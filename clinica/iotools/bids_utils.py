@@ -332,7 +332,7 @@ def write_modality_agnostic_files(study_name, bids_dir):
             # Won't fix errors
             "MISSING_SESSION",  # Allows subjects to have different sessions
             "INCONSISTENT_SUBJECTS",  # Allows subjects to have different modalities
-            "SCANS_FILENAME_NOT_MATCH_DATASET"  # Necessary until PET is added to BIDS standard
+            "SCANS_FILENAME_NOT_MATCH_DATASET",  # Necessary until PET is added to BIDS standard
             "CUSTOM_COLUMN_WITHOUT_DESCRIPTION",  # We won't create these JSON files as clinical description
             # is already done in TSV files of clinica.
             "NO_AUTHORS",  # Optional field in dataset_description.json

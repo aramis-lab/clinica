@@ -510,7 +510,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
 
     counter = None
 
-    makedirs(join(bids_dir, 'conversion_info'))
+    makedirs(join(bids_dir, 'conversion_info'), exist_ok=True)
 
     def init(args):
         """ store the counter for later use """
