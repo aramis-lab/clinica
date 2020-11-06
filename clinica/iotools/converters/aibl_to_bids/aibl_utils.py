@@ -495,6 +495,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
          existence
      """
     from os.path import join, exists
+    from os import makedirs
     from numpy import nan
     import pandas as pds
     from clinica.utils.stream import cprint
@@ -508,6 +509,8 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
                            + ' is not supported for conversion')
 
     counter = None
+
+    makedirs(join(bids_dir, 'conversion_info'))
 
     def init(args):
         """ store the counter for later use """
@@ -558,7 +561,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
                                         image_path)
         return output_image
 
-    # it reads the dataframe where subject_ID, session_ID and path are saved
+    # it reads the DataFrame where subject_ID, session_ID and path are saved
     if modality == 't1':
         images = find_path_to_T1(path_to_dataset, path_to_csv)
     else:
@@ -574,7 +577,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
         df_pet = pds.read_csv(path_to_csv_pet_modality, sep=',|;', usecols=list(range(0, 36)))
         images = find_path_to_pet_modality(path_to_dataset,
                                            df_pet)
-    images.to_csv(join(bids_dir, modality + '_paths_aibl.tsv'),
+    images.to_csv(join(bids_dir, 'conversion_info', modality + '_paths.tsv'),
                   index=False, sep='\t', encoding='utf-8')
 
     counter = Value('i', 0)
