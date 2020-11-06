@@ -123,6 +123,7 @@ class OasisToBids(Converter):
             hdr.set_qform(s_form, code='scanner')
             hdr['extents'] = 16384
             hdr['xyzt_units'] = 10
+            hdr['dim0'] = 3
 
             img_with_good_orientation_nifti = nb.Nifti1Image(
                 np.round(img_with_wrong_orientation_analyze.get_data()).astype(np.int16),
