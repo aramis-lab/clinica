@@ -54,7 +54,8 @@ class OasisToBids(Converter):
 
         # --Create scans files--
         # Note: We have no scans information for OASIS
-        scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID', '', dict())
+        scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids,
+                                            'ID', '', {"ses-M00": ""})
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
     def convert_images(self, source_dir, dest_dir):
@@ -73,7 +74,7 @@ class OasisToBids(Converter):
         from glob import glob
         import os
         from multiprocessing.dummy import Pool
-        from multiprocessing import cpu_count
+        from nipype.interfaces.fsl import ExtractROI
 
         def convert_single_subject(subj_folder):
             import os
@@ -123,7 +124,6 @@ class OasisToBids(Converter):
             hdr.set_qform(s_form, code='scanner')
             hdr['extents'] = 16384
             hdr['xyzt_units'] = 10
-            hdr['dim0'] = 3
 
             img_with_good_orientation_nifti = nb.Nifti1Image(
                 np.round(img_with_wrong_orientation_analyze.get_data()).astype(np.int16),
@@ -131,6 +131,10 @@ class OasisToBids(Converter):
                 header=hdr
             )
             nb.save(img_with_good_orientation_nifti, output_path)
+
+            # Header correction to obtain dim0 = 3
+            fslroi = ExtractROI(in_file=output_path, roi_file=output_path, t_min=0, t_size=1)
+            fslroi.run()
 
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)
