@@ -46,7 +46,7 @@ If you want to run the pipeline on a subset of your BIDS dataset, you can use th
 
 
 ## Outputs
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dwi-preprocessing-preprocessing-of-raw-diffusion-weighted-imaging-dwi-datasets): `subjects/sub-<participant_label>/ses-<session_label>/dwi/preprocessing`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dwi-preprocessing-preprocessing-of-raw-diffusion-weighted-imaging-dwi-datasets): `subjects/<participant_id>/<session_id>/dwi/preprocessing`.
 
 The output files are:
 

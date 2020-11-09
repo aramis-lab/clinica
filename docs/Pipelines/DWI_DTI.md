@@ -29,7 +29,7 @@ If you want to run the pipeline on a subset of your CAPS dataset, you can use th
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dwi-dti-dti-based-processing-of-corrected-dwi-datasets): `subjects/sub-<participant_label>/ses-<session_label>/dwi/dti_based_processing/`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dwi-dti-dti-based-processing-of-corrected-dwi-datasets): `subjects/<participant_id>/<session_id>/dwi/dti_based_processing/`.
 
 The main output files are:
 

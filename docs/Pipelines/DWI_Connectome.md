@@ -35,7 +35,7 @@ If you want to run the pipeline on a subset of your CAPS dataset, you can use th
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications): `subjects/sub-<participant_label>/ses-<session_label>/dwi/connectome_based_processing/`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications): `subjects/<participant_id>/<session_id>/dwi/connectome_based_processing/`.
 
 The main output files are:
 
@@ -59,16 +59,16 @@ We advise you to use the following commands to visualize the tractography result
 
 ```shell
 caps_directory= # Example: "MY_DATASET_CAPS"
-subject_id= # Example: "01"
-session_id= # Example: "M00"
-atlas_id= # Example: "desikan"
+participant_id= # Example: "sub-CLNC01"
+session_id= # Example: "ses-M00"
+atlas_label= # Example: "desikan"
 
 mrview -mode 2 \
-        -load                   ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/preprocessing/sub-${subject_id}_ses-${session_id}_preproc.nii.gz \
-        -tractography.load      ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/connectome_based_processing/*_tractography.tck \
-        -odf.load_sh            ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/connectome_based_processing/*_FOD.mif \
-        -connectome.init        ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/connectome_based_processing/*_parcellation-${atlas_id}_node.nii.gz \
-        -connectome.load        ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/connectome_based_processing/*_parcellation-${atlas_id}_connectivity.tsv
+        -load                   ${caps_directory}/subjects/${participant_id}/${session_id}/dwi/preprocessing/${participant_id}_${session_id}_preproc.nii.gz \
+        -tractography.load      ${caps_directory}/subjects/${participant_id}/${session_id}/dwi/connectome_based_processing/*_tractography.tck \
+        -odf.load_sh            ${caps_directory}/subjects/${participant_id}/${session_id}/dwi/connectome_based_processing/*_FOD.mif \
+        -connectome.init        ${caps_directory}/subjects/${participant_id}/${session_id}/dwi/connectome_based_processing/*_parcellation-${atlas_label}_node.nii.gz \
+        -connectome.load        ${caps_directory}/subjects/${participant_id}/${session_id}/dwi/connectome_based_processing/*_parcellation-${atlas_label}_connectivity.tsv
 ```
 
 Do not forget to fill in the missing information (after the `=` signs) and do not hesitate to remove lines of the `mrview` command that you may not be interested in or that may take to much time to load.

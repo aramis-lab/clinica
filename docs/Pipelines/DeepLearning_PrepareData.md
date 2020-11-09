@@ -50,7 +50,7 @@ In the following subsections, files with the `.pt` extension denote tensors in P
 The full list of output files can be found in the [ClinicA Processed Structure (CAPS) Specification](../../CAPS/Specifications/#deeplearning-prepare-data-prepare-input-data-for-deep-learning-with-pytorch).
 
 ### Image-based outputs
-Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/<subject_id>/<session_id>/deeplearning_prepare_data/image_based/t1_linear`.
+Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/<participant_id>/<session_id>/deeplearning_prepare_data/image_based/t1_linear`.
 
 The main output files are:
 
@@ -58,7 +58,7 @@ The main output files are:
 
 ### Patch-based outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/<subject_id>/<session_id>/deeplearning_prepare_data/patch_based/t1_linear`.
+Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/<participant_id>/<session_id>/deeplearning_prepare_data/patch_based/t1_linear`.
 
 The main output files are:
 
@@ -66,7 +66,7 @@ The main output files are:
 
 ### Slice-based outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/<subject_id>/<session_id>/deeplearning_prepare_data/slice_based/t1_linear`.
+Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/<participant_id>/<session_id>/deeplearning_prepare_data/slice_based/t1_linear`.
 
 The main output files are:
 
