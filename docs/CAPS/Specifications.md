@@ -3,10 +3,11 @@
 In the following, brackets `[`/`]` will denote optional key/value pairs in the filename while accolades `{`/`}` will indicate a list of compulsory values (e.g. `hemi-{left|right}` means that the key `hemi` only accepts `left` or `right` as values).
 
 Finally:
-- `participant_id` denotes `participant-<participant_label>`
-- `session_id` denotes `session-<session_label>`
-- `group_id` denotes `group-<group_label>`
-- `long_id` denotes `long-<long_label>`
+
+- `participant_id` denotes `participant-<participant_label>`;
+- `session_id` denotes `session-<session_label>`;
+- `group_id` denotes `group-<group_label>`;
+- `long_id` denotes `long-<long_label>`.
 
 ##  T1 MRI data
 
