@@ -196,7 +196,7 @@ pipeline {
           '''
         }
         post {
-          sucess {
+          success {
             sh 'scp -r public aramislab:~/clinica/docs'
           }
         }
