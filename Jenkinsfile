@@ -106,80 +106,80 @@ pipeline {
           }
         }
       }
-#      stage('Short Tests') {
-#        parallel {
-#          stage('Instantiate Linux') {
-#            agent { label 'ubuntu' }
-#            environment {
-#              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
-#              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-#              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
-#              }
-#            steps {
-#              echo 'Testing pipeline instantation...'
-#              sh 'echo "Agent name: ${NODE_NAME}"'
-#              sh '''
-#                 set +x
-#                 eval "$(conda shell.bash hook)"
-#                 source ./.jenkins/scripts/find_env.sh
-#                 conda activate clinica_env_$BRANCH_NAME
-#                 source /usr/local/Modules/init/profile.sh
-#                 module load clinica.all
-#                 cd test
-#                 ln -s /mnt/data/ci/data_ci_linux ./data
-#                 taskset -c 0-21 pytest \
-#                    --junitxml=./test-reports/instantation_linux.xml \
-#                    --verbose \
-#                    --working_directory=$WORK_DIR_LINUX \
-#                    --disable-warnings \
-#                    --timeout=0 \
-#                    -n 6 \
-#                    -k 'test_instantiate'
-#                 module purge
-#                 conda deactivate
-#                 '''
-#            }
-#            post {
-#              always {
-#                junit 'test/test-reports/*.xml'
-#              }
-#            }  
-#          }
-#          stage('Instantiate Mac') {
-#            agent { label 'macos' }
-#            environment {
-#              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
-#              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-#              }
-#            steps {
-#              echo 'Testing pipeline instantation...'
-#              sh 'echo "Agent name: ${NODE_NAME}"'
-#              sh '''
-#                 set +x
-#                 eval "$(conda shell.bash hook)"
-#                 source ./.jenkins/scripts/find_env.sh
-#                 conda activate clinica_env_$BRANCH_NAME
-#                 source /usr/local/opt/modules/init/bash
-#                 module load clinica.all
-#                 cd test
-#                 ln -s /Volumes/data/data_ci ./data
-#                 pytest \
-#                    --verbose \
-#                    --junitxml=./test-reports/instantation_mac.xml \
-#                    --disable-warnings \
-#                    -k 'test_instantiate'
-#                 module purge
-#                 conda deactivate
-#                 '''
-#            }
-#            post {
-#              always {
-#                junit 'test/test-reports/*.xml'
-#              }
-#            }  
-#          }
-#        }
-#      }
+//      stage('Short Tests') {
+//        parallel {
+//          stage('Instantiate Linux') {
+//            agent { label 'ubuntu' }
+//            environment {
+//              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+//              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+//              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+//              }
+//            steps {
+//              echo 'Testing pipeline instantation...'
+//              sh 'echo "Agent name: ${NODE_NAME}"'
+//              sh '''
+//                 set +x
+//                 eval "$(conda shell.bash hook)"
+//                 source ./.jenkins/scripts/find_env.sh
+//                 conda activate clinica_env_$BRANCH_NAME
+//                 source /usr/local/Modules/init/profile.sh
+//                 module load clinica.all
+//                 cd test
+//                 ln -s /mnt/data/ci/data_ci_linux ./data
+//                 taskset -c 0-21 pytest \
+//                    --junitxml=./test-reports/instantation_linux.xml \
+//                    --verbose \
+//                    --working_directory=$WORK_DIR_LINUX \
+//                    --disable-warnings \
+//                    --timeout=0 \
+//                    -n 6 \
+//                    -k 'test_instantiate'
+//                 module purge
+//                 conda deactivate
+//                 '''
+//            }
+//            post {
+//              always {
+//                junit 'test/test-reports/*.xml'
+//              }
+//            }  
+//          }
+//          stage('Instantiate Mac') {
+//            agent { label 'macos' }
+//            environment {
+//              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
+//              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+//              }
+//            steps {
+//              echo 'Testing pipeline instantation...'
+//              sh 'echo "Agent name: ${NODE_NAME}"'
+//              sh '''
+//                 set +x
+//                 eval "$(conda shell.bash hook)"
+//                 source ./.jenkins/scripts/find_env.sh
+//                 conda activate clinica_env_$BRANCH_NAME
+//                 source /usr/local/opt/modules/init/bash
+//                 module load clinica.all
+//                 cd test
+//                 ln -s /Volumes/data/data_ci ./data
+//                 pytest \
+//                    --verbose \
+//                    --junitxml=./test-reports/instantation_mac.xml \
+//                    --disable-warnings \
+//                    -k 'test_instantiate'
+//                 module purge
+//                 conda deactivate
+//                 '''
+//            }
+//            post {
+//              always {
+//                junit 'test/test-reports/*.xml'
+//              }
+//            }  
+//          }
+//        }
+//      }
       stage('Build and publish doc') {
         agent { label 'ubuntu && short' }
         environment {
