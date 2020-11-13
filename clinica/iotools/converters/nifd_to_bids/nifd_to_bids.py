@@ -12,16 +12,16 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
     converts the image with the highest quality for each category"""
 
     import os
-    from clinica.iotools.converters.nifd_to_bids.utils.conv_image_folders import get_all_med_name, dict_conversion, \
-        get_descriptors
-    from clinica.iotools.converters.nifd_to_bids.nifd_utils import get_patients_source_files, \
-        filter_patients_source_files, \
-        collect_conversion_tuples, convert
-    from clinica.iotools.converters.nifd_to_bids.utils.manage_conflicts import Manage_conflicts
-    from clinica.iotools.converters.nifd_to_bids.utils.patient import Patient
     from clinica.utils.stream import cprint
-    from clinica.iotools.converters.nifd_to_bids.preprocessing.parse_ida import process_ida
-    from clinica.iotools.converters.nifd_to_bids.preprocessing.update_clinical_info import update_info_clinical
+    from .preprocessing.parse_ida import process_ida
+    from .preprocessing.update_clinical_info import update_info_clinical
+    from .nifd_utils import (get_patients_source_files,
+                             filter_patients_source_files,
+                             collect_conversion_tuples,
+                             convert)
+    from .utils.conv_image_folders import get_all_med_name, dict_conversion, get_descriptors
+    from .utils.manage_conflicts import Manage_conflicts
+    from .utils.patient import Patient
 
     path_converter = os.path.join(os.path.dirname(os.path.realpath(__file__)))
     path_conflicts = os.path.join(path_converter, 'config_files', 'unique_conflicts.txt')
@@ -39,7 +39,33 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
         name_ida = 'idaSearch_all.csv'
 
     path_idaSearch = os.path.join(path_to_clinical, name_ida)
-    path_DataDictionary_NIFD_2017 = os.path.join(path_to_clinical, 'DataDictionary_NIFD_2017.10.18.xlsx')
+
+    def get_data_dictionary(path_to_clinical_data_folder):
+        """
+        Temporary function to get DataDictionary_NIFD_2017.10.18.xlsx file
+        See https://github.com/aramis-lab/clinica/issues/122 for details.
+        Args:
+            path_to_clinical_data_folder: Path to clinical data folder.
+        Returns:
+            Path to 'DataDictionary_NIFD_2017.10.18.xlsx' file.
+        """
+        import os
+        from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
+
+        local_nifd_dictionary = os.path.join(path_to_clinical, 'DataDictionary_NIFD_2017.10.18.xlsx')
+        if os.path.exists(local_nifd_dictionary):
+            path_to_nifd_dictionary = local_nifd_dictionary
+        else:
+            NIFD_DICTIONNARY = RemoteFileStructure(
+                filename='DataDictionary_NIFD_2017.10.18.xlsx',
+                url='https://aramislab.paris.inria.fr/files/data/databases/converters/',
+                checksum='e75b23a9f4dad601463f48031cfc00e1180e4877d0bebbdfd340fdbcbacab5cb'
+            )
+            path_to_nifd_dictionary = get_file_from_server(NIFD_DICTIONNARY)
+
+        return path_to_nifd_dictionary
+
+    path_DataDictionary_NIFD_2017 = get_data_dictionary(path_to_clinical)
 
     # Pre-processing step, to be executed the first time the converter is used.
     if not os.path.isfile(path_to_ida):
