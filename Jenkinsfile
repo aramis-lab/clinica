@@ -197,7 +197,7 @@ pipeline {
         }
         post {
           sucess {
-            scp -r public aramislab.paris.inria.fr:~/clinica/docs
+            sh 'scp -r public aramislab:~/clinica/docs'
           }
         }
       }
