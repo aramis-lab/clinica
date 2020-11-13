@@ -27,6 +27,6 @@ for branch in $branches; do
 done
 # The master branch becomes the public root, and other branches go in
 # the branches/ subdirectory of public.
-mv branches/master public
+mv branches/dev public
 mv branches public/
 
