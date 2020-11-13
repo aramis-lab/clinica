@@ -180,6 +180,27 @@ pipeline {
           }
         }
       }
+      stage('Build and publish doc') {
+        agent { label 'linux && short' }
+        environment {
+          PATH = "$HOME/miniconda/bin:$PATH"
+          }
+        steps {
+          echo "Build and publish Clinica's documentation"
+          sh 'echo "Agent name: ${NODE_NAME}"'
+          sh '''
+          conda create -name build_doc python=3.8
+          conda activate build_doc
+          pip install -r docs/requirements.txt
+          .jenkins/script/publish.sh
+          '''
+        }
+        post {
+          sucess {
+            scp -r public aramislab.paris.inria.fr:~/clinica/docs
+          }
+        }
+      }
     }
     post {
       failure {
