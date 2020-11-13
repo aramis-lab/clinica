@@ -181,7 +181,7 @@ pipeline {
         }
       }
       stage('Build and publish doc') {
-        agent { label 'linux && short' }
+        agent { label 'ubuntu && short' }
         environment {
           PATH = "$HOME/miniconda/bin:$PATH"
           }
