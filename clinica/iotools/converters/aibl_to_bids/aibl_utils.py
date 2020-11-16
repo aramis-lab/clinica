@@ -603,14 +603,15 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
         This methods create a participants file for the AIBL dataset where
         information regarding the patients are reported
 
-        :param input_path: path to the input directory
-        :param clinical_spec_path: path to the clinical file
-        :param clinical_data_dir: directory to the clinical data files
-        :param delete_non_bids_info: if True delete all the rows of the subjects
-        that are not available in the BIDS dataset
+        Args:
+            input_path: path to the input directory
+            clinical_spec_path: path to the clinical file
+            clinical_data_dir: directory to the clinical data files
+            delete_non_bids_info: if True delete all the rows of the subjects
+            that are not available in the BIDS dataset
 
-        :return:
-            a pandas DataFrame that contains the participants data and it is saved in a tsv file
+        Returns:
+            a pandas DataFrame that contains the participants data
     """
     import pandas as pd
     import os
@@ -806,21 +807,18 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
 
 def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
     """
-    Create scans.tsv files for ADNI
+    Create scans.tsv files for AIBL
 
     Args:
-        clinic_specs_path: path to the clinical file
-        bids_subjs_paths: list of bids subject paths
-        bids_ids: list of bids ids
-
-    Returns:
+        input_path: path to the input folder
+        clinical_spec_path: path to the clinical file
+        clinical_data_dir: directory to the clinical data files
 
     """
     import glob
     import pandas as pd
     from os import path
     import clinica.iotools.bids_utils as bids
-    from clinica.utils.stream import cprint
 
     # Load data
     location = 'AIBL location'
@@ -844,7 +842,6 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
         if not pd.isnull(scans_fields[i]):
             # Load the file
             tmp = field_location[i]
-            location = tmp[0]
             file_to_read_path = path.join(clinical_data_dir, tmp)
             files_to_read.append(glob.glob(file_to_read_path)[0])
             sessions_fields_to_read.append(scans_fields[i])
@@ -861,7 +858,7 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
 
     scans_dict = bids.create_scans_dict(clinical_data_dir, 'AIBL', clinical_spec_path, bids_ids,
                                         'RID', 'VISCODE', ses_dict)
-    bids.write_scans_tsv(input_path, bids_ids, scans_dict, replace_aibl_nan=True)
+    bids.write_scans_tsv(input_path, bids_ids, scans_dict)
 
 
 def get_examdates(rid, examdates, viscodes, clinical_data_dir):
