@@ -326,8 +326,7 @@ def write_modality_agnostic_files(study_name, bids_dir):
     f.close()
 
     file = open(path.join(bids_dir, 'README'), 'w')
-    file.write("This bids was generated with Clinica v%s.\nMore information on http://www.clinica.run\n"
-               % clinica.__version__)
+    file.write(f"This BIDS directory was generated with Clinica v{clinica.__version__}.\nMore information on http://www.clinica.run\n")
     file.close()
 
     validator_dict = {
