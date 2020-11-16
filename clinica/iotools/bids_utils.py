@@ -332,7 +332,7 @@ def write_modality_agnostic_files(study_name, bids_dir):
 
     validator_dict = {
         "ignore": [
-            # Possibly dcm2nii errors
+            # Possibly dcm2nii(x) errors
             "NIFTI_UNIT",
             "INCONSISTENT_PARAMETERS",
 
