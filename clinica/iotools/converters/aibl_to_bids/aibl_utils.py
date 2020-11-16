@@ -534,9 +534,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
                 cprint('No path specified for ' + subject + ' in session '
                        + session)
             else:
-                cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
-                       + ' - session ' + session + ', ' + str(counter.value) + ' / '
-                       + str(total))
+                cprint(f"'[{modality.upper()}] Processing subject {subject} - {session} {session}, {counter.value}/{total}")
 
         if image_path is nan:
             return nan
