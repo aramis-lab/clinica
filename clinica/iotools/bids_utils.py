@@ -220,15 +220,16 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
         clinic_specs_path: path to the clinical specification file
         bids_ids: list of bids ids
         name_column_ids: name of the column where the subject id is contained
+        name_column_ses: name of the column where the viscode of the session is contained
+        ses_dict: links the session id to the viscode of the session.
 
-    Returns:
+    Returns: a pandas DataFrame that contains the scans information for all sessions of all participants.
 
     """
     import pandas as pd
-    from os import path, listdir
+    from os import path
     import glob
     import datetime
-    from clinica.utils.stream import cprint
 
     scans_dict = {}
     prev_file = ''
@@ -290,9 +291,14 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
                     row_to_extract = row_to_extract[0]
                     # Fill the dictionary with all the information
                     value = file_to_read.iloc[row_to_extract][fields_dataset[i]]
-                    if fields_bids[i] == 'acq_time' and value != "-4":
-                        date_obj = datetime.datetime.strptime(value, '%m/%d/%Y')
-                        value = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+
+                    if study_name == "AIBL":  # Deal with special format in AIBL
+                        if value == "-4":
+                            value = "n/a"
+                        elif fields_bids[i] == 'acq_time':
+                            date_obj = datetime.datetime.strptime(value, '%m/%d/%Y')
+                            value = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+
                     scans_dict[bids_id][session_name][fields_mod[i]][fields_bids[i]] = value
                 else:
                     print(" Scans information for %s %s not found." % (bids_id, session_name))
@@ -396,7 +402,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
         session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
 
 
-def write_scans_tsv(bids_dir, bids_ids, scans_dict, replace_aibl_nan=False):
+def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     """
 
     Write the scans dict into tsv files
@@ -411,7 +417,6 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict, replace_aibl_nan=False):
     from os import path
     import os
     from glob import glob
-    from clinica.utils.stream import cprint
 
     for bids_id in bids_ids:
         # Create the file
@@ -444,8 +449,6 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict, replace_aibl_nan=False):
                     scans_df = scans_df.append(row_to_append)
 
             scans_df = scans_df.fillna("n/a")
-            if replace_aibl_nan:
-                scans_df = scans_df.replace("-4", "n/a")
             scans_df.to_csv(path.join(bids_dir, bids_id, session_name, tsv_name),
                             sep='\t', index=False, encoding='utf8')
 
