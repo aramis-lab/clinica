@@ -5,7 +5,7 @@ Module for converting FLAIR of ADNI
 """
 
 
-def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
+def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
     """
     Convert FLAIR images of ADNI into BIDS format
 
@@ -14,6 +14,7 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
     """
 
@@ -32,7 +33,7 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
     images = compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of FLAIR images found. Exporting images into BIDS ...')
     # flair_paths_to_bids(images, dest_dir)
-    paths_to_bids(images, dest_dir, 'flair')
+    paths_to_bids(images, dest_dir, 'flair', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'FLAIR conversion done.' + Fore.RESET)
 
 

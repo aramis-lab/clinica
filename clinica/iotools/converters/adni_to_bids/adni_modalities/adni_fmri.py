@@ -5,7 +5,7 @@ Module for converting fMRI of ADNI
 """
 
 
-def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
+def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
     """
     Convert fMR images of ADNI into BIDS format
 
@@ -14,6 +14,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
     """
 
@@ -32,7 +33,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
     images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
     # fmri_paths_to_bids(dest_dir, images)
-    paths_to_bids(images, dest_dir, 'fmri')
+    paths_to_bids(images, dest_dir, 'fmri', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'fMRI conversion done.' + Fore.RESET)
 
 

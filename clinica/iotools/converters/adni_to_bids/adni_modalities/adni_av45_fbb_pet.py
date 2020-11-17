@@ -5,7 +5,7 @@ Module for converting AV45 and Florbetaben PET of ADNI
 """
 
 
-def convert_adni_av45_fbb_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
+def convert_adni_av45_fbb_pet(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
     """
     Convert AV-45 and Florbetaben PET images of ADNI into BIDS format
 
@@ -14,6 +14,7 @@ def convert_adni_av45_fbb_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
     """
 
@@ -32,7 +33,7 @@ def convert_adni_av45_fbb_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
            path.join(dest_dir, 'conversion_info'))
     images = compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of AV45 and Florbetaben PET images found. Exporting images into BIDS ...')
-    paths_to_bids(images, dest_dir, 'av45_fbb')
+    paths_to_bids(images, dest_dir, 'av45_fbb', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'AV45 and Florbetaben PET conversion done.' + Fore.RESET)
 
 

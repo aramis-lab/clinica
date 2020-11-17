@@ -5,7 +5,7 @@ Module for converting Tau PET of ADNI
 """
 
 
-def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
+def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
     """
     Convert Tau PET images of ADNI into BIDS format
 
@@ -14,6 +14,7 @@ def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
     """
 
@@ -31,7 +32,7 @@ def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of TAU PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
     images = compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of TAU PET images found. Exporting images into BIDS ...')
-    paths_to_bids(images, dest_dir, 'tau')
+    paths_to_bids(images, dest_dir, 'tau', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'TAU PET conversion done.' + Fore.RESET)
 
 

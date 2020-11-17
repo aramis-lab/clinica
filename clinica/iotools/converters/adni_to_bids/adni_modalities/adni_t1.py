@@ -5,7 +5,7 @@ Module for converting T1 of ADNI
 """
 
 
-def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
+def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
     """Convert T1 MR images of ADNI into BIDS format
 
     Args:
@@ -13,6 +13,7 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
     """
 
@@ -32,7 +33,7 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of T1 images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of T1 images found. Exporting images into BIDS ...')
-    paths_to_bids(images, dest_dir, 't1')
+    paths_to_bids(images, dest_dir, 't1', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'T1 conversion done.' + Fore.RESET)
 
 
