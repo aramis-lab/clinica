@@ -5,6 +5,7 @@ def write(df, path, name):
     import os
 
     name = os.path.join(path, name) + '.tsv'
+    df = df.fillna("n/a")
     df.to_csv(sep='\t', path_or_buf=name, index=False)
 
 
