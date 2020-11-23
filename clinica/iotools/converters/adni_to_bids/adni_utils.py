@@ -525,7 +525,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                     if location in ['ADAS_ADNIGO2.csv', 'DXSUM_PDXCONV_ADNIALL.csv', 'CDR.csv',
                                                     'NEUROBAT.csv', 'GDSCALE.csv', 'MODHACH.csv', 'MOCA.csv',
                                                     'NPIQ.csv', 'MEDHIST.csv', 'VITALS.csv', 'UWNPSYCHSUM_03_07_19.csv',
-                                                    'ECOGPT.csv', 'ECOGSP.csv', 'FCI.csv', 'CCI.csv']:
+                                                    'ECOGPT.csv', 'ECOGSP.csv', 'FCI.csv', 'CCI.csv', 'NPIQ.csv']:
                                         if pd.isnull(row['VISCODE2']) or row['VISCODE2'] == 'f':
                                             continue
                                         visit_id = row['VISCODE2']
