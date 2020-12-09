@@ -44,5 +44,6 @@ setup(
         'Programming Language :: Python',
     ],
     install_requires=requirements,
+    extras_require={"test": ["pytest", "coverage"]},
     python_requires='>=3.6'
 )
