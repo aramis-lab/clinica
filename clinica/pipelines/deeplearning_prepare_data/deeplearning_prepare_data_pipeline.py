@@ -60,14 +60,15 @@ class DeepLearningPrepareData(cpe.Pipeline):
         from clinica.utils.ux import print_images_to_process
 
         if self.parameters.get('modality') == 't1-linear':
-        if self.parameters.get('use_uncropped_image'):
-            FILE_TYPE = T1W_LINEAR
-        else:
-            FILE_TYPE = T1W_LINEAR_CROPPED
+            if self.parameters.get('use_uncropped_image'):
+                FILE_TYPE = T1W_LINEAR
+            else:
+                FILE_TYPE = T1W_LINEAR_CROPPED
         if self.parameters.get('modality') == 't1-extensive':
             FILE_TYPE = T1W_EXTENSIVE
         if self.parameters.get('modality') == 'custom':  
             # TODO
+            cprint("This modality will be implemented soon...")
 
         # T1w_Linear file:
         try:
@@ -172,12 +173,19 @@ class DeepLearningPrepareData(cpe.Pipeline):
             self.connect([
                 (self.output_node, write_node, [('output_pt_file', '@output_pt_file')])
                 ])
+        
+        if self.parameters.get('modality') == 't1-linear':
+            mod_subfolder =  't1_linear'   
+        if self.parameters.get('modality') == 't1-extensive':
+            mod_subfolder =  't1_extensive'   
+        if self.parameters.get('modality') == 'custom':
+            mod_subfolder =  'custom'   
 
         self.connect([
             (container_path, write_node, [(
                 (
                     'container', fix_join,
-                    'deeplearning_prepare_data', subfolder, 't1_linear'
+                    'deeplearning_prepare_data', subfolder, mod_subfolder
                     ),
                 'container')]),
             ])
