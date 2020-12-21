@@ -67,7 +67,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
         if self.parameters.get('modality') == 't1-extensive':
             FILE_TYPE = T1W_EXTENSIVE
         if self.parameters.get('modality') == 'custom':  
-            # TODO
             FILE_TYPE = {'pattern': f"*{self.parameters.get('custom_suffix')}",
                          'description': 'Custom suffix'}
 

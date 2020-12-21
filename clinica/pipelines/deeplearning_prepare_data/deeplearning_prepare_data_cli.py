@@ -30,7 +30,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
                 help='''For which modality the tensor will be extracted.
                 't1-linear': images prepocessed with t1-linear pipeline.
                 't1-extensive': images preprocessed with t1-extensive pipeline.
-                'custom': fing images with a custom suffix in their filename and 
+                'custom': find images with a custom suffix in their filename and 
                 transform them to tensor format.''',
                 choices=['t1-linear', 't1-extensive', 'custom'], default='t1-linear'
                 )                          
@@ -95,7 +95,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
                 'graymatter_space-Ixi549Space_modulated-off_probability.nii.gz', or
                 'segm-whitematter_probability.nii.gz'
                 ''',
-                type=int, default=0
+                type=str, default=''
                 )        
 
         # Clinica standard arguments (e.g. --n_procs)
