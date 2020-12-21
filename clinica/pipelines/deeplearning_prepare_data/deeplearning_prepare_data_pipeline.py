@@ -68,7 +68,8 @@ class DeepLearningPrepareData(cpe.Pipeline):
             FILE_TYPE = T1W_EXTENSIVE
         if self.parameters.get('modality') == 'custom':  
             # TODO
-            cprint("This modality will be implemented soon...")
+            FILE_TYPE = {'pattern': f"*{self.parameters.get('custom_suffix')}",
+                         'description': 'Custom suffix'}
 
         # T1w_Linear file:
         try:
@@ -174,6 +175,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 (self.output_node, write_node, [('output_pt_file', '@output_pt_file')])
                 ])
         
+        mod_subfolder = ''
         if self.parameters.get('modality') == 't1-linear':
             mod_subfolder =  't1_linear'   
         if self.parameters.get('modality') == 't1-extensive':
