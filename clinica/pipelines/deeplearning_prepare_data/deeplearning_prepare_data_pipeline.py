@@ -55,13 +55,19 @@ class DeepLearningPrepareData(cpe.Pipeline):
         from clinica.utils.stream import cprint
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_LINEAR
+        from clinica.utils.input_files import T1W_EXTENSIVE
         from clinica.utils.input_files import T1W_LINEAR_CROPPED
         from clinica.utils.ux import print_images_to_process
 
+        if self.parameters.get('modality') == 't1-linear':
         if self.parameters.get('use_uncropped_image'):
             FILE_TYPE = T1W_LINEAR
         else:
             FILE_TYPE = T1W_LINEAR_CROPPED
+        if self.parameters.get('modality') == 't1-extensive':
+            FILE_TYPE = T1W_EXTENSIVE
+        if self.parameters.get('modality') == 'custom':  
+            # TODO
 
         # T1w_Linear file:
         try:

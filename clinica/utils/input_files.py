@@ -103,6 +103,10 @@ T1W_LINEAR_CROPPED = {'pattern': '*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_
                       '(matrix size 169×208×179, 1 mm isotropic voxels)',
                       'needed_pipeline': 't1-linear'}
 
+T1W_EXTENSIVE = {'pattern': '*space-Ixi549Space_desc-SkullStripped_T1w.nii.gz',
+              'description': 'T1w image skull-stripped registered in Ixi549Space space using clinicaDL preprocessing pipeline',
+              'needed_pipeline': 't1-extensive'}
+
 # T1-Volume
 
 
