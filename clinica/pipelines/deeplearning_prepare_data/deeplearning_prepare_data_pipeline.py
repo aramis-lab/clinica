@@ -66,7 +66,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 FILE_TYPE = T1W_LINEAR_CROPPED
         if self.parameters.get('modality') == 't1-extensive':
             FILE_TYPE = T1W_EXTENSIVE
-        if self.parameters.get('modality') == 'custom':  
+        if self.parameters.get('modality') == 'custom':
             FILE_TYPE = {'pattern': f"*{self.parameters.get('custom_suffix')}",
                          'description': 'Custom suffix'}
 
@@ -173,14 +173,14 @@ class DeepLearningPrepareData(cpe.Pipeline):
             self.connect([
                 (self.output_node, write_node, [('output_pt_file', '@output_pt_file')])
                 ])
-        
+
         mod_subfolder = ''
         if self.parameters.get('modality') == 't1-linear':
-            mod_subfolder =  't1_linear'   
+            mod_subfolder = 't1_linear'
         if self.parameters.get('modality') == 't1-extensive':
-            mod_subfolder =  't1_extensive'   
+            mod_subfolder = 't1_extensive'
         if self.parameters.get('modality') == 'custom':
-            mod_subfolder =  'custom'   
+            mod_subfolder = 'custom'
 
         self.connect([
             (container_path, write_node, [(
