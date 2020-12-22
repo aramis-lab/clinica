@@ -426,7 +426,8 @@ def test_instantiate_DLPrepareData():
     root = join(root, 'data', 'DeepLearningPrepareData')
 
     parameters = {
-            'extract_method': 'whole'
+            'modality': 't1-linear',
+            'extract_method': 'image'
             }
     pipeline = DeepLearningPrepareData(
         caps_directory=join(root, 'in', 'caps'),
