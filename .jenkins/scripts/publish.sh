@@ -14,7 +14,7 @@ set -ex
 # so we strip the three first path components to keep only "branch-name".
 # We don't keep neither "dont_publish.*" branches nor HEAD branch.
 branches="`\
-  git branch --remote --format='%(refname:lstrip=2)' |\
+  git branch --format='%(refname:lstrip=2)' |\
   grep -v '^dont_publish\|^HEAD$'`"
 # The branches/ directory will temporarily contain one directory with
 # the generated pages for each branch
