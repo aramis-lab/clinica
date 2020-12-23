@@ -223,12 +223,13 @@ pipeline {
              conda deactivate
              '''
           withCredentials([usernamePassword(credentialsId: 'jenkins-pass-for-pypi-aramis', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          sh '''#!/usr/bin/env bash
-             cd $WORKSPACE/clinica
-             twine upload \
-               -u ${USERNAME} \
-               -p ${PASSWORD} ./dist/*
-             '''
+             sh '''#!/usr/bin/env bash
+                cd $WORKSPACE/clinica
+                twine upload \
+                  -u ${USERNAME} \
+                  -p ${PASSWORD} ./dist/*
+                '''
+             }
         }
       }
     }
