@@ -72,21 +72,21 @@ Pipeline options if you use `custom` modality:
   processed files will kep their original name. E.g.: you can convert the
   images from the segmentation of the grey matter registered on the
   Ixi549Space. This images are obtained by running `t1-volume` pipeline (and
-  SPM underhood). The suffix of these images is
+  SPM underhood). The suffix for these images is
   "graymatter_space-Ixi549Space_modulated-off_probability.nii.gz".
 
 
 !!! note "Regarding the default values"
-  When using patch or slice extraction, default values were set according to
-  [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
+    When using patch or slice extraction, default values were set according to
+    [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
 
 !!! note
-  The arguments common to all Clinica pipelines are described in [Interacting
-  with clinica](../InteractingWithClinica).
+    The arguments common to all Clinica pipelines are described in [Interacting
+    with clinica](../InteractingWithClinica).
 
 !!! tip
-  Do not hesitate to type `clinica run deeplearning-prepare-data --help` to see
-  the full list of parameters.
+    Do not hesitate to type `clinica run deeplearning-prepare-data --help` to see
+    the full list of parameters.
 
 
 ## Outputs
