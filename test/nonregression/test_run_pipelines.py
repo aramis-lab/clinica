@@ -851,7 +851,7 @@ def test_run_DLPrepareData(cmdopt):
 
     # Test the transformation of the complete T1 MRI
     parameters = {
-        'modality': 't1-linear',    
+        'modality': 't1-linear',
         'extract_method': 'image'
     }
     # Instantiate pipeline
@@ -865,7 +865,7 @@ def test_run_DLPrepareData(cmdopt):
 
     # Test the patch extraction
     parameters = {
-        'modality': 't1-linear',    
+        'modality': 't1-linear',
         'extract_method': 'patch',
         'patch_size': 50,
         'stride_size': 50
@@ -881,7 +881,7 @@ def test_run_DLPrepareData(cmdopt):
 
     # Test the slice extraction
     parameters = {
-        'modality': 't1-linear',    
+        'modality': 't1-linear',
         'extract_method': 'slice',
         'slice_mode': 'rgb',
         'slice_direction': 0
