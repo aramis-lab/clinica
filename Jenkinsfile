@@ -202,6 +202,35 @@ pipeline {
           }
         }
       }
+      stage('Deploy') {
+        agent { label 'ubuntu' }
+        when { buildingTag() }
+        environment {
+          PATH = "$HOME/miniconda/bin:$PATH"
+        }
+        steps {
+          echo 'Create ClinicaDL package and upload to Pypi...'
+          sh 'echo "Agent name: ${NODE_NAME}"'
+          //sh 'conda env remove --name "clinicadl_test"'
+          sh '''#!/usr/bin/env bash
+             set +x
+             eval "$(conda shell.bash hook)"
+             source ./.jenkins/scripts/find_env.sh
+             conda activate clinica_env_$BRANCH_NAME
+             clinica --help
+             cd $WORKSPACE/.jenkins/scripts
+             ./generate_wheels.sh
+             conda deactivate
+             '''
+          withCredentials([usernamePassword(credentialsId: 'jenkins-pass-for-pypi-aramis', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+          sh '''#!/usr/bin/env bash
+             cd $WORKSPACE/clinica
+             twine upload \
+               -u ${USERNAME} \
+               -p ${PASSWORD} ./dist/*
+             '''
+        }
+      }
     }
     post {
       failure {
