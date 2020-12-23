@@ -2,14 +2,14 @@
 
 def extract_slices(input_tensor, slice_direction=0, slice_mode='single'):
     """Extracts the slices from three directions
-    
+
     This function extracts slices form the preprocesed nifti image.  The
     direction of extraction can be defined either on sagital direction (0),
     cornal direction (1) or axial direction (other). The output slices can be
     stores following two modes: single (1 channel) ou RGB (3 channels, all the
     same).
 
-    
+
     Args:
         input_tensor: tensor version of the nifti MRI.
         slice_direction: which axis direction that the slices were extracted
@@ -34,11 +34,11 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='single'):
 
     basedir = os.getcwd()
     input_tensor_filename = os.path.basename(input_tensor)
-    
+
     txt_idx = input_tensor_filename.rfind("_")
     it_filename_prefix = input_tensor_filename[0:txt_idx]
     it_filename_suffix = input_tensor_filename[txt_idx:]
-    
+
     output_file_original = []
     output_file_rgb = []
     if slice_direction == 0:
@@ -159,13 +159,13 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='single'):
 
 def extract_patches(input_tensor, patch_size, stride_size):
     """Extracts the patches
-    
+
     This function extracts patches form the preprocesed nifti image. Patch size
     if provieded as input and also the stride size. If stride size is smaller
     than the patch size an overlap exist between consecutive patches. If stride
     size is equal to path size there is no overlap. Otherwise, unprocessed
     zones can exits.
-    
+
     Args:
         input_tensor: tensor version of the nifti MRI.
         patch_size: size of a single patch.
@@ -185,7 +185,7 @@ def extract_patches(input_tensor, patch_size, stride_size):
     patches_tensor = image_tensor.unfold(1, patch_size, stride_size).unfold(2, patch_size, stride_size).unfold(3, patch_size, stride_size).contiguous()
     # the dimension of patch_tensor should be [1, patch_num1, patch_num2, patch_num3, patch_size1, patch_size2, patch_size3]
     patches_tensor = patches_tensor.view(-1, patch_size, patch_size, patch_size)
-    
+
     input_tensor_filename = os.path.basename(input_tensor)
     txt_idx = input_tensor_filename.rfind("_")
     it_filename_prefix = input_tensor_filename[0:txt_idx]
@@ -215,10 +215,10 @@ def extract_patches(input_tensor, patch_size, stride_size):
 
 def save_as_pt(input_img):
     """Saves PyTorch tensor version of the nifti image
-    
+
     This function convert nifti image to tensor (.pt) version of the image.
     Tensor version is saved at the same location than input_img.
-    
+
     Args:
         input_tensor: tensor version of the nifti MRI.
 
