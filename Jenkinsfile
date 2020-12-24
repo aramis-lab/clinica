@@ -223,7 +223,7 @@ pipeline {
              '''
           withCredentials([usernamePassword(credentialsId: 'jenkins-pass-for-pypi-aramis', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
              sh '''#!/usr/bin/env bash
-                cd $WORKSPACE/clinica
+                cd $WORKSPACE
                 twine upload \
                   -u ${USERNAME} \
                   -p ${PASSWORD} ./dist/*
