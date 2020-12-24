@@ -193,12 +193,12 @@ pipeline {
           conda create --name build_doc python=3.8
           conda activate build_doc
           pip install -r docs/requirements.txt
-          ./.jenkins/scripts/publish.sh
+          ./.jenkins/scripts/publish.sh ${BRANCH_NAME}
           '''
         }
         post {
           success {
-            sh 'scp -r public aramislab:~/clinica/docs'
+            sh 'scp -r ${BRANCH_NAME} aramislab:~/clinica/docs/public/'
           }
         }
       }

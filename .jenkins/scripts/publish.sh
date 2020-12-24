@@ -9,24 +9,27 @@ set -ex
 # produced by an other branch, but this would require to hard-wire all
 # the branch names in .gitlab.yml...)
 
-# $branches get all the branch names.
-# Remotes refs are of the form "refs/remotes/origin/branch-name"
-# so we strip the three first path components to keep only "branch-name".
-# We don't keep neither "dont_publish.*" branches nor HEAD branch.
-branches="`\
-  git branch --format='%(refname:lstrip=2)' |\
-  grep -v '^dont_publish\|^HEAD$'`"
-# The branches/ directory will temporarily contain one directory with
-# the generated pages for each branch
-mkdir branches
-for branch in $branches; do
-  # We are in detached HEAD: use "git reset" to force getting the branch
-  git reset --hard origin/$branch
-  mkdocs build || true
-  mv site branches/$branch
-done
-# The master branch becomes the public root, and other branches go in
-# the branches/ subdirectory of public.
-mv branches/dev public
-mv branches public/
+branch = $1
+mkdocs build || true
+mv site $branch
+
+## Remotes refs are of the form "refs/remotes/origin/branch-name"
+## so we strip the three first path components to keep only "branch-name".
+## We don't keep neither "dont_publish.*" branches nor HEAD branch.
+#branches="`\
+#  git branch --format='%(refname:lstrip=2)' |\
+#  grep -v '^dont_publish\|^HEAD$'`"
+## The branches/ directory will temporarily contain one directory with
+## the generated pages for each branch
+#mkdir branches
+#for branch in $branches; do
+#  # We are in detached HEAD: use "git reset" to force getting the branch
+#  git reset --hard origin/$branch
+#  mkdocs build || true
+#  mv site branches/$branch
+#done
+## The master branch becomes the public root, and other branches go in
+## the branches/ subdirectory of public.
+#mv branches/dev public
+#mv branches public/
 
