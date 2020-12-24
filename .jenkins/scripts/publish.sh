@@ -9,7 +9,7 @@ set -ex
 # produced by an other branch, but this would require to hard-wire all
 # the branch names in .gitlab.yml...)
 
-branch = $1
+branch=$1
 mkdocs build || true
 mv site $branch
 
