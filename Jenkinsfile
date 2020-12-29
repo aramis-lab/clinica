@@ -216,6 +216,7 @@ pipeline {
              eval "$(conda shell.bash hook)"
              source ./.jenkins/scripts/find_env.sh
              conda activate clinica_env_$BRANCH_NAME
+             pip install -e .
              clinica --help
              cd $WORKSPACE/.jenkins/scripts
              ./generate_wheels.sh
