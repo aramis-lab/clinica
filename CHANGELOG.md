@@ -9,8 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add option to run in deeplearning-prepare-data in t1-extension pipeline and
-  custom pipelines (PR #150).
+-
+-
+-
+
+### Changed
+
+-
+-
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## Clinica 0.3.8
+
+### Added
+
+- Add option to run deeplearning-prepare-data in output of t1-extension pipeline
+  and custom pipelines (PR #150).
 - Add Build and publish documentation with CI (PR #146).
 - Add CHANGELOG.md file
 
@@ -20,15 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Behaviour of ADNI converter: some minor bugs and updated wrt ADNI3. E.g., the
   field age_bl was added. (PR #139, #138, #140, #142)
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Add DataDictionary_NIFD_.xlsx file when using NIFD2BIDS.
-
-### Security
 
 
 ## Clinica 0.3.7 - FreeSurfer-Longitudinal
