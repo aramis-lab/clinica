@@ -230,6 +230,14 @@ pipeline {
                 '''
              }
         }
+        post {
+          success {
+            mattermostSend( 
+              color: "#00B300",
+              message: "Clinica version ${env.TAG_NAME} is now available!:  ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Link to build>)"
+            )
+          }
+        }
       }
     }
     post {
