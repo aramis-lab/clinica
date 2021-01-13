@@ -1,3 +1,7 @@
+templates_dict = {
+  "t1-linear": "MNI152NLin2009cSym",
+  "t1-volume": "Ixi549Space"
+}
 
 
 def extract_roi(input_path, basedir, masks_location, input_pattern, roi_list, uncrop_output, template):
@@ -82,7 +86,6 @@ if __name__ == "__main__":
     import argparse
     from os import path
     import os
-    import json
 
     from ...utils.inputs import clinica_file_reader
 
@@ -97,11 +100,6 @@ if __name__ == "__main__":
     parser.add_argument("--uncrop_output", action="store_true", default=False,
                         help="Disable cropping option so the output tensors have the same size than the whole image.")
     args = parser.parse_args()
-
-    template_dir = path.dirname(path.realpath(__file__))
-
-    with open(path.join(template_dir, "templates.json"), "r") as f:
-        templates_dict = json.load(f)
 
     cropping = "desc-Crop_"
     if args.use_uncropped_image:
