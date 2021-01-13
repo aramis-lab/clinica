@@ -53,11 +53,12 @@ def extract_roi(input_path, basedir, masks_location, input_pattern, roi_list, un
                                                  roi_mask.any((0, 2, 3)),
                                                  roi_mask.any((0, 1, 3)),
                                                  roi_mask.any((0, 1, 2)))]
+        extracted_roi = extracted_roi.float()
         # save into .pt format
         output_roi.append(
             os.path.join(
                 basedir,
-                "%sroi-%s%s%s.pt" % (it_filename_prefix, roi, crop_desc, it_filename_suffix)
+                "%s_roi-%s%s%s.pt" % (it_filename_prefix, roi, crop_desc, it_filename_suffix)
             )
         )
         os.makedirs(output_path, exist_ok=True)
@@ -125,7 +126,7 @@ if __name__ == "__main__":
                                              {"needed_pipeline": preprocessing,
                                               "pattern": "*%s*.nii.gz" % input_pattern,
                                               "description": "cropped output of t1-linear"})[0]
-            output_path = path.join(subject_path, session, "deeplearning_prepare_data", "roi_based", preprocessing)
+            output_path = path.join(subject_path, session, "deeplearning_prepare_data", "roi_based", "t1_linear")
             extract_roi(input_path, output_path, masks_location, input_pattern,
                         roi_list=args.roi_list, uncrop_output=args.uncrop_output,
                         template=templates_dict[preprocessing])
