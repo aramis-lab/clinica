@@ -264,6 +264,8 @@ class Parse_clinical():
         import os
 
         name = os.path.join(path, name) + '.tsv'
+        df = df.replace('', "n/a")
+        df = df.fillna("n/a")
         df.to_csv(sep='\t', path_or_buf=name, index=False)
 
     def make_all(self, pathBIDS):

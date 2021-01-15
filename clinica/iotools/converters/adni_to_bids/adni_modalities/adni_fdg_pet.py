@@ -5,7 +5,7 @@ Module for converting FDG PET of ADNI
 """
 
 
-def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
+def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
     """Convert FDG PET images of ADNI into BIDS format
 
     Args:
@@ -13,6 +13,7 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
     """
     import pandas as pd
     from os import path
@@ -28,7 +29,7 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of FDG PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
     images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of FDG PET images found. Exporting images into BIDS ...')
-    paths_to_bids(images, dest_dir, 'fdg')
+    paths_to_bids(images, dest_dir, 'fdg', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'FDG PET conversion done.' + Fore.RESET)
 
 

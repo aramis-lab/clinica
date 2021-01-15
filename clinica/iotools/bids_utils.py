@@ -120,6 +120,8 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
 
+    participant_df = participant_df.fillna("n/a")
+
     return participant_df
 
 
@@ -208,7 +210,8 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
     return sessions_dict
 
 
-def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids, name_column_ids):
+def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids,
+                      name_column_ids, name_column_ses, ses_dict):
     """
 
     Args:
@@ -217,12 +220,17 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
         clinic_specs_path: path to the clinical specification file
         bids_ids: list of bids ids
         name_column_ids: name of the column where the subject id is contained
+        name_column_ses: name of the column where the viscode of the session is contained
+        ses_dict: links the session id to the viscode of the session.
 
-    Returns:
+    Returns: a pandas DataFrame that contains the scans information for all sessions of all participants.
 
     """
     import pandas as pd
     from os import path
+    import glob
+    import datetime
+
     scans_dict = {}
     prev_file = ''
     prev_sheet = ''
@@ -232,7 +240,9 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
 
     # Init the dictionary with the subject ids
     for bids_id in bids_ids:
-        scans_dict.update({bids_id: {'T1/DWI/fMRI/FMAP': {}, 'FDG': {}}})
+        scans_dict[bids_id] = dict()
+        for session_id in ses_dict.keys():
+            scans_dict[bids_id][session_id] = {'T1/DWI/fMRI/FMAP': {}, 'PIB': {}, 'AV45': {}, 'FLUTE': {}, 'FDG': {}}
 
     scans_specs = pd.read_excel(clinic_specs_path, sheet_name='scans.tsv')
     fields_dataset = []
@@ -263,25 +273,98 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
             pass
         else:
             file_to_read_path = path.join(clinical_data_dir, file_name)
-            if sheet != '':
-                file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
-            else:
-                file_to_read = pd.read_excel(file_to_read_path)
+            file_ext = path.splitext(file_name)[1]
+            if file_ext == '.xlsx':
+                file_to_read = pd.read_excel(glob.glob(file_to_read_path)[0], sheet_name=sheet)
+            elif file_ext == '.csv':
+                file_to_read = pd.read_csv(glob.glob(file_to_read_path)[0])
             prev_file = file_name
             prev_sheet = sheet
 
         for bids_id in bids_ids:
             original_id = bids_id.replace('sub-'+study_name, '')
-            row_to_extract = file_to_read[file_to_read[name_column_ids] == int(original_id)].index.tolist()
-            if len(row_to_extract) > 0:
-                row_to_extract = row_to_extract[0]
-                # Fill the dictionary with all the information
-                (scans_dict[bids_id][fields_mod[i]]).update(
-                    {fields_bids[i]: file_to_read.iloc[row_to_extract][fields_dataset[i]]})
-            else:
-                print(" Scans information for " + bids_id + " not found.")
+            for session_name in ses_dict.keys():
+                row_to_extract = file_to_read[(file_to_read[name_column_ids] == int(original_id)) &
+                                              (file_to_read[name_column_ses] == ses_dict[session_name])
+                                              ].index.tolist()
+                if len(row_to_extract) > 0:
+                    row_to_extract = row_to_extract[0]
+                    # Fill the dictionary with all the information
+                    value = file_to_read.iloc[row_to_extract][fields_dataset[i]]
+
+                    if study_name == "AIBL":  # Deal with special format in AIBL
+                        if value == "-4":
+                            value = "n/a"
+                        elif fields_bids[i] == 'acq_time':
+                            date_obj = datetime.datetime.strptime(value, '%m/%d/%Y')
+                            value = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+
+                    scans_dict[bids_id][session_name][fields_mod[i]][fields_bids[i]] = value
+                else:
+                    print(" Scans information for %s %s not found." % (bids_id, session_name))
+                    scans_dict[bids_id][session_name][fields_mod[i]][fields_bids[i]] = "n/a"
 
     return scans_dict
+
+
+def write_modality_agnostic_files(study_name, bids_dir):
+    """
+    Write the files README, dataset_description.json, .bidsignore and .bids-validator-config.json
+    at the root of the BIDS directory.
+
+    Args:
+        study_name: name of the study (Ex ADNI)
+        bids_dir: path to the bids directory
+
+    Returns:
+
+    """
+    import json
+    from os import path
+    import clinica
+
+    dataset_dict = {"Name": study_name,
+                    "BIDSVersion": "1.4.1",
+                    "DatasetType": "raw"}
+    dataset_json = json.dumps(dataset_dict, skipkeys=True, indent=4)
+    f = open(path.join(bids_dir, "dataset_description.json"), "w")
+    f.write(dataset_json)
+    f.close()
+
+    file = open(path.join(bids_dir, 'README'), 'w')
+    file.write(f"This BIDS directory was generated with Clinica v{clinica.__version__}.\nMore information on http://www.clinica.run\n")
+    file.close()
+
+    validator_dict = {
+        "ignore": [
+            # Possibly dcm2nii(x) errors
+            "NIFTI_UNIT",
+            "INCONSISTENT_PARAMETERS",
+
+            # fMRI-specific errors
+            "SLICE_TIMING_NOT_DEFINED",
+            "NIFTI_PIXDIM4",
+            "BOLD_NOT_4D",
+            "REPETITION_TIME_MUST_DEFINE",
+            "TASK_NAME_MUST_DEFINE",
+
+            # Won't fix errors
+            "MISSING_SESSION",  # Allows subjects to have different sessions
+            "INCONSISTENT_SUBJECTS",  # Allows subjects to have different modalities
+            "SCANS_FILENAME_NOT_MATCH_DATASET",  # Necessary until PET is added to BIDS standard
+            "CUSTOM_COLUMN_WITHOUT_DESCRIPTION",  # We won't create these JSON files as clinical description
+            # is already done in TSV files of clinica.
+            "NO_AUTHORS",  # Optional field in dataset_description.json
+        ],
+        "warn": [], "error": [], "ignoredFiles": []}
+    validator_json = json.dumps(validator_dict, skipkeys=True, indent=4)
+    f = open(path.join(bids_dir, ".bids-validator-config.json"), "w")
+    f.write(validator_json)
+    f.close()
+
+    f = open(path.join(bids_dir, '.bidsignore'), 'w')
+    f.write('pet/\nconversion_info/\n')  # pet/ is necessary until PET is added to BIDS standard
+    f.close()
 
 
 def write_sessions_tsv(bids_dir, sessions_dict):
@@ -290,7 +373,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
 
     Args:
         bids_dir: path to the bids directory
-        sessions_dict: output of the function create_scans_dict
+        sessions_dict: output of the function create_sessions_dict
 
     Returns:
 
@@ -310,12 +393,13 @@ def write_sessions_tsv(bids_dir, sessions_dict):
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
-            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
         else:
             print("No session data available for " + sp)
             session_df = pd.DataFrame(columns=['session_id'])
             session_df['session_id'] = pd.Series('M00')
-            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
+
+        session_df = session_df.fillna("n/a")
+        session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
 
 
 def write_scans_tsv(bids_dir, bids_ids, scans_dict):
@@ -335,31 +419,38 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     from glob import glob
 
     for bids_id in bids_ids:
-        scans_df = pd.DataFrame()
-        bids_id = bids_id.split(os.sep)[-1]
         # Create the file
-        tsv_name = bids_id + "_ses-M00_scans.tsv"
-        # If the file already exists, remove it
-        if os.path.exists(path.join(bids_dir, bids_id, 'ses-M00', tsv_name)):
-            os.remove(path.join(bids_dir, bids_id, 'ses-M00', tsv_name))
+        sessions_paths = glob(path.join(bids_dir, bids_id, 'ses-*'))
+        for session_path in sessions_paths:
+            scans_df = pd.DataFrame()
+            session_name = session_path.split(os.sep)[-1]
+            tsv_name = bids_id + '_' + session_name + "_scans.tsv"
 
-        mod_available = glob(path.join(bids_dir, bids_id, 'ses-M00', '*'))
-        for mod in mod_available:
-            mod_name = os.path.basename(mod)
-            files = glob(path.join(mod, '*'))
-            for file in files:
-                file_name = os.path.basename(file)
-                if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
-                    f_type = 'T1/DWI/fMRI/FMAP'
-                elif mod_name == 'pet':
-                    f_type = 'FDG'
+            # If the file already exists, remove it
+            if os.path.exists(path.join(bids_dir, bids_id, session_name, tsv_name)):
+                os.remove(path.join(bids_dir, bids_id, session_name, tsv_name))
 
-                row_to_append = pd.DataFrame(scans_dict[bids_id][f_type], index=[0])
-                # Insert the column filename as first value
-                row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
-                scans_df = scans_df.append(row_to_append)
+            mod_available = glob(path.join(bids_dir, bids_id, session_name, '*'))
+            for mod in mod_available:
+                mod_name = os.path.basename(mod)
+                files = glob(path.join(mod, '*'))
+                for file in files:
+                    file_name = os.path.basename(file)
+                    if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
+                        f_type = 'T1/DWI/fMRI/FMAP'
+                    elif mod_name == 'pet':
+                        description_dict = {carac.split('-')[0]: carac.split('-')[1] for carac in file_name.split('_') if
+                                            '-' in carac}
+                        f_type = description_dict['acq'].upper()
 
-            scans_df.to_csv(path.join(bids_dir, bids_id, 'ses-M00', tsv_name), sep='\t', index=False, encoding='utf8')
+                    row_to_append = pd.DataFrame(scans_dict[bids_id][session_name][f_type], index=[0])
+                    # Insert the column filename as first value
+                    row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
+                    scans_df = scans_df.append(row_to_append)
+
+            scans_df = scans_df.fillna("n/a")
+            scans_df.to_csv(path.join(bids_dir, bids_id, session_name, tsv_name),
+                            sep='\t', index=False, encoding='utf8')
 
 
 # -- Other methods --

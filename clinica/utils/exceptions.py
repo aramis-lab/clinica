@@ -19,3 +19,7 @@ class ClinicaBIDSError(ClinicaException):
 
 class ClinicaCAPSError(ClinicaException):
     """ Base class for CAPS errors """
+
+
+class ClinicaParserError(ClinicaException):
+    """ Base class for parser errors """

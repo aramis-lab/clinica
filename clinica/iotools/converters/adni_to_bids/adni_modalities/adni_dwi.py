@@ -5,7 +5,7 @@ Module for converting DWI of ADNI
 """
 
 
-def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
+def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
     """
     Convert DW images of ADNI into BIDS format
 
@@ -14,6 +14,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
     """
 
@@ -32,7 +33,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
     images = compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of DWI images found. Exporting images into BIDS ...')
     # dwi_paths_to_bids(images, dest_dir)
-    paths_to_bids(images, dest_dir, 'dwi')
+    paths_to_bids(images, dest_dir, 'dwi', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'DWI conversion done.' + Fore.RESET)
 
 

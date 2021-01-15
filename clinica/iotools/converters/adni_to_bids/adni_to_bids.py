@@ -57,6 +57,10 @@ class AdniToBids(Converter):
             bids_ids = ['sub-ADNI' + subj.replace('_', '') for subj in list(adni_merge.PTID.unique())]
             bids_subjs_paths = [path.join(out_path, subj) for subj in bids_ids]
 
+        # -- Creation of modality agnostic files --
+        cprint("Creating modality agnostic files...")
+        bids.write_modality_agnostic_files('ADNI', out_path)
+
         # -- Creation of participant.tsv --
         cprint("Creating participants.tsv...")
         participants_df = bids.create_participants_df('ADNI', clinic_specs_path, clinical_data_dir, bids_ids)
@@ -76,7 +80,8 @@ class AdniToBids(Converter):
         adni_utils.create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids)
 
     def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path=None,
-                       modalities=['T1', 'PET_FDG', 'PET_AMYLOID', 'PET_TAU', 'DWI', 'FLAIR', 'fMRI']):
+                       modalities=['T1', 'PET_FDG', 'PET_AMYLOID', 'PET_TAU', 'DWI', 'FLAIR', 'fMRI'],
+                       force_new_extraction=False):
         """
         Convert the images of ADNI
 
@@ -86,6 +91,7 @@ class AdniToBids(Converter):
             dest_dir: path to the BIDS directory
             subjs_list_path: list of subjects to process
             modalities: modalities to convert (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
+            force_new_extraction: if given pre-existing images in the BIDS directory will be erased and extracted again.
 
         """
 
@@ -129,10 +135,8 @@ class AdniToBids(Converter):
             subjs_list = list(adni_merge['PTID'].unique())
 
         # Create the output folder if is not already existing
-        if not os.path.exists(dest_dir):
-            os.makedirs(dest_dir)
-        if not os.path.exists(path.join(dest_dir, 'conversion_info')):
-            os.makedirs(path.join(dest_dir, 'conversion_info'))
+        os.makedirs(dest_dir, exist_ok=True)
+        os.makedirs(path.join(dest_dir, 'conversion_info'), exist_ok=True)
         cprint(dest_dir)
 
         converters = {'T1': [adni_t1.convert_adni_t1],
@@ -149,4 +153,4 @@ class AdniToBids(Converter):
             if modality not in converters:
                 raise Exception('%s is not a valid input modality' % modality)
             for converter in converters[modality]:
-                converter(source_dir, clinical_dir, dest_dir, subjs_list)
+                converter(source_dir, clinical_dir, dest_dir, subjs_list, force_new_extraction)

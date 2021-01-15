@@ -495,6 +495,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
          existence
      """
     from os.path import join, exists
+    from os import makedirs
     from numpy import nan
     import pandas as pds
     from clinica.utils.stream import cprint
@@ -509,6 +510,8 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
 
     counter = None
 
+    makedirs(join(bids_dir, 'conversion_info'), exist_ok=True)
+
     def init(args):
         """ store the counter for later use """
         global counter
@@ -522,18 +525,19 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
                         'av45': 'Path_to_pet',
                         'flute': 'Path_to_pet',
                         'pib': 'Path_to_pet'}
-        # depending on the dataframe, there is different way of accessing
-        # the iage object
+        # depending on the DataFrame, there is different way of accessing
+        # the image object
         image_path = image[name_of_path[modality]]
         with counter.get_lock():
             counter.value += 1
+            if image_path is nan:
+                cprint('No path specified for ' + subject + ' in session '
+                       + session)
+            else:
+                cprint(f"'[{modality.upper()}] Processing subject {subject} - {session} {session}, {counter.value}/{total}")
+
         if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session '
-                   + session)
             return nan
-        cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
-               + ' - session ' + session + ', ' + str(counter.value) + ' / '
-               + str(total))
         session = viscode_to_session(session)
         # creation of the path
         if modality == 't1':
@@ -558,7 +562,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
                                         image_path)
         return output_image
 
-    # it reads the dataframe where subject_ID, session_ID and path are saved
+    # it reads the DataFrame where subject_ID, session_ID and path are saved
     if modality == 't1':
         images = find_path_to_T1(path_to_dataset, path_to_csv)
     else:
@@ -574,7 +578,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
         df_pet = pds.read_csv(path_to_csv_pet_modality, sep=',|;', usecols=list(range(0, 36)))
         images = find_path_to_pet_modality(path_to_dataset,
                                            df_pet)
-    images.to_csv(join(bids_dir, modality + '_paths_aibl.tsv'),
+    images.to_csv(join(bids_dir, 'conversion_info', modality + '_paths.tsv'),
                   index=False, sep='\t', encoding='utf-8')
 
     counter = Value('i', 0)
@@ -599,12 +603,15 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
         This methods create a participants file for the AIBL dataset where
         information regarding the patients are reported
 
-        :param input_path: path to the input directory :param
-        clinical_spec_path: path to the clinical file :param clinical_data_dir:
-        directory to the clinical data files :param delete_non_bids_info: if
-        True delete all the rows of the subjects that are not available in the
-        BIDS dataset :return: a pandas dataframe that contains the participants
-        data and it is saved in a tsv file
+        Args:
+            input_path: path to the input directory
+            clinical_spec_path: path to the clinical file
+            clinical_data_dir: directory to the clinical data files
+            delete_non_bids_info: if True delete all the rows of the subjects
+            that are not available in the BIDS dataset
+
+        Returns:
+            a pandas DataFrame that contains the participants data
     """
     import pandas as pd
     import os
@@ -675,7 +682,7 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
                         value_to_append = str(file_to_read.at[j, participant_fields_db[i]])
 
                     else:
-                        value_to_append = np.NaN
+                        value_to_append = "n/a"
                 else:
                     value_to_append = file_to_read.at[j, participant_fields_db[i]]
                 field_col_values.append(value_to_append)
@@ -692,7 +699,7 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
         else:
             participant_df['sex'][i] = 'F'
 
-    participant_df.replace('-4', np.nan)
+    participant_df.replace('-4', "n/a")
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
@@ -760,13 +767,13 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
             for j in sessions_fields_to_read:
                 if j in list(file_to_read.columns.values) and j == 'MMSCORE':
                     MMSCORE = file_to_read.loc[(file_to_read["RID"] == r), j]
-                    MMSCORE[MMSCORE == -4] = np.nan
+                    MMSCORE[MMSCORE == -4] = "n/a"
                 elif j in list(file_to_read.columns.values) and j == 'CDGLOBAL':
                     CDGLOBAL = file_to_read.loc[(file_to_read["RID"] == r), j]
-                    CDGLOBAL[CDGLOBAL == -4] = np.nan
+                    CDGLOBAL[CDGLOBAL == -4] = "n/a"
                 elif j in list(file_to_read.columns.values) and j == 'DXCURREN':
                     DXCURREN = file_to_read.loc[(file_to_read["RID"] == r), j]
-                    DXCURREN[DXCURREN == -4] = np.nan
+                    DXCURREN[DXCURREN == -4] = "n/a"
                     DXCURREN[DXCURREN == 1] = 'CN'
                     DXCURREN[DXCURREN == 2] = 'MCI'
                     DXCURREN[DXCURREN == 3] = 'AD'
@@ -796,6 +803,62 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         if path.exists(bids_paths):
             dict.to_csv(path.join(input_path, 'sub-AIBL' + str(r), 'sub-AIBL' + str(r) + '_sessions.tsv'), sep='\t',
                         index=False, encoding='utf8')
+
+
+def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
+    """
+    Create scans.tsv files for AIBL
+
+    Args:
+        input_path: path to the input folder
+        clinical_spec_path: path to the clinical file
+        clinical_data_dir: directory to the clinical data files
+
+    """
+    import glob
+    import pandas as pd
+    from os import path
+    import clinica.iotools.bids_utils as bids
+
+    # Load data
+    location = 'AIBL location'
+    scans = pd.read_excel(clinical_spec_path, sheet_name='scans.tsv')
+    scans_fields = scans['AIBL']
+    field_location = scans[location]
+    scans_fields_bids = scans['BIDS CLINICA']
+    fields_dataset = []
+    fields_bids = []
+
+    # Keep only fields for which there are AIBL fields
+    for i in range(0, len(scans_fields)):
+        if not pd.isnull(scans_fields[i]):
+            fields_bids.append(scans_fields_bids[i])
+            fields_dataset.append(scans_fields[i])
+
+    files_to_read = []
+    sessions_fields_to_read = []
+    for i in range(0, len(scans_fields)):
+        # If the i-th field is available
+        if not pd.isnull(scans_fields[i]):
+            # Load the file
+            tmp = field_location[i]
+            file_to_read_path = path.join(clinical_data_dir, tmp)
+            files_to_read.append(glob.glob(file_to_read_path)[0])
+            sessions_fields_to_read.append(scans_fields[i])
+
+    rid_df = pd.read_csv(files_to_read[0], dtype={'text': str}, low_memory=False).RID
+    rid_list = list(set(rid_df))
+    bids_ids = ["sub-AIBL%i" % rid for rid in rid_list]
+
+    # This dictionary should be automatically computed from the dataset
+    ses_dict = {"ses-M00": "bl",
+                "ses-M18": "m18",
+                "ses-M36": "m36",
+                "ses-M54": "m54"}
+
+    scans_dict = bids.create_scans_dict(clinical_data_dir, 'AIBL', clinical_spec_path, bids_ids,
+                                        'RID', 'VISCODE', ses_dict)
+    bids.write_scans_tsv(input_path, bids_ids, scans_dict)
 
 
 def get_examdates(rid, examdates, viscodes, clinical_data_dir):

@@ -417,6 +417,7 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
                                           + sessions_df['adas_Q6'])  # / 10
             sessions_df['adas_concentration'] = sessions_df['adas_Q13']  # / 5
 
+            sessions_df = sessions_df.fillna("n/a")
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
 
@@ -524,7 +525,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                     if location in ['ADAS_ADNIGO2.csv', 'DXSUM_PDXCONV_ADNIALL.csv', 'CDR.csv',
                                                     'NEUROBAT.csv', 'GDSCALE.csv', 'MODHACH.csv', 'MOCA.csv',
                                                     'NPIQ.csv', 'MEDHIST.csv', 'VITALS.csv', 'UWNPSYCHSUM_03_07_19.csv',
-                                                    'ECOGPT.csv', 'ECOGSP.csv', 'FCI.csv', 'CCI.csv']:
+                                                    'ECOGPT.csv', 'ECOGSP.csv', 'FCI.csv', 'CCI.csv', 'NPIQ.csv']:
                                         if pd.isnull(row['VISCODE2']) or row['VISCODE2'] == 'f':
                                             continue
                                         visit_id = row['VISCODE2']
@@ -654,6 +655,7 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
     import pandas as pd
     from os import path
     from os.path import normpath
+    from clinica.utils.stream import cprint
 
     scans_dict = {}
 
@@ -701,6 +703,7 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                         type_mod = 'FDG'
 
                     scans_df['filename'] = pd.Series(path.join(mod_name, file_name))
+                    scans_df = scans_df.fillna("n/a")
                     scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False, encoding='utf-8')
 
             scans_df = pd.DataFrame(columns=(fields_bids))
@@ -769,7 +772,7 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
         images: List of images metadata and paths
         bids_dir: Path to the output BIDS directory
         modality: Imaging modality
-        mod_to_update:
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted agai n.
 
     """
     from multiprocessing import Pool, cpu_count, Value
@@ -825,7 +828,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         modality: Imaging modality
         total: Total number of images to convert
         bids_dir: Path to the output BIDS directory
-        mod_to_update:
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
     Returns:
 
@@ -918,121 +921,126 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         for im in existing_im:
             os.remove(im)
 
-    try:
-        os.makedirs(output_path)
-    except OSError:
-        # Folder already created with previous instance
-        pass
+    if mod_to_update or not len(existing_im) > 0:
 
-    generate_json = modality_specific[modality]['json']
-    if modality_specific[modality]['to_center']:
-        zip_image = 'n'
-    else:
-        zip_image = 'y'
+        try:
+            os.makedirs(output_path)
+        except OSError:
+            # Folder already created with previous instance
+            pass
 
-    if image.Is_Dicom:
-        command = 'dcm2niix -b %s -z %s -o %s -f %s %s' % \
-                  (generate_json, zip_image, output_path, output_filename, image_path)
-        subprocess.run(command,
-                       shell=True,
-                       stderr=subprocess.DEVNULL,
-                       stdout=subprocess.DEVNULL)
+        generate_json = modality_specific[modality]['json']
+        if modality_specific[modality]['to_center']:
+            zip_image = 'n'
+        else:
+            zip_image = 'y'
 
-        # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
-        exception_t = glob(path.join(output_path, output_filename + '_t[0-9]*'))
-        for trigger_time in exception_t:
-            res = re.search('_t\d+\.', trigger_time)
-            no_trigger_time = trigger_time.replace(trigger_time[res.start(): res.end()], '.')
-            os.rename(trigger_time, no_trigger_time)
-
-        # Removing ADC images if one is generated
-        adc_image = path.join(output_path, output_filename + '_ADC.nii.gz')
-        if os.path.exists(adc_image):
-            os.remove(adc_image)
-
-        nifti_file = path.join(output_path, output_filename + '.nii')
-        output_image = nifti_file + '.gz'
-
-        # Conditions to check if output NIFTI files exists,
-        # and, if DWI, if .bvec and .bval files are also present
-        nifti_exists = path.isfile(nifti_file) or path.isfile(output_image)
-        dwi_bvec_and_bval_exist = not (modality == 'dwi') or (path.isfile(path.join(output_path, output_filename + '.bvec'))
-                                                              and path.isfile(path.join(output_path, output_filename + '.bval')))
-
-        # Check if conversion worked (output files exist)
-        if not nifti_exists or not dwi_bvec_and_bval_exist:
-
-            cprint(
-                f"WARNING: Conversion with dcm2niix failed, trying with dcm2nii "
-                f"for subject {subject} and session {session}"
-            )
-            command = f"dcm2nii -a n -d n -e n -i y -g {zip_image} -p n -m n -r n -x n -o {output_path} {image_path}"
+        if image.Is_Dicom:
+            command = 'dcm2niix -b %s -z %s -o %s -f %s %s' % \
+                      (generate_json, zip_image, output_path, output_filename, image_path)
             subprocess.run(command,
                            shell=True,
-                           stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL)
+                           stderr=subprocess.DEVNULL,
+                           stdout=subprocess.DEVNULL)
 
-            # If modality is DWI we check if .bvec and .bval files are also present
-            if modality == "dwi":
-                bvec_file = path.join(output_path, subject.replace('_', '') + '.bvec')
-                bval_file = path.join(output_path, subject.replace('_', '') + '.bval')
+            # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
+            exception_t = glob(path.join(output_path, output_filename + '_t[0-9]*'))
+            for trigger_time in exception_t:
+                res = re.search('_t\d+\.', trigger_time)
+                no_trigger_time = trigger_time.replace(trigger_time[res.start(): res.end()], '.')
+                os.rename(trigger_time, no_trigger_time)
 
-                if os.path.exists(bvec_file) and os.path.exists(bval_file):
-                    os.rename(bvec_file, path.join(output_path, output_filename + '.bvec'))
-                    os.rename(bval_file, path.join(output_path, output_filename + '.bval'))
-                else:
-                    cprint(
-                        f"{Fore.RED}WARNING: bvec and bval not generated by dcm2nii "
-                        f"for subject {subject} and session {session}{Fore.RESET}"
-                    )
+            # Removing ADC images if one is generated
+            adc_image = path.join(output_path, output_filename + '_ADC.nii.gz')
+            if os.path.exists(adc_image):
+                os.remove(adc_image)
 
-            nifti_files = glob(path.join(output_path, subject.replace('_', '') + '.nii*'))
-            output_image = path.join(output_path, output_filename + '.nii.gz')
+            nifti_file = path.join(output_path, output_filename + '.nii')
+            output_image = nifti_file + '.gz'
 
-            # If no NIFTI files were converted then conversion failed
-            if nifti_files:
-                nifti_file = nifti_files[0]
-                conversion_failed = False
-            else:
-                conversion_failed = True
+            # Conditions to check if output NIFTI files exists,
+            # and, if DWI, if .bvec and .bval files are also present
+            nifti_exists = path.isfile(nifti_file) or path.isfile(output_image)
+            dwi_bvec_and_bval_exist = not (modality == 'dwi') or (path.isfile(path.join(output_path, output_filename + '.bvec'))
+                                                                  and path.isfile(path.join(output_path, output_filename + '.bval')))
 
-            # If image is not going to be centered, then it is already a .nii.gz file
-            # and we only need to rename it to the output image filename
-            if not conversion_failed and not modality_specific[modality]['to_center']:
-                os.rename(nifti_file, output_image)
+            # Check if conversion worked (output files exist)
+            if not nifti_exists or not dwi_bvec_and_bval_exist:
 
-            # We check if neither the NIFTI file to be centered
-            # nor the final compressed NIFTI file exist. In this case, conversion failed
-            if conversion_failed or (not path.isfile(nifti_file) and not path.isfile(output_image)):
                 cprint(
-                    f"{Fore.RED} WARNING: Conversion of the dicom failed "
-                    f"for subject {subject} and session {session}. Image path: {image_path}{Fore.RESET}"
+                    f"WARNING: Conversion with dcm2niix failed, trying with dcm2nii "
+                    f"for subject {subject} and session {session}"
                 )
-                # If conversion failed we remove the folder if it is empty
-                if not os.listdir(output_path):
-                    os.rmdir(output_path)
-                return nan
+                command = f"dcm2nii -a n -d n -e n -i y -g {zip_image} -p n -m n -r n -x n -o {output_path} {image_path}"
+                subprocess.run(command,
+                               shell=True,
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
 
-        # Case when JSON file was expected, but not generated by dcm2niix
-        elif generate_json == 'y' and not os.path.exists(path.join(output_path, output_filename + '.json')):
-            cprint(f"WARNING: JSON file not generated by dcm2niix for subject {subject} and session {session}")
+                # If modality is DWI we check if .bvec and .bval files are also present
+                if modality == "dwi":
+                    bvec_file = path.join(output_path, subject.replace('_', '') + '.bvec')
+                    bval_file = path.join(output_path, subject.replace('_', '') + '.bval')
 
-        if modality_specific[modality]['to_center']:
-            center_nifti_origin(nifti_file, output_image)
-            os.remove(nifti_file)
+                    if os.path.exists(bvec_file) and os.path.exists(bval_file):
+                        os.rename(bvec_file, path.join(output_path, output_filename + '.bvec'))
+                        os.rename(bval_file, path.join(output_path, output_filename + '.bval'))
+                    else:
+                        cprint(
+                            f"{Fore.RED}WARNING: bvec and bval not generated by dcm2nii "
+                            f"for subject {subject} and session {session}{Fore.RESET}"
+                        )
+
+                nifti_files = glob(path.join(output_path, subject.replace('_', '') + '.nii*'))
+                output_image = path.join(output_path, output_filename + '.nii.gz')
+
+                # If no NIFTI files were converted then conversion failed
+                if nifti_files:
+                    nifti_file = nifti_files[0]
+                    conversion_failed = False
+                else:
+                    conversion_failed = True
+
+                # If image is not going to be centered, then it is already a .nii.gz file
+                # and we only need to rename it to the output image filename
+                if not conversion_failed and not modality_specific[modality]['to_center']:
+                    os.rename(nifti_file, output_image)
+
+                # We check if neither the NIFTI file to be centered
+                # nor the final compressed NIFTI file exist. In this case, conversion failed
+                if conversion_failed or (not path.isfile(nifti_file) and not path.isfile(output_image)):
+                    cprint(
+                        f"{Fore.RED} WARNING: Conversion of the dicom failed "
+                        f"for subject {subject} and session {session}. Image path: {image_path}{Fore.RESET}"
+                    )
+                    # If conversion failed we remove the folder if it is empty
+                    if not os.listdir(output_path):
+                        os.rmdir(output_path)
+                    return nan
+
+            # Case when JSON file was expected, but not generated by dcm2niix
+            elif generate_json == 'y' and not os.path.exists(path.join(output_path, output_filename + '.json')):
+                cprint(f"WARNING: JSON file not generated by dcm2niix for subject {subject} and session {session}")
+
+            if modality_specific[modality]['to_center']:
+                center_nifti_origin(nifti_file, output_image)
+                os.remove(nifti_file)
+
+        else:
+            output_image = path.join(output_path, output_filename + '.nii.gz')
+            if modality_specific[modality]['to_center']:
+                center_nifti_origin(image_path, output_image)
+                if output_image is None:
+                    cprint(f"Error: For subject {subject} in session {session}, an error occurred recentering Nifti image: {image_path}")
+            else:
+                shutil.copy(image_path, output_image)
+
+        # Check if there is still the folder tmp_dcm_folder and remove it
+        remove_tmp_dmc_folder(bids_dir, image_id)
+        return output_image
 
     else:
-        output_image = path.join(output_path, output_filename + '.nii.gz')
-        if modality_specific[modality]['to_center']:
-            center_nifti_origin(image_path, output_image)
-            if output_image is None:
-                cprint(f"Error: For subject {subject} in session {session}, an error occurred recentering Nifti image: {image_path}")
-        else:
-            shutil.copy(image_path, output_image)
-
-    # Check if there is still the folder tmp_dcm_folder and remove it
-    remove_tmp_dmc_folder(bids_dir, image_id)
-    return output_image
+        return nan
 
 
 def viscode_to_session(viscode):

@@ -28,6 +28,9 @@ class OasisToBids(Converter):
         clinic_specs_path = path.join(iotools_folder, 'data',
                                       'clinical_specifications.xlsx')
 
+        # -- Creation of modality agnostic files --
+        bids.write_modality_agnostic_files('OASIS-1', bids_dir)
+
         # --Create participants.tsv--
         participants_df = bids.create_participants_df('OASIS', clinic_specs_path, clinical_data_dir, bids_ids)
 
@@ -36,6 +39,7 @@ class OasisToBids(Converter):
         participants_df['diagnosis_bl'].replace([0.5, 1.0, 1.5, 2.0], 'AD', inplace=True)
         # Following line has no sense
         # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
+        participants_df = participants_df.fillna("n/a")
         participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
         # --Create sessions files--
@@ -50,7 +54,8 @@ class OasisToBids(Converter):
 
         # --Create scans files--
         # Note: We have no scans information for OASIS
-        scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
+        scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids,
+                                            'ID', '', {"ses-M00": ""})
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
     def convert_images(self, source_dir, dest_dir):
@@ -69,7 +74,7 @@ class OasisToBids(Converter):
         from glob import glob
         import os
         from multiprocessing.dummy import Pool
-        from multiprocessing import cpu_count
+        from nipype.interfaces.fsl import ExtractROI
 
         def convert_single_subject(subj_folder):
             import os
@@ -126,6 +131,10 @@ class OasisToBids(Converter):
                 header=hdr
             )
             nb.save(img_with_good_orientation_nifti, output_path)
+
+            # Header correction to obtain dim0 = 3
+            fslroi = ExtractROI(in_file=output_path, roi_file=output_path, t_min=0, t_size=1)
+            fslroi.run()
 
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)

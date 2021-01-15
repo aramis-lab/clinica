@@ -155,12 +155,14 @@ def convert_clinical_data(bids_dir, path_to_clinical, to_convert):
     import os
     from clinica.iotools.converters.nifd_to_bids.utils.parse_clinical import Parse_clinical
     from clinica.utils.stream import cprint
+    import clinica.iotools.bids_utils as bids
 
     path_to_ida = os.path.join(path_to_clinical, 'ida.tsv')
     assert os.path.isfile(path_to_ida), 'Failed to create ida.tsv'
 
     cprint('Creating clinical data files')
 
+    bids.write_modality_agnostic_files('NIFD', bids_dir)
     pc = Parse_clinical(path_to_clinical)
     pc.make_all(bids_dir)
     pc.make_all_scans(to_convert)
