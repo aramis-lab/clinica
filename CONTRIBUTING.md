@@ -21,7 +21,7 @@ he current state of the code (feedback is more than welcome).
   Groups dedicated to Clinica](https://groups.google.com/g/clinica-user).
 
 
-## Making direct contributions (e.g. submitting a fix).
+## Making direct contributions (e.g. submitting a fix)
 
 If this is your first time contributing to an open source project, please read
 this very clear
@@ -170,26 +170,14 @@ This project uses [MkDocs](https://www.mkdocs.org/) tool with [Material
 theme](https://squidfunk.github.io/mkdocs-material/) and extra plugins to
 generate the documentation.
 
-- To test locally, you will need to install Clinica using [developer
-  installation](http://www.clinica.run/doc/Installation/#install-clinica)
-(If you are working on your *fork*, simply replace
-`git@github.com:aramis-lab/clinica.git` by
-`git@github.com:<username>/clinica.git` where `<username>` is your GitHub
-username)
+A folder named `docs` contains all the files to build the documentation. These
+files are written in Markdown format.  Documentation is built automatically for
+each PR. You can preview the output for your PR by remplacing and copying this
+URL in your browser:
 
-- Once done, you need to run MkDocs. Simply type:
-```Shell
-$ mkdocs serve
 ```
-
-- Finally, open up [`http://127.0.0.1:8000/`](http://127.0.0.1:8000/) in your
-  browser, and you should see the default home page being displayed.
-
-Please note that any modifications on the Markdown files or the configuration
-file (`mdkocs.yml`) will automatically update the [localhost
-website](http://127.0.0.1:8000).
-
-
+https://aramislab.paris.inria.fr/clinica/docs/public/<your-PR-ID>
+```
 
 ## License
 
