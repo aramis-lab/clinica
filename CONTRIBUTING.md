@@ -7,7 +7,7 @@ this project. For example, you can:
 * [Discuss of the current state of the code](https://github.com/aramis-lab/clinica/issues/new?assignees=&labels=&template=discussion.md&title=).
 * [Submit a bugfix](https://github.com/aramis-lab/clinica/compare).
 * [Propose a new feature](https://github.com/aramis-lab/clinica/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=).
-* Become a maintainer.
+* [Become a maintainer](mailto:clinica-user@googlegroups.com).
 
 
 ## Asking questions or reporting a bug or discussing the state of the code
