@@ -37,16 +37,16 @@ To sum up these steps:
 
 - Clone the project to your local computer:
 
-```Shell
-$ git clone git@github.com:<username>/clinica.git
+```{.sourceCode .bash}
+git clone git@github.com:<username>/clinica.git
 ```
 where `<username>` is your GitHub username.
 
 - Create a branch for the feature you want to work on. Since the branch name
   will appear on the pull request, use a meaningful name:
 
-```Shell
-$ git checkout -b <branch_name>
+```{.sourceCode .bash}
+git checkout -b <branch_name>
 ```
 (e.g. `git checkout -b fix_something_important`)
 
@@ -54,8 +54,8 @@ $ git checkout -b <branch_name>
 
 - To push your changes to your fork on GitHub, type:
 
-```Shell
-$ git push origin <branch_name>
+```{.sourceCode .bash}
+git push origin <branch_name>
 ```
 
 - Go to GitHub. The new branch will show up with a green Pull Request button.
@@ -75,7 +75,7 @@ steps:
 
 1. Add the main Clinica repository to your remote:
 
-   ```
+   ```{.sourceCode .bash}
    git remote add upstream https://github.com/aramis-lab/clinica.git
    ```
 
@@ -85,21 +85,21 @@ steps:
 2. Get the data associated with the remote (it will only download it and do
    nothing else):
 
-   ```
+   ```{.sourceCode .bash}
    git fetch upstream
    ```
 
 3. Let's say you want the latest version of the `dev` branch. Go to your own
    dev branch, then pull from the `upstream` remote:
 
-   ```
+   ```{.sourceCode .bash}
    git checkout dev
    git pull upstream dev
    ```
 Now your `dev` branch of your own fork is up to date with `aramislab/clinica`
 dev.
 
-### Solving conflicts in pull request 
+### Solving conflicts in pull request
 
 It may happen that your pull request has conflicts (your feature branch tries
 to modify the same portion of code as a recently made commit on the `dev`
@@ -108,8 +108,8 @@ One way of doing it would be to merge `upstream/dev` directly into your feature
 branch. We will rather rebase it, so that our git history in Clinica can keep a
 linear history.
 
-1. Go to your feature branch, and perform an interactive rebasing: 
-   ```
+1. Go to your feature branch, and perform an interactive rebasing:
+   ```{.sourceCode .bash}
    git checkout newfeature
    git rebase -i upstream/dev
    ```
@@ -123,12 +123,12 @@ linear history.
 2. Solve the conflicts, following git instructions.
 
 3. Once it is done, you can force push (because you have rewritten history):
-   ```
+   ```{.sourceCode .bash}
    git push --force
    ```
 
-   or 
-   ```
+   or
+   ```{.sourceCode .bash}
    git push --force origin newfeature
    ```
 
@@ -142,7 +142,7 @@ on the nature of the PR and the organisation of the commits in your fork. For
 example, a PR that fixes a typo will be integrated by "squash and merge" while
 a PR proposing a new pipeline will be probably integrated by "rebase and
 merge". In this case we would like to keep intermediate commit messages (if we
-consider them important for the project). 
+consider them important for the project).
 
 ## Coding/style conventions
 
