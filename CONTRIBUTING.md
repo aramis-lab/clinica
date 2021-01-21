@@ -115,8 +115,8 @@ linear history.
    ```
 
    Keep only the commits that must be applied at the top of `upstream/dev` that
-   correspond to your newfeature (more information
-   [here](https://thoughtbot.com/blog/git-interactive-rebase-squash-amend-rewriting-history)
+   correspond to `newfeature` (more information
+   [here](https://thoughtbot.com/blog/git-interactive-rebase-squash-amend-rewriting-history)).
 
    The conflict will appear once you validate the rebasing.
 
