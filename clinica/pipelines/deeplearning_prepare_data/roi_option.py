@@ -89,6 +89,7 @@ if __name__ == "__main__":
     import os
 
     from ...utils.inputs import clinica_file_reader
+    from ...utils.exceptions import ClinicaCAPSError
 
     parser = argparse.ArgumentParser(description="Temporary parser for the extraction of ROI tensors.")
 
@@ -122,11 +123,14 @@ if __name__ == "__main__":
     for subject in os.listdir(path.join(args.caps_directory, "subjects")):
         subject_path = path.join(args.caps_directory, "subjects", subject)
         for session in os.listdir(subject_path):
-            input_path = clinica_file_reader([subject], [session], args.caps_directory,
-                                             {"needed_pipeline": preprocessing,
-                                              "pattern": "*%s*.nii.gz" % input_pattern,
-                                              "description": "cropped output of t1-linear"})[0]
-            output_path = path.join(subject_path, session, "deeplearning_prepare_data", "roi_based", "t1_linear")
-            extract_roi(input_path, output_path, masks_location, input_pattern,
-                        roi_list=args.roi_list, uncrop_output=args.uncrop_output,
-                        template=templates_dict[preprocessing])
+            try:
+                input_path = clinica_file_reader([subject], [session], args.caps_directory,
+                                                 {"needed_pipeline": preprocessing,
+                                                  "pattern": "*%s*.nii.gz" % input_pattern,
+                                                  "description": "cropped output of t1-linear"})[0]
+                output_path = path.join(subject_path, session, "deeplearning_prepare_data", "roi_based", "t1_linear")
+                extract_roi(input_path, output_path, masks_location, input_pattern,
+                            roi_list=args.roi_list, uncrop_output=args.uncrop_output,
+                            template=templates_dict[preprocessing])
+            except ClinicaCAPSError:
+                print("Subject %s session %s was not treated." % (subject, session))
