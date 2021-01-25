@@ -204,6 +204,7 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI053S4813 for session ses-M48
             - Subject sub-ADNI053S5272 for session ses-M24
             - Subject sub-ADNI135S6284 for session ses-M12
+            - Subject sub-ADNI027S5170 for session ses-M72
 
 
     - **fMRI**
