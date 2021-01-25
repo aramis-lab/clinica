@@ -137,6 +137,9 @@ class AdniToBids(Converter):
         # Create the output folder if is not already existing
         os.makedirs(dest_dir, exist_ok=True)
         os.makedirs(path.join(dest_dir, 'conversion_info'), exist_ok=True)
+        version_number = len(os.listdir(path.join(dest_dir, 'conversion_info')))
+        conversion_dir = path.join(dest_dir, 'conversion_info', f'v{version_number}')
+        os.makedirs(conversion_dir)
         cprint(dest_dir)
 
         converters = {'T1': [adni_t1.convert_adni_t1],
@@ -153,4 +156,4 @@ class AdniToBids(Converter):
             if modality not in converters:
                 raise Exception('%s is not a valid input modality' % modality)
             for converter in converters[modality]:
-                converter(source_dir, clinical_dir, dest_dir, subjs_list, force_new_extraction)
+                converter(source_dir, clinical_dir, dest_dir, conversion_dir, subjs_list, force_new_extraction)

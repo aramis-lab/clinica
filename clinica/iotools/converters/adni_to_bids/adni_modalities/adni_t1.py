@@ -5,13 +5,14 @@ Module for converting T1 of ADNI
 """
 
 
-def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
+def convert_adni_t1(source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False):
     """Convert T1 MR images of ADNI into BIDS format
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
+        conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
@@ -30,14 +31,14 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_updat
         adni_merge = parsers.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of T1 images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
-    images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint(f'Calculating paths of T1 images. Output will be stored in {conversion_dir}.')
+    images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint('Paths of T1 images found. Exporting images into BIDS ...')
     paths_to_bids(images, dest_dir, 't1', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'T1 conversion done.' + Fore.RESET)
 
 
-def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
+def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
     """Compute the paths to T1 MR images and store them in a tsv file
 
     Args:
@@ -45,6 +46,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        conversion_dir: path to the TSV files including the paths to original images
 
     Returns:
         images: a dataframe with all the paths to the T1 MR images that will be converted into BIDS
@@ -117,6 +119,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('100_S_0995', 'm18'),
                          ('031_S_0867', 'm48'),
                          ('100_S_0892', 'm18'),
+                         ('003_S_6264', 'm12'),
                          # Empty folders
                          # ('029_S_0845', 'm24'),
                          # ('094_S_1267', 'm24'),
@@ -151,12 +154,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Checking for images paths in filesystem
     images = find_image_path(t1_df, source_dir, 'T1', 'S', 'Series_ID')
-
-    # Store the paths inside a file called conversion_info inside the input directory
-    t1_tsv_path = path.join(dest_dir, 'conversion_info')
-    if not path.exists(t1_tsv_path):
-        makedirs(t1_tsv_path)
-    images.to_csv(path.join(t1_tsv_path, 't1_paths.tsv'), sep='\t', index=False)
+    images.to_csv(path.join(conversion_dir, 't1_paths.tsv'), sep='\t', index=False)
 
     return images
 

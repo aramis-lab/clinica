@@ -5,7 +5,7 @@ Module for converting Tau PET of ADNI
 """
 
 
-def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
+def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False):
     """
     Convert Tau PET images of ADNI into BIDS format
 
@@ -13,6 +13,7 @@ def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
+        conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
@@ -29,14 +30,14 @@ def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_
         adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of TAU PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
-    images = compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint(f'Calculating paths of TAU PET images. Output will be stored in {conversion_dir}.')
+    images = compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint('Paths of TAU PET images found. Exporting images into BIDS ...')
     paths_to_bids(images, dest_dir, 'tau', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'TAU PET conversion done.' + Fore.RESET)
 
 
-def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
+def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
     """
     Compute the paths to Tau PET images
 
@@ -45,6 +46,7 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        conversion_dir: path to the TSV files including the paths to original images
 
     Returns: pandas Dataframe containing the path for each Tau PET image
 
@@ -105,10 +107,6 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Checking for images paths in filesystem
     images = find_image_path(pet_tau_df, source_dir, 'TAU', 'I', 'Image_ID')
-
-    tau_csv_path = path.join(dest_dir, 'conversion_info')
-    if not os.path.exists(tau_csv_path):
-        os.mkdir(tau_csv_path)
-    images.to_csv(path.join(tau_csv_path, 'tau_pet_paths.tsv'), sep='\t', index=False)
+    images.to_csv(path.join(conversion_dir, 'tau_pet_paths.tsv'), sep='\t', index=False)
 
     return images

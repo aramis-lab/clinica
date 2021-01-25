@@ -5,7 +5,7 @@ Module for converting FLAIR of ADNI
 """
 
 
-def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
+def convert_adni_flair(source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False):
     """
     Convert FLAIR images of ADNI into BIDS format
 
@@ -13,6 +13,7 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_up
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
+        conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
@@ -29,15 +30,15 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_up
         adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of FLAIR images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
-    images = compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint(f'Calculating paths of FLAIR images. Output will be stored in {conversion_dir}.')
+    images = compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint('Paths of FLAIR images found. Exporting images into BIDS ...')
     # flair_paths_to_bids(images, dest_dir)
     paths_to_bids(images, dest_dir, 'flair', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'FLAIR conversion done.' + Fore.RESET)
 
 
-def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
+def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
     """
     Compute the paths to the FLAIR images and store them in a tsv file
 
@@ -46,6 +47,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        conversion_dir: path to the TSV files including the paths to original images
 
     Returns:
         images: a dataframe with all the paths to the FLAIR images that will be converted into BIDS
@@ -123,6 +125,8 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('029_S_2395', 'm72'),
                          ('130_S_6043', 'bl'),
                          ('031_S_2018', 'bl'),
+                         ('027_S_5170', 'm72'),
+                         ('135_S_6284', 'm12'),
                          # Several output images
                          ('114_S_6039', 'bl')]
 
@@ -133,11 +137,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Checking for images paths in filesystem
     images = find_image_path(flair_df, source_dir, 'FLAIR', 'S', 'Series_ID')
-
-    flair_tsv_path = path.join(dest_dir, 'conversion_info')
-    if not path.exists(flair_tsv_path):
-        mkdir(flair_tsv_path)
-    images.to_csv(path.join(flair_tsv_path, 'flair_paths.tsv'), sep='\t', index=False)
+    images.to_csv(path.join(conversion_dir, 'flair_paths.tsv'), sep='\t', index=False)
 
     return images
 

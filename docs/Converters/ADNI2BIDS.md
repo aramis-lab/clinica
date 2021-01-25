@@ -140,6 +140,7 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI100S0995 for session ses-M18
             - Subject sub-ADNI031S0867 for session ses-M48
             - Subject sub-ADNI100S0892 for session ses-M18
+            - Subject sub-ADNI003S6264 for session ses-M12
         - _Image conversion does not generate an output file:_
             - Subject sub-ADNI029S0845 for session ses-M24
             - Subject sub-ADNI094S1267 for session ses-M24
@@ -155,6 +156,11 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI027S5118 for session ses-M00
             - Subject sub-ADNI094S2238 for session ses-M48
             - Subject sub-ADNI129S4287 for session ses-M00
+            - Subject sub-ADNI006S6252 for session ses-M12
+            - Subject sub-ADNI010S0419 for session ses-M156
+            - Subject sub-ADNI127S0259 for session ses-M156
+            - Subject sub-ADNI129S6830 for session ses-M00
+            - Subject sub-ADNI135S6104 for session ses-M24
         - _Two images are generated and we can not choose the correct one:_
             - Subject sub-ADNI098S4018 for session ses-M00
             - Subject sub-ADNI098S4003 for session ses-M12
@@ -168,6 +174,20 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI094S4630 for session ses-M06
             - Subject sub-ADNI094S4649 for session ses-M06
             - Subject sub-ADNI029S5219 for session ses-M24
+            - Subject sub-ADNI020S5203 for session ses-M72
+            - Subject sub-ADNI020S6185 for session ses-M24
+            - Subject sub-ADNI020S6513 for session ses-M12
+            - Subject sub-ADNI021S0178 for session ses-M156
+            - Subject sub-ADNI153S6336 for session ses-M12
+            - Subject sub-ADNI153S6755 for session ses-M00
+        - _Volume mismatch between .nii and .bvec / .bval files:_
+            - Subject sub-ADNI006S6610 for session ses-M00
+            - Subject sub-ADNI006S6682 for session ses-M00
+            - Subject sub-ADNI006S6696 for session ses-M00
+            - Subject sub-ADNI006S6770 for session ses-M00
+            - Subject sub-ADNI029S6289 for session ses-M00
+            - Subject sub-ADNI130S6043 for session ses-M00
+            - Subject sub-ADNI130S6329 for session ses-M00
         - _Wrong output dimensions:_
             - Subject sub-ADNI027S2219 for session ses-M36 (256 x 256 x 2013)
             - Subject sub-ADNI129S2332 for session ses-M12 (256 x 256 x 1549)
@@ -183,11 +203,17 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI128S4586 for session ses-M48
             - Subject sub-ADNI053S4813 for session ses-M48
             - Subject sub-ADNI053S5272 for session ses-M24
+            - Subject sub-ADNI135S6284 for session ses-M12
 
 
     - **fMRI**
         - _Image conversion does not generate an output file:_
             - Subject sub-ADNI006S4485 for session ses-M84
+            - Subject sub-ADNI123S4127 for session ses-M96
+        - _Interslice distance varies in the volume (incompatible with NIfTI format):_
+            - Subject sub-ADNI016S6802 for session ses-M00
+            - Subject sub-ADNI016S6816 for session ses-M00
+            - Subject sub-ADNI126S4891 for session ses-M84
 
     - **FDG PET**
         - _Image conversion does not generate an output file:_
