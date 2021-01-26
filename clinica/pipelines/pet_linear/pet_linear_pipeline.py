@@ -1,0 +1,154 @@
+# coding: utf8
+
+"""pet_linear - Clinica Pipeline.
+This file has been generated automatically by the `clinica generate template`
+command line tool. See here for more details: http://www.clinica.run/doc/InteractingWithClinica/.
+"""
+
+# WARNING: Don't put any import statement here except if it's absolutly
+# necessary. Put it *inside* the different methods.
+# Otherwise it will slow down the dynamic loading of the pipelines list by the
+# command line tool.
+import clinica.pipelines.engine as cpe
+
+
+# Use hash instead of parameters for iterables folder names
+# Otherwise path will be too long and generate OSError
+from nipype import config
+cfg = dict(execution={'parameterize_dirs': False})
+config.update_config(cfg)
+
+
+class pet_linear(cpe.Pipeline):
+    """pet_linear SHORT DESCRIPTION.
+
+    Warnings:
+        - A warning.
+
+    Todos:
+        - [x] A filled todo item.
+        - [ ] An ongoing todo item.
+
+    Returns:
+        A clinica pipeline object containing the pet_linear pipeline.
+
+    Raises:
+
+    """
+
+
+    def check_custom_dependencies(self):
+        """Check dependencies that can not be listed in the `info.json` file."""
+        pass
+
+
+    def get_input_fields(self):
+        """Specify the list of possible inputs of this pipeline.
+
+        Returns:
+            A list of (string) input fields name.
+        """
+
+        return ['t1w'] # Fill here the list
+
+
+    def get_output_fields(self):
+        """Specify the list of possible outputs of this pipeline.
+
+        Returns:
+            A list of (string) output fields name.
+        """
+
+        return [] # Fill here the list
+
+
+    def build_input_node(self):
+        """Build and connect an input node to the pipeline."""
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.stream import cprint
+        from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import T1W_NII
+        from clinica.utils.ux import print_images_to_process
+
+        # This node is supposedly used to load BIDS and/or CAPS inputs when this pipeline is
+        # not already connected to the output of a previous Clinica pipeline.
+        # For this example, we read T1w MRI data which are passed to a read_node with iterable.
+        # This allows to parallelize the pipelines accross sessions
+        # when connected to the `self.input_node`.
+
+        # Inputs from anat/ folder
+        # ========================
+        # T1w file:
+        try:
+            t1w_files = clinica_file_reader(self.subjects,
+                                            self.sessions,
+                                            self.bids_directory,
+                                            T1W_NII)
+        except ClinicaException as e:
+            err = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
+            raise ClinicaBIDSError(err)
+
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('The pipeline will last approximately 42 minutes per image.') # Replace by adequate computational time.
+
+        read_node = npe.Node(name="ReadingFiles",
+                             iterables=[
+                                 ('t1w', t1w_files),
+                             ],
+                             synchronize=True,
+                             interface=nutil.IdentityInterface(
+                                 fields=self.get_input_fields())
+                             )
+        self.connect([
+            (read_node, self.input_node, [('t1w', 't1w')]),
+        ])
+
+
+    def build_output_node(self):
+        """Build and connect an output node to the pipeline."""
+
+        # In the same idea as the input node, this output node is supposedly
+        # used to write the output fields in a CAPS. It should be executed only
+        # if this pipeline output is not already connected to a next Clinica
+        # pipeline.
+
+        pass
+
+
+    def build_core_nodes(self):
+        """Build and connect the core nodes of the pipeline."""
+
+        import pet_linear_utils as utils
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
+        # Step 1
+        # ======
+        node1 = npe.Node(name="Step1",
+                         interface=nutil.Function(
+                             input_names=['t1w', 'in_hello_word'],
+                             output_names=[],
+                             function=utils.step1))
+        node1.inputs.in_hello_word = self.parameters['hello_word']
+
+        # Step 2
+        # ======
+        node2 = npe.Node(name="Step2",
+                         interface=nutil.Function(
+                             input_names=['t1w', 'in_advanced_arg'],
+                             output_names=[],
+                             function=utils.step2))
+        node2.inputs.in_advanced_arg = self.parameters['advanced_argument']
+
+        # Connection
+        # ==========
+        self.connect([
+            # STEP 1
+            (self.input_node,      node1,    [('t1w',    't1w')]),
+            # STEP 2
+            (self.input_node,      node2,    [('t1w',    't1w')])
+        ])
