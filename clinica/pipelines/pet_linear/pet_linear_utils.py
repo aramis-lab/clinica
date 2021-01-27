@@ -17,6 +17,7 @@ def suvr_normalization(input_img, ref_mask):
        ref_mask (str): mask of the reference region
     Returns:
        output_img (nifty image): normalized nifty image
+       mask_template (nifty image): output mask on disk
     """
 
     import nibabel as nib
@@ -56,7 +57,7 @@ def crop_nifti(input_img, ref_crop):
        ref_img (str): template used to crop the image
     Returns:
        output_img (nifty image): crop image on disk.
-       crop_template: (nifty image): output template on disk.
+       crop_template (nifty image): output template on disk.
     """
 
     import nibabel as nib
