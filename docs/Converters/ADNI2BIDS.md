@@ -151,16 +151,33 @@ clinica convert adni-to-bids -h
 
     - **DWI**
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
-            - Subject sub-ADNI016S4638 for session ses-M00
+            - Subject sub-ADNI006S6252 for session ses-M12
             - Subject sub-ADNI007S4611 for session ses-M03
+            - Subject sub-ADNI010S0419 for session ses-M156
+            - Subject sub-ADNI016S4638 for session ses-M00
+            - Subject sub-ADNI021S5237 for session ses-M84
+            - Subject sub-ADNI027S2245 for session ses-M120
             - Subject sub-ADNI027S5118 for session ses-M00
             - Subject sub-ADNI094S2238 for session ses-M48
-            - Subject sub-ADNI129S4287 for session ses-M00
-            - Subject sub-ADNI006S6252 for session ses-M12
-            - Subject sub-ADNI010S0419 for session ses-M156
+            - Subject sub-ADNI099S6396 for session ses-M24
+            - Subject sub-ADNI126S4507 for session ses-M96
+            - Subject sub-ADNI126S4891 for session ses-M96
+            - Subject sub-ADNI126S4896 for session ses-M96
+            - Subject sub-ADNI126S6559 for session ses-M24
+            - Subject sub-ADNI126S6724 for session ses-M12
             - Subject sub-ADNI127S0259 for session ses-M156
-            - Subject sub-ADNI129S6830 for session ses-M00
+            - Subject sub-ADNI127S6203 for session ses-M24
+            - Subject sub-ADNI127S6330 for session ses-M24
+            - Subject sub-ADNI127S6512 for session ses-M24
+            - Subject sub-ADNI127S6549 for session ses-M24
+            - Subject sub-ADNI129S4287 for session ses-M00
+            - Subject sub-ADNI129S6459 for session ses-M24
+            - Subject sub-ADNI129S6763 for session ses-M12
+            - Subject sub-ADNI129S6784 for session ses-M12
+            - Subject sub-ADNI129S6830 for session ses-M00, ses-M12
             - Subject sub-ADNI135S6104 for session ses-M24
+            - Subject sub-ADNI135S6446 for session ses-M24
+            - Subject sub-ADNI301S6224 for session ses-M36
         - _Two images are generated and we can not choose the correct one:_
             - Subject sub-ADNI098S4018 for session ses-M00
             - Subject sub-ADNI098S4003 for session ses-M12
@@ -176,7 +193,9 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI029S5219 for session ses-M24
             - Subject sub-ADNI020S5203 for session ses-M72
             - Subject sub-ADNI020S6185 for session ses-M24
-            - Subject sub-ADNI020S6513 for session ses-M12
+            - Subject sub-ADNI020S6227 for session ses-M24
+            - Subject sub-ADNI020S6449 for session ses-M24
+            - Subject sub-ADNI020S6513 for session ses-M12, ses-M24
             - Subject sub-ADNI021S0178 for session ses-M156
             - Subject sub-ADNI153S6336 for session ses-M12
             - Subject sub-ADNI153S6755 for session ses-M00
@@ -185,7 +204,9 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI006S6682 for session ses-M00
             - Subject sub-ADNI006S6696 for session ses-M00
             - Subject sub-ADNI006S6770 for session ses-M00
+            - Subject sub-ADNI027S6183 for session ses-M24
             - Subject sub-ADNI029S6289 for session ses-M00
+            - Subject sub-ADNI123S6891 for session ses-M00
             - Subject sub-ADNI130S6043 for session ses-M00
             - Subject sub-ADNI130S6329 for session ses-M00
         - _Wrong output dimensions:_
@@ -205,6 +226,8 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI053S5272 for session ses-M24
             - Subject sub-ADNI135S6284 for session ses-M12
             - Subject sub-ADNI027S5170 for session ses-M72
+            - Subject sub-ADNI068S0127 for session ses-M180
+            - Subject sub-ADNI068S2187 for session ses-M120
 
 
     - **fMRI**
