@@ -127,6 +127,8 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_di
                          ('031_S_2018', 'bl'),
                          ('027_S_5170', 'm72'),
                          ('135_S_6284', 'm12'),
+                         ('068_S_0127', 'm180'),
+                         ('068_S_2187', 'm120'),
                          # Several output images
                          ('114_S_6039', 'bl')]
 
