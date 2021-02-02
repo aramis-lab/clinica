@@ -45,7 +45,7 @@ models. Use `--uncropped_image` flag if you do not want to crop the image.
     with clinica](../../InteractingWithClinica).
 
 !!! tip
-    Do not hesitate to type `clinica run pet-surface --help` to see the full
+    Do not hesitate to type `clinica run t1-linear --help` to see the full
     list of parameters.
 
 ## Outputs
