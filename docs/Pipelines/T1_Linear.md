@@ -44,6 +44,9 @@ models. Use `--uncropped_image` flag if you do not want to crop the image.
     The arguments common to all Clinica pipelines are described in [Interacting
     with clinica](../../InteractingWithClinica).
 
+!!! tip
+    Do not hesitate to type `clinica run pet-surface --help` to see the full
+    list of parameters.
 
 ## Outputs
 Results are stored in the following folder of the [CAPS
