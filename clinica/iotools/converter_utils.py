@@ -1,6 +1,19 @@
 # coding: utf8
 
 
+def sort_session_list(session_list):
+    session_idx = [int(session[5:]) for session in session_list]
+    session_idx.sort()
+    session_id_list = []
+    for session in session_idx:
+        if session < 10:
+            session_id_list.append(f'ses-M0{session}')
+        else:
+            session_id_list.append(f'ses-M{session}')
+
+    return session_id_list
+
+
 def print_statistics(summary_file, num_subjs, ses_aval, mmt):
     """
     Print to a given input file statistics about missing files and modalities
@@ -19,6 +32,8 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
     summary_file.write('Number of subjects converted: ' + str(num_subjs) + '\n')
     summary_file.write('Sessions available: '+ses_aval[0] + '\n')
 
+    ses_aval = sort_session_list(ses_aval)
+
     for ses in ses_aval:
         ses_miss = missing_list[ses]['session']
         ses_found = num_subjs - ses_miss
@@ -35,6 +50,76 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
                 num_miss_mod = missing_list[ses][mod]
                 percentage_missing = round((num_miss_mod*100/float(num_subjs - missing_list[ses]['session'])), 2)
                 summary_file.write(mod+': ' + str(num_miss_mod) + ' ('+str(percentage_missing) + '%) \n')
+
+
+def print_longitudinal_analysis(summary_file, bids_dir, out_dir, ses_aval, out_file_name):
+    """
+    Print to a given input file statistics about the present modalities
+    and diagnoses in a dataset for each session.
+
+    Args:
+        summary_file: path of the output file where write.
+        bids_dir: path to the BIDS directory
+        out_dir: output_dir of the check-missing-modality pipeline.
+        ses_aval: list of sessions available.
+        out_file_name: string that replace the default prefix ('missing_mods_') in the name of all the output files
+    """
+    import pandas as pd
+    from os import path
+
+    ses_aval = sort_session_list(ses_aval)
+
+    summary_file.write('**********************************************\n\n')
+    summary_file.write('Number of present diagnoses and modalities for each session:\n')
+
+    for ses in ses_aval:
+        ses_df = pd.read_csv(path.join(out_dir, out_file_name + ses + '.tsv'), sep="\t").set_index('participant_id')
+        mods_avail = ses_df.columns.values
+        mod_dict = dict()
+        for mod in mods_avail:
+            diagnosis_dict = dict()
+            subjects_avail = ses_df[ses_df[mod] == 1].index.values
+            for subject in subjects_avail:
+                subj_tsv_path = path.join(bids_dir, subject, f"{subject}_sessions.tsv")
+                subj_df = pd.read_csv(subj_tsv_path, sep="\t").set_index("session_id")
+                diagnosis = subj_df.loc[ses, "diagnosis"]
+                if diagnosis not in diagnosis_dict and isinstance(diagnosis, str):
+                    diagnosis_dict[diagnosis] = 1
+                elif isinstance(diagnosis, str):
+                    diagnosis_dict[diagnosis] += 1
+            mod_dict[mod] = diagnosis_dict
+
+        summary_file.write(f'{ses}\n')
+        print_table(summary_file, mod_dict)
+        summary_file.write('\n\n')
+
+
+def print_table(summary_file, double_dict):
+
+    # Find all keys at the second level of the dictionnary
+    diagnoses = set()
+    mods = double_dict.keys()
+    for mod in mods:
+        diagnoses = diagnoses | set(double_dict[mod].keys())
+
+    diagnoses = list(diagnoses)
+    diagnoses.sort()
+
+    summary_file.write('\t')
+    for diag in diagnoses:
+        summary_file.write(f'\t| {diag}')
+    summary_file.write('\n' + "-" * 8 * (len(diagnoses) + 2) + "\n")
+
+    for mod in double_dict.keys():
+        summary_file.write(f'{mod}')
+        if len(mod) < 8:
+            summary_file.write(f'\t')
+        for diag in diagnoses:
+            if diag not in double_dict[mod]:
+                summary_file.write(f'\t| 0')
+            else:
+                summary_file.write(f'\t| {double_dict[mod][diag]}')
+        summary_file.write('\n')
 
 
 def has_one_index(index_list):
