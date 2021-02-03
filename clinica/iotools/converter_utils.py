@@ -100,9 +100,10 @@ def print_longitudinal_analysis(summary_file, bids_dir, out_dir, ses_aval, out_f
 
 def increment_dict(dictionnary, key):
     if key not in dictionnary:
-        dictionnary[key] = 0
+        dictionnary[key] = 1
     else:
         dictionnary[key] += 1
+
 
 def print_table(summary_file, double_dict):
 
