@@ -416,11 +416,30 @@ Known conversion exceptions are removed from the list.
 
 
 ### Step 2: Path extraction
-In this step the input is a pandas dataframe of images containing metadata. Usually: `Subject_ID`, `VISCODE`, `Visit`, `Sequence`, `Scan_Date`, `Study_ID`, `Series_ID`, `Image_ID`. This dataframe is passed to the function `find_image_path(images, source_dir, modality, prefix, id_field)` in the `adni_utils.py` file. The source directory containing the downloaded ADNI images is used as the base path for the paths we will create next.
+In this step the input is a pandas dataframe of images containing metadata. 
+Usually: `Subject_ID`, `VISCODE`, `Visit`, `Sequence`, `Scan_Date`, `Study_ID`, `Series_ID`, `Image_ID`. 
+This dataframe is passed to the function `find_image_path(images, source_dir, modality, prefix, id_field)` 
+in the `adni_utils.py` file. The source directory containing the downloaded ADNI images is used as the base 
+path for the paths we will create next.
 
-For each image in the dataframe, we create the path to the folder of the subject and the corresponding image sequence (after escaping special characters). Inside these folders, there are folders named as timestamps corresponding to the dates of the different scans with the same sequence name for the current subject. Inside each of these "timestamp" folders there is another folder with the corresponding series ID or image ID (depending on the modality). Since the exact timestamp of a scan is hard to obtain, we need to iterate through the "timestamp" folders to see which one contains the folder named as the identifier we are looking for. Once we have this folder we can see if there is an image inside it and if it is a NIfTI file or a series of DICOM files. If the image is in NIfTI format, the path to the file is saved. If it is a DICOM image, the path to the folder is saved. If at some point we do not find a corresponding folder for the subject, the sequence, or the image or series identifier, we save an empty path.
+For each image in the dataframe, we create the path to the folder of the subject and the corresponding image 
+sequence (after escaping special characters). Inside these folders, there are folders named as timestamps 
+corresponding to the dates of the different scans with the same sequence name for the current subject. 
+Inside each of these "timestamp" folders there is another folder with the corresponding series ID or image ID 
+(depending on the modality). Since the exact timestamp of a scan is hard to obtain, we need to iterate through 
+the "timestamp" folders to see which one contains the folder named as the identifier we are looking for. 
+Once we have this folder we can see if there is an image inside it and if it is a NIfTI file or a series of DICOM files. 
+If the image is in NIfTI format, the path to the file is saved. If it is a DICOM image, the path to the folder is saved. 
+If at some point we do not find a corresponding folder for the subject, the sequence, or the image or series identifier, 
+we save an empty path.
 
-The result of this step is a `MODALITY_paths.tsv` file (e.g. `mri_paths.tsv`) containing the list of image metadata, paths and whether the images are DICOM or NIfTI. It will be located in the BIDS output folder in a directory called `conversion_info`.
+The result of this step is a `MODALITY_paths.tsv` file (e.g. `t1_paths.tsv`) containing the list of image metadata, 
+paths and whether the images are DICOM or NIfTI. It will be located in the BIDS output folder in a directory 
+called `conversion_info`.
+
+!!! note "Use of symlinks"
+    If a symlink is used for the folder of the imaging data, the `MODALITY_paths.tsv` files will include
+    the paths using the symlink (and not the real path).
 
 ### Step 3: Paths to BIDS conversion
 In this step the images in the dataframe are going to be converted into NIfTI images stored in a BIDS tree hierarchy. Most of the modalities use the function `paths_to_bids(images, bids_dir, modality)` that creates multiple parallel processes to accelerate the conversion of the images. The main steps are, for each image (inside the function `create_file`):
