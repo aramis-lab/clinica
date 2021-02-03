@@ -5,7 +5,7 @@ Module for converting DWI of ADNI
 """
 
 
-def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
+def convert_adni_dwi(source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False):
     """
     Convert DW images of ADNI into BIDS format
 
@@ -13,6 +13,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_upda
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
+        conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
@@ -29,15 +30,15 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_upda
         adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of DWI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
-    images = compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint(f'Calculating paths of DWI images. Output will be stored in {conversion_dir}.')
+    images = compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint('Paths of DWI images found. Exporting images into BIDS ...')
     # dwi_paths_to_bids(images, dest_dir)
     paths_to_bids(images, dest_dir, 'dwi', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'DWI conversion done.' + Fore.RESET)
 
 
-def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
+def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
     """
     Compute paths to DW images to convert to BIDS
 
@@ -46,6 +47,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        conversion_dir: path to the TSV files including the paths to original images
 
     Returns:
         images: pandas dataframe that contains the path to all the DW images to convert
@@ -139,6 +141,50 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('153_S_6336', 'bl'),
                          ('153_S_6450', 'bl'),
                          ('003_S_4441', 'm12'),
+                         # Eq_1 Images
+                         ('006_S_6252', 'm12'),
+                         ('010_S_0419', 'm156'),
+                         ('127_S_0259', 'm156'),
+                         ('129_S_6830', 'bl'),
+                         ('135_S_6104', 'm24'),
+                         ('021_S_5237', 'm84'),
+                         ('027_S_2245', 'm120'),
+                         ('099_S_6396', 'm24'),
+                         ('126_S_4507', 'm96'),
+                         ('126_S_4891', 'm96'),
+                         ('126_S_4896', 'm96'),
+                         ('126_S_6559', 'm24'),
+                         ('126_S_6724', 'm12'),
+                         ('127_S_6203', 'm24'),
+                         ('127_S_6330', 'm24'),
+                         ('127_S_6512', 'm24'),
+                         ('127_S_6549', 'm24'),
+                         ('129_S_6459', 'm24'),
+                         ('129_S_6763', 'm12'),
+                         ('129_S_6784', 'm12'),
+                         ('129_S_6830', 'm12'),
+                         ('135_S_6446', 'm24'),
+                         ('301_S_6224', 'm36'),
+                         # Missing .bval and .bvec
+                         ('020_S_5203', 'm72'),
+                         ('020_S_6185', 'm24'),
+                         ('020_S_6513', 'm12'),
+                         ('021_S_0178', 'm156'),
+                         ('153_S_6336', 'm12'),
+                         ('153_S_6755', 'bl'),
+                         ('020_S_6227', 'm24'),
+                         ('020_S_6449', 'm24'),
+                         ('020_S_6513', 'm24'),
+                         # Volume mismatch between .nii and .bvec / .bval
+                         ('006_S_6610', 'bl'),
+                         ('006_S_6682', 'bl'),
+                         ('006_S_6696', 'bl'),
+                         ('006_S_6770', 'bl'),
+                         ('029_S_6289', 'bl'),
+                         ('130_S_6043', 'bl'),
+                         ('130_S_6329', 'bl'),
+                         ('027_S_6183', 'm24'),
+                         ('123_S_6891', 'bl'),
                          # Several output images
                          ('029_S_2395', 'm72')]
 
@@ -149,11 +195,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Checking for images paths in filesystem
     images = find_image_path(dwi_df, source_dir, 'DWI', 'S', 'Series_ID')
-
-    dwi_tsv_path = path.join(dest_dir, 'conversion_info')
-    if not path.exists(dwi_tsv_path):
-        mkdir(dwi_tsv_path)
-    images.to_csv(path.join(dwi_tsv_path, 'dwi_paths.tsv'), sep='\t', index=False)
+    images.to_csv(path.join(conversion_dir, 'dwi_paths.tsv'), sep='\t', index=False)
 
     return images
 

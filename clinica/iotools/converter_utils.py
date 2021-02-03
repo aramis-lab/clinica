@@ -1,6 +1,19 @@
 # coding: utf8
 
 
+def sort_session_list(session_list):
+    session_idx = [int(session[5:]) for session in session_list]
+    session_idx.sort()
+    session_id_list = []
+    for session in session_idx:
+        if session < 10:
+            session_id_list.append(f'ses-M0{session}')
+        else:
+            session_id_list.append(f'ses-M{session}')
+
+    return session_id_list
+
+
 def print_statistics(summary_file, num_subjs, ses_aval, mmt):
     """
     Print to a given input file statistics about missing files and modalities
@@ -15,15 +28,16 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
         mmt: object MissingModsTracker
     """
     missing_list = mmt.get_missing_list()
+    ses_aval = sort_session_list(ses_aval)
     summary_file.write('**********************************************\n')
-    summary_file.write('Number of subjects converted: ' + str(num_subjs) + '\n')
-    summary_file.write('Sessions available: '+ses_aval[0] + '\n')
+    summary_file.write(f'Number of subjects converted: {num_subjs}\n')
+    summary_file.write(f'Sessions available: {ses_aval}\n')
 
     for ses in ses_aval:
         ses_miss = missing_list[ses]['session']
         ses_found = num_subjs - ses_miss
         perc_ses_found = ses_found*100/num_subjs
-        summary_file.write('Number of sessions '+ses+" found: "+str(ses_found)+' ('+str(perc_ses_found)+'%)\n')
+        summary_file.write(f'Number of sessions {ses} found: {ses_found} ({perc_ses_found}%)\n')
 
     summary_file.write('**********************************************\n\n')
     summary_file.write('Number of missing modalities for each session:\n')
@@ -34,7 +48,7 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
             if mod != 'session':
                 num_miss_mod = missing_list[ses][mod]
                 percentage_missing = round((num_miss_mod*100/float(num_subjs - missing_list[ses]['session'])), 2)
-                summary_file.write(mod+': ' + str(num_miss_mod) + ' ('+str(percentage_missing) + '%) \n')
+                summary_file.write(f'{mod}: {num_miss_mod} ({percentage_missing}%) \n')
 
 
 def has_one_index(index_list):

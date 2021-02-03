@@ -5,13 +5,14 @@ Module for converting FDG PET of ADNI
 """
 
 
-def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
+def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False):
     """Convert FDG PET images of ADNI into BIDS format
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
+        conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
     """
@@ -26,14 +27,14 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_
         adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of FDG PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
-    images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint(f'Calculating paths of FDG PET images. Output will be stored in {conversion_dir}.')
+    images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint('Paths of FDG PET images found. Exporting images into BIDS ...')
     paths_to_bids(images, dest_dir, 'fdg', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'FDG PET conversion done.' + Fore.RESET)
 
 
-def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
+def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
     """Compute the paths to the FDG PET images and store them in a tsv file
 
     Args:
@@ -41,6 +42,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        conversion_dir: path to the TSV files including the paths to original images
 
     Returns:
         images: a dataframe with all the paths to the PET images that will be converted into BIDS
@@ -108,10 +110,6 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         pet_fdg_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_fdg_df, source_dir, 'FDG', 'I', 'Image_ID')
-
-    fdg_csv_path = path.join(dest_dir, 'conversion_info')
-    if not os.path.exists(fdg_csv_path):
-        os.mkdir(fdg_csv_path)
-    images.to_csv(path.join(fdg_csv_path, 'fdg_pet_paths.tsv'), sep='\t', index=False)
+    images.to_csv(path.join(conversion_dir, 'fdg_pet_paths.tsv'), sep='\t', index=False)
 
     return images

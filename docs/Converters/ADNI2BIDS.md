@@ -140,6 +140,7 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI100S0995 for session ses-M18
             - Subject sub-ADNI031S0867 for session ses-M48
             - Subject sub-ADNI100S0892 for session ses-M18
+            - Subject sub-ADNI003S6264 for session ses-M12
         - _Image conversion does not generate an output file:_
             - Subject sub-ADNI029S0845 for session ses-M24
             - Subject sub-ADNI094S1267 for session ses-M24
@@ -150,11 +151,33 @@ clinica convert adni-to-bids -h
 
     - **DWI**
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
-            - Subject sub-ADNI016S4638 for session ses-M00
+            - Subject sub-ADNI006S6252 for session ses-M12
             - Subject sub-ADNI007S4611 for session ses-M03
+            - Subject sub-ADNI010S0419 for session ses-M156
+            - Subject sub-ADNI016S4638 for session ses-M00
+            - Subject sub-ADNI021S5237 for session ses-M84
+            - Subject sub-ADNI027S2245 for session ses-M120
             - Subject sub-ADNI027S5118 for session ses-M00
             - Subject sub-ADNI094S2238 for session ses-M48
+            - Subject sub-ADNI099S6396 for session ses-M24
+            - Subject sub-ADNI126S4507 for session ses-M96
+            - Subject sub-ADNI126S4891 for session ses-M96
+            - Subject sub-ADNI126S4896 for session ses-M96
+            - Subject sub-ADNI126S6559 for session ses-M24
+            - Subject sub-ADNI126S6724 for session ses-M12
+            - Subject sub-ADNI127S0259 for session ses-M156
+            - Subject sub-ADNI127S6203 for session ses-M24
+            - Subject sub-ADNI127S6330 for session ses-M24
+            - Subject sub-ADNI127S6512 for session ses-M24
+            - Subject sub-ADNI127S6549 for session ses-M24
             - Subject sub-ADNI129S4287 for session ses-M00
+            - Subject sub-ADNI129S6459 for session ses-M24
+            - Subject sub-ADNI129S6763 for session ses-M12
+            - Subject sub-ADNI129S6784 for session ses-M12
+            - Subject sub-ADNI129S6830 for session ses-M00, ses-M12
+            - Subject sub-ADNI135S6104 for session ses-M24
+            - Subject sub-ADNI135S6446 for session ses-M24
+            - Subject sub-ADNI301S6224 for session ses-M36
         - _Two images are generated and we can not choose the correct one:_
             - Subject sub-ADNI098S4018 for session ses-M00
             - Subject sub-ADNI098S4003 for session ses-M12
@@ -168,6 +191,24 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI094S4630 for session ses-M06
             - Subject sub-ADNI094S4649 for session ses-M06
             - Subject sub-ADNI029S5219 for session ses-M24
+            - Subject sub-ADNI020S5203 for session ses-M72
+            - Subject sub-ADNI020S6185 for session ses-M24
+            - Subject sub-ADNI020S6227 for session ses-M24
+            - Subject sub-ADNI020S6449 for session ses-M24
+            - Subject sub-ADNI020S6513 for session ses-M12, ses-M24
+            - Subject sub-ADNI021S0178 for session ses-M156
+            - Subject sub-ADNI153S6336 for session ses-M12
+            - Subject sub-ADNI153S6755 for session ses-M00
+        - _Volume mismatch between .nii and .bvec / .bval files:_
+            - Subject sub-ADNI006S6610 for session ses-M00
+            - Subject sub-ADNI006S6682 for session ses-M00
+            - Subject sub-ADNI006S6696 for session ses-M00
+            - Subject sub-ADNI006S6770 for session ses-M00
+            - Subject sub-ADNI027S6183 for session ses-M24
+            - Subject sub-ADNI029S6289 for session ses-M00
+            - Subject sub-ADNI123S6891 for session ses-M00
+            - Subject sub-ADNI130S6043 for session ses-M00
+            - Subject sub-ADNI130S6329 for session ses-M00
         - _Wrong output dimensions:_
             - Subject sub-ADNI027S2219 for session ses-M36 (256 x 256 x 2013)
             - Subject sub-ADNI129S2332 for session ses-M12 (256 x 256 x 1549)
@@ -183,11 +224,20 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI128S4586 for session ses-M48
             - Subject sub-ADNI053S4813 for session ses-M48
             - Subject sub-ADNI053S5272 for session ses-M24
+            - Subject sub-ADNI135S6284 for session ses-M12
+            - Subject sub-ADNI027S5170 for session ses-M72
+            - Subject sub-ADNI068S0127 for session ses-M180
+            - Subject sub-ADNI068S2187 for session ses-M120
 
 
     - **fMRI**
         - _Image conversion does not generate an output file:_
             - Subject sub-ADNI006S4485 for session ses-M84
+            - Subject sub-ADNI123S4127 for session ses-M96
+        - _Interslice distance varies in the volume (incompatible with NIfTI format):_
+            - Subject sub-ADNI016S6802 for session ses-M00
+            - Subject sub-ADNI016S6816 for session ses-M00
+            - Subject sub-ADNI126S4891 for session ses-M84
 
     - **FDG PET**
         - _Image conversion does not generate an output file:_
@@ -366,11 +416,30 @@ Known conversion exceptions are removed from the list.
 
 
 ### Step 2: Path extraction
-In this step the input is a pandas dataframe of images containing metadata. Usually: `Subject_ID`, `VISCODE`, `Visit`, `Sequence`, `Scan_Date`, `Study_ID`, `Series_ID`, `Image_ID`. This dataframe is passed to the function `find_image_path(images, source_dir, modality, prefix, id_field)` in the `adni_utils.py` file. The source directory containing the downloaded ADNI images is used as the base path for the paths we will create next.
+In this step the input is a pandas dataframe of images containing metadata. 
+Usually: `Subject_ID`, `VISCODE`, `Visit`, `Sequence`, `Scan_Date`, `Study_ID`, `Series_ID`, `Image_ID`. 
+This dataframe is passed to the function `find_image_path(images, source_dir, modality, prefix, id_field)` 
+in the `adni_utils.py` file. The source directory containing the downloaded ADNI images is used as the base 
+path for the paths we will create next.
 
-For each image in the dataframe, we create the path to the folder of the subject and the corresponding image sequence (after escaping special characters). Inside these folders, there are folders named as timestamps corresponding to the dates of the different scans with the same sequence name for the current subject. Inside each of these "timestamp" folders there is another folder with the corresponding series ID or image ID (depending on the modality). Since the exact timestamp of a scan is hard to obtain, we need to iterate through the "timestamp" folders to see which one contains the folder named as the identifier we are looking for. Once we have this folder we can see if there is an image inside it and if it is a NIfTI file or a series of DICOM files. If the image is in NIfTI format, the path to the file is saved. If it is a DICOM image, the path to the folder is saved. If at some point we do not find a corresponding folder for the subject, the sequence, or the image or series identifier, we save an empty path.
+For each image in the dataframe, we create the path to the folder of the subject and the corresponding image 
+sequence (after escaping special characters). Inside these folders, there are folders named as timestamps 
+corresponding to the dates of the different scans with the same sequence name for the current subject. 
+Inside each of these "timestamp" folders there is another folder with the corresponding series ID or image ID 
+(depending on the modality). Since the exact timestamp of a scan is hard to obtain, we need to iterate through 
+the "timestamp" folders to see which one contains the folder named as the identifier we are looking for. 
+Once we have this folder we can see if there is an image inside it and if it is a NIfTI file or a series of DICOM files. 
+If the image is in NIfTI format, the path to the file is saved. If it is a DICOM image, the path to the folder is saved. 
+If at some point we do not find a corresponding folder for the subject, the sequence, or the image or series identifier, 
+we save an empty path.
 
-The result of this step is a `MODALITY_paths.tsv` file (e.g. `mri_paths.tsv`) containing the list of image metadata, paths and whether the images are DICOM or NIfTI. It will be located in the BIDS output folder in a directory called `conversion_info`.
+The result of this step is a `MODALITY_paths.tsv` file (e.g. `t1_paths.tsv`) containing the list of image metadata, 
+paths and whether the images are DICOM or NIfTI. It will be located in the BIDS output folder in a directory 
+called `conversion_info`.
+
+!!! note "Use of symlinks"
+    If a symlink is used for the folder of the imaging data, the `MODALITY_paths.tsv` files will include
+    the paths using the symlink (and not the real path).
 
 ### Step 3: Paths to BIDS conversion
 In this step the images in the dataframe are going to be converted into NIfTI images stored in a BIDS tree hierarchy. Most of the modalities use the function `paths_to_bids(images, bids_dir, modality)` that creates multiple parallel processes to accelerate the conversion of the images. The main steps are, for each image (inside the function `create_file`):

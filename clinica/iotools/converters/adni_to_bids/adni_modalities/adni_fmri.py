@@ -5,7 +5,7 @@ Module for converting fMRI of ADNI
 """
 
 
-def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_update=False):
+def convert_adni_fmri(source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False):
     """
     Convert fMR images of ADNI into BIDS format
 
@@ -13,6 +13,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_upd
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
+        conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
@@ -29,15 +30,15 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None, mod_to_upd
         adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of fMRI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
-    images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint(f'Calculating paths of fMRI images. Output will be stored in {conversion_dir}.')
+    images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
     # fmri_paths_to_bids(dest_dir, images)
     paths_to_bids(images, dest_dir, 'fmri', mod_to_update=mod_to_update)
     cprint(Fore.GREEN + 'fMRI conversion done.' + Fore.RESET)
 
 
-def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
+def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
     """
     Compute the paths to fMR images
 
@@ -46,6 +47,7 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        conversion_dir: path to the TSV files including the paths to original images
 
     Returns: pandas Dataframe containing the path for each fmri
 
@@ -112,11 +114,15 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
     # Exceptions
     # ==========
     conversion_errors = [('006_S_4485', 'm84'),
+                         ('123_S_4127', 'm96'),
                          # Eq_1
                          ('094_S_4503', 'm24'),
                          ('009_S_4388', 'm72'),
                          ('036_S_6088', 'bl'),
                          ('036_S_6134', 'bl'),
+                         ('016_S_6802', 'bl'),
+                         ('016_S_6816', 'bl'),
+                         ('126_S_4891', 'm84'),
                          # Multiple images
                          ('029_S_2395', 'm72')]
 
@@ -127,11 +133,7 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Checking for images paths in filesystem
     images = find_image_path(fmri_df, source_dir, 'fMRI', 'S', 'Series_ID')
-
-    fmri_tsv_path = path.join(dest_dir, 'conversion_info')
-    if not path.exists(fmri_tsv_path):
-        mkdir(fmri_tsv_path)
-    images.to_csv(path.join(fmri_tsv_path, 'fmri_paths.tsv'), sep='\t', index=False)
+    images.to_csv(path.join(conversion_dir, 'fmri_paths.tsv'), sep='\t', index=False)
 
     return images
 
