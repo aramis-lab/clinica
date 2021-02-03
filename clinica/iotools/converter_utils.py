@@ -82,17 +82,27 @@ def print_longitudinal_analysis(summary_file, bids_dir, out_dir, ses_aval, out_f
             for subject in subjects_avail:
                 subj_tsv_path = path.join(bids_dir, subject, f"{subject}_sessions.tsv")
                 subj_df = pd.read_csv(subj_tsv_path, sep="\t").set_index("session_id")
-                diagnosis = subj_df.loc[ses, "diagnosis"]
-                if diagnosis not in diagnosis_dict and isinstance(diagnosis, str):
-                    diagnosis_dict[diagnosis] = 1
-                elif isinstance(diagnosis, str):
-                    diagnosis_dict[diagnosis] += 1
+                if ses in subj_df.index.values:
+                    diagnosis = subj_df.loc[ses, "diagnosis"]
+                    if isinstance(diagnosis, str):
+                        increment_dict(diagnosis_dict, diagnosis)
+                    else:
+                        increment_dict(diagnosis_dict, "n/a")
+                else:
+                    increment_dict(diagnosis_dict, "missing")
+
             mod_dict[mod] = diagnosis_dict
 
         summary_file.write(f'{ses}\n')
         print_table(summary_file, mod_dict)
         summary_file.write('\n\n')
 
+
+def increment_dict(dictionnary, key):
+    if key not in dictionnary:
+        dictionnary[key] = 0
+    else:
+        dictionnary[key] += 1
 
 def print_table(summary_file, double_dict):
 
