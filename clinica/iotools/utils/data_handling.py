@@ -357,7 +357,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
         output_prefix: string that replace the default prefix ('missing_mods_') in the name of all the output files
     created
     """
-    from ..converter_utils import MissingModsTracker, print_statistics
+    from ..converter_utils import MissingModsTracker, print_statistics, print_longitudinal_analysis
     import os
     from os import path
     import pandas as pd
@@ -382,6 +382,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
         out_file_name = output_prefix + '_'
 
     summary_file = open(path.join(out_dir, out_file_name + 'summary.txt'), 'w')
+    analysis_file = open(path.join(out_dir, 'analysis.txt'), 'w')
     missing_mods_df = pd.DataFrame(columns=cols_dataframe)
     row_to_append_df = pd.DataFrame(columns=cols_dataframe)
     subjects_paths_lists = glob(path.join(bids_dir, '*sub-*'))
@@ -476,6 +477,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
         missing_mods_df = pd.DataFrame(columns=cols_dataframe)
 
     print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt)
+    print_longitudinal_analysis(analysis_file, bids_dir, out_dir, sessions_found, out_file_name)
 
 
 def create_subs_sess_list(input_dir, output_dir,
