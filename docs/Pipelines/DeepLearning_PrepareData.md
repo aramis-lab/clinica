@@ -21,7 +21,7 @@ pipeline](../PET_Volume)  prior to running this pipeline. -->
 
 You need to have performed the [`t1-linear` pipeline](../T1_Linear) or
 [`t1-extensive
-pipeline](https://clinicadl.readthedocs.io/en/latest/Preprocessing/T1_Extensive/)
+pipeline`](https://clinicadl.readthedocs.io/en/latest/Preprocessing/T1_Extensive/)
 on your T1-weighted MRI. There exists an option to convert custom nifty images
 into tensors. This option is chosen by adding the parameter `custom` to the
 command line instruction and a known suffix, as explained below. 
