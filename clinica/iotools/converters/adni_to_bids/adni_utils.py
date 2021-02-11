@@ -348,6 +348,8 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     For ADNI3 participants with a filled DX_bl, we keep this value for
     diagnosis_sc because else the information about SMC participants is lost.
 
+    The identification of SMC, EMCI, LMCI is lost in ADNI3.
+
     Args:
         clinical_data_dir: path to the input folder containing clinical data.
         participants_df: DataFrame containing metadata at the participant level.
@@ -359,8 +361,7 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
 
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
     dxsum_df = pd.read_csv(path.join(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL.csv")).set_index(['PTID', 'VISCODE2'])
-    missing_sc = participants_df[(participants_df.diagnosis_sc == "n/a") &
-                                 (participants_df.original_study == "ADNI3")]
+    missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
         diagnosis_sc = diagnosis_dict[dxsum_df.loc[(alternative_id, "sc"), "DIAGNOSIS"].values[0]]
