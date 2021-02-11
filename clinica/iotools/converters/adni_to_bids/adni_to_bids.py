@@ -69,6 +69,9 @@ class AdniToBids(Converter):
         participants_df['sex'] = participants_df['sex'].replace('Male', 'M')
         participants_df['sex'] = participants_df['sex'].replace('Female', 'F')
 
+        # Correction of diagnosis_sc for ADNI3 participants
+        participants_df = adni_utils.correct_diagnosis_sc_adni3(clinical_data_dir, participants_df)
+
         participants_df.to_csv(path.join(out_path, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
         # -- Creation of sessions.tsv --

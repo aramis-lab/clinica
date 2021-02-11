@@ -341,6 +341,35 @@ def get_images_pet(subject, pet_qc_subj, subject_pet_meta, df_cols, modality, se
     return subj_dfs_list
 
 
+def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
+    """
+    Add missing diagnosis at screening in ADNI3 due to changes in DX_bl
+    see https://groups.google.com/g/adni-data/c/whYhKafN_0Q.
+    For ADNI3 participants with a filled DX_bl, we keep this value for
+    diagnosis_sc because else the information about SMC participants is lost.
+
+    Args:
+        clinical_data_dir: path to the input folder containing clinical data.
+        participants_df: DataFrame containing metadata at the participant level.
+    Returns:
+        Corrected participants_df.
+    """
+    import pandas as pd
+    from os import path
+
+    diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
+    dxsum_df = pd.read_csv(path.join(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL.csv")).set_index(['PTID', 'VISCODE2'])
+    missing_sc = participants_df[(participants_df.diagnosis_sc == "n/a") &
+                                 (participants_df.original_study == "ADNI3")]
+    participants_df.set_index("alternative_id_1", drop=True, inplace=True)
+    for alternative_id in missing_sc.alternative_id_1.values:
+        diagnosis_sc = diagnosis_dict[dxsum_df.loc[(alternative_id, "sc"), "DIAGNOSIS"].values[0]]
+        participants_df.loc[alternative_id, "diagnosis_sc"] = diagnosis_sc
+
+    participants_df.reset_index(inplace=True, drop=False)
+    return participants_df
+
+
 def replace_sequence_chars(sequence_name):
     """
     Replace special characters in the sequence by underscores (as done for corresponding folder names in ADNI)
