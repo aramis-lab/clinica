@@ -345,8 +345,6 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     """
     Add missing diagnosis at screening in ADNI3 due to changes in DX_bl
     see https://groups.google.com/g/adni-data/c/whYhKafN_0Q.
-    For ADNI3 participants with a filled DX_bl, we keep this value for
-    diagnosis_sc because else the information about SMC participants is lost.
 
     The identification of SMC, EMCI, LMCI is lost in ADNI3.
 
