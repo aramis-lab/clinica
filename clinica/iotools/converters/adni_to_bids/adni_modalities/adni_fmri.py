@@ -5,7 +5,9 @@ Module for converting fMRI of ADNI
 """
 
 
-def convert_adni_fmri(source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False):
+def convert_adni_fmri(
+    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+):
     """
     Convert fMR images of ADNI into BIDS format
 
@@ -26,16 +28,20 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
 
     if subjs_list is None:
-        adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
+        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
+        adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint(f'Calculating paths of fMRI images. Output will be stored in {conversion_dir}.')
-    images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
-    cprint('Paths of fMRI images found. Exporting images into BIDS ...')
+    cprint(
+        f"Calculating paths of fMRI images. Output will be stored in {conversion_dir}."
+    )
+    images = compute_fmri_path(
+        source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
+    )
+    cprint("Paths of fMRI images found. Exporting images into BIDS ...")
     # fmri_paths_to_bids(dest_dir, images)
-    paths_to_bids(images, dest_dir, 'fmri', mod_to_update=mod_to_update)
-    cprint(Fore.GREEN + 'fMRI conversion done.' + Fore.RESET)
+    paths_to_bids(images, dest_dir, "fmri", mod_to_update=mod_to_update)
+    cprint(Fore.GREEN + "fMRI conversion done." + Fore.RESET)
 
 
 def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
@@ -55,42 +61,70 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
 
     from os import path, mkdir
     import pandas as pd
-    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        find_image_path,
+        visits_to_timepoints,
+    )
 
-    fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
-                'Study_ID', 'Field_Strength', 'Series_ID', 'Image_ID']
+    fmri_col = [
+        "Subject_ID",
+        "VISCODE",
+        "Visit",
+        "Sequence",
+        "Scan_Date",
+        "Study_ID",
+        "Field_Strength",
+        "Series_ID",
+        "Image_ID",
+    ]
     fmri_df = pd.DataFrame(columns=fmri_col)
     fmri_dfs_list = []
 
     # Loading needed .csv files
-    adni_merge = pd.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
+    adni_merge = pd.read_csv(
+        path.join(csv_dir, "ADNIMERGE.csv"), sep=",", low_memory=False
+    )
 
-    mayo_mri_qc = pd.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',', low_memory=False)
-    mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'fMRI']
+    mayo_mri_qc = pd.read_csv(
+        path.join(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15.csv"),
+        sep=",",
+        low_memory=False,
+    )
+    mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "fMRI"]
     mayo_mri_qc.columns = [x.upper() for x in mayo_mri_qc.columns]
 
-    mayo_mri_qc3 = pd.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_QUALITY_ADNI3.csv'), sep=',', low_memory=False)
-    mayo_mri_qc3 = mayo_mri_qc3[mayo_mri_qc3.SERIES_TYPE == 'EPB']
+    mayo_mri_qc3 = pd.read_csv(
+        path.join(csv_dir, "MAYOADIRL_MRI_QUALITY_ADNI3.csv"), sep=",", low_memory=False
+    )
+    mayo_mri_qc3 = mayo_mri_qc3[mayo_mri_qc3.SERIES_TYPE == "EPB"]
 
     # Concatenating visits in both QC files
-    mayo_mri_qc = pd.concat([mayo_mri_qc, mayo_mri_qc3], axis=0, ignore_index=True, sort=False)
+    mayo_mri_qc = pd.concat(
+        [mayo_mri_qc, mayo_mri_qc3], axis=0, ignore_index=True, sort=False
+    )
 
-    mri_list = pd.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',', low_memory=False)
+    mri_list = pd.read_csv(path.join(csv_dir, "MRILIST.csv"), sep=",", low_memory=False)
 
     # Selecting only fMRI images that are not Multiband
-    mri_list = mri_list[mri_list.SEQUENCE.str.contains('MRI')]  # 'MRI' includes all fMRI and fMRI scans, but not others
-    unwanted_sequences = ['MB']
-    mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: not any(subs in x for subs in unwanted_sequences))]
+    mri_list = mri_list[
+        mri_list.SEQUENCE.str.contains("MRI")
+    ]  # 'MRI' includes all fMRI and fMRI scans, but not others
+    unwanted_sequences = ["MB"]
+    mri_list = mri_list[
+        mri_list.SEQUENCE.map(
+            lambda x: not any(subs in x for subs in unwanted_sequences)
+        )
+    ]
 
     # We will convert the images for each subject in the subject list
     for subj in subjs_list:
 
         # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
-        adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
+        adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")
 
         mri_list_subj = mri_list[mri_list.SUBJECT == subj]
-        mri_list_subj = mri_list_subj.sort_values('SCANDATE')
+        mri_list_subj = mri_list_subj.sort_values("SCANDATE")
 
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
@@ -102,10 +136,17 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
             visit_str = visits[visit_info]
 
             visit_mri_list = mri_list_subj[mri_list_subj.VISIT == visit_str]
-            image = fmri_image(subj, timepoint, visits[visit_info], visit_mri_list, mayo_mri_qc_subj)
+            image = fmri_image(
+                subj, timepoint, visits[visit_info], visit_mri_list, mayo_mri_qc_subj
+            )
 
             if image is not None:
-                row_to_append = pd.DataFrame(image, index=['i', ])
+                row_to_append = pd.DataFrame(
+                    image,
+                    index=[
+                        "i",
+                    ],
+                )
                 fmri_dfs_list.append(row_to_append)
 
     if fmri_dfs_list:
@@ -113,27 +154,33 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
 
     # Exceptions
     # ==========
-    conversion_errors = [('006_S_4485', 'm84'),
-                         ('123_S_4127', 'm96'),
-                         # Eq_1
-                         ('094_S_4503', 'm24'),
-                         ('009_S_4388', 'm72'),
-                         ('036_S_6088', 'bl'),
-                         ('036_S_6134', 'bl'),
-                         ('016_S_6802', 'bl'),
-                         ('016_S_6816', 'bl'),
-                         ('126_S_4891', 'm84'),
-                         # Multiple images
-                         ('029_S_2395', 'm72')]
+    conversion_errors = [
+        ("006_S_4485", "m84"),
+        ("123_S_4127", "m96"),
+        # Eq_1
+        ("094_S_4503", "m24"),
+        ("009_S_4388", "m72"),
+        ("036_S_6088", "bl"),
+        ("036_S_6134", "bl"),
+        ("016_S_6802", "bl"),
+        ("016_S_6816", "bl"),
+        ("126_S_4891", "m84"),
+        # Multiple images
+        ("029_S_2395", "m72"),
+    ]
 
     # Removing known exceptions from images to convert
     if not fmri_df.empty:
-        error_ind = fmri_df.index[fmri_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        error_ind = fmri_df.index[
+            fmri_df.apply(
+                lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1
+            )
+        ]
         fmri_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
-    images = find_image_path(fmri_df, source_dir, 'fMRI', 'S', 'Series_ID')
-    images.to_csv(path.join(conversion_dir, 'fmri_paths.tsv'), sep='\t', index=False)
+    images = find_image_path(fmri_df, source_dir, "fMRI", "S", "Series_ID")
+    images.to_csv(path.join(conversion_dir, "fmri_paths.tsv"), sep="\t", index=False)
 
     return images
 
@@ -153,7 +200,10 @@ def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
     Returns: dictionary - contains image metadata
 
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, select_image_qc
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        replace_sequence_chars,
+        select_image_qc,
+    )
 
     mri_qc_subj.columns = [x.lower() for x in mri_qc_subj.columns]
     sel_image = select_image_qc(list(visit_mri_list.IMAGEUID), mri_qc_subj)
@@ -162,14 +212,16 @@ def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
 
     sel_scan = visit_mri_list[visit_mri_list.IMAGEUID == sel_image].iloc[0]
 
-    image_dict = {'Subject_ID': subject_id,
-                  'VISCODE': timepoint,
-                  'Visit': visit_str,
-                  'Sequence': replace_sequence_chars(sel_scan.SEQUENCE),
-                  'Scan_Date': sel_scan['SCANDATE'],
-                  'Study_ID': str(int(sel_scan.STUDYID)),
-                  'Series_ID': str(int(sel_scan.SERIESID)),
-                  'Image_ID': str(int(sel_scan.IMAGEUID)),
-                  'Field_Strength': sel_scan.MAGSTRENGTH}
+    image_dict = {
+        "Subject_ID": subject_id,
+        "VISCODE": timepoint,
+        "Visit": visit_str,
+        "Sequence": replace_sequence_chars(sel_scan.SEQUENCE),
+        "Scan_Date": sel_scan["SCANDATE"],
+        "Study_ID": str(int(sel_scan.STUDYID)),
+        "Series_ID": str(int(sel_scan.SERIESID)),
+        "Image_ID": str(int(sel_scan.IMAGEUID)),
+        "Field_Strength": sel_scan.MAGSTRENGTH,
+    }
 
     return image_dict

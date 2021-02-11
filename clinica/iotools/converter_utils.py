@@ -7,9 +7,9 @@ def sort_session_list(session_list):
     session_id_list = []
     for session in session_idx:
         if session < 10:
-            session_id_list.append(f'ses-M0{session}')
+            session_id_list.append(f"ses-M0{session}")
         else:
-            session_id_list.append(f'ses-M{session}')
+            session_id_list.append(f"ses-M{session}")
 
     return session_id_list
 
@@ -29,28 +29,37 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
     """
     missing_list = mmt.get_missing_list()
     ses_aval = sort_session_list(ses_aval)
-    summary_file.write('**********************************************\n')
-    summary_file.write(f'Number of subjects converted: {num_subjs}\n')
-    summary_file.write(f'Sessions available: {ses_aval}\n')
+    summary_file.write("**********************************************\n")
+    summary_file.write(f"Number of subjects converted: {num_subjs}\n")
+    summary_file.write(f"Sessions available: {ses_aval}\n")
 
     ses_aval = sort_session_list(ses_aval)
 
     for ses in ses_aval:
-        ses_miss = missing_list[ses]['session']
+        ses_miss = missing_list[ses]["session"]
         ses_found = num_subjs - ses_miss
-        perc_ses_found = ses_found*100/num_subjs
-        summary_file.write(f'Number of sessions {ses} found: {ses_found} ({perc_ses_found}%)\n')
+        perc_ses_found = ses_found * 100 / num_subjs
+        summary_file.write(
+            f"Number of sessions {ses} found: {ses_found} ({perc_ses_found}%)\n"
+        )
 
-    summary_file.write('**********************************************\n\n')
-    summary_file.write('Number of missing modalities for each session:\n')
+    summary_file.write("**********************************************\n\n")
+    summary_file.write("Number of missing modalities for each session:\n")
 
     for ses in ses_aval:
-        summary_file.write('\n' + ses + '\n')
+        summary_file.write("\n" + ses + "\n")
         for mod in missing_list[ses]:
-            if mod != 'session':
+            if mod != "session":
                 num_miss_mod = missing_list[ses][mod]
-                percentage_missing = round((num_miss_mod*100/float(num_subjs - missing_list[ses]['session'])), 2)
-                summary_file.write(f'{mod}: {num_miss_mod} ({percentage_missing}%) \n')
+                percentage_missing = round(
+                    (
+                        num_miss_mod
+                        * 100
+                        / float(num_subjs - missing_list[ses]["session"])
+                    ),
+                    2,
+                )
+                summary_file.write(f"{mod}: {num_miss_mod} ({percentage_missing}%) \n")
 
 
 def print_longitudinal_analysis(summary_file, bids_dir, out_dir, ses_aval, out_file_name):
@@ -140,31 +149,36 @@ def has_one_index(index_list):
     if len(index_list) == 0:
         return -1
     if len(index_list) > 1:
-        raise('Multiple indexes found')
+        raise ("Multiple indexes found")
 
 
 class MissingModsTracker:
     """
     Class used for tracking the number of missing modalities in a database
     """
+
     def __init__(self, ses, mod_list=False):
         self.missing = {}
         self.ses = ses
         if mod_list:
             for s in ses:
-                self.missing.update({s: {'session': 0}})
+                self.missing.update({s: {"session": 0}})
                 for mod in mod_list:
                     self.missing[s].update({mod: 0})
         else:
             for s in ses:
-                self.missing.update({
-                    s: {'session': 0,
-                        'dwi': 0,
-                        'func': 0,
-                        'fieldmap': 0,
-                        'flair': 0,
-                        't1w': 0}
-                    })
+                self.missing.update(
+                    {
+                        s: {
+                            "session": 0,
+                            "dwi": 0,
+                            "func": 0,
+                            "fieldmap": 0,
+                            "flair": 0,
+                            "t1w": 0,
+                        }
+                    }
+                )
 
     def add_missing_mod(self, ses, mod):
         """
@@ -177,7 +191,7 @@ class MissingModsTracker:
         self.missing[ses][mod] += 1
 
     def increase_missing_ses(self, ses):
-        self.missing[ses]['session'] += 1
+        self.missing[ses]["session"] += 1
 
     def get_missing_list(self):
         """

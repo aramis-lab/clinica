@@ -25,7 +25,7 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
 
     # Extract <image_id>
     long_id = get_long_id(list_session_ids)
-    image_id = participant_id + '_' + long_id
+    image_id = participant_id + "_" + long_id
 
     # Create SUBJECTS_DIR for recon-all (otherwise, the command won't run)
     if len(list_session_ids) == 1:
@@ -33,9 +33,11 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
         # if the $SUBJECTS_DIR is too long ('Word too long.' error).
         # To circumvent this issue, we create a sym link in $(TMP) so that $SUBJECTS_DIR is a short path
         subjects_dir = mkdtemp()
-        now = datetime.datetime.now().strftime('%H:%M:%S')
-        cprint('%s[%s] %s has only one time point. Needs to create a $SUBJECTS_DIR folder in %s%s' %
-               (Fore.YELLOW, now, image_id.replace('_', ' | '), subjects_dir, Fore.RESET))
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        cprint(
+            "%s[%s] %s has only one time point. Needs to create a $SUBJECTS_DIR folder in %s%s"
+            % (Fore.YELLOW, now, image_id.replace("_", " | "), subjects_dir, Fore.RESET)
+        )
     else:
         subjects_dir = os.path.join(output_dir, image_id)
     try:
@@ -48,15 +50,18 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
     for session_id in list_session_ids:
         cross_sectional_path = os.path.join(
             caps_dir,
-            'subjects',
+            "subjects",
             participant_id,
             session_id,
-            't1',
-            'freesurfer_cross_sectional',
-            participant_id + '_' + session_id
+            "t1",
+            "freesurfer_cross_sectional",
+            participant_id + "_" + session_id,
         )
         try:
-            os.symlink(cross_sectional_path, os.path.join(subjects_dir, participant_id + '_' + session_id))
+            os.symlink(
+                cross_sectional_path,
+                os.path.join(subjects_dir, participant_id + "_" + session_id),
+            )
         except FileExistsError as e:
             if e.errno != errno.EEXIST:  # EEXIST: folder already exists
                 raise e
@@ -71,10 +76,7 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
     return image_id, subjects_dir, flags
 
 
-def run_recon_all_base(subjects_dir,
-                       subject_id,
-                       flags,
-                       directive):
+def run_recon_all_base(subjects_dir, subject_id, flags, directive):
     """Run recon-all to create an unbiased template from all time points.
 
     Note:
@@ -92,15 +94,17 @@ def run_recon_all_base(subjects_dir,
     """
     import subprocess
 
-    recon_all_base_command = 'recon-all -base {0} {1} -sd {2} {3}'.format(
-        subject_id, flags, subjects_dir, directive)
+    recon_all_base_command = "recon-all -base {0} {1} -sd {2} {3}".format(
+        subject_id, flags, subjects_dir, directive
+    )
     subprocess_run_recon_all_base = subprocess.run(
         recon_all_base_command,
         shell=True,
         stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL)
+        stderr=subprocess.DEVNULL,
+    )
     if subprocess_run_recon_all_base.returncode != 0:
-        raise ValueError('recon-all -base failed, returned non-zero code')
+        raise ValueError("recon-all -base failed, returned non-zero code")
 
     return subject_id
 
@@ -131,17 +135,21 @@ def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
         shutil.copytree(
             src=os.path.join(subjects_dir, subject_id),
             dst=os.path.join(source_dir, subject_id, subject_id),
-            symlinks=True
+            symlinks=True,
         )
         shutil.rmtree(subjects_dir)
-        now = datetime.datetime.now().strftime('%H:%M:%S')
-        cprint('%s[%s] Segmentation of %s has moved to working directory and $SUBJECTS_DIR folder (%s) was deleted%s' %
-               (Fore.YELLOW, now, subject_id.replace('_', ' | '), subjects_dir, Fore.RESET))
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        cprint(
+            f"{Fore.YELLOW}[{now}] Segmentation of {subject_id.replace('_', ' | ')} "
+            f"has moved to working directory and $SUBJECTS_DIR folder ({subjects_dir}) was deleted{Fore.RESET}"
+        )
 
     return subject_id
 
 
-def save_to_caps(source_dir, image_id, list_session_ids, caps_dir, overwrite_caps=False):
+def save_to_caps(
+    source_dir, image_id, list_session_ids, caps_dir, overwrite_caps=False
+):
     """Save `source_dir`/`image_id`/ to CAPS folder.
 
     This function copies FreeSurfer segmentation and regional_measures folder of `source_dir`/`image_id`/ to
@@ -165,30 +173,29 @@ def save_to_caps(source_dir, image_id, list_session_ids, caps_dir, overwrite_cap
     from clinica.utils.longitudinal import save_long_id
     from clinica.utils.ux import print_end_image
 
-    participant_id = image_id.split('_')[0]
-    long_id = image_id.split('_')[1]
+    participant_id = image_id.split("_")[0]
+    long_id = image_id.split("_")[1]
 
     destination_dir = os.path.join(
         os.path.expanduser(caps_dir),
-        'subjects',
+        "subjects",
         participant_id,
         long_id,
-        'freesurfer_unbiased_template'
+        "freesurfer_unbiased_template",
     )
 
     # Save <long_id>_sessions.tsv to retrieve sessions used to generate <long_id>
     sessions_tsv_path = os.path.join(
-        os.path.expanduser(caps_dir),
-        'subjects',
-        participant_id,
-        long_id
+        os.path.expanduser(caps_dir), "subjects", participant_id, long_id
     )
-    if not os.path.isfile(os.path.join(sessions_tsv_path, long_id + '_sessions.tsv')):
-        save_long_id(list_session_ids, sessions_tsv_path, long_id + '_sessions.tsv')
+    if not os.path.isfile(os.path.join(sessions_tsv_path, long_id + "_sessions.tsv")):
+        save_long_id(list_session_ids, sessions_tsv_path, long_id + "_sessions.tsv")
 
     # Save FreeSurfer segmentation
-    representative_file = os.path.join(image_id, 'mri', 'aparc+aseg.mgz')
-    representative_source_file = os.path.join(os.path.expanduser(source_dir), image_id, representative_file)
+    representative_file = os.path.join(image_id, "mri", "aparc+aseg.mgz")
+    representative_source_file = os.path.join(
+        os.path.expanduser(source_dir), image_id, representative_file
+    )
     representative_destination_file = os.path.join(destination_dir, representative_file)
     if os.path.isfile(representative_source_file):
         if os.path.isfile(representative_destination_file):
@@ -197,17 +204,20 @@ def save_to_caps(source_dir, image_id, list_session_ids, caps_dir, overwrite_cap
                 shutil.copytree(
                     src=os.path.join(source_dir, image_id, image_id),
                     dst=os.path.join(destination_dir, image_id),
-                    symlinks=True
+                    symlinks=True,
                 )
         else:
             shutil.copytree(
                 src=os.path.join(source_dir, image_id, image_id),
                 dst=os.path.join(destination_dir, image_id),
-                symlinks=True
+                symlinks=True,
             )
         print_end_image(image_id)
     else:
-        now = datetime.datetime.now().strftime('%H:%M:%S')
-        cprint('%s[%s] %s does not contain mri/aseg+aparc.mgz file. Copy will be skipped.%s' %
-               (Fore.YELLOW, now, image_id.replace('_', ' | '), Fore.RESET))
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+
+        cprint(
+            f"{Fore.YELLOW}[{now}] {image_id.replace('_', ' | ')}  does not contain "
+            f"mri/aseg+aparc.mgz file. Copy will be skipped.{Fore.RESET}"
+        )
     return image_id

@@ -15,9 +15,13 @@ def init_input_node(pet_nii):
     # Check that the PET file is a 3D volume
     img = nib.load(pet_nii)
     if len(img.shape) == 4:
-        now = datetime.datetime.now().strftime('%H:%M:%S')
-        error_msg = '%s[%s] Error: Clinica does not handle 4D volumes for %s%s'\
-                    % (Fore.RED, now, image_id.replace('_', ' | '), Fore.RESET)
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        error_msg = "%s[%s] Error: Clinica does not handle 4D volumes for %s%s" % (
+            Fore.RED,
+            now,
+            image_id.replace("_", " | "),
+            Fore.RESET,
+        )
         cprint(error_msg)
         raise NotImplementedError(error_msg)
 
@@ -43,7 +47,9 @@ def create_binary_mask(tissues, threshold=0.3):
     from os.path import join, basename
 
     if len(tissues) == 0:
-        raise RuntimeError('The length of the list of tissues must be greater than zero.')
+        raise RuntimeError(
+            "The length of the list of tissues must be greater than zero."
+        )
 
     img_0 = nib.load(tissues[0])
     shape = list(img_0.get_data().shape)
@@ -54,7 +60,7 @@ def create_binary_mask(tissues, threshold=0.3):
         data = data + nib.load(image).get_data()
 
     data = (data > threshold) * 1.0
-    out_mask = join(getcwd(), basename(tissues[0]) + '_brainmask.nii')
+    out_mask = join(getcwd(), basename(tissues[0]) + "_brainmask.nii")
 
     mask = nib.Nifti1Image(data, img_0.affine, header=img_0.header)
     nib.save(mask, out_mask)
@@ -71,8 +77,10 @@ def apply_binary_mask(image, binary_mask):
 
     data = original_image.get_data() * mask.get_data()
 
-    masked_image_path = join(getcwd(), 'masked_' + basename(image))
-    masked_image = nib.Nifti1Image(data, original_image.affine, header=original_image.header)
+    masked_image_path = join(getcwd(), "masked_" + basename(image))
+    masked_image = nib.Nifti1Image(
+        data, original_image.affine, header=original_image.header
+    )
     nib.save(masked_image, masked_image_path)
     return masked_image_path
 
@@ -85,7 +93,9 @@ def create_pvc_mask(tissues):
     from os.path import join
 
     if len(tissues) == 0:
-        raise RuntimeError('The length of the list of tissues must be greater than zero.')
+        raise RuntimeError(
+            "The length of the list of tissues must be greater than zero."
+        )
 
     img_0 = nib.load(tissues[0])
     shape = img_0.get_data().shape
@@ -102,7 +112,7 @@ def create_pvc_mask(tissues):
     background = 1.0 - background
     data[..., len(tissues)] = np.array(background)
 
-    out_mask = join(getcwd(), 'pvc_mask.nii')
+    out_mask = join(getcwd(), "pvc_mask.nii")
     mask = nib.Nifti1Image(data, img_0.affine, header=img_0.header)
     nib.save(mask, out_mask)
     return out_mask
@@ -110,7 +120,8 @@ def create_pvc_mask(tissues):
 
 def pet_pvc_name(pet_image, pvc_method):
     from os.path import basename
-    pet_pvc_path = 'pvc-' + pvc_method.lower() + '_' + basename(pet_image)
+
+    pet_pvc_path = "pvc-" + pvc_method.lower() + "_" + basename(pet_image)
     return pet_pvc_path
 
 
@@ -128,7 +139,7 @@ def normalize_to_reference(pet_image, region_mask):
 
     data = pet.get_data() / region_mean
 
-    suvr_pet_path = join(getcwd(), 'suvr_' + basename(pet_image))
+    suvr_pet_path = join(getcwd(), "suvr_" + basename(pet_image))
 
     suvr_pet = nib.Nifti1Image(data, pet.affine, header=pet.header)
     nib.save(suvr_pet, suvr_pet_path)
@@ -160,7 +171,9 @@ def atlas_statistics(in_image, in_atlas_list):
     for atlas in in_atlas_list:
         for atlas_class in atlas_classes:
             if atlas_class.get_name_atlas() == atlas:
-                out_atlas_statistics = abspath(join(getcwd(), base + '_space-' + atlas + '_statistics.tsv'))
+                out_atlas_statistics = abspath(
+                    join(getcwd(), base + "_space-" + atlas + "_statistics.tsv")
+                )
                 statistics_on_atlas(in_image, atlas_class(), out_atlas_statistics)
                 atlas_statistics_list.append(out_atlas_statistics)
                 break
@@ -171,16 +184,19 @@ def atlas_statistics(in_image, in_atlas_list):
 def pet_container_from_filename(pet_filename):
     import re
     from os.path import join
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', pet_filename)
+
+    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_", pet_filename)
 
     if m is None:
-        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It does not contain the subject' +
-                         ' and session information.')
+        raise ValueError(
+            "Input filename is not in a BIDS or CAPS compliant format. It does not contain the subject"
+            + " and session information."
+        )
 
     subject = m.group(1)
     session = m.group(2)
 
-    return join('subjects', subject, session, 'pet/preprocessing')
+    return join("subjects", subject, session, "pet/preprocessing")
 
 
 def get_from_list(in_list, index):

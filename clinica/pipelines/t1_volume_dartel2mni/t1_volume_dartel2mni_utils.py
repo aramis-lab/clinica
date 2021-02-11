@@ -9,4 +9,7 @@ def join_smoothed_files(smoothed_normalized_files):
     """
     Joins outputs
     """
-    return [[x for smooth in subject for x in smooth] for subject in zip(*smoothed_normalized_files)]
+    return [
+        [x for smooth in subject for x in smooth]
+        for subject in zip(*smoothed_normalized_files)
+    ]

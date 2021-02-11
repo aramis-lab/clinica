@@ -5,7 +5,9 @@ Module for converting PIB PET of ADNI
 """
 
 
-def convert_adni_pib_pet(source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False):
+def convert_adni_pib_pet(
+    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+):
     """Convert PIB PET images of ADNI into BIDS format
 
     Args:
@@ -25,15 +27,19 @@ def convert_adni_pib_pet(source_dir, csv_dir, dest_dir, conversion_dir, subjs_li
     from colorama import Fore
 
     if subjs_list is None:
-        adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
+        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
+        adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint(f'Calculating paths of PIB PET images. Output will be stored in {conversion_dir}.')
-    images = compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
-    cprint('Paths of PIB PET images found. Exporting images into BIDS ...')
-    paths_to_bids(images, dest_dir, 'pib', mod_to_update=mod_to_update)
-    cprint(Fore.GREEN + 'PIB PET conversion done.' + Fore.RESET)
+    cprint(
+        f"Calculating paths of PIB PET images. Output will be stored in {conversion_dir}."
+    )
+    images = compute_pib_pet_paths(
+        source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
+    )
+    cprint("Paths of PIB PET images found. Exporting images into BIDS ...")
+    paths_to_bids(images, dest_dir, "pib", mod_to_update=mod_to_update)
+    cprint(Fore.GREEN + "PIB PET conversion done." + Fore.RESET)
 
 
 def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
@@ -54,21 +60,36 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
     import pandas as pd
     import os
     from os import path
-    from clinica.iotools.converters.adni_to_bids.adni_utils import get_images_pet, find_image_path
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        get_images_pet,
+        find_image_path,
+    )
 
-    pet_pib_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
-                   'Series_ID', 'Image_ID', 'Original']
+    pet_pib_col = [
+        "Phase",
+        "Subject_ID",
+        "VISCODE",
+        "Visit",
+        "Sequence",
+        "Scan_Date",
+        "Study_ID",
+        "Series_ID",
+        "Image_ID",
+        "Original",
+    ]
     pet_pib_df = pd.DataFrame(columns=pet_pib_col)
     pet_pib_dfs_list = []
 
     # Loading needed .csv files
-    pibqc = pd.read_csv(path.join(csv_dir, 'PIBQC.csv'), sep=',', low_memory=False)
-    pet_meta_list = pd.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',', low_memory=False)
+    pibqc = pd.read_csv(path.join(csv_dir, "PIBQC.csv"), sep=",", low_memory=False)
+    pet_meta_list = pd.read_csv(
+        path.join(csv_dir, "PET_META_LIST.csv"), sep=",", low_memory=False
+    )
 
     for subj in subjs_list:
 
         # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
+        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subj]
 
         if subject_pet_meta.empty:
             continue
@@ -76,9 +97,16 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
         # QC for PIB PET images
         pet_qc_subj = pibqc[(pibqc.PASS == 1) & (pibqc.RID == int(subj[-4:]))]
 
-        sequences_preprocessing_step = ['PIB Co-registered, Averaged']
-        subj_dfs_list = get_images_pet(subj, pet_qc_subj, subject_pet_meta, pet_pib_col, 'PIB-PET',
-                                       sequences_preprocessing_step, viscode_field="VISCODE")
+        sequences_preprocessing_step = ["PIB Co-registered, Averaged"]
+        subj_dfs_list = get_images_pet(
+            subj,
+            pet_qc_subj,
+            subject_pet_meta,
+            pet_pib_col,
+            "PIB-PET",
+            sequences_preprocessing_step,
+            viscode_field="VISCODE",
+        )
         if subj_dfs_list:
             pet_pib_dfs_list += subj_dfs_list
 
@@ -91,11 +119,14 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
 
     # Removing known exceptions from images to convert
     if not pet_pib_df.empty:
-        error_ind = pet_pib_df.index[pet_pib_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors),
-                                                      axis=1)]
+        error_ind = pet_pib_df.index[
+            pet_pib_df.apply(
+                lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1
+            )
+        ]
         pet_pib_df.drop(error_ind, inplace=True)
 
-    images = find_image_path(pet_pib_df, source_dir, 'PIB', 'I', 'Image_ID')
-    images.to_csv(path.join(conversion_dir, 'pib_pet_paths.tsv'), sep='\t', index=False)
+    images = find_image_path(pet_pib_df, source_dir, "PIB", "I", "Image_ID")
+    images.to_csv(path.join(conversion_dir, "pib_pet_paths.tsv"), sep="\t", index=False)
 
     return images

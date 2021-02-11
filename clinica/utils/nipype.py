@@ -19,19 +19,21 @@ def container_from_filename(bids_or_caps_filename):
 
     import os
     import re
-    m = re.search(r'(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)', bids_or_caps_filename)
+
+    m = re.search(r"(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)", bids_or_caps_filename)
     if m is None:
         raise ValueError(
-                'Input filename is not in a BIDS or CAPS compliant format.'
-                'It does not contain the participant and session ID.'
-                )
+            "Input filename is not in a BIDS or CAPS compliant format."
+            "It does not contain the participant and session ID."
+        )
     subject = m.group(1)
     session = m.group(2)
-    return os.path.join('subjects', subject, session)
+    return os.path.join("subjects", subject, session)
 
 
 def fix_join(path, *paths):
     # This workaround is used in pipelines like DWIPreprocessingUsingT1
     # In the workflow.connect part, you can use some function that are used as string, causing an import error
     import os
+
     return os.path.join(path, *paths)

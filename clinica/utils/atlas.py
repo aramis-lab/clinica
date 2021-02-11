@@ -16,7 +16,6 @@ Either a refactoring of this module or the use of an external API
 
 import abc
 
-
 T1_VOLUME_ATLASES = [
     "AAL2",
     "AICHA",
@@ -57,7 +56,6 @@ class AtlasAbstract:
         """
         Returns the name of the atlas (as defined in BIDS/CAPS specifications).
         """
-        pass
 
     def get_spatial_resolution(self):
         """
@@ -89,7 +87,6 @@ class AtlasAbstract:
         """
         Returns the image with the different labels/ROIs.
         """
-        pass
 
     @abc.abstractmethod
     def get_tsv_roi(self):
@@ -97,7 +94,6 @@ class AtlasAbstract:
         Returns the TSV file containing the ROI (regions of interest) of
         the atlas.
         """
-        pass
 
     def get_index(self):
         import nibabel as nib

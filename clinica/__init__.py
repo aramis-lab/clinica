@@ -1,9 +1,11 @@
-__all__ = ['__version__']
+__all__ = ["__version__"]
+
+import pkgutil
 
 # Load the Clinica package version
 import sys
-import pkgutil
-__version__ = pkgutil.get_data(__package__, 'VERSION').decode('ascii').strip()
+
+__version__ = pkgutil.get_data(__package__, "VERSION").decode("ascii").strip()
 version = __version__
 
 # import pkg_resources

@@ -76,11 +76,11 @@ def get_descriptors(path_root):
     import os
     import json
 
-    with open(os.path.join(path_root, 'config_dcm2bids.json')) as f:
+    with open(os.path.join(path_root, "config_dcm2bids.json")) as f:
         data = json.load(f)
 
     descriptors = []
-    for i in data['descriptions']:
+    for i in data["descriptions"]:
         des = Descriptor(i)
         descriptors.append(des)
 

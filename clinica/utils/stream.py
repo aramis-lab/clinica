@@ -15,13 +15,15 @@ class FilterOut(object):
 
     def write(self, text):
         import re
+
         if not text:
             return
-        if re.match('^(@clinica@)', text):
+        if re.match("^(@clinica@)", text):
             self.stdout.write(text.replace("@clinica@", ""))
             self.stdout.flush()
 
-    def flush(self): self.stdout.flush()
+    def flush(self):
+        self.stdout.flush()
 
     def __enter__(self):
         self.origin_stdout = sys.stdout
