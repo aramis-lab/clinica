@@ -289,14 +289,14 @@ def find_mods_and_sess(bids_dir):
                     func_name = func_path.split(os.sep)[-1]
                     func_name_tokens = func_name.split('_')
                     func_task = func_name_tokens[2]
-                if 'func' in mods_dict:
-                    if 'func_' + func_task not in mods_dict['func']:
-                        mods_dict['func'].append('func_' + func_task)
-                else:
-                    mods_dict.update({'func': ['func_' + func_task]})
+                    if 'func' in mods_dict:
+                        if 'func_' + func_task not in mods_dict['func']:
+                            mods_dict['func'].append('func_' + func_task)
+                    else:
+                        mods_dict.update({'func': ['func_' + func_task]})
 
-                if 'func_' + func_task not in mods_list:
-                    mods_list.append('func_' + func_task)
+                    if 'func_' + func_task not in mods_list:
+                        mods_list.append('func_' + func_task)
 
             if 'dwi' in mods_avail:
                 if 'dwi' not in mods_dict:
@@ -311,10 +311,19 @@ def find_mods_and_sess(bids_dir):
                     mods_list.append('fmap')
 
             if 'pet' in mods_avail:
-                if 'pet' not in mods_dict:
-                    mods_dict.update({'pet': ['pet']})
-                if 'pet' not in mods_list:
-                    mods_list.append('pet')
+                list_pet_paths = glob(path.join(session, 'pet', '*pet.nii.gz'))
+                for pet_path in list_pet_paths:
+                    pet_name = pet_path.split(os.sep)[-1].split('.')[0]
+                    pet_name_tokens = pet_name.split('_')
+                    pet_acq = pet_name_tokens[3]
+                    if 'pet' in mods_dict:
+                        if 'pet_' + pet_acq not in mods_dict['pet']:
+                            mods_dict['pet'].append('pet_' + pet_acq)
+                    else:
+                        mods_dict.update({'pet': ['pet_' + pet_acq]})
+
+                    if 'pet_' + pet_acq not in mods_list:
+                        mods_list.append('pet_' + pet_acq)
 
             if 'anat' in mods_avail:
                 anat_files_paths = glob(path.join(session, 'anat', '*'))
@@ -392,7 +401,6 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
         raise IOError("No subjects found or dataset not BIDS complaint.")
     # Check the modalities available for each session
     for ses in sessions_found:
-        mods_avail_bids = []
         for sub_path in subjects_paths_lists:
             mods_avail_bids = []
             subj_id = sub_path.split(os.sep)[-1]
@@ -462,11 +470,25 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
                         row_to_append_df['fmap'] = pd.Series('0')
                         mmt.add_missing_mod(ses, 'fmap')
                 if 'pet' in mods_avail_bids:
-                    row_to_append_df['pet'] = pd.Series('1')
+                    # Extract all the task available
+                    for m in mods_avail_dict['pet']:
+                        tokens = m.split('_')
+                        pet_acq = tokens[1]
+                        acq_avail_list = glob(path.join(
+                            ses_path, 'pet', '*' + pet_acq + '*')
+                        )
+
+                        if len(acq_avail_list) == 0:
+                            row_to_append_df[m] = pd.Series('0')
+                        else:
+                            row_to_append_df[m] = pd.Series('1')
+                # If the folder is not available but the modality is
+                # in the list of the available one mark it as missing
                 else:
-                    if 'pet' in mods_avail:
-                        row_to_append_df['pet'] = pd.Series('0')
-                        mmt.add_missing_mod(ses, 'pet')
+                    if 'pet' in mods_avail_dict:
+                        for m in mods_avail_dict['pet']:
+                            row_to_append_df[m] = pd.Series('0')
+                        mmt.add_missing_mod(ses, m)
 
             missing_mods_df = missing_mods_df.append(row_to_append_df)
             row_to_append_df = pd.DataFrame(columns=cols_dataframe)
