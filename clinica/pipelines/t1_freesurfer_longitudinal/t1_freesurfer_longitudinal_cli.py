@@ -29,17 +29,20 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         import datetime
+        import os
+
         from colorama import Fore
-        from clinica.utils.stream import cprint
+
         from clinica.utils.longitudinal import get_participants_long_id
         from clinica.utils.participant import get_subject_session_list
-        from .t1_freesurfer_template_cli import T1FreeSurferTemplateCLI
+        from clinica.utils.stream import cprint
+
+        from .longitudinal_utils import save_part_sess_long_ids_to_tsv
         from .t1_freesurfer_longitudinal_correction_cli import (
             T1FreeSurferLongitudinalCorrectionCLI,
         )
-        from .longitudinal_utils import save_part_sess_long_ids_to_tsv
+        from .t1_freesurfer_template_cli import T1FreeSurferTemplateCLI
 
         cprint(
             f"The t1-freesurfer-longitudinal pipeline is divided into 2 parts:\n"

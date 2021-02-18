@@ -19,14 +19,15 @@ class CmdParserSubjectsSessions(ce.CmdParser):
         self._args.add_argument(
             "out_tsv",
             help="Output TSV file containing the participants with their sessions.",
-        )  # noqa
+        )
 
     def run_command(self, args):
-        import os
         import errno
+        import os
+
         from clinica.iotools.utils import data_handling as dt
-        from clinica.utils.stream import cprint
         from clinica.utils.inputs import check_bids_folder
+        from clinica.utils.stream import cprint
 
         check_bids_folder(args.bids_directory)
         output_directory = os.path.dirname(os.path.abspath(args.out_tsv))
@@ -146,14 +147,14 @@ class CmdParserMissingModalities(ce.CmdParser):
         )
         self._args.add_argument(
             "out_directory", help="Path to the output directory."
-        )  # noqa
+        )
         self._args.add_argument(
             "-op",
             "--output_prefix",
             type=str,
             default="",
             help="Prefix for the name of output files (default: --output_prefix missing_mods).",
-        )  # noqa
+        )
 
     def run_command(self, args):
         from clinica.iotools.utils import data_handling as dt
@@ -172,16 +173,15 @@ class CmdParserCenterNifti(ce.CmdParser):
     def define_description(self):
         self._description = (
             "Center NIFTI of a BIDS directory. Tool mainly used when SPM is not able \nto segment some"
-            + " T1w images because the centers of these volumes are not\naligned with the origin of the"
-            + "world coordinate system. By default, only\nproblematic images are converted. The rest"
-            + " of the images are also copied\nto the new BIDS directory, but left untouched."
+            " T1w images because the centers of these volumes are not\naligned with the origin of the"
+            "world coordinate system. By default, only\nproblematic images are converted. The rest"
+            " of the images are also copied\nto the new BIDS directory, but left untouched."
         )
 
     def define_options(self):
         self._args.add_argument(
             "bids_directory",
-            help="Path to the BIDS dataset directory in which you want to center the NIfTI "
-            + "files/images.",
+            help="Path to the BIDS dataset directory in which you want to center the NIfTI files/images.",
         )
         self._args.add_argument(
             "output_bids_directory",
@@ -206,17 +206,18 @@ class CmdParserCenterNifti(ce.CmdParser):
         )
 
     def run_command(self, args):
+        import sys
+        import time
+        from os import listdir, makedirs
+        from os.path import abspath, isdir, isfile, join
+
         from colorama import Fore
-        from os.path import isdir, abspath, join, isfile
-        from os import listdir
-        from os import makedirs
+
         from clinica.iotools.utils.data_handling import (
             center_all_nifti,
             write_list_of_files,
         )
         from clinica.utils.stream import cprint
-        import sys
-        import time
 
         # check that output_folder does not exist, or is an empty folder
         if isdir(args.output_bids_directory):
@@ -227,10 +228,8 @@ class CmdParserCenterNifti(ce.CmdParser):
             ]
             if len(file_list) > 0:
                 error_str = (
-                    Fore.YELLOW
-                    + "[Warning] Some files or directory have been found in "
-                    + abspath(args.output_bids_directory)
-                    + ": \n"
+                    f"{Fore.YELLOW}[Warning] Some files or directory have been found "
+                    f"in {{abspath(args.output_bids_directory)}}: \n"
                 )
                 for f in file_list:
                     error_str += "\t" + f + "\n"
@@ -243,9 +242,9 @@ class CmdParserCenterNifti(ce.CmdParser):
                     if answer.lower() in ["yes", "no"]:
                         break
                     else:
-                        cprint(Fore.RED + "You must answer yes or no" + Fore.RESET)
+                        cprint(f"{Fore.RED}You must answer yes or no{Fore.RESET}")
                 if answer.lower() == "no":
-                    cprint(Fore.RED + "Clinica will now exit..." + Fore.RESET)
+                    cprint(f"{Fore.RED}Clinica will now exit...{Fore.RESET}")
                     sys.exit(0)
         else:
             makedirs(args.output_bids_directory)
@@ -272,32 +271,20 @@ class CmdParserCenterNifti(ce.CmdParser):
         )
         # If an error happen while creating the file, the function returns Nan
         if not write_list_of_files(centered_files, log_file):
-            cprint(Fore.YELLOW + "[Warning] Could not create log file" + Fore.RESET)
+            cprint(f"{Fore.YELLOW}[Warning] Could not create log file.{Fore.RESET}")
 
         # Final message
         cprint(
-            Fore.GREEN
-            + str(len(centered_files))
-            + " NIfTI files/images of BIDS folder:\n\t "
-            + Fore.BLUE
-            + abspath(args.bids_directory)
-            + Fore.GREEN
-            + "\n for the modalities "
-            + Fore.YELLOW
-            + args.modality
-            + Fore.GREEN
-            + " have been centered in output folder:\n\t"
-            + Fore.BLUE
-            + abspath(args.output_bids_directory)
-            + Fore.RESET
+            f"{Fore.GREEN}{str(len(centered_files))} NIfTI files/images of BIDS folder:\n\t "
+            f"{Fore.BLUE}{abspath(args.bids_directory)}"
+            f"{Fore.GREEN}\n for the modalities "
+            f"{Fore.YELLOW}{args.modality}"
+            f"{Fore.GREEN} have been centered in output folder:\n\t"
+            f"{Fore.BLUE}{abspath(args.output_bids_directory)}{Fore.RESET}"
         )
         if isfile(log_file):
             cprint(
-                Fore.GREEN
-                + "The list of centered NIfTI files is available here : "
-                + Fore.BLUE
-                + log_file
-                + Fore.RESET
+                f"{Fore.GREEN}The list of centered NIfTI files is available here: {Fore.BLUE}{log_file}{Fore.RESET}"
             )
         cprint(
             "Please note that the rest of the input BIDS folder has also been copied to the output folder."

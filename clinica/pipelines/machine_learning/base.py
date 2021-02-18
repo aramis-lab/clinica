@@ -29,7 +29,7 @@ class MLWorkflow(ABC):
 
     def run(self):
 
-        from os import path, makedirs
+        from os import makedirs, path
 
         # Instantiating input class
         self._input = self._input_class(self._input_params)

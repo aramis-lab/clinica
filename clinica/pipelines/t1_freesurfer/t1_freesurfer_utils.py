@@ -10,8 +10,9 @@ def init_input_node(t1w, recon_all_args, output_dir):
         - Create SUBJECTS_DIR for recon-all (otherwise, the command won't run);
         - Print begin execution message.
     """
-    import os
     import errno
+    import os
+
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.freesurfer import check_flags
     from clinica.utils.ux import print_begin_image
@@ -44,11 +45,13 @@ def write_tsv_files(subjects_dir, image_id):
         If an error occurs, it will be detected by Nipype and the next nodes (including
         write_tsv_files will not be called).
     """
-    import os
     import datetime
+    import os
+
     from colorama import Fore
-    from clinica.utils.stream import cprint
+
     from clinica.utils.freesurfer import generate_regional_measures
+    from clinica.utils.stream import cprint
 
     if os.path.isfile(os.path.join(subjects_dir, image_id, "mri", "aparc+aseg.mgz")):
         generate_regional_measures(subjects_dir, image_id)
@@ -77,10 +80,12 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
         We do not need to check the line "finished without error" in scripts/recon-all.log.
         If an error occurs, it will be detected by Nipype and the next nodes (i.e.  save_to_caps will not be called).
     """
-    import os
     import datetime
+    import os
     import shutil
+
     from colorama import Fore
+
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_end_image
 

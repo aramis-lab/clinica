@@ -25,52 +25,51 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         """Check dependencies that can not be listed in the `info.json` file."""
 
     def get_input_fields(self):
-        """Specify the list of possible inputs of this pipelines.
+        """Specify the list of possible inputs of this pipeline.
 
         Returns:
             A list of (string) input fields name.
         """
-
         return ["dartel_inputs"]
 
     def get_output_fields(self):
-        """Specify the list of possible outputs of this pipelines.
+        """Specify the list of possible outputs of this pipeline.
 
         Returns:
             A list of (string) output fields name.
         """
-
         return ["final_template_file", "template_files", "dartel_flow_fields"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
         import sys
-        from colorama import Fore
-        import nipype.pipeline.engine as npe
+
         import nipype.interfaces.utility as nutil
-        from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.input_files import t1_volume_dartel_input_tissue
+        import nipype.pipeline.engine as npe
+        from colorama import Fore
+
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.input_files import t1_volume_dartel_input_tissue
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
+            print_begin_image,
             print_groups_in_caps_directory,
             print_images_to_process,
-            print_begin_image,
         )
 
         representative_output = os.path.join(
             self.caps_directory,
             "groups",
-            "group-" + self.parameters["group_label"],
+            f"group-{self.parameters['group_label']}",
             "t1",
-            "group-" + self.parameters["group_label"] + "_template.nii.gz",
+            f"group-{self.parameters['group_label']}_template.nii.gz",
         )
         if os.path.exists(representative_output):
             cprint(
-                "%sDARTEL template for %s already exists. Currently, Clinica does not propose to overwrite outputs "
-                "for this pipeline.%s"
-                % (Fore.YELLOW, self.parameters["group_label"], Fore.RESET)
+                f"{Fore.YELLOW}DARTEL template for {self.parameters['group_label']} already exists. "
+                f"Currently, Clinica does not propose to overwrite outputs for this pipeline.{Fore.RESET}"
             )
             print_groups_in_caps_directory(self.caps_directory)
             sys.exit(0)
@@ -118,7 +117,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             cprint(
                 "Computational time for DARTEL creation will depend on the number of images."
             )
-            print_begin_image("group-" + self.parameters["group_label"])
+            print_begin_image(f"group-{self.parameters['group_label']}")
 
         # fmt: off
         self.connect(
@@ -131,9 +130,11 @@ class T1VolumeCreateDartel(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import os.path as op
-        import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
         import re
+
+        import nipype.interfaces.io as nio
+        import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import zip_nii
 
         # Writing flowfields into CAPS
@@ -179,7 +180,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         write_template_node.inputs.parameterization = False
         write_template_node.inputs.base_directory = self.caps_directory
         write_template_node.inputs.container = op.join(
-            "groups/group-" + self.parameters["group_label"], "t1"
+            "groups", f"group-{self.parameters['group_label']}", "t1"
         )
         write_template_node.inputs.regexp_substitutions = [
             (
@@ -210,8 +211,9 @@ class T1VolumeCreateDartel(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.spm as spm
-        import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
@@ -244,3 +246,4 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                                                      ("template_files", "template_files")]),
             ]
         )
+        # fmt: on

@@ -1,15 +1,12 @@
 # coding: utf-8
 
-"""
-Module for converting AV45 and Florbetaben PET of ADNI
-"""
+"""Module for converting AV45 and Florbetaben PET of ADNI."""
 
 
 def convert_adni_av45_fbb_pet(
     source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
 ):
-    """
-    Convert AV-45 and Florbetaben PET images of ADNI into BIDS format
+    """Convert AV-45 and Florbetaben PET images of ADNI into BIDS format.
 
     Args:
         source_dir: path to the ADNI directory
@@ -18,13 +15,12 @@ def convert_adni_av45_fbb_pet(
         conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
-
     """
+    from os import path
 
     import pandas as pd
-    from os import path
-    from clinica.utils.stream import cprint
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.utils.stream import cprint
     from colorama import Fore
 
     if subjs_list is None:
@@ -42,14 +38,13 @@ def convert_adni_av45_fbb_pet(
         "Paths of AV45 and Florbetaben PET images found. Exporting images into BIDS ..."
     )
     paths_to_bids(images, dest_dir, "av45_fbb", mod_to_update=mod_to_update)
-    cprint(Fore.GREEN + "AV45 and Florbetaben PET conversion done." + Fore.RESET)
+    cprint(f"{Fore.GREEN}AV45 and Florbetaben PET conversion done.{Fore.RESET}")
 
 
 def compute_av45_fbb_pet_paths(
     source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
 ):
-    """
-    Compute the paths to the AV45 and Florbetaben PET images and store them in a tsv file
+    """Compute the paths to the AV45 and Florbetaben PET images and store them in a TSV file.
 
     Args:
         source_dir: path to the ADNI directory
@@ -62,13 +57,12 @@ def compute_av45_fbb_pet_paths(
         images: a dataframe with all the paths to the PET images that will be converted into BIDS
 
     """
+    from os import path
 
     import pandas as pd
-    import os
-    from os import path
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        get_images_pet,
         find_image_path,
+        get_images_pet,
     )
 
     pet_amyloid_col = [

@@ -3,8 +3,10 @@
 
 def init_input_node(pet_nii):
     import datetime
+
     import nibabel as nib
     from colorama import Fore
+
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
@@ -16,11 +18,9 @@ def init_input_node(pet_nii):
     img = nib.load(pet_nii)
     if len(img.shape) == 4:
         now = datetime.datetime.now().strftime("%H:%M:%S")
-        error_msg = "%s[%s] Error: Clinica does not handle 4D volumes for %s%s" % (
-            Fore.RED,
-            now,
-            image_id.replace("_", " | "),
-            Fore.RESET,
+        error_msg = (
+            f"{Fore.RED}[{now}] Error: Clinica does not handle 4D volumes "
+            f"for {image_id.replace('_', ' | ')}{Fore.RESET}"
         )
         cprint(error_msg)
         raise NotImplementedError(error_msg)
@@ -41,10 +41,11 @@ def create_binary_mask(tissues, threshold=0.3):
     Returns:
 
     """
+    from os import getcwd
+    from os.path import basename, join
+
     import nibabel as nib
     import numpy as np
-    from os import getcwd
-    from os.path import join, basename
 
     if len(tissues) == 0:
         raise RuntimeError(
@@ -68,9 +69,10 @@ def create_binary_mask(tissues, threshold=0.3):
 
 
 def apply_binary_mask(image, binary_mask):
-    import nibabel as nib
     from os import getcwd
-    from os.path import join, basename
+    from os.path import basename, join
+
+    import nibabel as nib
 
     original_image = nib.load(image)
     mask = nib.load(binary_mask)
@@ -87,10 +89,11 @@ def apply_binary_mask(image, binary_mask):
 
 def create_pvc_mask(tissues):
 
-    import nibabel as nib
-    import numpy as np
     from os import getcwd
     from os.path import join
+
+    import nibabel as nib
+    import numpy as np
 
     if len(tissues) == 0:
         raise RuntimeError(
@@ -126,10 +129,11 @@ def pet_pvc_name(pet_image, pvc_method):
 
 
 def normalize_to_reference(pet_image, region_mask):
-    import nibabel as nib
-    import numpy as np
     from os import getcwd
     from os.path import basename, join
+
+    import nibabel as nib
+    import numpy as np
 
     pet = nib.load(pet_image)
     ref = nib.load(region_mask)
@@ -161,7 +165,9 @@ def atlas_statistics(in_image, in_atlas_list):
     """
     from os import getcwd
     from os.path import abspath, join
+
     from nipype.utils.filemanip import split_filename
+
     from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.statistics import statistics_on_atlas
 

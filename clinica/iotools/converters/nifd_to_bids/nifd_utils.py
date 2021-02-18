@@ -11,8 +11,7 @@ def break_path(path):
 
 
 def filter(l_paths, source_dir, descriptors):
-    """
-    From a list of paths, removes paths that do not lead to an image described by any of the descriptor in descriptors
+    """From a list of paths, remove paths that do not lead to an image described by any of the descriptor in descriptors.
 
     Args:
         l_paths: list of paths
@@ -109,8 +108,7 @@ def csv_to_path(csv_line, source_dir):
 
 
 def get_patients_source_files(source_dir, path_ida):
-    """
-    Returns a dictionary containing the paths of all Dicom files for a patient
+    """Return a dictionary containing the paths of all Dicom files for a patient.
 
     Args:
         source_dir: path to the NIFD dataset
@@ -135,7 +133,7 @@ def get_patients_source_files(source_dir, path_ida):
 def filter_patients_source_files(patients_files, source_dir, descriptors):
     """
     Iterates over a dictionary containing all source files for a patient,
-    returns the same dictionary with only path to files that could be converted
+    returns the same dictionary with only path to files that could be converted.
 
     Args:
         patients_files: patients_source_files[subject_ID] = [paths_to_all_medical_images_of_subject]
@@ -154,9 +152,7 @@ def filter_patients_source_files(patients_files, source_dir, descriptors):
 
 
 def create_folder(path):
-    """
-    If the provided path does not exist, the required folders are created
-    """
+    """If the provided path does not exist, the required folders are created."""
     import os
 
     try:
@@ -166,11 +162,10 @@ def create_folder(path):
 
 
 def extract_date(path):
-    """
-    Extracts the name of the date associated with the given path
+    """Extract the name of the date associated with the given path.
 
     Args:
-        path: Path to a Dicom file
+        path: Path to a DICOM file
 
     Returns:
         Date
@@ -183,8 +178,7 @@ def extract_date(path):
 
 
 def extract_name_med_img(path, equivalences):
-    """
-    Extracts the name of the medical image associated with the given path
+    """Extract the name of the medical image associated with the given path.
 
     Args:
         path: Path to a Dicom file
@@ -200,8 +194,7 @@ def extract_name_med_img(path, equivalences):
 
 
 def print_patients_source_files(dict):
-    """
-    Pretty printer for a nested dictionary such as patients_source_files
+    """Pretty printer for a nested dictionary such as patients_source_files.
 
     Args:
         dict: Data structure of the form dict['subject_ID'] = [paths/to/dcm]
@@ -215,8 +208,7 @@ def print_patients_source_files(dict):
 
 
 def print_orderedBIDS(dict):
-    """
-    Pretty printer for a nested dictionary such as ordered_bids, final_bids
+    """Pretty printer for a nested dictionary such as ordered_bids, final_bids.
 
     Args:
         dict: Data structure of the form dict['session_id']['dataType']['Priority']['Final_name'] = [paths/to/dcm]
@@ -236,9 +228,10 @@ def print_orderedBIDS(dict):
 
 
 def collect_conversion_tuples(final_bids, dest_dir, patient):
-    """
-    Returns a list of tuples that will be the input of the convert function
-    If final_bids[session][datatype][priority][name] contains a path, it is added to tuple[0], tuple[1] contains the path where the Nifti will be located (follows the BIDS format)
+    """Return a list of tuples that will be the input of the convert function.
+
+    If final_bids[session][datatype][priority][name] contains a path, it is added to
+    tuple[0], tuple[1] contains the path where the Nifti will be located (follows the BIDS format).
 
     Args:
         final_bids: A data structure of the form : final_bids[session][datatype][priority][name]
@@ -265,14 +258,13 @@ def collect_conversion_tuples(final_bids, dest_dir, patient):
 
 
 def supress_stdout(func):
-    """
-    Wrapper, makes a function non-verbose
+    """Wrapper, makes a function non-verbose.
 
     Args:
         func: function to be silenced
     """
-    import os
     import contextlib
+    import os
 
     def wrapper(*a, **ka):
         with open(os.devnull, "w") as devnull:
@@ -283,17 +275,15 @@ def supress_stdout(func):
 
 
 def convert_dcm_to_nii(single_tuple):
-    """
+    """[Summary].
 
     Args:
         single_tuple: tuple where tuple[0] is the path to the data,
             and tuple[1] the path to the coverted data
-
-    Returns:
-
     """
-    import subprocess
     import os
+    import subprocess
+
     from clinica.utils.stream import cprint
 
     filename = os.path.basename(single_tuple[1])
@@ -307,8 +297,7 @@ def convert_dcm_to_nii(single_tuple):
 
 
 def convert(list_tuples):
-    """
-    Converts a list of tuples = [(path/to/dicom, path/to/nifti), ...]
+    """Convert a list of tuples = [(path/to/dicom, path/to/nifti), ...].
 
     Args:
         list_tuples: list of tuples, tuple[0] contains a path to a Dicom file, tuple[1] contains the path where the Nifti file needs to be created.

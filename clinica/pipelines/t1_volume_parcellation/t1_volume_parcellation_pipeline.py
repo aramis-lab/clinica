@@ -4,7 +4,7 @@ import clinica.pipelines.engine as cpe
 
 
 class T1VolumeParcellation(cpe.Pipeline):
-    """T1VolumeParcellation - Computation of mean GM concentration for a set of regions
+    """T1VolumeParcellation - Computation of mean GM concentration for a set of regions.
 
     Returns:
         A clinica pipeline object containing the T1VolumeParcellation pipeline.
@@ -15,8 +15,8 @@ class T1VolumeParcellation(cpe.Pipeline):
 
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
-        from clinica.utils.group import check_group_label
         from clinica.utils.atlas import T1_VOLUME_ATLASES
+        from clinica.utils.group import check_group_label
 
         self.parameters.setdefault("group_label", None)
         check_group_label(self.parameters["group_label"])
@@ -29,7 +29,6 @@ class T1VolumeParcellation(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-
         return ["file_list", "atlas_list"]
 
     def get_output_fields(self):
@@ -42,12 +41,14 @@ class T1VolumeParcellation(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
-        from colorama import Fore
-        import nipype.pipeline.engine as npe
+
         import nipype.interfaces.utility as nutil
-        from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.input_files import t1_volume_template_tpm_in_mni
+        import nipype.pipeline.engine as npe
+        from colorama import Fore
+
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.input_files import t1_volume_template_tpm_in_mni
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_groups_in_caps_directory,
@@ -103,9 +104,10 @@ class T1VolumeParcellation(cpe.Pipeline):
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
+        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
+
         from ..t1_volume_parcellation import (
             t1_volume_parcellation_utils as parcellation_utils,
         )

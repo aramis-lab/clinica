@@ -1,6 +1,4 @@
-"""
-Script that generate the skeleton for a new Pipeline
-"""
+"""Script that generate the skeleton for a new Pipeline."""
 from os import getcwd, mkdir
 from os.path import isdir, join, splitext
 
@@ -8,9 +6,10 @@ from clinica.engine.cmdparser import CmdParser
 
 
 class CmdGenerateTemplates(CmdParser):
-    """
+    """Genrate pre-filles pipeline files.
+
     Using the jinja2 library and the pipelines template's file (in the resource dir)
-    the user can create his own run-to-go pipelines
+    the user can create his own run-to-go pipelines.
     """
 
     def __init__(self):
@@ -29,7 +28,6 @@ class CmdGenerateTemplates(CmdParser):
         )
 
     def run_command(self, args):
-        # Parsing input arguments
         if args.output_dir is None:
             args.output_dir = getcwd()
         pipeline = dict()
@@ -60,5 +58,5 @@ class CmdGenerateTemplates(CmdParser):
             else:
                 path_to_write = join(pipeline["dir"], rendered_file)
             with open(path_to_write, "w+") as file_to_write:
-                print("Generating template %s" % file_to_write.name)
+                print(f"Generating template {file_to_write.name}")
                 file_to_write.write(template.render(pipeline=pipeline))

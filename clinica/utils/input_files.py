@@ -1,7 +1,6 @@
 # coding: utf8
 
-"""
-This module contains dictionaries used in inputs.py::clinica_{file|group}_reader().
+"""This module contains dictionaries used in inputs.py::clinica_{file|group}_reader().
 
 These dictionaries describe files to grab.
 """
@@ -154,8 +153,9 @@ T1W_EXTENSIVE = {
 
 
 def t1_volume_native_tpm(tissue_number):
-    from .spm import INDEX_TISSUE_MAP
     import os
+
+    from .spm import INDEX_TISSUE_MAP
 
     information = {
         "pattern": os.path.join(
@@ -172,8 +172,9 @@ def t1_volume_native_tpm(tissue_number):
 
 
 def t1_volume_dartel_input_tissue(tissue_number):
-    from .spm import INDEX_TISSUE_MAP
     import os
+
+    from .spm import INDEX_TISSUE_MAP
 
     information = {
         "pattern": os.path.join(
@@ -190,8 +191,9 @@ def t1_volume_dartel_input_tissue(tissue_number):
 
 
 def t1_volume_native_tpm_in_mni(tissue_number, modulation):
-    from .spm import INDEX_TISSUE_MAP
     import os
+
+    from .spm import INDEX_TISSUE_MAP
 
     if modulation:
         pattern_modulation = "on"
@@ -217,8 +219,9 @@ def t1_volume_native_tpm_in_mni(tissue_number, modulation):
 
 
 def t1_volume_template_tpm_in_mni(group_label, tissue_number, modulation):
-    from .spm import INDEX_TISSUE_MAP
     import os
+
+    from .spm import INDEX_TISSUE_MAP
 
     if modulation:
         pattern_modulation = "on"
@@ -387,8 +390,8 @@ def pet_volume_normalized_suvr_pet(
         fwhm_key_value = f"_fwhm-{fwhm}mm"
         fwhm_description = f"with {fwhm}mm smoothing"
     else:
-        fwhm_key_value = f""
-        fwhm_description = f"with no smoothing"
+        fwhm_key_value = ""
+        fwhm_description = "with no smoothing"
 
     suvr_key_value = f"_suvr-{suvr_reference_region}"
 

@@ -1,8 +1,6 @@
 # coding: utf8
 
-"""
-The 'clinica' executable command line, installed with the clinica package,
-calls this module.
+"""The 'clinica' executable command line, installed with the clinica package, calls this module.
 
 The aim of this module is to execute pipelines from the command line,
 and gives to the user some other utils to work with the pipelines.
@@ -10,25 +8,16 @@ and gives to the user some other utils to work with the pipelines.
 
 import os
 import sys
+from argparse import ArgumentParser
 
 import argcomplete
-from clinica.engine.cmdparser import *
-from clinica.utils.stream import cprint
 
-__author__ = "Michael Bacci"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Alexandre Routier", "Mauricio Diaz"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Mauricio Diaz"
-__email__ = "mauriciodiaz@inria.fr"
-__status__ = "Development"
+from clinica.engine.cmdparser import init_cmdparser_objects
+from clinica.utils.stream import cprint
 
 
 class ClinicaClassLoader:
-    """
-    Load pipelines from a custom locations (general from $HOME/clinica)
-    """
+    """Load pipelines from a custom locations (general from $HOME/clinica)."""
 
     def __init__(
         self, env="CLINICAPATH", baseclass=None, reg=r".*_cli\.py$", extra_dir=""
@@ -52,7 +41,7 @@ class ClinicaClassLoader:
 
             return pipeline_cli_parsers
 
-        clinica_pipelines_path = join(os.environ[self.env], self.extra_dir)
+        clinica_pipelines_path = os.path.join(os.environ[self.env], self.extra_dir)
         if not os.path.isdir(clinica_pipelines_path):
             return pipeline_cli_parsers
 
@@ -102,9 +91,11 @@ class ClinicaClassLoader:
 
 # Nice display
 def custom_traceback(exc_type, exc_value, exc_traceback):
-    import traceback
     import math
+    import traceback
+
     from colorama import Fore
+
     from clinica.utils.exceptions import ClinicaException
     from clinica.utils.stream import cprint
 
@@ -116,13 +107,7 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
         )
     else:
         cprint(
-            Fore.RED
-            + "\n"
-            + "*" * 23
-            + "\n*** Clinica crashed ***\n"
-            + "*" * 23
-            + "\n"
-            + Fore.RESET
+            f"{Fore.RED}\n{'*' * 23}\n*** Clinica crashed ***\n{'*' * 23}\n{Fore.RESET}"
         )
         cprint(f"{Fore.YELLOW}Exception type:{Fore.RESET} {exc_type.__name__}")
         cprint(f"{Fore.YELLOW}Exception value:{Fore.RESET} {exc_value}")
@@ -174,11 +159,12 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
 
 
 def execute():
-    import os
     import argparse
-    from colorama import Fore
-    import warnings
     import logging
+    import os
+    import warnings
+
+    from colorama import Fore
 
     # Suppress potential warnings
     warnings.filterwarnings("ignore")
@@ -200,7 +186,6 @@ def execute():
     # Nice traceback when clinica crashes
     sys.excepthook = custom_traceback
 
-    MANDATORY_TITLE = f"{Fore.YELLOW}Mandatory arguments{Fore.RESET}"
     OPTIONAL_TITLE = f"{Fore.YELLOW}Optional arguments{Fore.RESET}"
     """
     Define and parse the command line argument
@@ -235,33 +220,52 @@ def execute():
     """
     run category: run one of the available pipelines
     """
-    from clinica.engine import CmdParser
-
     # fmt: off
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_cli import T1FreeSurferTemplateCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_cli import T1FreeSurferLongitudinalCorrectionCLI
-    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
-    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
-    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_cli import T1VolumeRegisterDartelCLI
-    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
-    from clinica.pipelines.t1_volume.t1_volume_cli import T1VolumeCLI
-    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
-    from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
-    from clinica.pipelines.t1_linear.t1_linear_cli import T1LinearCLI
-    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_cli import DeepLearningPrepareDataCLI
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli
+    from clinica.engine import CmdParser
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_cli import \
+        DeepLearningPrepareDataCLI
+    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import \
+        DwiConnectomeCli
     from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli
-    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli
-    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import \
+        DwiPreprocessingUsingPhaseDiffFieldmapCli
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import \
+        DwiPreprocessingUsingT1Cli
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import \
+        SpatialSVMCLI
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
-    from clinica.pipelines.pet_surface.pet_surface_longitudinal_cli import PetSurfaceLongitudinalCLI
-    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI
-    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI
-    from clinica.pipelines.statistics_volume.statistics_volume_cli import StatisticsVolumeCLI
-    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_cli import StatisticsVolumeCorrectionCLI
+    from clinica.pipelines.pet_surface.pet_surface_longitudinal_cli import \
+        PetSurfaceLongitudinalCLI
+    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
+    from clinica.pipelines.statistics_surface.statistics_surface_cli import \
+        StatisticsSurfaceCLI
+    from clinica.pipelines.statistics_volume.statistics_volume_cli import \
+        StatisticsVolumeCLI
+    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_cli import \
+        StatisticsVolumeCorrectionCLI
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import \
+        T1FreeSurferCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import \
+        T1FreeSurferLongitudinalCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_cli import \
+        T1FreeSurferLongitudinalCorrectionCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_cli import \
+        T1FreeSurferTemplateCLI
+    from clinica.pipelines.t1_linear.t1_linear_cli import T1LinearCLI
+    from clinica.pipelines.t1_volume.t1_volume_cli import T1VolumeCLI
+    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import \
+        T1VolumeCreateDartelCLI
+    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import \
+        T1VolumeDartel2MNICLI
+    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import \
+        T1VolumeExistingTemplateCLI
+    from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import \
+        T1VolumeParcellationCLI
+    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_cli import \
+        T1VolumeRegisterDartelCLI
+    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import \
+        T1VolumeTissueSegmentationCLI
+
     # fmt: on
 
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
@@ -302,7 +306,9 @@ def execute():
         formatter_class=argparse.RawTextHelpFormatter,
         help="To run pipelines on BIDS/CAPS datasets.",
     )
-    run_parser.description = f"{Fore.GREEN}Run pipelines on BIDS/CAPS datasets.{Fore.RESET}"
+    run_parser.description = (
+        f"{Fore.GREEN}Run pipelines on BIDS/CAPS datasets.{Fore.RESET}"
+    )
     run_parser._positionals.title = (
         f"{Fore.GREEN}clinica run expects one of the following pipelines{Fore.RESET}"
     )
@@ -315,10 +321,15 @@ def execute():
     convert category: convert one of the supported datasets into BIDS hierarchy
     """
     # fmt: off
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI
-    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI
-    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids_cli import NifdToBidsCLI
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import \
+        AdniToBidsCLI
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import \
+        AiblToBidsCLI
+    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids_cli import \
+        NifdToBidsCLI
+    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import \
+        OasisToBidsCLI
+
     # fmt: on
 
     converters = ClinicaClassLoader(
@@ -346,10 +357,9 @@ def execute():
     """
     iotools category
     """
-    from clinica.iotools.utils.data_handling_cli import CmdParserSubjectsSessions
-    from clinica.iotools.utils.data_handling_cli import CmdParserMergeTsv
-    from clinica.iotools.utils.data_handling_cli import CmdParserMissingModalities
-    from clinica.iotools.utils.data_handling_cli import CmdParserCenterNifti
+    from clinica.iotools.utils.data_handling_cli import (
+        CmdParserCenterNifti, CmdParserMergeTsv, CmdParserMissingModalities,
+        CmdParserSubjectsSessions)
 
     io_tools = [
         CmdParserSubjectsSessions(),
@@ -376,10 +386,8 @@ def execute():
     visualize category: run one of the available pipelines
     """
     from clinica.engine import CmdParser
-
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_visualizer import (
-        T1FreeSurferVisualizer,
-    )
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_visualizer import \
+        T1FreeSurferVisualizer
 
     visualizers = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     visualizers += [
@@ -523,8 +531,9 @@ def execute():
 
         sys.stdout = FilterOut(sys.stdout)
         import logging as python_logging
-        from logging import Filter, ERROR
         import os
+        from logging import ERROR, Filter
+
         from nipype import config, logging
 
         # Configure Nipype logger for our needs
@@ -542,9 +551,9 @@ def execute():
 
         # Define the LogFilter for ERROR detection
         class LogFilter(Filter):
-            """
-            The LogFilter class ables to monitor if an ERROR log signal is sent
-            from Clinica/Nipype. If detected, the user will be warned.
+            """Monitor if an ERROR log signal is sent from Clinica/Nipype.
+
+            If detected, the user will be warned.
             """
 
             def filter(self, record):
@@ -571,9 +580,9 @@ def execute():
 
         # Enable file logging using a filename
         def enable_file_logging(self, filename):
-            """
-            Hack to define a filename for the log file! It overloads the
-            'enable_file_logging' method in 'nipype/utils/logger.py' file.
+            """Hack to define a filename for the log file.
+
+            It overloads the 'enable_file_logging' method in 'nipype/utils/logger.py' file.
             """
             import logging
             from logging.handlers import RotatingFileHandler as RFHandler

@@ -15,7 +15,8 @@ def sort_session_list(session_list):
 
 
 def print_statistics(summary_file, num_subjs, ses_aval, mmt):
-    """
+    """Write statistics file.
+
     Print to a given input file statistics about missing files and modalities
     in a dataset.  This metod takes in input a MissingModsTracker object (mmt)
     that contains the number of missing modalities for each session and the
@@ -62,10 +63,10 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
                 summary_file.write(f"{mod}: {num_miss_mod} ({percentage_missing}%) \n")
 
 
-def print_longitudinal_analysis(summary_file, bids_dir, out_dir, ses_aval, out_file_name):
-    """
-    Print to a given input file statistics about the present modalities
-    and diagnoses in a dataset for each session.
+def print_longitudinal_analysis(
+    summary_file, bids_dir, out_dir, ses_aval, out_file_name
+):
+    """Print to a given input file statistics about the present modalities and diagnoses in a dataset for each session.
 
     Args:
         summary_file: path of the output file where write.
@@ -74,16 +75,19 @@ def print_longitudinal_analysis(summary_file, bids_dir, out_dir, ses_aval, out_f
         ses_aval: list of sessions available.
         out_file_name: string that replace the default prefix ('missing_mods_') in the name of all the output files
     """
-    import pandas as pd
     from os import path
+
+    import pandas as pd
 
     ses_aval = sort_session_list(ses_aval)
 
-    summary_file.write('**********************************************\n\n')
-    summary_file.write('Number of present diagnoses and modalities for each session:\n')
+    summary_file.write("**********************************************\n\n")
+    summary_file.write("Number of present diagnoses and modalities for each session:\n")
 
     for ses in ses_aval:
-        ses_df = pd.read_csv(path.join(out_dir, out_file_name + ses + '.tsv'), sep="\t").set_index('participant_id')
+        ses_df = pd.read_csv(
+            path.join(out_dir, out_file_name + ses + ".tsv"), sep="\t"
+        ).set_index("participant_id")
         mods_avail = ses_df.columns.values
         mod_dict = dict()
         for mod in mods_avail:
@@ -103,9 +107,9 @@ def print_longitudinal_analysis(summary_file, bids_dir, out_dir, ses_aval, out_f
 
             mod_dict[mod] = diagnosis_dict
 
-        summary_file.write(f'{ses}\n')
+        summary_file.write(f"{ses}\n")
         print_table(summary_file, mod_dict)
-        summary_file.write('\n\n')
+        summary_file.write("\n\n")
 
 
 def increment_dict(dictionnary, key):
@@ -126,21 +130,21 @@ def print_table(summary_file, double_dict):
     diagnoses = list(diagnoses)
     diagnoses.sort()
 
-    summary_file.write('\t')
+    summary_file.write("\t")
     for diag in diagnoses:
-        summary_file.write(f'\t| {diag}')
-    summary_file.write('\n' + "-" * 8 * (len(diagnoses) + 2) + "\n")
+        summary_file.write(f"\t| {diag}")
+    summary_file.write("\n" + "-" * 8 * (len(diagnoses) + 2) + "\n")
 
     for mod in double_dict.keys():
-        summary_file.write(f'{mod}')
+        summary_file.write(f"{mod}")
         if len(mod) < 8:
-            summary_file.write(f'\t')
+            summary_file.write("\t")
         for diag in diagnoses:
             if diag not in double_dict[mod]:
-                summary_file.write(f'\t| 0')
+                summary_file.write("\t| 0")
             else:
-                summary_file.write(f'\t| {double_dict[mod][diag]}')
-        summary_file.write('\n')
+                summary_file.write(f"\t| {double_dict[mod][diag]}")
+        summary_file.write("\n")
 
 
 def has_one_index(index_list):
@@ -149,13 +153,11 @@ def has_one_index(index_list):
     if len(index_list) == 0:
         return -1
     if len(index_list) > 1:
-        raise ("Multiple indexes found")
+        raise ValueError("Multiple indexes found")
 
 
 class MissingModsTracker:
-    """
-    Class used for tracking the number of missing modalities in a database
-    """
+    """Class used for tracking the number of missing modalities in a database."""
 
     def __init__(self, ses, mod_list=False):
         self.missing = {}
@@ -181,8 +183,7 @@ class MissingModsTracker:
                 )
 
     def add_missing_mod(self, ses, mod):
-        """
-        Increase the number of missing files for the input modality.
+        """Increase the number of missing files for the input modality.
 
         Args:
             ses: name of the session
@@ -194,11 +195,9 @@ class MissingModsTracker:
         self.missing[ses]["session"] += 1
 
     def get_missing_list(self):
-        """
-        Return the hash map mods_missing.
+        """Return the hash map mods_missing.
 
         Returns:
              The hash map containing the list of missing files.
-
         """
         return self.missing

@@ -1,7 +1,5 @@
 # coding: utf8
-"""
-This module contains FreeSurfer utilities.
-"""
+"""This module contains FreeSurfer utilities."""
 
 
 def extract_image_id_from_longitudinal_segmentation(freesurfer_id):
@@ -42,7 +40,7 @@ def extract_image_id_from_longitudinal_segmentation(freesurfer_id):
 
 
 def get_secondary_stats(stats_filename, info_type):
-    """Read the 'secondary' statistical info from .stats file
+    """Read the 'secondary' statistical info from .stats file.
 
     Extract the information from .stats file that is commented out
     (lines starting with '# Measure' prefix) and does not appear in the
@@ -98,11 +96,10 @@ def get_secondary_stats(stats_filename, info_type):
 
 
 def generate_regional_measures(segmentation_path, subject_id, output_dir=None):
-    """
-    Read stats files located in
-    <segmentation_path>/<subject_id>/stats/*.stats
-    and generate TSV files in <segmentation_path>/regional_measures
-    folder.
+    """General regional measures files from FreeSurfer segmentation.
+
+    Read stats files located in <segmentation_path>/<subject_id>/stats/*.stats
+    and generate TSV files in <segmentation_path>/regional_measures folder.
 
     Note: the .stats files contain both 1) a table with statistical
     information (e.g., structure volume) and 2) 'secondary' statistical
@@ -118,17 +115,19 @@ def generate_regional_measures(segmentation_path, subject_id, output_dir=None):
             stored. Will be [path_segmentation]/regional_measures if no
             dir is provided by the user
     """
-    import os
     import errno
+    import os
+
     import pandas
+
     from clinica.utils.freesurfer import write_tsv_file
 
     image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
     prefix = image_id.participant_id
     if image_id.session_id:
-        prefix = prefix + "_" + image_id.session_id
+        prefix = f"{prefix}_{image_id.session_id}"
     if image_id.long_id:
-        prefix = prefix + "_" + image_id.long_id
+        prefix = f"{prefix}_{image_id.long_id}"
 
     stats_folder = os.path.join(
         os.path.expanduser(segmentation_path), subject_id, "stats"
@@ -136,8 +135,7 @@ def generate_regional_measures(segmentation_path, subject_id, output_dir=None):
 
     if not os.path.isdir(stats_folder):
         raise IOError(
-            "Image %s does not contain FreeSurfer segmentation"
-            % prefix.replace("_", " | ")
+            f"Image {prefix.replace('_', ' | ')} does not contain FreeSurfer segmentation"
         )
 
     if not output_dir:
@@ -277,7 +275,7 @@ def generate_regional_measures(segmentation_path, subject_id, output_dir=None):
 
 
 def write_tsv_file(out_filename, name_list, scalar_name, scalar_list):
-    """Write a .tsv file with list of keys and values
+    """Write a .tsv file with list of keys and values.
 
     Args:
         out_filename (string): name of the .tsv file
@@ -287,8 +285,9 @@ def write_tsv_file(out_filename, name_list, scalar_name, scalar_list):
             pandas data frame
         scalar_list (list of float): list of values corresponding to the keys
     """
-    import pandas
     import warnings
+
+    import pandas
 
     try:
         data = pandas.DataFrame({"label_name": name_list, "label_value": scalar_list})
@@ -317,10 +316,10 @@ def check_flags(in_t1w, recon_all_args):
         or (voxel_size[1] * t1_size[1] > 256)
         or (voxel_size[2] * t1_size[2] > 256)
     ):
-        # cprint("Setting MRI Convert to crop images to 256 FOV for %s file." % in_t1w)
+        # cprint(f"Setting MRI Convert to crop images to 256 FOV for {in_t1w} file.")
         optional_flag = " -cw256"
     else:
-        # cprint("No need to add -cw256 flag for %s file." % in_t1w)
+        # cprint(f"No need to add -cw256 flag for {in_t1w} file.")
         optional_flag = ""
     flags = "{0}".format(recon_all_args) + optional_flag
 

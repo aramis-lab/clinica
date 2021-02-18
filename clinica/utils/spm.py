@@ -1,8 +1,6 @@
 # coding: utf8
 
-"""
-This module contains SPM utilities.
-"""
+"""This module contains SPM utilities."""
 
 INDEX_TISSUE_MAP = {
     1: "graymatter",
@@ -18,7 +16,9 @@ def check_spm_home():
     """Check and get SPM_HOME environment variable if present."""
     import os
     import platform
+
     from colorama import Fore
+
     from .check_dependency import check_environment_variable
     from .exceptions import ClinicaMissingDependencyError
 
@@ -75,14 +75,14 @@ def get_tpm():
 
 
 def spm_standalone_is_available():
-    """
-        Tells if SPM standalone can be used
+    """Tell if SPM standalone can be used.
+
     Returns:
         True if SPM standalone is detected, False otherwise. Note that it does not guarentee that SPM (classical) is
         up and running in the system.
     """
     import os
-    from os.path import isdir, expandvars
+    from os.path import expandvars, isdir
 
     use_spm_stand = False
     if all(elem in os.environ.keys() for elem in ["SPMSTANDALONE_HOME", "MCR_HOME"]):
@@ -96,14 +96,14 @@ def spm_standalone_is_available():
 
 
 def use_spm_standalone():
-    """
-    Use SPM Standalone with MATLAB Common Runtime
-    """
+    """Use SPM Standalone with MATLAB Common Runtime."""
     import os
-    from colorama import Fore
     import platform
-    from clinica.utils.stream import cprint
+
+    from colorama import Fore
     from nipype.interfaces import spm
+
+    from clinica.utils.stream import cprint
 
     # This section of code determines whether to use SPM standalone or not
     if all(elem in os.environ.keys() for elem in ["SPMSTANDALONE_HOME", "MCR_HOME"]):
@@ -111,24 +111,20 @@ def use_spm_standalone():
         mcr_home = os.getenv("MCR_HOME")
         if os.path.exists(spm_standalone_home) and os.path.exists(mcr_home):
             cprint(
-                Fore.GREEN
-                + "SPM standalone has been found and will be used in this pipeline"
-                + Fore.RESET
+                f"{Fore.GREEN}SPM standalone has been found and will be used in this pipeline{Fore.RESET}"
             )
             if platform.system().lower().startswith("darwin"):
-                matlab_cmd = "cd %s && ./run_spm12.sh %s script" % (
-                    spm_standalone_home,
-                    mcr_home,
+                matlab_cmd = (
+                    f"cd {spm_standalone_home} && ./run_spm12.sh {mcr_home} script"
                 )
             elif platform.system().lower().startswith("linux"):
-                matlab_cmd = "%s %s script" % (
-                    os.path.join(spm_standalone_home, "run_spm12.sh"),
-                    mcr_home,
+                matlab_cmd = (
+                    f"{os.path.join(spm_standalone_home, 'run_spm12.sh')} {mcr_home} script"
                 )
             else:
                 raise SystemError("Clinica only support macOS and Linux")
             spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-            cprint("Using SPM standalone version %s" % spm.SPMCommand().version)
+            cprint(f"Using SPM standalone version {spm.SPMCommand().version}")
         else:
             raise FileNotFoundError(
                 "$SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder "

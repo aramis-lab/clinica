@@ -28,7 +28,6 @@ def spm_read(fname):
     """
 
     import nibabel as nib
-
     import numpy as np
 
     img = nib.load(fname)
@@ -175,6 +174,7 @@ def tensor_determinant(g):
     :return: determinant of the tensor dim = xg*yg*zg
     """
     import numpy as np
+
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     g = np.array(g)
@@ -243,10 +243,11 @@ def roots_poly(C):
 
     the functions find the polynomial roots. It computes the roots of the polynomail whose coefficients are the elements of the vector C?
     """
-    import numpy as np
+    import cmath
     import math
 
-    import cmath
+    import numpy as np
+
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     C = np.array(C)
@@ -325,6 +326,7 @@ def tensor_eigenvalues(g):
 
     """
     import numpy as np
+
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     g = np.array(g)
@@ -386,9 +388,9 @@ def tensor_commatrix(g):
     :param g: tensor
     :return: commatrix of the tensor
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
-
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     g = np.array(g)
     g_com = []
@@ -643,8 +645,9 @@ def tensor_inverse(g):
     :param g: tensor
     :return: inverse of the tensor
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     h = utils.tensor_transpose(utils.tensor_commatrix(g))
     detg = utils.tensor_determinant(g)
@@ -663,8 +666,9 @@ def operateur(x, ginv, detg):
     :param detg:
     :return:
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     if len(x.shape) == 4:
         x = x[0, :, :, :]
@@ -685,10 +689,11 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
     :return: lamba = the largest eigenvalues
 
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
+    import cmath
 
     import numpy as np
-    import cmath
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # parameters
     if epsilon is None:
@@ -758,9 +763,9 @@ def heat_finite_elt_3D_tensor2(x0, t_final, t_step, h, g):
     :return: vector x (at t = t_final)
 
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
-
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     if len(x0.shape) == 4:
         x0 = x0[0, :, :, :]
@@ -810,8 +815,9 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
     :return: vector x (at t = t_final)
 
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # parameters
     nb_step = np.ceil(t_final / t_step)  # number of time step
@@ -857,8 +863,9 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     :param epsilon:
     :return: u= solution of the poisson's equation
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # initialisation
     if h is None:
@@ -900,8 +907,9 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     :param epsilon:
     :return: u= solution of the poisson's equation
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # intiialisation
     if h is None:
@@ -936,11 +944,12 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     """
 
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
-
     import math
-    import numpy as np
     import os
+
+    import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     #
     # PARAMETERS
@@ -1007,13 +1016,14 @@ def obtain_time_step_estimation(dartel_input, FWHM, g):
     :param g: fisher tensor
     :return:
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
-
-    import math
-    import numpy as np
     import json
+    import math
     import os
+
     import nibabel as nib
+    import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # obtain voxel size with dartel_input
     head = nib.load(dartel_input)
@@ -1058,10 +1068,12 @@ def obtain_time_step_estimation(dartel_input, FWHM, g):
 
 def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     import math
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
+    import os
+
     import nibabel as nib
     import numpy as np
-    import os
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # obtain voxel size with dartel_input
     head = nib.load(dartel_input)

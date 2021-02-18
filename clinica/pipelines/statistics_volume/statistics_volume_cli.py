@@ -18,6 +18,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from colorama import Fore
+
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 
@@ -136,11 +137,13 @@ class StatisticsVolumeCLI(ce.CmdParser):
         )
 
     def run_command(self, args):
-        from networkx import Graph
         from colorama import Fore
-        from .statistics_volume_pipeline import StatisticsVolume
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
+        from networkx import Graph
+
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+
+        from .statistics_volume_pipeline import StatisticsVolume
 
         # PET-Volume pipeline
         if args.orig_input_data == "pet-volume":

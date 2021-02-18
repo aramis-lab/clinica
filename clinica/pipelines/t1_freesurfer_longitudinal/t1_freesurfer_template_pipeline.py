@@ -5,7 +5,7 @@ import clinica.pipelines.engine as cpe
 
 
 class T1FreeSurferTemplate(cpe.Pipeline):
-    """FreeSurfer Longitudinal template class
+    """FreeSurfer Longitudinal template class.
 
     Returns:
         A clinica pipeline object containing the T1FreeSurferTemplate pipeline.
@@ -14,11 +14,12 @@ class T1FreeSurferTemplate(cpe.Pipeline):
     @staticmethod
     def get_processed_images(caps_directory, subjects, sessions):
         import os
-        from clinica.utils.inputs import clinica_file_reader
+        import re
+
         from clinica.utils.input_files import T1_FS_T_DESTRIEUX
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.longitudinal import get_long_id
         from clinica.utils.participant import get_unique_subjects
-        import re
 
         [list_participant_id, list_list_session_ids] = get_unique_subjects(
             subjects, sessions
@@ -46,7 +47,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         """Check pipeline parameters."""
 
     def check_custom_dependencies(self):
-        """Check dependencies that cannot be listed in `info.json`"""
+        """Check dependencies that cannot be listed in `info.json`."""
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -77,25 +78,26 @@ class T1FreeSurferTemplate(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
-        from colorama import Fore
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from colorama import Fore
 
-        from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
+        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
-        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1_FS_DESTRIEUX
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.longitudinal import (
             get_long_id,
-            read_sessions,
             get_participants_long_id,
+            read_sessions,
         )
         from clinica.utils.participant import (
             get_unique_subjects,
             unique_subjects_sessions_to_subjects_sessions,
         )
         from clinica.utils.stream import cprint
+
         from .longitudinal_utils import (
             extract_participant_long_ids_from_filename,
             save_part_sess_long_ids_to_tsv,
@@ -112,21 +114,19 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         ) = extract_participant_long_ids_from_filename(output_ids)
         if len(processed_participants) > 0:
             cprint(
-                "%sClinica found %s participant(s) already processed in CAPS directory:%s"
-                % (Fore.YELLOW, len(processed_participants), Fore.RESET)
+                f"{Fore.YELLOW}Clinica found {len(processed_participants)} participant(s) "
+                f"already processed in CAPS directory:{Fore.RESET}"
             )
             for p_id, l_id in zip(processed_participants, processed_long_sessions):
-                cprint("%s\t%s | %s%s" % (Fore.YELLOW, p_id, l_id, Fore.RESET))
+                cprint(f"{Fore.YELLOW}\t{p_id} | {l_id}{Fore.RESET}")
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<long_id>/freesurfer_unbiased_template/"
                 cprint(
-                    "%s\nOutput folders in %s will be recreated.\n%s"
-                    % (Fore.YELLOW, output_folder, Fore.RESET)
+                    f"{Fore.YELLOW}\nOutput folders in {output_folder} will be recreated.\n{Fore.RESET}"
                 )
             else:
                 cprint(
-                    "%s\nParticipant(s) will be ignored by Clinica.\n%s"
-                    % (Fore.YELLOW, Fore.RESET)
+                    f"{Fore.YELLOW}\nParticipant(s) will be ignored by Clinica.\n{Fore.RESET}"
                 )
                 input_ids = [
                     p_id + "_" + s_id
@@ -179,14 +179,13 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             unique_part_list, per_part_session_list, list_part_long_id
         ):
             cprint(
-                "The pipeline will be run on the following %s participant(s):"
-                % len(unique_part_list)
+                f"The pipeline will be run on the following {len(unique_part_list)} participant(s):"
             )
             for (part_id, list_sess_id, list_id) in zip(
                 unique_part_list, per_part_session_list, list_part_long_id
             ):
                 sessions_participant = ", ".join(s_id for s_id in list_sess_id)
-                cprint("\t%s | %s | %s" % (part_id, sessions_participant, list_id))
+                cprint(f"\t{part_id} | {sessions_participant} | {list_id}")
 
         if len(self.subjects):
             # TODO: Generalize long IDs to the message display
@@ -208,23 +207,23 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
+        # fmt: off
         self.connect(
             [
                 (read_node, self.input_node, [("participant_id", "participant_id")]),
-                (
-                    read_node,
-                    self.input_node,
-                    [("list_session_ids", "list_session_ids")],
-                ),
+                (read_node, self.input_node, [("list_session_ids", "list_session_ids")]),
             ]
         )
+        # fmt: on
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        import nipype.pipeline.engine as npe
-        import nipype.interfaces.utility as nutil
-        from .t1_freesurfer_template_utils import save_to_caps
         import os
+
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
+        from .t1_freesurfer_template_utils import save_to_caps
 
         save_to_caps = npe.Node(
             interface=nutil.Function(
@@ -246,26 +245,26 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         save_to_caps.inputs.caps_dir = self.caps_directory
         save_to_caps.inputs.overwrite_caps = False
 
+        # fmt: off
         self.connect(
             [
-                (
-                    self.input_node,
-                    save_to_caps,
-                    [("list_session_ids", "list_session_ids")],
-                ),
+                (self.input_node, save_to_caps, [("list_session_ids", "list_session_ids")]),
                 (self.output_node, save_to_caps, [("image_id", "image_id")]),
             ]
         )
+        # fmt: on
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import os
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from .t1_freesurfer_template_utils import (
             init_input_node,
-            run_recon_all_base,
             move_subjects_dir_to_source_dir,
+            run_recon_all_base,
         )
 
         # Nodes declaration
@@ -315,25 +314,17 @@ class T1FreeSurferTemplate(cpe.Pipeline):
 
         # Connections
         # ===========
+        # fmt: off
         self.connect(
             [
                 # Initialize the pipeline
                 (self.input_node, init_input, [("participant_id", "participant_id")]),
-                (
-                    self.input_node,
-                    init_input,
-                    [("list_session_ids", "list_session_ids")],
+                (self.input_node, init_input, [("list_session_ids", "list_session_ids")],
                 ),
                 # Run recon-all command
-                (
-                    init_input,
-                    recon_all,
-                    [
-                        ("subjects_dir", "subjects_dir"),
-                        ("image_id", "subject_id"),
-                        ("flags", "flags"),
-                    ],
-                ),
+                (init_input, recon_all, [("subjects_dir", "subjects_dir"),
+                                         ("image_id", "subject_id"),
+                                         ("flags", "flags")]),
                 # Move $SUBJECT_DIR to source_dir (1 time point case)
                 (init_input, move_subjects_dir, [("subjects_dir", "subjects_dir")]),
                 (recon_all, move_subjects_dir, [("subject_id", "subject_id")]),
@@ -341,3 +332,4 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                 (move_subjects_dir, self.output_node, [("subject_id", "image_id")]),
             ]
         )
+        # fmt: on

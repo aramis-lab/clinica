@@ -1,8 +1,6 @@
 # coding: utf8
 
-"""
-Methods to find information in the different pipelines of Clinica
-"""
+"""Methods to find information in the different pipelines of Clinica."""
 
 
 import os
@@ -15,9 +13,7 @@ import pandas as pd
 
 
 def pet_volume_pipeline(caps_dir, df, **kwargs):
-    """
-    This method merge the data of the PET-Volume pipeline to the merged file
-    containing the BIDS information.
+    """Merge the data of the PET-Volume pipeline to the merged file containing the BIDS information.
 
     Args:
         caps_dir: the path to the CAPS directory
@@ -189,13 +185,7 @@ def pet_volume_pipeline(caps_dir, df, **kwargs):
                     for atlas in atlas_list:
                         atlas_path = group_path + os.sep + "atlas_statistics" + os.sep
                         atlas_path = (
-                            atlas_path
-                            + participant_id
-                            + "_"
-                            + session_id
-                            + "_"
-                            + atlas
-                            + "_statistics.tsv"
+                            f"{atlas_path}{participant_id}_{session_id}_{atlas}_statistics.tsv"
                         )
                         if os.path.exists(atlas_path):
                             n_regions = summary_df[
@@ -219,9 +209,7 @@ def pet_volume_pipeline(caps_dir, df, **kwargs):
 
 
 def t1_volume_pipeline(caps_dir, df, **kwargs):
-    """
-    This method merge the data of the t1-volume pipeline to the merged file containing the
-    BIDS information.
+    """Merge data of the t1-volume pipeline to the merged file containing the BIDS information.
 
     Args:
         caps_dir: the path to the CAPS directory

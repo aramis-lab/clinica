@@ -1,24 +1,23 @@
 # coding: utf8
 
-"""
-Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS.
-"""
+"""Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS."""
 
 from clinica.iotools.abstract_converter import Converter
 
 
 class OasisToBids(Converter):
     def convert_clinical_data(self, clinical_data_dir, bids_dir):
-        """
-        Convert the clinical data defined inside the clinical_specifications.xlx into BIDS
+        """Convert the clinical data defined inside the clinical_specifications.xlx into BIDS.
 
         Args:
             clinical_data_dir: path to the folder with the original clinical data
             bids_dir: path to the BIDS directory
         """
-        from os import path
         import os
+        from os import path
+
         import numpy as np
+
         import clinica.iotools.bids_utils as bids
         from clinica.utils.stream import cprint
 
@@ -79,25 +78,26 @@ class OasisToBids(Converter):
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
     def convert_images(self, source_dir, dest_dir):
-        """
-        Convert T1 images to BIDS
+        """Convert T1w images to BIDS.
 
         Args:
             source_dir: path to the OASIS dataset
             dest_dir: path to the BIDS directory
 
         Note:
-            Previous version of this method used mri_convert from FreeSurfer to convert Analyze data from OASIS-1.
-            To remove this strong dependency, NiBabel is used instead.
+            Previous version of this method used mri_convert from FreeSurfer to convert
+            Analyze data from OASIS-1. To remove this strong dependency, NiBabel is used instead.
         """
-        from os import path
-        from glob import glob
         import os
+        from glob import glob
         from multiprocessing.dummy import Pool
+        from os import path
+
         from nipype.interfaces.fsl import ExtractROI
 
         def convert_single_subject(subj_folder):
             import os
+
             import nibabel as nb
             import numpy as np
 

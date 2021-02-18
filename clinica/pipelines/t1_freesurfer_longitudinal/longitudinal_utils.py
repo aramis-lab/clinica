@@ -1,17 +1,19 @@
 # coding: utf8
 
-"""
-This module contains functions to deal with longitudinal datasets. Currently, Clinica Pipeline class and clinica/utils
-folder can not handle the case where we need to manipulate longitudinal IDs.
+"""This module contains functions to deal with longitudinal datasets.
+
+Currently, Clinica Pipeline class and clinica/utils folder can not handle the case
+where we need to manipulate longitudinal IDs.
 
 When a new longitudinal pipeline will be developed into Clinica, refactoring will be needed.
 """
 
 
 def extract_subject_session_longitudinal_ids_from_filename(bids_or_caps_files):
-    """Extract participant/session/longitudinal IDs
-    (e.g. ['sub-CLNC01', 'sub-CLNC01']/['ses-M00', 'ses-M18']/['long-M00M18', 'long-M00M18'])
-    from `bids_or_caps_files`.
+    """Extract participant/session/longitudinal IDs from filename.
+
+    Example:
+        ['sub-CLNC01', 'sub-CLNC01'], ['ses-M00', 'ses-M18'], ['long-M00M18', 'long-M00M18'])
 
     TODO: Find a way to merge with utils/filemanip.py::extract_subjects_sessions_from_filename into one util
     """
@@ -36,33 +38,25 @@ def read_part_sess_long_ids_from_tsv(tsv_file):
     TODO: Find a way to merge with utils/filemanip.py::read_participant_tsv into one util
     """
     import os
+
     import pandas
     from colorama import Fore
+
     from clinica.utils.exceptions import ClinicaException
 
     if not os.path.isfile(tsv_file):
         raise ClinicaException(
-            "\n%s[Error] The TSV file you gave is not a file.%s\n"
-            "\n%sError explanations:%s\n"
-            " - Clinica expected the following path to be a file: %s%s%s\n"
-            " - If you gave relative path, did you run Clinica on the good folder?"
-            % (
-                Fore.RED,
-                Fore.RESET,
-                Fore.YELLOW,
-                Fore.RESET,
-                Fore.BLUE,
-                tsv_file,
-                Fore.RESET,
-            )
+            f"\n{Fore.RED}[Error] The TSV file you gave is not a file.{Fore.RESET}\n"
+            f"\n{Fore.YELLOW}Error explanations:{Fore.RESET}\n"
+            f" - Clinica expected the following path to be a file: {Fore.BLUE}{tsv_file}{Fore.RESET}\n"
+            f" - If you gave relative path, did you run Clinica on the good folder?"
         )
     df = pandas.read_csv(tsv_file, sep="\t")
 
     def check_key_in_data_frame(file, data_frame, key):
         if key not in list(data_frame.columns.values):
             raise ClinicaException(
-                "\n%s[Error] The TSV file does not contain %s column (path: %s)%s"
-                % (Fore.RED, key, file, Fore.RESET)
+                f"\n{Fore.RED}[Error] The TSV file does not contain {key} column (path: {file}){Fore.RESET}"
             )
 
     check_key_in_data_frame(tsv_file, df, "participant_id")
@@ -85,11 +79,14 @@ def save_part_sess_long_ids_to_tsv(
     participant_ids, session_ids, long_ids, out_folder, file_name=None
 ):
     """Save participant, session and longitudinal IDs to TSV file.
+
     TODO: Find a way to merge with utils/save_participants_sessions.py::read_participant_tsv into one util
     """
-    import os
     import errno
+    import os
+
     import pandas
+
     from clinica.utils.stream import cprint
 
     try:
@@ -113,14 +110,12 @@ def save_part_sess_long_ids_to_tsv(
         )
         data.to_csv(tsv_file, sep="\t", index=False, encoding="utf-8")
     except Exception as e:
-        cprint("Impossible to save %s with pandas" % tsv_file)
+        cprint(f"Impossible to save {tsv_file} with pandas")
         raise e
 
 
 def extract_participant_long_ids_from_filename(caps_files):
-    """
-    TODO: Find a way to merge with utils/filemanip.py::extract_subjects_sessions_from_filename into one util
-    """
+    """TODO: Find a way to merge with utils/filemanip.py::extract_subjects_sessions_from_filename into one util."""
     import re
 
     caps_files = [
@@ -134,8 +129,7 @@ def extract_participant_long_ids_from_filename(caps_files):
 
 
 def grab_image_ids_from_caps_directory(caps_dir):
-    """
-    Parse CAPS directory to extract participants, sessions and longitudinal IDs.
+    """Parse CAPS directory to extract participants, sessions and longitudinal IDs.
 
     Note:
         This function is a simplified version of create_subs_sess_list for CAPS folders with longitudinal IDs
@@ -162,8 +156,8 @@ def grab_image_ids_from_caps_directory(caps_dir):
     Args:
         caps_dir (str): Path to the CAPS directory.
     """
-    from glob import glob
     import os
+    from glob import glob
 
     participants_paths = glob(os.path.join(caps_dir, "subjects", "*sub-*"))
 

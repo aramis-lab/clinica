@@ -1,12 +1,12 @@
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 # -*- coding: utf-8 -*-
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os.path as op
 
-from nipype.interfaces.base import traits, TraitedSpec, File
-from nipype.interfaces.mrtrix3.base import MRTrix3BaseInputSpec, MRTrix3Base
+from nipype.interfaces.base import File, TraitedSpec, traits
+from nipype.interfaces.mrtrix3.base import MRTrix3Base, MRTrix3BaseInputSpec
 
 
 class TractographyInputSpec(MRTrix3BaseInputSpec):

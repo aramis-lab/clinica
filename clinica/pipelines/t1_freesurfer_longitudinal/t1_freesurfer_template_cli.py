@@ -30,8 +30,10 @@ class T1FreeSurferTemplateCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
+
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+
         from .t1_freesurfer_template_pipeline import T1FreeSurferTemplate
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline = T1FreeSurferTemplate(
             caps_directory=self.absolute_path(args.caps_directory),

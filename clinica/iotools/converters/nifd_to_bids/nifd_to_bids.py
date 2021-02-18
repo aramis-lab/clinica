@@ -1,29 +1,30 @@
 # coding: utf8
 
-"""
-Convert the NIFD dataset into BIDS.
-"""
+"""Convert the NIFD dataset into BIDS."""
 
 
 def convert_images(path_to_dataset, bids_dir, path_to_clinical):
-    # Conversion of the entire dataset in BIDS
-    """Scans available files in the path_to_dataset,
-    identifies the patients that have images described by the json file,
-    converts the image with the highest quality for each category"""
+    """Convert the entire dataset in BIDS.
 
+    Scans available files in the path_to_dataset,
+    identifies the patients that have images described by the JSON file,
+    converts the image with the highest quality for each category.
+    """
     import os
+
     from clinica.utils.stream import cprint
-    from .preprocessing.parse_ida import process_ida
-    from .preprocessing.update_clinical_info import update_info_clinical
+
     from .nifd_utils import (
-        get_patients_source_files,
-        filter_patients_source_files,
         collect_conversion_tuples,
         convert,
+        filter_patients_source_files,
+        get_patients_source_files,
     )
+    from .preprocessing.parse_ida import process_ida
+    from .preprocessing.update_clinical_info import update_info_clinical
     from .utils.conv_image_folders import (
-        get_all_med_name,
         dict_conversion,
+        get_all_med_name,
         get_descriptors,
     )
     from .utils.manage_conflicts import Manage_conflicts
@@ -53,15 +54,18 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
     path_idaSearch = os.path.join(path_to_clinical, name_ida)
 
     def get_data_dictionary(path_to_clinical_data_folder):
-        """
-        Temporary function to get DataDictionary_NIFD_2017.10.18.xlsx file
+        """Temporary function to get DataDictionary_NIFD_2017.10.18.xlsx file.
+
         See https://github.com/aramis-lab/clinica/issues/122 for details.
+
         Args:
             path_to_clinical_data_folder: Path to clinical data folder.
+
         Returns:
             Path to 'DataDictionary_NIFD_2017.10.18.xlsx' file.
         """
         import os
+
         from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
 
         local_nifd_dictionary = os.path.join(
@@ -187,11 +191,12 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
 def convert_clinical_data(bids_dir, path_to_clinical, to_convert):
     # clinical specifications in BIDS
     import os
+
+    import clinica.iotools.bids_utils as bids
     from clinica.iotools.converters.nifd_to_bids.utils.parse_clinical import (
         Parse_clinical,
     )
     from clinica.utils.stream import cprint
-    import clinica.iotools.bids_utils as bids
 
     path_to_ida = os.path.join(path_to_clinical, "ida.tsv")
     assert os.path.isfile(path_to_ida), "Failed to create ida.tsv"

@@ -83,8 +83,9 @@ def first_process(path_out):
 
 
 def second_process(path_out):
-    import pandas as pd
     import os
+
+    import pandas as pd
 
     path_ida = os.path.join(path_out, "ida.tsv")
 

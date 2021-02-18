@@ -61,7 +61,6 @@ class StatisticsVolume(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-
         return ["input_files"]
 
     def get_output_fields(self):
@@ -70,7 +69,6 @@ class StatisticsVolume(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-
         return [
             "spmT_0001",
             "spmT_0002",
@@ -84,17 +82,18 @@ class StatisticsVolume(cpe.Pipeline):
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        from colorama import Fore
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from colorama import Fore
+
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import (
-            t1_volume_template_tpm_in_mni,
             pet_volume_normalized_suvr_pet,
+            t1_volume_template_tpm_in_mni,
         )
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
-        from clinica.utils.ux import print_images_to_process, print_begin_image
+        from clinica.utils.ux import print_begin_image, print_images_to_process
 
         all_errors = []
         if self.parameters["orig_input_data"] == "pet-volume":
@@ -175,9 +174,10 @@ class StatisticsVolume(cpe.Pipeline):
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
         from os.path import join, pardir
+
+        import nipype.interfaces.io as nio
+        import nipype.pipeline.engine as npe
 
         relative_path = join(
             "groups",
@@ -277,11 +277,13 @@ class StatisticsVolume(cpe.Pipeline):
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        import clinica.pipelines.statistics_volume.statistics_volume_utils as utils
+        from os.path import dirname, join
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
+        import clinica.pipelines.statistics_volume.statistics_volume_utils as utils
         from clinica.utils.filemanip import unzip_nii
-        from os.path import join, dirname
 
         # SPM cannot handle zipped files
         unzip_node = npe.Node(

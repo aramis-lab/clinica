@@ -125,12 +125,15 @@ class T1VolumeCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         import datetime
+        import os
+
         from colorama import Fore
-        from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import (
-            T1VolumeTissueSegmentationCLI,
-        )
+
+        from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.participant import get_subject_session_list
+        from clinica.utils.stream import cprint
+
         from ..t1_volume_create_dartel.t1_volume_create_dartel_cli import (
             T1VolumeCreateDartelCLI,
         )
@@ -140,9 +143,9 @@ class T1VolumeCLI(ce.CmdParser):
         from ..t1_volume_parcellation.t1_volume_parcellation_cli import (
             T1VolumeParcellationCLI,
         )
-        from clinica.utils.filemanip import save_participants_sessions
-        from clinica.utils.participant import get_subject_session_list
-        from clinica.utils.stream import cprint
+        from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import (
+            T1VolumeTissueSegmentationCLI,
+        )
 
         cprint(
             f"The t1-volume pipeline is divided into 4 parts:\n"

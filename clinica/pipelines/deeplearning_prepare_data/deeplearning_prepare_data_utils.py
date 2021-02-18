@@ -20,8 +20,9 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode="single"):
         file: multiple tensors saved on the disk, suffixes corresponds to
             indexes of the slices. Same location than input file.
     """
-    import torch
     import os
+
+    import torch
 
     image_tensor = torch.load(input_tensor)
     # reshape the tensor, delete the first dimension for slice-level
@@ -223,8 +224,9 @@ def extract_patches(input_tensor, patch_size, stride_size):
         file: multiple tensors saved on the disk, suffixes corresponds to
             indexes of the patches. Same location than input file.
     """
-    import torch
     import os
+
+    import torch
 
     basedir = os.getcwd()
     image_tensor = torch.load(input_tensor)
@@ -282,9 +284,10 @@ def save_as_pt(input_img):
 
     """
 
-    import torch
     import os
+
     import nibabel as nib
+    import torch
 
     basedir = os.getcwd()
     image_array = nib.load(input_img).get_fdata()

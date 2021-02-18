@@ -8,8 +8,6 @@ class SpatialSVM(cpe.Pipeline):
 
     Returns:
         A clinica pipeline object containing the SpatialSVM pipeline.
-
-    Raises:
     """
 
     def check_pipeline_parameters(self):
@@ -42,7 +40,6 @@ class SpatialSVM(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-
         return ["dartel_input", "input_image"]
 
     def get_output_fields(self):
@@ -51,21 +48,22 @@ class SpatialSVM(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-
         return ["regularized_image"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
-        from colorama import Fore
-        import nipype.pipeline.engine as npe
+
         import nipype.interfaces.utility as nutil
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
-        from clinica.utils.input_files import (
-            t1_volume_final_group_template,
-            pet_volume_normalized_suvr_pet,
-        )
+        import nipype.pipeline.engine as npe
+        from colorama import Fore
+
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.input_files import (
+            pet_volume_normalized_suvr_pet,
+            t1_volume_final_group_template,
+        )
+        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.ux import print_groups_in_caps_directory
 
         # Check that group already exists
@@ -151,30 +149,25 @@ class SpatialSVM(cpe.Pipeline):
         read_parameters_node.inputs.dartel_input = dartel_input
         read_parameters_node.inputs.input_image = input_image
 
+        # fmt: off
         self.connect(
             [
-                (
-                    read_parameters_node,
-                    self.input_node,
-                    [("dartel_input", "dartel_input")],
-                ),
-                (
-                    read_parameters_node,
-                    self.input_node,
-                    [("input_image", "input_image")],
-                ),
+                (read_parameters_node, self.input_node, [("dartel_input", "dartel_input")]),
+                (read_parameters_node, self.input_node, [("input_image", "input_image")]),
             ]
         )
+        # fmt: on
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
+        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
+
+        import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
         fisher_tensor_generation = npe.Node(
             name="obtain_g_fisher_tensor",
@@ -263,49 +256,19 @@ class SpatialSVM(cpe.Pipeline):
             ]
         # Connection
         # ==========
+        # fmt: off
         self.connect(
             [
-                (
-                    self.input_node,
-                    fisher_tensor_generation,
-                    [("dartel_input", "dartel_input")],
-                ),
-                (
-                    fisher_tensor_generation,
-                    time_step_generation,
-                    [("fisher_tensor", "g")],
-                ),
-                (
-                    self.input_node,
-                    time_step_generation,
-                    [("dartel_input", "dartel_input")],
-                ),
-                (
-                    self.input_node,
-                    heat_solver_equation,
-                    [("input_image", "input_image")],
-                ),
-                (
-                    fisher_tensor_generation,
-                    heat_solver_equation,
-                    [("fisher_tensor", "g")],
-                ),
+                (self.input_node, fisher_tensor_generation, [("dartel_input", "dartel_input")]),
+                (fisher_tensor_generation, time_step_generation, [("fisher_tensor", "g")]),
+                (self.input_node, time_step_generation, [("dartel_input", "dartel_input")]),
+                (self.input_node, heat_solver_equation, [("input_image", "input_image")]),
+                (fisher_tensor_generation, heat_solver_equation, [("fisher_tensor", "g")]),
                 (time_step_generation, heat_solver_equation, [("t_step", "t_step")]),
-                (
-                    self.input_node,
-                    heat_solver_equation,
-                    [("dartel_input", "dartel_input")],
-                ),
-                (
-                    fisher_tensor_generation,
-                    datasink,
-                    [("fisher_tensor_path", "fisher_tensor_path")],
-                ),
+                (self.input_node, heat_solver_equation, [("dartel_input", "dartel_input")]),
+                (fisher_tensor_generation, datasink, [("fisher_tensor_path", "fisher_tensor_path")]),
                 (time_step_generation, datasink, [("json_file", "json_file")]),
-                (
-                    heat_solver_equation,
-                    datasink,
-                    [("regularized_image", "regularized_image")],
-                ),
+                (heat_solver_equation, datasink, [("regularized_image", "regularized_image")]),
             ]
         )
+        # fmt: on

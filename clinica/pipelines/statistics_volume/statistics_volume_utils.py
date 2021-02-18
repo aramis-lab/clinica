@@ -14,6 +14,7 @@ def get_group_1_and_2(tsv, contrast):
         class_names: (list of str of len 2) list of the class names read in the column contrast of the tsv
     """
     import pandas as pds
+
     from clinica.utils.exceptions import ClinicaException
 
     # StatisticsVolume pipeline has been instantiated with tsv_file=tsv,
@@ -63,14 +64,16 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
         current_model: (str) path to the matlab files with all the @TEXT replaced with the correct names
         covariates: list of str with the names of covariates
     """
-    from os.path import join, dirname, isfile, abspath, isdir
-    from shutil import rmtree
-    from clinica.utils.exceptions import ClinicaException
     from numbers import Number
-    from os import remove, mkdir
+    from os import mkdir, remove
+    from os.path import abspath, dirname, isdir, isfile, join
+    from shutil import rmtree
+
     import numpy as np
     import pandas as pds
+
     import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+    from clinica.utils.exceptions import ClinicaException
 
     # Get template for model creation
     if not isfile(template_file):
@@ -249,12 +252,14 @@ def run_m_script(m_file):
     Returns:
         output_mat_file: (str) path to the SPM.mat file needed in SPM analysis
     """
-    from os.path import isfile, dirname, basename, abspath, join
-    from os import system
-    from clinica.utils.spm import spm_standalone_is_available
-    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
-    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     import platform
+    from os import system
+    from os.path import abspath, basename, dirname, isfile, join
+
+    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
+
+    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+    from clinica.utils.spm import spm_standalone_is_available
 
     assert isinstance(m_file, str), "[Error] Argument must be a string"
     if not isfile(m_file):
@@ -365,8 +370,8 @@ def results(mat_file, template_file, method, threshold):
     Returns:
         current_model_estimation: (str) path to the template file filled with SPM.mat information, ready to be launched
     """
-    from os.path import abspath
     import time
+    from os.path import abspath
 
     # Read template
     with open(template_file, "r") as file:
@@ -441,8 +446,8 @@ def read_output(spm_mat, class_names, covariates, group_label, fwhm, measure):
         contrasts: (str list) path to weighted parameter estimation for the 2 contrasts
 
     """
-    from os.path import join, dirname, isdir, isfile, abspath
     from os import listdir
+    from os.path import abspath, dirname, isdir, isfile, join
     from shutil import copyfile
 
     if not isfile(spm_mat):
@@ -478,53 +483,17 @@ def read_output(spm_mat, class_names, covariates, group_label, fwhm, measure):
         raise RuntimeError("[Error] " + str(len(spm_T)) + " SPM t-map(s) were found")
     if fwhm:
         spmT_0001 = abspath(
-            "group-"
-            + group_label
-            + "_"
-            + class_names[0]
-            + "-lt-"
-            + class_names[1]
-            + "_measure-"
-            + measure
-            + "_fwhm-"
-            + str(int(fwhm))
-            + "_TStatistics.nii"
+            f"group-{group_label}_{class_names[0]}-lt-{class_names[1]}_measure-{measure}_fwhm-{int(fwhm)}_TStatistics.nii"
         )
         spmT_0002 = abspath(
-            "group-"
-            + group_label
-            + "_"
-            + class_names[1]
-            + "-lt-"
-            + class_names[0]
-            + "_measure-"
-            + measure
-            + "_fwhm-"
-            + str(int(fwhm))
-            + "_TStatistics.nii"
+            f"group-{group_label}_{class_names[1]}-lt-{class_names[0]}_measure-{measure}_fwhm-{int(fwhm)}_TStatistics.nii"
         )
     else:
         spmT_0001 = abspath(
-            "group-"
-            + group_label
-            + "_"
-            + class_names[0]
-            + "-lt-"
-            + class_names[1]
-            + "_measure-"
-            + measure
-            + "_TStatistics.nii"
+            f"group-{group_label}_{class_names[0]}-lt-{class_names[1]}_measure-{measure}_TStatistics.nii"
         )
         spmT_0002 = abspath(
-            "group-"
-            + group_label
-            + "_"
-            + class_names[1]
-            + "-lt-"
-            + class_names[0]
-            + "_measure-"
-            + measure
-            + "_TStatistics.nii"
+            f"group-{group_label}_{class_names[1]}-lt-{class_names[0]}_measure-{measure}_TStatistics.nii"
         )
     copyfile(join(dirname(spm_mat), "spmT_0001.nii"), spmT_0001)
     copyfile(join(dirname(spm_mat), "spmT_0002.nii"), spmT_0002)
@@ -563,26 +532,10 @@ def read_output(spm_mat, class_names, covariates, group_label, fwhm, measure):
         raise RuntimeError("There must exists only 2 contrast files !")
     contrasts = [
         abspath(
-            "group-"
-            + group_label
-            + "_"
-            + class_names[0]
-            + "-lt-"
-            + class_names[1]
-            + "_measure-"
-            + measure
-            + "_contrast.nii"
+            f"group-{group_label}_{class_names[0]}-lt-{class_names[1]}_measure-{measure}_contrast.nii"
         ),
         abspath(
-            "group-"
-            + group_label
-            + "_"
-            + class_names[1]
-            + "-lt-"
-            + class_names[0]
-            + "_measure-"
-            + measure
-            + "_contrast.nii"
+            f"group-{group_label}_{class_names[1]}-lt-{class_names[0]}_measure-{measure}_contrast.nii"
         ),
     ]
     for con, contrast in zip(con_files, contrasts):

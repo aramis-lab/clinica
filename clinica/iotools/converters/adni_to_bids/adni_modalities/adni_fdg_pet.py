@@ -1,14 +1,12 @@
 # coding: utf-8
 
-"""
-Module for converting FDG PET of ADNI
-"""
+"""Module for converting FDG PET of ADNI."""
 
 
 def convert_adni_fdg_pet(
     source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
 ):
-    """Convert FDG PET images of ADNI into BIDS format
+    """Convert FDG PET images of ADNI into BIDS format.
 
     Args:
         source_dir: path to the ADNI directory
@@ -18,10 +16,11 @@ def convert_adni_fdg_pet(
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
     """
-    import pandas as pd
     from os import path
-    from clinica.utils.stream import cprint
+
+    import pandas as pd
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.utils.stream import cprint
     from colorama import Fore
 
     if subjs_list is None:
@@ -37,11 +36,11 @@ def convert_adni_fdg_pet(
     )
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "fdg", mod_to_update=mod_to_update)
-    cprint(Fore.GREEN + "FDG PET conversion done." + Fore.RESET)
+    cprint(f"{Fore.GREEN}FDG PET conversion done.{Fore.RESET}")
 
 
 def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
-    """Compute the paths to the FDG PET images and store them in a tsv file
+    """Compute the paths to the FDG PET images and store them in a TSV file.
 
     Args:
         source_dir: path to the ADNI directory
@@ -52,15 +51,13 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
 
     Returns:
         images: a dataframe with all the paths to the PET images that will be converted into BIDS
-
     """
+    from os import path
 
     import pandas as pd
-    import os
-    from os import path
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        get_images_pet,
         find_image_path,
+        get_images_pet,
     )
 
     pet_fdg_col = [

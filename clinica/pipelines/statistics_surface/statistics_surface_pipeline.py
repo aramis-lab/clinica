@@ -4,8 +4,7 @@ import clinica.pipelines.engine as cpe
 
 
 class StatisticsSurface(cpe.Pipeline):
-    """
-    StatisticsSurface - Surface-based mass-univariate analysis with SurfStat
+    """StatisticsSurface - Surface-based mass-univariate analysis with SurfStat.
 
     See documentation at http://www.clinica.run/doc/Pipelines/Stats_Surface/
 
@@ -21,9 +20,10 @@ class StatisticsSurface(cpe.Pipeline):
 
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
-        from .statistics_surface_utils import get_t1_freesurfer_custom_file
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.group import check_group_label
+
+        from .statistics_surface_utils import get_t1_freesurfer_custom_file
 
         # Clinica compulsory parameters
         self.parameters.setdefault("group_label", None)
@@ -89,8 +89,9 @@ class StatisticsSurface(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
-        from clinica.utils.inputs import clinica_file_reader
+
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
 
         # Check if already present in CAPS
@@ -101,7 +102,7 @@ class StatisticsSurface(cpe.Pipeline):
         # TODO: Modify this behaviour
         if os.path.exists(
             os.path.join(
-                self.caps_directory, "groups", "group-" + self.parameters["group_label"]
+                self.caps_directory, "groups", f"group-{self.parameters['group_label']}"
             )
         ):
             error_message = (
@@ -137,8 +138,7 @@ class StatisticsSurface(cpe.Pipeline):
         # Files on left hemisphere
         lh_surface_based_info = {
             "pattern": pattern_hemisphere.replace("@hemi", "lh"),
-            "description": "surface-based features on left hemisphere at FWHM = %s"
-            % self.parameters["full_width_at_half_maximum"],
+            "description": f"surface-based features on left hemisphere at FWHM = {self.parameters['full_width_at_half_maximum']}",
         }
         try:
             clinica_file_reader(
@@ -148,8 +148,7 @@ class StatisticsSurface(cpe.Pipeline):
             all_errors.append(e)
         rh_surface_based_info = {
             "pattern": pattern_hemisphere.replace("@hemi", "rh"),
-            "description": "surface-based features on right hemisphere at FWHM = %s"
-            % self.parameters["full_width_at_half_maximum"],
+            "description": f"surface-based features on right hemisphere at FWHM = {self.parameters['full_width_at_half_maximum']}",
         }
         try:
             clinica_file_reader(
@@ -174,6 +173,7 @@ class StatisticsSurface(cpe.Pipeline):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from .statistics_surface_utils import save_to_caps
 
         # Writing results into CAPS
@@ -203,10 +203,13 @@ class StatisticsSurface(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import os
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from .statistics_surface_utils import init_input_node
+
         import clinica.pipelines.statistics_surface.statistics_surface_utils as utils
+
+        from .statistics_surface_utils import init_input_node
 
         init_input = npe.Node(
             interface=nutil.Function(

@@ -1,15 +1,12 @@
 # coding: utf-8
 
-"""
-Module for converting DWI of ADNI
-"""
+"""Module for converting DWI of ADNI."""
 
 
 def convert_adni_dwi(
     source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
 ):
-    """
-    Convert DW images of ADNI into BIDS format
+    """Convert DW images of ADNI into BIDS format.
 
     Args:
         source_dir: path to the ADNI directory
@@ -18,14 +15,13 @@ def convert_adni_dwi(
         conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
-
     """
+    from os import path
 
     import pandas as pd
-    from os import path
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
     from colorama import Fore
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
@@ -41,12 +37,11 @@ def convert_adni_dwi(
     cprint("Paths of DWI images found. Exporting images into BIDS ...")
     # dwi_paths_to_bids(images, dest_dir)
     paths_to_bids(images, dest_dir, "dwi", mod_to_update=mod_to_update)
-    cprint(Fore.GREEN + "DWI conversion done." + Fore.RESET)
+    cprint(f"{Fore.GREEN}DWI conversion done.{Fore.RESET}")
 
 
 def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
-    """
-    Compute paths to DW images to convert to BIDS
+    """Compute paths to DW images to convert to BIDS.
 
     Args:
         source_dir: path to the ADNI directory
@@ -57,12 +52,10 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
 
     Returns:
         images: pandas dataframe that contains the path to all the DW images to convert
-
     """
+    from os import path
 
-    from os import path, mkdir
     import pandas as pd
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
         visits_to_timepoints,
@@ -244,7 +237,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
 def dwi_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
     """
     One image among those in the input list is chosen according to QC
-    and then correspoding metadata is extracted to a dictionary
+    and then correspoding metadata is extracted to a dictionary.
 
     Args:
         subject_id: Subject identifier
@@ -254,7 +247,6 @@ def dwi_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
         mri_qc_subj: Dataframe containing list of QC of scans for the subject
 
     Returns: dictionary - contains image metadata
-
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,

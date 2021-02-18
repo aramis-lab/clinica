@@ -25,33 +25,32 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         check_group_label(self.parameters["group_label"])
 
     def get_input_fields(self):
-        """Specify the list of possible inputs of this pipelines.
+        """Specify the list of possible inputs of this pipeline.
 
         Returns:
             A list of (string) input fields name.
         """
-
         return ["dartel_input_images", "dartel_iteration_templates"]
 
     def get_output_fields(self):
-        """Specify the list of possible outputs of this pipelines.
+        """Specify the list of possible outputs of this pipeline.
 
         Returns:
             A list of (string) output fields name.
         """
-
         return ["dartel_flow_fields"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        import nipype.pipeline.engine as npe
+
+        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.input_files import (
-            t1_volume_i_th_iteration_group_template,
             t1_volume_dartel_input_tissue,
+            t1_volume_i_th_iteration_group_template,
         )
+        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.ux import print_images_to_process
 
         read_input_node = npe.Node(
@@ -117,9 +116,11 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
         import re
+
+        import nipype.interfaces.io as nio
+        import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import zip_nii
 
         # Writing flowfields into CAPS
@@ -168,11 +169,12 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         # fmt: on
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipelines."""
-        import nipype.pipeline.engine as npe
+        """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
-        from clinica.utils.filemanip import unzip_nii
+        import nipype.pipeline.engine as npe
+
         import clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_utils as utils
+        from clinica.utils.filemanip import unzip_nii
 
         # Unzipping
         # =========

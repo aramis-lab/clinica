@@ -78,8 +78,10 @@ def save_long_id(list_session_id, output_dir, file_name=None):
 def read_sessions(caps_dir, participant_id, long_id):
     """Extract sessions IDs from `caps_dir`/subjects/`participant_id`/`long_id`/`long_id`_sessions.tsv."""
     import os
+
     import pandas
     from colorama import Fore
+
     from clinica.utils.exceptions import ClinicaException
 
     sessions_file = os.path.join(

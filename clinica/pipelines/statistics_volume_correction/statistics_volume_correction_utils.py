@@ -18,8 +18,9 @@ def peak_correction(t_map, t_threshold, output_name=None):
     Returns:
         path to the generated file.
     """
+    from os.path import abspath, basename, join
+
     import nibabel as nib
-    from os.path import join, basename, abspath
 
     original_nifti = nib.load(t_map)
     data = original_nifti.get_data()
@@ -48,8 +49,9 @@ def cluster_correction(t_map, t_thresh, c_thresh, output_name=None):
     Returns:
         path to the generated file.
     """
+    from os.path import abspath, basename, join
+
     import nibabel as nib
-    from os.path import join, basename, abspath
     import numpy as np
     from scipy.ndimage.measurements import label
 
@@ -99,9 +101,10 @@ def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh, 
     Returns:
         List of path to image files: glass brain, statmap along x, statmap along y, statmap along z
     """
-    from nilearn import plotting
-    import numpy as np
     from os.path import abspath
+
+    import numpy as np
+    from nilearn import plotting
 
     assert type_of_correction in ["FWE", "FDR"], "Type of correction must be FWE or FDR"
     if not np.isnan(c_thresh):
@@ -171,7 +174,7 @@ def generate_output(t_map, figs, name):
         Nothing
     """
     from os import makedirs
-    from os.path import join, dirname, basename, splitext
+    from os.path import basename, dirname, join, splitext
     from shutil import copyfile
 
     # Will extract group-GroupTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics from TStatistics file

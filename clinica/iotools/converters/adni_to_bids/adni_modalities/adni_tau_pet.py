@@ -1,15 +1,12 @@
 # coding: utf-8
 
-"""
-Module for converting Tau PET of ADNI
-"""
+"""Module for converting Tau PET of ADNI."""
 
 
 def convert_adni_tau_pet(
     source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
 ):
-    """
-    Convert Tau PET images of ADNI into BIDS format
+    """Convert Tau PET images of ADNI into BIDS format.
 
     Args:
         source_dir: path to the ADNI directory
@@ -18,13 +15,12 @@ def convert_adni_tau_pet(
         conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
-
     """
+    from os import path
 
     import pandas as pd
-    from os import path
-    from clinica.utils.stream import cprint
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.utils.stream import cprint
     from colorama import Fore
 
     if subjs_list is None:
@@ -40,12 +36,11 @@ def convert_adni_tau_pet(
     )
     cprint("Paths of TAU PET images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "tau", mod_to_update=mod_to_update)
-    cprint(Fore.GREEN + "TAU PET conversion done." + Fore.RESET)
+    cprint(f"{Fore.GREEN}TAU PET conversion done.{Fore.RESET}")
 
 
 def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
-    """
-    Compute the paths to Tau PET images
+    """Compute the paths to Tau PET images.
 
     Args:
         source_dir: path to the ADNI directory
@@ -55,15 +50,13 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
         conversion_dir: path to the TSV files including the paths to original images
 
     Returns: pandas Dataframe containing the path for each Tau PET image
-
     """
+    from os import path
 
     import pandas as pd
-    import os
-    from os import path
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        get_images_pet,
         find_image_path,
+        get_images_pet,
     )
 
     pet_tau_col = [

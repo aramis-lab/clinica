@@ -79,8 +79,10 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
+
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+
         from .t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
             "tissue_classes": args.tissue_classes,

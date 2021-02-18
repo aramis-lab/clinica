@@ -1,10 +1,10 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -20,9 +20,10 @@ class T1FreeSurfer(cpe.Pipeline):
     @staticmethod
     def get_processed_images(caps_directory, subjects, sessions):
         import os
-        from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.input_files import T1_FS_DESTRIEUX
+
         from clinica.utils.filemanip import extract_image_ids
+        from clinica.utils.input_files import T1_FS_DESTRIEUX
+        from clinica.utils.inputs import clinica_file_reader
 
         image_ids = []
         if os.path.isdir(caps_directory):
@@ -35,13 +36,13 @@ class T1FreeSurfer(cpe.Pipeline):
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
         from colorama import Fore
+
         from clinica.utils.stream import cprint
 
         if "-dontrun" in self.parameters["recon_all_args"].split(" "):
             cprint(
-                "%s[Warning] Found -dontrun flag for FreeSurfer recon-all. "
-                "Please note that this will not run the segmentation.%s"
-                % (Fore.YELLOW, Fore.RESET)
+                f"{Fore.YELLOW}[Warning] Found -dontrun flag for FreeSurfer recon-all. "
+                f"Please note that this will not run the segmentation.{Fore.RESET}"
             )
 
     def check_custom_dependencies(self):
@@ -78,9 +79,11 @@ class T1FreeSurfer(cpe.Pipeline):
             ClinicaBIDSError: If there are duplicated files or missing files for any subject
         """
         import os
-        from colorama import Fore
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from colorama import Fore
+
         from clinica.iotools.utils.data_handling import (
             check_volume_location_in_world_coordinate_system,
         )
@@ -89,8 +92,8 @@ class T1FreeSurfer(cpe.Pipeline):
             extract_subjects_sessions_from_filename,
             save_participants_sessions,
         )
-        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -101,23 +104,21 @@ class T1FreeSurfer(cpe.Pipeline):
         )
         if len(processed_ids) > 0:
             cprint(
-                "%sClinica found %s image(s) already processed in CAPS directory:%s"
-                % (Fore.YELLOW, len(processed_ids), Fore.RESET)
+               f"{Fore.YELLOW}Clinica found {len(processed_ids)} image(s) "
+               f"already processed in CAPS directory:{Fore.RESET}"
             )
             for image_id in processed_ids:
                 cprint(
-                    "%s\t%s%s" % (Fore.YELLOW, image_id.replace("_", " | "), Fore.RESET)
+                    f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}"
                 )
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/freesurfer_cross_sectional"
                 cprint(
-                    "%s\nOutput folders in %s will be recreated.\n%s"
-                    % (Fore.YELLOW, output_folder, Fore.RESET)
+                    f"{Fore.YELLOW}\nOutput folders in {output_folder} will be recreated.\n{Fore.RESET}"
                 )
             else:
                 cprint(
-                    "%s\nImage(s) will be ignored by Clinica.\n%s"
-                    % (Fore.YELLOW, Fore.RESET)
+                    f"{Fore.YELLOW}\nImage(s) will be ignored by Clinica.\n{Fore.RESET}"
                 )
                 input_ids = [
                     p_id + "_" + s_id
@@ -173,10 +174,12 @@ class T1FreeSurfer(cpe.Pipeline):
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        import nipype.pipeline.engine as npe
-        import nipype.interfaces.utility as nutil
-        from .t1_freesurfer_utils import save_to_caps
         import os
+
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
+        from .t1_freesurfer_utils import save_to_caps
 
         save_to_caps = npe.Node(
             interface=nutil.Function(
@@ -201,9 +204,11 @@ class T1FreeSurfer(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import os
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
+
         from .t1_freesurfer_utils import init_input_node, write_tsv_files
 
         # Nodes declaration

@@ -7,8 +7,7 @@
 def convert_flirt_transformation_to_mrtrix_transformation(
     in_source_image, in_reference_image, in_flirt_matrix, name_output_matrix=None
 ):
-    """
-    Convert flirt matrix to mrtrix matrix.
+    """Convert flirt matrix to mrtrix matrix.
 
     This function converts a transformation matrix produced by FSL's flirt
     command into a format usable by MRtrix. The output of this function
@@ -28,6 +27,7 @@ def convert_flirt_transformation_to_mrtrix_transformation(
         out_mrtrix_matrix (str): Transformation matrix in MRtrix format.
     """
     import os
+
     from clinica.utils.check_dependency import check_mrtrix
 
     check_mrtrix()
@@ -54,8 +54,7 @@ def apply_ants_registration_syn_quick_transformation(
     in_bspline_transformation,
     name_output_image=None,
 ):
-    """
-    Apply a transformation obtained with antsRegistrationSyNQuick.sh.
+    """Apply a transformation obtained with antsRegistrationSyNQuick.sh.
 
     This function applies a rigid & deformable B-Spline syn transformation
     which has been estimated previously with antsRegistrationSyNQuick script.
@@ -79,6 +78,7 @@ def apply_ants_registration_syn_quick_transformation(
             transformations.
     """
     import os
+
     from clinica.utils.check_dependency import check_ants
 
     check_ants()
@@ -103,8 +103,7 @@ def apply_ants_registration_syn_quick_transformation(
 
 
 def ants_registration_syn_quick(fix_image, moving_image, prefix_output=None):
-    """
-    Small wrapper for antsRegistrationSyNQuick.sh.
+    """Small wrapper for antsRegistrationSyNQuick.sh.
 
     This function calls antsRegistrationSyNQuick.sh in order to register
     non-linearly moving_image towards fix_image.
@@ -120,6 +119,7 @@ def ants_registration_syn_quick(fix_image, moving_image, prefix_output=None):
         The deformed image with the deformation parameters.
     """
     import os
+
     from clinica.utils.check_dependency import check_ants
 
     check_ants()
@@ -140,8 +140,7 @@ def ants_registration_syn_quick(fix_image, moving_image, prefix_output=None):
 
 
 def ants_combine_transform(in_file, transforms_list, reference):
-    """
-    Apply a transformation obtained with antsRegistrationSyNQuick.sh.
+    """Apply a transformation obtained with antsRegistrationSyNQuick.sh.
 
     This function applies a rigid & deformable B-Spline syn transformation
     which has been estimated previously with antsRegistrationSyNQuick script.
@@ -159,6 +158,7 @@ def ants_combine_transform(in_file, transforms_list, reference):
             in_bspline_transformation transformations.
     """
     import os
+
     from clinica.utils.check_dependency import check_ants
 
     check_ants()

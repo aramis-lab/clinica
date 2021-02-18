@@ -1,8 +1,6 @@
 # coding: utf-8
 
-"""
-Methods used by BIDS converters
-"""
+"""Methods used by BIDS converters."""
 
 
 # -- Methods for the clinical data --
@@ -14,8 +12,7 @@ def create_participants_df(
     bids_ids,
     delete_non_bids_info=True,
 ):
-    """
-    Create the file participants.tsv
+    """Create the file participants.tsv.
 
     Args:
         study_name: name of the study (Ex. ADNI)
@@ -28,10 +25,12 @@ def create_participants_df(
 
     Returns: a pandas dataframe that contains the participants data
     """
-    import pandas as pd
     import os
     from os import path
+
     import numpy as np
+    import pandas as pd
+
     from clinica.utils.stream import cprint
 
     fields_bids = ["participant_id"]
@@ -148,9 +147,7 @@ def create_sessions_dict(
     name_column_ids,
     subj_to_remove=[],
 ):
-    """
-
-    Extract the information regarding the sessions and store them in a dictionary (session M00 only)
+    """Extract the information regarding the sessions and store them in a dictionary (session M00 only).
 
     Args:
         clinical_data_dir: path to the input folder
@@ -159,12 +156,12 @@ def create_sessions_dict(
         bids_ids: list of bids ids
         name_column_ids: name of the column where the subject ids are stored
         subj_to_remove: subjects to remove
-
     """
-    import pandas as pd
-    from os import path
-    import numpy as np
     import os
+    from os import path
+
+    import numpy as np
+    import pandas as pd
 
     # Load data
     location = study_name + " location"
@@ -255,7 +252,7 @@ def create_scans_dict(
     name_column_ses,
     ses_dict,
 ):
-    """
+    """[summary].
 
     Args:
         clinical_data_dir: path to the directory where the clinical data are stored
@@ -267,12 +264,12 @@ def create_scans_dict(
         ses_dict: links the session id to the viscode of the session.
 
     Returns: a pandas DataFrame that contains the scans information for all sessions of all participants.
-
     """
-    import pandas as pd
-    from os import path
-    import glob
     import datetime
+    import glob
+    from os import path
+
+    import pandas as pd
 
     scans_dict = {}
     prev_file = ""
@@ -358,8 +355,7 @@ def create_scans_dict(
                     ] = value
                 else:
                     print(
-                        " Scans information for %s %s not found."
-                        % (bids_id, session_name)
+                        f"Scans information for {bids_id} {session_name} not found."
                     )
                     scans_dict[bids_id][session_name][fields_mod[i]][
                         fields_bids[i]
@@ -376,12 +372,10 @@ def write_modality_agnostic_files(study_name, bids_dir):
     Args:
         study_name: name of the study (Ex ADNI)
         bids_dir: path to the bids directory
-
-    Returns:
-
     """
     import json
     from os import path
+
     import clinica
 
     dataset_dict = {"Name": study_name, "BIDSVersion": "1.4.1", "DatasetType": "raw"}
@@ -392,7 +386,8 @@ def write_modality_agnostic_files(study_name, bids_dir):
 
     file = open(path.join(bids_dir, "README"), "w")
     file.write(
-        f"This BIDS directory was generated with Clinica v{clinica.__version__}.\nMore information on http://www.clinica.run\n"
+        f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
+        f"More information on http://www.clinica.run\n"
     )
     file.close()
 
@@ -432,20 +427,20 @@ def write_modality_agnostic_files(study_name, bids_dir):
 
 
 def write_sessions_tsv(bids_dir, sessions_dict):
-    """
-    Write the content of the function create scans dict in several tsv files following the BIDS specification
+    """Create <participant_id>_sessions.tsv files.
+
+    Write the content of the function create scans dict in several TSV files
+    following the BIDS specification.
 
     Args:
         bids_dir: path to the bids directory
         sessions_dict: output of the function create_sessions_dict
-
-    Returns:
-
     """
     import os
-    import pandas as pd
-    from os import path
     from glob import glob
+    from os import path
+
+    import pandas as pd
 
     bids_paths = glob(path.join(bids_dir, "sub-*"))
 
@@ -463,7 +458,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
         else:
-            print("No session data available for " + sp)
+            print(f"No session data available for {sp}")
             session_df = pd.DataFrame(columns=["session_id"])
             session_df["session_id"] = pd.Series("M00")
 
@@ -477,9 +472,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
 
 
 def write_scans_tsv(bids_dir, bids_ids, scans_dict):
-    """
-
-    Write the scans dict into tsv files
+    """Write the scans dict into TSV files.
 
     Args:
         bids_dir:  path to the BIDS directory
@@ -487,10 +480,11 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
         scans_dict:  the output of the function create_scans_dict
 
     """
-    import pandas as pd
-    from os import path
     import os
     from glob import glob
+    from os import path
+
+    import pandas as pd
 
     for bids_id in bids_ids:
         # Create the file
@@ -538,14 +532,13 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
 
 # -- Other methods --
 def contain_dicom(folder_path):
-    """
-     Check if a folder contains DICOM images
+    """Check if a folder contains DICOM images.
 
     Args:
         folder_path: path to the folder
 
-    Returns: True if dicom files are found inside the folder, False otherwise
-
+    Returns:
+        True if DICOM files are found inside the folder, False otherwise
     """
     from glob import glob
     from os import path
@@ -558,24 +551,12 @@ def contain_dicom(folder_path):
 
 
 def get_supported_dataset():
-    """
-    Return the list of supported datasets
-
-    Returns: a list of supported datasets
-
-    """
+    """Return the list of supported datasets."""
     return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "AIBL"]
 
 
 def get_bids_subjs_list(bids_path):
-    """
-
-    Given a BIDS compliant dataset, returns the list of all the subjects available
-
-    Args:/
-        bids_path: path to the BIDS folder
-
-    """
+    """Given a BIDS compliant dataset, return the list of all the subjects available."""
     import os
     from os import path
 
@@ -583,14 +564,7 @@ def get_bids_subjs_list(bids_path):
 
 
 def get_bids_subjs_paths(bids_path):
-    """
-
-    Given a BIDS compliant dataset, returns the list of all paths to the subjects folders
-
-    Args:
-        bids_path: path to the BIDS folder
-    """
-
+    """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders."""
     import os
     from os import path
 
@@ -602,19 +576,17 @@ def get_bids_subjs_paths(bids_path):
 
 
 def compute_new_subjects(original_ids, bids_ids):
-    """
-    Check for new subject to convert
+    """Check for new subject to convert.
 
-    This function checks for news subjects to convert to the BIDS version i.e. subjects contained in the unorganised
-    version that are not available in the bids version.
-
+    This function checks for news subjects to convert to the BIDS version i.e. subjects
+    contained in the unorganised version that are not available in the BIDS version.
 
     Args:
         original_ids: list of all the ids of the unorganized folder.
-        bids_ids: list of all the BIDS ids contained inside the bids converted version of the dataset
+        bids_ids: list of all the BIDS ids contained inside the BIDS converted version of the dataset
 
-    Returns: a list containing the original_ids of the subjects that are not available in the bids converted version
-
+    Returns:
+        a list containing the original_ids of the subjects that are not available in the BIDS converted version
     """
     to_return = []
     original_ids = remove_space_and_symbols(original_ids)
@@ -627,8 +599,7 @@ def compute_new_subjects(original_ids, bids_ids):
 
 
 def remove_space_and_symbols(data):
-    """
-    Remove spaces and  - _ from a list (or a single) of strings
+    """Remove spaces and  - _ from a list (or a single) of strings.
 
     Args:
         data: list of strings or a single string to clean
@@ -648,7 +619,6 @@ def remove_space_and_symbols(data):
 
 
 def get_ext(file_path):
-
     import os
 
     root, ext = os.path.splitext(file_path)
@@ -665,9 +635,9 @@ def compress_nii(file_path):
     Args:
         file_path (str): path to the file to convert
     """
-    from os import remove
     import gzip
     import shutil
+    from os import remove
 
     with open(file_path, "rb") as f_in:
         with gzip.open(file_path + ".gz", "wb") as f_out:

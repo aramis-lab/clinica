@@ -33,6 +33,7 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
         """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from clinica.utils.inputs import clinica_group_reader
 
         t_map = clinica_group_reader(
@@ -59,12 +60,15 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        import clinica.pipelines.statistics_volume_correction.statistics_volume_correction_utils as utils
-        from clinica.utils.inputs import fetch_file, RemoteFileStructure
+        from os.path import abspath, dirname, exists, join, pardir
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from os.path import join, abspath, pardir, dirname, exists
         import numpy as np
+
+        import clinica.pipelines.statistics_volume_correction.statistics_volume_correction_utils as utils
+        from clinica.utils.inputs import RemoteFileStructure, fetch_file
+        from clinica.utils.stream import cprint
 
         peak_correction_FWE = npe.Node(
             name="peak_correction_FWE",

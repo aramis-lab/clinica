@@ -1,7 +1,6 @@
 # coding: utf8
 
-"""
-This module contains utilities for longitudinal pipelines.
+"""This module contains utilities for longitudinal pipelines.
 
 See CAPS specifications for details about long ID.
 """
@@ -110,7 +109,8 @@ def get_subject_session_list(
     """
     import os
     import tempfile
-    from time import time, strftime, localtime
+    from time import localtime, strftime, time
+
     import clinica.iotools.utils.data_handling as cdh
 
     if not ss_file:

@@ -5,7 +5,7 @@ import clinica.pipelines.engine as cpe
 
 
 class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
-    """FreeSurfer Longitudinal correction class
+    """FreeSurfer Longitudinal correction class.
 
     Returns:
         A clinica pipeline object containing the T1FreeSurferLongitudinalCorrection pipeline
@@ -42,26 +42,26 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-
         return ["subject_id"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
-        from colorama import Fore
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
+
         from .longitudinal_utils import (
+            extract_subject_session_longitudinal_ids_from_filename,
             grab_image_ids_from_caps_directory,
             read_part_sess_long_ids_from_tsv,
             save_part_sess_long_ids_to_tsv,
-            extract_subject_session_longitudinal_ids_from_filename,
         )
         from .t1_freesurfer_longitudinal_correction_utils import get_processed_images
 
@@ -91,7 +91,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             )
             for image_id in processed_ids:
                 cprint(
-                    "%s\t%s%s" % (Fore.YELLOW, image_id.replace("_", " | "), Fore.RESET)
+                    f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}"
                 )
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/<long_id>/freesurfer_longitudinal/"
@@ -150,13 +150,12 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             list_participant_id, list_session_id, list_longitudinal_id
         ):
             cprint(
-                "The pipeline will be run on the following %s image(s):"
-                % len(list_participant_id)
+                f"The pipeline will be run on the following {len(list_participant_id)} image(s):"
             )
             for (p_id, s_id, l_id) in zip(
                 list_participant_id, list_session_id, list_longitudinal_id
             ):
-                cprint("\t%s | %s | %s" % (p_id, s_id, l_id))
+                cprint(f"\t{p_id} | {s_id} | {l_id}")
 
         if len(self.subjects):
             # TODO: Generalize long IDs to the message display
@@ -187,10 +186,12 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        import nipype.pipeline.engine as npe
-        import nipype.interfaces.utility as nutil
-        from .t1_freesurfer_longitudinal_correction_utils import save_to_caps
         import os
+
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
+        from .t1_freesurfer_longitudinal_correction_utils import save_to_caps
 
         save_to_caps = npe.Node(
             interface=nutil.Function(
@@ -215,13 +216,15 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import os
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from .t1_freesurfer_longitudinal_correction_utils import (
             init_input_node,
+            move_subjects_dir_to_source_dir,
             run_recon_all_long,
             write_tsv_files,
-            move_subjects_dir_to_source_dir,
         )
 
         # Nodes declaration

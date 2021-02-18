@@ -46,8 +46,10 @@ class T1LinearCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
+
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+
         from .t1_linear_pipeline import T1Linear
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {"uncropped_image": args.uncropped_image}
 

@@ -1,7 +1,6 @@
 # coding: utf8
 
-"""Define the command line parser for each utility (pipeline, iotools, etc.)
-"""
+"""Define the command line parser for each utility (pipeline, iotools, etc.)."""
 
 import abc
 from argparse import ArgumentParser
@@ -11,16 +10,16 @@ from os.path import expanduser, join
 from colorama import Fore
 
 PIPELINE_CATEGORIES = {
-    "CLINICA_COMPULSORY": "%sClinica mandatory arguments%s" % (Fore.BLUE, Fore.RESET),
-    "OPTIONAL": "%sPipeline options%s" % (Fore.BLUE, Fore.RESET),
-    "CLINICA_OPTIONAL": "%sClinica standard options%s" % (Fore.BLUE, Fore.RESET),
-    "ADVANCED": "%sPipelines advanced options%s" % (Fore.BLUE, Fore.RESET),
-    "IOTOOLS_OPTIONS": "%sOptional arguments%s" % (Fore.BLUE, Fore.RESET),
+    "CLINICA_COMPULSORY": f"{Fore.BLUE}Clinica mandatory arguments{Fore.RESET}",
+    "OPTIONAL": f"{Fore.BLUE}Pipeline options{Fore.RESET}",
+    "CLINICA_OPTIONAL": f"{Fore.BLUE}Clinica standard options{Fore.RESET}",
+    "ADVANCED": f"{Fore.BLUE}Pipelines advanced options{Fore.RESET}",
+    "IOTOOLS_OPTIONS": f"{Fore.BLUE}Optional arguments{Fore.RESET}",
 }
 
 
 class CmdParser:
-    """Abstract class to extend in order to create your command line parser
+    """Abstract class to extend in order to create your command line parser.
 
     For pipelines, please use the 'clinica generate template' command.
     For converters, see clinica/iotools/converters/*/*_cli.py
@@ -46,23 +45,18 @@ class CmdParser:
     def set_content(self):
         from colorama import Fore
 
-        self._args._positionals.title = "%sMandatory arguments%s" % (
-            Fore.BLUE,
-            Fore.RESET,
-        )
-        self._args._optionals.title = "%sOptional arguments%s" % (Fore.BLUE, Fore.RESET)
+        self._args._positionals.title = f"{Fore.BLUE}Mandatory arguments{Fore.RESET}"
+        self._args._optionals.title = f"{Fore.BLUE}Optional arguments{Fore.RESET}"
         if self._description is None:
             self._description = self._name
             self._args.description = (
-                "%sIf you are not familiar with Clinica, see:\n"
-                "http://clinica.run/doc/InteractingWithClinica/%s"
-                % (Fore.GREEN, Fore.RESET)
+                f"{Fore.GREEN}If you are not familiar with Clinica, see:\n"
+                f"http://clinica.run/doc/InteractingWithClinica/{Fore.RESET}"
             )
         else:
             self._args.description = (
-                "%s%s\n\nIf you are not familiar with Clinica, see:\n"
-                "http://clinica.run/doc/InteractingWithClinica%s"
-                % (Fore.GREEN, self._description, Fore.RESET)
+                f"{Fore.GREEN}{self._description}\n\nIf you are not familiar with Clinica, see:\n"
+                f"http://clinica.run/doc/InteractingWithClinica{Fore.RESET}"
             )
 
     @property
@@ -147,7 +141,7 @@ class CmdParser:
 
     @staticmethod
     def list_to_string(list):
-        """Convert list (e.g. [8, 8, 8]) to string (e.g. '8 8 8')"""
+        """Convert list (e.g. [8, 8, 8]) to string (e.g. '8 8 8')."""
         string_without_commas_and_brackets = " ".join(str(item) for item in list)
         return string_without_commas_and_brackets
 
@@ -164,8 +158,7 @@ class CmdParser:
 
 
 def init_cmdparser_objects(root_parser, parser, objects):
-    """
-    Init all derived CmdParser instances with specific data.
+    """Init all derived CmdParser instances with specific data.
 
     Args:
         root_parser: The root parser
@@ -205,8 +198,7 @@ def init_cmdparser_objects(root_parser, parser, objects):
 
 
 def get_cmdparser_names(objects=None):
-    """
-    Return the names of all pipelines
+    """Return the names of all pipelines.
 
     Args:
         objects: All CmdParser instances of this file

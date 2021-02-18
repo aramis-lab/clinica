@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-import clinica.pipelines.engine as cpe
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -20,9 +20,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
 
     Returns:
         A clinica pipeline object containing the Deeplearning prepare data pipeline.
-
-    Raises:
-
     """
 
     def check_custom_dependencies(self):
@@ -34,7 +31,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-
         return ["input_nifti"]
 
     def get_output_fields(self):
@@ -43,19 +39,21 @@ class DeepLearningPrepareData(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-
-        return ["image_id"]  # Fill here the list
+        return ["image_id"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.stream import cprint
+        from clinica.utils.input_files import (
+            T1W_EXTENSIVE,
+            T1W_LINEAR,
+            T1W_LINEAR_CROPPED,
+        )
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.input_files import T1W_LINEAR
-        from clinica.utils.input_files import T1W_EXTENSIVE
-        from clinica.utils.input_files import T1W_LINEAR_CROPPED
+        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
         if self.parameters.get("modality") == "t1-linear":
@@ -121,10 +119,11 @@ class DeepLearningPrepareData(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
-        from nipype.interfaces.io import DataSink
         import nipype.pipeline.engine as npe
-        from clinica.utils.nipype import fix_join, container_from_filename
+        from nipype.interfaces.io import DataSink
+
         from clinica.utils.filemanip import get_subject_id
+        from clinica.utils.nipype import container_from_filename, fix_join
 
         # Write node
         # ----------------------
@@ -207,41 +206,27 @@ class DeepLearningPrepareData(cpe.Pipeline):
         if self.parameters.get("modality") == "custom":
             mod_subfolder = "custom"
 
+        # fmt: on
         self.connect(
             [
-                (
-                    container_path,
-                    write_node,
-                    [
-                        (
-                            (
-                                "container",
-                                fix_join,
-                                "deeplearning_prepare_data",
-                                subfolder,
-                                mod_subfolder,
-                            ),
-                            "container",
-                        )
-                    ],
-                ),
+                (container_path, write_node, [
+                    (("container", fix_join, "deeplearning_prepare_data", subfolder, mod_subfolder), "container")]),
             ]
         )
         # fmt: on
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from .deeplearning_prepare_data_utils import (
-            extract_slices,
             extract_patches,
+            extract_slices,
             save_as_pt,
         )
 
         # The processing nodes
-
         # Node to save MRI in nii.gz format into pytorch .pt format
         # ----------------------
         save_as_pt = npe.MapNode(
@@ -314,3 +299,4 @@ class DeepLearningPrepareData(cpe.Pipeline):
                     (save_as_pt, self.output_node, [("output_file", "output_pt_file")]),
                 ]
             )
+        # fmt: on

@@ -2,11 +2,13 @@
 
 
 def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
-    """
+    """Extract SUBJECT_DIR.
+
     Extract path to FreeSurfer segmentation in CAPS folder and FreeSurfer ID
     (e.g. sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18 or sub-CLNC01_ses-M00).
     """
     import os
+
     from clinica.utils.exceptions import ClinicaCAPSError
 
     if is_longitudinal:
@@ -14,15 +16,11 @@ def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
         long_folds = [f for f in os.listdir(root) if f.startswith("long-")]
         if len(long_folds) > 1:
             raise ClinicaCAPSError(
-                "[Error] Folder "
-                + root
-                + " contains "
-                + str(len(long_folds))
-                + " folders labeled long-*. Only 1 can exist"
+                f"[Error] Folder {root} contains {len(long_folds)} folders labeled long-*. Only 1 can exist."
             )
         elif len(long_folds) == 0:
             raise ClinicaCAPSError(
-                f"[Error] Folder {root} does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?"
+                f"[Error] Folder {root} does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal?"
             )
         else:
             root_env = os.path.join(root, long_folds[0], "freesurfer_longitudinal")
@@ -63,8 +61,10 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     """
     import os
     import shutil
+
     import nipype.pipeline.engine as pe
     from nipype.interfaces.base import CommandLine
+
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
     # Old subject_dir is saved for later
@@ -132,6 +132,7 @@ def remove_nan(volname):
         (string) Path to the volume in Nifti that does not contain any NaNs
     """
     import os
+
     import nibabel as nib
     import numpy as np
 
@@ -160,10 +161,12 @@ def make_label_conversion(gtmsegfile, csv):
         (list of strings) List of path to the converted volumes according to the .csv file. Each volume is a mask
         representing an area
     """
+    import os
+
     import nibabel as nib
     import numpy
-    import os
     import pandas
+
     from clinica.utils.stream import cprint
 
     def isclose(a, b, rel_tol=1e-9, abs_tol=0.0):
@@ -256,9 +259,9 @@ def runApplyInverseDeformationField_SPM_standalone(
     a batch file that SPM standalone can run. This function does not check wether SPM standalone must be used. Previous
     check when building the pipeline ensures that all the env vars exists ($SPMSTANDALONE_HOME and $MCR_HOME)
     """
-    from os.path import abspath, join, basename, exists
-    import platform
     import os
+    import platform
+    from os.path import abspath, basename, exists, join
 
     prefix = "subject_space_"
 
@@ -309,8 +312,9 @@ def runApplyInverseDeformationField_SPM_standalone(
 
 def runApplyInverseDeformationField(target, deformation_field, img, matscript_folder):
 
-    import sys
     import os
+    import sys
+
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
 
     prefix = "subject_space_"
@@ -336,9 +340,7 @@ def runApplyInverseDeformationField(target, deformation_field, img, matscript_fo
     output_file = os.path.join(os.path.abspath("./"), prefix + os.path.basename(img))
     if not os.path.exists(output_file):
         raise IOError(
-            "Something went wrong, please check "
-            + os.path.abspath(matlab.inputs.logfile)
-            + " for more information"
+            f"Something went wrong, please check {os.path.abspath(matlab.inputs.logfile)} for more information"
         )
     return output_file
 
@@ -355,8 +357,9 @@ def suvr_normalization(pet_path, mask):
     Returns:
         (string) Path to the suvr normalized volume in the current directory
     """
-    import nibabel as nib
     import os
+
+    import nibabel as nib
 
     # Load mask
     eroded_mask_nifti = nib.load(mask)
@@ -399,11 +402,10 @@ def mris_expand(in_surface):
         (list of strings) List of path to the generated surfaces
     """
     import os
-    import sys
     import shutil
+    import sys
 
     # bug in mris_expand : you are not allowed to write the surfaces elsewhere than in the surf folder
-
     # -N is a hidden parameter (not documented) that allows the user to specify the number of surface generated between
     # source and final target surface. Here target is 65% of thickness, with 13 surfaces. Then we only keep the surfaces
     # we are interested in.
@@ -470,6 +472,7 @@ def surf2surf(
     import os
     import shutil
     import sys
+
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
     # set subjects_dir env. variable for mri_surf2surf to work properly
@@ -540,6 +543,7 @@ def vol2surf(
     import os
     import shutil
     import sys
+
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
     # set subjects_dir env. variable for mri_vol2surf to work properly
@@ -626,9 +630,10 @@ def weighted_mean(in_surfaces):
     Returns:
         (string) Path to the data averaged
     """
+    import os
+
     import nibabel as nib
     import numpy as np
-    import os
 
     # coefficient for normal repartition
     coefficient = [0.1034, 0.1399, 0.1677, 0.1782, 0.1677, 0.1399, 0.1034]
@@ -676,9 +681,11 @@ def fsaverage_projection(
     Returns:
         (string) Path to the data averaged
     """
-    from nipype.interfaces.freesurfer import MRISPreproc
     import os
     import shutil
+
+    from nipype.interfaces.freesurfer import MRISPreproc
+
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
     subjects_dir_backup = os.path.expandvars("$SUBJECTS_DIR")
@@ -775,10 +782,12 @@ def produce_tsv(pet, atlas_files):
         Returns:
             (string) tsv  : path to the tsv containing average PET values
     """
+    import os
+
     import nibabel as nib
     import numpy as np
     import pandas as pds
-    import os
+
     from clinica.utils.stream import cprint
 
     # Extract data from projected PET data
@@ -886,20 +895,22 @@ def get_wf(
     Returns:
         Void
     """
-    import os
     import datetime
+    import os
+
     import nibabel as nib
-    from colorama import Fore
-    import nipype.pipeline.engine as pe
-    import nipype.interfaces.utility as niu
     import nipype.interfaces.io as nio
-    from nipype.interfaces.freesurfer import Tkregister2, ApplyVolTransform, MRIConvert
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as pe
+    from colorama import Fore
+    from nipype.interfaces.freesurfer import ApplyVolTransform, MRIConvert, Tkregister2
     from nipype.interfaces.fsl import Merge
     from nipype.interfaces.petpvc import PETPVC
     from nipype.interfaces.spm import Coregister, Normalize12
+
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
     from clinica.utils.filemanip import unzip_nii
-    from clinica.utils.pet import read_psf_information, get_suvr_mask
+    from clinica.utils.pet import get_suvr_mask, read_psf_information
     from clinica.utils.spm import get_tpm
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
@@ -908,12 +919,9 @@ def get_wf(
     img = nib.load(pet)
     if len(img.shape) == 4:
         now = datetime.datetime.now().strftime("%H:%M:%S")
-        error_msg = "%s[%s] Error: Clinica does not handle 4D volumes for %s | %s%s" % (
-            Fore.RED,
-            now,
-            subject_id,
-            session_id,
-            Fore.RESET,
+        error_msg = (
+            f"{Fore.RED}[{now}] Error: Clinica does not handle 4D volumes "
+            f"for {subject_id} | {session_id}{Fore.RESET}"
         )
         cprint(error_msg)
         raise NotImplementedError(error_msg)
@@ -1212,6 +1220,7 @@ def get_wf(
 
     def get_output_dir(is_longitudinal, caps_dir, subject_id, session_id):
         import os
+
         from clinica.utils.exceptions import ClinicaCAPSError
 
         if is_longitudinal:
@@ -1379,7 +1388,7 @@ def get_wf(
             (gtmsegmentation, vol_on_surf, [("gtmseg_file", "gtmsegfile")]),
             (vol_on_surf, normal_average, [("output", "in_surfaces")]),
             (normal_average, project_on_fsaverage, [("out_surface", "projection")]),
-            (normal_average,gather_pet_projection, [("out_surface", "pet_projection_lh_rh")]),
+            (normal_average, gather_pet_projection, [("out_surface", "pet_projection_lh_rh")]),
             (gather_pet_projection, atlas_tsv, [("pet_projection_lh_rh", "pet")]),
             (atlas_tsv, outputnode, [("destrieux_tsv", "destrieux_tsv")]),
             (atlas_tsv, outputnode, [("desikan_tsv", "desikan_tsv")]),
@@ -1395,3 +1404,4 @@ def get_wf(
     )
     # wf.write_graph(graph2use='flat')
     wf.run()
+    # fmt: on

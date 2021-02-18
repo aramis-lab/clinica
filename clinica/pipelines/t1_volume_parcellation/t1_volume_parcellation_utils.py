@@ -13,10 +13,12 @@ def atlas_statistics(in_image, atlas_list):
         List of paths to TSV files
     """
     from os.path import abspath, join
+
     from nipype.utils.filemanip import split_filename
+
     from clinica.utils.atlas import AtlasAbstract
-    from clinica.utils.statistics import statistics_on_atlas
     from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.statistics import statistics_on_atlas
     from clinica.utils.ux import print_end_image
 
     subject_id = get_subject_id(in_image)

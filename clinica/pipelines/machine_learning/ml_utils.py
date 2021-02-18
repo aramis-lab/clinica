@@ -107,8 +107,8 @@ def metric_distribution(
     """
     # from __future__ import print_function, division
 
-    import numpy as np
     import matplotlib.pyplot as plt
+    import numpy as np
     from matplotlib import cm
     from matplotlib.backends.backend_pdf import PdfPages
 

@@ -1,15 +1,12 @@
 # coding: utf-8
 
-"""
-Module for converting FLAIR of ADNI
-"""
+"""Module for converting FLAIR of ADNI."""
 
 
 def convert_adni_flair(
     source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
 ):
-    """
-    Convert FLAIR images of ADNI into BIDS format
+    """Convert FLAIR images of ADNI into BIDS format.
 
     Args:
         source_dir: path to the ADNI directory
@@ -18,14 +15,13 @@ def convert_adni_flair(
         conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
-
     """
+    from os import path
 
     import pandas as pd
-    from os import path
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
     from colorama import Fore
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
@@ -41,12 +37,11 @@ def convert_adni_flair(
     cprint("Paths of FLAIR images found. Exporting images into BIDS ...")
     # flair_paths_to_bids(images, dest_dir)
     paths_to_bids(images, dest_dir, "flair", mod_to_update=mod_to_update)
-    cprint(Fore.GREEN + "FLAIR conversion done." + Fore.RESET)
+    cprint(f"{Fore.GREEN}FLAIR conversion done.{Fore.RESET}")
 
 
 def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
-    """
-    Compute the paths to the FLAIR images and store them in a tsv file
+    """Compute the paths to the FLAIR images and store them in a TSV file.
 
     Args:
         source_dir: path to the ADNI directory
@@ -57,12 +52,10 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_di
 
     Returns:
         images: a dataframe with all the paths to the FLAIR images that will be converted into BIDS
-
     """
+    from os import path
 
-    from os import path, mkdir
     import pandas as pd
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
         visits_to_timepoints,
@@ -198,7 +191,6 @@ def flair_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
         mri_qc_subj: Dataframe containing list of QC of scans for the subject
 
     Returns: dictionary - contains image metadata
-
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,

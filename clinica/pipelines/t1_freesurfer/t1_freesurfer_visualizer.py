@@ -31,9 +31,10 @@ class T1FreeSurferVisualizer(ce.CmdParser):
     def run_command(self, args):
         """"""
         import os
-        from clinica.utils.stream import cprint
-        from clinica.utils.check_dependency import check_freesurfer
         import subprocess
+
+        from clinica.utils.check_dependency import check_freesurfer
+        from clinica.utils.stream import cprint
 
         check_freesurfer()
 

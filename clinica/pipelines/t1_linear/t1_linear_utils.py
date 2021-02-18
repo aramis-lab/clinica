@@ -31,21 +31,21 @@ def get_substitutions_datasink(bids_file):
 # Function used by the nipype interface.
 # It crops an image based on the reference.
 def crop_nifti(input_img, ref_crop):
-    """Crop input image based on the reference. It uses nilearn
-    `resample_to_img` function.
-    Args:
-       input_img (str): image to be processed
-       ref_img (str): template used to crop the image
-    Returns:
-       output_img (nifty image): crop image on disk.
-       crop_template: (nifty image): output template on disk.
-    """
+    """Crop input image based on the reference.
 
-    import nibabel as nib
+    It uses nilearn `resample_to_img` function.
+
+    Args:
+        input_img (str): image to be processed
+        ref_crop (str): template used to crop the image
+
+    Returns:
+       output_img (NIfTI image): crop image on disk.
+       crop_template: (NIfTI image): output template on disk.
+    """
     import os
-    import numpy as np
-    from nilearn.image import resample_img, crop_img, resample_to_img
-    from nibabel.spatialimages import SpatialImage
+
+    from nilearn.image import crop_img, resample_to_img
 
     basedir = os.getcwd()
     # crop_ref = crop_img(ref_img, rtol=0.5)
@@ -69,10 +69,8 @@ def crop_nifti(input_img, ref_crop):
 
 
 def print_end_pipeline(t1w, final_file):
-    """
-    Display end message for <subject_id> when <final_file> is connected.
-    """
-    from clinica.utils.ux import print_end_image
+    """Display end message for <subject_id> when <final_file> is connected."""
     from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_end_image
 
     print_end_image(get_subject_id(t1w))

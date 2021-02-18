@@ -2,14 +2,13 @@
 
 
 def convert_phase_in_radians(in_file, out_file=None):
-    """
-    Convert phase image in radians.
-    """
+    """Convert phase image in radians."""
     import math
+    import os
+    import os.path as op
+
     import nibabel as nb
     import numpy as np
-    import os.path as op
-    import os
 
     assert op.isfile(in_file)
 
@@ -37,13 +36,15 @@ def convert_phase_in_radians(in_file, out_file=None):
 
 
 def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
+    """Converts input (unwarpped) phase1 and phase2 map to into a fieldmap inrads.
+
+    Warning:
+        delta_te should be in seconds.
     """
-    Converts input (unwarpped) phase1 and phase2 map to into a fieldmap in
-    rads. (delta_te should be in seconds)
-    """
-    import numpy as np
-    import nibabel as nb
     import os.path as op
+
+    import nibabel as nb
+    import numpy as np
 
     if out_file is None:
         out_file = op.abspath("fmap_radsec.nii.gz")
@@ -58,8 +59,7 @@ def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
 
 
 def resample_fmap_to_b0(in_fmap, in_b0, out_file=None):
-    """
-    Resample fieldmap onto the b0 image.
+    """Resample fieldmap onto the b0 image.
 
     Warnings:
         The fieldmap should already be aligned on the b0.
@@ -73,6 +73,7 @@ def resample_fmap_to_b0(in_fmap, in_b0, out_file=None):
         Fieldmap image resampled on b0.
     """
     import os.path as op
+
     import nibabel
     from nilearn.image import resample_to_img
 
@@ -81,7 +82,7 @@ def resample_fmap_to_b0(in_fmap, in_b0, out_file=None):
         if ext == ".gz":
             fname, ext2 = op.splitext(fname)
             ext = ext2 + ext
-        out_resampled_fmap = op.abspath("%s_space-b0%s" % (fname, ext))
+        out_resampled_fmap = op.abspath(f"%s_space-b0%s" % (fname, ext))
     else:
         out_resampled_fmap = out_file
 

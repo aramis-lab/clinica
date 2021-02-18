@@ -32,36 +32,36 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         """Check dependencies that can not be listed in the `info.json` file."""
 
     def get_input_fields(self):
-        """Specify the list of possible inputs of this pipelines.
+        """Specify the list of possible inputs of this pipeline.
 
         Returns:
             A list of (string) input fields name.
         """
-
         return ["native_segmentations", "flowfield_files", "template_file"]
 
     def get_output_fields(self):
-        """Specify the list of possible outputs of this pipelines.
+        """Specify the list of possible outputs of this pipeline.
 
         Returns:
             A list of (string) output fields name.
         """
-
         return ["normalized_files", "smoothed_normalized_files", "atlas_statistics"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
-        from colorama import Fore
-        import nipype.pipeline.engine as npe
+
         import nipype.interfaces.utility as nutil
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        import nipype.pipeline.engine as npe
+        from colorama import Fore
+
+        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.input_files import (
+            t1_volume_deformation_to_template,
             t1_volume_final_group_template,
             t1_volume_native_tpm,
-            t1_volume_deformation_to_template,
         )
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_groups_in_caps_directory,
@@ -76,8 +76,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         ):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                "%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s"
-                % (Fore.RED, self.parameters["group_label"], Fore.RESET)
+                f"{Fore.RED}Group {self.parameters['group_label']} does not exist. "
+                f"Did you run t1-volume or t1-volume-create-dartel pipeline?{Fore.RESET}"
             )
 
         all_errors = []
@@ -155,8 +155,9 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
+        import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import zip_nii
 
         # Writing normalized images (and smoothed) into CAPS
@@ -218,13 +219,15 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.spm as spm
-        import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import unzip_nii
+        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+
         from ..t1_volume_dartel2mni import (
             t1_volume_dartel2mni_utils as dartel2mni_utils,
         )
-        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         if spm_standalone_is_available():
             use_spm_standalone()
@@ -312,9 +315,9 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                 (self.input_node, unzip_template_node, [("template_file", "in_file")]),
                 (unzip_tissues_node, dartel2mni_node, [("out_file", "apply_to_files")]),
                 (unzip_flowfields_node, dartel2mni_node, [
-                        (( "out_file", dartel2mni_utils.prepare_flowfields, self.parameters["tissues"]), "flowfield_files")
-                    ]),
+                    (("out_file", dartel2mni_utils.prepare_flowfields, self.parameters["tissues"]), "flowfield_files")]),
                 (unzip_template_node, dartel2mni_node, [("out_file", "template_file")]),
                 (dartel2mni_node, self.output_node, [("normalized_files", "normalized_files")]),
             ]
         )
+        # fmt: on

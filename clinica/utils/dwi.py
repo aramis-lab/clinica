@@ -15,8 +15,8 @@ def merge_volumes_tdim(in_file1, in_file2):
     Returns:
         out_file (str): The two sets of volumes merged.
     """
-    import os.path as op
     import os
+    import os.path as op
 
     out_file = op.abspath("merged_files.nii.gz")
     cmd = f"fslmerge -t {out_file} {in_file1} {in_file2}"
@@ -58,9 +58,10 @@ def b0_average(in_file, out_file=None):
     Warnings:
         The b0 volumes must be registered.
     """
-    import numpy as np
-    import nibabel as nb
     import os.path as op
+
+    import nibabel as nb
+    import numpy as np
 
     if out_file is None:
         fname, ext = op.splitext(op.basename(in_file))
@@ -101,10 +102,11 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
         out_bvals (str): The b-values corresponding to the out_dwi.
         out_bvecs (str): The b-vecs corresponding to the out_dwi.
     """
-    import numpy as np
-    import nibabel as nib
     import os.path as op
     import warnings
+
+    import nibabel as nib
+    import numpy as np
 
     assert op.isfile(in_dwi)
     assert op.isfile(in_bval)
@@ -176,9 +178,11 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
         out_bval (str): B-values update.
         out_bvec (str): Directions of diffusion update.
     """
-    from clinica.utils.dwi import merge_volumes_tdim
     import os.path as op
+
     import numpy as np
+
+    from clinica.utils.dwi import merge_volumes_tdim
 
     assert op.isfile(in_b0)
     assert op.isfile(in_dwi)
@@ -227,18 +231,17 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         out_updated_bval (str): Updated gradient values table.
         out_updated_bvec (str): Updated gradient vectors table.
     """
+    import os.path as op
+    import tempfile
+
     from clinica.utils.dwi import (
-        insert_b0_into_dwi,
+        b0_average,
         b0_dwi_split,
         count_b0s,
-        b0_average,
+        insert_b0_into_dwi,
     )
-    from clinica.workflows.dwi_preprocessing import b0_flirt_pipeline
     from clinica.utils.stream import cprint
-
-    import os.path as op
-
-    import tempfile
+    from clinica.workflows.dwi_preprocessing import b0_flirt_pipeline
 
     # Count the number of b0s
     nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
@@ -305,9 +308,10 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
         out_bval (str): The b-values corresponding to the moving volume.
         volid (int): Index of the reference volume.
     """
-    import numpy as np
-    import nibabel as nib
     import os.path as op
+
+    import nibabel as nib
+    import numpy as np
 
     im = nib.load(in_file)
     data = im.get_data()

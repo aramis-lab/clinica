@@ -3,15 +3,17 @@
 
 def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
     """Initialize the pipeline."""
-    import os
-    import errno
     import datetime
+    import errno
+    import os
     import platform
     from tempfile import mkdtemp
+
     from colorama import Fore
+
     from clinica.utils.longitudinal import read_sessions
-    from clinica.utils.ux import print_begin_image
     from clinica.utils.stream import cprint
+    from clinica.utils.ux import print_begin_image
 
     # Extract <image_id>
     image_id = "{0}_{1}_{2}".format(participant_id, session_id, long_id)
@@ -23,8 +25,8 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
         subjects_dir = mkdtemp()
         now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            "%s[%s] Needs to create a $SUBJECTS_DIR folder in %s for %s (macOS case). %s"
-            % (Fore.YELLOW, now, subjects_dir, image_id.replace("_", " | "), Fore.RESET)
+            f"{Fore.YELLOW}[{now}] Needs to create a $SUBJECTS_DIR folder "
+            f"in {subjects_dir} for {image_id.replace('_', ' | ')} (macOS case). {Fore.RESET}"
         )
     else:
         subjects_dir = os.path.join(output_dir, image_id)
@@ -44,11 +46,11 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
             s_id,
             "t1",
             "freesurfer_cross_sectional",
-            participant_id + "_" + s_id,
+            f"{participant_id}_{s_id}",
         )
         os.symlink(
             cross_sectional_path,
-            os.path.join(subjects_dir, participant_id + "_" + s_id),
+            os.path.join(subjects_dir, f"{participant_id}_{s_id}"),
         )
 
     # Create symbolic links containing unbiased template in SUBJECTS_DIR so that recon-all can run
@@ -58,10 +60,10 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
         participant_id,
         long_id,
         "freesurfer_unbiased_template",
-        participant_id + "_" + long_id,
+        f"{participant_id}_{long_id}",
     )
     os.symlink(
-        template_path, os.path.join(subjects_dir, participant_id + "_" + long_id)
+        template_path, os.path.join(subjects_dir, f"{participant_id}_{long_id}")
     )
 
     print_begin_image(image_id)
@@ -113,22 +115,23 @@ def run_recon_all_long(subjects_dir, participant_id, session_id, long_id, direct
 
 
 def write_tsv_files(subjects_dir, subject_id):
-    """
-    Generate statistics TSV files in `subjects_dir`/regional_measures folder for `subject_id`.
+    """Generate statistics TSV files in `subjects_dir`/regional_measures folder for `subject_id`.
 
     Notes:
         We do not need to check the line "finished without error" in scripts/recon-all.log.
         If an error occurs, it will be detected by Nipype and the next nodes (i.e.
         write_tsv_files will not be called).
     """
-    import os
     import datetime
+    import os
+
     from colorama import Fore
-    from clinica.utils.stream import cprint
+
     from clinica.utils.freesurfer import (
-        generate_regional_measures,
         extract_image_id_from_longitudinal_segmentation,
+        generate_regional_measures,
     )
+    from clinica.utils.stream import cprint
 
     image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
     str_image_id = (
@@ -139,16 +142,14 @@ def write_tsv_files(subjects_dir, subject_id):
     else:
         now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            "%s[%s] %s does not contain mri/aseg+aparc.mgz file. "
-            "Creation of regional_measures/ folder will be skipped.%s"
-            % (Fore.YELLOW, now, str_image_id.replace("_", " | "), Fore.RESET)
+            f"{Fore.YELLOW}[{now}] {str_image_id.replace('_', ' | ')} does not contain mri/aseg+aparc.mgz file. "
+            f"Creation of regional_measures/ folder will be skipped.{Fore.RESET}"
         )
     return subject_id
 
 
 def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
-    """
-    Move content of `subjects_dir`/`subject_id` to `source_dir`.
+    """Move content of `subjects_dir`/`subject_id` to `source_dir`.
 
     This function will move content of `subject_id` if recon-all has run
     in $(TMP). This happens when FreeSurfer is run on macOS. Content of
@@ -163,17 +164,16 @@ def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
     Returns:
         subject_id for node connection with Nipype
     """
+    import datetime
     import os
     import shutil
-    import datetime
+
     from colorama import Fore
+
     from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
     from clinica.utils.stream import cprint
 
     image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
-    participant_id = image_id.participant_id
-    session_id = image_id.session_id
-    long_id = image_id.long_id
     str_image_id = (
         image_id.participant_id + "_" + image_id.session_id + "_" + image_id.long_id
     )
@@ -216,13 +216,15 @@ def save_to_caps(source_dir, subject_id, caps_dir, overwrite_caps=False):
         We do not need to check the line "finished without error" in scripts/recon-all.log.
         If an error occurs, it will be detected by Nipype and the next nodes (i.e. save_to_caps will not be called).
     """
-    import os
     import datetime
+    import os
     import shutil
+
     from colorama import Fore
+
+    from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_end_image
-    from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
 
     image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
     participant_id = image_id.participant_id
@@ -302,16 +304,10 @@ def get_processed_images(caps_directory, part_ids, sess_ids, long_ids):
                 "t1",
                 long_id,
                 "freesurfer_longitudinal",
-                participant_id
-                + "_"
-                + session_id
-                + ".long."
-                + participant_id
-                + "_"
-                + long_id,
+                f"{participant_id}_{session_id}.long.{participant_id}_{long_id}",
                 "mri",
                 "aparc+aseg.mgz",
             )
             if os.path.isfile(output_file):
-                image_ids.append(participant_id + "_" + session_id + "_" + long_id)
+                image_ids.append(f"{participant_id}_{session_id}_{long_id}")
     return image_ids

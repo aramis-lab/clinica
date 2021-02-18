@@ -2,7 +2,7 @@
 
 
 class Patient(object):
-    """Class that handles sessions ordering, image quality hierarchy and final BIDS structure"""
+    """Class that handles sessions ordering, image quality hierarchy and final BIDS structure."""
 
     def __init__(self, name, path_patient, path_ida):
         self.name = name
@@ -13,9 +13,7 @@ class Patient(object):
         self.ses0 = self.get_ses0()
 
     def get_sessions(self):
-        """
-        Returns the list of all sessions that the patient attended
-        """
+        """Return the list of all sessions that the patient attended."""
         import pandas as pd
 
         def change_format_date(date):
@@ -64,15 +62,14 @@ class Patient(object):
         return "sub-NIFD" + self.name.replace("_", "")
 
     def order_sessions(self, equivalences, descriptors, folders):
-        """
-        Orders sessions of a given patient
+        """Order sessions of a given patient.
 
         Args:
-          folders : List of all paths to medical images
+            folders : List of all paths to medical images
 
         Returns:
-          same_ses : dictionary containing paths ordered by sessions
-                    i.e. same_ses = {'session_number' : [all paths to MRIs made during said session]}
+            same_ses : dictionary containing paths ordered by sessions
+                i.e. same_ses = {'session_number' : [all paths to MRIs made during said session]}
         """
         from clinica.iotools.converters.nifd_to_bids.nifd_utils import extract_date
 
@@ -97,8 +94,7 @@ class Patient(object):
         return same_ses
 
     def order_priorities(self, equivalences, descriptors, folders):
-        """
-        Order all folders in the BIDS format following the priorities defined in the json file
+        """Order all folders in the BIDS format following the priorities defined in the JSON file.
 
         Args:
             equivalences:   Data structure of the form :
@@ -140,9 +136,9 @@ class Patient(object):
     def clean_conflicts(
         self, equivalences, descriptors, folders, conflicts_manager, pat
     ):
-        """
-        Order all folders in the BIDS format and removes all conflicts
-        The output contains all paths to be used by the converter
+        """Order all folders in the BIDS format and removes all conflicts.
+
+        The output contains all paths to be used by the converter.
 
         Args:
             equivalences:   Data structure of the form :

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
-import clinica.pipelines.engine as cpe
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -10,6 +11,7 @@ config.update_config(cfg)
 
 class T1Linear(cpe.Pipeline):
     """T1 Linear - Affine registration of T1w images to standard space.
+
     This preprocessing pipeline includes globally three steps:
     1) Bias correction with N4 algorithm from ANTs.
     2) Linear registration to MNI152NLin2009cSym template with
@@ -23,9 +25,10 @@ class T1Linear(cpe.Pipeline):
     @staticmethod
     def get_processed_images(caps_directory, subjects, sessions):
         import os
-        from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.input_files import T1W_LINEAR_CROPPED
+
         from clinica.utils.filemanip import extract_image_ids
+        from clinica.utils.input_files import T1W_LINEAR_CROPPED
+        from clinica.utils.inputs import clinica_file_reader
 
         image_ids = []
         if os.path.isdir(caps_directory):
@@ -44,7 +47,6 @@ class T1Linear(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-
         return ["t1w"]
 
     def get_output_fields(self):
@@ -53,23 +55,27 @@ class T1Linear(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-
         return ["image_id"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from os import pardir
-        from os.path import dirname, join, abspath, exists
-        from colorama import Fore
+        from os.path import abspath, dirname, exists, join
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from colorama import Fore
+
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
-        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
-        from clinica.utils.inputs import fetch_file, RemoteFileStructure
-        from clinica.utils.ux import print_images_to_process
+        from clinica.utils.inputs import (
+            RemoteFileStructure,
+            clinica_file_reader,
+            fetch_file,
+        )
         from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_images_to_process
 
         root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
         path_to_mask = join(root, "resources", "masks")
@@ -113,17 +119,11 @@ class T1Linear(cpe.Pipeline):
         )
         if len(processed_ids) > 0:
             cprint(
-                "%sClinica found %s image(s) already processed in CAPS directory:%s"
-                % (Fore.YELLOW, len(processed_ids), Fore.RESET)
+                f"{Fore.YELLOW}Clinica found {len(processed_ids)} image(s) already processed in CAPS directory:{Fore.RESET}"
             )
             for image_id in processed_ids:
-                cprint(
-                    "%s\t%s%s" % (Fore.YELLOW, image_id.replace("_", " | "), Fore.RESET)
-                )
-            cprint(
-                "%s\nImage(s) will be ignored by Clinica.\n%s"
-                % (Fore.YELLOW, Fore.RESET)
-            )
+                cprint(f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}")
+            cprint(f"{Fore.YELLOW}\nImage(s) will be ignored by Clinica.\n{Fore.RESET}")
             input_ids = [
                 p_id + "_" + s_id for p_id, s_id in zip(self.subjects, self.sessions)
             ]
@@ -167,9 +167,11 @@ class T1Linear(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
-        from nipype.interfaces.io import DataSink
         import nipype.pipeline.engine as npe
-        from clinica.utils.nipype import fix_join, container_from_filename
+        from nipype.interfaces.io import DataSink
+
+        from clinica.utils.nipype import container_from_filename, fix_join
+
         from .t1_linear_utils import get_substitutions_datasink
 
         # Writing node
@@ -222,8 +224,10 @@ class T1Linear(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.filemanip import get_filename_no_ext
         from nipype.interfaces import ants
+
+        from clinica.utils.filemanip import get_filename_no_ext
+
         from .t1_linear_utils import crop_nifti, print_end_pipeline
 
         image_id_node = npe.Node(
@@ -305,3 +309,4 @@ class T1Linear(cpe.Pipeline):
                     (ants_registration_node, print_end_message, [("warped_image", "final_file")]),
                 ]
             )
+        # fmt: on

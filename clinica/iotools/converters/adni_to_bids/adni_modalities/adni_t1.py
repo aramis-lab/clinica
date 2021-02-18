@@ -1,14 +1,12 @@
 # coding: utf-8
 
-"""
-Module for converting T1 of ADNI
-"""
+"""Module for converting T1 of ADNI."""
 
 
 def convert_adni_t1(
     source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
 ):
-    """Convert T1 MR images of ADNI into BIDS format
+    """Convert T1 MR images of ADNI into BIDS format.
 
     Args:
         source_dir: path to the ADNI directory
@@ -17,16 +15,13 @@ def convert_adni_t1(
         conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
-
     """
-
     from os import path
 
-    from pandas.io import parsers
-    from colorama import Fore
-
-    from clinica.utils.stream import cprint
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.utils.stream import cprint
+    from colorama import Fore
+    from pandas.io import parsers
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
@@ -39,11 +34,11 @@ def convert_adni_t1(
     images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint("Paths of T1 images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "t1", mod_to_update=mod_to_update)
-    cprint(Fore.GREEN + "T1 conversion done." + Fore.RESET)
+    cprint(f"{Fore.GREEN}T1 conversion done.{Fore.RESET}")
 
 
 def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
-    """Compute the paths to T1 MR images and store them in a tsv file
+    """Compute the paths to T1 MR images and store them in a TSV file.
 
     Args:
         source_dir: path to the ADNI directory
@@ -54,18 +49,15 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
 
     Returns:
         images: a dataframe with all the paths to the T1 MR images that will be converted into BIDS
-
     """
-
-    from os import path, makedirs
+    from os import path
 
     import pandas as pd
-
-    from clinica.utils.stream import cprint
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        visits_to_timepoints,
         find_image_path,
+        visits_to_timepoints,
     )
+    from clinica.utils.stream import cprint
 
     t1_col_df = [
         "Subject_ID",
@@ -141,8 +133,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
                 )
             else:
                 cprint(
-                    "Subject %s visit %s belongs to an unknown cohort: %s"
-                    % (subj, visit_str, cohort)
+                    f"Subject {subj} visit {visit_str} belongs to an unknown cohort: {cohort}"
                 )
 
             if image_dict is not None:
@@ -218,7 +209,7 @@ def adni1go2_image(
     mayo_mri_qc_subj,
     preferred_field_strength=3.0,
 ):
-    """Selects the preferred scan for a subject in a visit, given the subject belongs to ADNI 1, Go or 2 cohorts
+    """Select the preferred scan for a subject in a visit, given the subject belongs to ADNI 1, Go or 2 cohorts.
 
     Args:
 
@@ -232,9 +223,7 @@ def adni1go2_image(
 
     Returns:
         Dictionary containing selected scan information
-
     """
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,
     )
@@ -298,8 +287,7 @@ def adni1go2_image(
 
 
 def preferred_processed_scan(mprage_meta_subj, visit_str, unwanted_series_id=()):
-    """
-    Filters content of Dataframe containing MPRAGE metadata to obtain last processed image for the specified visit
+    """Filter content of Dataframe containing MPRAGE metadata to obtain last processed image for the specified visit.
 
     Args:
         mprage_meta_subj: DataFrame of MPRAGE metadata of images corresponding to the subject
@@ -308,9 +296,7 @@ def preferred_processed_scan(mprage_meta_subj, visit_str, unwanted_series_id=())
 
     Returns:
         Dataframe
-
     """
-
     mprage_meta_subj = mprage_meta_subj[
         ~mprage_meta_subj.SeriesID.isin(unwanted_series_id)
     ]
@@ -334,7 +320,7 @@ def preferred_processed_scan(mprage_meta_subj, visit_str, unwanted_series_id=())
 
 
 def adni3_image(subject_id, timepoint, visit_str, mprage_meta_subj, mayo_mri_qc_subj):
-    """Selects the preferred scan for a subject in a visit, given the subject belongs to ADNI 3 cohort
+    """Select the preferred scan for a subject in a visit, given the subject belongs to ADNI 3 cohort.
 
     Args:
         subject_id: string containing subject ID
@@ -345,9 +331,7 @@ def adni3_image(subject_id, timepoint, visit_str, mprage_meta_subj, mayo_mri_qc_
 
     Returns:
         Dictionary containing selected scan information
-
     """
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,
     )
@@ -398,7 +382,7 @@ def original_image(
     mayo_mri_qc_subj,
     preferred_field_strength=3.0,
 ):
-    """Selects the preferred scan for a subject in a visit, given the scan is not preprocessed
+    """Select the preferred scan for a subject in a visit, given the scan is not preprocessed.
 
     Args:
         subject_id:string containing subject ID
@@ -411,9 +395,7 @@ def original_image(
 
     Returns:
         Dictionary containing selected scan information
-
     """
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,
     )
@@ -470,7 +452,7 @@ def original_image(
 
 
 def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
-    """Selects a scan from a list of scans taking into account available QC
+    """Select a scan from a list of scans taking into account available QC.
 
     Args:
         scans_meta: DataFrame containing the metadata for images to choose among
@@ -479,7 +461,6 @@ def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
 
     Returns:
         DataFrame row containing selected scan
-
     """
     import numpy as np
 
@@ -564,16 +545,14 @@ def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
 
 
 def select_scan_no_qc(scans_meta):
-    """Selects a scan from available scans in case there is not an available QC
+    """Select a scan from available scans in case there is not an available QC.
 
     Args:
         scans_meta: DataFrame containing the metadata for images to choose among
 
     Returns:
         DataFrame row containing selected scan
-
     """
-
     # We choose the first scan (not containing repeat in name)
     selected_scan = scans_meta[
         ~scans_meta.Sequence.str.contains("repeat", case=False, na=False)
@@ -587,7 +566,7 @@ def select_scan_no_qc(scans_meta):
 
 
 def check_qc(scan, subject_id, visit_str, mri_quality_subj):
-    """Checks if a scan has passed check quality, if it was performed
+    """Check if a scan has passed check quality, if it was performed.
 
     Args:
         scan: DataFrame row containing scan information
@@ -597,7 +576,6 @@ def check_qc(scan, subject_id, visit_str, mri_quality_subj):
 
     Returns:
         boolean, True if image passed QC or if there is not available QC, False elsewhere
-
     """
     from clinica.utils.stream import cprint
 
@@ -609,14 +587,8 @@ def check_qc(scan, subject_id, visit_str, mri_quality_subj):
 
         cprint("QC found but NOT passed")
         cprint(
-            "Subject "
-            + subject_id
-            + " for visit "
-            + visit_str
-            + " - Series: "
-            + str(scan.SeriesID)
-            + " - Study: "
-            + str(scan.StudyID)
+            f"Subject {subject_id} for visit {visit_str} "
+            f"- Series: {str(scan.SeriesID)} - Study: {str(scan.StudyID)}"
         )
         return False
     return True

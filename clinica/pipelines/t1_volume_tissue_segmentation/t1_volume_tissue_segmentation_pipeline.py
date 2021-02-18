@@ -1,18 +1,17 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
 class T1VolumeTissueSegmentation(cpe.Pipeline):
-    """T1VolumeTissueSegmentation - Tissue segmentation, bias correction and
-    spatial normalization to MNI space.
+    """T1VolumeTissueSegmentation - Tissue segmentation, bias correction and spatial normalization to MNI space.
 
     Returns:
         A clinica pipeline object containing the T1VolumeTissueSegmentation pipeline.
@@ -41,7 +40,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             self.parameters["tissue_probability_maps"] = get_tpm()
 
     def get_input_fields(self):
-        """Specify the list of possible inputs of this pipelines.
+        """Specify the list of possible inputs of this pipeline.
 
         Returns:
             A list of (string) input fields name.
@@ -49,7 +48,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         return ["t1w"]
 
     def get_output_fields(self):
-        """Specify the list of possible outputs of this pipelines.
+        """Specify the list of possible outputs of this pipeline.
 
         Returns:
             A list of (string) output fields name.
@@ -75,13 +74,14 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.stream import cprint
+
         from clinica.iotools.utils.data_handling import (
             check_volume_location_in_world_coordinate_system,
         )
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.input_files import T1W_NII
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
         # Inputs from anat/ folder
@@ -120,16 +120,18 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        import nipype.pipeline.engine as npe
-        import nipype.interfaces.utility as nutil
         import nipype.interfaces.io as nio
         import nipype.interfaces.spm as spm
-        from ..t1_volume_tissue_segmentation import (
-            t1_volume_tissue_segmentation_utils as seg_utils,
-        )
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import unzip_nii, zip_nii
         from clinica.utils.nipype import fix_join
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+
+        from ..t1_volume_tissue_segmentation import (
+            t1_volume_tissue_segmentation_utils as seg_utils,
+        )
 
         if spm_standalone_is_available():
             use_spm_standalone()

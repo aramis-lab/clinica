@@ -1,8 +1,6 @@
 # coding: utf8
 
-"""
-This module handles stream and log redirection.
-"""
+"""This module handles stream and log redirection."""
 
 import sys
 

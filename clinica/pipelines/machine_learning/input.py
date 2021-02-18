@@ -156,8 +156,8 @@ class CAPSVoxelBasedInput(CAPSInput):
         """
         Returns: a list of filenames
         """
-        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import pet_volume_normalized_suvr_pet
+        from clinica.utils.inputs import clinica_file_reader
 
         if self._images is not None:
             return self._images
@@ -436,9 +436,10 @@ class CAPSVertexBasedInput(CAPSInput):
         return self._x
 
     def save_weights_as_datasurface(self, weights, output_dir):
-        import numpy as np
-        import nibabel as nib
         import os
+
+        import nibabel as nib
+        import numpy as np
 
         if self._images is None:
             self.get_images()

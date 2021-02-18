@@ -5,8 +5,9 @@ class Parse_clinical:
     """Creates the clinical files for the BIDS directory"""
 
     def __init__(self, path_clinical):
-        import pandas as pd
         import os.path as path
+
+        import pandas as pd
 
         self.df_dict_mod = pd.read_csv(
             path.join(path_clinical, "clinical_info.tsv"), sep="\t"
@@ -20,8 +21,7 @@ class Parse_clinical:
         self.df_clinical = self.merge_clinical
 
     def make_sessions_ida(self, pat_name):
-        """
-        Preprocesses ida for the left join operated in merge_clinical_scans
+        """Preprocesses ida for the left join operated in merge_clinical_scans.
 
         Args:
             pat_name: subject_ID
@@ -50,9 +50,9 @@ class Parse_clinical:
         return bloc
 
     def merge_clinical_scans(self, pat_name):
-        """
-        Operates a left join between the ida and clinical table
-        For a given patient, we have the usual ida file, extended with the information from the clinical table
+        """Operate a left join between the ida and clinical table.
+
+        For a given patient, we have the usual ida file, extended with the information from the clinical table.
 
         Args:
             pat_name: Name of the subject
@@ -60,8 +60,9 @@ class Parse_clinical:
         Returns:
             dfMerge: pandas dataframe corresponding to the left join
         """
-        import pandas as pd
         import warnings
+
+        import pandas as pd
 
         bloc = self.df_clinical[self.df_clinical["LONI_ID"] == pat_name]
 
@@ -91,9 +92,10 @@ class Parse_clinical:
         return dfMerge
 
     def merge_clinical(self):
-        """
-        Operates a left join between the clinical and ida table
-        The table that we obtain is the usual clinical table with data, when examination_date and CLINICAL_LINKDATE are the same, from the ida table
+        """Operate a left join between the clinical and ida table.
+
+        The table that we obtain is the usual clinical table with data,
+        when examination_date and CLINICAL_LINKDATE are the same, from the ida table.
 
         Returns:
             dfSol: pandas dataframe corresponding to the left join
@@ -127,9 +129,10 @@ class Parse_clinical:
         return dfSol
 
     def get_clinical_ida(self):
-        """ Left join clinical data and ida, new version """
-        import pandas as pd
+        """Left join clinical data and ida, new version."""
         import math
+
+        import pandas as pd
 
         df_clinical = self.df_clinical.copy()
         df_ida = self.df_ida.copy()
@@ -177,15 +180,15 @@ class Parse_clinical:
         return dfSol
 
     def make_sessions_type(self, pat_name, keep_all=False):
-        """Updated version of make_sessions
+        """Updated version of make_sessions.
 
         Args:
             pat_name: subject_ID of a patient
             keep_all: if True, include clinical data not linked to a MRI, else include only clinical data linked to a MRI
 
         Returns:
-            bloc: pandas dataframe corresponding to the "sessions.tsv" file"""
-
+            bloc: pandas dataframe corresponding to the "sessions.tsv" file
+        """
         name_clinical, name_BIDS = self.get_names("sessions")
         name_clinical.insert(0, "session_id")
         name_BIDS.insert(0, "session_id")
@@ -220,8 +223,7 @@ class Parse_clinical:
         return name_clinical, name_BIDS
 
     def make_sessions(self, pat_name):
-        """
-        Creates the sessions file for a given patient
+        """Create the sessions file for a given patient.
 
         Args:
             pat_name: subject_ID of a patient
@@ -238,8 +240,7 @@ class Parse_clinical:
         return bloc
 
     def make_participants(self, pat_list=None):
-        """
-        Creates the participants file for all patients
+        """Create the participants file for all patients.
 
         Args:
             pat_list: subject_ID of all patients found in the converted BIDS directory
@@ -265,8 +266,7 @@ class Parse_clinical:
         return bloc
 
     def make_scans(self, path_scans):
-        """
-        Creates the scans file for a patient's session
+        """Create the scans file for a patient's session.
 
         Args:
             path_scans: path to a session for a patient
@@ -291,13 +291,12 @@ class Parse_clinical:
         return s
 
     def write(self, df, path, name):
-        """
-        Saves a pandas dataframe
+        """Save a pandas dataframe.
 
         Args:
             df: a pandas dataframe
             path: Path where the dataframe is to be saved
-            name: name of the output file (/!\ do not include the extension, '.tsv' is added in the function)
+            name: name of the output file (Warning: do not include the extension, '.tsv' is added in the function)
         """
         import os
 
@@ -307,8 +306,7 @@ class Parse_clinical:
         df.to_csv(sep="\t", path_or_buf=name, index=False)
 
     def make_all(self, pathBIDS):
-        """
-        Makes the participants.tsv and all sessions.tsv files for all subjects available in the BIDS directory
+        """Make the participants.tsv and all sessions.tsv files for all subjects available in the BIDS directory.
 
         Args:
             pathBIDS: path to the BIDS directory
@@ -329,13 +327,11 @@ class Parse_clinical:
             self.write(self.make_sessions_type(pat2), path_sessions, pat + "_sessions")
 
     def make_all_scans(self, to_convert):
-        """
-        Makes the scans.tsv files for all subjects available in the BIDS directory
+        """Make the scans.tsv files for all subjects available in the BIDS directory.
 
         Args:
             to_convert: List of tuples of paths (path_in, path_out), computed for the initial image conversion
         """
-
         import os
 
         root = "/" + os.path.join(*to_convert[0][1].split("/")[:-4])
@@ -433,33 +429,11 @@ class Parse_clinical:
                         des = s_path0[-3].split("_")
                         if len(des) == 6:
                             des = (
-                                des[0]
-                                + ":"
-                                + des[1]
-                                + " "
-                                + des[2]
-                                + ":"
-                                + des[3]
-                                + ":"
-                                + des[4]
-                                + " "
-                                + des[5]
+                                f"{des[0]}:{des[1]} {des[2]}:{des[3]}:{des[4]} {des[5]}"
                             )
                         else:
                             des = (
-                                des[0]
-                                + ":"
-                                + des[1]
-                                + " "
-                                + des[2]
-                                + ":"
-                                + des[3]
-                                + ":"
-                                + des[4]
-                                + " "
-                                + des[5]
-                                + " "
-                                + des[6]
+                                f"{des[0]}:{des[1]} {des[2]}:{des[3]}:{des[4]} {des[5]} {des[6]}"
                             )
                         df_line_ida = self.df_ida[
                             (

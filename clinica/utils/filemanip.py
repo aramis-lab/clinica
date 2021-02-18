@@ -2,10 +2,11 @@
 
 
 def zip_nii(in_file, same_dir=False):
-    from os import getcwd
-    from os.path import abspath, join
     import gzip
     import shutil
+    from os import getcwd
+    from os.path import abspath, join
+
     from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
 
@@ -34,8 +35,8 @@ def zip_nii(in_file, same_dir=False):
 
 
 def unzip_nii(in_file):
-    from nipype.utils.filemanip import split_filename
     from nipype.algorithms.misc import Gunzip
+    from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
 
     if (in_file is None) or isinstance(in_file, _Undefined):
@@ -56,12 +57,12 @@ def unzip_nii(in_file):
 
 
 def save_participants_sessions(participant_ids, session_ids, out_folder, out_file=None):
-    """
-    Save <participant_ids> <session_ids> in <out_folder>/<out_file> TSV file.
-    """
-    import os
+    """Save <participant_ids> <session_ids> in <out_folder>/<out_file> TSV file."""
     import errno
+    import os
+
     import pandas
+
     from clinica.utils.stream import cprint
 
     assert len(participant_ids) == len(session_ids)
@@ -86,14 +87,12 @@ def save_participants_sessions(participant_ids, session_ids, out_folder, out_fil
         )
         data.to_csv(tsv_file, sep="\t", index=False, encoding="utf-8")
     except Exception as e:
-        cprint("Impossible to save %s with pandas" % out_file)
+        cprint(f"Impossible to save {out_file} with pandas")
         raise e
 
 
 def get_subject_id(bids_or_caps_file):
-    """
-    Extracts "sub-<participant_id>_ses-<session_label>" from BIDS or CAPS file
-    """
+    """Extract "sub-<participant_id>_ses-<session_label>" from BIDS or CAPS file."""
     import re
 
     m = re.search(r"(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)", bids_or_caps_file)
@@ -110,9 +109,7 @@ def get_subject_id(bids_or_caps_file):
 
 
 def get_filename_no_ext(filename):
-    """
-    Get filename without extension [".nii.gz", ".tar.gz", ".niml.dset"]
-    """
+    """Get filename without extension [".nii.gz", ".tar.gz", ".niml.dset"]."""
     from nipype.utils.filemanip import split_filename
 
     _, filename_no_ext, _ = split_filename(filename)
@@ -146,8 +143,7 @@ def extract_crash_files_from_log_file(filename):
     import re
 
     assert os.path.isfile(filename), (
-        "extract_crash_files_from_log_file: filename parameter is not a file (%s)"
-        % filename
+        f"extract_crash_files_from_log_file: filename parameter is not a file ({filename})"
     )
 
     log_file = open(filename, "r")
@@ -167,8 +163,10 @@ def read_participant_tsv(tsv_file):
         ClinicaException if participant_id or session_id column is missing from TSV file
     """
     import os
+
     import pandas as pd
     from colorama import Fore
+
     from clinica.utils.exceptions import ClinicaException
 
     if not os.path.isfile(tsv_file):

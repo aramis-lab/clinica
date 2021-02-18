@@ -1,8 +1,7 @@
 # coding: utf8
 
 
-"""
-This module contains utilities to handle groups in Clinica.
+"""This module contains utilities to handle groups in Clinica.
 
 See CAPS specifications for details about groups.
 """

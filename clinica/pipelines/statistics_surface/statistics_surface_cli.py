@@ -18,6 +18,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from colorama import Fore
+
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 
@@ -135,15 +136,17 @@ class StatisticsSurfaceCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        from networkx import Graph
         from colorama import Fore
+        from networkx import Graph
+
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+
         from .statistics_surface_pipeline import StatisticsSurface
         from .statistics_surface_utils import (
-            get_t1_freesurfer_custom_file,
             get_pet_surface_custom_file,
+            get_t1_freesurfer_custom_file,
         )
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
-        from clinica.utils.exceptions import ClinicaException
 
         # PET-Surface pipeline
         if args.orig_input_data == "pet-surface":

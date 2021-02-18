@@ -39,14 +39,15 @@ def init_input_node(parameters, base_dir, subjects_visits_tsv):
         - Copy TSV file with covariates;
         - Print begin execution message.
     """
-    import os
     import errno
     import json
+    import os
     import shutil
-    from clinica.utils.ux import print_begin_image
+
     from clinica.pipelines.statistics_surface.statistics_surface_utils import (
         create_glm_info_dictionary,
     )
+    from clinica.utils.ux import print_begin_image
 
     group_id = "group-" + parameters["group_label"]
 
@@ -179,13 +180,15 @@ def run_matlab(caps_dir, output_dir, subjects_visits_tsv, pipeline_parameters):
         pipeline_parameters (dict): parameters of StatisticsSurface pipeline
     """
     import os
+
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
+
     import clinica.pipelines as clinica_pipelines
-    from clinica.utils.check_dependency import check_environment_variable
     from clinica.pipelines.statistics_surface.statistics_surface_utils import (
         covariates_to_design_matrix,
         get_string_format_from_tsv,
     )
+    from clinica.utils.check_dependency import check_environment_variable
 
     path_to_matlab_script = os.path.join(
         os.path.dirname(clinica_pipelines.__path__[0]), "lib", "clinicasurfstat"
@@ -289,6 +292,7 @@ def save_to_caps(source_dir, caps_dir, overwrite_caps, pipeline_parameters):
     """
     import os
     import shutil
+
     from clinica.utils.ux import print_end_image
 
     group_id = "group-" + pipeline_parameters["group_label"]

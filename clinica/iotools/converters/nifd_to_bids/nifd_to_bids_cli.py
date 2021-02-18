@@ -30,12 +30,13 @@ class NifdToBidsCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the converter with defined args."""
         from colorama import Fore
+
         from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import (
-            convert_images,
             convert_clinical_data,
+            convert_images,
         )
-        from clinica.utils.stream import cprint
         from clinica.utils.check_dependency import check_dcm2niix
+        from clinica.utils.stream import cprint
 
         check_dcm2niix()
 
@@ -47,4 +48,4 @@ class NifdToBidsCLI(ce.CmdParser):
         convert_clinical_data(
             args.bids_directory, args.clinical_data_directory, to_convert
         )
-        cprint(Fore.GREEN + "Conversion to BIDS succeeded" + Fore.RESET)
+        cprint(f"{Fore.GREEN}Conversion to BIDS succeeded{Fore.RESET}")

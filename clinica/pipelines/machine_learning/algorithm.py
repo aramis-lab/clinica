@@ -14,10 +14,10 @@ from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.svm import SVC
+from xgboost import XGBClassifier
 
 import clinica.pipelines.machine_learning.ml_utils as utils
 from clinica.pipelines.machine_learning import base
-from xgboost import XGBClassifier
 
 
 class DualSVMAlgorithm(base.MLAlgorithm):

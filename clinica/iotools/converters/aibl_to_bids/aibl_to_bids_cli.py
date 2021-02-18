@@ -26,8 +26,9 @@ class AiblToBidsCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the converter with defined args."""
-        from os.path import exists
         from os import makedirs
+        from os.path import exists
+
         from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import (
             convert_clinical_data,
             convert_images,

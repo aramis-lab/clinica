@@ -14,18 +14,20 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
     The current function works around this issue by checking if there only is one session associated to a subject, and
     in that case, putting the SUBJECT_DIR inside the system temporary folder so that its path is as short as possible.
     """
-    import os
-    import errno
     import datetime
+    import errno
+    import os
     from tempfile import mkdtemp
+
     from colorama import Fore
-    from clinica.utils.stream import cprint
+
     from clinica.utils.longitudinal import get_long_id
+    from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
 
     # Extract <image_id>
     long_id = get_long_id(list_session_ids)
-    image_id = participant_id + "_" + long_id
+    image_id = f"{participant_id}_{long_id}"
 
     # Create SUBJECTS_DIR for recon-all (otherwise, the command won't run)
     if len(list_session_ids) == 1:
@@ -35,8 +37,8 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
         subjects_dir = mkdtemp()
         now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            "%s[%s] %s has only one time point. Needs to create a $SUBJECTS_DIR folder in %s%s"
-            % (Fore.YELLOW, now, image_id.replace("_", " | "), subjects_dir, Fore.RESET)
+            f"{Fore.YELLOW}[{now}] {image_id.replace('_', ' | ')} has only one time point. "
+            f"Needs to create a $SUBJECTS_DIR folder in {subjects_dir}{Fore.RESET}"
         )
     else:
         subjects_dir = os.path.join(output_dir, image_id)
@@ -55,12 +57,12 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
             session_id,
             "t1",
             "freesurfer_cross_sectional",
-            participant_id + "_" + session_id,
+            f"{participant_id}_{session_id}",
         )
         try:
             os.symlink(
                 cross_sectional_path,
-                os.path.join(subjects_dir, participant_id + "_" + session_id),
+                os.path.join(subjects_dir, f"{participant_id}_{session_id}"),
             )
         except FileExistsError as e:
             if e.errno != errno.EEXIST:  # EEXIST: folder already exists
@@ -69,7 +71,7 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
     # Prepare arguments for recon-all.
     flags = ""
     for session_id in list_session_ids:
-        flags += " -tp " + participant_id + "_" + session_id
+        flags += f" -tp {participant_id}_{session_id}"
 
     print_begin_image(image_id)
 
@@ -125,10 +127,12 @@ def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
     Returns:
         subject_id for node connection with Nipype
     """
+    import datetime
     import os
     import shutil
-    import datetime
+
     from colorama import Fore
+
     from clinica.utils.stream import cprint
 
     if source_dir not in subjects_dir:
@@ -165,12 +169,14 @@ def save_to_caps(
         We do not need to check the line "finished without error" in scripts/recon-all.log.
         If an error occurs, it will be detected by Nipype and the next nodes (i.e. save_to_caps will not be called).
     """
-    import os
     import datetime
+    import os
     import shutil
+
     from colorama import Fore
-    from clinica.utils.stream import cprint
+
     from clinica.utils.longitudinal import save_long_id
+    from clinica.utils.stream import cprint
     from clinica.utils.ux import print_end_image
 
     participant_id = image_id.split("_")[0]
@@ -188,8 +194,8 @@ def save_to_caps(
     sessions_tsv_path = os.path.join(
         os.path.expanduser(caps_dir), "subjects", participant_id, long_id
     )
-    if not os.path.isfile(os.path.join(sessions_tsv_path, long_id + "_sessions.tsv")):
-        save_long_id(list_session_ids, sessions_tsv_path, long_id + "_sessions.tsv")
+    if not os.path.isfile(os.path.join(sessions_tsv_path, f"{long_id}_sessions.tsv")):
+        save_long_id(list_session_ids, sessions_tsv_path, f"{long_id}_sessions.tsv")
 
     # Save FreeSurfer segmentation
     representative_file = os.path.join(image_id, "mri", "aparc+aseg.mgz")

@@ -1,7 +1,6 @@
 # coding: utf8
 
-"""
-This module contains the Pipeline abstract class needed for Clinica.
+"""This module contains the Pipeline abstract class needed for Clinica.
 
 Subclasses are located in clinica/pipeline/<pipeline_name>/<pipeline_name>_pipeline.py
 """
@@ -82,20 +81,25 @@ class Pipeline(Workflow):
         """Init a Pipeline object.
 
         Args:
-            bids_directory (optional): Path to a BIDS directory.
-            caps_directory (optional): Path to a CAPS directory.
-            tsv_file (optional): Path to a subjects-sessions `.tsv` file.
-            overwrite_caps (optional): Boolean which specifies overwritten of output directory.
-            base_dir (optional): Working directory (attribute of Nipype::Workflow class).
-            name (optional): Pipeline name.
+            bids_directory (str, optional): Path to a BIDS directory. Defaults to None.
+            caps_directory (str, optional): Path to a CAPS directory. Defaults to None.
+            tsv_file (str, optional): Path to a subjects-sessions `.tsv` file. Defaults to None.
+            overwrite_caps (bool, optional): Overwrite or not output directory.. Defaults to False.
+            base_dir (str, optional): Working directory (attribute of Nipype::Workflow class). Defaults to None.
+            parameters (dict, optional): Pipeline parameters. Defaults to {}.
+            name (str, optional): Pipeline name. Defaults to None.
+
+        Raises:
+            RuntimeError: [description]
         """
         import inspect
         import os
         from tempfile import mkdtemp
+
         from colorama import Fore
-        from clinica.utils.inputs import check_caps_folder
-        from clinica.utils.inputs import check_bids_folder
+
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.inputs import check_bids_folder, check_caps_folder
         from clinica.utils.participant import get_subject_session_list
 
         self._is_built = False
@@ -151,9 +155,11 @@ class Pipeline(Workflow):
             [ ] Implement this static method in all pipelines
             [ ] Make it abstract to force overload in future pipelines
         """
-        from clinica.utils.exceptions import ClinicaException
         import datetime
+
         from colorama import Fore
+
+        from clinica.utils.exceptions import ClinicaException
         from clinica.utils.stream import cprint
 
         now = datetime.datetime.now().strftime("%H:%M:%S")
@@ -257,10 +263,12 @@ class Pipeline(Workflow):
             An execution graph (see Workflow.run).
         """
         import shutil
-        from networkx import Graph, NetworkXError
+
         from colorama import Fore
-        from clinica.utils.ux import print_failed_images
+        from networkx import Graph, NetworkXError
+
         from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_failed_images
 
         if not self.is_built:
             self.build()
@@ -380,12 +388,14 @@ class Pipeline(Workflow):
 
     def check_size(self):
         """Check if the pipeline has enough space on the disk for both working directory and CAPS."""
+        import select
+        import sys
         from os import statvfs
         from os.path import dirname
-        from clinica.utils.stream import cprint
+
         from colorama import Fore
-        import sys
-        import select
+
+        from clinica.utils.stream import cprint
 
         SYMBOLS = {
             "customary": ("B", "K", "M", "G", "T", "P", "E", "Z", "Y"),
@@ -556,11 +566,13 @@ class Pipeline(Workflow):
         We force the use of plugin MultiProc
 
         Author: Arnaud Marcoux"""
-        from clinica.utils.stream import cprint
-        from multiprocessing import cpu_count
-        from colorama import Fore
         import select
         import sys
+        from multiprocessing import cpu_count
+
+        from colorama import Fore
+
+        from clinica.utils.stream import cprint
 
         # count number of CPUs
         n_cpu = cpu_count()
@@ -630,11 +642,13 @@ class Pipeline(Workflow):
 
         author: Arnaud Marcoux
         """
-        from os import listdir
-        from os.path import join, isdir, dirname, abspath, basename
-        from colorama import Fore
-        from clinica.utils.stream import cprint
         import sys
+        from os import listdir
+        from os.path import abspath, basename, dirname, isdir, join
+
+        from colorama import Fore
+
+        from clinica.utils.stream import cprint
 
         def convert_cross_sectional(bids_in, bids_out, cross_subjects, long_subjects):
             """
@@ -652,9 +666,9 @@ class Pipeline(Workflow):
             Returns:
                 nothing
             """
-            from os.path import exists, isfile
             from os import mkdir
-            from shutil import copytree, copy2
+            from os.path import exists, isfile
+            from shutil import copy2, copytree
 
             def add_ses(f):
                 """
@@ -700,8 +714,8 @@ class Pipeline(Workflow):
                 Returns:
                     copy2 with modified filename
                 """
+                from os.path import basename, dirname, join
                 from shutil import copy2
-                from os.path import join, dirname, basename
 
                 dst_modified = join(dirname(dst), add_ses(basename(src)))
                 return copy2(src, dst_modified)

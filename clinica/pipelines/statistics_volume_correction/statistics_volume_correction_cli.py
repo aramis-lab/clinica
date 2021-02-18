@@ -62,8 +62,10 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
 
     def run_command(self, args):
         from networkx import Graph
+
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+
         from .statistics_volume_correction_pipeline import StatisticsVolumeCorrection
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
             "t_map": args.t_map,

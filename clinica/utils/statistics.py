@@ -1,15 +1,13 @@
 # coding: utf8
 
-"""
-This module contains utilities for statistics.
+"""This module contains utilities for statistics.
 
 Currently, it contains one function to generate TSV file containing mean map based on a parcellation.
 """
 
 
 def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
-    """
-    Compute statistics of a map on an atlas.
+    """Compute statistics of a map on an atlas.
 
     Given an atlas image with a set of ROIs, this function computes the mean of
     a normalized map (e.g. GM segmentation, FA map from DTI, etc.) on each ROI.
@@ -25,11 +23,13 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         out_file (str): TSV file containing the statistics (content of the
             columns: label, mean scalar, std of the scalar', number of voxels).
     """
-    from clinica.utils.atlas import AtlasAbstract
+    import os.path as op
+
     import nibabel as nib
     import numpy as np
     import pandas
-    import os.path as op
+
+    from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.stream import cprint
 
     if not isinstance(in_atlas, AtlasAbstract):

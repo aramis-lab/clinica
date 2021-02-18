@@ -14,7 +14,7 @@ version = __version__
 
 # python 3.6 minimum version is required
 if sys.version_info < (3, 6):
-    print("Clinica %s requires Python 3.6" % __version__)
+    print(f"Clinica {__version__} requires Python 3.6")
     sys.exit(1)
 
 # Note: The following lines have been commented for speed purposes.

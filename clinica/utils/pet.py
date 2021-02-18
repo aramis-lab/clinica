@@ -28,6 +28,7 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
         PSF information following [subject_ids, session_ids] order
     """
     import os
+
     from pandas.io.parsers import read_csv
 
     if not os.path.isfile(pvc_psf_tsv):

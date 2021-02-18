@@ -126,19 +126,21 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from colorama import Fore
-        from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import (
-            T1VolumeTissueSegmentationCLI,
-        )
-        from ..t1_volume_register_dartel.t1_volume_register_dartel_cli import (
-            T1VolumeRegisterDartelCLI,
-        )
+
+        from clinica.utils.stream import cprint
+
         from ..t1_volume_dartel2mni.t1_volume_dartel2mni_cli import (
             T1VolumeDartel2MNICLI,
         )
         from ..t1_volume_parcellation.t1_volume_parcellation_cli import (
             T1VolumeParcellationCLI,
         )
-        from clinica.utils.stream import cprint
+        from ..t1_volume_register_dartel.t1_volume_register_dartel_cli import (
+            T1VolumeRegisterDartelCLI,
+        )
+        from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import (
+            T1VolumeTissueSegmentationCLI,
+        )
 
         cprint(
             f"The t1-volume-existing-template pipeline is divided into 4 parts:\n"

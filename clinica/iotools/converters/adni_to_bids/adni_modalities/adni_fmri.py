@@ -1,15 +1,12 @@
 # coding: utf-8
 
-"""
-Module for converting fMRI of ADNI
-"""
+"""Module for converting fMRI of ADNI."""
 
 
 def convert_adni_fmri(
     source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
 ):
-    """
-    Convert fMR images of ADNI into BIDS format
+    """Convert fMR images of ADNI into BIDS format.
 
     Args:
         source_dir: path to the ADNI directory
@@ -18,14 +15,13 @@ def convert_adni_fmri(
         conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
-
     """
+    from os import path
 
     import pandas as pd
-    from os import path
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
     from colorama import Fore
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
@@ -41,12 +37,11 @@ def convert_adni_fmri(
     cprint("Paths of fMRI images found. Exporting images into BIDS ...")
     # fmri_paths_to_bids(dest_dir, images)
     paths_to_bids(images, dest_dir, "fmri", mod_to_update=mod_to_update)
-    cprint(Fore.GREEN + "fMRI conversion done." + Fore.RESET)
+    cprint(f"{Fore.GREEN}fMRI conversion done.{Fore.RESET}")
 
 
 def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
-    """
-    Compute the paths to fMR images
+    """Compute the paths to fMR images.
 
     Args:
         source_dir: path to the ADNI directory
@@ -55,11 +50,11 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
         subjs_list: subjects list
         conversion_dir: path to the TSV files including the paths to original images
 
-    Returns: pandas Dataframe containing the path for each fmri
-
+    Returns:
+        pandas Dataframe containing the path for each fmri
     """
+    from os import path
 
-    from os import path, mkdir
     import pandas as pd
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
@@ -188,7 +183,7 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
 def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
     """
     One image among those in the input list is chosen according to QC
-    and then correspoding metadata is extracted to a dictionary
+    and then correspoding metadata is extracted to a dictionary.
 
     Args:
         subject_id: Subject identifier
@@ -198,7 +193,6 @@ def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
         mri_qc_subj: Dataframe containing list of QC of scans for the subject
 
     Returns: dictionary - contains image metadata
-
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,

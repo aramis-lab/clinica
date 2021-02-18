@@ -48,9 +48,10 @@ class PetSurface(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
-        from clinica.utils.ux import print_images_to_process
+
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_images_to_process
 
         if self.parameters["longitudinal"]:
             self.build_input_node_longitudinal()
@@ -74,12 +75,13 @@ class PetSurface(cpe.Pipeline):
     def build_input_node_longitudinal(self):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaException
+
+        import clinica.utils.input_files as input_files
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
-        import clinica.utils.input_files as input_files
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.inputs import clinica_file_reader
 
         read_parameters_node = npe.Node(
             name="LoadingCLIArguments",
@@ -209,12 +211,13 @@ class PetSurface(cpe.Pipeline):
     def build_input_node_cross_sectional(self):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaException
+
+        import clinica.utils.input_files as input_files
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
-        import clinica.utils.input_files as input_files
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.inputs import clinica_file_reader
 
         read_parameters_node = npe.Node(
             name="LoadingCLIArguments",
@@ -340,7 +343,9 @@ class PetSurface(cpe.Pipeline):
         """Build and connect an output node to the pipeline."""
 
     def build_core_nodes(self):
-        """The function get_wf constructs a pipeline for one subject (in pet_surface_utils.py) and runs it.
+        """Build and connect the core nodes of the pipeline.
+
+        The function get_wf constructs a pipeline for one subject (in pet_surface_utils.py) and runs it.
         We use iterables to give to the node all the files and information needed.
         """
         # TODO(@arnaud.marcoux): Convert it to a Node with iterables + MapNodes.
@@ -349,8 +354,10 @@ class PetSurface(cpe.Pipeline):
         #   Check it out to get inspiration from it when it's ready.
 
         import os
-        import nipype.pipeline.engine as npe
+
         import nipype.interfaces.utility as niu
+        import nipype.pipeline.engine as npe
+
         import clinica.pipelines.pet_surface.pet_surface_utils as utils
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
@@ -440,3 +447,4 @@ class PetSurface(cpe.Pipeline):
                                               ("desikan_right", "desikan_right")])
             ]
         )
+        # fmt: off

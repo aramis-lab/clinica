@@ -9,8 +9,7 @@ def write(df, path, name):
 
 
 def complete_info_clinical(path_to_clinical, dfClinicalDict):
-    """
-    Determines where the clinical data that are not encoded in the Clinica standard have to be written under the BIDS format
+    """Determine where the clinical data that are not encoded in the Clinica standard have to be written under the BIDS format.
 
     Args:
        path_to_clinical: Path to the original data dictionnary 'DataDictionary_NIFD_2017.10.18.xlsx'
@@ -19,7 +18,7 @@ def complete_info_clinical(path_to_clinical, dfClinicalDict):
     import pandas as pd
 
     def get_unclassified(dfClinicalDict):
-        """ Returns the list of the remaining clinical data categories not encoded in the Clinica standard"""
+        """Return the list of the remaining clinical data categories not encoded in the Clinica standard."""
         return list(dfClinicalDict[dfClinicalDict["BIDS_CLINICA"] == ""]["COLUMN_NAME"])
 
     def dicho_participants(path_to_clinical, possible_participants):
@@ -47,16 +46,18 @@ def complete_info_clinical(path_to_clinical, dfClinicalDict):
 def update_info_clinical(
     path_data_dict, path_clinicals, path_to_clinical, path_preprocessing
 ):
-    """
-    Builds or updates 'clinical_info.tsv' in the preprocessing folder
+    """Build or update 'clinical_info.tsv' in the preprocessing folder.
 
     Args:
-        path_data_dict: Path to the original data dictionnary 'DataDictionary_NIFD_2017.10.18.xlsx'
-        path_clinicals: Path to the directory containing the Clinical data BIDS correspondence files
+        path_data_dict (str): Path to the original data dictionnary 'DataDictionary_NIFD_2017.10.18.xlsx'
+        path_clinicals (str): Path to the directory containing the Clinical data BIDS correspondence files
+        path_to_clinical (str): [description]
+        path_preprocessing (str): [description]
     """
-    import pandas as pd
     import os
+
     import numpy as np
+    import pandas as pd
 
     dfParticipant = pd.read_csv(
         os.path.join(

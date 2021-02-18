@@ -1,7 +1,6 @@
 # coding: utf8
 
-"""
-This module gathers formatted messages that are displayed when running Clinica.
+"""This module gathers formatted messages that are displayed when running Clinica.
 
 These functions are mainly called by the pipelines.
 """
@@ -11,8 +10,9 @@ LINES_TO_DISPLAY = 25
 
 def print_images_to_process(list_participant_id, list_session_id):
     """Print which images will be processed by the pipeline."""
-    from .stream import cprint
     from clinica.utils.participant import get_unique_subjects
+
+    from .stream import cprint
 
     unique_participants, sessions_per_participant = get_unique_subjects(
         list_participant_id, list_session_id
@@ -38,13 +38,15 @@ def print_images_to_process(list_participant_id, list_session_id):
 def print_begin_image(image_id, list_keys=None, list_values=None):
     """Print begin run pipeline message for a given image `image_id`."""
     import datetime
+
     from colorama import Fore
+
     from .stream import cprint
 
     if list_keys is not None:
         assert len(list_keys) == len(list_values)
 
-    begin_message = "Running pipeline for %s" % (image_id.replace("_", " | "))
+    begin_message = f"Running pipeline for {image_id.replace('_', ' | ')}"
     if list_keys and list_values:
         begin_message += " ("
         begin_message += ", ".join(
@@ -58,7 +60,9 @@ def print_begin_image(image_id, list_keys=None, list_values=None):
 def print_end_image(image_id):
     """Print end pipeline message for a given image `image_id`."""
     import datetime
+
     from colorama import Fore
+
     from .stream import cprint
 
     end_message = f"{image_id.replace(' ', ' | ')} has completed"
@@ -68,9 +72,11 @@ def print_end_image(image_id):
 
 def print_end_pipeline(cli_name, working_directory, working_directory_was_specified):
     """Print end pipeline message after its execution."""
-    import os
     import datetime
+    import os
+
     from colorama import Fore
+
     from .stream import cprint
 
     now = datetime.datetime.now().strftime("%H:%M:%S")
@@ -89,10 +95,13 @@ def print_end_pipeline(cli_name, working_directory, working_directory_was_specif
 def print_failed_images(cli_name, image_ids):
     """Print missing images in CAPS folder after a RuntimeError from Nipype."""
     import datetime
+
     from colorama import Fore
+
+    from clinica.utils.participant import get_unique_subjects
+
     from .filemanip import extract_subjects_sessions_from_filename
     from .stream import cprint
-    from clinica.utils.participant import get_unique_subjects
 
     list_participant_id, list_session_id = extract_subjects_sessions_from_filename(
         image_ids
@@ -129,8 +138,9 @@ def print_failed_images(cli_name, image_ids):
 def print_crash_files_and_exit(log_file, working_directory):
     """Print command(s) to type in order to extract details after a Nipype RuntimeError and exit with an exception."""
     from colorama import Fore
-    from .filemanip import extract_crash_files_from_log_file
+
     from .exceptions import ClinicaException
+    from .filemanip import extract_crash_files_from_log_file
     from .stream import cprint
 
     cprint(

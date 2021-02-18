@@ -1,9 +1,5 @@
 # coding: utf-8
 
-"""
-Command line for adni_to_bids converter
-"""
-
 import clinica.engine as ce
 
 
@@ -68,8 +64,7 @@ class AdniToBidsCLI(ce.CmdParser):
 
         if args.clinical_data_only and args.force_new_extraction:
             raise ClinicaParserError(
-                "%s\n[Error] Arguments clinical_data_only and force_new_extraction are mutually exclusive.%s"
-                % (Fore.RED, Fore.RESET)
+                f"{Fore.RED}\n[Error] Arguments clinical_data_only and force_new_extraction are mutually exclusive.{Fore.RESET}"
             )
 
         if not args.clinical_data_only:

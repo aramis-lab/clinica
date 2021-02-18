@@ -7,7 +7,6 @@ Utils for the implementation of t1-volume-tissue-segmentation pipeline
 import os
 
 import numpy as np
-
 from nipype.interfaces.base import (
     File,
     InputMultiPath,

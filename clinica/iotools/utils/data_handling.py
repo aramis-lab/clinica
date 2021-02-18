@@ -1,16 +1,12 @@
 # coding: utf8
 
-"""
-Data handling scripts
-"""
+"""Data handling scripts."""
 
 
 def create_merge_file(
     bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines=None, **kwargs
 ):
-    """
-    Merge all the .TSV files containing clinical data of a BIDS compliant dataset and store
-    the result inside a .TSV file.
+    """Merge all the TSV files containing clinical data of a BIDS compliant dataset and store the result inside a TSV file.
 
     Args:
         bids_dir: path to the BIDS folder
@@ -18,15 +14,17 @@ def create_merge_file(
         caps_dir: path to the CAPS folder (optional)
         tsv_file: TSV file containing the subjects with their sessions (optional)
         pipelines: when adding CAPS information, indicates the pipelines that will be merged (optional)
-
     """
-    from os import path
     import os
-    import pandas as pd
-    import numpy as np
     import warnings
-    from .pipeline_handling import InitException, DatasetError
+    from os import path
+
+    import numpy as np
+    import pandas as pd
+
     from clinica.utils.participant import get_subject_session_list
+
+    from .pipeline_handling import DatasetError, InitException
 
     if caps_dir is not None:
         if not path.isdir(caps_dir):
@@ -225,7 +223,7 @@ def create_merge_file(
     # CAPS
     if caps_dir is not None:
         # Call the different pipelines
-        from .pipeline_handling import t1_volume_pipeline, pet_volume_pipeline
+        from .pipeline_handling import pet_volume_pipeline, t1_volume_pipeline
 
         pipeline_options = {
             "t1-volume": t1_volume_pipeline,
@@ -279,8 +277,7 @@ def create_merge_file(
 
 
 def find_mods_and_sess(bids_dir):
-    """
-    Find all the modalities and sessions available for a given BIDS dataset
+    """Find all the modalities and sessions available for a given BIDS dataset.
 
     Args:
         bids_dir: path to the BIDS dataset
@@ -297,9 +294,9 @@ def find_mods_and_sess(bids_dir):
     }
 
     """
+    import os
     from glob import glob
     from os import path
-    import os
 
     mods_dict = {}
     mods_list = []
@@ -386,8 +383,7 @@ def find_mods_and_sess(bids_dir):
 
 
 def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
-    """
-    Compute the list of missing modalities for each subject in a BIDS compliant dataset
+    """Compute the list of missing modalities for each subject in a BIDS compliant dataset.
 
     Args:
         bids_dir: path to the BIDS directory
@@ -395,15 +391,17 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
         output_prefix: string that replace the default prefix ('missing_mods_') in the name of all the output files
     created
     """
+    import os
+    from glob import glob
+    from os import path
+
+    import pandas as pd
+
     from ..converter_utils import (
         MissingModsTracker,
-        print_statistics,
         print_longitudinal_analysis,
+        print_statistics,
     )
-    import os
-    from os import path
-    import pandas as pd
-    from glob import glob
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -533,9 +531,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
 def create_subs_sess_list(
     input_dir, output_dir, file_name=None, is_bids_dir=True, use_session_tsv=False
 ):
-    """
-    Create the file subject_session_list.tsv that contains the list
-    of the visits for each subject for a BIDS or CAPS compliant dataset.
+    """Create the file subject_session_list.tsv that contains the list of the visits for each subject for a BIDS or CAPS compliant dataset.
 
     Args:
         input_dir (str): Path to the BIDS or CAPS directory.
@@ -545,10 +541,11 @@ def create_subs_sess_list(
             not (i.e. a CAPS directory)
         use_session_tsv (boolean): Specify if the list uses the sessions listed in the sessions.tsv files
     """
-    from os import path
-    from glob import glob
-    import pandas as pd
     import os
+    from glob import glob
+    from os import path
+
+    import pandas as pd
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -592,9 +589,7 @@ def create_subs_sess_list(
 
 
 def center_nifti_origin(input_image, output_image):
-    """
-
-    Put the origin of the coordinate system at the center of the image
+    """Put the origin of the coordinate system at the center of the image.
 
     Args:
         input_image: path to the input image
@@ -603,13 +598,13 @@ def center_nifti_origin(input_image, output_image):
     Returns:
         path of the output image created
     """
+    import os
+    from os.path import isfile
 
     import nibabel as nib
     import numpy as np
     from colorama import Fore
     from nibabel.spatialimages import ImageFileError
-    from os.path import isfile
-    import os
 
     error_str = None
     try:
@@ -660,8 +655,8 @@ def center_nifti_origin(input_image, output_image):
 
 
 def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
-    """
-    Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
+    """Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
+
     All the files from bids_dir are copied into output_dir, then all the NIfTI images we can found are replaced by their
     centered version if their center if off the origin by more than 50 mm.
 
@@ -674,14 +669,15 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     Returns:
         List of the centered files
     """
-    from colorama import Fore
-    from clinica.utils.inputs import check_bids_folder
-    from clinica.utils.exceptions import ClinicaBIDSError
-    from os.path import join, basename
     from glob import glob
     from os import listdir
-    from os.path import isdir, isfile
+    from os.path import basename, isdir, isfile, join
     from shutil import copy2, copytree
+
+    from colorama import Fore
+
+    from clinica.utils.exceptions import ClinicaBIDSError
+    from clinica.utils.inputs import check_bids_folder
 
     # output and input must be different, so that we do not mess with user's data
     if bids_dir == output_dir:
@@ -741,8 +737,8 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
 
 
 def are_far_appart(file1, file2, threshold=80):
-    """
-    Tells if 2 files have a center located at more than a threshold distance
+    """Tell if 2 files have a center located at more than a threshold distance.
+
     Args:
         file1: (str) path to the first nifti file
         file2: (str) path to the second nifti file
@@ -752,6 +748,7 @@ def are_far_appart(file1, file2, threshold=80):
         True if distance between `file1` and `file2` is greter than `threshold`, False otherwise.
     """
     from os.path import isfile
+
     import numpy as np
 
     assert isfile(file1)
@@ -764,8 +761,8 @@ def are_far_appart(file1, file2, threshold=80):
 
 
 def write_list_of_files(file_list, output_file):
-    """
-    Save `file_list` list of files into `output_file` text file.
+    """Save `file_list` list of files into `output_file` text file.
+
     Args:
         file_list: (list of str) of path to files
         output_file: (str) path to the output txt file
@@ -802,14 +799,14 @@ def check_relative_volume_location_in_world_coordinate_system(
         bids_dir: bids directory (used in potential warning message)
         modality: string that must be used in argument of: clinica iotools bids --modality MODALITY (used in potential
                 warning message)
-    Returns:
-        Nothing
     """
+    import sys
+    from os.path import abspath, basename
+
     import numpy as np
     from colorama import Fore
-    from os.path import abspath, basename
+
     from clinica.utils.stream import cprint
-    import sys
 
     center_coordinate_1 = [get_world_coordinate_of_center(file) for file in nifti_list1]
     center_coordinate_2 = [get_world_coordinate_of_center(file) for file in nifti_list2]
@@ -822,12 +819,9 @@ def check_relative_volume_location_in_world_coordinate_system(
 
     if len(pairs_with_problems) > 0:
         warning_message = (
-            Fore.YELLOW
-            + "[Warning] It appears that "
-            + str(len(pairs_with_problems))
-            + " pairs of files"
-            + " have an important relative offset. SPM coregistration has a high probability to fail "
-            + "on these files:\n\n"
+            f"{Fore.YELLOW}[Warning] It appears that {str(len(pairs_with_problems))} "
+            f"pairs of files have an important relative offset. "
+            f"SPM coregistration has a high probability to fail on these files:\n\n"
         )
 
         # File column width : 3 spaces more than the longest string to display
@@ -882,26 +876,13 @@ def check_relative_volume_location_in_world_coordinate_system(
                 + ".2f\n"
             ) % (str(basename(file1)), str(basename(file2)), norm)
         warning_message += (
-            "\nClinica provides a tool to counter this problem by replacing the center of the volume"
-            + " at the origin of the world coordinates.\nUse the following command line to correct the "
-            + "header of the faulty NIFTI volumes in a new folder:\n"
-            + Fore.RESET
-            + Fore.BLUE
-            + "\nclinica iotools center-nifti "
-            + abspath(bids_dir)
-            + " "
-            + abspath(bids_dir)
-            + '_centered --modality "'
-            + modality
-            + '"\n\n'
-            + Fore.YELLOW
-            + "You will find more information on the command by typing "
-            + Fore.BLUE
-            + "clinica iotools center-nifti"
-            + Fore.YELLOW
-            + " in the console.\nDo you still want to "
-            + "launch the pipeline now?"
-            + Fore.RESET
+            "\nClinica provides a tool to counter this problem by replacing the center "
+            "of the volume at the origin of the world coordinates.\nUse the following "
+            "command line to correct the header of the faulty NIFTI volumes in a new folder:\n\n"
+            f'{Fore.BLUE}clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality "{modality}"{Fore.RESET}\n\n'
+            f"{Fore.YELLOW}You will find more information on the command by typing {Fore.RESET}"
+            f"{Fore.BLUE}clinica iotools center-nifti{Fore.RESET}"
+            f"{Fore.YELLOW} in the console.\nDo you still want to launch the pipeline now?{Fore.RESET}"
         )
         cprint(warning_message)
         while True:
@@ -932,15 +913,14 @@ def check_volume_location_in_world_coordinate_system(
         bids_dir: (str) path to bids directory associated with this check (in order to propose directly the good
             command line for center-nifti tool)
         modality: (str) to propose directly the good command line option
-
-    Returns:
-        Nothing
     """
-    from colorama import Fore
-    from clinica.utils.stream import cprint
-    from os.path import abspath, basename
-    import numpy as np
     import sys
+    from os.path import abspath, basename
+
+    import numpy as np
+    from colorama import Fore
+
+    from clinica.utils.stream import cprint
 
     list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
     if len(list_non_centered_files) > 0:
@@ -958,12 +938,9 @@ def check_volume_location_in_world_coordinate_system(
         )
 
         warning_message = (
-            Fore.YELLOW
-            + "[Warning] It appears that "
-            + str(len(list_non_centered_files))
-            + " files "
-            + "have a center way out of the origin of the world coordinate system. SPM has a high prob"
-            + "ability to fail on these files (for coregistration or segmentation):\n\n"
+            f"{Fore.YELLOW}[Warning] It appears that {str(len(list_non_centered_files))} files "
+            "have a center way out of the origin of the world coordinate system. SPM has a high "
+            "probability to fail on these files (for coregistration or segmentation):\n\n"
         )
         warning_message += (
             "%-" + str(file_width) + "s%-" + str(center_width) + "s%-s"
@@ -982,17 +959,9 @@ def check_volume_location_in_world_coordinate_system(
             ) % (basename(file), str(center), l2)
 
         cmd_line = (
-            Fore.BLUE
-            + "\nclinica iotools center-nifti "
-            + abspath(bids_dir)
-            + " "
-            + abspath(bids_dir)
-            + "_centered"
-            + '--modality "'
-            + modality
-            + '"'
-            + "\n\n"
-            + Fore.YELLOW
+            f"{Fore.BLUE}\n"
+            f'clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality "{modality}"'
+            f"\n\n{Fore.YELLOW}"
         )
 
         warning_message += (
@@ -1002,16 +971,11 @@ def check_volume_location_in_world_coordinate_system(
 
         warning_message += (
             "\nClinica provides a tool to counter this problem by replacing the center of the volume"
-            + " at the origin of the world coordinates.\nUse the following command line to correct the "
-            + "header of the faulty NIFTI volumes in a new folder:\n"
-            + cmd_line
-            + "You will find more information on the command by typing "
-            + Fore.BLUE
-            + "clinica iotools center-nifti"
-            + Fore.YELLOW
-            + " in the console.\nDo you still want to "
-            + "launch the pipeline now?"
-            + Fore.RESET
+            " at the origin of the world coordinates.\nUse the following command line to correct the "
+            f"header of the faulty NIFTI volumes in a new folder:\n{cmd_line}"
+            f"You will find more information on the command by typing "
+            f"{Fore.BLUE}clinica iotools center-nifti{Fore.RESET} "
+            f"{Fore.YELLOW}in the console.\nDo you still want to launch the pipeline now?{Fore.RESET}"
         )
         cprint(warning_message)
         while True:
@@ -1027,8 +991,7 @@ def check_volume_location_in_world_coordinate_system(
 
 
 def is_centered(nii_volume, threshold_l2=50):
-    """
-    Tells if a NIfTI volume is centered on the origin of the world coordinate system.
+    """Tell if a NIfTI volume is centered on the origin of the world coordinate system.
 
     SPM has troubles to segment files if the center of the volume is not close from the origin of the world coordinate
     system. A series of experiment have been conducted: we take a volume whose center is on the origin of the world
@@ -1048,7 +1011,6 @@ def is_centered(nii_volume, threshold_l2=50):
 
     Returns:
         True or False
-
     """
     import numpy as np
 
@@ -1067,20 +1029,21 @@ def is_centered(nii_volume, threshold_l2=50):
 
 
 def get_world_coordinate_of_center(nii_volume):
-    """
-    Extract the world coordinates of the center of the image. Based on methods described
-    here : https://brainder.org/2012/09/23/the-nifti-file-format/
+    """Extract the world coordinates of the center of the image.
+
+    Based on methods described here: https://brainder.org/2012/09/23/the-nifti-file-format/
 
     Args:
         nii_volume: path to nii volume
 
     Returns:
-
+        [Returns]
     """
     from os.path import isfile
+
     import nibabel as nib
-    from colorama import Fore
     import numpy as np
+    from colorama import Fore
 
     assert isinstance(nii_volume, str), "input argument nii_volume must be a str"
     assert isfile(nii_volume), "input argument must be a path to a file"
@@ -1122,8 +1085,8 @@ def get_world_coordinate_of_center(nii_volume):
 
 
 def get_center_volume(header):
-    """
-    Get the voxel coordinates of the center of the data, using header information
+    """Get the voxel coordinates of the center of the data, using header information.
+
     Args:
         header: a nifti header
 
@@ -1173,8 +1136,10 @@ def vox_to_world_space_method_2(coordinates_vol, header):
     import numpy as np
 
     def get_r_matrix(h):
-        """
-        Get rotation matrix, more information here: https://brainder.org/2012/09/23/the-nifti-file-format/
+        """Get rotation matrix.
+
+        More information here: https://brainder.org/2012/09/23/the-nifti-file-format/
+
         Args:
             h: header
 
@@ -1217,22 +1182,24 @@ def vox_to_world_space_method_2(coordinates_vol, header):
 def vox_to_world_space_method_3(coordinates_vol, header):
     """
     This method is used when sform_code is larger than zero. It relies on a full affine matrix, stored in the header in
-     the fields srow_[x,y,y], to map voxel to world coordinates.
-     When a nifti file is created with raw data and affine=..., this is this method that is used to decypher the
-     voxel-to-world correspondance.
+    the fields srow_[x,y,y], to map voxel to world coordinates.
+    When a nifti file is created with raw data and affine=..., this is this method that is used to decypher the
+    voxel-to-world correspondance.
+
     Args:
         coordinates_vol: coordinate in the volume (raw data)
         header: header object
 
     Returns:
         Coordinates in the world space
-
     """
     import numpy as np
 
     def get_aff_matrix(h):
-        """
-        Get affine transformation matrix, described here: https://brainder.org/2012/09/23/the-nifti-file-format/
+        """Get affine transformation matrix.
+
+        See details here: https://brainder.org/2012/09/23/the-nifti-file-format/
+
         Args:
             h: header
 
@@ -1269,7 +1236,7 @@ def vox_to_world_space_method_3(coordinates_vol, header):
 
 def vox_to_world_space_method_3_bis(coordinates_vol, header):
     """
-    This method relies on the same technique as method 3, but for images created by FreeSurfer (MGHImage, MGHHeader)
+    This method relies on the same technique as method 3, but for images created by FreeSurfer (MGHImage, MGHHeader).
     Args:
         coordinates_vol: coordinate in the volume (raw data)
         header: nib.freesurfer.mghformat.MGHHeader object

@@ -1,7 +1,6 @@
 # coding: utf8
 
-"""
-This module contains utilities to handle atlases in Clinica.
+"""This module contains utilities to handle atlases in Clinica.
 
 An atlas is currently defined by its name and a set of labels in a template space.
 
@@ -42,8 +41,7 @@ VOLUME_ATLASES = list(set(T1_VOLUME_ATLASES + PET_VOLUME_ATLASES + DWI_DTI_ATLAS
 
 
 class AtlasAbstract:
-    """
-    Abstract class for Atlas handling.
+    """Abstract class for Atlas handling.
 
     Naming convention for children classes of AtlasAbstract:
     <name_atlas>[<resolution>][<map>]
@@ -53,15 +51,10 @@ class AtlasAbstract:
 
     @abc.abstractmethod
     def get_name_atlas(self):
-        """
-        Returns the name of the atlas (as defined in BIDS/CAPS specifications).
-        """
+        """Return the name of the atlas (as defined in BIDS/CAPS specifications)."""
 
     def get_spatial_resolution(self):
-        """
-        Returns the spatial resolution of the atlas (in format "XxXxX" e.g.
-        1x1x1 or 1.5x1.5x1.5).
-        """
+        """Return the spatial resolution of the atlas (in format "XxXxX" e.g. 1.5x1.5x1.5)."""
         import nibabel as nib
 
         img_labels = nib.load(self.get_atlas_labels())
@@ -84,16 +77,11 @@ class AtlasAbstract:
 
     @abc.abstractmethod
     def get_atlas_labels(self):
-        """
-        Returns the image with the different labels/ROIs.
-        """
+        """Return the image with the different labels/ROIs."""
 
     @abc.abstractmethod
     def get_tsv_roi(self):
-        """
-        Returns the TSV file containing the ROI (regions of interest) of
-        the atlas.
-        """
+        """Return the TSV file containing the ROI (regions of interest) of the atlas."""
 
     def get_index(self):
         import nibabel as nib
@@ -119,6 +107,7 @@ class JHUDTI811mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
+
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
 
@@ -139,7 +128,7 @@ class JHUDTI811mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -161,6 +150,7 @@ class JHUTracts01mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
+
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
 
@@ -181,7 +171,7 @@ class JHUTracts01mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -203,6 +193,7 @@ class JHUTracts251mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
+
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
 
@@ -227,7 +218,7 @@ class JHUTracts251mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -249,6 +240,7 @@ class JHUTracts501mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
+
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
 
@@ -273,7 +265,7 @@ class JHUTracts501mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -294,7 +286,7 @@ class AAL2(AtlasAbstract):
 
     @staticmethod
     def get_atlas_labels():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -306,7 +298,7 @@ class AAL2(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -338,7 +330,7 @@ class Hammers(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -370,7 +362,7 @@ class LPBA40(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -391,7 +383,7 @@ class AICHA(AtlasAbstract):
 
     @staticmethod
     def get_atlas_labels():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -403,7 +395,7 @@ class AICHA(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
@@ -435,7 +427,7 @@ class Neuromorphometrics(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        from os.path import join, split, realpath
+        from os.path import join, realpath, split
 
         return join(
             split(realpath(__file__))[0],
