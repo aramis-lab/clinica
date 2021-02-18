@@ -60,10 +60,11 @@ pip install clinica
     git clone https://github.com/aramis-lab/clinica.git
     ```
 
-    We suggest creating a custom Conda environment and installing Clinica:
+    We suggest creating a custom Conda environment and installing Clinica inside it:
     ```bash
     cd clinica
     conda create --name clinicaEnv python=3.7
+    conda activate clinicaEnv
     pip install -r requirements-dev.txt
     pip install -e .
     ```
