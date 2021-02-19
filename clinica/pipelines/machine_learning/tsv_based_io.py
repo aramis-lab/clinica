@@ -20,7 +20,7 @@ def load_data(images, caps_directory, subjects, sessions, dataset):
 
     """
 
-    df = pd.io.parsers.read_csv(os.path.join(caps_directory), sep='\t')
+    df = pd.io.parsers.read_csv(os.path.join(caps_directory), sep="\t")
 
     all_vector = np.array([])
 
