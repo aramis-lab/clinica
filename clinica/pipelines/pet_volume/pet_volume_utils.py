@@ -31,15 +31,6 @@ def init_input_node(pet_nii):
 
 
 def create_binary_mask(tissues, threshold=0.3):
-    """
-
-    Args:
-        tissues:
-        threshold:
-
-    Returns:
-
-    """
     from os import getcwd
     from os.path import basename, join
 
@@ -151,7 +142,8 @@ def normalize_to_reference(pet_image, region_mask):
 
 
 def atlas_statistics(in_image, in_atlas_list):
-    """
+    """Generate regional measure from atlas_list in TSV files.
+
     For each atlas name provided it calculates for the input image the mean
     for each region in the atlas and saves it to a TSV file.
 
@@ -160,7 +152,7 @@ def atlas_statistics(in_image, in_atlas_list):
         in_atlas_list: List of names of atlas to be applied
 
     Returns:
-        List of paths to tsv files
+        List of paths to TSV files
     """
     from os import getcwd
     from os.path import abspath, join

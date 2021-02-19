@@ -1,8 +1,6 @@
 # coding: utf8
 
-"""
-Utils for the implementation of t1-volume-tissue-segmentation pipeline
-"""
+"""Utils for the implementation of t1-volume-tissue-segmentation pipeline."""
 
 import os
 
@@ -19,10 +17,7 @@ from nipype.utils.filemanip import filename_to_list, list_to_filename
 
 
 def init_input_node(t1w):
-    """
-    Extracts "sub-<participant_id>_ses-<session_label>" from input node
-    and prints begin message.
-    """
+    """Extract "sub-<participant_id>_ses-<session_label>" from <t1w> and print begin message."""
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
 
@@ -33,9 +28,7 @@ def init_input_node(t1w):
 
 
 def print_end_pipeline(subject_id, final_file):
-    """
-    Display end message for <subject_id> when <final_file> is connected.
-    """
+    """Display end message for <subject_id> when <final_file> is connected."""
     from clinica.utils.ux import print_end_image
 
     print_end_image(subject_id)
@@ -57,7 +50,8 @@ def get_tissue_tuples(
     save_warped_unmodulated,
     save_warped_modulated,
 ):
-    """
+    """Get tissue tuples.
+
     Method to obtain the list of tuples, one for each tissue class, with the following fields:
      - tissue probability map (4D), 1-based index to frame
      - number of gaussians
