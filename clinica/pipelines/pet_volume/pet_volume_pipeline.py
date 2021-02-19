@@ -1,8 +1,7 @@
 # coding: utf8
 
-from nipype import config
-
 import clinica.pipelines.engine as cpe
+from nipype import config
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -83,8 +82,6 @@ class PETVolume(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
-
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
@@ -105,6 +102,7 @@ class PETVolume(cpe.Pipeline):
             print_groups_in_caps_directory,
             print_images_to_process,
         )
+        from colorama import Fore
 
         # Check that group already exists
         if not exists(
@@ -287,10 +285,8 @@ class PETVolume(cpe.Pipeline):
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-
-        import clinica.pipelines.pet_volume.pet_volume_utils as utils
         from clinica.utils.filemanip import zip_nii
-        from clinica.utils.nipype import fix_join
+        from clinica.utils.nipype import container_from_filename, fix_join
 
         # Find container path from pet filename
         # =====================================
@@ -298,7 +294,7 @@ class PETVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["pet_filename"],
                 output_names=["container"],
-                function=utils.pet_container_from_filename,
+                function=container_from_filename,
             ),
             name="container_path",
         )
@@ -416,11 +412,20 @@ class PETVolume(cpe.Pipeline):
         import nipype.interfaces.spm.utils as spmutils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from nipype.interfaces.petpvc import PETPVC
-
-        import clinica.pipelines.pet_volume.pet_volume_utils as utils
         from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+        from nipype.interfaces.petpvc import PETPVC
+
+        from .pet_volume_utils import (
+            apply_binary_mask,
+            atlas_statistics,
+            create_binary_mask,
+            create_pvc_mask,
+            get_from_list,
+            init_input_node,
+            normalize_to_reference,
+            pet_pvc_name,
+        )
 
         if spm_standalone_is_available():
             use_spm_standalone()
@@ -431,7 +436,7 @@ class PETVolume(cpe.Pipeline):
             interface=nutil.Function(
                 input_names=["pet_nii"],
                 output_names=["pet_nii"],
-                function=utils.init_input_node,
+                function=init_input_node,
             ),
             name="init_pipeline",
         )
@@ -501,7 +506,7 @@ class PETVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["pet_image", "region_mask"],
                 output_names=["suvr_pet_path"],
-                function=utils.normalize_to_reference,
+                function=normalize_to_reference,
             ),
             name="norm_to_ref",
         )
@@ -512,7 +517,7 @@ class PETVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["tissues", "threshold"],
                 output_names=["out_mask"],
-                function=utils.create_binary_mask,
+                function=create_binary_mask,
             ),
             name="binary_mask",
         )
@@ -524,7 +529,7 @@ class PETVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["image", "binary_mask"],
                 output_names=["masked_image_path"],
-                function=utils.apply_binary_mask,
+                function=apply_binary_mask,
             ),
             name="apply_mask",
         )
@@ -556,7 +561,7 @@ class PETVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["in_image", "in_atlas_list"],
                 output_names=["atlas_statistics"],
-                function=utils.atlas_statistics,
+                function=atlas_statistics,
             ),
             name="atlas_stats_node",
             iterfield=["in_image"],
@@ -619,7 +624,7 @@ class PETVolume(cpe.Pipeline):
                 nutil.Function(
                     input_names=["tissues"],
                     output_names=["out_mask"],
-                    function=utils.create_pvc_mask,
+                    function=create_pvc_mask,
                 ),
                 name="pvc_mask",
             )
@@ -647,7 +652,7 @@ class PETVolume(cpe.Pipeline):
                 nutil.Function(
                     input_names=["pet_image", "region_mask"],
                     output_names=["suvr_pet_path"],
-                    function=utils.normalize_to_reference,
+                    function=normalize_to_reference,
                 ),
                 name="norm_to_ref_pvc",
             )
@@ -658,7 +663,7 @@ class PETVolume(cpe.Pipeline):
                 nutil.Function(
                     input_names=["image", "binary_mask"],
                     output_names=["masked_image_path"],
-                    function=utils.apply_binary_mask,
+                    function=apply_binary_mask,
                 ),
                 name="apply_mask_pvc",
             )
@@ -693,7 +698,7 @@ class PETVolume(cpe.Pipeline):
                 nutil.Function(
                     input_names=["in_image", "in_atlas_list"],
                     output_names=["atlas_statistics"],
-                    function=utils.atlas_statistics,
+                    function=atlas_statistics,
                 ),
                 name="atlas_stats_pvc",
                 iterfield=["in_image"],
@@ -711,11 +716,11 @@ class PETVolume(cpe.Pipeline):
                     (unzip_dartel_template, dartel_mni_reg_pvc, [("out_file", "template_file")]),
                     (unzip_reference_mask, reslice_pvc, [("out_file", "in_file")]),
                     (coreg_pet_t1, petpvc, [("coregistered_source", "in_file"),
-                                            (("coregistered_source", utils.pet_pvc_name, "RBV"), "out_file")]),
+                                            (("coregistered_source", pet_pvc_name, "RBV"), "out_file")]),
                     (pvc_mask, petpvc, [("out_mask", "mask_file")]),
-                    (self.input_node, petpvc, [(("psf", utils.get_from_list, 0), "fwhm_x"),
-                                               (("psf", utils.get_from_list, 1), "fwhm_y"),
-                                               (("psf", utils.get_from_list, 2), "fwhm_z")]),
+                    (self.input_node, petpvc, [(("psf", get_from_list, 0), "fwhm_x"),
+                                               (("psf", get_from_list, 1), "fwhm_y"),
+                                               (("psf", get_from_list, 2), "fwhm_z")]),
                     (petpvc, dartel_mni_reg_pvc, [("out_file", "apply_to_files")]),
                     (dartel_mni_reg_pvc, reslice_pvc, [("normalized_files", "space_defining")]),
                     (dartel_mni_reg_pvc, norm_to_ref_pvc, [("normalized_files", "pet_image")]),

@@ -5,11 +5,10 @@ def init_input_node(pet_nii):
     import datetime
 
     import nibabel as nib
-    from colorama import Fore
-
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
+    from colorama import Fore
 
     # Extract image ID
     image_id = get_subject_id(pet_nii)
@@ -166,10 +165,9 @@ def atlas_statistics(in_image, in_atlas_list):
     from os import getcwd
     from os.path import abspath, join
 
-    from nipype.utils.filemanip import split_filename
-
     from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.statistics import statistics_on_atlas
+    from nipype.utils.filemanip import split_filename
 
     orig_dir, base, ext = split_filename(in_image)
     atlas_classes = AtlasAbstract.__subclasses__()
@@ -185,24 +183,6 @@ def atlas_statistics(in_image, in_atlas_list):
                 break
 
     return atlas_statistics_list
-
-
-def pet_container_from_filename(pet_filename):
-    import re
-    from os.path import join
-
-    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_", pet_filename)
-
-    if m is None:
-        raise ValueError(
-            "Input filename is not in a BIDS or CAPS compliant format. It does not contain the subject"
-            + " and session information."
-        )
-
-    subject = m.group(1)
-    session = m.group(2)
-
-    return join("subjects", subject, session, "pet/preprocessing")
 
 
 def get_from_list(in_list, index):
