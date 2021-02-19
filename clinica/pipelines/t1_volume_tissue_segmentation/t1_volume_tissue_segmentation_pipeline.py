@@ -126,11 +126,15 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import unzip_nii, zip_nii
-        from clinica.utils.nipype import fix_join
+        from clinica.utils.nipype import fix_join, container_from_filename
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
-        from ..t1_volume_tissue_segmentation import (
-            t1_volume_tissue_segmentation_utils as seg_utils,
+        from .t1_volume_tissue_segmentation_utils import (
+            init_input_node,
+            print_end_pipeline,
+            zip_list_files,
+            get_tissue_tuples,
+            ApplySegmentationDeformation
         )
 
         if spm_standalone_is_available():
@@ -143,7 +147,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             interface=nutil.Function(
                 input_names=self.get_input_fields(),
                 output_names=["subject_id"] + self.get_input_fields(),
-                function=seg_utils.init_input_node,
+                function=init_input_node,
             ),
             name="0-InitNode",
         )
@@ -161,7 +165,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         # ====================
         new_segment = npe.Node(spm.NewSegment(), name="2-SpmSegmentation")
         new_segment.inputs.write_deformation_fields = [True, True]
-        new_segment.inputs.tissues = seg_utils.get_tissue_tuples(
+        new_segment.inputs.tissues = get_tissue_tuples(
             self.parameters["tissue_probability_maps"],
             self.parameters["tissue_classes"],
             self.parameters["dartel_tissues"],
@@ -172,7 +176,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         # Apply segmentation deformation to T1 (into MNI space)
         # =====================================================
         t1_to_mni = npe.Node(
-            seg_utils.ApplySegmentationDeformation(), name="3-T1wToMni"
+            ApplySegmentationDeformation(), name="3-T1wToMni"
         )
 
         # Print end message
@@ -180,7 +184,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         print_end_message = npe.Node(
             interface=nutil.Function(
                 input_names=["subject_id", "final_file"],
-                function=seg_utils.print_end_pipeline,
+                function=print_end_pipeline,
             ),
             name="WriteEndMessage",
         )
@@ -217,7 +221,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             nutil.Function(
                 input_names=["t1w_filename"],
                 output_names=["container"],
-                function=seg_utils.t1w_container_from_filename,
+                function=container_from_filename,
             ),
             name="ContainerPath",
         )
@@ -261,8 +265,8 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             [
                 (self.input_node, container_path, [("t1w", "t1w_filename")]),
                 (container_path, write_node, [(("container", fix_join, ""), "container")]),
-                (self.output_node, write_node, [(("native_class_images", seg_utils.zip_list_files, True), "native_space"),
-                                                (("dartel_input_images", seg_utils.zip_list_files, True), "dartel_input")]),
+                (self.output_node, write_node, [(("native_class_images", zip_list_files, True), "native_space"),
+                                                (("dartel_input_images", zip_list_files, True), "dartel_input")]),
                 (self.output_node, write_node, [(("inverse_deformation_field", zip_nii, True), "inverse_deformation_field")]),
                 (self.output_node, write_node, [(("forward_deformation_field", zip_nii, True), "forward_deformation_field")]),
                 (self.output_node, write_node, [(("t1_mni", zip_nii, True), "t1_mni")]),
@@ -271,13 +275,13 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         if self.parameters["save_warped_unmodulated"]:
             self.connect(
                 [
-                    (self.output_node, write_node, [(("normalized_class_images", seg_utils.zip_list_files, True), "normalized")]),
+                    (self.output_node, write_node, [(("normalized_class_images", zip_list_files, True), "normalized")]),
                 ]
             )
         if self.parameters["save_warped_modulated"]:
             self.connect(
                 [
-                    (self.output_node, write_node, [(("modulated_class_images", seg_utils.zip_list_files, True), "modulated_normalized")]),
+                    (self.output_node, write_node, [(("modulated_class_images", zip_list_files, True), "modulated_normalized")]),
                 ]
             )
         # fmt: on

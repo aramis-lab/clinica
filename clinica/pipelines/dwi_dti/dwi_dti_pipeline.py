@@ -127,7 +127,7 @@ class DwiDti(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from clinica.utils.nipype import fix_join
+        from clinica.utils.nipype import fix_join, container_from_filename
 
         import clinica.pipelines.dwi_dti.dwi_dti_utils as utils
 
@@ -135,7 +135,7 @@ class DwiDti(cpe.Pipeline):
         container_path = npe.Node(nutil.Function(
             input_names=['dwi_filename'],
             output_names=['container'],
-            function=utils.dwi_container_from_filename),
+            function=container_from_filename),
             name='container_path')
 
         rename_into_caps = npe.Node(nutil.Function(
