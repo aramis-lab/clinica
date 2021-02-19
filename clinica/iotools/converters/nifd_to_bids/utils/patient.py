@@ -2,7 +2,7 @@
 
 
 class Patient(object):
-    """Class that handles sessions ordering, image quality hierarchy and final BIDS structure"""
+    """Class that handles sessions ordering, image quality hierarchy and final BIDS structure."""
 
     def __init__(self, name, path_patient, path_ida):
         self.name = name
@@ -13,36 +13,36 @@ class Patient(object):
         self.ses0 = self.get_ses0()
 
     def get_sessions(self):
-        """
-        Returns the list of all sessions that the patient attended
-        """
+        """Return the list of all sessions that the patient attended."""
         import pandas as pd
 
         def change_format_date(date):
             sol = ""
-            new_date = date.split('/')
+            new_date = date.split("/")
             if len(new_date[0]) != 2:
-                new_date[0] = '0' + new_date[0]
+                new_date[0] = "0" + new_date[0]
             if len(new_date[1]) != 2:
-                new_date[1] = '0' + new_date[1]
-            sol = new_date[2] + '-' + new_date[0] + '-' + new_date[1]
+                new_date[1] = "0" + new_date[1]
+            sol = new_date[2] + "-" + new_date[0] + "-" + new_date[1]
             return sol
 
-        df = pd.read_csv(self.path_ida, sep='\t')
-        patient_clinical = df.loc[df['Subject ID'] == self.name]
+        df = pd.read_csv(self.path_ida, sep="\t")
+        patient_clinical = df.loc[df["Subject ID"] == self.name]
         dic = dict()
-        sessions = list(set(list(patient_clinical['Study Date'])))
+        sessions = list(set(list(patient_clinical["Study Date"])))
 
         for ses in sessions:
-            visit = patient_clinical.loc[patient_clinical['Study Date'] == ses]['Visit'].iloc[0]
-            ses_number = visit.split(' ')[1]
+            visit = patient_clinical.loc[patient_clinical["Study Date"] == ses][
+                "Visit"
+            ].iloc[0]
+            ses_number = visit.split(" ")[1]
             dic[change_format_date(ses)] = int(ses_number)
 
         return sessions, dic
 
     def get_ses0(self):
         if self.sessions == []:
-            print('Warning: sessions not defined for ' + str(self.name))
+            print("Warning: sessions not defined for " + str(self.name))
             return None
         return self.sessions[0]
 
@@ -52,32 +52,34 @@ class Patient(object):
     def get_sesName(self, ses_date):
         number = str(self.get_sesNumber(ses_date))
         while len(number) < 2:
-            number = '0' + number
+            number = "0" + number
 
-        res = 'ses-M' + number
+        res = "ses-M" + number
 
         return res
 
     def get_name(self):
-        return 'sub-NIFD' + self.name.replace("_", "")
+        return "sub-NIFD" + self.name.replace("_", "")
 
     def order_sessions(self, equivalences, descriptors, folders):
-        """
-        Orders sessions of a given patient
+        """Order sessions of a given patient.
 
         Args:
-          folders : List of all paths to medical images
+            folders : List of all paths to medical images
 
         Returns:
-          same_ses : dictionary containing paths ordered by sessions
-                    i.e. same_ses = {'session_number' : [all paths to MRIs made during said session]}
+            same_ses : dictionary containing paths ordered by sessions
+                i.e. same_ses = {'session_number' : [all paths to MRIs made during said session]}
         """
         from clinica.iotools.converters.nifd_to_bids.nifd_utils import extract_date
 
         dates = [extract_date(path) for path in folders]
         dates = list(set(dates))
 
-        same_dates = [(self.get_sesName(date), [fold for fold in folders if date in fold]) for date in dates]
+        same_dates = [
+            (self.get_sesName(date), [fold for fold in folders if date in fold])
+            for date in dates
+        ]
 
         ses_names = [tupl[0] for tupl in same_dates]
         ses_names = list(set(ses_names))
@@ -92,8 +94,7 @@ class Patient(object):
         return same_ses
 
     def order_priorities(self, equivalences, descriptors, folders):
-        """
-        Order all folders in the BIDS format following the priorities defined in the json file
+        """Order all folders in the BIDS format following the priorities defined in the JSON file.
 
         Args:
             equivalences:   Data structure of the form :
@@ -105,7 +106,9 @@ class Patient(object):
         Returns:
           sol: dictionary of the form sol['session_id']['dataType']['Priority']['Final_name'] = [paths/to/dcm]
         """
-        from clinica.iotools.converters.nifd_to_bids.nifd_utils import extract_name_med_img
+        from clinica.iotools.converters.nifd_to_bids.nifd_utils import (
+            extract_name_med_img,
+        )
 
         sol = {}
         sessions = self.order_sessions(equivalences, descriptors, folders)
@@ -117,7 +120,7 @@ class Patient(object):
                 med_name = extract_name_med_img(path, equivalences)
                 dataType = equivalences[med_name][0].dataType
                 priority = equivalences[med_name][0].priority
-                final_name = self.get_name() + '_' + ses_id + '_' + equivalences[med_name][0].get_bids_info()
+                final_name = f"{self.get_name()}_{ses_id}_{equivalences[med_name][0].get_bids_info()}"
 
                 if dataType not in sol[ses_id]:
                     sol[ses_id][dataType] = {}
@@ -130,10 +133,12 @@ class Patient(object):
 
         return sol
 
-    def clean_conflicts(self, equivalences, descriptors, folders, conflicts_manager, pat):
-        """
-        Order all folders in the BIDS format and removes all conflicts
-        The output contains all paths to be used by the converter
+    def clean_conflicts(
+        self, equivalences, descriptors, folders, conflicts_manager, pat
+    ):
+        """Order all folders in the BIDS format and removes all conflicts.
+
+        The output contains all paths to be used by the converter.
 
         Args:
             equivalences:   Data structure of the form :
@@ -149,7 +154,9 @@ class Patient(object):
             ordered_bids[session][datatype][priority][name] ontains a list that is either empty or has a single path to a dicom file.
             All paths will then be converted to Nifti following the BIDS format.
         """
-        from clinica.iotools.converters.nifd_to_bids.nifd_utils import extract_name_med_img
+        from clinica.iotools.converters.nifd_to_bids.nifd_utils import (
+            extract_name_med_img,
+        )
 
         ordered_bids = self.order_priorities(equivalences, descriptors, folders)
 
@@ -160,27 +167,48 @@ class Patient(object):
                 while highest_priority != 0:
                     if highest_priority in ordered_bids[ses][dType]:
                         for name in ordered_bids[ses][dType][highest_priority]:
-                            enc = name.split('_')[-1]
+                            enc = name.split("_")[-1]
                             if enc in encountered:
                                 ordered_bids[ses][dType][highest_priority][name] = []
                             else:
                                 encountered.append(enc)
-                                if len(ordered_bids[ses][dType][highest_priority][name]) > 1:
+                                if (
+                                    len(
+                                        ordered_bids[ses][dType][highest_priority][name]
+                                    )
+                                    > 1
+                                ):
 
-                                    conflit = [extract_name_med_img(path, equivalences) for path in
-                                               ordered_bids[ses][dType][highest_priority][name]]
+                                    conflit = [
+                                        extract_name_med_img(path, equivalences)
+                                        for path in ordered_bids[ses][dType][
+                                            highest_priority
+                                        ][name]
+                                    ]
                                     try:
-                                        select = conflicts_manager.make_decision(conflit)
+                                        select = conflicts_manager.make_decision(
+                                            conflit
+                                        )
                                     except Exception:
-                                        print('Warning : ' + str(
-                                            conflit) + ' not in expected conflicts, files will not be converted [Subject ID : ' + pat + ']')
+                                        print(
+                                            f"Warning : {str(conflit)} not in expected conflicts, files will not be converted [Subject ID: {pat}]"
+                                        )
                                         select = None
                                     if select is None:
-                                        ordered_bids[ses][dType][highest_priority][name] = []
+                                        ordered_bids[ses][dType][highest_priority][
+                                            name
+                                        ] = []
                                     else:
-                                        val = [path for path in ordered_bids[ses][dType][highest_priority][name] if
-                                               str(select) in path]
-                                        ordered_bids[ses][dType][highest_priority][name] = val
+                                        val = [
+                                            path
+                                            for path in ordered_bids[ses][dType][
+                                                highest_priority
+                                            ][name]
+                                            if str(select) in path
+                                        ]
+                                        ordered_bids[ses][dType][highest_priority][
+                                            name
+                                        ] = val
                     highest_priority -= 1
 
         return ordered_bids
@@ -201,14 +229,29 @@ class Patient(object):
                     if highest_priority in ordered_bids[ses][dataType]:
                         for name in ordered_bids[ses][dataType][highest_priority]:
                             name2 = name
-                            name = name.split('_')[-1]
+                            name = name.split("_")[-1]
                             if name not in name_encountered:
                                 name_encountered.append(name)
-                                if len(ordered_bids[ses][dataType][highest_priority][name2]) > 1:
+                                if (
+                                    len(
+                                        ordered_bids[ses][dataType][highest_priority][
+                                            name2
+                                        ]
+                                    )
+                                    > 1
+                                ):
                                     if name not in conflicts:
-                                        conflicts[name] = [ordered_bids[ses][dataType][highest_priority][name2]]
+                                        conflicts[name] = [
+                                            ordered_bids[ses][dataType][
+                                                highest_priority
+                                            ][name2]
+                                        ]
                                     else:
-                                        conflicts[name].append(ordered_bids[ses][dataType][highest_priority][name2])
+                                        conflicts[name].append(
+                                            ordered_bids[ses][dataType][
+                                                highest_priority
+                                            ][name2]
+                                        )
 
                     highest_priority -= 1
 

@@ -5,9 +5,16 @@ Utils for the implementation of t1-volume-tissue-segmentation pipeline
 """
 
 import os
+
 import numpy as np
-from nipype.interfaces.spm.base import SPMCommandInputSpec, SPMCommand
-from nipype.interfaces.base import TraitedSpec, OutputMultiPath, InputMultiPath, File, traits
+from nipype.interfaces.base import (
+    File,
+    InputMultiPath,
+    OutputMultiPath,
+    TraitedSpec,
+    traits,
+)
+from nipype.interfaces.spm.base import SPMCommand, SPMCommandInputSpec
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
 
@@ -18,16 +25,19 @@ def t1w_container_from_filename(t1w_filename):
     """
     import re
     from os.path import join
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', t1w_filename)
+
+    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_", t1w_filename)
 
     if m is None:
-        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It does not contain the subject' +
-                         ' and session information.')
+        raise ValueError(
+            "Input filename is not in a BIDS or CAPS compliant format. It does not "
+            "contain the subject and session information."
+        )
 
     participant_id = m.group(1)
     session_id = m.group(2)
 
-    return join('subjects', participant_id, session_id, 't1', 'spm', 'segmentation')
+    return join("subjects", participant_id, session_id, "t1", "spm", "segmentation")
 
 
 def init_input_node(t1w):
@@ -49,6 +59,7 @@ def print_end_pipeline(subject_id, final_file):
     Display end message for <subject_id> when <final_file> is connected.
     """
     from clinica.utils.ux import print_end_image
+
     print_end_image(subject_id)
 
 
@@ -61,7 +72,13 @@ def zip_list_files(class_images, zip_files=False):
     return [tissue for tissue in class_images]
 
 
-def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated):
+def get_tissue_tuples(
+    tissue_map,
+    tissue_classes,
+    dartel_tissues,
+    save_warped_unmodulated,
+    save_warped_modulated,
+):
     """
     Method to obtain the list of tuples, one for each tissue class, with the following fields:
      - tissue probability map (4D), 1-based index to frame
@@ -102,46 +119,55 @@ def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_un
         if i in dartel_tissues:
             dartel_input = True
 
-        tissues.append(((tissue_map, i),
-                        n_gaussians,
-                        (native_space, dartel_input),
-                        (warped_unmodulated, warped_modulated)))
+        tissues.append(
+            (
+                (tissue_map, i),
+                n_gaussians,
+                (native_space, dartel_input),
+                (warped_unmodulated, warped_modulated),
+            )
+        )
     return tissues
 
 
 class ApplySegmentationDeformationInput(SPMCommandInputSpec):
 
     deformation_field = File(
-        exists=True,  mandatory=True,
-        field='comp{1}.def',
-        desc='SPM Segmentation deformation file')
+        exists=True,
+        mandatory=True,
+        field="comp{1}.def",
+        desc="SPM Segmentation deformation file",
+    )
     in_files = InputMultiPath(
-        File(exists=True), mandatory=True,
-        field='out{1}.pull.fnames',
-        desc='Files on which deformation field is applied')
+        File(exists=True),
+        mandatory=True,
+        field="out{1}.pull.fnames",
+        desc="Files on which deformation field is applied",
+    )
     interpolation = traits.Range(
-        low=0, high=7,
-        field='out{1}.pull.interp',
-        desc='degree of b-spline used for interpolation')
+        low=0,
+        high=7,
+        field="out{1}.pull.interp",
+        desc="degree of b-spline used for interpolation",
+    )
     mask = traits.Int(
-        0,
-        usedefault=True,
-        field='out{1}.pull.mask',
-        desc='image masking')
+        0, usedefault=True, field="out{1}.pull.mask", desc="image masking"
+    )
     fwhm = traits.List(
         traits.Float(0),
-        field='out{1}.pull.fwhm',
-        minlen=3, maxlen=3,
-        desc='3-element list (opt)')
+        field="out{1}.pull.fwhm",
+        minlen=3,
+        maxlen=3,
+        desc="3-element list (opt)",
+    )
 
 
 class ApplySegmentationDeformationOutput(TraitedSpec):
-    out_files = OutputMultiPath(File(exists=True),
-                                desc='Transformed files')
+    out_files = OutputMultiPath(File(exists=True), desc="Transformed files")
 
 
 class ApplySegmentationDeformation(SPMCommand):
-    """ Uses SPM to apply a deformation field obtained from Segmentation routine to a given file
+    """Uses SPM to apply a deformation field obtained from Segmentation routine to a given file
 
     Examples
     --------
@@ -156,22 +182,21 @@ class ApplySegmentationDeformation(SPMCommand):
     input_spec = ApplySegmentationDeformationInput
     output_spec = ApplySegmentationDeformationOutput
 
-    _jobtype = 'util'
-    _jobname = 'defs'
+    _jobtype = "util"
+    _jobname = "defs"
 
     def _format_arg(self, opt, spec, val):
-        """Convert input to appropriate format for spm
-        """
-        if opt == 'deformation_field':
+        """Convert input to appropriate format for spm"""
+        if opt == "deformation_field":
             return np.array([list_to_filename(val)], dtype=object)
-        if opt == 'in_files':
+        if opt == "in_files":
             return np.array(filename_to_list(val), dtype=object)
         return val
 
     def _list_outputs(self):
         outputs = self._outputs().get()
-        outputs['out_files'] = []
+        outputs["out_files"] = []
         for filename in self.inputs.in_files:
             _, fname = os.path.split(filename)
-            outputs['out_files'].append(os.path.realpath('w%s' % fname))
+            outputs["out_files"].append(os.path.realpath("w%s" % fname))
         return outputs

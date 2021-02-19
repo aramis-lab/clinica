@@ -14,8 +14,7 @@ class Old_image_folder(object):
         self.bids_info = None
 
     def get_new_name(self, desc_list):
-        """
-        Finds the descriptor that describes the current image with the highest priority
+        """Find the descriptor that describes the current image with the highest priority.
 
         Args:
             desc_list: list of descriptor instances
@@ -41,8 +40,7 @@ class Old_image_folder(object):
 
 
 def get_all_med_name(path_dataset):
-    """
-    Creates a list 'medical_images' containing all possible medical images' names in the NIFD dataset
+    """Create a list 'medical_images' containing all possible medical images' names in the NIFD dataset.
 
     Args:
         path_dataset: path to the NIFD dataset
@@ -64,8 +62,7 @@ def get_all_med_name(path_dataset):
 
 
 def get_descriptors(path_root):
-    """
-    Loading the descriptors
+    """Load the descriptors.
 
     Args:
         path_root: path to the folder containing the 'config_dcm2bids.json' file
@@ -73,14 +70,14 @@ def get_descriptors(path_root):
     Returns:
         descriptors: list of descriptor instances
     """
-    import os
     import json
+    import os
 
-    with open(os.path.join(path_root, 'config_dcm2bids.json')) as f:
+    with open(os.path.join(path_root, "config_dcm2bids.json")) as f:
         data = json.load(f)
 
     descriptors = []
-    for i in data['descriptions']:
+    for i in data["descriptions"]:
         des = Descriptor(i)
         descriptors.append(des)
 

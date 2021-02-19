@@ -1,9 +1,9 @@
 # coding: utf8
 
 
+import nibabel as nib
 import numpy as np
 import pandas as pd
-import nibabel as nib
 
 
 def load_data(image_list, subjects):
@@ -19,12 +19,14 @@ def load_data(image_list, subjects):
 
     subj_average = []
     all_vector = np.array([])
-    read_file = pd.io.parsers.read_csv(image_list[0], sep='\t', usecols=[2], header=0)
+    read_file = pd.io.parsers.read_csv(image_list[0], sep="\t", usecols=[2], header=0)
     read_file = read_file.mean_scalar
     data = np.zeros((len(subjects), len(read_file)))
 
     for i in range(len(image_list)):
-        tsv_file = pd.io.parsers.read_csv(image_list[i], sep='\t', usecols=[2], header=0)
+        tsv_file = pd.io.parsers.read_csv(
+            image_list[i], sep="\t", usecols=[2], header=0
+        )
         subj_average = tsv_file.mean_scalar
         all_vector = np.append(all_vector, subj_average)
     data_temp = np.split(all_vector, len(image_list))
@@ -60,11 +62,11 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
 
     sv_images = [image_list[i] for i in sv_indices]
 
-    shape = pd.io.parsers.read_csv(sv_images[0], sep='\t', usecols=[2], header=0)
+    shape = pd.io.parsers.read_csv(sv_images[0], sep="\t", usecols=[2], header=0)
     weights = np.zeros(len(shape))
 
     for i in range(len(sv_images)):
-        subj = pd.io.parsers.read_csv(sv_images[i], sep='\t', usecols=[2], header=0)
+        subj = pd.io.parsers.read_csv(sv_images[i], sep="\t", usecols=[2], header=0)
         subj_data = subj.mean_scalar
         weights += dual_coefficients[i] * subj_data
 
@@ -91,12 +93,12 @@ def weights_to_nifti(weights, atlas, output_filename):
             atlas_path = atlas_class.get_atlas_labels()
 
     if not atlas_path:
-        raise ValueError('Atlas path not found for atlas name ' + atlas)
+        raise ValueError("Atlas path not found for atlas name " + atlas)
 
     atlas_image = nib.load(atlas_path)
     atlas_data = atlas_image.get_data()
     labels = list(set(atlas_data.ravel()))
-    output_image_weights = np.array(atlas_data, dtype='f')
+    output_image_weights = np.array(atlas_data, dtype="f")
     for i, n in enumerate(labels):
         index = np.array(np.where(atlas_data == n))
         output_image_weights[index[0, :], index[1, :], index[2, :]] = weights[i]
