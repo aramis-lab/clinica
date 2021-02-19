@@ -2,8 +2,10 @@
 
 
 def atlas_statistics(in_image, atlas_list):
-    """
-    For each atlas name provided it calculates for the input image the mean for each region in the atlas and saves it to a TSV file.
+    """Generate regional measure from atlas_list in TSV files.
+
+    For each atlas name provided it calculates for the input image the mean
+    for each region in the atlas and saves it to a TSV file.
 
     Args:
         in_image: A Nifti image
@@ -31,11 +33,7 @@ def atlas_statistics(in_image, atlas_list):
             if atlas_class.get_name_atlas() == atlas:
                 out_atlas_statistics = abspath(
                     join(
-                        "./"
-                        + base
-                        + "_space-"
-                        + atlas
-                        + "_map-graymatter_statistics.tsv"
+                        f"./{base}_space-{atlas}_map-graymatter_statistics.tsv"
                     )
                 )
                 statistics_on_atlas(in_image, atlas_class(), out_atlas_statistics)
