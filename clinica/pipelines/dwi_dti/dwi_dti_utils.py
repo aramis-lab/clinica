@@ -1,41 +1,6 @@
 # coding: utf8
 
 
-def erode_mask(in_mask, npass=6, nthreads=2):
-    """Erode the mask.
-
-    This function is used for the erosion of the brain mask thus preventing
-    voxels near the edge of the brain from potentially being erroneously
-    selected as single-fibre voxels during the estimation of the response
-    function.
-
-    Args:
-        in_mask (str): Binary mask.
-        npass (Optional[int]): Number of times to repeatedly apply the erosion
-            (default=6 which is used in MRtrix community).
-        nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 1 disables multi-threading).
-
-    Returns:
-        An eroded mask.
-    """
-    import os
-    import os.path as op
-
-    assert op.isfile(in_mask)
-
-    out_eroded_mask = op.abspath("eroded_mask.nii.gz")
-    cmd = "maskfilter -npass %s -nthreads %s %s erode %s" % (
-        npass,
-        nthreads,
-        in_mask,
-        out_eroded_mask,
-    )
-    os.system(cmd)
-
-    return out_eroded_mask
-
-
 def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     """Computes a list of statistics files for each atlas.
 
@@ -198,32 +163,19 @@ def rename_into_caps(
 
 
 def print_begin_pipeline(in_bids_or_caps_file):
-    import datetime
-    import re
+    from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_begin_image
 
-    from clinica.utils.stream import cprint
-    from colorama import Fore
-
-    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)", in_bids_or_caps_file)
-    if m is None:
-        raise ValueError("Input filename is not in a BIDS or CAPS compliant format.")
-    now = datetime.datetime.now().strftime("%H:%M:%S")
-
-    cprint(
-        "%s[%s]%s Running pipeline for %s..." % (Fore.BLUE, now, Fore.RESET, m.group(0))
-    )
+    print_begin_image(get_subject_id(in_bids_or_caps_file))
 
 
 def print_end_pipeline(in_bids_or_caps_file, final_file_1, final_file_2):
-    import datetime
-    import re
+    from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_end_image
 
-    from clinica.utils.stream import cprint
-    from colorama import Fore
+    print_end_image(get_subject_id(in_bids_or_caps_file))
 
-    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)", in_bids_or_caps_file)
-    if m is None:
-        raise ValueError("Input filename is not in a BIDS or CAPS compliant format.")
-    now = datetime.datetime.now().strftime("%H:%M:%S")
 
-    cprint("%s[%s]%s ...%s has completed." % (Fore.GREEN, now, Fore.RESET, m.group(0)))
+def get_ants_transforms(in_affine_transformation, in_bspline_transformation):
+    """Combine transformations for antsApplyTransforms interface."""
+    return [in_bspline_transformation, in_affine_transformation]
