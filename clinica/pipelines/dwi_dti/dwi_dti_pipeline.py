@@ -155,7 +155,7 @@ class DwiDti(cpe.Pipeline):
         # Find container path from filename
         container_path = npe.Node(
             nutil.Function(
-                input_names=["dwi_filename"],
+                input_names=["bids_or_caps_filename"],
                 output_names=["container"],
                 function=container_from_filename,
             ),
@@ -194,7 +194,8 @@ class DwiDti(cpe.Pipeline):
         # fmt: off
         self.connect(
             [
-                (self.input_node, container_path, [("preproc_dwi", "dwi_filename")]),
+                (self.input_node, container_path, [("preproc_dwi", "bids_or_caps_filename")]),
+
                 (container_path, write_results, [(("container", fix_join, "dwi", "dti_based_processing"), "container")]),
                 (self.output_node, write_results, [("dti", "native_space.@dti")]),
                 (self.output_node, write_results, [("fa", "native_space.@fa"),
@@ -202,6 +203,7 @@ class DwiDti(cpe.Pipeline):
                                                    ("ad", "native_space.@ad"),
                                                    ("rd", "native_space.@rd"),
                                                    ("decfa", "native_space.@decfa")]),
+
                 (self.input_node, rename_into_caps, [("preproc_dwi", "in_caps_dwi")]),
                 (self.output_node, rename_into_caps, [("registered_fa", "in_norm_fa"),
                                                       ("registered_md", "in_norm_md"),
@@ -209,32 +211,38 @@ class DwiDti(cpe.Pipeline):
                                                       ("registered_rd", "in_norm_rd"),
                                                       ("affine_matrix", "in_affine_matrix"),
                                                       ("b_spline_transform", "in_b_spline_transform")]),
+
                 (rename_into_caps, write_results, [("out_caps_fa", "normalized_space.@registered_fa"),
                                                    ("out_caps_md", "normalized_space.@registered_md"),
                                                    ("out_caps_ad", "normalized_space.@registered_ad"),
                                                    ("out_caps_rd", "normalized_space.@registered_rd"),
                                                    ("out_caps_affine_matrix", "normalized_space.@affine_matrix"),
                                                    ("out_caps_b_spline_transform", "normalized_space.@b_spline_transform")]),
+
                 (self.output_node, write_results, [("statistics_fa", "atlas_statistics.@statistics_fa"),
                                                    ("statistics_md", "atlas_statistics.@statistics_md"),
                                                    ("statistics_ad", "atlas_statistics.@statistics_ad"),
-                                                   ("statistics_rd", "atlas_statistics.@statistics_rd")]),
+                                                   ("statistics_rd", "atlas_statistics.@statistics_rd")])
             ]
         )
         # fmt: on
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipelines."""
-        import clinica.pipelines.dwi_dti.dwi_dti_workflows as workflows
+        """Build and connect the core nodes of the pipeline."""
+        import os
+
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix as mrtrix
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.lib.nipype.interfaces.mrtrix3.utils import TensorMetrics
         from clinica.lib.nipype.interfaces.mrtrix.preprocess import DWI2Tensor
+        from clinica.utils.check_dependency import check_environment_variable
+        from nipype.interfaces.ants import ApplyTransforms, RegistrationSynQuick
 
         from .dwi_dti_utils import (
             extract_bids_identifier_from_caps_filename,
+            get_ants_transforms,
             get_caps_filenames,
             print_begin_pipeline,
             print_end_pipeline,
@@ -262,6 +270,7 @@ class DwiDti(cpe.Pipeline):
                     "out_md",
                     "out_ad",
                     "out_rd",
+                    "out_evec",
                 ],
                 function=get_caps_filenames,
             ),
@@ -272,21 +281,49 @@ class DwiDti(cpe.Pipeline):
             interface=mrtrix.FSL2MRTrix(), name="0-Convert_FSL_Gradient"
         )
 
-        dwi_to_dti = npe.Node(
-            # interface=mrtrix.DWI2Tensor(),
-            interface=DWI2Tensor(),
-            name="1-Compute_DTI",
+        dwi_to_dti = npe.Node(interface=DWI2Tensor(), name="1-Compute_DTI")
+
+        dti_to_metrics = npe.Node(interface=TensorMetrics(), name="2-DTI-based_Metrics")
+
+        register_fa = npe.Node(interface=RegistrationSynQuick(), name="3a-Register_FA")
+        fsl_dir = check_environment_variable("FSLDIR", "FSL")
+        fa_map = os.path.join(fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-FA-1mm.nii.gz")
+        register_fa.inputs.fixed_image = fa_map
+
+        ants_transforms = npe.Node(
+            interface=nutil.Function(
+                input_names=["in_affine_transformation", "in_bspline_transformation"],
+                output_names=["transforms"],
+                function=get_ants_transforms,
+            ),
+            name="combine_ants_transforms",
         )
 
-        dti_to_metrics = npe.Node(
-            #            interface=mrtrix3.TensorMetrics(),
-            interface=TensorMetrics(),
-            name="2-DTI-based_Metrics",
+        apply_ants_registration = npe.Node(
+            interface=ApplyTransforms(), name="apply_ants_registration"
+        )
+        apply_ants_registration.inputs.dimension = 3
+        apply_ants_registration.inputs.input_image_type = 0
+        apply_ants_registration.inputs.interpolation = "Linear"
+        apply_ants_registration.inputs.reference_image = fa_map
+
+        apply_ants_registration_for_md = apply_ants_registration.clone(
+            "3b-Apply_ANTs_Registration_MD"
+        )
+        apply_ants_registration_for_ad = apply_ants_registration.clone(
+            "3b-Apply_ANTs_Registration_AD"
+        )
+        apply_ants_registration_for_rd = apply_ants_registration.clone(
+            "3b-Apply_ANTs_Registration_RD"
         )
 
-        register_on_jhu_atlas = workflows.register_dti_maps_on_atlas(
-            working_directory=self.base_dir, name="3-Register_DTI_Maps_On_JHU"
+        thres_map = npe.Node(
+            fsl.Threshold(thresh=0.0), iterfield=["in_file"], name="RemoveNegative"
         )
+        thres_norm_fa = thres_map.clone("3c-RemoveNegative_FA")
+        thres_norm_md = thres_map.clone("3c-RemoveNegative_MD")
+        thres_norm_ad = thres_map.clone("3c-RemoveNegative_AD")
+        thres_norm_rd = thres_map.clone("3c-RemoveNegative_RD")
 
         scalar_analysis = npe.Node(
             interface=nutil.Function(
@@ -312,11 +349,11 @@ class DwiDti(cpe.Pipeline):
         thres_md = thres_map.clone("5-Remove_Negative_MD")
         thres_ad = thres_map.clone("5-Remove_Negative_AD")
         thres_rd = thres_map.clone("5-Remove_Negative_RD")
+        thres_decfa = thres_map.clone("5-Remove_Negative_DECFA")
 
         print_begin_message = npe.Node(
             interface=nutil.Function(
-                input_names=["in_bids_or_caps_file"],
-                function=print_begin_pipeline,
+                input_names=["in_bids_or_caps_file"], function=print_begin_pipeline
             ),
             name="Write-Begin_Message",
         )
@@ -340,9 +377,11 @@ class DwiDti(cpe.Pipeline):
                 # Get BIDS/CAPS identifier from filename
                 (self.input_node, get_bids_identifier, [("preproc_dwi", "caps_dwi_filename")]),
                 # Convert FSL gradient files (bval/bvec) to MRtrix format
-                (self.input_node, convert_gradients, [("preproc_bval", "bval_file"), ("preproc_bvec", "bvec_file")]),
+                (self.input_node, convert_gradients, [("preproc_bval", "bval_file"),
+                                                      ("preproc_bvec", "bvec_file")]),
                 # Computation of the DTI model
-                (self.input_node, dwi_to_dti, [("b0_mask", "in_mask"), ("preproc_dwi", "in_file")]),
+                (self.input_node, dwi_to_dti, [("b0_mask", "in_mask"),
+                                               ("preproc_dwi", "in_file")]),
                 (convert_gradients, dwi_to_dti, [("encoding_file", "encoding_file")]),
                 (get_caps_filenames, dwi_to_dti, [("out_dti", "out_filename")]),
                 # Computation of the different metrics from the DTI
@@ -350,44 +389,68 @@ class DwiDti(cpe.Pipeline):
                 (get_caps_filenames, dti_to_metrics, [("out_md", "out_adc")]),
                 (get_caps_filenames, dti_to_metrics, [("out_ad", "out_ad")]),
                 (get_caps_filenames, dti_to_metrics, [("out_rd", "out_rd")]),
+                (get_caps_filenames, dti_to_metrics, [("out_evec", "out_evec")]),
                 (self.input_node, dti_to_metrics, [("b0_mask", "in_mask")]),
                 (dwi_to_dti, dti_to_metrics, [("tensor", "in_file")]),
-                # Register DTI maps on JHU atlas
-                (dti_to_metrics, register_on_jhu_atlas, [("out_fa", "inputnode.in_fa"),
-                                                         ("out_adc", "inputnode.in_md"),
-                                                         ("out_ad", "inputnode.in_ad"),
-                                                         ("out_rd", "inputnode.in_rd")]),
+                # Registration of FA-map onto the atlas:
+                (dti_to_metrics, register_fa, [("out_fa", "moving_image")]),
+                # Apply deformation field on MD, AD & RD:
+                (register_fa, ants_transforms, [("out_matrix", "in_affine_transformation")]),
+                (register_fa, ants_transforms, [("forward_warp_field", "in_bspline_transformation")]),
+
+                (dti_to_metrics, apply_ants_registration_for_md, [("out_adc", "input_image")]),
+                (ants_transforms, apply_ants_registration_for_md, [("transforms", "transforms")]),
+
+                (dti_to_metrics, apply_ants_registration_for_ad, [("out_ad", "input_image")]),
+                (ants_transforms, apply_ants_registration_for_ad, [("transforms", "transforms")]),
+
+                (dti_to_metrics, apply_ants_registration_for_rd, [("out_rd", "input_image")]),
+                (ants_transforms, apply_ants_registration_for_rd, [("transforms", "transforms")]),
+                # Remove negative values from the DTI maps:
+                (register_fa, thres_norm_fa, [("warped_image", "in_file")]),
+                (apply_ants_registration_for_md, thres_norm_md, [("output_image", "in_file")]),
+                (apply_ants_registration_for_rd, thres_norm_rd, [("output_image", "in_file")]),
+                (apply_ants_registration_for_ad, thres_norm_ad, [("output_image", "in_file")]),
                 # Generate regional TSV files
                 (get_bids_identifier, scalar_analysis_fa, [("bids_identifier", "prefix_file")]),
-                (register_on_jhu_atlas, scalar_analysis_fa, [("outputnode.out_norm_fa", "in_registered_map")]),
+                (thres_norm_fa, scalar_analysis_fa, [("out_file", "in_registered_map")]),
                 (get_bids_identifier, scalar_analysis_md, [("bids_identifier", "prefix_file")]),
-                (register_on_jhu_atlas, scalar_analysis_md, [("outputnode.out_norm_md", "in_registered_map")]),
+                (thres_norm_md, scalar_analysis_md, [("out_file", "in_registered_map")]),
                 (get_bids_identifier, scalar_analysis_ad, [("bids_identifier", "prefix_file")]),
-                (register_on_jhu_atlas, scalar_analysis_ad, [("outputnode.out_norm_ad", "in_registered_map")]),
+                (thres_norm_ad, scalar_analysis_ad, [("out_file", "in_registered_map")]),
                 (get_bids_identifier, scalar_analysis_rd, [("bids_identifier", "prefix_file")]),
-                (register_on_jhu_atlas, scalar_analysis_rd, [("outputnode.out_norm_rd", "in_registered_map")]),
+                (thres_norm_rd, scalar_analysis_rd, [("out_file", "in_registered_map")]),
                 # Remove negative values from the DTI maps:
                 (get_caps_filenames, thres_fa, [("out_fa", "out_file")]),
                 (dti_to_metrics, thres_fa, [("out_fa", "in_file")]),
+
                 (get_caps_filenames, thres_md, [("out_md", "out_file")]),
                 (dti_to_metrics, thres_md, [("out_adc", "in_file")]),
+
                 (get_caps_filenames, thres_ad, [("out_ad", "out_file")]),
                 (dti_to_metrics, thres_ad, [("out_ad", "in_file")]),
+
                 (get_caps_filenames, thres_rd, [("out_rd", "out_file")]),
                 (dti_to_metrics, thres_rd, [("out_rd", "in_file")]),
+
+                (get_caps_filenames, thres_decfa, [("out_evec", "out_file")]),
+                (dti_to_metrics, thres_decfa, [("out_evec", "in_file")]),
                 # Outputnode
                 (dwi_to_dti, self.output_node, [("tensor", "dti")]),
                 (thres_fa, self.output_node, [("out_file", "fa")]),
                 (thres_md, self.output_node, [("out_file", "md")]),
                 (thres_ad, self.output_node, [("out_file", "ad")]),
                 (thres_rd, self.output_node, [("out_file", "rd")]),
-                (dti_to_metrics, self.output_node, [("out_evec", "decfa")]),
-                (register_on_jhu_atlas, self.output_node, [("outputnode.out_norm_fa", "registered_fa"),
-                                                           ("outputnode.out_norm_md", "registered_md"),
-                                                           ("outputnode.out_norm_ad", "registered_ad"),
-                                                           ("outputnode.out_norm_rd", "registered_rd"),
-                                                           ("outputnode.out_affine_matrix", "affine_matrix"),
-                                                           ("outputnode.out_b_spline_transform", "b_spline_transform")]),
+                (thres_decfa, self.output_node, [("out_file", "decfa")]),
+
+                (register_fa, self.output_node, [("out_matrix", "affine_matrix")]),
+                (register_fa, self.output_node, [("forward_warp_field", "b_spline_transform")]),
+
+                (thres_norm_fa, self.output_node, [("out_file", "registered_fa")]),
+                (thres_norm_md, self.output_node, [("out_file", "registered_md")]),
+                (thres_norm_ad, self.output_node, [("out_file", "registered_ad")]),
+                (thres_norm_rd, self.output_node, [("out_file", "registered_rd")]),
+
                 (scalar_analysis_fa, self.output_node, [("atlas_statistics_list", "statistics_fa")]),
                 (scalar_analysis_md, self.output_node, [("atlas_statistics_list", "statistics_md")]),
                 (scalar_analysis_ad, self.output_node, [("atlas_statistics_list", "statistics_ad")]),
