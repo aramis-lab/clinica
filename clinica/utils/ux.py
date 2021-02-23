@@ -50,7 +50,7 @@ def print_begin_image(image_id, list_keys=None, list_values=None):
     if list_keys and list_values:
         begin_message += " ("
         begin_message += ", ".join(
-            key + " = " + value for key, value in zip(list_keys, list_values)
+            f"{key} = {key_value}" for key, key_value in zip(list_keys, list_values)
         )
         begin_message += ")"
     now = datetime.datetime.now().strftime("%H:%M:%S")
@@ -172,7 +172,7 @@ def print_groups_in_caps_directory(caps_directory):
     if group_ids == [""]:
         cprint("No group was found in CAPS directory")
     else:
+        found_groups = ", ".join(g_id.replace("group-", "") for g_id in group_ids)
         cprint(
-            "Groups that exist in your CAPS directory are %s."
-            % ", ".join(g_id.replace("group-", "") for g_id in group_ids)
+            f"Groups that exist in your CAPS directory are {found_groups}."
         )

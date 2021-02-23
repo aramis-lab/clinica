@@ -73,7 +73,7 @@ class AtlasAbstract:
         else:
             s_z = str(voxels_labels[2])
 
-        return s_x + "x" + s_y + "x" + s_z
+        return f"{s_x}x{s_y}x{s_z}"
 
     @abc.abstractmethod
     def get_atlas_labels(self):
