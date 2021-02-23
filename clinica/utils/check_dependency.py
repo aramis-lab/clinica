@@ -1,16 +1,14 @@
 # coding: utf8
 
 
-"""
-This module contains utilities to check dependencies before running Clinica.
+"""This module contains utilities to check dependencies before running Clinica.
 
 These functions can check binaries, software (e.g. FreeSurfer) or toolboxes (e.g. SPM).
 """
 
 
 def is_binary_present(binary):
-    """
-    Check if a binary is present.
+    """Check if a binary is present.
 
     This function checks if the program is present. Do not use this function
     with a binary GUI, it will open the GUI.

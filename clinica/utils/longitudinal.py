@@ -89,7 +89,7 @@ def read_sessions(caps_dir, participant_id, long_id):
         "subjects",
         participant_id,
         long_id,
-        long_id + "_sessions.tsv",
+        f"{long_id}_sessions.tsv",
     )
     if not os.path.isfile(sessions_file):
         raise ClinicaException(

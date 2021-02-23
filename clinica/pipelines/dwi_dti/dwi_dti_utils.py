@@ -13,8 +13,7 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     Returns:
         List of paths leading to the statistics TSV files.
     """
-    from os import getcwd
-    from os.path import abspath, join
+    import os
 
     from clinica.utils.atlas import (
         AtlasAbstract,
@@ -44,7 +43,7 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
                 f"_res-{atlas.get_spatial_resolution()}_map-{name_map}_statistics.tsv"
             )
 
-        out_atlas_statistics = abspath(join(getcwd(), filename))
+        out_atlas_statistics = os.path.abspath(os.path.join(os.getcwd(), filename))
 
         statistics_on_atlas(in_registered_map, atlas, out_atlas_statistics)
         atlas_statistics_list.append(out_atlas_statistics)
@@ -77,13 +76,13 @@ def get_caps_filenames(caps_dwi_filename):
         raise ValueError("Input filename is not in a CAPS compliant format.")
 
     caps_prefix = m.group(0)
-    bids_source = m.group(1) + "_" + m.group(2) + "_dwi"
+    bids_source = f"{m.group(1)}_{m.group(2)}_dwi"
 
-    out_dti = caps_prefix + "_model-DTI_diffmodel.nii.gz"
-    out_fa = caps_prefix + "_FA.nii.gz"
-    out_md = caps_prefix + "_MD.nii.gz"
-    out_ad = caps_prefix + "_AD.nii.gz"
-    out_rd = caps_prefix + "_RD.nii.gz"
+    out_dti = f"{caps_prefix}_model-DTI_diffmodel.nii.gz"
+    out_fa = f"{caps_prefix}_FA.nii.gz"
+    out_md = f"{caps_prefix}_MD.nii.gz"
+    out_ad = f"{caps_prefix}_AD.nii.gz"
+    out_rd = f"{caps_prefix}_RD.nii.gz"
 
     return bids_source, out_dti, out_fa, out_md, out_ad, out_rd
 
@@ -113,42 +112,42 @@ def rename_into_caps(
     rename_fa = Rename()
     rename_fa.inputs.in_file = in_norm_fa
     rename_fa.inputs.format_string = (
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_FA.nii.gz"
+        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_FA.nii.gz"
     )
     out_caps_fa = rename_fa.run()
     # CAPS normalized MD
     rename_md = Rename()
     rename_md.inputs.in_file = in_norm_md
     rename_md.inputs.format_string = (
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_MD.nii.gz"
+        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_MD.nii.gz"
     )
     out_caps_md = rename_md.run()
     # CAPS normalized AD
     rename_ad = Rename()
     rename_ad.inputs.in_file = in_norm_ad
     rename_ad.inputs.format_string = (
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_AD.nii.gz"
+        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_AD.nii.gz"
     )
     out_caps_ad = rename_ad.run()
     # CAPS normalized RD
     rename_rd = Rename()
     rename_rd.inputs.in_file = in_norm_rd
     rename_rd.inputs.format_string = (
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_RD.nii.gz"
+        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_RD.nii.gz"
     )
     out_caps_rd = rename_rd.run()
     # CAPS B-spline transform
     rename_b_spline = Rename()
     rename_b_spline.inputs.in_file = in_b_spline_transform
     rename_b_spline.inputs.format_string = (
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_deformation.nii.gz"
+        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_deformation.nii.gz"
     )
     out_caps_b_spline_transform = rename_b_spline.run()
     # CAPS Affine matrix
     rename_affine = Rename()
     rename_affine.inputs.in_file = in_affine_matrix
     rename_affine.inputs.format_string = (
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_affine.mat"
+        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_affine.mat"
     )
     out_caps_affine_matrix = rename_affine.run()
 

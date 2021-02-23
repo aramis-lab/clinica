@@ -141,13 +141,13 @@ def have_same_subjects(tsv_file_1, tsv_file_2):
     tsv_df_1 = pd.io.parsers.read_csv(tsv_file_1, sep="\t")
     tsv_df_2 = pd.io.parsers.read_csv(tsv_file_2, sep="\t")
     image_ids_1 = [
-        p_id + "_" + s_id
+        f"{p_id}_{s_id}"
         for (p_id, s_id) in zip(
             list(tsv_df_1.participant_id), list(tsv_df_1.session_id)
         )
     ]
     image_ids_2 = [
-        p_id + "_" + s_id
+        f"{p_id}_{s_id}"
         for (p_id, s_id) in zip(
             list(tsv_df_2.participant_id), list(tsv_df_2.session_id)
         )
