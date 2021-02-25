@@ -334,6 +334,58 @@ def clinica_file_reader(
     return results
 
 
+def clinica_list_of_files_reader(
+    participant_ids,
+    session_ids,
+    bids_or_caps_directory,
+    list_information,
+    raise_exception=True,
+):
+    """Read list of BIDS or CAPS files.
+
+    This function iterates calls of clinica_file_reader to extract input files based on information given by
+    `list_information`.
+
+    Args:
+        participant_ids (List[str]): List of participant IDs
+            (e.g. ['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'])
+        session_ids (List[str]): List of sessions ID associated to `participant_ids`
+            (e.g. ['ses-M00', 'ses-M18', 'ses-M00'])
+        bids_or_caps_directory (str): BIDS of CAPS directory
+        list_information (List[Dict]): List of dictionaries described in clinica_file_reader
+        raise_exception (bool, optional): Raise Exception or not. Defaults to True.
+
+    Returns:
+        List[List[str]]: List of list of found files following order of `list_information`
+    """
+    from .exceptions import ClinicaException, ClinicaBIDSError
+
+    all_errors = []
+    list_found_files = []
+    for info_file in list_information:
+        try:
+            list_found_files.append(
+                clinica_file_reader(
+                    participant_ids,
+                    session_ids,
+                    bids_or_caps_directory,
+                    info_file,
+                    True,
+                )
+            )
+        except ClinicaException as e:
+            list_found_files.append([])
+            all_errors.append(e)
+
+    if len(all_errors) > 0 and raise_exception:
+        error_message = "Clinica faced error(s) while trying to read files in your BIDS or CAPS directory.\n"
+        for msg in all_errors:
+            error_message += str(msg)
+        raise ClinicaBIDSError(error_message)
+
+    return list_found_files
+
+
 def clinica_group_reader(caps_directory, information, raise_exception=True):
     """Read files CAPS directory based on group ID(s).
 
