@@ -382,6 +382,81 @@ def find_mods_and_sess(bids_dir):
     return mods_dict
 
 
+def compute_missing_processing(caps_dir, out_file):
+    """
+    Compute the list of missing processing for each subject in a CAPS compliant dataset
+
+    Args:
+        caps_dir: path to the CAPS directory .
+        out_file: path to the output file (filename included).
+    """
+    from os import path, sep, listdir
+    from glob import glob
+    import pandas as pd
+
+    if path.exists(path.join(caps_dir, "groups")):
+        groups = listdir(path.join(caps_dir, 'groups'))
+    else:
+        groups = list()
+    output_df = pd.DataFrame()
+
+    subjects_paths = glob(path.join(caps_dir, 'subjects', 'sub-*'))
+    for subject_path in subjects_paths:
+        participant_id = subject_path.split(sep)[-1]
+        sessions_paths = glob(path.join(subject_path, "ses-*"))
+        for session_path in sessions_paths:
+            session_id = session_path.split(sep)[-1]
+            row_df = pd.DataFrame([[participant_id, session_id]], columns=['participant_id', 'session_id'])
+
+            # Check t1-volume outputs
+            if path.exists(path.join(session_path, "t1", "spm", "segmentation")):
+                row_df.loc[0, "t1-volume-segmentation"] = "1"
+                for group in groups:
+                    group_id = group.split('-')[-1]
+                    if path.exists(path.join(
+                            session_path, "t1", "spm", "dartel", group,
+                            f"{participant_id}_{session_id}_T1w_target-{group_id}_transformation-forward_deformation.nii.gz")):
+                        row_df.loc[0, f"t1-volume-register-dartel_{group}"] = "1"
+                        dartel2mni = glob(path.join(
+                            session_path, "t1", "spm", "dartel", group,
+                            f"{participant_id}_{session_id}_T1w_segm-*_space-Ixi549Space_modulated-*_probability.nii.gz"))
+                        if len(dartel2mni) > 0:
+                            row_df.loc[0, f"t1-volume-dartel2mni_{group}"] = "1"
+                            if path.exists(path.join(session_path, "t1", "spm", "dartel", group, "atlas_statistics")):
+                                row_df.loc[0, f"t1-volume-parcellation_{group}"] = "1"
+                            else:
+                                row_df.loc[0, f"t1-volume-parcellation_{group}"] = "0"
+                        else:
+                            row_df.loc[0, f"t1-volume-dartel2mni_{group}"] = "0"
+                            row_df.loc[0, f"t1-volume-parcellation_{group}"] = "0"
+                    else:
+                        row_df.loc[0, f"t1-volume-register-dartel_{group}"] = "0"
+                        row_df.loc[0, f"t1-volume-dartel2mni_{group}"] = "0"
+                        row_df.loc[0, f"t1-volume-parcellation_{group}"] = "0"
+            else:
+                row_df.loc[0, "t1-volume-segmentation"] = "0"
+                for group in groups:
+                    row_df.loc[0, f"t1-volume-register-dartel_{group}"] = "0"
+                    row_df.loc[0, f"t1-volume-dartel2mni_{group}"] = "0"
+                    row_df.loc[0, f"t1-volume-parcellation_{group}"] = "0"
+
+            # Check t1-linear outputs
+            if path.exists(path.join(session_path, "t1_linear")):
+                row_df.loc[0, "t1-linear"] = "1"
+            else:
+                row_df.loc[0, "t1-linear"] = "0"
+
+            # Check t1-freesurfer outputs
+            if path.exists(path.join(session_path, "freesurfer_cross_sectional")):
+                row_df.loc[0, "t1-freesurfer"] = "1"
+            else:
+                row_df.loc[0, "t1-freesurfer"] = "0"
+
+            output_df = pd.concat([output_df, row_df])
+
+    output_df.to_csv(out_file, sep="\t", index=False)
+
+
 def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
     """Compute the list of missing modalities for each subject in a BIDS compliant dataset.
 
