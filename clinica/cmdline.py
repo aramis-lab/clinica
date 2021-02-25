@@ -300,11 +300,13 @@ def execute():
     """
     from clinica.iotools.utils.data_handling_cli import CmdParserSubjectsSessions
     from clinica.iotools.utils.data_handling_cli import CmdParserMergeTsv
+    from clinica.iotools.utils.data_handling_cli import CmdParserMissingProcessing
     from clinica.iotools.utils.data_handling_cli import CmdParserMissingModalities
     from clinica.iotools.utils.data_handling_cli import CmdParserCenterNifti
     io_tools = [
         CmdParserSubjectsSessions(),
         CmdParserMergeTsv(),
+        CmdParserMissingProcessing(),
         CmdParserMissingModalities(),
         CmdParserCenterNifti()
     ]

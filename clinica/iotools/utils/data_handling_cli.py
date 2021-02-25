@@ -86,6 +86,28 @@ class CmdParserMergeTsv(ce.CmdParser):
                              tsv_file=args.subjects_sessions_tsv, group_selection=args.group_selection)
 
 
+class CmdParserMissingProcessing(ce.CmdParser):
+
+    def define_name(self):
+        self._name = 'check-missing-processing'
+
+    def define_description(self):
+        self._description = 'Check missing processing in a CAPS directory'
+
+    def define_options(self):
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS dataset directory.')
+        self._args.add_argument("out_file",
+                                help='Path to the output TSV file (filename included).')
+
+    def run_command(self, args):
+        from clinica.iotools.utils import data_handling as dt
+        from clinica.utils.inputs import check_caps_folder
+
+        check_caps_folder(args.caps_directory)
+        dt.compute_missing_processing(args.caps_directory, args.out_file)
+
+
 class CmdParserMissingModalities(ce.CmdParser):
 
     def define_name(self):
