@@ -208,6 +208,7 @@ def execute():
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
     from clinica.pipelines.pet_surface.pet_surface_longitudinal_cli import PetSurfaceLongitudinalCLI
+    from clinica.pipelines.pet_linear.pet_linear_cli import PETLinearCLI
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI
     from clinica.pipelines.statistics_volume.statistics_volume_cli import StatisticsVolumeCLI
@@ -228,6 +229,7 @@ def execute():
         DwiConnectomeCli(),
         PETVolumeCLI(),
         PetSurfaceCLI(),
+        PETLinearCLI(),
         # PetSurfaceLongitudinalCLI(),
         DeepLearningPrepareDataCLI(),
         SpatialSVMCLI(),
