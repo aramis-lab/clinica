@@ -8,6 +8,18 @@ http://clinica.run/doc/InteractingWithClinica/
 
 
 # Function used by nipype interface.
+# Concatenate two transformation in one transformation list
+def concatenate_transforms(transform1, transform2):
+    """Concatenate two input transformation files into a list.
+    Args:
+       transform1 (str): first transformation to apply
+       transform2 (str): second transformation to apply
+    Returns:
+       transform_list (list of string): both transform files path in a list
+    """
+    return [transform2, transform1]
+
+
 # Normalize the images based on the reference mask region
 def suvr_normalization(input_img, ref_mask):
     """Normalize the input image according to the reference region.
@@ -28,15 +40,15 @@ def suvr_normalization(input_img, ref_mask):
     basedir = os.getcwd()
 
     # Downsample the input image so we can multiply it with the mask
-    ds_img = resample_to_img(img, mask, interpolation="nearest")
+    ds_img = resample_to_img(input_img, ref_mask, interpolation="nearest")
 
     # Compute the mean of the region
-    region = np.multiply(ds_img.get_data(), mask.get_data())
+    region = np.multiply(ds_img.get_data(), ref_mask.get_data())
     region_mean = np.nanmean(np.where(region != 0, region, np.nan))
 
     # Divide the value of the image voxels by the computed mean
-    data = img.get_data() / region_mean
-    normalized_img = nib.Nifti1Image(data, img.affine, header=img.header)
+    data = input_img.get_data() / region_mean
+    normalized_img = nib.Nifti1Image(data, input_img.affine, header=input_img.header)
 
     output_img = os.path.join(
        basedir,
@@ -75,9 +87,39 @@ def crop_nifti(input_img, ref_crop):
        os.path.basename(input_img).split('.nii')[0] + '_cropped.nii.gz')
 
     crop_img.to_filename(output_img)
-    crop_template = ref_crop
 
-    return output_img, crop_template
+    return output_img
+
+
+def rename_into_caps(in_bids_pet, fname_pet, fname_trans):
+    """
+    Rename the outputs of the pipelines into CAPS format.
+    Args:
+        in_bids_pet (str): Input BIDS PET to extract the <source_file>
+        fname_pet (str): Preprocessed PET file.
+        fname_trans (str): Transformation file from PET to MRI space
+    Returns:
+        The different outputs in CAPS format
+    """
+    from nipype.utils.filemanip import split_filename
+    from nipype.interfaces.utility import Rename
+    import os
+
+    _, source_file_pet, _ = split_filename(in_bids_pet)
+
+    # Rename into CAPS PET:
+    rename_pet = Rename()
+    rename_pet.inputs.in_file = fname_pet
+    rename_pet.inputs.format_string = source_file_pet + '_space-MNI152NLin2009cSym.nii.gz'
+    out_caps_pet = rename_pet.run()
+
+    # Rename into CAPS transformation file:
+    rename_trans = Rename()
+    rename_trans.inputs.in_file = fname_trans
+    rename_trans.inputs.format_string = source_file_pet + '_space-T1w.map'
+    out_caps_trans = rename_trans.run()
+
+    return out_caps_pet.outputs.out_file, out_caps_trans.outputs.out_file
 
 
 def print_end_pipeline(pet, final_file):

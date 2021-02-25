@@ -10,72 +10,64 @@ http://clinica.run/doc/InteractingWithClinica/
 import clinica.engine as ce
 
 
-class pet_linearCLI(ce.CmdParser):
+class PETLinearCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline."""
-        self._name = 'pet_linear'
+        self._name = 'pet-linear'
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = ('Brief description:\n'
-                             'http://clinica.run/doc/Pipelines/pet_linear/')
+        self._description = ('ffine registration of PET images to the MNI standard space:\n'
+                             'http://clinica.run/doc/Pipelines/PET_Linear/')
 
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label...)
-        # Most of the time, you will want to read your pipeline inputs into
-        # a BIDS and/or CAPS directory. If your pipeline does not require BIDS input,
-        # simply remove the two lines involving the BIDS directory.
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
+        clinica_comp.add_argument("acq_label", type=str,
+                                  help='Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).')
+        clinica_comp.add_argument("suvr_reference_region",  choices=LIST_SUVR_REFERENCE_REGIONS,
+                                  help='Intensity normalization using the average PET uptake in reference regions '
+                                       'resulting in a standardized uptake value ratio (SUVR) map. It can be '
+                                       'cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).')
 
-        # group_label can be used by certain pipelines when some operations are performed at the group level
-        # (for example, generation of a template in t1-volume pipeline)
-        # clinica_comp.add_argument("group_label",
-        #                           help='User-defined identifier for the provided group of subjects.')
-
-        # Add your own pipeline command line arguments here to be used in the
-        # method below. Example below:
+        # Clinica optional arguments
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-hw", "--hello_word_arg", default='Hello',
-                              help='Word to say hello (default: --hello_word_arg %(default)s).')
+        optional.add_argument("-ui", "--uncropped_image",
+                              help='''Do not crop the image with template
+                              (cropped image are suggested for using with DL
+                              models)''',
+                              action='store_true',
+                              default=False)
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
-        # Add advanced arguments
-        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-aa", "--advanced_arg", default='Advanced',
-                              help='Your advanced argument (default: --advanced_arg %(default)s).')
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
         import os
         from networkx import Graph
         from colorama import Fore
-        from .pet_linear_pipeline import pet_linear
+        from .pet_linear_pipeline import PETLinear
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
-            # Add your own pipeline parameters here to use them inside your
-            # pipeline. See the file `pet_linear_pipeline.py` to
-            # see an example of use.
-            'hello_word' : args.hello_word_arg,
-            'advanced_argument' : args.advanced_arg,
+            'acq_label': args.acq_label,
+            'suvr_reference_region': args.suvr_reference_region,
+            'advanced_argument': args.advanced_arg,
         }
 
-        # Most of the time, you will want to instantiate your pipeline with a
-        # BIDS and/or CAPS directory as inputs. If the BIDS directory is not needed
-        # for your pipeline, simply remove:
-        # bids_directory=self.absolute_path(args.bids_directory),
-        pipeline = pet_linear(
+        pipeline = PETLinear(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
