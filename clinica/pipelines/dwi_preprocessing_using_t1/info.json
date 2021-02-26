@@ -1,15 +1,20 @@
 {
     "id": "aramislab/dwi-preprocessing-using-t1",
-    "author": ["Thomas Jacquemont", "Alexandre Routier"],
+    "author": ["Junhao Wen", "Thomas Jacquemont", "Alexandre Routier"],
     "credits": ["Nipype"],
     "space_caps": "150M",
     "space_wd": "3G",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "dependencies": [
         {
             "type": "software",
             "name": "fsl",
-            "version": ">=5.0.9"
+            "version": ">=6.0.1"
+        },
+        {
+            "type": "software",
+            "name": "convert3d",
+            "version": ""
         },
         {
             "type": "software",
