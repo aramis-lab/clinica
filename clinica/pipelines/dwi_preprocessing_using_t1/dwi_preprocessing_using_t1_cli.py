@@ -16,6 +16,19 @@ pipeline_name = "dwi-preprocessing-using-t1"
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option_group.advanced_pipeline_options
+@cli_param.option_group.option(
+    "--use_cuda",
+    default=False,
+    show_default=True,
+    help="Use the CUDA implementation of FSL eddy. See https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#The_eddy_executables for details.",
+)
+@cli_param.option_group.option(
+    "--initrand",
+    default=None,
+    show_default=True,
+    help="Set the seed of the random number generator used when estimating hyperparameters in FSL eddy.",
+)
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -23,6 +36,8 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    use_cuda: Optional[bool] = False,
+    initrand: Optional[int] = None,
 ) -> None:
     """Preprocessing of raw DWI datasets using a T1w image.
 
@@ -34,7 +49,11 @@ def cli(
 
     from .dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
 
-    parameters = {"low_bval": low_bval}
+    parameters = {
+        "low_bval": low_bval,
+        "use_cuda": use_cuda,
+        "initrand": initrand,
+    }
 
     pipeline = DwiPreprocessingUsingT1(
         bids_directory=bids_directory,
