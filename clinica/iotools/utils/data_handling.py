@@ -391,12 +391,13 @@ def find_mods_and_sess(bids_dir):
     return mods_dict
 
 
-def compute_missing_processing(caps_dir, out_file):
+def compute_missing_processing(bids_dir, caps_dir, out_file):
     """
     Compute the list of missing processing for each subject in a CAPS compliant dataset
 
     Args:
-        caps_dir: path to the CAPS directory .
+        bids_dir: path to the BIDS directory.
+        caps_dir: path to the CAPS directory.
         out_file: path to the output file (filename included).
     """
     from os import path, sep, listdir
@@ -408,6 +409,13 @@ def compute_missing_processing(caps_dir, out_file):
     else:
         groups = list()
     output_df = pd.DataFrame()
+
+    # Retrieve pet tracers avail
+    mods_and_sess = find_mods_and_sess(bids_dir)
+    mods_and_sess.pop("sessions")
+    mods_avail_dict = mods_and_sess
+    trc_avail = [j.split('_')[1] for i in mods_avail_dict.values() for j in i if "pet" in j]
+    print(trc_avail)
 
     subjects_paths = glob(path.join(caps_dir, 'subjects', 'sub-*'))
     for subject_path in subjects_paths:
@@ -463,10 +471,16 @@ def compute_missing_processing(caps_dir, out_file):
 
             # Check pet-volume outputs
             for group in groups:
-
+                for trc in trc_avail:
+                    pet_pattern = path.join(session_path, "pet", "preprocessing", group, f"*{trc}*")
+                    if len(glob(pet_pattern)) > 0:
+                        row_df.loc[0, f"pet-volume_{trc}_{group}"] = "1"
+                    else:
+                        row_df.loc[0, f"pet-volume_{trc}_{group}"] = "0"
 
             output_df = pd.concat([output_df, row_df])
 
+    output_df.sort_values(["participant_id", "session_id"], inplace=True)
     output_df.to_csv(out_file, sep="\t", index=False)
 
 
