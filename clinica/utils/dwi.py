@@ -257,8 +257,12 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
     import os
     import tempfile
 
-    from clinica.utils.dwi import (b0_average, b0_dwi_split, count_b0s,
-                                   insert_b0_into_dwi)
+    from clinica.utils.dwi import (
+        b0_average,
+        b0_dwi_split,
+        count_b0s,
+        insert_b0_into_dwi,
+    )
     from clinica.utils.stream import cprint
     from clinica.workflows.dwi_preprocessing import b0_flirt_pipeline
 
@@ -385,3 +389,136 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
             f"Number of DWIs, b-vals and b-vecs mismatch "
             f"(# DWI = {num_dwis}, # B-vec = {num_b_vecs}, #B-val = {num_b_vals}) "
         )
+
+
+def find_b0_indices(in_bval, low_bval=5.0):
+    """Return indices of bval <= low_bval.
+
+    Args:
+        in_bval (str): Bval file.
+        low_bval (Optional[int]): Define the b0 volumes as all volume
+            bval <= low_bval. (Default=5.0)
+
+    Returns:
+        out_indices (int): Indices of bval <= low_bval.
+    """
+    import os.path as op
+
+    import numpy as np
+
+    assert op.isfile(in_bval)
+    bvals = np.loadtxt(in_bval)
+
+    idx_low_bvals = np.where(bvals <= low_bval)
+    out_indices = idx_low_bvals[0].tolist()
+
+    return out_indices
+
+
+def generate_index_file(in_bval, low_bval=5.0, image_id=None):
+    """Generate [`image_id`]_index.txt file for FSL eddy command.
+
+    Args:
+        in_bval (str): Bval file.
+        low_bval (float): Define the b0 volumes as all volume bval <= low_bval. Default to 5.0.
+        image_id (str, optional): Optional prefix. Defaults to None.
+
+    Returns:
+        out_index: [`image_id`]_index.txt or index.txt file.
+    """
+    import os
+
+    import numpy as np
+
+    assert os.path.isfile(in_bval)
+    bvals = np.loadtxt(in_bval)
+    idx_low_bvals = np.where(bvals <= low_bval)
+    b0_index = idx_low_bvals[0].tolist()
+
+    if not b0_index:
+        raise ValueError(
+            f"Could not find b-value <= {low_bval} in bval file ({in_bval}). Found values: {bvals}"
+        )
+
+    if image_id:
+        out_index = os.path.abspath(f"{image_id}_index.txt")
+    else:
+        out_index = os.path.abspath("index.txt")
+
+    vols = len(bvals)
+    index_list = []
+    for i in range(0, len(b0_index)):
+        if i == (len(b0_index) - 1):
+            index_list.extend([i + 1] * (vols - b0_index[i]))
+        else:
+            index_list.extend([i + 1] * (b0_index[i + 1] - b0_index[i]))
+    index_array = np.asarray(index_list)
+    try:
+        len(index_list) == vols
+    except ValueError:
+        raise ValueError(
+            "It seems that you do not define the index file for FSL eddy correctly!"
+        )
+    np.savetxt(out_index, index_array.T)
+
+    return out_index
+
+
+def generate_acq_file(
+    in_dwi, fsl_phase_encoding_direction, total_readout_time, image_id=None
+):
+    """Generate [`image_id`]_acq.txt file for FSL eddy command.
+
+    Args:
+        in_dwi (str): DWI file.
+        fsl_phase_encoding_direction (str): PhaseEncodingDirection from BIDS specifications in FSL format (i.e. x/y/z instead of i/j/k).
+        total_readout_time (str): TotalReadoutTime from BIDS specifications.
+        image_id (str, optional): Optional prefix. Defaults to None.
+
+    Returns:
+        out_acq: [`image_id`]_acq.txt or acq.txt file.
+    """
+    import os
+
+    import nibabel as nb
+    import numpy as np
+
+    if image_id:
+        out_acq = os.path.abspath(f"{image_id}_acq.txt")
+    else:
+        out_acq = os.path.abspath("acq.txt")
+    vols = nb.load(in_dwi).get_data().shape[-1]
+    arr = np.ones([vols, 4])
+    for i in range(vols):
+        if fsl_phase_encoding_direction == "y-":
+            arr[i, :] = np.array((0, -1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == "y":
+            arr[i, :] = np.array((0, 1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == "x":
+            arr[i, :] = np.array((1, 0, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == "x-":
+            arr[i, :] = np.array((-1, 0, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == "z":
+            arr[i, :] = np.array((0, 1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == "z-":
+            arr[i, :] = np.array((0, 0, -1, total_readout_time))
+        else:
+            raise RuntimeError(
+                f"FSL PhaseEncodingDirection (found value: {fsl_phase_encoding_direction}) "
+                f"is unknown, it should be a value in (x, y, z, x-, y-, z-)"
+            )
+
+    np.savetxt(out_acq, arr, fmt="%d " * 3 + "%f")
+
+    return out_acq
+
+
+def bids_dir_to_fsl_dir(bids_dir):
+    """Converts BIDS PhaseEncodingDirection parameters (i,j,k,i-,j-,k-) to FSL direction (x,y,z,x-,y-,z-)."""
+    fsl_dir = bids_dir.lower()
+    if "i" not in fsl_dir and "j" not in fsl_dir and "k" not in fsl_dir:
+        raise ValueError(
+            f"Unknown PhaseEncodingDirection {fsl_dir}: it should be a value in (i, j, k, i-, j-, k-)"
+        )
+
+    return fsl_dir.replace("i", "x").replace("j", "y").replace("k", "z")
