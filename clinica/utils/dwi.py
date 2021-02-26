@@ -5,8 +5,7 @@
 
 
 def merge_volumes_tdim(in_file1, in_file2):
-    """
-    Merge 'in_file1' and 'in_file2' in the t dimension.
+    """Merge 'in_file1' and 'in_file2' in the t dimension.
 
     Args:
         in_file1 (str): First set of volumes.
@@ -16,22 +15,19 @@ def merge_volumes_tdim(in_file1, in_file2):
         out_file (str): The two sets of volumes merged.
     """
     import os
-    import os.path as op
 
-    out_file = op.abspath("merged_files.nii.gz")
+    out_file = os.path.abspath("merged_files.nii.gz")
     cmd = f"fslmerge -t {out_file} {in_file1} {in_file2}"
     os.system(cmd)
     return out_file
 
 
 def count_b0s(in_bval, low_bval=5.0):
-    """
-    Count the number of volumes where b<=low_bval.
+    """Count the number of volumes where b<=low_bval.
 
     Args:
         in_bval (str): bval file.
-        low_bval (Optional[int]): Define the b0 volumes as all volume
-            bval <= lowbval. (Default=5.0)
+        low_bval (int, optional): Define the b0 volumes as all volume bval <= lowbval. Defaults to 5.0.
 
     Returns:
         num_b0s: Number of b0s.
@@ -45,12 +41,11 @@ def count_b0s(in_bval, low_bval=5.0):
 
 
 def b0_average(in_file, out_file=None):
-    """
-    Average the b0 volumes.
+    """Average the b0 volumes.
 
     Args:
         in_file (str): The b0 volumes already registered.
-        out_file (optional[str]): Name of the file.
+        out_file (str, optional): Name of the file. Defaults to None.
 
     Returns:
         The mean of the b0 volumes.
@@ -58,17 +53,17 @@ def b0_average(in_file, out_file=None):
     Warnings:
         The b0 volumes must be registered.
     """
-    import os.path as op
+    import os
 
     import nibabel as nb
     import numpy as np
 
     if out_file is None:
-        fname, ext = op.splitext(op.basename(in_file))
+        fname, ext = os.path.splitext(os.path.basename(in_file))
         if ext == ".gz":
-            fname, ext2 = op.splitext(fname)
+            fname, ext2 = os.path.splitext(fname)
             ext = ext2 + ext
-        out_file = op.abspath("%s_avg_b0%s" % (fname, ext))
+        out_file = os.path.abspath(f"{fname}_avg_b0{ext}")
 
     imgs = np.array(nb.four_to_three(nb.load(in_file)))
     b0s = [im.get_fdata(dtype="float32").astype(np.float32) for im in imgs]
@@ -84,7 +79,8 @@ def b0_average(in_file, out_file=None):
 
 
 def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
-    """
+    """Split DWI dataset.
+
     Split the DWI volumes into two datasets :
      - the first dataset contains the set of b<=low_bval volumes.
      - the second dataset contains the set of DWI volumes.
@@ -93,8 +89,7 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
         in_dwi (str): DWI dataset.
         in_bval (str): File describing the b-values of the DWI dataset.
         in_bvec (str): File describing the directions of the DWI dataset.
-        low_bval (Optional[int]): Define the b0 volumes as all volume
-            bval <= lowbval. (Default=5.0)
+        low_bval (int, optional): Define the b0 volumes as all volume bval <= lowbval. Defaults to 5.0.
 
     Returns:
         out_b0 (str): The set of b<=low_bval volumes.
@@ -102,15 +97,15 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
         out_bvals (str): The b-values corresponding to the out_dwi.
         out_bvecs (str): The b-vecs corresponding to the out_dwi.
     """
-    import os.path as op
+    import os
     import warnings
 
     import nibabel as nib
     import numpy as np
 
-    assert op.isfile(in_dwi)
-    assert op.isfile(in_bval)
-    assert op.isfile(in_bvec)
+    assert os.path.isfile(in_dwi)
+    assert os.path.isfile(in_bval)
+    assert os.path.isfile(in_bvec)
     assert low_bval >= 0
 
     im = nib.load(in_dwi)
@@ -121,32 +116,31 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
 
     if bvals.shape[0] == bvecs.shape[0]:
         warnings.warn(
-            "Warning: The b-vectors file should be column-wise. "
-            + "The b-vectors will be transposed",
+            "Warning: The b-vectors file should be column-wise. The b-vectors will be transposed",
             UserWarning,
         )
         bvecs = bvecs.T
 
     lowbs = np.where(bvals <= low_bval)[0]
 
-    fname_b0, ext_b0 = op.splitext(op.basename(in_dwi))
+    fname_b0, ext_b0 = os.path.splitext(os.path.basename(in_dwi))
     if ext_b0 == ".gz":
-        fname_b0, ext2 = op.splitext(fname_b0)
+        fname_b0, ext2 = os.path.splitext(fname_b0)
         ext_b0 = ext2 + ext_b0
-    out_b0 = op.abspath("%s_b0%s" % (fname_b0, ext_b0))
+    out_b0 = os.path.abspath(f"{fname_b0}_b0{ext_b0}")
     # out_b0 = op.abspath('b0.nii.gz')
     b0data = data[..., lowbs]
     hdr.set_data_shape(b0data.shape)
     nib.Nifti1Image(b0data, im.get_affine(), hdr).to_filename(out_b0)
 
     dwi_bvals = np.where(bvals > low_bval)[0]
-    out_dwi = op.abspath("dwi.nii.gz")
+    out_dwi = os.path.abspath("dwi.nii.gz")
     dwi_data = data[..., dwi_bvals]
     hdr.set_data_shape(dwi_data.shape)
     nib.Nifti1Image(dwi_data, im.get_affine(), hdr).to_filename(out_dwi)
 
     bvals_dwi = bvals[dwi_bvals]
-    out_bvals = op.abspath("bvals")
+    out_bvals = os.path.abspath("bvals")
     np.savetxt(out_bvals, bvals_dwi, fmt="%d", delimiter=" ")
 
     bvecs_dwi = np.array(
@@ -156,16 +150,47 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
             bvecs[2][dwi_bvals].tolist(),
         ]
     )
-    out_bvecs = op.abspath("bvecs")
+    out_bvecs = os.path.abspath("bvecs")
     np.savetxt(out_bvecs, bvecs_dwi, fmt="%10.5f", delimiter=" ")
 
     return out_b0, out_dwi, out_bvals, out_bvecs
 
 
+def compute_average_b0(in_dwi, in_bval, low_bval=5.0):
+    """Compute average b0 volume from DWI dataset."""
+    import os
+
+    import nibabel
+    import numpy as np
+
+    assert os.path.isfile(in_dwi)
+    assert os.path.isfile(in_bval)
+    assert low_bval >= 0
+
+    imgs = np.array(nibabel.four_to_three(nibabel.load(in_dwi)))
+    bvals = np.loadtxt(in_bval)
+    low_bvals = np.where(bvals <= low_bval)[0]
+
+    fname_b0, ext_b0 = os.path.splitext(os.path.basename(in_dwi))
+    if ext_b0 == ".gz":
+        fname_b0, ext2 = os.path.splitext(fname_b0)
+        ext_b0 = ext2 + ext_b0
+    out_b0_average = os.path.abspath(f"{fname_b0}_avg_b0{ext_b0}")
+
+    b0s_data = [imgs[i].get_data() for i in low_bvals]
+    avg_b0_data = np.average(np.array(b0s_data), axis=0)
+
+    hdr = imgs[0].get_header().copy()
+    hdr.set_data_shape(avg_b0_data.shape)
+    nibabel.Nifti1Image(avg_b0_data, imgs[0].get_affine(), hdr).to_filename(
+        out_b0_average
+    )
+
+    return out_b0_average
+
+
 def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
-    """
-    This function inserts a b0 volume into the dwi dataset as the first volume
-    and updates the bvals and bvecs files.
+    """Insert a b0 volume into the dwi dataset as the first volume and update the bvals and bvecs files.
 
     Args:
         in_b0 (str): One b=0 volume (could be the average of a b0 dataset).
@@ -178,22 +203,22 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
         out_bval (str): B-values update.
         out_bvec (str): Directions of diffusion update.
     """
-    import os.path as op
+    import os
 
     import numpy as np
 
     from clinica.utils.dwi import merge_volumes_tdim
 
-    assert op.isfile(in_b0)
-    assert op.isfile(in_dwi)
-    assert op.isfile(in_bval)
-    assert op.isfile(in_bvec)
+    assert os.path.isfile(in_b0)
+    assert os.path.isfile(in_dwi)
+    assert os.path.isfile(in_bval)
+    assert os.path.isfile(in_bvec)
 
     out_dwi = merge_volumes_tdim(in_b0, in_dwi)
 
     lst = np.loadtxt(in_bval).tolist()
     lst.insert(0, 0)
-    out_bvals = op.abspath("bvals")
+    out_bvals = os.path.abspath("bvals")
     np.savetxt(out_bvals, np.matrix(lst), fmt="%d", delimiter=" ")
 
     bvecs = np.loadtxt(in_bvec)
@@ -204,42 +229,36 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
     bvecs_2 = bvecs[2].tolist()
     bvecs_2.insert(0, 0.0)
     bvecs_dwi = np.array([bvecs_0, bvecs_1, bvecs_2])
-    out_bvecs = op.abspath("bvecs")
+    out_bvecs = os.path.abspath("bvecs")
     np.savetxt(out_bvecs, bvecs_dwi, fmt="%10.5f", delimiter=" ")
 
     return out_dwi, out_bvals, out_bvecs
 
 
 def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
-    """
-    This function prepare the data for further corrections. It coregisters
-    the B0 images and then average it in order to obtain only
-    one average B0 images.
+    """Prepare the data for further corrections.
+
+    It coregisters the B0 images and then average it in order to obtain only
+    one average B0 image.
 
     Args:
         in_dwi (str): Input DWI file.
-        in_bvec (str): Vector file of the diffusion directions of
-            the dwi dataset.
+        in_bvec (str): Vector file of the diffusion directions of the DWI dataset.
         in_bval (str): B-values file.
         low_bval (optional[int]):
 
     Returns:
         out_reference_b0 (str): Average of the B0 images or the only B0 image.
-        out_b0_mask (str): Binary mask obtained from the average of
-            the B0 images.
+        out_b0_mask (str): Binary mask obtained from the average of the B0 images.
         out_b0_dwi_merge (str): Average of B0 images merged to the DWIs.
         out_updated_bval (str): Updated gradient values table.
         out_updated_bvec (str): Updated gradient vectors table.
     """
-    import os.path as op
+    import os
     import tempfile
 
-    from clinica.utils.dwi import (
-        b0_average,
-        b0_dwi_split,
-        count_b0s,
-        insert_b0_into_dwi,
-    )
+    from clinica.utils.dwi import (b0_average, b0_dwi_split, count_b0s,
+                                   insert_b0_into_dwi)
     from clinica.utils.stream import cprint
     from clinica.workflows.dwi_preprocessing import b0_flirt_pipeline
 
@@ -266,8 +285,8 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         b0_flirt.base_dir = tmp_dir
         b0_flirt.run()
         # out_node = b0_flirt.get_node('outputnode')
-        registered_b0s = op.abspath(
-            op.join(
+        registered_b0s = os.path.abspath(
+            os.path.join(
                 tmp_dir, "b0_coregistration", "concat_ref_moving", "merged_files.nii.gz"
             )
         )
@@ -291,17 +310,14 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
 
 
 def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
-    """
-    Selects the reference ('out_ref') and moving ('out_mov') volumes
-    from a dwi dataset for the purpose of head motion correction (HMC).
+    """Select the reference and moving volumes from a DWI dataset for the purpose of head motion correction (HMC).
 
     Args:
         in_file (str): DWI dataset.
         in_bval (str): File describing the b-values of the DWI dataset.
-        ref_num (Optional[str]): The reference volume in the dwi dataset.
-            Default ref_num= 0.
-        lowbval (Optional[int]): Define the b0 volumes as all volume
-            bval <= lowbval. (Default=5.0)
+        ref_num (int, optional): The reference volume in the dwi dataset. Defaults to 0.
+        lowbval (int, optional): Define the b0 volumes as all volume bval <= lowbval. Defaults to 5.0.
+
     Returns:
         out_ref (str): The reference volume.
         out_mov (str): The moving volume to align to the reference volume.
@@ -347,12 +363,10 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
 
 
 def check_dwi_volume(in_dwi, in_bvec, in_bval):
-    # TODO return str instead of raising an error, so that user can be informed of which file is causing problem
-    """
-    Check that # DWI = # B-val = # B-vec.
+    """Check that # DWI = # B-val = # B-vec.
 
     Raises
-        IOError
+        ValueError if # DWI, # B-val and # B-vec mismatch.
     """
     import nibabel as nib
     import numpy as np
