@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from clinica.pipelines.machine_learning import base, input, algorithm, validation
+from clinica.pipelines.machine_learning import algorithm, base, input, validation
 
 
 class VoxelBasedKFoldDualSVM(base.MLWorkflow):

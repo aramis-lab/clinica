@@ -5,16 +5,21 @@ from abc import ABC, abstractmethod
 
 
 class MLWorkflow(ABC):
-
-    def __init__(self, input_class, validation_class, algorithm_class, all_params, output_dir):
+    def __init__(
+        self, input_class, validation_class, algorithm_class, all_params, output_dir
+    ):
 
         self._input_class = input_class
         self._validation_class = validation_class
         self._algorithm_class = algorithm_class
 
         self._input_params = self.create_parameters_dict(all_params, input_class)
-        self._validation_params = self.create_parameters_dict(all_params, validation_class)
-        self._algorithm_params = self.create_parameters_dict(all_params, algorithm_class)
+        self._validation_params = self.create_parameters_dict(
+            all_params, validation_class
+        )
+        self._algorithm_params = self.create_parameters_dict(
+            all_params, algorithm_class
+        )
 
         self._output_dir = output_dir
 
@@ -24,7 +29,7 @@ class MLWorkflow(ABC):
 
     def run(self):
 
-        from os import path, makedirs
+        from os import makedirs, path
 
         # Instantiating input class
         self._input = self._input_class(self._input_params)
@@ -41,13 +46,15 @@ class MLWorkflow(ABC):
             self._algorithm = self._algorithm_class(x, y, self._algorithm_params)
 
         # Instantiating cross-validation method and classification algorithm
-        self._validation = self._validation_class(self._algorithm, self._validation_params)
+        self._validation = self._validation_class(
+            self._algorithm, self._validation_params
+        )
 
         # Launching classification with selected cross-validation
         classifier, best_params, results = self._validation.validate(y)
 
         # Creation of the directory to save results
-        classifier_dir = path.join(self._output_dir, 'classifier')
+        classifier_dir = path.join(self._output_dir, "classifier")
         if not path.exists(classifier_dir):
             makedirs(classifier_dir)
 
@@ -70,7 +77,6 @@ class MLWorkflow(ABC):
 
 
 class MLInput(ABC):
-
     def __init__(self, input_params):
 
         self._input_params = self.get_default_parameters()
@@ -95,7 +101,6 @@ class MLInput(ABC):
 
 
 class MLValidation(ABC):
-
     def __init__(self, ml_algorithm, validation_params):
 
         self._ml_algorithm = ml_algorithm
@@ -118,7 +123,6 @@ class MLValidation(ABC):
 
 
 class MLAlgorithm(ABC):
-
     def __init__(self, input_data, y, algorithm_params):
 
         self._algorithm_params = self.get_default_parameters()

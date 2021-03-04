@@ -56,21 +56,21 @@ class Descriptor(object):
         """
 
         def test_desc(str_image, desc):
-            if desc[0] == '*':
-                if desc[-1] == '*':
+            if desc[0] == "*":
+                if desc[-1] == "*":
                     return desc[1:-1] in str_image
                 else:
-                    return str_image[-len(desc) + 1:] == desc[1:]
+                    return str_image[-len(desc) + 1 :] == desc[1:]
 
             else:
-                if desc[-1] == '*':
-                    return str_image[:len(desc) - 1] == desc[:-1]
+                if desc[-1] == "*":
+                    return str_image[: len(desc) - 1] == desc[:-1]
                 else:
                     return str_image == desc
 
-        descriptions = self.SeriesDescription.split(':')
+        descriptions = self.SeriesDescription.split(":")
         for desc in descriptions:
-            sub_desc = desc.split('^')
+            sub_desc = desc.split("^")
             bool = True
             for sub in sub_desc:
                 bool = bool and test_desc(str_image, sub)
@@ -82,9 +82,9 @@ class Descriptor(object):
     def get_bids_info(self):
         s = ""
         if self.customLabels is not None:
-            s += self.customLabels + '_'
+            s += self.customLabels + "_"
         if self.modalityLabel is not None:
-            s += self.modalityLabel + '_'
+            s += self.modalityLabel + "_"
 
         if len(s) == 0:
             return s

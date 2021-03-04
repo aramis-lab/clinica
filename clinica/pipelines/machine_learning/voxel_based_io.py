@@ -1,7 +1,7 @@
 # coding: utf8
 
-import numpy as np
 import nibabel as nib
+import numpy as np
 
 
 def load_data(image_list, mask=True):
@@ -25,7 +25,9 @@ def load_data(image_list, mask=True):
 
         # Memory allocation for ndarray containing all data to avoid copying the array for each new subject
         if first:
-            data = np.ndarray(shape=(len(image_list), subj_data.shape[0]), dtype=float, order='C')
+            data = np.ndarray(
+                shape=(len(image_list), subj_data.shape[0]), dtype=float, order="C"
+            )
             shape = subj.get_data().shape
             first = False
 
@@ -63,10 +65,12 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mas
     if len(sv_indices) != len(dual_coefficients):
         print("Length dual coefficients: " + str(len(dual_coefficients)))
         print("Length indices: " + str(len(sv_indices)))
-        raise ValueError('The number of support vectors indices and the number of coefficients must be the same.')
+        raise ValueError(
+            "The number of support vectors indices and the number of coefficients must be the same."
+        )
 
     if len(image_list) == 0:
-        raise ValueError('The number of images must be greater than 0.')
+        raise ValueError("The number of images must be greater than 0.")
 
     sv_images = [image_list[i] for i in sv_indices]
 
@@ -110,8 +114,8 @@ def weights_to_nifti(weights, image, output_filename):
     qform = np.zeros((4, 4))
 
     for i in range(1, 4):
-        qform[i-1, i-1] = hd['pixdim'][i]
-        qform[i-1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
+        qform[i - 1, i - 1] = hd["pixdim"][i]
+        qform[i - 1, 3] = -1.0 * hd["pixdim"][i] * hd["dim"][i] / 2.0
 
     output_image = nib.Nifti1Image(features, qform)
     nib.save(output_image, output_filename)
