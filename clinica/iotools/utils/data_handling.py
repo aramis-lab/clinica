@@ -21,7 +21,7 @@ def compute_default_filename(out_path):
 
 
 def create_merge_file(
-    bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines=None, **kwargs
+    bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines=None, ignore_scan_files=False, **kwargs
 ):
     """Merge all the TSV files containing clinical data of a BIDS compliant dataset and store the result inside a TSV file.
 
@@ -30,6 +30,7 @@ def create_merge_file(
         out_tsv: path to the output tsv file
         caps_dir: path to the CAPS folder (optional)
         tsv_file: TSV file containing the subjects with their sessions (optional)
+        ignore_scan_files: If True the information related to scans is not read (optional)
         pipelines: when adding CAPS information, indicates the pipelines that will be merged (optional)
     """
     import os
@@ -88,7 +89,7 @@ def create_merge_file(
                     session,
                     f"{subject}_{session}_scans.tsv",
                 )
-            if path.isfile(scan_path):
+            if path.isfile(scan_path) and not ignore_scan_files:
                 scans_dict = dict()
                 scans_df = pd.read_csv(scan_path, sep="\t")
                 for idx in scans_df.index.values:
