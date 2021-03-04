@@ -10,17 +10,20 @@ from os import path
 import pandas as pd
 
 
-def pet_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selection=None, pvc_restriction=None, **kwargs):
+def pet_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selection=None, pvc_restriction=None,
+                        tracers_selection=None, **kwargs):
     """Merge the data of the PET-Volume pipeline to the merged file containing the BIDS information.
 
     Args:
         caps_dir: the path to the CAPS directory
         df: the DataFrame containing the BIDS information
-        atlas_selection: allows to choose the atlas to merge (default = 'all')
+        group_selection: allows to choose the DARTEL groups to merge. If None all groups are selected.
+        volume_atlas_selection: allows to choose the atlas to merge (default = 'all')
         pvc_restriction: gives the restriction on the inclusion or not of the file with the label 'pvc-rbv'
             1       --> only the atlases containing the label will be used
             0       --> the atlases containing the label won't be used
             None    --> all the atlases will be used
+        tracers_selection: allows to choose the PET tracer to merge (default = 'all')
 
     Returns:
          final_df: a DataFrame containing the information of the bids and the pipeline
@@ -31,7 +34,8 @@ def pet_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selecti
                            group_selection=group_selection,
                            atlas_selection=volume_atlas_selection,
                            pvc_restriction=pvc_restriction,
-                           pipeline_name="pet-volume")
+                           pipeline_name="pet-volume",
+                           tracers_selection=tracers_selection)
 
 
 def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwargs):
@@ -40,7 +44,7 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     Args:
         caps_dir: the path to the CAPS directory
         df: the DataFrame containing the BIDS information
-        atlas_selection: allows to choose the atlas to merge (default = 'all')
+        freesurfer_atlas_selection: allows to choose the atlas to merge (default = 'all')
 
     Returns:
          final_df: a DataFrame containing the information of the bids and the pipeline
@@ -101,7 +105,7 @@ def t1_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selectio
         caps_dir: the path to the CAPS directory
         df: the DataFrame containing the BIDS information
         group_selection: allows to choose the DARTEL groups to merge. If None all groups are selected.
-        atlas_selection: allows to choose the atlas to merge. If None all atlases are selected.
+        volume_atlas_selection: allows to choose the atlas to merge. If None all atlases are selected.
 
     Returns:
         final_df: a DataFrame containing the information of the bids and the pipeline
@@ -117,7 +121,7 @@ def t1_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selectio
 
 def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
                     group_selection=None, atlas_selection=None,
-                    pvc_restriction=None):
+                    pvc_restriction=None, tracers_selection=None):
     """Merge data of the t1-volume pipeline to the merged file containing the BIDS information.
 
     Args:
@@ -180,6 +184,13 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
                             atlas_paths = [atlas_path for atlas_path in atlas_paths if "pvc-rbv" in atlas_path]
                         else:
                             atlas_paths = [atlas_path for atlas_path in atlas_paths if "pvc-rbv" not in atlas_path]
+
+                    # Filter tracers
+                    if tracers_selection is not None:
+                        atlas_paths = [atlas_path
+                                       for atlas_path in atlas_paths
+                                       for tracer in tracers_selection
+                                       if tracer in atlas_path]
 
                     for atlas_path in atlas_paths:
                         atlas_name = atlas_path.split("_space-")[1].split("_")[0]
@@ -259,6 +270,7 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
                         )
                         summary_df = summary_df.append(row_df, ignore_index=True)
 
+    summary_df = summary_df.replace('_', 'n/a')
     return summary_df
 
 

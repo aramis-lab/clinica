@@ -93,7 +93,6 @@ class CmdParserMergeTsv(ce.CmdParser):
             help="(Optional) atlas that will be merged for volume pipelines. \n"
             "Default: all atlases are merged",
         )
-
         iotools_options.add_argument(
             "-fas",
             "--freesurfer_atlas_selection",
@@ -112,6 +111,15 @@ class CmdParserMergeTsv(ce.CmdParser):
             "Default: all atlases are merged\n"
             "0: atlases without the label only are merged\n"
             "1: atlases with the label only are merged",
+        )
+        iotools_options.add_argument(
+            "-pts",
+            "--pet_tracers_selection",
+            type=str,
+            default=None,
+            nargs="*",
+            help="(Optional) PET tracers that will be merged. \n"
+            "Default: all PET tracers are merged.",
         )
         iotools_options.add_argument(
             "-group",
@@ -143,6 +151,7 @@ class CmdParserMergeTsv(ce.CmdParser):
             pvc_restriction=args.pvc_restriction,
             tsv_file=args.subjects_sessions_tsv,
             group_selection=args.group_selection,
+            tracers_selection=args.pet_tracers_selection
         )
 
 
