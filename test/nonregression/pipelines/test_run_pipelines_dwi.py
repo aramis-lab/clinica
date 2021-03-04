@@ -62,30 +62,32 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
     clean_folder(join(working_dir, "DWIPreprocessingUsingT1"), recreate=False)
 
 
-def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
+def test_run_DWIPreprocessingUsingPhaseDiffFMap(cmdopt):
     import warnings
     from os.path import abspath, dirname, join
 
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import (
-        DwiPreprocessingUsingPhaseDiffFieldmap,
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_pipeline import (
+        DwiPreprocessingUsingPhaseDiffFMap
     )
 
     warnings.filterwarnings("ignore")
 
+    pipeline_name = "DWIPreprocessingUsingPhaseDiffFMap"
+
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "DWIPreprocessingUsingPhaseDiffFieldmap")
+    root = join(root, "data", pipeline_name)
 
     # Remove old instance of UT
     clean_folder(join(root, "out", "caps"))
-    clean_folder(join(working_dir, "DWIPreprocessingUsingPhaseDiffFieldmap"))
+    clean_folder(join(working_dir, pipeline_name))
 
     parameters = {"low_bval": 5}
-    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
+    pipeline = DwiPreprocessingUsingPhaseDiffFMap(
         bids_directory=join(root, "in", "bids"),
         caps_directory=join(root, "out", "caps"),
         tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "DWIPreprocessingUsingPhaseDiffFieldmap"),
+        base_dir=join(working_dir, pipeline_name),
         parameters=parameters,
     )
     pipeline.build()
@@ -110,7 +112,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     # Delete out/caps folder
     clean_folder(join(root, "out", "caps"), recreate=False)
     clean_folder(
-        join(working_dir, "DWIPreprocessingUsingPhaseDiffFieldmap"), recreate=False
+        join(working_dir, pipeline_name), recreate=False
     )
 
 
@@ -153,10 +155,7 @@ def test_run_DWIDTI(cmdopt):
             "dwi",
             "dti_based_processing",
             "atlas_statistics",
-            subject_id
-            + "_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-"
-            + m
-            + "_statistics.tsv",
+            f"{subject_id}_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-{m}_statistics.tsv",
         )
         for m in maps
     ]
@@ -164,10 +163,7 @@ def test_run_DWIDTI(cmdopt):
         join(
             root,
             "ref",
-            subject_id
-            + "_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-"
-            + m
-            + "_statistics.tsv",
+            f"{subject_id}_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-{m}_statistics.tsv",
         )
         for m in maps
     ]
@@ -244,12 +240,7 @@ def test_run_DWIConnectome(cmdopt):
             session_id,
             "dwi",
             "connectome_based_processing",
-            subject_id
-            + "_"
-            + session_id
-            + "_dwi_space-b0_atlas-"
-            + a
-            + "_parcellation.nii.gz",
+            f"{subject_id}_{session_id}_dwi_space-b0_atlas-{a}_parcellation.nii.gz",
         )
         for a in atlases
     ]
@@ -257,12 +248,7 @@ def test_run_DWIConnectome(cmdopt):
         join(
             root,
             "ref",
-            subject_id
-            + "_"
-            + session_id
-            + "_dwi_space-b0_atlas-"
-            + a
-            + "_parcellation.nii.gz",
+            f"{subject_id}_{session_id}_dwi_space-b0_atlas-{a}_parcellation.nii.gz",
         )
         for a in atlases
     ]

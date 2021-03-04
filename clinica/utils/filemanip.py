@@ -189,7 +189,6 @@ def extract_metadata_from_json(json_file, list_keys):
     import json
     import datetime
     from clinica.utils.exceptions import ClinicaException
-    from clinica.utils.stream import cprint
 
     list_values = []
     try:

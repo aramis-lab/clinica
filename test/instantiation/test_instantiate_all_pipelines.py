@@ -149,15 +149,15 @@ def test_instantiate_DWIPreprocessingUsingT1():
 def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
     from os.path import abspath, dirname, join
 
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import (
-        DwiPreprocessingUsingPhaseDiffFieldmap,
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_pipeline import (
+        DwiPreprocessingUsingPhaseDiffFMap,
     )
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, "data", "DWIPreprocessingUsingPhaseDiffFieldmap")
 
     parameters = {"low_bval": 5}
-    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
+    pipeline = DwiPreprocessingUsingPhaseDiffFMap(
         bids_directory=join(root, "in", "bids"),
         caps_directory=join(root, "in", "caps"),
         tsv_file=join(root, "in", "subjects.tsv"),
