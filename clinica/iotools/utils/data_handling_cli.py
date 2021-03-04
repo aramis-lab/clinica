@@ -90,7 +90,7 @@ class CmdParserMergeTsv(ce.CmdParser):
             nargs="*",
             type=str,
             default=None,
-            help="(Optional) atlas that will be merged for volume pipelines. \n"
+            help="(Optional) atlas that will be merged for t1-volume and pet-volume pipelines. \n"
             "Default: all atlases are merged",
         )
         iotools_options.add_argument(
@@ -99,7 +99,7 @@ class CmdParserMergeTsv(ce.CmdParser):
             nargs="*",
             type=str,
             default=None,
-            help="(Optional) atlas that will be merged for volume pipelines. \n"
+            help="(Optional) atlas that will be merged for t1-freesurfer pipeline. \n"
             "Default: all atlases are merged",
         )
         iotools_options.add_argument(
@@ -107,7 +107,7 @@ class CmdParserMergeTsv(ce.CmdParser):
             "--pvc_restriction",
             type=int,
             default=None,
-            help="(Optional) indicates restriction on the label [_pvc-rbv]\n"
+            help="(Optional) indicates restriction on the label [_pvc-rbv] for pet-volume \n"
             "Default: all atlases are merged\n"
             "0: atlases without the label only are merged\n"
             "1: atlases with the label only are merged",
@@ -128,7 +128,7 @@ class CmdParserMergeTsv(ce.CmdParser):
             type=str,
             default=None,
             help="(Optional) groups that will be merged. \n"
-            "Default: all groups are merged",
+            "Default: all groups are merged.",
         )
         iotools_options.add_argument(
             "-tsv",
