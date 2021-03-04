@@ -42,7 +42,7 @@ def create_merge_file(
     from clinica.utils.participant import get_subject_session_list
     from clinica.utils.stream import cprint
 
-    from .pipeline_handling import DatasetError, InitException
+    from .pipeline_handling import DatasetError
 
     if caps_dir is not None:
         if not path.isdir(caps_dir):
@@ -119,36 +119,27 @@ def create_merge_file(
     merged_df.to_csv(out_path, sep="\t", index=False)
     cprint("End of BIDS information merge.")
 
-    len_BIDS = len(merged_df.columns)
-
-    merged_df = merged_df.reset_index(drop=True)
+    n_bids_columns = len(merged_df.columns)
+    merged_df.reset_index(drop=True, inplace=True)
 
     # CAPS
     if caps_dir is not None:
         # Call the different pipelines
-        from .pipeline_handling import pet_volume_pipeline, t1_volume_pipeline
+        from .pipeline_handling import pet_volume_pipeline, t1_volume_pipeline, t1_freesurfer_pipeline
 
         pipeline_options = {
             "t1-volume": t1_volume_pipeline,
             "pet-volume": pet_volume_pipeline,
+            "t1-freesurfer": t1_freesurfer_pipeline
         }
-        columns_summary = [
-            "pipeline_name",
-            "group_id",
-            "atlas_id",
-            "regions_number",
-            "first_column_name",
-            "last_column_name",
-        ]
-        merged_summary_df = pd.DataFrame(columns=columns_summary)
+        merged_summary_df = pd.DataFrame()
         if pipelines is None:
-            for key, pipeline in pipeline_options.items():
-                try:
-                    merged_df, summary_df = pipeline(caps_dir, merged_df, **kwargs)
-                    merged_summary_df = pd.concat([merged_summary_df, summary_df])
+            for pipeline_name, pipeline_fn in pipeline_options.items():
+                merged_df, summary_df = pipeline_fn(caps_dir, merged_df, **kwargs)
+                merged_summary_df = pd.concat([merged_summary_df, summary_df])
 
-                except InitException:
-                    warnings.warn("This pipeline was not initialized: " + key)
+                if len(summary_df) == 0:
+                    cprint(f"{pipeline_name} outputs were not found in the CAPS folder.")
         else:
             for pipeline in pipelines:
                 merged_df, summary_df = pipeline_options[pipeline](
@@ -161,11 +152,11 @@ def create_merge_file(
             index=np.arange(n_atlas),
             columns=["first_column_index", "last_column_index"],
         )
-        index_column_df.iat[0, 0] = len_BIDS
+        index_column_df.iat[0, 0] = n_bids_columns
         index_column_df.iat[n_atlas - 1, 1] = np.shape(merged_df)[1] - 1
         for i in range(1, n_atlas):
             index_column_df.iat[i, 0] = (
-                index_column_df.iat[i - 1, 0] + merged_summary_df.iat[i - 1, 3]
+                index_column_df.iat[i - 1, 0] + merged_summary_df.iat[i - 1, 5]
             )
             index_column_df.iat[i - 1, 1] = index_column_df.iat[i, 0] - 1
 
