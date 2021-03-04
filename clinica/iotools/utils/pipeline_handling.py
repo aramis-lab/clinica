@@ -49,8 +49,8 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
 
     # Ensures that df is correctly indexed
-    df.reset_index(inplace=True)
-    df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+    if "participant_id" in df.columns.values:
+        df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
     subjects_dir = path.join(caps_dir, "subjects")
 
@@ -129,7 +129,6 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
     Returns:
         final_df: a DataFrame containing the information of the bids and the pipeline
     """
-    from clinica.utils.stream import cprint
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
 
     if group_selection is None:
@@ -138,8 +137,8 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
         group_selection = [f"group-{group}" for group in group_selection]
 
     # Ensures that df is correctly indexed
-    df.reset_index(inplace=True)
-    df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+    if "participant_id" in df.columns.values:
+        df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
     subjects_dir = path.join(caps_dir, "subjects")
 
@@ -210,7 +209,6 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
 
 
 def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
-    from clinica.utils.stream import cprint
 
     columns = [
         "pipeline_name",
@@ -234,6 +232,7 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
     tracers = list({column.split("_acq-")[1].split("_")[0] for column in pipeline_df.columns.values if "acq" in column})
     if len(tracers) == 0:
         tracers.append("_")
+        pvc_rectrictions = ["_"]
     groups.sort()
     atlases.sort()
 
@@ -243,7 +242,7 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
             atlas_id = atlas.split("-")[-1]
             for tracer in tracers:
                 for pvc_rectriction in pvc_rectrictions:
-                    if pvc_rectriction:
+                    if pvc_rectriction and pvc_rectriction != "_":
                         regions = [column
                                    for column in pipeline_df.columns.values
                                    if group in column and atlas in column and "pvc-rbv" in column and tracer in column]

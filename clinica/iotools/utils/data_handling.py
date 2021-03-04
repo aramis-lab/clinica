@@ -33,7 +33,6 @@ def create_merge_file(
         pipelines: when adding CAPS information, indicates the pipelines that will be merged (optional)
     """
     import os
-    import warnings
     from os import path
 
     import numpy as np
@@ -167,7 +166,7 @@ def create_merge_file(
             summary_path, sep="\t", index=False
         )
 
-        merged_df.to_csv(out_path, sep="\t", index=False)
+        merged_df.to_csv(out_path, sep="\t")
         cprint("End of CAPS information merge.")
 
 

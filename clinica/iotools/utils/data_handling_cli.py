@@ -79,8 +79,9 @@ class CmdParserMergeTsv(ce.CmdParser):
             nargs="*",
             type=str,
             default=None,
+            choices=["t1-freesurfer", "t1-volume", "pet-volume"],
             help="(Optional) pipelines which will be merged to the TSV file. \n"
-            "Currently, only t1-volume and pet-volume are supported.\n"
+            "Currently, only t1-volume, t1-freesurfer and pet-volume are supported.\n"
             "Default: all pipeline are merged",
         )
         iotools_options.add_argument(
