@@ -18,7 +18,7 @@ config.update_config(cfg)
 
 class PETLinear(cpe.Pipeline):
     """PET Linear - Affine registration of PET images to standard space.
-    This preprocessing pipeline uses T1w MRI transfomation into standard
+    This preprocessing pipeline uses T1w MRI transformation into standard
     space computed in clinica t1-linear pipeline.
     It includes globally four steps:
     1) PET image registration into associated T1w MRI image space
@@ -42,10 +42,7 @@ class PETLinear(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-
-        return ['pet',
-                't1w',
-                'transformation_matrix']  # Fill here the list
+        return ['pet', 't1w', 't1w_to_mni']  
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -53,8 +50,7 @@ class PETLinear(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-
-        return ['registered_pet']  # Fill here the list
+        return ['registered_pet, transform_mat']  # Fill here the list
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -75,7 +71,6 @@ class PETLinear(cpe.Pipeline):
         # from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
 
         # Import references files
-        # =======================
         root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
         path_to_mask = join(root, 'resources', 'masks')
         url_aramis = 'https://aramislab.paris.inria.fr/files/data/img_t1_linear/'
@@ -106,7 +101,6 @@ class PETLinear(cpe.Pipeline):
                 cprint('Unable to download required template (ref_crop) for processing:' + err)
 
         # Inputs from BIDS directory
-        # ========================
         # pet file:
         PET_NII = bids_pet_nii(self.parameters["acq_label"])
         try:
@@ -118,17 +112,6 @@ class PETLinear(cpe.Pipeline):
             err = 'Clinica faced error(s) while trying to read pet files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
 
-        read_pet_node = npe.Node(name="ReadingFiles",
-                                 iterables=[('pet', pet_files), ],
-                                 synchronize=True,
-                                 interface=nutil.IdentityInterface(
-                                    fields=self.get_input_fields())
-                                 )
-
-        self.connect([
-            (read_pet_node, self.input_node, [('pet', 'pet')]),
-        ])
-
         # T1w file:
         try:
             t1w_files = clinica_file_reader(self.subjects,
@@ -139,39 +122,35 @@ class PETLinear(cpe.Pipeline):
             err = 'Clinica faced error(s) while trying to read t1w files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
 
-        if len(self.subjects):
-            print_images_to_process(self.subjects, self.sessions)
-            cprint('The pipeline will last approximately 10 minutes per image.')
-
         # Inputs from t1-linear pipeline
-        # ==============================
         # Transformation files from T1w files to MNI:
         try:
-            t1w_to_mni_transformations = clinica_file_reader(self.subjects,
-                                                             self.sessions,
-                                                             self.caps_directory,
-                                                             T1W_TO_MNI_TRANSFROM)
+            t1w_to_mni_transformation_files = clinica_file_reader(self.subjects,
+                                                                  self.sessions,
+                                                                  self.caps_directory,
+                                                                  T1W_TO_MNI_TRANSFROM)
         except ClinicaException as e:
             err = 'Clinica faced error(s) while trying to read transformation files in your CAPS directory.\n' + str(e)
             raise ClinicaCAPSError(err)
 
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('The pipeline will last approximately 3 minutes per image.')
+
         read_input_node = npe.Node(
-            name="ReadingFiles",
-            iterables=[
-                ("t1w", t1w_files),
-                ("pet", pet_files),
-                ("t1w", t1w_to_mni_transformations),
-            ],
+            name="LoadingCLIArguments",
+            iterables=[("t1w", t1w_files),
+                       ("pet", pet_files),
+                       ("t1w_to_mni", t1w_to_mni_transformation_files)],
             synchronize=True,
-            interface=nutil.IdentityInterface(fields=self.get_input_fields()),
+            interface=nutil.IdentityInterface(fields=self.get_input_fields())
         )
-        self.connect(
-            [
+
+        self.connect([
                 (read_input_node, self.input_node, [("t1w", "t1w")]),
                 (read_input_node, self.input_node, [("pet", "pet")]),
-                (read_input_node, self.input_node, [("t1w_to_mni_transformation", "t1w_to_mni_transformation")]),
-            ]
-        )
+                (read_input_node, self.input_node, [("t1w_to_mni", "t1w_to_mni")])
+            ])
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
@@ -184,39 +163,40 @@ class PETLinear(cpe.Pipeline):
 
         # Writing node
         write_node = npe.Node(
-                name="WriteCaps",
-                interface=DataSink()
-                )
+            name="WriteCaps",
+            interface=DataSink()
+        )
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
 
         # Other nodes
-        # =====================================
         rename_files = npe.Node(
             interface=nutil.Function(
                 input_names=['in_bids_pet', 'fname_pet', 'fname_trans'],
                 output_names=['out_caps_pet', 'out_caps_trans'],
                 function=rename_into_caps),
-            name='renameFileCAPS')
+            name='renameFileCAPS'
+        )
         container_path = npe.Node(
-                interface=nutil.Function(
-                    input_names=['pet_filename'],
-                    output_names=['container'],
-                    function=container_from_filename),
-                name='containerPath')
+            interface=nutil.Function(
+                input_names=['bids_or_caps_filename'],
+                output_names=['container'],
+                function=container_from_filename),
+            name='containerPath'
+        )
 
         self.connect([
             (self.input_node, container_path, [('pet', 'bids_or_caps_filename')]),
             (container_path, write_node, [(('container', fix_join, 'pet'), 'container')]),
-            (self.input_node, rename_files, [('pet', 'bids_pet')]),
+            (self.input_node, rename_files, [('pet', 'in_bids_pet')]),
             (self.output_node, rename_files, [('affine_mat', 'fname_trans')]),
-            (rename_files, write_node, [('out_caps_trans', '@trans_mat')])
+            (rename_files, write_node, [('out_caps_trans', '@transform_mat')])
             ])
 
         if not (self.parameters.get('uncropped_image')):
             self.connect([
                 (self.output_node, rename_files, [('outfile_crop', 'fname_pet')]),
-                (rename_files, write_node, [('out_caps_pet', '@registered_crop_pet')])
+                (rename_files, write_node, [('out_caps_pet', '@registered_pet')])
                 ])
 
         else:
@@ -231,27 +211,25 @@ class PETLinear(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        # from clinica.utils.filemanip import get_filename_no_ext
+        import clinica.pipelines.pet_linear.pet_linear_utils as utils 
         from nipype.interfaces import ants
-        from .pet_linear_utils import suvr_normalization, crop_nifti, print_end_pipeline, concatenate_transforms
 
-        # image_id_node = npe.Node(
-        #         interface=nutil.Function(
-        #             input_names=['filename'],
-        #             output_names=['image_id'],
-        #             function=get_filename_no_ext),
-        #         name='ImageID'
-        #         )
+        # Utilitary nodes
+        init_node = npe.Node(interface=nutil.Function(
+            input_names=['pet'],
+            output_names=['pet'],
+            function=utils.init_input_node),
+            name='initPipeline'
+        )
         concatenate_node = npe.Node(
-                interface=nutil.Function(
-                    input_names=['transform1', 'transform2'],
-                    output_names=['transforms_list'],
-                    function=concatenate_transforms),
-                name='concatenateTransforms'
-                )
+            interface=nutil.Function(
+                input_names=['pet_to_t1w_tranform', 't1w_to_mni_tranform'],
+                output_names=['transforms_list'],
+                function=utils.concatenate_transforms),
+            name='concatenateTransforms'
+        )
 
         # The core (processing) nodes
-        # =====================================
 
         # 1. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
@@ -260,23 +238,6 @@ class PETLinear(cpe.Pipeline):
         )
         ants_registration_node.inputs.dimension = 3
         ants_registration_node.inputs.transform_type = 'r'
-
-        # # 2. `ApplyTransforms` by *ANTS*. It uses nipype interface. PET to MRI
-        # ants_applytransform1_node = npe.Node(
-        #     name='antsApplyTransform1',
-        #     interface=ants.ApplyTransforms()
-        # )
-        # # Reference image is the MRI image and input image is pet
-        # ants_applytransform1_node.inputs.dimension = 3
-
-        # # 3. `ApplyTransforms` by *ANTS*. It uses nipype interface. PET to MNI
-        # ants_applytransform2_node = npe.Node(
-        #     name='antsApplyTransform2',
-        #     interface=ants.ApplyTransforms()
-        # )
-        # # Input image is pet output from previous node
-        # ants_applytransform2_node.inputs.dimension = 3
-        # ants_applytransform2_node.inputs.reference_image = self.ref_template
 
         # 2. `ApplyTransforms` by *ANTS*. It uses nipype interface. PET to MRI
         ants_applytransform_node = npe.Node(
@@ -290,10 +251,9 @@ class PETLinear(cpe.Pipeline):
         normalize_intensity_node = npe.Node(
             name='intensityNormalization',
             interface=nutil.Function(
-                function=suvr_normalization,
+                function=utils.suvr_normalization,
                 input_names=['input_img', 'ref_mask'],
-                output_names=['output_img', 'mask_template']
-            )
+                output_names=['output_img'])
         )
         normalize_intensity_node.inputs.ref_mask = self.ref_mask
 
@@ -301,48 +261,38 @@ class PETLinear(cpe.Pipeline):
         crop_nifti_node = npe.Node(
                 name='cropNifti',
                 interface=nutil.Function(
-                    function=crop_nifti,
+                    function=utils.crop_nifti,
                     input_names=['input_img', 'ref_crop'],
-                    output_names=['output_img']
-                    )
-                )
+                    output_names=['output_img'])
+        )
         crop_nifti_node.inputs.ref_crop = self.ref_crop
 
         # 5. Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
                 input_names=['pet', 'final_file'],
-                function=print_end_pipeline),
+                function=utils.print_end_pipeline),
             name='WriteEndMessage')
 
         # Connection
         # ==========
         self.connect([
-            # (self.input_node, image_id_node, [('t1w', 'filename')]),
-            # STEP 1.1
+            (self.input_node, init_node, [('pet', 'pet')]),
+            # STEP 1
             (self.input_node, ants_registration_node, [('t1w', 'fixed_image')]),
-            (self.input_node, ants_registration_node, [('pet', 'moving_image')]),
-            # STEP.1.2
-            # (self.input_node, ants_applytransform1_node, [('pet', 'input_node')]),
-            # (self.input_node, ants_applytransform1_node, [('t1w', 'reference_image')]),
-            # (ants_registration_node, ants_applytransform1_node, [('out_matrix', 'transforms')]),
-            # # STEP 2
-            # (self.input_node, ants_applytransform2_node, [('mni_trans', 'transforms')]),
-            # (ants_applytransform1_node, ants_applytransform2_node, [('output_image', 'input_node')]),
+            (init_node, ants_registration_node, [('pet', 'moving_image')]),
             # STEP 2
-            (ants_registration_node, concatenate_node, [('mni_trans', 'transform1')]),
-            (self.input_node, concatenate_node, [('t1w_to_mni_transformation', 'transform2')]),
-            (self.input_node, ants_applytransform_node, [('pet', 'input_node')]),
+            (ants_registration_node, concatenate_node, [('out_matrix', 'pet_to_t1w_tranform')]),
+            (self.input_node, concatenate_node, [('t1w_to_mni', 't1w_to_mni_tranform')]),
+            (self.input_node, ants_applytransform_node, [('pet', 'input_image')]),
             (concatenate_node, ants_applytransform_node, [('transforms_list', 'transforms')]),
             # STEP 3
             (ants_applytransform_node, normalize_intensity_node, [('output_image', 'input_img')]),
 
             # Connect to DataSink
-            # (image_id_node, self.output_node, [('image_id', 'image_id')]),
-            (ants_registration_node, self.output_node, [('out_matrix', '@affine_mat')]),
-            # (ants_applytransform1_node, self.output_node, [('output_image', 'pet_in_mri')]),
-            # (ants_applytransform_node, self.output_node, [('output_image', 'pet_in_mni')]),
-            (normalize_intensity_node, self.output_node, [('output_image', 'suvr_pet')]),
+            (ants_registration_node, self.output_node, [('out_matrix', 'affine_mat')]),
+            (normalize_intensity_node, self.output_node, [('output_img', 'suvr_pet')]),
+            
             (self.input_node, print_end_message, [('pet', 'pet')]),
             ])
         # STEP 4
@@ -351,7 +301,7 @@ class PETLinear(cpe.Pipeline):
                 (normalize_intensity_node, crop_nifti_node, [('output_img', 'input_img')]),
                 (crop_nifti_node, self.output_node, [('output_img', 'outfile_crop')]),
                 (crop_nifti_node, print_end_message, [('output_img', 'final_file')]),
-                ])
+            ])
         else:
             self.connect([
                 (normalize_intensity_node, print_end_message, [('output_img', 'final_file')]),

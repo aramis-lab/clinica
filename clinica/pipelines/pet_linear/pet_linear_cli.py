@@ -18,7 +18,7 @@ class PETLinearCLI(ce.CmdParser):
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = ('ffine registration of PET images to the MNI standard space:\n'
+        self._description = ('Affine registration of PET images to the MNI standard space:\n'
                              'http://clinica.run/doc/Pipelines/PET_Linear/')
 
     def define_options(self):
@@ -63,9 +63,8 @@ class PETLinearCLI(ce.CmdParser):
 
         parameters = {
             'acq_label': args.acq_label,
-            'suvr_reference_region': args.suvr_reference_region,
-            'advanced_argument': args.advanced_arg,
-        }
+            'suvr_reference_region': args.suvr_reference_region
+            }
 
         pipeline = PETLinear(
             bids_directory=self.absolute_path(args.bids_directory),
@@ -74,7 +73,7 @@ class PETLinearCLI(ce.CmdParser):
             base_dir=self.absolute_path(args.working_directory),
             parameters=parameters,
             name=self.name
-        )
+            )
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

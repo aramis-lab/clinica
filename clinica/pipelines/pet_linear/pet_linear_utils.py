@@ -8,8 +8,19 @@ http://clinica.run/doc/InteractingWithClinica/
 
 
 # Function used by nipype interface.
+
+# Initiate the pipeline
+def init_input_node(pet):
+    from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_begin_image
+    # Extract image ID
+    image_id = get_subject_id(pet)
+    print_begin_image(image_id)
+    return pet
+
+
 # Concatenate two transformation in one transformation list
-def concatenate_transforms(transform1, transform2):
+def concatenate_transforms(pet_to_t1w_tranform, t1w_to_mni_tranform):
     """Concatenate two input transformation files into a list.
     Args:
        transform1 (str): first transformation to apply
@@ -17,7 +28,7 @@ def concatenate_transforms(transform1, transform2):
     Returns:
        transform_list (list of string): both transform files path in a list
     """
-    return [transform2, transform1]
+    return [t1w_to_mni_tranform, pet_to_t1w_tranform]
 
 
 # Normalize the images based on the reference mask region
@@ -37,27 +48,28 @@ def suvr_normalization(input_img, ref_mask):
     import numpy as np
     from nilearn.image import resample_to_img
 
-    basedir = os.getcwd()
+    pet = nib.load(input_img)
+    ref = nib.load(ref_mask)
 
     # Downsample the input image so we can multiply it with the mask
-    ds_img = resample_to_img(input_img, ref_mask, interpolation="nearest")
+    ds_img = resample_to_img(pet, ref, interpolation="nearest")
 
     # Compute the mean of the region
-    region = np.multiply(ds_img.get_data(), ref_mask.get_data())
+    region = np.multiply(ds_img.get_data(), ref.get_data())
     region_mean = np.nanmean(np.where(region != 0, region, np.nan))
 
     # Divide the value of the image voxels by the computed mean
-    data = input_img.get_data() / region_mean
-    normalized_img = nib.Nifti1Image(data, input_img.affine, header=input_img.header)
-
+    data = pet.get_data() / region_mean
+    
+    # Create and save the normalized image
     output_img = os.path.join(
-       basedir,
+       os.getcwd(),
        os.path.basename(input_img).split('.nii')[0] + '_suvr_normalized.nii.gz')
 
+    normalized_img = nib.Nifti1Image(data, pet.affine, header=pet.header)
     normalized_img.to_filename(output_img)
-    mask_template = ref_mask
 
-    return output_img, mask_template
+    return output_img
 
 
 # It crops an image based on the reference.
@@ -80,7 +92,7 @@ def crop_nifti(input_img, ref_crop):
     basedir = os.getcwd()
 
     # resample the individual MRI into the cropped template image
-    crop_img = resample_to_img(input_img, ref_crop)
+    crop_img = resample_to_img(input_img, ref_crop, force_resample=True)
 
     output_img = os.path.join(
        basedir,
@@ -116,7 +128,7 @@ def rename_into_caps(in_bids_pet, fname_pet, fname_trans):
     # Rename into CAPS transformation file:
     rename_trans = Rename()
     rename_trans.inputs.in_file = fname_trans
-    rename_trans.inputs.format_string = source_file_pet + '_space-T1w.map'
+    rename_trans.inputs.format_string = source_file_pet + '_rigid.mat'
     out_caps_trans = rename_trans.run()
 
     return out_caps_pet.outputs.out_file, out_caps_trans.outputs.out_file
