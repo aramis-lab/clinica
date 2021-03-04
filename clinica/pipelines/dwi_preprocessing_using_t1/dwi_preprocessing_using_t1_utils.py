@@ -12,7 +12,7 @@ def rename_into_caps(in_bids_dwi, fname_dwi, fname_bval, fname_bvec, fname_brain
         fname_brainmask (str): B0 mask.
 
     Returns:
-        List[str]: The different outputs in CAPS format.
+        Tuple[str, str, str, str]: The different outputs in CAPS format.
     """
     import os
 
