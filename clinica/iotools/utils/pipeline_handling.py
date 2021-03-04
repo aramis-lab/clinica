@@ -79,7 +79,7 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
                                                  atlas_name in freesurfer_atlas_selection)):
                     atlas_df = pd.read_csv(atlas_path, sep="\t")
                     label_list = [
-                        f"t1-freesurfer_atlas-{atlas_name}_ROI-{replace_sequence_chars(roi_name)}"
+                        f"t1-freesurfer_atlas-{atlas_name}_ROI-{replace_sequence_chars(roi_name)}_thickness"
                         for roi_name in atlas_df.label_name.values
                     ]
                     ses_df[label_list] = atlas_df[
@@ -194,7 +194,7 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
                                 additional_desc += f"_pvc-rbv"
 
                             label_list = [
-                                f"{pipeline_name}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}"
+                                f"{pipeline_name}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_volume"
                                 for roi_name in atlas_df.label_name.values
                             ]
                             ses_df[label_list] = atlas_df[
