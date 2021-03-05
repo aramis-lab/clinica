@@ -367,11 +367,26 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
             # Check pet-volume outputs
             for group in groups:
                 for trc in trc_avail:
-                    pet_pattern = path.join(session_path, "pet", "preprocessing", group, f"*{trc}*")
-                    if len(glob(pet_pattern)) > 0:
-                        row_df.loc[0, f"pet-volume_{trc}_{group}"] = "1"
-                    else:
-                        row_df.loc[0, f"pet-volume_{trc}_{group}"] = "0"
+                    for pvc in [True, False]:
+                        pet_pattern = path.join(session_path, "pet", "preprocessing", group, f"*{trc}*")
+                        pet_paths = glob(pet_pattern)
+                        if pvc:
+                            pet_paths = [pet_path for pet_path in pet_paths if "pvc" in pet_path]
+                        else:
+                            pet_paths = [pet_path for pet_path in pet_paths if "pvc" not in pet_path]
+
+                        if len(pet_paths) > 0:
+                            row_df.loc[0, f"pet-volume_{trc}_{group}"] = "1"
+                        else:
+                            row_df.loc[0, f"pet-volume_{trc}_{group}"] = "0"
+
+            # Check pet-surface outputs
+            for trc in trc_avail:
+                pet_pattern = path.join(session_path, "pet", "surface", f"*{trc}*")
+                if len(glob(pet_pattern)) > 0:
+                    row_df.loc[0, f"pet-surface_{trc}"] = "1"
+                else:
+                    row_df.loc[0, f"pet-volume_{trc}"] = "0"
 
             output_df = pd.concat([output_df, row_df])
 
