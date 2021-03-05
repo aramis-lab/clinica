@@ -202,7 +202,6 @@ def rads2hz(in_file, delta_te, out_file=None):
 
     import nibabel as nb
     import numpy as np
-    from nipype.utils import NUMPY_MMAP
 
     if out_file is None:
         fname, fext = os.path.splitext(os.path.basename(in_file))
@@ -210,7 +209,7 @@ def rads2hz(in_file, delta_te, out_file=None):
             fname, _ = os.path.splitext(fname)
         out_file = os.path.abspath(f"./{fname}_radsec.nii.gz")
 
-    im = nb.load(in_file, mmap=NUMPY_MMAP)
+    im = nb.load(in_file)
     data = im.get_data().astype(np.float32) * (1.0 / (delta_te * 2 * math.pi))
     nb.Nifti1Image(data, im.affine, im.header).to_filename(out_file)
     return out_file

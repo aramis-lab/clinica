@@ -471,8 +471,8 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     import warnings
     from os.path import abspath, dirname, join
 
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import (
-        DwiPreprocessingUsingPhaseDiffFieldmap,
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_pipeline import (
+        DwiPreprocessingUsingPhaseDiffFMap
     )
 
     warnings.filterwarnings("ignore")
@@ -486,7 +486,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     clean_folder(join(working_dir, "DWIPreprocessingUsingPhaseDiffFieldmap"))
 
     parameters = {"low_bval": 5}
-    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
+    pipeline = DwiPreprocessingUsingPhaseDiffFMap(
         bids_directory=join(root, "in", "bids"),
         caps_directory=join(root, "out", "caps"),
         tsv_file=join(root, "in", "subjects.tsv"),
