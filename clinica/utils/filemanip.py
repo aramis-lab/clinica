@@ -142,9 +142,9 @@ def extract_crash_files_from_log_file(filename):
     import os
     import re
 
-    assert os.path.isfile(filename), (
-        f"extract_crash_files_from_log_file: filename parameter is not a file ({filename})"
-    )
+    assert os.path.isfile(
+        filename
+    ), f"extract_crash_files_from_log_file: filename parameter is not a file ({filename})"
 
     log_file = open(filename, "r")
     crash_files = []
@@ -192,3 +192,33 @@ def read_participant_tsv(tsv_file):
     return [sub.strip(" ") for sub in participants], [
         ses.strip(" ") for ses in sessions
     ]
+
+
+def extract_metadata_from_json(json_file, list_keys):
+    """Extract fields from JSON file."""
+    import json
+    import datetime
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.stream import cprint
+
+    list_values = []
+    try:
+        with open(json_file, "r") as file:
+            data = json.load(file)
+            for key in list_keys:
+                list_values.append(data[key])
+    except EnvironmentError:
+        raise EnvironmentError(
+            f"[Error] Clinica could not open the following JSON file: {json_file}"
+        )
+    except KeyError as e:
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        error_message = (
+            f"{Fore.RED}[{now}] Error: Clinica could not find the e key in the following JSON file: {json_file}{Fore.RESET}"
+        )
+        raise ClinicaException(error_message)
+    finally:
+        file.close()
+
+    return list_values
