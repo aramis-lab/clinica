@@ -42,7 +42,7 @@ class PETLinear(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-        return ['pet', 't1w', 't1w_to_mni']  
+        return ['pet', 't1w', 't1w_to_mni']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -200,18 +200,17 @@ class PETLinear(cpe.Pipeline):
                 ])
 
         else:
-             self.connect([
-                (self.output_node, rename_files, [('suvr_pet', 'fname_pet')]), 
+            self.connect([
+                (self.output_node, rename_files, [('suvr_pet', 'fname_pet')]),
                 (rename_files, write_node, [('out_caps_pet', '@registered_pet')])
-             ])
-
+                ])
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import clinica.pipelines.pet_linear.pet_linear_utils as utils 
+        import clinica.pipelines.pet_linear.pet_linear_utils as utils
         from nipype.interfaces import ants
 
         # Utilitary nodes
@@ -292,7 +291,7 @@ class PETLinear(cpe.Pipeline):
             # Connect to DataSink
             (ants_registration_node, self.output_node, [('out_matrix', 'affine_mat')]),
             (normalize_intensity_node, self.output_node, [('output_img', 'suvr_pet')]),
-            
+
             (self.input_node, print_end_message, [('pet', 'pet')]),
             ])
         # STEP 4
@@ -301,8 +300,8 @@ class PETLinear(cpe.Pipeline):
                 (normalize_intensity_node, crop_nifti_node, [('output_img', 'input_img')]),
                 (crop_nifti_node, self.output_node, [('output_img', 'outfile_crop')]),
                 (crop_nifti_node, print_end_message, [('output_img', 'final_file')]),
-            ])
+                ])
         else:
             self.connect([
                 (normalize_intensity_node, print_end_message, [('output_img', 'final_file')]),
-            ])
+                ])

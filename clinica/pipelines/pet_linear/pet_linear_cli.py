@@ -51,7 +51,6 @@ class PETLinearCLI(ce.CmdParser):
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
-
     def run_command(self, args):
         """Run the pipeline with defined args."""
         import os
