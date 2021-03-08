@@ -19,6 +19,17 @@ sub-CLNC0003      ses-M00        fdg           7        7        7
 
 Since the PSF depends on the PET tracer and scanner, the `participant_id`, `session_id`, ` acq_label`, ` psf_x`, `psf_y` and `psf_z` columns are compulsory.
 
+The values in the column `acq_label` should match the value associated to the `acq` key in the BIDS dataset.
+For example in the following BIDS layout the values associated would be `fdg` and `av45`:
+
+```
+bids
+└── sub-CLNC0001
+    └── ses-M00
+            └── sub-001_ses-M00_task-rest_acq-fdg_pet.nii.gz
+            └── sub-001_ses-M00_task-rest_acq-av45_pet.nii.gz
+```
+
 
 ## Reference regions used for intensity normalization
 
