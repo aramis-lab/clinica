@@ -11,10 +11,10 @@ For instance, if the FWHM of the PSF associated with your first image is 5 mm al
 
 ```
 participant_id    session_id     acq_label     psf_x    psf_y    psf_z
-sub-CLNC0001      ses-M00        FDG           5        5        6
-sub-CLNC0001      ses-M00        AV45          4.5      4.5      5
-sub-CLNC0002      ses-M00        FDG           5        5        6
-sub-CLNC0003      ses-M00        FDG           7        7        7
+sub-CLNC0001      ses-M00        fdg           5        5        6
+sub-CLNC0001      ses-M00        av45          4.5      4.5      5
+sub-CLNC0002      ses-M00        fdg           5        5        6
+sub-CLNC0003      ses-M00        fdg           7        7        7
 ```
 
 Since the PSF depends on the PET tracer and scanner, the `participant_id`, `session_id`, ` acq_label`, ` psf_x`, `psf_y` and `psf_z` columns are compulsory.
