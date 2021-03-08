@@ -376,9 +376,9 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
                             pet_paths = [pet_path for pet_path in pet_paths if "pvc" not in pet_path]
 
                         if len(pet_paths) > 0:
-                            row_df.loc[0, f"pet-volume_{trc}_{group}"] = "1"
+                            row_df.loc[0, f"pet-volume_{trc}_{group}_pvc-{pvc}"] = "1"
                         else:
-                            row_df.loc[0, f"pet-volume_{trc}_{group}"] = "0"
+                            row_df.loc[0, f"pet-volume_{trc}_{group}_pvc-{pvc}"] = "0"
 
             # Check pet-surface outputs
             for trc in trc_avail:
@@ -386,7 +386,7 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
                 if len(glob(pet_pattern)) > 0:
                     row_df.loc[0, f"pet-surface_{trc}"] = "1"
                 else:
-                    row_df.loc[0, f"pet-volume_{trc}"] = "0"
+                    row_df.loc[0, f"pet-surface_{trc}"] = "0"
 
             output_df = pd.concat([output_df, row_df])
 
