@@ -7,6 +7,7 @@
 def init_input_node(pet):
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
+
     # Extract image ID
     image_id = get_subject_id(pet)
     print_begin_image(image_id)
@@ -29,7 +30,7 @@ def concatenate_transforms(pet_to_t1w_tranform, t1w_to_mni_tranform):
 def suvr_normalization(input_img, ref_mask):
     """Normalize the input image according to the reference region.
     It uses nilearn `resample_to_img` function.
-    This function is different than the one in other PET pipelines 
+    This function is different than the one in other PET pipelines
     because there is a downsampling step.
     Args:
        input_img (str): image to be processed
@@ -59,8 +60,9 @@ def suvr_normalization(input_img, ref_mask):
 
     # Create and save the normalized image
     output_img = os.path.join(
-       os.getcwd(),
-       os.path.basename(input_img).split('.nii')[0] + '_suvr_normalized.nii.gz')
+        os.getcwd(),
+        os.path.basename(input_img).split(".nii")[0] + "_suvr_normalized.nii.gz",
+    )
 
     normalized_img = nib.Nifti1Image(data, pet.affine, header=pet.header)
     normalized_img.to_filename(output_img)
@@ -91,15 +93,17 @@ def crop_nifti(input_img, ref_crop):
     crop_img = resample_to_img(input_img, ref_crop, force_resample=True)
 
     output_img = os.path.join(
-       basedir,
-       os.path.basename(input_img).split('.nii')[0] + '_cropped.nii.gz')
+        basedir, os.path.basename(input_img).split(".nii")[0] + "_cropped.nii.gz"
+    )
 
     crop_img.to_filename(output_img)
 
     return output_img
 
 
-def rename_into_caps(in_bids_pet, fname_pet, fname_trans, uncropped_image, suvr_reference_region):
+def rename_into_caps(
+    in_bids_pet, fname_pet, fname_trans, uncropped_image, suvr_reference_region
+):
     """
     Rename the outputs of the pipelines into CAPS format.
     Args:
@@ -119,17 +123,21 @@ def rename_into_caps(in_bids_pet, fname_pet, fname_trans, uncropped_image, suvr_
     rename_pet = Rename()
     rename_pet.inputs.in_file = fname_pet
     if uncropped_image:
-        suffix = '_space-MNI152NLin2009cSym_desc-Uncrop_suvr-{}_pet.nii.gz'.format(suvr_reference_region)
+        suffix = "_space-MNI152NLin2009cSym_desc-Uncrop_suvr-{}_pet.nii.gz".format(
+            suvr_reference_region
+        )
         rename_pet.inputs.format_string = source_file_pet + suffix
     else:
-        suffix = '_space-MNI152NLin2009cSym_suvr-{}_pet.nii.gz'.format(suvr_reference_region)
+        suffix = "_space-MNI152NLin2009cSym_suvr-{}_pet.nii.gz".format(
+            suvr_reference_region
+        )
         rename_pet.inputs.format_string = source_file_pet + suffix
     out_caps_pet = rename_pet.run()
 
     # Rename into CAPS transformation file:
     rename_trans = Rename()
     rename_trans.inputs.in_file = fname_trans
-    rename_trans.inputs.format_string = source_file_pet + '_space-T1w_rigid_rigid.mat'
+    rename_trans.inputs.format_string = source_file_pet + "_space-T1w_rigid_rigid.mat"
     out_caps_trans = rename_trans.run()
 
     return out_caps_pet.outputs.out_file, out_caps_trans.outputs.out_file
@@ -141,4 +149,5 @@ def print_end_pipeline(pet, final_file):
     """
     from clinica.utils.ux import print_end_image
     from clinica.utils.filemanip import get_subject_id
+
     print_end_image(get_subject_id(pet))
