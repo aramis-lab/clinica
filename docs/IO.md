@@ -124,11 +124,15 @@ where:
 
 The content of `out_file` will look like:
 ```
-participant_id   session_id     t1-linear   t1-freesurfer   
-sub-01           ses-M00        1           0
-sub-01           ses-M12        1           0
-sub-02           ses-M00        0           0
+participant_id   session_id     t1-linear   ...     pet-volume_acq-<tracer>_group-<group_label>_pvc-{True|False}
+sub-01           ses-M00        1                                                                              0
+sub-01           ses-M12        1                                                                              0
+sub-02           ses-M00        0                                                                              0
 ```
+columns associated with `pet-volume` outputs will specify the PET tracer, the group label and if a pvc correction was
+performed.
+columns associated with `t1-volume` outputs will specify the  group label and which steps of `t1-volume` were performed.
+columns associated with `pet-surface` outputs will specify the PET tracer used.
 
 
 ##`center-nifti` - Center NIfTI files of a BIDS directory
