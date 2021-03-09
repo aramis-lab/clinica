@@ -122,8 +122,8 @@ def rename_into_caps(
     # Rename into CAPS PET:
     rename_pet = Rename()
     rename_pet.inputs.in_file = fname_pet
-    if uncropped_image:
-        suffix = "_space-MNI152NLin2009cSym_desc-Uncrop_suvr-{}_pet.nii.gz".format(
+    if not uncropped_image:
+        suffix = "_space-MNI152NLin2009cSym_desc-Crop_suvr-{}_pet.nii.gz".format(
             suvr_reference_region
         )
         rename_pet.inputs.format_string = source_file_pet + suffix
