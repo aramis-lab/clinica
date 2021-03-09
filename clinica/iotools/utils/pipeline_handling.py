@@ -122,13 +122,20 @@ def t1_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selectio
 def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
                     group_selection=None, atlas_selection=None,
                     pvc_restriction=None, tracers_selection=None):
-    """Merge data of the t1-volume pipeline to the merged file containing the BIDS information.
+    """Merge data of the t1-volume and pet-volume pipelines to the merged file containing the BIDS information.
 
     Args:
         caps_dir: the path to the CAPS directory
         df: the DataFrame containing the BIDS information
+        pipeline_path: path between the session folder and the group folder
+        pipeline_name: name of the pipeline
         group_selection: allows to choose the DARTEL groups to merge. If None all groups are selected.
         atlas_selection: allows to choose the atlas to merge. If None all atlases are selected.
+        pvc_restriction: gives the restriction on the inclusion or not of the file with the label 'pvc-rbv'
+            1       --> only the atlases containing the label will be used
+            0       --> the atlases containing the label won't be used
+            None    --> all the atlases will be used
+        tracers_selection: allows to choose the PET tracer to merge (default = 'all')
 
     Returns:
         final_df: a DataFrame containing the information of the bids and the pipeline
