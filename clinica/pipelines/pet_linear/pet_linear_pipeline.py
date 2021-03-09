@@ -1,10 +1,5 @@
 # coding: utf8
 
-"""pet_linear - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: http://www.clinica.run/doc/InteractingWithClinica/.
-"""
-
 
 import clinica.pipelines.engine as cpe
 

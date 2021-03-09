@@ -1,13 +1,7 @@
 # coding: utf8
 
-"""pet_linear - Clinica Utilities.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
-"""
 
-
-# Function used by nipype interface.
+# Functions used by nipype interface.
 
 # Initiate the pipeline
 def init_input_node(pet):
