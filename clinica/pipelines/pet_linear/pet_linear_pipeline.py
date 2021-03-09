@@ -167,11 +167,14 @@ class PETLinear(cpe.Pipeline):
         # Other nodes
         rename_files = npe.Node(
             interface=nutil.Function(
-                input_names=['in_bids_pet', 'fname_pet', 'fname_trans'],
+                input_names=['in_bids_pet', 'fname_pet', 'fname_trans',
+                'uncropped_image', 'suvr_reference_region'],
                 output_names=['out_caps_pet', 'out_caps_trans'],
                 function=rename_into_caps),
             name='renameFileCAPS'
         )
+        rename_files.inputs.cropped_image = self.parameters.get('uncropped_image')
+        rename_files.inputs.suvr_reference_region = self.parameters['suvr_reference_region']
         container_path = npe.Node(
             interface=nutil.Function(
                 input_names=['bids_or_caps_filename'],
@@ -182,7 +185,7 @@ class PETLinear(cpe.Pipeline):
 
         self.connect([
             (self.input_node, container_path, [('pet', 'bids_or_caps_filename')]),
-            (container_path, write_node, [(('container', fix_join, 'pet'), 'container')]),
+            (container_path, write_node, [(('container', fix_join, 'pet_linear'), 'container')]),
             (self.input_node, rename_files, [('pet', 'in_bids_pet')]),
             (self.output_node, rename_files, [('affine_mat', 'fname_trans')]),
             (rename_files, write_node, [('out_caps_trans', '@transform_mat')])
