@@ -2,8 +2,8 @@
     "id": "aramislab/pet_linear",
     "author": "Ravi Hassanaly",
     "version": "0.1.0",
-    "space_caps": "42M",
-    "space_wd": "42M",
+    "space_caps": "50M",
+    "space_wd": "160M",
     "dependencies": [
         {
             "type": "software",
