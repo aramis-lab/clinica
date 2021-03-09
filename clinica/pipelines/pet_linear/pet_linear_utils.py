@@ -29,6 +29,8 @@ def concatenate_transforms(pet_to_t1w_tranform, t1w_to_mni_tranform):
 def suvr_normalization(input_img, ref_mask):
     """Normalize the input image according to the reference region.
     It uses nilearn `resample_to_img` function.
+    This function is different than the one in other PET pipelines 
+    because there is a downsampling step.
     Args:
        input_img (str): image to be processed
        ref_mask (str): mask of the reference region
@@ -97,7 +99,7 @@ def crop_nifti(input_img, ref_crop):
     return output_img
 
 
-def rename_into_caps(in_bids_pet, fname_pet, fname_trans):
+def rename_into_caps(in_bids_pet, fname_pet, fname_trans, uncropped_image, suvr_reference_region):
     """
     Rename the outputs of the pipelines into CAPS format.
     Args:
@@ -116,7 +118,12 @@ def rename_into_caps(in_bids_pet, fname_pet, fname_trans):
     # Rename into CAPS PET:
     rename_pet = Rename()
     rename_pet.inputs.in_file = fname_pet
-    rename_pet.inputs.format_string = source_file_pet + '_space-MNI152NLin2009cSym_pet.nii.gz'
+    if uncropped_image:
+        suffix = '_space-MNI152NLin2009cSym_desc-Uncrop_suvr-{}_pet.nii.gz'.format(suvr_reference_region)
+        rename_pet.inputs.format_string = source_file_pet + suffix
+    else:
+        suffix = '_space-MNI152NLin2009cSym_suvr-{}_pet.nii.gz'.format(suvr_reference_region)
+        rename_pet.inputs.format_string = source_file_pet + suffix
     out_caps_pet = rename_pet.run()
 
     # Rename into CAPS transformation file:

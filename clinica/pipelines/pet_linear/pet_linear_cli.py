@@ -56,7 +56,8 @@ class PETLinearCLI(ce.CmdParser):
 
         parameters = {
             'acq_label': args.acq_label,
-            'suvr_reference_region': args.suvr_reference_region
+            'suvr_reference_region': args.suvr_reference_region,
+            'uncropped_image': args.uncropped_image
             }
 
         pipeline = PETLinear(

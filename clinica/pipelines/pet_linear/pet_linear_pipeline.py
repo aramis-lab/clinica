@@ -173,8 +173,8 @@ class PETLinear(cpe.Pipeline):
                 function=rename_into_caps),
             name='renameFileCAPS'
         )
-        rename_files.inputs.cropped_image = self.parameters.get('uncropped_image')
-        rename_files.inputs.suvr_reference_region = self.parameters['suvr_reference_region']
+        rename_files.interface.inputs.uncropped_image = self.parameters.get('uncropped_image')
+        rename_files.interface.inputs.suvr_reference_region = self.parameters['suvr_reference_region']
         container_path = npe.Node(
             interface=nutil.Function(
                 input_names=['bids_or_caps_filename'],
