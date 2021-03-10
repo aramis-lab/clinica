@@ -137,7 +137,7 @@ def rename_into_caps(
     # Rename into CAPS transformation file:
     rename_trans = Rename()
     rename_trans.inputs.in_file = fname_trans
-    rename_trans.inputs.format_string = source_file_pet + "_space-T1w_rigid_rigid.mat"
+    rename_trans.inputs.format_string = source_file_pet + "_space-T1w_rigid.mat"
     out_caps_trans = rename_trans.run()
 
     return out_caps_pet.outputs.out_file, out_caps_trans.outputs.out_file
