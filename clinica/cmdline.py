@@ -358,12 +358,14 @@ def execute():
     iotools category
     """
     from clinica.iotools.utils.data_handling_cli import (
-        CmdParserCenterNifti, CmdParserMergeTsv, CmdParserMissingModalities,
+        CmdParserCenterNifti, CmdParserMergeTsv,
+        CmdParserMissingProcessing, CmdParserMissingModalities,
         CmdParserSubjectsSessions)
 
     io_tools = [
         CmdParserSubjectsSessions(),
         CmdParserMergeTsv(),
+        CmdParserMissingProcessing(),
         CmdParserMissingModalities(),
         CmdParserCenterNifti(),
     ]

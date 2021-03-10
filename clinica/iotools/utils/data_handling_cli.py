@@ -79,17 +79,27 @@ class CmdParserMergeTsv(ce.CmdParser):
             nargs="*",
             type=str,
             default=None,
+            choices=["t1-freesurfer", "t1-volume", "pet-volume"],
             help="(Optional) pipelines which will be merged to the TSV file. \n"
-            "Currently, only t1-volume and pet-volume are supported.\n"
+            "Currently, only t1-volume, t1-freesurfer and pet-volume are supported.\n"
             "Default: all pipeline are merged",
         )
         iotools_options.add_argument(
-            "-atlas",
-            "--atlas_selection",
+            "-vas",
+            "--volume_atlas_selection",
             nargs="*",
             type=str,
             default=None,
-            help="(Optional) atlas that will be merged. \n"
+            help="(Optional) atlas that will be merged for t1-volume and pet-volume pipelines. \n"
+            "Default: all atlases are merged",
+        )
+        iotools_options.add_argument(
+            "-fas",
+            "--freesurfer_atlas_selection",
+            nargs="*",
+            type=str,
+            default=None,
+            help="(Optional) atlas that will be merged for t1-freesurfer pipeline. \n"
             "Default: all atlases are merged",
         )
         iotools_options.add_argument(
@@ -97,10 +107,19 @@ class CmdParserMergeTsv(ce.CmdParser):
             "--pvc_restriction",
             type=int,
             default=None,
-            help="(Optional) indicates restriction on the label [_pvc-rbv]\n"
+            help="(Optional) indicates restriction on the label [_pvc-rbv] for pet-volume \n"
             "Default: all atlases are merged\n"
             "0: atlases without the label only are merged\n"
             "1: atlases with the label only are merged",
+        )
+        iotools_options.add_argument(
+            "-pts",
+            "--pet_tracers_selection",
+            type=str,
+            default=None,
+            nargs="*",
+            help="(Optional) PET tracers that will be merged. \n"
+            "Default: all PET tracers are merged.",
         )
         iotools_options.add_argument(
             "-group",
@@ -109,12 +128,21 @@ class CmdParserMergeTsv(ce.CmdParser):
             type=str,
             default=None,
             help="(Optional) groups that will be merged. \n"
-            "Default: all groups are merged",
+            "Default: all groups are merged.",
         )
         iotools_options.add_argument(
             "-tsv",
             "--subjects_sessions_tsv",
+            default=None,
+            type=str,
             help="TSV file containing the subjects with their sessions.",
+        )
+        iotools_options.add_argument(
+            "--ignore_scan_files",
+            default=False,
+            action='store_true',
+            help="If given, the scan files will not be read and added to the "
+                 "final output. This may accelerate the procedure.",
         )
 
     def run_command(self, args):
@@ -127,11 +155,38 @@ class CmdParserMergeTsv(ce.CmdParser):
             args.out_tsv,
             caps_dir=args.caps_directory,
             pipelines=args.pipelines,
-            atlas_selection=args.atlas_selection,
+            volume_atlas_selection=args.volume_atlas_selection,
+            freesurfer_atlas_selection=args.freesurfer_atlas_selection,
             pvc_restriction=args.pvc_restriction,
             tsv_file=args.subjects_sessions_tsv,
             group_selection=args.group_selection,
+            tracers_selection=args.pet_tracers_selection,
+            ignore_scan_files=args.ignore_scan_files
         )
+
+
+class CmdParserMissingProcessing(ce.CmdParser):
+
+    def define_name(self):
+        self._name = 'check-missing-processing'
+
+    def define_description(self):
+        self._description = 'Check missing processing in a CAPS directory'
+
+    def define_options(self):
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS dataset directory.')
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS dataset directory.')
+        self._args.add_argument("out_file",
+                                help='Path to the output TSV file (filename included).')
+
+    def run_command(self, args):
+        from clinica.iotools.utils import data_handling as dt
+        from clinica.utils.inputs import check_caps_folder
+
+        check_caps_folder(args.caps_directory)
+        dt.compute_missing_processing(args.bids_directory, args.caps_directory, args.out_file)
 
 
 class CmdParserMissingModalities(ce.CmdParser):

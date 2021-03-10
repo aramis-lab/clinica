@@ -106,6 +106,35 @@ If an input list of subjects and sessions is given, the merged file will only ga
     ...
     ```
 
+##`check-missing-processing` - Check missing processing in a CAPS directory
+Starting from a CAPS compliant dataset, this command creates a TSV file with columns
+`participant_id`, `session_id` and names corresponding to steps of `t1-volume`, `t1-freesurfer`, 
+`t1-linear`, `pet-volume` and `pet-surface`. For PET pipelines one column is created per tracer
+and the PVC option is considered for `pet-volume`.
+
+```Text
+clinica iotools check-missing-processing <bids_directory> <caps_directory> <output_directory>
+```
+where:
+
+- `bids_directory`: input folder of a BIDS compliant dataset
+- `caps_directory`: input folder of a [CAPS](../CAPS/Introduction) compliant dataset
+- `out_file`: output file path (filename included).
+
+
+The content of `out_file` will look like:
+```
+participant_id   session_id     t1-linear   ...     pet-volume_acq-<tracer>_group-<group_label>_pvc-{True|False}
+sub-01           ses-M00        1                                                                              0
+sub-01           ses-M12        1                                                                              0
+sub-02           ses-M00        0                                                                              0
+```
+columns associated with `pet-volume` outputs will specify the PET tracer, the group label and if a pvc correction was
+performed.
+columns associated with `t1-volume` outputs will specify the  group label and which steps of `t1-volume` were performed.
+columns associated with `pet-surface` outputs will specify the PET tracer used.
+
+
 ##`center-nifti` - Center NIfTI files of a BIDS directory
 Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIfTI files whose origin does not correspond to the center of the image (i.e. the anterior commissure). SPM is especially sensitive to this case, and segmentation procedures may result in blank images, or even fail. To mitigate this issue, we propose a simple tool that convert your BIDS dataset into a dataset with centered NIfTI files for the selected modalities. Only NIfTI volumes whose center is at more than 50 mm from the origin of the world coordinate system are centered (this can be changed by the `--center_all_files` flag). This threshold has been chosen empirically after a set of experiments to determine at which distance from the origin SPM segmentation and coregistration procedures stop working properly. By default, this tool will only center T1w images but you can specify other modalities.
 
