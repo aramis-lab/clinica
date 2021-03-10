@@ -185,7 +185,7 @@ class PETVolume(cpe.Pipeline):
 
         if self.parameters["pvc_psf_tsv"] is not None:
             iterables_psf = read_psf_information(
-                self.parameters["pvc_psf_tsv"], self.subjects, self.sessions
+                self.parameters["pvc_psf_tsv"], self.subjects, self.sessions, self.parameters["acq_label"]
             )
             self.parameters["apply_pvc"] = True
         else:
