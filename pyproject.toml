@@ -10,7 +10,7 @@ line_length = 88
 line-length = 88
 target-version = ['py36', 'py37', 'py38']
 include = '\.pyi?$'
-exclude = '''
+force-exclude = '''
 /(
     \.eggs
   | \.git
