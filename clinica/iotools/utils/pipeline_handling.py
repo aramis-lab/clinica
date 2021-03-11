@@ -211,7 +211,7 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
                                 additional_desc += f"_pvc-rbv"
 
                             label_list = [
-                                f"{pipeline_name}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_volume"
+                                f"{pipeline_name}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
                                 for roi_name in atlas_df.label_name.values
                             ]
                             ses_df[label_list] = atlas_df[
