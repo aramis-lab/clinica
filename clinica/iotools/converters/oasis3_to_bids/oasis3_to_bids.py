@@ -7,7 +7,7 @@ Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS.
 from clinica.iotools.abstract_converter import Converter
 
 
-class OasisToBids(Converter):
+class Oasis3ToBids(Converter):
     def convert_clinical_data(self, clinical_data_dir, bids_dir):
         """
         Convert the clinical data defined inside the clinical_specifications.xlx into BIDS
