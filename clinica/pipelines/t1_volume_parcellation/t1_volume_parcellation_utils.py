@@ -32,9 +32,7 @@ def atlas_statistics(in_image, atlas_list):
         for atlas_class in atlas_classes:
             if atlas_class.get_name_atlas() == atlas:
                 out_atlas_statistics = abspath(
-                    join(
-                        f"./{base}_space-{atlas}_map-graymatter_statistics.tsv"
-                    )
+                    join(f"./{base}_space-{atlas}_map-graymatter_statistics.tsv")
                 )
                 statistics_on_atlas(in_image, atlas_class(), out_atlas_statistics)
                 atlas_statistics_list.append(out_atlas_statistics)

@@ -21,8 +21,14 @@ def compute_default_filename(out_path):
 
 
 def create_merge_file(
-    bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines=None,
-        ignore_scan_files=False, ignore_sessions_files=False, **kwargs
+    bids_dir,
+    out_tsv,
+    caps_dir=None,
+    tsv_file=None,
+    pipelines=None,
+    ignore_scan_files=False,
+    ignore_sessions_files=False,
+    **kwargs,
 ):
     """Merge all the TSV files containing clinical data of a BIDS compliant dataset and store the result inside a TSV file.
 
@@ -57,8 +63,10 @@ def create_merge_file(
     sessions, subjects = get_subject_session_list(
         bids_dir, ss_file=tsv_file, use_session_tsv=True
     )
-    sub_ses_df = pd.DataFrame([[subject, session] for subject, session in zip(subjects, sessions)],
-                              columns=["participant_id", "session_id"])
+    sub_ses_df = pd.DataFrame(
+        [[subject, session] for subject, session in zip(subjects, sessions)],
+        columns=["participant_id", "session_id"],
+    )
     sub_ses_df.set_index(["participant_id", "session_id"], inplace=True)
 
     out_path = compute_default_filename(out_tsv)
@@ -70,7 +78,9 @@ def create_merge_file(
     # BIDS part
     for subject, subject_df in sub_ses_df.groupby(level=0):
         sub_path = path.join(bids_dir, subject)
-        row_participant_df = participants_df[participants_df["participant_id"] == subject]
+        row_participant_df = participants_df[
+            participants_df["participant_id"] == subject
+        ]
         row_participant_df.reset_index(inplace=True, drop=True)
         if len(row_participant_df) == 0:
             cprint(f"Warning: participant {subject} does not exist in participants.tsv")
@@ -123,6 +133,43 @@ def create_merge_file(
 
                 row_df = pd.concat([row_participant_df, row_session_df, row_scans_df], axis=1)
                 merged_df = merged_df.append(row_df)
+=======
+        for _, session in subject_df.index.values:
+            row_session_df = sessions_df[sessions_df.session_id == session]
+            row_session_df.reset_index(inplace=True, drop=True)
+            if len(row_session_df) == 0:
+                raise DatasetError(sessions_df.loc[0, "session_id"] + " / " + session)
+
+            # Read scans TSV files
+            scan_path = path.join(
+                bids_dir,
+                subject,
+                session,
+                f"{subject}_{session}_scans.tsv",
+            )
+            if path.isfile(scan_path) and not ignore_scan_files:
+                scans_dict = dict()
+                scans_df = pd.read_csv(scan_path, sep="\t")
+                for idx in scans_df.index.values:
+                    filepath = scans_df.loc[idx, "filename"]
+                    filename = path.basename(filepath).split(".")[0]
+                    modality = "_".join(filename.split("_")[2::])
+                    for col in scans_df.columns.values:
+                        if col == "filename":
+                            pass
+                        else:
+                            value = scans_df.loc[idx, col]
+                            new_col_name = f"{modality}_{col}"
+                            scans_dict.update({new_col_name: value})
+                row_scans_df = pd.DataFrame(scans_dict, index=[0])
+            else:
+                row_scans_df = pd.DataFrame()
+
+            row_df = pd.concat(
+                [row_participant_df, row_session_df, row_scans_df], axis=1
+            )
+            merged_df = merged_df.append(row_df)
+>>>>>>> 4d944126 (Apply black to remaining files)
 
     # Put participant_id and session_id first
     col_list = merged_df.columns.values.tolist()
@@ -139,12 +186,16 @@ def create_merge_file(
     # CAPS
     if caps_dir is not None:
         # Call the different pipelines
-        from .pipeline_handling import pet_volume_pipeline, t1_volume_pipeline, t1_freesurfer_pipeline
+        from .pipeline_handling import (
+            pet_volume_pipeline,
+            t1_volume_pipeline,
+            t1_freesurfer_pipeline,
+        )
 
         pipeline_options = {
             "t1-volume": t1_volume_pipeline,
             "pet-volume": pet_volume_pipeline,
-            "t1-freesurfer": t1_freesurfer_pipeline
+            "t1-freesurfer": t1_freesurfer_pipeline,
         }
         merged_summary_df = pd.DataFrame()
         if pipelines is None:
@@ -153,7 +204,9 @@ def create_merge_file(
                 merged_summary_df = pd.concat([merged_summary_df, summary_df])
 
                 if len(summary_df) == 0:
-                    cprint(f"{pipeline_name} outputs were not found in the CAPS folder.")
+                    cprint(
+                        f"{pipeline_name} outputs were not found in the CAPS folder."
+                    )
         else:
             for pipeline in pipelines:
                 merged_df, summary_df = pipeline_options[pipeline](
@@ -177,9 +230,7 @@ def create_merge_file(
         merged_summary_df.reset_index(inplace=True, drop=True)
         merged_summary_df = pd.concat([merged_summary_df, index_column_df], axis=1)
         summary_path = path.splitext(out_path)[0] + "_summary.tsv"
-        merged_summary_df.to_csv(
-            summary_path, sep="\t", index=False
-        )
+        merged_summary_df.to_csv(summary_path, sep="\t", index=False)
 
         merged_df.to_csv(out_path, sep="\t")
         cprint("End of CAPS information merge.")
@@ -314,7 +365,7 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
     import pandas as pd
 
     if path.exists(path.join(caps_dir, "groups")):
-        groups = listdir(path.join(caps_dir, 'groups'))
+        groups = listdir(path.join(caps_dir, "groups"))
     else:
         groups = list()
     output_df = pd.DataFrame()
@@ -323,32 +374,59 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
     mods_and_sess = find_mods_and_sess(bids_dir)
     mods_and_sess.pop("sessions")
     mods_avail_dict = mods_and_sess
-    trc_avail = [j.split('_')[1] for i in mods_avail_dict.values() for j in i if "pet" in j]
+    trc_avail = [
+        j.split("_")[1] for i in mods_avail_dict.values() for j in i if "pet" in j
+    ]
     print(trc_avail)
 
-    subjects_paths = glob(path.join(caps_dir, 'subjects', 'sub-*'))
+    subjects_paths = glob(path.join(caps_dir, "subjects", "sub-*"))
     for subject_path in subjects_paths:
         participant_id = subject_path.split(sep)[-1]
         sessions_paths = glob(path.join(subject_path, "ses-*"))
         for session_path in sessions_paths:
             session_id = session_path.split(sep)[-1]
-            row_df = pd.DataFrame([[participant_id, session_id]], columns=['participant_id', 'session_id'])
+            row_df = pd.DataFrame(
+                [[participant_id, session_id]], columns=["participant_id", "session_id"]
+            )
 
             # Check t1-volume outputs
             if path.exists(path.join(session_path, "t1", "spm", "segmentation")):
                 row_df.loc[0, "t1-volume-segmentation"] = "1"
                 for group in groups:
-                    group_id = group.split('-')[-1]
-                    if path.exists(path.join(
-                            session_path, "t1", "spm", "dartel", group,
-                            f"{participant_id}_{session_id}_T1w_target-{group_id}_transformation-forward_deformation.nii.gz")):
+                    group_id = group.split("-")[-1]
+                    if path.exists(
+                        path.join(
+                            session_path,
+                            "t1",
+                            "spm",
+                            "dartel",
+                            group,
+                            f"{participant_id}_{session_id}_T1w_target-{group_id}_transformation-forward_deformation.nii.gz",
+                        )
+                    ):
                         row_df.loc[0, f"t1-volume-register-dartel_{group}"] = "1"
-                        dartel2mni = glob(path.join(
-                            session_path, "t1", "spm", "dartel", group,
-                            f"{participant_id}_{session_id}_T1w_segm-*_space-Ixi549Space_modulated-*_probability.nii.gz"))
+                        dartel2mni = glob(
+                            path.join(
+                                session_path,
+                                "t1",
+                                "spm",
+                                "dartel",
+                                group,
+                                f"{participant_id}_{session_id}_T1w_segm-*_space-Ixi549Space_modulated-*_probability.nii.gz",
+                            )
+                        )
                         if len(dartel2mni) > 0:
                             row_df.loc[0, f"t1-volume-dartel2mni_{group}"] = "1"
-                            if path.exists(path.join(session_path, "t1", "spm", "dartel", group, "atlas_statistics")):
+                            if path.exists(
+                                path.join(
+                                    session_path,
+                                    "t1",
+                                    "spm",
+                                    "dartel",
+                                    group,
+                                    "atlas_statistics",
+                                )
+                            ):
                                 row_df.loc[0, f"t1-volume-parcellation_{group}"] = "1"
                             else:
                                 row_df.loc[0, f"t1-volume-parcellation_{group}"] = "0"
@@ -382,12 +460,20 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
             for group in groups:
                 for trc in trc_avail:
                     for pvc in [True, False]:
-                        pet_pattern = path.join(session_path, "pet", "preprocessing", group, f"*{trc}*")
+                        pet_pattern = path.join(
+                            session_path, "pet", "preprocessing", group, f"*{trc}*"
+                        )
                         pet_paths = glob(pet_pattern)
                         if pvc:
-                            pet_paths = [pet_path for pet_path in pet_paths if "pvc" in pet_path]
+                            pet_paths = [
+                                pet_path for pet_path in pet_paths if "pvc" in pet_path
+                            ]
                         else:
-                            pet_paths = [pet_path for pet_path in pet_paths if "pvc" not in pet_path]
+                            pet_paths = [
+                                pet_path
+                                for pet_path in pet_paths
+                                if "pvc" not in pet_path
+                            ]
 
                         if len(pet_paths) > 0:
                             row_df.loc[0, f"pet-volume_{trc}_{group}_pvc-{pvc}"] = "1"
@@ -528,25 +614,25 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
                     if "fmap" in mods_avail:
                         row_to_append_df["fmap"] = pd.Series("0")
                         mmt.add_missing_mod(ses, "fmap")
-                if 'pet' in mods_avail_bids:
+                if "pet" in mods_avail_bids:
                     # Extract all the task available
-                    for m in mods_avail_dict['pet']:
-                        tokens = m.split('_')
+                    for m in mods_avail_dict["pet"]:
+                        tokens = m.split("_")
                         pet_acq = tokens[1]
-                        acq_avail_list = glob(path.join(
-                            ses_path, 'pet', '*' + pet_acq + '*')
+                        acq_avail_list = glob(
+                            path.join(ses_path, "pet", "*" + pet_acq + "*")
                         )
 
                         if len(acq_avail_list) == 0:
-                            row_to_append_df[m] = pd.Series('0')
+                            row_to_append_df[m] = pd.Series("0")
                         else:
-                            row_to_append_df[m] = pd.Series('1')
+                            row_to_append_df[m] = pd.Series("1")
                 # If the folder is not available but the modality is
                 # in the list of the available one mark it as missing
                 else:
-                    if 'pet' in mods_avail_dict:
-                        for m in mods_avail_dict['pet']:
-                            row_to_append_df[m] = pd.Series('0')
+                    if "pet" in mods_avail_dict:
+                        for m in mods_avail_dict["pet"]:
+                            row_to_append_df[m] = pd.Series("0")
                         mmt.add_missing_mod(ses, m)
 
             missing_mods_df = missing_mods_df.append(row_to_append_df)

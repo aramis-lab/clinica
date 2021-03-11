@@ -1219,9 +1219,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
                     f"WARNING: Conversion with dcm2niix failed, trying with dcm2nii "
                     f"for subject {subject} and session {session}"
                 )
-                command = (
-                    f"dcm2nii -a n -d n -e n -i y -g {zip_image} -p n -m n -r n -x n -o {output_path} {image_path}"
-                )
+                command = f"dcm2nii -a n -d n -e n -i y -g {zip_image} -p n -m n -r n -x n -o {output_path} {image_path}"
                 subprocess.run(
                     command,
                     shell=True,

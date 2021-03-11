@@ -104,13 +104,11 @@ class T1FreeSurfer(cpe.Pipeline):
         )
         if len(processed_ids) > 0:
             cprint(
-               f"{Fore.YELLOW}Clinica found {len(processed_ids)} image(s) "
-               f"already processed in CAPS directory:{Fore.RESET}"
+                f"{Fore.YELLOW}Clinica found {len(processed_ids)} image(s) "
+                f"already processed in CAPS directory:{Fore.RESET}"
             )
             for image_id in processed_ids:
-                cprint(
-                    f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}"
-                )
+                cprint(f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}")
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/freesurfer_cross_sectional"
                 cprint(
