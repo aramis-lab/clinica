@@ -667,6 +667,7 @@ def create_adni_sessions_dict(
                                         "FCI.csv",
                                         "CCI.csv",
                                         "NPIQ.csv",
+                                        "NPI.csv"
                                     ]:
                                         if (
                                             pd.isnull(row["VISCODE2"])
