@@ -1,4 +1,5 @@
 <!--(http://www.clinica.run/img/clinica_brainweb.png)-->
+<!-- markdownlint-disable MD033 -->
 
 <h1 align="center">
   <a href="http://www.clinica.run">
@@ -34,24 +35,21 @@
   <a href="#related-repositories">AD-DL</a>
 </p>
 
-
-
-
-
 ## About The Project
 
 Clinica is a software platform for clinical research studies involving patients
 with neurological and psychiatric diseases and the acquisition of multimodal
-data (neuroimaging, clinical and cognitive evaluations, genetics...), most
-often with longitudinal follow-up.
+data (neuroimaging, clinical and cognitive evaluations, genetics...),
+most often with longitudinal follow-up.
 
-Clinica is command-line driven and written in Python. It uses the
-[Nipype](https://nipype.readthedocs.io/) system for pipelining and combines
+Clinica is command-line driven and written in Python.
+It uses the [Nipype](https://nipype.readthedocs.io/) system for pipelining and combines
 widely-used software packages for neuroimaging data analysis
 ([ANTs](http://stnava.github.io/ANTs/),
 [FreeSurfer](https://surfer.nmr.mgh.harvard.edu/),
 [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki),
-[MRtrix](https://www.mrtrix.org/), [PETPVC](https://github.com/UCL/PETPVC),
+[MRtrix](https://www.mrtrix.org/),
+[PETPVC](https://github.com/UCL/PETPVC),
 [SPM](https://www.fil.ion.ucl.ac.uk/spm/)), machine learning
 ([Scikit-learn](https://scikit-learn.org/stable/)) and the [BIDS
 standard](http://bids-specification.readthedocs.io/) for data organization.
@@ -66,8 +64,8 @@ BIDS, namely:
 
 Clinica can process any BIDS-compliant dataset with a set of complex processing
 pipelines involving different software packages for the analysis of
-neuroimaging data (T1-weighted MRI, diffusion MRI and PET data). It also
-provides integration between feature extraction and statistics, machine
+neuroimaging data (T1-weighted MRI, diffusion MRI and PET data).
+It also provides integration between feature extraction and statistics, machine
 learning or deep learning.
 
 ![ClinicaPipelines](http://www.clinica.run/img/clinica_pipelines.png)
@@ -77,27 +75,24 @@ learning or deep learning.
 </p>
 
 Clinica is also showcased as a framework for the reproducible classification of
-Alzheimer's disease using [machine
-learning](https://github.com/aramis-lab/AD-ML) and [deep
-learning](https://github.com/aramis-lab/AD-DL).
-
-
+Alzheimer's disease using
+[machine learning](https://github.com/aramis-lab/AD-ML) and
+[deep learning](https://github.com/aramis-lab/AD-DL).
 
 ## Getting Started
+
 > Full instructions for installation and additional information can be found in
 the [user documentation](http://www.clinica.run/doc).
 
-Clinica currently supports macOS and Linux. It can be installed by typing the
-following command:
+Clinica currently supports macOS and Linux.
+It can be installed by typing the following command:
 
 ```sh
 pip install clinica
 ```
 
-To avoid conflicts with other versions of the dependency packages installed by
-pip, it is strongly recommended to create a virtual environment before the
-installation.  For example, use
-[Conda](https://docs.conda.io/en/latest/miniconda.html), to create a virtual
+To avoid conflicts with other versions of the dependency packages installed by pip, it is strongly recommended to create a virtual environment before the installation.
+For example, use [Conda](https://docs.conda.io/en/latest/miniconda.html), to create a virtual
 environment and activate it before installing clinica (you can also use
 `virtualenv`):
 
@@ -106,9 +101,9 @@ conda create --name clinicaEnv python=3.7
 conda activate clinicaEnv
 ```
 
-Depending on the pipeline that you want to use, you need to install
-pipeline-specific interfaces. Not all the dependencies are necessary to run
-Clinica. Please refer to this [page](http://www.clinica.run/doc/Third-party/)
+Depending on the pipeline that you want to use, you need to install pipeline-specific interfaces.
+Not all the dependencies are necessary to run Clinica.
+Please refer to this [page](http://www.clinica.run/doc/Third-party/)
 to determine which third-party libraries you need to install.
 
 ## Example
@@ -117,6 +112,7 @@ Diagram illustrating the Clinica pipelines involved when performing a group
 comparison of FDG PET data projected on the cortical surface between patients
 with Alzheimer's disease and healthy controls from the ADNI database:
 ![ClinicaExample](http://www.clinica.run/img/clinica_example.png)
+
 1. Clinical and neuroimaging data are downloaded from the ADNI website and data
    are converted into BIDS with the [`adni-to-bids`
    converter](http://www.clinica.run/doc/Converters/ADNI2BIDS).
@@ -134,18 +130,11 @@ with Alzheimer's disease and healthy controls from the ADNI database:
 > For more examples and details, please refer to the
 > [Documentation](http://www.clinica.run/doc/).
 
-
-
-
-
 ## Support
+
 - [Report an issue on GitHub](https://github.com/aramis-lab/clinica/issues)
 - Use the [Clinica Google
   Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
-
-
-
-
 
 <!--
 ## Contributing
@@ -155,17 +144,15 @@ hesitate to ask questions if something is not clear for you, report an issue,
 etc.
 -->
 
-
-
-
 ## License
 
-This software is distributed under the MIT License. See [license
-file](https://github.com/aramis-lab/clinica/blob/dev/LICENSE.txt) for more
-information.
-
+This software is distributed under the MIT License.
+See [license file](https://github.com/aramis-lab/clinica/blob/dev/LICENSE.txt)
+for more information.
 
 ## Related Repositories
 
-- [AD-DL: Framework for the reproducible classification of Alzheimer's disease using deep learning](https://github.com/aramis-lab/AD-DL)
-- [AD-ML: Framework for the reproducible classification of Alzheimer's disease using machine learning](https://github.com/aramis-lab/AD-ML)
+- [AD-DL: Framework for the reproducible classification of Alzheimer's disease using
+deep learning](https://github.com/aramis-lab/AD-DL)
+- [AD-ML: Framework for the reproducible classification of Alzheimer's disease using
+machine learning](https://github.com/aramis-lab/AD-ML)
