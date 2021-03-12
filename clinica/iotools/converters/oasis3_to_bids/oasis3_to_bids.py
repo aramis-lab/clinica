@@ -84,7 +84,6 @@ class Oasis3ToBids(Converter):
                 except IOError as e:
                     print("Unable to copy file. %s" % e)
 
-            t1_folder = path.join(subj_folder, 'anat1')
             subj_id = os.path.basename(subj_folder)
             print('Converting ', subj_id)
             old_sess_fold = subj_id.split("_")
@@ -99,18 +98,34 @@ class Oasis3ToBids(Converter):
             session_folder = path.join(bids_subj_folder, 'ses-' + session_name)
             if not os.path.isdir(session_folder):
                 os.mkdir(path.join(session_folder))
-                os.mkdir(path.join(session_folder, 'anat'))
 
             # In order do convert the Analyze format to Nifti the path to the .img file is required
-            img_file_path = glob(path.join(t1_folder, '**/*.nii.gz'), recursive=True)[0]
+            nifti_folders = glob(path.join(subj_folder, '**/*.nii.gz'), recursive=True)
             #TODO: if not nifit ( len(img_file_path) = 0), then convert
-            #img_file_path = glob(path.join(t1_folder, '**/*.img'), recursive=True)[0]
 
-            base_file_name = os.path.basename(img_file_path).split(".")[0]
-            json_file_path = glob(path.join(t1_folder, '**/' + base_file_name + ".json"), recursive=True)[0]
+            for nifti_folder in nifti_folders:
+                #  Get the json files
+                base_file_name = os.path.basename(nifti_folder).split(".")[0]
+                json_file_paths = glob(path.join(subj_folder, '**/' + base_file_name + ".json"), recursive=True)
+                #
+                # Looking for an existing func or anat folder
+                dir_name = path.dirname(nifti_folder)
+                regex = re.compile("(?P<folder>anat|func)\d")
+                if regex.search(dir_name) is not None:
+                    output_folder = regex.search(dir_name).group("folder")
+                elif regex.search(path.abspath(dir_name)) is not None:
+                    output_folder = regex.search(path.abspath(dir_name)).group("folder")
+                else:
+                    output_folder = "anat"
+                #
+                # Moove nifti and json files to the right folder
+                output_path = path.join(session_folder, output_folder)
+                if not os.path.isdir(output_path):
+                    os.mkdir(path.join(output_path))
+                copy_file(nifti_folder, output_path)
+                if len(json_file_paths) > 0:
+                    copy_file(json_file_paths[0], output_path)
 
-            output_path = path.join(session_folder, 'anat')
-            copy_file(json_file_path, output_path)
             # First, convert to Nifti so that we can extract the s_form with NiBabel
             # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
             # img_with_wrong_orientation_analyze = nb.load(img_file_path)
