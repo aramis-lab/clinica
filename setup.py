@@ -1,11 +1,15 @@
+import pathlib
+
+import pkg_resources
 from os.path import abspath, dirname, join
 
 from setuptools import find_packages, setup
 
-try:  # for pip >= 10
-    from pip._internal.req import parse_requirements
-except ImportError:  # for pip <= 9.0.3
-    from pip.req import parse_requirements
+with pathlib.Path("requirements.txt").open() as requirements_txt:
+    install_requires = [
+        str(requirement)
+        for requirement in pkg_resources.parse_requirements(requirements_txt)
+    ]
 
 with open(join(dirname(__file__), "clinica/VERSION"), "rb") as f:
     version = f.read().decode("ascii").strip()
@@ -13,12 +17,6 @@ with open(join(dirname(__file__), "clinica/VERSION"), "rb") as f:
 this_directory = abspath(dirname(__file__))
 with open(join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
-
-install_reqs = parse_requirements("requirements.txt", session="hack")
-try:
-    requirements = [str(ir.req) for ir in install_reqs]
-except Exception:
-    requirements = [str(ir.requirement) for ir in install_reqs]
 
 setup(
     name="clinica",
@@ -43,7 +41,7 @@ setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python",
     ],
-    install_requires=requirements,
+    install_requires=install_requires,
     extras_require={"test": ["pytest", "coverage"]},
     python_requires=">=3.6,<3.8",
 )
