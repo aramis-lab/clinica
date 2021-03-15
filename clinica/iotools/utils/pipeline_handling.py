@@ -49,7 +49,6 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     Returns:
          final_df: a DataFrame containing the information of the bids and the pipeline
     """
-    from clinica.utils.stream import cprint
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
 
     # Ensures that df is correctly indexed
@@ -200,7 +199,7 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
                                        if tracer in atlas_path]
 
                     for atlas_path in atlas_paths:
-                        atlas_name = atlas_path.split("_space-")[1].split("_")[0]
+                        atlas_name = atlas_path.split("_space-")[-1].split("_")[0]
                         if path.exists(atlas_path):
                             atlas_df = pd.read_csv(atlas_path, sep="\t")
                             additional_desc = ""

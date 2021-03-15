@@ -142,7 +142,15 @@ class CmdParserMergeTsv(ce.CmdParser):
             default=False,
             action='store_true',
             help="If given, the scan files will not be read and added to the "
-                 "final output. This may accelerate the procedure.",
+                 "final output. This accelerates the procedure.",
+        )
+
+        iotools_options.add_argument(
+            "--ignore_session_scan_files",
+            default=False,
+            action='store_true',
+            help="If given, the session and scan files will not be read and added to the "
+                 "final output. This accelerates the procedure.",
         )
 
     def run_command(self, args):
@@ -161,7 +169,8 @@ class CmdParserMergeTsv(ce.CmdParser):
             tsv_file=args.subjects_sessions_tsv,
             group_selection=args.group_selection,
             tracers_selection=args.pet_tracers_selection,
-            ignore_scan_files=args.ignore_scan_files
+            ignore_scan_files=args.ignore_scan_files,
+            ignore_sessions_files=args.ignore_session_scan_files
         )
 
 
