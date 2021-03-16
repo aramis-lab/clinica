@@ -51,6 +51,12 @@ class PETLinearCLI(ce.CmdParser):
             action="store_true",
             default=False,
         )
+        optional.add_argument(
+            "--save_intermediate",
+            help="""Save the PET image in the T1w space computed in the intermediate step of the pipeline""",
+            action="store_true",
+            default=False,
+        )
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
@@ -68,6 +74,7 @@ class PETLinearCLI(ce.CmdParser):
             "acq_label": args.acq_label,
             "suvr_reference_region": args.suvr_reference_region,
             "uncropped_image": args.uncropped_image,
+            "save_PETinT1w": args.save_intermediate,
         }
 
         pipeline = PETLinear(

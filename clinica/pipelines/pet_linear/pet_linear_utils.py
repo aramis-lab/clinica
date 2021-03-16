@@ -102,7 +102,12 @@ def crop_nifti(input_img, ref_crop):
 
 
 def rename_into_caps(
-    in_bids_pet, fname_pet, fname_trans, uncropped_image, suvr_reference_region
+    in_bids_pet,
+    fname_pet,
+    fname_trans,
+    uncropped_image,
+    suvr_reference_region,
+    fname_pet_in_t1w="",
 ):
     """
     Rename the outputs of the pipelines into CAPS format.
@@ -123,8 +128,10 @@ def rename_into_caps(
     rename_pet = Rename()
     rename_pet.inputs.in_file = fname_pet
     if not uncropped_image:
-        suffix = "_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-{}_pet.nii.gz".format(
-            suvr_reference_region
+        suffix = (
+            "_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-{}_pet.nii.gz".format(
+                suvr_reference_region
+            )
         )
         rename_pet.inputs.format_string = source_file_pet + suffix
     else:
@@ -140,7 +147,17 @@ def rename_into_caps(
     rename_trans.inputs.format_string = source_file_pet + "_space-T1w_rigid.mat"
     out_caps_trans = rename_trans.run()
 
-    return out_caps_pet.outputs.out_file, out_caps_trans.outputs.out_file
+    # Rename intermediate PET in T1w MRI space
+    rename_pet_in_t1w = Rename()
+    rename_pet_in_t1w.inputs.in_file = fname_pet_in_t1w
+    rename_pet_in_t1w.inputs.format_string = source_file_pet + "_space-T1w_pet.nii.gz"
+    out_caps_pet_in_t1w = rename_pet_in_t1w.run()
+
+    return (
+        out_caps_pet.outputs.out_file,
+        out_caps_trans.outputs.out_file,
+        out_caps_pet_in_t1w.outputs.out_file,
+    )
 
 
 def print_end_pipeline(pet, final_file):

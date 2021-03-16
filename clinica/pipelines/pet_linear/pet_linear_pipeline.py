@@ -46,7 +46,10 @@ class PETLinear(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-        return ["registered_pet, transform_mat"]  # Fill here the list
+        return [
+            "registered_pet, transform_mat",
+            "registered_pet_in_t1w",
+        ]  # Fill here the list
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
@@ -193,20 +196,21 @@ class PETLinear(cpe.Pipeline):
                     "in_bids_pet",
                     "fname_pet",
                     "fname_trans",
-                    "uncropped_image",
                     "suvr_reference_region",
+                    "uncropped_image",
+                    "fname_pet_in_t1w",
                 ],
-                output_names=["out_caps_pet", "out_caps_trans"],
+                output_names=["out_caps_pet", "out_caps_trans", "out_caps_pet_in_T1w"],
                 function=rename_into_caps,
             ),
             name="renameFileCAPS",
         )
+        rename_files.interface.inputs.suvr_reference_region = self.parameters.get(
+            "suvr_reference_region"
+        )
         rename_files.interface.inputs.uncropped_image = self.parameters.get(
             "uncropped_image"
         )
-        rename_files.interface.inputs.suvr_reference_region = self.parameters[
-            "suvr_reference_region"
-        ]
         container_path = npe.Node(
             interface=nutil.Function(
                 input_names=["bids_or_caps_filename"],
@@ -229,7 +233,6 @@ class PETLinear(cpe.Pipeline):
                 (rename_files, write_node, [("out_caps_trans", "@transform_mat")]),
             ]
         )
-
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
@@ -237,12 +240,26 @@ class PETLinear(cpe.Pipeline):
                     (rename_files, write_node, [("out_caps_pet", "@registered_pet")]),
                 ]
             )
-
         else:
             self.connect(
                 [
                     (self.output_node, rename_files, [("suvr_pet", "fname_pet")]),
                     (rename_files, write_node, [("out_caps_pet", "@registered_pet")]),
+                ]
+            )
+        if self.parameters.get("save_PETinT1w"):
+            self.connect(
+                [
+                    (
+                        self.output_node,
+                        rename_files,
+                        [("PETinT1w", "fname_pet_in_t1w")],
+                    ),
+                    (
+                        rename_files,
+                        write_node,
+                        [("out_caps_pet_in_T1w", "@registered_pet_in_t1w")],
+                    ),
                 ]
             )
 
@@ -283,7 +300,7 @@ class PETLinear(cpe.Pipeline):
 
         # 2. `ApplyTransforms` by *ANTS*. It uses nipype interface. PET to MRI
         ants_applytransform_node = npe.Node(
-            name="antsApplyTransform", interface=ants.ApplyTransforms()
+            name="antsApplyTransformPET2MNI", interface=ants.ApplyTransforms()
         )
         ants_applytransform_node.inputs.dimension = 3
         ants_applytransform_node.inputs.reference_image = self.ref_template
@@ -317,6 +334,12 @@ class PETLinear(cpe.Pipeline):
             ),
             name="WriteEndMessage",
         )
+
+        # 6. Optionnal node: compute PET image in T1w
+        ants_applytransform_optional_node = npe.Node(
+            name="antsApplyTransformPET2T1w", interface=ants.ApplyTransforms()
+        )
+        ants_applytransform_optional_node.inputs.dimension = 3
 
         # Connection
         # ==========
@@ -391,6 +414,27 @@ class PETLinear(cpe.Pipeline):
                         normalize_intensity_node,
                         print_end_message,
                         [("output_img", "final_file")],
+                    ),
+                ]
+            )
+        # STEP 6: Optionnal argument
+        if self.parameters.get("save_PETinT1w"):
+            self.connect(
+                [
+                    (
+                        self.input_node,
+                        ants_applytransform_optional_node,
+                        [("pet", "input_image"), ("t1w", "reference_image")],
+                    ),
+                    (
+                        ants_registration_node,
+                        ants_applytransform_optional_node,
+                        [("out_matrix", "transforms")],
+                    ),
+                    (
+                        ants_applytransform_optional_node,
+                        self.output_node,
+                        [("output_image", "PETinT1w")],
                     ),
                 ]
             )
