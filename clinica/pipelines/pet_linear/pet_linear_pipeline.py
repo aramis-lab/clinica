@@ -166,7 +166,7 @@ class PETLinear(cpe.Pipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-
+    # fmt: off
         self.connect(
             [
                 (read_input_node, self.input_node, [("t1w", "t1w")]),
@@ -174,7 +174,7 @@ class PETLinear(cpe.Pipeline):
                 (read_input_node, self.input_node, [("t1w_to_mni", "t1w_to_mni")]),
             ]
         )
-
+    # fmt: on
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
 
@@ -219,7 +219,7 @@ class PETLinear(cpe.Pipeline):
             ),
             name="containerPath",
         )
-
+        # fmt: off
         self.connect(
             [
                 (self.input_node, container_path, [("pet", "bids_or_caps_filename")]),
@@ -262,7 +262,7 @@ class PETLinear(cpe.Pipeline):
                     ),
                 ]
             )
-
+    # fmt: on
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
 
@@ -340,7 +340,7 @@ class PETLinear(cpe.Pipeline):
             name="antsApplyTransformPET2T1w", interface=ants.ApplyTransforms()
         )
         ants_applytransform_optional_node.inputs.dimension = 3
-
+        # fmt: off
         # Connection
         # ==========
         self.connect(
@@ -438,3 +438,4 @@ class PETLinear(cpe.Pipeline):
                     ),
                 ]
             )
+    #fmt: on
