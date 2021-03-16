@@ -105,9 +105,9 @@ def rename_into_caps(
     in_bids_pet,
     fname_pet,
     fname_trans,
-    uncropped_image,
     suvr_reference_region,
-    fname_pet_in_t1w="",
+    uncropped_image,
+    fname_pet_in_t1w=None,
 ):
     """
     Rename the outputs of the pipelines into CAPS format.
@@ -115,6 +115,9 @@ def rename_into_caps(
         in_bids_pet (str): Input BIDS PET to extract the <source_file>
         fname_pet (str): Preprocessed PET file.
         fname_trans (str): Transformation file from PET to MRI space
+        suvr_reference_region (str): SUVR mask name for file name output
+        uncropped_image (bool): Pipeline argument for image cropping
+        fname_pet_in_t1w (bool): Pipeline argument for saving intermediate file
     Returns:
         The different outputs in CAPS format
     """
@@ -128,32 +131,31 @@ def rename_into_caps(
     rename_pet = Rename()
     rename_pet.inputs.in_file = fname_pet
     if not uncropped_image:
-        suffix = (
-            f"_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz"
-        )
+        suffix = f"_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz"
         rename_pet.inputs.format_string = source_file_pet + suffix
     else:
         suffix = f"_space-MNI152NLin2009cSym_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz"
         rename_pet.inputs.format_string = source_file_pet + suffix
-    out_caps_pet = rename_pet.run()
+    out_caps_pet = rename_pet.run().outputs.out_file
 
     # Rename into CAPS transformation file:
     rename_trans = Rename()
     rename_trans.inputs.in_file = fname_trans
     rename_trans.inputs.format_string = source_file_pet + "_space-T1w_rigid.mat"
-    out_caps_trans = rename_trans.run()
+    out_caps_trans = rename_trans.run().outputs.out_file
 
     # Rename intermediate PET in T1w MRI space
-    rename_pet_in_t1w = Rename()
-    rename_pet_in_t1w.inputs.in_file = fname_pet_in_t1w
-    rename_pet_in_t1w.inputs.format_string = source_file_pet + "_space-T1w_pet.nii.gz"
-    out_caps_pet_in_t1w = rename_pet_in_t1w.run()
+    if fname_pet_in_t1w is not None:
+        rename_pet_in_t1w = Rename()
+        rename_pet_in_t1w.inputs.in_file = fname_pet_in_t1w
+        rename_pet_in_t1w.inputs.format_string = (
+            source_file_pet + "_space-T1w_pet.nii.gz"
+        )
+        out_caps_pet_in_t1w = rename_pet_in_t1w.run().outputs.out_file
+    else:
+        out_caps_pet_in_t1w = None
 
-    return (
-        out_caps_pet.outputs.out_file,
-        out_caps_trans.outputs.out_file,
-        out_caps_pet_in_t1w.outputs.out_file,
-    )
+    return out_caps_pet, out_caps_trans, out_caps_pet_in_t1w
 
 
 def print_end_pipeline(pet, final_file):
