@@ -13,7 +13,7 @@ class PETLinearCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Affine registration of PET images to the MNI standard space:\n"
-            "http://clinica.run/doc/Pipelines/PET_Linear/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Linear/"
         )
 
     def define_options(self):
