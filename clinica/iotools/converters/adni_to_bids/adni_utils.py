@@ -827,6 +827,9 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
     from os import path
     from os.path import normpath
     import pandas as pd
+    from colorama import Fore
+
+    from clinica.utils.stream import cprint
 
     scans_fields_bids = ["filename", "scan_id", "mri_field"]
 
@@ -871,11 +874,14 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                     scans_df["filename"] = path.join(mod_name, file_name)
                     converted_mod = find_conversion_mod(file_name)
                     conversion_df = converted_dict[converted_mod]
-                    scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
-                    scans_df["scan_id"] = scan_id
-                    if "Field_Strength" in conversion_df.columns.values:
-                        field_strength = conversion_df.loc[(subject_id, viscode), "Field_Strength"]
-                        scans_df["mri_field"] = field_strength
+                    try:
+                        scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
+                        scans_df["scan_id"] = scan_id
+                        if "Field_Strength" in conversion_df.columns.values:
+                            field_strength = conversion_df.loc[(subject_id, viscode), "Field_Strength"]
+                            scans_df["mri_field"] = field_strength
+                    except KeyError:
+                        cprint(f"{Fore.RED}No information found for file {file_name}.{Fore.RESET}")
 
                     scans_df = scans_df.fillna("n/a")
                     scans_df.to_csv(
