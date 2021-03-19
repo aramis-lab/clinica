@@ -763,9 +763,9 @@ def test_run_PETLinear(cmdopt):
 
     # Instantiate pipeline
     pipeline = PETLinear(
-        bids_directory=join(root, "in2", "bids"),
+        bids_directory=join(root, "in", "bids"),
         caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in2", "subjects.tsv"),
+        tsv_file=join(root, "in", "subjects.tsv"),
         base_dir=join(working_dir, "PETLinear"),
         parameters=parameters,
     )
