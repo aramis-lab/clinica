@@ -744,6 +744,43 @@ def test_run_PETVolume(cmdopt):
     clean_folder(join(working_dir, "PETVolume"), recreate=False)
 
 
+def test_run_PETLinear(cmdopt):
+    from os.path import abspath, dirname, join
+
+    from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, "data", "PETLinear")
+
+    # Remove potential residual of previous UT
+    clean_PETLinear(join(root, "out", "caps"))
+    
+    parameters = {
+        "acq_label": "fdg",
+        "suvr_reference_region": "pons"
+    }
+
+    # Instantiate pipeline
+    pipeline = PETLinear(
+        bids_directory=join(root, "in2", "bids"),
+        caps_directory=join(root, "out", "caps"),
+        tsv_file=join(root, "in2", "subjects.tsv"),
+        base_dir=join(working_dir, "PETLinear"),
+        parameters=parameters,
+    )
+    pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
+
+    # Check output vs ref
+    out_folder = join(root, "out")
+    ref_folder = join(root, "ref")
+
+    compare_folders(out_folder, ref_folder, shared_folder_name="caps")
+
+    clean_PETLinear(join(root, "out", "caps"))
+
+
+
 def test_run_StatisticsSurface(cmdopt):
     import shutil
     from os.path import abspath, dirname, join
