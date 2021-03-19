@@ -30,7 +30,7 @@ class PETLinearCLI(ce.CmdParser):
         clinica_comp.add_argument(
             "acq_label",
             type=str,
-            help="Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).",
+            help="Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>). For instance it can be 'fdg' for fluorodésoxyglucose or 'av45' for florbetapir.",
         )
         clinica_comp.add_argument(
             "suvr_reference_region",
