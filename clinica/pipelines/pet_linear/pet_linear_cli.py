@@ -52,7 +52,7 @@ class PETLinearCLI(ce.CmdParser):
             default=False,
         )
         optional.add_argument(
-            "--save_intermediate",
+            "--save_pet_in_t1w_space",
             help="""Save the PET image in the T1w space computed in the intermediate step of the pipeline""",
             action="store_true",
             default=False,
@@ -74,7 +74,7 @@ class PETLinearCLI(ce.CmdParser):
             "acq_label": args.acq_label,
             "suvr_reference_region": args.suvr_reference_region,
             "uncropped_image": args.uncropped_image,
-            "save_PETinT1w": args.save_intermediate,
+            "save_PETinT1w": args.save_pet_in_t1w_space,
         }
 
         pipeline = PETLinear(
