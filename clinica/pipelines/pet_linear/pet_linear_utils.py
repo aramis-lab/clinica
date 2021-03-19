@@ -44,6 +44,7 @@ def suvr_normalization(input_img, ref_mask):
     import os
     import numpy as np
     from nilearn.image import resample_to_img
+    from scipy.stats import trim_mean
 
     pet = nib.load(input_img)
     ref = nib.load(ref_mask)
@@ -52,8 +53,9 @@ def suvr_normalization(input_img, ref_mask):
     ds_img = resample_to_img(pet, ref, interpolation="nearest")
 
     # Compute the mean of the region
-    region = np.multiply(ds_img.get_data(), ref.get_data())
-    region_mean = np.nanmean(np.where(region != 0, region, np.nan))
+    region = np.multiply(ds_img.get_fdata(), ref.get_fdata())
+    array_region = np.where(region != 0, region, np.nan).flatten()
+    region_mean = trim_mean(array_region[~np.isnan(array_region)], 0.05)
 
     # Divide the value of the image voxels by the computed mean
     data = pet.get_data() / region_mean
