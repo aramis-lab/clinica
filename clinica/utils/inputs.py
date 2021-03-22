@@ -439,10 +439,10 @@ def fetch_file(remote, dirname=None):
     except URLError as e:
         if hasattr(e, "reason"):
             cprint("We failed to reach a server.")
-            cprint(["Reason: " + e.reason])
+            cprint([f"Reason: {e.reason}"])
         elif hasattr(e, "code"):
             cprint("The server could not fulfill the request.")
-            cprint(["Error code: " + e.code])
+            cprint([f"Error code: {e.code}"])
     else:
         try:
             with open(file_path, "wb") as out_file:

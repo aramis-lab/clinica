@@ -47,6 +47,7 @@ class AdniToBids(Converter):
 
         bids_ids = bids.get_bids_subjs_list(out_path)
         bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
+        conversion_path = path.join(out_path, "conversion_info")
 
         if not bids_ids:
             adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
@@ -92,7 +93,7 @@ class AdniToBids(Converter):
         # -- Creation of scans files --
         cprint("Creating scans files...")
         adni_utils.create_adni_scans_files(
-            clinic_specs_path, bids_subjs_paths, bids_ids
+            conversion_path, bids_subjs_paths,
         )
 
     def convert_images(

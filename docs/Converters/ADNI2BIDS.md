@@ -18,9 +18,24 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 
 ## Downloading ADNI
 
-To download the ADNI dataset you first need to register to the [LONI Image & Data Archive (IDA)](https://ida.loni.usc.edu/login.jsp), a secure research data repository, and then request access to the ADNI dataset through the submission of an [online application form](https://ida.loni.usc.edu/collaboration/access/appApply.jsp?project=ADNI).
+To download the ADNI dataset you first need to register to the 
+[LONI Image & Data Archive (IDA)](https://ida.loni.usc.edu/login.jsp), 
+a secure research data repository, and then request access to the ADNI dataset through the submission of an 
+[online application form](https://ida.loni.usc.edu/collaboration/access/appApply.jsp?project=ADNI).
 
-In order to use the converter, you will need to download both the images and the clinical data. To do so, from the [main page](https://ida.loni.usc.edu/login.jsp?returnPage=UserManagement.jsp&project=) click on `PROJECTS` and `ADNI`. To download the imaging data, click on `Download` and choose `Image collections`. In the `Advanced search` tab, pick the images you wish to download, for example tick `MRI` to download all the MR images, and then click on `SEARCH`. In the `Advanced search results` tab, click `Select All` and `Add To Collection`. Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and click on `Advanced download`. We advise you to group files as 10 zip files. To download the clinical data, click on `Download` and choose `Study Data`. Select all the CSV files which are present in ALL by ticking `Select ALL tabular data` and click `Download`.
+In order to use the converter, you will need to download both the images and the clinical data. 
+To do so, from the [main page](https://ida.loni.usc.edu/login.jsp?returnPage=UserManagement.jsp&project=) 
+click on `PROJECTS` and `ADNI`. To download the imaging data, click on `Download` and choose `Image collections`. 
+In the `Advanced search` tab:
+    1. pick the images you wish to download (for example tick `MRI` to download all the MR images),
+    2. tick all the boxes in the `IMAGE TYPES` section (`Original`, `Pre-processed`, `Post-processed`),
+    3. click on `SEARCH`. 
+In the `Advanced search results` tab, click `Select All` and `Add To Collection`. 
+Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and click on 
+`Advanced download`. We advise you to group files as 10 zip files. 
+
+To download the clinical data, click on `Download` and choose `Study Data`. 
+Select all the CSV files which are present in ALL by ticking `Select ALL tabular data` and click `Download`.
 
 !!! note
     You do not have to modify the original folder name or rename the clinical data files before using the converter.
