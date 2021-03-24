@@ -778,7 +778,7 @@ def test_run_PETLinear(cmdopt):
     compare_folders(out_folder, ref_folder, shared_folder_name="caps")
 
     clean_PETLinear(join(root, "out", "caps"))
-
+    clean_folder(join(working_dir, "PETLinear"), recreate=False)
 
 
 def test_run_StatisticsSurface(cmdopt):
