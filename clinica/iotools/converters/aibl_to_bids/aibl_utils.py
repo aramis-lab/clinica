@@ -589,7 +589,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
         session = viscode_to_session(session)
         # creation of the path
         if modality == "t1":
-            output_path = join(bids_dir, f"sub-AIBL{subject}ses-{session}", "anat")
+            output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
             output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
         elif modality in ["flute", "pib", "av45"]:
             output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
