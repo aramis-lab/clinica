@@ -29,7 +29,7 @@ def concatenate_transforms(pet_to_t1w_tranform, t1w_to_mni_tranform):
 # Normalize the images based on the reference mask region
 def suvr_normalization(input_img, ref_mask):
     """Normalize the input image according to the reference region.
-    It uses nilearn `resample_to_img` function.
+    It uses nilearn `resample_to_img` and scipy `trim_mean` functions.
     This function is different than the one in other PET pipelines
     because there is a downsampling step.
     Args:
@@ -55,7 +55,7 @@ def suvr_normalization(input_img, ref_mask):
     # Compute the mean of the region
     region = np.multiply(ds_img.get_fdata(), ref.get_fdata())
     array_region = np.where(region != 0, region, np.nan).flatten()
-    region_mean = trim_mean(array_region[~np.isnan(array_region)], 0.05)
+    region_mean = trim_mean(array_region[~np.isnan(array_region)], 0.1)
 
     # Divide the value of the image voxels by the computed mean
     data = pet.get_data() / region_mean
