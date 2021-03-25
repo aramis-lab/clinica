@@ -24,6 +24,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     """
     import pandas as pd
     import os
+    import re
     from os import path
     import numpy as np
     from clinica.utils.stream import cprint
@@ -102,6 +103,8 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     for i in range(0, len(participant_df)):
         if study_name == 'OASIS':
             value = (participant_df['alternative_id_1'][i].split("_"))[1]
+        elif study_name == 'OASIS3':
+            value = re.sub("OAS3", "", participant_df['alternative_id_1'][i])
         else:
             value = remove_space_and_symbols(participant_df['alternative_id_1'][i])
 

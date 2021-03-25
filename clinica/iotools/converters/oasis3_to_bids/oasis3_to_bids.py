@@ -29,7 +29,7 @@ class Oasis3ToBids(Converter):
                                       'clinical_specifications.xlsx')
 
         # --Create participants.tsv--
-        participants_df = bids.create_participants_df('OASIS', clinic_specs_path, clinical_data_dir, bids_ids)
+        participants_df = bids.create_participants_df('OASIS3', clinic_specs_path, clinical_data_dir, bids_ids)
 
         # Replace the values of the diagnosis_bl column
         participants_df['diagnosis_bl'].replace([0.0, np.nan], 'CN', inplace=True)
@@ -38,20 +38,20 @@ class Oasis3ToBids(Converter):
         # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
         participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
-        # --Create sessions files--
-        sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
-        for y in bids_ids:
-            if sessions_dict[y]['M00']['diagnosis'] > 0:
-                sessions_dict[y]['M00']['diagnosis'] = 'AD'
-            else:
-                sessions_dict[y]['M00']['diagnosis'] = 'CN'
-
-        bids.write_sessions_tsv(bids_dir, sessions_dict)
-
-        # --Create scans files--
-        # Note: We have no scans information for OASIS
-        scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
-        bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
+        # # --Create sessions files--
+        # sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
+        # for y in bids_ids:
+        #     if sessions_dict[y]['M00']['diagnosis'] > 0:
+        #         sessions_dict[y]['M00']['diagnosis'] = 'AD'
+        #     else:
+        #         sessions_dict[y]['M00']['diagnosis'] = 'CN'
+        #
+        # bids.write_sessions_tsv(bids_dir, sessions_dict)
+        #
+        # # --Create scans files--
+        # # Note: We have no scans information for OASIS
+        # scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
+        # bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
     def convert_images(self, source_dir, dest_dir):
         """
@@ -161,6 +161,5 @@ class Oasis3ToBids(Converter):
             os.mkdir(dest_dir)
 
         subjs_folders = glob(path.join(source_dir, 'OAS3*'))
-        # subjs_folders = [subj_folder for subj_folder in subjs_folders if subj_folder.endswith('_MR1')]
         poolrunner = Pool(max(os.cpu_count()-1, 1))
         poolrunner.map(convert_single_subject, subjs_folders)
