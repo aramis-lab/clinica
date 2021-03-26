@@ -201,12 +201,20 @@ def execute():
 
     sub_parser = parser.add_subparsers(metavar="")
     parser.add_argument(
+        "-V",
+        "--version",
+        dest="version",
+        action="store_true",
+        default=False,
+        help="Clinica's installed version",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         dest="verbose",
         action="store_true",
         default=False,
-        help="Verbose: print all messages to the console",
+        help="Verbose: print all messages to the standard output",
     )
     parser.add_argument(
         "-l",
@@ -358,9 +366,12 @@ def execute():
     iotools category
     """
     from clinica.iotools.utils.data_handling_cli import (
-        CmdParserCenterNifti, CmdParserMergeTsv,
-        CmdParserMissingProcessing, CmdParserMissingModalities,
-        CmdParserSubjectsSessions)
+        CmdParserCenterNifti,
+        CmdParserMergeTsv,
+        CmdParserMissingProcessing,
+        CmdParserMissingModalities,
+        CmdParserSubjectsSessions,
+    )
 
     io_tools = [
         CmdParserSubjectsSessions(),
@@ -388,8 +399,9 @@ def execute():
     visualize category: run one of the available pipelines
     """
     from clinica.engine import CmdParser
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_visualizer import \
-        T1FreeSurferVisualizer
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_visualizer import (
+        T1FreeSurferVisualizer,
+    )
 
     visualizers = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     visualizers += [
@@ -473,6 +485,11 @@ def execute():
     try:
         argcomplete.autocomplete(parser)
         args, unknown_args = parser.parse_known_args()
+        if args.version:
+            import clinica
+
+            print(f"Clinica version is: {clinica.__version__}")
+            exit(0)
         if unknown_args:
             if ("--verbose" in unknown_args) or ("-v" in unknown_args):
                 cprint("Verbose detected")
