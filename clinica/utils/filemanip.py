@@ -58,7 +58,6 @@ def unzip_nii(in_file):
 
 def save_participants_sessions(participant_ids, session_ids, out_folder, out_file=None):
     """Save <participant_ids> <session_ids> in <out_folder>/<out_file> TSV file."""
-    import errno
     import os
 
     import pandas
@@ -67,11 +66,7 @@ def save_participants_sessions(participant_ids, session_ids, out_folder, out_fil
 
     assert len(participant_ids) == len(session_ids)
 
-    try:
-        os.makedirs(out_folder)
-    except OSError as e:
-        if e.errno != errno.EEXIST:  # EEXIST: folder already exists
-            raise e
+    os.makedirs(out_folder, exist_ok=True)
 
     if out_file:
         tsv_file = os.path.join(out_folder, out_file)

@@ -39,7 +39,6 @@ def init_input_node(parameters, base_dir, subjects_visits_tsv):
         - Copy TSV file with covariates;
         - Print begin execution message.
     """
-    import errno
     import json
     import os
     import shutil
@@ -53,11 +52,7 @@ def init_input_node(parameters, base_dir, subjects_visits_tsv):
 
     # Create surfstat_results_dir for SurfStat
     surfstat_results_dir = os.path.join(base_dir, group_id)
-    try:
-        os.makedirs(surfstat_results_dir)
-    except OSError as e:
-        if e.errno != errno.EEXIST:  # EEXIST: folder already exists
-            raise e
+    os.makedirs(surfstat_results_dir, exist_ok=True)
 
     # Save pipeline parameters in JSON file
     glm_dict = create_glm_info_dictionary(subjects_visits_tsv, parameters)

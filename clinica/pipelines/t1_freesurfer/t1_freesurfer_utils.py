@@ -10,7 +10,6 @@ def init_input_node(t1w, recon_all_args, output_dir):
         - Create SUBJECTS_DIR for recon-all (otherwise, the command won't run);
         - Print begin execution message.
     """
-    import errno
     import os
 
     from clinica.utils.filemanip import get_subject_id
@@ -25,11 +24,7 @@ def init_input_node(t1w, recon_all_args, output_dir):
 
     # Create SUBJECTS_DIR for recon-all (otherwise, the command won't run)
     subjects_dir = os.path.join(output_dir, image_id)
-    try:
-        os.makedirs(subjects_dir)
-    except OSError as e:
-        if e.errno != errno.EEXIST:  # EEXIST: folder already exists
-            raise e
+    os.makedirs(subjects_dir, exist_ok=True)
 
     print_begin_image(image_id, ["ReconAllArgs"], [flags])
 
