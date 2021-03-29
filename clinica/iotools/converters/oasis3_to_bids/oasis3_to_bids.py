@@ -38,8 +38,8 @@ class Oasis3ToBids(Converter):
         # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
         participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
-        # # --Create sessions files--
-        # sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
+        # --Create sessions files--
+        sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
         # for y in bids_ids:
         #     if sessions_dict[y]['M00']['diagnosis'] > 0:
         #         sessions_dict[y]['M00']['diagnosis'] = 'AD'
@@ -48,8 +48,8 @@ class Oasis3ToBids(Converter):
         #
         # bids.write_sessions_tsv(bids_dir, sessions_dict)
         #
-        # # --Create scans files--
-        # # Note: We have no scans information for OASIS
+        # --Create scans files--
+        # Note: We have no scans information for OASIS
         # scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
         # bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 

@@ -144,6 +144,7 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
     from os import path
     import numpy as np
     import os
+    import re
 
     # Load data
     location = study_name + ' location'
@@ -192,6 +193,8 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
                 subj_id_alpha = remove_space_and_symbols(subj_id)
                 if study_name == 'OASIS':
                     subj_id_alpha = str(subj_id[0:3] + 'IS' + subj_id[3] + subj_id[5:9])
+                if study_name == 'OASIS3':
+                    subj_id_alpha = str(subj_id[0:3] + 'IS' + subj_id[3:])
 
                 # Extract the corresponding BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
@@ -202,11 +205,16 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
                 else:
                     subj_bids = subj_bids[0]
                     sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
-                    if subj_bids in sessions_dict:
-                        (sessions_dict[subj_bids]['M00']).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
-                    else:
-                        sessions_dict.update({subj_bids: {
-                            'M00': {'session_id': 'ses-M00', sessions_fields_bids[i]: row[sessions_fields[i]]}}})
+
+                    subj_dir = path.join(path.dirname(path.dirname(clinical_data_dir)), 'out', 'bids', subj_bids)
+                    session_names = get_bids_subjs_list(subj_dir)
+                    for s in session_names:
+                        s_name = re.sub('ses-', '', s)
+                        if subj_bids in sessions_dict:
+                            (sessions_dict[subj_bids][s_name]).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
+                        else:
+                            sessions_dict.update({subj_bids: {
+                                s_name: {'session_id': s, sessions_fields_bids[i]: row[sessions_fields[i]]}}})
 
     return sessions_dict
 
