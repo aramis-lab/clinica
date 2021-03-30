@@ -45,7 +45,9 @@ used (`acq-<acq_label>`). It can be for instance 'fdg' for
 - `suvr_reference_region` is the reference region used to perform intensity
 normalization (i.e. dividing each voxel of the image by the average uptake in
 this region) resulting in a standardized uptake value ratio (SUVR) map. It can
-be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
+be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) and `pons` 
+or `pons2` (used for FDG). See [PET introduction](./PET_Introduction.md) for 
+more details about masks versions.
 
 By default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are
 generated to reduce the computing power required when training deep learning
