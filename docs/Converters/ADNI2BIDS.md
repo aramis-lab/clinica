@@ -304,7 +304,7 @@ clinica convert adni-to-bids -h
     [[Routier et al.](https://hal.inria.fr/hal-02308126/);
     [Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
 
-If you used the converter for DWI data, please also cite [[Wen et al., 2018](https://arxiv.org/abs/1812.11183)].
+If you used the converter for DWI data, please also cite [[Wen et al., 2020](https://doi.org/10.1007/s12021-020-09469-5)].
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/NASGJPVL).
