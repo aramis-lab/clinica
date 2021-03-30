@@ -32,6 +32,12 @@ Reference regions provided by Clinica come from the [Pick atlas](https://www.nit
 
 - `cerebellumPons`:  6 mm eroded version of the cerebellum + pons regions
 
+- `pons2`:  new in clinica `v0.4`
+
+- `cerebellumPons2`: new in clinica `v0.4`
+
+In clinica `v0.4` two new versions of these masks has been introduced: `pons2` and `cerebellumPons2`. Indeed we wanted to improve the reference regions maks to fit more the [MNI152NLin2009cSym template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html#template-based-coordinate-systems) used in linear processing pipelines. The new masks still come from the [Pick atlas](https://www.nitrc.org/projects/wfu_pickatlas) but with a different processing: we decided to first truncate the mask using SPM12 tissue probablity maps to remove voxels overlapping with regions outside the brain (bone, csf, bachground...). Then we eroded the mask using scipy [`binary_erosion`](https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.ndimage.morphology.binary_erosion.html) with 3 iterations.
+
 ## Tutorial: How to add new SUVR reference regions to Clinica?
 
 It is possible to run the [`pet-surface`](../PET_Surface) and [`pet-volume`](../PET_Volume) pipelines using a custom reference region.
@@ -44,6 +50,8 @@ It is possible to run the [`pet-surface`](../PET_Surface) and [`pet-volume`](../
     LIST_SUVR_REFERENCE_REGIONS = [
         "pons",
         "cerebellumPons",
+        "pons2",
+        "cerebellumPons2"
     ]
     ```
     Simply define a new label that will be your new SUVR reference region. `LIST_SUVR_REFERENCE_REGIONS` is used by all command-line interfaces so you do not need to modify the pipelines' CLI to make this new region appear.
@@ -75,6 +83,20 @@ It is possible to run the [`pet-surface`](../PET_Surface) and [`pet-volume`](../
                 "resources",
                 "masks",
                 "region-cerebellumPons_eroded-6mm_mask.nii.gz",
+            ),
+            "pons2": os.path.join(
+                os.path.split(os.path.realpath(__file__))[0],
+                "..",
+                "resources",
+                "masks",
+                "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz",
+            ),
+            "cerebellumPons2": os.path.join(
+                os.path.split(os.path.realpath(__file__))[0],
+                "..",
+                "resources",
+                "masks",
+                "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz",
             ),
         }
         return suvr_reference_region_to_suvr[suvr_reference_region]
