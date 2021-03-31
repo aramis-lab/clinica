@@ -354,31 +354,33 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     from glob import glob
 
     for bids_id in bids_ids:
-        scans_df = pd.DataFrame()
         bids_id = bids_id.split(os.sep)[-1]
-        # Create the file
-        tsv_name = bids_id + "_ses-M00_scans.tsv"
-        # If the file already exists, remove it
-        if os.path.exists(path.join(bids_dir, bids_id, 'ses-M00', tsv_name)):
-            os.remove(path.join(bids_dir, bids_id, 'ses-M00', tsv_name))
+        for s in glob(path.join(bids_dir, bids_id, 'ses-*')):
+            s_name = os.path.basename(s)
+            scans_df = pd.DataFrame()
+            # Create the file
+            tsv_name = '_'.join([bids_id, s_name, "scans.tsv"])
+            # If the file already exists, remove it
+            if os.path.exists(path.join(bids_dir, bids_id, s_name, tsv_name)):
+                os.remove(path.join(bids_dir, bids_id, s_name, tsv_name))
 
-        mod_available = glob(path.join(bids_dir, bids_id, 'ses-M00', '*'))
-        for mod in mod_available:
-            mod_name = os.path.basename(mod)
-            files = glob(path.join(mod, '*'))
-            for file in files:
-                file_name = os.path.basename(file)
-                if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
-                    f_type = 'T1/DWI/fMRI/FMAP'
-                elif mod_name == 'pet':
-                    f_type = 'FDG'
+            mod_available = glob(path.join(bids_dir, bids_id, s_name, '*'))
+            for mod in mod_available:
+                mod_name = os.path.basename(mod)
+                files = glob(path.join(mod, '*.nii.gz'))
+                for file in files:
+                    file_name = os.path.basename(file)
+                    if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
+                        f_type = 'T1/DWI/fMRI/FMAP'
+                    elif mod_name == 'pet':
+                        f_type = 'FDG'
 
-                row_to_append = pd.DataFrame(scans_dict[bids_id][f_type], index=[0])
-                # Insert the column filename as first value
-                row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
-                scans_df = scans_df.append(row_to_append)
+                    row_to_append = pd.DataFrame(scans_dict[bids_id][f_type], index=[0])
+                    # Insert the column filename as first value
+                    row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
+                    scans_df = scans_df.append(row_to_append)
 
-            scans_df.to_csv(path.join(bids_dir, bids_id, 'ses-M00', tsv_name), sep='\t', index=False, encoding='utf8')
+                scans_df.to_csv(path.join(bids_dir, bids_id, s_name, tsv_name), sep='\t', index=False, encoding='utf8')
 
 
 # -- Other methods --

@@ -51,8 +51,8 @@ class Oasis3ToBids(Converter):
 
         # --Create scans files--
         # Note: We have no scans information for OASIS
-        # scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
-        # bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
+        scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
+        bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
     def convert_images(self, source_dir, dest_dir):
         """
