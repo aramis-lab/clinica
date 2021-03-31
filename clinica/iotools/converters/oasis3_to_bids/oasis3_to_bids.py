@@ -40,14 +40,15 @@ class Oasis3ToBids(Converter):
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS3', clinic_specs_path, bids_ids, 'ID')
-        # for y in bids_ids:
-        #     if sessions_dict[y]['M00']['diagnosis'] > 0:
-        #         sessions_dict[y]['M00']['diagnosis'] = 'AD'
-        #     else:
-        #         sessions_dict[y]['M00']['diagnosis'] = 'CN'
-        #
-        # bids.write_sessions_tsv(bids_dir, sessions_dict)
-        #
+        for y in bids_ids:
+            for z in sessions_dict[y].keys():
+                if sessions_dict[y][z]['diagnosis'] > 0:
+                    sessions_dict[y][z]['diagnosis'] = 'AD'
+                else:
+                    sessions_dict[y][z]['diagnosis'] = 'CN'
+
+        bids.write_sessions_tsv(bids_dir, sessions_dict)
+
         # --Create scans files--
         # Note: We have no scans information for OASIS
         # scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
