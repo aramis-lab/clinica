@@ -39,7 +39,7 @@ class Oasis3ToBids(Converter):
         participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
         # --Create sessions files--
-        sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
+        sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS3', clinic_specs_path, bids_ids, 'ID')
         # for y in bids_ids:
         #     if sessions_dict[y]['M00']['diagnosis'] > 0:
         #         sessions_dict[y]['M00']['diagnosis'] = 'AD'

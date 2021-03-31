@@ -210,11 +210,11 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
                     session_names = get_bids_subjs_list(subj_dir)
                     for s in session_names:
                         s_name = re.sub('ses-', '', s)
-                        if subj_bids in sessions_dict:
-                            (sessions_dict[subj_bids][s_name]).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
-                        else:
-                            sessions_dict.update({subj_bids: {
-                                s_name: {'session_id': s, sessions_fields_bids[i]: row[sessions_fields[i]]}}})
+                        if subj_bids not in sessions_dict:
+                            sessions_dict.update({subj_bids: {}})
+                        if s_name not in sessions_dict[subj_bids].keys():
+                            sessions_dict[subj_bids].update({s_name: {'session_id': 'ses-M00'}})
+                        (sessions_dict[subj_bids][s_name]).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
 
     return sessions_dict
 
@@ -317,7 +317,15 @@ def write_sessions_tsv(bids_dir, sessions_dict):
         bids_id = sp.split(os.sep)[-1]
 
         if bids_id in sessions_dict:
-            session_df = pd.DataFrame(sessions_dict[bids_id]['M00'], index=['i', ])
+            columns = list(list(sessions_dict.values())[0].values())[0].keys()
+            session_df = pd.DataFrame(columns=columns)
+            it = 0
+            for k in sessions_dict[bids_id].keys():
+                session_dict = sessions_dict[bids_id][k]
+                # session_df.iloc[it] = pd.Series(session_dict) # TODO : not working
+                session_df_temp = pd.DataFrame(session_dict, index=[k, ])
+                # it = it + 1
+                session_df = pd.concat([session_df, session_df_temp])
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
