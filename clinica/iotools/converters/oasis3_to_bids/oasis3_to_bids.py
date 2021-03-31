@@ -82,6 +82,8 @@ class Oasis3ToBids(Converter):
             def copy_file(source, target):
                 try:
                     shutil.copy(source, target)
+                    f = path.join(target, path.basename(source))
+                    os.rename(f, re.sub("OAS3", "OASIS3", f))
                 except IOError as e:
                     print("Unable to copy file. %s" % e)
 
@@ -108,7 +110,7 @@ class Oasis3ToBids(Converter):
                 #  Get the json files
                 base_file_name = os.path.basename(nifti_folder).split(".")[0]
                 json_file_paths = glob(path.join(subj_folder, '**/' + base_file_name + ".json"), recursive=True)
-                #
+
                 # Looking for an existing func or anat folder
                 dir_name = path.dirname(nifti_folder)
                 regex = re.compile("(?P<folder>anat|func)\d")
