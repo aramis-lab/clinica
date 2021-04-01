@@ -86,6 +86,7 @@ nav:
       - Linear processing: Pipelines/PET_Linear.md
       - Volume processing: Pipelines/PET_Volume.md
       - Surface processing: Pipelines/PET_Surface.md
+      - Surface longitudinal processing: Pipelines/PET_Surface_Longitudinal.md
     - Statistics:
       - Surface-based mass-univariate analysis: Pipelines/Stats_Surface.md
       - Volume-based mass-univariate analysis: Pipelines/Stats_Volume.md

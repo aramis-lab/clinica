@@ -42,6 +42,7 @@ ICM members are encouraged to use the version of Clinica available on the cluste
     - `pet-linear` - [Linear processing of PET images](Pipelines/PET_Linear): affine registration to the MNI standard space and intensity normalization
     - `pet-volume` - [Volume-based processing of PET images](Pipelines/PET_Volume): registration to T1w MRI, intensity normalization, partial volume correction and spatial normalization
     - `pet-surface` - [Surface-based processing of PET images](Pipelines/PET_Surface): projection of the PET signal onto the subject’s cortical surface
+    - `pet-surface-longitudinal` - [Surface-based longitudinal processing of PET images](Pipelines/PET_Surface_Longitudinal): projection of the PET signal onto the subject’s cortical surface
 - Statistics
     - `statistics-surface` - [Surface-based mass-univariate analysis with SurfStat](Pipelines/Stats_Surface)
     - `statistics-volume` - [Volume-based mass-univariate analysis with SPM](Pipelines/Stats_Volume)
