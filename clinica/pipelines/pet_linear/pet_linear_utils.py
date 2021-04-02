@@ -27,13 +27,14 @@ def concatenate_transforms(pet_to_t1w_tranform, t1w_to_mni_tranform):
 
 
 # Normalize the images based on the reference mask region
-def suvr_normalization(input_img, ref_mask):
+def suvr_normalization(input_img, norm_img, ref_mask):
     """Normalize the input image according to the reference region.
     It uses nilearn `resample_to_img` and scipy `trim_mean` functions.
     This function is different than the one in other PET pipelines
     because there is a downsampling step.
     Args:
        input_img (str): image to be processed
+       norm_img (str): image used to compute the mean of the reference region
        ref_mask (str): mask of the reference region
     Returns:
        output_img (nifty image): normalized nifty image
@@ -47,15 +48,19 @@ def suvr_normalization(input_img, ref_mask):
     from scipy.stats import trim_mean
 
     pet = nib.load(input_img)
-    ref = nib.load(ref_mask)
+    norm = nib.load(norm_img)
+    mask = nib.load(ref_mask)
 
-    # Downsample the input image so we can multiply it with the mask
-    ds_img = resample_to_img(pet, ref, interpolation="nearest")
+    # Downsample the pet image used for normalization so we can multiply it with the mask
+    ds_img = resample_to_img(norm, mask, interpolation="nearest")
 
     # Compute the mean of the region
-    region = np.multiply(ds_img.get_fdata(), ref.get_fdata())
+    region = np.multiply(ds_img.get_fdata(), mask.get_fdata())
     array_region = np.where(region != 0, region, np.nan).flatten()
     region_mean = trim_mean(array_region[~np.isnan(array_region)], 0.1)
+
+    from clinica.utils.stream import cprint
+    cprint(region_mean)
 
     # Divide the value of the image voxels by the computed mean
     data = pet.get_data() / region_mean

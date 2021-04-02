@@ -296,11 +296,39 @@ class PETLinear(cpe.Pipeline):
         ants_applytransform_node.inputs.reference_image = self.ref_template
 
         # 3. Normalize the image (using nifti). It uses custom interface, from utils file
+        ants_registration_nonlinear_node = npe.Node(
+            name="antsRegistrationT1W2MNI", interface=ants.Registration()
+        )
+        ants_registration_nonlinear_node.inputs.fixed_image = self.ref_template
+        ants_registration_nonlinear_node.inputs.metric = ['MI']
+        ants_registration_nonlinear_node.inputs.metric_weight = [1.0]
+        ants_registration_nonlinear_node.inputs.transforms = ['SyN']
+        ants_registration_nonlinear_node.inputs.transform_parameters = [(0.1, 3, 0)]
+        ants_registration_nonlinear_node.inputs.dimension = 3
+        ants_registration_nonlinear_node.inputs.shrink_factors = [[8, 4, 2]]
+        ants_registration_nonlinear_node.inputs.smoothing_sigmas = [[3, 2, 1]]
+        ants_registration_nonlinear_node.inputs.sigma_units = ['vox']
+        ants_registration_nonlinear_node.inputs.number_of_iterations = [[200, 50, 10]]
+        ants_registration_nonlinear_node.inputs.convergence_threshold = [1e-05]
+        ants_registration_nonlinear_node.inputs.convergence_window_size = [10]
+        ants_registration_nonlinear_node.inputs.radius_or_number_of_bins = [32]
+        ants_registration_nonlinear_node.inputs.winsorize_lower_quantile = 0.005
+        ants_registration_nonlinear_node.inputs.winsorize_upper_quantile =  0.995
+        ants_registration_nonlinear_node.inputs.collapse_output_transforms = True
+        ants_registration_nonlinear_node.inputs.use_histogram_matching = False
+        ants_registration_nonlinear_node.inputs.verbose = True
+
+        ants_applytransform_nonlinear_node = npe.Node(
+            name="antsApplyTransformNonLinear", interface=ants.ApplyTransforms()
+        )
+        ants_applytransform_nonlinear_node.inputs.dimension = 3
+        ants_applytransform_nonlinear_node.inputs.reference_image = self.ref_template
+
         normalize_intensity_node = npe.Node(
             name="intensityNormalization",
             interface=nutil.Function(
                 function=utils.suvr_normalization,
-                input_names=["input_img", "ref_mask"],
+                input_names=["input_img", "norm_img", "ref_mask"],
                 output_names=["output_img"],
             ),
         )
@@ -345,7 +373,11 @@ class PETLinear(cpe.Pipeline):
                 (self.input_node, ants_applytransform_node, [("pet", "input_image")]),
                 (concatenate_node, ants_applytransform_node, [("transforms_list", "transforms")]),
                 # STEP 3
+                (self.input_node, ants_registration_nonlinear_node, [("t1w", "moving_image")]),
+                (ants_registration_nonlinear_node, ants_applytransform_nonlinear_node, [("reverse_forward_transforms", "transforms")]),
+                (ants_applytransform_node, ants_applytransform_nonlinear_node, [("output_image", "input_image")]),
                 (ants_applytransform_node, normalize_intensity_node, [("output_image", "input_img")]),
+                (ants_applytransform_nonlinear_node, normalize_intensity_node, [("output_image", "norm_img")]),
                 # Connect to DataSink
                 (ants_registration_node, self.output_node, [("out_matrix", "affine_mat")]),
                 (normalize_intensity_node, self.output_node, [("output_img", "suvr_pet")]),
