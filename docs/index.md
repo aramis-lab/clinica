@@ -44,12 +44,14 @@ ICM members are encouraged to use the version of Clinica available on the cluste
 - Statistics
     - `statistics-surface` - [Surface-based mass-univariate analysis with SurfStat](Pipelines/Stats_Surface)
     - `statistics-volume` - [Volume-based mass-univariate analysis with SPM](Pipelines/Stats_Volume)
-- Deep Learning
-    - `deeplearning-prepare-data` - [Prepare input data for deep learning with PyTorch](Pipelines/DeepLearning_PrepareData)
 
 - Machine Learning
     - `machinelearning-prepare-spatial-svm` - [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
     - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
+
+- Deep Learning
+    - `deeplearning-prepare-data` - [Prepare input data for deep learning with PyTorch](Pipelines/DeepLearning_PrepareData)
+
 
 ### Dataset converters (`clinica convert`)
 Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to BIDS namely:
