@@ -230,51 +230,31 @@ def execute():
     """
     # fmt: off
     from clinica.engine import CmdParser
-    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_cli import \
-        DeepLearningPrepareDataCLI
-    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import \
-        DwiConnectomeCli
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_cli import DeepLearningPrepareDataCLI
+    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli
     from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import \
-        DwiPreprocessingUsingPhaseDiffFieldmapCli
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import \
-        DwiPreprocessingUsingT1Cli
-    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import \
-        SpatialSVMCLI
-    from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
-    from clinica.pipelines.pet_surface.pet_surface_longitudinal_cli import \
-        PetSurfaceLongitudinalCLI
-    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI
     from clinica.pipelines.pet_linear.pet_linear_cli import PETLinearCLI
-    from clinica.pipelines.statistics_surface.statistics_surface_cli import \
-        StatisticsSurfaceCLI
-    from clinica.pipelines.statistics_volume.statistics_volume_cli import \
-        StatisticsVolumeCLI
-    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_cli import \
-        StatisticsVolumeCorrectionCLI
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import \
-        T1FreeSurferCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import \
-        T1FreeSurferLongitudinalCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_cli import \
-        T1FreeSurferLongitudinalCorrectionCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_cli import \
-        T1FreeSurferTemplateCLI
+    from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
+    from clinica.pipelines.pet_surface.pet_surface_longitudinal_cli import PetSurfaceLongitudinalCLI
+    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
+    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI
+    from clinica.pipelines.statistics_volume.statistics_volume_cli import StatisticsVolumeCLI
+    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_cli import StatisticsVolumeCorrectionCLI
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_cli import T1FreeSurferLongitudinalCorrectionCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_cli import T1FreeSurferTemplateCLI
     from clinica.pipelines.t1_linear.t1_linear_cli import T1LinearCLI
     from clinica.pipelines.t1_volume.t1_volume_cli import T1VolumeCLI
-    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import \
-        T1VolumeCreateDartelCLI
-    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import \
-        T1VolumeDartel2MNICLI
-    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import \
-        T1VolumeExistingTemplateCLI
-    from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import \
-        T1VolumeParcellationCLI
-    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_cli import \
-        T1VolumeRegisterDartelCLI
-    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import \
-        T1VolumeTissueSegmentationCLI
-
+    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
+    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
+    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
+    from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
+    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_cli import T1VolumeRegisterDartelCLI
+    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
     # fmt: on
 
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
@@ -290,10 +270,10 @@ def execute():
         DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
         DwiConnectomeCli(),
+        PETLinearCLI(),
         PETVolumeCLI(),
         PetSurfaceCLI(),
-        PETLinearCLI(),
-        # PetSurfaceLongitudinalCLI(),
+        PetSurfaceLongitudinalCLI(),
         DeepLearningPrepareDataCLI(),
         SpatialSVMCLI(),
         StatisticsSurfaceCLI(),
