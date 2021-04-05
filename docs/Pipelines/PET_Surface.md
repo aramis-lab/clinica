@@ -59,7 +59,7 @@ To mitigate this issue, you can do the following:
     **1)** Use a working directory when you launch Clinica.
 
     **2)** If the pipeline crashed, just launch again the command (while giving the same working directory).
-    The whole processing will continue where it left (you can reduce the number of threads to run in parallel the second time.)
+    The whole processing will continue where it left (you can reduce the number of threads to run in parallel the second time).
 
 !!! note
     The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
@@ -85,7 +85,7 @@ surface at equal distance between the white matter/gray matter interface and the
 TSV files summarizing the regional statistics on the labelled atlases (Desikan and Destrieux).
 
 !!! note
-    The full list of output files from the pet-volume pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-surface-surface-based-processing-of-pet-images).
+    The full list of output files from the `pet-surface` pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-surface-surface-based-processing-of-pet-images).
 
 <center>![PET surface results](../../img/PET_Surface.jpg)</center>
 *<center><small>FDG PET SUVR projected onto the cortical surface (left hemisphere) for (from left to right) a cognitively normal subject (CN), a patient with Alzheimer’s disease (AD), a patient with semantic variant primary progressive aphasia (svPPA) and a patient with logopenic variant primary progressive aphasia (lvPPA).
