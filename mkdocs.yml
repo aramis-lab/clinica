@@ -83,6 +83,7 @@ nav:
       - Connectome: Pipelines/DWI_Connectome.md
     - PET:
       - Introduction: Pipelines/PET_Introduction.md
+      - Linear processing: Pipelines/PET_Linear.md
       - Volume processing: Pipelines/PET_Volume.md
       - Surface processing: Pipelines/PET_Surface.md
     - Statistics:
