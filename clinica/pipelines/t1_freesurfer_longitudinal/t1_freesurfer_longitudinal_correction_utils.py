@@ -4,7 +4,6 @@
 def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
     """Initialize the pipeline."""
     import datetime
-    import errno
     import os
     import platform
     from tempfile import mkdtemp
@@ -31,11 +30,7 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
     else:
         subjects_dir = os.path.join(output_dir, image_id)
 
-    try:
-        os.makedirs(subjects_dir)
-    except OSError as e:
-        if e.errno != errno.EEXIST:  # EEXIST: folder already exists
-            raise e
+    os.makedirs(subjects_dir, exist_ok=True)
 
     # Create symbolic link containing cross-sectional segmentation(s) in SUBJECTS_DIR so that recon-all can run
     for s_id in read_sessions(caps_dir, participant_id, long_id):

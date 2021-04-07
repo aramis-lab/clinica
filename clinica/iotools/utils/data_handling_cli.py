@@ -22,7 +22,6 @@ class CmdParserSubjectsSessions(ce.CmdParser):
         )
 
     def run_command(self, args):
-        import errno
         import os
 
         from clinica.iotools.utils import data_handling as dt
@@ -31,12 +30,7 @@ class CmdParserSubjectsSessions(ce.CmdParser):
 
         check_bids_folder(args.bids_directory)
         output_directory = os.path.dirname(os.path.abspath(args.out_tsv))
-        if not os.path.exists(output_directory):
-            try:
-                os.makedirs(output_directory)
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
+        os.makedirs(output_directory, exist_ok=True)
         dt.create_subs_sess_list(
             args.bids_directory, output_directory, os.path.basename(args.out_tsv)
         )
