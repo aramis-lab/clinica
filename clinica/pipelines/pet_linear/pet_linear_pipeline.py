@@ -166,7 +166,7 @@ class PETLinear(cpe.Pipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-    # fmt: off
+        # fmt: off
         self.connect(
             [
                 (read_input_node, self.input_node, [("t1w", "t1w")]),
@@ -174,7 +174,8 @@ class PETLinear(cpe.Pipeline):
                 (read_input_node, self.input_node, [("t1w_to_mni", "t1w_to_mni")]),
             ]
         )
-    # fmt: on
+        # fmt: on
+
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
 
@@ -195,7 +196,7 @@ class PETLinear(cpe.Pipeline):
             "fname_pet",
             "fname_trans",
             "suvr_reference_region",
-            "uncropped_image"
+            "uncropped_image",
         ]
         if self.parameters.get("save_PETinT1w"):
             rename_file_node_inputs.append("fname_pet_in_t1w")
@@ -252,7 +253,8 @@ class PETLinear(cpe.Pipeline):
                     (rename_files, write_node, [("out_caps_pet_in_T1w", "@registered_pet_in_t1w")]),
                 ]
             )
-    # fmt: on
+        # fmt: on
+
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
 
@@ -300,20 +302,20 @@ class PETLinear(cpe.Pipeline):
             name="antsRegistrationT1W2MNI", interface=ants.Registration()
         )
         ants_registration_nonlinear_node.inputs.fixed_image = self.ref_template
-        ants_registration_nonlinear_node.inputs.metric = ['MI']
+        ants_registration_nonlinear_node.inputs.metric = ["MI"]
         ants_registration_nonlinear_node.inputs.metric_weight = [1.0]
-        ants_registration_nonlinear_node.inputs.transforms = ['SyN']
+        ants_registration_nonlinear_node.inputs.transforms = ["SyN"]
         ants_registration_nonlinear_node.inputs.transform_parameters = [(0.1, 3, 0)]
         ants_registration_nonlinear_node.inputs.dimension = 3
         ants_registration_nonlinear_node.inputs.shrink_factors = [[8, 4, 2]]
         ants_registration_nonlinear_node.inputs.smoothing_sigmas = [[3, 2, 1]]
-        ants_registration_nonlinear_node.inputs.sigma_units = ['vox']
+        ants_registration_nonlinear_node.inputs.sigma_units = ["vox"]
         ants_registration_nonlinear_node.inputs.number_of_iterations = [[200, 50, 10]]
         ants_registration_nonlinear_node.inputs.convergence_threshold = [1e-05]
         ants_registration_nonlinear_node.inputs.convergence_window_size = [10]
         ants_registration_nonlinear_node.inputs.radius_or_number_of_bins = [32]
         ants_registration_nonlinear_node.inputs.winsorize_lower_quantile = 0.005
-        ants_registration_nonlinear_node.inputs.winsorize_upper_quantile =  0.995
+        ants_registration_nonlinear_node.inputs.winsorize_upper_quantile = 0.995
         ants_registration_nonlinear_node.inputs.collapse_output_transforms = True
         ants_registration_nonlinear_node.inputs.use_histogram_matching = False
         ants_registration_nonlinear_node.inputs.verbose = True
@@ -358,9 +360,10 @@ class PETLinear(cpe.Pipeline):
             name="antsApplyTransformPET2T1w", interface=ants.ApplyTransforms()
         )
         ants_applytransform_optional_node.inputs.dimension = 3
-        # fmt: off
+
         # Connection
         # ==========
+        # fmt: off
         self.connect(
             [
                 (self.input_node, init_node, [("pet", "pet")]),
@@ -409,4 +412,4 @@ class PETLinear(cpe.Pipeline):
                     (ants_applytransform_optional_node, self.output_node, [("output_image", "PETinT1w")]),
                 ]
             )
-    #fmt: on
+        # fmt: on

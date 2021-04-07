@@ -286,22 +286,21 @@ def clean_PETLinear(caps_path):
     from shutil import rmtree
 
     # Handle subjects subdirectory
-    abs_path_subjs = path.join(caps_path,'subjects')
+    abs_path_subjs = path.join(caps_path, "subjects")
 
     # Iterate over the subject directories
     for subj in listdir(abs_path_subjs):
-        subj_dir = path.join(abs_path_subjs,subj)
+        subj_dir = path.join(abs_path_subjs, subj)
         if path.isdir(subj_dir):
             # Iterate over session directories
             for sess in listdir(subj_dir):
                 sess_dir = path.join(subj_dir, sess)
                 if path.isdir(sess_dir):
-            
-                    path_pet_linear = path.join(sess_dir, 'pet_linear')
-                    clean_folder(path_pet_linear, recreate=False)
-                
-    #TODO: handle groups subdirectory
 
+                    path_pet_linear = path.join(sess_dir, "pet_linear")
+                    clean_folder(path_pet_linear, recreate=False)
+
+    # TODO: handle groups subdirectory
 
 
 def create_list_hashes(path_folder, extensions_to_keep=(".nii.gz", ".tsv", ".json")):

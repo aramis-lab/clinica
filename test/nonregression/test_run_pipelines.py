@@ -755,11 +755,8 @@ def test_run_PETLinear(cmdopt):
 
     # Remove potential residual of previous UT
     clean_PETLinear(join(root, "out", "caps"))
-    
-    parameters = {
-        "acq_label": "fdg",
-        "suvr_reference_region": "pons"
-    }
+
+    parameters = {"acq_label": "fdg", "suvr_reference_region": "pons"}
 
     # Instantiate pipeline
     pipeline = PETLinear(
