@@ -108,11 +108,11 @@ def create_merge_file(
 
                 # Read scans TSV files
                 scan_path = path.join(
-                        bids_dir,
-                        subject,
-                        session,
-                        f"{subject}_{session}_scans.tsv",
-                    )
+                    bids_dir,
+                    subject,
+                    session,
+                    f"{subject}_{session}_scans.tsv",
+                )
                 if path.isfile(scan_path) and not ignore_scan_files:
                     scans_dict = dict()
                     scans_df = pd.read_csv(scan_path, sep="\t")
@@ -131,9 +131,10 @@ def create_merge_file(
                 else:
                     row_scans_df = pd.DataFrame()
 
-                row_df = pd.concat([row_participant_df, row_session_df, row_scans_df], axis=1)
+                row_df = pd.concat(
+                    [row_participant_df, row_session_df, row_scans_df], axis=1
+                )
                 merged_df = merged_df.append(row_df)
-=======
         for _, session in subject_df.index.values:
             row_session_df = sessions_df[sessions_df.session_id == session]
             row_session_df.reset_index(inplace=True, drop=True)
@@ -169,7 +170,6 @@ def create_merge_file(
                 [row_participant_df, row_session_df, row_scans_df], axis=1
             )
             merged_df = merged_df.append(row_df)
->>>>>>> 4d944126 (Apply black to remaining files)
 
     # Put participant_id and session_id first
     col_list = merged_df.columns.values.tolist()
@@ -188,8 +188,8 @@ def create_merge_file(
         # Call the different pipelines
         from .pipeline_handling import (
             pet_volume_pipeline,
-            t1_volume_pipeline,
             t1_freesurfer_pipeline,
+            t1_volume_pipeline,
         )
 
         pipeline_options = {
@@ -360,8 +360,9 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
         caps_dir: path to the CAPS directory.
         out_file: path to the output file (filename included).
     """
-    from os import path, sep, listdir
     from glob import glob
+    from os import listdir, path, sep
+
     import pandas as pd
 
     if path.exists(path.join(caps_dir, "groups")):
