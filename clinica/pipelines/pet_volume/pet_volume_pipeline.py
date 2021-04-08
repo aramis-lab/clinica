@@ -185,7 +185,10 @@ class PETVolume(cpe.Pipeline):
 
         if self.parameters["pvc_psf_tsv"] is not None:
             iterables_psf = read_psf_information(
-                self.parameters["pvc_psf_tsv"], self.subjects, self.sessions, self.parameters["acq_label"]
+                self.parameters["pvc_psf_tsv"],
+                self.subjects,
+                self.sessions,
+                self.parameters["acq_label"],
             )
             self.parameters["apply_pvc"] = True
         else:
@@ -292,7 +295,7 @@ class PETVolume(cpe.Pipeline):
         # =====================================
         container_path = npe.Node(
             nutil.Function(
-                input_names=["pet_filename"],
+                input_names=["bids_or_caps_filename"],
                 output_names=["container"],
                 function=container_from_filename,
             ),
@@ -386,8 +389,8 @@ class PETVolume(cpe.Pipeline):
         # fmt: off
         self.connect(
             [
-                (self.input_node, container_path, [("pet_image", "pet_filename")]),
-                (container_path, write_images_node, [(("container", fix_join, f"group-{self.parameters['group_label']}"), "container")]),
+                (self.input_node, container_path, [("pet_image", "bids_or_caps_filename")]),
+                (container_path, write_images_node, [(("container", fix_join, "pet", "preprocessing", f"group-{self.parameters['group_label']}"), "container")]),
                 (self.output_node, write_images_node, [(("pet_t1_native", zip_nii, True), "pet_t1_native"),
                                                        (("pet_mni", zip_nii, True), "pet_mni"),
                                                        (("pet_suvr", zip_nii, True), "pet_suvr"),
@@ -399,7 +402,7 @@ class PETVolume(cpe.Pipeline):
                                                        (("pet_pvc_suvr", zip_nii, True), "pet_pvc_suvr"),
                                                        (("pet_pvc_suvr_masked", zip_nii, True), "pet_pvc_suvr_masked"),
                                                        (("pet_pvc_suvr_masked_smoothed", zip_nii, True), "pet_pvc_suvr_masked_smoothed")]),
-                (container_path, write_atlas_node, [(("container", fix_join, f"group-{self.parameters['group_label']}"), "container")]),
+                (container_path, write_atlas_node, [(("container", fix_join, "pet", "preprocessing", f"group-{self.parameters['group_label']}"), "container")]),
                 (self.output_node, write_atlas_node, [("atlas_statistics", "atlas_statistics"),
                                                       ("pvc_atlas_statistics", "pvc_atlas_statistics")]),
             ]
