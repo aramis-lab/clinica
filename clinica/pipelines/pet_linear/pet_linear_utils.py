@@ -41,8 +41,9 @@ def suvr_normalization(input_img, norm_img, ref_mask):
        mask_template (nifty image): output mask on disk
     """
 
-    import nibabel as nib
     import os
+
+    import nibabel as nib
     import numpy as np
     from nilearn.image import resample_to_img
     from scipy.stats import trim_mean
@@ -60,6 +61,7 @@ def suvr_normalization(input_img, norm_img, ref_mask):
     region_mean = trim_mean(array_region[~np.isnan(array_region)], 0.1)
 
     from clinica.utils.stream import cprint
+
     cprint(region_mean)
 
     # Divide the value of the image voxels by the computed mean
@@ -89,8 +91,9 @@ def crop_nifti(input_img, ref_crop):
        crop_template (nifty image): output template on disk.
     """
 
-    import nibabel as nib
     import os
+
+    import nibabel as nib
     import numpy as np
     from nilearn.image import resample_to_img
 
@@ -128,9 +131,10 @@ def rename_into_caps(
     Returns:
         The different outputs in CAPS format
     """
-    from nipype.utils.filemanip import split_filename
-    from nipype.interfaces.utility import Rename
     import os
+
+    from nipype.interfaces.utility import Rename
+    from nipype.utils.filemanip import split_filename
 
     _, source_file_pet, _ = split_filename(in_bids_pet)
 
@@ -169,7 +173,7 @@ def print_end_pipeline(pet, final_file):
     """
     Display end message for <subject_id> when <final_file> is connected.
     """
-    from clinica.utils.ux import print_end_image
     from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_end_image
 
     print_end_image(get_subject_id(pet))

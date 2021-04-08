@@ -304,7 +304,9 @@ def runApplyInverseDeformationField_SPM_standalone(
         stderr=subprocess.DEVNULL,
     )
     if subprocess_run.returncode != 0:
-        raise ValueError("runApplyInverseDeformationField_SPM_standalone failed, returned non-zero code")
+        raise ValueError(
+            "runApplyInverseDeformationField_SPM_standalone failed, returned non-zero code"
+        )
 
     output_file = join(abspath("./"), prefix + basename(img))
     if not exists(output_file):

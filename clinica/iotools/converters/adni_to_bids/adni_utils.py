@@ -284,6 +284,7 @@ def get_images_pet(
     Returns: Dataframe containing images metadata
     """
     import pandas as pd
+
     from clinica.utils.stream import cprint
 
     subj_dfs_list = []
@@ -577,8 +578,9 @@ def create_adni_sessions_dict(
     from datetime import datetime
     from os import path
 
-    import clinica.iotools.bids_utils as bids
     import pandas as pd
+
+    import clinica.iotools.bids_utils as bids
     from clinica.utils.stream import cprint
 
     # Load data
@@ -667,7 +669,7 @@ def create_adni_sessions_dict(
                                         "FCI.csv",
                                         "CCI.csv",
                                         "NPIQ.csv",
-                                        "NPI.csv"
+                                        "NPI.csv",
                                     ]:
                                         if (
                                             pd.isnull(row["VISCODE2"])
@@ -826,6 +828,7 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
     from glob import glob
     from os import path
     from os.path import normpath
+
     import pandas as pd
     from colorama import Fore
 
@@ -833,13 +836,16 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
 
     scans_fields_bids = ["filename", "scan_id", "mri_field"]
 
-    conversion_versions = [folder for folder in os.listdir(conversion_path)
-                           if folder[0] == "v" and path.isdir(path.join(conversion_path, folder))]
+    conversion_versions = [
+        folder
+        for folder in os.listdir(conversion_path)
+        if folder[0] == "v" and path.isdir(path.join(conversion_path, folder))
+    ]
     conversion_versions.sort()
     older_version = conversion_versions[-1]
     converted_dict = dict()
     for tsv_path in os.listdir(path.join(conversion_path, older_version)):
-        modality = tsv_path.split('_paths')[0]
+        modality = tsv_path.split("_paths")[0]
         df = pd.read_csv(path.join(conversion_path, older_version, tsv_path), sep="\t")
         df.set_index(["Subject_ID", "VISCODE"], inplace=True, drop=True)
         converted_dict[modality] = df
@@ -878,10 +884,14 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                         scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
                         scans_df["scan_id"] = scan_id
                         if "Field_Strength" in conversion_df.columns.values:
-                            field_strength = conversion_df.loc[(subject_id, viscode), "Field_Strength"]
+                            field_strength = conversion_df.loc[
+                                (subject_id, viscode), "Field_Strength"
+                            ]
                             scans_df["mri_field"] = field_strength
                     except KeyError:
-                        cprint(f"{Fore.RED}No information found for file {file_name}.{Fore.RESET}")
+                        cprint(
+                            f"{Fore.RED}No information found for file {file_name}.{Fore.RESET}"
+                        )
 
                     scans_df = scans_df.fillna("n/a")
                     scans_df.to_csv(
@@ -926,6 +936,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     from os import path, walk
 
     import pandas as pd
+
     from clinica.utils.stream import cprint
 
     is_dicom = []
@@ -1051,10 +1062,11 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
     from glob import glob
     from os import path
 
-    from clinica.iotools.utils.data_handling import center_nifti_origin
-    from clinica.utils.stream import cprint
     from colorama import Fore
     from numpy import nan
+
+    from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.utils.stream import cprint
 
     modality_specific = {
         "t1": {
