@@ -1,9 +1,10 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
-
 # Use hash instead of parameters for iterables folder names
 from nipype import config
+
+import clinica.pipelines.engine as cpe
+
 cfg = dict(execution={'parameterize_dirs': False})
 config.update_config(cfg)
 
@@ -48,13 +49,15 @@ class DwiConnectome(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
+        import re
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.stream import cprint
+
+        import clinica.utils.input_files as input_files
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.inputs import clinica_file_reader
-        import clinica.utils.input_files as input_files
-        import re
+        from clinica.utils.stream import cprint
 
         all_errors = []
 
@@ -214,9 +217,10 @@ class DwiConnectome(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
-        import nipype.pipeline.engine as npe
-        import nipype.interfaces.utility as nutil
         import nipype.interfaces.io as nio
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
 
         # Writing CAPS
@@ -265,24 +269,25 @@ class DwiConnectome(cpe.Pipeline):
             - [ ] Allow for custom parcellations (See TODOs in utils).
 
         """
+        import nipype.interfaces.freesurfer as fs
+        import nipype.interfaces.fsl as fsl
+        import nipype.interfaces.mrtrix3 as mrtrix3
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.fsl as fsl
-        import nipype.interfaces.freesurfer as fs
-        import nipype.interfaces.mrtrix3 as mrtrix3
-        from clinica.lib.nipype.interfaces.mrtrix.preprocess import MRTransform
+
+        import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
         from clinica.lib.nipype.interfaces.mrtrix3.reconst import EstimateFOD
         from clinica.lib.nipype.interfaces.mrtrix3.tracking import Tractography
-        from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
+        from clinica.lib.nipype.interfaces.mrtrix.preprocess import MRTransform
+        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.mri_registration import (
+            convert_flirt_transformation_to_mrtrix_transformation,
+        )
         from clinica.utils.stream import cprint
-        import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
-        from clinica.utils.mri_registration import convert_flirt_transformation_to_mrtrix_transformation
 
         # cprint('Building the pipeline...')
-
         # Nodes
         # =====
-
         # B0 Extraction (only if space=b0)
         # -------------
         split_node = npe.Node(name="Reg-0-DWI-B0Extraction",

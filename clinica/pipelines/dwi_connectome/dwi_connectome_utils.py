@@ -3,6 +3,7 @@
 
 def get_luts():
     import os
+
     from clinica.utils.exceptions import ClinicaException
 
     try:
@@ -22,6 +23,7 @@ def get_luts():
 
 def get_conversion_luts():
     import os
+
     from clinica.utils.exceptions import ClinicaException
 
     try:
@@ -77,10 +79,12 @@ def get_caps_filenames(dwi_file):
 def print_begin_pipeline(in_bids_or_caps_file):
     """
     """
-    from clinica.utils.stream import cprint
-    import re
     import datetime
+    import re
+
     from colorama import Fore
+
+    from clinica.utils.stream import cprint
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
                   in_bids_or_caps_file)
@@ -96,10 +100,12 @@ def print_begin_pipeline(in_bids_or_caps_file):
 def print_end_pipeline(in_bids_or_caps_file, final_file):
     """
     """
-    from clinica.utils.stream import cprint
-    import re
     import datetime
+    import re
+
     from colorama import Fore
+
+    from clinica.utils.stream import cprint
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
                   in_bids_or_caps_file)

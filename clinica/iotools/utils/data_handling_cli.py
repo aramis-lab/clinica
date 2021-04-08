@@ -134,17 +134,9 @@ class CmdParserMergeTsv(ce.CmdParser):
         iotools_options.add_argument(
             "--ignore_scan_files",
             default=False,
-            action='store_true',
-            help="If given, the scan files will not be read and added to the "
-                 "final output. This accelerates the procedure.",
-        )
-
-        iotools_options.add_argument(
-            "--ignore_session_scan_files",
-            default=False,
-            action='store_true',
-            help="If given, the session and scan files will not be read and added to the "
-                 "final output. This accelerates the procedure.",
+            action="store_true",
+            help="If given, the session and scan files will not be read and added to "
+            "the final output. This may accelerate the procedure.",
         )
 
     def run_command(self, args):
@@ -164,32 +156,36 @@ class CmdParserMergeTsv(ce.CmdParser):
             group_selection=args.group_selection,
             tracers_selection=args.pet_tracers_selection,
             ignore_scan_files=args.ignore_scan_files,
-            ignore_sessions_files=args.ignore_session_scan_files
+            ignore_sessions_files=args.ignore_session_scan_files,
         )
 
 
 class CmdParserMissingProcessing(ce.CmdParser):
-
     def define_name(self):
-        self._name = 'check-missing-processing'
+        self._name = "check-missing-processing"
 
     def define_description(self):
-        self._description = 'Check missing processing in a CAPS directory'
+        self._description = "Check missing processing in a CAPS directory"
 
     def define_options(self):
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS dataset directory.')
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS dataset directory.')
-        self._args.add_argument("out_file",
-                                help='Path to the output TSV file (filename included).')
+        self._args.add_argument(
+            "bids_directory", help="Path to the BIDS dataset directory."
+        )
+        self._args.add_argument(
+            "caps_directory", help="Path to the CAPS dataset directory."
+        )
+        self._args.add_argument(
+            "out_file", help="Path to the output TSV file (filename included)."
+        )
 
     def run_command(self, args):
         from clinica.iotools.utils import data_handling as dt
         from clinica.utils.inputs import check_caps_folder
 
         check_caps_folder(args.caps_directory)
-        dt.compute_missing_processing(args.bids_directory, args.caps_directory, args.out_file)
+        dt.compute_missing_processing(
+            args.bids_directory, args.caps_directory, args.out_file
+        )
 
 
 class CmdParserMissingModalities(ce.CmdParser):
@@ -203,9 +199,7 @@ class CmdParserMissingModalities(ce.CmdParser):
         self._args.add_argument(
             "bids_directory", help="Path to the BIDS dataset directory."
         )
-        self._args.add_argument(
-            "out_directory", help="Path to the output directory."
-        )
+        self._args.add_argument("out_directory", help="Path to the output directory.")
         self._args.add_argument(
             "-op",
             "--output_prefix",

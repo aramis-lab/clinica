@@ -150,9 +150,9 @@ T1W_EXTENSIVE = {
 }
 
 T1W_TO_MNI_TRANSFROM = {
-    'pattern': '*space-MNI152NLin2009cSym_res-1x1x1_affine.mat',
-    'description': 'Transformation matrix from T1W image to MNI space using t1-linear pipeline',
-    'needed_pipeline': 't1-linear'
+    "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+    "description": "Transformation matrix from T1W image to MNI space using t1-linear pipeline",
+    "needed_pipeline": "t1-linear",
 }
 
 # T1-Volume

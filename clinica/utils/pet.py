@@ -84,12 +84,7 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     return iterables_psf
 
 
-LIST_SUVR_REFERENCE_REGIONS = [
-    "pons",
-    "cerebellumPons",
-    "pons2",
-    "cerebellumPons2"
-]
+LIST_SUVR_REFERENCE_REGIONS = ["pons", "cerebellumPons", "pons2", "cerebellumPons2"]
 
 
 def get_suvr_mask(suvr_reference_region):

@@ -1,7 +1,8 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -60,9 +61,10 @@ class DwiDti(cpe.Pipeline):
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import clinica.utils.input_files as input_files
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
+        import clinica.utils.input_files as input_files
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
@@ -148,6 +150,7 @@ class DwiDti(cpe.Pipeline):
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from clinica.utils.nipype import container_from_filename, fix_join
 
         from .dwi_dti_utils import rename_into_caps
@@ -235,10 +238,11 @@ class DwiDti(cpe.Pipeline):
         import nipype.interfaces.mrtrix as mrtrix
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from nipype.interfaces.ants import ApplyTransforms, RegistrationSynQuick
+
         from clinica.lib.nipype.interfaces.mrtrix3.utils import TensorMetrics
         from clinica.lib.nipype.interfaces.mrtrix.preprocess import DWI2Tensor
         from clinica.utils.check_dependency import check_environment_variable
-        from nipype.interfaces.ants import ApplyTransforms, RegistrationSynQuick
 
         from .dwi_dti_utils import (
             extract_bids_identifier_from_caps_filename,

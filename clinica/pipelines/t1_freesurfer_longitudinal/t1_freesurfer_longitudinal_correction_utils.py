@@ -57,9 +57,7 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
         "freesurfer_unbiased_template",
         f"{participant_id}_{long_id}",
     )
-    os.symlink(
-        template_path, os.path.join(subjects_dir, f"{participant_id}_{long_id}")
-    )
+    os.symlink(template_path, os.path.join(subjects_dir, f"{participant_id}_{long_id}"))
 
     print_begin_image(image_id)
 

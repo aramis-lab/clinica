@@ -1,7 +1,8 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -82,6 +83,8 @@ class PETVolume(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from colorama import Fore
+
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
@@ -102,7 +105,6 @@ class PETVolume(cpe.Pipeline):
             print_groups_in_caps_directory,
             print_images_to_process,
         )
-        from colorama import Fore
 
         # Check that group already exists
         if not exists(
@@ -288,6 +290,7 @@ class PETVolume(cpe.Pipeline):
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import zip_nii
         from clinica.utils.nipype import container_from_filename, fix_join
 
@@ -415,9 +418,10 @@ class PETVolume(cpe.Pipeline):
         import nipype.interfaces.spm.utils as spmutils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from nipype.interfaces.petpvc import PETPVC
+
         from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
-        from nipype.interfaces.petpvc import PETPVC
 
         from .pet_volume_utils import (
             apply_binary_mask,

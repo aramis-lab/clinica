@@ -53,11 +53,11 @@ def susceptibility_distortion_correction_using_t1(
         >>> epi.run() # doctest: +SKIP
     """
     import nipype
-    import nipype.pipeline.engine as pe
-    import nipype.interfaces.utility as niu
     import nipype.interfaces.fsl as fsl
-    import \
-        clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils as utils
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as pe
+
+    import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils as utils
 
     def expend_matrix_list(in_matrix, in_bvec):
         import numpy as np
@@ -78,6 +78,7 @@ def susceptibility_distortion_correction_using_t1(
           the target position of :math:`\\vec{r}`.
         """
         import os
+
         import numpy as np
 
         name, fext = os.path.splitext(os.path.basename(in_bvec))
