@@ -1,12 +1,11 @@
 # coding: utf8
 
 
-import clinica.pipelines.engine as cpe
-
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -54,29 +53,33 @@ class PETLinear(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from os import pardir
-        from os.path import dirname, join, abspath, exists
-        from colorama import Fore
+        from os.path import abspath, dirname, exists, join
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from colorama import Fore
+
         from clinica.utils.exceptions import (
             ClinicaBIDSError,
-            ClinicaException,
             ClinicaCAPSError,
+            ClinicaException,
         )
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
-        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import (
             T1W_NII,
             T1W_TO_MNI_TRANSFROM,
             bids_pet_nii,
         )
-        from clinica.utils.inputs import fetch_file, RemoteFileStructure
-        from clinica.utils.ux import print_images_to_process
-        from clinica.utils.stream import cprint
+        from clinica.utils.inputs import (
+            RemoteFileStructure,
+            clinica_file_reader,
+            fetch_file,
+        )
         from clinica.utils.pet import get_suvr_mask
+        from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_images_to_process
 
         # from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
-
         # Import references files
         root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
         path_to_mask = join(root, "resources", "masks")
@@ -180,9 +183,11 @@ class PETLinear(cpe.Pipeline):
         """Build and connect an output node to the pipeline."""
 
         import nipype.interfaces.utility as nutil
-        from nipype.interfaces.io import DataSink
         import nipype.pipeline.engine as npe
-        from clinica.utils.nipype import fix_join, container_from_filename
+        from nipype.interfaces.io import DataSink
+
+        from clinica.utils.nipype import container_from_filename, fix_join
+
         from .pet_linear_utils import rename_into_caps
 
         # Writing node
@@ -260,8 +265,9 @@ class PETLinear(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import clinica.pipelines.pet_linear.pet_linear_utils as utils
         from nipype.interfaces import ants
+
+        import clinica.pipelines.pet_linear.pet_linear_utils as utils
 
         # Utilitary nodes
         init_node = npe.Node(

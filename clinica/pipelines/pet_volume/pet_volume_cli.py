@@ -97,9 +97,10 @@ class PETVolumeCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
+        from networkx import Graph
+
         from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
         from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
-        from networkx import Graph
 
         parameters = {
             "group_label": args.group_label,

@@ -1,8 +1,7 @@
 import pathlib
-
-import pkg_resources
 from os.path import abspath, dirname, join
 
+import pkg_resources
 from setuptools import find_packages, setup
 
 with pathlib.Path("requirements.txt").open() as requirements_txt:

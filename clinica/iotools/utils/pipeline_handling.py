@@ -60,10 +60,10 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     Returns:
          final_df: a DataFrame containing the information of the bids and the pipeline
     """
-    from clinica.utils.stream import cprint
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,
     )
+    from clinica.utils.stream import cprint
 
     # Ensures that df is correctly indexed
     if "participant_id" in df.columns.values:

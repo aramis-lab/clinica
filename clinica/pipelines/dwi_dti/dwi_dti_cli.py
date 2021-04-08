@@ -29,8 +29,9 @@ class DwiDtiCli(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
         from networkx import Graph
+
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
 
         from .dwi_dti_pipeline import DwiDti
 

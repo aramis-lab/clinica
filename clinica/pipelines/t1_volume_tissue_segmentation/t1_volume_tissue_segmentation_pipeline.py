@@ -126,15 +126,15 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import unzip_nii, zip_nii
-        from clinica.utils.nipype import fix_join, container_from_filename
+        from clinica.utils.nipype import container_from_filename, fix_join
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         from .t1_volume_tissue_segmentation_utils import (
+            ApplySegmentationDeformation,
+            get_tissue_tuples,
             init_input_node,
             print_end_pipeline,
             zip_list_files,
-            get_tissue_tuples,
-            ApplySegmentationDeformation,
         )
 
         if spm_standalone_is_available():

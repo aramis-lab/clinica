@@ -281,7 +281,7 @@ def clean_folder(path, recreate=True):
 
 
 def clean_PETLinear(caps_path):
-    from os import makedirs, listdir, path
+    from os import listdir, makedirs, path
     from os.path import abspath, exists
     from shutil import rmtree
 
