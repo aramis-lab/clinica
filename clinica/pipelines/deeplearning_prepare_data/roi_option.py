@@ -1,11 +1,15 @@
-templates_dict = {
-  "t1-linear": "MNI152NLin2009cSym",
-  "t1-extensive": "Ixi549Space"
-}
+templates_dict = {"t1-linear": "MNI152NLin2009cSym", "t1-extensive": "Ixi549Space"}
 
 
-def extract_roi(input_path, basedir, masks_location, mask_pattern, cropped_input,
-                roi_list, uncrop_output):
+def extract_roi(
+    input_path,
+    basedir,
+    masks_location,
+    mask_pattern,
+    cropped_input,
+    roi_list,
+    uncrop_output,
+):
     """Extracts regions of interest defined by masks
 
     This function extracts regions of interest from preprocessed nifti images.
@@ -25,20 +29,21 @@ def extract_roi(input_path, basedir, masks_location, mask_pattern, cropped_input
         file: multiple tensors saved on the disk, suffixes corresponds to
             indexes of the patches. Same location than input file.
     """
-    import torch
-    import nibabel as nib
     import os
+
+    import nibabel as nib
     import numpy as np
+    import torch
 
     image_array = nib.load(input_path).get_fdata()
     image_tensor = torch.from_numpy(image_array).unsqueeze(0).float()
 
     input_tensor_filename = os.path.basename(input_path)
 
-    sub_ses_prefix = "_".join(input_tensor_filename.split('_')[0:3:])
+    sub_ses_prefix = "_".join(input_tensor_filename.split("_")[0:3:])
     if not sub_ses_prefix.endswith("_T1w"):
-        sub_ses_prefix = "_".join(input_tensor_filename.split('_')[0:2:])
-    input_suffix = input_tensor_filename.split('_')[-1].split('.')[0]
+        sub_ses_prefix = "_".join(input_tensor_filename.split("_")[0:2:])
+    input_suffix = input_tensor_filename.split("_")[-1].split(".")[0]
 
     output_roi = []
     for index_roi, roi in enumerate(roi_list):
@@ -49,17 +54,20 @@ def extract_roi(input_path, basedir, masks_location, mask_pattern, cropped_input
 
         extracted_roi = image_tensor * mask_np
         if not uncrop_output:
-            extracted_roi = extracted_roi[np.ix_(mask_np.any((1, 2, 3)),
-                                                 mask_np.any((0, 2, 3)),
-                                                 mask_np.any((0, 1, 3)),
-                                                 mask_np.any((0, 1, 2)))]
+            extracted_roi = extracted_roi[
+                np.ix_(
+                    mask_np.any((1, 2, 3)),
+                    mask_np.any((0, 2, 3)),
+                    mask_np.any((0, 1, 3)),
+                    mask_np.any((0, 1, 2)),
+                )
+            ]
         extracted_roi = extracted_roi.float()
         # save into .pt format
         output_pattern = compute_output_pattern(mask_path, not uncrop_output)
         output_roi.append(
             os.path.join(
-                basedir,
-                f"{sub_ses_prefix}_{output_pattern}_{input_suffix}.pt"
+                basedir, f"{sub_ses_prefix}_{output_pattern}_{input_suffix}.pt"
             )
         )
         os.makedirs(output_path, exist_ok=True)
@@ -69,18 +77,22 @@ def extract_roi(input_path, basedir, masks_location, mask_pattern, cropped_input
 
 
 def check_mask_list(masks_location, roi_list, mask_pattern, cropping):
-    import numpy as np
     import nibabel as nib
+    import numpy as np
 
     for roi in roi_list:
         roi_path = find_mask_path(masks_location, roi, mask_pattern, cropping)
         if roi_path is None:
-            raise ValueError(f'The ROI wanted do not correspond to a mask in the CAPS directory.'
-                             f'The mask should include the following pattern: {mask_pattern}.')
+            raise ValueError(
+                f"The ROI wanted do not correspond to a mask in the CAPS directory."
+                f"The mask should include the following pattern: {mask_pattern}."
+            )
         roi_mask = nib.load(roi_path).get_fdata()
         mask_values = set(np.unique(roi_mask))
         if mask_values != {0, 1}:
-            raise ValueError('The ROI masks used should be binary (composed of 0 and 1 only).')
+            raise ValueError(
+                "The ROI masks used should be binary (composed of 0 and 1 only)."
+            )
 
 
 def find_mask_path(masks_location, roi, mask_pattern, cropping):
@@ -88,7 +100,9 @@ def find_mask_path(masks_location, roi, mask_pattern, cropping):
     from glob import glob
     from os import path
 
-    candidates = glob(path.join(masks_location, f"*{mask_pattern}*roi-{roi}*_mask.nii.gz"))
+    candidates = glob(
+        path.join(masks_location, f"*{mask_pattern}*roi-{roi}*_mask.nii.gz")
+    )
     if cropping:
         candidates = [mask for mask in candidates if "_desc-Crop_" in mask]
     else:
@@ -119,7 +133,9 @@ def compute_output_pattern(mask_path, crop_output):
     if "desc-Crop" not in mask_descriptors and crop_output:
         mask_descriptors = ["desc-CropRoi"] + mask_descriptors
     elif "desc-Crop" in mask_descriptors:
-        mask_descriptors = [descriptor for descriptor in mask_descriptors if descriptor != "desc-Crop"]
+        mask_descriptors = [
+            descriptor for descriptor in mask_descriptors if descriptor != "desc-Crop"
+        ]
         if crop_output:
             mask_descriptors = ["desc-CropRoi"] + mask_descriptors
         else:
@@ -133,34 +149,49 @@ def compute_output_pattern(mask_path, crop_output):
 
 if __name__ == "__main__":
     import argparse
-    from os import path
     import os
+    from os import path
 
-    from ...utils.inputs import clinica_file_reader
+    from clinica.utils.input_files import T1W_EXTENSIVE, T1W_LINEAR, T1W_LINEAR_CROPPED
+
     from ...utils.exceptions import ClinicaCAPSError
-    from clinica.utils.input_files import (
-        T1W_EXTENSIVE,
-        T1W_LINEAR,
-        T1W_LINEAR_CROPPED,
+    from ...utils.inputs import clinica_file_reader
+
+    parser = argparse.ArgumentParser(
+        description="Temporary parser for the extraction of ROI tensors."
     )
-    parser = argparse.ArgumentParser(description="Temporary parser for the extraction of ROI tensors.")
 
     parser.add_argument("caps_directory", type=str, help="path to the CAPS directory.")
-    parser.add_argument("modality",
-                        help="""For which modality the tensor will be extracted.
+    parser.add_argument(
+        "modality",
+        help="""For which modality the tensor will be extracted.
                         't1-linear': images preprocessed with t1-linear pipeline.
                         't1-extensive': images preprocessed with t1-extensive pipeline.
                         'custom': find images with a custom suffix in their filename and
                         transform them to tensor format.""",
-                        choices=["t1-linear", "t1-extensive", "custom"],
-                        default="t1-linear")
-    parser.add_argument('-uui', '--use_uncropped_image',
-                        help='''Use the uncropped image instead of the cropped image generated by t1-linear.''',
-                        default=False, action="store_true")
-    parser.add_argument("--roi_list", type=str, nargs="+", default=None,
-                        help="List of regions to be extracted")
-    parser.add_argument("--uncrop_output", action="store_true", default=False,
-                        help="Disable cropping option so the output tensors have the same size than the whole image.")
+        choices=["t1-linear", "t1-extensive", "custom"],
+        default="t1-linear",
+    )
+    parser.add_argument(
+        "-uui",
+        "--use_uncropped_image",
+        help="""Use the uncropped image instead of the cropped image generated by t1-linear.""",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--roi_list",
+        type=str,
+        nargs="+",
+        default=None,
+        help="List of regions to be extracted",
+    )
+    parser.add_argument(
+        "--uncrop_output",
+        action="store_true",
+        default=False,
+        help="Disable cropping option so the output tensors have the same size than the whole image.",
+    )
     parser.add_argument(
         "-cn",
         "--custom_suffix",
@@ -176,7 +207,7 @@ if __name__ == "__main__":
         "--custom_template",
         help="""Name of the template used when modality is set to custom.""",
         type=str,
-        default=None
+        default=None,
     )
     parser.add_argument(
         "-cmp",
@@ -185,14 +216,16 @@ if __name__ == "__main__":
                 The mask with the shortest name is taken.
                 This argument is taken into account only of the modality is custom.""",
         type=str,
-        default=None
+        default=None,
     )
     args = parser.parse_args()
 
     if args.modality == "custom":
         template = args.custom_template
         if template is None:
-            raise ValueError("A custom template must be defined when the modality is set to custom.")
+            raise ValueError(
+                "A custom template must be defined when the modality is set to custom."
+            )
     else:
         template = templates_dict[args.modality]
 
@@ -220,10 +253,10 @@ if __name__ == "__main__":
         output_folder = "custom"
 
     # Load the corresponding masks
-    masks_location = path.join(args.caps_directory, "masks",  f"tpl-{template}")
+    masks_location = path.join(args.caps_directory, "masks", f"tpl-{template}")
 
     if args.roi_list is None:
-        raise ValueError('A list of regions must be given.')
+        raise ValueError("A list of regions must be given.")
     else:
         check_mask_list(masks_location, args.roi_list, args.mask_pattern, cropping)
 
@@ -231,9 +264,24 @@ if __name__ == "__main__":
         subject_path = path.join(args.caps_directory, "subjects", subject)
         for session in os.listdir(subject_path):
             try:
-                input_path = clinica_file_reader([subject], [session], args.caps_directory, FILE_TYPE)[0]
-                output_path = path.join(subject_path, session, "deeplearning_prepare_data", "roi_based", output_folder)
-                extract_roi(input_path, output_path, masks_location, args.mask_pattern, cropping,
-                            roi_list=args.roi_list, uncrop_output=args.uncrop_output)
+                input_path = clinica_file_reader(
+                    [subject], [session], args.caps_directory, FILE_TYPE
+                )[0]
+                output_path = path.join(
+                    subject_path,
+                    session,
+                    "deeplearning_prepare_data",
+                    "roi_based",
+                    output_folder,
+                )
+                extract_roi(
+                    input_path,
+                    output_path,
+                    masks_location,
+                    args.mask_pattern,
+                    cropping,
+                    roi_list=args.roi_list,
+                    uncrop_output=args.uncrop_output,
+                )
             except ClinicaCAPSError:
                 print("Subject %s session %s was not treated." % (subject, session))
