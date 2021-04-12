@@ -12,7 +12,7 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Inter-subject registration using Dartel (creating a new Dartel template):\n"
-            "http://clinica.run/doc/Pipelines/T1_Volume/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/"
         )
 
     def define_options(self):

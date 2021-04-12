@@ -1,7 +1,8 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -82,6 +83,8 @@ class PETVolume(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from colorama import Fore
+
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
@@ -102,7 +105,6 @@ class PETVolume(cpe.Pipeline):
             print_groups_in_caps_directory,
             print_images_to_process,
         )
-        from colorama import Fore
 
         # Check that group already exists
         if not exists(
@@ -185,7 +187,10 @@ class PETVolume(cpe.Pipeline):
 
         if self.parameters["pvc_psf_tsv"] is not None:
             iterables_psf = read_psf_information(
-                self.parameters["pvc_psf_tsv"], self.subjects, self.sessions, self.parameters["acq_label"]
+                self.parameters["pvc_psf_tsv"],
+                self.subjects,
+                self.sessions,
+                self.parameters["acq_label"],
             )
             self.parameters["apply_pvc"] = True
         else:
@@ -285,6 +290,7 @@ class PETVolume(cpe.Pipeline):
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import zip_nii
         from clinica.utils.nipype import container_from_filename, fix_join
 
@@ -292,7 +298,7 @@ class PETVolume(cpe.Pipeline):
         # =====================================
         container_path = npe.Node(
             nutil.Function(
-                input_names=["pet_filename"],
+                input_names=["bids_or_caps_filename"],
                 output_names=["container"],
                 function=container_from_filename,
             ),
@@ -386,8 +392,8 @@ class PETVolume(cpe.Pipeline):
         # fmt: off
         self.connect(
             [
-                (self.input_node, container_path, [("pet_image", "pet_filename")]),
-                (container_path, write_images_node, [(("container", fix_join, f"group-{self.parameters['group_label']}"), "container")]),
+                (self.input_node, container_path, [("pet_image", "bids_or_caps_filename")]),
+                (container_path, write_images_node, [(("container", fix_join, "pet", "preprocessing", f"group-{self.parameters['group_label']}"), "container")]),
                 (self.output_node, write_images_node, [(("pet_t1_native", zip_nii, True), "pet_t1_native"),
                                                        (("pet_mni", zip_nii, True), "pet_mni"),
                                                        (("pet_suvr", zip_nii, True), "pet_suvr"),
@@ -399,7 +405,7 @@ class PETVolume(cpe.Pipeline):
                                                        (("pet_pvc_suvr", zip_nii, True), "pet_pvc_suvr"),
                                                        (("pet_pvc_suvr_masked", zip_nii, True), "pet_pvc_suvr_masked"),
                                                        (("pet_pvc_suvr_masked_smoothed", zip_nii, True), "pet_pvc_suvr_masked_smoothed")]),
-                (container_path, write_atlas_node, [(("container", fix_join, f"group-{self.parameters['group_label']}"), "container")]),
+                (container_path, write_atlas_node, [(("container", fix_join, "pet", "preprocessing", f"group-{self.parameters['group_label']}"), "container")]),
                 (self.output_node, write_atlas_node, [("atlas_statistics", "atlas_statistics"),
                                                       ("pvc_atlas_statistics", "pvc_atlas_statistics")]),
             ]
@@ -412,9 +418,10 @@ class PETVolume(cpe.Pipeline):
         import nipype.interfaces.spm.utils as spmutils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from nipype.interfaces.petpvc import PETPVC
+
         from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
-        from nipype.interfaces.petpvc import PETPVC
 
         from .pet_volume_utils import (
             apply_binary_mask,

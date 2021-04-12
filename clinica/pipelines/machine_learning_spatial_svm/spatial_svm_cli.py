@@ -12,7 +12,7 @@ class SpatialSVMCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Prepare input data for SVM with spatial and anatomical regularization:\n"
-            "http://clinica.run/doc/MachineLeaning_PrepareSpatialSVM"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/MachineLearning_PrepareSVM/"
         )
 
     def define_options(self):

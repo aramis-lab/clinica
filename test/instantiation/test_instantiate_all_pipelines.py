@@ -222,6 +222,24 @@ def test_instantiate_PETVolume():
     pipeline.build()
 
 
+def test_instantiate_PETLinear():
+    from os.path import abspath, dirname, join
+
+    from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, "data", "PETLinear")
+
+    parameters = {"acq_label": "fdg", "suvr_reference_region": "cerebellumPons"}
+    pipeline = PETLinear(
+        bids_directory=join(root, "in", "bids"),
+        caps_directory=join(root, "in", "caps"),
+        tsv_file=join(root, "in", "subjects.tsv"),
+        parameters=parameters,
+    )
+    pipeline.build
+
+
 def test_instantiate_StatisticsSurface():
     from os.path import abspath, dirname, join
 

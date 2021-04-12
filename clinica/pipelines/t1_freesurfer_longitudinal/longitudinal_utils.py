@@ -82,18 +82,13 @@ def save_part_sess_long_ids_to_tsv(
 
     TODO: Find a way to merge with utils/save_participants_sessions.py::read_participant_tsv into one util
     """
-    import errno
     import os
 
     import pandas
 
     from clinica.utils.stream import cprint
 
-    try:
-        os.makedirs(out_folder)
-    except OSError as e:
-        if e.errno != errno.EEXIST:  # EEXIST: folder already exists
-            raise e
+    os.makedirs(out_folder, exist_ok=True)
 
     if file_name:
         tsv_file = os.path.join(out_folder, file_name)

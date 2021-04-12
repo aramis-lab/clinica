@@ -53,9 +53,10 @@ class AdniToBidsCLI(ce.CmdParser):
         )
 
     def run_command(self, args):
+        from colorama import Fore
+
         from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
         from clinica.utils.exceptions import ClinicaParserError
-        from colorama import Fore
 
         adni_to_bids = AdniToBids()
 

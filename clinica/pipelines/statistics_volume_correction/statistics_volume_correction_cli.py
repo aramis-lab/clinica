@@ -12,7 +12,7 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Statistical correction of statistics-volume pipeline:\n"
-            "http://clinica.run/doc/Pipelines/Statistics_Volume/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Volume/"
         )
 
     def define_options(self):

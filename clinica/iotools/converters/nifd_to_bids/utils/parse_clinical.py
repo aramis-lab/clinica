@@ -432,9 +432,7 @@ class Parse_clinical:
                                 f"{des[0]}:{des[1]} {des[2]}:{des[3]}:{des[4]} {des[5]}"
                             )
                         else:
-                            des = (
-                                f"{des[0]}:{des[1]} {des[2]}:{des[3]}:{des[4]} {des[5]} {des[6]}"
-                            )
+                            des = f"{des[0]}:{des[1]} {des[2]}:{des[3]}:{des[4]} {des[5]} {des[6]}"
                         df_line_ida = self.df_ida[
                             (
                                 self.df_ida["Subject ID"]

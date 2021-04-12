@@ -69,9 +69,10 @@ def rename_into_caps(in_bids_dwi,
     Returns:
         The different outputs in CAPS format
     """
-    from nipype.utils.filemanip import split_filename
-    from nipype.interfaces.utility import Rename
     import os
+
+    from nipype.interfaces.utility import Rename
+    from nipype.utils.filemanip import split_filename
 
     # Extract <source_file> in format sub-CLNC01_ses-M00[_acq-label]_dwi
     _, source_file_dwi, _ = split_filename(in_bids_dwi)
@@ -113,10 +114,12 @@ def rename_into_caps(in_bids_dwi,
 def print_begin_pipeline(in_bids_or_caps_file):
     """
     """
-    from clinica.utils.stream import cprint
-    import re
     import datetime
+    import re
+
     from colorama import Fore
+
+    from clinica.utils.stream import cprint
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
                   in_bids_or_caps_file)
@@ -132,10 +135,12 @@ def print_begin_pipeline(in_bids_or_caps_file):
 def print_end_pipeline(in_bids_or_caps_file, final_file):
     """
     """
-    from clinica.utils.stream import cprint
-    import re
     import datetime
+    import re
+
     from colorama import Fore
+
+    from clinica.utils.stream import cprint
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
                   in_bids_or_caps_file)

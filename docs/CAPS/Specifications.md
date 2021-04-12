@@ -370,6 +370,24 @@ If `_space_native_` is in the name, it can be mapped onto the white or pial surf
 Files with the `statistics` suffix are text files that display average PET values on either `_space-desikan` or `_space-destrieux` atlases.
 Example of this content can be found in [appendix](#appendix-content-of-a-statistic-file).
 
+### `pet-surface-longitudinal` - Surface-based longitudinal processing of PET images
+
+```Text
+subjects/
+└─ <participant_id>/
+   └─ <session_id>/
+      └─ pet/
+         └─ <long_id>/
+            └─ surface_longitudinal/
+               ├─ atlas_statistics/
+               │  └─ sub-<label>_ses-<lalbel>_long-<label>_task-<label>_acq-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
+               ├─ sub-<label>_ses-<lalbel>_long-<label>_hemi-{left|right}_midcorticalsurface
+               └─ sub-<label>_ses-<lalbel>_long-<label>_task-rest_acq-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
+```
+
+Explanations on the key/values can be found on the
+[`pet-surface` section](#pet-surface-surface-based-processing-of-pet-images).
+
 ## Statistics
 
 ### `statistics-surface` - Surface-based mass-univariate analysis with SurfStat

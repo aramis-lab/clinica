@@ -1,7 +1,7 @@
 # Project information
 site_name: Clinica Documentation
 site_author: Clinica contributors
-site_url: http://www.clinica.run/doc
+site_url: https://aramislab.paris.inria.fr/clinica/docs/public
 site_description: >-
   Software platform for clinical neuroimaging studies
 
@@ -28,9 +28,14 @@ theme:
     primary: light blue
     accent: light blue
 
+# Version panel
+extra_javascript:
+  - 'https://code.jquery.com/jquery-3.3.1.min.js'
+      
 # Customization
 extra_css:
   - css/clinica.css
+
 extra:
   feature:
     tabs: true
@@ -41,6 +46,8 @@ extra:
       link: https://twitter.com/clinica_run
     - icon: material/earth
       link: http://www.aramislab.fr
+  version:
+    provider: mike
 
 # Extensions
 markdown_extensions:
@@ -83,8 +90,10 @@ nav:
       - Connectome: Pipelines/DWI_Connectome.md
     - PET:
       - Introduction: Pipelines/PET_Introduction.md
+      - Linear processing: Pipelines/PET_Linear.md
       - Volume processing: Pipelines/PET_Volume.md
       - Surface processing: Pipelines/PET_Surface.md
+      - Surface longitudinal processing: Pipelines/PET_Surface_Longitudinal.md
     - Statistics:
       - Surface-based mass-univariate analysis: Pipelines/Stats_Surface.md
       - Volume-based mass-univariate analysis: Pipelines/Stats_Volume.md

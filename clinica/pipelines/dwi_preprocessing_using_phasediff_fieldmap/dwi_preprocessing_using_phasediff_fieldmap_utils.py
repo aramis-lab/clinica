@@ -94,9 +94,10 @@ def rename_into_caps(in_bids_dwi,
     Returns:
         The different outputs in CAPS format
     """
-    from nipype.utils.filemanip import split_filename
-    from nipype.interfaces.utility import Rename
     import os
+
+    from nipype.interfaces.utility import Rename
+    from nipype.utils.filemanip import split_filename
 
     # Extract <source_file> in format sub-CLNC01_ses-M00_[acq-label]_dwi
     _, source_file_dwi, _ = split_filename(in_bids_dwi)

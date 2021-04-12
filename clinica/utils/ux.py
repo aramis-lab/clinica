@@ -156,7 +156,7 @@ def print_crash_files_and_exit(log_file, working_directory):
         f"{Fore.YELLOW}\n"
         f"If your pipeline crashed due to lack of space of network issues, "
         f"re-run the pipeline with the working directory (-wd {working_directory}).\n"
-        f"Known issues are displayed here: http://www.clinica.run/doc/InteractingWithClinica/#known-issues\n"
+        f"Known issues are displayed here: https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/#known-issues\n"
         f"Otherwise, you can delete it.{Fore.RESET}"
     )
     # Force the display of "Documentation can be found..."
@@ -173,6 +173,4 @@ def print_groups_in_caps_directory(caps_directory):
         cprint("No group was found in CAPS directory")
     else:
         found_groups = ", ".join(g_id.replace("group-", "") for g_id in group_ids)
-        cprint(
-            f"Groups that exist in your CAPS directory are {found_groups}."
-        )
+        cprint(f"Groups that exist in your CAPS directory are {found_groups}.")

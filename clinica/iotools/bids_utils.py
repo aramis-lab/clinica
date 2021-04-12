@@ -354,9 +354,7 @@ def create_scans_dict(
                         fields_bids[i]
                     ] = value
                 else:
-                    print(
-                        f"Scans information for {bids_id} {session_name} not found."
-                    )
+                    print(f"Scans information for {bids_id} {session_name} not found.")
                     scans_dict[bids_id][session_name][fields_mod[i]][
                         fields_bids[i]
                     ] = "n/a"

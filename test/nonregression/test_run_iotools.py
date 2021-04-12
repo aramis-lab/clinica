@@ -93,7 +93,7 @@ def test_run_Adni2Bids(cmdopt):
     adni_to_bids.check_adni_dependencies()
 
     dataset_directory = join(root, "in", "unorganized_data")
-    clinical_data_directory = join(root, "in", "clinical_data_25-04-19")
+    clinical_data_directory = join(root, "in", "clinical_data")
     bids_directory = join(root, "out", "bids")
     subjects_list = join(root, "in", "subjects.txt")
     modalities = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]

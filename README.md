@@ -28,7 +28,8 @@
 
 <p align="center">
   <a href="http://www.clinica.run">Homepage</a> |
-  <a href="http://www.clinica.run/doc">Documentation</a> |
+  <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/">Documentation</a> |
+  <a href="https://hal.inria.fr/hal-02308126">Preprint</a> |
   <a href="https://groups.google.com/forum/#!forum/clinica-user">Forum</a> |
   See also:
   <a href="#related-repositories">AD-ML</a>,
@@ -68,11 +69,7 @@ neuroimaging data (T1-weighted MRI, diffusion MRI and PET data).
 It also provides integration between feature extraction and statistics, machine
 learning or deep learning.
 
-![ClinicaPipelines](http://www.clinica.run/img/clinica_pipelines.png)
-
-<p align="center">
-  <i>Current pipelines are indicated in blue while new or updated pipelines are indicated in purple (will be released in Summer 2020).</i>
-</p>
+![ClinicaPipelines](http://www.clinica.run/img/Clinica_Pipelines_A4_2021-04-02_75dpi.jpg)
 
 Clinica is also showcased as a framework for the reproducible classification of
 Alzheimer's disease using
@@ -82,7 +79,7 @@ Alzheimer's disease using
 ## Getting Started
 
 > Full instructions for installation and additional information can be found in
-the [user documentation](http://www.clinica.run/doc).
+the [user documentation](https://aramislab.paris.inria.fr/clinica/docs/public/latest/).
 
 Clinica currently supports macOS and Linux.
 It can be installed by typing the following command:
@@ -111,7 +108,8 @@ to determine which third-party libraries you need to install.
 Diagram illustrating the Clinica pipelines involved when performing a group
 comparison of FDG PET data projected on the cortical surface between patients
 with Alzheimer's disease and healthy controls from the ADNI database:
-![ClinicaExample](http://www.clinica.run/img/clinica_example.png)
+
+![ClinicaExample](http://www.clinica.run/img/Clinica_Example_2021-04-02_75dpi.jpg)
 
 1. Clinical and neuroimaging data are downloaded from the ADNI website and data
    are converted into BIDS with the [`adni-to-bids`

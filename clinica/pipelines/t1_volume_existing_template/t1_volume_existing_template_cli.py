@@ -12,7 +12,7 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Volume-based processing of T1-weighted MR images using an existing DARTEL template:\n"
-            "http://clinica.run/doc/Pipelines/T1_Volume/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/"
         )
 
     def define_options(self):
