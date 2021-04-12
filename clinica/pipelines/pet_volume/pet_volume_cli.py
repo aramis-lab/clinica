@@ -12,7 +12,7 @@ class PETVolumeCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "SPM-based pre-processing of PET images:\n"
-            "http://clinica.run/doc/Pipelines/PET_Volume/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Volume/"
         )
 
     def define_options(self):

@@ -17,17 +17,17 @@
   <a href="https://badge.fury.io/py/clinica">
     <img src="https://badge.fury.io/py/clinica.svg" alt="PyPI version">
   </a>
-  <a href="http://www.clinica.run/doc/Installation/">
+  <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
     <img src="https://anaconda.org/aramislab/clinica/badges/installer/conda.svg" alt="conda install">
   </a>
-  <a href="http://www.clinica.run/doc/Installation/">
+  <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
     <img src="https://anaconda.org/aramislab/clinica/badges/platforms.svg" alt="platform">
   </a>
 </p>
 
 <p align="center">
   <a href="http://www.clinica.run">Homepage</a> |
-  <a href="http://www.clinica.run/doc">Documentation</a> |
+  <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/">Documentation</a> |
   <a href="https://hal.inria.fr/hal-02308126">Preprint</a> |
   <a href="https://groups.google.com/forum/#!forum/clinica-user">Forum</a> |
   See also:
@@ -60,10 +60,10 @@ standard](http://bids-specification.readthedocs.io/) for data organization.
 Clinica provides tools to convert publicly available neuroimaging datasets into
 BIDS, namely:
 
-- [ADNI: Alzheimer’s Disease Neuroimaging Initiative](http://www.clinica.run/doc/Converters/ADNI2BIDS)
-- [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](http://www.clinica.run/doc/Converters/AIBL2BIDS)
-- [NIFD: Neuroimaging in Frontotemporal Dementia](http://www.clinica.run/doc/Converters/NIFD2BIDS)
-- [OASIS: Open Access Series of Imaging Studies](http://www.clinica.run/doc/Converters/OASIS2BIDS)
+- [ADNI: Alzheimer’s Disease Neuroimaging Initiative](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/ADNI2BIDS/)
+- [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/AIBL2BIDS/)
+- [NIFD: Neuroimaging in Frontotemporal Dementia](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/NIFD2BIDS/)
+- [OASIS: Open Access Series of Imaging Studies](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/OASIS2BIDS/)
 
 Clinica can process any BIDS-compliant dataset with a set of complex processing
 pipelines involving different software packages for the analysis of
@@ -82,7 +82,7 @@ learning](https://github.com/aramis-lab/AD-DL).
 
 ## Getting Started
 > Full instructions for installation and additional information can be found in
-the [user documentation](http://www.clinica.run/doc).
+the [user documentation](https://aramislab.paris.inria.fr/clinica/docs/public/latest/).
 
 Clinica currently supports macOS and Linux. It can be installed by typing the
 following command:
@@ -116,20 +116,20 @@ with Alzheimer's disease and healthy controls from the ADNI database:
 ![ClinicaExample](http://www.clinica.run/img/Clinica_Example_2021-04-02_75dpi.jpg)
 1. Clinical and neuroimaging data are downloaded from the ADNI website and data
    are converted into BIDS with the [`adni-to-bids`
-   converter](http://www.clinica.run/doc/Converters/ADNI2BIDS).
+   converter](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/ADNI2BIDS/).
 2. Estimation of the cortical and white surface is then produced by the
    [`t1-freesurfer`
-   pipeline](http://www.clinica.run/doc/Pipelines/T1_FreeSurfer).
+   pipeline](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_FreeSurfer/).
 3. FDG PET data can be projected on the subject’s cortical surface and
    normalized to the FsAverage template from FreeSurfer using the
-   [`pet-surface` pipeline](http://www.clinica.run/doc/Pipelines/PET_Surface).
+   [`pet-surface` pipeline](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface/).
 4. TSV file with demographic information of the population studied is given to
    the [`statistics-surface`
-   pipeline](http://www.clinica.run/doc/Pipelines/Stats_Surface) to generate
+   pipeline](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/) to generate
    the results of the group comparison.
 
 > For more examples and details, please refer to the
-> [Documentation](http://www.clinica.run/doc/).
+> [Documentation](https://aramislab.paris.inria.fr/clinica/docs/public/latest/).
 
 
 

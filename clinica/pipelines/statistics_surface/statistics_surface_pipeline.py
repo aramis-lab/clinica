@@ -6,7 +6,7 @@ import clinica.pipelines.engine as cpe
 class StatisticsSurface(cpe.Pipeline):
     """StatisticsSurface - Surface-based mass-univariate analysis with SurfStat.
 
-    See documentation at http://www.clinica.run/doc/Pipelines/Stats_Surface/
+    See documentation at https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
 
     Note:
         The `tsv_file` attribute is overloaded for this pipeline. It must contain a list of subjects

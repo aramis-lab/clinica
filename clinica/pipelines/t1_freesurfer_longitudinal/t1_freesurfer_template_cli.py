@@ -12,7 +12,7 @@ class T1FreeSurferTemplateCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Creation of unbiased template with FreeSurfer:\n"
-            "http://clinica.run/doc/Pipelines/T1_FreeSurfer_Longitudinal/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_FreeSurfer_Longitudinal/"
         )
 
     def define_options(self):

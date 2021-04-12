@@ -12,7 +12,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Volume-based mass-univariate analysis with SPM:\n"
-            "http://clinica.run/doc/Pipelines/Statistics_Volume/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Volume/"
         )
 
     def define_options(self):

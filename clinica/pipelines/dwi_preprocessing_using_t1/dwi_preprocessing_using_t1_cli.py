@@ -12,7 +12,7 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline."""
         self._description = ('Preprocessing of raw DWI datasets using a T1w image:\n'
-                             'http://clinica.run/doc/Pipelines/DWI_Preprocessing/')
+                             'https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_Preprocessing/')
 
     def define_options(self):
         """Define the sub-command arguments."""
