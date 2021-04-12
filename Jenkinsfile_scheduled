@@ -40,7 +40,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
-                    nonregression/test_run_iotools.py
+                    nonregression/iotools
                  module purge
                  conda deactivate
                  '''
@@ -81,7 +81,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
-                    nonregression/test_run_iotools.py
+                    nonregression/iotools
                  module purge
                  conda deactivate
                  '''
