@@ -8,8 +8,7 @@ different functions available in Clinica
 
 import warnings
 from os import pardir
-
-from testing_tools import (
+from test.nonregression.testing_tools import (
     clean_folder,
     compare_folders,
     compare_folders_structures,
@@ -29,7 +28,9 @@ def test_run_CreateSubjectSessionList(cmdopt):
 
     from clinica.iotools.utils import data_handling as dt
 
-    root = join(dirname(abspath(__file__)), pardir, "data", "CreateSubjectSessionList")
+    root = join(
+        dirname(abspath(__file__)), pardir, pardir, "data", "CreateSubjectSessionList"
+    )
 
     # Set variables
     bids_directory = join(root, "in", "bids")
@@ -54,7 +55,7 @@ def test_run_CreateMergeFile(cmdopt):
 
     from clinica.iotools.utils import data_handling as dt
 
-    root = join(dirname(abspath(__file__)), pardir, "data", "CreateMergeFile")
+    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "CreateMergeFile")
 
     bids_directory = join(root, "in", "bids")
     out_tsv = join(root, "out", "output_file.tsv")
@@ -86,7 +87,7 @@ def test_run_ComputeMissingModalities(cmdopt):
 
     from clinica.iotools.utils import data_handling as dt
 
-    root = join(dirname(abspath(__file__)), pardir, "data", "ComputeMissingMod")
+    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "ComputeMissingMod")
 
     bids_directory = join(root, "in", "bids")
     output_directory = join(root, "out")
@@ -120,7 +121,7 @@ def test_run_CenterNifti(cmdopt):
 
     from clinica.iotools.utils.data_handling import center_all_nifti
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "CenterNifti")
 
     clean_folder(join(root, "out", "bids_centered"), recreate=True)

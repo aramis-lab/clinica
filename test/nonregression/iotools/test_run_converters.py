@@ -8,8 +8,7 @@ different functions available in Clinica
 
 import warnings
 from os import pardir
-
-from testing_tools import (
+from test.nonregression.testing_tools import (
     clean_folder,
     compare_folders,
     compare_folders_structures,
@@ -32,7 +31,7 @@ def test_run_Nifd2Bids(cmdopt):
         convert_images,
     )
 
-    root = join(dirname(abspath(__file__)), pardir, "data", "Nifd2Bids")
+    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "Nifd2Bids")
 
     clean_folder(join(root, "out", "bids"), recreate=True)
     clean_folder(join(root, "out", "clinical_data"), recreate=False)
@@ -63,7 +62,7 @@ def test_run_Oasis2Bids(cmdopt):
 
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
 
-    root = join(dirname(abspath(__file__)), pardir, "data", "Oasis2Bids")
+    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "Oasis2Bids")
 
     clean_folder(join(root, "out", "bids"), recreate=True)
 
@@ -85,7 +84,7 @@ def test_run_Adni2Bids(cmdopt):
 
     from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
 
-    root = join(dirname(abspath(__file__)), pardir, "data", "Adni2Bids")
+    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "Adni2Bids")
 
     clean_folder(join(root, "out", "bids"), recreate=True)
 
@@ -118,7 +117,7 @@ def test_run_Aibl2Bids(cmdopt):
         convert_images,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "Aibl2Bids")
 
     dataset_directory = join(root, "in", "unorganized_data")
