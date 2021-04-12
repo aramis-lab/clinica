@@ -150,7 +150,7 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
     if not issubclass(exc_type, KeyboardInterrupt):
         cprint(
             f"\nDocumentation can be found here: "
-            f"{Fore.BLUE}http://www.clinica.run/doc/{Fore.RESET}\n"
+            f"{Fore.BLUE}https://aramislab.paris.inria.fr/clinica/docs/public/latest/{Fore.RESET}\n"
             f"If you need support, do not hesitate to ask: "
             f"{Fore.BLUE}https://groups.google.com/forum/#!forum/clinica-user{Fore.RESET}\n"
             f"Alternatively, you can also open an issue on GitHub: "

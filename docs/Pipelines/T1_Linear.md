@@ -32,9 +32,9 @@ clinica run t1-linear <bids_directory> <caps_directory>
 where:
 
 - `bids_directory` is the input folder containing the dataset in a
-  [BIDS](http://www.clinica.run/doc/BIDS/) hierarchy.
+  [BIDS](https://aramislab.paris.inria.fr/clinica/docs/public/latest/BIDS/) hierarchy.
 - `caps_directory` is the output folder containing the results in a
-  [CAPS](http://www.clinica.run/doc/CAPS/Introduction) hierarchy.
+  [CAPS](https://aramislab.paris.inria.fr/clinica/docs/public/latest/CAPS/Introduction/) hierarchy.
 
 On default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are
 generated to reduce the computing power required when training deep learning
