@@ -1,7 +1,7 @@
 # Project information
 site_name: Clinica Documentation
 site_author: Clinica contributors
-site_url: http://www.clinica.run/doc
+site_url: https://aramislab.paris.inria.fr/clinica/docs/public
 site_description: >-
   Software platform for clinical neuroimaging studies
 
@@ -29,9 +29,8 @@ theme:
     accent: light blue
 
 # Version panel
-extra_javascript:
-  - 'https://code.jquery.com/jquery-3.3.1.min.js'
-  - 'https://assets.readthedocs.org/static/core/js/readthedocs-doc-embed.js'  
+# extra_javascript:
+#  - 'https://code.jquery.com/jquery-3.3.1.min.js'
       
 # Customization
 extra_css:
@@ -47,7 +46,7 @@ extra:
     - icon: material/earth
       link: http://www.aramislab.fr
   version:
-    default: stable
+    provider: mike
 
 # Extensions
 markdown_extensions:
