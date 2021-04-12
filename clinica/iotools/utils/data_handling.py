@@ -201,9 +201,10 @@ def create_merge_file(
         if pipelines is None:
             for pipeline_name, pipeline_fn in pipeline_options.items():
                 merged_df, summary_df = pipeline_fn(caps_dir, merged_df, **kwargs)
-                merged_summary_df = pd.concat([merged_summary_df, summary_df])
+                if summary_df is not None:
+                    merged_summary_df = pd.concat([merged_summary_df, summary_df])
 
-                if len(summary_df) == 0:
+                if len(summary_df) == 0 or summary_df is not None:
                     cprint(
                         f"{pipeline_name} outputs were not found in the CAPS folder."
                     )
