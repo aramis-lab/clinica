@@ -12,7 +12,7 @@ class PetSurfaceCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Surface-based processing of PET images:\n"
-            "http://clinica.run/doc/Pipelines/PET_Surface/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface/"
         )
 
     def define_options(self):

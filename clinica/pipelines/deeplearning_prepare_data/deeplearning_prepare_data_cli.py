@@ -15,7 +15,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Prepare data generated Clinica for PyTorch with Tensor extraction:\n"
-            "http://clinica.run/doc/Pipelines/DeepLearning_PrepareData/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DeepLearning_PrepareData/"
         )
 
     def define_options(self):
