@@ -77,6 +77,7 @@ def test_run_PETVolume(cmdopt):
 
 
 def test_run_PETLinear(cmdopt):
+    import shutil
     from os.path import abspath, dirname, join
 
     from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
@@ -85,8 +86,9 @@ def test_run_PETLinear(cmdopt):
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "PETLinear")
 
-    # Remove potential residual of previous UT
-    clean_PETLinear(join(root, "out", "caps"))
+    clean_folder(join(root, "out", "caps"), recreate=False)
+    clean_folder(join(working_dir, "PETLinear"))
+    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
 
     parameters = {"acq_label": "fdg", "suvr_reference_region": "pons"}
 
@@ -106,7 +108,7 @@ def test_run_PETLinear(cmdopt):
 
     compare_folders(out_folder, ref_folder, shared_folder_name="caps")
 
-    clean_PETLinear(join(root, "out", "caps"))
+    clean_folder(join(root, "out", "caps"), recreate=False)
     clean_folder(join(working_dir, "PETLinear"), recreate=False)
 
 
