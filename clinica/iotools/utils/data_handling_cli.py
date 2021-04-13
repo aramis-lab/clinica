@@ -142,7 +142,7 @@ class CmdParserMergeTsv(ce.CmdParser):
             "--ignore_session_scan_files",
             default=False,
             action="store_true",
-            help="If given, the session ans scan files will not be read and added to "
+            help="If given, the session files will not be read and added to "
             "the final output. This may accelerate the procedure.",
         )
 
