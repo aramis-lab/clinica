@@ -69,16 +69,17 @@ def test_run_CreateMergeFile(cmdopt):
         bids_directory,
         out_tsv,
         caps_dir=caps_directory,
+        tsv_file=subject_session_tsv,
         pipelines=None,
         atlas_selection=None,
         pvc_restriction=None,
-        tsv_file=subject_session_tsv,
         group_selection=None,
     )
     # Comparison step
     ref_tsv = join(root, "ref", "output_file.tsv")
     assert cmp(out_tsv, ref_tsv)
     remove(out_tsv)
+    clean_folder(join(root, "out", "caps"), recreate=False)
 
 
 def test_run_ComputeMissingModalities(cmdopt):
