@@ -135,7 +135,14 @@ class CmdParserMergeTsv(ce.CmdParser):
             "--ignore_scan_files",
             default=False,
             action="store_true",
-            help="If given, the session and scan files will not be read and added to "
+            help="If given, the scan files will not be read and added to "
+            "the final output. This may accelerate the procedure.",
+        )
+        iotools_options.add_argument(
+            "--ignore_session_scan_files",
+            default=False,
+            action="store_true",
+            help="If given, the session files will not be read and added to "
             "the final output. This may accelerate the procedure.",
         )
 
@@ -149,14 +156,14 @@ class CmdParserMergeTsv(ce.CmdParser):
             args.out_tsv,
             caps_dir=args.caps_directory,
             pipelines=args.pipelines,
+            ignore_scan_files=args.ignore_scan_files,
+            ignore_sessions_files=args.ignore_session_scan_files,
             volume_atlas_selection=args.volume_atlas_selection,
             freesurfer_atlas_selection=args.freesurfer_atlas_selection,
             pvc_restriction=args.pvc_restriction,
             tsv_file=args.subjects_sessions_tsv,
             group_selection=args.group_selection,
             tracers_selection=args.pet_tracers_selection,
-            ignore_scan_files=args.ignore_scan_files,
-            ignore_sessions_files=args.ignore_session_scan_files,
         )
 
 
