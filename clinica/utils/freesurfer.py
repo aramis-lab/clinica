@@ -115,7 +115,6 @@ def generate_regional_measures(segmentation_path, subject_id, output_dir=None):
             stored. Will be [path_segmentation]/regional_measures if no
             dir is provided by the user
     """
-    import errno
     import os
 
     import pandas
@@ -140,12 +139,7 @@ def generate_regional_measures(segmentation_path, subject_id, output_dir=None):
 
     if not output_dir:
         output_dir = os.path.join(segmentation_path, "regional_measures")
-    try:
-        os.makedirs(output_dir)
-    except OSError as exception:
-        # if dest_dir exists, go on, if its other error, raise
-        if exception.errno != errno.EEXIST:
-            raise
+    os.makedirs(output_dir, exist_ok=True)
 
     # Generate TSV files for parcellation files
     #

@@ -90,9 +90,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                 f"{Fore.YELLOW}Clinica found {len(processed_ids)} images(s) already processed in CAPS directory:{Fore.RESET}"
             )
             for image_id in processed_ids:
-                cprint(
-                    f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}"
-                )
+                cprint(f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}")
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/<long_id>/freesurfer_longitudinal/"
                 cprint(

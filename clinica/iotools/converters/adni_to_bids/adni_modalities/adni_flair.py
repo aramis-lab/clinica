@@ -19,9 +19,10 @@ def convert_adni_flair(
     from os import path
 
     import pandas as pd
+    from colorama import Fore
+
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
-    from colorama import Fore
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
@@ -56,6 +57,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_di
     from os import path
 
     import pandas as pd
+
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
         visits_to_timepoints,

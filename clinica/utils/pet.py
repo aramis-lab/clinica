@@ -84,10 +84,7 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     return iterables_psf
 
 
-LIST_SUVR_REFERENCE_REGIONS = [
-    "pons",
-    "cerebellumPons",
-]
+LIST_SUVR_REFERENCE_REGIONS = ["pons", "cerebellumPons", "pons2", "cerebellumPons2"]
 
 
 def get_suvr_mask(suvr_reference_region):
@@ -115,6 +112,20 @@ def get_suvr_mask(suvr_reference_region):
             "resources",
             "masks",
             "region-cerebellumPons_eroded-6mm_mask.nii.gz",
+        ),
+        "pons2": os.path.join(
+            os.path.split(os.path.realpath(__file__))[0],
+            "..",
+            "resources",
+            "masks",
+            "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz",
+        ),
+        "cerebellumPons2": os.path.join(
+            os.path.split(os.path.realpath(__file__))[0],
+            "..",
+            "resources",
+            "masks",
+            "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz",
         ),
     }
     return suvr_reference_region_to_suvr[suvr_reference_region]

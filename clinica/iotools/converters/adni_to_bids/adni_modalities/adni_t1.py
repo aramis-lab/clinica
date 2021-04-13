@@ -18,10 +18,11 @@ def convert_adni_t1(
     """
     from os import path
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
-    from clinica.utils.stream import cprint
     from colorama import Fore
     from pandas.io import parsers
+
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.utils.stream import cprint
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
@@ -53,6 +54,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
     from os import path
 
     import pandas as pd
+
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
         visits_to_timepoints,

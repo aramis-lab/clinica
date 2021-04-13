@@ -1,8 +1,8 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
 from nipype import config
 
+import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -25,6 +25,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
         from colorama import Fore
+
         from clinica.utils.stream import cprint
 
         if self.parameters['low_bval'] < 0:
@@ -65,10 +66,11 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.inputs import clinica_file_reader
+
+        import clinica.utils.input_files as input_files
         from clinica.utils.dwi import check_dwi_volume
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        import clinica.utils.input_files as input_files
+        from clinica.utils.inputs import clinica_file_reader
 
         all_errors = []
         try:
@@ -134,11 +136,12 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
+        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
-        from clinica.utils.nipype import fix_join
+
         import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils as utils
+        from clinica.utils.nipype import fix_join
 
         # Find container path from DWI filename
         # =====================================
@@ -180,21 +183,21 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-        import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows as workflows
-        import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils as utils
-
+        import nipype.interfaces.fsl as fsl
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.fsl as fsl
 
+        import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils as utils
+        import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows as workflows
         from clinica.utils.dwi import prepare_reference_b0
-        from clinica.workflows.dwi_preprocessing import ecc_pipeline
-        from clinica.workflows.dwi_preprocessing import hmc_pipeline
-        from clinica.workflows.dwi_preprocessing import remove_bias
+        from clinica.workflows.dwi_preprocessing import (
+            ecc_pipeline,
+            hmc_pipeline,
+            remove_bias,
+        )
 
         # Nodes creation
         # ==============
-
         # Prepare b0 image for further corrections
         prepare_b0 = npe.Node(name="PrepareB0", interface=nutil.Function(
             input_names=['in_dwi', 'in_bval', 'in_bvec', 'low_bval'],

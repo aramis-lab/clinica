@@ -118,9 +118,7 @@ def use_spm_standalone():
                     f"cd {spm_standalone_home} && ./run_spm12.sh {mcr_home} script"
                 )
             elif platform.system().lower().startswith("linux"):
-                matlab_cmd = (
-                    f"{os.path.join(spm_standalone_home, 'run_spm12.sh')} {mcr_home} script"
-                )
+                matlab_cmd = f"{os.path.join(spm_standalone_home, 'run_spm12.sh')} {mcr_home} script"
             else:
                 raise SystemError("Clinica only support macOS and Linux")
             spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)

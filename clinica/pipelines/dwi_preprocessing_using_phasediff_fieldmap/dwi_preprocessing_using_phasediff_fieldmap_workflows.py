@@ -53,18 +53,21 @@ def susceptibility_distortion_correction_using_phasediff_fmap(
         phase-unwrapping algorithm <http://dx.doi.org/10.1002/mrm.10354>`_,
         MRM 49(1):193-197, 2003, doi: 10.1002/mrm.10354.
     """
-    import nipype.pipeline.engine as pe
-    import nipype.interfaces.utility as niu
-    import nipype.interfaces.fsl as fsl
     import nipype.interfaces.ants as ants
+    import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as pe
+    from nipype.workflows.dmri.fsl.utils import (
+        add_empty_vol,
+        cleanup_edge_pipeline,
+        demean_image,
+        rads2radsec,
+        siemens2rads,
+        vsm2warp,
+    )
 
     from clinica.utils.epi import bids_dir_to_fsl_dir
     from clinica.utils.fmap import resample_fmap_to_b0
-
-    from nipype.workflows.dmri.fsl.utils import (rads2radsec, siemens2rads,
-                                                 vsm2warp, add_empty_vol,
-                                                 cleanup_edge_pipeline,
-                                                 demean_image)
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_dwi', 'in_mask', 'in_fmap_phasediff', 'in_fmap_magnitude',

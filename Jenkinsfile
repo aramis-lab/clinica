@@ -15,7 +15,7 @@ pipeline {
               PATH = "$HOME/miniconda/bin:$PATH"
               }
             when { 
-              changeset "requirements.txt"
+              changeset 'requirements*'
             }
             steps {
               echo 'My branch name is ${BRANCH_NAME}'
@@ -34,7 +34,7 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:$PATH"
               }
             when {
-              changeset "requirements.txt"
+              changeset 'requirements*'
             }
             steps {
               echo 'My branch name is ${BRANCH_NAME}'

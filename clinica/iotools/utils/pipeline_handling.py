@@ -10,8 +10,15 @@ from os import path
 import pandas as pd
 
 
-def pet_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selection=None, pvc_restriction=None,
-                        tracers_selection=None, **kwargs):
+def pet_volume_pipeline(
+    caps_dir,
+    df,
+    group_selection=None,
+    volume_atlas_selection=None,
+    pvc_restriction=None,
+    tracers_selection=None,
+    **kwargs,
+):
     """Merge the data of the PET-Volume pipeline to the merged file containing the BIDS information.
 
     Args:
@@ -30,12 +37,16 @@ def pet_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selecti
     """
     pet_path = path.join("pet", "preprocessing")
 
-    return volume_pipeline(caps_dir, df, pet_path,
-                           group_selection=group_selection,
-                           atlas_selection=volume_atlas_selection,
-                           pvc_restriction=pvc_restriction,
-                           pipeline_name="pet-volume",
-                           tracers_selection=tracers_selection)
+    return volume_pipeline(
+        caps_dir,
+        df,
+        pet_path,
+        group_selection=group_selection,
+        atlas_selection=volume_atlas_selection,
+        pvc_restriction=pvc_restriction,
+        pipeline_name="pet-volume",
+        tracers_selection=tracers_selection,
+    )
 
 
 def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwargs):
@@ -49,7 +60,10 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     Returns:
          final_df: a DataFrame containing the information of the bids and the pipeline
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        replace_sequence_chars,
+    )
+    from clinica.utils.stream import cprint
 
     # Ensures that df is correctly indexed
     if "participant_id" in df.columns.values:
@@ -62,32 +76,35 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     for participant_id, session_id in df.index.values:
 
         ses_path = path.join(subjects_dir, participant_id, session_id)
-        mod_path = path.join(ses_path, "t1", "freesurfer_cross_sectional", "regional_measures")
-        ses_df = pd.DataFrame([[participant_id, session_id]], columns=["participant_id", "session_id"])
+        mod_path = path.join(
+            ses_path, "t1", "freesurfer_cross_sectional", "regional_measures"
+        )
+        ses_df = pd.DataFrame(
+            [[participant_id, session_id]], columns=["participant_id", "session_id"]
+        )
         ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
         if os.path.exists(mod_path):
             # Looking for atlases
             atlas_paths = glob(
-                path.join(
-                    mod_path,
-                    f"{participant_id}_{session_id}_*thickness.tsv"
-                )
+                path.join(mod_path, f"{participant_id}_{session_id}_*thickness.tsv")
             )
 
             for atlas_path in atlas_paths:
                 atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
-                if path.exists(atlas_path) and (freesurfer_atlas_selection is None or
-                                                (freesurfer_atlas_selection is not None and
-                                                 atlas_name in freesurfer_atlas_selection)):
+                if path.exists(atlas_path) and (
+                    freesurfer_atlas_selection is None
+                    or (
+                        freesurfer_atlas_selection is not None
+                        and atlas_name in freesurfer_atlas_selection
+                    )
+                ):
                     atlas_df = pd.read_csv(atlas_path, sep="\t")
                     label_list = [
                         f"t1-freesurfer_atlas-{atlas_name}_ROI-{replace_sequence_chars(roi_name)}_thickness"
                         for roi_name in atlas_df.label_name.values
                     ]
-                    ses_df[label_list] = atlas_df[
-                        "label_value"
-                    ].to_numpy()
+                    ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
         pipeline_df = pipeline_df.append(ses_df)
 
@@ -97,7 +114,9 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     return final_df, summary_df
 
 
-def t1_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selection=None, **kwargs):
+def t1_volume_pipeline(
+    caps_dir, df, group_selection=None, volume_atlas_selection=None, **kwargs
+):
     """Merge data of the t1-volume pipeline to the merged file containing the BIDS information.
 
     Args:
@@ -111,16 +130,27 @@ def t1_volume_pipeline(caps_dir, df, group_selection=None, volume_atlas_selectio
     """
     t1_spm_path = path.join("t1", "spm", "dartel")
 
-    return volume_pipeline(caps_dir, df, t1_spm_path,
-                           group_selection=group_selection,
-                           atlas_selection=volume_atlas_selection,
-                           pvc_restriction=None,
-                           pipeline_name="t1-volume")
+    return volume_pipeline(
+        caps_dir,
+        df,
+        t1_spm_path,
+        group_selection=group_selection,
+        atlas_selection=volume_atlas_selection,
+        pvc_restriction=None,
+        pipeline_name="t1-volume",
+    )
 
 
-def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
-                    group_selection=None, atlas_selection=None,
-                    pvc_restriction=None, tracers_selection=None):
+def volume_pipeline(
+    caps_dir,
+    df,
+    pipeline_path,
+    pipeline_name,
+    group_selection=None,
+    atlas_selection=None,
+    pvc_restriction=None,
+    tracers_selection=None,
+):
     """Merge data of the t1-volume and pet-volume pipelines to the merged file containing the BIDS information.
 
     Args:
@@ -139,16 +169,21 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
     Returns:
         final_df: a DataFrame containing the information of the bids and the pipeline
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
-
-    if group_selection is None:
-        group_selection = os.listdir(path.join(caps_dir, "groups"))
-    else:
-        group_selection = [f"group-{group}" for group in group_selection]
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        replace_sequence_chars,
+    )
 
     # Ensures that df is correctly indexed
     if "participant_id" in df.columns.values:
         df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+
+    if group_selection is None:
+        try:
+            group_selection = os.listdir(path.join(caps_dir, "groups"))
+        except FileNotFoundError:
+            return df, None
+    else:
+        group_selection = [f"group-{group}" for group in group_selection]
 
     subjects_dir = path.join(caps_dir, "subjects")
 
@@ -158,7 +193,9 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
 
         ses_path = path.join(subjects_dir, participant_id, session_id)
         mod_path = path.join(ses_path, pipeline_path)
-        ses_df = pd.DataFrame([[participant_id, session_id]], columns=["participant_id", "session_id"])
+        ses_df = pd.DataFrame(
+            [[participant_id, session_id]], columns=["participant_id", "session_id"]
+        )
         ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
         if os.path.exists(mod_path):
@@ -172,31 +209,43 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
                             path.join(
                                 group_path,
                                 "atlas_statistics",
-                                f"{participant_id}_{session_id}_*_statistics.tsv"
+                                f"{participant_id}_{session_id}_*_statistics.tsv",
                             )
                         )
                     else:
                         atlas_paths = list()
                         for atlas in atlas_selection:
-                            atlas_paths += glob(path.join(
-                                group_path,
-                                "atlas_statistics",
-                                f"{participant_id}_{session_id}_*{atlas}*_statistics.tsv"
-                            ))
+                            atlas_paths += glob(
+                                path.join(
+                                    group_path,
+                                    "atlas_statistics",
+                                    f"{participant_id}_{session_id}_*{atlas}*_statistics.tsv",
+                                )
+                            )
 
                     # Filter pvc_restriction
                     if pvc_restriction is not None:
                         if pvc_restriction == 1:
-                            atlas_paths = [atlas_path for atlas_path in atlas_paths if "pvc-rbv" in atlas_path]
+                            atlas_paths = [
+                                atlas_path
+                                for atlas_path in atlas_paths
+                                if "pvc-rbv" in atlas_path
+                            ]
                         else:
-                            atlas_paths = [atlas_path for atlas_path in atlas_paths if "pvc-rbv" not in atlas_path]
+                            atlas_paths = [
+                                atlas_path
+                                for atlas_path in atlas_paths
+                                if "pvc-rbv" not in atlas_path
+                            ]
 
                     # Filter tracers
                     if tracers_selection is not None:
-                        atlas_paths = [atlas_path
-                                       for atlas_path in atlas_paths
-                                       for tracer in tracers_selection
-                                       if tracer in atlas_path]
+                        atlas_paths = [
+                            atlas_path
+                            for atlas_path in atlas_paths
+                            for tracer in tracers_selection
+                            if tracer in atlas_path
+                        ]
 
                     for atlas_path in atlas_paths:
                         atlas_name = atlas_path.split("_space-")[-1].split("_")[0]
@@ -204,7 +253,7 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
                             atlas_df = pd.read_csv(atlas_path, sep="\t")
                             additional_desc = ""
                             if "acq" in atlas_path:
-                                tracer = atlas_path.split('_acq-')[1].split("_")[0]
+                                tracer = atlas_path.split("_acq-")[1].split("_")[0]
                                 additional_desc += f"_acq-{tracer}"
                             if "pvc-rbv" in atlas_path:
                                 additional_desc += f"_pvc-rbv"
@@ -213,9 +262,7 @@ def volume_pipeline(caps_dir, df, pipeline_path, pipeline_name,
                                 f"{pipeline_name}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
                                 for roi_name in atlas_df.label_name.values
                             ]
-                            ses_df[label_list] = atlas_df[
-                                "mean_scalar"
-                            ].to_numpy()
+                            ses_df[label_list] = atlas_df["mean_scalar"].to_numpy()
 
         pipeline_df = pipeline_df.append(ses_df)
 
@@ -245,8 +292,16 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
     else:
         groups = list({column.split("_")[1] for column in pipeline_df.columns.values})
         atlases = list({column.split("_")[2] for column in pipeline_df.columns.values})
-    pvc_rectrictions = list({"pvc-rbv" in column for column in pipeline_df.columns.values})
-    tracers = list({column.split("_acq-")[1].split("_")[0] for column in pipeline_df.columns.values if "acq" in column})
+    pvc_rectrictions = list(
+        {"pvc-rbv" in column for column in pipeline_df.columns.values}
+    )
+    tracers = list(
+        {
+            column.split("_acq-")[1].split("_")[0]
+            for column in pipeline_df.columns.values
+            if "acq" in column
+        }
+    )
     if len(tracers) == 0:
         tracers.append("_")
         pvc_rectrictions = ["_"]
@@ -260,23 +315,43 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
             for tracer in tracers:
                 for pvc_rectriction in pvc_rectrictions:
                     if pvc_rectriction and pvc_rectriction != "_":
-                        regions = [column
-                                   for column in pipeline_df.columns.values
-                                   if group in column and atlas in column and "pvc-rbv" in column and tracer in column]
+                        regions = [
+                            column
+                            for column in pipeline_df.columns.values
+                            if group in column
+                            and atlas in column
+                            and "pvc-rbv" in column
+                            and tracer in column
+                        ]
                     else:
-                        regions = [column
-                                   for column in pipeline_df.columns.values
-                                   if group in column and atlas in column and "pvc-rbv" not in column and tracer in column]
+                        regions = [
+                            column
+                            for column in pipeline_df.columns.values
+                            if group in column
+                            and atlas in column
+                            and "pvc-rbv" not in column
+                            and tracer in column
+                        ]
 
                     if len(regions) > 0:
                         row_df = pd.DataFrame(
-                            [[pipeline_name, group_id, atlas_id, tracer, pvc_rectriction,
-                              len(regions), regions[0], regions[-1]]],
-                            columns=columns
+                            [
+                                [
+                                    pipeline_name,
+                                    group_id,
+                                    atlas_id,
+                                    tracer,
+                                    pvc_rectriction,
+                                    len(regions),
+                                    regions[0],
+                                    regions[-1],
+                                ]
+                            ],
+                            columns=columns,
                         )
                         summary_df = summary_df.append(row_df, ignore_index=True)
 
-    summary_df = summary_df.replace('_', 'n/a')
+    summary_df = summary_df.replace("_", "n/a")
     return summary_df
 
 

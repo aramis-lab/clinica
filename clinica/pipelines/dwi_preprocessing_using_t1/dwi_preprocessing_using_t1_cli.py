@@ -17,6 +17,7 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
@@ -35,8 +36,10 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
+
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+
         from .dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
             'low_bval': args.low_bval

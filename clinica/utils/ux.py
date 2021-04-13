@@ -173,6 +173,4 @@ def print_groups_in_caps_directory(caps_directory):
         cprint("No group was found in CAPS directory")
     else:
         found_groups = ", ".join(g_id.replace("group-", "") for g_id in group_ids)
-        cprint(
-            f"Groups that exist in your CAPS directory are {found_groups}."
-        )
+        cprint(f"Groups that exist in your CAPS directory are {found_groups}.")

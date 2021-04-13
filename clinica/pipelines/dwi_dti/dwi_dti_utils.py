@@ -15,6 +15,8 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     """
     import os
 
+    from nipype.utils.filemanip import split_filename
+
     from clinica.utils.atlas import (
         AtlasAbstract,
         JHUDTI811mm,
@@ -22,7 +24,6 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
         JHUTracts251mm,
     )
     from clinica.utils.statistics import statistics_on_atlas
-    from nipype.utils.filemanip import split_filename
 
     in_atlas_list = [JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()]
 
@@ -101,10 +102,11 @@ def rename_into_caps(
     Returns:
         The different outputs with CAPS naming convention
     """
+    from nipype.interfaces.utility import Rename
+
     from clinica.pipelines.dwi_dti.dwi_dti_utils import (
         extract_bids_identifier_from_caps_filename,
     )
-    from nipype.interfaces.utility import Rename
 
     bids_identifier = extract_bids_identifier_from_caps_filename(in_caps_dwi)
 
