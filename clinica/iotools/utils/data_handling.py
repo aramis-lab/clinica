@@ -135,41 +135,6 @@ def create_merge_file(
                     [row_participant_df, row_session_df, row_scans_df], axis=1
                 )
                 merged_df = merged_df.append(row_df)
-        for _, session in subject_df.index.values:
-            row_session_df = sessions_df[sessions_df.session_id == session]
-            row_session_df.reset_index(inplace=True, drop=True)
-            if len(row_session_df) == 0:
-                raise DatasetError(sessions_df.loc[0, "session_id"] + " / " + session)
-
-            # Read scans TSV files
-            scan_path = path.join(
-                bids_dir,
-                subject,
-                session,
-                f"{subject}_{session}_scans.tsv",
-            )
-            if path.isfile(scan_path) and not ignore_scan_files:
-                scans_dict = dict()
-                scans_df = pd.read_csv(scan_path, sep="\t")
-                for idx in scans_df.index.values:
-                    filepath = scans_df.loc[idx, "filename"]
-                    filename = path.basename(filepath).split(".")[0]
-                    modality = "_".join(filename.split("_")[2::])
-                    for col in scans_df.columns.values:
-                        if col == "filename":
-                            pass
-                        else:
-                            value = scans_df.loc[idx, col]
-                            new_col_name = f"{modality}_{col}"
-                            scans_dict.update({new_col_name: value})
-                row_scans_df = pd.DataFrame(scans_dict, index=[0])
-            else:
-                row_scans_df = pd.DataFrame()
-
-            row_df = pd.concat(
-                [row_participant_df, row_session_df, row_scans_df], axis=1
-            )
-            merged_df = merged_df.append(row_df)
 
     # Put participant_id and session_id first
     col_list = merged_df.columns.values.tolist()
