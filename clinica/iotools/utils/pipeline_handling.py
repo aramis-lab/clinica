@@ -173,14 +173,17 @@ def volume_pipeline(
         replace_sequence_chars,
     )
 
-    if group_selection is None:
-        group_selection = os.listdir(path.join(caps_dir, "groups"))
-    else:
-        group_selection = [f"group-{group}" for group in group_selection]
-
     # Ensures that df is correctly indexed
     if "participant_id" in df.columns.values:
         df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+
+    if group_selection is None:
+        try:
+            group_selection = os.listdir(path.join(caps_dir, "groups"))
+        except FileNotFoundError:
+            return df, None
+    else:
+        group_selection = [f"group-{group}" for group in group_selection]
 
     subjects_dir = path.join(caps_dir, "subjects")
 

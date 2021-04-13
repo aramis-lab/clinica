@@ -201,9 +201,10 @@ def create_merge_file(
         if pipelines is None:
             for pipeline_name, pipeline_fn in pipeline_options.items():
                 merged_df, summary_df = pipeline_fn(caps_dir, merged_df, **kwargs)
-                merged_summary_df = pd.concat([merged_summary_df, summary_df])
+                if summary_df is not None:
+                    merged_summary_df = pd.concat([merged_summary_df, summary_df])
 
-                if len(summary_df) == 0:
+                if summary_df is None or len(summary_df) == 0:
                     cprint(
                         f"{pipeline_name} outputs were not found in the CAPS folder."
                     )
@@ -215,6 +216,11 @@ def create_merge_file(
                 merged_summary_df = pd.concat([merged_summary_df, summary_df])
 
         n_atlas = len(merged_summary_df)
+        if n_atlas == 0:
+            raise FileNotFoundError(
+                "No outputs were found for any pipeline in the CAPS folder. "
+                "The output only contains BIDS information."
+            )
         index_column_df = pd.DataFrame(
             index=np.arange(n_atlas),
             columns=["first_column_index", "last_column_index"],
