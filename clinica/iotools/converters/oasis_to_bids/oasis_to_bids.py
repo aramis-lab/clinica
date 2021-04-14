@@ -3,6 +3,7 @@
 """Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS."""
 
 from clinica.iotools.abstract_converter import Converter
+from clinica.utils.stream import cprint
 
 
 class OasisToBids(Converter):
@@ -93,7 +94,16 @@ class OasisToBids(Converter):
         from multiprocessing.dummy import Pool
         from os import path
 
-        from nipype.interfaces.fsl import ExtractROI
+        try:
+            from nipype.interfaces.fsl import ExtractROI
+
+            fsl_found = True
+        except OSError:
+            cprint(
+                "FSL was not found in the environment. "
+                "MRI dimension correction will not be performed."
+            )
+            fsl_found = False
 
         def convert_single_subject(subj_folder):
             import os
@@ -164,10 +174,11 @@ class OasisToBids(Converter):
             nb.save(img_with_good_orientation_nifti, output_path)
 
             # Header correction to obtain dim0 = 3
-            fslroi = ExtractROI(
-                in_file=output_path, roi_file=output_path, t_min=0, t_size=1
-            )
-            fslroi.run()
+            if fsl_found:
+                fslroi = ExtractROI(
+                    in_file=output_path, roi_file=output_path, t_min=0, t_size=1
+                )
+                fslroi.run()
 
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)
