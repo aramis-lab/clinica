@@ -150,7 +150,7 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
     if not issubclass(exc_type, KeyboardInterrupt):
         cprint(
             f"\nDocumentation can be found here: "
-            f"{Fore.BLUE}http://www.clinica.run/doc/{Fore.RESET}\n"
+            f"{Fore.BLUE}https://aramislab.paris.inria.fr/clinica/docs/public/latest/{Fore.RESET}\n"
             f"If you need support, do not hesitate to ask: "
             f"{Fore.BLUE}https://groups.google.com/forum/#!forum/clinica-user{Fore.RESET}\n"
             f"Alternatively, you can also open an issue on GitHub: "
@@ -201,12 +201,20 @@ def execute():
 
     sub_parser = parser.add_subparsers(metavar="")
     parser.add_argument(
+        "-V",
+        "--version",
+        dest="version",
+        action="store_true",
+        default=False,
+        help="Clinica's installed version",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         dest="verbose",
         action="store_true",
         default=False,
-        help="Verbose: print all messages to the console",
+        help="Verbose: print all messages to the standard output",
     )
     parser.add_argument(
         "-l",
@@ -222,50 +230,65 @@ def execute():
     """
     # fmt: off
     from clinica.engine import CmdParser
-    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_cli import \
-        DeepLearningPrepareDataCLI
-    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import \
-        DwiConnectomeCli
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_cli import (
+        DeepLearningPrepareDataCLI,
+    )
+    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli
     from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import \
-        DwiPreprocessingUsingPhaseDiffFieldmapCli
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import \
-        DwiPreprocessingUsingT1Cli
-    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import \
-        SpatialSVMCLI
-    from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
-    from clinica.pipelines.pet_surface.pet_surface_longitudinal_cli import \
-        PetSurfaceLongitudinalCLI
-    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import (
+        DwiPreprocessingUsingPhaseDiffFieldmapCli,
+    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import (
+        DwiPreprocessingUsingT1Cli,
+    )
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import (
+        SpatialSVMCLI,
+    )
     from clinica.pipelines.pet_linear.pet_linear_cli import PETLinearCLI
-    from clinica.pipelines.statistics_surface.statistics_surface_cli import \
-        StatisticsSurfaceCLI
-    from clinica.pipelines.statistics_volume.statistics_volume_cli import \
-        StatisticsVolumeCLI
-    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_cli import \
-        StatisticsVolumeCorrectionCLI
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import \
-        T1FreeSurferCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import \
-        T1FreeSurferLongitudinalCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_cli import \
-        T1FreeSurferLongitudinalCorrectionCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_cli import \
-        T1FreeSurferTemplateCLI
+    from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
+    from clinica.pipelines.pet_surface.pet_surface_longitudinal_cli import (
+        PetSurfaceLongitudinalCLI,
+    )
+    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
+    from clinica.pipelines.statistics_surface.statistics_surface_cli import (
+        StatisticsSurfaceCLI,
+    )
+    from clinica.pipelines.statistics_volume.statistics_volume_cli import (
+        StatisticsVolumeCLI,
+    )
+    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_cli import (
+        StatisticsVolumeCorrectionCLI,
+    )
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import (
+        T1FreeSurferLongitudinalCLI,
+    )
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_cli import (
+        T1FreeSurferLongitudinalCorrectionCLI,
+    )
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_cli import (
+        T1FreeSurferTemplateCLI,
+    )
     from clinica.pipelines.t1_linear.t1_linear_cli import T1LinearCLI
     from clinica.pipelines.t1_volume.t1_volume_cli import T1VolumeCLI
-    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import \
-        T1VolumeCreateDartelCLI
-    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import \
-        T1VolumeDartel2MNICLI
-    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import \
-        T1VolumeExistingTemplateCLI
-    from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import \
-        T1VolumeParcellationCLI
-    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_cli import \
-        T1VolumeRegisterDartelCLI
-    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import \
-        T1VolumeTissueSegmentationCLI
+    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import (
+        T1VolumeCreateDartelCLI,
+    )
+    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import (
+        T1VolumeDartel2MNICLI,
+    )
+    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import (
+        T1VolumeExistingTemplateCLI,
+    )
+    from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import (
+        T1VolumeParcellationCLI,
+    )
+    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_cli import (
+        T1VolumeRegisterDartelCLI,
+    )
+    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import (
+        T1VolumeTissueSegmentationCLI,
+    )
 
     # fmt: on
 
@@ -282,10 +305,10 @@ def execute():
         DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
         DwiConnectomeCli(),
+        PETLinearCLI(),
         PETVolumeCLI(),
         PetSurfaceCLI(),
-        PETLinearCLI(),
-        # PetSurfaceLongitudinalCLI(),
+        PetSurfaceLongitudinalCLI(),
         DeepLearningPrepareDataCLI(),
         SpatialSVMCLI(),
         StatisticsSurfaceCLI(),
@@ -323,14 +346,12 @@ def execute():
     convert category: convert one of the supported datasets into BIDS hierarchy
     """
     # fmt: off
-    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import \
-        AdniToBidsCLI
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import \
-        AiblToBidsCLI
-    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids_cli import \
-        NifdToBidsCLI
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import \
-        OasisToBidsCLI
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI
+    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids_cli import NifdToBidsCLI
+    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import (
+        OasisToBidsCLI,
+    )
 
     # fmt: on
 
@@ -360,12 +381,17 @@ def execute():
     iotools category
     """
     from clinica.iotools.utils.data_handling_cli import (
-        CmdParserCenterNifti, CmdParserMergeTsv, CmdParserMissingModalities,
-        CmdParserSubjectsSessions)
+        CmdParserCenterNifti,
+        CmdParserMergeTsv,
+        CmdParserMissingModalities,
+        CmdParserMissingProcessing,
+        CmdParserSubjectsSessions,
+    )
 
     io_tools = [
         CmdParserSubjectsSessions(),
         CmdParserMergeTsv(),
+        CmdParserMissingProcessing(),
         CmdParserMissingModalities(),
         CmdParserCenterNifti(),
     ]
@@ -388,8 +414,9 @@ def execute():
     visualize category: run one of the available pipelines
     """
     from clinica.engine import CmdParser
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_visualizer import \
-        T1FreeSurferVisualizer
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_visualizer import (
+        T1FreeSurferVisualizer,
+    )
 
     visualizers = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     visualizers += [
@@ -473,6 +500,11 @@ def execute():
     try:
         argcomplete.autocomplete(parser)
         args, unknown_args = parser.parse_known_args()
+        if args.version:
+            import clinica
+
+            print(f"Clinica version is: {clinica.__version__}")
+            exit(0)
         if unknown_args:
             if ("--verbose" in unknown_args) or ("-v" in unknown_args):
                 cprint("Verbose detected")

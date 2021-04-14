@@ -13,7 +13,7 @@ class T1LinearCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Affine registration of T1w images to the MNI standard space:\n"
-            "http://clinica.run/doc/Pipelines/T1_Linear/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Linear/"
         )
 
     def define_options(self):

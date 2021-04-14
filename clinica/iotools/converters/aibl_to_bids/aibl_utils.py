@@ -219,9 +219,7 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
             raise
 
     # if image.Is_Dicom:
-    command = (
-        f"dcm2niix -b n -z y -o {output_path} -f {output_filename} {image_path}"
-    )
+    command = f"dcm2niix -b n -z y -o {output_path} -f {output_filename} {image_path}"
     subprocess.run(
         command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
@@ -229,9 +227,7 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
 
     # Check if conversion worked (output file exists?)
     if not exists(nifti_file):
-        command = (
-            f"dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o {output_path} {image_path}"
-        )
+        command = f"dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o {output_path} {image_path}"
         subprocess.run(
             command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
@@ -589,7 +585,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
         session = viscode_to_session(session)
         # creation of the path
         if modality == "t1":
-            output_path = join(bids_dir, f"sub-AIBL{subject}ses-{session}", "anat")
+            output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
             output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
         elif modality in ["flute", "pib", "av45"]:
             output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
@@ -599,9 +595,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
         # image is saved following BIDS specifications
 
         if exists(join(output_path, output_filename + ".nii.gz")):
-            cprint(
-                f"Subject {str(subject)} - session {session} already processed."
-            )
+            cprint(f"Subject {str(subject)} - session {session} already processed.")
             output_image = join(output_path, output_filename + ".nii.gz")
         else:
             output_image = dicom_to_nii(

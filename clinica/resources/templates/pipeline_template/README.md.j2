@@ -2,45 +2,48 @@
 
 <SHORT_DESCRIPTION>
 
-
 ## Dependencies
 <!-- If you installed the docker image of Clinica, nothing is required. -->
 
 If you only installed the core of Clinica, this pipeline needs the installation
-of **<software_package>** on your computer. You can find how to install this
+of **<software_package>** on your computer.
+You can find how to install this
 software on the [third-party](../../Third-party) page.
 
-
 ## Running the pipeline
+
 The pipeline can be run with the following command line:
 
+```Text
+clinica run {{ pipeline.command_name }} <bids_directory> <caps_directory>
 ```
-clinica run {{ pipeline.command_name }} bids_directory caps_directory
-```
+
 where:
 
-  - `bids_directory` is the input folder containing the dataset in a [BIDS](../BIDS) hierarchy.
-  - `caps_directory` is the output folder containing the results in a [CAPS](../CAPS) hierarchy.
-  - `<ARG_1>` <ARG_1_DESCRIPTION>
-  - `<ARG_2>` <ARG_2_DESCRIPTION>
+- `bids_directory` is the input folder containing the dataset in a [BIDS](../BIDS) hierarchy.
+- `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `<ARG_1>` <ARG_1_DESCRIPTION>
+- `<ARG_2>` <ARG_2_DESCRIPTION>
 
-If you want to run the pipeline on a subset of your BIDS dataset, you can use
-the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
+If you want to run the pipeline on a subset of your BIDS dataset,
+you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
 !!! note "Particular note regarding your pipeline"
-    If you have any note regarding your pipeline
+    If you have any note regarding your pipeline.
 
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#<section_generated_by_mkdocs>):
-`subjects/sub-<participant_label>/ses-<session_label>/<some_folder>`.
+Results are stored in the following folder of the
+[CAPS hierarchy](../../CAPS/Specifications/#<section_generated_by_mkdocs>):
+`subjects/<participant_id>/<session_id>/<some_folder>`.
+/
+`groups/<group_id>/<some_folder>`.
 
 The main output files are:
 
-  - `<source_file>_labelname-<label>_mainouput1`: description main output 1.
-
-  - `<source_file>_labelname-<label>_mainouput2`: description main output 2.
+- `<source_file>_labelname-<label>_mainouput1`: description main output 1.
+- `<source_file>_labelname-<label>_mainouput2`: description main output 2.
 
 The full list of output files from the pet-volume pipeline can be found in the
 [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#<section_generated_by_mkdocs>).
@@ -58,16 +61,17 @@ The full list of output files from the pet-volume pipeline can be found in the
 In that case, simply use `!!! cite "Example of paragraph:"` -->
 
 !!! cite "Example of paragraph (short version):"
-    These results have been obtained using the `{{ pipeline.command_name }}`
-    pipeline of Clinica. This pipeline is a ...
+    These results have been obtained using the `{{ pipeline.command_name }}` pipeline of Clinica.
+    This pipeline is a ...
 
 !!! cite "Example of paragraph (long version):"
-    These results have been obtained using the `{{ pipeline.command_name }}`
-    pipeline of Clinica. More precisely,...
+    These results have been obtained using the `{{ pipeline.command_name }}` pipeline of Clinica.
+    More precisely,...
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/INDXD9QQ).
 
 ## Support
--   You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
--   Report an issue on [GitHub](https://github.com/aramis-lab/clinica/issues).
+
+- You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
+- Report an issue on [GitHub](https://github.com/aramis-lab/clinica/issues).

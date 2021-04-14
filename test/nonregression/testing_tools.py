@@ -163,18 +163,22 @@ def same_missing_modality_tsv(file1, file2):
 
     # Extract data and form lists for both files
     subjects1 = list(df1.participant_id)
-    pet1 = list(df1.pet)
+    pet_AV45_1 = list(df1["pet_acq-AV45"])
+    pet_FDG_1 = list(df1["pet_acq-FDG"])
     t1w1 = list(df1.t1w)
     func_task_rest1 = list(df1["func_task-rest"])
 
     subjects2 = list(df2.participant_id)
-    pet2 = list(df2.pet)
+    pet_AV45_2 = list(df2["pet_acq-AV45"])
+    pet_FDG_2 = list(df2["pet_acq-FDG"])
     t1w2 = list(df2.t1w)
     func_task_rest2 = list(df2["func_task-rest"])
 
     # Subjects are sorted in alphabetical order. The same permutation of element is applied on each column
-    subjects1_sorted, pet1 = (list(t) for t in zip(*sorted(zip(subjects1, pet1))))
-    subjects2_sorted, pet2 = (list(t) for t in zip(*sorted(zip(subjects2, pet2))))
+    subjects1_sorted, pet_AV45_1 = (list(t) for t in zip(*sorted(zip(subjects1, pet_AV45_1))))
+    subjects2_sorted, pet_AV45_2 = (list(t) for t in zip(*sorted(zip(subjects2, pet_AV45_2))))
+    subjects1_sorted, pet_FDG_1 = (list(t) for t in zip(*sorted(zip(subjects1, pet_FDG_1))))
+    subjects2_sorted, pet_FDG_2 = (list(t) for t in zip(*sorted(zip(subjects2, pet_FDG_2))))
     subjects1_sorted, t1w1 = (list(t) for t in zip(*sorted(zip(subjects1, t1w1))))
     subjects2_sorted, t1w2 = (list(t) for t in zip(*sorted(zip(subjects2, t1w2))))
     subjects1_sorted, func_task_rest1 = (
@@ -187,7 +191,8 @@ def same_missing_modality_tsv(file1, file2):
     # Test is positive when all the sorted list s are equals
     return (
         (subjects1_sorted == subjects2_sorted)
-        & (pet1 == pet2)
+        & (pet_AV45_1 == pet_AV45_2)
+        & (pet_FDG_1 == pet_FDG_2)
         & (t1w1 == t1w2)
         & (func_task_rest1 == func_task_rest2)
     )
@@ -278,6 +283,29 @@ def clean_folder(path, recreate=True):
         rmtree(abs_path)
     if recreate:
         makedirs(abs_path)
+
+
+def clean_PETLinear(caps_path):
+    from os import listdir, makedirs, path
+    from os.path import abspath, exists
+    from shutil import rmtree
+
+    # Handle subjects subdirectory
+    abs_path_subjs = path.join(caps_path, "subjects")
+
+    # Iterate over the subject directories
+    for subj in listdir(abs_path_subjs):
+        subj_dir = path.join(abs_path_subjs, subj)
+        if path.isdir(subj_dir):
+            # Iterate over session directories
+            for sess in listdir(subj_dir):
+                sess_dir = path.join(subj_dir, sess)
+                if path.isdir(sess_dir):
+
+                    path_pet_linear = path.join(sess_dir, "pet_linear")
+                    clean_folder(path_pet_linear, recreate=False)
+
+    # TODO: handle groups subdirectory
 
 
 def create_list_hashes(path_folder, extensions_to_keep=(".nii.gz", ".tsv", ".json")):

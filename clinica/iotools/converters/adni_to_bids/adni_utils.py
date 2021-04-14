@@ -284,6 +284,7 @@ def get_images_pet(
     Returns: Dataframe containing images metadata
     """
     import pandas as pd
+
     from clinica.utils.stream import cprint
 
     subj_dfs_list = []
@@ -577,8 +578,9 @@ def create_adni_sessions_dict(
     from datetime import datetime
     from os import path
 
-    import clinica.iotools.bids_utils as bids
     import pandas as pd
+
+    import clinica.iotools.bids_utils as bids
     from clinica.utils.stream import cprint
 
     # Load data
@@ -667,6 +669,7 @@ def create_adni_sessions_dict(
                                         "FCI.csv",
                                         "CCI.csv",
                                         "NPIQ.csv",
+                                        "NPI.csv",
                                     ]:
                                         if (
                                             pd.isnull(row["VISCODE2"])
@@ -814,13 +817,12 @@ def convert_diagnosis_code(diagnosis_code):
         return diagnosis[diagnosis_code]
 
 
-def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
+def create_adni_scans_files(conversion_path, bids_subjs_paths):
     """Create scans.tsv files for ADNI.
 
     Args:
-        clinic_specs_path: path to the clinical file
+        conversion_path: path to the conversion_info folder
         bids_subjs_paths: list of bids subject paths
-        bids_ids: list of bids ids
     """
     import os
     from glob import glob
@@ -828,31 +830,35 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
     from os.path import normpath
 
     import pandas as pd
+    from colorama import Fore
 
-    scans_dict = {}
+    from clinica.utils.stream import cprint
 
-    for bids_id in bids_ids:
-        scans_dict.update({bids_id: {"T1/DWI/fMRI": {}, "FDG": {}}})
+    scans_fields_bids = ["filename", "scan_id", "mri_field"]
 
-    scans_specs = pd.read_excel(clinic_specs_path, sheet_name="scans.tsv")
-    scans_fields_db = scans_specs["ADNI"]
-    scans_fields_bids = scans_specs["BIDS CLINICA"]
-    scans_fields_mod = scans_specs["Modalities related"]
-    fields_bids = ["filename"]
-
-    for i in range(0, len(scans_fields_db)):
-        if not pd.isnull(scans_fields_db[i]):
-            fields_bids.append(scans_fields_bids[i])
-
-    scans_df = pd.DataFrame(columns=(fields_bids))
+    conversion_versions = [
+        folder
+        for folder in os.listdir(conversion_path)
+        if folder[0] == "v" and path.isdir(path.join(conversion_path, folder))
+    ]
+    conversion_versions.sort()
+    older_version = conversion_versions[-1]
+    converted_dict = dict()
+    for tsv_path in os.listdir(path.join(conversion_path, older_version)):
+        modality = tsv_path.split("_paths")[0]
+        df = pd.read_csv(path.join(conversion_path, older_version, tsv_path), sep="\t")
+        df.set_index(["Subject_ID", "VISCODE"], inplace=True, drop=True)
+        converted_dict[modality] = df
 
     for bids_subj_path in bids_subjs_paths:
         # Create the file
         bids_id = os.path.basename(normpath(bids_subj_path))
+        subject_id = "_S_".join(bids_id[8::].split("S"))
 
         sessions_paths = glob(path.join(bids_subj_path, "ses-*"))
         for session_path in sessions_paths:
             session_name = session_path.split(os.sep)[-1]
+            viscode = session_to_viscode(session_name[4::])
             tsv_name = f"{bids_id}_{session_name}_scans.tsv"
 
             # If the file already exists, remove it
@@ -860,6 +866,7 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                 os.remove(path.join(session_path, tsv_name))
 
             scans_tsv = open(path.join(session_path, tsv_name), "a")
+            scans_df = pd.DataFrame(columns=scans_fields_bids)
             scans_df.to_csv(scans_tsv, sep="\t", index=False, encoding="utf-8")
 
             # Extract modalities available for each subject
@@ -868,19 +875,49 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                 mod_name = os.path.basename(mod)
                 files = glob(path.join(mod, "*"))
                 for file in files:
+                    scans_df = pd.DataFrame(index=[0], columns=scans_fields_bids)
                     file_name = os.path.basename(file)
-                    if mod == "anat" or mod == "dwi" or mod == "func":
-                        type_mod = "T1/DWI/fMRI"
-                    else:
-                        type_mod = "FDG"
+                    scans_df["filename"] = path.join(mod_name, file_name)
+                    converted_mod = find_conversion_mod(file_name)
+                    conversion_df = converted_dict[converted_mod]
+                    try:
+                        scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
+                        scans_df["scan_id"] = scan_id
+                        if "Field_Strength" in conversion_df.columns.values:
+                            field_strength = conversion_df.loc[
+                                (subject_id, viscode), "Field_Strength"
+                            ]
+                            scans_df["mri_field"] = field_strength
+                    except KeyError:
+                        cprint(
+                            f"{Fore.RED}No information found for file {file_name}.{Fore.RESET}"
+                        )
 
-                    scans_df["filename"] = pd.Series(path.join(mod_name, file_name))
                     scans_df = scans_df.fillna("n/a")
                     scans_df.to_csv(
                         scans_tsv, header=False, sep="\t", index=False, encoding="utf-8"
                     )
 
-            scans_df = pd.DataFrame(columns=(fields_bids))
+
+def find_conversion_mod(file_name):
+
+    suffix = file_name.split("_")[-1].split(".")[0]
+    if suffix == "T1w":
+        return "t1"
+    elif suffix == "FLAIR":
+        return "flair"
+    elif suffix == "dwi":
+        return "dwi"
+    elif suffix == "bold":
+        return "fmri"
+    elif suffix == "pet":
+        tracer = file_name.split("acq-")[1].split("_")[0]
+        if tracer == "av45" or tracer == "fbb":
+            return "amyloid_pet"
+        else:
+            return f"{tracer}_pet"
+    else:
+        raise ValueError(f"Conversion modality could not be found for file {file_name}")
 
 
 def find_image_path(images, source_dir, modality, prefix, id_field):
@@ -899,6 +936,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     from os import path, walk
 
     import pandas as pd
+
     from clinica.utils.stream import cprint
 
     is_dicom = []
@@ -1024,10 +1062,11 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
     from glob import glob
     from os import path
 
-    from clinica.iotools.utils.data_handling import center_nifti_origin
-    from clinica.utils.stream import cprint
     from colorama import Fore
     from numpy import nan
+
+    from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.utils.stream import cprint
 
     modality_specific = {
         "t1": {
@@ -1192,9 +1231,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
                     f"WARNING: Conversion with dcm2niix failed, trying with dcm2nii "
                     f"for subject {subject} and session {session}"
                 )
-                command = (
-                    f"dcm2nii -a n -d n -e n -i y -g {zip_image} -p n -m n -r n -x n -o {output_path} {image_path}"
-                )
+                command = f"dcm2nii -a n -d n -e n -i y -g {zip_image} -p n -m n -r n -x n -o {output_path} {image_path}"
                 subprocess.run(
                     command,
                     shell=True,
@@ -1303,6 +1340,21 @@ def viscode_to_session(viscode):
         return "M00"
     else:
         return viscode.capitalize()
+
+
+def session_to_viscode(session_name):
+    """Replace the session label 'bl' with 'M00' or capitalize the session name passed as input.
+
+    Args:
+        session_name: MXX
+
+    Returns:
+        M00 if is the baseline session or the original session name capitalized
+    """
+    if session_name == "M00":
+        return "bl"
+    else:
+        return session_name.lower()
 
 
 def check_two_dcm_folder(dicom_path, bids_folder, image_uid):

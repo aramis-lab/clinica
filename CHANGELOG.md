@@ -63,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [New] `t1-freesurfer-longitudinal` pipeline: FreeSurfer-based longitudinal
   processing of T1-weighted MR images [[Reuter et al.,
   2012](http://dx.doi.org/10.1016/j.neuroimage.2012.02.084)]. More info in the
-  wiki: http://www.clinica.run/doc/Pipelines/T1_FreeSurfer_Longitudinal/
+  wiki: https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_FreeSurfer_Longitudinal/
 - [Change] The `fmri-preprocessing` pipeline is removed from the Clinica
   software as we will not actively maintain it. It is now in a separate
   repository: https://github.com/aramis-lab/clinica_pipeline_fmri_preprocessing
@@ -111,7 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [New] `deeplearning-prepare-data` pipeline: Prepare input data for deep
   learning with PyTorch. More info on the Wiki:
-  http://www.clinica.run/doc/Pipelines/DeepLearning_PrepareData/
+  https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DeepLearning_PrepareData/
 - [Change] `t1-linear` pipeline now crops image on default. If
   `--uncropped_image` is added to the command line, the image is not cropped.
 - [Change] Refactor machine learning modules. Main changes involve use of

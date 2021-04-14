@@ -42,11 +42,8 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
         )
     else:
         subjects_dir = os.path.join(output_dir, image_id)
-    try:
-        os.makedirs(subjects_dir)
-    except OSError as e:
-        if e.errno != errno.EEXIST:  # EEXIST: folder already exists
-            raise e
+
+    os.makedirs(subjects_dir, exist_ok=True)
 
     # Create symbolic links containing cross-sectional segmentation(s) in SUBJECTS_DIR so that recon-all can run
     for session_id in list_session_ids:

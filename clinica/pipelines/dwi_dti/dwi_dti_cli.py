@@ -12,7 +12,7 @@ class DwiDtiCli(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "DTI-based processing of DWI datasets:\n"
-            "http://www.clinica.run/doc/Pipelines/DWI_DTI"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_DTI/"
         )
 
     def define_options(self):
@@ -29,8 +29,9 @@ class DwiDtiCli(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
         from networkx import Graph
+
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
 
         from .dwi_dti_pipeline import DwiDti
 

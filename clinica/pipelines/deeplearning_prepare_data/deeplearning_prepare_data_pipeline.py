@@ -215,7 +215,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         if self.parameters.get("modality") == "custom":
             mod_subfolder = "custom"
 
-        # fmt: on
+        # fmt: off
         self.connect(
             [
                 (container_path, write_node, [

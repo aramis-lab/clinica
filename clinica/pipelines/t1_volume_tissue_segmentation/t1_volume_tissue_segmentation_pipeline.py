@@ -126,15 +126,15 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import unzip_nii, zip_nii
-        from clinica.utils.nipype import fix_join, container_from_filename
+        from clinica.utils.nipype import container_from_filename, fix_join
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         from .t1_volume_tissue_segmentation_utils import (
+            ApplySegmentationDeformation,
+            get_tissue_tuples,
             init_input_node,
             print_end_pipeline,
             zip_list_files,
-            get_tissue_tuples,
-            ApplySegmentationDeformation
         )
 
         if spm_standalone_is_available():
@@ -175,9 +175,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
         # Apply segmentation deformation to T1 (into MNI space)
         # =====================================================
-        t1_to_mni = npe.Node(
-            ApplySegmentationDeformation(), name="3-T1wToMni"
-        )
+        t1_to_mni = npe.Node(ApplySegmentationDeformation(), name="3-T1wToMni")
 
         # Print end message
         # =================
@@ -219,7 +217,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         # =====================================
         container_path = npe.Node(
             nutil.Function(
-                input_names=["t1w_filename"],
+                input_names=["bids_or_caps_filename"],
                 output_names=["container"],
                 function=container_from_filename,
             ),
@@ -263,8 +261,8 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         # fmt: off
         self.connect(
             [
-                (self.input_node, container_path, [("t1w", "t1w_filename")]),
-                (container_path, write_node, [(("container", fix_join, ""), "container")]),
+                (self.input_node, container_path, [("t1w", "bids_or_caps_filename")]),
+                (container_path, write_node, [(("container", fix_join, "t1", "spm", "segmentation"), "container")]),
                 (self.output_node, write_node, [(("native_class_images", zip_list_files, True), "native_space"),
                                                 (("dartel_input_images", zip_list_files, True), "dartel_input")]),
                 (self.output_node, write_node, [(("inverse_deformation_field", zip_nii, True), "inverse_deformation_field")]),

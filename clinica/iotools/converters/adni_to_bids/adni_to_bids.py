@@ -29,9 +29,10 @@ class AdniToBids(Converter):
         import os
         from os import path
 
+        import pandas as pd
+
         import clinica.iotools.bids_utils as bids
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
-        import pandas as pd
         from clinica.utils.stream import cprint
 
         clinic_specs_path = path.join(
@@ -47,6 +48,7 @@ class AdniToBids(Converter):
 
         bids_ids = bids.get_bids_subjs_list(out_path)
         bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
+        conversion_path = path.join(out_path, "conversion_info")
 
         if not bids_ids:
             adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
@@ -92,7 +94,8 @@ class AdniToBids(Converter):
         # -- Creation of scans files --
         cprint("Creating scans files...")
         adni_utils.create_adni_scans_files(
-            clinic_specs_path, bids_subjs_paths, bids_ids
+            conversion_path,
+            bids_subjs_paths,
         )
 
     def convert_images(
@@ -118,6 +121,9 @@ class AdniToBids(Converter):
         from copy import copy
         from os import path
 
+        import pandas as pd
+        from colorama import Fore
+
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
@@ -126,9 +132,7 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
-        import pandas as pd
         from clinica.utils.stream import cprint
-        from colorama import Fore
 
         adni_merge_path = path.join(clinical_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path)

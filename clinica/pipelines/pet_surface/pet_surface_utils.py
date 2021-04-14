@@ -215,15 +215,15 @@ def make_label_conversion(gtmsegfile, csv):
             raise Exception(
                 f"Could not find label {old_labels[i]} on conversion table. Add it manually in CSV file to correct error"
             )
-        else:
-            cprint(str(old_labels[i]) + " has been found on conversion table")
+        # else:
+        #     cprint(str(old_labels[i]) + " has been found on conversion table")
 
     # Instanciation of final volume, with same dtype as original volume
     new_volume = numpy.zeros(volume.shape, dtype=volume.dtype)
     # Computing the transformation
     for i in range(len(src)):
         new_volume[volume == src_val[i]] = dst_val[i]
-        cprint("Region " + reg[i] + " transformed")
+        # cprint("Region " + reg[i] + " transformed")
     # Get unique list of new label
     new_labels = numpy.unique(new_volume)
     new_labels = new_labels.astype("int")
@@ -238,7 +238,7 @@ def make_label_conversion(gtmsegfile, csv):
         current_path = os.path.abspath(current_path)
         nib.save(myNifti, current_path)
         list_of_regions.append(current_path)
-        cprint("Label " + str(new_labels[i]) + " created in " + current_path)
+        # cprint("Label " + str(new_labels[i]) + " created in " + current_path)
         allsum = allsum + region_volume
 
     # The sum of a voxel location across the fourth dimension should be 1
@@ -261,6 +261,7 @@ def runApplyInverseDeformationField_SPM_standalone(
     """
     import os
     import platform
+    import subprocess
     from os.path import abspath, basename, exists, join
 
     prefix = "subject_space_"
@@ -296,7 +297,16 @@ def runApplyInverseDeformationField_SPM_standalone(
         cmdline = f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch {script_location}"
     else:
         raise SystemError("Only support Mac OS and Linux")
-    os.system(cmdline)
+    subprocess_run = subprocess.run(
+        cmdline,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if subprocess_run.returncode != 0:
+        raise ValueError(
+            "runApplyInverseDeformationField_SPM_standalone failed, returned non-zero code"
+        )
 
     output_file = join(abspath("./"), prefix + basename(img))
     if not exists(output_file):
@@ -403,6 +413,7 @@ def mris_expand(in_surface):
     """
     import os
     import shutil
+    import subprocess
     import sys
 
     # bug in mris_expand : you are not allowed to write the surfaces elsewhere than in the surf folder
@@ -416,7 +427,14 @@ def mris_expand(in_surface):
     if sys.platform == "darwin":
         cmd = "export DYLD_LIBRARY_PATH=$FREESURFER_HOME/lib/gcc/lib && " + cmd
 
-    os.system(cmd)
+    subprocess_mris_expand = subprocess.run(
+        cmd,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if subprocess_mris_expand.returncode != 0:
+        raise ValueError("mris_expand failed, returned non-zero code")
 
     # Move surface file to the current directory
     out_filelist = [
@@ -471,6 +489,7 @@ def surf2surf(
     """
     import os
     import shutil
+    import subprocess
     import sys
 
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
@@ -505,7 +524,14 @@ def surf2surf(
     # If system is MacOS, this export command must be run just before the mri_vol2surf command to bypass MacOs security
     if sys.platform == "darwin":
         cmd = "export DYLD_LIBRARY_PATH=$FREESURFER_HOME/lib/gcc/lib && " + cmd
-    os.system(cmd)
+    subprocess_mri_surf2surf = subprocess.run(
+        cmd,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if subprocess_mri_surf2surf.returncode != 0:
+        raise ValueError("mri_surf2surf failed, returned non-zero code")
 
     # remove file in caps
     os.remove(
@@ -542,6 +568,7 @@ def vol2surf(
     """
     import os
     import shutil
+    import subprocess
     import sys
 
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
@@ -594,7 +621,14 @@ def vol2surf(
     # If system is MacOS, this export command must be run just before the mri_vol2surf command to bypass MacOs security
     if sys.platform == "darwin":
         cmd = "export DYLD_LIBRARY_PATH=$FREESURFER_HOME/lib/gcc/lib && " + cmd
-    os.system(cmd)
+    subprocess_mri_vol2surf = subprocess.run(
+        cmd,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if subprocess_mri_vol2surf.returncode != 0:
+        raise ValueError("mri_vol2surf failed, returned non-zero code")
 
     # remove file in caps
     os.remove(
@@ -809,7 +843,7 @@ def produce_tsv(pet, atlas_files):
         average_region = []
         region_names = []
         for r in range(len(annot_atlas_left[2])):
-            cprint(annot_atlas_left[2][r])
+            # cprint(annot_atlas_left[2][r])
             region_names.append(annot_atlas_left[2][r].astype(str) + "_lh")
             region_names.append(annot_atlas_left[2][r].astype(str) + "_rh")
 
