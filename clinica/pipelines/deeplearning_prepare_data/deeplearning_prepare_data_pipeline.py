@@ -68,7 +68,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             FILE_TYPE = pet_linear_nii(
                 self.parameters.get("acq_label"),
                 self.parameters.get("suvr_reference_region"),
-                self.parameters.get("uncropped_image"),
+                self.parameters.get("use_uncropped_image"),
             )
         if self.parameters.get("modality") == "custom":
             FILE_TYPE = {
