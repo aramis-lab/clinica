@@ -54,7 +54,7 @@ def determine_caps_or_bids(input_dir):
         ) > 0 or isdir(join(input_dir, "groups")):
             return False
         else:
-            cprint(f"{Fore.YELLOW} [Warning] We were unable to validate the CAPS directory structure{Fore.RESET}")
+            cprint(f"{Fore.YELLOW}[Warning] Could not determine if {input_dir} is a CAPS or BIDS directory. Clinica will asume this is a CAPS directory.{Fore.RESET}")
             return False
 
     else:
@@ -73,7 +73,7 @@ def determine_caps_or_bids(input_dir):
             if isdir(join(input_dir, "groups")):
                 return False
             else:
-                cprint(f"{Fore.YELLOW} [Warning] We were unable to validate the CAPS directory structure{Fore.RESET}")
+                cprint(f"{Fore.YELLOW}[Warning] Could not determine if {input_dir} is a CAPS or BIDS directory. Clinica will asume this is a CAPS directory.{Fore.RESET}")
                 return False
 
 
