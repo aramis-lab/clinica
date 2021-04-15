@@ -40,6 +40,9 @@ def determine_caps_or_bids(input_dir):
     """
     from os import listdir
     from os.path import isdir, join
+    from colorama import Fore
+
+    from clinica.utils.stream import cprint
 
     if isdir(join(input_dir, "subjects")):
         if len(
@@ -51,9 +54,8 @@ def determine_caps_or_bids(input_dir):
         ) > 0 or isdir(join(input_dir, "groups")):
             return False
         else:
-            raise RuntimeError(
-                f"Could not determine if {input_dir} is a CAPS or BIDS directory"
-            )
+            cprint(f"{Fore.YELLOW}[Warning] Could not determine if {input_dir} is a CAPS or BIDS directory. Clinica will asume this is a CAPS directory.{Fore.RESET}")
+            return False
 
     else:
         if (
@@ -71,9 +73,8 @@ def determine_caps_or_bids(input_dir):
             if isdir(join(input_dir, "groups")):
                 return False
             else:
-                raise RuntimeError(
-                    f"Could not determine if {input_dir} is a CAPS or BIDS directory"
-                )
+                cprint(f"{Fore.YELLOW}[Warning] Could not determine if {input_dir} is a CAPS or BIDS directory. Clinica will asume this is a CAPS directory.{Fore.RESET}")
+                return False
 
 
 def check_bids_folder(bids_directory):
