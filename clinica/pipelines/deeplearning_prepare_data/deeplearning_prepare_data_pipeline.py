@@ -149,7 +149,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             name="ImageID",
         )
 
-        # Find container path from t1w filename
+        # Find container path from input filename
         # ----------------------
         container_path = npe.Node(
             nutil.Function(
@@ -236,7 +236,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         )
 
         # The processing nodes
-        # Node to save MRI in nii.gz format into pytorch .pt format
+        # Node to save input in nii.gz format into pytorch .pt format
         # ----------------------
         save_as_pt = npe.MapNode(
             name="save_as_pt",

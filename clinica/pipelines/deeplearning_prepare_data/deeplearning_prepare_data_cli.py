@@ -39,7 +39,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             'pet-linear': images preprocessed with pet-linear pipeline.
             'custom': find images with a custom suffix in their filename and
             transform them to tensor format.""",
-            choices=["t1-linear", "t1-extensive", "custom", "pet-linear"],
+            choices=["t1-linear", "t1-extensive", "pet-linear", "custom"],
             default="t1-linear",
         )
         clinica_comp.add_argument(
@@ -107,13 +107,13 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         )
 
         optional_pet = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you chose 'pet-linear' modality{Fore.RESET}"
+            f"{Fore.BLUE}Pipeline options if you chose 'pet-linear' pipeline{Fore.RESET}"
         )
         optional_pet.add_argument(
             "--acq_label",
             help="""Name of the label given to the PET acquisition, specifying 
             the tracer used (acq-<acq_label>). For instance it can be 'fdg' for 
-            fluorodésoxyglucose or 'av45' for florbetapir.""",
+            fluorodeoxyglucose or 'av45' for florbetapir.""",
             type=str,
             default="",
         )
@@ -122,7 +122,8 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             "--suvr_reference_region",
             help="""Intensity normalization using the average PET uptake in reference regions 
             resulting in a standardized uptake value ratio (SUVR) map. It can be 
-            cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).""",
+            cerebellumPons or cerebellumPon2 (used for amyloid tracers) or pons or pons2 
+            (used for 18F-FDG tracers).""",
             choices=LIST_SUVR_REFERENCE_REGIONS,
             default=None,
         )
