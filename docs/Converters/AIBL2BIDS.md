@@ -52,6 +52,9 @@ Currently, the modalities supported by our converter are:
 
 The conversion of the imaging data to BIDS relies on modality-specific csv files that provide the list of scans available.
 For each AIBL participant, the only T1w MR, PiB PET, Florbetapir PET, and Flutemetamol PET image available per session is converted.
+For each image, the coordinates of the origin are set to the center of the box containing the image data.
+This allows other image processing pipelines in Clinica (mainly SPM based) to run without needing further image preprocessing.
+
 The conversion of the clinical data relies on the list of subjects and sessions obtained after the conversion of the imaging data and on the csv files containing the non-imaging data.
 Data that do not change over time are gathered in the `participants.tsv` file, located at the top of the BIDS folder hierarchy, while the session-dependent data are gathered in `<subjectID>_session.tsv` files in each participant subfolder.
 The clinical data being converted are defined in a spreadsheet (`clinical_specifications.xlsx`) available with the code of the converter, which the user can modify.
