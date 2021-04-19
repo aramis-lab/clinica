@@ -29,13 +29,45 @@ def test_run_DLPrepareData(cmdopt):
     shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
 
     # Test the patch extraction
-    data= [
-        {"modality": "t1-linear", "use_uncropped_image": False, "extract_method": "image"},
-        {"modality": "t1-linear", "use_uncropped_image": True, "extract_method": "image"},
-        {"modality": "t1-linear", "extract_method": "patch", "use_uncropped_image": False, "patch_size": 50, "stride_size": 50},
-        {"modality": "t1-linear", "extract_method": "patch", "use_uncropped_image": True, "patch_size": 50, "stride_size": 50},
-        {"modality": "t1-linear", "extract_method": "slice", "use_uncropped_image": False, "slice_mode": "rgb", "slice_direction": 0},
-        {"modality": "t1-linear", "extract_method": "slice", "use_uncropped_image": True, "slice_mode": "rgb", "slice_direction": 0},
+    data = [
+        {
+            "modality": "t1-linear",
+            "use_uncropped_image": False,
+            "extract_method": "image",
+        },
+        {
+            "modality": "t1-linear",
+            "use_uncropped_image": True,
+            "extract_method": "image",
+        },
+        {
+            "modality": "t1-linear",
+            "extract_method": "patch",
+            "use_uncropped_image": False,
+            "patch_size": 50,
+            "stride_size": 50,
+        },
+        {
+            "modality": "t1-linear",
+            "extract_method": "patch",
+            "use_uncropped_image": True,
+            "patch_size": 50,
+            "stride_size": 50,
+        },
+        {
+            "modality": "t1-linear",
+            "extract_method": "slice",
+            "use_uncropped_image": False,
+            "slice_mode": "rgb",
+            "slice_direction": 0,
+        },
+        {
+            "modality": "t1-linear",
+            "extract_method": "slice",
+            "use_uncropped_image": True,
+            "slice_mode": "rgb",
+            "slice_direction": 0,
+        },
     ]
     for parameters in data:
         DLPrepareData_Generic(root, working_dir, parameters)
@@ -48,7 +80,6 @@ def test_run_DLPrepareData(cmdopt):
 
     clean_folder(join(root, "out", "caps"), recreate=False)
     clean_folder(join(working_dir, "DeepLearningPrepareData"), recreate=False)
-
 
 
 def DLPrepareData_Generic(root, working_dir, parameters):
