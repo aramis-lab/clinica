@@ -29,46 +29,23 @@ def test_run_DLPrepareData(cmdopt):
     shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
 
     # Test the patch extraction
-    data = [
-        {
-            "modality": "t1-linear",
-            "use_uncropped_image": False,
-            "extract_method": "image",
-        },
-        {
-            "modality": "t1-linear",
-            "use_uncropped_image": True,
-            "extract_method": "image",
-        },
-        {
-            "modality": "t1-linear",
-            "extract_method": "patch",
-            "use_uncropped_image": False,
-            "patch_size": 50,
-            "stride_size": 50,
-        },
-        {
-            "modality": "t1-linear",
-            "extract_method": "patch",
-            "use_uncropped_image": True,
-            "patch_size": 50,
-            "stride_size": 50,
-        },
-        {
-            "modality": "t1-linear",
-            "extract_method": "slice",
-            "use_uncropped_image": False,
-            "slice_mode": "rgb",
-            "slice_direction": 0,
-        },
-        {
-            "modality": "t1-linear",
-            "extract_method": "slice",
-            "use_uncropped_image": True,
-            "slice_mode": "rgb",
-            "slice_direction": 0,
-        },
-    ]
+
+    modalities = ["t1-linear"]
+    uncropped_image = [True, False]
+
+    image_params = {"extract_mode": "image"}
+    slice_params = {"extract_mode": "slice", "patch_size": 50, "stride_size": 50}
+    patch_params = {"extract_mode": "patch", "slice_mode": "rgb", "slice_direction": 0}
+
+    data = [image_params, slice_params, patch_params]
+
+    for parameters in data:
+        for modality in modalities:
+            for flag in uncropped_image:
+                parameters["modality"] = modality
+                parameters["use_uncropped_image"] = flag
+        DLPrepareData_Generic(root, working_dir, parameters)
+
     for parameters in data:
         DLPrepareData_Generic(root, working_dir, parameters)
 
