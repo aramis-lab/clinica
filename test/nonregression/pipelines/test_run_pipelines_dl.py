@@ -28,26 +28,33 @@ def test_run_DLPrepareData(cmdopt):
     # Copy necessary data from in to out
     shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
 
-    # Test the patch extraction
+    # Prepare test for different parameters
 
     modalities = ["t1-linear"]
     uncropped_image = [True, False]
 
-    image_params = {"extract_mode": "image"}
-    slice_params = {"extract_mode": "slice", "patch_size": 50, "stride_size": 50}
-    patch_params = {"extract_mode": "patch", "slice_mode": "rgb", "slice_direction": 0}
+    image_params = {"extract_method": "image"}
+    slice_params = {"extract_method": "patch", "patch_size": 50, "stride_size": 50}
+    patch_params = {
+        "extract_method": "slice",
+        "slice_mode": "rgb",
+        "slice_direction": 0,
+    }
 
     data = [image_params, slice_params, patch_params]
 
     for parameters in data:
         for modality in modalities:
-            for flag in uncropped_image:
-                parameters["modality"] = modality
-                parameters["use_uncropped_image"] = flag
-        DLPrepareData_Generic(root, working_dir, parameters)
-
-    for parameters in data:
-        DLPrepareData_Generic(root, working_dir, parameters)
+            if modality == "pet-linear":
+                parameters["acq_label"] = "av45"
+                parameters["suvr_reference_region"] = "pons2"
+                parameters["use_uncropped_image"] = False
+                DLPrepareData_Generic(root, working_dir, parameters)
+            else:
+                for flag in uncropped_image:
+                    parameters["modality"] = modality
+                    parameters["use_uncropped_image"] = flag
+                    DLPrepareData_Generic(root, working_dir, parameters)
 
     # Check output vs ref
     out_folder = join(root, "out")
@@ -72,4 +79,5 @@ def DLPrepareData_Generic(root, working_dir, parameters):
         base_dir=join(working_dir, "DeepLearningPrepareData"),
         parameters=parameters,
     )
+
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
