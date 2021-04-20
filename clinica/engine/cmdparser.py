@@ -51,12 +51,12 @@ class CmdParser:
             self._description = self._name
             self._args.description = (
                 f"{Fore.GREEN}If you are not familiar with Clinica, see:\n"
-                f"http://clinica.run/doc/InteractingWithClinica/{Fore.RESET}"
+                f"https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/{Fore.RESET}"
             )
         else:
             self._args.description = (
                 f"{Fore.GREEN}{self._description}\n\nIf you are not familiar with Clinica, see:\n"
-                f"http://clinica.run/doc/InteractingWithClinica{Fore.RESET}"
+                f"https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/{Fore.RESET}"
             )
 
     @property
