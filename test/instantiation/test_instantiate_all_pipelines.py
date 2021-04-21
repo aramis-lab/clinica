@@ -18,9 +18,7 @@ def test_instantiate_T1FreeSurferCrossSectional():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, "data", "T1FreeSurfer")
 
-    parameters = {
-        "recon_all_args": "-qcache",
-    }
+    parameters = {"recon_all_args": "-qcache", "skip_question": False}
 
     pipeline = T1FreeSurfer(
         bids_directory=join(root, "in", "bids"),
