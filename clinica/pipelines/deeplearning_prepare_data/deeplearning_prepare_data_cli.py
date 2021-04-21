@@ -46,10 +46,11 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             "extract_method",
             help="""Format of the extracted features. Three options:
             'image' to convert to PyTorch tensor the complete 3D image,
-            'patch' to extract 3D volumetric patches and
-            'slice' to extract 2D slices from the image.
+            'patch' to extract 3D volumetric patches,
+            'slice' to extract 2D slices from the image and
+            'roi' to extract region of interest.
             By default the features are extracted from the cropped image.""",
-            choices=["image", "slice", "patch"],
+            choices=["image", "slice", "patch", "roi"],
             default="image",
         )
 
@@ -106,6 +107,24 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             default="rgb",
         )
 
+        optional_roi = self._args.add_argument_group(
+            f"{Fore.BLUE}Pipeline options if you chose 'pet-linear' pipeline{Fore.RESET}"
+        )
+        optional_roi.add_argument(
+            "--roi_list",
+            help="List of regions to be extracted",
+            type=str,
+            nargs="+",
+            default=None,
+            
+        )
+        optional_roi.add_argument(
+            "--roi_uncrop_output",
+            help="Disable cropping option so the output tensors have the same size than the whole image.",
+            action="store_true",
+            default=False,
+        )
+
         optional_pet = self._args.add_argument_group(
             f"{Fore.BLUE}Pipeline options if you chose 'pet-linear' pipeline{Fore.RESET}"
         )
@@ -141,6 +160,22 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             type=str,
             default="",
         )
+        optional_custom.add_argument(
+            "-ct",
+            "--custom_template",
+            help="""Name of the template used when modality is set to custom.""",
+            type=str,
+            default=None,
+        )
+        optional_custom.add_argument(
+            "-cmp",
+            "--custom_mask_pattern",
+            help="""If given will select only the masks containing the string given.
+                    The mask with the shortest name is taken.
+                    This argument is taken into account only of the modality is custom.""",
+            type=str,
+            default=None,
+        )
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
@@ -163,8 +198,12 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             "stride_size": args.stride_size,
             "slice_direction": args.slice_direction,
             "slice_mode": args.slice_mode,
+            "roi_list": args.roi_list,
+            "roi_uncrop_output": args.roi_uncrop_output,
             "use_uncropped_image": args.use_uncropped_image,
             "custom_suffix": args.custom_suffix,
+            "custom_template": args.custom_template,
+            "custom_mask_pattern": args.custom_mask_pattern,
             "acq_label": args.acq_label,
             "suvr_reference_region": args.suvr_reference_region,
         }
