@@ -39,6 +39,14 @@ class T1FreeSurferCLI(ce.CmdParser):
             "Please note that = is compulsory after --recon_all_args/-raa flag "
             "(this is not the case for other flags).",
         )
+        optional.add_argument(
+            "-y",
+            "--yes",
+            action="store_true",
+            default=False,
+            help="Executes t1-freesurfer even if input images are not centered without "
+            "asking for more user input.",
+        )
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments(add_overwrite_flag=True)
@@ -51,9 +59,7 @@ class T1FreeSurferCLI(ce.CmdParser):
 
         from .t1_freesurfer_pipeline import T1FreeSurfer
 
-        parameters = {
-            "recon_all_args": args.recon_all_args,
-        }
+        parameters = {"recon_all_args": args.recon_all_args, "skip_question": args.yes}
         pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
