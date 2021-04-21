@@ -1072,11 +1072,13 @@ def check_volume_location_in_world_coordinate_system(
             " at the origin of the world coordinates.\nUse the following command line to correct the "
             f"header of the faulty NIFTI volumes in a new folder:\n{cmd_line}"
             f"You will find more information on the command by typing "
-            f"{Fore.BLUE}clinica iotools center-nifti{Fore.RESET} "
-            f"{Fore.YELLOW}in the console.\nDo you still want to launch the pipeline now?{Fore.RESET}"
+            f"{Fore.BLUE}clinica iotools center-nifti{Fore.RESET} {Fore.YELLOW}in the console.{Fore.RESET}"
         )
         cprint(warning_message)
         if not skip_question:
+            cprint(
+                f"{Fore.YELLOW}Do you still want to launch the pipeline now?{Fore.RESET}"
+            )
             while True:
                 cprint("Your answer [yes/no]:")
                 answer = input()
