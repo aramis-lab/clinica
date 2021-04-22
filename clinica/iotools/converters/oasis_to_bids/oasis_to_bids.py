@@ -94,8 +94,6 @@ class OasisToBids(Converter):
         from multiprocessing.dummy import Pool
         from os import path
 
-        from nipype.interfaces.fsl import ExtractROI
-
         def convert_single_subject(subj_folder):
             import os
 
@@ -162,19 +160,12 @@ class OasisToBids(Converter):
                 s_form,
                 header=hdr,
             )
-            nb.save(img_with_good_orientation_nifti, output_path)
-
             # Header correction to obtain dim0 = 3
-            try:
-                fslroi = ExtractROI(
-                    in_file=output_path, roi_file=output_path, t_min=0, t_size=1
-                )
-                fslroi.run()
-            except OSError:
-                cprint(
-                    "FSL was not found in the environment. "
-                    "MRI dimension correction will not be performed."
-                )
+            img_with_good_dimension = nb.funcs.four_to_three(
+                img_with_good_orientation_nifti
+            )[0]
+
+            nb.save(img_with_good_dimension, output_path)
 
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)
