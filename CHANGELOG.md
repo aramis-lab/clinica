@@ -9,22 +9,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--
--
--
+- Center output nifti files of AIBL
+- Remove FSL library depency for OASIS-to-bids conversion
 
 ### Changed
-
--
--
-
-### Deprecated
-
-### Removed
+- Fix minor typos in documentation (#205)
+- Replace exception by warning when CAPs folder not recognized
+- In AIBL-to-bids, center output nifti files of AIBL
 
 ### Fixed
 
-### Security
+- Add SPM12 dependency check for pet_surface pipelines
+
+## Clinica 0.4.0
+
+### Added
+
+- pet-linear pipeline: spatial normalization to the MNI space and intensity normalization of PET images
+- pet-surface-longitudinal pipeline: Surface-based longitudinal processing of PET images 
+- check-missing-processing tool allows creating a TSV file containing information about the pipelines executed into a specific CAPS folder
+- Conversion information is added once the converter is run to facilitate traceability.
+- Add new keywords available in ADNI3 to the adni-2-bids converter
+
+### Changed
+
+- Harmonize output message display when running a pipeline.
+- Automatically ignore an image to process if it is found in the CAPS folder.
+- 
+
+
+### Fixed
+
+- Fix a minor bug when the pet-volume pipeline performs PVC.
+- Code source was completely reformatted using the Black code style.
+- Documentation for the project is now versioned (versions from 0.3.8 are publicly available).
+- Functions used for multiple pipelines are now mutualized (e.g container_from_filename function).
+- f-strings are used massively.
 
 ## Clinica 0.3.8
 
