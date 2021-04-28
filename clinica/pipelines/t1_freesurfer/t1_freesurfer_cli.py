@@ -41,7 +41,7 @@ class T1FreeSurferCLI(ce.CmdParser):
         )
 
         # Clinica standard arguments (e.g. --n_procs)
-        self.add_clinica_standard_arguments(add_overwrite_flag=True)
+        self.add_clinica_standard_arguments(add_overwrite_flag=True, add_yes_flag=True)
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
@@ -51,9 +51,7 @@ class T1FreeSurferCLI(ce.CmdParser):
 
         from .t1_freesurfer_pipeline import T1FreeSurfer
 
-        parameters = {
-            "recon_all_args": args.recon_all_args,
-        }
+        parameters = {"recon_all_args": args.recon_all_args, "skip_question": args.yes}
         pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),

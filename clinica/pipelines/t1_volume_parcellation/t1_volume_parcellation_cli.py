@@ -12,7 +12,7 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         """Define a description of this pipeline."""
         self._description = (
             "Computation of mean GM concentration for a set of regions:\n"
-            "http://clinica.run/doc/Pipelines/T1_Volume/"
+            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/"
         )
 
     def define_options(self):
