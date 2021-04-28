@@ -140,6 +140,10 @@ class DeepLearningPrepareData(cpe.Pipeline):
                     self.mask_pattern,
                     not self.parameters.get("use_uncropped_image"),
                 )
+        else:
+            self.masks_location = ""
+            self.mask_pattern = ""
+            self.roi_list = []
 
         # The reading node
         # -------------------------
