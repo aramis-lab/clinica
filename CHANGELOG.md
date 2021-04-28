@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Center output nifti files of AIBL
 - Remove FSL library depency for OASIS-to-bids conversion
+- Option to run `deeplearning-prepare-data` pipeline with pet-linear outputs
 
 ### Changed
 - Fix minor typos in documentation (#205)
