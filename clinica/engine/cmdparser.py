@@ -51,12 +51,12 @@ class CmdParser:
             self._description = self._name
             self._args.description = (
                 f"{Fore.GREEN}If you are not familiar with Clinica, see:\n"
-                f"http://clinica.run/doc/InteractingWithClinica/{Fore.RESET}"
+                f"https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/{Fore.RESET}"
             )
         else:
             self._args.description = (
                 f"{Fore.GREEN}{self._description}\n\nIf you are not familiar with Clinica, see:\n"
-                f"http://clinica.run/doc/InteractingWithClinica{Fore.RESET}"
+                f"https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/{Fore.RESET}"
             )
 
     @property
@@ -100,6 +100,7 @@ class CmdParser:
         add_wd_flag=True,
         add_nprocs_flag=True,
         add_overwrite_flag=False,
+        add_yes_flag=False,
     ):
         clinica_standard_options = self._args.add_argument_group(
             PIPELINE_CATEGORIES["CLINICA_OPTIONAL"]
@@ -131,6 +132,16 @@ class CmdParser:
                 action="store_true",
                 default=False,
                 help="Force overwrite of output files in CAPS folder.",
+            )
+
+        if add_yes_flag:
+            clinica_standard_options.add_argument(
+                "-y",
+                "--yes",
+                action="store_true",
+                default=False,
+                help="Execute the pipeline even if input images are not centered without "
+                "asking for more user input.",
             )
 
         return clinica_standard_options

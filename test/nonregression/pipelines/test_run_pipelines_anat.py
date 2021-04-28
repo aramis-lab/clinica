@@ -27,9 +27,7 @@ def test_run_T1FreeSurferCrossSectional(cmdopt):
     clean_folder(join(root, "out", "caps"), recreate=False)
     clean_folder(join(working_dir, "T1FreeSurfer"))
 
-    parameters = {
-        "recon_all_args": "-qcache",
-    }
+    parameters = {"recon_all_args": "-qcache", "skip_question": False}
 
     pipeline = T1FreeSurfer(
         bids_directory=join(root, "in", "bids"),

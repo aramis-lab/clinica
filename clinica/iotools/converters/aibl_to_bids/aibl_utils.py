@@ -543,6 +543,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
     import pandas as pds
     from numpy import nan
 
+    from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
 
     if modality.lower() not in ["t1", "av45", "flute", "pib"]:
@@ -601,6 +602,10 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
             output_image = dicom_to_nii(
                 subject, output_path, output_filename, image_path
             )
+
+        # Center all images
+        center_nifti_origin(output_image, output_image)
+
         return output_image
 
     # it reads the DataFrame where subject_ID, session_ID and path are saved

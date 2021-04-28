@@ -1,7 +1,9 @@
 {
     "id": "aramislab/pet-surface",
     "author": "Arnaud Marcoux",
-    "credits": ["Michael Bacci"],
+    "credits": [
+        "Michael Bacci"
+    ],
     "version": "0.1",
     "space_caps": "25M",
     "space_wd": "1G",
@@ -11,10 +13,15 @@
             "name": "freesurfer",
             "version": ">=6"
         },
-         {
+        {
             "type": "software",
             "name": "petpvc",
             "version": ""
+        },
+        {
+            "type": "software",
+            "name": "spm",
+            "version": ">=12"
         }
     ]
 }
