@@ -68,7 +68,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             FILE_TYPE = pet_linear_nii(
                 self.parameters.get("acq_label"),
                 self.parameters.get("suvr_reference_region"),
-                self.parameters.get("uncropped_image"),
+                self.parameters.get("use_uncropped_image"),
             )
         if self.parameters.get("modality") == "custom":
             FILE_TYPE = {
@@ -149,7 +149,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             name="ImageID",
         )
 
-        # Find container path from t1w filename
+        # Find container path from input filename
         # ----------------------
         container_path = npe.Node(
             nutil.Function(
@@ -236,7 +236,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         )
 
         # The processing nodes
-        # Node to save MRI in nii.gz format into pytorch .pt format
+        # Node to save input in nii.gz format into pytorch .pt format
         # ----------------------
         save_as_pt = npe.MapNode(
             name="save_as_pt",
