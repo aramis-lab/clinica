@@ -41,6 +41,7 @@ def create_merge_file(
         ignore_sessions_files: If True the information related to sessions and scans is not read (optional)
         pipelines: when adding CAPS information, indicates the pipelines that will be merged (optional)
     """
+    import json
     import os
     from os import path
 
@@ -71,7 +72,8 @@ def create_merge_file(
 
     out_path = compute_default_filename(out_tsv)
     out_dir = path.dirname(out_path)
-    os.makedirs(out_dir, exist_ok=True)
+    if len(out_dir) > 0:
+        os.makedirs(out_dir, exist_ok=True)
 
     merged_df = pd.DataFrame(columns=participants_df.columns.values)
 
@@ -126,6 +128,16 @@ def create_merge_file(
                             else:
                                 value = scans_df.loc[idx, col]
                                 new_col_name = f"{modality}_{col}"
+                                scans_dict.update({new_col_name: value})
+                        json_path = path.join(
+                            bids_dir, subject, session, filepath.split(".")[0] + ".json"
+                        )
+                        cprint(json_path)
+                        if path.exists(json_path):
+                            with open(json_path, "r") as f:
+                                json_dict = json.load(f)
+                            for key, value in json_dict.items():
+                                new_col_name = f"{modality}_{key}"
                                 scans_dict.update({new_col_name: value})
                     row_scans_df = pd.DataFrame(scans_dict, index=[0])
                 else:
