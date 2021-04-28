@@ -126,7 +126,7 @@ with Alzheimer's disease and healthy controls from the ADNI database:
    the results of the group comparison.
 
 > For more examples and details, please refer to the
-> [Documentation](http://www.clinica.run/doc).
+> [Documentation](https://aramislab.paris.inria.fr/clinica/docs/public/latest/).
 
 ## Support
 

@@ -9,7 +9,11 @@ Three types of tensors are proposed: 3D images, 3D patches or 2D slices.
 Outputs from the [`t1-linear` pipeline](../T1_Linear), [`t1-extensive`
 pipeline](https://clinicadl.readthedocs.io/en/latest/Preprocessing/T1_Extensive/) and 
 [`pet-linear` pipeline](../PET_Linear) can be processed (for the moment, 
+<<<<<<< HEAD
 `t1-extensive` is available from [ClinicaDL](https://clinicadl.readthedocs.io).
+=======
+`t1-extensive` is available from [ClinicaDL](https://clinicadl.readthedocs.io)).
+>>>>>>> b2383ab9483dcd44fd65a12e43703822f3b8c1c1
 These pipelines are designed as a prerequisite for
 the deep learning classification algorithms presented in
 [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)] and showcased
