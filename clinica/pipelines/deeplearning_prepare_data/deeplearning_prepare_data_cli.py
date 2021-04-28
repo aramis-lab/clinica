@@ -20,6 +20,9 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
 
     def define_options(self):
         """Define the sub-command arguments."""
+
+        import sys
+
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 
@@ -115,6 +118,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             the tracer used (acq-<acq_label>). For instance it can be 'fdg' for 
             fluorodeoxyglucose or 'av45' for florbetapir.""",
             type=str,
+            required="pet-linear" in sys.argv,
             default="",
         )
         optional_pet.add_argument(
@@ -125,6 +129,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             cerebellumPons or cerebellumPon2 (used for amyloid tracers) or pons or pons2 
             (used for 18F-FDG tracers).""",
             choices=LIST_SUVR_REFERENCE_REGIONS,
+            required="pet-linear" in sys.argv,
             default=None,
         )
 
