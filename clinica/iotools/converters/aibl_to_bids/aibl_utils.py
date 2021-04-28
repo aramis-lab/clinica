@@ -521,18 +521,19 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
 # in BIDS
 
 
-def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
+def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=False):
     """Convert all the T1 images found in the AIBL dataset downloaded in BIDS.
 
-    :param path_to_dataset: path_to_dataset
-    :param path_to_csv: path to the csv file containing clinical data
-    :param bids_dir: path to save the AIBL-T1-dataset converted in a
-    BIDS format
-    :param modality: string 't1', 'av45', 'flute' or 'pib'
+    Args:
+        path_to_dataset: path_to_dataset
+        path_to_csv: path to the csv file containing clinical data
+        bids_dir: path to save the AIBL-T1-dataset converted in a BIDS format
+        modality: string 't1', 'av45', 'flute' or 'pib'
+        overwrite: if True previous existing outputs will be erased
 
-    :return: list of all the images that are potentially converted in a
-    BIDS format and saved in the bids_dir. This does not guarantee
-    existence
+    Returns:
+        list of all the images that are potentially converted in a BIDS format and saved in the bids_dir.
+        This does not guarantee existence.
     """
     import glob
     from multiprocessing import Value, cpu_count
@@ -543,6 +544,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
     import pandas as pds
     from numpy import nan
 
+    from clinica.iotools.bids_utils import json_from_dcm
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
 
@@ -595,13 +597,14 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
             )
         # image is saved following BIDS specifications
 
-        if exists(join(output_path, output_filename + ".nii.gz")):
+        if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
             cprint(f"Subject {str(subject)} - session {session} already processed.")
             output_image = join(output_path, output_filename + ".nii.gz")
         else:
             output_image = dicom_to_nii(
                 subject, output_path, output_filename, image_path
             )
+            json_from_dcm(image_path, join(output_path, output_filename + ".json"))
 
         # Center all images
         center_nifti_origin(output_image, output_image)

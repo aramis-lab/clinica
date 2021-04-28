@@ -641,3 +641,39 @@ def compress_nii(file_path):
         with gzip.open(file_path + ".gz", "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
     remove(file_path)
+
+
+def json_from_dcm(dcm_dir, json_path):
+    """
+    Writes descriptive JSON file from DICOM header
+
+    Args:
+        dcm_dir (str): Path to the DICOM directory
+        json_path (str): Path to the output JSON file
+    """
+    import json
+    from glob import glob
+    from os import path
+
+    from pydicom import dcmread
+    from pydicom.tag import Tag
+
+    fields_dict = {
+        "DeviceSerialNumber": Tag(("0018", "1000")),
+        "Manufacturer": Tag(("0008", "0070")),
+        "ManufacturersModelName": Tag(("0008", "1090")),
+        "SoftwareVersions": Tag(("0018", "1020")),
+        "MagneticFieldStrength": Tag(("0018", "0087")),
+        "InstitutionName": Tag(("0008", "0080")),
+    }
+
+    dcm_path = glob(path.join(dcm_dir, "*.dcm"))[0]
+    ds = dcmread(dcm_path)
+    json_dict = dict()
+    for key, tag in fields_dict.items():
+        if tag in ds.keys():
+            json_dict[key] = ds.get(tag).value
+
+    json = json.dumps(json_dict, skipkeys=True, indent=4)
+    with open(json_path, "w") as f:
+        f.write(json)

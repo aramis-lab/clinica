@@ -23,6 +23,12 @@ class AiblToBidsCLI(ce.CmdParser):
             "clinical_data_directory", help="Path to the AIBL clinical data directory."
         )
         self._args.add_argument("bids_directory", help="Path to the BIDS directory.")
+        self._args.add_argument(
+            "--overwrite",
+            action="store_true",
+            default=False,
+            help="Overwrites previously written nifti and json files.",
+        )
 
     def run_command(self, args):
         """Run the converter with defined args."""
@@ -47,6 +53,9 @@ class AiblToBidsCLI(ce.CmdParser):
             makedirs(args.bids_directory)
 
         convert_images(
-            args.dataset_directory, args.clinical_data_directory, args.bids_directory
+            args.dataset_directory,
+            args.clinical_data_directory,
+            args.bids_directory,
+            args.overwrite,
         )
         convert_clinical_data(args.bids_directory, args.clinical_data_directory)
