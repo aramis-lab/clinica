@@ -132,7 +132,6 @@ def create_merge_file(
                         json_path = path.join(
                             bids_dir, subject, session, filepath.split(".")[0] + ".json"
                         )
-                        cprint(json_path)
                         if path.exists(json_path):
                             with open(json_path, "r") as f:
                                 json_dict = json.load(f)
