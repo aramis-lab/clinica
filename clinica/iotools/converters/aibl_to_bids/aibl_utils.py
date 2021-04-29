@@ -927,9 +927,10 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
             files_to_read.append(glob.glob(file_to_read_path)[0])
             sessions_fields_to_read.append(scans_fields[i])
 
-    rid_df = pd.read_csv(files_to_read[0], dtype={"text": str}, low_memory=False).RID
-    rid_list = list(set(rid_df))
-    bids_ids = ["sub-AIBL%i" % rid for rid in rid_list]
+    bids_ids = [
+        path.basename(sub_path)
+        for sub_path in glob.glob(path.join(input_path, "sub-AIBL*"))
+    ]
 
     # This dictionary should be automatically computed from the dataset
     ses_dict = {"ses-M00": "bl", "ses-M18": "m18", "ses-M36": "m36", "ses-M54": "m54"}
