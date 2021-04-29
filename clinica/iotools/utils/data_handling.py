@@ -120,24 +120,28 @@ def create_merge_file(
                     scans_df = pd.read_csv(scan_path, sep="\t")
                     for idx in scans_df.index.values:
                         filepath = scans_df.loc[idx, "filename"]
-                        filename = path.basename(filepath).split(".")[0]
-                        modality = "_".join(filename.split("_")[2::])
-                        for col in scans_df.columns.values:
-                            if col == "filename":
-                                pass
-                            else:
-                                value = scans_df.loc[idx, col]
-                                new_col_name = f"{modality}_{col}"
-                                scans_dict.update({new_col_name: value})
-                        json_path = path.join(
-                            bids_dir, subject, session, filepath.split(".")[0] + ".json"
-                        )
-                        if path.exists(json_path):
-                            with open(json_path, "r") as f:
-                                json_dict = json.load(f)
-                            for key, value in json_dict.items():
-                                new_col_name = f"{modality}_{key}"
-                                scans_dict.update({new_col_name: value})
+                        if filepath.endswith(".nii.gz"):
+                            filename = path.basename(filepath).split(".")[0]
+                            modality = "_".join(filename.split("_")[2::])
+                            for col in scans_df.columns.values:
+                                if col == "filename":
+                                    pass
+                                else:
+                                    value = scans_df.loc[idx, col]
+                                    new_col_name = f"{modality}_{col}"
+                                    scans_dict.update({new_col_name: value})
+                            json_path = path.join(
+                                bids_dir,
+                                subject,
+                                session,
+                                filepath.split(".")[0] + ".json",
+                            )
+                            if path.exists(json_path):
+                                with open(json_path, "r") as f:
+                                    json_dict = json.load(f)
+                                for key, value in json_dict.items():
+                                    new_col_name = f"{modality}_{key}"
+                                    scans_dict.update({new_col_name: value})
                     row_scans_df = pd.DataFrame(scans_dict, index=[0])
                 else:
                     row_scans_df = pd.DataFrame()
