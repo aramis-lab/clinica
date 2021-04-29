@@ -538,7 +538,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
     import glob
     from multiprocessing import Value, cpu_count
     from multiprocessing.dummy import Pool
-    from os import makedirs
+    from os import makedirs, remove
     from os.path import exists, join
 
     import pandas as pds
@@ -601,6 +601,8 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
             cprint(f"Subject {str(subject)} - session {session} already processed.")
             output_image = join(output_path, output_filename + ".nii.gz")
         else:
+            if exists(join(output_path, output_filename + ".nii.gz")):
+                remove(join(output_path, output_filename + ".nii.gz"))
             output_image = dicom_to_nii(
                 subject, output_path, output_filename, image_path
             )
