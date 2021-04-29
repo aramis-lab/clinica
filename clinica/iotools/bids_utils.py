@@ -655,8 +655,11 @@ def json_from_dcm(dcm_dir, json_path):
     from glob import glob
     from os import path
 
+    from colorama import Fore
     from pydicom import dcmread
     from pydicom.tag import Tag
+
+    from clinica.utils.stream import cprint
 
     fields_dict = {
         "DeviceSerialNumber": Tag(("0018", "1000")),
@@ -667,13 +670,16 @@ def json_from_dcm(dcm_dir, json_path):
         "InstitutionName": Tag(("0008", "0080")),
     }
 
-    dcm_path = glob(path.join(dcm_dir, "*.dcm"))[0]
-    ds = dcmread(dcm_path)
-    json_dict = dict()
-    for key, tag in fields_dict.items():
-        if tag in ds.keys():
-            json_dict[key] = ds.get(tag).value
+    try:
+        dcm_path = glob(path.join(dcm_dir, "*.dcm"))[0]
+        ds = dcmread(dcm_path)
+        json_dict = dict()
+        for key, tag in fields_dict.items():
+            if tag in ds.keys():
+                json_dict[key] = ds.get(tag).value
 
-    json = json.dumps(json_dict, skipkeys=True, indent=4)
-    with open(json_path, "w") as f:
-        f.write(json)
+        json = json.dumps(json_dict, skipkeys=True, indent=4)
+        with open(json_path, "w") as f:
+            f.write(json)
+    except IndexError:
+        cprint(f"{Fore.RED}WARNING:No DICOM found at {dcm_dir}.{Fore.RESET}")
