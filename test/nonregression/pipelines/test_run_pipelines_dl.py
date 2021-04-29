@@ -79,8 +79,4 @@ def DLPrepareData_Generic(root, working_dir, parameters):
         base_dir=join(working_dir, "DeepLearningPrepareData"),
         parameters=parameters,
     )
-<<<<<<< HEAD
-=======
-
->>>>>>> b2383ab9483dcd44fd65a12e43703822f3b8c1c1
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
