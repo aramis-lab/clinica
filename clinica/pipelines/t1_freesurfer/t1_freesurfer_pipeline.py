@@ -163,7 +163,11 @@ class T1FreeSurfer(cpe.Pipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-        check_volume_location_in_world_coordinate_system(t1w_files, self.bids_directory)
+        check_volume_location_in_world_coordinate_system(
+            t1w_files,
+            self.bids_directory,
+            skip_question=self.parameters["skip_question"],
+        )
         self.connect(
             [
                 (read_node, self.input_node, [("t1w", "t1w")]),

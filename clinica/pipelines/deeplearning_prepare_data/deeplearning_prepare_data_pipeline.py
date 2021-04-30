@@ -51,6 +51,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             T1W_EXTENSIVE,
             T1W_LINEAR,
             T1W_LINEAR_CROPPED,
+            pet_linear_nii,
         )
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
@@ -63,15 +64,21 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 FILE_TYPE = T1W_LINEAR_CROPPED
         if self.parameters.get("modality") == "t1-extensive":
             FILE_TYPE = T1W_EXTENSIVE
+        if self.parameters.get("modality") == "pet-linear":
+            FILE_TYPE = pet_linear_nii(
+                self.parameters.get("acq_label"),
+                self.parameters.get("suvr_reference_region"),
+                self.parameters.get("use_uncropped_image"),
+            )
         if self.parameters.get("modality") == "custom":
             FILE_TYPE = {
                 "pattern": f"*{self.parameters.get('custom_suffix')}",
                 "description": "Custom suffix",
             }
 
-        # T1w_Linear file:
+        # Input file:
         try:
-            t1w_files = clinica_file_reader(
+            input_files = clinica_file_reader(
                 self.subjects, self.sessions, self.caps_directory, FILE_TYPE
             )
         except ClinicaException as e:
@@ -104,7 +111,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         read_node = npe.Node(
             name="ReadingFiles",
             iterables=[
-                ("input_nifti", t1w_files),
+                ("input_nifti", input_files),
             ],
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
@@ -142,7 +149,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             name="ImageID",
         )
 
-        # Find container path from t1w filename
+        # Find container path from input filename
         # ----------------------
         container_path = npe.Node(
             nutil.Function(
@@ -203,6 +210,8 @@ class DeepLearningPrepareData(cpe.Pipeline):
             mod_subfolder = "t1_linear"
         if self.parameters.get("modality") == "t1-extensive":
             mod_subfolder = "t1_extensive"
+        if self.parameters.get("modality") == "pet-linear":
+            mod_subfolder = "pet_linear"
         if self.parameters.get("modality") == "custom":
             mod_subfolder = "custom"
 
@@ -227,7 +236,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         )
 
         # The processing nodes
-        # Node to save MRI in nii.gz format into pytorch .pt format
+        # Node to save input in nii.gz format into pytorch .pt format
         # ----------------------
         save_as_pt = npe.MapNode(
             name="save_as_pt",

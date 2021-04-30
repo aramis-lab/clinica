@@ -18,9 +18,7 @@ def test_instantiate_T1FreeSurferCrossSectional():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, "data", "T1FreeSurfer")
 
-    parameters = {
-        "recon_all_args": "-qcache",
-    }
+    parameters = {"recon_all_args": "-qcache", "skip_question": False}
 
     pipeline = T1FreeSurfer(
         bids_directory=join(root, "in", "bids"),
@@ -230,7 +228,7 @@ def test_instantiate_PETLinear():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, "data", "PETLinear")
 
-    parameters = {"acq_label": "fdg", "suvr_reference_region": "cerebellumPons"}
+    parameters = {"acq_label": "fdg", "suvr_reference_region": "cerebellumPons2"}
     pipeline = PETLinear(
         bids_directory=join(root, "in", "bids"),
         caps_directory=join(root, "in", "caps"),

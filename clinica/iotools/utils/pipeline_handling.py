@@ -106,6 +106,17 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
                     ]
                     ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
+            # Always retrieve subcortical volumes
+            atlas_path = path.join(
+                mod_path, f"{participant_id}_{session_id}_segmentationVolumes.tsv"
+            )
+            atlas_df = pd.read_csv(atlas_path, sep="\t")
+            label_list = [
+                f"t1-freesurfer_segmentation-volumes_ROI-{replace_sequence_chars(roi_name)}_volume"
+                for roi_name in atlas_df.label_name.values
+            ]
+            ses_df[label_list] = atlas_df["label_value"].to_numpy()
+
         pipeline_df = pipeline_df.append(ses_df)
 
     summary_df = generate_summary(pipeline_df, "t1-freesurfer", ignore_groups=True)
