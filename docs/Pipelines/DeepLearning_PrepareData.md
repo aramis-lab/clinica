@@ -6,10 +6,10 @@ deep learning library [[Paszke et al.,
 2019]](https://papers.nips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library).
 Three types of tensors are proposed: 3D images, 3D patches or 2D slices.
 
-Outputs from the [`t1-linear` pipeline](../T1_Linear) and [`t1-extensive`
-pipeline](https://clinicadl.readthedocs.io/en/latest/Preprocessing/T1_Extensive/)
-can be processed (for the moment, latter is available from
-[ClinicaDL](https://clinicadl.readthedocs.io).
+Outputs from the [`t1-linear` pipeline](../T1_Linear), [`t1-extensive`
+pipeline](https://clinicadl.readthedocs.io/en/latest/Preprocessing/T1_Extensive/) and 
+[`pet-linear` pipeline](../PET_Linear) can be processed (for the moment, 
+`t1-extensive` is available from [ClinicaDL](https://clinicadl.readthedocs.io)).
 These pipelines are designed as a prerequisite for
 the deep learning classification algorithms presented in
 [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)] and showcased
@@ -25,7 +25,8 @@ pipeline](../PET_Volume)  prior to running this pipeline. -->
 You need to have performed the [`t1-linear` pipeline](../T1_Linear) or
 [`t1-extensive`
 pipeline](https://clinicadl.readthedocs.io/en/latest/Preprocessing/T1_Extensive/)
-on your T1-weighted MRI.
+on your T1-weighted MRI or [`pet-linear` pipeline](../PET_Linear) on
+your PET images.
 There exists an option to convert custom nifty images into tensors.
 This option is chosen by adding the parameter `custom` to the
 command line instruction and a known suffix, as explained below.
@@ -48,7 +49,7 @@ where:
 [`t1-linear` pipeline](../T1_Linear) and the output of the present command,
 both in a [CAPS hierarchy](../../CAPS/Introduction).
 - `modality` is the name of the preprocessing done in the original images.
-It can be `t1-linear` or `t1-extensive`.
+It can be `t1-linear`, `t1-extensive` or `pet-linear`.
 You can chose `custom` if you want to get a tensor from a custom filename.
 - `tensor_format` is the format of the extracted tensors.
 You can choose between `image` to convert to PyTorch tensor the whole 3D image,
@@ -57,6 +58,7 @@ You can choose between `image` to convert to PyTorch tensor the whole 3D image,
 By default the features are extracted from the cropped image (see the
 documentation of the [`t1-linear` pipeline](../T1_Linear)).
 You can deactivate this behaviour with the `--use_uncropped_image` flag.
+The same behaviour is applied to [`pet-linear` pipeline](../PET_Linear).
 
 Pipeline options if you use `patch` extraction:
 
@@ -71,6 +73,22 @@ You can choose between `0` (sagittal plane), `1`(coronal plane) or
 - `--slice_mode`: slice mode.
 You can choose between `rgb` (will save the slice in three identical channels) or
 `single` (will save the slice in a single channel). Default value: `rgb`.
+
+Pipeline options if you use `pet-linear` modality:
+
+- `--acq_label`: the label given to the PET acquisition, specifying the tracer
+used (`acq-<acq_label>`). It can be for instance 'fdg' for
+<sup>18</sup>F-fluorodeoxyglucose or 'av45' for <sup>18</sup>F-florbetapir;
+- `--suvr_reference_region`: the reference region used to perform intensity
+normalization (i.e. dividing each voxel of the image by the average uptake in
+this region) resulting in a standardized uptake value ratio (SUVR) map. It can
+be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) and `pons` 
+or `pons2` (used for FDG). See [PET introduction](./PET_Introduction.md) for 
+more details about masks versions.
+
+!!! note
+    Same values used for the [`pet-linear` pipeline](../PET_Linear) are needed for
+    both options.
 
 Pipeline options if you use `custom` modality:
 
@@ -116,7 +134,7 @@ For the `t1-linear` modality, the main output files are:
   and optionally cropped.
 
 Corresponding folder and file names are obtained for the files processed with the
-`t1-extensive` modality.
+`t1-extensive` and `pet-linear` modality.
 
 For the case of files processed with the `custom` modality, files are stored in
 the following folder:
