@@ -666,8 +666,19 @@ def json_from_dcm(dcm_dir, json_path):
         "Manufacturer": Tag(("0008", "0070")),
         "ManufacturersModelName": Tag(("0008", "1090")),
         "SoftwareVersions": Tag(("0018", "1020")),
-        "MagneticFieldStrength": Tag(("0018", "0087")),
+        "BodyPart": Tag(("0018", "0015")),
+        "Units": Tag(("0054", "1001")),
+        # Institution
         "InstitutionName": Tag(("0008", "0080")),
+        "InstitutionAddress": Tag(("0008", "0081")),
+        "InstitutionalDepartmentName": Tag(("0008", "1040")),
+        # MRI
+        "MagneticFieldStrength": Tag(("0018", "0087")),
+        # PET
+        "InjectedRadioactivity": Tag(("0018", "1074")),
+        "MolarActivity": Tag(("0018", "1077")),
+        "InjectionStart": Tag(("0018", "1042")),
+        "FrameDuration": Tag(("0018", "1242")),
     }
 
     try:
