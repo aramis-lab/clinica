@@ -271,6 +271,8 @@ def create_scans_dict(
 
     import pandas as pd
 
+    from clinica.utils.stream import cprint
+
     scans_dict = {}
     prev_file = ""
     prev_sheet = ""
@@ -327,7 +329,9 @@ def create_scans_dict(
                     glob.glob(file_to_read_path)[0], sheet_name=sheet
                 )
             elif file_ext == ".csv":
-                file_to_read = pd.read_csv(glob.glob(file_to_read_path)[0])
+                file_to_read = pd.read_csv(
+                    glob.glob(file_to_read_path)[0], sep=None, engine="python"
+                )
             prev_file = file_name
             prev_sheet = sheet
 
