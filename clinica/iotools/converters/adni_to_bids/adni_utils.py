@@ -664,6 +664,7 @@ def create_adni_sessions_dict(
                                         "MEDHIST.csv",
                                         "VITALS.csv",
                                         "UWNPSYCHSUM_03_07_19.csv",
+                                        "UWNPSYCHSUM_03_26_20.csv",
                                         "ECOGPT.csv",
                                         "ECOGSP.csv",
                                         "FCI.csv",
