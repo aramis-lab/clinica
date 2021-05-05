@@ -1,0 +1,21 @@
+
+on:
+  pull_request:
+    branches:
+      - dev
+    types: [closed]
+
+jobs:
+
+  clean_closed_PR:
+    name: Clean_Closed_PR
+    runs-on: ubuntu-latest  
+    if: github.event.pull_request.merged == true
+    steps: 
+    - name: trigger single Job
+      uses: appleboy/jenkins-action@master
+      with:
+        url: "https://ci.inria.fr/clinica-aramis"
+        user: "mauricio.diaz-melo@inria.fr"
+        token: ${{ JENKINS_CLINICA }}
+        job: "clean_env"
