@@ -361,7 +361,7 @@ Known conversion exceptions are removed from the list.
     For each subject, we pair the closest dates from the two files as the same visit (`visits_to_timepoints_t1`).
     - For each visit, the image is processed differently according to which cohort it belongs.
         - If the visit occurs in ADNI 1, GO or 2 (`adni1go2_image`):
-            - Filter out images which do not pass QC check base on `MRIQUALITY.csv`.
+            - Filter out images which do not pass QC check based on `MRIQUALITY.csv`.
             - Since there might be several acquisitions (each acquisition corresponds to a different series ID, which is the same for all the processed images associated to the corresponding original acquisition), we have to choose a series.
              - The first option is to look at which one has been further processed (preferred series).
              The last processing step is scaling.
