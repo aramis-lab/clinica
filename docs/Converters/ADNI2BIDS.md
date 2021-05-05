@@ -373,10 +373,11 @@ Known conversion exceptions are removed from the list.
                 
             - If there are images with different magnetic field strengths it means the image was acquired during ADNI1, so we filter and keep preferred 1.5 T.
             - If we have several processed images, we keep the one with the lower series ID (acquired first).
-            - We save as sequence name of the image we want to use, the current sequence up to the point after where the processed scan contains N3m or N3.
+            - We save as sequence name of the image we want to use, the current sequence up to the point after where the processed scan contains N3m or N3. We do this because we do not want to keep Scaled images.
 
-            > :warning: **The imageID saved in the t1_paths.csv file corresponds to that of the scaled image** 
-            We do this because we do not want to keep Scaled images.
+            !!! Warning
+            The imageID saved in the t1_paths.csv file corresponds to that of the scaled image
+            
         - If the visit occurs in ADNI 3 (`adni3_image`), the selection criteria are (for the current visit and patient):
             - Original images (All the previous preprocessing steps are now done directly on the scanners, so we only need the original image.)
             - Containing `accel` in the sequence name (In the ADNI 3 T1 protocol all the sequences are `accelerated`.)
