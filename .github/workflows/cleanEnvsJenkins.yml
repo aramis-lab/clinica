@@ -17,5 +17,5 @@ jobs:
       with:
         url: "https://ci.inria.fr/clinica-aramis"
         user: "mauricio.diaz-melo@inria.fr"
-        token: ${{ JENKINS_CLINICA }}
+        token: ${{ secrets.JENKINS_CLINICA }}
         job: "clean_env"
