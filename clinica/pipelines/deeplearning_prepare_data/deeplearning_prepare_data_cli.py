@@ -111,7 +111,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         )
 
         optional_roi = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you chose 'pet-linear' pipeline{Fore.RESET}"
+            f"{Fore.BLUE}Pipeline options if you chose 'roi' extraction{Fore.RESET}"
         )
         optional_roi.add_argument(
             "--roi_list",
@@ -126,6 +126,23 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             help="Disable cropping option so the output tensors have the same size than the whole image.",
             action="store_true",
             default=False,
+        )
+
+        optional_roi.add_argument(
+            "-ct",
+            "--custom_template",
+            help="""Name of the template used when modality is set to custom.""",
+            type=str,
+            default=None,
+        )
+        optional_roi.add_argument(
+            "-cmp",
+            "--custom_mask_pattern",
+            help="""If given will select only the masks containing the string given.
+                    The mask with the shortest name is taken.
+                    This argument is taken into account only of the modality is custom.""",
+            type=str,
+            default=None,
         )
 
         optional_pet = self._args.add_argument_group(
@@ -165,22 +182,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             type=str,
             default="",
         )
-        optional_custom.add_argument(
-            "-ct",
-            "--custom_template",
-            help="""Name of the template used when modality is set to custom.""",
-            type=str,
-            default=None,
-        )
-        optional_custom.add_argument(
-            "-cmp",
-            "--custom_mask_pattern",
-            help="""If given will select only the masks containing the string given.
-                    The mask with the shortest name is taken.
-                    This argument is taken into account only of the modality is custom.""",
-            type=str,
-            default=None,
-        )
+
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
@@ -205,10 +207,10 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             "slice_mode": args.slice_mode,
             "roi_list": args.roi_list,
             "roi_uncrop_output": args.roi_uncrop_output,
-            "use_uncropped_image": args.use_uncropped_image,
-            "custom_suffix": args.custom_suffix,
             "custom_template": args.custom_template,
             "custom_mask_pattern": args.custom_mask_pattern,
+            "use_uncropped_image": args.use_uncropped_image,
+            "custom_suffix": args.custom_suffix,
             "acq_label": args.acq_label,
             "suvr_reference_region": args.suvr_reference_region,
         }
