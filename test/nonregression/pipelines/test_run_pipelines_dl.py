@@ -40,8 +40,13 @@ def test_run_DLPrepareData(cmdopt):
         "slice_mode": "rgb",
         "slice_direction": 0,
     }
+    roi_params = {
+        "extract_method": "roi",
+        "roi_list": ["rightHippocampusBox", "leftHippocampusBox"],
+        "roi_uncrop_output": False,
+    }
 
-    data = [image_params, slice_params, patch_params]
+    data = [image_params, slice_params, patch_params, roi_params]
 
     for parameters in data:
         for modality in modalities:
@@ -79,4 +84,5 @@ def DLPrepareData_Generic(root, working_dir, parameters):
         base_dir=join(working_dir, "DeepLearningPrepareData"),
         parameters=parameters,
     )
+
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
