@@ -67,7 +67,7 @@ git push origin <branch_name>
   The pull request will update automatically and will finally be merged by the
   reviewer(s).
 
-Note: In order to uniform code style across Clinica, we use the [Black code
+Note: In order to normalize code style across Clinica, we use the [Black code
 formatter](https://black.readthedocs.io).  A nice idea is to used in
 combination of a pre-commit hook. Please see [instructions
 here](https://pre-commit.com/) about how to install the precommit hook in your
