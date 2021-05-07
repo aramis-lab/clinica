@@ -14,5 +14,7 @@ jobs:
     steps: 
     - name: curl
       uses: wei/curl@v1
+      env:
+        JK_TOKEN: ${{ secrets.JENKIS_CLINICA }}
       with:
-        args: -v -X POST --user mauricio.diaz-melo@inria.fr:${{ secrets.JENKINS_CLINICA }} https://ci.inria.fr/clinica-aramis/job/clean_env/build
+        args: -v -X POST --user mauricio.diaz-melo@inria.fr:"$JK_TOKEN" https://ci.inria.fr/clinica-aramis/job/clean_env/build
