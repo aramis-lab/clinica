@@ -17,4 +17,4 @@ jobs:
       env:
         JK_TOKEN: ${{ secrets.JENKIS_CLINICA }}
       with:
-        args: -v -X POST --user mauricio.diaz-melo@inria.fr:"$JK_TOKEN" https://ci.inria.fr/clinica-aramis/job/clean_env/build
+        args: -v -X POST --user mauricio.diaz-melo@inria.fr:$JK_TOKEN https://ci.inria.fr/clinica-aramis/job/clean_env/build
