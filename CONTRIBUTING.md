@@ -68,11 +68,10 @@ git push origin <branch_name>
   reviewer(s).
 
 Note: In order to normalize code style across Clinica, we use the [Black code
-formatter](https://black.readthedocs.io).  A nice idea is to used in
+formatter](https://black.readthedocs.io).  A nice idea is to use it in
 combination of a pre-commit hook. Please see [instructions
 here](https://pre-commit.com/) about how to install the precommit hook in your
-local copie of the clone (shortly: run `pre-commit install` inside the cloned
-folder). 
+local copy (shortly: run `pre-commit install` inside the cloned folder). 
 
 
 ### Keeping your fork up to date
