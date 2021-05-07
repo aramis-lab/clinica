@@ -358,34 +358,33 @@ Known conversion exceptions are removed from the list.
 
 ??? abstract "Criteria for T1-weighted MRI"
     - First, since the `ADNIMERGE` and `MPRAGEMETA` files have different notations for the visits, a correspondence must be established.
-    - For each subject, we pair the closest dates from the two files as the same visit (`visits_to_timepoints_t1`).
+    - For each subject, we pair the closest dates from the two files as the same visit (`visits_to_timepoints_t1`)
     - For each visit, the image is processed differently according to which cohort it belongs.
         - If the visit occurs in ADNI 1, GO or 2 (`adni1go2_image`):
             - Filter out images which do not pass QC check based on `MRIQUALITY.csv`.
             - Since there might be several acquisitions (each acquisition corresponds to a different series ID, which is the same for all the processed images associated to the corresponding original acquisition), we have to choose a series.
-             - The first option is to look at which one has been further processed (preferred series).
+            - The first option is to look at which one has been further processed (preferred series).
              The last processing step is scaling.
-             So we look for a ‘Processed’ image with its sequence name ending by ‘Scaled’ (preferred_processed_scan.
-            - If not found, we look for images with the previous processing step, N3 bias field correction.
-            So we look for a `Processed` image with its sequence name ending by `N3m` (`preferred_processed_scan`).
-            - If there is no N3 processed image, we can only use the original image (original_image).
+             So we look for a ‘Processed’ image with its sequence name ending by ‘Scaled’ (preferred_processed_scan
+             - If not found, we look for images with the previous processing step, N3 bias field correction.
+             So we look for a `Processed` image with its sequence name ending by `N3m` (`preferred_processed_scan`
+             - If there is no N3 processed image, we can only use the original image (original_image).
                 - We keep images that are MPRAGE (`mprage|mp-rage|mp rage` in the sequence, but no `2`, to keep the first acquisition) or SPGR (`spgr` in sequence name, but no `acc`, since for ADNI 2 we have a single standard acquisition and sometimes a second accelerated acquisition).
-                
             - If there are images with different magnetic field strengths it means the image was acquired during ADNI1, so we filter and keep preferred 1.5 T.
             - If we have several processed images, we keep the one with the lower series ID (acquired first).
             - We save as sequence name of the image we want to use, the current sequence up to the point after where the processed scan contains N3m or N3. We do this because we do not want to keep Scaled images.
 
-            -**The imageID saved in the t1_paths.csv file corresponds to that of the scaled image**
-    
-            
+            !!! Warning
+                The imageID saved in the t1_paths.csv file corresponds to that of the scaled image**
+
         - If the visit occurs in ADNI 3 (`adni3_image`), the selection criteria are (for the current visit and patient):
             - Original images (All the previous preprocessing steps are now done directly on the scanners, so we only need the original image.)
             - Containing `accel` in the sequence name (In the ADNI 3 T1 protocol all the sequences are `accelerated`.)
             - Not containing `_nd` in the sequence name.
-              > [The `_ND` suffix is an automated output from some Siemens scanners when distortion correction is applied.
-              The ND stands for No Distortion correction, so they system provides the distortion corrected images and the non corrected images.](http://adni.loni.usc.edu/support/experts-knowledge-base/question/?QID=1191)
+              > [The `_ND` suffix is an automated output from some Siemens scanners when distortion correction is applied. The ND stands for No Distortion correction, so they system provides the distortion corrected images and the non corrected images.](http://adni.loni.usc.edu/support/experts-knowledge-base/question/?QID=1191)
 
             - QC check is done with `select_scan_from_qc`.
+        
         - To check QC in the case of an original image for ADNI1, GO and 2, or always for ADNI 3, the function `select_scan_from_qc` is used:
             - We separate the scans according to the preferred magnetic field strength
                 - If there are 3T scans, we check for QC
