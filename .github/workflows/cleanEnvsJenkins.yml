@@ -15,4 +15,4 @@ jobs:
     - name: curl
       uses: wei/curl@v1
       with:
-        args: v -X POST --user mauricio.diaz-melo@inria.fr:${{ secrets.JENKINS_CLINICA }} https://ci.inria.fr/clinica-aramis/job/clean_env/build
+        args: -v -X POST --user mauricio.diaz-melo@inria.fr:${{ secrets.JENKINS_CLINICA }} https://ci.inria.fr/clinica-aramis/job/clean_env/build
