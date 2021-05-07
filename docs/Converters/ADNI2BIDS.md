@@ -375,7 +375,7 @@ Known conversion exceptions are removed from the list.
             - If we have several processed images, we keep the one with the lower series ID (acquired first).
             - We save as sequence name of the image we want to use, the current sequence up to the point after where the processed scan contains N3m or N3. We do this because we do not want to keep Scaled images.
 
-            > :warning: **The imageID saved in the t1_paths.csv file corresponds to that of the scaled image**
+            -**The imageID saved in the t1_paths.csv file corresponds to that of the scaled image**
     
             
         - If the visit occurs in ADNI 3 (`adni3_image`), the selection criteria are (for the current visit and patient):
