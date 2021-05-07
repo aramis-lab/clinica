@@ -364,18 +364,18 @@ Known conversion exceptions are removed from the list.
             - Filter out images which do not pass QC check based on `MRIQUALITY.csv`.
             - Since there might be several acquisitions (each acquisition corresponds to a different series ID, which is the same for all the processed images associated to the corresponding original acquisition), we have to choose a series.
             - The first option is to look at which one has been further processed (preferred series).
-             The last processing step is scaling.
-             So we look for a ‘Processed’ image with its sequence name ending by ‘Scaled’ (preferred_processed_scan
-             - If not found, we look for images with the previous processing step, N3 bias field correction.
-             So we look for a `Processed` image with its sequence name ending by `N3m` (`preferred_processed_scan`
-             - If there is no N3 processed image, we can only use the original image (original_image).
+            The last processing step is scaling.
+            So we look for a ‘Processed’ image with its sequence name ending by ‘Scaled’ (preferred_processed_scan
+            - If not found, we look for images with the previous processing step, N3 bias field correction.
+            So we look for a `Processed` image with its sequence name ending by `N3m` (`preferred_processed_scan`
+            - If there is no N3 processed image, we can only use the original image (original_image).
                 - We keep images that are MPRAGE (`mprage|mp-rage|mp rage` in the sequence, but no `2`, to keep the first acquisition) or SPGR (`spgr` in sequence name, but no `acc`, since for ADNI 2 we have a single standard acquisition and sometimes a second accelerated acquisition).
             - If there are images with different magnetic field strengths it means the image was acquired during ADNI1, so we filter and keep preferred 1.5 T.
             - If we have several processed images, we keep the one with the lower series ID (acquired first).
             - We save as sequence name of the image we want to use, the current sequence up to the point after where the processed scan contains N3m or N3. We do this because we do not want to keep Scaled images.
 
             !!! Warning
-                The imageID saved in the t1_paths.csv file corresponds to that of the scaled image**
+                The imageID saved in the t1_paths.csv file corresponds to that of the scaled image
 
         - If the visit occurs in ADNI 3 (`adni3_image`), the selection criteria are (for the current visit and patient):
             - Original images (All the previous preprocessing steps are now done directly on the scanners, so we only need the original image.)
