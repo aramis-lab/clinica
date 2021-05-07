@@ -12,10 +12,7 @@ jobs:
     runs-on: ubuntu-latest  
     if: github.event.pull_request.merged == true
     steps: 
-    - name: trigger single Job
-      uses: appleboy/jenkins-action@master
+    - name: curl
+      uses: wei/curl@v1
       with:
-        url: "https://ci.inria.fr/clinica-aramis"
-        user: "mauricio.diaz-melo@inria.fr"
-        token: ${{ secrets.JENKINS_CLINICA }}
-        job: "clean_env"
+        args: v -X POST --user mauricio.diaz-melo@inria.fr:${{ secrets.JENKINS_CLINICA }} https://ci.inria.fr/clinica-aramis/job/clean_env/build
