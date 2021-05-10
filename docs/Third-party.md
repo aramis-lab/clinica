@@ -14,7 +14,9 @@ If you want to run the `convert <dataset>-to-bids` commands (e.g. `adni-to-bids`
 
 Please refer to each tool’s website for installation instructions:
 
-- [**dcm2niix**](https://github.com/rordenlab/dcm2niix) Download [here](https://github.com/rordenlab/dcm2niix) and follow the installation instructions on the same page.
+- [**dcm2niix**](https://github.com/rordenlab/dcm2niix)
+  - Download [here](https://github.com/rordenlab/dcm2niix) and follow the installation instructions on the same page.
+  - For Mac users: use Homebrew to install `dcm2niix` with `brew install dcm2niix`.
 - [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) `dcm2nii` is incuded in MRIcron and can be downloaded [here](https://www.nitrc.org/frs/?group_id=152).
 Please download the 2016 version since `dcm2nii` is no more available afterwards.
 - [**FreeSurfer 6.0**](http://surfer.nmr.mgh.harvard.edu/)
