@@ -175,10 +175,18 @@ def same_missing_modality_tsv(file1, file2):
     func_task_rest2 = list(df2["func_task-rest"])
 
     # Subjects are sorted in alphabetical order. The same permutation of element is applied on each column
-    subjects1_sorted, pet_AV45_1 = (list(t) for t in zip(*sorted(zip(subjects1, pet_AV45_1))))
-    subjects2_sorted, pet_AV45_2 = (list(t) for t in zip(*sorted(zip(subjects2, pet_AV45_2))))
-    subjects1_sorted, pet_FDG_1 = (list(t) for t in zip(*sorted(zip(subjects1, pet_FDG_1))))
-    subjects2_sorted, pet_FDG_2 = (list(t) for t in zip(*sorted(zip(subjects2, pet_FDG_2))))
+    subjects1_sorted, pet_AV45_1 = (
+        list(t) for t in zip(*sorted(zip(subjects1, pet_AV45_1)))
+    )
+    subjects2_sorted, pet_AV45_2 = (
+        list(t) for t in zip(*sorted(zip(subjects2, pet_AV45_2)))
+    )
+    subjects1_sorted, pet_FDG_1 = (
+        list(t) for t in zip(*sorted(zip(subjects1, pet_FDG_1)))
+    )
+    subjects2_sorted, pet_FDG_2 = (
+        list(t) for t in zip(*sorted(zip(subjects2, pet_FDG_2)))
+    )
     subjects1_sorted, t1w1 = (list(t) for t in zip(*sorted(zip(subjects1, t1w1))))
     subjects2_sorted, t1w2 = (list(t) for t in zip(*sorted(zip(subjects2, t1w2))))
     subjects1_sorted, func_task_rest1 = (
@@ -238,15 +246,12 @@ def list_files(startpath, filename=None):
     Returns:
         void
     """
-    from os import sep, walk
+    from os import sep, walk, remove
     from os.path import abspath, basename, exists, expanduser, expandvars
 
     if exists(filename):
-        raise RuntimeError(
-            filename
-            + " already exists. Remove it before "
-            + "launching this tree-like function."
-        )
+        remove(filename)
+
     expanded_path = abspath(expanduser(expandvars(startpath)))
     for root, dirs, files in walk(expanded_path):
         level = root.replace(startpath, "").count(sep)
