@@ -14,9 +14,11 @@ If you want to run the `convert <dataset>-to-bids` commands (e.g. `adni-to-bids`
 
 Please refer to each tool’s website for installation instructions:
 
-- [**dcm2niix**](https://github.com/rordenlab/dcm2niix) Download [here](https://github.com/rordenlab/dcm2niix) and follow the installation instructions on the same page.
-- [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) `dcm2nii` is incuded in MRIcron and can be downloaded [here](https://www.nitrc.org/frs/?group_id=152).
-Please download the 2016 version since `dcm2nii` is no more available afterwards.
+- [**dcm2niix**](https://github.com/rordenlab/dcm2niix)
+  - Download [here](https://github.com/rordenlab/dcm2niix) and follow the installation instructions on the same page.
+  - For Mac users: use Homebrew to install `dcm2niix` with `brew install dcm2niix`.
+- [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) `dcm2nii` is included in an older release of MRIcron which can be downloaded [here](https://www.nitrc.org/frs/download.php/1976/mricronmac.zip).
+Unpack the downloaded zip archive and move the `dcm2nii` binary somewhere within your registered `$PATH`.
 - [**FreeSurfer 6.0**](http://surfer.nmr.mgh.harvard.edu/)
   - For Linux users, download and install FreeSurfer following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
   Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` (a `sudo apt-get install tcsh libjpeg62` should do the job).
