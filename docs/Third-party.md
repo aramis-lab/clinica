@@ -61,8 +61,9 @@ Please refer to each tool’s website for installation instructions:
   - For Mac users, download [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the FreeSurfer [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
 - [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/) Download [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the FSL wiki (this [page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/Linux) for Linux users and this [page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/MacOsX) for Mac users).
 - [**ITK**](https://itk.org/) Follow the instructions on the ITK blog (this [page](https://blog.kitware.com/itk-packages-in-linux-distributions/) for Linux users and this [page](https://blog.kitware.com/kitware-packages-on-os-x-with-homebrew/) for Mac users).
-- [**MRtrix3**](http://www.mrtrix.org) Follow the instructions on the MRtrix website (this [page](https://mrtrix.readthedocs.io/en/latest/installation/linux_install.html) for Linux users and this [page](https://mrtrix.readthedocs.io/en/latest/installation/mac_install.html) for Mac users).
-Note for Mac users: the fastest solution is to use Homebrew: a `brew tap MRtrix3/mrtrix3` command followed by `brew install mrtrix3` will install MRtrix3.
+- [**MRtrix3**](http://www.mrtrix.org) Follow the instructions on the MRtrix [website](https://www.mrtrix.org/download/)
+  - For Linux users: use the official package for [Anaconda](https://www.mrtrix.org/download/linux-anaconda/) or follow this set of [instructions](https://mrtrix.readthedocs.io/en/latest/installation/build_from_source.html#linux) to build it from source.
+  - For Mac users: use the official package for [Anaconda](https://www.mrtrix.org/download/macos-anaconda/) or the official [installer](https://www.mrtrix.org/download/macos-application/). There is also this [Homebrew formula](https://github.com/MRtrix3/homebrew-mrtrix3), although large dependencies such as XCode and Qt5 are required.
 - [**Matlab**](https://fr.mathworks.com/products/matlab/)
 - [**PETPVC 1.2.4**](https://github.com/UCL/PETPVC) Follow the instructions [here](https://github.com/UCL/PETPVC).
 Do not forget to compile in RELEASE mode, otherwise, partial volume correction will be very slow.
