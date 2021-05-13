@@ -8,7 +8,7 @@ The easiest way to use Clinica is to have your data organized using the [BIDS st
 
 If your dataset does not follow this standard, you will need to convert it:
 
-- If your data are in DICOM format, you can use one of the converters from the [BIDS website](http://bids.neuroimaging.io/).
+- If your data are in DICOM format, you can use one of the converters referenced on the [BIDS website](https://bids.neuroimaging.io/benefits.html#converters).
 - Otherwise, Clinica includes converters for public datasets such as [ADNI](http://adni.loni.usc.edu/), [AIBL](https://aibl.csiro.au), [NIFD](http://4rtni-ftldni.ini.usc.edu/) and [OASIS](http://www.oasis-brains.org).
 See [here](../DatabasesToBIDS) for more details.
 
