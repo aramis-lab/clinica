@@ -584,7 +584,7 @@ def create_adni_sessions_dict(
     from clinica.utils.stream import cprint
 
     # Load data
-    sessions = pd.read_excel(clinic_specs_path, sheet_name="sessions.tsv")
+    sessions = pd.read_csv(clinic_specs_path + "_sessions.tsv", sep="\t")
     sessions_fields = sessions["ADNI"]
     field_location = sessions["ADNI location"]
     sessions_fields_bids = sessions["BIDS CLINICA"]
