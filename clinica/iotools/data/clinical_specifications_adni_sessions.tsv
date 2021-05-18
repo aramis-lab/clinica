@@ -2,13 +2,13 @@ Field	BIDS CLINICA	BIDS format	BIDS type	ADNI	ADNI location
 BIDS session id	session_id	Keyword 'ses-' followed by the original session id of each dataset without special characters or symbols	string		
 Date of the examination	examination_date	YYYY-MM-DD HH:MM:SS	string	EXAMDATE	ADNIMERGE.csv/ADNIMERGE
 Age at the session	age		float	AGE	ADNIMERGE.csv/ADNIMERGE
-Protocol under which data was collected	current_study	free format: ADNI1; ADNI2; ADNI3; ADNIGO	string	COLPROT	ADNIMERGE.csv/ADNIMERGE
-Current Diagnosis	diagnosis	string: CN (CN) ; MCI (MCI); Dementia (AD)	string	DX	ADNIMERGE.csv/ADNIMERGE
+Protocol under which data was collected	current_study	"free format: ADNI1; ADNI2; ADNI3; ADNIGO"	string	COLPROT	ADNIMERGE.csv/ADNIMERGE
+Current Diagnosis	diagnosis	"string: CN (CN) ; MCI (MCI); Dementia (AD)"	string	DX	ADNIMERGE.csv/ADNIMERGE
 Average FDG-PET of angular, temporal and posterior cingulate	adni_fdg	Number (float)		FDG	ADNIMERGE.csv/ADNIMERGE
 Average PIB SUVR of frontal cortex, anterior cingulate, precuneus cortex and parietal cortex	adni_pib	Number (float)		PIB	ADNIMERGE.csv/ADNIMERGE
 Average AV45 SUVR of frontal, anterior cingulate, precuneus, and parietal cortex relative to cerebellum	adni_av45	Number (float)		AV45	ADNIMERGE.csv/ADNIMERGE
-Clinical Dementia Rating Scale - Sum of boxes	cdr_sb	Number: 0;0.5;1;2;3		CDRSB	ADNIMERGE.csv/ADNIMERGE
-Clinical Dementia Rating Scale - Global	cdr_global	Number: 0;0.5;1;2;3		CDGLOBAL	CDR.csv
+Clinical Dementia Rating Scale - Sum of boxes	cdr_sb	"Number: 0;0.5;1;2;3"		CDRSB	ADNIMERGE.csv/ADNIMERGE
+Clinical Dementia Rating Scale - Global	cdr_global	"Number: 0;0.5;1;2;3"		CDGLOBAL	CDR.csv
 AD Assessment Scale - 11	adas11	Number (float)		ADAS11	ADNIMERGE.csv/ADNIMERGE
 AD Assessment Scale - 13	adas13	Number (float)		ADAS13	ADNIMERGE.csv/ADNIMERGE
 Mini-mental state exam	MMSE	Number	int	MMSE	ADNIMERGE.csv/ADNIMERGE
@@ -169,7 +169,6 @@ Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 
 Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 2	ecogpt_visspat2			VISSPAT2	ECOGPT.csv
 Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 3	ecogpt_visspat3			VISSPAT3	ECOGPT.csv
 Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 4	ecogpt_visspat4			VISSPAT4	ECOGPT.csv
-Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 5	ecogpt_visspat5			VISSPAT5	ECOGPT.csv
 Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 6	ecogpt_visspat6			VISSPAT6	ECOGPT.csv
 Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 7	ecogpt_visspat7			VISSPAT7	ECOGPT.csv
 Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 8	ecogpt_visspat8			VISSPAT8	ECOGPT.csv
@@ -221,7 +220,6 @@ Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 1	e
 Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 2	ecogsp_visspat2			VISSPAT2	ECOGSP.csv
 Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 3	ecogsp_visspat3			VISSPAT3	ECOGSP.csv
 Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 4	ecogsp_visspat4			VISSPAT4	ECOGSP.csv
-Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 5	ecogsp_visspat5			VISSPAT5	ECOGSP.csv
 Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 6	ecogsp_visspat6			VISSPAT6	ECOGSP.csv
 Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 7	ecogsp_visspat7			VISSPAT7	ECOGSP.csv
 Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 8	ecogsp_visspat8			VISSPAT8	ECOGSP.csv
@@ -243,13 +241,13 @@ Everyday Cognition (Study Partner Report) - Divided attention component 4	ecogsp
 Everyday Cognition (Study Partner Report) - Staff assistance	ecogsp_staffasst			STAFFASST	ECOGSP.csv
 Everyday Cognition (Study Partner Report) - Validity of the information collected	ecogsp_validity			VALIDITY	ECOGSP.csv
 Everyday Cognition (Study Partner Report) - Information Source	ecogsp_source			SOURCE	ECOGSP.csv
-Everyday Cognition (Study Partner Report) - Divided attention component	ecogsp_ecogptdivatt			EcogPtDivatt	ECOGSP.csv
-Everyday Cognition (Study Partner Report) - Language component	ecogsp_ecogptlang			EcogPtLang	ECOGSP.csv
-Everyday Cognition (Study Partner Report) - Memory component	ecogsp_ecogptmem			EcogPtMem	ECOGSP.csv
-Everyday Cognition (Study Partner Report) - Organization component	ecogsp_ecogptorgan			EcogPtOrgan	ECOGSP.csv
-Everyday Cognition (Study Partner Report) - Planning component	ecogsp_ecogptplan			EcogPtPlan	ECOGSP.csv
-Everyday Cognition (Study Partner Report) - Visuospatial Abilities component	ecogsp_ecogptvisspat			EcogPtVisspat	ECOGSP.csv
-Everyday Cognition (Study Partner Report) - Total	ecogsp_ecogpttotal			EcogPtTotal	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Divided attention component	ecogsp_ecogptdivatt			EcogSPDivatt	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component	ecogsp_ecogptlang			EcogSPLang	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component	ecogsp_ecogptmem			EcogSPMem	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Organization component	ecogsp_ecogptorgan			EcogSPOrgan	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Planning component	ecogsp_ecogptplan			EcogSPPlan	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Visuospatial Abilities component	ecogsp_ecogptvisspat			EcogSPVisspat	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Total	ecogsp_ecogpttotal			EcogSPTotal	ECOGSP.csv
 					
 Financial Capacity Instrument Short Form - Mental Calculation Score (Items 1-2)	fci_mc_score			MC_SCORE	FCI.csv
 Financial Capacity Instrument Short Form - Fincial Conceptual Knowledge Score (Items 3-6)	fci_fc_score			FC_SCORE	FCI.csv
