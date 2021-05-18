@@ -1,0 +1,29 @@
+Field	BIDS CLINICA	BIDS format	BIDS type	ADNI	ADNI location
+BIDS id of the participant	participant_id	Keyword 'sub-' followed by one of the original subject IDs without special characters or symbols	string		
+Second participant id	alternative_id_1		string	PTID	ADNIMERGE.csv
+Third participant id	alternative_id_2		string		
+Fourth participant id	alternative_id_3		string		
+Type of subj in PrevDemAls dataset	prevdemals_status	A or R (A = patients, R = relatives)	char		
+Date of birth	date_of_birth	YYYY-MM-DD HH:MM:SS	string		
+Sex	sex	M or F	char	PTGENDER	ADNIMERGE.csv
+Educational level	education_level	Free format	string	PTEDUCAT	ADNIMERGE.csv
+Deceased	deceased	Y or N			
+Age at baseline in years	age_bl	In years with, possibly, decimals	float	AGE	ADNIMERGE.csv
+Civil status	marital_status	Free format	string	PTMARRY	ADNIMERGE.csv
+	ethnic_cat		string	PTETHCAT	ADNIMERGE.csv
+Digit roster ID (unique ID of the participant which is composed with site ID to form the participant ID)	adni_rid	Number 4 digits		RID	ADNIMERGE.csv
+Site in which the patient was studied	site	Free format	string	SITE	ADNIMERGE.csv
+Protocol from which the subject originated	original_study	Free format: ADNI1; ADNI2; ADNI3; ADNIGO		ORIGPROT	ADNIMERGE.csv
+Clinical Dementia Rate Global	cdr_bl	Number: 0; 0.5; 1; 2; 3			
+Diagnosis at screening	diagnosis_sc	AD=Alzheimer's disease - bvFTD=behavioral variant Fronto Temporal Dementia	string	DX_bl	ADNIMERGE.csv
+Score of mmse test at the baseline	mmse_bl			MMSE_bl	ADNIMERGE.csv
+AD Assessment scale - 11	adas11_bl	Number (float)		ADAS11_bl	ADNIMERGE.csv
+AD Assessment scale - 13	adas13_bl	Number (float)		ADAS13_bl	ADNIMERGE.csv
+APOE (number of E4 alleles)	apoe4	Number: 0; 1; 2 (number of E4 alleles)	int	APOE4	ADNIMERGE.csv
+Genotype (Allele 1)	apoe_gen1	Number: 2; 3; 4		APGEN1	APOERES.csv
+Genotype (Allele 2)	apoe_gen2	Number: 2; 3; 4		APGEN2	APOERES.csv
+Rey's Auditory Verbal Learning Test - immediate	ravlt_immediate_bl	Number (int)		RAVLT_immediate_bl	ADNIMERGE.csv
+MOntreal Cognitive Assessment Test	moca_bl	Numer (int)		MOCA_bl	ADNIMERGE.csv
+Trails B	trabscor_bl			TRABSCOR_bl	ADNIMERGE.csv
+ADNI modified Preclinical Alzheimer's Cognitive Composite (PACC) with Digit Symbol Substitution	mpaccdigit_bl			mPACCdigit_bl	ADNIMERGE.csv
+ADNI modified Preclinical Alzheimer's Cognitive Composite (PACC) with Trails B	mpacctrails_bl			mPACCtrailsB_bl	ADNIMERGE.csv
