@@ -21,7 +21,7 @@
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2nii** and **dcm2niix** DICOM to NIfTI converters, and of **FreeSurfer**.
+If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2niix** DICOM to NIfTI converter and **FreeSurfer**.
 You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
 
 ### Downloading AIBL
