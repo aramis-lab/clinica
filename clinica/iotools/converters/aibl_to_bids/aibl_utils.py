@@ -223,19 +223,8 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
     )
     nifti_file = os.path.join(output_path, output_filename + ".nii.gz")
 
-    # Check if conversion worked (output file exists?)
     if not exists(nifti_file):
-        command = f"dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o {output_path} {image_path}"
-        subprocess.run(
-            command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        nifti_file_dcm2nii = os.path.join(output_path, "DE-IDENTIFIED.nii.gz")
-        if os.path.isfile(nifti_file_dcm2nii):
-            shutil.move(nifti_file_dcm2nii, nifti_file)
-
-    if not exists(nifti_file):
-        # if the conversion dcm2nii has not worked, freesurfer utils
-        # mri_convert is used
+        # Use mri_convert from freesurfer as fallback
         dicom_image = listdir_nohidden(image_path)
         dicom_image = [dcm for dcm in dicom_image if dcm.endswith(".dcm")]
         try:
