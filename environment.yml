@@ -1,8 +1,10 @@
 name: clinica_env
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - python=3.7
   - pip
   - pip:
       - -r requirements.txt
+  - dcm2niix
