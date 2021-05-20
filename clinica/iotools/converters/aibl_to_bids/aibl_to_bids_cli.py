@@ -34,7 +34,7 @@ class AiblToBidsCLI(ce.CmdParser):
             "--clinical_data_only",
             action="store_true",
             help="(Optional) Given the path to an already existing ADNI BIDS folder, convert only "
-            "the clinical data. Mutually exclusive with --force_new_extraction",
+            "the clinical data.",
         )
 
     def run_command(self, args):
