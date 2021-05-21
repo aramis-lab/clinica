@@ -3,7 +3,8 @@
 #   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
 
 -r requirements.txt
-nipy >= 0.4.2
+nipy == 0.4.2
+numpy>=1.17,<=1.19
 isort
 black
 pre-commit
