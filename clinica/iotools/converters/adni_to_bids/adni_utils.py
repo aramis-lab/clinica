@@ -1,9 +1,6 @@
 # coding: utf-8
 
 
-from build.lib.clinica.utils.filemanip import get_subject_id
-
-
 def visits_to_timepoints(
     subject,
     mri_list_subj,
