@@ -1166,12 +1166,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
         if image.Is_Dicom:
             command = f"dcm2niix -b {generate_json} -z {zip_image} -o {output_path} -f {output_filename} {image_path}"
-            subprocess.run(
-                command,
-                shell=True,
-                stderr=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-            )
+            subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
 
             # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
             exception_t = glob(path.join(output_path, output_filename + "_t[0-9]*"))

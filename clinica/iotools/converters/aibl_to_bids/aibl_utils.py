@@ -218,9 +218,7 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
 
     # if image.Is_Dicom:
     command = f"dcm2niix -b n -z y -o {output_path} -f {output_filename} {image_path}"
-    subprocess.run(
-        command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
+    subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
     nifti_file = os.path.join(output_path, output_filename + ".nii.gz")
 
     if not exists(nifti_file):
