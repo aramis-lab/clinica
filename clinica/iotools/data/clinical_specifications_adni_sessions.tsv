@@ -834,3 +834,8 @@ Vital Signs - Temperature Units	vitals_vstmpunt			VSTMPUNT	VITALS.csv
 					
 Crane Lab (UW) Neuropsych Summary Scores - ADNI Memory	uwnpsychsum_03_07_19_adni_mem			ADNI_MEM	UWNPSYCHSUM_03_07_19.csv
 Crane Lab (UW) Neuropsych Summary Scores - ADNI Executive Functioning	uwnpsychsum_03_07_19_adni_ef			ADNI_EF	UWNPSYCHSUM_03_07_19.csv
+					
+Crane Lab (UW) Neuropsych Summary Scores - ADNI Memory	comp_adni_mem			ADNI_MEM	UWNPSYCHSUM_03_26_20.csv
+Crane Lab (UW) Neuropsych Summary Scores - ADNI Executive Functioning	comp_adni_ef			ADNI_EF	UWNPSYCHSUM_03_26_20.csv
+Crane Lab (UW) Neuropsych Summary Scores - ADNI Language	comp_adni_lan			ADNI_LAN	UWNPSYCHSUM_03_26_20.csv
+Crane Lab (UW) Neuropsych Summary Scores - ADNI VS	comp_adni_vs			ADNI_VS	UWNPSYCHSUM_03_26_20.csv
