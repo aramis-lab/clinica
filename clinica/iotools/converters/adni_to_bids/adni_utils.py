@@ -461,70 +461,36 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     import pandas as pd
     from clinica.utils.stream import cprint
 
+    df_subj_sessions["adas_memory"] = (
+        df_subj_sessions["adas_Q1"]
+        + df_subj_sessions["adas_Q4"]
+        + df_subj_sessions["adas_Q7"]
+        + df_subj_sessions["adas_Q8"]
+        + df_subj_sessions["adas_Q9"]
+    )  # / 45
+    df_subj_sessions["adas_language"] = (
+        df_subj_sessions["adas_Q2"]
+        + df_subj_sessions["adas_Q5"]
+        + df_subj_sessions["adas_Q10"]
+        + df_subj_sessions["adas_Q11"]
+        + df_subj_sessions["adas_Q12"]
+    )  # / 25
+    df_subj_sessions["adas_praxis"] = (
+        df_subj_sessions["adas_Q3"] + df_subj_sessions["adas_Q6"]
+    )  # / 10
+    df_subj_sessions["adas_concentration"] = df_subj_sessions["adas_Q13"]  # / 5
+
+    df_subj_sessions = df_subj_sessions.fillna("")
+
     for sp in bids_subjs_paths:
         cprint(f"writting data for subject {sp}")
         if not path.exists(sp):
             os.makedirs(sp)
 
         bids_id = sp.split(os.sep)[-1]
+        df_tmp = df_subj_sessions[df_subj_sessions["RID"] == bids_id]
 
-        # df_subj_sessions[
-        #     [
-        #         "adas_Q1",
-        #         "adas_Q2",
-        #         "adas_Q3",
-        #         "adas_Q4",
-        #         "adas_Q5",
-        #         "adas_Q6",
-        #         "adas_Q7",
-        #         "adas_Q8",
-        #         "adas_Q9",
-        #         "adas_Q10",
-        #         "adas_Q11",
-        #         "adas_Q12",
-        #         "adas_Q13",
-        #     ]
-        # ] = df_subj_sessions[
-        #     [
-        #         "adas_Q1",
-        #         "adas_Q2",
-        #         "adas_Q3",
-        #         "adas_Q4",
-        #         "adas_Q5",
-        #         "adas_Q6",
-        #         "adas_Q7",
-        #         "adas_Q8",
-        #         "adas_Q9",
-        #         "adas_Q10",
-        #         "adas_Q11",
-        #         "adas_Q12",
-        #         "adas_Q13",
-        #     ]
-        # ].apply(
-        #     pd.to_numeric
-        # )
-
-        df_subj_sessions["adas_memory"] = (
-            df_subj_sessions["adas_Q1"]
-            + df_subj_sessions["adas_Q4"]
-            + df_subj_sessions["adas_Q7"]
-            + df_subj_sessions["adas_Q8"]
-            + df_subj_sessions["adas_Q9"]
-        )  # / 45
-        df_subj_sessions["adas_language"] = (
-            df_subj_sessions["adas_Q2"]
-            + df_subj_sessions["adas_Q5"]
-            + df_subj_sessions["adas_Q10"]
-            + df_subj_sessions["adas_Q11"]
-            + df_subj_sessions["adas_Q12"]
-        )  # / 25
-        df_subj_sessions["adas_praxis"] = (
-            df_subj_sessions["adas_Q3"] + df_subj_sessions["adas_Q6"]
-        )  # / 10
-        df_subj_sessions["adas_concentration"] = df_subj_sessions["adas_Q13"]  # / 5
-
-        df_subj_sessions = df_subj_sessions.fillna("")
-        df_subj_sessions.to_csv(
+        df_tmp.to_csv(
             path.join(sp, f"{bids_id}_sessions.tsv"),
             sep="\t",
             index=False,
