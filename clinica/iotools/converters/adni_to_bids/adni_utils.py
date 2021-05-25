@@ -459,9 +459,10 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     from os import path
 
     import pandas as pd
+    from clinica.utils.stream import cprint
 
     for sp in bids_subjs_paths:
-
+        cprint(f"writting data for subject {sp}")
         if not path.exists(sp):
             os.makedirs(sp)
 
