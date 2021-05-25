@@ -488,14 +488,18 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
             os.makedirs(sp)
 
         bids_id = sp.split(os.sep)[-1]
-        df_tmp = df_subj_sessions[df_subj_sessions["RID"] == bids_id]
+        
+        if (bids_id == "conversion_info"):
+            continue
+        else:
+            df_tmp = df_subj_sessions[df_subj_sessions["RID"] == bids_id[12:]]
 
-        df_tmp.to_csv(
-            path.join(sp, f"{bids_id}_sessions.tsv"),
-            sep="\t",
-            index=False,
-            encoding="utf-8",
-        )
+            df_tmp.to_csv(
+                path.join(sp, f"{bids_id}_sessions.tsv"),
+                sep="\t",
+                index=False,
+                encoding="utf-8",
+            )
 
 
 def remove_fields_duplicated(bids_fields):
