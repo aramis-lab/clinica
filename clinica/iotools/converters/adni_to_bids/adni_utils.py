@@ -451,8 +451,7 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     """Write the result of method create_session_dict into several TSV files.
 
     Args:
-        sessions_dict: dictonary coming from the method create_sessions_dict
-        fields_bids: fields bids to convert
+        df_subj_sessions: global dataframe containing clinical sessions data for all subjects
         bids_subjs_paths: a list with the path to all bids subjects
     """
     import os
@@ -534,6 +533,7 @@ def filter_subj_bids(df_files, location, bids_ids):
 
 
 def update_age(row):
+    """Update age with time passed since bl to current visit"""
     from datetime import datetime
 
     if row["session_id"] != "ses-M00":
@@ -541,7 +541,6 @@ def update_age(row):
         examdate_bl = datetime.strptime(row["EXAMDATE_bl"], "%Y-%m-%d")
         delta = examdate - examdate_bl
 
-        # Adding time passed since bl to patient's age in current visit
         updated_age = round(
             float(row["AGE"]) + (delta.days / 365.25),
             1,
@@ -552,6 +551,7 @@ def update_age(row):
 
 
 def pad_id(ref_id):
+    """Add leading zeros to the RID to keep à length of 4"""
     rid = str(ref_id)
     # Fill the rid with the needed number of zero
     if 4 - len(rid) > 0:
@@ -561,6 +561,7 @@ def pad_id(ref_id):
 
 
 def get_visit_id(row, location):
+    """Return a common visit ID across different files"""
     import pandas as pd
 
     locations_visicode2 = [
@@ -608,7 +609,7 @@ def create_adni_sessions_dict(
     """Extract all the data required for the sessions files and organize them in a dictionary.
 
     Args:
-        bids_ids:
+        bids_ids: list of subject IDs to process
         clinic_specs_path: path to the specifications for converting the clinical data
         clinical_data_dir: path to the clinical data folder
         bids_subjs_paths: a list with the path to all the BIDS subjects
@@ -661,15 +662,19 @@ def create_adni_sessions_dict(
                 ]
                 df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
 
-    # reorder columns
-    # df_subj_session = df_subj_session[
-    #    [x for x in set(df_sessions["BIDS CLINICA"]) if x in df_subj_session.columns]
-    # ]
-
     write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
 
 def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
+    """Update the sessions dataframe with data of current subject.
+
+    Args:
+        df_subj_session: dataframe containing aggregate sessions
+        df_filtered: dataframe with current subject sessions data
+        df_sessions: dataframe with the the metadata information
+        location: the clinica data filename
+    """
+
     import pandas as pd
 
     df_columns_to_add = df_sessions[
