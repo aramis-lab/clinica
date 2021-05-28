@@ -487,12 +487,13 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     df_subj_sessions.to_csv("merged_sesions.tsv", sep="\t")
 
     for sp in bids_subjs_paths:
+        cprint(f"writting data for subject {sp}")
         if not path.exists(sp):
             os.makedirs(sp)
 
         bids_id = sp.split(os.sep)[-1]
-
-        if bids_id == "conversion_info":
+        
+        if (bids_id == "conversion_info"):
             continue
         else:
             df_tmp = df_subj_sessions[df_subj_sessions["RID"] == bids_id[12:]]
