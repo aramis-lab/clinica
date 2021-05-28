@@ -480,11 +480,7 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     )  # / 10
     df_subj_sessions["adas_concentration"] = df_subj_sessions["adas_Q13"]  # / 5
 
-    df_subj_sessions = df_subj_sessions.fillna("n/a")
-
-    # for debugging purpose: to remove
-    cprint("Writting sessions merge file..")
-    df_subj_sessions.to_csv("merged_sesions.tsv", sep="\t")
+    df_subj_sessions = df_subj_sessions.fillna("")
 
     for sp in bids_subjs_paths:
         cprint(f"writting data for subject {sp}")
