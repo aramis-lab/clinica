@@ -661,7 +661,8 @@ def create_adni_sessions_dict(
                     :, (~df_filtered.columns.isin(df_subj_session.columns))
                 ]
                 df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
-
+    
+    df_subj_session.drop(df_subj_session[df_subj_session.session_id =='sc'].index, inplace=True)
     write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
 
@@ -689,6 +690,9 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
         ["RID", "session_id"] + list(df_columns_to_add["ADNI"])
     ].copy()
     df_temp.columns = ["RID", "session_id"] + list(df_columns_to_add["BIDS CLINICA"])
+
+    # if error in adni data (duplicate session id), keep only the first row
+    df_temp.drop_duplicates(subset=["RID", "session_id"], keep="first", inplace=True)
 
     if df_subj_session.empty:
         df_subj_session = df_temp
