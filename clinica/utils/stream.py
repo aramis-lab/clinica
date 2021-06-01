@@ -32,10 +32,6 @@ class FilterOut(object):
         self.flush()
 
 
-def active_cprint():
-    sys.stdout = FilterOut(sys.stdout)
-
-
 def cprint(msg):
     global clinica_verbose
     if clinica_verbose is True:
