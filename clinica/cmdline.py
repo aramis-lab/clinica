@@ -13,7 +13,6 @@ from argparse import ArgumentParser
 import argcomplete
 
 from clinica.engine.cmdparser import init_cmdparser_objects
-from clinica.utils.stream import cprint
 
 
 class ClinicaClassLoader:
@@ -87,6 +86,32 @@ class ClinicaClassLoader:
             for file in os.listdir(path)
             if re.match(reg, file) is not None
         ]
+
+
+def setup_logging(verbosity: int = 0) -> None:
+    """
+    Setup Clinica's logging facilities.
+
+    Args:
+        verbosity (int): The desired level of verbosity for logging.
+            (0 (default): WARNING, 1: INFO, 2: DEBUG)
+    """
+    from logging import StreamHandler, Formatter, getLogger
+    from logging import WARNING, INFO, DEBUG
+    from sys import stdout
+
+    # Cap max verbosity level to 2.
+    verbosity = min(verbosity, 2)
+
+    # Define the module level logger.
+    logger = getLogger("clinica")
+    logger.setLevel([WARNING, INFO, DEBUG][verbosity])
+
+    # Add console handler with custom formatting.
+    console_handler = StreamHandler(stdout)
+    formatter = Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
 
 
 # Nice display
@@ -165,6 +190,7 @@ def execute():
     import warnings
 
     from colorama import Fore
+    from clinica.utils.stream import cprint
 
     # Suppress potential warnings
     warnings.filterwarnings("ignore")
@@ -199,7 +225,6 @@ def execute():
     )
     parser._optionals.title = OPTIONAL_TITLE
 
-    sub_parser = parser.add_subparsers(metavar="")
     parser.add_argument(
         "-V",
         "--version",
@@ -208,21 +233,13 @@ def execute():
         default=False,
         help="Clinica's installed version",
     )
+
     parser.add_argument(
         "-v",
         "--verbose",
-        dest="verbose",
-        action="store_true",
-        default=False,
-        help="Verbose: print all messages to the standard output",
-    )
-    parser.add_argument(
-        "-l",
-        "--logname",
-        dest="logname",
-        default="clinica.log",
-        metavar=("file.log"),
-        help="Define the log file name (default: clinica.log)",
+        action="count",
+        default=0,
+        help="increase logging verbosity",
     )
 
     """
@@ -324,6 +341,8 @@ def execute():
         T1FreeSurferTemplateCLI(),
         T1FreeSurferLongitudinalCorrectionCLI(),
     ]
+
+    sub_parser = parser.add_subparsers(metavar="")
 
     run_parser = sub_parser.add_parser(
         "run",
@@ -495,27 +514,9 @@ def execute():
     """
     Parse the command and check that everything went fine
     """
-    args = None
-    unknown_args = None
     try:
         argcomplete.autocomplete(parser)
-        args, unknown_args = parser.parse_known_args()
-        if args.version:
-            import clinica
-
-            print(f"Clinica version is: {clinica.__version__}")
-            exit(0)
-        if unknown_args:
-            if ("--verbose" in unknown_args) or ("-v" in unknown_args):
-                cprint("Verbose detected")
-                args.verbose = True
-            unknown_args = [i for i in unknown_args if i != "-v"]
-            unknown_args = [i for i in unknown_args if i != "--verbose"]
-            if unknown_args:
-                print(
-                    f"{Fore.YELLOW}[Warning] Unknown flag(s) detected: {unknown_args}. "
-                    f"This will be ignored by Clinica{Fore.RESET}"
-                )
+        args = parser.parse_args()
     except SystemExit:
         exit(0)
     except Exception:
@@ -525,6 +526,14 @@ def execute():
         )
         parser.print_help()
         exit(-1)
+
+    if args.version:
+        import clinica
+
+        print(f"Clinica version is: {clinica.__version__}")
+        exit(0)
+
+    setup_logging(verbosity=args.verbose)
 
     if "run" in args and hasattr(args, "func") is False:
         # Case when we type `clinica run` on the terminal
@@ -550,103 +559,6 @@ def execute():
         # Case when we type `clinica` on the terminal
         parser.print_help()
         exit(0)
-
-    import clinica.utils.stream as var
-
-    var.clinica_verbose = args.verbose
-
-    if args.verbose is False:
-        """
-        Enable only cprint(msg) --> clinica print(msg)
-        - All the print() will be ignored!
-        - All the logging will be redirect to the log file.
-        """
-        from clinica.utils.stream import FilterOut
-
-        sys.stdout = FilterOut(sys.stdout)
-        import logging as python_logging
-        import os
-        from logging import ERROR, Filter
-
-        from nipype import config, logging
-
-        # Configure Nipype logger for our needs
-        config.update_config(
-            {
-                "logging": {
-                    "workflow_level": "INFO",
-                    "log_directory": os.getcwd(),
-                    "log_to_file": True,
-                },
-                "execution": {"stop_on_first_crash": False, "hash_method": "content"},
-            }
-        )
-        logging.update_logging(config)
-
-        # Define the LogFilter for ERROR detection
-        class LogFilter(Filter):
-            """Monitor if an ERROR log signal is sent from Clinica/Nipype.
-
-            If detected, the user will be warned.
-            """
-
-            def filter(self, record):
-                if record.levelno >= ERROR:
-                    import datetime
-
-                    now = datetime.datetime.now().strftime("%H:%M:%S")
-                    cprint(
-                        f"{Fore.RED}[{now}]{Fore.RESET} An error was found: please "
-                        f"check the log file ({args.logname}) or crash file "
-                        f"(nipypecli crash <pklz_file>) for details. Clinica is still running."
-                    )
-                return True
-
-        if args.verbose:
-            logger = logging.getLogger("nipype.workflow")
-            logger.addFilter(LogFilter())
-
-        # Remove all handlers associated with the root logger object
-        for handler in python_logging.root.handlers[:]:
-            python_logging.root.removeHandler(handler)
-
-        logging.disable_file_logging()
-
-        # Enable file logging using a filename
-        def enable_file_logging(self, filename):
-            """Hack to define a filename for the log file.
-
-            It overloads the 'enable_file_logging' method in 'nipype/utils/logger.py' file.
-            """
-            import logging
-            from logging.handlers import RotatingFileHandler as RFHandler
-
-            config = self._config
-            LOG_FILENAME = os.path.join(
-                config.get("logging", "log_directory"), filename
-            )
-            hdlr = RFHandler(
-                LOG_FILENAME,
-                maxBytes=int(config.get("logging", "log_size")),
-                backupCount=int(config.get("logging", "log_rotate")),
-            )
-            formatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
-            hdlr.setFormatter(formatter)
-            self._logger.addHandler(hdlr)
-            self._fmlogger.addHandler(hdlr)
-            self._iflogger.addHandler(hdlr)
-            self._hdlr = hdlr
-
-        enable_file_logging(logging, args.logname)
-
-        class Stream:
-            def write(self, text):
-                print(text)
-                sys.stdout.flush()
-
-        python_logging.basicConfig(
-            format=logging.fmt, datefmt=logging.datefmt, stream=Stream()
-        )
 
     # Finally, run the command
     args.func(args)
