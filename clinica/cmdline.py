@@ -96,8 +96,8 @@ def setup_logging(verbosity: Optional[int] = 0) -> None:
         verbosity (int): The desired level of verbosity for logging.
             (0 (default): WARNING, 1: INFO, 2: DEBUG)
     """
-    from logging import StreamHandler, Formatter, getLogger
-    from logging import WARNING, INFO, DEBUG
+    from colorlog import StreamHandler, ColoredFormatter
+    from logging import getLogger, WARNING, INFO, DEBUG
     from sys import stdout
 
     # Cap max verbosity level to 2.
@@ -109,8 +109,7 @@ def setup_logging(verbosity: Optional[int] = 0) -> None:
 
     # Add console handler with custom formatting.
     console_handler = StreamHandler(stdout)
-    formatter = Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    console_handler.setFormatter(formatter)
+    console_handler.setFormatter(ColoredFormatter("%(log_color)s%(asctime)s:%(levelname)s:%(message)s"))
     logger.addHandler(console_handler)
 
 
@@ -118,8 +117,6 @@ def setup_logging(verbosity: Optional[int] = 0) -> None:
 def custom_traceback(exc_type, exc_value, exc_traceback):
     import math
     import traceback
-
-    from colorama import Fore
 
     from clinica.utils.exceptions import ClinicaException
     from clinica.utils.stream import cprint
@@ -134,12 +131,12 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
     else:
         cprint(
             msg=(
-                f"{Fore.RED}\n{'*' * 23}\n*** Clinica crashed ***\n{'*' * 23}\n{Fore.RESET}\n\n"
-                f"{Fore.YELLOW}Exception type:{Fore.RESET} {exc_type.__name__}\n"
-                f"{Fore.YELLOW}Exception value:{Fore.RESET} {exc_value}\n\n"
-                f"Below are displayed information that were gathered when Clinica crashed. "
-                f"This will help to understand what happened if you transfer "
-                f"those information to the Clinica development team."
+                "{'*' * 23}\n*** Clinica crashed ***\n{'*' * 23}\n\n"
+                f"Exception type: {exc_type.__name__}\n"
+                f"Exception value: {exc_value}\n\n"
+                "Below are displayed information that were gathered when Clinica crashed. "
+                "This will help to understand what happened if you transfer "
+                "those information to the Clinica development team."
             ),
             lvl="error",
         )
@@ -159,16 +156,12 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
             t = (
                 "{}"
                 + " " * (1 + framewidth - len(str(i)))
-                + Fore.RED
                 + "{}"
                 + " " * (1 + filewidth - len(frames[i][0]))
-                + Fore.RESET
                 + "{}"
                 + " " * (1 + linewidth - len(str(frames[i][1])))
-                + Fore.GREEN
                 + "{}"
                 + " " * (1 + functionwidth - len(frames[i][2]))
-                + Fore.RESET
                 + "{}"
             )
             cprint(t.format(i, frames[i][0], frames[i][1], frames[i][2], frames[i][3]), lvl="error")
@@ -178,11 +171,11 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
         cprint(
             msg=(
                 "Documentation can be found here:\n"
-                f"{Fore.BLUE}https://aramislab.paris.inria.fr/clinica/docs/public/latest/{Fore.RESET}\n"
+                "https://aramislab.paris.inria.fr/clinica/docs/public/latest/\n"
                 "If you need support, do not hesitate to ask:\n"
-                f"{Fore.BLUE}https://groups.google.com/forum/#!forum/clinica-user{Fore.RESET}\n"
+                "https://groups.google.com/forum/#!forum/clinica-user\n"
                 "Alternatively, you can also open an issue on GitHub:\n"
-                f"{Fore.BLUE}https://github.com/aramis-lab/clinica/issues{Fore.RESET}\n"
+                "https://github.com/aramis-lab/clinica/issues\n"
             ),
             lvl="warning",
         )
@@ -193,8 +186,6 @@ def execute():
     import logging
     import os
     import warnings
-
-    from colorama import Fore
     from clinica.utils.stream import cprint
 
     # Suppress potential warnings
@@ -204,20 +195,10 @@ def execute():
     # "Assuming non interactive session since isatty found missing" message
     logging.getLogger("duecredit.utils").setLevel(logging.ERROR)
 
-    # Add warning message if PYTHONPATH is not empty
-    # cf https://groups.google.com/forum/#!topic/clinica-user/bVgifEdkg20
-    python_path = os.environ.get("PYTHONPATH", "")
-    if python_path:
-        print(
-            f"{Fore.YELLOW}[Warning] The PYTHONPATH environment variable is not empty."
-            f" Make sure there is no interference with Clinica "
-            f"(content of PYTHONPATH: {python_path}).{Fore.RESET}"
-        )
-
     # Nice traceback when clinica crashes
     sys.excepthook = custom_traceback
 
-    OPTIONAL_TITLE = f"{Fore.YELLOW}Optional arguments{Fore.RESET}"
+    OPTIONAL_TITLE = "Optional arguments"
     """
     Define and parse the command line argument
     """
@@ -226,7 +207,7 @@ def execute():
         "-h", "--help", action="help", default=argparse.SUPPRESS, help=argparse.SUPPRESS
     )
     parser._positionals.title = (
-        f"{Fore.YELLOW}clinica expects one of the following keywords{Fore.RESET}"
+        f"clinica expects one of the following keywords"
     )
     parser._optionals.title = OPTIONAL_TITLE
 
@@ -356,10 +337,10 @@ def execute():
         help="To run pipelines on BIDS/CAPS datasets.",
     )
     run_parser.description = (
-        f"{Fore.GREEN}Run pipelines on BIDS/CAPS datasets.{Fore.RESET}"
+        f"Run pipelines on BIDS/CAPS datasets."
     )
     run_parser._positionals.title = (
-        f"{Fore.GREEN}clinica run expects one of the following pipelines{Fore.RESET}"
+        f"clinica run expects one of the following pipelines"
     )
 
     init_cmdparser_objects(
@@ -394,8 +375,8 @@ def execute():
         add_help=False,
         help="To convert unorganized datasets into a BIDS hierarchy.",
     )
-    convert_parser.description = f"{Fore.GREEN}Tools to convert unorganized datasets into a BIDS hierarchy.{Fore.RESET}"
-    convert_parser._positionals.title = f"{Fore.YELLOW}clinica convert expects one of the following datasets{Fore.RESET}"
+    convert_parser.description = f"Tools to convert unorganized datasets into a BIDS hierarchy."
+    convert_parser._positionals.title = f"clinica convert expects one of the following datasets"
     convert_parser._optionals.title = OPTIONAL_TITLE
     init_cmdparser_objects(
         parser, convert_parser.add_subparsers(metavar="", dest="convert"), converters
@@ -426,8 +407,8 @@ def execute():
         add_help=False,
         help=HELP_IO_TOOLS,
     )
-    io_parser.description = f"{Fore.GREEN}{HELP_IO_TOOLS}{Fore.RESET}"
-    io_parser._positionals.title = f"{Fore.YELLOW}clinica iotools expects one of the following BIDS/CAPS utilities{Fore.RESET}"
+    io_parser.description = f"{HELP_IO_TOOLS}"
+    io_parser._positionals.title = f"clinica iotools expects one of the following BIDS/CAPS utilities"
     io_parser._optionals.title = OPTIONAL_TITLE
 
     init_cmdparser_objects(
@@ -454,9 +435,9 @@ def execute():
         help="To visualize outputs of Clinica pipelines.",
     )
     visualize_parser.description = (
-        f"{Fore.GREEN}Visualize outputs of Clinica pipelines.{Fore.RESET}"
+        f"Visualize outputs of Clinica pipelines."
     )
-    visualize_parser._positionals.title = f"{Fore.YELLOW}clinica visualize expects one of the following pipelines{Fore.RESET}"
+    visualize_parser._positionals.title = f"clinica visualize expects one of the following pipelines"
 
     init_cmdparser_objects(
         parser,
@@ -474,9 +455,9 @@ def execute():
             "To generate pre-filled files when creating new pipelines (for developers)."
         ),
     )
-    generate_parser.description = f"{Fore.GREEN}Generate pre-filled files when creating new pipelines (for  developers).{Fore.RESET}"
+    generate_parser.description = f"Generate pre-filled files when creating new pipelines (for  developers)."
     generate_parser._positionals.title = (
-        f"{Fore.YELLOW}clinica generate expects one of the following tools{Fore.RESET}"
+        f"clinica generate expects one of the following tools"
     )
     generate_parser._optionals.title = OPTIONAL_TITLE
 
@@ -525,10 +506,7 @@ def execute():
     except SystemExit:
         exit(0)
     except Exception:
-        print(
-            f"{Fore.RED}\n[Error] You wrote wrong arguments on the command line. "
-            f"Clinica will now exit.\n{Fore.RESET}"
-        )
+        print("Wrong arguments provided, Clinica will now exit!")
         parser.print_help()
         exit(-1)
 
@@ -539,6 +517,19 @@ def execute():
         exit(0)
 
     setup_logging(verbosity=args.verbose)
+
+    # Add warning message if PYTHONPATH is not empty
+    # cf https://groups.google.com/forum/#!topic/clinica-user/bVgifEdkg20
+    python_path = os.environ.get("PYTHONPATH", "")
+    if python_path:
+        cprint(
+            msg=(
+                "The PYTHONPATH environment variable is not empty. "
+                "Make sure there is no interference with Clinica "
+                f"(content of PYTHONPATH: {python_path})."
+            ),
+            lvl="warning",
+        )
 
     if "run" in args and hasattr(args, "func") is False:
         # Case when we type `clinica run` on the terminal
