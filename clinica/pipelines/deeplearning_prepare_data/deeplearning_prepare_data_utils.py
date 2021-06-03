@@ -304,6 +304,7 @@ def save_as_pt(input_img):
 
 # ROI extraction utils
 
+
 def check_mask_list(masks_location, roi_list, mask_pattern, cropping):
     import nibabel as nib
     import numpy as np
@@ -329,7 +330,7 @@ def find_mask_path(masks_location, roi, mask_pattern, cropping):
     from os import path
 
     candidates = glob(
-        path.join(masks_location, f"*{mask_pattern}*roi-{roi}*_mask.nii.gz")
+        path.join(masks_location, f"*{mask_pattern}*_roi-{roi}_mask.nii.gz")
     )
     if cropping:
         candidates = [mask for mask in candidates if "_desc-Crop_" in mask]
@@ -399,10 +400,15 @@ def extract_roi(
             indexes of the patches. Same location than input file.
     """
     import os
+
     import nibabel as nib
     import numpy as np
     import torch
-    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_utils import find_mask_path, compute_output_pattern
+
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_utils import (
+        compute_output_pattern,
+        find_mask_path,
+    )
 
     image_tensor = torch.load(input_tensor)
     basedir = os.getcwd()
