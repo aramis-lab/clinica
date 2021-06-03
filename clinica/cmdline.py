@@ -125,21 +125,23 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
     from clinica.utils.stream import cprint
 
     if issubclass(exc_type, ClinicaException):
-        cprint(exc_value)
+        cprint(exc_value, lvl="error")
     elif issubclass(exc_type, KeyboardInterrupt):
         cprint(
-            f"\n{Fore.RESET}[Error] Program interrupted by the user. Clinica will now exit...{Fore.RESET}"
+            msg=f"Program interrupted by the user. Clinica will now exit...",
+            lvl="warning",
         )
     else:
         cprint(
-            f"{Fore.RED}\n{'*' * 23}\n*** Clinica crashed ***\n{'*' * 23}\n{Fore.RESET}"
-        )
-        cprint(f"{Fore.YELLOW}Exception type:{Fore.RESET} {exc_type.__name__}")
-        cprint(f"{Fore.YELLOW}Exception value:{Fore.RESET} {exc_value}")
-        cprint(
-            "Below are displayed information that were gathered when Clinica crashed. "
-            "This will help to understand what happened if you transfer "
-            "those information to the Clinica development team.\n"
+            msg=(
+                f"{Fore.RED}\n{'*' * 23}\n*** Clinica crashed ***\n{'*' * 23}\n{Fore.RESET}\n\n"
+                f"{Fore.YELLOW}Exception type:{Fore.RESET} {exc_type.__name__}\n"
+                f"{Fore.YELLOW}Exception value:{Fore.RESET} {exc_value}\n\n"
+                f"Below are displayed information that were gathered when Clinica crashed. "
+                f"This will help to understand what happened if you transfer "
+                f"those information to the Clinica development team."
+            ),
+            lvl="error",
         )
 
         frames = traceback.extract_tb(exc_traceback)
@@ -152,7 +154,7 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
             linewidth = max(linewidth, frame[1])
             functionwidth = max(functionwidth, len(frame[2]))
         linewidth = int(math.ceil(math.log(linewidth) / math.log(10)))
-        cprint("=" * (filewidth + linewidth + functionwidth + linewidth))
+        cprint("=" * (filewidth + linewidth + functionwidth + linewidth), lvl="error")
         for i in range(len(frames)):
             t = (
                 "{}"
@@ -169,17 +171,20 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
                 + Fore.RESET
                 + "{}"
             )
-            cprint(t.format(i, frames[i][0], frames[i][1], frames[i][2], frames[i][3]))
-        cprint("=" * (filewidth + linewidth + functionwidth + linewidth))
+            cprint(t.format(i, frames[i][0], frames[i][1], frames[i][2], frames[i][3]), lvl="error")
+        cprint("=" * (filewidth + linewidth + functionwidth + linewidth), lvl="error")
 
     if not issubclass(exc_type, KeyboardInterrupt):
         cprint(
-            f"\nDocumentation can be found here: "
-            f"{Fore.BLUE}https://aramislab.paris.inria.fr/clinica/docs/public/latest/{Fore.RESET}\n"
-            f"If you need support, do not hesitate to ask: "
-            f"{Fore.BLUE}https://groups.google.com/forum/#!forum/clinica-user{Fore.RESET}\n"
-            f"Alternatively, you can also open an issue on GitHub: "
-            f"{Fore.BLUE}https://github.com/aramis-lab/clinica/issues{Fore.RESET}"
+            msg=(
+                "Documentation can be found here:\n"
+                f"{Fore.BLUE}https://aramislab.paris.inria.fr/clinica/docs/public/latest/{Fore.RESET}\n"
+                "If you need support, do not hesitate to ask:\n"
+                f"{Fore.BLUE}https://groups.google.com/forum/#!forum/clinica-user{Fore.RESET}\n"
+                "Alternatively, you can also open an issue on GitHub:\n"
+                f"{Fore.BLUE}https://github.com/aramis-lab/clinica/issues{Fore.RESET}\n"
+            ),
+            lvl="warning",
         )
 
 
