@@ -457,9 +457,6 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     import os
     from os import path
 
-    import pandas as pd
-    from clinica.utils.stream import cprint
-
     df_subj_sessions["adas_memory"] = (
         df_subj_sessions["adas_Q1"]
         + df_subj_sessions["adas_Q4"]
