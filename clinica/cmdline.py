@@ -9,7 +9,7 @@ and gives to the user some other utils to work with the pipelines.
 import os
 import sys
 from argparse import ArgumentParser
-
+from typing import Optional
 import argcomplete
 
 from clinica.engine.cmdparser import init_cmdparser_objects
@@ -88,7 +88,7 @@ class ClinicaClassLoader:
         ]
 
 
-def setup_logging(verbosity: int = 0) -> None:
+def setup_logging(verbosity: Optional[int] = 0) -> None:
     """
     Setup Clinica's logging facilities.
 
