@@ -99,8 +99,7 @@ class T1Linear(cpe.Pipeline):
                 fetch_file(FILE2, path_to_mask)
             except IOError as err:
                 cprint(
-                    "Unable to download required template (mni_icbm152) for processing:",
-                    err,
+                    f"Unable to download required template (mni_icbm152) for processing: {err}"
                 )
 
         if not (exists(self.ref_crop)):
@@ -108,8 +107,7 @@ class T1Linear(cpe.Pipeline):
                 fetch_file(FILE1, path_to_mask)
             except IOError as err:
                 cprint(
-                    "Unable to download required template (ref_crop) for processing:",
-                    err,
+                    f"Unable to download required template (ref_crop) for processing: {err}"
                 )
 
         # Display image(s) already present in CAPS folder
