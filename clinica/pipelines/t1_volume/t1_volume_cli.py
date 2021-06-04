@@ -128,8 +128,6 @@ class T1VolumeCLI(ce.CmdParser):
         import datetime
         import os
 
-        from colorama import Fore
-
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.participant import get_subject_session_list
         from clinica.utils.stream import cprint
@@ -148,15 +146,15 @@ class T1VolumeCLI(ce.CmdParser):
         )
 
         cprint(
-            f"The t1-volume pipeline is divided into 4 parts:\n"
-            f"\t{Fore.BLUE}t1-volume-tissue-segmentation pipeline{Fore.RESET}: "
-            f"Tissue segmentation, bias correction and spatial normalization to MNI space\n"
-            f"\t{Fore.BLUE}t1-volume-create-dartel pipeline{Fore.RESET}: "
-            f"Inter-subject registration with the creation of a new DARTEL template\n"
-            f"\t{Fore.BLUE}t1-volume-dartel2mni pipeline{Fore.RESET}: "
-            f"DARTEL template to MNI\n"
-            f"\t{Fore.BLUE}t1-volume-parcellation pipeline{Fore.RESET}: "
-            f"Atlas statistics"
+            "The t1-volume pipeline is divided into 4 parts:\n"
+            "\tt1-volume-tissue-segmentation pipeline: "
+            "Tissue segmentation, bias correction and spatial normalization to MNI space\n"
+            "\tt1-volume-create-dartel pipeline: "
+            "Inter-subject registration with the creation of a new DARTEL template\n"
+            "\tt1-volume-dartel2mni pipeline: "
+            "DARTEL template to MNI\n"
+            "\tt1-volume-parcellation pipeline: "
+            "Atlas statistics"
         )
 
         if not self.absolute_path(args.subjects_sessions_tsv):
@@ -169,26 +167,18 @@ class T1VolumeCLI(ce.CmdParser):
                 participant_ids, session_ids, os.getcwd(), args.subjects_sessions_tsv
             )
 
-        cprint(
-            f"{Fore.BLUE}\nPart 1/4: Running t1-volume-segmentation pipeline{Fore.RESET}"
-        )
+        cprint("Part 1/4: Running t1-volume-segmentation pipeline")
         tissue_segmentation_cli = T1VolumeTissueSegmentationCLI()
         tissue_segmentation_cli.run_command(args)
 
-        cprint(
-            f"{Fore.BLUE}\nPart 2/4: Running t1-volume-create-dartel pipeline{Fore.RESET}"
-        )
+        cprint("Part 2/4: Running t1-volume-create-dartel pipeline")
         create_dartel_cli = T1VolumeCreateDartelCLI()
         create_dartel_cli.run_command(args)
 
-        cprint(
-            f"{Fore.BLUE}\nPart 3/4: Running t1-volume-dartel2mni pipeline{Fore.RESET}"
-        )
+        cprint("Part 3/4: Running t1-volume-dartel2mni pipeline")
         dartel2mni_cli = T1VolumeDartel2MNICLI()
         dartel2mni_cli.run_command(args)
 
-        cprint(
-            f"{Fore.BLUE}\nPart 4/4: Running t1-volume-parcellation pipeline{Fore.RESET}"
-        )
+        cprint("Part 4/4: Running t1-volume-parcellation pipeline")
         parcellation_cli = T1VolumeParcellationCLI()
         parcellation_cli.run_command(args)

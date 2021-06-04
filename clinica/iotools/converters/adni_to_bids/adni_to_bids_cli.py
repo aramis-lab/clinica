@@ -53,8 +53,6 @@ class AdniToBidsCLI(ce.CmdParser):
         )
 
     def run_command(self, args):
-        from colorama import Fore
-
         from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
         from clinica.utils.exceptions import ClinicaParserError
 
@@ -65,7 +63,7 @@ class AdniToBidsCLI(ce.CmdParser):
 
         if args.clinical_data_only and args.force_new_extraction:
             raise ClinicaParserError(
-                f"{Fore.RED}\n[Error] Arguments clinical_data_only and force_new_extraction are mutually exclusive.{Fore.RESET}"
+                "Arguments clinical_data_only and force_new_extraction are mutually exclusive."
             )
 
         if not args.clinical_data_only:

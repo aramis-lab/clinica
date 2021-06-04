@@ -2,11 +2,7 @@
 
 
 def init_input_node(pet_nii):
-    import datetime
-
     import nibabel as nib
-    from colorama import Fore
-
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
@@ -17,12 +13,8 @@ def init_input_node(pet_nii):
     # Check that the PET file is a 3D volume
     img = nib.load(pet_nii)
     if len(img.shape) == 4:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        error_msg = (
-            f"{Fore.RED}[{now}] Error: Clinica does not handle 4D volumes "
-            f"for {image_id.replace('_', ' | ')}{Fore.RESET}"
-        )
-        cprint(error_msg)
+        error_msg = f"Clinica does not handle 4D volumes for {image_id.replace('_', ' | ')}"
+        cprint(error_msg, lvl="error")
         raise NotImplementedError(error_msg)
 
     # Print begin message

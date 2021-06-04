@@ -127,8 +127,11 @@ def create_participants_df(
 
     if len(subjects_to_drop) > 0:
         cprint(
-            "The following subjects of dataset directory were not found in your BIDS folder :\n"
-            + ", ".join(subjects_to_drop)
+            msg=(
+                "The following subjects of dataset directory were not found in your BIDS folder :\n"
+                + ", ".join(subjects_to_drop)
+            ),
+            lvl="warning",
         )
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
@@ -660,7 +663,6 @@ def json_from_dcm(dcm_dir, json_path):
     from glob import glob
     from os import path
 
-    from colorama import Fore
     from pydicom import dcmread
     from pydicom.tag import Tag
 
@@ -698,4 +700,4 @@ def json_from_dcm(dcm_dir, json_path):
         with open(json_path, "w") as f:
             f.write(json)
     except IndexError:
-        cprint(f"{Fore.RED}WARNING:No DICOM found at {dcm_dir}.{Fore.RESET}")
+        cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")

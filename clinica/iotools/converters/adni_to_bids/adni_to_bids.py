@@ -129,7 +129,6 @@ class AdniToBids(Converter):
         from os import path
 
         import pandas as pd
-        from colorama import Fore
 
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
@@ -155,7 +154,8 @@ class AdniToBids(Converter):
                 adnimerge_subj = adni_merge[adni_merge.PTID == subj]
                 if len(adnimerge_subj) == 0:
                     cprint(
-                        f"{Fore.RED}Subject with PTID {subj} does not exist. Please check your subjects list.{Fore.RESET}"
+                        msg=f"Subject with PTID {subj} does not exist. Please check your subjects list.",
+                        lvl="warning",
                     )
                     subjs_list.remove(subj)
             del subjs_list_copy
@@ -170,7 +170,7 @@ class AdniToBids(Converter):
         version_number = len(os.listdir(path.join(dest_dir, "conversion_info")))
         conversion_dir = path.join(dest_dir, "conversion_info", f"v{version_number}")
         os.makedirs(conversion_dir)
-        cprint(dest_dir)
+        cprint(dest_dir, lvl="debug")
 
         converters = {
             "T1": [adni_t1.convert_adni_t1],

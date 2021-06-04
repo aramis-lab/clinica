@@ -32,8 +32,6 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
         import datetime
         import os
 
-        from colorama import Fore
-
         from clinica.utils.longitudinal import get_participants_long_id
         from clinica.utils.participant import get_subject_session_list
         from clinica.utils.stream import cprint
@@ -45,9 +43,9 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
         from .t1_freesurfer_template_cli import T1FreeSurferTemplateCLI
 
         cprint(
-            f"The t1-freesurfer-longitudinal pipeline is divided into 2 parts:\n"
-            f"\t{Fore.BLUE}t1-freesurfer-unbiased-template pipeline{Fore.RESET}: Creation of unbiased template\n"
-            f"\t{Fore.BLUE}t1-freesurfer-longitudinal-correction pipeline{Fore.RESET}: Longitudinal correction\n"
+            "The t1-freesurfer-longitudinal pipeline is divided into 2 parts:\n"
+            "\tt1-freesurfer-unbiased-template pipeline: Creation of unbiased template\n"
+            "\tt1-freesurfer-longitudinal-correction pipeline: Longitudinal correction\n"
         )
 
         if not self.absolute_path(args.subjects_sessions_tsv):
@@ -61,14 +59,10 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
                 l_part, l_sess, l_long, os.getcwd(), args.subjects_sessions_tsv
             )
 
-        cprint(
-            f"{Fore.BLUE}\nPart 1/2: Running t1-freesurfer-unbiased-template pipeline{Fore.RESET}"
-        )
+        cprint("Part 1/2: Running t1-freesurfer-unbiased-template pipeline")
         unbiased_template_cli = T1FreeSurferTemplateCLI()
         unbiased_template_cli.run_command(args)
 
-        cprint(
-            f"{Fore.BLUE}\nPart 2/2 Running t1-freesurfer-longitudinal-correction pipeline{Fore.RESET}"
-        )
+        cprint("Part 2/2 Running t1-freesurfer-longitudinal-correction pipeline")
         longitudinal_correction_cli = T1FreeSurferLongitudinalCorrectionCLI()
         longitudinal_correction_cli.run_command(args)

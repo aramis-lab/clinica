@@ -58,7 +58,6 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         import os
         from networkx import Graph
-        from colorama import Fore
         from .{{ pipeline.module_name }}_pipeline import {{ pipeline.class_name }}
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit

@@ -14,12 +14,9 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
     The current function works around this issue by checking if there only is one session associated to a subject, and
     in that case, putting the SUBJECT_DIR inside the system temporary folder so that its path is as short as possible.
     """
-    import datetime
     import errno
     import os
     from tempfile import mkdtemp
-
-    from colorama import Fore
 
     from clinica.utils.longitudinal import get_long_id
     from clinica.utils.stream import cprint
@@ -35,10 +32,12 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
         # if the $SUBJECTS_DIR is too long ('Word too long.' error).
         # To circumvent this issue, we create a sym link in $(TMP) so that $SUBJECTS_DIR is a short path
         subjects_dir = mkdtemp()
-        now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            f"{Fore.YELLOW}[{now}] {image_id.replace('_', ' | ')} has only one time point. "
-            f"Needs to create a $SUBJECTS_DIR folder in {subjects_dir}{Fore.RESET}"
+            msg=(
+                f"{image_id.replace('_', ' | ')} has only one time point. "
+                f"Needs to create a $SUBJECTS_DIR folder in {subjects_dir}"
+            ),
+            lvl="warning",
         )
     else:
         subjects_dir = os.path.join(output_dir, image_id)
@@ -124,11 +123,8 @@ def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
     Returns:
         subject_id for node connection with Nipype
     """
-    import datetime
     import os
     import shutil
-
-    from colorama import Fore
 
     from clinica.utils.stream import cprint
 
@@ -139,10 +135,12 @@ def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
             symlinks=True,
         )
         shutil.rmtree(subjects_dir)
-        now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            f"{Fore.YELLOW}[{now}] Segmentation of {subject_id.replace('_', ' | ')} "
-            f"has moved to working directory and $SUBJECTS_DIR folder ({subjects_dir}) was deleted{Fore.RESET}"
+            msg=(
+                f"Segmentation of {subject_id.replace('_', ' | ')} "
+                f"has moved to working directory and $SUBJECTS_DIR folder ({subjects_dir}) was deleted."
+            ),
+            lvl="warning",
         )
 
     return subject_id
@@ -166,11 +164,8 @@ def save_to_caps(
         We do not need to check the line "finished without error" in scripts/recon-all.log.
         If an error occurs, it will be detected by Nipype and the next nodes (i.e. save_to_caps will not be called).
     """
-    import datetime
     import os
     import shutil
-
-    from colorama import Fore
 
     from clinica.utils.longitudinal import save_long_id
     from clinica.utils.stream import cprint
@@ -217,10 +212,8 @@ def save_to_caps(
             )
         print_end_image(image_id)
     else:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-
         cprint(
-            f"{Fore.YELLOW}[{now}] {image_id.replace('_', ' | ')}  does not contain "
-            f"mri/aseg+aparc.mgz file. Copy will be skipped.{Fore.RESET}"
+            msg=f"{image_id.replace('_', ' | ')}  does not contain mri/aseg+aparc.mgz file. Copy will be skipped.",
+            lvl="warning",
         )
     return image_id

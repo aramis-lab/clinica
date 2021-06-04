@@ -18,7 +18,6 @@ def convert_adni_t1(
     """
     from os import path
 
-    from colorama import Fore
     from pandas.io import parsers
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
@@ -35,7 +34,7 @@ def convert_adni_t1(
     images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint("Paths of T1 images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "t1", mod_to_update=mod_to_update)
-    cprint(f"{Fore.GREEN}T1 conversion done.{Fore.RESET}")
+    cprint(msg="T1 conversion done.", lvl="debug")
 
 
 def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):

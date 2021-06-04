@@ -79,10 +79,7 @@ def get_caps_filenames(dwi_file):
 def print_begin_pipeline(in_bids_or_caps_file):
     """
     """
-    import datetime
     import re
-
-    from colorama import Fore
 
     from clinica.utils.stream import cprint
 
@@ -91,28 +88,20 @@ def print_begin_pipeline(in_bids_or_caps_file):
     if m is None:
         raise ValueError(
             'Input filename is not in a BIDS or CAPS compliant format.')
-    now = datetime.datetime.now().strftime('%H:%M:%S')
 
-    cprint('%s[%s]%s Running pipeline for %s...' % (
-        Fore.BLUE, now, Fore.RESET, m.group(0)))
+    cprint(f"Running pipeline for {m.group(0)}")
 
 
 def print_end_pipeline(in_bids_or_caps_file, final_file):
     """
     """
-    import datetime
     import re
-
-    from colorama import Fore
 
     from clinica.utils.stream import cprint
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
                   in_bids_or_caps_file)
     if m is None:
-        raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.')
-    now = datetime.datetime.now().strftime('%H:%M:%S')
+        raise ValueError("Input filename is not in a BIDS or CAPS compliant format.")
 
-    cprint('%s[%s]%s ...%s has completed.' % (
-        Fore.GREEN, now, Fore.RESET, m.group(0)))
+    cprint(f"...{m.group(0)} has completed.")

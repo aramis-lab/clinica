@@ -40,24 +40,21 @@ def read_part_sess_long_ids_from_tsv(tsv_file):
     import os
 
     import pandas
-    from colorama import Fore
 
     from clinica.utils.exceptions import ClinicaException
 
     if not os.path.isfile(tsv_file):
         raise ClinicaException(
-            f"\n{Fore.RED}[Error] The TSV file you gave is not a file.{Fore.RESET}\n"
-            f"\n{Fore.YELLOW}Error explanations:{Fore.RESET}\n"
-            f" - Clinica expected the following path to be a file: {Fore.BLUE}{tsv_file}{Fore.RESET}\n"
-            f" - If you gave relative path, did you run Clinica on the good folder?"
+            "The TSV file you gave is not a file.\n"
+            "Error explanations:\n"
+            f" - Clinica expected the following path to be a file: {tsv_file}\n"
+            " - If you gave relative path, did you run Clinica on the good folder?"
         )
     df = pandas.read_csv(tsv_file, sep="\t")
 
     def check_key_in_data_frame(file, data_frame, key):
         if key not in list(data_frame.columns.values):
-            raise ClinicaException(
-                f"\n{Fore.RED}[Error] The TSV file does not contain {key} column (path: {file}){Fore.RESET}"
-            )
+            raise ClinicaException(f"The TSV file does not contain {key} column (path: {file})")
 
     check_key_in_data_frame(tsv_file, df, "participant_id")
     check_key_in_data_frame(tsv_file, df, "session_id")

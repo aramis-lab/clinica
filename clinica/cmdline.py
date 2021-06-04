@@ -479,9 +479,7 @@ def execute():
 
     def single_error_message(p):
         def error(x):
-            from colorama import Fore
-
-            print(f"{Fore.RED}Error {x}{Fore.RESET}\n")
+            print(f"Error: {x}\n")
             p.print_help()
             parser.print_help = silent_help
             exit(-1)

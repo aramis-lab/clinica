@@ -19,7 +19,6 @@ def convert_adni_tau_pet(
     from os import path
 
     import pandas as pd
-    from colorama import Fore
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
@@ -37,7 +36,7 @@ def convert_adni_tau_pet(
     )
     cprint("Paths of TAU PET images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "tau", mod_to_update=mod_to_update)
-    cprint(f"{Fore.GREEN}TAU PET conversion done.{Fore.RESET}")
+    cprint(msg="TAU PET conversion done.", lvl="debug")
 
 
 def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):

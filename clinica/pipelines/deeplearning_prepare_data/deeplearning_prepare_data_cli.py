@@ -1,8 +1,6 @@
 # coding: utf8
 
 
-from colorama import Fore
-
 import clinica.engine as ce
 
 
@@ -69,7 +67,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         )
 
         optional_patch = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you chose ‘patch’ extraction{Fore.RESET}"
+            f"Pipeline options if you chose `patch` extraction"
         )
         optional_patch.add_argument(
             "-ps",
@@ -87,7 +85,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         )
 
         optional_slice = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you chose ‘slice’ extraction{Fore.RESET}"
+            "Pipeline options if you chose `slice` extraction"
         )
         optional_slice.add_argument(
             "-sd",
@@ -145,7 +143,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         )
 
         optional_pet = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you chose 'pet-linear' pipeline{Fore.RESET}"
+            "Pipeline options if you chose `pet-linear` pipeline"
         )
         optional_pet.add_argument(
             "--acq_label",
@@ -169,7 +167,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         )
 
         optional_custom = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you chose ‘custom’ modality{Fore.RESET}"
+            "Pipeline options if you chose `custom` modality"
         )
         optional_custom.add_argument(
             "-cn",

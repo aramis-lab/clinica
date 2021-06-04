@@ -17,8 +17,6 @@ class SpatialSVMCLI(ce.CmdParser):
 
     def define_options(self):
         """Define the sub-command arguments."""
-        from colorama import Fore
-
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 
@@ -40,7 +38,7 @@ class SpatialSVMCLI(ce.CmdParser):
         )
         # Optional arguments for inputs from pet-volume pipeline
         optional_pet = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you use inputs from pet-volume pipeline{Fore.RESET}"
+            "Pipeline options if you use inputs from pet-volume pipeline"
         )
         optional_pet.add_argument(
             "-acq",
@@ -82,7 +80,6 @@ class SpatialSVMCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        from colorama import Fore
         from networkx import Graph
 
         from clinica.utils.exceptions import ClinicaException
@@ -93,13 +90,13 @@ class SpatialSVMCLI(ce.CmdParser):
         if args.orig_input_data == "pet-volume":
             if args.acq_label is None:
                 raise ClinicaException(
-                    f"{Fore.RED}You selected pet-volume pipeline without setting --acq_label flag. "
-                    f"Clinica will now exit.{Fore.RESET}"
+                    "You selected pet-volume pipeline without setting --acq_label flag. "
+                    "Clinica will now exit."
                 )
             if args.suvr_reference_region is None:
                 raise ClinicaException(
-                    f"{Fore.RED}You selected pet-volume pipeline without setting --suvr_reference_region flag. "
-                    f"Clinica will now exit.{Fore.RESET}"
+                    "You selected pet-volume pipeline without setting --suvr_reference_region flag. "
+                    "Clinica will now exit."
                 )
 
         parameters = {

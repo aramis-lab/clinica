@@ -208,8 +208,6 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
     import subprocess
     from os.path import exists
 
-    from colorama import Fore
-
     from clinica.utils.stream import cprint
 
     try:
@@ -244,7 +242,8 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
             dicom_image = os.path.join(image_path, dicom_image[0])
         except IndexError:
             cprint(
-                f"{Fore.RED}We did not found the DICOM files associated with the following directory: {image_path}{Fore.RESET}"
+                msg=f"DICOM files not found in the following directory: {image_path}",
+                lvl="warning",
             )
 
         # it requires the installation of Freesurfer (checked at the beginning)

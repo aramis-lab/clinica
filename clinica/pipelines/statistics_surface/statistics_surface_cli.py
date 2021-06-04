@@ -17,8 +17,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
 
     def define_options(self):
         """Define the sub-command arguments."""
-        from colorama import Fore
-
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 
@@ -78,9 +76,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             "(default: --full_width_at_half_maximum %(default)s).",
         )
         # Optional arguments for inputs from pet-surface pipeline
-        opt_pet = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you use inputs from pet-surface pipeline{Fore.RESET}"
-        )
+        opt_pet = self._args.add_argument_group("Pipeline options if you use inputs from pet-surface pipeline")
         opt_pet.add_argument(
             "-acq",
             "--acq_label",
@@ -98,9 +94,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             "cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).",
         )
         # Optional arguments for custom pipeline
-        opt_custom_input = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you selected custom-pipeline{Fore.RESET}"
-        )
+        opt_custom_input = self._args.add_argument_group("Pipeline options if you selected custom-pipeline")
         opt_custom_input.add_argument(
             "-cf",
             "--custom_file",
@@ -136,7 +130,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        from colorama import Fore
         from networkx import Graph
 
         from clinica.utils.exceptions import ClinicaException
@@ -152,13 +145,13 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         if args.orig_input_data == "pet-surface":
             if args.acq_label is None:
                 raise ClinicaException(
-                    f"{Fore.RED}You selected pet-surface pipeline without setting --acq_label flag. "
-                    f"Clinica will now exit.{Fore.RESET}"
+                    "You selected pet-surface pipeline without setting --acq_label flag. "
+                    "Clinica will now exit."
                 )
             if args.suvr_reference_region is None:
                 raise ClinicaException(
-                    f"{Fore.RED}You selected pet-surface pipeline without setting --suvr_reference_region flag. "
-                    f"Clinica will now exit.{Fore.RESET}"
+                    "You selected pet-surface pipeline without setting --suvr_reference_region flag. "
+                    "Clinica will now exit."
                 )
 
         # FreeSurfer cortical thickness

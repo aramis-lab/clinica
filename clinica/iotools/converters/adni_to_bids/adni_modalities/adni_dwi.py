@@ -19,7 +19,6 @@ def convert_adni_dwi(
     from os import path
 
     import pandas as pd
-    from colorama import Fore
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
@@ -38,7 +37,7 @@ def convert_adni_dwi(
     cprint("Paths of DWI images found. Exporting images into BIDS ...")
     # dwi_paths_to_bids(images, dest_dir)
     paths_to_bids(images, dest_dir, "dwi", mod_to_update=mod_to_update)
-    cprint(f"{Fore.GREEN}DWI conversion done.{Fore.RESET}")
+    cprint(msg="DWI conversion done.", lvl="debug")
 
 
 def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):

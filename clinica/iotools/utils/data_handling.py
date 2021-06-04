@@ -85,7 +85,7 @@ def create_merge_file(
         ]
         row_participant_df.reset_index(inplace=True, drop=True)
         if len(row_participant_df) == 0:
-            cprint(f"Warning: participant {subject} does not exist in participants.tsv")
+            cprint(msg="Participant {subject} does not exist in participants.tsv", lvl="warning")
             row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
 
         if ignore_sessions_files:
@@ -161,7 +161,7 @@ def create_merge_file(
     merged_df = merged_df[col_list]
 
     merged_df.to_csv(out_path, sep="\t", index=False)
-    cprint("End of BIDS information merge.")
+    cprint("End of BIDS information merge.", lvl="debug")
 
     n_bids_columns = len(merged_df.columns)
     merged_df.reset_index(drop=True, inplace=True)
@@ -222,7 +222,7 @@ def create_merge_file(
         merged_summary_df.to_csv(summary_path, sep="\t", index=False)
 
         merged_df.to_csv(out_path, sep="\t")
-        cprint("End of CAPS information merge.")
+        cprint("End of CAPS information merge.", lvl="debug")
 
 
 def find_mods_and_sess(bids_dir):
@@ -718,20 +718,18 @@ def center_nifti_origin(input_image, output_image):
 
     import nibabel as nib
     import numpy as np
-    from colorama import Fore
     from nibabel.spatialimages import ImageFileError
 
     error_str = None
     try:
         img = nib.load(input_image)
     except FileNotFoundError:
-        error_str = Fore.RED + "[Error] No such file " + input_image + Fore.RESET
+        error_str = f"No such file {input_image}"
     except ImageFileError:
-        error_str = (
-            f"{Fore.RED}[Error] File {input_image} could not be read.{Fore.RESET}"
-        )
+        error_str = f"File {input_image} could not be read"
+
     except Exception as e:
-        error_str = f"{Fore.RED}[Error] File {input_image} could not be loaded with nibabel: {e}{Fore.RESET}"
+        error_str = f"File {input_image} could not be loaded with nibabel: {e}"
 
     if not error_str:
         try:
@@ -753,17 +751,15 @@ def center_nifti_origin(input_image, output_image):
             nib.save(new_img, output_image)
             if not isfile(output_image):
                 error_str = (
-                    f"{Fore.RED}[Error] NIfTI file created but Clinica could not save it to {output_image}. "
-                    f"Please check that the output folder has the correct permissions.{Fore.RESET}"
+                    f"NIfTI file created but Clinica could not save it to {output_image}. "
+                    "Please check that the output folder has the correct permissions."
                 )
         except Exception as e:
             error_str = (
-                Fore.RED
-                + "[Error] File "
+                "File "
                 + input_image
                 + " could not be processed with nibabel: "
                 + str(e)
-                + Fore.RESET
             )
 
     return output_image, error_str
@@ -789,18 +785,12 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     from os.path import basename, isdir, isfile, join
     from shutil import copy2, copytree
 
-    from colorama import Fore
-
     from clinica.utils.exceptions import ClinicaBIDSError
     from clinica.utils.inputs import check_bids_folder
 
     # output and input must be different, so that we do not mess with user's data
     if bids_dir == output_dir:
-        raise ClinicaBIDSError(
-            Fore.RED
-            + "[Error] Input BIDS and output directories must be different"
-            + Fore.RESET
-        )
+        raise ClinicaBIDSError("Input BIDS and output directories must be different")
 
     assert isinstance(modality, list), "modality arg must be a list of str"
 
@@ -840,8 +830,7 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
             all_errors.append(current_error)
     if len(all_errors) > 0:
         final_error_msg = (
-            Fore.RED
-            + "[Error] Clinica encoutered "
+            "Clinica encoutered "
             + str(len(all_errors))
             + " error(s) while trying to center all NIfTI images.\n"
         )
@@ -919,7 +908,6 @@ def check_relative_volume_location_in_world_coordinate_system(
     from os.path import abspath, basename
 
     import numpy as np
-    from colorama import Fore
 
     from clinica.utils.stream import cprint
 
@@ -934,9 +922,9 @@ def check_relative_volume_location_in_world_coordinate_system(
 
     if len(pairs_with_problems) > 0:
         warning_message = (
-            f"{Fore.YELLOW}[Warning] It appears that {str(len(pairs_with_problems))} "
-            f"pairs of files have an important relative offset. "
-            f"SPM coregistration has a high probability to fail on these files:\n\n"
+            f"It appears that {str(len(pairs_with_problems))} "
+            "pairs of files have an important relative offset. "
+            "SPM coregistration has a high probability to fail on these files:\n\n"
         )
 
         # File column width : 3 spaces more than the longest string to display
@@ -994,21 +982,20 @@ def check_relative_volume_location_in_world_coordinate_system(
             "\nClinica provides a tool to counter this problem by replacing the center "
             "of the volume at the origin of the world coordinates.\nUse the following "
             "command line to correct the header of the faulty NIFTI volumes in a new folder:\n\n"
-            f'{Fore.BLUE}clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality "{modality}"{Fore.RESET}\n\n'
-            f"{Fore.YELLOW}You will find more information on the command by typing {Fore.RESET}"
-            f"{Fore.BLUE}clinica iotools center-nifti{Fore.RESET}"
-            f"{Fore.YELLOW} in the console.\nDo you still want to launch the pipeline now?{Fore.RESET}"
+            f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`\n\n"
+            "You will find more information on the command by typing `clinica iotools center-nifti` in the console.\n"
+            "Do you still want to launch the pipeline now?"
         )
-        cprint(warning_message)
+        cprint(msg=warning_message, lvl="warning")
         while True:
-            cprint("Your answer [yes/no]:")
+            cprint(msg="Your answer [yes/no]: ", lvl="warning")
             answer = input()
             if answer.lower() in ["yes", "no"]:
                 break
             else:
-                cprint(Fore.RED + "You must answer yes or no" + Fore.RESET)
+                cprint(msg="You must answer 'yes' or 'no'", lvl="warning")
         if answer.lower() == "no":
-            cprint(Fore.RED + "Clinica will now exit..." + Fore.RESET)
+            cprint(msg="Clinica will now exit...", lvl="warning")
             sys.exit(0)
 
 
@@ -1034,7 +1021,6 @@ def check_volume_location_in_world_coordinate_system(
     from os.path import abspath, basename
 
     import numpy as np
-    from colorama import Fore
 
     from clinica.utils.stream import cprint
 
@@ -1054,7 +1040,7 @@ def check_volume_location_in_world_coordinate_system(
         )
 
         warning_message = (
-            f"{Fore.YELLOW}[Warning] It appears that {str(len(list_non_centered_files))} files "
+            f"It appears that {str(len(list_non_centered_files))} files "
             "have a center way out of the origin of the world coordinate system. SPM has a high "
             "probability to fail on these files (for coregistration or segmentation):\n\n"
         )
@@ -1075,9 +1061,7 @@ def check_volume_location_in_world_coordinate_system(
             ) % (basename(file), str(center), l2)
 
         cmd_line = (
-            f"{Fore.BLUE}\n"
-            f'clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality "{modality}"'
-            f"\n\n{Fore.YELLOW}"
+            f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
         )
 
         warning_message += (
@@ -1089,26 +1073,27 @@ def check_volume_location_in_world_coordinate_system(
             "\nClinica provides a tool to counter this problem by replacing the center of the volume"
             " at the origin of the world coordinates.\nUse the following command line to correct the "
             f"header of the faulty NIFTI volumes in a new folder:\n{cmd_line}"
-            f"You will find more information on the command by typing "
-            f"{Fore.BLUE}clinica iotools center-nifti{Fore.RESET} {Fore.YELLOW}in the console.{Fore.RESET}"
+            "You will find more information on the command by typing "
+            "clinica iotools center-nifti in the console."
         )
         cprint(warning_message)
         if not skip_question:
             cprint(
-                f"{Fore.YELLOW}Do you still want to launch the pipeline now?{Fore.RESET}"
+                msg="Do you still want to launch the pipeline now?",
+                lvl="warning",
             )
             while True:
-                cprint("Your answer [yes/no]:")
+                cprint(msg="Your answer [yes/no]:", lvl="warning")
                 answer = input()
                 if answer.lower() in ["yes", "no"]:
                     break
                 else:
-                    cprint(Fore.RED + "You must answer yes or no" + Fore.RESET)
+                    cprint(msg="You must answer yes or no", lvl="warning")
         else:
             answer = "yes"
 
         if answer.lower() == "no":
-            cprint(Fore.RED + "Clinica will now exit..." + Fore.RESET)
+            cprint(msg="Clinica will now exit...", lvl="debug")
             sys.exit(0)
 
 
@@ -1165,7 +1150,6 @@ def get_world_coordinate_of_center(nii_volume):
 
     import nibabel as nib
     import numpy as np
-    from colorama import Fore
 
     assert isinstance(nii_volume, str), "input argument nii_volume must be a str"
     assert isfile(nii_volume), "input argument must be a path to a file"
@@ -1173,9 +1157,7 @@ def get_world_coordinate_of_center(nii_volume):
     try:
         orig_nifti = nib.load(nii_volume)
     except nib.filebasedimages.ImageFileError:
-        print(
-            f"{Fore.RED}[Error] {nii_volume}  could not be read by nibabel. Is it a valid NIfTI file ?{Fore.RESET}"
-        )
+        print(f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI file ?")
         return np.nan
 
     head = orig_nifti.header
