@@ -515,7 +515,8 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                             if "-" in carac
                         }
                         f_type = description_dict["acq"].upper()
-
+                    else:
+                        continue
                     row_to_append = pd.DataFrame(
                         scans_dict[bids_id][session_name][f_type], index=[0]
                     )

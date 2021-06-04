@@ -68,6 +68,7 @@ Please refer to each tool’s website for installation instructions:
 - [**PETPVC 1.2.4**](https://github.com/UCL/PETPVC) Follow the instructions [here](https://github.com/UCL/PETPVC).
 Do not forget to compile in RELEASE mode, otherwise, partial volume correction will be very slow.
 - [**SPM12**](http://www.fil.ion.ucl.ac.uk/spm/) Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the SPM wiki (this [page](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux) for Linux users and this [page](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)) for Mac users).
+  - For systems running on MacOS Big Sur, a development version of SPM12 (check [here](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) for updates) as well as a more recent release of the MCR (minimum 2019a) are required.
 
 Do not forget to check the installations following each tool’s guidelines.
 
