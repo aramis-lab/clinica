@@ -119,7 +119,6 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             type=str,
             nargs="+",
             default=None,
-            
         )
         optional_roi.add_argument(
             "--roi_uncrop_output",
@@ -140,7 +139,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             "--custom_mask_pattern",
             help="""If given will select only the masks containing the string given.
                     The mask with the shortest name is taken.
-                    This argument is taken into account only of the modality is custom.""",
+                    This argument is taken into account only when the modality is custom.""",
             type=str,
             default=None,
         )
@@ -182,7 +181,6 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             type=str,
             default="",
         )
-
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()

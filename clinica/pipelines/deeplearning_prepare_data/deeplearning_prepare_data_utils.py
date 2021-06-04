@@ -310,11 +310,10 @@ def check_mask_list(masks_location, roi_list, mask_pattern, cropping):
     import numpy as np
 
     for roi in roi_list:
-        roi_path = find_mask_path(masks_location, roi, mask_pattern, cropping)
+        roi_path, desc = find_mask_path(masks_location, roi, mask_pattern, cropping)
         if roi_path is None:
             raise ValueError(
-                f"The ROI wanted do not correspond to a mask in the CAPS directory."
-                f"The mask should include the following pattern: {mask_pattern}."
+                f"The ROI '{roi}' does not correspond to a mask in the CAPS directory. {desc}"
             )
         roi_mask = nib.load(roi_path).get_fdata()
         mask_values = set(np.unique(roi_mask))
@@ -329,18 +328,29 @@ def find_mask_path(masks_location, roi, mask_pattern, cropping):
     from glob import glob
     from os import path
 
-    candidates = glob(
-        path.join(masks_location, f"*{mask_pattern}*_roi-{roi}_mask.nii.gz")
+    # Check that pattern begins and ends with _ to avoid mixing keys
+    if len(mask_pattern) != 0:
+        if not mask_pattern.endswith("_"):
+            mask_pattern += "_"
+        if not mask_pattern[0] == "_":
+            mask_pattern = "_" + mask_pattern
+
+    candidates_pattern = path.join(
+        masks_location, f"*{mask_pattern}*_roi-{roi}_mask.nii*"
     )
+    desc = f"The mask should follow the pattern {candidates_pattern} "
+    candidates = glob(candidates_pattern)
     if cropping:
         candidates = [mask for mask in candidates if "_desc-Crop_" in mask]
+        desc += f"and contain '_desc-Crop_' string."
     else:
         candidates = [mask for mask in candidates if "_desc-Crop_" not in mask]
+        desc += f"and not contain '_desc-Crop_' string."
 
     if len(candidates) == 0:
-        return None
+        return None, desc
     else:
-        return min(candidates, key=len)
+        return min(candidates, key=len), desc
 
 
 def compute_output_pattern(mask_path, crop_output):
@@ -423,7 +433,7 @@ def extract_roi(
     output_roi = []
     for index_roi, roi in enumerate(roi_list):
         # read mask
-        mask_path = find_mask_path(masks_location, roi, mask_pattern, cropped_input)
+        mask_path, _ = find_mask_path(masks_location, roi, mask_pattern, cropped_input)
         mask_np = nib.load(mask_path).get_fdata()
         if len(mask_np.shape) == 3:
             mask_np = mask_np[np.newaxis, :]
