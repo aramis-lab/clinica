@@ -141,7 +141,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
                     The mask with the shortest name is taken.
                     This argument is taken into account only when the modality is custom.""",
             type=str,
-            default=None,
+            default="",
         )
 
         optional_pet = self._args.add_argument_group(

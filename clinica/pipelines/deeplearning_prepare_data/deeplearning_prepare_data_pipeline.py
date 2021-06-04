@@ -44,6 +44,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from os import path
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -61,6 +62,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
+
         from .deeplearning_prepare_data_utils import check_mask_list
 
         # Select the correct filetype corresponding to modality
@@ -71,6 +73,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 FILE_TYPE = T1W_LINEAR_CROPPED
         if self.parameters.get("modality") == "t1-extensive":
             FILE_TYPE = T1W_EXTENSIVE
+            self.parameters["use_uncropped_image"] = None
         if self.parameters.get("modality") == "pet-linear":
             FILE_TYPE = pet_linear_nii(
                 self.parameters.get("acq_label"),
@@ -82,6 +85,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 "pattern": f"*{self.parameters.get('custom_suffix')}",
                 "description": "Custom suffix",
             }
+            self.parameters["use_uncropped_image"] = None
 
         # Input file:
         try:
@@ -116,7 +120,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         # Load the corresponding masks
         if self.parameters.get("extract_method") == "roi":
             self.roi_list = self.parameters.get("roi_list")
-            
+
             if self.parameters.get("modality") == "custom":
                 self.mask_pattern = self.parameters.get("custom_mask_pattern")
                 self.template = self.parameters.get("custom_template")
@@ -127,9 +131,12 @@ class DeepLearningPrepareData(cpe.Pipeline):
             else:
                 self.mask_pattern = ""
                 from .deeplearning_prepare_data_utils import TEMPLATE_DICT
+
                 self.template = TEMPLATE_DICT[self.parameters.get("modality")]
 
-            self.masks_location = path.join(self.caps_directory, "masks", f"tpl-{self.template}")
+            self.masks_location = path.join(
+                self.caps_directory, "masks", f"tpl-{self.template}"
+            )
 
             if self.roi_list is None:
                 raise ValueError("A list of regions must be given.")
@@ -138,7 +145,9 @@ class DeepLearningPrepareData(cpe.Pipeline):
                     self.masks_location,
                     self.roi_list,
                     self.mask_pattern,
-                    not self.parameters.get("use_uncropped_image"),
+                    None
+                    if self.parameters.get("use_uncropped_image") is None
+                    else not self.parameters.get("use_uncropped_image"),
                 )
         else:
             self.masks_location = ""
@@ -275,8 +284,8 @@ class DeepLearningPrepareData(cpe.Pipeline):
 
         from .deeplearning_prepare_data_utils import (
             extract_patches,
-            extract_slices,
             extract_roi,
+            extract_slices,
             save_as_pt,
         )
 
@@ -329,18 +338,24 @@ class DeepLearningPrepareData(cpe.Pipeline):
             iterfield=["input_tensor"],
             interface=nutil.Function(
                 function=extract_roi,
-                input_names=["input_tensor",
-                             "masks_location",
-                             "mask_pattern",
-                             "cropped_input",
-                             "roi_list",
-                             "uncrop_output"],
+                input_names=[
+                    "input_tensor",
+                    "masks_location",
+                    "mask_pattern",
+                    "cropped_input",
+                    "roi_list",
+                    "uncrop_output",
+                ],
                 output_names=["output_roi"],
             ),
         )
         extract_roi_node.inputs.masks_location = self.masks_location
         extract_roi_node.inputs.mask_pattern = self.mask_pattern
-        extract_roi_node.inputs.cropped_input = not self.parameters.get("use_uncropped_image")
+        extract_roi_node.inputs.cropped_input = (
+            None
+            if self.parameters.get("use_uncropped_image") is None
+            else not self.parameters.get("use_uncropped_image")
+        )
         extract_roi_node.inputs.roi_list = self.roi_list
         extract_roi_node.inputs.uncrop_output = self.parameters.get("roi_uncrop_output")
 
