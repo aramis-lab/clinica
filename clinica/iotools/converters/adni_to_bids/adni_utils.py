@@ -661,8 +661,10 @@ def create_adni_sessions_dict(
                     :, (~df_filtered.columns.isin(df_subj_session.columns))
                 ]
                 df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
-    
-    df_subj_session.drop(df_subj_session[df_subj_session.session_id =='sc'].index, inplace=True)
+
+    df_subj_session.drop(
+        df_subj_session[df_subj_session.session_id == "sc"].index, inplace=True
+    )
     write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
 
@@ -799,7 +801,7 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                             f"{Fore.RED}No information found for file {file_name}.{Fore.RESET}"
                         )
 
-                    scans_df = scans_df.fillna("")
+                    scans_df = scans_df.fillna("n/a")
                     scans_df.to_csv(
                         scans_tsv, header=False, sep="\t", index=False, encoding="utf-8"
                     )
