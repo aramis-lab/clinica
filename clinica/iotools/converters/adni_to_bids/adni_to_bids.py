@@ -3,6 +3,19 @@
 from clinica.iotools.abstract_converter import Converter
 
 
+def get_bids_subjs_info(clinical_data_dir, out_path):
+    from os import path
+    import pandas as pd
+
+    adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
+    adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=",")
+    bids_ids = [
+        "sub-ADNI" + subj.replace("_", "") for subj in list(adni_merge.PTID.unique())
+    ]
+    bids_subjs_paths = [path.join(out_path, subj) for subj in bids_ids]
+    return bids_ids, bids_subjs_paths
+
+
 class AdniToBids(Converter):
     def get_modalities_supported(self):
         """Return a list of modalities supported.
@@ -38,7 +51,7 @@ class AdniToBids(Converter):
         clinic_specs_path = path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "data",
-            "clinical_specifications_adni.xlsx",
+            "clinical_specifications_adni",
         )
         try:
             os.path.exists(out_path)
@@ -51,13 +64,7 @@ class AdniToBids(Converter):
         conversion_path = path.join(out_path, "conversion_info")
 
         if not bids_ids:
-            adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
-            adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=",")
-            bids_ids = [
-                "sub-ADNI" + subj.replace("_", "")
-                for subj in list(adni_merge.PTID.unique())
-            ]
-            bids_subjs_paths = [path.join(out_path, subj) for subj in bids_ids]
+            bids_ids, bids_subjs_path = get_bids_subjs_info(clinical_data_dir, out_path)
 
         # -- Creation of modality agnostic files --
         cprint("Creating modality agnostic files...")

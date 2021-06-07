@@ -685,9 +685,11 @@ def create_participants_df_AIBL(
     index_to_drop = []
 
     location_name = "AIBL location"
+    clinical_spec_path = clinical_spec_path + "_participant.tsv"
+
     if not os.path.exists(clinical_spec_path):
         raise FileNotFoundError(clinical_spec_path + " not found in clinical data.")
-    participants_specs = pd.read_excel(clinical_spec_path, sheet_name="participant.tsv")
+    participants_specs = pd.read_csv(clinical_spec_path, sep="\t")
     participant_fields_db = participants_specs["AIBL"]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
@@ -794,7 +796,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
 
     # Load data
     location = "AIBL location"
-    sessions = pd.read_excel(clinical_spec_path, sheet_name="sessions.tsv")
+    sessions = pd.read_csv(clinical_spec_path + "_sessions.tsv", sep="\t")
     sessions_fields = sessions["AIBL"]
     field_location = sessions[location]
     sessions_fields_bids = sessions["BIDS CLINICA"]
@@ -903,7 +905,7 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
 
     # Load data
     location = "AIBL location"
-    scans = pd.read_excel(clinical_spec_path, sheet_name="scans.tsv")
+    scans = pd.read_csv(clinical_spec_path + "_scans.tsv", sep="\t")
     scans_fields = scans["AIBL"]
     field_location = scans[location]
     scans_fields_bids = scans["BIDS CLINICA"]

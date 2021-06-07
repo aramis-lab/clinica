@@ -40,7 +40,7 @@ def create_participants_df(
     location_name = study_name + " location"
 
     # Load the data from the clincal specification file
-    participants_specs = pd.read_excel(clinical_spec_path, sheet_name="participant.tsv")
+    participants_specs = pd.read_csv(clinical_spec_path + "_participant.tsv", sep="\t")
     participant_fields_db = participants_specs[study_name]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
@@ -165,7 +165,7 @@ def create_sessions_dict(
 
     # Load data
     location = study_name + " location"
-    sessions = pd.read_excel(clinical_spec_path, sheet_name="sessions.tsv")
+    sessions = pd.read_csv(clinical_spec_path + "_sessions.tsv", sep="\t")
     sessions_fields = sessions[study_name]
     field_location = sessions[location]
     sessions_fields_bids = sessions["BIDS CLINICA"]
@@ -294,7 +294,7 @@ def create_scans_dict(
                 "FDG": {},
             }
 
-    scans_specs = pd.read_excel(clinic_specs_path, sheet_name="scans.tsv")
+    scans_specs = pd.read_csv(clinic_specs_path + "_scans.tsv", sep="\t")
     fields_dataset = []
     fields_location = []
     fields_bids = []

@@ -26,9 +26,7 @@ class OasisToBids(Converter):
         bids_ids = bids.get_bids_subjs_list(bids_dir)
 
         iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        clinic_specs_path = path.join(
-            iotools_folder, "data", "clinical_specifications.xlsx"
-        )
+        clinic_specs_path = path.join(iotools_folder, "data", "clinical_specifications")
 
         # -- Creation of modality agnostic files --
         bids.write_modality_agnostic_files("OASIS-1", bids_dir)

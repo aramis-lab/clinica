@@ -142,6 +142,9 @@ def create_merge_file(
                                 for key, value in json_dict.items():
                                     new_col_name = f"{modality}_{key}"
                                     scans_dict.update({new_col_name: value})
+                    scans_dict = {
+                        str(key): str(value) for key, value in scans_dict.items()
+                    }
                     row_scans_df = pd.DataFrame(scans_dict, index=[0])
                 else:
                     row_scans_df = pd.DataFrame()

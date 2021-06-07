@@ -1,0 +1,9 @@
+regex	type	acq_label	expected_num
+*t1mpr_SAG_NSel_S176	T1w		2
+*T2_FLAIR_TRA_ip2_n2_TE128	FLAIR		1
+*T2star_GRE_TRA	T2w	GRE	1
+*T2_TSE_TRA	T2w	TSE	1
+*Resting_State_fMRI	bold		1
+*DTI_50_PtkSms_TR13_B1500	dwi		1
+*GRE_FIELD_MAPPING	magnitude		2
+*GRE_FIELD_MAPPING	phasediff		1
