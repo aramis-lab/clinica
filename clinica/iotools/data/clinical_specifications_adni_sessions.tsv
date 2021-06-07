@@ -1,0 +1,841 @@
+Field	BIDS CLINICA	BIDS format	BIDS type	ADNI	ADNI location
+BIDS session id	session_id	Keyword 'ses-' followed by the original session id of each dataset without special characters or symbols	string		
+Date of the examination	examination_date	YYYY-MM-DD HH:MM:SS	string	EXAMDATE	ADNIMERGE.csv/ADNIMERGE
+Age at the session	age		float	AGE	ADNIMERGE.csv/ADNIMERGE
+Protocol under which data was collected	current_study	"free format: ADNI1; ADNI2; ADNI3; ADNIGO"	string	COLPROT	ADNIMERGE.csv/ADNIMERGE
+Current Diagnosis	diagnosis	"string: CN (CN) ; MCI (MCI); Dementia (AD)"	string	DX	ADNIMERGE.csv/ADNIMERGE
+Average FDG-PET of angular, temporal and posterior cingulate	adni_fdg	Number (float)		FDG	ADNIMERGE.csv/ADNIMERGE
+Average PIB SUVR of frontal cortex, anterior cingulate, precuneus cortex and parietal cortex	adni_pib	Number (float)		PIB	ADNIMERGE.csv/ADNIMERGE
+Average AV45 SUVR of frontal, anterior cingulate, precuneus, and parietal cortex relative to cerebellum	adni_av45	Number (float)		AV45	ADNIMERGE.csv/ADNIMERGE
+Clinical Dementia Rating Scale - Sum of boxes	cdr_sb	"Number: 0;0.5;1;2;3"		CDRSB	ADNIMERGE.csv/ADNIMERGE
+Clinical Dementia Rating Scale - Global	cdr_global	"Number: 0;0.5;1;2;3"		CDGLOBAL	CDR.csv
+AD Assessment Scale - 11	adas11	Number (float)		ADAS11	ADNIMERGE.csv/ADNIMERGE
+AD Assessment Scale - 13	adas13	Number (float)		ADAS13	ADNIMERGE.csv/ADNIMERGE
+Mini-mental state exam	MMSE	Number	int	MMSE	ADNIMERGE.csv/ADNIMERGE
+Functional Activities Questionnaires	FAQ	Number		FAQ	ADNIMERGE.csv/ADNIMERGE
+UCSF Ventricule Volume	adni_ventricles_vol	Number (float)		Ventricles	ADNIMERGE.csv/ADNIMERGE
+UCSF Hippocampus Volume	adni_hippocampus_vol	Number (float)		Hippocampus	ADNIMERGE.csv/ADNIMERGE
+UCSF Whole Brain Volume	adni_brain_vol	Number (float)		WholeBrain	ADNIMERGE.csv/ADNIMERGE
+UCSF Entorhinal Volume	adni_entorhinal_vol	Number (float)		Entorhinal	ADNIMERGE.csv/ADNIMERGE
+Intracranial volume	adni_icv			ICV	ADNIMERGE.csv/ADNIMERGE
+					
+Rey's Auditory Verbal Learning Test - immediate	ravlt_immediate	Number (int)		RAVLT_immediate	ADNIMERGE.csv/ADNIMERGE
+MOntreal Cognitive Assessment Test	moca	Number (int)		MOCA	ADNIMERGE.csv/ADNIMERGE
+Trail and Making Test - Part A - Complete	TMT_A	Number (int)		TMT_PtA_Complete	ITEM.csv
+Trail and Making Test - Part B - Complete	TMT_B	Number (int)		TMT_PtB_Complete	ITEM.csv
+Logical Memory - Delayed Recall Total Number of Story Units Recalled	logmem_delay	Number (int)		LDELTOTAL	NEUROBAT.csv
+Logical Memory - Immediate Recall Total Number of Story Units Recalled	logmem_imm	Number (int)		LIMMTOTAL	NEUROBAT.csv
+Digit Symbol Substitution Test Score	dsst	Number (int)		DIGITSCOR	NEUROBAT.csv
+					
+AD Assessment scale - Word Recall	adas_Q1	Number		Q1	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Commands	adas_Q2	Number		Q2	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Construction	adas_Q3	Number		Q3	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Delayed Word Recall	adas_Q4	Number		Q4	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Naming	adas_Q5	Number		Q5	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Ideational Praxis	adas_Q6	Number		Q6	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Orientation	adas_Q7	Number		Q7	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Word Recognition	adas_Q8	Number		Q8	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Recall Instructions	adas_Q9	Number		Q9	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Spoken Language	adas_Q10	Number		Q10	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Word Finding Difficulty	adas_Q11	Number		Q11	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Comprehension	adas_Q12	Number		Q12	ADASSCORES.csv/ADASSCORES
+AD Assessment scale - Number Cancellation	adas_Q13	Number		Q14	ADASSCORES.csv/ADASSCORES
+					
+AD Assessment scale - Word Recall	adas_Q1	Number		Q1SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Commands	adas_Q2	Number		Q2SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Construction	adas_Q3	Number		Q3SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Delayed Word Recall	adas_Q4	Number		Q4SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Naming	adas_Q5	Number		Q5SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Ideational Praxis	adas_Q6	Number		Q6SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Orientation	adas_Q7	Number		Q7SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Word Recognition	adas_Q8	Number		Q8SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Recall Instructions	adas_Q9	Number		Q9SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Spoken Language	adas_Q10	Number		Q10SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Word Finding Difficulty	adas_Q11	Number		Q11SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Comprehension	adas_Q12	Number		Q12SCORE	ADAS_ADNIGO2.csv
+AD Assessment scale - Number Cancellation	adas_Q13	Number		Q13SCORE	ADAS_ADNIGO2.csv
+					
+Item Level Data - ANART	anart_Q1	Number		ANART_Q1	ITEM.csv
+Item Level Data - ANART	anart_Q2	Number		ANART_Q2	ITEM.csv
+Item Level Data - ANART	anart_Q3	Number		ANART_Q3	ITEM.csv
+Item Level Data - ANART	anart_Q4	Number		ANART_Q4	ITEM.csv
+Item Level Data - ANART	anart_Q5	Number		ANART_Q5	ITEM.csv
+Item Level Data - ANART	anart_Q6	Number		ANART_Q6	ITEM.csv
+Item Level Data - ANART	anart_Q7	Number		ANART_Q7	ITEM.csv
+Item Level Data - ANART	anart_Q8	Number		ANART_Q8	ITEM.csv
+Item Level Data - ANART	anart_Q9	Number		ANART_Q9	ITEM.csv
+Item Level Data - ANART	anart_Q10	Number		ANART_Q10	ITEM.csv
+Item Level Data - ANART	anart_Q11	Number		ANART_Q11	ITEM.csv
+Item Level Data - ANART	anart_Q12	Number		ANART_Q12	ITEM.csv
+Item Level Data - ANART	anart_Q13	Number		ANART_Q13	ITEM.csv
+Item Level Data - ANART	anart_Q14	Number		ANART_Q14	ITEM.csv
+Item Level Data - ANART	anart_Q15	Number		ANART_Q15	ITEM.csv
+Item Level Data - ANART	anart_Q16	Number		ANART_Q16	ITEM.csv
+Item Level Data - ANART	anart_Q17	Number		ANART_Q17	ITEM.csv
+Item Level Data - ANART	anart_Q18	Number		ANART_Q18	ITEM.csv
+Item Level Data - ANART	anart_Q19	Number		ANART_Q19	ITEM.csv
+Item Level Data - ANART	anart_Q20	Number		ANART_Q20	ITEM.csv
+Item Level Data - ANART	anart_Q21	Number		ANART_Q21	ITEM.csv
+Item Level Data - ANART	anart_Q22	Number		ANART_Q22	ITEM.csv
+Item Level Data - ANART	anart_Q23	Number		ANART_Q23	ITEM.csv
+Item Level Data - ANART	anart_Q24	Number		ANART_Q24	ITEM.csv
+Item Level Data - ANART	anart_Q25	Number		ANART_Q25	ITEM.csv
+Item Level Data - ANART	anart_Q26	Number		ANART_Q26	ITEM.csv
+Item Level Data - ANART	anart_Q27	Number		ANART_Q27	ITEM.csv
+Item Level Data - ANART	anart_Q28	Number		ANART_Q28	ITEM.csv
+Item Level Data - ANART	anart_Q29	Number		ANART_Q29	ITEM.csv
+Item Level Data - ANART	anart_Q30	Number		ANART_Q30	ITEM.csv
+Item Level Data - ANART	anart_Q31	Number		ANART_Q31	ITEM.csv
+Item Level Data - ANART	anart_Q32	Number		ANART_Q32	ITEM.csv
+Item Level Data - ANART	anart_Q33	Number		ANART_Q33	ITEM.csv
+Item Level Data - ANART	anart_Q34	Number		ANART_Q34	ITEM.csv
+Item Level Data - ANART	anart_Q35	Number		ANART_Q35	ITEM.csv
+Item Level Data - ANART	anart_Q36	Number		ANART_Q36	ITEM.csv
+Item Level Data - ANART	anart_Q37	Number		ANART_Q37	ITEM.csv
+Item Level Data - ANART	anart_Q38	Number		ANART_Q38	ITEM.csv
+Item Level Data - ANART	anart_Q39	Number		ANART_Q39	ITEM.csv
+Item Level Data - ANART	anart_Q40	Number		ANART_Q40	ITEM.csv
+Item Level Data - ANART	anart_Q41	Number		ANART_Q41	ITEM.csv
+Item Level Data - ANART	anart_Q42	Number		ANART_Q42	ITEM.csv
+Item Level Data - ANART	anart_Q43	Number		ANART_Q43	ITEM.csv
+Item Level Data - ANART	anart_Q44	Number		ANART_Q44	ITEM.csv
+Item Level Data - ANART	anart_Q45	Number		ANART_Q45	ITEM.csv
+Item Level Data - ANART	anart_Q46	Number		ANART_Q46	ITEM.csv
+Item Level Data - ANART	anart_Q47	Number		ANART_Q47	ITEM.csv
+Item Level Data - ANART	anart_Q48	Number		ANART_Q48	ITEM.csv
+Item Level Data - ANART	anart_Q49	Number		ANART_Q49	ITEM.csv
+Item Level Data - ANART	anart_Q50	Number		ANART_Q50	ITEM.csv
+					
+AD Assessment scale - Memory component (Q1 + Q4 + Q7 + Q9 + Q9)	adas_memory	Number	adas_Q1 + adas_Q4 + adas_Q7 + adas_Q8 + adas_Q9	ADAS13	ADNIMERGE.csv/ADNIMERGE
+AD Assessment scale - Language component (Q2 + Q5 + Q10 + Q11 + Q12	adas_language	Number	adas_Q2 + adas_Q5 + adas_Q10 + adas_Q11 + adas_Q12	ADAS13	ADNIMERGE.csv/ADNIMERGE
+AD Assessment scale - Concentration component (Q13)	adas_concentration	Number	adas_Q13	ADAS13	ADNIMERGE.csv/ADNIMERGE
+AD Assessment scale - Praxis component (Q3 + Q6)	adas_praxis	Number	adas_Q3 + adas_Q6	ADAS13	ADNIMERGE.csv/ADNIMERGE
+					
+UCSF Fusiform Volume	adni_fusiform_vol	Number		Fusiform	ADNIMERGE.csv/ADNIMERGE
+UCSF Mid Temporal Volume	adni_midtemp_vol	Number		MidTemp	ADNIMERGE.csv/ADNIMERGE
+CSF level of beta-amyloid 1-42	adni_abeta	Number		ABETA	ADNIMERGE.csv/ADNIMERGE
+CSF level of total Tau	adni_tau	Number		TAU	ADNIMERGE.csv/ADNIMERGE
+CSF level of Tau phosphorylated at threonine 181	adni_ptau	Number		PTAU	ADNIMERGE.csv/ADNIMERGE
+					
+Clinical Dementia Rating Scale - Memory component	cdr_cdmemory			CDMEMORY	CDR.csv
+Clinical Dementia Rating Scale - Orientation component	cdr_cdorient			CDORIENT	CDR.csv
+Clinical Dementia Rating Scale - Judgment & Problem Solving component	cdr_cdjudge			CDJUDGE	CDR.csv
+Clinical Dementia Rating Scale - Community Affairs component	cdr_cdcommun			CDCOMMUN	CDR.csv
+Clinical Dementia Rating Scale -  Home & Hobbies component	cdr_cdhome			CDHOME	CDR.csv
+Clinical Dementia Rating Scale - Personal Care component	cdr_cdcare			CDCARE	CDR.csv
+Clinical Dementia Rating - Global CDR	cdr_cdglobal			CDGLOBAL	CDR.csv
+					
+Cognitive Change Index - 1 Recalling information when I really try	cci_cci1			CCI1	CCI.csv
+Cognitive Change Index - 2 Remembering names and faces of new people I meet	cci_cci2			CCI2	CCI.csv
+Cognitive Change Index - 3 Remembering things that have happened recently	cci_cci3			CCI3	CCI.csv
+Cognitive Change Index - 4 Recalling conversations a few days later	cci_cci4			CCI4	CCI.csv
+Cognitive Change Index - 5 Remembering where things are usually kept	cci_cci5			CCI5	CCI.csv
+Cognitive Change Index - 6 Remembering new information told to me	cci_cci6			CCI6	CCI.csv
+Cognitive Change Index - 7 Remembering where I placed familiar objects	cci_cci7			CCI7	CCI.csv
+Cognitive Change Index - 8 Remembering what I intended to do	cci_cci8			CCI8	CCI.csv
+Cognitive Change Index - 9 Remembering names of family members and friends	cci_cci9			CCI9	CCI.csv
+Cognitive Change Index - 10 Remembering without notes and reminders	cci_cci10			CCI10	CCI.csv
+Cognitive Change Index - 11 People who know me would find that my memory is	cci_cci11			CCI11	CCI.csv
+Cognitive Change Index - 12 Remembering things compared to my age group	cci_cci12			CCI12	CCI.csv
+Cognitive Change Index - 13 Making decisions about everyday matters	cci_cci13			CCI13	CCI.csv
+Cognitive Change Index - 14 Reasoning through a complicated problem	cci_cci14			CCI14	CCI.csv
+Cognitive Change Index - 15 Focusing on goals and carrying out a plan	cci_cci15			CCI15	CCI.csv
+Cognitive Change Index - 16 Shifting easily from one activity to the next	cci_cci16			CCI16	CCI.csv
+Cognitive Change Index - 17 Organizing my daily activities	cci_cci17			CCI17	CCI.csv
+Cognitive Change Index - 18 Understanding conversations	cci_cci18			CCI18	CCI.csv
+Cognitive Change Index - 19 Expressing myself when speaking	cci_cci19			CCI19	CCI.csv
+Cognitive Change Index - 20 Following a story in a book, movie or TV	cci_cci20			CCI20	CCI.csv
+Cognitive Change Index - CCI: sum of first 12 items	cci_cci12tot			CCI12TOT	CCI.csv
+					
+Everyday Cognition (Participant Self Report) - Concern	ecogpt_concern			CONCERN	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Memory component 1	ecogpt_memory1			MEMORY1	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Memory component 2	ecogpt_memory2			MEMORY2	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Memory component 3	ecogpt_memory3			MEMORY3	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Memory component 4	ecogpt_memory4			MEMORY4	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Memory component 5	ecogpt_memory5			MEMORY5	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Memory component 6	ecogpt_memory6			MEMORY6	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Memory component 7	ecogpt_memory7			MEMORY7	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Memory component 8	ecogpt_memory8			MEMORY8	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component 1	ecogpt_lang1			LANG1	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component 2	ecogpt_lang2			LANG2	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component 3	ecogpt_lang3			LANG3	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component 4	ecogpt_lang4			LANG4	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component 5	ecogpt_lang5			LANG5	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component 6	ecogpt_lang6			LANG6	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component 7	ecogpt_lang7			LANG7	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component 8	ecogpt_lang8			LANG8	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component 9	ecogpt_lang9			LANG9	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 1	ecogpt_visspat1			VISSPAT1	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 2	ecogpt_visspat2			VISSPAT2	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 3	ecogpt_visspat3			VISSPAT3	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 4	ecogpt_visspat4			VISSPAT4	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 6	ecogpt_visspat6			VISSPAT6	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 7	ecogpt_visspat7			VISSPAT7	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Visuospatial Abilities component 8	ecogpt_visspat8			VISSPAT8	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Planning component 1	ecogpt_plan1			PLAN1	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Planning component 2	ecogpt_plan2			PLAN2	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Planning component 3	ecogpt_plan3			PLAN3	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Planning component 4	ecogpt_plan4			PLAN4	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Planning component 5	ecogpt_plan5			PLAN5	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Organization component 1	ecogpt_organ1			ORGAN1	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Organization component 2	ecogpt_organ2			ORGAN2	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Organization component 3	ecogpt_organ3			ORGAN3	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Organization component 4	ecogpt_organ4			ORGAN4	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Organization component 5	ecogpt_organ5			ORGAN5	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Organization component 6	ecogpt_organ6			ORGAN6	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Divided attention component 1	ecogpt_divatt1			DIVATT1	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Divided attention component 2	ecogpt_divatt2			DIVATT2	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Divided attention component 3	ecogpt_divatt3			DIVATT3	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Divided attention component 4	ecogpt_divatt4			DIVATT4	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Staff assistance	ecogpt_staffasst			STAFFASST	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Validity of the information collected	ecogpt_validity			VALIDITY	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Information Source	ecogpt_source			SOURCE	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Divided attention component	ecogpt_ecogptdivatt			EcogPtDivatt	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Language component	ecogpt_ecogptlang			EcogPtLang	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Memory component	ecogpt_ecogptmem			EcogPtMem	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Organization component	ecogpt_ecogptorgan			EcogPtOrgan	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Planning component	ecogpt_ecogptplan			EcogPtPlan	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Visuospatial Abilities component	ecogpt_ecogptvisspat			EcogPtVisspat	ECOGPT.csv
+Everyday Cognition (Participant Self Report) - Total	ecogpt_ecogpttotal			EcogPtTotal	ECOGPT.csv
+					
+Everyday Cognition (Study Partner Report) - Concern	ecogsp_concern			CONCERN	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component 1	ecogsp_memory1			MEMORY1	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component 2	ecogsp_memory2			MEMORY2	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component 3	ecogsp_memory3			MEMORY3	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component 4	ecogsp_memory4			MEMORY4	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component 5	ecogsp_memory5			MEMORY5	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component 6	ecogsp_memory6			MEMORY6	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component 7	ecogsp_memory7			MEMORY7	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component 8	ecogsp_memory8			MEMORY8	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component 1	ecogsp_lang1			LANG1	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component 2	ecogsp_lang2			LANG2	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component 3	ecogsp_lang3			LANG3	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component 4	ecogsp_lang4			LANG4	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component 5	ecogsp_lang5			LANG5	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component 6	ecogsp_lang6			LANG6	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component 7	ecogsp_lang7			LANG7	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component 8	ecogsp_lang8			LANG8	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component 9	ecogsp_lang9			LANG9	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 1	ecogsp_visspat1			VISSPAT1	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 2	ecogsp_visspat2			VISSPAT2	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 3	ecogsp_visspat3			VISSPAT3	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 4	ecogsp_visspat4			VISSPAT4	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 6	ecogsp_visspat6			VISSPAT6	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 7	ecogsp_visspat7			VISSPAT7	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Visuospatial Abilities component 8	ecogsp_visspat8			VISSPAT8	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Planning component 1	ecogsp_plan1			PLAN1	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Planning component 2	ecogsp_plan2			PLAN2	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Planning component 3	ecogsp_plan3			PLAN3	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Planning component 4	ecogsp_plan4			PLAN4	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Planning component 5	ecogsp_plan5			PLAN5	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Organization component 1	ecogsp_organ1			ORGAN1	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Organization component 2	ecogsp_organ2			ORGAN2	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Organization component 3	ecogsp_organ3			ORGAN3	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Organization component 4	ecogsp_organ4			ORGAN4	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Organization component 5	ecogsp_organ5			ORGAN5	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Organization component 6	ecogsp_organ6			ORGAN6	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Divided attention component 1	ecogsp_divatt1			DIVATT1	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Divided attention component 2	ecogsp_divatt2			DIVATT2	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Divided attention component 3	ecogsp_divatt3			DIVATT3	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Divided attention component 4	ecogsp_divatt4			DIVATT4	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Staff assistance	ecogsp_staffasst			STAFFASST	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Validity of the information collected	ecogsp_validity			VALIDITY	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Information Source	ecogsp_source			SOURCE	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Divided attention component	ecogsp_ecogptdivatt			EcogSPDivatt	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Language component	ecogsp_ecogptlang			EcogSPLang	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Memory component	ecogsp_ecogptmem			EcogSPMem	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Organization component	ecogsp_ecogptorgan			EcogSPOrgan	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Planning component	ecogsp_ecogptplan			EcogSPPlan	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Visuospatial Abilities component	ecogsp_ecogptvisspat			EcogSPVisspat	ECOGSP.csv
+Everyday Cognition (Study Partner Report) - Total	ecogsp_ecogpttotal			EcogSPTotal	ECOGSP.csv
+					
+Financial Capacity Instrument Short Form - Mental Calculation Score (Items 1-2)	fci_mc_score			MC_SCORE	FCI.csv
+Financial Capacity Instrument Short Form - Fincial Conceptual Knowledge Score (Items 3-6)	fci_fc_score			FC_SCORE	FCI.csv
+Financial Capacity Instrument Short Form - Single/Checkbook Register Score (Items 7-16)	fci_snglchkscore			SNGLCHKSCORE	FCI.csv
+Financial Capacity Instrument Short Form - Complex Checkbook/Register Score (Items 17-30)	fci_complxchkscore			COMPLXCHKSCORE	FCI.csv
+Financial Capacity Instrument Short Form - Checkbook/Register Composite Time (Items Jul-16 & 17-30):	fci_chkcompostime			CHKCOMPOSTIME	FCI.csv
+Financial Capacity Instrument Short Form - Combined Checkbook/Register Score (Items Jul-16 + 17-30 )	fci_chkcomposscore			CHKCOMPOSSCORE	FCI.csv
+Financial Capacity Instrument Short Form - Bank Statement Magement Score (Items 31-37)	fci_bankstatscore			BANKSTATSCORE	FCI.csv
+Financial Capacity Instrument Short Form -  Total Composite Time (Items 4, 5, 7-16, 17-30)	fci_totcomptime			TOTCOMPTIME	FCI.csv
+Financial Capacity Instrument Short Form - Total score	fci_fciscore			FCISCORE	FCI.csv
+Financial Capacity Instrument Short Form - Was assessment/procedure done?	fci_done			DONE	FCI.csv
+Financial Capacity Instrument Short Form - If No, reason not done	fci_ndreason			NDREASON	FCI.csv
+Financial Capacity Instrument Short Form - 1 Nickels	fci_nickels			NICKELS	FCI.csv
+Financial Capacity Instrument Short Form - 2 Quarters	fci_quarters			QUARTERS	FCI.csv
+Financial Capacity Instrument Short Form - 3 Budget	fci_budget			BUDGET	FCI.csv
+Financial Capacity Instrument Short Form - Experience with Medical Insurance Plan?	fci_expmedins			EXPMEDINS	FCI.csv
+Financial Capacity Instrument Short Form - 4 Health Care Insurance Problem	fci_insurance			INSURANCE	FCI.csv
+Financial Capacity Instrument Short Form - Time to complete Item 4	fci_medinstime			MEDINSTIME	FCI.csv
+Financial Capacity Instrument Short Form - Experience with Income Taxes?	fci_expinctax			EXPINCTAX	FCI.csv
+Financial Capacity Instrument Short Form - 5 a. Tax Credit	fci_taxcreda			TAXCREDA	FCI.csv
+Financial Capacity Instrument Short Form - Time to complete Item 5.a.	fci_ques5time			QUES5TIME	FCI.csv
+Financial Capacity Instrument Short Form - 5 b. Tax Credit	fci_taxcredb			TAXCREDB	FCI.csv
+Financial Capacity Instrument Short Form - Experience with Checkbook/Check Register?	fci_expcheckreg			EXPCHECKREG	FCI.csv
+Financial Capacity Instrument Short Form - 6 Payee	fci_payee			PAYEE	FCI.csv
+Financial Capacity Instrument Short Form - 7 Payee section	fci_snglchk7			SNGLCHK7	FCI.csv
+Financial Capacity Instrument Short Form - 8 $ amount section (numerical)	fci_snglchk8			SNGLCHK8	FCI.csv
+Financial Capacity Instrument Short Form - 9 $ amount section (written)	fci_snglchk9			SNGLCHK9	FCI.csv
+Financial Capacity Instrument Short Form - 10 Sigture of payer	fci_snglchk10			SNGLCHK10	FCI.csv
+Financial Capacity Instrument Short Form - 11 Date properly written	fci_snglchk11			SNGLCHK11	FCI.csv
+Financial Capacity Instrument Short Form - 12 Number of check	fci_snglchk12			SNGLCHK12	FCI.csv
+Financial Capacity Instrument Short Form - 13 Date properly entered	fci_snglchk13			SNGLCHK13	FCI.csv
+Financial Capacity Instrument Short Form - 14 Payee section	fci_snglchk14			SNGLCHK14	FCI.csv
+Financial Capacity Instrument Short Form - 15 Amount of check	fci_snglchk15			SNGLCHK15	FCI.csv
+Financial Capacity Instrument Short Form - 16 New account balance	fci_snglchk16			SNGLCHK16	FCI.csv
+Financial Capacity Instrument Short Form - Time to complete items 7-16	fci_snglchktime			SNGLCHKTIME	FCI.csv
+Financial Capacity Instrument Short Form - 17 Number of check	fci_complxchk17			COMPLXCHK17	FCI.csv
+Financial Capacity Instrument Short Form - 18 Date properly entered	fci_complxchk18			COMPLXCHK18	FCI.csv
+Financial Capacity Instrument Short Form - 19 Payee section	fci_complxchk19			COMPLXCHK19	FCI.csv
+Financial Capacity Instrument Short Form - 20 Amount of check	fci_complxchk20			COMPLXCHK20	FCI.csv
+Financial Capacity Instrument Short Form - 21 New Account Balance	fci_complxchk21			COMPLXCHK21	FCI.csv
+Financial Capacity Instrument Short Form - 22 Number of check	fci_complxchk22			COMPLXCHK22	FCI.csv
+Financial Capacity Instrument Short Form - 23 Date properly entered	fci_complxchk23			COMPLXCHK23	FCI.csv
+Financial Capacity Instrument Short Form - 24 Payee section	fci_complxchk24			COMPLXCHK24	FCI.csv
+Financial Capacity Instrument Short Form - 25 Amount of check	fci_complxchk25			COMPLXCHK25	FCI.csv
+Financial Capacity Instrument Short Form - 26 New Account Balance	fci_complxchk26			COMPLXCHK26	FCI.csv
+Financial Capacity Instrument Short Form - 27 Date properly entered	fci_complxchk27			COMPLXCHK27	FCI.csv
+Financial Capacity Instrument Short Form - 28 Description of Transaction	fci_complxchk28			COMPLXCHK28	FCI.csv
+Financial Capacity Instrument Short Form - 29 Amount of deposit	fci_complxchk29			COMPLXCHK29	FCI.csv
+Financial Capacity Instrument Short Form - 30 New account balance	fci_complxchk30			COMPLXCHK30	FCI.csv
+Financial Capacity Instrument Short Form - Time to complete Items 17-30	fci_complxchktime			COMPLXCHKTIME	FCI.csv
+Financial Capacity Instrument Short Form - 31 a. Bank Statement	fci_bankstata			BANKSTATA	FCI.csv
+Financial Capacity Instrument Short Form - 31 b. Bank Statement	fci_bankstatb			BANKSTATB	FCI.csv
+Financial Capacity Instrument Short Form - Experience with Bank Statement?	fci_expbankstate			EXPBANKSTATE	FCI.csv
+Financial Capacity Instrument Short Form - 32 Interest Rate	fci_bankstat32			BANKSTAT32	FCI.csv
+Financial Capacity Instrument Short Form - 33 Time Period	fci_bankstat33			BANKSTAT33	FCI.csv
+Financial Capacity Instrument Short Form - 34 Checks Cleared	fci_bankstat34			BANKSTAT34	FCI.csv
+Financial Capacity Instrument Short Form - 35 Quarterly Interest	fci_bankstat35			BANKSTAT35	FCI.csv
+Financial Capacity Instrument Short Form - 36 Gaps in Check Sequence	fci_bankstat36			BANKSTAT36	FCI.csv
+Financial Capacity Instrument Short Form - 37 Date of the Withdrawal Payment	fci_bankstat37			BANKSTAT37	FCI.csv
+					
+Geriatric Depression Scale - Information Source	gdscale_gdsource			GDSOURCE	GDSCALE.csv
+Geriatric Depression Scale - Check here if:	gdscale_gdunabl			GDUNABL	GDSCALE.csv
+Geriatric Depression Scale - If unable, explain:	gdscale_gdunabsp			GDUNABSP	GDSCALE.csv
+Geriatric Depression Scale - 1. Are you basically satisfied with your life?	gdscale_gdsatis			GDSATIS	GDSCALE.csv
+Geriatric Depression Scale - 2. Have you dropped many of your activities and interests?	gdscale_gddrop			GDDROP	GDSCALE.csv
+Geriatric Depression Scale - 3. Do you feel that your life is empty?	gdscale_gdempty			GDEMPTY	GDSCALE.csv
+Geriatric Depression Scale - 4. Do you often get bored?	gdscale_gdbored			GDBORED	GDSCALE.csv
+Geriatric Depression Scale - 5. Are you in good spirits most of the time?	gdscale_gdspirit			GDSPIRIT	GDSCALE.csv
+Geriatric Depression Scale - 6. Are you afraid that something bad is going to happen to you?	gdscale_gdafraid			GDAFRAID	GDSCALE.csv
+Geriatric Depression Scale - 7. Do you feel happy most of the time?	gdscale_gdhappy			GDHAPPY	GDSCALE.csv
+Geriatric Depression Scale - 8. Do you often feel helpless?	gdscale_gdhelp			GDHELP	GDSCALE.csv
+Geriatric Depression Scale - 9. Do you prefer to stay at home, rather than going out and doing new things?	gdscale_gdhome			GDHOME	GDSCALE.csv
+Geriatric Depression Scale - 10. Do you feel you have more problems with memory than most?	gdscale_gdmemory			GDMEMORY	GDSCALE.csv
+Geriatric Depression Scale - 11. Do you think its wonderful to be alive now?	gdscale_gdalive			GDALIVE	GDSCALE.csv
+Geriatric Depression Scale - 12. Do you feel pretty worthless the way you are now?	gdscale_gdworth			GDWORTH	GDSCALE.csv
+Geriatric Depression Scale - 13. Do you feel full of energy?	gdscale_gdenergy			GDENERGY	GDSCALE.csv
+Geriatric Depression Scale - 14. Do you feel that your situation is hopeless?	gdscale_gdhope			GDHOPE	GDSCALE.csv
+Geriatric Depression Scale - 15. Do you think that most people are better off than you are?	gdscale_gdbetter			GDBETTER	GDSCALE.csv
+Geriatric Depression Scale - Total Score	gdscale_gdtotal			GDTOTAL	GDSCALE.csv
+					
+Modified Hachinski - 1. Abrupt Onset of Dementia	modhach_hmonset			HMONSET	MODHACH.csv
+Modified Hachinski - 2. Stepwise Deterioration of Dementia	modhach_hmstepws			HMSTEPWS	MODHACH.csv
+Modified Hachinski - 3. Somatic Complaints	modhach_hmsomatc			HMSOMATC	MODHACH.csv
+Modified Hachinski - 4. Emotional Incontinence	modhach_hmemotio			HMEMOTIO	MODHACH.csv
+Modified Hachinski - 5. History of Hypertension	modhach_hmhypert			HMHYPERT	MODHACH.csv
+Modified Hachinski - 6. History of Stroke	modhach_hmstroke			HMSTROKE	MODHACH.csv
+Modified Hachinski - 7. Focal Neurologic Symptoms	modhach_hmneursm			HMNEURSM	MODHACH.csv
+Modified Hachinski - 8. Focal Neurologic Signs	modhach_hmneursg			HMNEURSG	MODHACH.csv
+Modified Hachinski - Total score	modhach_hmscore			HMSCORE	MODHACH.csv
+					
+Montreal Cognitive Assessment - Trails	moca_trails			TRAILS	MOCA.csv
+Montreal Cognitive Assessment - Copy Cube	moca_cube			CUBE	MOCA.csv
+Montreal Cognitive Assessment - Draw Clock - Contour	moca_clockcon			CLOCKCON	MOCA.csv
+Montreal Cognitive Assessment - Draw Clock - Number	moca_clockno			CLOCKNO	MOCA.csv
+Montreal Cognitive Assessment - Draw Clock - Hands	moca_clockhan			CLOCKHAN	MOCA.csv
+Montreal Cognitive Assessment - Lion	moca_lion			LION	MOCA.csv
+Montreal Cognitive Assessment - Rhinoceros	moca_rhino			RHINO	MOCA.csv
+Montreal Cognitive Assessment - Camel	moca_camel			CAMEL	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#1): Face	moca_immt1w1			IMMT1W1	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#1): Velvet	moca_immt1w2			IMMT1W2	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#1): Church	moca_immt1w3			IMMT1W3	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#1): Daisy	moca_immt1w4			IMMT1W4	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#1): Red	moca_immt1w5			IMMT1W5	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#2): Face	moca_immt2w1			IMMT2W1	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#2): Velvet	moca_immt2w2			IMMT2W2	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#2): Church	moca_immt2w3			IMMT2W3	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#2): Daisy	moca_immt2w4			IMMT2W4	MOCA.csv
+Montreal Cognitive Assessment - Immediate (#2): Red	moca_immt2w5			IMMT2W5	MOCA.csv
+Montreal Cognitive Assessment - Digits Forward	moca_digfor			DIGFOR	MOCA.csv
+Montreal Cognitive Assessment - Digits Backward	moca_digback			DIGBACK	MOCA.csv
+Montreal Cognitive Assessment - List of Letters/Tapping: # Errors	moca_letters			LETTERS	MOCA.csv
+Montreal Cognitive Assessment - Serial 07:00 1st Subtraction	moca_serial1			SERIAL1	MOCA.csv
+Montreal Cognitive Assessment - Serial 07:00 2nd Subtraction	moca_serial2			SERIAL2	MOCA.csv
+Montreal Cognitive Assessment - Serial 07:00 3rd Subtraction	moca_serial3			SERIAL3	MOCA.csv
+Montreal Cognitive Assessment - Serial 07:00 4th Subtraction	moca_serial4			SERIAL4	MOCA.csv
+Montreal Cognitive Assessment - Serial 07:00 5th Subtraction	moca_serial5			SERIAL5	MOCA.csv
+Montreal Cognitive Assessment - Repeat Sentence: I only know that John is the one to help today.	moca_repeat1			REPEAT1	MOCA.csv
+Montreal Cognitive Assessment - Repeat Sentence: The cat always hid under the couch when dogs were in the room.	moca_repeat2			REPEAT2	MOCA.csv
+Montreal Cognitive Assessment - Letter Fluency - F: Total number of correct words	moca_ffluency			FFLUENCY	MOCA.csv
+Montreal Cognitive Assessment - Abstraction: train-bicycle	moca_abstran			ABSTRAN	MOCA.csv
+Montreal Cognitive Assessment - Abstraction: watch-ruler	moca_absmeas			ABSMEAS	MOCA.csv
+Montreal Cognitive Assessment - Delayed: Face	moca_delw1			DELW1	MOCA.csv
+Montreal Cognitive Assessment - Delayed: Velvet	moca_delw2			DELW2	MOCA.csv
+Montreal Cognitive Assessment - Delayed: Church	moca_delw3			DELW3	MOCA.csv
+Montreal Cognitive Assessment - Delayed: Daisy	moca_delw4			DELW4	MOCA.csv
+Montreal Cognitive Assessment - Delayed: Red	moca_delw5			DELW5	MOCA.csv
+Montreal Cognitive Assessment - Date	moca_date			DATE	MOCA.csv
+Montreal Cognitive Assessment - Month	moca_month			MONTH	MOCA.csv
+Montreal Cognitive Assessment - Year	moca_year			YEAR	MOCA.csv
+Montreal Cognitive Assessment - Day	moca_day			DAY	MOCA.csv
+Montreal Cognitive Assessment - Place	moca_place			PLACE	MOCA.csv
+Montreal Cognitive Assessment - City	moca_city			CITY	MOCA.csv
+Montreal Cognitive Assessment - MoCA	moca_moca			MOCA	MOCA.csv
+					
+Neuropsychiatric Inventory - A. Delusions	npi_npia			NPIA	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} believe that he/she is in danger - that others are planning to hurt him/her?	npi_npia1			NPIA1	NPI.csv
+Neuropsychiatric Inventory - 10a. Frequency Ratings	npi_npia10a			NPIA10A	NPI.csv
+Neuropsychiatric Inventory - 10b. Severity Ratings	npi_npia10b			NPIA10B	NPI.csv
+Neuropsychiatric Inventory - 10c. Caregiver Distress	npi_npia10c			NPIA10C	NPI.csv
+Neuropsychiatric Inventory - 2. Does {P} believe that others are stealing from him/her?	npi_npia2			NPIA2	NPI.csv
+Neuropsychiatric Inventory - 3. Does {P} believe that his/her spouse is having an affair?	npi_npia3			NPIA3	NPI.csv
+Neuropsychiatric Inventory - 4. Does {P} believe that unwelcome guests are living in his/her house?	npi_npia4			NPIA4	NPI.csv
+Neuropsychiatric Inventory - 5. Does {P} believe that his/her spouse or others are not who they claim to be?	npi_npia5			NPIA5	NPI.csv
+Neuropsychiatric Inventory - 6. Does {P} believe that his/her house is not his/her home?	npi_npia6			NPIA6	NPI.csv
+Neuropsychiatric Inventory - 7. Does {P} believe that family members plan to abandon him/her?	npi_npia7			NPIA7	NPI.csv
+Neuropsychiatric Inventory - 8. Does {P} believe that television or magazine figures are actually present in the home?  [Does he/she try to talk to or interact with them?]	npi_npia8			NPIA8	NPI.csv
+Neuropsychiatric Inventory - 9. Does {P} believe any other unusual things that I haven't asked about?	npi_npia9			NPIA9	NPI.csv
+Neuropsychiatric Inventory - A. Delusions: Item score	npi_npiatot			NPIATOT	NPI.csv
+Neuropsychiatric Inventory - B.  Hallucinations	npi_npib			NPIB	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} describe hearing voices or act as if he/she hears voices?	npi_npib1			NPIB1	NPI.csv
+Neuropsychiatric Inventory - 2. Does {P} talk to people who are not there?	npi_npib2			NPIB2	NPI.csv
+Neuropsychiatric Inventory - 3. Does {P} describe seeing things not seen by others or behave as if he/she is seeing things not seen by others (people, animals, lights, etc.)?	npi_npib3			NPIB3	NPI.csv
+Neuropsychiatric Inventory - 4. Does {P} report smelling odors not smelled by others?	npi_npib4			NPIB4	NPI.csv
+Neuropsychiatric Inventory - 5. Does {P} describe feeling things on his/her skin or otherwise appear to be feeling things crawling or touching him/her?	npi_npib5			NPIB5	NPI.csv
+Neuropsychiatric Inventory - 7. Does {P} describe any other unusual sensory experiences?	npi_npib7			NPIB7	NPI.csv
+Neuropsychiatric Inventory - 8a.  Frequency Ratings	npi_npib8a			NPIB8A	NPI.csv
+Neuropsychiatric Inventory - 8b. Severity Ratings	npi_npib8b			NPIB8B	NPI.csv
+Neuropsychiatric Inventory - 8c. Caregiver Distress	npi_npib8c			NPIB8C	NPI.csv
+Neuropsychiatric Inventory - B. Hallucinations: Item score	npi_npibtot			NPIBTOT	NPI.csv
+Neuropsychiatric Inventory - C: Agitation/Aggression	npi_npic			NPIC	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} get upset with those trying to care for him/her or resist activities such as bathing or changing clothes?	npi_npic1			NPIC1	NPI.csv
+Neuropsychiatric Inventory - 2. Is {P} stubborn, having to have things his/her way?	npi_npic2			NPIC2	NPI.csv
+Neuropsychiatric Inventory - 3. Is {P} uncooperative, resistive to help from others?	npi_npic3			NPIC3	NPI.csv
+Neuropsychiatric Inventory - 4. Does {P} have any other behaviors that make him/her hard to handle?	npi_npic4			NPIC4	NPI.csv
+Neuropsychiatric Inventory - 5. Does {P} shout or curse angrily?	npi_npic5			NPIC5	NPI.csv
+Neuropsychiatric Inventory - 6. Does {P} slam doors, kick furniture, throw things?	npi_npic6			NPIC6	NPI.csv
+Neuropsychiatric Inventory - 7. Does {P} attempt to hurt or hit others?	npi_npic7			NPIC7	NPI.csv
+Neuropsychiatric Inventory - 8. Does {P} have any other aggressive or agitated behaviors?	npi_npic8			NPIC8	NPI.csv
+Neuropsychiatric Inventory - 9a. Frequency Ratings	npi_npic9a			NPIC9A	NPI.csv
+Neuropsychiatric Inventory - 9b. Severity Ratings	npi_npic9b			NPIC9B	NPI.csv
+Neuropsychiatric Inventory - 9c. Caregiver Distress	npi_npic9c			NPIC9C	NPI.csv
+Neuropsychiatric Inventory - C. Agitation/Aggression: Item score	npi_npictot			NPICTOT	NPI.csv
+Neuropsychiatric Inventory - D: Depression/Dysphoria	npi_npid			NPID	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} have periods of tearfulness or sobbing that seem to indicate sadness?	npi_npid1			NPID1	NPI.csv
+Neuropsychiatric Inventory - 2. Does {P} say or act as if he/she is sad or low in spirits?	npi_npid2			NPID2	NPI.csv
+Neuropsychiatric Inventory - 3. Does {P} put him/herself down or say that he/she feels like a failure?	npi_npid3			NPID3	NPI.csv
+Neuropsychiatric Inventory - 4. Does {P} say that he/she is a bad person or deserves to be punished?	npi_npid4			NPID4	NPI.csv
+Neuropsychiatric Inventory - 5. Does {P} seem very discouraged or say that he/ she has not future?	npi_npid5			NPID5	NPI.csv
+Neuropsychiatric Inventory - 6. Does {P} say he/she is a burden to the family or that the family would be better off without him/her?	npi_npid6			NPID6	NPI.csv
+Neuropsychiatric Inventory - 7. Does {P} express a wish for death or talk about killing him/herself?	npi_npid7			NPID7	NPI.csv
+Neuropsychiatric Inventory - 8. Does {P} show any other signs of depression or sadness?	npi_npid8			NPID8	NPI.csv
+Neuropsychiatric Inventory - 9a. Frequency Ratings	npi_npid9a			NPID9A	NPI.csv
+Neuropsychiatric Inventory - 9b. Severity Ratings	npi_npid9b			NPID9B	NPI.csv
+Neuropsychiatric Inventory - 9c. Caregiver Distress	npi_npid9c			NPID9C	NPI.csv
+Neuropsychiatric Inventory - D. Depression/Dysphoria: Item score	npi_npidtot			NPIDTOT	NPI.csv
+Neuropsychiatric Inventory - E. Anxiety	npi_npie			NPIE	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} say that he/she is worried about planned events?	npi_npie1			NPIE1	NPI.csv
+Neuropsychiatric Inventory - 2. Does {P} have periods of feeling shaky, unable to relax, or feeling excessively tense?	npi_npie2			NPIE2	NPI.csv
+Neuropsychiatric Inventory - 3. Does {P} have periods of [or complain of] shortness of breath, gasping, or sighing for no apparent reason other than nervousness?	npi_npie3			NPIE3	NPI.csv
+Neuropsychiatric Inventory - 4. Does {P} complain of butterflies in his/her stomach, or of racing or pounding of the heart in association with nervousness? [Symptoms not explained by ill health]?	npi_npie4			NPIE4	NPI.csv
+Neuropsychiatric Inventory - 5. Does {P} avoid certain places or situations that make him.her more nervous such as riding in the car, meeting with friends, or being in crowds?	npi_npie5			NPIE5	NPI.csv
+Neuropsychiatric Inventory - 6. Does {P} become nervous or upset when separated from you [or his/her caregiver]? [Does he/she cling to you to keep from being separated?]	npi_npie6			NPIE6	NPI.csv
+Neuropsychiatric Inventory - 7. Does {P} show any other signs of anxiety?	npi_npie7			NPIE7	NPI.csv
+Neuropsychiatric Inventory - 8a. Frequency Ratings	npi_npie8a			NPIE8A	NPI.csv
+Neuropsychiatric Inventory - 8b. Severity Ratings	npi_npie8b			NPIE8B	NPI.csv
+Neuropsychiatric Inventory - 8c. Caregiver Distress	npi_npie8c			NPIE8C	NPI.csv
+Neuropsychiatric Inventory - F. Elation/Euphoria	npi_npif			NPIF	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} appear to feel too good or too happy, different from his/her usual self?	npi_npif1			NPIF1	NPI.csv
+Neuropsychiatric Inventory - 2. Does {P} find humor and laugh at things that others do not find funny?	npi_npif2			NPIF2	NPI.csv
+Neuropsychiatric Inventory - 3. Does {P} seem to have a childish sense of humor with a tendency to giggle or laugh inappropriately (such as when something unfortunate happens to others)?	npi_npif3			NPIF3	NPI.csv
+Neuropsychiatric Inventory - 4. Does {P} tell jokes or make remarks that have little humor for others but seem funny to him/her?	npi_npif4			NPIF4	NPI.csv
+Neuropsychiatric Inventory - 5. Does he/she play childish pranks such as pinching or playing 'keep away' for the fun of it?	npi_npif5			NPIF5	NPI.csv
+Neuropsychiatric Inventory - 6. Does {P} 'talk big' or claim to have more abilities or wealth than is true?	npi_npif6			NPIF6	NPI.csv
+Neuropsychiatric Inventory - 7. Does {P} show any other signs of feeling too good or being too happy?	npi_npif7			NPIF7	NPI.csv
+Neuropsychiatric Inventory - 8a. Frequency Ratings	npi_npif8a			NPIF8A	NPI.csv
+Neuropsychiatric Inventory - 8b. Severity Ratings	npi_npif8b			NPIF8B	NPI.csv
+Neuropsychiatric Inventory - G. Apathy/Indifference	npi_npig			NPIG	NPI.csv
+Neuropsychiatric Inventory - 3. Is {P} less affectionate or lacking in emotions when compared to his/her usual self?	npi_npig3			NPIG3	NPI.csv
+Neuropsychiatric Inventory - 4. Does {P} contribute less to household chores?	npi_npig4			NPIG4	NPI.csv
+Neuropsychiatric Inventory - 5. Does {P} seem less interested in the activities and plans of others?	npi_npig5			NPIG5	NPI.csv
+Neuropsychiatric Inventory - 7. Is {P} less enthusiastic about his/her usual interests?	npi_npig7			NPIG7	NPI.csv
+Neuropsychiatric Inventory - 9a. Frequency Ratings	npi_npig9a			NPIG9A	NPI.csv
+Neuropsychiatric Inventory - 9b. Severity Ratings	npi_npig9b			NPIG9B	NPI.csv
+Neuropsychiatric Inventory - 9c. Caregiver Distress	npi_npig9c			NPIG9C	NPI.csv
+Neuropsychiatric Inventory - G. Apathy/Indifference: Item score	npi_npigtot			NPIGTOT	NPI.csv
+Neuropsychiatric Inventory - H. Disinhibition	npi_npih			NPIH	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} act impulsively without appearing to consider the consequences?	npi_npih1			NPIH1	NPI.csv
+Neuropsychiatric Inventory - 3. Does {P} say things to people that are insensitive or hurt their feelings?	npi_npih3			NPIH3	NPI.csv
+Neuropsychiatric Inventory - 6. Does {P} take liberties or touch or hug others in a way that is out of character for him/her?	npi_npih6			NPIH6	NPI.csv
+Neuropsychiatric Inventory - 8a. Frequency Ratings	npi_npih8a			NPIH8A	NPI.csv
+Neuropsychiatric Inventory - 8c. Caregiver Distress	npi_npih8c			NPIH8C	NPI.csv
+Neuropsychiatric Inventory - I. Irritability/Lability	npi_npii			NPII	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} have a bad temper, flying 'off the handle' easily over little things?	npi_npii1			NPII1	NPI.csv
+Neuropsychiatric Inventory - 2. Does {P} rapidly change moods from one to another, being fine one minute and angry the next?	npi_npii2			NPII2	NPI.csv
+Neuropsychiatric Inventory - 3. Does {P} have sudden flashes of anger?	npi_npii3			NPII3	NPI.csv
+Neuropsychiatric Inventory - 4. Is {P} impatient, having trouble coping with delays or waiting for planned activities?	npi_npii4			NPII4	NPI.csv
+Neuropsychiatric Inventory - 5. Is {P} cranky and irritable?	npi_npii5			NPII5	NPI.csv
+Neuropsychiatric Inventory - 6. Is {P} argumentative and difficult to get along with?	npi_npii6			NPII6	NPI.csv
+Neuropsychiatric Inventory - 7. Does {P} show any other signs of irritability?	npi_npii7			NPII7	NPI.csv
+Neuropsychiatric Inventory - 8a. Frequency Ratings	npi_npii8a			NPII8A	NPI.csv
+Neuropsychiatric Inventory - 8b. Severity Ratings	npi_npii8b			NPII8B	NPI.csv
+Neuropsychiatric Inventory - 8c. Caregiver Distress	npi_npii8c			NPII8C	NPI.csv
+Neuropsychiatric Inventory - I. Irritability/Lability: Item score	npi_npiitot			NPIITOT	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} pace around the house without apparent purpose?	npi_npij1			NPIJ1	NPI.csv
+Neuropsychiatric Inventory - 2. Does {P} rummage around opening and unpacking drawers or closets?	npi_npij2			NPIJ2	NPI.csv
+Neuropsychiatric Inventory - 3. Does {P} repeatedly put on and take off clothing?	npi_npij3			NPIJ3	NPI.csv
+Neuropsychiatric Inventory - 4. Does {P} have repetitive activities or 'habits' that he/she performs over and over?	npi_npij4			NPIJ4	NPI.csv
+Neuropsychiatric Inventory - 5. Does {P} engage in repetitive activities such as handling buttons, picking, wrapping string, etc?	npi_npij5			NPIJ5	NPI.csv
+Neuropsychiatric Inventory - 7. Does {P} do any other activities over and over?	npi_npij7			NPIJ7	NPI.csv
+Neuropsychiatric Inventory - 8a. Frequency Ratings	npi_npij8a			NPIJ8A	NPI.csv
+Neuropsychiatric Inventory - 8b. Severity Ratings	npi_npij8b			NPIJ8B	NPI.csv
+Neuropsychiatric Inventory - 8c. Caregiver Distress	npi_npij8c			NPIJ8C	NPI.csv
+Neuropsychiatric Inventory - J. Aberrant Motor Behavior: Item score	npi_npijtot			NPIJTOT	NPI.csv
+Neuropsychiatric Inventory - 1. Does {P} have difficulty falling asleep?	npi_npik1			NPIK1	NPI.csv
+Neuropsychiatric Inventory - 2. Does {P} get up during the night (do not count if the patient gets up once or twice per night only to go to the bathroom and falls back asleep immediately)?	npi_npik2			NPIK2	NPI.csv
+Neuropsychiatric Inventory - 3. Does {P} wander, pace, or get involved in inappropriate activities at night?	npi_npik3			NPIK3	NPI.csv
+Neuropsychiatric Inventory - 4. Does {P} awaken you during the night?	npi_npik4			NPIK4	NPI.csv
+Neuropsychiatric Inventory - 5. Does {P} awaken at night, dress, and plan to go out thinking that it is morning and time to start the day?	npi_npik5			NPIK5	NPI.csv
+Neuropsychiatric Inventory - 6. Does {P} awaken too early in the morning (earlier than was his/her habit)?	npi_npik6			NPIK6	NPI.csv
+Neuropsychiatric Inventory - 7. Does {P} sleep excessively during the day?	npi_npik7			NPIK7	NPI.csv
+Neuropsychiatric Inventory - 9a. Frequency Ratings	npi_npik9a			NPIK9A	NPI.csv
+Neuropsychiatric Inventory - 9b. Severity Ratings	npi_npik9b			NPIK9B	NPI.csv
+Neuropsychiatric Inventory - 9c. Caregiver Distress	npi_npik9c			NPIK9C	NPI.csv
+Neuropsychiatric Inventory - K. Sleep: Item score	npi_npiktot			NPIKTOT	NPI.csv
+Neuropsychiatric Inventory - L. Appetite and eating disorders:	npi_npil			NPIL	NPI.csv
+Neuropsychiatric Inventory - 2. Has he/she had an increase in appetite?	npi_npil2			NPIL2	NPI.csv
+Neuropsychiatric Inventory - 4. Has he/she gained weight?	npi_npil4			NPIL4	NPI.csv
+Neuropsychiatric Inventory - 5. Has he/she had a change in eating behavior such as putting too much food in his/her mouth at once?	npi_npil5			NPIL5	NPI.csv
+Neuropsychiatric Inventory - 7. Has he/she developed eating behaviors such as eating exactly the same types of food each day or eating the food in exactly the same order?	npi_npil7			NPIL7	NPI.csv
+Neuropsychiatric Inventory - 8. Have there been any other changes in appetite or eating that I haven't asked about?	npi_npil8			NPIL8	NPI.csv
+Neuropsychiatric Inventory - 9a. Frequency Ratings	npi_npil9a			NPIL9A	NPI.csv
+Neuropsychiatric Inventory - 9b. Severity Ratings	npi_npil9b			NPIL9B	NPI.csv
+Neuropsychiatric Inventory - L. Appetite and eating disorders: Item score	npi_npiltot			NPILTOT	NPI.csv
+Neuropsychiatric Inventory - NPI Total Score	npi_npitotal			NPITOTAL	NPI.csv
+					
+Neuropsychiatric Inventory Q - Information Source	npiq_npisource			NPISOURCE	NPIQ.csv
+Neuropsychiatric Inventory Q - Does P believe that others are stealing from him/her, or planning to harm him/her in some way?	npiq_npia			NPIA	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (A. Delusions)	npiq_npiasev			NPIASEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Does P act as if he/she hears voices? Does he/she talk to people who are not there?	npiq_npib			NPIB	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (B. Hallucinations)	npiq_npibsev			NPIBSEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Is P stubborn and resistive to help from others?	npiq_npic			NPIC	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (C. Agitation/Aggression)	npiq_npicsev			NPICSEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Does P act as if he/she is sad or in low spirits? Does he/she cry?	npiq_npid			NPID	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (D. Depression/Dysphoria)	npiq_npidsev			NPIDSEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Does P become upset when separated from you? Does he/she have any other signs of nervousness, such as shortness of breath, sighing, being unable to relax, or feeling excessively tense?	npiq_npie			NPIE	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (E. Anxiety)	npiq_npiesev			NPIESEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Does P appear to feel too good or act excessively happy?	npiq_npif			NPIF	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (F. Elation/Euphoria)	npiq_npifsev			NPIFSEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Does P seem less interested in his/her usual activities and in the activities and plans of others?	npiq_npig			NPIG	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (G. Apathy/Indifference)	npiq_npigsev			NPIGSEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Does P seem to act impulsively? For example, does P talk to strangers as if he/she knows them, or does P say things that may hurt people's feelings?	npiq_npih			NPIH	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (H. Disinhibition)	npiq_npihsev			NPIHSEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Is P impatient or cranky? Does he/she have difficulty coping with delays or waiting for planned activities?	npiq_npii			NPII	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (I. Irritability/Lability)	npiq_npiisev			NPIISEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Does P engage in repetitive activities, such as pacing around the house, handling buttons, wrapping strings, or doing other things repeatedly?	npiq_npij			NPIJ	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (J. Aberrant Motor Behavior)	npiq_npijsev			NPIJSEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Does P awaken you during the night, rise too early in the morning, or take excessive naps during the day?	npiq_npik			NPIK	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (K. Sleep)	npiq_npiksev			NPIKSEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Has P lost or gained weight, or had a change in the food he/she likes?	npiq_npil			NPIL	NPIQ.csv
+Neuropsychiatric Inventory Q - Severity Ratings (L. Appetite)	npiq_npilsev			NPILSEV	NPIQ.csv
+Neuropsychiatric Inventory Q - Total score	npiq_npiscore			NPISCORE	NPIQ.csv
+					
+Neuropsychological Battery -  Clock Drawing - 1 Approximately circular face	neurobat_clockcirc			CLOCKCIRC	NEUROBAT.csv
+Neuropsychological Battery - Clock Drawing - 2 Symmetry of number placement	neurobat_clocksym			CLOCKSYM	NEUROBAT.csv
+Neuropsychological Battery - Clock Drawing - 3 Correctness of numbers	neurobat_clocknum			CLOCKNUM	NEUROBAT.csv
+Neuropsychological Battery - Clock Drawing - 4 Presence of the two hands	neurobat_clockhand			CLOCKHAND	NEUROBAT.csv
+Neuropsychological Battery - Clock Drawing - 5 Presence of the two hands, set to ten after eleven	neurobat_clocktime			CLOCKTIME	NEUROBAT.csv
+Neuropsychological Battery - Clock Drawing - Total Score	neurobat_clockscor			CLOCKSCOR	NEUROBAT.csv
+Neuropsychological Battery - Clock Copying - 1 Approximately circular face	neurobat_copycirc			COPYCIRC	NEUROBAT.csv
+Neuropsychological Battery - Clock Copying - 2 Symmetry of number placement	neurobat_copysym			COPYSYM	NEUROBAT.csv
+Neuropsychological Battery - Clock Copying - 3 Correctness of numbers	neurobat_copynum			COPYNUM	NEUROBAT.csv
+Neuropsychological Battery - Clock Copying - 4 Presence of the two hands	neurobat_copyhand			COPYHAND	NEUROBAT.csv
+Neuropsychological Battery - Clock Copying - 5 Presence of the two hands, set to ten after eleven	neurobat_copytime			COPYTIME	NEUROBAT.csv
+Neuropsychological Battery - Clock Copying - Total Score	neurobat_copyscor			COPYSCOR	NEUROBAT.csv
+Neuropsychological Battery - Logical Memory - Immediate Recall - Which story was used?	neurobat_lmstory			LMSTORY	NEUROBAT.csv
+Neuropsychological Battery - Logical Memory - Immediate Recall - Total Number of Story Units Recalled	neurobat_limmtotal			LIMMTOTAL	NEUROBAT.csv
+Neuropsychological Battery - Logical Memory - Immediate Recall - Time Ended (24-hour clock)	neurobat_limmend			LIMMEND	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Trial 1 Total	neurobat_avtot1			AVTOT1	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Total Intrusions	neurobat_averr1			AVERR1	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Trial 2 Total	neurobat_avtot2			AVTOT2	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Total Intrusions	neurobat_averr2			AVERR2	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Trial 3 Total	neurobat_avtot3			AVTOT3	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Total Intrusions	neurobat_averr3			AVERR3	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Trial 4 Total	neurobat_avtot4			AVTOT4	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Total Intrusions	neurobat_averr4			AVERR4	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Trial 5 Total	neurobat_avtot5			AVTOT5	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Total Intrusions	neurobat_averr5			AVERR5	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Trial 6 Total	neurobat_avtot6			AVTOT6	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Total Intrusions	neurobat_averr6			AVERR6	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - List B Total	neurobat_avtotb			AVTOTB	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Total Intrusions	neurobat_averrb			AVERRB	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Time Trial B Ended	neurobat_avended			AVENDED	NEUROBAT.csv
+Neuropsychological Battery - Digit Span - Forward: Total Correct	neurobat_dspanfor			DSPANFOR	NEUROBAT.csv
+Neuropsychological Battery - Digit Span - Forward: Length	neurobat_dspanflth			DSPANFLTH	NEUROBAT.csv
+Neuropsychological Battery - Digit Span - Backward: Total Correct	neurobat_dspanbac			DSPANBAC	NEUROBAT.csv
+Neuropsychological Battery - Digit Span - Backward: Length	neurobat_dspanblth			DSPANBLTH	NEUROBAT.csv
+Neuropsychological Battery - Category Fluency (Animals) - Total Correct	neurobat_catanimsc			CATANIMSC	NEUROBAT.csv
+Neuropsychological Battery - Category Fluency (Animals) - Perseverations	neurobat_catanpers			CATANPERS	NEUROBAT.csv
+Neuropsychological Battery - Category Fluency (Animals) - Intrusions	neurobat_catanintr			CATANINTR	NEUROBAT.csv
+Neuropsychological Battery - Category Fluency (Vegetables) - Total Correct	neurobat_catvegesc			CATVEGESC	NEUROBAT.csv
+Neuropsychological Battery - Category Fluency (Vegetables) - Perseverations	neurobat_catvgpers			CATVGPERS	NEUROBAT.csv
+Neuropsychological Battery - Category Fluency (Vegetables) - Intrusions	neurobat_catvgintr			CATVGINTR	NEUROBAT.csv
+Neuropsychological Battery - Trail Making Test - Part A - Time to Complete	neurobat_traascor			TRAASCOR	NEUROBAT.csv
+Neuropsychological Battery - Trail Making Test - Errors of Commission	neurobat_traaerrcom			TRAAERRCOM	NEUROBAT.csv
+Neuropsychological Battery - Trail Making Test - Errors of Omission	neurobat_traaerrom			TRAAERROM	NEUROBAT.csv
+Neuropsychological Battery - Trail Making Test - Part B - Time to complete	neurobat_trabscor			TRABSCOR	NEUROBAT.csv
+Neuropsychological Battery - Trail Making Test - Errors of Commission	neurobat_traberrcom			TRABERRCOM	NEUROBAT.csv
+Neuropsychological Battery - Trail Making Test - Errors of Omission	neurobat_traberrom			TRABERROM	NEUROBAT.csv
+Neuropsychological Battery - Digit Score - Total Correct	neurobat_digitscor			DIGITSCOR	NEUROBAT.csv
+Neuropsychological Battery - Logical Memory - Delayed Recall - Time Began (24-hour clock)	neurobat_ldelbegin			LDELBEGIN	NEUROBAT.csv
+Neuropsychological Battery - Logical Memory - Delayed Recall - Total Number of Story Units Recalled	neurobat_ldeltotal			LDELTOTAL	NEUROBAT.csv
+Neuropsychological Battery - Logical Memory - Delayed Recall - Cue used?	neurobat_ldelcue			LDELCUE	NEUROBAT.csv
+Neuropsychological Battery - Boston Naming Test - Check here if:	neurobat_bntnd			BNTND	NEUROBAT.csv
+Neuropsychological Battery - Boston Naming Test - 1 Number of spontaneously given correct responses	neurobat_bntspont			BNTSPONT	NEUROBAT.csv
+Neuropsychological Battery - Boston Naming Test - 2 Number of semantic cues given	neurobat_bntstim			BNTSTIM	NEUROBAT.csv
+Neuropsychological Battery - Boston Naming Test - 3 Number of correct responses following a semantic cue	neurobat_bntcstim			BNTCSTIM	NEUROBAT.csv
+Neuropsychological Battery - Boston Naming Test - 4 Number of phonemic cues given	neurobat_bntphon			BNTPHON	NEUROBAT.csv
+Neuropsychological Battery - Boston Naming Test - 5 Number of correct responses following a phonemic cue	neurobat_bntcphon			BNTCPHON	NEUROBAT.csv
+Neuropsychological Battery - Boston Naming Test - Total Number Correct (1+3)	neurobat_bnttotal			BNTTOTAL	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Delayed - Time Began (24-hour clock)	neurobat_avdelbegan			AVDELBEGAN	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Delayed - 30 Minute Delay Total	neurobat_avdel30min			AVDEL30MIN	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Delayed - Total Intrusions	neurobat_avdelerr1			AVDELERR1	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Delayed - Recognition Score	neurobat_avdeltot			AVDELTOT	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Delayed - Recognition Errors	neurobat_avdelerr2			AVDELERR2	NEUROBAT.csv
+Neuropsychological Battery - American National Adult Reading Test - Check here if:	neurobat_anartnd			ANARTND	NEUROBAT.csv
+Neuropsychological Battery - American National Adult Reading Test - Total score (total # of errors)	neurobat_anarterr			ANARTERR	NEUROBAT.csv
+Neuropsychological Battery - Multilingual Naming Test - Total Correct - with Semantic Cue	neurobat_mintsemcue			MINTSEMCUE	NEUROBAT.csv
+Neuropsychological Battery - Multilingual Naming Test - Total Correct (Uncued + Correct with Semantic cue)	neurobat_minttotal			MINTTOTAL	NEUROBAT.csv
+Neuropsychological Battery - Multilingual Naming Test - Total Uncued Correct	neurobat_mintuncued			MINTUNCUED	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Forgetting (trial 5 - delayed)	neurobat_ravlt_forgetting			RAVLT_forgetting	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Immediate (sum of 5 trials)	neurobat_ravlt_immediate			RAVLT_immediate	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Learning (trial 5 - trial 1)	neurobat_ravlt_learning			RAVLT_learning	NEUROBAT.csv
+Neuropsychological Battery - Rey Auditory Verbal Learning Test - Percent Forgetting	neurobat_ravlt_perc_forgetting			RAVLT_perc_forgetting	NEUROBAT.csv
+					
+Brain Health Registry - Everyday Cognition - Latest	bhr_everyday_cognition_latest			latest	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID49_1	bhr_everyday_cognition_qid49_1			QID49_1	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID49_2	bhr_everyday_cognition_qid49_2			QID49_2	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID49_3	bhr_everyday_cognition_qid49_3			QID49_3	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID49_4	bhr_everyday_cognition_qid49_4			QID49_4	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID49_5	bhr_everyday_cognition_qid49_5			QID49_5	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID49_6	bhr_everyday_cognition_qid49_6			QID49_6	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID49_7	bhr_everyday_cognition_qid49_7			QID49_7	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID49_8	bhr_everyday_cognition_qid49_8			QID49_8	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID50_1	bhr_everyday_cognition_qid50_1			QID50_1	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID50_2	bhr_everyday_cognition_qid50_2			QID50_2	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID50_3	bhr_everyday_cognition_qid50_3			QID50_3	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID50_4	bhr_everyday_cognition_qid50_4			QID50_4	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID50_5	bhr_everyday_cognition_qid50_5			QID50_5	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID50_6	bhr_everyday_cognition_qid50_6			QID50_6	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID50_7	bhr_everyday_cognition_qid50_7			QID50_7	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID50_8	bhr_everyday_cognition_qid50_8			QID50_8	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID50_9	bhr_everyday_cognition_qid50_9			QID50_9	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID51_1	bhr_everyday_cognition_qid51_1			QID51_1	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID51_2	bhr_everyday_cognition_qid51_2			QID51_2	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID51_3	bhr_everyday_cognition_qid51_3			QID51_3	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID51_4	bhr_everyday_cognition_qid51_4			QID51_4	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID51_5	bhr_everyday_cognition_qid51_5			QID51_5	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID51_6	bhr_everyday_cognition_qid51_6			QID51_6	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID51_7	bhr_everyday_cognition_qid51_7			QID51_7	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID52_1	bhr_everyday_cognition_qid52_1			QID52_1	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID52_2	bhr_everyday_cognition_qid52_2			QID52_2	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID52_3	bhr_everyday_cognition_qid52_3			QID52_3	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID52_4	bhr_everyday_cognition_qid52_4			QID52_4	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID52_5	bhr_everyday_cognition_qid52_5			QID52_5	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID53_1	bhr_everyday_cognition_qid53_1			QID53_1	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID53_2	bhr_everyday_cognition_qid53_2			QID53_2	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID53_3	bhr_everyday_cognition_qid53_3			QID53_3	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID53_4	bhr_everyday_cognition_qid53_4			QID53_4	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID53_5	bhr_everyday_cognition_qid53_5			QID53_5	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID53_6	bhr_everyday_cognition_qid53_6			QID53_6	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID54_1	bhr_everyday_cognition_qid54_1			QID54_1	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID54_2	bhr_everyday_cognition_qid54_2			QID54_2	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID54_3	bhr_everyday_cognition_qid54_3			QID54_3	BHR_EVERYDAY_COGNITION.csv
+Brain Health Registry - Everyday Cognition - QID54_4	bhr_everyday_cognition_qid54_4			QID54_4	BHR_EVERYDAY_COGNITION.csv
+					
+Brain Health Registry - Baseline Questionnaire - Latest	bhr_baseline_questionnaire_latest			latest	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID49	bhr_baseline_questionnaire_qid49			QID49	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID50	bhr_baseline_questionnaire_qid50			QID50	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID4	bhr_baseline_questionnaire_qid4			QID4	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID2	bhr_baseline_questionnaire_qid2			QID2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID3	bhr_baseline_questionnaire_qid3			QID3	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID5	bhr_baseline_questionnaire_qid5			QID5	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID20	bhr_baseline_questionnaire_qid20			QID20	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID7	bhr_baseline_questionnaire_qid7			QID7	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID8	bhr_baseline_questionnaire_qid8			QID8	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID21	bhr_baseline_questionnaire_qid21			QID21	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID38	bhr_baseline_questionnaire_qid38			QID38	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID22	bhr_baseline_questionnaire_qid22			QID22	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID23_TEXT	bhr_baseline_questionnaire_qid23_text			QID23_TEXT	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID41	bhr_baseline_questionnaire_qid41			QID41	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID42_TEXT	bhr_baseline_questionnaire_qid42_text			QID42_TEXT	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID15_1	bhr_baseline_questionnaire_qid15_1			QID15_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID15_2	bhr_baseline_questionnaire_qid15_2			QID15_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID26_1	bhr_baseline_questionnaire_qid26_1			QID26_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID26_2	bhr_baseline_questionnaire_qid26_2			QID26_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID27_1	bhr_baseline_questionnaire_qid27_1			QID27_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID27_3	bhr_baseline_questionnaire_qid27_3			QID27_3	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_1	bhr_baseline_questionnaire_qid16_1			QID16_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_2	bhr_baseline_questionnaire_qid16_2			QID16_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_3	bhr_baseline_questionnaire_qid16_3			QID16_3	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_4	bhr_baseline_questionnaire_qid16_4			QID16_4	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_5	bhr_baseline_questionnaire_qid16_5			QID16_5	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_6	bhr_baseline_questionnaire_qid16_6			QID16_6	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_7	bhr_baseline_questionnaire_qid16_7			QID16_7	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_8	bhr_baseline_questionnaire_qid16_8			QID16_8	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_9	bhr_baseline_questionnaire_qid16_9			QID16_9	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID16_10	bhr_baseline_questionnaire_qid16_10			QID16_10	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID28_1	bhr_baseline_questionnaire_qid28_1			QID28_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID28_2	bhr_baseline_questionnaire_qid28_2			QID28_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID29_1	bhr_baseline_questionnaire_qid29_1			QID29_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID29_2	bhr_baseline_questionnaire_qid29_2			QID29_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID30_1	bhr_baseline_questionnaire_qid30_1			QID30_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID30_2	bhr_baseline_questionnaire_qid30_2			QID30_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID31_1	bhr_baseline_questionnaire_qid31_1			QID31_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID31_2	bhr_baseline_questionnaire_qid31_2			QID31_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID32_1	bhr_baseline_questionnaire_qid32_1			QID32_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID32_2	bhr_baseline_questionnaire_qid32_2			QID32_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID33_1	bhr_baseline_questionnaire_qid33_1			QID33_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID33_2	bhr_baseline_questionnaire_qid33_2			QID33_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID34_1	bhr_baseline_questionnaire_qid34_1			QID34_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID34_2	bhr_baseline_questionnaire_qid34_2			QID34_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID35_1	bhr_baseline_questionnaire_qid35_1			QID35_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID35_2	bhr_baseline_questionnaire_qid35_2			QID35_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID36_1	bhr_baseline_questionnaire_qid36_1			QID36_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID36_2	bhr_baseline_questionnaire_qid36_2			QID36_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID37_1	bhr_baseline_questionnaire_qid37_1			QID37_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID37_2	bhr_baseline_questionnaire_qid37_2			QID37_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID39_1	bhr_baseline_questionnaire_qid39_1			QID39_1	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID39_2	bhr_baseline_questionnaire_qid39_2			QID39_2	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID39_3	bhr_baseline_questionnaire_qid39_3			QID39_3	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID39_4	bhr_baseline_questionnaire_qid39_4			QID39_4	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID39_5	bhr_baseline_questionnaire_qid39_5			QID39_5	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID46_6	bhr_baseline_questionnaire_qid46_6			QID46_6	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID46_7	bhr_baseline_questionnaire_qid46_7			QID46_7	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID46_8	bhr_baseline_questionnaire_qid46_8			QID46_8	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID46_9	bhr_baseline_questionnaire_qid46_9			QID46_9	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID46_13	bhr_baseline_questionnaire_qid46_13			QID46_13	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID47_11	bhr_baseline_questionnaire_qid47_11			QID47_11	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID47_12	bhr_baseline_questionnaire_qid47_12			QID47_12	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID47_13	bhr_baseline_questionnaire_qid47_13			QID47_13	BHR_BASELINE_QUESTIONNAIRE.csv
+Brain Health Registry - Baseline Questionnaire - QID47_14	bhr_baseline_questionnaire_qid47_14			QID47_14	BHR_BASELINE_QUESTIONNAIRE.csv
+					
+Brain Health Registry - Longitudinal Questionnaire - Latest	bhr_longitudinal_questionnaire_latest			latest	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID53	bhr_longitudinal_questionnaire_qid53			QID53	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID54	bhr_longitudinal_questionnaire_qid54			QID54	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID1	bhr_longitudinal_questionnaire_qid1			QID1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID2	bhr_longitudinal_questionnaire_qid2			QID2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID3	bhr_longitudinal_questionnaire_qid3			QID3	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID4	bhr_longitudinal_questionnaire_qid4			QID4	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID24	bhr_longitudinal_questionnaire_qid24			QID24	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID6	bhr_longitudinal_questionnaire_qid6			QID6	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID7	bhr_longitudinal_questionnaire_qid7			QID7	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID8	bhr_longitudinal_questionnaire_qid8			QID8	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID25	bhr_longitudinal_questionnaire_qid25			QID25	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID10	bhr_longitudinal_questionnaire_qid10			QID10	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID12	bhr_longitudinal_questionnaire_qid12			QID12	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID27	bhr_longitudinal_questionnaire_qid27			QID27	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID28_TEXT	bhr_longitudinal_questionnaire_qid28_text			QID28_text	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID29	bhr_longitudinal_questionnaire_qid29			QID29	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID30_TEXT	bhr_longitudinal_questionnaire_qid30_text			QID30_text	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID18_1	bhr_longitudinal_questionnaire_qid18_1			QID18_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID18_2	bhr_longitudinal_questionnaire_qid18_2			QID18_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID31_1	bhr_longitudinal_questionnaire_qid31_1			QID31_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID31_2	bhr_longitudinal_questionnaire_qid31_2			QID31_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID32_1	bhr_longitudinal_questionnaire_qid32_1			QID32_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID32_3	bhr_longitudinal_questionnaire_qid32_3			QID32_3	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_1	bhr_longitudinal_questionnaire_qid19_1			QID19_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_2	bhr_longitudinal_questionnaire_qid19_2			QID19_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_3	bhr_longitudinal_questionnaire_qid19_3			QID19_3	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_4	bhr_longitudinal_questionnaire_qid19_4			QID19_4	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_5	bhr_longitudinal_questionnaire_qid19_5			QID19_5	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_6	bhr_longitudinal_questionnaire_qid19_6			QID19_6	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_7	bhr_longitudinal_questionnaire_qid19_7			QID19_7	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_8	bhr_longitudinal_questionnaire_qid19_8			QID19_8	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_9	bhr_longitudinal_questionnaire_qid19_9			QID19_9	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID19_10	bhr_longitudinal_questionnaire_qid19_10			QID19_10	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID34_1	bhr_longitudinal_questionnaire_qid34_1			QID34_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID34_2	bhr_longitudinal_questionnaire_qid34_2			QID34_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID35_1	bhr_longitudinal_questionnaire_qid35_1			QID35_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID35_2	bhr_longitudinal_questionnaire_qid35_2			QID35_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID36_1	bhr_longitudinal_questionnaire_qid36_1			QID36_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID36_2	bhr_longitudinal_questionnaire_qid36_2			QID36_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID37_1	bhr_longitudinal_questionnaire_qid37_1			QID37_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID37_2	bhr_longitudinal_questionnaire_qid37_2			QID37_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID38_1	bhr_longitudinal_questionnaire_qid38_1			QID38_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID38_2	bhr_longitudinal_questionnaire_qid38_2			QID38_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID39_1	bhr_longitudinal_questionnaire_qid39_1			QID39_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID39_2	bhr_longitudinal_questionnaire_qid39_2			QID39_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID40_1	bhr_longitudinal_questionnaire_qid40_1			QID40_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID40_2	bhr_longitudinal_questionnaire_qid40_2			QID40_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID41_1	bhr_longitudinal_questionnaire_qid41_1			QID41_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID41_2	bhr_longitudinal_questionnaire_qid41_2			QID41_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID42_1	bhr_longitudinal_questionnaire_qid42_1			QID42_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID42_2	bhr_longitudinal_questionnaire_qid42_2			QID42_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID43_1	bhr_longitudinal_questionnaire_qid43_1			QID43_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID43_2	bhr_longitudinal_questionnaire_qid43_2			QID43_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID49_1	bhr_longitudinal_questionnaire_qid49_1			QID49_1	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID49_2	bhr_longitudinal_questionnaire_qid49_2			QID49_2	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID49_3	bhr_longitudinal_questionnaire_qid49_3			QID49_3	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID49_4	bhr_longitudinal_questionnaire_qid49_4			QID49_4	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID49_5	bhr_longitudinal_questionnaire_qid49_5			QID49_5	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID50_6	bhr_longitudinal_questionnaire_qid50_6			QID50_6	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID50_7	bhr_longitudinal_questionnaire_qid50_7			QID50_7	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID50_8	bhr_longitudinal_questionnaire_qid50_8			QID50_8	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID50_9	bhr_longitudinal_questionnaire_qid50_9			QID50_9	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID50_13	bhr_longitudinal_questionnaire_qid50_13			QID50_13	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID51_11	bhr_longitudinal_questionnaire_qid51_11			QID51_11	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID51_12	bhr_longitudinal_questionnaire_qid51_12			QID51_12	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID51_13	bhr_longitudinal_questionnaire_qid51_13			QID51_13	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+Brain Health Registry - Longitudinal Questionnaire - QID51_14	bhr_longitudinal_questionnaire_qid51_14			QID51_14	BHR_LONGITUDINAL_QUESTIONNAIRE.csv
+					
+Medical History - Examination Date	medhist_examdate			EXAMDATE	MEDHIST.csv
+Medical History - Information Source	medhist_mhsource			MHSOURCE	MEDHIST.csv
+Medical History - 1 Psychiatric	medhist_mhpsych			MHPSYCH	MEDHIST.csv
+Medical History - 2 Neurologic (other than AD)	medhist_mh2neurl			MH2NEURL	MEDHIST.csv
+Medical History - 3 Head, Eyes, Ears, Nose and Throat	medhist_mh3head			MH3HEAD	MEDHIST.csv
+Medical History - 4 Cardiovascular	medhist_mh4card			MH4CARD	MEDHIST.csv
+Medical History - 5 Respiratory	medhist_mh5resp			MH5RESP	MEDHIST.csv
+Medical History - 6 Hepatic	medhist_mh6hepat			MH6HEPAT	MEDHIST.csv
+Medical History - 7 Dermatologic-Connective Tissue	medhist_mh7derm			MH7DERM	MEDHIST.csv
+Medical History - 8 Musculoskeletal	medhist_mh8muscl			MH8MUSCL	MEDHIST.csv
+Medical History - 9 Endocrine-Metabolic	medhist_mh9endo			MH9ENDO	MEDHIST.csv
+Medical History - 10 Gastrointestinal	medhist_mh10gast			MH10GAST	MEDHIST.csv
+Medical History - 11 Hematopoietic-Lymphatic	medhist_mh11hema			MH11HEMA	MEDHIST.csv
+Medical History - 12 Renal-Genitourinary	medhist_mh12rena			MH12RENA	MEDHIST.csv
+Medical History - 13 Allergies or Drug Sensitivities	medhist_mh13alle			MH13ALLE	MEDHIST.csv
+Medical History - 14 Alcohol Abuse	medhist_mh14alch			MH14ALCH	MEDHIST.csv
+Medical History - 14a. During period of alcohol abuse, estimate the average number of drinks per day	medhist_mh14aalch			MH14AALCH	MEDHIST.csv
+Medical History - 14b. Duration of abuse (years)	medhist_mh14balch			MH14BALCH	MEDHIST.csv
+Medical History - 14c. Period of time since end of abuse (years)	medhist_mh14calch			MH14CALCH	MEDHIST.csv
+Medical History - 15 Drug Abuse	medhist_mh15drug			MH15DRUG	MEDHIST.csv
+Medical History - 15a. Duration of abuse (years):	medhist_mh15adrug			MH15ADRUG	MEDHIST.csv
+Medical History - 15b. Period of time since end of abuse (years):	medhist_mh15bdrug			MH15BDRUG	MEDHIST.csv
+Medical History - 16 Smoking	medhist_mh16smok			MH16SMOK	MEDHIST.csv
+Medical History - 16a. During periods of smoking, the average number of packs/day	medhist_mh16asmok			MH16ASMOK	MEDHIST.csv
+Medical History - 16b. Duration (years)	medhist_mh16bsmok			MH16BSMOK	MEDHIST.csv
+Medical History - 16c. If no longer smoking, provide period of time since stopped smoking (years)	medhist_mh16csmok			MH16CSMOK	MEDHIST.csv
+Medical History - 17 Malignancy	medhist_mh17mali			MH17MALI	MEDHIST.csv
+Medical History - 18 Major Surgical Procedures	medhist_mh18surg			MH18SURG	MEDHIST.csv
+Medical History - 19 Other (if none, select No)	medhist_mh19othr			MH19OTHR	MEDHIST.csv
+					
+Vital Signs - Examination Date	vitals_examdate			EXAMDATE	VITALS.csv
+Vital Signs - Weight	vitals_vsweight			VSWEIGHT	VITALS.csv
+Vital Signs - Weight Units	vitals_vswtunit			VSWTUNIT	VITALS.csv
+Vital Signs - Height	vitals_vsheight			VSHEIGHT	VITALS.csv
+Vital Signs - Height Units	vitals_vshtunit			VSHTUNIT	VITALS.csv
+Vital Signs - Systolic - mmHg	vitals_vsbpsys			VSBPSYS	VITALS.csv
+Vital Signs - Diastolic - mmHg	vitals_vsbpdia			VSBPDIA	VITALS.csv
+Vital Signs - Seated Pulse Rate (per minute)	vitals_vspulse			VSPULSE	VITALS.csv
+Vital Signs - Respirations (per minute)	vitals_vsresp			VSRESP	VITALS.csv
+Vital Signs - Temperature	vitals_vstemp			VSTEMP	VITALS.csv
+Vital Signs - Temperature Source	vitals_vstmpsrc			VSTMPSRC	VITALS.csv
+Vital Signs - Temperature Units	vitals_vstmpunt			VSTMPUNT	VITALS.csv
+					
+Crane Lab (UW) Neuropsych Summary Scores - ADNI Memory	uwnpsychsum_03_07_19_adni_mem			ADNI_MEM	UWNPSYCHSUM_03_07_19.csv
+Crane Lab (UW) Neuropsych Summary Scores - ADNI Executive Functioning	uwnpsychsum_03_07_19_adni_ef			ADNI_EF	UWNPSYCHSUM_03_07_19.csv
+					
+Crane Lab (UW) Neuropsych Summary Scores - ADNI Memory	comp_adni_mem			ADNI_MEM	UWNPSYCHSUM_03_26_20.csv
+Crane Lab (UW) Neuropsych Summary Scores - ADNI Executive Functioning	comp_adni_ef			ADNI_EF	UWNPSYCHSUM_03_26_20.csv
+Crane Lab (UW) Neuropsych Summary Scores - ADNI Language	comp_adni_lan			ADNI_LAN	UWNPSYCHSUM_03_26_20.csv
+Crane Lab (UW) Neuropsych Summary Scores - ADNI VS	comp_adni_vs			ADNI_VS	UWNPSYCHSUM_03_26_20.csv

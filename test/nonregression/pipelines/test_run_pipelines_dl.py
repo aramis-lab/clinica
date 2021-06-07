@@ -31,6 +31,7 @@ def test_run_DLPrepareData(cmdopt):
     # Prepare test for different parameters
 
     modalities = ["t1-linear", "pet-linear", "custom"]
+
     uncropped_image = [True, False]
 
     image_params = {"extract_method": "image"}
@@ -50,6 +51,7 @@ def test_run_DLPrepareData(cmdopt):
 
     for parameters in data:
         for modality in modalities:
+            parameters["modality"] = modality
             if modality == "pet-linear":
                 parameters["acq_label"] = "av45"
                 parameters["suvr_reference_region"] = "pons2"
@@ -63,7 +65,6 @@ def test_run_DLPrepareData(cmdopt):
                 DLPrepareData_Generic(root, working_dir, parameters)
             elif modality == "t1-linear":
                 for flag in uncropped_image:
-                    parameters["modality"] = modality
                     parameters["use_uncropped_image"] = flag
                     DLPrepareData_Generic(root, working_dir, parameters)
             else:
@@ -95,5 +96,4 @@ def DLPrepareData_Generic(root, working_dir, parameters):
         base_dir=join(working_dir, "DeepLearningPrepareData"),
         parameters=parameters,
     )
-
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)

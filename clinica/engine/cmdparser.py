@@ -206,18 +206,3 @@ def init_cmdparser_objects(root_parser, parser, objects):
             init(x)
         except BaseException:
             pass
-
-
-def get_cmdparser_names(objects=None):
-    """Return the names of all pipelines.
-
-    Args:
-        objects: All CmdParser instances of this file
-
-    Returns:
-        The names of all pipelines
-    """
-    if objects is None:
-        objects = get_cmdparser_objects()
-    for x in objects:
-        yield x.name

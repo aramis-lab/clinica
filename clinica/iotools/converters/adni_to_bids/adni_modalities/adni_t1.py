@@ -230,6 +230,12 @@ def adni1go2_image(
         replace_sequence_chars,
     )
 
+    # filter out images that do not pass QC
+    mprage_meta_subj = mprage_meta_subj[
+        mprage_meta_subj.apply(
+            lambda x: check_qc(x, subject_id, visit_str, mri_quality_subj), axis=1
+        )
+    ]
     filtered_mprage = preferred_processed_scan(mprage_meta_subj, visit_str)
 
     # If no N3 processed image found (it means there are no processed images at all), get best original image
@@ -252,22 +258,6 @@ def adni1go2_image(
     # Sort by Series ID in case there are several images, so we keep the one acquired first
     filtered_mprage = filtered_mprage.sort_values("SeriesID")
     scan = filtered_mprage.iloc[0]
-
-    # Check if selected scan passes QC (if QC exists)
-    if not check_qc(scan, subject_id, visit_str, mri_quality_subj):
-
-        # If not passed, look for another scan in the visit from a different acquisition
-        filtered_mprage = preferred_processed_scan(
-            mprage_meta_subj, visit_str, unwanted_series_id=[scan.SeriesID]
-        )
-
-        if filtered_mprage.empty:
-            return None
-
-        scan = filtered_mprage.iloc[0]
-        # Check QC for second scan
-        if not check_qc(scan, subject_id, visit_str, mri_quality_subj):
-            return None
 
     n3 = scan.Sequence.find("N3")
     # Sequence ends in 'N3' or in 'N3m'
