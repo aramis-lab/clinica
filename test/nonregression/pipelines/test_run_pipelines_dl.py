@@ -60,6 +60,7 @@ def test_run_DLPrepareData(cmdopt):
                 parameters[
                     "custom_suffix"
                 ] = "graymatter_space-Ixi549Space_modulated-off_probability.nii.gz"
+                DLPrepareData_Generic(root, working_dir, parameters)
             elif modality == "t1-linear":
                 for flag in uncropped_image:
                     parameters["modality"] = modality
