@@ -120,7 +120,7 @@ class StatisticsVolume(cpe.Pipeline):
         elif self.parameters["orig_input_data"] == "t1-volume":
             self.parameters["measure_label"] = "graymatter"
             information_dict = t1_volume_template_tpm_in_mni(
-                self.parameters["group_label_dartel"], 0, True
+                self.parameters["group_label_dartel"], 1, True
             )
 
         elif self.parameters["orig_input_data"] == "custom-pipeline":
