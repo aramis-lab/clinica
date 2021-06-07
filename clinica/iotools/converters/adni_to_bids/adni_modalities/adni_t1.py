@@ -4,7 +4,13 @@
 
 
 def convert_adni_t1(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+    source_dir,
+    csv_dir,
+    dest_dir,
+    conversion_dir,
+    subjs_list=None,
+    center_flag=False,
+    mod_to_update=False,
 ):
     """Convert T1 MR images of ADNI into BIDS format.
 
@@ -34,7 +40,7 @@ def convert_adni_t1(
     )
     images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint("Paths of T1 images found. Exporting images into BIDS ...")
-    paths_to_bids(images, dest_dir, "t1", mod_to_update=mod_to_update)
+    paths_to_bids(images, dest_dir, "t1", center_flag, mod_to_update=mod_to_update)
     cprint(f"{Fore.GREEN}T1 conversion done.{Fore.RESET}")
 
 

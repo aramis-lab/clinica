@@ -4,7 +4,13 @@
 
 
 def convert_adni_tau_pet(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+    source_dir,
+    csv_dir,
+    dest_dir,
+    conversion_dir,
+    subjs_list=None,
+    center_flag=False,
+    mod_to_update=False,
 ):
     """Convert Tau PET images of ADNI into BIDS format.
 
@@ -36,7 +42,7 @@ def convert_adni_tau_pet(
         source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
     )
     cprint("Paths of TAU PET images found. Exporting images into BIDS ...")
-    paths_to_bids(images, dest_dir, "tau", mod_to_update=mod_to_update)
+    paths_to_bids(images, dest_dir, "tau", center_flag, mod_to_update=mod_to_update)
     cprint(f"{Fore.GREEN}TAU PET conversion done.{Fore.RESET}")
 
 

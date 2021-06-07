@@ -4,7 +4,13 @@
 
 
 def convert_adni_dwi(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+    source_dir,
+    csv_dir,
+    dest_dir,
+    conversion_dir,
+    subjs_list=None,
+    center_flag=False,
+    mod_to_update=False,
 ):
     """Convert DW images of ADNI into BIDS format.
 
@@ -37,7 +43,7 @@ def convert_adni_dwi(
     )
     cprint("Paths of DWI images found. Exporting images into BIDS ...")
     # dwi_paths_to_bids(images, dest_dir)
-    paths_to_bids(images, dest_dir, "dwi", mod_to_update=mod_to_update)
+    paths_to_bids(images, dest_dir, "dwi", center_flag, mod_to_update=mod_to_update)
     cprint(f"{Fore.GREEN}DWI conversion done.{Fore.RESET}")
 
 

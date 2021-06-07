@@ -4,7 +4,13 @@
 
 
 def convert_adni_av45_fbb_pet(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+    source_dir,
+    csv_dir,
+    dest_dir,
+    conversion_dir,
+    subjs_list=None,
+    center_flag=False,
+    mod_to_update=False,
 ):
     """Convert AV-45 and Florbetaben PET images of ADNI into BIDS format.
 
@@ -38,7 +44,9 @@ def convert_adni_av45_fbb_pet(
     cprint(
         "Paths of AV45 and Florbetaben PET images found. Exporting images into BIDS ..."
     )
-    paths_to_bids(images, dest_dir, "av45_fbb", mod_to_update=mod_to_update)
+    paths_to_bids(
+        images, dest_dir, "av45_fbb", center_flag, mod_to_update=mod_to_update
+    )
     cprint(f"{Fore.GREEN}AV45 and Florbetaben PET conversion done.{Fore.RESET}")
 
 

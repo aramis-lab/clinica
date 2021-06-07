@@ -36,6 +36,11 @@ class AdniToBidsCLI(ce.CmdParser):
             "bids_directory. Mutually exclusive with --clinical_data_only",
         )
         self._args.add_argument(
+            "--center_image",
+            action="store_true",
+            help="(Optional) Put the origin of the coordinate system at the center of the image. ",
+        )
+        self._args.add_argument(
             "-sl",
             "--subjects_list",
             help="(Optional) A path to a .txt file containing a list of subject to convert "
@@ -75,6 +80,7 @@ class AdniToBidsCLI(ce.CmdParser):
                 self.absolute_path(args.bids_directory),
                 args.subjects_list,
                 args.modalities,
+                args.center_image,
                 args.force_new_extraction,
             )
 

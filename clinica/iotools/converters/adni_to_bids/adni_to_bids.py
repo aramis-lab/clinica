@@ -112,6 +112,7 @@ class AdniToBids(Converter):
         dest_dir,
         subjs_list_path=None,
         modalities=["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"],
+        center_flag=False,
         force_new_extraction=False,
     ):
         """Convert the images of ADNI.
@@ -195,5 +196,6 @@ class AdniToBids(Converter):
                     dest_dir,
                     conversion_dir,
                     subjs_list,
+                    center_flag,
                     force_new_extraction,
                 )

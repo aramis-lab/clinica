@@ -4,7 +4,13 @@
 
 
 def convert_adni_flair(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+    source_dir,
+    csv_dir,
+    dest_dir,
+    conversion_dir,
+    subjs_list=None,
+    center_flag=False,
+    mod_to_update=False,
 ):
     """Convert FLAIR images of ADNI into BIDS format.
 
@@ -37,7 +43,7 @@ def convert_adni_flair(
     )
     cprint("Paths of FLAIR images found. Exporting images into BIDS ...")
     # flair_paths_to_bids(images, dest_dir)
-    paths_to_bids(images, dest_dir, "flair", mod_to_update=mod_to_update)
+    paths_to_bids(images, dest_dir, "flair", center_flag, mod_to_update=mod_to_update)
     cprint(f"{Fore.GREEN}FLAIR conversion done.{Fore.RESET}")
 
 

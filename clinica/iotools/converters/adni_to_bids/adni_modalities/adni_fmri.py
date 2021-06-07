@@ -4,7 +4,13 @@
 
 
 def convert_adni_fmri(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+    source_dir,
+    csv_dir,
+    dest_dir,
+    conversion_dir,
+    subjs_list=None,
+    center_flag=False,
+    mod_to_update=False,
 ):
     """Convert fMR images of ADNI into BIDS format.
 
@@ -37,7 +43,7 @@ def convert_adni_fmri(
     )
     cprint("Paths of fMRI images found. Exporting images into BIDS ...")
     # fmri_paths_to_bids(dest_dir, images)
-    paths_to_bids(images, dest_dir, "fmri", mod_to_update=mod_to_update)
+    paths_to_bids(images, dest_dir, "fmri", center_flag, mod_to_update=mod_to_update)
     cprint(f"{Fore.GREEN}fMRI conversion done.{Fore.RESET}")
 
 

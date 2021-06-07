@@ -882,7 +882,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     return images
 
 
-def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
+def paths_to_bids(images, bids_dir, modality, center_flag=False, mod_to_update=False):
     """Images in the list are converted and copied to directory in BIDS format.
 
     Args:
@@ -933,6 +933,7 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
         modality=modality,
         total=total,
         bids_dir=bids_dir,
+        center_flag=center_flag,
         mod_to_update=mod_to_update,
     )
 
@@ -944,7 +945,7 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
     return output_file_treated
 
 
-def create_file(image, modality, total, bids_dir, mod_to_update):
+def create_file(image, modality, total, bids_dir, center_flag, mod_to_update):
     """
     Image file is created at the corresponding output folder
     as result of image conversion (DICOM to NIFTI) and centering,
@@ -977,7 +978,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         "t1": {
             "output_path": "anat",
             "output_filename": "_T1w",
-            "to_center": True,
+            "to_center": center_flag,
             "json": "n",
         },
         "dwi": {
@@ -989,7 +990,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         "flair": {
             "output_path": "anat",
             "output_filename": "_FLAIR",
-            "to_center": True,
+            "to_center": center_flag,
             "json": "y",
         },
         "fmri": {
@@ -1001,31 +1002,31 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         "fdg": {
             "output_path": "pet",
             "output_filename": "_task-rest_acq-fdg_pet",
-            "to_center": True,
+            "to_center": center_flag,
             "json": "n",
         },
         "pib": {
             "output_path": "pet",
             "output_filename": "_task-rest_acq-pib_pet",
-            "to_center": True,
+            "to_center": center_flag,
             "json": "n",
         },
         "av45": {
             "output_path": "pet",
             "output_filename": "_task-rest_acq-av45_pet",
-            "to_center": True,
+            "to_center": center_flag,
             "json": "n",
         },
         "fbb": {
             "output_path": "pet",
             "output_filename": "_task-rest_acq-fbb_pet",
-            "to_center": True,
+            "to_center": center_flag,
             "json": "n",
         },
         "tau": {
             "output_path": "pet",
             "output_filename": "_task-rest_acq-tau_pet",
-            "to_center": True,
+            "to_center": center_flag,
             "json": "n",
         },
     }
