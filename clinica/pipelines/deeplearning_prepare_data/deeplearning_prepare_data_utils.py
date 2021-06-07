@@ -329,7 +329,9 @@ def find_mask_path(masks_location, roi, mask_pattern, cropping):
     from os import path
 
     # Check that pattern begins and ends with _ to avoid mixing keys
-    if len(mask_pattern) != 0:
+    if mask_pattern is None:
+        mask_pattern = ""
+    elif len(mask_pattern) != 0:
         if not mask_pattern.endswith("_"):
             mask_pattern += "_"
         if not mask_pattern[0] == "_":

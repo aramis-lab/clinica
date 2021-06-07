@@ -129,7 +129,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                         "A custom template must be defined when the modality is set to custom."
                     )
             else:
-                self.mask_pattern = ""
+                self.mask_pattern = None
                 from .deeplearning_prepare_data_utils import TEMPLATE_DICT
 
                 self.template = TEMPLATE_DICT[self.parameters.get("modality")]
@@ -151,7 +151,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 )
         else:
             self.masks_location = ""
-            self.mask_pattern = ""
+            self.mask_pattern = None
             self.roi_list = []
 
         # The reading node
