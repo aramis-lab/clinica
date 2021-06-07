@@ -5,7 +5,9 @@ Convert the AIBL dataset (http://www.aibl.csiro.au/) into BIDS.
 """
 
 
-def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
+def convert_images(
+    path_to_dataset, path_to_csv, bids_dir, center_flag=False, overwrite=False
+):
 
     # Conversion of the entire dataset in BIDS
     from os.path import exists
@@ -20,7 +22,12 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
     for modality in ["t1", "av45", "flute", "pib"]:
         list_of_created_files.append(
             paths_to_bids(
-                path_to_dataset, path_to_csv, bids_dir, modality, overwrite=overwrite
+                path_to_dataset,
+                path_to_csv,
+                bids_dir,
+                modality,
+                center_flag,
+                overwrite=overwrite,
             )
         )
 

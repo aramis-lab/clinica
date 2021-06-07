@@ -30,10 +30,16 @@ class AiblToBidsCLI(ce.CmdParser):
             help="Overwrites previously written nifti and json files.",
         )
         self._args.add_argument(
+            "--center_image",
+            action="store_true",
+            default=False,
+            help="(Optional) Put the origin of the coordinate system at the center of the image. ",
+        )
+        self._args.add_argument(
             "-c",
             "--clinical_data_only",
             action="store_true",
-            help="(Optional) Given the path to an already existing ADNI BIDS folder, convert only "
+            help="(Optional) Given the path to an already existing AIBL BIDS folder, convert only "
             "the clinical data.",
         )
 
@@ -62,6 +68,7 @@ class AiblToBidsCLI(ce.CmdParser):
                 args.dataset_directory,
                 args.clinical_data_directory,
                 args.bids_directory,
+                args.center_image,
                 args.overwrite,
             )
         convert_clinical_data(args.bids_directory, args.clinical_data_directory)

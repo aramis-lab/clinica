@@ -521,7 +521,9 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
 # in BIDS
 
 
-def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=False):
+def paths_to_bids(
+    path_to_dataset, path_to_csv, bids_dir, modality, center_flag=False, overwrite=False
+):
     """Convert all the T1 images found in the AIBL dataset downloaded in BIDS.
 
     Args:
@@ -609,7 +611,8 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
             json_from_dcm(image_path, join(output_path, output_filename + ".json"))
 
         # Center all images
-        center_nifti_origin(output_image, output_image)
+        if center_flag:
+            center_nifti_origin(output_image, output_image)
 
         return output_image
 
