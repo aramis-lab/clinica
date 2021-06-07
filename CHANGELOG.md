@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [Adni-to-bids]: Replace xlsx files with tsv
 - [Adni-to-bids]: Refactor 'sessions' converter 
-
+- [Adni/Aibl-to-bids]: image centering as optional command line argument instead of default
 
 ### Fixed
 
