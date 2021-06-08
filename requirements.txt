@@ -20,3 +20,4 @@ scikit-image == 0.16.2
 torch > 1.0
 torchvision
 pydicom
+networkx
