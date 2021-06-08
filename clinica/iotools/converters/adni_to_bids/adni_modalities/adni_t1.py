@@ -231,11 +231,6 @@ def adni1go2_image(
     )
 
     # filter out images that do not pass QC
-    mprage_meta_subj = mprage_meta_subj[
-        mprage_meta_subj.apply(
-            lambda x: check_qc(x, subject_id, visit_str, mri_quality_subj), axis=1
-        )
-    ]
     filtered_mprage = preferred_processed_scan(mprage_meta_subj, visit_str)
 
     # If no N3 processed image found (it means there are no processed images at all), get best original image
@@ -264,18 +259,14 @@ def adni1go2_image(
     sequence = scan.Sequence[: n3 + 2 + int(scan.Sequence[n3 + 2] == "m")]
     sequence = replace_sequence_chars(sequence)
 
-    return {
-        "Subject_ID": subject_id,
-        "VISCODE": timepoint,
-        "Visit": visit_str,
-        "Sequence": sequence,
-        "Scan_Date": scan.ScanDate,
-        "Study_ID": str(scan.StudyID),
-        "Series_ID": str(scan.SeriesID),
-        "Image_ID": str(scan.ImageUID),
-        "Field_Strength": scan.MagStrength,
-        "Original": False,
-    }
+    return original_image(
+            subject_id,
+            timepoint,
+            visit_str,
+            mprage_meta_subj,
+            mayo_mri_qc_subj,
+            preferred_field_strength,
+        )
 
 
 def preferred_processed_scan(mprage_meta_subj, visit_str, unwanted_series_id=()):
