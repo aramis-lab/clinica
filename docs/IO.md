@@ -95,14 +95,14 @@ Then for each `participant_id` and `session_id` couple, a boolean value indicate
 the availability of the pipeline.
 
 ```Text
-clinica iotools check-missing-modalities <bids_directory> <output_directory> [-op]
+clinica iotools check-missing-processing <bids_directory> <caps_directory> <output_file>
 ```
 
 where:
 
 - `bids_directory`: input folder of a BIDS compliant dataset
 - `caps_directory`:  input folder of a CAPS compliant dataset
-- `out_file`:  path to the output TSV file (filename included)
+- `output_file`:  path to the output TSV file (filename included)
 
 The content of the output TSV file will look like:
 
