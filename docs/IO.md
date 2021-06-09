@@ -43,7 +43,10 @@ Starting from a BIDS compliant dataset, this command creates:
 1. A TSV file for each session available with the list of the modalities found for each subject.
 The name of the files produced will be `<prefix>_ses-<session_label>.tsv`.
 2. A text file containing the number and the percentage of modalities missing for each session.
-The name of the files produced will be `<prefix>_summary.txt`.
+The name of the file produced will be `<prefix>_summary.txt`.
+3. A text file in which a table is written per session. This table contains the number of
+images per modality per diagnosis when the column `diagnosis` is available in the session-
+level files of the BIDS directory. The name of the file produced will be `analysis.txt`.
 
 If no value for `<prefix>` is specified by the user, the default will be `missing_mods`.
 
@@ -83,6 +86,37 @@ The nomenclature of the modalities tries to follow, as much as possible, the one
     clinica iotools check-missing-modalities /Home/ADNI_BIDS/ /Home/
     clinica iotools check-missing-modalities /Home/ADNI_BIDS/ /Home/ -op new_name
     ```
+
+## `check-missing-processing` - Check missing processing in a CAPS directory
+
+Starting from a CAPS compliant dataset and its corresponding BIDS, this command outputs
+a TSV file in which all the detected pipelines of Clinica in this CAPS are listed.
+Then for each `participant_id` and `session_id` couple, a boolean value indicates
+the availability of the pipeline.
+
+```Text
+clinica iotools check-missing-modalities <bids_directory> <output_directory> [-op]
+```
+
+where:
+
+- `bids_directory`: input folder of a BIDS compliant dataset
+- `caps_directory`:  input folder of a CAPS compliant dataset
+- `out_file`:  path to the output TSV file (filename included)
+
+The content of the output TSV file will look like:
+
+```Text
+participant_id   session_id 	t1-freesurfer   pet-surface_acq-fdg	    pet-surface_acq-av45
+sub-01           ses-M00        1               1                       0
+sub-01           ses-M06        1               0                       0
+sub-02           ses-M00        1               1                       1
+```
+
+Where the column `participant_id` and `session_id` contain all the sessions found,
+and the following columns correspond to the list of all the pipelines available in the CAPS directory.
+The availability is expressed by a boolean value.
+
 
 ## `merge-tsv` - Gather BIDS and CAPS data into a single TSV file
 
