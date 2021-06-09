@@ -157,7 +157,7 @@ The parameters of the command line are stored in the `group-ADvsHC_glm.json` fil
 ```
 
 The results of the group comparison between AD and HC are given by the `group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_correctedPValue.jpg` file and is illustrated as follows:
-![Corrected p-value map](../../img/StatsSurfStat_images/ContrastNegative-CorrectedPValue.jpg)
+![Corrected p-value map](../img/StatsSurfStat_images/ContrastNegative-CorrectedPValue.jpg)
 *<center>Visualization of corrected p-value map.</center>*
 
 The blue area corresponds to the vertex-based corrected p-value and the yellow area represents the cluster-based corrected p-value.

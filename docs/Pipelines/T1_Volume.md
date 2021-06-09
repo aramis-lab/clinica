@@ -80,7 +80,7 @@ The main output files are:
     - `<source_file>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-off_probability.nii.gz`: The different tissue maps that have been registered to the MNI space without modulation, i.e. no division by the jacobian of the transformation meaning that concentrations are preserved.
     These outputs are useful if you want to QC both the registration into MNI and the accuracy of the segmentations.
 
-<center>![](../../img/T1_Volume/ex_GM_WM_CSF.png)</center>
+<center>![](../img/T1_Volume/ex_GM_WM_CSF.png)</center>
 *<center><small>Example of gray matter (GM), white matter (WM) and CSF tissue segmentation.</small></center>*
 
 ### Inter-subject registration using Dartel
@@ -89,7 +89,7 @@ The final estimation of the gray matter template is stored under the following f
 [CAPS hierarchy](../../CAPS/Specifications/#dartel):
 `groups/<group_id>/t1/<group_id>_template.nii.gz`
 
-<center>![](../../img/T1_Volume/ex_Dartel_template_GM.png)</center>
+<center>![](../img/T1_Volume/ex_Dartel_template_GM.png)</center>
 *<center><small>Example of a group template calculated using DARTEL. Only the gray matter class is shown.</small></center>*
 
 The flow fields containing the deformation from an image to the group template are stored in the folder
@@ -108,7 +108,7 @@ The main output files are:
 - `<source_file>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_fwhm-<label>_probability.nii.gz`: The modulated tissue probability maps, i.e. the tissue probability maps obtained with multiplied by their relative volume before and after spatial normalisation, into the MNI space.
 The different tissue maps that have been registered to the MNI space and modulated, i.e. divided by the jacobian of the transformation meaning that volume is preserved.
 
- <center>![](../../img/T1_Volume/ex_GM_MNI_space.png)</center>
+ <center>![](../img/T1_Volume/ex_GM_MNI_space.png)</center>
  *<center><small>Final result: Probability Gray Matter in MNI space without smoothing (top) or smoothed using a 8 mm FWHM kernel (bottom).</small></center>*
 
 ### Atlas statistics
