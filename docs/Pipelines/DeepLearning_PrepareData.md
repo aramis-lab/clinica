@@ -28,7 +28,7 @@ You need to have performed the [`t1-linear` pipeline](../T1_Linear) or
 pipeline](https://clinicadl.readthedocs.io/en/latest/Preprocessing/T1_Extensive/)
 on your T1-weighted MRI or [`pet-linear` pipeline](../PET_Linear) on
 your PET images.
-There exists an option to convert custom nifty images into tensors.
+There exists an option to convert custom nifti images into tensors.
 This option is chosen by adding the parameter `custom` to the
 command line instruction and a known suffix, as explained below.
 
@@ -47,9 +47,9 @@ clinica run deeplearning-prepare-data <caps_directory> <modality> <tensor_format
 where:
 
 - `caps_directory` is the folder containing the results of the
-[`t1-linear` pipeline](../T1_Linear) and the output of the present command,
-both in a [CAPS hierarchy](../../CAPS/Introduction).
-- `modality` is the name of the preprocessing done in the original images.
+pipeline used as input and the output of the present command,
+both in a [CAPS hierarchy](../CAPS/Introduction.md).
+- `modality` is the name of the preprocessing whose outputs are used as inputs.
 It can be `t1-linear`, `t1-extensive` or `pet-linear`.
 You can choose `custom` if you want to get a tensor from a custom filename.
 - `tensor_format` is the format of the extracted tensors.
@@ -58,9 +58,9 @@ You can choose between `image` to convert to PyTorch tensor the whole 3D image,
 `roi` to extract 3D region of interest depending on the ROI mask.
 
 By default, the features are extracted from the cropped image (see the
-documentation of the [`t1-linear` pipeline](../T1_Linear)).
+documentation of the [`t1-linear` pipeline](T1_Linear.md)).
 You can deactivate this behaviour with the `--use_uncropped_image` flag.
-The same behaviour is applied to [`pet-linear` pipeline](../PET_Linear).
+The same behaviour is applied to [`pet-linear` pipeline](PET_Linear.md).
 
 Pipeline options if you use `patch` extraction:
 
@@ -102,7 +102,7 @@ Allows to choose a particular mask with a name following the given pattern.
 
     The chosen mask will correspond to the mask with the shortest name following the wanted pattern.
 
-Example of file system needed:
+Example of a valid CAPS hierarchy:
 
 ```Text
 caps
@@ -122,7 +122,7 @@ caps
 
 The first two masks in `tpl-MNI152NLin2009cSym/` contain `desc-Crop`, hence they can only be
 applied to cropped input images, and their size will be (169x208x179). On the contrary the last two masks
-in the same folder fo not contain `desc-Crop` hence they can only be applied to uncropped
+in the same folder do not contain `desc-Crop` hence they can only be applied to uncropped
 input images and their size will be (193x229x193).
 
 Pipeline options if you use `pet-linear` modality:
@@ -177,12 +177,11 @@ Results are stored in the following folder of the
 [CAPS hierarchy](../../CAPS/Specifications):
 `subjects/<participant_id>/<session_id>/deeplearning_prepare_data/image_based/t1_linear`.
 
-For the `t1-linear` modality, the main output files are:
-
-- `<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_T1w.pt`: tensor
-  version of the 3D T1w image registered to the [`MNI152NLin2009cSym`
-  template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html)
-  and optionally cropped.
+For the `t1-linear` modality, the output file is 
+`<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_T1w.pt`: a tensor
+version of the 3D T1w image registered to the [`MNI152NLin2009cSym`
+template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html)
+and optionally cropped.
 
 Corresponding folder and file names are obtained for the files processed with the
 `t1-extensive` and `pet-linear` modality.
@@ -197,9 +196,7 @@ Results are stored in the following folder of the
 [CAPS hierarchy](../../CAPS/Specifications):
 `subjects/<participant_id>/<session_id>/deeplearning_prepare_data/patch_based/t1_linear`.
 
-The main output files are:
-
-- `<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_patchsize-<N>_stride-<M>_patch-<i>_T1w.pt`:
+The output files are `<source_file>[_<input_pattern>]_patchsize-<N>_stride-<M>_patch-<i>_T1w.pt`:
 tensor version of the `<i>`-th 3D isotropic patch of size `<N>` with a stride of `<M>`.
 
 ### Slice-based outputs
@@ -208,9 +205,7 @@ Results are stored in the following folder of the
 [CAPS hierarchy](../../CAPS/Specifications):
 `subjects/<participant_id>/<session_id>/deeplearning_prepare_data/slice_based/t1_linear`.
 
-The main output files are:
-
-- `<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_axis-{sag|cor|axi}_channel-{single|rgb}_T1w.pt`:
+The output files are `<source_file>[_<input_pattern>]_axis-{sag|cor|axi}_channel-{single|rgb}_T1w.pt`:
 tensor version of the `<i>`-th 2D slice in `sag`ittal, `cor`onal or `axi`al
 plane using three identical channels (`rgb`) or one channel (`single`).
 
@@ -220,14 +215,14 @@ Results are stored in the following folder of the
 [CAPS hierarchy](../../CAPS/Specifications):
 `subjects/<participant_id>/<session_id>/deeplearning_prepare_data/roi_based/t1_linear`.
 
-The main output files are:
-
-`<source_file>_space-<tpl_name>[_desc-{CropRoi|CropImage|Crop}]_[mask_pattern]_roi-<roi_name>_T1w.pt`:
+The output files are `<source_file>_space-<tpl_name>[_desc-{CropRoi|CropImage|Crop}]_[mask_pattern]_roi-<roi_name>_T1w.pt`:
 tensor version of the selected 3D region of interest. 
+
 The key value following `desc` depends on the input and output image:
-- `desc-CropROI`: the input image contains `desc-Crop` and ROI cropping is unabled,
+
+- `desc-CropROI`: the input image contains `desc-Crop` and ROI cropping is enabled,
 - `desc-CropImage`: the input image contains `desc-Crop` and ROI cropping is disabled,
-- `desc-Crop`: the input image do not contain `desc-Crop` and ROI cropping is unabled,
+- `desc-Crop`: the input image do not contain `desc-Crop` and ROI cropping is enabled,
 - `<no_descriptor>`: the input image do not contain `desc-Crop` and ROI cropping is disabled.
 
 ## Going further
