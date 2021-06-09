@@ -110,6 +110,7 @@ nav:
   - I/O tools:
     - create-subjects-visits: IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset
     - check-missing-modalities: IO#check-missing-modalities-check-missing-modalities-for-each-subject
+    - check-missing-processing: IO#check-missing-processing-check-missing-processing-in-a-caps-directory
     - merge-tsv: IO#merge-tsv-gather-bids-and-caps-data-into-a-single-tsv-file
     - center-nifti: IO#center-nifti-center-the-nifti-files-of-a-bids-directory
   - Presentations & demos:
