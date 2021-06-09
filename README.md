@@ -19,7 +19,6 @@
     <img src="https://badge.fury.io/py/clinica.svg" alt="PyPI version">
   </a>
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
-    <img src="https://anaconda.org/aramislab/clinica/badges/installer/conda.svg" alt="conda install">
   </a>
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
     <img src="https://anaconda.org/aramislab/clinica/badges/platforms.svg" alt="platform">

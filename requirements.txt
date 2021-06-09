@@ -2,8 +2,7 @@
 # ***** Requirements with Version Specifiers *****
 #   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
 nibabel >= 2.3.3
-nipype >= 1.4.0
-pybids == 0.5.1
+nipype >= 1.4.0, < 2.0.0
 argcomplete >= 1.9.4
 pandas >= 0.24.2
 jinja2 >= 2.10.1
@@ -20,3 +19,4 @@ niflow-nipype1-workflows
 scikit-image == 0.16.2
 torch > 1.0
 torchvision
+pydicom

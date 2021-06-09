@@ -40,7 +40,7 @@ def create_participants_df(
     location_name = study_name + " location"
 
     # Load the data from the clincal specification file
-    participants_specs = pd.read_excel(clinical_spec_path, sheet_name="participant.tsv")
+    participants_specs = pd.read_csv(clinical_spec_path + "_participant.tsv", sep="\t")
     participant_fields_db = participants_specs[study_name]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
@@ -165,7 +165,7 @@ def create_sessions_dict(
 
     # Load data
     location = study_name + " location"
-    sessions = pd.read_excel(clinical_spec_path, sheet_name="sessions.tsv")
+    sessions = pd.read_csv(clinical_spec_path + "_sessions.tsv", sep="\t")
     sessions_fields = sessions[study_name]
     field_location = sessions[location]
     sessions_fields_bids = sessions["BIDS CLINICA"]
@@ -271,6 +271,8 @@ def create_scans_dict(
 
     import pandas as pd
 
+    from clinica.utils.stream import cprint
+
     scans_dict = {}
     prev_file = ""
     prev_sheet = ""
@@ -292,7 +294,7 @@ def create_scans_dict(
                 "FDG": {},
             }
 
-    scans_specs = pd.read_excel(clinic_specs_path, sheet_name="scans.tsv")
+    scans_specs = pd.read_csv(clinic_specs_path + "_scans.tsv", sep="\t")
     fields_dataset = []
     fields_location = []
     fields_bids = []
@@ -327,7 +329,9 @@ def create_scans_dict(
                     glob.glob(file_to_read_path)[0], sheet_name=sheet
                 )
             elif file_ext == ".csv":
-                file_to_read = pd.read_csv(glob.glob(file_to_read_path)[0])
+                file_to_read = pd.read_csv(
+                    glob.glob(file_to_read_path)[0], sep=None, engine="python"
+                )
             prev_file = file_name
             prev_sheet = sheet
 
@@ -511,7 +515,8 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                             if "-" in carac
                         }
                         f_type = description_dict["acq"].upper()
-
+                    else:
+                        continue
                     row_to_append = pd.DataFrame(
                         scans_dict[bids_id][session_name][f_type], index=[0]
                     )
@@ -641,3 +646,56 @@ def compress_nii(file_path):
         with gzip.open(file_path + ".gz", "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
     remove(file_path)
+
+
+def json_from_dcm(dcm_dir, json_path):
+    """
+    Writes descriptive JSON file from DICOM header
+
+    Args:
+        dcm_dir (str): Path to the DICOM directory
+        json_path (str): Path to the output JSON file
+    """
+    import json
+    from glob import glob
+    from os import path
+
+    from colorama import Fore
+    from pydicom import dcmread
+    from pydicom.tag import Tag
+
+    from clinica.utils.stream import cprint
+
+    fields_dict = {
+        "DeviceSerialNumber": Tag(("0018", "1000")),
+        "Manufacturer": Tag(("0008", "0070")),
+        "ManufacturersModelName": Tag(("0008", "1090")),
+        "SoftwareVersions": Tag(("0018", "1020")),
+        "BodyPart": Tag(("0018", "0015")),
+        "Units": Tag(("0054", "1001")),
+        # Institution
+        "InstitutionName": Tag(("0008", "0080")),
+        "InstitutionAddress": Tag(("0008", "0081")),
+        "InstitutionalDepartmentName": Tag(("0008", "1040")),
+        # MRI
+        "MagneticFieldStrength": Tag(("0018", "0087")),
+        # PET
+        "InjectedRadioactivity": Tag(("0018", "1074")),
+        "MolarActivity": Tag(("0018", "1077")),
+        "InjectionStart": Tag(("0018", "1042")),
+        "FrameDuration": Tag(("0018", "1242")),
+    }
+
+    try:
+        dcm_path = glob(path.join(dcm_dir, "*.dcm"))[0]
+        ds = dcmread(dcm_path)
+        json_dict = dict()
+        for key, tag in fields_dict.items():
+            if tag in ds.keys():
+                json_dict[key] = ds.get(tag).value
+
+        json = json.dumps(json_dict, skipkeys=True, indent=4)
+        with open(json_path, "w") as f:
+            f.write(json)
+    except IndexError:
+        cprint(f"{Fore.RED}WARNING:No DICOM found at {dcm_dir}.{Fore.RESET}")

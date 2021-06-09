@@ -521,28 +521,30 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
 # in BIDS
 
 
-def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
+def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=False):
     """Convert all the T1 images found in the AIBL dataset downloaded in BIDS.
 
-    :param path_to_dataset: path_to_dataset
-    :param path_to_csv: path to the csv file containing clinical data
-    :param bids_dir: path to save the AIBL-T1-dataset converted in a
-    BIDS format
-    :param modality: string 't1', 'av45', 'flute' or 'pib'
+    Args:
+        path_to_dataset: path_to_dataset
+        path_to_csv: path to the csv file containing clinical data
+        bids_dir: path to save the AIBL-T1-dataset converted in a BIDS format
+        modality: string 't1', 'av45', 'flute' or 'pib'
+        overwrite: if True previous existing outputs will be erased
 
-    :return: list of all the images that are potentially converted in a
-    BIDS format and saved in the bids_dir. This does not guarantee
-    existence
+    Returns:
+        list of all the images that are potentially converted in a BIDS format and saved in the bids_dir.
+        This does not guarantee existence.
     """
     import glob
     from multiprocessing import Value, cpu_count
     from multiprocessing.dummy import Pool
-    from os import makedirs
+    from os import makedirs, remove
     from os.path import exists, join
 
     import pandas as pds
     from numpy import nan
 
+    from clinica.iotools.bids_utils import json_from_dcm
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
 
@@ -595,13 +597,16 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
             )
         # image is saved following BIDS specifications
 
-        if exists(join(output_path, output_filename + ".nii.gz")):
+        if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
             cprint(f"Subject {str(subject)} - session {session} already processed.")
             output_image = join(output_path, output_filename + ".nii.gz")
         else:
+            if exists(join(output_path, output_filename + ".nii.gz")):
+                remove(join(output_path, output_filename + ".nii.gz"))
             output_image = dicom_to_nii(
                 subject, output_path, output_filename, image_path
             )
+            json_from_dcm(image_path, join(output_path, output_filename + ".json"))
 
         # Center all images
         center_nifti_origin(output_image, output_image)
@@ -680,9 +685,11 @@ def create_participants_df_AIBL(
     index_to_drop = []
 
     location_name = "AIBL location"
+    clinical_spec_path = clinical_spec_path + "_participant.tsv"
+
     if not os.path.exists(clinical_spec_path):
         raise FileNotFoundError(clinical_spec_path + " not found in clinical data.")
-    participants_specs = pd.read_excel(clinical_spec_path, sheet_name="participant.tsv")
+    participants_specs = pd.read_csv(clinical_spec_path, sep="\t")
     participant_fields_db = participants_specs["AIBL"]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
@@ -789,7 +796,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
 
     # Load data
     location = "AIBL location"
-    sessions = pd.read_excel(clinical_spec_path, sheet_name="sessions.tsv")
+    sessions = pd.read_csv(clinical_spec_path + "_sessions.tsv", sep="\t")
     sessions_fields = sessions["AIBL"]
     field_location = sessions[location]
     sessions_fields_bids = sessions["BIDS CLINICA"]
@@ -898,7 +905,7 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
 
     # Load data
     location = "AIBL location"
-    scans = pd.read_excel(clinical_spec_path, sheet_name="scans.tsv")
+    scans = pd.read_csv(clinical_spec_path + "_scans.tsv", sep="\t")
     scans_fields = scans["AIBL"]
     field_location = scans[location]
     scans_fields_bids = scans["BIDS CLINICA"]
@@ -922,9 +929,10 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
             files_to_read.append(glob.glob(file_to_read_path)[0])
             sessions_fields_to_read.append(scans_fields[i])
 
-    rid_df = pd.read_csv(files_to_read[0], dtype={"text": str}, low_memory=False).RID
-    rid_list = list(set(rid_df))
-    bids_ids = ["sub-AIBL%i" % rid for rid in rid_list]
+    bids_ids = [
+        path.basename(sub_path)
+        for sub_path in glob.glob(path.join(input_path, "sub-AIBL*"))
+    ]
 
     # This dictionary should be automatically computed from the dataset
     ses_dict = {"ses-M00": "bl", "ses-M18": "m18", "ses-M36": "m36", "ses-M54": "m54"}
