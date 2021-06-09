@@ -1,65 +1,59 @@
-# coding: utf8
+from typing import Optional
 
-import clinica.engine as ce
+import click
+
+from clinica.pipelines import cli_param
+
+pipeline_name = "dwi-processing-using-t1"
 
 
-class DwiPreprocessingUsingT1Cli(ce.CmdParser):
+@click.command(name=pipeline_name)
+@cli_param.argument.bids_directory
+@cli_param.argument.caps_directory
+@cli_param.option.low_bval
+@cli_param.option.subjects_sessions_tsv
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+def cli(
+    bids_directory: str,
+    caps_directory: str,
+    low_bval: int = 5,
+    subjects_sessions_tsv: Optional[str] = None,
+    working_directory: Optional[str] = None,
+    n_procs: Optional[int] = None,
+) -> None:
+    """Preprocessing of raw DWI datasets using a T1w image.
 
-    def define_name(self):
-        """Define the sub-command name to run this pipeline."""
-        self._name = 'dwi-preprocessing-using-t1'
+    https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_Preprocessing/
+    """
+    from networkx import Graph
 
-    def define_description(self):
-        """Define a description of this pipeline."""
-        self._description = ('Preprocessing of raw DWI datasets using a T1w image:\n'
-                             'https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_Preprocessing/')
+    from clinica.utils.ux import print_end_pipeline
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+    from .dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
 
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
-        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
-        clinica_comp.add_argument("bids_directory",
-                                  help='Path to the BIDS directory.')
-        clinica_comp.add_argument("caps_directory",
-                                  help='Path to the CAPS directory.')
-        # Optional arguments (e.g. FWHM)
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("--low_bval",
-                              metavar='N', type=int, default=5,
-                              help='Define the b0 volumes as all volume bval <= low_bval '
-                                   '(default: --low_bval %(default)s).')
-        # Clinica standard arguments (e.g. --n_procs)
-        self.add_clinica_standard_arguments()
+    parameters = {"low_bval": low_bval}
 
-    def run_command(self, args):
-        """Run the pipeline with defined args."""
-        from networkx import Graph
+    pipeline = DwiPreprocessingUsingT1(
+        bids_directory=bids_directory,
+        caps_directory=caps_directory,
+        tsv_file=subjects_sessions_tsv,
+        base_dir=working_directory,
+        parameters=parameters,
+        name=pipeline_name,
+    )
 
-        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+    exec_pipeline = (
+        pipeline.run(plugin="MultiProc", plugin_args={"n_procs": n_procs})
+        if n_procs
+        else pipeline.run()
+    )
 
-        from .dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
-
-        parameters = {
-            'low_bval': args.low_bval
-        }
-        pipeline = DwiPreprocessingUsingT1(
-            bids_directory=self.absolute_path(args.bids_directory),
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters,
-            name=self.name
+    if isinstance(exec_pipeline, Graph):
+        print_end_pipeline(
+            pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
 
-        if args.n_procs:
-            exec_pipeline = pipeline.run(plugin='MultiProc',
-                                         plugin_args={'n_procs': args.n_procs})
-        else:
-            exec_pipeline = pipeline.run()
 
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
-        else:
-            print_crash_files_and_exit(args.logname, pipeline.base_dir)
+if __name__ == "__main__":
+    cli()
