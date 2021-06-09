@@ -51,13 +51,13 @@ where:
 both in a [CAPS hierarchy](../../CAPS/Introduction).
 - `modality` is the name of the preprocessing done in the original images.
 It can be `t1-linear`, `t1-extensive` or `pet-linear`.
-You can chose `custom` if you want to get a tensor from a custom filename.
+You can choose `custom` if you want to get a tensor from a custom filename.
 - `tensor_format` is the format of the extracted tensors.
 You can choose between `image` to convert to PyTorch tensor the whole 3D image,
 `patch` to extract 3D patches, `slice` to extract 2D slices from the image and
 `roi` to extract 3D region of interest depending on the ROI mask.
 
-By default the features are extracted from the cropped image (see the
+By default, the features are extracted from the cropped image (see the
 documentation of the [`t1-linear` pipeline](../T1_Linear)).
 You can deactivate this behaviour with the `--use_uncropped_image` flag.
 The same behaviour is applied to [`pet-linear` pipeline](../PET_Linear).
@@ -78,14 +78,52 @@ You can choose between `rgb` (will save the slice in three identical channels) o
 
 Pipeline options if you use `roi` extraction:
 
-- `--roi_list`: list of ROI to be extracted. By default the masks of ROI should be
-save in `<caps_directory/masks>`.
-- `--roi_uncrop_output`: disable cropping option so the output 
-tensors have the same size than the whole image instead of the ROI size.
-- `--custom_template` (optionnal): if the modality is set to custom, it will chose the 
-corresponding mask which matches with the template.
-- `--custom_mask_pattern` (optionnal): to select a mask with a specific pattern 
-in the file name.
+- `--roi_list`: list of ROI to be extracted. The masks corresponding to these ROIs should be
+written in `<caps_directory>/masks/tpl-<tpl_name>`.
+- `--roi_uncrop_output`: disables cropping option, so the output 
+tensors have the same size as the whole image instead of the ROI size.
+- `--custom_template` (mandatory for `custom`): only used when `modality` is set to `custom`.
+Sets the value of `<tpl_name>`.
+- `--custom_mask_pattern` (optional): only used when `modality` is set to `custom`.
+Allows to choose a particular mask with a name following the given pattern.
+  
+!!! note "ROI masks"
+    ROI masks are compressed nifti files (.nii.gz) containing a binary mask of the same size as the
+    input data it corresponds to. All masks must follow the pattern 
+    `tpl-<tpl_name>_*_roi-<roi_name>_mask.nii.gz`.
+
+    If the defined region is not cubic, `deeplearning-prepare-data` will automatically extract
+    the smallest bounding box around the region and fill the remaining values with 0 (unless
+    `--roi_uncrop_output` is specified).
+
+    Masks must correspond to the template used in the pipeline for registration. For `t1-linear`
+    and `pet-linear` it is automatically set to `MNI152NLin2009cSym`. For a `custom` modality
+    this value must be set using `custom_template`.
+
+    The chosen mask will correspond to the mask with the shortest name following the wanted pattern.
+
+Example of file system needed:
+
+```Text
+caps
+├── masks
+│       ├── tpl-<tpl_name>
+│       │       ├── tpl-<tpl_name>[_custom_pattern]_roi-<roi_1>_mask.nii.gz
+│       │       ├── ...
+│       │       └── tpl-<tpl_name>[_custom_pattern]_roi-<roi_N>_mask.nii.gz
+│       └── tpl-MNI152NLin2009cSym
+│               ├── tpl-MNI152NLin2009cSym_desc-Crop_res-1x1x1_roi-<roi_1>_mask.nii.gz
+│               ├── tpl-MNI152NLin2009cSym_desc-Crop_res-1x1x1_roi-<roi_2>_mask.nii.gz
+│               ├── tpl-MNI152NLin2009cSym_res-1x1x1_roi-<roi_1>_mask.nii.gz
+│               └── tpl-MNI152NLin2009cSym_res-1x1x1_roi-<roi_2>_mask.nii.gz
+└── subjects
+        └── ...
+```
+
+The first two masks in `tpl-MNI152NLin2009cSym/` contain `desc-Crop`, hence they can only be
+applied to cropped input images, and their size will be (169x208x179). On the contrary the last two masks
+in the same folder fo not contain `desc-Crop` hence they can only be applied to uncropped
+input images and their size will be (193x229x193).
 
 Pipeline options if you use `pet-linear` modality:
 
@@ -163,9 +201,6 @@ The main output files are:
 
 - `<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_patchsize-<N>_stride-<M>_patch-<i>_T1w.pt`:
 tensor version of the `<i>`-th 3D isotropic patch of size `<N>` with a stride of `<M>`.
-Each patch is extracted from the T1w image registered to the [`MNI152NLin2009cSym`
-template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html)
-and optionally cropped.
 
 ### Slice-based outputs
 
@@ -178,9 +213,6 @@ The main output files are:
 - `<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_axis-{sag|cor|axi}_channel-{single|rgb}_T1w.pt`:
 tensor version of the `<i>`-th 2D slice in `sag`ittal, `cor`onal or `axi`al
 plane using three identical channels (`rgb`) or one channel (`single`).
-Each slice is extracted from the T1w image registered to the [`MNI152NLin2009cSym`
-template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html)
-and optionally cropped.
 
 ### ROI based outputs
 
@@ -190,11 +222,13 @@ Results are stored in the following folder of the
 
 The main output files are:
 
-`<source_file>_space-MNI152NLin2009cSym[_desc-{CropRoi|CropImage}]_res-1x1x1_roi-<name_of_roi>_T1w.pt`:
+`<source_file>_space-<tpl_name>[_desc-{CropRoi|CropImage|Crop}]_[mask_pattern]_roi-<roi_name>_T1w.pt`:
 tensor version of the selected 3D region of interest. 
-Each slice is extracted from the T1w image registered to the [`MNI152NLin2009cSym`
-template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html)
-and optionally cropped.
+The key value following `desc` depends on the input and output image:
+- `desc-CropROI`: the input image contains `desc-Crop` and ROI cropping is unabled,
+- `desc-CropImage`: the input image contains `desc-Crop` and ROI cropping is disabled,
+- `desc-Crop`: the input image do not contain `desc-Crop` and ROI cropping is unabled,
+- `<no_descriptor>`: the input image do not contain `desc-Crop` and ROI cropping is disabled.
 
 ## Going further
 
