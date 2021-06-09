@@ -69,21 +69,26 @@ class Oasis3ToBids(Converter):
         from os import path
         from glob import glob
         import os
-        from multiprocessing.dummy import Pool
-        from multiprocessing import cpu_count
 
         def convert_single_subject(subj_folder):
             import os
             import re
             import shutil
-            import nibabel as nb
-            import numpy as np
 
             def copy_file(source, target):
                 try:
+                    new_filename = re.sub("OAS3", "OASIS3", path.basename(source))
+                    new_filename = re.sub("_echo-", "_run-", new_filename)
+                    if re.search(".*_pet.(nii.gz|json)", new_filename) is not None:
+                        new_filename = re.sub("task-rest_", "", new_filename)
+                        new_filename = re.sub("acq", "trc", new_filename)
+                        target = path.join(path.dirname(target), "pet")
+                    elif re.search(".*_(minIP|swi|dwi).(nii.gz|json)", new_filename) is not None:
+                        target = path.join(path.dirname(target), "swi")
+                    if not os.path.isdir(target):
+                        os.mkdir(path.join(target))
                     shutil.copy(source, target)
-                    f = path.join(target, path.basename(source))
-                    os.rename(f, re.sub("OAS3", "OASIS3", f))
+                    os.rename(path.join(target, path.basename(source)), path.join(target, new_filename))
                 except IOError as e:
                     print("Unable to copy file. %s" % e)
 
@@ -96,7 +101,6 @@ class Oasis3ToBids(Converter):
             if not os.path.isdir(bids_subj_folder):
                 os.mkdir(bids_subj_folder)
 
-            #session_name = "".join(old_sess_fold[1:])
             session_name = old_sess_fold[2]
             session_folder = path.join(bids_subj_folder, 'ses-' + session_name)
             if not os.path.isdir(session_folder):
@@ -113,56 +117,23 @@ class Oasis3ToBids(Converter):
 
                 # Looking for an existing func or anat folder
                 dir_name = path.dirname(nifti_folder)
-                regex = re.compile("(?P<folder>anat|func)\d")
+                regex = re.compile("(?P<folder>anat|func)[1-9]")
                 if regex.search(dir_name) is not None:
                     output_folder = regex.search(dir_name).group("folder")
                 elif regex.search(path.abspath(dir_name)) is not None:
                     output_folder = regex.search(path.abspath(dir_name)).group("folder")
                 else:
                     output_folder = "anat"
-                #
+
                 # Moove nifti and json files to the right folder
                 output_path = path.join(session_folder, output_folder)
-                if not os.path.isdir(output_path):
-                    os.mkdir(path.join(output_path))
                 copy_file(nifti_folder, output_path)
                 if len(json_file_paths) > 0:
                     copy_file(json_file_paths[0], output_path)
-
-            # First, convert to Nifti so that we can extract the s_form with NiBabel
-            # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
-            # img_with_wrong_orientation_analyze = nb.load(img_file_path)
-
-            # OASIS-1 images have the same header but sform is incorrect
-            # To solve this issue, we use header from images converted with FreeSurfer
-            # to generate a 'clean hard-coded' header
-            # affine:
-            # [[   0.    0.   -1.   80.]
-            #  [   1.    0.    0. -128.]
-            #  [   0.    1.    0. -128.]
-            #  [   0.    0.    0.    1.]]
-            # affine = np.array([0, 0, -1, 80, 1, 0, 0, -128, 0, 1, 0, -128, 0, 0, 0, 1]).reshape(4, 4)
-            # s_form = affine.astype(np.int16)
-            #
-            # hdr = nb.Nifti1Header()
-            # hdr.set_data_shape((256, 256, 160))
-            # hdr.set_data_dtype(np.int16)
-            # hdr['bitpix'] = 16
-            # hdr.set_sform(s_form, code='scanner')
-            # hdr.set_qform(s_form, code='scanner')
-            # hdr['extents'] = 16384
-            # hdr['xyzt_units'] = 10
-            #
-            # img_with_good_orientation_nifti = nb.Nifti1Image(
-            #     np.round(img_with_wrong_orientation_analyze.get_data()).astype(np.int16),
-            #     s_form,
-            #     header=hdr
-            # )
-            # nb.save(img_with_good_orientation_nifti, output_path)
 
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)
 
         subjs_folders = glob(path.join(source_dir, 'OAS3*'))
-        poolrunner = Pool(max(os.cpu_count()-1, 1))
-        poolrunner.map(convert_single_subject, subjs_folders)
+        for subj_folder in subjs_folders:
+            convert_single_subject(subj_folder)
