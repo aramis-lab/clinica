@@ -43,10 +43,16 @@ class DeepLearningPrepareData(cpe.Pipeline):
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
+        from os import path
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.exceptions import (
+            ClinicaBIDSError,
+            ClinicaCAPSError,
+            ClinicaException,
+        )
         from clinica.utils.input_files import (
             T1W_EXTENSIVE,
             T1W_LINEAR,
@@ -57,6 +63,9 @@ class DeepLearningPrepareData(cpe.Pipeline):
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
+        from .deeplearning_prepare_data_utils import check_mask_list
+
+        # Select the correct filetype corresponding to modality
         if self.parameters.get("modality") == "t1-linear":
             if self.parameters.get("use_uncropped_image"):
                 FILE_TYPE = T1W_LINEAR
@@ -64,6 +73,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 FILE_TYPE = T1W_LINEAR_CROPPED
         if self.parameters.get("modality") == "t1-extensive":
             FILE_TYPE = T1W_EXTENSIVE
+            self.parameters["use_uncropped_image"] = None
         if self.parameters.get("modality") == "pet-linear":
             FILE_TYPE = pet_linear_nii(
                 self.parameters.get("acq_label"),
@@ -75,6 +85,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 "pattern": f"*{self.parameters.get('custom_suffix')}",
                 "description": "Custom suffix",
             }
+            self.parameters["use_uncropped_image"] = None
 
         # Input file:
         try:
@@ -105,6 +116,43 @@ class DeepLearningPrepareData(cpe.Pipeline):
         else:
             self.patch_size = 50
             self.stride_size = 50
+
+        # Load the corresponding masks
+        if self.parameters.get("extract_method") == "roi":
+            self.roi_list = self.parameters.get("roi_list")
+
+            if self.parameters.get("modality") == "custom":
+                self.mask_pattern = self.parameters.get("custom_mask_pattern")
+                self.template = self.parameters.get("custom_template")
+                if self.template is None:
+                    raise ValueError(
+                        "A custom template must be defined when the modality is set to custom."
+                    )
+            else:
+                self.mask_pattern = None
+                from .deeplearning_prepare_data_utils import TEMPLATE_DICT
+
+                self.template = TEMPLATE_DICT[self.parameters.get("modality")]
+
+            self.masks_location = path.join(
+                self.caps_directory, "masks", f"tpl-{self.template}"
+            )
+
+            if self.roi_list is None:
+                raise ValueError("A list of regions must be given.")
+            else:
+                check_mask_list(
+                    self.masks_location,
+                    self.roi_list,
+                    self.mask_pattern,
+                    None
+                    if self.parameters.get("use_uncropped_image") is None
+                    else not self.parameters.get("use_uncropped_image"),
+                )
+        else:
+            self.masks_location = ""
+            self.mask_pattern = None
+            self.roi_list = []
 
         # The reading node
         # -------------------------
@@ -174,36 +222,41 @@ class DeepLearningPrepareData(cpe.Pipeline):
         subfolder = "image_based"
         if self.parameters.get("extract_method") == "slice":
             subfolder = "slice_based"
+            # fmt: off
             self.connect(
                 [
-                    (
-                        self.output_node,
-                        write_node,
-                        [("slices_rgb_T1", "@slices_rgb_T1")],
-                    ),
-                    (
-                        self.output_node,
-                        write_node,
-                        [("slices_original_T1", "@slices_original_T1")],
-                    ),
+                    (self.output_node, write_node, [("slices_rgb_output", "@slices_rgb_output")]),
+                    (self.output_node, write_node, [("slices_original_output", "@slices_original_output")]),
                 ]
             )
+            # fmt: on
 
         elif self.parameters.get("extract_method") == "patch":
             subfolder = "patch_based"
-            self.connect(
-                [(self.output_node, write_node, [("patches_T1", "@patches_T1")])]
-            )
-        else:
+            # fmt: off
             self.connect(
                 [
-                    (
-                        self.output_node,
-                        write_node,
-                        [("output_pt_file", "@output_pt_file")],
-                    )
+                    (self.output_node, write_node, [("patches_output", "@patches_output")])
                 ]
             )
+            # fmt: on
+        elif self.parameters.get("extract_method") == "roi":
+            subfolder = "roi_based"
+            # fmt: off
+            self.connect(
+                [
+                    (self.output_node, write_node, [("roi_output", "@roi_output")])
+                ]
+            )
+            # fmt: on
+        else:
+            # fmt: off
+            self.connect(
+                [
+                    (self.output_node, write_node, [("output_pt_file", "@output_pt_file")])
+                ]
+            )
+            # fmt: on
 
         mod_subfolder = ""
         if self.parameters.get("modality") == "t1-linear":
@@ -231,6 +284,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
 
         from .deeplearning_prepare_data_utils import (
             extract_patches,
+            extract_roi,
             extract_slices,
             save_as_pt,
         )
@@ -250,7 +304,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
 
         # Extract slices node (options: 3 directions, mode)
         # ----------------------
-        extract_slices = npe.MapNode(
+        extract_slices_node = npe.MapNode(
             name="extract_slices",
             iterfield=["input_tensor"],
             interface=nutil.Function(
@@ -260,12 +314,12 @@ class DeepLearningPrepareData(cpe.Pipeline):
             ),
         )
 
-        extract_slices.inputs.slice_direction = self.slice_direction
-        extract_slices.inputs.slice_mode = self.slice_mode
+        extract_slices_node.inputs.slice_direction = self.slice_direction
+        extract_slices_node.inputs.slice_mode = self.slice_mode
 
         # Extract patches node (options, patch size and stride size)
         # ----------------------
-        extract_patches = npe.MapNode(
+        extract_patches_node = npe.MapNode(
             name="extract_patches",
             iterfield=["input_tensor"],
             interface=nutil.Function(
@@ -275,8 +329,35 @@ class DeepLearningPrepareData(cpe.Pipeline):
             ),
         )
 
-        extract_patches.inputs.patch_size = self.patch_size
-        extract_patches.inputs.stride_size = self.stride_size
+        extract_patches_node.inputs.patch_size = self.patch_size
+        extract_patches_node.inputs.stride_size = self.stride_size
+
+        # Extract ROi node
+        extract_roi_node = npe.MapNode(
+            name="extract_ROI",
+            iterfield=["input_tensor"],
+            interface=nutil.Function(
+                function=extract_roi,
+                input_names=[
+                    "input_tensor",
+                    "masks_location",
+                    "mask_pattern",
+                    "cropped_input",
+                    "roi_list",
+                    "uncrop_output",
+                ],
+                output_names=["output_roi"],
+            ),
+        )
+        extract_roi_node.inputs.masks_location = self.masks_location
+        extract_roi_node.inputs.mask_pattern = self.mask_pattern
+        extract_roi_node.inputs.cropped_input = (
+            None
+            if self.parameters.get("use_uncropped_image") is None
+            else not self.parameters.get("use_uncropped_image")
+        )
+        extract_roi_node.inputs.roi_list = self.roi_list
+        extract_roi_node.inputs.uncrop_output = self.parameters.get("roi_uncrop_output")
 
         # Connections
         # ----------------------
@@ -290,16 +371,23 @@ class DeepLearningPrepareData(cpe.Pipeline):
         if self.parameters.get("extract_method") == "slice":
             self.connect(
                 [
-                    (save_as_pt, extract_slices, [("output_file", "input_tensor")]),
-                    (extract_slices, self.output_node, [("output_file_rgb", "slices_rgb_T1")]),
-                    (extract_slices, self.output_node, [("output_file_original", "slices_original_T1")]),
+                    (save_as_pt, extract_slices_node, [("output_file", "input_tensor")]),
+                    (extract_slices_node, self.output_node, [("output_file_rgb", "slices_rgb_output")]),
+                    (extract_slices_node, self.output_node, [("output_file_original", "slices_original_output")]),
                 ]
             )
         elif self.parameters.get("extract_method") == "patch":
             self.connect(
                 [
-                    (save_as_pt, extract_patches, [("output_file", "input_tensor")]),
-                    (extract_patches, self.output_node, [("output_patch", "patches_T1")]),
+                    (save_as_pt, extract_patches_node, [("output_file", "input_tensor")]),
+                    (extract_patches_node, self.output_node, [("output_patch", "patches_output")]),
+                ]
+            )
+        elif self.parameters.get("extract_method") == "roi":
+            self.connect(
+                [
+                    (save_as_pt, extract_roi_node, [("output_file", "input_tensor")]),
+                    (extract_roi_node, self.output_node, [("output_roi", "roi_output")]),
                 ]
             )
         else:

@@ -107,7 +107,7 @@ TSV files summarizing the regional statistics on the labelled atlases (Desikan a
 !!! note
     The full list of output files from the `pet-surface` pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-surface-surface-based-processing-of-pet-images).
 
-<center>![PET surface results](../../img/PET_Surface.jpg)</center>
+<center>![PET surface results](../img/PET_Surface/PET_Surface.jpg)</center>
 *<center><small>FDG PET SUVR projected onto the cortical surface (left hemisphere) for (from left to right) a cognitively normal subject (CN), a patient with Alzheimer’s disease (AD), a patient with semantic variant primary progressive aphasia (svPPA) and a patient with logopenic variant primary progressive aphasia (lvPPA).
 The first row is the projection in the subject’s space.
 The second row is the same signal for each subject, but warped to FsAverage after smoothing with a 20 mm Gaussian kernel.</small></center>*

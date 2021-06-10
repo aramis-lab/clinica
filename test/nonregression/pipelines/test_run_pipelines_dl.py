@@ -30,7 +30,8 @@ def test_run_DLPrepareData(cmdopt):
 
     # Prepare test for different parameters
 
-    modalities = ["t1-linear", "pet-linear"]
+    modalities = ["t1-linear", "pet-linear", "custom"]
+
     uncropped_image = [True, False]
 
     image_params = {"extract_method": "image"}
@@ -40,8 +41,13 @@ def test_run_DLPrepareData(cmdopt):
         "slice_mode": "rgb",
         "slice_direction": 0,
     }
+    roi_params = {
+        "extract_method": "roi",
+        "roi_list": ["rightHippocampusBox", "leftHippocampusBox"],
+        "roi_uncrop_output": False,
+    }
 
-    data = [image_params, slice_params, patch_params]
+    data = [image_params, slice_params, patch_params, roi_params]
 
     for parameters in data:
         for modality in modalities:
@@ -51,10 +57,20 @@ def test_run_DLPrepareData(cmdopt):
                 parameters["suvr_reference_region"] = "pons2"
                 parameters["use_uncropped_image"] = False
                 DLPrepareData_Generic(root, working_dir, parameters)
-            else:
+            elif modality == "custom":
+                parameters["custom_template"] = "Ixi549Space"
+                parameters[
+                    "custom_suffix"
+                ] = "graymatter_space-Ixi549Space_modulated-off_probability.nii.gz"
+                DLPrepareData_Generic(root, working_dir, parameters)
+            elif modality == "t1-linear":
                 for flag in uncropped_image:
                     parameters["use_uncropped_image"] = flag
                     DLPrepareData_Generic(root, working_dir, parameters)
+            else:
+                raise NotImplementedError(
+                    f"Test for modality {modality} was not implemented."
+                )
 
     # Check output vs ref
     out_folder = join(root, "out")
@@ -69,6 +85,7 @@ def test_run_DLPrepareData(cmdopt):
 def DLPrepareData_Generic(root, working_dir, parameters):
 
     from os.path import join
+
     from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_pipeline import (
         DeepLearningPrepareData,
     )

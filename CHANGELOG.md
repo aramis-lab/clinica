@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- 
+- *  [deeplearning-prepare-data]: Add option to run pipeline with `roi` for `tensor_format` option to extract region of interest according to a mask.
+
 ### Changed
 
 - [Adni-to-bids]: Replace xlsx files with tsv

@@ -300,3 +300,174 @@ def save_as_pt(input_img):
     torch.save(image_tensor.clone(), output_file)
 
     return output_file
+
+
+# ROI extraction utils
+
+
+def check_mask_list(masks_location, roi_list, mask_pattern, cropping):
+    import nibabel as nib
+    import numpy as np
+
+    for roi in roi_list:
+        roi_path, desc = find_mask_path(masks_location, roi, mask_pattern, cropping)
+        if roi_path is None:
+            raise ValueError(
+                f"The ROI '{roi}' does not correspond to a mask in the CAPS directory. {desc}"
+            )
+        roi_mask = nib.load(roi_path).get_fdata()
+        mask_values = set(np.unique(roi_mask))
+        if mask_values != {0, 1}:
+            raise ValueError(
+                "The ROI masks used should be binary (composed of 0 and 1 only)."
+            )
+
+
+def find_mask_path(masks_location, roi, mask_pattern, cropping):
+    """Finds masks corresponding to the pattern asked and containing the adequate cropping description"""
+    from glob import glob
+    from os import path
+
+    # Check that pattern begins and ends with _ to avoid mixing keys
+    if mask_pattern is None:
+        mask_pattern = ""
+    elif len(mask_pattern) != 0:
+        if not mask_pattern.endswith("_"):
+            mask_pattern += "_"
+        if not mask_pattern[0] == "_":
+            mask_pattern = "_" + mask_pattern
+
+    candidates_pattern = path.join(
+        masks_location, f"*{mask_pattern}*_roi-{roi}_mask.nii*"
+    )
+    desc = f"The mask should follow the pattern {candidates_pattern} "
+    candidates = glob(candidates_pattern)
+    if cropping is None:
+        desc += "."
+    elif cropping:
+        candidates = [mask for mask in candidates if "_desc-Crop_" in mask]
+        desc += f"and contain '_desc-Crop_' string."
+    else:
+        candidates = [mask for mask in candidates if "_desc-Crop_" not in mask]
+        desc += f"and not contain '_desc-Crop_' string."
+
+    if len(candidates) == 0:
+        return None, desc
+    else:
+        return min(candidates, key=len), desc
+
+
+def compute_output_pattern(mask_path, crop_output):
+    """
+    Computes the output pattern of the region cropped (without the source file prefix)
+    Args:
+        mask_path: path to the masks
+        crop_output: If True the output is cropped, and the descriptor CropRoi must exist
+    Returns:
+        the output pattern
+    """
+    from os import path
+
+    mask_filename = path.basename(mask_path)
+    template_id = mask_filename.split("_")[0].split("-")[1]
+    mask_descriptors = mask_filename.split("_")[1:-2:]
+    roi_id = mask_filename.split("_")[-2].split("-")[1]
+    if "desc-Crop" not in mask_descriptors and crop_output:
+        mask_descriptors = ["desc-CropRoi"] + mask_descriptors
+    elif "desc-Crop" in mask_descriptors:
+        mask_descriptors = [
+            descriptor for descriptor in mask_descriptors if descriptor != "desc-Crop"
+        ]
+        if crop_output:
+            mask_descriptors = ["desc-CropRoi"] + mask_descriptors
+        else:
+            mask_descriptors = ["desc-CropImage"] + mask_descriptors
+
+    mask_pattern = "_".join(mask_descriptors)
+    output_pattern = f"space-{template_id}_{mask_pattern}_roi-{roi_id}"
+
+    return output_pattern
+
+
+def extract_roi(
+    input_tensor,
+    masks_location,
+    mask_pattern,
+    cropped_input,
+    roi_list,
+    uncrop_output,
+):
+    """Extracts regions of interest defined by masks
+    This function extracts regions of interest from preprocessed nifti images.
+    The regions are defined using binary masks that must be located in the CAPS
+    at `masks/tpl-<template>`.
+    Args:
+        input_path: path to the tensor version of the nifti MRI.
+        basedir: path to the extracted files.
+        masks_location: path to the masks
+        mask_pattern: pattern to identify the masks
+        cropped_input: if the input is cropped or not (contains desc-Crop)
+        roi_list: list of the names of the regions that will be extracted.
+        uncrop_output: if True, the final region is not cropped.
+    Returns:
+        file: multiple tensors saved on the disk, suffixes corresponds to
+            indexes of the patches. Same location than input file.
+    """
+    import os
+
+    import nibabel as nib
+    import numpy as np
+    import torch
+
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_utils import (
+        compute_output_pattern,
+        find_mask_path,
+    )
+
+    image_tensor = torch.load(input_tensor)
+    basedir = os.getcwd()
+
+    input_tensor_filename = os.path.basename(input_tensor)
+
+    sub_ses_prefix = "_".join(input_tensor_filename.split("_")[0:3:])
+    if not sub_ses_prefix.endswith("_T1w"):
+        sub_ses_prefix = "_".join(input_tensor_filename.split("_")[0:2:])
+    input_suffix = input_tensor_filename.split("_")[-1].split(".")[0]
+
+    output_roi = []
+    for index_roi, roi in enumerate(roi_list):
+        # read mask
+        mask_path, _ = find_mask_path(masks_location, roi, mask_pattern, cropped_input)
+        mask_np = nib.load(mask_path).get_fdata()
+        if len(mask_np.shape) == 3:
+            mask_np = mask_np[np.newaxis, :]
+
+        extracted_roi = image_tensor * mask_np
+        if not uncrop_output:
+            extracted_roi = extracted_roi[
+                np.ix_(
+                    mask_np.any((1, 2, 3)),
+                    mask_np.any((0, 2, 3)),
+                    mask_np.any((0, 1, 3)),
+                    mask_np.any((0, 1, 2)),
+                )
+            ]
+        extracted_roi = extracted_roi.float()
+        # save into .pt format
+        output_pattern = compute_output_pattern(mask_path, not uncrop_output)
+        output_roi.append(
+            os.path.join(
+                basedir, f"{sub_ses_prefix}_{output_pattern}_{input_suffix}.pt"
+            )
+        )
+        # os.makedirs(basedir, exist_ok=True)
+        torch.save(extracted_roi.clone(), output_roi[index_roi])
+
+    return output_roi
+
+
+TEMPLATE_DICT = {
+    "t1-linear": "MNI152NLin2009cSym",
+    "t1-extensive": "Ixi549Space",
+    "pet-linear": "MNI152NLin2009cSym",
+}
