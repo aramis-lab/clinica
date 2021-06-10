@@ -40,10 +40,12 @@ sub-03           ses-M24
 
 Starting from a BIDS compliant dataset, this command creates:
 
-1. A TSV file for each session available with the list of the modalities found for each subject.
-The name of the files produced will be `<prefix>_ses-<session_label>.tsv`.
-2. A text file containing the number and the percentage of modalities missing for each session.
-The name of the files produced will be `<prefix>_summary.txt`.
+1. `<prefix>_ses-<session_label>.tsv`: TSV files for each session available with the list 
+   of the modalities found for each subject.
+2. `<prefix>_summary.txt`: a text file containing the number and the percentage of modalities missing for each session.
+3. `analysis.txt`: a text file in which a table is written per session. This table contains the number of
+images per modality per diagnosis when the column `diagnosis` is available in the session-
+level files of the BIDS directory.
 
 If no value for `<prefix>` is specified by the user, the default will be `missing_mods`.
 
@@ -83,6 +85,38 @@ The nomenclature of the modalities tries to follow, as much as possible, the one
     clinica iotools check-missing-modalities /Home/ADNI_BIDS/ /Home/
     clinica iotools check-missing-modalities /Home/ADNI_BIDS/ /Home/ -op new_name
     ```
+
+## `check-missing-processing` - Check missing processing in a CAPS directory
+
+Starting from a CAPS compliant dataset, this command creates a TSV file with columns
+`participant_id`, `session_id` and names corresponding to steps of
+`t1-volume`, `t1-freesurfer`, `t1-linear`, `pet-volume` and `pet-surface`.
+For PET pipelines one column is created per tracer and the PVC option is considered for `pet-volume`.
+
+```Text
+clinica iotools check-missing-processing <bids_directory> <caps_directory> <out_file>
+```
+
+where:
+
+- `bids_directory`: input folder of a BIDS compliant dataset
+- `caps_directory`: input folder of a [CAPS](../CAPS/Introduction) compliant dataset
+- `out_file`: output file path (filename included).
+
+The content of `out_file` will look like:
+
+```Text
+participant_id   session_id     t1-linear   ...     pet-volume_acq-<tracer>_group-<group_label>_pvc-{True|False}
+sub-01           ses-M00        1                   1
+sub-01           ses-M12        1                   0
+sub-02           ses-M00        0                   0
+```
+
+- columns associated with `pet-volume` outputs will specify the PET tracer,
+the group label and if a PVC correction was performed.
+- columns associated with `t1-volume` outputs will specify the group label and which steps of `t1-volume` were performed.
+- columns associated with `pet-surface` outputs will specify the PET tracer used.
+
 
 ## `merge-tsv` - Gather BIDS and CAPS data into a single TSV file
 
@@ -126,37 +160,6 @@ If an input list of subjects and sessions is given, the merged file will only ga
     sub-02           ses-M00      09/01/91        ...   9.586342    0.027254
     ...
     ```
-
-## `check-missing-processing` - Check missing processing in a CAPS directory
-
-Starting from a CAPS compliant dataset, this command creates a TSV file with columns
-`participant_id`, `session_id` and names corresponding to steps of
-`t1-volume`, `t1-freesurfer`, `t1-linear`, `pet-volume` and `pet-surface`.
-For PET pipelines one column is created per tracer and the PVC option is considered for `pet-volume`.
-
-```Text
-clinica iotools check-missing-processing <bids_directory> <caps_directory> <out_file>
-```
-
-where:
-
-- `bids_directory`: input folder of a BIDS compliant dataset
-- `caps_directory`: input folder of a [CAPS](../CAPS/Introduction) compliant dataset
-- `out_file`: output file path (filename included).
-
-The content of `out_file` will look like:
-
-```Text
-participant_id   session_id     t1-linear   ...     pet-volume_acq-<tracer>_group-<group_label>_pvc-{True|False}
-sub-01           ses-M00        1                                                                              0
-sub-01           ses-M12        1                                                                              0
-sub-02           ses-M00        0                                                                              0
-```
-
-- columns associated with `pet-volume` outputs will specify the PET tracer,
-the group label and if a PVC correction was performed.
-- columns associated with `t1-volume` outputs will specify the group label and which steps of `t1-volume` were performed.
-- columns associated with `pet-surface` outputs will specify the PET tracer used.
 
 ## `center-nifti` - Center NIfTI files of a BIDS directory
 
