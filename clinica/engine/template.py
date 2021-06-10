@@ -6,7 +6,7 @@ from clinica.engine.cmdparser import CmdParser
 
 
 class CmdGenerateTemplates(CmdParser):
-    """Genrate pre-filles pipeline files.
+    """Generate a new pipeline from a template.
 
     Using the jinja2 library and the pipelines template's file (in the resource dir)
     the user can create his own run-to-go pipelines.
