@@ -369,8 +369,11 @@ def get_images_pet(
                 tracer = "FBB"
             else:
                 cprint(
-                    f"Unknown tracer for Amyloid PET image metadata for subject {subject} "
-                    f"for visit {qc_visit[viscode_field]}"
+                    msg=(
+                        f"Unknown tracer for Amyloid PET image metadata for subject {subject} "
+                        f"for visit {qc_visit[viscode_field]}"
+                    ),
+                    lvl="warning",
                 )
                 continue
 
