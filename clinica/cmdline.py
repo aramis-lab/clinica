@@ -133,7 +133,7 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
     else:
         cprint(
             msg=(
-                "{'*' * 23}\n*** Clinica crashed ***\n{'*' * 23}\n\n"
+                f"{'*' * 23}\n*** Clinica crashed ***\n{'*' * 23}\n\n"
                 f"Exception type: {exc_type.__name__}\n"
                 f"Exception value: {exc_value}\n\n"
                 "Below are displayed information that were gathered when Clinica crashed. "
