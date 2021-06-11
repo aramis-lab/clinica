@@ -29,7 +29,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             raise ValueError(f"The low_bval is negative ({low_bval}): it should be zero or close to zero.")
 
         if low_bval > 100:
-            cprint(f"The low_bval parameter is {low_bval}: it should be zero or close to zero", "warning")
+            cprint(f"The low_bval parameter is {low_bval}: it should be zero or close to zero", lvl="warning")
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
