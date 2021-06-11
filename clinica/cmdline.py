@@ -127,7 +127,7 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
         cprint(exc_value, lvl="error")
     elif issubclass(exc_type, KeyboardInterrupt):
         cprint(
-            msg=f"Program interrupted by the user. Clinica will now exit...",
+            msg="Program interrupted by the user. Clinica will now exit...",
             lvl="warning",
         )
     else:
