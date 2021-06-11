@@ -1063,7 +1063,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
                     f"[{modality.upper()}] No path specified for {image.Subject_ID} "
                     f"in session {image.VISCODE} {counter.value}/{total}"
                 ),
-                lvl="warning",
+                lvl="info",
             )
         else:
             cprint(
