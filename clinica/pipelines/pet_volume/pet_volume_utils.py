@@ -3,6 +3,7 @@
 
 def init_input_node(pet_nii):
     import nibabel as nib
+
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image

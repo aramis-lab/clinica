@@ -626,7 +626,9 @@ def create_adni_sessions_dict(
     """
 
     from os import path
+
     import pandas as pd
+
     from clinica.utils.stream import cprint
 
     # Load data

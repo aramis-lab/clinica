@@ -7,7 +7,6 @@ from argparse import ArgumentParser
 from os import getcwd
 from os.path import expanduser, join
 
-
 PIPELINE_CATEGORIES = {
     "CLINICA_COMPULSORY": "Clinica mandatory arguments",
     "OPTIONAL": "Pipeline options",

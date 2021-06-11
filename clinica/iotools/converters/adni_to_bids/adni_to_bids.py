@@ -5,6 +5,7 @@ from clinica.iotools.abstract_converter import Converter
 
 def get_bids_subjs_info(clinical_data_dir, out_path):
     from os import path
+
     import pandas as pd
 
     adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")

@@ -10,6 +10,7 @@ import os
 import sys
 from argparse import ArgumentParser
 from typing import Optional
+
 import argcomplete
 
 from clinica.engine.cmdparser import init_cmdparser_objects
@@ -96,9 +97,10 @@ def setup_logging(verbosity: Optional[int] = 0) -> None:
         verbosity (int): The desired level of verbosity for logging.
             (0 (default): WARNING, 1: INFO, 2: DEBUG)
     """
-    from colorlog import StreamHandler, ColoredFormatter
-    from logging import getLogger, WARNING, INFO, DEBUG
+    from logging import DEBUG, INFO, WARNING, getLogger
     from sys import stdout
+
+    from colorlog import ColoredFormatter, StreamHandler
 
     # Cap max verbosity level to 2.
     verbosity = min(verbosity, 2)
@@ -186,6 +188,7 @@ def execute():
     import logging
     import os
     import warnings
+
     from clinica.utils.stream import cprint
 
     # Suppress potential warnings
