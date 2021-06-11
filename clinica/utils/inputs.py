@@ -123,7 +123,7 @@ def check_bids_folder(bids_directory):
         )
 
     if len(listdir(bids_directory)) == 0:
-        raise ClinicaBIDSError(f"The BIDS directory you provided  is empty. ({bids_directory}).")
+        raise ClinicaBIDSError(f"The BIDS directory you provided is empty. ({bids_directory}).")
 
     if len([item for item in listdir(bids_directory) if item.startswith("sub-")]) == 0:
         raise ClinicaBIDSError(
