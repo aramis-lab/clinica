@@ -129,7 +129,7 @@ def check_freesurfer(version_requirements=None):
             raise ClinicaMissingDependencyError(
                 "Clinica could not find FreeSurfer software: "
                 f"the {binary} command is not present in your PATH environment: "
-                "did you have the line source ${{FREESURFER_HOME}}/SetUpFreeSurfer.sh "
+                "did you have the line `source $FREESURFER_HOME/SetUpFreeSurfer.sh` "
                 "in your configuration file?"
             )
 
