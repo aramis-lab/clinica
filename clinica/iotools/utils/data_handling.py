@@ -85,7 +85,7 @@ def create_merge_file(
         ]
         row_participant_df.reset_index(inplace=True, drop=True)
         if len(row_participant_df) == 0:
-            cprint(msg="Participant {subject} does not exist in participants.tsv", lvl="warning")
+            cprint(msg=f"Participant {subject} does not exist in participants.tsv", lvl="warning")
             row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
 
         if ignore_sessions_files:
