@@ -131,7 +131,7 @@ def create_participants_df(
                 "The following subjects of dataset directory were not found in your BIDS folder :\n"
                 + ", ".join(subjects_to_drop)
             ),
-            lvl="warning",
+            lvl="info",
         )
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
