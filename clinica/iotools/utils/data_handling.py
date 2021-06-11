@@ -1093,7 +1093,7 @@ def check_volume_location_in_world_coordinate_system(
             answer = "yes"
 
         if answer.lower() == "no":
-            cprint(msg="Clinica will now exit...", lvl="debug")
+            cprint(msg="Clinica will now exit...", lvl="warning")
             sys.exit(0)
 
 
