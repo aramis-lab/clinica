@@ -225,7 +225,7 @@ def execute():
         "--verbose",
         action="count",
         default=0,
-        help="increase logging verbosity",
+        help="Increase logging verbosity",
     )
 
     """
