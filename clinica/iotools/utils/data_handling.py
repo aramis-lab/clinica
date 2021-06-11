@@ -1157,7 +1157,10 @@ def get_world_coordinate_of_center(nii_volume):
     try:
         orig_nifti = nib.load(nii_volume)
     except nib.filebasedimages.ImageFileError:
-        print(f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI file ?")
+        cprint(
+            msg=f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI file ?",
+            lvl="warning",
+        )
         return np.nan
 
     head = orig_nifti.header
