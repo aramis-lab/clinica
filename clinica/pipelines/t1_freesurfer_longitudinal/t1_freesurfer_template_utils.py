@@ -15,12 +15,12 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
     in that case, putting the SUBJECT_DIR inside the system temporary folder so that its path is as short as possible.
     """
     import datetime
-    import errno
     import os
     from tempfile import mkdtemp
 
     from colorama import Fore
 
+    from clinica.compat import errno
     from clinica.utils.longitudinal import get_long_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
