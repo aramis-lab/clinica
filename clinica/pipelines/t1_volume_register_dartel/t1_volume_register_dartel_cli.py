@@ -29,17 +29,6 @@ class T1VolumeRegisterDartelCLI(ce.CmdParser):
             "group_label",
             help="User-defined identifier for the provided group of subjects.",
         )
-        # Optional arguments (e.g. FWHM)
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES["OPTIONAL"])
-        optional.add_argument(
-            "-s",
-            "--smooth",
-            nargs="+",
-            type=int,
-            default=[8],
-            help="A list of integers specifying the different isomorphic FWHM in millimeters "
-            "to smooth the image (default: --smooth 8).",
-        )
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
