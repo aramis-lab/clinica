@@ -73,7 +73,7 @@ class SpatialSVM(cpe.Pipeline):
         ):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"Group {self.parameters["group_label"]} does not exist. "
+                f"Group {self.parameters['group_label']} does not exist. "
                 "Did you run pet-volume, t1-volume or t1-volume-create-dartel pipeline?"
             )
 
