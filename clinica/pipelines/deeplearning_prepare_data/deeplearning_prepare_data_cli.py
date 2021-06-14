@@ -109,7 +109,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         )
 
         optional_roi = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you chose 'roi' extraction{Fore.RESET}"
+            "Pipeline options if you chose 'roi' extraction"
         )
         optional_roi.add_argument(
             "--roi_list",
