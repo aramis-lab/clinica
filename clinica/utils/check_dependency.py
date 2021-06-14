@@ -24,12 +24,8 @@ def is_binary_present(binary):
     """
     import os
     import subprocess
-    import sys
 
-    if sys.version_info[0] >= 3 and sys.version_info[1] >= 7:
-        import errno
-    else:
-        errno = os.errno
+    from clinica.compat import errno
 
     try:
         devnull = open(os.devnull)
