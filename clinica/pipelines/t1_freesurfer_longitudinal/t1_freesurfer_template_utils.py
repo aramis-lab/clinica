@@ -14,10 +14,10 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
     The current function works around this issue by checking if there only is one session associated to a subject, and
     in that case, putting the SUBJECT_DIR inside the system temporary folder so that its path is as short as possible.
     """
-    import errno
     import os
     from tempfile import mkdtemp
 
+    from clinica.compat import errno
     from clinica.utils.longitudinal import get_long_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
