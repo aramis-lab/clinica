@@ -72,8 +72,8 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
             "height_threshold": args.height_threshold,
             "FWEp": args.FWEp,
             "FDRp": args.FDRp,
-            "FWEc": args.FWEp,
-            "FDRc": args.FDRp,
+            "FWEc": args.FWEc,
+            "FDRc": args.FDRc,
             "n_cuts": args.n_cuts,
         }
 
