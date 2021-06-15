@@ -4,10 +4,9 @@ import clinica.pipelines.engine as cpe
 
 
 class StatisticsSurface(cpe.Pipeline):
-    """
-    StatisticsSurface - Surface-based mass-univariate analysis with SurfStat
+    """StatisticsSurface - Surface-based mass-univariate analysis with SurfStat.
 
-    See documentation at http://www.clinica.run/doc/Pipelines/Stats_Surface/
+    See documentation at https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
 
     Note:
         The `tsv_file` attribute is overloaded for this pipeline. It must contain a list of subjects
@@ -18,44 +17,51 @@ class StatisticsSurface(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the StatisticsSurface pipeline.
     """
+
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
-        from .statistics_surface_utils import get_t1_freesurfer_custom_file
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.group import check_group_label
 
+        from .statistics_surface_utils import get_t1_freesurfer_custom_file
+
         # Clinica compulsory parameters
-        self.parameters.setdefault('group_label', None)
-        check_group_label(self.parameters['group_label'])
+        self.parameters.setdefault("group_label", None)
+        check_group_label(self.parameters["group_label"])
 
-        if 'orig_input_data' not in self.parameters.keys():
-            raise KeyError('Missing compulsory orig_input_data key in pipeline parameter.')
+        if "orig_input_data" not in self.parameters.keys():
+            raise KeyError(
+                "Missing compulsory orig_input_data key in pipeline parameter."
+            )
 
-        self.parameters.setdefault('glm_type', None)
-        if self.parameters['glm_type'] not in ['group_comparison', 'correlation']:
+        self.parameters.setdefault("glm_type", None)
+        if self.parameters["glm_type"] not in ["group_comparison", "correlation"]:
             raise ClinicaException(
                 f"The glm_type you specified is wrong: it should be group_comparison or "
                 f"correlation (given value: {self.parameters['glm_type']})."
             )
 
-        if 'contrast' not in self.parameters.keys():
-            raise KeyError('Missing compulsory contrast key in pipeline parameter.')
+        if "contrast" not in self.parameters.keys():
+            raise KeyError("Missing compulsory contrast key in pipeline parameter.")
 
         # Optional parameters
-        self.parameters.setdefault('covariates', None)
-        self.parameters.setdefault('full_width_at_half_maximum', 20)
+        self.parameters.setdefault("covariates", None)
+        self.parameters.setdefault("full_width_at_half_maximum", 20)
 
         # Optional parameters for inputs from pet-surface pipeline
-        self.parameters.setdefault('acq_label', None)
-        self.parameters.setdefault('suvr_reference_region', None)
+        self.parameters.setdefault("acq_label", None)
+        self.parameters.setdefault("suvr_reference_region", None)
 
         # Optional parameters for custom pipeline
-        self.parameters.setdefault('custom_file', get_t1_freesurfer_custom_file())
-        self.parameters.setdefault('measure_label', 'ct')
+        self.parameters.setdefault("custom_file", get_t1_freesurfer_custom_file())
+        self.parameters.setdefault("measure_label", "ct")
 
         # Advanced parameters
-        self.parameters.setdefault('cluster_threshold', 0.001)
-        if self.parameters['cluster_threshold'] < 0 or self.parameters['cluster_threshold'] > 1:
+        self.parameters.setdefault("cluster_threshold", 0.001)
+        if (
+            self.parameters["cluster_threshold"] < 0
+            or self.parameters["cluster_threshold"] > 1
+        ):
             raise ClinicaException(
                 f"Cluster threshold should be between 0 and 1 "
                 f"(given value: {self.parameters['cluster_threshold']})."
@@ -63,7 +69,6 @@ class StatisticsSurface(cpe.Pipeline):
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
-        pass
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -79,13 +84,14 @@ class StatisticsSurface(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-        return ['output_dir']
+        return ["output_dir"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
-        from clinica.utils.inputs import clinica_file_reader
+
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
 
         # Check if already present in CAPS
@@ -94,7 +100,11 @@ class StatisticsSurface(cpe.Pipeline):
         # Note(AR): if the user wants to compare Cortical Thickness measure with PET measure
         # using the group_id, Clinica won't allow it.
         # TODO: Modify this behaviour
-        if os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_label'])):
+        if os.path.exists(
+            os.path.join(
+                self.caps_directory, "groups", f"group-{self.parameters['group_label']}"
+            )
+        ):
             error_message = (
                 f"Group label {self.parameters['group_label']} already exists, "
                 f"please choose another one or delete the existing folder and "
@@ -118,97 +128,124 @@ class StatisticsSurface(cpe.Pipeline):
         # =====================================================
         all_errors = []
         # clinica_files_reader expects regexp to start at subjects/ so sub-*/ses-*/ is removed here
-        pattern_hemisphere = self.parameters['custom_file'].replace(
-            '@subject', 'sub-*').replace(
-            '@session', 'ses-*').replace(
-            '@fwhm', str(self.parameters['full_width_at_half_maximum'])).replace(
-            'sub-*/ses-*/', ''
+        pattern_hemisphere = (
+            self.parameters["custom_file"]
+            .replace("@subject", "sub-*")
+            .replace("@session", "ses-*")
+            .replace("@fwhm", str(self.parameters["full_width_at_half_maximum"]))
+            .replace("sub-*/ses-*/", "")
         )
         # Files on left hemisphere
         lh_surface_based_info = {
-            'pattern': pattern_hemisphere.replace('@hemi', 'lh'),
-            'description': 'surface-based features on left hemisphere at FWHM = %s' %
-                           self.parameters['full_width_at_half_maximum'],
+            "pattern": pattern_hemisphere.replace("@hemi", "lh"),
+            "description": f"surface-based features on left hemisphere at FWHM = {self.parameters['full_width_at_half_maximum']}",
         }
         try:
-            clinica_file_reader(self.subjects, self.sessions, self.caps_directory, lh_surface_based_info)
+            clinica_file_reader(
+                self.subjects, self.sessions, self.caps_directory, lh_surface_based_info
+            )
         except ClinicaException as e:
             all_errors.append(e)
         rh_surface_based_info = {
-            'pattern': pattern_hemisphere.replace('@hemi', 'rh'),
-            'description': 'surface-based features on right hemisphere at FWHM = %s' %
-                           self.parameters['full_width_at_half_maximum'],
+            "pattern": pattern_hemisphere.replace("@hemi", "rh"),
+            "description": f"surface-based features on right hemisphere at FWHM = {self.parameters['full_width_at_half_maximum']}",
         }
         try:
-            clinica_file_reader(self.subjects, self.sessions, self.caps_directory, rh_surface_based_info)
+            clinica_file_reader(
+                self.subjects, self.sessions, self.caps_directory, rh_surface_based_info
+            )
         except ClinicaException as e:
             all_errors.append(e)
         # Raise all errors if something happened
         if len(all_errors) > 0:
-            error_message = 'Clinica faced errors while trying to read files in your CAPS directory.\n'
+            error_message = "Clinica faced errors while trying to read files in your CAPS directory.\n"
             for msg in all_errors:
                 error_message += str(msg)
             raise RuntimeError(error_message)
 
         # Give pipeline info
         # ==================
-        cprint('The pipeline will last a few minutes. Images generated by Matlab will popup during the pipeline.')
+        cprint(
+            "The pipeline will last a few minutes. Images generated by Matlab will popup during the pipeline."
+        )
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from .statistics_surface_utils import save_to_caps
 
         # Writing results into CAPS
         # =========================
-        save_to_caps = npe.Node(interface=nutil.Function(
-            input_names=['source_dir', 'caps_dir', 'overwrite_caps', 'pipeline_parameters'],
-            function=save_to_caps),
-            name='SaveToCaps')
+        save_to_caps = npe.Node(
+            interface=nutil.Function(
+                input_names=[
+                    "source_dir",
+                    "caps_dir",
+                    "overwrite_caps",
+                    "pipeline_parameters",
+                ],
+                function=save_to_caps,
+            ),
+            name="SaveToCaps",
+        )
         save_to_caps.inputs.caps_dir = self.caps_directory
         save_to_caps.inputs.overwrite_caps = self.overwrite_caps
         save_to_caps.inputs.pipeline_parameters = self.parameters
 
-        self.connect([
-            (self.output_node, save_to_caps, [('output_dir', 'source_dir')]),
-        ])
+        self.connect(
+            [
+                (self.output_node, save_to_caps, [("output_dir", "source_dir")]),
+            ]
+        )
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import os
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from .statistics_surface_utils import init_input_node
+
         import clinica.pipelines.statistics_surface.statistics_surface_utils as utils
+
+        from .statistics_surface_utils import init_input_node
 
         init_input = npe.Node(
             interface=nutil.Function(
-                input_names=['parameters', 'base_dir', 'subjects_visits_tsv'],
-                output_names=['group_label', 'surfstat_results_dir'],
-                function=init_input_node),
-            name='0-InitPipeline')
+                input_names=["parameters", "base_dir", "subjects_visits_tsv"],
+                output_names=["group_label", "surfstat_results_dir"],
+                function=init_input_node,
+            ),
+            name="0-InitPipeline",
+        )
         init_input.inputs.parameters = self.parameters
         init_input.inputs.base_dir = os.path.join(self.base_dir, self.name)
         init_input.inputs.subjects_visits_tsv = self.tsv_file
 
         # Node to wrap the SurfStat matlab script
-        surfstat = npe.Node(name='1-RunSurfStat',
-                            interface=nutil.Function(
-                                input_names=['caps_dir',
-                                             'output_dir',
-                                             'subjects_visits_tsv',
-                                             'pipeline_parameters',
-                                             ],
-                                output_names=['output_dir'],
-                                function=utils.run_matlab))
+        surfstat = npe.Node(
+            name="1-RunSurfStat",
+            interface=nutil.Function(
+                input_names=[
+                    "caps_dir",
+                    "output_dir",
+                    "subjects_visits_tsv",
+                    "pipeline_parameters",
+                ],
+                output_names=["output_dir"],
+                function=utils.run_matlab,
+            ),
+        )
         surfstat.inputs.caps_dir = self.caps_directory
         surfstat.inputs.subjects_visits_tsv = self.tsv_file
         surfstat.inputs.pipeline_parameters = self.parameters
 
         # Connection
         # ==========
-        self.connect([
-            (init_input, surfstat, [('surfstat_results_dir', 'output_dir')]),
-            (surfstat, self.output_node, [('output_dir', 'output_dir')]),
-        ])
+        self.connect(
+            [
+                (init_input, surfstat, [("surfstat_results_dir", "output_dir")]),
+                (surfstat, self.output_node, [("output_dir", "output_dir")]),
+            ]
+        )

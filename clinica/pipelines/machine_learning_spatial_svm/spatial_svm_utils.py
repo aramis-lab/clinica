@@ -28,12 +28,11 @@ def spm_read(fname):
     """
 
     import nibabel as nib
-
     import numpy as np
 
     img = nib.load(fname)
     pico = img.get_data()
-    pico = np.array(pico, dtype='float32')
+    pico = np.array(pico, dtype="float32")
     mask = np.isnan(pico)
     pico[mask] = 0
     volu = img.header
@@ -70,6 +69,7 @@ def rescaleImage(image1, p):
 
     """
     import numpy as np
+
     eps = 2.2204e-16
     p = np.array(p)
     m = image1.min()
@@ -93,6 +93,7 @@ def tensor_scalar_product(sc, g1):
     :return: product between the tensor and the scalar
     """
     import numpy as np
+
     # we define the scalar and the tensor as complex
 
     sc = np.array(sc, dtype=np.complex128)
@@ -115,6 +116,7 @@ def tensor_eye(atlas):
     :return: the identity matrix of a tensor
     """
     import numpy as np
+
     a = np.ones(atlas[0].shape)
     b = np.zeros(atlas[0].shape)
     # the new matrix is 1 on the diagonal and 0 in the other positions
@@ -135,6 +137,7 @@ def tensor_sum(g1, g2):
     :return: sum of the two tensor
     """
     import numpy as np
+
     g = np.add(g1, g2)
     # numpy add to sum the tensors
     return g
@@ -148,6 +151,7 @@ def tensor_product(g1, g2):
     :return: product between the two tensors
     """
     import numpy as np
+
     g1 = np.array(g1)
     g2 = np.array(g2)
 
@@ -170,6 +174,7 @@ def tensor_determinant(g):
     :return: determinant of the tensor dim = xg*yg*zg
     """
     import numpy as np
+
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     g = np.array(g)
@@ -224,6 +229,7 @@ def tensor_trace(g):
     :return: trace of a tensor
     """
     import numpy as np
+
     trace = np.trace(g)
     # trace if the trace of the input tensor
     return trace
@@ -237,10 +243,11 @@ def roots_poly(C):
 
     the functions find the polynomial roots. It computes the roots of the polynomail whose coefficients are the elements of the vector C?
     """
-    import numpy as np
+    import cmath
     import math
 
-    import cmath
+    import numpy as np
+
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     C = np.array(C)
@@ -248,11 +255,16 @@ def roots_poly(C):
         rts = []
 
     elif C.shape[0] < 3:
-        rts = - C[:, 1] * (1 / C[:, 0])
+        rts = -C[:, 1] * (1 / C[:, 0])
 
     elif C.shape[0] < 4:
         # implementation of delta
-        delta = np.array([cmath.sqrt((C[1, i] * C[1, i]) - (4 * C[0, i] * C[2, i])) for i in range(C.shape[1])])
+        delta = np.array(
+            [
+                cmath.sqrt((C[1, i] * C[1, i]) - (4 * C[0, i] * C[2, i]))
+                for i in range(C.shape[1])
+            ]
+        )
         # two roots
         rts1 = (-C[1, :] + delta) * (1 / ((2 * C[0, :])))
         rts2 = (-C[1, :] - delta) * (1 / ((2 * C[0, :])))
@@ -266,10 +278,12 @@ def roots_poly(C):
         c = C[2, :]
         d = C[3, :]
 
-        p = - b * b * (1 / (3 * a * a)) + c * (1 / a)
-        q = b * (1 / (27. * a)) * (2 * b * b * (1 / (a * a)) - 9 * c * (1 / a)) + d * (1 / a)
+        p = -b * b * (1 / (3 * a * a)) + c * (1 / a)
+        q = b * (1 / (27.0 * a)) * (2 * b * b * (1 / (a * a)) - 9 * c * (1 / a)) + d * (
+            1 / a
+        )
 
-        new_roots = np.array([np.ones((q.shape[0])), q, - (p * p * p) / 27])
+        new_roots = np.array([np.ones((q.shape[0])), q, -(p * p * p) / 27])
 
         rts = utils.roots_poly(new_roots)
 
@@ -281,9 +295,9 @@ def roots_poly(C):
         v_mod = abs(v) ** (1 / 3)
         v_angle = np.angle(v) * (1 / 3)
 
-        rts = np.zeros([C.shape[1], 3], dtype='complex128')
+        rts = np.zeros([C.shape[1], 3], dtype="complex128")
 
-        ind = np.zeros([u.shape[0]], dtype='int32')
+        ind = np.zeros([u.shape[0]], dtype="int32")
 
         for k in [0, 1, 2]:
             u = u_mod * np.power(math.e, 1j * (u_angle + k * 2 * math.pi * (1 / 3)))
@@ -312,7 +326,9 @@ def tensor_eigenvalues(g):
 
     """
     import numpy as np
+
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
+
     g = np.array(g)
 
     if g.shape[0] < 4:
@@ -320,26 +336,30 @@ def tensor_eigenvalues(g):
 
         C1 = np.ones(len(np.ravel(g[0][0])))
         buff = -utils.tensor_trace(g)
-        C2 = buff.flatten('F')
+        C2 = buff.flatten("F")
         buff = utils.tensor_trace(utils.tensor_product(g, g))
-        buff = (- 0.5 * (buff.flatten('F') - np.multiply(C2, C2)))
-        C3 = buff.flatten('F')
+        buff = -0.5 * (buff.flatten("F") - np.multiply(C2, C2))
+        C3 = buff.flatten("F")
         buff = -utils.tensor_determinant(g)
-        C4 = buff.flatten('F')
+        C4 = buff.flatten("F")
 
         C = np.array([C1, C2, C3, C4])
         rts = utils.roots_poly(C)
 
     else:
-        print('Degree too big : not still implemented')
+        print("Degree too big : not still implemented")
 
     rts2 = rts.real.copy()
     rts2.sort()
 
-    lamb = np.zeros(shape=(g.shape[0], g.shape[2], g.shape[3], g.shape[4]), dtype='complex128')
+    lamb = np.zeros(
+        shape=(g.shape[0], g.shape[2], g.shape[3], g.shape[4]), dtype="complex128"
+    )
 
     for i in range(g.shape[0]):
-        lamb[i, :, :, :] = rts2[:, i].reshape(g.shape[2], g.shape[3], g.shape[4], order='F')
+        lamb[i, :, :, :] = rts2[:, i].reshape(
+            g.shape[2], g.shape[3], g.shape[4], order="F"
+        )
 
     # lamb[0] is the smallest eigenvalues, lamb[2] is the biggest
     return lamb
@@ -368,9 +388,10 @@ def tensor_commatrix(g):
     :param g: tensor
     :return: commatrix of the tensor
     """
+    import numpy as np
+
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
-    import numpy as np
     g = np.array(g)
     g_com = []
 
@@ -427,7 +448,6 @@ def create_fisher_tensor(atlas):
 
     # create tensor for fisher metrics
     import numpy as np
-    import math
 
     upper_bound = 0.999  # probabibilty limits to avoid log(0) and log(1)
     lower_bound = 0.001  # probability limits to avoid log(0) and log(1)
@@ -445,13 +465,13 @@ def create_fisher_tensor(atlas):
 
     for i in range(3):  # for for each component of the tensor
         proba = 1
-        proba = (proba * atlas[i])
+        proba = proba * atlas[i]
         proba = np.maximum(np.minimum(proba, upper_bound), lower_bound)
         gr = np.array(np.gradient(np.log(proba)))
 
         for x in range(3):
             for y in range(3):
-                g[x][y] = (g[x][y] + (proba * gr[x] * gr[y]))
+                g[x][y] = g[x][y] + (proba * gr[x] * gr[y])
 
     return g
 
@@ -468,6 +488,7 @@ def tensor_helmholtz(x, h, detg, k):
     """
 
     import numpy as np
+
     detg = np.array(detg)
     if len(detg.shape) == 3:
         detg_ = detg
@@ -476,7 +497,14 @@ def tensor_helmholtz(x, h, detg, k):
 
     weight = detg_[1:-1, 1:-1, 1:-1] * k
     if len(h.shape) == 6:
-        h_ = h[:, :, 0, :, :, :, ]
+        h_ = h[
+            :,
+            :,
+            0,
+            :,
+            :,
+            :,
+        ]
     else:
         h_ = h
     for i in range(len(h)):  # from 1 to 3
@@ -495,7 +523,7 @@ def tensor_helmholtz(x, h, detg, k):
     weight = weight + 0.5 * mat_3[1:-1, 1:-1, :-2]
     weight = weight + 0.5 * mat_3[1:-1, 1:-1, 2:]
 
-    y0 = (weight * x[1:-1, 1:-1, 1:-1])
+    y0 = weight * x[1:-1, 1:-1, 1:-1]
 
     mat1 = h_[0][1]
     mat2 = h_[1][0]
@@ -504,25 +532,109 @@ def tensor_helmholtz(x, h, detg, k):
     mat5 = h_[0][2]
     mat6 = h_[2][0]
 
-    y0 = y0 + (-1 * -1 * -0.25) * (mat1[:-2, 1:-1, 1: -1] + mat2[1:-1, :-2, 1:-1]) * x[:-2, :-2, 1:-1]
-    y0 = y0 + (-1 * -1 * -0.25) * (mat3[1:-1, :-2, 1: -1] + mat4[1:-1, 1:-1, :-2]) * x[1:-1, :-2, :-2]
-    y0 = y0 + (-1 * -1 * -0.25) * (mat5[:-2, 1:-1, 1: -1] + mat6[1:-1, 1:-1, :-2]) * x[:-2, 1:-1, :-2]
-    y0 = y0 + (-1 * +1 * -0.25) * (mat1[:-2, 1:-1, 1: -1] + mat2[1:-1, 2:, 1:-1]) * x[:-2, 2:, 1:-1]
-    y0 = y0 + (-1 * +1 * -0.25) * (mat3[1:-1, :-2, 1: -1] + mat4[1:-1, 1:-1, 2:]) * x[1:-1, :-2, 2:]
-    y0 = y0 + (-1 * +1 * -0.25) * (mat5[:-2, 1:-1, 1: -1] + mat6[1:-1, 1:-1, 2:]) * x[:-2, 1:-1, 2:]
-    y0 = y0 + (+1 * -1 * -0.25) * (mat1[2:, 1:-1, 1: -1] + mat2[1:-1, :-2, 1:-1]) * x[2:, :-2, 1:-1]
-    y0 = y0 + (+1 * -1 * -0.25) * (mat3[1:-1, 2:, 1: -1] + mat4[1:-1, 1:-1, :-2]) * x[1:-1, 2:, :-2]
-    y0 = y0 + (+1 * -1 * -0.25) * (mat5[2:, 1:-1, 1: -1] + mat6[1:-1, 1:-1, :-2]) * x[2:, 1:-1, :-2]
-    y0 = y0 + (+1 * +1 * -0.25) * (mat1[2:, 1:-1, 1: -1] + mat2[1:-1, 2:, 1:-1]) * x[2:, 2:, 1:-1]
-    y0 = y0 + (+1 * +1 * -0.25) * (mat3[1:-1, 2:, 1: -1] + mat4[1:-1, 1:-1, 2:]) * x[1:-1, 2:, 2:]
-    y0 = y0 + (+1 * +1 * -0.25) * (mat5[2:, 1:-1, 1: -1] + mat6[1:-1, 1:-1, 2:]) * x[2:, 1:-1, 2:]
+    y0 = (
+        y0
+        + (-1 * -1 * -0.25)
+        * (mat1[:-2, 1:-1, 1:-1] + mat2[1:-1, :-2, 1:-1])
+        * x[:-2, :-2, 1:-1]
+    )
+    y0 = (
+        y0
+        + (-1 * -1 * -0.25)
+        * (mat3[1:-1, :-2, 1:-1] + mat4[1:-1, 1:-1, :-2])
+        * x[1:-1, :-2, :-2]
+    )
+    y0 = (
+        y0
+        + (-1 * -1 * -0.25)
+        * (mat5[:-2, 1:-1, 1:-1] + mat6[1:-1, 1:-1, :-2])
+        * x[:-2, 1:-1, :-2]
+    )
+    y0 = (
+        y0
+        + (-1 * +1 * -0.25)
+        * (mat1[:-2, 1:-1, 1:-1] + mat2[1:-1, 2:, 1:-1])
+        * x[:-2, 2:, 1:-1]
+    )
+    y0 = (
+        y0
+        + (-1 * +1 * -0.25)
+        * (mat3[1:-1, :-2, 1:-1] + mat4[1:-1, 1:-1, 2:])
+        * x[1:-1, :-2, 2:]
+    )
+    y0 = (
+        y0
+        + (-1 * +1 * -0.25)
+        * (mat5[:-2, 1:-1, 1:-1] + mat6[1:-1, 1:-1, 2:])
+        * x[:-2, 1:-1, 2:]
+    )
+    y0 = (
+        y0
+        + (+1 * -1 * -0.25)
+        * (mat1[2:, 1:-1, 1:-1] + mat2[1:-1, :-2, 1:-1])
+        * x[2:, :-2, 1:-1]
+    )
+    y0 = (
+        y0
+        + (+1 * -1 * -0.25)
+        * (mat3[1:-1, 2:, 1:-1] + mat4[1:-1, 1:-1, :-2])
+        * x[1:-1, 2:, :-2]
+    )
+    y0 = (
+        y0
+        + (+1 * -1 * -0.25)
+        * (mat5[2:, 1:-1, 1:-1] + mat6[1:-1, 1:-1, :-2])
+        * x[2:, 1:-1, :-2]
+    )
+    y0 = (
+        y0
+        + (+1 * +1 * -0.25)
+        * (mat1[2:, 1:-1, 1:-1] + mat2[1:-1, 2:, 1:-1])
+        * x[2:, 2:, 1:-1]
+    )
+    y0 = (
+        y0
+        + (+1 * +1 * -0.25)
+        * (mat3[1:-1, 2:, 1:-1] + mat4[1:-1, 1:-1, 2:])
+        * x[1:-1, 2:, 2:]
+    )
+    y0 = (
+        y0
+        + (+1 * +1 * -0.25)
+        * (mat5[2:, 1:-1, 1:-1] + mat6[1:-1, 1:-1, 2:])
+        * x[2:, 1:-1, 2:]
+    )
 
-    y0 = y0 + (-0.5) * (mat_1[1:-1, 1:-1, 1:-1] + mat_1[:-2, 1:-1, 1:-1]) * x[:-2, 1:-1, 1:-1]
-    y0 = y0 + (-0.5) * (mat_1[1:-1, 1:-1, 1:-1] + mat_1[2:, 1:-1, 1:-1]) * x[2:, 1:-1, 1:-1]
-    y0 = y0 + (-0.5) * (mat_2[1:-1, 1:-1, 1:-1] + mat_2[1:-1, :-2, 1:-1]) * x[1:-1, :-2, 1:-1]
-    y0 = y0 + (-0.5) * (mat_2[1:-1, 1:-1, 1:-1] + mat_2[1:-1, 2:, 1:-1]) * x[1:-1, 2:, 1:-1]
-    y0 = y0 + (-0.5) * (mat_3[1:-1, 1:-1, 1:-1] + mat_3[1:-1, 1:-1, :-2]) * x[1:-1, 1:-1, :-2]
-    y0 = y0 + (-0.5) * (mat_3[1:-1, 1:-1, 1:-1] + mat_3[1:-1, 1:-1, 2:]) * x[1:-1, 1:-1, 2:]
+    y0 = (
+        y0
+        + (-0.5)
+        * (mat_1[1:-1, 1:-1, 1:-1] + mat_1[:-2, 1:-1, 1:-1])
+        * x[:-2, 1:-1, 1:-1]
+    )
+    y0 = (
+        y0
+        + (-0.5) * (mat_1[1:-1, 1:-1, 1:-1] + mat_1[2:, 1:-1, 1:-1]) * x[2:, 1:-1, 1:-1]
+    )
+    y0 = (
+        y0
+        + (-0.5)
+        * (mat_2[1:-1, 1:-1, 1:-1] + mat_2[1:-1, :-2, 1:-1])
+        * x[1:-1, :-2, 1:-1]
+    )
+    y0 = (
+        y0
+        + (-0.5) * (mat_2[1:-1, 1:-1, 1:-1] + mat_2[1:-1, 2:, 1:-1]) * x[1:-1, 2:, 1:-1]
+    )
+    y0 = (
+        y0
+        + (-0.5)
+        * (mat_3[1:-1, 1:-1, 1:-1] + mat_3[1:-1, 1:-1, :-2])
+        * x[1:-1, 1:-1, :-2]
+    )
+    y0 = (
+        y0
+        + (-0.5) * (mat_3[1:-1, 1:-1, 1:-1] + mat_3[1:-1, 1:-1, 2:]) * x[1:-1, 1:-1, 2:]
+    )
 
     return y0
 
@@ -533,8 +645,9 @@ def tensor_inverse(g):
     :param g: tensor
     :return: inverse of the tensor
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     h = utils.tensor_transpose(utils.tensor_commatrix(g))
     detg = utils.tensor_determinant(g)
@@ -553,8 +666,9 @@ def operateur(x, ginv, detg):
     :param detg:
     :return:
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     if len(x.shape) == 4:
         x = x[0, :, :, :]
@@ -575,10 +689,11 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
     :return: lamba = the largest eigenvalues
 
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
+    import cmath
 
     import numpy as np
-    import cmath
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # parameters
     if epsilon is None:
@@ -607,20 +722,32 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
     s = [g[0][0].shape[0] - 2, g[0][0].shape[1] - 2, g[0][0].shape[2] - 2]
     b1 = np.ones([s[0], s[1], s[2]])
 
-    b1 = np.divide(b1, np.array(cmath.sqrt(np.dot(b1.flatten('F').transpose(), b1.flatten('F'))), dtype=np.complex128))
+    b1 = np.divide(
+        b1,
+        np.array(
+            cmath.sqrt(np.dot(b1.flatten("F").transpose(), b1.flatten("F"))),
+            dtype=np.complex128,
+        ),
+    )
 
     print("Computation of the largest eigenvalue ...")
     while erreur > epsilon:
         b0 = b1
-        b2 = np.array(np.divide(np.array(utils.operateur(b1, ginv, detg)) * h, detg2) / h / h / h, dtype=np.complex128)
-        b1 = np.divide(b2, np.array(cmath.sqrt(np.dot(b2.flatten('F').transpose(), b2.flatten('F')))),
-                       dtype=np.complex128)
+        b2 = np.array(
+            np.divide(np.array(utils.operateur(b1, ginv, detg)) * h, detg2) / h / h / h,
+            dtype=np.complex128,
+        )
+        b1 = np.divide(
+            b2,
+            np.array(cmath.sqrt(np.dot(b2.flatten("F").transpose(), b2.flatten("F")))),
+            dtype=np.complex128,
+        )
 
-        erreur = np.linalg.norm(b1.flatten('F') - b0.flatten('F'))
+        erreur = np.linalg.norm(b1.flatten("F") - b0.flatten("F"))
 
     print("done")
 
-    lam = (cmath.sqrt(np.dot(b2.flatten('F').transpose(), b2.flatten('F'))))
+    lam = cmath.sqrt(np.dot(b2.flatten("F").transpose(), b2.flatten("F")))
 
     return lam
 
@@ -636,9 +763,10 @@ def heat_finite_elt_3D_tensor2(x0, t_final, t_step, h, g):
     :return: vector x (at t = t_final)
 
     """
+    import numpy as np
+
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
-    import numpy as np
     if len(x0.shape) == 4:
         x0 = x0[0, :, :, :]
 
@@ -657,14 +785,21 @@ def heat_finite_elt_3D_tensor2(x0, t_final, t_step, h, g):
         ginv = ginv[:, :, 0, :, :, :]
     if len(detg.shape) == 4:
         detg = detg[0, :, :, :]
-    ginv = np.array(ginv.real, dtype='float64')
-    detg = np.array(detg.real, dtype='float64')
-    detg2 = np.array(detg2.real, dtype='float64')
+    ginv = np.array(ginv.real, dtype="float64")
+    detg = np.array(detg.real, dtype="float64")
+    detg2 = np.array(detg2.real, dtype="float64")
 
     # LOOP
     x = x0
     for i in range(nb_step):
-        x = np.array(x - t_step * (np.divide(np.array(utils.operateur(x, ginv, detg)) * h, detg2)) / h / h / h)
+        x = np.array(
+            x
+            - t_step
+            * (np.divide(np.array(utils.operateur(x, ginv, detg)) * h, detg2))
+            / h
+            / h
+            / h
+        )
 
     return x
 
@@ -680,8 +815,9 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
     :return: vector x (at t = t_final)
 
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # parameters
     nb_step = np.ceil(t_final / t_step)  # number of time step
@@ -698,9 +834,19 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
     x = x0
     for i in range(nb_step):
         m = t_step / h / h
-        x = np.sum(x, -(
-            utils.tensor_scalar_product(m,
-                                        np.divide(utils.tensor_scalar_product(h, utils.operateur(x, ginv, detg)), detg2, dtype=object))))
+        x = np.sum(
+            x,
+            -(
+                utils.tensor_scalar_product(
+                    m,
+                    np.divide(
+                        utils.tensor_scalar_product(h, utils.operateur(x, ginv, detg)),
+                        detg2,
+                        dtype=object,
+                    ),
+                )
+            ),
+        )
 
     return x
 
@@ -717,8 +863,9 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     :param epsilon:
     :return: u= solution of the poisson's equation
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # initialisation
     if h is None:
@@ -732,11 +879,12 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     b_h = f[1:-1, 1:-1, 1:-1] * (h * h * h)
 
     b_h[:, :, 0] = b_h[:, :, 0] + (
-        CL_value[1:-1, 1:-1, 0] * h)  # not sure about b_h third value is 0 -> I need to avoid the column (HOW??)
+        CL_value[1:-1, 1:-1, 0] * h
+    )  # not sure about b_h third value is 0 -> I need to avoid the column (HOW??)
     b_h[:, 0, :] = b_h[:, 0, :] + (CL_value[1:-1, 0, 1:-1] * h)
     b_h[0, :, :] = b_h[0, :, :] + (CL_value[0, 1:-1, 1:-1] * h)
 
-    print('##########computation b_H#############@ ')
+    print("##########computation b_H#############@ ")
 
     # inversion of the linear system
     U_h = utils.heat_finite_elt_3D_tensor2(b_h, t_final, t_step, h, g)
@@ -759,8 +907,9 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     :param epsilon:
     :return: u= solution of the poisson's equation
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # intiialisation
     if h is None:
@@ -795,11 +944,12 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     """
 
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
-
     import math
-    import numpy as np
     import os
+
+    import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     #
     # PARAMETERS
@@ -841,7 +991,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     eigenv = utils.tensor_eigenvalues(g)
 
-    print('done')
+    print("done")
 
     dist_av = []
 
@@ -853,9 +1003,9 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     g = utils.tensor_scalar_product((1 / dist_av) / dist_av, g)
 
-    np.save(os.path.abspath('./output_fisher_tensor.npy'), g)
+    np.save(os.path.abspath("./output_fisher_tensor.npy"), g)
 
-    return g, os.path.abspath('./output_fisher_tensor.npy')
+    return g, os.path.abspath("./output_fisher_tensor.npy")
 
 
 def obtain_time_step_estimation(dartel_input, FWHM, g):
@@ -866,30 +1016,30 @@ def obtain_time_step_estimation(dartel_input, FWHM, g):
     :param g: fisher tensor
     :return:
     """
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
-
-    import math
-    import numpy as np
     import json
+    import math
     import os
+
     import nibabel as nib
+    import numpy as np
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # obtain voxel size with dartel_input
     head = nib.load(dartel_input)
     head_ = head.header
-    for i in range(len(head_['pixdim'])):
-        if head_['pixdim'][i] > 0:
-            h = head_['pixdim'][i]
+    for i in range(len(head_["pixdim"])):
+        if head_["pixdim"][i] > 0:
+            h = head_["pixdim"][i]
 
     error_tol = 0.001  # error for the estimation of the largest eigenvalue
     alpha_time = 0.9  # time_step = alpha_time * (time_step_max)
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
     beta = sigma ** 2 / 2
 
-    lam = utils.largest_eigenvalue_heat_3D_tensor2(g, h,
-                                                   error_tol)
+    lam = utils.largest_eigenvalue_heat_3D_tensor2(g, h, error_tol)
     print("lambda: ", lam)
-    lam = np.array(lam.real, dtype='float64')
+    lam = np.array(lam.real, dtype="float64")
     t_step_max = 2 / lam
 
     t_step = alpha_time * t_step_max
@@ -906,41 +1056,45 @@ def obtain_time_step_estimation(dartel_input, FWHM, g):
         "TimeStepMax": t_step_max,
         "SpatialPrior": "Tissues (GM, WM, CSF)",
         "RegularizationType": "Fisher",
-        "FWHM": FWHM
+        "FWHM": FWHM,
     }
 
     json_data = json.dumps(data)
-    with open('./output_data.json', 'w') as f:
+    with open("./output_data.json", "w") as f:
         f.write(json_data)
 
-    return t_step, os.path.abspath('./output_data.json')
+    return t_step, os.path.abspath("./output_data.json")
 
 
 def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     import math
-    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
+    import os
+
     import nibabel as nib
     import numpy as np
-    import os
+
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # obtain voxel size with dartel_input
     head = nib.load(dartel_input)
     head_ = head.header
-    for i in range(len(head_['pixdim'])):
-        if head_['pixdim'][i] > 0:
-            h = head_['pixdim'][i]
+    for i in range(len(head_["pixdim"])):
+        if head_["pixdim"][i] > 0:
+            h = head_["pixdim"][i]
 
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
     beta = sigma ** 2 / 2
 
     input_image_read = nib.load(input_image)
     input_image_data = input_image_read.get_data()
-    input_image_data = np.array(input_image_data, dtype='float32')
+    input_image_data = np.array(input_image_data, dtype="float32")
 
-    u = utils.heat_solver_tensor_3D_P1_grad_conj(input_image_data, g, beta, h, t_step, CL_value=None, epsilon=None)
+    u = utils.heat_solver_tensor_3D_P1_grad_conj(
+        input_image_data, g, beta, h, t_step, CL_value=None, epsilon=None
+    )
 
     img = utils.spm_write_vol(input_image, u)
 
-    nib.save(img, './regularized_' + os.path.basename(input_image))
+    nib.save(img, "./regularized_" + os.path.basename(input_image))
 
-    return os.path.abspath('./regularized_' + os.path.basename(input_image))
+    return os.path.abspath("./regularized_" + os.path.basename(input_image))

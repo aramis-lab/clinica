@@ -16,7 +16,9 @@ def load_data(mgh_list):
 
     # Construct 0-matrix with the good size, based on the size of the surfaces
     # provided by the first subject
-    N_vertex = []  # array containing the surface size of the different surfaces of a subject
+    N_vertex = (
+        []
+    )  # array containing the surface size of the different surfaces of a subject
     sample = mgh_list[0]
     for i in range(len(sample)):
         N_vertex.append(np.max(nib.load(sample[i]).header.get_data_shape()))
@@ -27,5 +29,5 @@ def load_data(mgh_list):
     for s in range(len(mgh_list)):
         for h in range(len(mgh_list[s])):
             current_data = np.squeeze(nib.load(mgh_list[s][h]).get_data())
-            data[s, N_cumul[h]: N_cumul[h+1]] = current_data
+            data[s, N_cumul[h] : N_cumul[h + 1]] = current_data
     return data

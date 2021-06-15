@@ -1,8 +1,8 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
 from nipype import config
 
+import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -22,6 +22,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
         from colorama import Fore
+
         from clinica.utils.stream import cprint
 
         if self.parameters['low_bval'] < 0:
@@ -65,11 +66,12 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.dwi import check_dwi_volume
-        from clinica.utils.inputs import clinica_file_reader
+
         import clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_utils as utils
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         import clinica.utils.input_files as input_files
+        from clinica.utils.dwi import check_dwi_volume
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
 
         all_errors = []
@@ -197,11 +199,12 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
+        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
-        from clinica.utils.nipype import fix_join
+
         import clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_utils as utils
+        from clinica.utils.nipype import fix_join
 
         # Find container path from DWI filename
         # =====================================
@@ -243,17 +246,18 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
+        import nipype.interfaces.fsl as fsl
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.fsl as fsl
         from nipype.workflows.dmri.fsl.utils import apply_all_corrections
 
-        from clinica.utils.dwi import prepare_reference_b0
-        from clinica.workflows.dwi_preprocessing import ecc_pipeline
-        from clinica.workflows.dwi_preprocessing import hmc_pipeline
-        from clinica.workflows.dwi_preprocessing import remove_bias
-
         import clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_workflows as workflows
+        from clinica.utils.dwi import prepare_reference_b0
+        from clinica.workflows.dwi_preprocessing import (
+            ecc_pipeline,
+            hmc_pipeline,
+            remove_bias,
+        )
 
         # Nodes creation
         # ==============

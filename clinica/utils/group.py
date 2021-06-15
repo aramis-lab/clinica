@@ -1,8 +1,7 @@
 # coding: utf8
 
 
-"""
-This module contains utilities to handle groups in Clinica.
+"""This module contains utilities to handle groups in Clinica.
 
 See CAPS specifications for details about groups.
 """
@@ -11,8 +10,10 @@ See CAPS specifications for details about groups.
 def check_group_label(group_label):
     """Check that `group_label` is compliant with specifications."""
     if not group_label.isalnum():
-        raise ValueError('Not valid group_label value: it must be composed only by letters and/or numbers '
-                         '(given value: %s).' % group_label)
+        raise ValueError(
+            f"Not valid group_label value: it must be composed only by letters "
+            f"and/or numbers (given value: {group_label})."
+        )
 
 
 def extract_group_ids(caps_directory):
@@ -20,8 +21,8 @@ def extract_group_ids(caps_directory):
     import os
 
     try:
-        group_ids = os.listdir(os.path.join(caps_directory, 'groups'))
+        group_ids = os.listdir(os.path.join(caps_directory, "groups"))
     except FileNotFoundError:
-        group_ids = ['']
+        group_ids = [""]
 
     return group_ids

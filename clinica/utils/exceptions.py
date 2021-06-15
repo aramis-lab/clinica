@@ -1,21 +1,23 @@
 # coding: utf8
 
-"""
-This module handles Clinica exceptions.
-"""
+"""This module handles Clinica exceptions."""
 
 
 class ClinicaException(Exception):
-    """ Base class for Clinica exceptions """
+    """Base class for Clinica exceptions."""
 
 
 class ClinicaMissingDependencyError(ClinicaException):
-    """ Base class for Clinica dependencies errors """
+    """Base class for Clinica dependencies errors."""
 
 
 class ClinicaBIDSError(ClinicaException):
-    """ Base class for BIDS errors """
+    """Base class for BIDS errors."""
 
 
 class ClinicaCAPSError(ClinicaException):
-    """ Base class for CAPS errors """
+    """Base class for CAPS errors."""
+
+
+class ClinicaParserError(ClinicaException):
+    """Base class for parser errors."""

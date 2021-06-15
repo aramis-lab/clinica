@@ -28,22 +28,26 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
         PSF information following [subject_ids, session_ids] order
     """
     import os
+
     from pandas.io.parsers import read_csv
 
     if not os.path.isfile(pvc_psf_tsv):
-        raise FileNotFoundError('Could not find the psf_tsv file %s' % pvc_psf_tsv)
+        raise FileNotFoundError(f"Could not find the psf_tsv file {pvc_psf_tsv}")
     try:
-        psf_df = read_csv(pvc_psf_tsv, sep='\t')
+        psf_df = read_csv(pvc_psf_tsv, sep="\t")
     except (IOError, UnicodeDecodeError):
-        raise RuntimeError('An error while reading %s happened' % pvc_psf_tsv)
+        raise RuntimeError("An error while reading {pvc_psf_tsv} happened")
 
-    if any(elem not in ['participant_id', 'session_id', 'acq_label', 'psf_x', 'psf_y', 'psf_z'] for elem in list(psf_df.columns)):
+    if any(
+        elem
+        not in ["participant_id", "session_id", "acq_label", "psf_x", "psf_y", "psf_z"]
+        for elem in list(psf_df.columns)
+    ):
         raise IOError(
-            'The file %s must contain the following columns (separated by tabulations):\n'
-            'participant_id, session_id, acq_label, psf_x, psf_y, psf_z\n'
-            '%s\n'
-            'Pay attention to the spaces (there should be none).' %
-            (pvc_psf_tsv, str(list(psf_df.columns)))
+            f"The file {pvc_psf_tsv} must contain the following columns (separated by tabulations):\n"
+            f"participant_id, session_id, acq_label, psf_x, psf_y, psf_z\n"
+            f"{str(list(psf_df.columns))}\n"
+            f"Pay attention to the spaces (there should be none)."
         )
 
     subjects_psf = list(psf_df.participant_id)
@@ -53,17 +57,24 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     for i, sub in enumerate(subject_ids):
         current_ses = session_ids[i]
         idx_sub = [
-            j for j in range(len(subjects_psf))
-            if (sub == subjects_psf[j]) and (current_ses == sessions_psf[j]) and (pet_tracer == pet_tracer_psf[j])
+            j
+            for j in range(len(subjects_psf))
+            if (sub == subjects_psf[j])
+            and (current_ses == sessions_psf[j])
+            and (pet_tracer == pet_tracer_psf[j])
         ]
         if len(idx_sub) == 0:
-            raise RuntimeError('Subject %s with session %s and tracer %s that you want to proceed was not found '
-                               'in the TSV file containing PSF specifications (%s).' %
-                               (sub, current_ses, pet_tracer, pvc_psf_tsv))
+            raise RuntimeError(
+                f"Subject {sub} with session {current_ses} and tracer {pet_tracer} "
+                f"that you want to proceed was not found in the TSV file containing "
+                f"PSF specifications ({pvc_psf_tsv})."
+            )
         if len(idx_sub) > 1:
-            raise RuntimeError('Subject %s with session %s and tracer %s that you want to proceed was found multiple times '
-                               'in the TSV file containing PSF specifications (%s).' %
-                               (sub, current_ses, pet_tracer, pvc_psf_tsv))
+            raise RuntimeError(
+                f"Subject {sub} with session {current_ses} and tracer {pet_tracer} "
+                f"that you want to proceed was found multiple times "
+                f"in the TSV file containing PSF specifications ({pvc_psf_tsv})."
+            )
         idx_reordered.append(idx_sub[0])
 
     psf_x = list(psf_df.psf_x)
@@ -73,10 +84,7 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     return iterables_psf
 
 
-LIST_SUVR_REFERENCE_REGIONS = [
-    "pons",
-    "cerebellumPons",
-]
+LIST_SUVR_REFERENCE_REGIONS = ["pons", "cerebellumPons", "pons2", "cerebellumPons2"]
 
 
 def get_suvr_mask(suvr_reference_region):
@@ -104,6 +112,20 @@ def get_suvr_mask(suvr_reference_region):
             "resources",
             "masks",
             "region-cerebellumPons_eroded-6mm_mask.nii.gz",
+        ),
+        "pons2": os.path.join(
+            os.path.split(os.path.realpath(__file__))[0],
+            "..",
+            "resources",
+            "masks",
+            "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz",
+        ),
+        "cerebellumPons2": os.path.join(
+            os.path.split(os.path.realpath(__file__))[0],
+            "..",
+            "resources",
+            "masks",
+            "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz",
         ),
     }
     return suvr_reference_region_to_suvr[suvr_reference_region]

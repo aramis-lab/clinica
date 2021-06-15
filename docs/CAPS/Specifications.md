@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD010 MD033 MD046 -->
 # Detailed file descriptions
 
 In the following, brackets `[`/`]` will denote optional key/value pairs in the filename while accolades `{`/`}` will indicate a list of compulsory values (e.g. `hemi-{left|right}` means that the key `hemi` only accepts `left` or `right` as values).
@@ -9,9 +10,10 @@ Finally:
 - `group_id` denotes `group-<group_label>`;
 - `long_id` denotes `long-<long_label>`.
 
-##  T1 MRI data
+## T1 MRI data
 
 ### `t1-linear` - Affine registration of T1w images to the MNI standard space
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -21,12 +23,13 @@ subjects/
          ├─ <source_file>_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz
          └─ <source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz
 ```
-The `desc-Crop` indicates images of size 169×208×179 after cropping to remove the background.
 
+The `desc-Crop` indicates images of size 169×208×179 after cropping to remove the background.
 
 ### `t1-volume` pipeline - Volume-based processing of T1-weighted MR images
 
 #### Segmentation
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -50,8 +53,8 @@ The possible values for the `segm-<segm>` key/value are: `graymatter`, `whitemat
 
 The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applying the transformation obtained from the SPM Segmentation routine to the T1 image in native space.
 
-
 #### DARTEL
+
 ```Text
 groups/
 └─ <group_id>/
@@ -68,8 +71,8 @@ The `<group_id>_iteration-<index>_template.nii.gz` obtained at each iteration wi
 !!! Note "Note for SPM experts"
     The original name of `<group_id>_iteration-<index>_template.nii.gz` is `Template<index>.nii`.
 
-
 #### DARTEL to MNI
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -83,6 +86,7 @@ subjects/
 ```
 
 #### Atlas statistics
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -94,13 +98,15 @@ subjects/
                   └─ atlas_statistics/
                      └─ <source_file>_space-<space>_map-graymatter_statistics.tsv
 ```
+
 Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#appendix-content-of-a-statistic-file).
 
-
 ### `t1-freesurfer` - FreeSurfer-based processing of T1-weighted MR images
+
 The outputs of the `t1-freesurfer` pipeline are split into two subfolders, the first one containing the FreeSurfer outputs and a second with additional outputs specific to Clinica.
 
 FreeSurfer outputs:
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -116,6 +122,7 @@ subjects/
 ```
 
 Clinica additional outputs:
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -130,7 +137,6 @@ subjects/
 
 For the file: `*_hemi-{left|right}_parcellation-<parcellation>_thickness.tsv`, `_thickness` is just an example for the cortical thickness, we also have other measurements defined in the table below:
 
-
 | Name                    | Suffix       | Description |
 |-------------------------|--------------|-------------|
 | Cortical thickness      | `_thickness` | Cortical thickness between pial surface and white surface|
@@ -138,16 +144,16 @@ For the file: `*_hemi-{left|right}_parcellation-<parcellation>_thickness.tsv`, `
 | Cortical surface area   | `_area`      | Cortical surface area|
 | Cortical mean curvature | `_meancurv`  | Mean curvature of cortical surface|
 
-
 The `hemi-{left|right}` key/value stands for `left` or `right` hemisphere.
 
-The possible values for the `parcellation-<parcellation>` key/value are: `desikan` (Desikan-Killiany Atlas), `destrieux` (Destrieux Atlas) and `ba` (Brodmann Area Maps). The TSV files for Brodmann areas contain a selection of regions, see this link for the content of this selection: [http://ftp.nmr.mgh.harvard.edu/fswiki/BrodmannAreaMaps](http://ftp.nmr.mgh.harvard.edu/fswiki/BrodmannAreaMaps)).
+The possible values for the `parcellation-<parcellation>` key/value are: `desikan` (Desikan-Killiany Atlas), `destrieux` (Destrieux Atlas) and `ba` (Brodmann Area Maps).
+The TSV files for Brodmann areas contain a selection of regions, see this link for the content of this selection: [http://ftp.nmr.mgh.harvard.edu/fswiki/BrodmannAreaMaps](http://ftp.nmr.mgh.harvard.edu/fswiki/BrodmannAreaMaps)).
 
 The details of the white matter parcellation of FreeSurfer can be found here: [https://surfer.nmr.mgh.harvard.edu/pub/articles/salat_2008.pdf](https://surfer.nmr.mgh.harvard.edu/pub/articles/salat_2008.pdf).
 
-
 !!! Example "Example - Content of the TSV files"
     Content of `sub-CLNC01_ses­-M00_T1w_segmentationVolumes.tsv`:
+
     ```Text
     Measure:volume	Left-Lateral-Ventricle	Left-Inf-Lat-Vent	...
     /path/to/freesurfer/segmentation/	12345.6	12.334	...
@@ -170,9 +176,10 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
     ```
     This file contains the cortical thickness in different regions of the Desikan atlas.
 
-
 ### `t1-freesurfer-longitudinal` – FreeSurfer-based longitudinal processing of T1-weighted MR images
+
 #### FreeSurfer unbiased templates
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -187,6 +194,7 @@ subjects/
 ```
 
 ### FreeSurfer longitudinal outputs
+
 The outputs are split into two subfolders, the first containing the FreeSurfer longitudinal outputs and a second with additional outputs specific to Clinica.
 
 ```Text
@@ -205,6 +213,7 @@ subjects/
 ```
 
 Clinica additional outputs:
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -217,14 +226,16 @@ subjects/
                   ├─ <participant_id>_<session_id>_<long_id>_segmentationVolumes.tsv
                   └─ <participant_id>_<session_id>_<long_id>_hemi-{left|right}_parcellation-<parcellation>_thickness.tsv
 ```
+
 where each file is explained in the `t1-freesurfer` sub-section.
 
 !!! Note
     The naming convention `<subject_name>.long.<template_name>` is imposed by FreeSurfer.
 
-
 ## Diffusion imaging data
+
 ### `dwi-preprocessing-*` - Preprocessing of raw diffusion weighted imaging (DWI) datasets
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -237,10 +248,12 @@ subjects/
             └─ <source_file>_space-<space>_brainmask.nii.gz
 ```
 
-The resulting DWI file after preprocessing. According to the subtype of pipeline run, `<space>` can be `T1w` ([`dwi-preprocessing-using-t1` pipeline](../../Pipelines/DWI_Preprocessing)) or `b0` ([`dwi-preprocessing-using-fieldmap` pipeline](../../Pipelines/DWI_Preprocessing)). A brain mask of the preprocessed file is provided.
-
+The resulting DWI file after preprocessing.
+According to the subtype of pipeline run, `<space>` can be `T1w` ([`dwi-preprocessing-using-t1` pipeline](../../Pipelines/DWI_Preprocessing)) or `b0` ([`dwi-preprocessing-using-fieldmap` pipeline](../../Pipelines/DWI_Preprocessing)).
+A brain mask of the preprocessed file is provided.
 
 ### `dwi-dti` - DTI-based processing of corrected DWI datasets
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -259,18 +272,18 @@ subjects/
                └─ <source_file>_space-<space>_res-1x1x1_map-{FA|MD|AD|RD}_statistics.tsv
 ```
 
-The DTI is saved under the `*_model-DTI_diffmodel.nii.gz` filename. The different maps based on the DTI are the fractional anisotropy (`FA`), mean diffusivity (`MD`), axial diffusivity (`AD`) and radial diffusivity (`RD`) parametric maps, as well as the directionally-encoded colour (DEC) FA (`DECFA`) map.
+The DTI is saved under the `*_model-DTI_diffmodel.nii.gz` filename.
+The different maps based on the DTI are the fractional anisotropy (`FA`), mean diffusivity (`MD`), axial diffusivity (`AD`) and radial diffusivity (`RD`) parametric maps, as well as the directionally-encoded colour (DEC) FA (`DECFA`) map.
 
 Current atlases used for statistics are the 1mm version of `JHUDTI81`, `JHUTract0` and `JHUTract25` (see [Atlases page](../../Atlases) for further details).
 
 Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#appendix-content-of-a-statistic-file).
 
-
 !!! Note
     The naming convention for suffixes follows the BIDS derivative specifications except for the statistics files (specific files for our needs) and the `_deformation.nii.gz` file (it is equivalent to the `_warp.nii.gz` file in the [BEP014 specifications](https://docs.google.com/document/d/11gCzXOPUbYyuQx8fErtMO9tnOKC3kTWiL9axWkkILNE)).
 
-
 ### `dwi-connectome` - Computation of structural connectome from corrected DWI datasets
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -282,13 +295,16 @@ subjects/
                 └─ <source_file>_space-{b0|T1w}_model-CSD_parcellation-{desikan|destrieux}_connectivity.tsv
 ```
 
-The constrained spherical deconvolution (CSD) diffusion model is saved under the `*_model-CSD_diffmodel.nii.gz` filename. The whole-brain tractography is saved under the `*_tractography.tck` filename. The connectivity matrices are saved under `*_connectivity.tsv` filenames.
+The constrained spherical deconvolution (CSD) diffusion model is saved under the `*_model-CSD_diffmodel.nii.gz` filename.
+The whole-brain tractography is saved under the `*_tractography.tck` filename.
+The connectivity matrices are saved under `*_connectivity.tsv` filenames.
 
 Current parcellations used for the computation of connectivity matrices are `desikan` and `desikan` (see [Atlases page](../../Atlases) for further details).
 
 ## PET imaging data
 
 ### `pet-volume` - Volume-based processing of PET images
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -303,6 +319,7 @@ subjects/
                ├─ <source_file>_space-Ixi549Space_brainmask.nii.gz
                └─ <source_file>_space-Ixi549Space[_pvc-rbv]_suvr-<suvr>_mask-brain_pet.nii.gz
 ```
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -321,8 +338,8 @@ The possible values for the `suvr-<suvr>` key/value are: `pons` for FDG-PET and 
 
 Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#appendix-content-of-a-statistic-file).
 
-
 ### `pet-surface` - Surface-based processing of PET images
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -341,20 +358,42 @@ The `[_pvc-iy]` label describes the partial volume correction used in the algori
 
 The possible values for the `suvr-<suvr>` key/value are: `pons` for FDG-PET and `cerebellumPons` for different types of amyloid PET
 
-The `fwhm` represents the FWHM (in mm) of the Gaussian filter applied to the data mapped onto the FsAverage surface. The different values are 0 (no smoothing), 5, 10, 15, 20, and 25.
+The `fwhm` represents the FWHM (in mm) of the Gaussian filter applied to the data mapped onto the FsAverage surface.
+The different values are 0 (no smoothing), 5, 10, 15, 20, and 25.
 
 Files with the `_midcorticalsurface` suffix represent the surface at equal distance between the white matter/gray matter interface and the pial surface (one per hemisphere).
 
-Files with the `projection` suffix are PET data that can be mapped onto meshes. If `_space_fsaverage_` is in the name, it can be mapped either onto the white or pial surface of FsAverage. If `_space_native_` is in the name, it can be mapped onto the white or pial surface of the subject’s surface (`{l|r}h.white`, `{l|r}h.pial` files from `t1-freesurfer` pipeline).
+Files with the `projection` suffix are PET data that can be mapped onto meshes.
+If `_space_fsaverage_` is in the name, it can be mapped either onto the white or pial surface of FsAverage.
+If `_space_native_` is in the name, it can be mapped onto the white or pial surface of the subject’s surface (`{l|r}h.white`, `{l|r}h.pial` files from `t1-freesurfer` pipeline).
 
-Files with the `statistics` suffix are text files that display average PET values on either `_space-desikan` or `_space-destrieux` atlases. Example of this content can be found in [appendix](#appendix-content-of-a-statistic-file).
+Files with the `statistics` suffix are text files that display average PET values on either `_space-desikan` or `_space-destrieux` atlases.
+Example of this content can be found in [appendix](#appendix-content-of-a-statistic-file).
 
+### `pet-surface-longitudinal` - Surface-based longitudinal processing of PET images
+
+```Text
+subjects/
+└─ <participant_id>/
+   └─ <session_id>/
+      └─ pet/
+         └─ <long_id>/
+            └─ surface_longitudinal/
+               ├─ atlas_statistics/
+               │  └─ sub-<label>_ses-<lalbel>_long-<label>_task-<label>_acq-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
+               ├─ sub-<label>_ses-<lalbel>_long-<label>_hemi-{left|right}_midcorticalsurface
+               └─ sub-<label>_ses-<lalbel>_long-<label>_task-rest_acq-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
+```
+
+Explanations on the key/values can be found on the
+[`pet-surface` section](#pet-surface-surface-based-processing-of-pet-images).
 
 ## Statistics
 
 ### `statistics-surface` - Surface-based mass-univariate analysis with SurfStat
 
 #### Group comparison
+
 ```Text
 groups/
 └─ <group_id>/
@@ -370,27 +409,26 @@ groups/
          └─ <group_id>_glm.json
 ```
 
-
-In the case above, `_correctedPValue` indicates that these are maps of corrected p-values. Other types of maps include, but are not limited to:
-
+In the case above, `_correctedPValue` indicates that these are maps of corrected p-values.
+Other types of maps include, but are not limited to:
 
 | Name                | Suffix               | Description |
 |---------------------|----------------------|-------------|
 | Corrected p-value   | `_correctedPValue`   | Corrected P-values for vertices and clusters level based on random field theory|
-| Uncorrected p-value | `_uncorrectedPValue` | Uncorrected P-value for a  generalized linear model|
+| Uncorrected p-value | `_uncorrectedPValue` | Uncorrected P-value for a generalized linear model|
 | T-statistics        | `_TStatistics`       | T statistics for a generalized linear model|
 | FDR                 | `_FDR`               | Q-values for False Discovery Rate of resels|
 
-
-
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: the measurement of `<group_1>` is lower than (`lt`) that `<group_2>`.
 
-Value for `measure` can be `ct` (cortical thickness from `t1-freesurfer`), `fdg` (from `pet-surface`) or user-defined maps. The value for `fwhm` corresponds to the size of the surface-based smoothing in mm and can be `5`, `10`, `15` or `20`.
+Value for `measure` can be `ct` (cortical thickness from `t1-freesurfer`), `fdg` (from `pet-surface`) or user-defined maps.
+The value for `fwhm` corresponds to the size of the surface-based smoothing in mm and can be `5`, `10`, `15` or `20`.
 
-The JPEG files are simple snapshots. The `*.mat` files can be read later by tools like PySurfer and Surfstat.
-
+The JPEG files are simple snapshots.
+The `*.mat` files can be read later by tools like PySurfer and Surfstat.
 
 !!! Example
+
     ```Text
     groups/
     └─ group-ADvsHC/
@@ -403,7 +441,8 @@ The JPEG files are simple snapshots. The `*.mat` files can be read later by tool
              └─ group-ADvsHC_glm.json
     ```
 
-    Group comparison between patients with Alzheimer’s Disease (`group_1` = `AD`) and healthy subjects (`group_2` = `HC`). `ADvsHC` defines the `group_label`.
+    Group comparison between patients with Alzheimer’s Disease (`group_1` = `AD`) and healthy subjects (`group_2` = `HC`).
+    `ADvsHC` defines the `group_label`.
 
     The `group-ADvsHC_glm.json` contains the information for your generalized linear model, for example:
 
@@ -416,7 +455,9 @@ The JPEG files are simple snapshots. The `*.mat` files can be read later by tool
     }
     ```
 
-    This file describes the model that you want to create, you should include the factor and covariates in your generalized linear model as a column name in this TSV file. For example, the linear model formula is: `CorticalThickness = 1 + age + sex + group`, the contrasts (factors) `group`, `age` and `sex` are the covariates. Additional information is included in the log file.
+    This file describes the model that you want to create, you should include the factor and covariates in your generalized linear model as a column name in this TSV file.
+    For example, the linear model formula is: `CorticalThickness = 1 + age + sex + group`, the contrasts (factors) `group`, `age` and `sex` are the covariates.
+    Additional information is included in the log file.
 
     The content of `group-ADvsHC_participants.tsv` is:
     ```Text
@@ -433,14 +474,15 @@ The JPEG files are simple snapshots. The `*.mat` files can be read later by tool
 
     (Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file.)
 
-    The `<group_id>` key/value stands for the `group_label` for your analysis. It can be used to run different analyses for different subjects or different analyses for the same subjects.
+    The `<group_id>` key/value stands for the `group_label` for your analysis.
+    It can be used to run different analyses for different subjects or different analyses for the same subjects.
 
     The example image here maps statistically significant differences in cortical thickness between a group of patients with Alzheimer’s disease and a group of healthy controls (yellow: correction at the vertex level; blue: correction at the cluster level).
 
     ![](../img/StatsSurfStat_images/ContrastNegative-CorrectedPValue.jpg)
 
-
 #### Correlation analysis
+
 ```Text
 groups/
 └─ <group_id>/
@@ -454,10 +496,10 @@ groups/
          └─ <group_id>_glm.json
 ```
 
-The `correlation-<label>` here describes the factor of the model which can be, for example, `age`. The `contrast-{negative|positive}` is the sign of the correlation you want to study, which can be `negative` or `positive`.
+The `correlation-<label>` here describes the factor of the model which can be, for example, `age`.
+The `contrast-{negative|positive}` is the sign of the correlation you want to study, which can be `negative` or `positive`.
 
 All other key/value pairs are defined in the same way as in the previous section.
-
 
 <!--### Generalised Linear Model (GLM)
 ```
@@ -473,7 +515,8 @@ groups/
                 └─ <group_id>_glm.json
 ```
 
-This section includes all the other situation for the generalized linear model. It follows the same spirit as the sections above.
+This section includes all the other situation for the generalized linear model.
+It follows the same spirit as the sections above.
 -->
 
 ### `statistics-volume` - Volume-based mass-univariate analysis with SPM
@@ -505,12 +548,13 @@ Suffixes are described in the table below:
 | Regression coefficient | `_regressionCoefficient` | Image of the estimated regression coefficient for <covariate> (known as `beta_000X.nii` in SPM)|
 | Report                 | `_report-{1|2}`          | SPM report containing FWE/FDR peak/cluster thresholds to report for subsequent corrections|
 
-
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measurement of `<group_1>` is lower than (`lt`) that of `<group_2>`".
 
-The value for `measure` can be `graymatter` (output of `t1-volume`), `fdg` or `av45` (output of `pet-volume`), or user-defined maps. The value for `fwhm` corresponds to the size of the volume-based smoothing in mm.
+The value for `measure` can be `graymatter` (output of `t1-volume`), `fdg` or `av45` (output of `pet-volume`), or user-defined maps.
+The value for `fwhm` corresponds to the size of the volume-based smoothing in mm.
 
 Corrected results are stored under the following hierarchy:
+
 ```Text
 groups/
 └─ <group_id>/
@@ -523,12 +567,16 @@ groups/
 
 `FWEp` (resp. `FDRp`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction at the peak (=voxel) level with a statistical threshold of P < 0.05.
 
-`FWEc` (resp. `FDRc`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction. A statistical threshold of P < 0.001 was first applied (height threshold). An extent threshold of P < 0.05 corrected for multiple comparisons was then applied at the cluster level.
+`FWEc` (resp. `FDRc`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction.
+A statistical threshold of P < 0.001 was first applied (height threshold).
+An extent threshold of P < 0.05 corrected for multiple comparisons was then applied at the cluster level.
 
 ### `deeplearning-prepare-data` - Prepare input data for deep learning with PyTorch
+
 In the following subsections, files with the `.pt` extension denote tensors in PyTorch format.
 
 #### Image-based outputs
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -538,9 +586,11 @@ subjects/
             └─ <pipeline_name>/
                └─ <source_file>_key1-<value_1>...keyN-<value_N>_suffix.pt
 ```
+
 Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D image follows the same naming convention as the generated file except the extension that is replaced by `.pt`.
 
 !!! Example "Example for the `t1-linear` pipeline"
+
     ```Text
     subjects/
     └─ <participant_id>/
@@ -552,6 +602,7 @@ Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D image
     ```
 
 #### Patch-based outputs
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -571,6 +622,7 @@ subjects/
 Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D patches follows the same naming convention except that `_patchsize-<N>_stride-<M>_patch-<index>` is inserted between `keyN-<value>` and `_suffix` and  the extension is replaced by `.pt`.
 
 !!! Example "Example for the `t1-linear` pipeline using a patch size and patch stride of `50`"
+
     ```Text
     subjects/
     └─ <participant_id>/
@@ -582,6 +634,7 @@ Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D patch
     ```
 
 #### Slice-based outputs
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -598,9 +651,10 @@ subjects/
 | `channel-{single|rgb}` | Slice mode. It can be three identical channels (`rgb`) or one channel (`single`). |
 | `slice-<index>`        | Slice index  |
 
-Given a file generated by a Clinica pipeline, the PyTorch tensor of the 2D slices follows the same naming convention except that `_axis-{sag|cor|axi}_channel-{single|rgb}_slice-<index>` is inserted between `keyN-<value>` and `_suffix` and  the extension is replaced by `.pt`.
+Given a file generated by a Clinica pipeline, the PyTorch tensor of the 2D slices follows the same naming convention except that `_axis-{sag|cor|axi}_channel-{single|rgb}_slice-<index>` is inserted between `keyN-<value>` and `_suffix` and the extension is replaced by `.pt`.
 
 !!! Example "Example for the `t1-linear` pipeline using slices in `sag`ittal plane and `rgb` channel"
+
     ```Text
     subjects/
     └─ <participant_id>/
@@ -612,7 +666,9 @@ Given a file generated by a Clinica pipeline, the PyTorch tensor of the 2D slice
     ```
 
 ## Machine Learning
+
 ### `machinelearning-prepare-spatial-svm` - Prepare input data for spatially regularized SVM
+
 ```Text
 subjects/
 └─ <participant_id>/
@@ -623,6 +679,7 @@ subjects/
                ├─ <source_file_t1w>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_spatialregularization.nii.gz
                └─ <source_file_pet>_space-Ixi549Space[_pvc-rbv]_suvr-<suvr>_spatialregularization.nii.gz
 ```
+
 ```Text
 groups/
 └─ <group_id>/
@@ -632,11 +689,10 @@ groups/
          └─ <group_id>_space-Ixi549Space_parameters.json
 ```
 
-
 At the subject level, it contains SVM regularization of gray matter/white matter/CSF maps or PET data that accounts for the spatial and anatomical structure of neuroimaging data.
 
-At the group level, it contains the Gram matrix with respect to gray matter/white matter/CSF maps needed for the SVM regularization and the information regarding the regularization. An example of JSON file is:
-
+At the group level, it contains the Gram matrix with respect to gray matter/white matter/CSF maps needed for the SVM regularization and the information regarding the regularization.
+An example of JSON file is:
 
 ```javascript
 {
@@ -652,17 +708,19 @@ At the group level, it contains the Gram matrix with respect to gray matter/whit
 }
 ```
 
-
 ## Appendix - Content of a statistic file
-```
+
+```Text
 <source_file>_space-<space>_map-<map>_statistics.tsv
 ```
 
-Statistic file for a given [atlas](../../Atlases). The TSV file summarizes regional volumes or averages for a given parametric map. With the help of pandas (Python library), it can be easily parsed for machine learning purposes.
+Statistic file for a given [atlas](../../Atlases).
+The TSV file summarizes regional volumes or averages for a given parametric map.
+With the help of pandas (Python library), it can be easily parsed for machine learning purposes.
 
 Possible values for `_map-<map>` key/value are:
 
-- For T1: `graymatter` (gray matter), `whitematter` (white matter),  `csf` (CSF) and  `ct` (cortical thickness)
+- For T1: `graymatter` (gray matter), `whitematter` (white matter), `csf` (CSF) and `ct` (cortical thickness)
 
 - For DWI: `FA` (fractional anisotropy), `MD` (mean diffusivity, also called apparent diffusion coefficient), `AD` (axial diffusivity), `RD` (radial diffusivity), `NDI` (neurite density index), `ODI` (orientation dispersion index) and `FWF` (free water fraction).
 
@@ -670,6 +728,7 @@ Possible values for `_map-<map>` key/value are:
 
 !!! Example
     Content of `sub-CLNC01_ses-M00_T1w_space-Hammers_map-graymatter_statistics.tsv`:
+
     ```Text
     index   label_name          mean_scalar
     0.0     Background          0.0011357992189
@@ -678,4 +737,5 @@ Possible values for `_map-<map>` key/value are:
     3.0     Left Amygdala       0.577247679234
     ...
     ```
+
     (Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file.)

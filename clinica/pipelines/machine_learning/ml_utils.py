@@ -2,7 +2,11 @@
 
 
 import numpy as np
-from sklearn.metrics import balanced_accuracy_score, accuracy_score, classification_report
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    classification_report,
+)
 
 
 def evaluate_prediction(y, y_hat):
@@ -33,7 +37,9 @@ def evaluate_prediction(y, y_hat):
                 false_positive += 1
                 fp.append(i)
 
-    accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
+    accuracy = (true_positive + true_negative) / (
+        true_positive + true_negative + false_positive + false_negative
+    )
 
     if (true_positive + false_negative) != 0:
         sensitivity = true_positive / (true_positive + false_negative)
@@ -57,14 +63,20 @@ def evaluate_prediction(y, y_hat):
 
     balanced_accuracy = (sensitivity + specificity) / 2
 
-    results = {'accuracy': accuracy,
-               'balanced_accuracy': balanced_accuracy,
-               'sensitivity': sensitivity,
-               'specificity': specificity,
-               'ppv': ppv,
-               'npv': npv,
-               'confusion_matrix': {'tp': len(tp), 'tn': len(tn), 'fp': len(fp), 'fn': len(fn)}
-               }
+    results = {
+        "accuracy": accuracy,
+        "balanced_accuracy": balanced_accuracy,
+        "sensitivity": sensitivity,
+        "specificity": specificity,
+        "ppv": ppv,
+        "npv": npv,
+        "confusion_matrix": {
+            "tp": len(tp),
+            "tn": len(tn),
+            "fp": len(fp),
+            "fn": len(fn),
+        },
+    }
 
     return results
 
@@ -78,13 +90,14 @@ def evaluate_prediction_multiclass(y, y_hat):
     balanced_accuracy = balanced_accuracy_score(y, y_hat)
     accuracy = accuracy_score(y, y_hat)
 
-    results = {'accuracy': accuracy,
-               'balanced_accuracy': balanced_accuracy}
+    results = {"accuracy": accuracy, "balanced_accuracy": balanced_accuracy}
 
     return results
 
 
-def metric_distribution(metric, labels, output_path, num_classes=2, metric_label='balanced accuracy'):
+def metric_distribution(
+    metric, labels, output_path, num_classes=2, metric_label="balanced accuracy"
+):
     """
 
     Distribution plots of various metrics such as balanced accuracy!
@@ -94,8 +107,8 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
     """
     # from __future__ import print_function, division
 
-    import numpy as np
     import matplotlib.pyplot as plt
+    import numpy as np
     from matplotlib import cm
     from matplotlib.backends.backend_pdf import PdfPages
 
@@ -105,19 +118,24 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
     method_ticks = 1.0 + np.arange(num_datasets)
 
     fig, ax = plt.subplots(figsize=[9, 9])
-    line_coll = ax.violinplot(metric, widths=0.8, bw_method=0.2,
-                              showmedians=True, showextrema=False,
-                              positions=method_ticks)
+    line_coll = ax.violinplot(
+        metric,
+        widths=0.8,
+        bw_method=0.2,
+        showmedians=True,
+        showextrema=False,
+        positions=method_ticks,
+    )
 
-    cmap = cm.get_cmap('Paired', num_datasets)
-    for cc, ln in enumerate(line_coll['bodies']):
+    cmap = cm.get_cmap("Paired", num_datasets)
+    for cc, ln in enumerate(line_coll["bodies"]):
         ln.set_facecolor(cmap(cc))
         ln.set_label(labels[cc])
 
     plt.legend(loc=2, ncol=num_datasets)
 
-    ax.tick_params(axis='both', which='major', labelsize=15)
-    ax.grid(axis='y', which='major')
+    ax.tick_params(axis="both", which="major", labelsize=15)
+    ax.grid(axis="y", which="major")
 
     lower_lim = np.round(np.min([np.float64(0.9 / num_classes), metric.min()]), 3)
     upper_lim = np.round(np.max([1.01, metric.max()]), 3)
@@ -135,7 +153,7 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
 
     fig.tight_layout()
 
-    pp1 = PdfPages(output_path + '.pdf')
+    pp1 = PdfPages(output_path + ".pdf")
     pp1.savefig()
     pp1.close()
 

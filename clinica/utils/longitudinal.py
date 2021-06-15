@@ -28,7 +28,7 @@ def get_long_id(list_session_id):
     """
     sorted_list = sorted(list_session_id)
     list_session_label = [session_id[4:] for session_id in sorted_list]
-    long_id = 'long-' + ''.join(list_session_label)
+    long_id = "long-" + "".join(list_session_label)
 
     return long_id
 
@@ -43,11 +43,15 @@ def get_participants_long_id(list_participant_id, list_session_id):
     """
     from .participant import get_unique_subjects
 
-    unique_subject_list, per_subject_session_list = get_unique_subjects(list_participant_id, list_session_id)
+    unique_subject_list, per_subject_session_list = get_unique_subjects(
+        list_participant_id, list_session_id
+    )
 
     list_long_id = []
     for i in range(0, len(unique_subject_list)):
-        list_long_id = list_long_id + [get_long_id(per_subject_session_list[i])] * len(per_subject_session_list[i])
+        list_long_id = list_long_id + [get_long_id(per_subject_session_list[i])] * len(
+            per_subject_session_list[i]
+        )
 
     return list_long_id
 
@@ -61,12 +65,12 @@ def save_long_id(list_session_id, output_dir, file_name=None):
 
     long_id = get_long_id(list_session_id)
     if file_name is None:
-        file_name = long_id + '_sessions.tsv'
-    sessions_tsv = open(os.path.join(output_dir, file_name), 'w')
-    sessions_tsv.write('session_id\n')
+        file_name = long_id + "_sessions.tsv"
+    sessions_tsv = open(os.path.join(output_dir, file_name), "w")
+    sessions_tsv.write("session_id\n")
 
     for session_id in sorted(list_session_id):
-        sessions_tsv.write(session_id + '\n')
+        sessions_tsv.write(session_id + "\n")
 
     sessions_tsv.close()
 
@@ -74,26 +78,30 @@ def save_long_id(list_session_id, output_dir, file_name=None):
 def read_sessions(caps_dir, participant_id, long_id):
     """Extract sessions IDs from `caps_dir`/subjects/`participant_id`/`long_id`/`long_id`_sessions.tsv."""
     import os
+
     import pandas
     from colorama import Fore
+
     from clinica.utils.exceptions import ClinicaException
 
-    sessions_file = os.path.join(os.path.expanduser(caps_dir),
-                                 'subjects',
-                                 participant_id,
-                                 long_id,
-                                 long_id+'_sessions.tsv')
+    sessions_file = os.path.join(
+        os.path.expanduser(caps_dir),
+        "subjects",
+        participant_id,
+        long_id,
+        f"{long_id}_sessions.tsv",
+    )
     if not os.path.isfile(sessions_file):
         raise ClinicaException(
-            '\n%s[Error] The TSV file with sessions associated to %s for longitudinal ID %s is missing '
-            '(expected path: %s).%s' %
-            (Fore.RED, participant_id, long_id, sessions_file, Fore.RESET)
+            f"\n{Fore.RED}[Error] The TSV file with sessions associated "
+            f"to {participant_id} for longitudinal ID {long_id} is missing "
+            f"(expected path: {sessions_file}).{Fore.RESET}"
         )
-    ss_df = pandas.read_csv(sessions_file, sep='\t')
-    if 'session_id' not in list(ss_df.columns.values):
+    ss_df = pandas.read_csv(sessions_file, sep="\t")
+    if "session_id" not in list(ss_df.columns.values):
         raise ClinicaException(
-            '\n%s[Error] The TSV file does not contain session_id column (path: %s)%s' %
-            (Fore.RED, sessions_file, Fore.RESET)
+            f"\n{Fore.RED}[Error] The TSV file does not contain session_id column "
+            f"(path: {sessions_file}){Fore.RESET}"
         )
 
     return list(ss_df.session_id)

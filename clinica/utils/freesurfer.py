@@ -1,7 +1,5 @@
 # coding: utf8
-"""
-This module contains FreeSurfer utilities.
-"""
+"""This module contains FreeSurfer utilities."""
 
 
 def extract_image_id_from_longitudinal_segmentation(freesurfer_id):
@@ -19,29 +17,30 @@ def extract_image_id_from_longitudinal_segmentation(freesurfer_id):
         image_id(participant_id='sub-CLNC01', session_id='ses-M00', long_id='long-M00M18')
     """
     from collections import namedtuple
-    image_id = namedtuple('image_id', ['participant_id', 'session_id', 'long_id'])
+
+    image_id = namedtuple("image_id", ["participant_id", "session_id", "long_id"])
 
     # Case 'sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18'
-    if '.long.' in freesurfer_id:
-        participant_id = freesurfer_id.split('.long.')[0].split('_')[0]
-        session_id = freesurfer_id.split('.long.')[0].split('_')[1]
-        long_id = freesurfer_id.split('.long.')[1].split('_')[1]
+    if ".long." in freesurfer_id:
+        participant_id = freesurfer_id.split(".long.")[0].split("_")[0]
+        session_id = freesurfer_id.split(".long.")[0].split("_")[1]
+        long_id = freesurfer_id.split(".long.")[1].split("_")[1]
     # Case 'sub-CLNC01_long-M00M18'
-    elif 'long-' in freesurfer_id:
-        participant_id = freesurfer_id.split('_')[0]
-        session_id = ''
-        long_id = freesurfer_id.split('_')[1]
+    elif "long-" in freesurfer_id:
+        participant_id = freesurfer_id.split("_")[0]
+        session_id = ""
+        long_id = freesurfer_id.split("_")[1]
     # Case 'sub-CLNC01_ses-M00'
     else:
-        participant_id = freesurfer_id.split('_')[0]
-        session_id = freesurfer_id.split('_')[1]
-        long_id = ''
+        participant_id = freesurfer_id.split("_")[0]
+        session_id = freesurfer_id.split("_")[1]
+        long_id = ""
 
     return image_id(participant_id, session_id, long_id)
 
 
 def get_secondary_stats(stats_filename, info_type):
-    """Read the 'secondary' statistical info from .stats file
+    """Read the 'secondary' statistical info from .stats file.
 
     Extract the information from .stats file that is commented out
     (lines starting with '# Measure' prefix) and does not appear in the
@@ -61,30 +60,30 @@ def get_secondary_stats(stats_filename, info_type):
 
     # currently no additional information is provided by .stats file for
     # the mean curvature
-    if info_type != 'meancurv':
+    if info_type != "meancurv":
         # define how lines are supposed to end in the stats file, depending
         # on the type of information that is searched for
         endline_dict = dict()
-        endline_dict['volume'] = 'mm^3'
-        endline_dict['thickness'] = 'mm'
-        endline_dict['area'] = 'mm^2'
+        endline_dict["volume"] = "mm^3"
+        endline_dict["thickness"] = "mm"
+        endline_dict["area"] = "mm^2"
 
         # define keywords that are supposed to appear in commented lines
         # containing statistical information
         info_keyword_dict = dict()
-        info_keyword_dict['volume'] = ['volume', 'Volume']
-        info_keyword_dict['area'] = ['area', 'Area']
-        info_keyword_dict['thickness'] = ['thickness', 'Thickness']
+        info_keyword_dict["volume"] = ["volume", "Volume"]
+        info_keyword_dict["area"] = ["area", "Area"]
+        info_keyword_dict["thickness"] = ["thickness", "Thickness"]
 
         # read stats file line by line and only keep relevant lines
-        with open(stats_filename, 'r') as stats_file:
+        with open(stats_filename, "r") as stats_file:
             stats = stats_file.read()
         stats_line_list = stats.splitlines()
         for stats_line in stats_line_list:
-            startswith_condition = stats_line.startswith('# Measure')
+            startswith_condition = stats_line.startswith("# Measure")
             endswith_condition = stats_line.endswith(endline_dict[info_type])
             if (startswith_condition) and (endswith_condition):
-                stats_line_word_list = stats_line.replace(',', '').split()
+                stats_line_word_list = stats_line.replace(",", "").split()
                 # sanity check: make sure any sensible variation of
                 # 'volume', 'thickness' or 'area' appears inside the line
                 if any(x in stats_line_word_list for x in info_keyword_dict[info_type]):
@@ -96,13 +95,11 @@ def get_secondary_stats(stats_filename, info_type):
     return secondary_stats_dict
 
 
-def generate_regional_measures(
-        segmentation_path, subject_id, output_dir=None):
-    """
-    Read stats files located in
-    <segmentation_path>/<subject_id>/stats/*.stats
-    and generate TSV files in <segmentation_path>/regional_measures
-    folder.
+def generate_regional_measures(segmentation_path, subject_id, output_dir=None):
+    """General regional measures files from FreeSurfer segmentation.
+
+    Read stats files located in <segmentation_path>/<subject_id>/stats/*.stats
+    and generate TSV files in <segmentation_path>/regional_measures folder.
 
     Note: the .stats files contain both 1) a table with statistical
     information (e.g., structure volume) and 2) 'secondary' statistical
@@ -119,117 +116,160 @@ def generate_regional_measures(
             dir is provided by the user
     """
     import os
-    import errno
+
     import pandas
+
     from clinica.utils.freesurfer import write_tsv_file
 
     image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
     prefix = image_id.participant_id
     if image_id.session_id:
-        prefix = prefix + '_' + image_id.session_id
+        prefix = f"{prefix}_{image_id.session_id}"
     if image_id.long_id:
-        prefix = prefix + '_' + image_id.long_id
+        prefix = f"{prefix}_{image_id.long_id}"
 
-    stats_folder = os.path.join(os.path.expanduser(segmentation_path), subject_id, 'stats')
+    stats_folder = os.path.join(
+        os.path.expanduser(segmentation_path), subject_id, "stats"
+    )
 
     if not os.path.isdir(stats_folder):
-        raise IOError("Image %s does not contain FreeSurfer segmentation" % prefix.replace('_', ' | '))
+        raise IOError(
+            f"Image {prefix.replace('_', ' | ')} does not contain FreeSurfer segmentation"
+        )
 
     if not output_dir:
-        output_dir = os.path.join(segmentation_path, 'regional_measures')
-    try:
-        os.makedirs(output_dir)
-    except OSError as exception:
-        # if dest_dir exists, go on, if its other error, raise
-        if exception.errno != errno.EEXIST:
-            raise
+        output_dir = os.path.join(segmentation_path, "regional_measures")
+    os.makedirs(output_dir, exist_ok=True)
 
     # Generate TSV files for parcellation files
     #
     # Columns in ?h.BA.stats, ?h.aparc.stats or ?h.aparc.a2009s.stats file
     columns_parcellation = [
-        'StructName', 'NumVert', 'SurfArea', 'GrayVol', 'ThickAvg', 'ThickStd',
-        'MeanCurv', 'GausCurv', 'FoldInd', 'CurvInd'
+        "StructName",
+        "NumVert",
+        "SurfArea",
+        "GrayVol",
+        "ThickAvg",
+        "ThickStd",
+        "MeanCurv",
+        "GausCurv",
+        "FoldInd",
+        "CurvInd",
     ]
-    hemi_dict = {
-        'left': 'lh',
-        'right': 'rh'
-    }
-    atlas_dict = {
-        'desikan': 'aparc',
-        'destrieux': 'aparc.a2009s',
-        'ba': 'BA_exvivo'
-    }
+    hemi_dict = {"left": "lh", "right": "rh"}
+    atlas_dict = {"desikan": "aparc", "destrieux": "aparc.a2009s", "ba": "BA_exvivo"}
     info_dict = {
-        'volume': 'GrayVol',
-        'thickness': 'ThickAvg',
-        'area': 'SurfArea',
-        'meancurv': 'MeanCurv'
+        "volume": "GrayVol",
+        "thickness": "ThickAvg",
+        "area": "SurfArea",
+        "meancurv": "MeanCurv",
     }
-    for atlas in ('desikan', 'destrieux', 'ba'):
+    for atlas in ("desikan", "destrieux", "ba"):
         stats_filename_dict = dict()
         df_dict = dict()
         # read both left and right .stats files
-        for hemi in ('left', 'right'):
+        for hemi in ("left", "right"):
             stats_filename_dict[hemi] = os.path.join(
-                stats_folder,
-                '{0}.{1}.stats'.format(hemi_dict[hemi], atlas_dict[atlas]))
+                stats_folder, "{0}.{1}.stats".format(hemi_dict[hemi], atlas_dict[atlas])
+            )
             df_dict[hemi] = pandas.read_csv(
                 stats_filename_dict[hemi],
                 names=columns_parcellation,
-                comment='#', header=None, delimiter='\s+', dtype=str)
+                comment="#",
+                header=None,
+                delimiter="\s+",
+                dtype=str,
+            )
         # generate .tsv from 1) the table in .stats file and 2) the
         # secondary (commented out) information common to both 'left'
         # and 'right' .stats file
-        for info in ('volume', 'thickness', 'area', 'meancurv'):
+        for info in ("volume", "thickness", "area", "meancurv"):
             # Secondary information (common to 'left' and 'right')
-            secondary_stats_dict = get_secondary_stats(stats_filename_dict['left'], info)
+            secondary_stats_dict = get_secondary_stats(
+                stats_filename_dict["left"], info
+            )
             # Join primary and secondary information
-            key_list = (list('lh_'+df_dict['left']['StructName']) +
-                        list('rh_'+df_dict['right']['StructName']) +
-                        list(secondary_stats_dict.keys()))
+            key_list = (
+                list("lh_" + df_dict["left"]["StructName"])
+                + list("rh_" + df_dict["right"]["StructName"])
+                + list(secondary_stats_dict.keys())
+            )
             col_name = info_dict[info]
-            value_list = (list(df_dict['left'][col_name]) +
-                          list(df_dict['right'][col_name]) +
-                          list(secondary_stats_dict.values()))
+            value_list = (
+                list(df_dict["left"][col_name])
+                + list(df_dict["right"][col_name])
+                + list(secondary_stats_dict.values())
+            )
             # Write .tsv
-            write_tsv_file(os.path.join(output_dir, '{0}_parcellation-{1}_{2}.tsv'.format(prefix, atlas, info)),
-                           key_list, info, value_list)
+            write_tsv_file(
+                os.path.join(
+                    output_dir,
+                    f"{prefix}_parcellation-{atlas}_{info}.tsv",
+                ),
+                key_list,
+                info,
+                value_list,
+            )
 
     # Generate TSV files for segmentation files
     #
     # Columns in aseg.stats or wmparc.stats file
     columns_segmentation = [
-        'Index', 'SegId', 'NVoxels', 'Volume_mm3', 'StructName', 'normMean',
-        'normStdDev', 'normMin', 'normMax', 'normRange']
+        "Index",
+        "SegId",
+        "NVoxels",
+        "Volume_mm3",
+        "StructName",
+        "normMean",
+        "normStdDev",
+        "normMin",
+        "normMax",
+        "normRange",
+    ]
 
     # Parsing aseg.stats
-    stats_filename = os.path.join(stats_folder, 'aseg.stats')
+    stats_filename = os.path.join(stats_folder, "aseg.stats")
     df = pandas.read_csv(
         stats_filename,
-        comment='#', header=None, delimiter='\s+', dtype=str,
-        names=columns_segmentation)
-    secondary_stats_dict = get_secondary_stats(stats_filename, 'volume')
-    key_list = list(df['StructName'])+list(secondary_stats_dict.keys())
-    value_list = list(df['Volume_mm3'])+list(secondary_stats_dict.values())
-    write_tsv_file(os.path.join(output_dir, prefix + '_segmentationVolumes.tsv'),
-                   key_list, 'volume', value_list)
+        comment="#",
+        header=None,
+        delimiter="\s+",
+        dtype=str,
+        names=columns_segmentation,
+    )
+    secondary_stats_dict = get_secondary_stats(stats_filename, "volume")
+    key_list = list(df["StructName"]) + list(secondary_stats_dict.keys())
+    value_list = list(df["Volume_mm3"]) + list(secondary_stats_dict.values())
+    write_tsv_file(
+        os.path.join(output_dir, prefix + "_segmentationVolumes.tsv"),
+        key_list,
+        "volume",
+        value_list,
+    )
 
     # Parsing wmparc.stats
-    stats_filename = os.path.join(stats_folder, 'wmparc.stats')
+    stats_filename = os.path.join(stats_folder, "wmparc.stats")
     df = pandas.read_csv(
         stats_filename,
-        comment='#', header=None, delimiter='\s+', dtype=str,
-        names=columns_segmentation)
-    secondary_stats_dict = get_secondary_stats(stats_filename, 'volume')
-    key_list = list(df['StructName'])+list(secondary_stats_dict.keys())
-    value_list = list(df['Volume_mm3'])+list(secondary_stats_dict.values())
-    write_tsv_file(os.path.join(output_dir, prefix + '_parcellation-wm_volume.tsv'),
-                   key_list, 'volume', value_list)
+        comment="#",
+        header=None,
+        delimiter="\s+",
+        dtype=str,
+        names=columns_segmentation,
+    )
+    secondary_stats_dict = get_secondary_stats(stats_filename, "volume")
+    key_list = list(df["StructName"]) + list(secondary_stats_dict.keys())
+    value_list = list(df["Volume_mm3"]) + list(secondary_stats_dict.values())
+    write_tsv_file(
+        os.path.join(output_dir, prefix + "_parcellation-wm_volume.tsv"),
+        key_list,
+        "volume",
+        value_list,
+    )
 
 
 def write_tsv_file(out_filename, name_list, scalar_name, scalar_list):
-    """Write a .tsv file with list of keys and values
+    """Write a .tsv file with list of keys and values.
 
     Args:
         out_filename (string): name of the .tsv file
@@ -239,14 +279,13 @@ def write_tsv_file(out_filename, name_list, scalar_name, scalar_list):
             pandas data frame
         scalar_list (list of float): list of values corresponding to the keys
     """
-    import pandas
     import warnings
 
+    import pandas
+
     try:
-        data = pandas.DataFrame({
-            'label_name': name_list,
-            'label_value': scalar_list})
-        data.to_csv(out_filename, sep='\t', index=False, encoding='utf-8')
+        data = pandas.DataFrame({"label_name": name_list, "label_value": scalar_list})
+        data.to_csv(out_filename, sep="\t", index=False, encoding="utf-8")
     except Exception as exception:
         warnings.warn("Impossible to save {0} file".format(out_filename))
         raise exception
@@ -260,19 +299,22 @@ def check_flags(in_t1w, recon_all_args):
     Currently, this function only adds '-cw256' if the FOV of `in_t1w` is greater than 256.
     """
     import nibabel as nib
+
     # from clinica.utils.stream import cprint
 
     f = nib.load(in_t1w)
     voxel_size = f.header.get_zooms()
     t1_size = f.header.get_data_shape()
-    if (voxel_size[0] * t1_size[0] > 256) or \
-            (voxel_size[1] * t1_size[1] > 256) or \
-            (voxel_size[2] * t1_size[2] > 256):
-        # cprint("Setting MRI Convert to crop images to 256 FOV for %s file." % in_t1w)
-        optional_flag = ' -cw256'
+    if (
+        (voxel_size[0] * t1_size[0] > 256)
+        or (voxel_size[1] * t1_size[1] > 256)
+        or (voxel_size[2] * t1_size[2] > 256)
+    ):
+        # cprint(f"Setting MRI Convert to crop images to 256 FOV for {in_t1w} file.")
+        optional_flag = " -cw256"
     else:
-        # cprint("No need to add -cw256 flag for %s file." % in_t1w)
-        optional_flag = ''
+        # cprint(f"No need to add -cw256 flag for {in_t1w} file.")
+        optional_flag = ""
     flags = "{0}".format(recon_all_args) + optional_flag
 
     return flags

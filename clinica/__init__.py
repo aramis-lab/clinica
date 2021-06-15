@@ -1,9 +1,11 @@
-__all__ = ['__version__']
+__all__ = ["__version__"]
+
+import pkgutil
 
 # Load the Clinica package version
 import sys
-import pkgutil
-__version__ = pkgutil.get_data(__package__, 'VERSION').decode('ascii').strip()
+
+__version__ = pkgutil.get_data(__package__, "VERSION").decode("ascii").strip()
 version = __version__
 
 # import pkg_resources
@@ -12,7 +14,7 @@ version = __version__
 
 # python 3.6 minimum version is required
 if sys.version_info < (3, 6):
-    print("Clinica %s requires Python 3.6" % __version__)
+    print(f"Clinica {__version__} requires Python 3.6")
     sys.exit(1)
 
 # Note: The following lines have been commented for speed purposes.

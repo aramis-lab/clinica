@@ -1,8 +1,6 @@
 # coding: utf8
 
-"""
-This module contains utilities to grab or download files for Clinica.
-"""
+"""This module contains utilities to grab or download files for Clinica."""
 
 import hashlib
 from collections import namedtuple
@@ -11,11 +9,12 @@ RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "che
 
 
 def insensitive_glob(pattern_glob, recursive=False):
-    """
-    This function is the glob.glob() function that is insensitive to the case
+    """This function is the glob.glob() function that is insensitive to the case.
+
     Args:
         pattern_glob: sensitive-to-the-case pattern
         recursive: recursive parameter for glob.glob()
+
     Returns:
          insensitive-to-the-case pattern
     """
@@ -28,18 +27,22 @@ def insensitive_glob(pattern_glob, recursive=False):
 
 
 def determine_caps_or_bids(input_dir):
-    """
-    Determines if the input is a CAPS or a BIDS folder
+    """Determine if the input is a CAPS or a BIDS folder.
+
     Args
         input_dir: input folder
+
     Returns:
         True if input_dir is a bids, False if input_dir is a CAPS
 
-    raise :
+    Raise:
         RuntimeError if function could not determine if BIDS or CAPS or whatever else
     """
-    from os.path import isdir, join
     from os import listdir
+    from os.path import isdir, join
+    from colorama import Fore
+
+    from clinica.utils.stream import cprint
 
     if isdir(join(input_dir, "subjects")):
         if len(
@@ -51,9 +54,8 @@ def determine_caps_or_bids(input_dir):
         ) > 0 or isdir(join(input_dir, "groups")):
             return False
         else:
-            raise RuntimeError(
-                f"Could not determine if {input_dir} is a CAPS or BIDS directory"
-            )
+            cprint(f"{Fore.YELLOW}[Warning] Could not determine if {input_dir} is a CAPS or BIDS directory. Clinica will asume this is a CAPS directory.{Fore.RESET}")
+            return False
 
     else:
         if (
@@ -71,14 +73,14 @@ def determine_caps_or_bids(input_dir):
             if isdir(join(input_dir, "groups")):
                 return False
             else:
-                raise RuntimeError(
-                    f"Could not determine if {input_dir} is a CAPS or BIDS directory"
-                )
+                cprint(f"{Fore.YELLOW}[Warning] Could not determine if {input_dir} is a CAPS or BIDS directory. Clinica will asume this is a CAPS directory.{Fore.RESET}")
+                return False
 
 
 def check_bids_folder(bids_directory):
-    """
-    check_bids_folder function checks the following items:
+    """Check BIDS folder.
+
+    This function checks the following items:
         - bids_directory is a string
         - the provided path exists and is a directory
         - provided path is not a CAPS folder (BIDS and CAPS could be swapped by user). We simply check that there is
@@ -86,9 +88,11 @@ def check_bids_folder(bids_directory):
         - provided folder is not empty
         - provided folder must contains at least one directory whose name starts with 'sub-'
     """
-    from os.path import isdir, join
     from os import listdir
+    from os.path import isdir, join
+
     from colorama import Fore
+
     from clinica.utils.exceptions import ClinicaBIDSError
 
     assert isinstance(
@@ -122,17 +126,20 @@ def check_bids_folder(bids_directory):
 
 
 def check_caps_folder(caps_directory):
-    """
-    check_caps_folder function checks the following items:
+    """Check CAPS folder.
+
+    This function checks the following items:
         - caps_directory is a string
         - the provided path exists and is a directory
         - provided path is not a BIDS folder (BIDS and CAPS could be swapped by user). We simply check that there is
           not a folder whose name starts with 'sub-' in the provided path (that exists in BIDS hierarchy)
-    Keep in mind that CAPS folder can be empty
+    Keep in mind that CAPS folder can be empty.
     """
-    from os import listdir
     import os
+    from os import listdir
+
     from colorama import Fore
+
     from clinica.utils.exceptions import ClinicaCAPSError
 
     assert isinstance(
@@ -150,9 +157,9 @@ def check_caps_folder(caps_directory):
     sub_folders = [item for item in listdir(caps_directory) if item.startswith("sub-")]
     if len(sub_folders) > 0:
         error_string = (
-            f"\n[Error] Your CAPS directory contains at least one folder whose name "
-            f"starts with 'sub-'. Check that you did not swap BIDS and CAPS folders.\n"
-            f" Folder(s) found that match(es) BIDS architecture:\n"
+            "\n[Error] Your CAPS directory contains at least one folder whose name "
+            "starts with 'sub-'. Check that you did not swap BIDS and CAPS folders.\n"
+            " Folder(s) found that match(es) BIDS architecture:\n"
         )
         for directory in sub_folders:
             error_string += f"\t{directory}\n"
@@ -166,7 +173,8 @@ def check_caps_folder(caps_directory):
 def clinica_file_reader(
     subjects, sessions, input_directory, information, raise_exception=True
 ):
-    """
+    """Read files in BIDS or CAPS directory based on participant ID(s).
+
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
     Args:
         subjects: list of subjects
@@ -238,9 +246,10 @@ def clinica_file_reader(
             that do not exists in the existing file path.
 
     """
-
     from os.path import join
+
     from colorama import Fore
+
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 
     assert isinstance(
@@ -323,7 +332,8 @@ def clinica_file_reader(
 
 
 def clinica_group_reader(caps_directory, information, raise_exception=True):
-    """
+    """Read files CAPS directory based on group ID(s).
+
     This function grabs files relative to a group, according to a glob pattern (using *). Only one file can be returned,
     as order is arbitrary in glob.glob().
     Args:
@@ -343,7 +353,9 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
         ClinicaCAPSError if no file is found, or more than 1 files are found
     """
     from os.path import join
+
     from colorama import Fore
+
     from clinica.utils.exceptions import ClinicaCAPSError
 
     assert isinstance(
@@ -398,20 +410,21 @@ def _sha256(path):
 
 
 def fetch_file(remote, dirname=None):
-    """Function to download a specific file and save it into the resources
-    folder of the package.
+    """Download a specific file and save it into the resources folder of the package.
+
     Args:
         remote: structure containing url, filename and checksum
         dirname: absolute path where the file will be downloaded
+
     Returns:
         file_path: absolute file path
-    Raises:
     """
-    from urllib.request import Request, urlopen
-    from urllib.error import URLError
+    import os.path
     import shutil
     import ssl
-    import os.path
+    from urllib.error import URLError
+    from urllib.request import Request, urlopen
+
     from clinica.utils.stream import cprint
 
     if not os.path.exists(dirname):
@@ -427,10 +440,10 @@ def fetch_file(remote, dirname=None):
     except URLError as e:
         if hasattr(e, "reason"):
             cprint("We failed to reach a server.")
-            cprint(["Reason: " + e.reason])
+            cprint([f"Reason: {e.reason}"])
         elif hasattr(e, "code"):
             cprint("The server could not fulfill the request.")
-            cprint(["Error code: " + e.code])
+            cprint([f"Error code: {e.code}"])
     else:
         try:
             with open(file_path, "wb") as out_file:
@@ -448,8 +461,7 @@ def fetch_file(remote, dirname=None):
 
 
 def get_file_from_server(remote_file, cache_path=None):
-    """
-    Download file from server
+    """Download file from server.
 
     Args:
         remote_file (str): RemoteFileStructure defined in clinica.utils.inputs
@@ -460,6 +472,7 @@ def get_file_from_server(remote_file, cache_path=None):
     """
     import os
     from pathlib import Path
+
     from clinica.utils.stream import cprint
 
     home = str(Path.home())

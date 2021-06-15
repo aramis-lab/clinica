@@ -1,73 +1,92 @@
 # coding: utf-8
 
-"""
-Module for converting Tau PET of ADNI
-"""
+"""Module for converting Tau PET of ADNI."""
 
 
-def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
-    """
-    Convert Tau PET images of ADNI into BIDS format
+def convert_adni_tau_pet(
+    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+):
+    """Convert Tau PET images of ADNI into BIDS format.
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
+        conversion_dir: path to the TSV files including the paths to original images
         subjs_list: subjects list
-
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
     """
+    from os import path
 
     import pandas as pd
-    from os import path
-    from clinica.utils.stream import cprint
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from colorama import Fore
 
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.utils.stream import cprint
+
     if subjs_list is None:
-        adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
+        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
+        adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of TAU PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
-    images = compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
-    cprint('Paths of TAU PET images found. Exporting images into BIDS ...')
-    paths_to_bids(images, dest_dir, 'tau')
-    cprint(Fore.GREEN + 'TAU PET conversion done.' + Fore.RESET)
+    cprint(
+        f"Calculating paths of TAU PET images. Output will be stored in {conversion_dir}."
+    )
+    images = compute_tau_pet_paths(
+        source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
+    )
+    cprint("Paths of TAU PET images found. Exporting images into BIDS ...")
+    paths_to_bids(images, dest_dir, "tau", mod_to_update=mod_to_update)
+    cprint(f"{Fore.GREEN}TAU PET conversion done.{Fore.RESET}")
 
 
-def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
-    """
-    Compute the paths to Tau PET images
+def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
+    """Compute the paths to Tau PET images.
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
         dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
+        conversion_dir: path to the TSV files including the paths to original images
 
     Returns: pandas Dataframe containing the path for each Tau PET image
-
     """
+    from os import path
 
     import pandas as pd
-    import os
-    from os import path
-    from clinica.iotools.converters.adni_to_bids.adni_utils import get_images_pet, find_image_path
 
-    pet_tau_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
-                   'Series_ID', 'Image_ID', 'Original']
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        find_image_path,
+        get_images_pet,
+    )
+
+    pet_tau_col = [
+        "Phase",
+        "Subject_ID",
+        "VISCODE",
+        "Visit",
+        "Sequence",
+        "Scan_Date",
+        "Study_ID",
+        "Series_ID",
+        "Image_ID",
+        "Original",
+    ]
     pet_tau_df = pd.DataFrame(columns=pet_tau_col)
     pet_tau_dfs_list = []
 
     # Loading needed .csv files
-    tauqc = pd.read_csv(path.join(csv_dir, 'TAUQC.csv'), sep=',', low_memory=False)
-    tauqc3 = pd.read_csv(path.join(csv_dir, 'TAUQC3.csv'), sep=',', low_memory=False)
-    pet_meta_list = pd.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',', low_memory=False)
+    tauqc = pd.read_csv(path.join(csv_dir, "TAUQC.csv"), sep=",", low_memory=False)
+    tauqc3 = pd.read_csv(path.join(csv_dir, "TAUQC3.csv"), sep=",", low_memory=False)
+    pet_meta_list = pd.read_csv(
+        path.join(csv_dir, "PET_META_LIST.csv"), sep=",", low_memory=False
+    )
 
     for subj in subjs_list:
 
         # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
+        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subj]
 
         if subject_pet_meta.empty:
             continue
@@ -79,12 +98,20 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         tau_qc3_subj = tauqc3[(tauqc3.SCANQLTY == 1) & (tauqc3.RID == int(subj[-4:]))]
 
         # Concatenating visits in both QC files
-        tau_qc_subj = pd.concat([tau_qc2_subj, tau_qc3_subj], axis=0, ignore_index=True, sort=False)
+        tau_qc_subj = pd.concat(
+            [tau_qc2_subj, tau_qc3_subj], axis=0, ignore_index=True, sort=False
+        )
         tau_qc_subj.rename(columns={"SCANDATE": "EXAMDATE"}, inplace=True)
 
-        sequences_preprocessing_step = ['AV1451 Co-registered, Averaged']
-        subj_dfs_list = get_images_pet(subj, tau_qc_subj, subject_pet_meta, pet_tau_col, 'TAU-PET',
-                                       sequences_preprocessing_step)
+        sequences_preprocessing_step = ["AV1451 Co-registered, Averaged"]
+        subj_dfs_list = get_images_pet(
+            subj,
+            tau_qc_subj,
+            subject_pet_meta,
+            pet_tau_col,
+            "TAU-PET",
+            sequences_preprocessing_step,
+        )
         if subj_dfs_list:
             pet_tau_dfs_list += subj_dfs_list
 
@@ -93,21 +120,19 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Exceptions
     # ==========
-    conversion_errors = [  # Multiple output images
-                         ('098_S_4275', 'm84')]
+    conversion_errors = [("098_S_4275", "m84")]  # Multiple output images
 
     # Removing known exceptions from images to convert
     if not pet_tau_df.empty:
-        error_ind = pet_tau_df.index[pet_tau_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors),
-                                                      axis=1)]
+        error_ind = pet_tau_df.index[
+            pet_tau_df.apply(
+                lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1
+            )
+        ]
         pet_tau_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
-    images = find_image_path(pet_tau_df, source_dir, 'TAU', 'I', 'Image_ID')
-
-    tau_csv_path = path.join(dest_dir, 'conversion_info')
-    if not os.path.exists(tau_csv_path):
-        os.mkdir(tau_csv_path)
-    images.to_csv(path.join(tau_csv_path, 'tau_pet_paths.tsv'), sep='\t', index=False)
+    images = find_image_path(pet_tau_df, source_dir, "TAU", "I", "Image_ID")
+    images.to_csv(path.join(conversion_dir, "tau_pet_paths.tsv"), sep="\t", index=False)
 
     return images

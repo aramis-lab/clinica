@@ -12,11 +12,12 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline."""
         self._description = ('Preprocessing of raw DWI datasets using a phase difference image:\n'
-                             'http://clinica.run/doc/Pipelines/DWI_Preprocessing/')
+                             'https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_Preprocessing/')
 
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
@@ -35,8 +36,12 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
-        from .dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
+
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+
+        from .dwi_preprocessing_using_phasediff_fieldmap_pipeline import (
+            DwiPreprocessingUsingPhaseDiffFieldmap,
+        )
 
         parameters = {
             'low_bval': args.low_bval

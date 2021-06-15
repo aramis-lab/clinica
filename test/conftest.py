@@ -20,9 +20,7 @@ import pytest
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--working_directory",
-        action="store",
-        help="Working directory for tests"
+        "--working_directory", action="store", help="Working directory for tests"
     )
 
 

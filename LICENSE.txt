@@ -25,30 +25,31 @@ LICENSE file that is included below.
 
 The following file is copyright of Rolls ET, Joliot M & Tzourio-Mazoyer N
 (2015) . NeuroImage 10.1016/j.neuroimage.2015.07.075:
-clinica/resources/atlases_spm/AAL2.nii The details of license are included
-below.
+- clinica/resources/atlases/atlas-AAL2_dseg.nii.gz
+The details of license are included below.
 
 
 The following file is copyright of Joliot M, Jobard G, Naveau M, Delcroix N,
 Petit L, Zago L, Crivello F, Mellet E, Mazoyer B & Tzourio-Mazoyer N (2015) .
 Journal of Neuroscience Methods 10.1016/j.jneumeth.2015.07.013:
-clinica/resources/atlases_spm/AICHA.nii The details of license are included
-below.
+- clinica/resources/atlases/atlas-AICHA_dseg.nii.gz
+The details of license are included below.
 
 
 The following files based on Alexander Hammers' brain atlas, made available for
-the Euripides project, Nov 2009 (A): clinica/resources/atlases_spm/Hammers.csv
-clinica/resources/atlases_spm/Hammers.nii The details of license are included
-below.
+the Euripides project, Nov 2009 (A):
+- clinica/resources/atlases/atlas-Hammers_dseg.tsv
+- clinica/resources/atlases/atlas-Hammers_dseg.nii.gz
+The details of license are included below.
 
 
 The following files are copyright of Shattuck DW, Mirza M, Adisetiyo V,
 Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW (2008)
 Construction of a 3D Probabilistic Atlas of Human Cortical Structures,
 NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031:
-clinica/resources/atlases_spm/LPBA40.csv
-clinica/resources/atlases_spm/LPBA40.nii The details of license are included
-below.
+- clinica/resources/atlases/atlas-LPBA40_dseg.tsv
+- clinica/resources/atlases/atlas-LPBA40_dseg.nii.gz
+The details of license are included below.
 
 
 The following files derived from the ``MICCAI 2012 Grand Challenge and Workshop
@@ -60,8 +61,8 @@ from the OASIS project (http://www.oasis-brains.org/) and the labeled data as
 "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under
 academic subscription".  These references should be included in all workshop
 and final publications:
-    clinica/resources/atlases_spm/Neuromorphometrics.csv
-    clinica/resources/atlases_spm/Neuromorphometrics.nii
+- clinica/resources/atlases/atlas-Neuromorphometrics_dseg.tsv
+- clinica/resources/atlases/atlas-Neuromorphometrics_dseg.nii.gz
 The details of license are included below.
 
 The clinica/lib/clinicasurfstat/SurfStat library is Copyright 2003 K.J. Worsley.

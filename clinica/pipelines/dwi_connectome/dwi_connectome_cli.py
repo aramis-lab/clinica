@@ -12,11 +12,12 @@ class DwiConnectomeCli(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline."""
         self._description = ('Connectome-based processing of DWI datasets:\n'
-                             'http://clinica.run/doc/DWI_Connectome')
+                             'https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_Connectome/')
 
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
@@ -33,8 +34,10 @@ class DwiConnectomeCli(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
+
+        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+
         from .dwi_connectome_pipeline import DwiConnectome
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
             'n_tracks': args.n_tracks

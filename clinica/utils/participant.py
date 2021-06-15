@@ -1,7 +1,6 @@
 # coding: utf8
 
-"""
-This module contains utilities for longitudinal pipelines.
+"""This module contains utilities for longitudinal pipelines.
 
 See CAPS specifications for details about long ID.
 """
@@ -38,22 +37,26 @@ def get_unique_subjects(in_subject_list, in_session_list):
     # their corresponding unique participant_id
 
     unique_subject_array, out_inverse_positions = np.unique(
-        subject_array, return_inverse=True)
+        subject_array, return_inverse=True
+    )
     out_unique_subject_list = unique_subject_array.tolist()
 
     subject_number = len(out_unique_subject_list)
     out_per_subject_session_list = [
-        session_array[
-            out_inverse_positions == subject_index
-            ].tolist() for subject_index in range(subject_number)]
+        session_array[out_inverse_positions == subject_index].tolist()
+        for subject_index in range(subject_number)
+    ]
 
-    assert len(out_unique_subject_list) == len(out_per_subject_session_list),\
-        'Problem while getting unique subjects and sessions lists'
+    assert len(out_unique_subject_list) == len(
+        out_per_subject_session_list
+    ), "Problem while getting unique subjects and sessions lists"
 
     return out_unique_subject_list, out_per_subject_session_list
 
 
-def unique_subjects_sessions_to_subjects_sessions(unique_subject_list, per_subject_session_list):
+def unique_subjects_sessions_to_subjects_sessions(
+    unique_subject_list, per_subject_session_list
+):
     """Do reverse operation of get_unique_subjects function.
 
     Example:
@@ -72,7 +75,9 @@ def unique_subjects_sessions_to_subjects_sessions(unique_subject_list, per_subje
     return list_participants, list_sessions
 
 
-def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_session_tsv=False, tsv_dir=None):
+def get_subject_session_list(
+    input_dir, ss_file=None, is_bids_dir=True, use_session_tsv=False, tsv_dir=None
+):
     """Parse a BIDS or CAPS directory to get the subjects and sessions.
 
     This function lists all the subjects and sessions based on the content of
@@ -104,7 +109,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
     """
     import os
     import tempfile
-    from time import time, strftime, localtime
+    from time import localtime, strftime, time
+
     import clinica.iotools.utils.data_handling as cdh
 
     if not ss_file:
@@ -112,8 +118,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
             output_dir = tsv_dir
         else:
             output_dir = tempfile.mkdtemp()
-        timestamp = strftime('%Y%m%d_%H%M%S', localtime(time()))
-        tsv_file = 'subjects_sessions_list_%s.tsv' % timestamp
+        timestamp = strftime("%Y%m%d_%H%M%S", localtime(time()))
+        tsv_file = f"subjects_sessions_list_{timestamp}.tsv"
         ss_file = os.path.join(output_dir, tsv_file)
 
         cdh.create_subs_sess_list(
@@ -121,7 +127,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
             output_dir=output_dir,
             file_name=tsv_file,
             is_bids_dir=is_bids_dir,
-            use_session_tsv=use_session_tsv)
+            use_session_tsv=use_session_tsv,
+        )
 
     participant_ids, session_ids = read_participant_tsv(ss_file)
     return session_ids, participant_ids
@@ -131,15 +138,19 @@ def have_same_subjects(tsv_file_1, tsv_file_2):
     """Return True if `tsv_file_1` and `tsv_file_2` have the same subjects, False otherwise."""
     import pandas as pd
 
-    tsv_df_1 = pd.io.parsers.read_csv(tsv_file_1, sep='\t')
-    tsv_df_2 = pd.io.parsers.read_csv(tsv_file_2, sep='\t')
+    tsv_df_1 = pd.io.parsers.read_csv(tsv_file_1, sep="\t")
+    tsv_df_2 = pd.io.parsers.read_csv(tsv_file_2, sep="\t")
     image_ids_1 = [
-        p_id + '_' + s_id
-        for (p_id, s_id) in zip(list(tsv_df_1.participant_id), list(tsv_df_1.session_id))
+        f"{p_id}_{s_id}"
+        for (p_id, s_id) in zip(
+            list(tsv_df_1.participant_id), list(tsv_df_1.session_id)
+        )
     ]
     image_ids_2 = [
-        p_id + '_' + s_id
-        for (p_id, s_id) in zip(list(tsv_df_2.participant_id), list(tsv_df_2.session_id))
+        f"{p_id}_{s_id}"
+        for (p_id, s_id) in zip(
+            list(tsv_df_2.participant_id), list(tsv_df_2.session_id)
+        )
     ]
     diff_image_ids = list(set(image_ids_1) - set(image_ids_2))
 
