@@ -3,7 +3,6 @@
 """This module handles stream and log redirection."""
 
 from enum import Enum
-from typing import Optional
 
 
 class LoggingLevel(str, Enum):
@@ -14,15 +13,14 @@ class LoggingLevel(str, Enum):
     critical = "critical"
 
 
-def cprint(msg: str, lvl: Optional[str] = "info"):
+def cprint(msg: str, lvl: str = "info") -> None:
     """
     Print message to the console at the desired logging level.
 
     Args:
-        msg (str): Message to print
-        lvl (str): Logging level ("debug", "info", "warning", "error", "critical")
-
-    Returns:
+        msg (str): Message to print.
+        lvl (str): Logging level between "debug", "info", "warning", "error" and "critical".
+                   The default value is "info".
     """
     from logging import getLogger
 
