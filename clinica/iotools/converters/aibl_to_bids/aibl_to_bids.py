@@ -10,8 +10,6 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
     # Conversion of the entire dataset in BIDS
     from os.path import exists
 
-    from colorama import Fore
-
     from clinica.iotools.converters.aibl_to_bids.aibl_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
@@ -30,10 +28,7 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
             if not exists(str(file)):
                 error_string = error_string + str(file) + "\n"
     if error_string != "":
-        cprint(
-            f"{Fore.RED}The following file were not converted "
-            f"(nan means no path was found):{error_string}{Fore.RESET}\n"
-        )
+        cprint(msg=f"The following file were not converted: {error_string}", lvl="warning")
 
 
 def convert_clinical_data(bids_dir, path_to_csv):

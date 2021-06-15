@@ -44,7 +44,6 @@ class T1VolumeParcellation(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.input_files import t1_volume_template_tpm_in_mni
@@ -63,8 +62,8 @@ class T1VolumeParcellation(cpe.Pipeline):
         ):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"%{Fore.RED}Group {self.parameters['group_label']} does not exist. "
-                f"Did you run t1-volume or t1-volume-create-dartel pipeline?{Fore.RESET}"
+                f"Group {self.parameters['group_label']} does not exist. "
+                "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
 
         try:

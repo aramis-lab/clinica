@@ -19,7 +19,6 @@ def convert_adni_fmri(
     from os import path
 
     import pandas as pd
-    from colorama import Fore
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
@@ -38,7 +37,7 @@ def convert_adni_fmri(
     cprint("Paths of fMRI images found. Exporting images into BIDS ...")
     # fmri_paths_to_bids(dest_dir, images)
     paths_to_bids(images, dest_dir, "fmri", mod_to_update=mod_to_update)
-    cprint(f"{Fore.GREEN}fMRI conversion done.{Fore.RESET}")
+    cprint(msg="fMRI conversion done.", lvl="debug")
 
 
 def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):

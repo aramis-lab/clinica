@@ -125,8 +125,6 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        from colorama import Fore
-
         from clinica.utils.stream import cprint
 
         from ..t1_volume_dartel2mni.t1_volume_dartel2mni_cli import (
@@ -143,37 +141,29 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         )
 
         cprint(
-            f"The t1-volume-existing-template pipeline is divided into 4 parts:\n"
-            f"\t{Fore.BLUE}t1-volume-tissue-segmentation pipeline{Fore.RESET}: "
-            f"Tissue segmentation, bias correction and spatial normalization to MNI space\n"
-            f"\t{Fore.BLUE}t1-volume-register-dartel pipeline{Fore.RESET}: "
-            f"Inter-subject registration using an existing DARTEL template\n"
-            f"\t{Fore.BLUE}t1-volume-dartel2mni pipeline{Fore.RESET}: "
-            f"DARTEL template to MNI\n"
-            f"\t{Fore.BLUE}t1-volume-parcellation pipeline{Fore.RESET}: "
-            f"Atlas statistics"
+            "The t1-volume-existing-template pipeline is divided into 4 parts:\n"
+            "\tt1-volume-tissue-segmentation pipeline: "
+            "Tissue segmentation, bias correction and spatial normalization to MNI space\n"
+            "\tt1-volume-register-dartel pipeline: "
+            "Inter-subject registration using an existing DARTEL template\n"
+            "\tt1-volume-dartel2mni pipeline: "
+            "DARTEL template to MNI\n"
+            "\tt1-volume-parcellation pipeline: "
+            "Atlas statistics"
         )
 
-        cprint(
-            f"{Fore.BLUE}\nPart 1/4: Running t1-volume-segmentation pipeline{Fore.RESET}"
-        )
+        cprint("Part 1/4: Running t1-volume-segmentation pipeline")
         tissue_segmentation_cli = T1VolumeTissueSegmentationCLI()
         tissue_segmentation_cli.run_command(args)
 
-        cprint(
-            f"{Fore.BLUE}\nPart 2/4: Running t1-volume-register-dartel pipeline{Fore.RESET}"
-        )
+        cprint("Part 2/4: Running t1-volume-register-dartel pipeline")
         register_dartel_cli = T1VolumeRegisterDartelCLI()
         register_dartel_cli.run_command(args)
 
-        cprint(
-            f"{Fore.BLUE}\nPart 3/4: Running t1-volume-dartel2mni pipeline{Fore.RESET}"
-        )
+        cprint("Part 3/4: Running t1-volume-dartel2mni pipeline")
         dartel2mni_cli = T1VolumeDartel2MNICLI()
         dartel2mni_cli.run_command(args)
 
-        cprint(
-            f"{Fore.BLUE}\nPart 4/4: Running t1-volume-parcellation pipeline{Fore.RESET}"
-        )
+        cprint("Part 4/4: Running t1-volume-parcellation pipeline")
         parcellation_cli = T1VolumeParcellationCLI()
         parcellation_cli.run_command(args)

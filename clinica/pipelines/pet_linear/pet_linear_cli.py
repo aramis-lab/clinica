@@ -63,12 +63,8 @@ class PETLinearCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
-
-        from colorama import Fore
         from networkx import Graph
 
-        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
 
         from .pet_linear_pipeline import PETLinear

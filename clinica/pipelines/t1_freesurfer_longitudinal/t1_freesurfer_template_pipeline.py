@@ -81,7 +81,6 @@ class T1FreeSurferTemplate(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
@@ -114,20 +113,19 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         ) = extract_participant_long_ids_from_filename(output_ids)
         if len(processed_participants) > 0:
             cprint(
-                f"{Fore.YELLOW}Clinica found {len(processed_participants)} participant(s) "
-                f"already processed in CAPS directory:{Fore.RESET}"
+                msg=(
+                    f"Clinica found {len(processed_participants)} participant(s) "
+                    "already processed in CAPS directory:"
+                ),
+                lvl="warning",
             )
             for p_id, l_id in zip(processed_participants, processed_long_sessions):
-                cprint(f"{Fore.YELLOW}\t{p_id} | {l_id}{Fore.RESET}")
+                cprint(f"{p_id} | {l_id}", lvl="warning")
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<long_id>/freesurfer_unbiased_template/"
-                cprint(
-                    f"{Fore.YELLOW}\nOutput folders in {output_folder} will be recreated.\n{Fore.RESET}"
-                )
+                cprint(f"Output folders in {output_folder} will be recreated.", lvl="warning")
             else:
-                cprint(
-                    f"{Fore.YELLOW}\nParticipant(s) will be ignored by Clinica.\n{Fore.RESET}"
-                )
+                cprint("Participant(s) will be ignored by Clinica.", lvl="warning")
                 input_ids = [
                     p_id + "_" + s_id
                     for p_id, s_id in zip(self.subjects, self.sessions)

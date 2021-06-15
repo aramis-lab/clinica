@@ -9,11 +9,11 @@ and gives to the user some other utils to work with the pipelines.
 import os
 import sys
 from argparse import ArgumentParser
+from typing import Optional
 
 import argcomplete
 
 from clinica.engine.cmdparser import init_cmdparser_objects
-from clinica.utils.stream import cprint
 
 
 class ClinicaClassLoader:
@@ -89,32 +89,58 @@ class ClinicaClassLoader:
         ]
 
 
+def setup_logging(verbosity: Optional[int] = 0) -> None:
+    """
+    Setup Clinica's logging facilities.
+
+    Args:
+        verbosity (int): The desired level of verbosity for logging.
+            (0 (default): WARNING, 1: INFO, 2: DEBUG)
+    """
+    from logging import DEBUG, INFO, WARNING, getLogger
+    from sys import stdout
+
+    from colorlog import ColoredFormatter, StreamHandler
+
+    # Cap max verbosity level to 2.
+    verbosity = min(verbosity, 2)
+
+    # Define the module level logger.
+    logger = getLogger("clinica")
+    logger.setLevel([WARNING, INFO, DEBUG][verbosity])
+
+    # Add console handler with custom formatting.
+    console_handler = StreamHandler(stdout)
+    console_handler.setFormatter(ColoredFormatter("%(log_color)s%(asctime)s:%(levelname)s:%(message)s"))
+    logger.addHandler(console_handler)
+
+
 # Nice display
 def custom_traceback(exc_type, exc_value, exc_traceback):
     import math
     import traceback
 
-    from colorama import Fore
-
     from clinica.utils.exceptions import ClinicaException
     from clinica.utils.stream import cprint
 
     if issubclass(exc_type, ClinicaException):
-        cprint(exc_value)
+        cprint(exc_value, lvl="error")
     elif issubclass(exc_type, KeyboardInterrupt):
         cprint(
-            f"\n{Fore.RESET}[Error] Program interrupted by the user. Clinica will now exit...{Fore.RESET}"
+            msg="Program interrupted by the user. Clinica will now exit...",
+            lvl="warning",
         )
     else:
         cprint(
-            f"{Fore.RED}\n{'*' * 23}\n*** Clinica crashed ***\n{'*' * 23}\n{Fore.RESET}"
-        )
-        cprint(f"{Fore.YELLOW}Exception type:{Fore.RESET} {exc_type.__name__}")
-        cprint(f"{Fore.YELLOW}Exception value:{Fore.RESET} {exc_value}")
-        cprint(
-            "Below are displayed information that were gathered when Clinica crashed. "
-            "This will help to understand what happened if you transfer "
-            "those information to the Clinica development team.\n"
+            msg=(
+                f"{'*' * 23}\n*** Clinica crashed ***\n{'*' * 23}\n\n"
+                f"Exception type: {exc_type.__name__}\n"
+                f"Exception value: {exc_value}\n\n"
+                "Below are displayed information that were gathered when Clinica crashed. "
+                "This will help to understand what happened if you transfer "
+                "those information to the Clinica development team."
+            ),
+            lvl="error",
         )
 
         frames = traceback.extract_tb(exc_traceback)
@@ -127,34 +153,33 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
             linewidth = max(linewidth, frame[1])
             functionwidth = max(functionwidth, len(frame[2]))
         linewidth = int(math.ceil(math.log(linewidth) / math.log(10)))
-        cprint("=" * (filewidth + linewidth + functionwidth + linewidth))
+        cprint("=" * (filewidth + linewidth + functionwidth + linewidth), lvl="error")
         for i in range(len(frames)):
             t = (
                 "{}"
                 + " " * (1 + framewidth - len(str(i)))
-                + Fore.RED
                 + "{}"
                 + " " * (1 + filewidth - len(frames[i][0]))
-                + Fore.RESET
                 + "{}"
                 + " " * (1 + linewidth - len(str(frames[i][1])))
-                + Fore.GREEN
                 + "{}"
                 + " " * (1 + functionwidth - len(frames[i][2]))
-                + Fore.RESET
                 + "{}"
             )
-            cprint(t.format(i, frames[i][0], frames[i][1], frames[i][2], frames[i][3]))
-        cprint("=" * (filewidth + linewidth + functionwidth + linewidth))
+            cprint(t.format(i, frames[i][0], frames[i][1], frames[i][2], frames[i][3]), lvl="error")
+        cprint("=" * (filewidth + linewidth + functionwidth + linewidth), lvl="error")
 
     if not issubclass(exc_type, KeyboardInterrupt):
         cprint(
-            f"\nDocumentation can be found here: "
-            f"{Fore.BLUE}https://aramislab.paris.inria.fr/clinica/docs/public/latest/{Fore.RESET}\n"
-            f"If you need support, do not hesitate to ask: "
-            f"{Fore.BLUE}https://groups.google.com/forum/#!forum/clinica-user{Fore.RESET}\n"
-            f"Alternatively, you can also open an issue on GitHub: "
-            f"{Fore.BLUE}https://github.com/aramis-lab/clinica/issues{Fore.RESET}"
+            msg=(
+                "Documentation can be found here:\n"
+                "https://aramislab.paris.inria.fr/clinica/docs/public/latest/\n"
+                "If you need support, do not hesitate to ask:\n"
+                "https://groups.google.com/forum/#!forum/clinica-user\n"
+                "Alternatively, you can also open an issue on GitHub:\n"
+                "https://github.com/aramis-lab/clinica/issues\n"
+            ),
+            lvl="warning",
         )
 
 
@@ -164,7 +189,7 @@ def execute():
     import os
     import warnings
 
-    from colorama import Fore
+    from clinica.utils.stream import cprint
 
     # Suppress potential warnings
     warnings.filterwarnings("ignore")
@@ -173,20 +198,10 @@ def execute():
     # "Assuming non interactive session since isatty found missing" message
     logging.getLogger("duecredit.utils").setLevel(logging.ERROR)
 
-    # Add warning message if PYTHONPATH is not empty
-    # cf https://groups.google.com/forum/#!topic/clinica-user/bVgifEdkg20
-    python_path = os.environ.get("PYTHONPATH", "")
-    if python_path:
-        print(
-            f"{Fore.YELLOW}[Warning] The PYTHONPATH environment variable is not empty."
-            f" Make sure there is no interference with Clinica "
-            f"(content of PYTHONPATH: {python_path}).{Fore.RESET}"
-        )
-
     # Nice traceback when clinica crashes
     sys.excepthook = custom_traceback
 
-    OPTIONAL_TITLE = f"{Fore.YELLOW}Optional arguments{Fore.RESET}"
+    OPTIONAL_TITLE = "Optional arguments"
     """
     Define and parse the command line argument
     """
@@ -195,11 +210,10 @@ def execute():
         "-h", "--help", action="help", default=argparse.SUPPRESS, help=argparse.SUPPRESS
     )
     parser._positionals.title = (
-        f"{Fore.YELLOW}clinica expects one of the following keywords{Fore.RESET}"
+        f"clinica expects one of the following keywords"
     )
     parser._optionals.title = OPTIONAL_TITLE
 
-    sub_parser = parser.add_subparsers(metavar="")
     parser.add_argument(
         "-V",
         "--version",
@@ -208,21 +222,13 @@ def execute():
         default=False,
         help="Clinica's installed version",
     )
+
     parser.add_argument(
         "-v",
         "--verbose",
-        dest="verbose",
-        action="store_true",
-        default=False,
-        help="Verbose: print all messages to the standard output",
-    )
-    parser.add_argument(
-        "-l",
-        "--logname",
-        dest="logname",
-        default="clinica.log",
-        metavar=("file.log"),
-        help="Define the log file name (default: clinica.log)",
+        action="count",
+        default=0,
+        help="Increase logging verbosity",
     )
 
     """
@@ -325,6 +331,8 @@ def execute():
         T1FreeSurferLongitudinalCorrectionCLI(),
     ]
 
+    sub_parser = parser.add_subparsers(metavar="")
+
     run_parser = sub_parser.add_parser(
         "run",
         add_help=False,
@@ -332,10 +340,10 @@ def execute():
         help="To run pipelines on BIDS/CAPS datasets.",
     )
     run_parser.description = (
-        f"{Fore.GREEN}Run pipelines on BIDS/CAPS datasets.{Fore.RESET}"
+        f"Run pipelines on BIDS/CAPS datasets."
     )
     run_parser._positionals.title = (
-        f"{Fore.GREEN}clinica run expects one of the following pipelines{Fore.RESET}"
+        f"clinica run expects one of the following pipelines"
     )
 
     init_cmdparser_objects(
@@ -370,8 +378,8 @@ def execute():
         add_help=False,
         help="To convert unorganized datasets into a BIDS hierarchy.",
     )
-    convert_parser.description = f"{Fore.GREEN}Tools to convert unorganized datasets into a BIDS hierarchy.{Fore.RESET}"
-    convert_parser._positionals.title = f"{Fore.YELLOW}clinica convert expects one of the following datasets{Fore.RESET}"
+    convert_parser.description = f"Tools to convert unorganized datasets into a BIDS hierarchy."
+    convert_parser._positionals.title = f"clinica convert expects one of the following datasets"
     convert_parser._optionals.title = OPTIONAL_TITLE
     init_cmdparser_objects(
         parser, convert_parser.add_subparsers(metavar="", dest="convert"), converters
@@ -402,8 +410,8 @@ def execute():
         add_help=False,
         help=HELP_IO_TOOLS,
     )
-    io_parser.description = f"{Fore.GREEN}{HELP_IO_TOOLS}{Fore.RESET}"
-    io_parser._positionals.title = f"{Fore.YELLOW}clinica iotools expects one of the following BIDS/CAPS utilities{Fore.RESET}"
+    io_parser.description = f"{HELP_IO_TOOLS}"
+    io_parser._positionals.title = f"clinica iotools expects one of the following BIDS/CAPS utilities"
     io_parser._optionals.title = OPTIONAL_TITLE
 
     init_cmdparser_objects(
@@ -430,9 +438,9 @@ def execute():
         help="To visualize outputs of Clinica pipelines.",
     )
     visualize_parser.description = (
-        f"{Fore.GREEN}Visualize outputs of Clinica pipelines.{Fore.RESET}"
+        f"Visualize outputs of Clinica pipelines."
     )
-    visualize_parser._positionals.title = f"{Fore.YELLOW}clinica visualize expects one of the following pipelines{Fore.RESET}"
+    visualize_parser._positionals.title = f"clinica visualize expects one of the following pipelines"
 
     init_cmdparser_objects(
         parser,
@@ -450,9 +458,9 @@ def execute():
             "To generate pre-filled files when creating new pipelines (for developers)."
         ),
     )
-    generate_parser.description = f"{Fore.GREEN}Generate pre-filled files when creating new pipelines (for  developers).{Fore.RESET}"
+    generate_parser.description = f"Generate pre-filled files when creating new pipelines (for  developers)."
     generate_parser._positionals.title = (
-        f"{Fore.YELLOW}clinica generate expects one of the following tools{Fore.RESET}"
+        f"clinica generate expects one of the following tools"
     )
     generate_parser._optionals.title = OPTIONAL_TITLE
 
@@ -474,9 +482,7 @@ def execute():
 
     def single_error_message(p):
         def error(x):
-            from colorama import Fore
-
-            print(f"{Fore.RED}Error {x}{Fore.RESET}\n")
+            print(f"Error: {x}\n")
             p.print_help()
             parser.print_help = silent_help
             exit(-1)
@@ -495,36 +501,36 @@ def execute():
     """
     Parse the command and check that everything went fine
     """
-    args = None
-    unknown_args = None
     try:
         argcomplete.autocomplete(parser)
-        args, unknown_args = parser.parse_known_args()
-        if args.version:
-            import clinica
-
-            print(f"Clinica version is: {clinica.__version__}")
-            exit(0)
-        if unknown_args:
-            if ("--verbose" in unknown_args) or ("-v" in unknown_args):
-                cprint("Verbose detected")
-                args.verbose = True
-            unknown_args = [i for i in unknown_args if i != "-v"]
-            unknown_args = [i for i in unknown_args if i != "--verbose"]
-            if unknown_args:
-                print(
-                    f"{Fore.YELLOW}[Warning] Unknown flag(s) detected: {unknown_args}. "
-                    f"This will be ignored by Clinica{Fore.RESET}"
-                )
+        args = parser.parse_args()
     except SystemExit:
         exit(0)
     except Exception:
-        print(
-            f"{Fore.RED}\n[Error] You wrote wrong arguments on the command line. "
-            f"Clinica will now exit.\n{Fore.RESET}"
-        )
+        print("Wrong arguments provided, Clinica will now exit!")
         parser.print_help()
         exit(-1)
+
+    if args.version:
+        import clinica
+
+        print(f"Clinica version is: {clinica.__version__}")
+        exit(0)
+
+    setup_logging(verbosity=args.verbose)
+
+    # Add warning message if PYTHONPATH is not empty
+    # cf https://groups.google.com/forum/#!topic/clinica-user/bVgifEdkg20
+    python_path = os.environ.get("PYTHONPATH", "")
+    if python_path:
+        cprint(
+            msg=(
+                "The PYTHONPATH environment variable is not empty. "
+                "Make sure there is no interference with Clinica "
+                f"(content of PYTHONPATH: {python_path})."
+            ),
+            lvl="warning",
+        )
 
     if "run" in args and hasattr(args, "func") is False:
         # Case when we type `clinica run` on the terminal
@@ -550,103 +556,6 @@ def execute():
         # Case when we type `clinica` on the terminal
         parser.print_help()
         exit(0)
-
-    import clinica.utils.stream as var
-
-    var.clinica_verbose = args.verbose
-
-    if args.verbose is False:
-        """
-        Enable only cprint(msg) --> clinica print(msg)
-        - All the print() will be ignored!
-        - All the logging will be redirect to the log file.
-        """
-        from clinica.utils.stream import FilterOut
-
-        sys.stdout = FilterOut(sys.stdout)
-        import logging as python_logging
-        import os
-        from logging import ERROR, Filter
-
-        from nipype import config, logging
-
-        # Configure Nipype logger for our needs
-        config.update_config(
-            {
-                "logging": {
-                    "workflow_level": "INFO",
-                    "log_directory": os.getcwd(),
-                    "log_to_file": True,
-                },
-                "execution": {"stop_on_first_crash": False, "hash_method": "content"},
-            }
-        )
-        logging.update_logging(config)
-
-        # Define the LogFilter for ERROR detection
-        class LogFilter(Filter):
-            """Monitor if an ERROR log signal is sent from Clinica/Nipype.
-
-            If detected, the user will be warned.
-            """
-
-            def filter(self, record):
-                if record.levelno >= ERROR:
-                    import datetime
-
-                    now = datetime.datetime.now().strftime("%H:%M:%S")
-                    cprint(
-                        f"{Fore.RED}[{now}]{Fore.RESET} An error was found: please "
-                        f"check the log file ({args.logname}) or crash file "
-                        f"(nipypecli crash <pklz_file>) for details. Clinica is still running."
-                    )
-                return True
-
-        if args.verbose:
-            logger = logging.getLogger("nipype.workflow")
-            logger.addFilter(LogFilter())
-
-        # Remove all handlers associated with the root logger object
-        for handler in python_logging.root.handlers[:]:
-            python_logging.root.removeHandler(handler)
-
-        logging.disable_file_logging()
-
-        # Enable file logging using a filename
-        def enable_file_logging(self, filename):
-            """Hack to define a filename for the log file.
-
-            It overloads the 'enable_file_logging' method in 'nipype/utils/logger.py' file.
-            """
-            import logging
-            from logging.handlers import RotatingFileHandler as RFHandler
-
-            config = self._config
-            LOG_FILENAME = os.path.join(
-                config.get("logging", "log_directory"), filename
-            )
-            hdlr = RFHandler(
-                LOG_FILENAME,
-                maxBytes=int(config.get("logging", "log_size")),
-                backupCount=int(config.get("logging", "log_rotate")),
-            )
-            formatter = logging.Formatter(fmt=self.fmt, datefmt=self.datefmt)
-            hdlr.setFormatter(formatter)
-            self._logger.addHandler(hdlr)
-            self._fmlogger.addHandler(hdlr)
-            self._iflogger.addHandler(hdlr)
-            self._hdlr = hdlr
-
-        enable_file_logging(logging, args.logname)
-
-        class Stream:
-            def write(self, text):
-                print(text)
-                sys.stdout.flush()
-
-        python_logging.basicConfig(
-            format=logging.fmt, datefmt=logging.datefmt, stream=Stream()
-        )
 
     # Finally, run the command
     args.func(args)

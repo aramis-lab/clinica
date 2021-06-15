@@ -67,7 +67,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         )
         data.to_csv(out_file, sep="\t", index=True, encoding="utf-8")
     except Exception as e:
-        cprint(f"Impossible to save {out_file} with pandas")
+        cprint(msg=f"Impossible to save {out_file} with pandas", lvl="error")
         raise e
 
     return out_file

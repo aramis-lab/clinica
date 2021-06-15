@@ -270,8 +270,6 @@ class CmdParserCenterNifti(ce.CmdParser):
         from os import listdir, makedirs
         from os.path import abspath, isdir, isfile, join
 
-        from colorama import Fore
-
         from clinica.iotools.utils.data_handling import (
             center_all_nifti,
             write_list_of_files,
@@ -287,23 +285,22 @@ class CmdParserCenterNifti(ce.CmdParser):
             ]
             if len(file_list) > 0:
                 error_str = (
-                    f"{Fore.YELLOW}[Warning] Some files or directory have been found "
+                    "Some files or directory have been found "
                     f"in {{abspath(args.output_bids_directory)}}: \n"
                 )
                 for f in file_list:
                     error_str += "\t" + f + "\n"
                 error_str += "Do you wish to continue ? (If yes, this may overwrite the files mentioned above)."
-                error_str += Fore.RESET
-                cprint(error_str)
+                cprint(msg=error_str, lvl="warning")
                 while True:
-                    cprint("Your answer [yes/no]:")
+                    cprint(msg="Your answer [yes/no]:", lvl="warning")
                     answer = input()
                     if answer.lower() in ["yes", "no"]:
                         break
                     else:
-                        cprint(f"{Fore.RED}You must answer yes or no{Fore.RESET}")
+                        cprint(msg="You must answer yes or no", lvl="warning")
                 if answer.lower() == "no":
-                    cprint(f"{Fore.RED}Clinica will now exit...{Fore.RESET}")
+                    cprint(msg="Clinica will now exit...", lvl="warning")
                     sys.exit(0)
         else:
             makedirs(args.output_bids_directory)
@@ -330,20 +327,20 @@ class CmdParserCenterNifti(ce.CmdParser):
         )
         # If an error happen while creating the file, the function returns Nan
         if not write_list_of_files(centered_files, log_file):
-            cprint(f"{Fore.YELLOW}[Warning] Could not create log file.{Fore.RESET}")
+            cprint(msg="Could not create log file.", lvl="warning")
 
         # Final message
         cprint(
-            f"{Fore.GREEN}{str(len(centered_files))} NIfTI files/images of BIDS folder:\n\t "
-            f"{Fore.BLUE}{abspath(args.bids_directory)}"
-            f"{Fore.GREEN}\n for the modalities "
-            f"{Fore.YELLOW}{args.modality}"
-            f"{Fore.GREEN} have been centered in output folder:\n\t"
-            f"{Fore.BLUE}{abspath(args.output_bids_directory)}{Fore.RESET}"
+            f"{str(len(centered_files))} NIfTI files/images of BIDS folder:\n\t "
+            f"{abspath(args.bids_directory)}"
+            "\n for the modalities "
+            f"{args.modality}"
+            "have been centered in output folder:\n\t"
+            f"{abspath(args.output_bids_directory)}"
         )
         if isfile(log_file):
             cprint(
-                f"{Fore.GREEN}The list of centered NIfTI files is available here: {Fore.BLUE}{log_file}{Fore.RESET}"
+                f"The list of centered NIfTI files is available here: {log_file}"
             )
         cprint(
             "Please note that the rest of the input BIDS folder has also been copied to the output folder."

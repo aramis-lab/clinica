@@ -929,14 +929,12 @@ def get_wf(
     Returns:
         Void
     """
-    import datetime
     import os
 
     import nibabel as nib
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
-    from colorama import Fore
     from nipype.interfaces.freesurfer import ApplyVolTransform, MRIConvert, Tkregister2
     from nipype.interfaces.fsl import Merge
     from nipype.interfaces.petpvc import PETPVC
@@ -952,12 +950,8 @@ def get_wf(
     # Check that the PET file is a 3D volume
     img = nib.load(pet)
     if len(img.shape) == 4:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        error_msg = (
-            f"{Fore.RED}[{now}] Error: Clinica does not handle 4D volumes "
-            f"for {subject_id} | {session_id}{Fore.RESET}"
-        )
-        cprint(error_msg)
+        error_msg = f"Clinica does not handle 4D volumes for {subject_id} | {session_id}"
+        cprint(error_msg, lvl="error")
         raise NotImplementedError(error_msg)
 
     print_begin_image(subject_id + "_" + session_id)
