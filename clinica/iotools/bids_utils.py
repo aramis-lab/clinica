@@ -115,8 +115,8 @@ def create_participants_df(
     for i in range(0, len(participant_df)):
         if study_name == "OASIS":
             value = (participant_df["alternative_id_1"][i].split("_"))[1]
-        elif study_name == 'OASIS3':
-            value = re.sub("OAS3", "", participant_df['alternative_id_1'][i])
+        elif study_name == "OASIS3":
+            value = re.sub("OAS3", "", participant_df["alternative_id_1"][i])
         else:
             value = remove_space_and_symbols(participant_df["alternative_id_1"][i])
 
@@ -215,8 +215,8 @@ def create_sessions_dict(
                 subj_id_alpha = remove_space_and_symbols(subj_id)
                 if study_name == "OASIS":
                     subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
-                if study_name == 'OASIS3':
-                    subj_id_alpha = str(subj_id[0:3] + 'IS' + subj_id[3:])
+                if study_name == "OASIS3":
+                    subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3:])
 
                 # Extract the corresponding BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
@@ -230,15 +230,22 @@ def create_sessions_dict(
                     subj_bids = subj_bids[0]
                     sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
 
-                    subj_dir = path.join(path.dirname(path.dirname(clinical_data_dir)), 'out', 'bids', subj_bids)
+                    subj_dir = path.join(
+                        path.dirname(path.dirname(clinical_data_dir)),
+                        "out",
+                        "bids",
+                        subj_bids
+                    )
                     session_names = get_bids_subjs_list(subj_dir)
                     for s in session_names:
-                        s_name = re.sub('ses-', '', s)
+                        s_name = re.sub("ses-", '', s)
                         if subj_bids not in sessions_dict:
                             sessions_dict.update({subj_bids: {}})
                         if s_name not in sessions_dict[subj_bids].keys():
-                            sessions_dict[subj_bids].update({s_name: {'session_id': s}})
-                        (sessions_dict[subj_bids][s_name]).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
+                            sessions_dict[subj_bids].update({s_name: {"session_id": s}})
+                        (sessions_dict[subj_bids][s_name]).update(
+                            {sessions_fields_bids[i]: row[sessions_fields[i]]}
+                        )
 
     return sessions_dict
 
@@ -489,38 +496,41 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     import pandas as pd
 
     for bids_id in bids_ids:
-        bids_id = bids_id.split(os.sep)[-1]
         sessions_paths = glob(path.join(bids_dir, bids_id, "ses-*"))
         for session_path in sessions_paths:
             session_name = session_path.split(os.sep)[-1]
             scans_df = pd.DataFrame()
             # Create the file
-            tsv_name = '_'.join([bids_id, session_name, "scans.tsv"])
+            tsv_name = "_".join([bids_id, session_name, "scans.tsv"])
             # If the file already exists, remove it
             if os.path.exists(path.join(bids_dir, bids_id, session_name, tsv_name)):
                 os.remove(path.join(bids_dir, bids_id, session_name, tsv_name))
 
-            mod_available = glob(path.join(bids_dir, bids_id, session_name, '*'))
+            mod_available = glob(path.join(bids_dir, bids_id, session_name, "*"))
             for mod in mod_available:
                 mod_name = os.path.basename(mod)
-                files = glob(path.join(mod, '*.nii.gz'))
+                files = glob(path.join(mod, "*.nii.gz"))
                 for file in files:
                     file_name = os.path.basename(file)
                     if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
-                        f_type = 'T1/DWI/fMRI/FMAP'
-                    elif mod_name == 'pet':
+                        f_type = "T1/DWI/fMRI/FMAP"
+                    elif mod_name == "pet":
                         description_dict = {
                             carac.split("-")[0]: carac.split("-")[1]
                             for carac in file_name.split("_")
                             if "-" in carac
                         }
                         f_type = description_dict["trc"].upper()
+                    elif mod_name == "swi":
+                        pass
                     else:
                         continue
 
-                    row_to_append = pd.DataFrame(scans_dict[bids_id][session_name][f_type], index=[0])
+                    row_to_append = pd.DataFrame(
+                        scans_dict[bids_id][session_name][f_type], index=[0]
+                    )
                     # Insert the column filename as first value
-                    row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
+                    row_to_append.insert(0, "filename", path.join(mod_name, file_name))
                     scans_df = scans_df.append(row_to_append)
 
             scans_df = scans_df.fillna("n/a")
