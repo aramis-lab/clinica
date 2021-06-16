@@ -9,8 +9,7 @@ from clinica.iotools.abstract_converter import Converter
 
 class Oasis3ToBids(Converter):
     def convert_clinical_data(self, clinical_data_dir, bids_dir):
-        """
-        Convert the clinical data defined inside the clinical_specifications.xlx into BIDS
+        """Convert the clinical data defined inside the clinical_specifications.xlx into BIDS
 
         Args:
             clinical_data_dir: path to the folder with the original clinical data
@@ -21,12 +20,15 @@ class Oasis3ToBids(Converter):
         import numpy as np
         import clinica.iotools.bids_utils as bids
         from clinica.utils.stream import cprint
+
         cprint('Converting clinical data...')
         bids_ids = bids.get_bids_subjs_list(bids_dir)
 
         iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        clinic_specs_path = path.join(iotools_folder, 'data',
-                                      'clinical_specifications.xlsx')
+        clinic_specs_path = path.join(iotools_folder, 'data', 'clinical_specifications')
+
+        # -- Creation of modality agnostic files --
+        bids.write_modality_agnostic_files("OASIS-1", bids_dir)
 
         # --Create participants.tsv--
         participants_df = bids.create_participants_df('OASIS3', clinic_specs_path, clinical_data_dir, bids_ids)
@@ -36,6 +38,7 @@ class Oasis3ToBids(Converter):
         participants_df['diagnosis_bl'].replace([0.5, 1.0, 1.5, 2.0], 'AD', inplace=True)
         # Following line has no sense
         # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
+        participants_df = participants_df.fillna("n/a")
         participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
         # --Create sessions files--
@@ -51,20 +54,15 @@ class Oasis3ToBids(Converter):
 
         # --Create scans files--
         # Note: We have no scans information for OASIS
-        scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
+        scans_dict = bids.create_scans_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID', '', sessions_dict)
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
     def convert_images(self, source_dir, dest_dir):
-        """
-        Convert T1 images to BIDS
+        """Convert T1w images to BIDS.
 
         Args:
             source_dir: path to the OASIS dataset
             dest_dir: path to the BIDS directory
-
-        Note:
-            Previous version of this method used mri_convert from FreeSurfer to convert Analyze data from OASIS-1.
-            To remove this strong dependency, NiBabel is used instead.
         """
         from os import path
         from glob import glob

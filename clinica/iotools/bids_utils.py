@@ -285,7 +285,7 @@ def create_scans_dict(
     # Init the dictionary with the subject ids
     for bids_id in bids_ids:
         scans_dict[bids_id] = dict()
-        for session_id in ses_dict.keys():
+        for session_id in {"ses-" + key for key in ses_dict[bids_id].keys()}:
             scans_dict[bids_id][session_id] = {
                 "T1/DWI/fMRI/FMAP": {},
                 "PIB": {},
@@ -337,7 +337,7 @@ def create_scans_dict(
 
         for bids_id in bids_ids:
             original_id = bids_id.replace("sub-" + study_name, "")
-            for session_name in ses_dict.keys():
+            for session_name in {"ses-" + key for key in ses_dict[bids_id].keys()}:
                 row_to_extract = file_to_read[
                     (file_to_read[name_column_ids] == int(original_id))
                     & (file_to_read[name_column_ses] == ses_dict[session_name])
@@ -486,21 +486,21 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     import os
     from glob import glob
     from os import path
-
     import pandas as pd
 
     for bids_id in bids_ids:
         bids_id = bids_id.split(os.sep)[-1]
-        for s in glob(path.join(bids_dir, bids_id, 'ses-*')):
-            s_name = os.path.basename(s)
+        sessions_paths = glob(path.join(bids_dir, bids_id, "ses-*"))
+        for session_path in sessions_paths:
+            session_name = session_path.split(os.sep)[-1]
             scans_df = pd.DataFrame()
             # Create the file
-            tsv_name = '_'.join([bids_id, s_name, "scans.tsv"])
+            tsv_name = '_'.join([bids_id, session_name, "scans.tsv"])
             # If the file already exists, remove it
-            if os.path.exists(path.join(bids_dir, bids_id, s_name, tsv_name)):
-                os.remove(path.join(bids_dir, bids_id, s_name, tsv_name))
+            if os.path.exists(path.join(bids_dir, bids_id, session_name, tsv_name)):
+                os.remove(path.join(bids_dir, bids_id, session_name, tsv_name))
 
-            mod_available = glob(path.join(bids_dir, bids_id, s_name, '*'))
+            mod_available = glob(path.join(bids_dir, bids_id, session_name, '*'))
             for mod in mod_available:
                 mod_name = os.path.basename(mod)
                 files = glob(path.join(mod, '*.nii.gz'))
@@ -509,9 +509,16 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                     if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
                         f_type = 'T1/DWI/fMRI/FMAP'
                     elif mod_name == 'pet':
-                        f_type = 'FDG'
+                        description_dict = {
+                            carac.split("-")[0]: carac.split("-")[1]
+                            for carac in file_name.split("_")
+                            if "-" in carac
+                        }
+                        f_type = description_dict["trc"].upper()
+                    else:
+                        continue
 
-                    row_to_append = pd.DataFrame(scans_dict[bids_id][f_type], index=[0])
+                    row_to_append = pd.DataFrame(scans_dict[bids_id][session_name][f_type], index=[0])
                     # Insert the column filename as first value
                     row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
                     scans_df = scans_df.append(row_to_append)

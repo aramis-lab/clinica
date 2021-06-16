@@ -1,11 +1,11 @@
-Field	INSIGHT	INSIGHT location	AIBL	AIBL location	OASIS	OASIS location	CAPP	CAPP location	PREVDEMALS	PREVDEMALS location	BIDS CLINICA	Modalities related	BIDS CLINICA.1	Type
-											scan_id		<modality_folder_label>/<filename> Ex: anat/example_T1W.nii.gz	string
-											mri_field	T1/DWI/fMRI/FMAP	1 or 1.5 or 3 or 7	float
-Date of MRI acquisition			EXAMDATE	aibl_mrimeta_*.csv			Date IRM à M0	2016.07.04_CAPP_Database/M0			acq_time	T1/DWI/fMRI/FMAP	YYYY-MM-DD HH:MM:SS	string
-Date of MRI acquisition			EXAMDATE	aibl_mri3meta_*.csv			Date TEP à M0	2016.07.04_CAPP_Database/M0			acq_time	T1/DWI/fMRI/FMAP	YYYY-MM-DD HH:MM:SS	string
-Date of AV45 PET acquisition			EXAMDATE	aibl_av45meta_*.csv							acq_time	AV45	YYYY-MM-DD HH:MM:SS	string
-Date of PiB PET acquisition			EXAMDATE	aibl_pibmeta_*.csv							acq_time	PIB	YYYY-MM-DD HH:MM:SS	string
-Date of FLUTE PET acquisition			EXAMDATE	aibl_flutemeta_*.csv							acq_time	FLUTE		
-											mri_machine_name	T1/DWI/fMRI/FMAP		
-											mri_machine_manufacturer	T1/DWI/fMRI/FMAP		
-											clinad_movement_QC_score	T1/DWI/fMRI/FMAP		
+Field	INSIGHT	INSIGHT location	AIBL	AIBL location	OASIS	OASIS location	OASIS3	OASIS3 location	CAPP	CAPP location	PREVDEMALS	PREVDEMALS location	BIDS CLINICA	Modalities related	BIDS CLINICA.1	Type
+													scan_id		<modality_folder_label>/<filename> Ex: anat/example_T1W.nii.gz	string
+													mri_field	T1/DWI/fMRI/FMAP	1 or 1.5 or 3 or 7	float
+Date of MRI acquisition			EXAMDATE	aibl_mrimeta_*.csv					Date IRM à M0	2016.07.04_CAPP_Database/M0			acq_time	T1/DWI/fMRI/FMAP	YYYY-MM-DD HH:MM:SS	string
+Date of MRI acquisition			EXAMDATE	aibl_mri3meta_*.csv					Date TEP à M0	2016.07.04_CAPP_Database/M0			acq_time	T1/DWI/fMRI/FMAP	YYYY-MM-DD HH:MM:SS	string
+Date of AV45 PET acquisition			EXAMDATE	aibl_av45meta_*.csv									acq_time	AV45	YYYY-MM-DD HH:MM:SS	string
+Date of PiB PET acquisition			EXAMDATE	aibl_pibmeta_*.csv									acq_time	PIB	YYYY-MM-DD HH:MM:SS	string
+Date of FLUTE PET acquisition			EXAMDATE	aibl_flutemeta_*.csv									acq_time	FLUTE		
+													mri_machine_name	T1/DWI/fMRI/FMAP		
+													mri_machine_manufacturer	T1/DWI/fMRI/FMAP		
+													clinad_movement_QC_score	T1/DWI/fMRI/FMAP		
