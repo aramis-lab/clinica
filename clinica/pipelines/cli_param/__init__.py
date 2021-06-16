@@ -1,2 +1,1 @@
-import argument
-import option
+from . import argument, option
