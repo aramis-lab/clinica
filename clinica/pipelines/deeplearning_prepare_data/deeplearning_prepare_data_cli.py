@@ -14,13 +14,11 @@ pipeline_name = "deeplearning-prepare-data"
     "modality",
     type=click.Choice(["t1-linear", "t1-extensive", "pet-linear", "custom"]),
     default="t1-linear",
-    show_default=True,
 )
 @click.argument(
     "extract-method",
     type=click.Choice(["image", "slice", "patch"]),
     default="image",
-    show_default=True,
 )
 @click.option(
     "-uui",
