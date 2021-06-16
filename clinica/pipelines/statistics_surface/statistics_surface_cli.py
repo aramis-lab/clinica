@@ -26,8 +26,7 @@ pipeline_name = "statistics-surface"
 @click.option(
     "-c",
     "--covariate",
-    metavar="covariates",
-    type=List[str],
+    multiple=True,
     help=(
         "List of covariates. Each covariate must match the column name of the TSV file. "
         "By default, no covariate is taken."
