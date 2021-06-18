@@ -31,6 +31,7 @@ from .t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_cli
 
 @click.group(name="run")
 def cli() -> None:
+    """Run pipelines on BIDS and CAPS datasets."""
     pass
 
 
