@@ -149,7 +149,7 @@ def check_missing_processing(
 @bids_directory
 @click.argument("out_tsv", type=click.Path(resolve_path=True))
 def create_subjects_visits(bids_directory: str, out_tsv: str) -> None:
-    """Export the manifest of participants with their sessions."""
+    """Export participants with their sessions."""
     from os import makedirs
     from os.path import basename, dirname
 
@@ -243,7 +243,8 @@ def merge_tsv(
     ignore_scan_files: bool = False,
     ignore_session_scan_files: bool = False,
 ) -> None:
-    """Merge TSV files containing clinical data of a BIDS dataset into a single TSV file."""
+    """Merge clinical data into a single TSV file."""
+
     from clinica.iotools.utils.data_handling import create_merge_file
     from clinica.utils.inputs import check_bids_folder
 
