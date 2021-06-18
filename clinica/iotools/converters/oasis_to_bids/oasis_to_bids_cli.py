@@ -3,7 +3,7 @@ import click
 from clinica.iotools.converters import cli_param
 
 
-@click.command(name="nifd-to-bids")
+@click.command(name="oasis-to-bids")
 @cli_param.dataset_directory
 @cli_param.clinical_data_directory
 @cli_param.bids_directory
