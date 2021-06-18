@@ -10,8 +10,8 @@ pipeline_name = "pet-linear"
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
-@cli_param.option.acq_label
-@cli_param.option.suvr_reference_region
+@cli_param.argument.acq_label
+@cli_param.argument.suvr_reference_region
 @click.option(
     "-ui",
     "--uncropped_image",
@@ -29,8 +29,8 @@ pipeline_name = "pet-linear"
 def cli(
     bids_directory: str,
     caps_directory: str,
-    acq_label: Optional[str] = None,
-    suvr_reference_region: Optional[str] = None,
+    acq_label: str,
+    suvr_reference_region: str,
     uncropped_image: bool = False,
     save_pet_in_t1w_space: bool = False,
     subjects_sessions_tsv: Optional[str] = None,

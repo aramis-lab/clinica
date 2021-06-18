@@ -22,6 +22,10 @@ orig_input_data = click.argument(
     type=click.Choice(["t1-freesurfer", "pet-surface", "custom-pipeline"]),
 )
 
+pvc_psf_tsv = click.argument(
+    "pvc_psf_tsv", type=click.Path(exists=True, resolve_path=True)
+)
+
 subject_visits_with_covariates_tsv = click.argument(
     "subject_visits_with_covariates_tsv",
     type=click.Path(exists=True, resolve_path=True),

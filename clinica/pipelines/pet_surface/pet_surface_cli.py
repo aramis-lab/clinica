@@ -10,18 +10,18 @@ pipeline_name = "pet-surface"
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
-@cli_param.option.acq_label
-@cli_param.option.suvr_reference_region
-@cli_param.option.pvc_psf_tsv
+@cli_param.argument.acq_label
+@cli_param.argument.suvr_reference_region
+@cli_param.argument.pvc_psf_tsv
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
 def cli(
     bids_directory: str,
     caps_directory: str,
-    acq_label: Optional[str] = None,
-    suvr_reference_region: Optional[str] = None,
-    pvc_psf_tsv: Optional[str] = None,
+    acq_label: str,
+    suvr_reference_region: str,
+    pvc_psf_tsv: str,
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
