@@ -18,6 +18,10 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
+    """DTI-based processing of DWI datasets."
+
+    https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_DTI/
+    """
     from networkx import Graph
 
     from clinica.utils.ux import print_end_pipeline
