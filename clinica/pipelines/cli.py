@@ -9,7 +9,7 @@ from .dwi_preprocessing_using_phasediff_fieldmap import (
 from .dwi_preprocessing_using_t1 import dwi_preprocessing_using_t1_cli
 from .machine_learning_spatial_svm import spatial_svm_cli
 from .pet_linear import pet_linear_cli
-from .pet_surface import pet_surface_cli
+from .pet_surface import pet_surface_cli, pet_surface_longitudinal_cli
 from .pet_volume import pet_volume_cli
 from .statistics_surface import statistics_surface_cli
 from .statistics_volume import statistics_volume_cli
@@ -53,6 +53,7 @@ cli.add_command(dwi_connectome_cli.cli)
 cli.add_command(pet_linear_cli.cli)
 cli.add_command(pet_volume_cli.cli)
 cli.add_command(pet_surface_cli.cli)
+cli.add_command(pet_surface_longitudinal_cli.cli)
 cli.add_command(deeplearning_prepare_data_cli.cli)
 cli.add_command(spatial_svm_cli.cli)
 cli.add_command(statistics_surface_cli.cli)
