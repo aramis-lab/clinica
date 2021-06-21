@@ -32,7 +32,7 @@ sub-03           ses-M24
 
 !!! example
 
-    ```Text
+    ```shell
     clinica iotools create-subjects-visits /home/ADNI_BIDS/ adni_participants.tsv
     ```
 
@@ -81,7 +81,7 @@ The nomenclature of the modalities tries to follow, as much as possible, the one
 
 !!! example
 
-    ```Text
+    ```shell
     clinica iotools check-missing-modalities /Home/ADNI_BIDS/ /Home/
     clinica iotools check-missing-modalities /Home/ADNI_BIDS/ /Home/ -op new_name
     ```
@@ -147,7 +147,7 @@ If an input list of subjects and sessions is given, the merged file will only ga
 
 !!! example
 
-    ```Text
+    ```shell
     clinica iotools merge-tsv /Home/ADNI_BIDS /Home/merge-tsv.tsv -caps /Home/ADNI_CAPS -tsv /Home/list_subjects.tsv
     ```
 
@@ -190,13 +190,13 @@ Optional arguments:
 
     If you want to convert FDG PET images (e.g. with `_acq-fdg` key/value in PET filename), use:
 
-    ```Text
+    ```shell
     clinica iotools center-nifti bids_directory new_bids_directory --modality "fdg_pet"
     ```
 
     If you want to convert AV45 PET images and T1w:
 
-    ```Text
+    ```shell
     clinica iotools center-nifti bids_directory new_bids_directory --modality "av45_pet t1w"
     ```
 
