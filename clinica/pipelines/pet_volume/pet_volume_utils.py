@@ -37,12 +37,12 @@ def create_binary_mask(tissues, threshold=0.3):
         )
 
     img_0 = nib.load(tissues[0])
-    shape = list(img_0.get_data().shape)
+    shape = list(img_0.get_fdata().shape)
 
     data = np.zeros(shape=shape)
 
     for image in tissues:
-        data = data + nib.load(image).get_data()
+        data = data + nib.load(image).get_fdata()
 
     data = (data > threshold) * 1.0
     out_mask = join(getcwd(), basename(tissues[0]) + "_brainmask.nii")
@@ -61,7 +61,7 @@ def apply_binary_mask(image, binary_mask):
     original_image = nib.load(image)
     mask = nib.load(binary_mask)
 
-    data = original_image.get_data() * mask.get_data()
+    data = original_image.get_fdata() * mask.get_fdata()
 
     masked_image_path = join(getcwd(), "masked_" + basename(image))
     masked_image = nib.Nifti1Image(
@@ -85,7 +85,7 @@ def create_pvc_mask(tissues):
         )
 
     img_0 = nib.load(tissues[0])
-    shape = img_0.get_data().shape
+    shape = img_0.get_fdata().shape
     background = np.zeros(shape=shape)
 
     shape += tuple([len(tissues) + 1])
@@ -93,8 +93,8 @@ def create_pvc_mask(tissues):
 
     for i in range(len(tissues)):
         image = nib.load(tissues[i])
-        data[..., i] = np.array(image.get_data())
-        background = background + image.get_data()
+        data[..., i] = np.array(image.get_fdata())
+        background = background + image.get_fdata()
 
     background = 1.0 - background
     data[..., len(tissues)] = np.array(background)
@@ -122,10 +122,10 @@ def normalize_to_reference(pet_image, region_mask):
     pet = nib.load(pet_image)
     ref = nib.load(region_mask)
 
-    region = np.multiply(pet.get_data(), ref.get_data())
+    region = np.multiply(pet.get_fdata(), ref.get_fdata())
     region_mean = np.nanmean(np.where(region != 0, region, np.nan))
 
-    data = pet.get_data() / region_mean
+    data = pet.get_fdata() / region_mean
 
     suvr_pet_path = join(getcwd(), "suvr_" + basename(pet_image))
 

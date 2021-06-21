@@ -152,7 +152,7 @@ class OasisToBids(Converter):
             hdr["xyzt_units"] = 10
 
             img_with_good_orientation_nifti = nb.Nifti1Image(
-                np.round(img_with_wrong_orientation_analyze.get_data()).astype(
+                np.round(img_with_wrong_orientation_analyze.get_fdata()).astype(
                     np.int16
                 ),
                 s_form,

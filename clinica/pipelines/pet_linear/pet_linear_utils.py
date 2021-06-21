@@ -65,7 +65,7 @@ def suvr_normalization(input_img, norm_img, ref_mask):
     cprint(region_mean)
 
     # Divide the value of the image voxels by the computed mean
-    data = pet.get_data() / region_mean
+    data = pet.get_fdata() / region_mean
 
     # Create and save the normalized image
     output_img = os.path.join(
