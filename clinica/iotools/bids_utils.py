@@ -116,7 +116,7 @@ def create_participants_df(
         if study_name == "OASIS":
             value = (participant_df["alternative_id_1"][i].split("_"))[1]
         elif study_name == "OASIS3":
-            value = re.sub("OAS3", "", participant_df["alternative_id_1"][i])
+            value = participant_df["alternative_id_1"][i].replace("OAS3", "")
         else:
             value = remove_space_and_symbols(participant_df["alternative_id_1"][i])
 
@@ -238,7 +238,7 @@ def create_sessions_dict(
                     )
                     session_names = get_bids_subjs_list(subj_dir)
                     for s in session_names:
-                        s_name = re.sub("ses-", '', s)
+                        s_name = s.replace("ses-", '')
                         if subj_bids not in sessions_dict:
                             sessions_dict.update({subj_bids: {}})
                         if s_name not in sessions_dict[subj_bids].keys():
@@ -500,8 +500,7 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
         for session_path in sessions_paths:
             session_name = session_path.split(os.sep)[-1]
             scans_df = pd.DataFrame()
-            # Create the file
-            tsv_name = "_".join([bids_id, session_name, "scans.tsv"])
+            tsv_name = bids_id + "_" + session_name + "_scans.tsv"
             # If the file already exists, remove it
             if os.path.exists(path.join(bids_dir, bids_id, session_name, tsv_name)):
                 os.remove(path.join(bids_dir, bids_id, session_name, tsv_name))
