@@ -107,7 +107,7 @@ def center_nifti(
 
 @cli.command()
 @bids_directory
-@click.argument("out_directory", type=click.Path(writable=True))
+@click.argument("output_directory", type=click.Path(writable=True))
 @click.option(
     "-op",
     "--output_prefix",
@@ -117,7 +117,7 @@ def center_nifti(
 )
 def check_missing_modalities(
     bids_directory: str,
-    out_directory: str,
+    output_directory: str,
     output_prefix: str = "missing_mods",
 ) -> None:
     """Check missing modalities in a BIDS dataset."""
@@ -125,30 +125,30 @@ def check_missing_modalities(
     from clinica.utils.inputs import check_bids_folder
 
     check_bids_folder(bids_directory)
-    compute_missing_mods(bids_directory, out_directory, output_prefix)
+    compute_missing_mods(bids_directory, output_directory, output_prefix)
 
 
 @cli.command()
 @bids_directory
 @click.argument("caps_directory", type=click.Path(exists=True, resolve_path=True))
-@click.argument("out_file", type=click.Path(resolve_path=True))
+@click.argument("output_file", type=click.Path(resolve_path=True))
 def check_missing_processing(
     bids_directory: str,
     caps_directory: str,
-    out_file: str,
+    output_file: str,
 ) -> None:
     """Check missing processing in a CAPS dataset."""
     from clinica.iotools.utils.data_handling import compute_missing_processing
     from clinica.utils.inputs import check_caps_folder
 
     check_caps_folder(caps_directory)
-    compute_missing_processing(bids_directory, caps_directory, out_file)
+    compute_missing_processing(bids_directory, caps_directory, output_file)
 
 
 @cli.command()
 @bids_directory
-@click.argument("out_tsv", type=click.Path(resolve_path=True))
-def create_subjects_visits(bids_directory: str, out_tsv: str) -> None:
+@click.argument("output_tsv", type=click.Path(resolve_path=True))
+def create_subjects_visits(bids_directory: str, output_tsv: str) -> None:
     """Export participants with their sessions."""
     from os import makedirs
     from os.path import basename, dirname
@@ -158,15 +158,15 @@ def create_subjects_visits(bids_directory: str, out_tsv: str) -> None:
     from clinica.utils.stream import cprint
 
     check_bids_folder(bids_directory)
-    output_directory = dirname(out_tsv)
+    output_directory = dirname(output_tsv)
     makedirs(output_directory, exist_ok=True)
-    create_subs_sess_list(bids_directory, output_directory, basename(out_tsv))
-    cprint(f"The TSV file was saved to {out_tsv}.")
+    create_subs_sess_list(bids_directory, output_directory, basename(output_tsv))
+    cprint(f"The TSV file was saved to {output_tsv}.")
 
 
 @cli.command()
 @bids_directory
-@click.argument("out_tsv", type=click.Path(resolve_path=True))
+@click.argument("output_tsv", type=click.Path(resolve_path=True))
 @click.option(
     "-caps",
     "--caps_directory",
@@ -231,7 +231,7 @@ def create_subjects_visits(bids_directory: str, out_tsv: str) -> None:
 )
 def merge_tsv(
     bids_directory: str,
-    out_tsv: str,
+    output_tsv: str,
     caps_directory: Optional[str] = None,
     pipelines: Optional[List[str]] = None,
     volume_atlas_selection: Optional[List[str]] = None,
@@ -252,7 +252,7 @@ def merge_tsv(
 
     create_merge_file(
         bids_directory,
-        out_tsv,
+        output_tsv,
         caps_dir=caps_directory,
         pipelines=pipelines,
         ignore_scan_files=ignore_scan_files,
