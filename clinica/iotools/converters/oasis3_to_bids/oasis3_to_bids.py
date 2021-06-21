@@ -41,11 +41,11 @@ class Oasis3ToBids(Converter):
         )
         # Following line has no sense
         # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
-        participants_df = participants_df.fillna("n/a")
         participants_df.to_csv(
             path.join(bids_dir, "participants.tsv"),
             sep="\t",
             index=False,
+            na_rep = "n/a",
             encoding="utf-8",
         )
 
@@ -91,6 +91,12 @@ class Oasis3ToBids(Converter):
             import re
             import shutil
 
+            # (i) According to the new BIDS convention for PET, use of the keyword trc instead of acq
+            # (ii) Removing the optional task keyword which is useless because it is always rest
+            # (iii) minIP files look like the list given on page 10 of this document
+            # https://www.oasis-brains.org/files/OASIS-3_Imaging_Data_Dictionary_v1.8.pdf
+            # Put the swi and minIP files in a swi/ folder,
+            # and make the bids-validator ignore it since it is not in the standard
             def copy_file(source, target):
                 try:
                     new_filename = path.basename(source).replace("OAS3", "OASIS3")
@@ -125,21 +131,20 @@ class Oasis3ToBids(Converter):
             if not os.path.isdir(session_folder):
                 os.mkdir(path.join(session_folder))
 
-            # In order do convert the Analyze format to Nifti the path to the .img file is required
-            nifti_paths = glob(
+            nifti_files = glob(
                 path.join(subj_folder, "**/*.nii.gz"), recursive=True
             )
 
-            for nifti_path in nifti_paths:
+            for nifti_file in nifti_files:
                 #  Get the json files
-                base_file_name = os.path.basename(nifti_path).split(".")[0]
+                base_file_name = os.path.basename(nifti_file).split(".")[0]
                 json_file_paths = glob(
                     path.join(subj_folder, "**/" + base_file_name + ".json"),
                     recursive=True
                 )
 
                 # Looking for an existing func or anat folder
-                dir_name = path.dirname(nifti_path)
+                dir_name = path.dirname(nifti_file)
                 regex = re.compile("(?P<folder>anat|func)[1-9]")
                 if regex.search(dir_name) is not None:
                     output_folder = regex.search(dir_name).group("folder")
@@ -152,7 +157,7 @@ class Oasis3ToBids(Converter):
 
                 # Moove nifti and json files to the right folder
                 output_path = path.join(session_folder, output_folder)
-                copy_file(nifti_path, output_path)
+                copy_file(nifti_file, output_path)
                 if len(json_file_paths) > 0:
                     copy_file(json_file_paths[0], output_path)
 
