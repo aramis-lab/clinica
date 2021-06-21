@@ -25,7 +25,7 @@ def cli(
     smooth: List[int] = (8,),
     tissues: List[int] = (1, 2, 3),
     modulate: bool = False,
-    voxel_size: Tuple[int, int, int] = (1.5, 1.5, 1.5),
+    voxel_size: Tuple[float, float, float] = (1.5, 1.5, 1.5),
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
