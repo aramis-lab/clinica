@@ -153,11 +153,12 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
     # Exceptions
     # ==========
     conversion_errors = [  # Eq_1
-        ("031_S_0830", "m48"),
-        ("100_S_0995", "m18"),
-        ("031_S_0867", "m48"),
-        ("100_S_0892", "m18"),
-        ("003_S_6264", "m12"),
+        #("031_S_0830", "m48"),
+        #("100_S_0995", "m18"),
+        #("031_S_0867", "m48"),
+        #("100_S_0892", "m18"),
+        #("003_S_6264", "m12"),
+        
         # Empty folders
         # ('029_S_0845', 'm24'),
         # ('094_S_1267', 'm24'),
@@ -180,10 +181,10 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
         # ('022_S_5004', 'bl'),
         # ('022_S_5004', 'm03'),
         # Several images: T1wa ...
-        ("006_S_4485", "m84"),
-        ("029_S_2395", "m72"),
-        ("114_S_6039", "bl"),
-        ("016_S_4952", "m48"),
+        #("006_S_4485", "m84"),
+        #("029_S_2395", "m72"),
+        #("114_S_6039", "bl"),
+        #("016_S_4952", "m48"),
     ]
 
     # Removing known exceptions from images to convert

@@ -96,7 +96,7 @@ def weights_to_nifti(weights, atlas, output_filename):
         raise ValueError("Atlas path not found for atlas name " + atlas)
 
     atlas_image = nib.load(atlas_path)
-    atlas_data = atlas_image.get_data()
+    atlas_data = atlas_image.get_fdata()
     labels = list(set(atlas_data.ravel()))
     output_image_weights = np.array(atlas_data, dtype="f")
     for i, n in enumerate(labels):

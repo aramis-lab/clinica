@@ -43,10 +43,10 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         out_file = op.abspath(f"{fname}_statistics_{in_atlas.get_name_atlas()}.tsv")
 
     atlas_labels = nib.load(in_atlas.get_atlas_labels())
-    atlas_labels_data = atlas_labels.get_data()
+    atlas_labels_data = atlas_labels.get_fdata()
 
     img = nib.load(in_normalized_map)
-    img_data = img.get_data()
+    img_data = img.get_fdata()
 
     atlas_correspondence = pandas.io.parsers.read_csv(in_atlas.get_tsv_roi(), sep="\t")
     label_name = list(atlas_correspondence.roi_name)
