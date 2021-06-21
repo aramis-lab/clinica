@@ -45,7 +45,7 @@ class Oasis3ToBids(Converter):
             path.join(bids_dir, "participants.tsv"),
             sep="\t",
             index=False,
-            na_rep = "n/a",
+            na_rep="n/a",
             encoding="utf-8",
         )
 
@@ -143,7 +143,11 @@ class Oasis3ToBids(Converter):
                     recursive=True
                 )
 
-                # Looking for an existing func or anat folder
+                # Parse the path of the json or nifti
+                # The format of the OASIS3 files and folders is quite variable.
+                # The json or the nifti can be or not be in a folder
+                # called "anat" or "func" or something else.
+                # It also can be in a variable number of parent folders (1 or 2)
                 dir_name = path.dirname(nifti_file)
                 regex = re.compile("(?P<folder>anat|func)[1-9]")
                 if regex.search(dir_name) is not None:
