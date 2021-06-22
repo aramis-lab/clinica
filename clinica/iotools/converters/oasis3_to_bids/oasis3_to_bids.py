@@ -35,10 +35,7 @@ class Oasis3ToBids(Converter):
         )
 
         # Replace the values of the diagnosis_bl column
-        participants_df["diagnosis_bl"].replace([0.0, np.nan], "CN", inplace=True)
-        participants_df["diagnosis_bl"].replace(
-            [0.5, 1.0, 1.5, 2.0], "AD", inplace=True
-        )
+        participants_df["diagnosis_bl"] = participants_df["diagnosis_bl"].fillna(0).apply(lambda x: "AD" if x > 0 else "CN")
         # Following line has no sense
         # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
         participants_df.to_csv(
@@ -145,7 +142,7 @@ class Oasis3ToBids(Converter):
 
                 # Parse the path of the json or nifti
                 # The format of the OASIS3 files and folders is quite variable.
-                # The json or the nifti can be or not be in a folder
+                # The json or the nifti can be in a folder
                 # called "anat" or "func" or something else.
                 # It also can be in a variable number of parent folders (1 or 2)
                 dir_name = path.dirname(nifti_file)
