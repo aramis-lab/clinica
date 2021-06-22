@@ -106,7 +106,7 @@ Allows to choose a particular mask with a name following the given pattern.
 Example of a valid CAPS hierarchy:
 
 ```console
-caps
+CAPS_DIRECTORY
 ├── masks
 │       ├── tpl-<tpl_name>
 │       │       ├── tpl-<tpl_name>[_custom_pattern]_roi-<roi_1>_mask.nii.gz
