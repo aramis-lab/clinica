@@ -15,6 +15,11 @@
             "type": "software",
             "name": "ants",
             "version": ""
+        },
+        {
+            "type": "software",
+            "name": "mrtrix",
+            "version": ""
         }
     ]
 }
