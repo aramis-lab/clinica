@@ -12,6 +12,11 @@ from .iotools.converters.cli import cli as convert_cli
 from .iotools.utils.cli import cli as iotools_cli
 from .pipelines.cli import cli as run_cli
 
+CONTEXT_SETTINGS = dict(
+    # Extend content width to avoid shortening of pipeline help.
+    max_content_width=120,
+)
+
 
 def setup_logging(verbosity: int = 0) -> None:
     """
@@ -40,7 +45,7 @@ def setup_logging(verbosity: int = 0) -> None:
     logger.addHandler(console_handler)
 
 
-@click.group()
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.version_option()
 @click.option("-v", "--verbose", "verbosity", count=True)
 def cli(verbosity: int = 0) -> None:
