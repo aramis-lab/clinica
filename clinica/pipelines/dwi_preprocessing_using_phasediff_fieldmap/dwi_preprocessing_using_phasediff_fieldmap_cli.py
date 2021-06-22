@@ -4,7 +4,7 @@ import click
 
 from clinica.pipelines import cli_param
 
-pipeline_name = "dwi-processing-using-phasediff-fieldmap"
+pipeline_name = "dwi-preprocessing-using-phasediff-fieldmap"
 
 
 @click.command(name=pipeline_name)

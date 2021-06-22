@@ -4,7 +4,7 @@ import click
 
 from clinica.pipelines import cli_param
 
-pipeline_name = "dwi-processing-using-t1"
+pipeline_name = "dwi-preprocessing-using-t1"
 
 
 @click.command(name=pipeline_name)
