@@ -13,8 +13,14 @@ pipeline_name = "pet-volume"
 @cli_param.argument.group_label
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
+@cli_param.option_group.pipeline_options
 @cli_param.option.pvc_psf_tsv
-@click.option(
+@cli_param.option_group.standard_options
+@cli_param.option.subjects_sessions_tsv
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+@cli_param.option_group.advanced_options
+@cli_param.option_group.option(
     "-mask",
     "--mask_tissues",
     multiple=True,
@@ -26,14 +32,14 @@ pipeline_name = "pet-volume"
         "for masking the PET image (default: GM, WM and CSF i.e. --mask_tissues 1 2 3)."
     ),
 )
-@click.option(
+@cli_param.option_group.option(
     "-threshold",
     "--mask_threshold",
     default=0.3,
     show_default=True,
     help="Value used as threshold to binarize the tissue maps.",
 )
-@click.option(
+@cli_param.option_group.option(
     "-pvc_mask",
     "--pvc_mask_tissues",
     multiple=True,
@@ -46,9 +52,6 @@ pipeline_name = "pet-volume"
     ),
 )
 @cli_param.option.smooth
-@cli_param.option.subjects_sessions_tsv
-@cli_param.option.working_directory
-@cli_param.option.n_procs
 def cli(
     bids_directory: str,
     caps_directory: str,

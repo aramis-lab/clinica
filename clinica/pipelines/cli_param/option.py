@@ -1,15 +1,18 @@
 """Common CLI options used by Clinica pipelines."""
+
 import click
 
 from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 
-acq_label = click.option(
+from .option_group import option
+
+acq_label = option(
     "-acq",
     "--acq_label",
     help="Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).",
 )
 
-dartel_tissues = click.option(
+dartel_tissues = option(
     "-dt",
     "--dartel_tissues",
     type=click.IntRange(1, 7),
@@ -18,42 +21,42 @@ dartel_tissues = click.option(
     help="Tissues to use for DARTEL template calculation.",
 )
 
-dont_save_warped_unmodulated = click.option(
+dont_save_warped_unmodulated = option(
     "-dswu",
     "--dont_save_warped_unmodulated",
     is_flag=True,
     help="Do not save warped unmodulated images for tissues specified in --tissue_classes flag.",
 )
 
-low_bval = click.option(
+low_bval = option(
     "--low_bval",
     default=5,
     show_default=True,
     help="Define the b0 volumes as all volume bval <= low_bval.",
 )
 
-modulate = click.option(
+modulate = option(
     "-m",
     "--modulate",
     is_flag=True,
     help="Modulate output images, no modulation preserves concentrations.",
 )
 
-n_procs = click.option(
+n_procs = option(
     "-np",
     "--n_procs",
     type=int,
     help="Number of cores used to run in parallel.",
 )
 
-overwrite_outputs = click.option(
+overwrite_outputs = option(
     "-overwrite",
     "--overwrite_outputs",
     is_flag=True,
     help="Force overwrite of output files in CAPS folder.",
 )
 
-pvc_psf_tsv = click.option(
+pvc_psf_tsv = option(
     "-psf",
     "--pvc_psf_tsv",
     type=click.Path(exists=True, resolve_path=True),
@@ -64,14 +67,14 @@ pvc_psf_tsv = click.option(
     ),
 )
 
-save_warped_modulated = click.option(
+save_warped_modulated = option(
     "-swm",
     "--save_warped_modulated",
     is_flag=True,
     help="Save warped modulated images for tissues specified in --tissue_classes flag.",
 )
 
-smooth = click.option(
+smooth = option(
     "-s",
     "--smooth",
     multiple=True,
@@ -80,14 +83,14 @@ smooth = click.option(
     help="Specify the different isomorphic FWHM in millimeters to smooth the image.",
 )
 
-subjects_sessions_tsv = click.option(
+subjects_sessions_tsv = option(
     "-tsv",
     "--subjects_sessions_tsv",
     type=click.Path(exists=True, resolve_path=True),
     help="TSV file containing a list of subjects with their sessions.",
 )
 
-suvr_reference_region = click.option(
+suvr_reference_region = option(
     "-suvr",
     "--suvr_reference_region",
     type=click.Choice(LIST_SUVR_REFERENCE_REGIONS),
@@ -98,7 +101,7 @@ suvr_reference_region = click.option(
     ),
 )
 
-tissues = click.option(
+tissues = option(
     "-t",
     "--tissues",
     multiple=True,
@@ -108,7 +111,7 @@ tissues = click.option(
     help="Tissues to create flow fields to DARTEL template.",
 )
 
-tissue_classes = click.option(
+tissue_classes = option(
     "-tc",
     "--tissue_classes",
     multiple=True,
@@ -121,21 +124,21 @@ tissue_classes = click.option(
     ),
 )
 
-tissue_probability_maps = click.option(
+tissue_probability_maps = option(
     "-tpm",
     "--tissue_probability_maps",
     type=click.Path(exists=True, resolve_path=True),
     help="Tissue probability maps to use for segmentation.",
 )
 
-use_pvc_data = click.option(
+use_pvc_data = option(
     "-pvc",
     "--use_pvc_data",
     is_flag=True,
     help="Use PET data with partial value correction.",
 )
 
-voxel_size = click.option(
+voxel_size = option(
     "-vs",
     "--voxel_size",
     type=click.Tuple([float, float, float]),
@@ -144,14 +147,14 @@ voxel_size = click.option(
     help="Specifying the voxel sizes of the output image.",
 )
 
-working_directory = click.option(
+working_directory = option(
     "-wd",
     "--working_directory",
     type=click.Path(exists=True, writable=True, resolve_path=True),
     help="Temporary directory to store pipelines intermediate results.",
 )
 
-yes = click.option(
+yes = option(
     "-y",
     "--yes",
     is_flag=True,

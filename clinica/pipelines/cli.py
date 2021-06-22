@@ -32,6 +32,7 @@ from .t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_cli
 
 class RegistrationOrderGroup(click.Group):
     """CLI group which lists commands by order or registration."""
+
     def list_commands(self, ctx):
         return self.commands.keys()
 

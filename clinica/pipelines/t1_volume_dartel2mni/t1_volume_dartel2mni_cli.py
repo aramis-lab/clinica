@@ -11,13 +11,16 @@ pipeline_name = "t1-volume-dartel2mni"
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
+@cli_param.option_group.pipeline_options
 @cli_param.option.smooth
-@cli_param.option.tissues
-@cli_param.option.modulate
-@cli_param.option.voxel_size
+@cli_param.option_group.standard_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option_group.advanced_options
+@cli_param.option.tissues
+@cli_param.option.modulate
+@cli_param.option.voxel_size
 def cli(
     bids_directory: str,
     caps_directory: str,

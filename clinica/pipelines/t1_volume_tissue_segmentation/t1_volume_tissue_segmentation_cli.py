@@ -10,14 +10,16 @@ pipeline_name = "t1-volume-tissue-segmentation"
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
+@cli_param.option_group.standard_options
+@cli_param.option.subjects_sessions_tsv
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+@cli_param.option_group.advanced_options
 @cli_param.option.tissue_classes
 @cli_param.option.dartel_tissues
 @cli_param.option.tissue_probability_maps
 @cli_param.option.dont_save_warped_unmodulated
 @cli_param.option.save_warped_modulated
-@cli_param.option.subjects_sessions_tsv
-@cli_param.option.working_directory
-@cli_param.option.n_procs
 def cli(
     bids_directory: str,
     caps_directory: str,

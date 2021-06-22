@@ -15,6 +15,7 @@ pipeline_name = "statistics-volume-correction"
 @click.argument("FDRp", type=float)
 @click.argument("FWEc", type=float)
 @click.argument("FDRc", type=float)
+@cli_param.option_group.standard_options
 @cli_param.option.working_directory
 @cli_param.option.n_procs
 @click.option(

@@ -9,6 +9,7 @@ pipeline_name = "dwi-dti"
 
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
+@cli_param.option_group.standard_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs

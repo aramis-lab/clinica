@@ -23,7 +23,8 @@ pipeline_name = "statistics-surface"
     type=click.Path(exists=True, resolve_path=True),
 )
 @cli_param.argument.contrast
-@click.option(
+@cli_param.option_group.pipeline_options
+@cli_param.option_group.option(
     "-c",
     "--covariate",
     multiple=True,
@@ -32,7 +33,7 @@ pipeline_name = "statistics-surface"
         "By default, no covariate is taken."
     ),
 )
-@click.option(
+@cli_param.option_group.option(
     "-fwhm",
     "--full_width_at_half_maximum",
     default=20,
@@ -41,7 +42,7 @@ pipeline_name = "statistics-surface"
 )
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
-@click.option(
+@cli_param.option_group.option(
     "-cf",
     "--custom_file",
     help=(
@@ -50,7 +51,7 @@ pipeline_name = "statistics-surface"
         "See Wiki for an example."
     ),
 )
-@click.option(
+@cli_param.option_group.option(
     "-ml",
     "--measure_label",
     help=(
@@ -60,15 +61,17 @@ pipeline_name = "statistics-surface"
         "See Wiki for an example."
     ),
 )
-@click.option(
+@cli_param.option_group.standard_options
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+@cli_param.option_group.advanced_options
+@cli_param.option_group.option(
     "-ct",
     "--cluster_threshold",
     default=0.001,
     show_default=True,
     help="Threshold to define a cluster in the process of cluster-wise correction.",
 )
-@cli_param.option.working_directory
-@cli_param.option.n_procs
 def cli(
     caps_directory: str,
     group_label: str,

@@ -10,7 +10,8 @@ pipeline_name = "t1-freesurfer"
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
-@click.option(
+@cli_param.option_group.pipeline_options
+@cli_param.option_group.option(
     "-raa",
     "--recon_all_args",
     default="-qcache",
@@ -21,6 +22,7 @@ pipeline_name = "t1-freesurfer"
         "(this is not the case for other flags)."
     ),
 )
+@cli_param.option_group.standard_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs

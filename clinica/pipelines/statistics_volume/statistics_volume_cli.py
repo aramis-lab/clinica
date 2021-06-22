@@ -13,14 +13,15 @@ pipeline_name = "statistics-volume"
 @cli_param.argument.orig_input_data
 @cli_param.argument.subject_visits_with_covariates_tsv
 @cli_param.argument.contrast
-@click.option(
+@cli_param.option_group.pipeline_options
+@cli_param.option_group.option(
     "-dartel",
     "--group_label_dartel",
     default="*",
     show_default=True,
     help="Name of the DARTEL template that Clinica needs to use to grab the input files.",
 )
-@click.option(
+@cli_param.option_group.option(
     "-fwhm",
     "--full_width_at_half_maximum",
     default=8,
@@ -30,7 +31,7 @@ pipeline_name = "statistics-volume"
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
 @cli_param.option.use_pvc_data
-@click.option(
+@cli_param.option_group.option(
     "-cf",
     "--custom_file",
     help=(
@@ -41,7 +42,7 @@ pipeline_name = "statistics-volume"
         "See Wiki for an example."
     ),
 )
-@click.option(
+@cli_param.option_group.option(
     "-ml",
     "--measure_label",
     help=(
@@ -51,15 +52,17 @@ pipeline_name = "statistics-volume"
         "See Wiki for an example."
     ),
 )
-@click.option(
+@cli_param.option_group.standard_options
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+@cli_param.option_group.advanced_options
+@cli_param.option_group.option(
     "-ct",
     "--cluster_threshold",
     default=0.001,
     show_default=True,
     help="Threshold to define a cluster in the process of cluster-wise correction.",
 )
-@cli_param.option.working_directory
-@cli_param.option.n_procs
 def cli(
     caps_directory: str,
     group_label: str,

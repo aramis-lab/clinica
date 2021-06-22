@@ -9,13 +9,15 @@ pipeline_name = "dwi-connectome"
 
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
-@click.option(
+@cli_param.option_group.pipeline_options
+@cli_param.option_group.option(
     "-nt",
     "--n_tracks",
     default=1e6,
     show_default=True,
     help="Set the desired number of streamlines to generate the tractography and connectome.",
 )
+@cli_param.option_group.standard_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs

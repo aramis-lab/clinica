@@ -11,10 +11,16 @@ pipeline_name = "machinelearning-prepare-spatial-svm"
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
 @cli_param.argument.orig_input_data
+@cli_param.option_group.pipeline_options
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
 @cli_param.option.use_pvc_data
-@click.option(
+@cli_param.option_group.standard_options
+@cli_param.option.subjects_sessions_tsv
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+@cli_param.option_group.advanced_options
+@cli_param.option_group.option(
     "-fwhm",
     "--full_width_half_maximum",
     default=4.0,
@@ -24,9 +30,6 @@ pipeline_name = "machinelearning-prepare-spatial-svm"
         "do not recommend to change it unless you have a specific reason to do so."
     ),
 )
-@cli_param.option.subjects_sessions_tsv
-@cli_param.option.working_directory
-@cli_param.option.n_procs
 def cli(
     caps_directory: str,
     group_label: str,

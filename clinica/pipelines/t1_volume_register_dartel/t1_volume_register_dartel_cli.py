@@ -11,10 +11,12 @@ pipeline_name = "t1-volume-register-dartel"
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
-@cli_param.option.tissues
+@cli_param.option_group.standard_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option_group.advanced_options
+@cli_param.option.tissues
 def cli(
     bids_directory: str,
     caps_directory: str,
