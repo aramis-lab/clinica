@@ -255,11 +255,14 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.fsl as fsl
+        import nipype.interfaces.mrtrix3 as mrtrix3
+        from clinica.utils.dwi import (
+            compute_average_b0,
+        )
 
         from .dwi_preprocessing_using_t1_workflows import (
             eddy_fsl_pipeline,
             epi_pipeline,
-            remove_bias,
         )
         from .dwi_preprocessing_using_t1_utils import (
             init_input_node,
@@ -322,8 +325,25 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         )
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(name="SusceptibilityDistortionCorrection")
-        # Remove bias correction
-        bias = remove_bias(name="RemoveBias")
+        # Remove bias correction from (Jeurissen et al., 2014)
+        bias = npe.Node(
+            mrtrix3.DWIBiasCorrect(use_ants=True), name="RemoveBias"
+        )
+        # Compute b0 mask on corrected avg b0
+        compute_avg_b0 = npe.Node(
+            nutil.Function(
+                input_names=["in_dwi", "in_bval"],
+                output_names=["out_b0_average"],
+                function=compute_average_b0,
+            ),
+            name="ComputeB0Average",
+        )
+        compute_avg_b0.inputs.low_bval = self.parameters["low_bval"]
+
+        # Compute brain mask from reference b0
+        mask_avg_b0 = npe.Node(
+            fsl.BET(mask=True, robust=True), name="MaskB0"
+        )
 
         # Print end message
         print_end_message = npe.Node(
@@ -363,15 +383,22 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 (eddy_fsl, sdc, [("outputnode.out_corrected", "inputnode.DWI")]),
                 (eddy_fsl, sdc, [("outputnode.out_rotated_bvecs", "inputnode.bvec")]),
                 # Bias correction
-                (sdc, bias, [("outputnode.DWIs_epicorrected", "inputnode.in_file")]),
+                (init_node, bias, [("bval", "in_bval")]),
+                (sdc, bias, [("outputnode.DWIs_epicorrected", "in_file"),
+                             ("outputnode.out_bvec", "in_bvec")]),
+                # Compute average b0 on corrected dataset (for brain mask extraction)
+                (init_node, compute_avg_b0, [("bval", "in_bval")]),
+                (bias, compute_avg_b0, [("out_file", "in_dwi")]),
+                # Compute b0 mask on corrected avg b0
+                (compute_avg_b0, mask_avg_b0, [("out_b0_average", "in_file")]),
                 # Print end message
                 (init_node, print_end_message, [("image_id", "image_id")]),
-                (bias, print_end_message, [("outputnode.out_file", "final_file")]),
+                (mask_avg_b0, print_end_message, [("mask_file", "final_file")]),
                 # Output node
-                (bias, self.output_node, [("outputnode.out_file", "preproc_dwi")]),
+                (bias, self.output_node, [("out_file", "preproc_dwi")]),
                 (sdc, self.output_node, [("outputnode.out_bvec", "preproc_bvec")]),
                 (prepare_b0, self.output_node, [("out_updated_bval", "preproc_bval")]),
-                (bias, self.output_node, [("outputnode.b0_mask", "b0_mask")])
+                (mask_avg_b0, self.output_node, [("mask_file", "b0_mask")]),
             ]
         )
         # fmt: on

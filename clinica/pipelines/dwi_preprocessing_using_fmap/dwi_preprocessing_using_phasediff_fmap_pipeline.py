@@ -315,7 +315,6 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             remove_filename_extension,
         )
         from .dwi_preprocessing_using_phasediff_fmap_workflows import (
-            ants_bias_correction,
             prepare_phasediff_fmap,
         )
 
@@ -459,7 +458,10 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
 
         # Step 4: Bias correction
         # =======================
-        bias = ants_bias_correction(name="4-RemoveBias")
+        # Use implementation detailed in (Jeurissen et al., 2014)
+        bias = npe.Node(
+            mrtrix3.DWIBiasCorrect(use_ants=True), name="4-RemoveBias"
+        )
 
         # Step 5: Final brainmask
         # =======================
@@ -563,16 +565,14 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
 
                 # Step 4: Bias correction
                 # =======================
-                (pre_mask_b0, bias, [("out_file", "input_node.mask")]),
-                (eddy, bias, [("out_corrected", "input_node.dwi"),
-                              ("out_rotated_bvecs", "input_node.bvec")]),
-                (init_node, bias, [("bval", "input_node.bval")]),
-
+                (init_node, bias, [("bval", "in_bval")]),
+                (eddy, bias, [("out_rotated_bvecs", "in_bvec"),
+                              ("out_corrected", "in_file")]),
                 # Step 5: Final brainmask
                 # =======================
                 # Compute average b0 on corrected dataset (for brain mask extraction)
                 (init_node, compute_avg_b0, [("bval", "in_bval")]),
-                (bias, compute_avg_b0, [("output_node.bias_corrected_dwi", "in_dwi")]),
+                (bias, compute_avg_b0, [("out_file", "in_dwi")]),
                 # Compute b0 mask on corrected avg b0
                 (compute_avg_b0, mask_avg_b0, [("out_b0_average", "in_file")]),
 
@@ -583,7 +583,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                 # Output node
                 (init_node, self.output_node, [("bval", "preproc_bval")]),
                 (eddy, self.output_node, [("out_rotated_bvecs", "preproc_bvec")]),
-                (bias, self.output_node, [("output_node.bias_corrected_dwi", "preproc_dwi")]),
+                (bias, self.output_node, [("out_file", "preproc_dwi")]),
                 (mask_avg_b0, self.output_node, [("mask_file", "b0_mask")]),
                 (bet_mag_fmap2b0, self.output_node, [("out_file", "magnitude_on_b0")]),
                 (fmap2b0, self.output_node, [("out_file", "calibrated_fmap_on_b0")]),

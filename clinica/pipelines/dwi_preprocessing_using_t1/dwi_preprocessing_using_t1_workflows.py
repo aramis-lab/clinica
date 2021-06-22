@@ -269,69 +269,6 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     return wf
 
 
-def remove_bias(name="bias_correct"):
-    """Estimate a single multiplicative bias field from the averaged *b0* image, as suggested in [Jeurissen et al., 2014].
-
-    Notes:
-        [Jeurissen et al., 2014]: Multi-tissue constrained spherical deconvolution for improved analysis
-        of multi-shell diffusion MRI data <http://dx.doi.org/10.1016/j.neuroimage.2014.07.061>
-
-        NeuroImage (2014). doi: 10.1016/j.neuroimage.2014.07.061
-    """
-    import nipype.interfaces.ants as ants
-    import nipype.interfaces.fsl as fsl
-    import nipype.interfaces.utility as niu
-    import nipype.pipeline.engine as pe
-
-    inputnode = pe.Node(niu.IdentityInterface(fields=["in_file"]), name="inputnode")
-
-    outputnode = pe.Node(
-        niu.IdentityInterface(fields=["out_file", "b0_mask"]), name="outputnode"
-    )
-
-    get_b0 = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name="get_b0")
-
-    mask_b0 = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True), name="mask_b0")
-
-    n4 = pe.Node(
-        ants.N4BiasFieldCorrection(
-            dimension=3, save_bias=True, bspline_fitting_distance=600
-        ),
-        name="Bias_b0",
-    )
-    split = pe.Node(fsl.Split(dimension="t"), name="SplitDWIs")
-    mult = pe.MapNode(
-        fsl.MultiImageMaths(op_string="-div %s"),
-        iterfield=["in_file"],
-        name="RemoveBiasOfDWIs",
-    )
-    thres = pe.MapNode(
-        fsl.Threshold(thresh=0.0), iterfield=["in_file"], name="RemoveNegative"
-    )
-    merge = pe.Node(fsl.utils.Merge(dimension="t"), name="MergeDWIs")
-
-    wf = pe.Workflow(name=name)
-    # fmt: off
-    wf.connect(
-        [
-            (inputnode, get_b0, [("in_file", "in_file")]),
-            (get_b0, n4, [("roi_file", "input_image")]),
-            (get_b0, mask_b0, [("roi_file", "in_file")]),
-            (mask_b0, n4, [("mask_file", "mask_image")]),
-            (inputnode, split, [("in_file", "in_file")]),
-            (n4, mult, [("bias_image", "operand_files")]),
-            (split, mult, [("out_files", "in_file")]),
-            (mult, thres, [("out_file", "in_file")]),
-            (thres, merge, [("out_file", "in_files")]),
-            (merge, outputnode, [("merged_file", "out_file")]),
-            (mask_b0, outputnode, [("mask_file", "b0_mask")])
-        ]
-    )
-    # fmt: on
-
-    return wf
-
-
 def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
     """Rigid registration of the B0 dataset onto the first volume.
 
