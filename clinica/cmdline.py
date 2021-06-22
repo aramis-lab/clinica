@@ -49,7 +49,9 @@ def setup_logging(verbosity: int = 0) -> None:
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.version_option()
-@click.option("-v", "--verbose", "verbosity", count=True)
+@click.option(
+    "-v", "--verbose", "verbosity", count=True, help="Increase logging verbosity."
+)
 def cli(verbosity: int = 0) -> None:
     setup_logging(verbosity=verbosity)
 
