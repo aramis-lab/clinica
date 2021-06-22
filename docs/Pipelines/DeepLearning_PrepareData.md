@@ -40,19 +40,20 @@ If you installed the core of Clinica, this pipeline needs no further dependencie
 
 The pipeline can be run with the following command line:
 
-```Text
-clinica run deeplearning-prepare-data <caps_directory> <modality> <tensor_format>
+```shell
+clinica run deeplearning-prepare-data [OPTIONS] CAPS_DIRECTORY [[t1-linear|t1-extensive|pet-linear|custom]]
+                                      [[image|slice|patch]]
 ```
 
 where:
 
-- `caps_directory` is the folder containing the results of the
+- `CAPS_DIRECTORY` is the folder containing the results of the
 pipeline used as input and the output of the present command,
 both in a [CAPS hierarchy](../CAPS/Introduction.md).
-- `modality` is the name of the preprocessing whose outputs are used as inputs.
+- The second positional argument is the name of the image modality whose outputs are used as inputs
 It can be `t1-linear`, `t1-extensive` or `pet-linear`.
 You can choose `custom` if you want to get a tensor from a custom filename.
-- `tensor_format` is the format of the extracted tensors.
+- The third positional argument is the format of the extracted tensors.
 You can choose between `image` to convert to PyTorch tensor the whole 3D image,
 `patch` to extract 3D patches, `slice` to extract 2D slices from the image and
 `roi` to extract 3D region of interest depending on the ROI mask.
@@ -104,7 +105,7 @@ Allows to choose a particular mask with a name following the given pattern.
 
 Example of a valid CAPS hierarchy:
 
-```Text
+```console
 caps
 ├── masks
 │       ├── tpl-<tpl_name>

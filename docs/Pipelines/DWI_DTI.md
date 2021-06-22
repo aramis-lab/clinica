@@ -23,12 +23,12 @@ You can find how to install these software packages on the [third-party](../../T
 The `dwi-dti` pipeline can be run with the following command line:
 
 ```Text
-clinica run dwi-dti <caps_directory>
+clinica run dwi-dti CAPS_DIRECTORY
 ```
 
 where:
 
-- `caps_directory` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your CAPS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 

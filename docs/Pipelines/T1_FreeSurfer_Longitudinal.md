@@ -32,12 +32,12 @@ You can find how to install this software on the [third-party](../../Third-party
 The pipeline can be run with the following command line:
 
 ```Text
-clinica run t1-freesurfer-longitudinal <caps_directory>
+clinica run t1-freesurfer-longitudinal [OPTIONS] CAPS_DIRECTORY 
 ```
 
 where:
 
-- `caps_directory` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 If you want to run the pipeline on a subset of your dataset, you can use the `-tsv` flag to specify in a TSV file the participants and the corresponding sessions of interest.
 
 !!! note
@@ -60,7 +60,7 @@ If you want to run the pipeline on a subset of your dataset, you can use the `-t
     If your CAPS directory contains a participant with one session e.g.:
 
     ```text
-    CAPS
+    CAPS_DIRECTORY
     └── subjects
      ├── sub-CLNC01
      │   ├── ses-M00
@@ -181,7 +181,7 @@ The two main processing steps of the `t1-freesurfer-longitudinal` pipeline can b
     Command line:
 
     ```Text
-    clinica run t1-freesurfer-template <caps_directory>
+    clinica run t1-freesurfer-template [OPTIONS] CAPS_DIRECTORY
     ```
 
 - **Longitudinal correction**
@@ -189,5 +189,5 @@ The two main processing steps of the `t1-freesurfer-longitudinal` pipeline can b
     Command line:
 
     ```Text
-    clinica run t1-freesurfer-longitudinal <caps_directory>
+    clinica run t1-freesurfer-longitudinal CAPS_DIRECTORY
     ```

@@ -34,23 +34,23 @@ You can find how to install these software packages on the [third-party](../../T
  The pipeline `t1-volume` can be run with the following command line:
 
 ```Text
-clinica run t1-volume <bids_directory> <caps_directory> <group_label>
+clinica run t1-volume [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY GROUP_LABEL
 ```
 
 where:
 
-- `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-- `group_label` is the user-defined identifier for the provided group of subjects.
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
+- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `GROUP_LABEL` is the user-defined identifier for the provided group of subjects.
 
 Pipeline options:
 
+- `--smooth`: a list of integers specifying the different isomorphic full width at half maximum (FWHM) in millimeters used to smooth the images.
+Default value is: `8`.
 - `--tissue_classes`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to save after segmentation (in order: gray matter (GM), white matter (WM), cerebrospinal fluid (CSF), bone, soft-tissue, air/background).
 Default value is: `1, 2, 3` (GM, WM and CSF are saved).
 - `--dartel_tissues`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to use for the Dartel template calculation (in order: GM, WM, CSF, bone, soft-tissue, air/background).
 Default value is: `1, 2, 3` (GM, WM and CSF are used).
-- `--smooth`: a list of integers specifying the different isomorphic full width at half maximum (FWHM) in millimeters used to smooth the images.
-Default value is: `8`.
 - `--modulate`: a boolean.
 If `True` output images are modulated and volumes are preserved.
 If `False` they are not modulated and concentrations are preserved.

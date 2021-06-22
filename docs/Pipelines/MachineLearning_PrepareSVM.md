@@ -17,15 +17,15 @@ If you installed the core of Clinica, this pipeline needs no further dependencie
 
 The pipeline can be run with the following command line:
 
-```Text
-clinica run machinelearning-prepare-spatial-svm <caps_directory> <group_label> <origin_input_data>
+```shell
+clinica run machinelearning-prepare-spatial-svm [OPTIONS] CAPS_DIRECTORY GROUP_LABEL {t1-volume|pet-surface}
 ```
 
 where:
 
-- `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy
-- `group_label` is the user-defined identifier for the provided group of subjects
-- `origin_input_data` can be `t1-volume` to use tissue maps or `pet-volume` to use standardized uptake value ratio (SUVR) maps.
+- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy
+- `GROUP_LABEL` is the user-defined identifier for the provided group of subjects
+- The third positional argument can be `t1-volume` to use tissue maps or `pet-volume` to use standardized uptake value ratio (SUVR) maps.
 
 Pipeline options if you use inputs from the `pet-volume` pipeline:
 
