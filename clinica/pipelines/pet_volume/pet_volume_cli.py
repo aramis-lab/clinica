@@ -62,7 +62,7 @@ def cli(
     mask_tissues: List[int] = (1, 2, 3),
     mask_threshold: float = 0.3,
     pvc_mask_tissues: List[int] = (1, 2, 3),
-    smooth: Tuple[int, int] = (8, 8),
+    smooth: List[int] = (8, 8),
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
