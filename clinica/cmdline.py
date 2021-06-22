@@ -14,7 +14,7 @@ from .pipelines.cli import cli as run_cli
 
 CONTEXT_SETTINGS = dict(
     # Extend content width to avoid shortening of pipeline help.
-    max_content_width=120,
+    max_content_width=160,
     # Display help string with -h, in addition to --help.
     help_option_names=["-h", "--help"],
 )
