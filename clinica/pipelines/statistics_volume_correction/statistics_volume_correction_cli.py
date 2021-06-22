@@ -15,16 +15,17 @@ pipeline_name = "statistics-volume-correction"
 @click.argument("FDRp", type=float)
 @click.argument("FWEc", type=float)
 @click.argument("FDRc", type=float)
-@cli_param.option_group.standard_options
-@cli_param.option.working_directory
-@cli_param.option.n_procs
-@click.option(
+@cli_param.option_group.pipeline_options
+@cli_param.option_group.option(
     "-nc",
     "--n_cuts",
     default=8,
     show_default=True,
     help="Number of cuts along each direction",
 )
+@cli_param.option_group.standard_options
+@cli_param.option.working_directory
+@cli_param.option.n_procs
 def cli(
     caps_directory: str,
     t_map: str,
