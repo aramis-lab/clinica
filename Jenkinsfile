@@ -134,7 +134,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 6 \
-                   ./instantation/
+                   ./instantiation/
                  module purge
                  conda deactivate
                  '''
@@ -167,7 +167,7 @@ pipeline {
                     --verbose \
                     --junitxml=./test-reports/instantation_mac.xml \
                     --disable-warnings \
-                    ./instantation/
+                    ./instantiation/
                  module purge
                  conda deactivate
                  '''
