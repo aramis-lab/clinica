@@ -15,6 +15,7 @@ acq_label = option(
 dartel_tissues = option(
     "-dt",
     "--dartel_tissues",
+    multiple=True,
     type=click.IntRange(1, 7),
     default=(1, 2, 3),
     show_default=True,
