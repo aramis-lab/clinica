@@ -22,6 +22,11 @@ orig_input_data = click.argument(
     type=click.Choice(["t1-freesurfer", "pet-surface", "custom-pipeline"]),
 )
 
+orig_input_data_ml = click.argument(
+    "orig_input_data_ml",
+    type=click.Choice(["t1-volume", "pet-surface"]),
+)
+
 pvc_psf_tsv = click.argument(
     "pvc_psf_tsv", type=click.Path(exists=True, resolve_path=True)
 )

@@ -10,7 +10,7 @@ pipeline_name = "machinelearning-prepare-spatial-svm"
 @click.command(pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
-@cli_param.argument.orig_input_data
+@cli_param.argument.orig_input_data_ml
 @cli_param.option_group.pipeline_options
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
@@ -33,7 +33,7 @@ pipeline_name = "machinelearning-prepare-spatial-svm"
 def cli(
     caps_directory: str,
     group_label: str,
-    orig_input_data: str,
+    orig_input_data_ml: str,
     acq_label: Optional[str] = None,
     suvr_reference_region: Optional[str] = None,
     use_pvc_data: bool = False,
@@ -68,7 +68,7 @@ def cli(
     parameters = {
         # Clinica compulsory arguments
         "group_label": group_label,
-        "orig_input_data": orig_input_data,
+        "orig_input_data_ml": orig_input_data_ml,
         # Optional arguments for inputs from pet-volume pipeline
         "acq_label": acq_label,
         "use_pvc_data": use_pvc_data,
