@@ -26,7 +26,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Inter-subject registration using Dartel (creating a new Dartel template)."
+    """Inter-subject registration using Dartel (creating a new Dartel template).
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """

@@ -89,7 +89,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Surface-based mass-univariate analysis with SurfStat."
+    """Surface-based mass-univariate analysis with SurfStat.
 
     See "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
     """

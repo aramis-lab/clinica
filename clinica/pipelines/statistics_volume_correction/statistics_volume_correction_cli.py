@@ -37,7 +37,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Statistical correction of statistics-volume pipeline:
+    """Statistical correction of statistics-volume pipeline.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Volume/
     """

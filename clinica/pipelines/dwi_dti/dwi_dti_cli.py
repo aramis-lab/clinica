@@ -19,7 +19,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """DTI-based processing of DWI datasets."
+    """DTI-based processing of DWI datasets.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_DTI/
     """

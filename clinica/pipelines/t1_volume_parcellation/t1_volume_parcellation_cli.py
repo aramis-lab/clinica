@@ -21,7 +21,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Computation of mean GM concentration for a set of regions."
+    """Computation of mean GM concentration for a set of regions.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """

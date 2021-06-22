@@ -21,7 +21,7 @@ def cli(
     n_procs: Optional[int] = None,
     overwrite_outputs: bool = False,
 ) -> None:
-    """Longitudinal pre-processing of T1w images with FreeSurfer."
+    """Longitudinal pre-processing of T1w images with FreeSurfer.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_FreeSurfer_Longitudinal/
     """

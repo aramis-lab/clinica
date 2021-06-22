@@ -17,16 +17,16 @@ pipeline_name = "pet-surface-longitudinal"
 @cli_param.option.working_directory
 @cli_param.option.n_procs
 def cli(
-        bids_directory: str,
-        caps_directory: str,
-        acq_label: str,
-        suvr_reference_region: str,
-        pvc_psf_tsv: str,
-        subjects_sessions_tsv: Optional[str] = None,
-        working_directory: Optional[str] = None,
-        n_procs: Optional[int] = None,
+    bids_directory: str,
+    caps_directory: str,
+    acq_label: str,
+    suvr_reference_region: str,
+    pvc_psf_tsv: str,
+    subjects_sessions_tsv: Optional[str] = None,
+    working_directory: Optional[str] = None,
+    n_procs: Optional[int] = None,
 ) -> None:
-    """Longitudinal surface-based processing of PET images."
+    """Longitudinal surface-based processing of PET images.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface_Longitudinal/
     """

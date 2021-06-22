@@ -38,7 +38,7 @@ def cli(
     overwrite_outputs: bool = False,
     yes: bool = False,
 ) -> None:
-    """Cross-sectional pre-processing of T1w images with FreeSurfer:
+    """Cross-sectional pre-processing of T1w images with FreeSurfer.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_FreeSurfer/
     """

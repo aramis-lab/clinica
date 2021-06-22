@@ -43,7 +43,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Volume-based processing of T1-weighted MR images."
+    """Volume-based processing of T1-weighted MR images.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """

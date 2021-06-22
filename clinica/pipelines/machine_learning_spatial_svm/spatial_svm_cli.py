@@ -42,7 +42,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Prepare input data for SVM with spatial and anatomical regularization."
+    """Prepare input data for SVM with spatial and anatomical regularization.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/MachineLearning_PrepareSVM/"
     """

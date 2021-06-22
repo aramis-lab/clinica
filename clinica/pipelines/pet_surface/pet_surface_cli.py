@@ -27,7 +27,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Surface-based processing of PET images."
+    """Surface-based processing of PET images.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface/
     """

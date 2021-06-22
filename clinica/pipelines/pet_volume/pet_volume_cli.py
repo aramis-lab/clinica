@@ -67,7 +67,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """SPM-based pre-processing of PET images."
+    """SPM-based pre-processing of PET images.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Volume/
     """

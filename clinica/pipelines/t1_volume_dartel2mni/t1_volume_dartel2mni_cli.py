@@ -33,7 +33,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Register DARTEL template to MNI space."
+    """Register DARTEL template to MNI space.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """

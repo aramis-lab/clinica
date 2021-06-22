@@ -39,7 +39,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Affine registration of PET images to the MNI standard space."
+    """Affine registration of PET images to the MNI standard space.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Linear/"
     """

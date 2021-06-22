@@ -32,7 +32,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Tissue segmentation, bias correction and spatial normalization to MNI space of T1w images with SPM."
+    """Tissue segmentation, bias correction and spatial normalization to MNI space of T1w images with SPM.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """

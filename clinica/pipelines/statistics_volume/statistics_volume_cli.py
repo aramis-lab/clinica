@@ -80,7 +80,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Volume-based mass-univariate analysis with SPM."
+    """Volume-based mass-univariate analysis with SPM.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Volume/
     """
