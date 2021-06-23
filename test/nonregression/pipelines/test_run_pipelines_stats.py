@@ -139,7 +139,8 @@ def test_run_StatisticsVolume(cmdopt):
     )
 
     assert np.allclose(
-        nib.load(output_t_stat).get_fdata(), nib.load(ref_t_stat).get_fdata()
+        nib.load(output_t_stat).get_fdata(dtype="float32"),
+        nib.load(ref_t_stat).get_fdata(dtype="float32"),
     )
 
     # Remove data in out folder

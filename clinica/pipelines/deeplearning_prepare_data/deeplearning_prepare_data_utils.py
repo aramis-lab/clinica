@@ -290,7 +290,7 @@ def save_as_pt(input_img):
     import torch
 
     basedir = os.getcwd()
-    image_array = nib.load(input_img).get_fdata()
+    image_array = nib.load(input_img).get_fdata(dtype="float32")
     image_tensor = torch.from_numpy(image_array).unsqueeze(0).float()
     # make sure the tensor dtype is torch.float32
     output_file = os.path.join(
