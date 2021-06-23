@@ -98,16 +98,16 @@ For further details regarding clinica data, we recommend to look at the [ADNI Da
 The converter can be run with the following command line:
 
 ```Text
-clinica convert adni-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
+clinica convert adni-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY
 ```
 
 where:
 
-- `dataset_directory` is the path to the downloaded ADNI images' directory.
+- `DATASET_DIRECTORY` is the path to the downloaded ADNI images' directory.
 Its content looks like:
 
 ```text
-<dataset_directory>
+DATASET_DIRECTORY
 ├── 027_S_0074
 │   ├── 3-plane_localizer
 │   │   ├── ...
@@ -131,11 +131,11 @@ Its content looks like:
 ├── ...
 ```
 
-- `clinical_data_directory` is the path to the directory where the CSV files with the clinical data are located.
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory where the CSV files with the clinical data are located.
 Its content looks like:
 
 ```text
-<clinical_data_directory>
+CLINICAL_DATA_DIRECTORY
 ├── ADAS_ADNI1.csv
 ├── ADAS_ADNIGO23.csv
 ├── ...
@@ -143,7 +143,7 @@ Its content looks like:
 └── VITALS.csv
 ```
 
-- `bids_directory` is the path to the output directory, where the BIDS-converted version of ADNI will be stored.
+- `BIDS_DIRECTORY` is the path to the output directory, where the BIDS-converted version of ADNI will be stored.
 
 ### Optional parameters
 

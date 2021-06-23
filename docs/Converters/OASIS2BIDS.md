@@ -41,16 +41,16 @@ The clinical data being converted are defined in a spreadsheet (`clinical_specif
 The converter can be run with the following command line:
 
 ```Text
-clinica convert oasis-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
+clinica convert oasis-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY 
 ```
 
 where:
 
-- `dataset_directory` is the path to the original OASIS images' directory.
+- `DATASET_DIRECTORY` is the path to the original OASIS images' directory.
 Its content looks like:
 
 ```text
-<dataset_directory>
+DATASET_DIRECTORY
 ├── OAS1_0001_MR1
 │   ├── FSL_SEG
 │   ├── PROCESSED
@@ -62,9 +62,9 @@ Its content looks like:
 ├── ...
 ```
 
-- `clinical_data_directory` is the path to the directory containing the CSV file called `oasis_cross-sectional.csv`.
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory containing the CSV file called `oasis_cross-sectional.csv`.
 
-- `bids_directory` is the path to the output directory, where the BIDS-converted version of OASIS will be stored.
+- `BIDS_DIRECTORY` is the path to the output directory, where the BIDS-converted version of OASIS will be stored.
 
 !!! note
     In order to improve the readability, the BIDS subject ID is different from the original OASIS ID and is defined as follows:

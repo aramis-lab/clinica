@@ -64,14 +64,14 @@ The clinical data being converted are defined in a spreadsheet (`clinical_specif
 The converter can be run with the following command line:
 
 ```shell
-clinica convert aibl-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
+clinica convert aibl-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY 
 ```
 
 where:
 
-- `dataset_directory` is the path to the original AIBL images' directory;
-- `clinical_data_directory` is the path to the directory where the csv file with the clinical data is located;
-- `bids_directory` is the path to the output directory, where the BIDS-converted version of AIBL will be stored.
+- `DATASET_DIRECTORY` is the path to the original AIBL images' directory;
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory where the csv file with the clinical data is located;
+- `BIDS_DIRECTORY` is the path to the output directory, where the BIDS-converted version of AIBL will be stored.
 
 ## Citing this converter in your paper
 

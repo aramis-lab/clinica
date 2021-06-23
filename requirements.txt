@@ -21,3 +21,5 @@ torch > 1.0
 torchvision
 pydicom
 networkx
+click >= 7
+click-option-group >= 0.5, < 0.6

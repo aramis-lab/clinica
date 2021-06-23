@@ -32,19 +32,20 @@ You can find how to install these software packages on the [third-party](../../T
 
 The pipeline can be run with the following command line:
 
-```Text
-clinica run pet-surface-longitudinal <bids_directory> <caps_directory> <acq_label> <suvr_reference_region> <pvc_psf_tsv>
+```shell
+clinica run pet-surface-longitudinal [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY ACQ_LABEL
+                                     {pons|cerebellumPons|pons2|cerebellumPons2} PVC_PSF_TSV
 ```
 
 where:
 
-- `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `caps_directory` acts both as an input folder (where the results of the `t1-freesurfer-longitudinal` pipeline are stored) and
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
+- `CAPS_DIRECTORY` acts both as an input folder (where the results of the `t1-freesurfer-longitudinal` pipeline are stored) and
 as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-- `acq_label` is the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
-- `suvr_reference_region` is the reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
-It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
-- `pvc_psf_tsv` is the TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image.
+- `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
+- The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
+It can be `cerebellumPons` or `cerebellumPons2 (used for amyloid tracers) or `pons` or `pons2` (used for FDG).
+- `PVC_PSF_TSV` is the TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image.
 More explanation is given in [PET Introduction](../PET_Introduction) page.
 
 !!! info

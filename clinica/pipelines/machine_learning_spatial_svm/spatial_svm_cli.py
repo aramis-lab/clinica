@@ -1,133 +1,101 @@
-# coding: utf8
+from typing import Optional
 
-import clinica.engine as ce
+import click
+
+from clinica.pipelines import cli_param
+
+pipeline_name = "machinelearning-prepare-spatial-svm"
 
 
-class SpatialSVMCLI(ce.CmdParser):
-    def define_name(self):
-        """Define the sub-command name to run this pipeline."""
-        self._name = "machinelearning-prepare-spatial-svm"
+@click.command(pipeline_name)
+@cli_param.argument.caps_directory
+@cli_param.argument.group_label
+@cli_param.argument.orig_input_data_ml
+@cli_param.option_group.pipeline_options
+@cli_param.option.acq_label
+@cli_param.option.suvr_reference_region
+@cli_param.option.use_pvc_data
+@cli_param.option_group.standard_options
+@cli_param.option.subjects_sessions_tsv
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+@cli_param.option_group.advanced_options
+@cli_param.option_group.option(
+    "-fwhm",
+    "--full_width_half_maximum",
+    default=4.0,
+    help=(
+        "Amount of regularization (in mm). In practice, we found the default value "
+        "(--full_width_half_maximum %(default)s) to be optimal. We therefore "
+        "do not recommend to change it unless you have a specific reason to do so."
+    ),
+)
+def cli(
+    caps_directory: str,
+    group_label: str,
+    orig_input_data_ml: str,
+    acq_label: Optional[str] = None,
+    suvr_reference_region: Optional[str] = None,
+    use_pvc_data: bool = False,
+    full_width_half_maximum: float = 4.0,
+    subjects_sessions_tsv: Optional[str] = None,
+    working_directory: Optional[str] = None,
+    n_procs: Optional[int] = None,
+) -> None:
+    """Prepare input data for SVM with spatial and anatomical regularization.
 
-    def define_description(self):
-        """Define a description of this pipeline."""
-        self._description = (
-            "Prepare input data for SVM with spatial and anatomical regularization:\n"
-            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/MachineLearning_PrepareSVM/"
-        )
+    See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/MachineLearning_PrepareSVM/"
+    """
+    from networkx import Graph
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.ux import print_end_pipeline
 
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
-        clinica_comp = self._args.add_argument_group(
-            PIPELINE_CATEGORIES["CLINICA_COMPULSORY"]
-        )
-        clinica_comp.add_argument("caps_directory", help="Path to the CAPS directory.")
-        clinica_comp.add_argument(
-            "group_label",
-            help="User-defined identifier for the provided group of subjects.",
-        )
-        clinica_comp.add_argument(
-            "orig_input_data",
-            help="""Origin of input data. Type
-            't1-volume' to use gray matter maps or
-            'pet-volume' to use SUVr maps.""",
-            choices=["t1-volume", "pet-volume"],
-        )
+    from .spatial_svm_pipeline import SpatialSVM
+
+    if orig_input_data == "pet-volume":
+        if acq_label is None:
+            raise ClinicaException(
+                "You selected pet-volume pipeline without setting --acq_label flag. "
+                "Clinica will now exit."
+            )
+        if suvr_reference_region is None:
+            raise ClinicaException(
+                "You selected pet-volume pipeline without setting --suvr_reference_region flag. "
+                "Clinica will now exit."
+            )
+
+    parameters = {
+        # Clinica compulsory arguments
+        "group_label": group_label,
+        "orig_input_data_ml": orig_input_data_ml,
         # Optional arguments for inputs from pet-volume pipeline
-        optional_pet = self._args.add_argument_group(
-            "Pipeline options if you use inputs from pet-volume pipeline"
-        )
-        optional_pet.add_argument(
-            "-acq",
-            "--acq_label",
-            type=str,
-            default=None,
-            help="Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).",
-        )
-        optional_pet.add_argument(
-            "-suvr",
-            "--suvr_reference_region",
-            choices=LIST_SUVR_REFERENCE_REGIONS,
-            default=None,
-            help="Intensity normalization using the average PET uptake in reference regions "
-            "resulting in a standardized uptake value ratio (SUVR) map. It can be "
-            "cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).",
-        )
-        optional_pet.add_argument(
-            "-pvc",
-            "--use_pvc_data",
-            action="store_true",
-            default=False,
-            help="Use PET data with partial value correction (by default, PET data with no PVC are used)",
-        )
-        # Clinica standard arguments (e.g. --n_procs)
-        self.add_clinica_standard_arguments()
-        # Advanced arguments (i.e. tricky parameters)
-        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES["ADVANCED"])
-        advanced.add_argument(
-            "-fwhm",
-            "--full_width_half_maximum",
-            type=float,
-            metavar="N",
-            default=4,
-            help="Amount of regularization (in mm). In practice, we found the default value "
-            "(--full_width_half_maximum %(default)s) to be optimal. We therefore "
-            "do not recommend to change it unless you have a specific reason to do so.",
+        "acq_label": acq_label,
+        "use_pvc_data": use_pvc_data,
+        "suvr_reference_region": suvr_reference_region,
+        # Advanced arguments
+        "fwhm": full_width_half_maximum,
+    }
+
+    pipeline = SpatialSVM(
+        caps_directory=caps_directory,
+        tsv_file=subjects_sessions_tsv,
+        base_dir=working_directory,
+        parameters=parameters,
+        name=pipeline_name,
+    )
+
+    exec_pipeline = (
+        pipeline.run(plugin="MultiProc", plugin_args={"n_procs": n_procs})
+        if n_procs
+        else pipeline.run()
+    )
+
+    if isinstance(exec_pipeline, Graph):
+        print_end_pipeline(
+            pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
 
-    def run_command(self, args):
-        """Run the pipeline with defined args."""
-        from networkx import Graph
 
-        from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
-
-        from .spatial_svm_pipeline import SpatialSVM
-
-        if args.orig_input_data == "pet-volume":
-            if args.acq_label is None:
-                raise ClinicaException(
-                    "You selected pet-volume pipeline without setting --acq_label flag. "
-                    "Clinica will now exit."
-                )
-            if args.suvr_reference_region is None:
-                raise ClinicaException(
-                    "You selected pet-volume pipeline without setting --suvr_reference_region flag. "
-                    "Clinica will now exit."
-                )
-
-        parameters = {
-            # Clinica compulsory arguments
-            "group_label": args.group_label,
-            "orig_input_data": args.orig_input_data,
-            # Optional arguments for inputs from pet-volume pipeline
-            "acq_label": args.acq_label,
-            "use_pvc_data": args.use_pvc_data,
-            "suvr_reference_region": args.suvr_reference_region,
-            # Advanced arguments
-            "fwhm": args.full_width_half_maximum,
-        }
-        pipeline = SpatialSVM(
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters,
-            name=self.name,
-        )
-
-        if args.n_procs:
-            exec_pipeline = pipeline.run(
-                plugin="MultiProc", plugin_args={"n_procs": args.n_procs}
-            )
-        else:
-            exec_pipeline = pipeline.run()
-
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(
-                self.name, pipeline.base_dir, pipeline.base_dir_was_specified
-            )
-        else:
-            print_crash_files_and_exit(args.logname, pipeline.base_dir)
+if __name__ == "__main__":
+    cli()

@@ -1,169 +1,119 @@
-# coding: utf8
+from typing import List, Optional, Tuple
 
-import clinica.engine as ce
+import click
+
+from clinica.pipelines import cli_param
+
+pipeline_name = "t1-volume-existing-template"
 
 
-class T1VolumeExistingTemplateCLI(ce.CmdParser):
-    def define_name(self):
-        """Define the sub-command name to run this pipeline."""
-        self._name = "t1-volume-existing-template"
+@click.command(name=pipeline_name)
+@cli_param.argument.bids_directory
+@cli_param.argument.caps_directory
+@cli_param.argument.group_label
+@cli_param.option_group.pipeline_options
+@cli_param.option.smooth
+@cli_param.option_group.standard_options
+@cli_param.option.subjects_sessions_tsv
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+@cli_param.option_group.advanced_options
+@cli_param.option.tissue_classes
+@cli_param.option.tissue_probability_maps
+@cli_param.option.dont_save_warped_unmodulated
+@cli_param.option.save_warped_modulated
+@cli_param.option.dartel_tissues
+@cli_param.option.tissues
+@cli_param.option.modulate
+@cli_param.option.voxel_size
+def cli(
+    bids_directory: str,
+    caps_directory: str,
+    group_label: str,
+    smooth: List[int] = (8,),
+    tissue_classes: List[int] = (1, 2, 3),
+    tissue_probability_maps: Optional[str] = None,
+    dont_save_warped_unmodulated: bool = False,
+    save_warped_modulated: bool = False,
+    dartel_tissues: List[int] = (1, 2, 3),
+    tissues: List[int] = (1, 2, 3),
+    modulate: bool = False,
+    voxel_size: Tuple[float, float, float] = (1.5, 1.5, 1.5),
+    subjects_sessions_tsv: Optional[str] = None,
+    working_directory: Optional[str] = None,
+    n_procs: Optional[int] = None,
+) -> None:
+    """Volume-based processing of T1-weighted MR images using an existing DARTEL template.
 
-    def define_description(self):
-        """Define a description of this pipeline."""
-        self._description = (
-            "Volume-based processing of T1-weighted MR images using an existing DARTEL template:\n"
-            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/"
-        )
+    https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
+    """
+    from clinica.utils.stream import cprint
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+    from ..t1_volume_dartel2mni import t1_volume_dartel2mni_cli
+    from ..t1_volume_parcellation import t1_volume_parcellation_cli
+    from ..t1_volume_register_dartel import t1_volume_register_dartel_cli
+    from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_cli
 
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
-        clinica_comp = self._args.add_argument_group(
-            PIPELINE_CATEGORIES["CLINICA_COMPULSORY"]
-        )
-        clinica_comp.add_argument("bids_directory", help="Path to the BIDS directory.")
-        clinica_comp.add_argument("caps_directory", help="Path to the CAPS directory.")
-        clinica_comp.add_argument(
-            "group_label",
-            help="User-defined identifier for the provided group of subjects.",
-        )
-        # Optional arguments (e.g. FWHM)
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES["OPTIONAL"])
-        optional.add_argument(
-            "-s",
-            "--smooth",
-            nargs="+",
-            type=int,
-            default=[8],
-            help="A list of integers specifying the different isomorphic FWHM in millimeters "
-            "to smooth the image (default: --smooth 8).",
-        )
-        # Clinica standard arguments (e.g. --n_procs)
-        self.add_clinica_standard_arguments()
-        # Advanced arguments (i.e. tricky parameters)
-        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES["ADVANCED"])
-        # t1-volume-tissue-segmentation
-        advanced.add_argument(
-            "-tc",
-            "--tissue_classes",
-            metavar="",
-            nargs="+",
-            type=int,
-            default=[1, 2, 3],
-            choices=range(1, 7),
-            help="Tissue classes (1: gray matter (GM), 2: white matter (WM), "
-            "3: cerebrospinal fluid (CSF), 4: bone, 5: soft-tissue, 6: background) to save "
-            "(default: GM, WM and CSF i.e. --tissue_classes 1 2 3).",
-        )
-        advanced.add_argument(
-            "-tpm",
-            "--tissue_probability_maps",
-            metavar="TissueProbabilityMap.nii",
-            default=None,
-            help="Tissue probability maps to use for segmentation "
-            "(default: TPM.nii from SPM software).",
-        )
-        advanced.add_argument(
-            "-dswu",
-            "--dont_save_warped_unmodulated",
-            action="store_true",
-            default=False,
-            help="Do not save warped unmodulated images for tissues specified "
-            "in --tissue_classes flag.",
-        )
-        advanced.add_argument(
-            "-swm",
-            "--save_warped_modulated",
-            action="store_true",
-            default=False,
-            help="Save warped modulated images for tissues specified in --tissue_classes flag.",
-        )
-        # t1-volume-tissue-segmentation / t1-volume-create-dartel
-        advanced.add_argument(
-            "-dt",
-            "--dartel_tissues",
-            metavar="",
-            nargs="+",
-            type=int,
-            default=[1, 2, 3],
-            choices=range(1, 7),
-            help="Tissues to use for DARTEL template calculation "
-            "(default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).",
-        )
-        # t1-volume-dartel2mni
-        advanced.add_argument(
-            "-t",
-            "--tissues",
-            metavar="",
-            nargs="+",
-            type=int,
-            default=[1, 2, 3],
-            choices=range(1, 7),
-            help="Tissues to create flow fields to DARTEL template "
-            "(default: GM, WM and CSF i.e. --tissues 1 2 3).",
-        )
-        advanced.add_argument(
-            "-m",
-            "--modulate",
-            type=bool,
-            default=True,
-            metavar=("True/False"),
-            help="A boolean. Modulate output images - no modulation preserves concentrations "
-            "(default: --modulate True).",
-        )
-        advanced.add_argument(
-            "-vs",
-            "--voxel_size",
-            metavar=("float"),
-            nargs=3,
-            type=float,
-            help="A list of 3 floats specifying the voxel sizeof the output image "
-            "(default: --voxel_size 1.5 1.5 1.5).",
-        )
+    cprint(
+        "The t1-volume-existing-template pipeline is divided into 4 parts:\n"
+        "\tt1-volume-tissue-segmentation pipeline: "
+        "Tissue segmentation, bias correction and spatial normalization to MNI space\n"
+        "\tt1-volume-register-dartel pipeline: "
+        "Inter-subject registration using an existing DARTEL template\n"
+        "\tt1-volume-dartel2mni pipeline: "
+        "DARTEL template to MNI\n"
+        "\tt1-volume-parcellation pipeline: "
+        "Atlas statistics"
+    )
 
-    def run_command(self, args):
-        """Run the pipeline with defined args."""
-        from clinica.utils.stream import cprint
+    cprint("Part 1/4: Running t1-volume-segmentation pipeline")
+    t1_volume_tissue_segmentation_cli.cli(
+        bids_directory=bids_directory,
+        caps_directory=caps_directory,
+        tissue_classes=tissue_classes,
+        dartel_tissues=dartel_tissues,
+        tissue_probability_maps=tissue_probability_maps,
+        dont_save_warped_unmodulated=dont_save_warped_unmodulated,
+        save_warped_modulated=save_warped_modulated,
+        subjects_sessions_tsv=subjects_sessions_tsv,
+        working_directory=working_directory,
+        n_procs=n_procs,
+    )
 
-        from ..t1_volume_dartel2mni.t1_volume_dartel2mni_cli import (
-            T1VolumeDartel2MNICLI,
-        )
-        from ..t1_volume_parcellation.t1_volume_parcellation_cli import (
-            T1VolumeParcellationCLI,
-        )
-        from ..t1_volume_register_dartel.t1_volume_register_dartel_cli import (
-            T1VolumeRegisterDartelCLI,
-        )
-        from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import (
-            T1VolumeTissueSegmentationCLI,
-        )
+    cprint("Part 2/4: Running t1-volume-register-dartel pipeline")
+    t1_volume_register_dartel_cli.cli(
+        bids_directory=bids_directory,
+        caps_directory=caps_directory,
+        group_label=group_label,
+        tissues=tissues,
+        subjects_sessions_tsv=subjects_sessions_tsv,
+        working_directory=working_directory,
+        n_procs=n_procs,
+    )
 
-        cprint(
-            "The t1-volume-existing-template pipeline is divided into 4 parts:\n"
-            "\tt1-volume-tissue-segmentation pipeline: "
-            "Tissue segmentation, bias correction and spatial normalization to MNI space\n"
-            "\tt1-volume-register-dartel pipeline: "
-            "Inter-subject registration using an existing DARTEL template\n"
-            "\tt1-volume-dartel2mni pipeline: "
-            "DARTEL template to MNI\n"
-            "\tt1-volume-parcellation pipeline: "
-            "Atlas statistics"
-        )
+    cprint("Part 3/4: Running t1-volume-dartel2mni pipeline")
+    t1_volume_dartel2mni_cli.cli(
+        bids_directory=bids_directory,
+        caps_directory=caps_directory,
+        group_label=group_label,
+        smooth=smooth,
+        tissues=tissues,
+        modulate=modulate,
+        voxel_size=voxel_size,
+        subjects_sessions_tsv=subjects_sessions_tsv,
+        working_directory=working_directory,
+        n_procs=n_procs,
+    )
 
-        cprint("Part 1/4: Running t1-volume-segmentation pipeline")
-        tissue_segmentation_cli = T1VolumeTissueSegmentationCLI()
-        tissue_segmentation_cli.run_command(args)
+    cprint("Part 4/4: Running t1-volume-parcellation pipeline")
+    t1_volume_parcellation_cli.cli(
+        caps_directory=caps_directory,
+        group_label=group_label,
+        subjects_sessions_tsv=subjects_sessions_tsv,
+        working_directory=working_directory,
+        n_procs=n_procs,
+    )
 
-        cprint("Part 2/4: Running t1-volume-register-dartel pipeline")
-        register_dartel_cli = T1VolumeRegisterDartelCLI()
-        register_dartel_cli.run_command(args)
 
-        cprint("Part 3/4: Running t1-volume-dartel2mni pipeline")
-        dartel2mni_cli = T1VolumeDartel2MNICLI()
-        dartel2mni_cli.run_command(args)
-
-        cprint("Part 4/4: Running t1-volume-parcellation pipeline")
-        parcellation_cli = T1VolumeParcellationCLI()
-        parcellation_cli.run_command(args)
+if __name__ == "__main__":
+    pass
