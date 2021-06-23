@@ -508,7 +508,7 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
             mod_available = glob(path.join(bids_dir, bids_id, session_name, "*"))
             for mod in mod_available:
                 mod_name = os.path.basename(mod)
-                files = glob(path.join(mod, "*.nii.gz"))
+                files = glob(path.join(mod, "*"))
                 for file in files:
                     file_name = os.path.basename(file)
                     if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
