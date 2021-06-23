@@ -198,7 +198,7 @@ Keep in mind that if you want to manipulate the data vector within this object, 
 Indeed, if you do the following:
 
 ```python
-raw_data = mydata.get_fdata()
+raw_data = mydata.get_fdata(dtype="float32")
 print(raw_data.shape)
 ```
 

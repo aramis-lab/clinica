@@ -175,8 +175,8 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
 
     for i in range(len(out_files)):
         assert np.allclose(
-            np.squeeze(nib.load(out_files[i]).get_fdata()),
-            np.squeeze(nib.load(ref_files[i]).get_fdata()),
+            np.squeeze(nib.load(out_files[i]).get_fdata(dtype="float32")),
+            np.squeeze(nib.load(ref_files[i]).get_fdata(dtype="float32")),
             rtol=3e-2,
             equal_nan=True,
         )
@@ -234,7 +234,7 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
 #
 #     # Tolerance values were taken from PETSurface - Cross-sectional case
 #     for i in range(len(out_files)):
-#         assert np.allclose(np.squeeze(nib.load(out_files[i]).get_fdata()),
-#                            np.squeeze(nib.load(ref_files[i]).get_fdata()),
+#         assert np.allclose(np.squeeze(nib.load(out_files[i]).get_fdata(dtype="float32")),
+#                            np.squeeze(nib.load(ref_files[i]).get_fdata(dtype="float32")),
 #                            rtol=3e-2, equal_nan=True)
 #     clean_folder(join(root, 'out', 'caps'), recreate=False)

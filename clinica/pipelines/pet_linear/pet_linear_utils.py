@@ -7,6 +7,7 @@
 def init_input_node(pet):
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
+
     # Extract image ID
     image_id = get_subject_id(pet)
     print_begin_image(image_id)
@@ -55,7 +56,7 @@ def suvr_normalization(input_img, norm_img, ref_mask):
     ds_img = resample_to_img(norm, mask, interpolation="nearest")
 
     # Compute the mean of the region
-    region = np.multiply(ds_img.get_fdata(), mask.get_fdata())
+    region = np.multiply(ds_img.get_fdata(), mask.get_fdata(dtype="float32"))
     array_region = np.where(region != 0, region, np.nan).flatten()
     region_mean = trim_mean(array_region[~np.isnan(array_region)], 0.1)
 
@@ -64,7 +65,7 @@ def suvr_normalization(input_img, norm_img, ref_mask):
     cprint(region_mean)
 
     # Divide the value of the image voxels by the computed mean
-    data = pet.get_fdata() / region_mean
+    data = pet.get_fdata(dtype="float32") / region_mean
 
     # Create and save the normalized image
     output_img = os.path.join(
