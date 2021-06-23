@@ -22,3 +22,7 @@ def cli(
     oasis_to_bids = OasisToBids()
     oasis_to_bids.convert_images(dataset_directory, bids_directory)
     oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+
+
+if __name__ == "__main__":
+    cli()
