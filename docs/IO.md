@@ -120,7 +120,7 @@ the group label and if a PVC correction was performed.
 
 ## `merge-tsv` - Gather BIDS and CAPS data into a single TSV file
 
-[BIDS](http://bids.neuroimaging.io) and [CAPS](../CAPS/Introduction) datasets are composed of multiple TSV files for the different subjects and sessions
+[BIDS](http://bids.neuroimaging.io) and [CAPS](../CAPS/Introduction) datasets are composed of multiple TSV files for the different subjects and sessions.
 While this has some advantages, it may not be convenient when performing statistical analyses (with external statistical software tools for instance).
 This command merges all the TSV files into a single larger TSV file and can be run with the following command line:
 
