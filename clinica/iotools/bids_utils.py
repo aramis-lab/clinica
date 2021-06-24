@@ -457,10 +457,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
         bids_id = sp.split(os.sep)[-1]
 
         if bids_id in sessions_dict:
-            columns = list(list(sessions_dict.values())[0].values())[0].keys()
-            session_df = pd.DataFrame(columns=columns)
-            for k in sessions_dict[bids_id].keys():
-                session_df.loc[k] = sessions_dict[bids_id][k]
+            session_df = pd.DataFrame.from_dict(sessions_dict[bids_id], orient="index")
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
