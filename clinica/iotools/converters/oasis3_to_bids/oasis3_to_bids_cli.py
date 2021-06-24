@@ -1,30 +1,28 @@
-# coding: utf8
+import click
 
-import clinica.engine as ce
+from clinica.iotools.converters import cli_param
 
 
-class Oasis3ToBidsCLI(ce.CmdParser):
-    def define_name(self):
-        """Define the sub-command name to run this command."""
-        self._name = 'oasis3-to-bids'
+@click.command(name="oasis3-to-bids")
+@cli_param.dataset_directory
+@cli_param.clinical_data_directory
+@cli_param.bids_directory
+def cli(
+    dataset_directory: str,
+    clinical_data_directory: str,
+    bids_directory: str,
+) -> None:
+    """OASIS-3 to BIDS converter.
 
-    def define_description(self):
-        """Define a description of this command."""
-        self._description = 'Convert OASIS3 (http://oasis-brains.org/) into BIDS.'
+    Convert the imaging and clinical data of OASIS-3 (http://oasis-brains.org/), located in DATASET_DIRECTORY and
+    CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
+    """
+    from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import Oasis3ToBids
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        self._args.add_argument("dataset_directory",
-                                help='Path to the OASIS3 images directory.')
-        self._args.add_argument("clinical_data_directory",
-                                help='Path to the OASIS3 clinical data directory.')
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
+    oasis3_to_bids = Oasis3ToBids()
+    oasis3_to_bids.convert_images(dataset_directory, bids_directory)
+    oasis3_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
 
-    def run_command(self, args):
-        """Run the converter with defined args."""
-        from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import Oasis3ToBids
 
-        oasis_to_bids = Oasis3ToBids()
-        oasis_to_bids.convert_images(args.dataset_directory, args.bids_directory)
-        oasis_to_bids.convert_clinical_data(args.clinical_data_directory, args.bids_directory)
+if __name__ == "__main__":
+    cli()
