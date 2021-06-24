@@ -46,14 +46,14 @@ Currently, the modalities supported by our converter are:
 The converter can be run with the following command line:
 
 ```Text
-clinica convert nifd-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
+clinica convert nifd-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY 
 ```
 
 where:
 
-- `dataset_directory` is the path to the original NIFD images' directory;
-- `clinical_data_directory` is the path to the directory where the following clinical data files are located: `NIFD_Clinical_Data_2017_final_updated.xlsx`, `DataDictionary_NIFD_2017.10.18.xlsx` and `idaSearch_all.csv`;
-- `bids_directory` is the path to the output directory, where the BIDS-converted version of NIFD will be stored.
+- `DATASET_DIRECTORY` is the path to the original NIFD images' directory;
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory where the following clinical data files are located: `NIFD_Clinical_Data_2017_final_updated.xlsx`, `DataDictionary_NIFD_2017.10.18.xlsx` and `idaSearch_all.csv`;
+- `BIDS_DIRECTORY` is the path to the output directory, where the BIDS-converted version of NIFD will be stored.
 
 ## Citing this converter in your paper
 

@@ -31,17 +31,17 @@ You can find how to install these software packages on the [third-party](../../T
 The pipeline can be run with the following command lines depending on the type of  magnetic susceptibility correction performed:
 
 ```Text
-clinica run dwi-preprocessing-using-t1 <bids_directory> <caps_directory>
+clinica run dwi-preprocessing-using-t1 [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY
 ```
 
 ```Text
-clinica run dwi-preprocessing-using-phasediff-fieldmap <bids_directory> <caps_directory>
+clinica run dwi-preprocessing-using-phasediff-fieldmap [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY
 ```
 
 where:
 
-- `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
+- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 

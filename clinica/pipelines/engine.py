@@ -96,9 +96,6 @@ class Pipeline(Workflow):
         import os
         from tempfile import mkdtemp
 
-        from colorama import Fore
-
-        from clinica.utils.exceptions import ClinicaException
         from clinica.utils.inputs import check_bids_folder, check_caps_folder
         from clinica.utils.participant import get_subject_session_list
 
@@ -130,8 +127,8 @@ class Pipeline(Workflow):
         if self._bids_directory is None:
             if self._caps_directory is None:
                 raise RuntimeError(
-                    f"{Fore.RED}[Error] The {self._name} pipeline does not contain "
-                    f"BIDS nor CAPS directory at the initialization.{Fore.RESET}"
+                    f"The {self._name} pipeline does not contain "
+                    "BIDS nor CAPS directory at the initialization."
                 )
 
             check_caps_folder(self._caps_directory)
@@ -155,19 +152,12 @@ class Pipeline(Workflow):
             [ ] Implement this static method in all pipelines
             [ ] Make it abstract to force overload in future pipelines
         """
-        import datetime
-
-        from colorama import Fore
-
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.stream import cprint
 
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        cprint(f"\n{Fore.RED}[{now}] Pipeline finished with errors.{Fore.RESET}\n")
-        cprint(f"{Fore.RED}CAPS outputs were not found for some image(s):{Fore.RESET}")
-        raise ClinicaException(
-            "Implementation on which image(s) failed will appear soon."
-        )
+        cprint(msg="Pipeline finished with errors.", lvl="error")
+        cprint(msg="CAPS outputs were not found for some image(s):", lvl="error")
+        raise ClinicaException("Implementation on which image(s) failed will appear soon.")
 
     def init_nodes(self):
         """Init the basic workflow and I/O nodes necessary before build."""
@@ -264,7 +254,6 @@ class Pipeline(Workflow):
         """
         import shutil
 
-        from colorama import Fore
         from networkx import Graph, NetworkXError
 
         from clinica.utils.stream import cprint
@@ -301,8 +290,11 @@ class Pipeline(Workflow):
                 raise e
         except NetworkXError:
             cprint(
-                f"{Fore.BLUE}Either all the images were already run by the pipeline "
-                f"or no image was found to run the pipeline.\n{Fore.RESET}"
+                msg=(
+                    "Either all the images were already run by the pipeline "
+                    "or no image was found to run the pipeline."
+                ),
+                lvl="warning",
             )
             exec_graph = Graph()
         return exec_graph
@@ -392,8 +384,6 @@ class Pipeline(Workflow):
         import sys
         from os import statvfs
         from os.path import dirname
-
-        from colorama import Fore
 
         from clinica.utils.stream import cprint
 
@@ -531,11 +521,14 @@ class Pipeline(Workflow):
                         f"{bytes2human(free_space_wd)})\n"
                     )
             if error != "":
-                cprint(f"{Fore.RED}[SpaceError] {error}{Fore.RESET}")
+                cprint(msg=f"[SpaceError] {error}", lvl="error")
                 while True:
                     cprint(
-                        f"Do you still want to run the pipeline? (yes/no): "
-                        f"in {timeout} sec the pipeline will start if you do not answer."
+                        msg=(
+                            "Do you still want to run the pipeline? (yes/no): "
+                            f"in {timeout} sec the pipeline will start if you do not answer."
+                        ),
+                        lvl="warning",
                     )
                     stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
                     if stdin_answer:
@@ -547,18 +540,15 @@ class Pipeline(Workflow):
                     if answer.lower() in ["yes", "no"]:
                         break
                     else:
-                        cprint("Possible answers are yes or no.\n")
+                        cprint(msg="Possible answers are 'yes' or 'no'.", lvl="warning")
                 if answer.lower() == "yes":
-                    cprint("Running the pipeline anyway.")
+                    cprint(msg="Running the pipeline anyway.", lvl="warning")
                 if answer.lower() == "no":
-                    cprint("Exiting clinica...")
+                    cprint(msg="Exiting clinica...", lvl="warning")
                     sys.exit()
 
         except KeyError:
-            cprint(
-                f"{Fore.RED}No info on how much size the pipeline takes. "
-                f"Running anyway...{Fore.RESET}"
-            )
+            cprint("No info on how much size the pipeline takes. Running anyway...")
 
     def update_parallelize_info(self, plugin_args):
         """Performs some checks of the number of threads given in parameters,
@@ -569,8 +559,6 @@ class Pipeline(Workflow):
         import select
         import sys
         from multiprocessing import cpu_count
-
-        from colorama import Fore
 
         from clinica.utils.stream import cprint
 
@@ -590,19 +578,24 @@ class Pipeline(Workflow):
             n_thread_cmdline = plugin_args["n_procs"]
             if n_thread_cmdline > n_cpu:
                 cprint(
-                    f"{Fore.YELLOW}[Warning] You are trying to run clinica "
-                    f"with a number of threads ({n_thread_cmdline}"
-                    f") superior to your number of CPUs ({n_cpu}).{Fore.RESET}"
+                    msg=(
+                        f"You are trying to run clinica with a number of threads ({n_thread_cmdline}) superior to your "
+                        f"number of CPUs ({n_cpu})."
+                    ),
+                    lvl="warning",
                 )
                 ask_user = True
         except TypeError:
             cprint(
-                f"{Fore.YELLOW}\n[Warning] You did not specify the number of "
-                f"threads to run in parallel (--n_procs argument).{Fore.RESET}"
+                msg=f"You did not specify the number of threads to run in parallel (--n_procs argument).",
+                lvl="warning",
             )
             cprint(
-                f"{Fore.YELLOW}Computation time can be shorten as you have {n_cpu}"
-                f" CPUs on this computer. We recommend using {n_cpu - 1} threads.\n{Fore.RESET}"
+                msg=(
+                    f"Computation time can be shorten as you have {n_cpu} CPUs on this computer. "
+                    f"We recommend using {n_cpu-1} threads."
+                ),
+                lvl="warning",
             )
             ask_user = True
 
@@ -612,9 +605,12 @@ class Pipeline(Workflow):
                 # user gives a answer that has the correct format
                 # (here, positive integer) or timeout
                 cprint(
-                    f"How many threads do you want to use? If you do not answer within "
-                    f"{timeout} sec, default value of {n_cpu - 1} will be taken. "
-                    f"Use --n_procs argument if you want to disable this message next time."
+                    msg=(
+                        f"How many threads do you want to use? If you do not answer within {timeout} sec, "
+                        f"default value of {n_cpu-1} will be taken. Set the --n_procs argument "
+                        "if you want to disable this message next time."
+                    ),
+                    lvl="warning",
                 )
                 stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
                 if stdin_answer:
@@ -624,7 +620,7 @@ class Pipeline(Workflow):
                 if answer.isnumeric():
                     if int(answer) > 0:
                         break
-                cprint(f"{Fore.RED}Your answer must be a positive integer.{Fore.RESET}")
+                cprint(msg="Your answer must be a positive integer", lvl="error")
             # If plugin_args is None, create the dictionary
             # If it already a dict, just update (or create -it is the same
             # code-) the correct key / value
@@ -645,8 +641,6 @@ class Pipeline(Workflow):
         import sys
         from os import listdir
         from os.path import abspath, basename, dirname, isdir, join
-
-        from colorama import Fore
 
         from clinica.utils.stream import cprint
 
@@ -811,13 +805,12 @@ class Pipeline(Workflow):
             # The following code is run if cross sectional subjects have been found
             if len(cross_subj) > 0:
                 cprint(
-                    f"{Fore.RED}It has been determined that "
-                    f"{len(cross_subj)} subjects  in your "
-                    f"BIDS folder did not respect the longitudinal "
-                    f"organisation from BIDS specification. Clinica does not "
-                    f"know how to handle cross sectional dataset, but it can "
-                    f"convert it to a Clinica compliant form (using session "
-                    f"ses-M00)\n{Fore.RESET}"
+                    msg=(
+                        f"{len(cross_subj)} subjects in your BIDS folder did not respect the longitudinal organisation "
+                        "from BIDS specification. Clinica does not know how to handle cross sectional dataset, but it "
+                        "can convert it to a Clinica compliant form (using session ses-M00)"
+                    ),
+                    lvl="warning",
                 )
                 proposed_bids = join(
                     dirname(bids_dir), basename(bids_dir) + "_clinica_compliant"
@@ -825,17 +818,20 @@ class Pipeline(Workflow):
 
                 while True:
                     cprint(
-                        f"Do you want to proceed to the conversion in an other "
-                        f"folder? (your original BIDS folder will not be modified, "
-                        f"the folder {proposed_bids} will be created) (yes/no): "
+                        msg=(
+                            "Do you want to proceed to the conversion in an other "
+                            "folder? (your original BIDS folder will not be modified, "
+                            f"the folder {proposed_bids} will be created) (yes/no): "
+                        ),
+                        lvl="warning",
                     )
                     answer = input("")
                     if answer.lower() in ["yes", "no"]:
                         break
                     else:
-                        cprint("Possible answers are yes or no.\n")
+                        cprint(msg="Possible answers are 'yes' or 'no'.", lvl="warning")
                 if answer.lower() == "no":
-                    cprint("Exiting clinica...")
+                    cprint(msg="Exiting clinica...", lvl="warning")
                     sys.exit()
                 else:
                     cprint("Converting cross-sectional dataset into longitudinal...")
@@ -843,8 +839,7 @@ class Pipeline(Workflow):
                         bids_dir, proposed_bids, cross_subj, long_subj
                     )
                     cprint(
-                        "{Fore.GREEN}Conversion succeeded. Your clinica-compliant"
-                        " dataset is located here: {proposed_bids}{Fore.RESET}"
+                        f"Conversion succeeded. Your clinica-compliant dataset is located here: {proposed_bids}"
                     )
 
     @property

@@ -1,51 +1,38 @@
-# coding: utf8
+import click
 
-import clinica.engine as ce
+from clinica.iotools.converters import cli_param
 
 
-class NifdToBidsCLI(ce.CmdParser):
-    def define_name(self):
-        """Define the sub-command name to run this command."""
-        self._name = "nifd-to-bids"
+@click.command(name="nifd-to-bids")
+@cli_param.dataset_directory
+@cli_param.clinical_data_directory
+@cli_param.bids_directory
+def cli(
+    dataset_directory: str,
+    clinical_data_directory: str,
+    bids_directory: str,
+) -> None:
+    """NIFD to BIDS converter.
 
-    def define_description(self):
-        """Define a description of this command."""
-        self._description = "Convert NIFD (http://4rtni-ftldni.ini.usc.edu/) into BIDS."
+    Convert the imaging and clinical data of NIFD (http://4rtni-ftldni.ini.usc.edu/), located in DATASET_DIRECTORY and
+    CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
+    """
+    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import (
+        convert_clinical_data,
+        convert_images,
+    )
+    from clinica.utils.check_dependency import check_dcm2niix
+    from clinica.utils.stream import cprint
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        self._args.add_argument(
-            "dataset_directory", help="Path to the NIFD images directory."
-        )
-        self._args.add_argument(
-            "clinical_data_directory",
-            help="Path to the directory containing the NIFD clinical files. "
-            "(NIFD_Clinical_Data_2017_final_updated.xlsx, "
-            "DataDictionary_NIFD_2017.10.18.xlsx, idaSearch_1_17_2019_NIFD_all.csv)",
-        )
-        # self._args.add_argument("ida_file",
-        #                         help='Path to the NIFD ida.tsv file, path/to/file/ida.tsv')
-        self._args.add_argument("bids_directory", help="Path to the BIDS directory.")
+    check_dcm2niix()
 
-    def run_command(self, args):
-        """Run the converter with defined args."""
-        from colorama import Fore
+    to_convert = convert_images(
+        dataset_directory, bids_directory, clinical_data_directory
+    )
+    convert_clinical_data(bids_directory, clinical_data_directory, to_convert)
 
-        from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import (
-            convert_clinical_data,
-            convert_images,
-        )
-        from clinica.utils.check_dependency import check_dcm2niix
-        from clinica.utils.stream import cprint
+    cprint("Conversion to BIDS succeeded.")
 
-        check_dcm2niix()
 
-        # to_convert = convert_images(args.dataset_directory, args.ida_file, args.bids_directory)
-        # convert_clinical_data(args.bids_directory, args.ida_file, args.clinical_data_file, to_convert)
-        to_convert = convert_images(
-            args.dataset_directory, args.bids_directory, args.clinical_data_directory
-        )
-        convert_clinical_data(
-            args.bids_directory, args.clinical_data_directory, to_convert
-        )
-        cprint(f"{Fore.GREEN}Conversion to BIDS succeeded{Fore.RESET}")
+if __name__ == "__main__":
+    cli()

@@ -10,7 +10,7 @@ xvfbwrapper == 0.2.9
 numpy >= 1.17
 scikit-learn == 0.23
 nilearn >= 0.6.0
-colorama >= 0.4.1
+colorlog >= 5
 xgboost == 0.80
 xlrd >= 1.2.0, < 2.0.0
 scipy == 1.2.3
@@ -21,3 +21,5 @@ torch > 1.0
 torchvision
 pydicom
 networkx
+click >= 7
+click-option-group >= 0.5, < 0.6

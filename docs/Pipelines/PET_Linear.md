@@ -29,36 +29,41 @@ on the [third-party](../../Third-party) page.
 
 The pipeline can be run with the following command line:
 
-```text
-clinica run pet-linear <bids_directory> <caps_directory> <acq_label> <suvr_reference_region>
+```shell
+clinica run pet-linear [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY ACQ_LABEL
+                       {pons|cerebellumPons|pons2|cerebellumPons2}
 ```
 
 where:
 
-- `bids_directory` is the input folder containing the dataset in a
+- ` BIDS_DIRECTORY` is the input folder containing the dataset in a
 [BIDS](../../BIDS) hierarchy;
-- `caps_directory` is the output folder containing the results in a
+- `CAPS_DIRECTORY` is the output folder containing the results in a
 [CAPS](../../CAPS/Introduction) hierarchy;
-- `acq_label` is the label given to the PET acquisition, specifying the tracer
+- `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer
 used (`acq-<acq_label>`). It can be for instance 'fdg' for
 <sup>18</sup>F-fluorodeoxyglucose or 'av45' for <sup>18</sup>F-florbetapir;
-- `suvr_reference_region` is the reference region used to perform intensity
-normalization (i.e. dividing each voxel of the image by the average uptake in
-this region) resulting in a standardized uptake value ratio (SUVR) map. It can
-be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) and `pons` 
-or `pons2` (used for FDG). See [PET introduction](./PET_Introduction.md) for 
-more details about masks versions.
+- The reference region is used to perform intensity normalization (i.e.
+  dividing each voxel of the image by the average uptake in this region)
+  resulting in a standardized uptake value ratio (SUVR) map. It can be
+  `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) and `pons`
+  or `pons2` (used for FDG). See [PET introduction](./PET_Introduction.md) for
+  more details about masks versions.
 
 By default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are
 generated to reduce the computing power required when training deep learning
-models. Use the `--uncropped_image` flag if you do not want to crop the image.
+models. Use the `--uncropped_image` option if you do not want to crop the image.
 
 The pipeline also offers the possibility to save the PET image in the T1w space
-after rigid transformation using the `--save_pet_in_t1w_space` flag.
+after rigid transformation using the `--save_pet_in_t1w_space` option.
 
 !!! note
     The arguments common to all Clinica pipelines are described in
     [Interacting with Clinica](../../InteractingWithClinica).
+
+!!! tip
+    Do not hesitate to type `clinica run pet-linear --help` to see the full
+    list of parameters.
 
 ## Outputs
 

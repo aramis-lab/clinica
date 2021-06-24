@@ -64,7 +64,6 @@ class T1Linear(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
@@ -99,7 +98,8 @@ class T1Linear(cpe.Pipeline):
                 fetch_file(FILE2, path_to_mask)
             except IOError as err:
                 cprint(
-                    f"Unable to download required template (mni_icbm152) for processing: {err}"
+                    msg=f"Unable to download required template (mni_icbm152) for processing: {err}",
+                    lvl="error",
                 )
 
         if not (exists(self.ref_crop)):
@@ -107,7 +107,8 @@ class T1Linear(cpe.Pipeline):
                 fetch_file(FILE1, path_to_mask)
             except IOError as err:
                 cprint(
-                    f"Unable to download required template (ref_crop) for processing: {err}"
+                    msg=f"Unable to download required template (ref_crop) for processing: {err}",
+                    lvl="error",
                 )
 
         # Display image(s) already present in CAPS folder
@@ -117,11 +118,12 @@ class T1Linear(cpe.Pipeline):
         )
         if len(processed_ids) > 0:
             cprint(
-                f"{Fore.YELLOW}Clinica found {len(processed_ids)} image(s) already processed in CAPS directory:{Fore.RESET}"
+                msg=f"Clinica found {len(processed_ids)} image(s) already processed in CAPS directory:",
+                lvl="warning",
             )
             for image_id in processed_ids:
-                cprint(f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}")
-            cprint(f"{Fore.YELLOW}\nImage(s) will be ignored by Clinica.\n{Fore.RESET}")
+                cprint(msg=f"{image_id.replace('_', ' | ')}", lvl="warning")
+            cprint(msg=f"Image(s) will be ignored by Clinica.", lvl="warning")
             input_ids = [
                 p_id + "_" + s_id for p_id, s_id in zip(self.subjects, self.sessions)
             ]

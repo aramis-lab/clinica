@@ -82,7 +82,7 @@ def save_participants_sessions(participant_ids, session_ids, out_folder, out_fil
         )
         data.to_csv(tsv_file, sep="\t", index=False, encoding="utf-8")
     except Exception as e:
-        cprint(f"Impossible to save {out_file} with pandas")
+        cprint(msg=f"Impossible to save {out_file} with pandas", lvl="error")
         raise e
 
 
@@ -160,26 +160,21 @@ def read_participant_tsv(tsv_file):
     import os
 
     import pandas as pd
-    from colorama import Fore
 
     from clinica.utils.exceptions import ClinicaException
 
     if not os.path.isfile(tsv_file):
         raise ClinicaException(
-            f"\n{Fore.RED}[Error] The TSV file you gave is not a file.{Fore.RESET}\n"
-            f"\n{Fore.YELLOW}Error explanations:{Fore.RESET}\n"
-            f" - Clinica expected the following path to be a file: {Fore.BLUE}{tsv_file}{Fore.RESET}\n"
-            f" - If you gave relative path, did you run Clinica on the good folder?"
+            "The TSV file you gave is not a file.\n"
+            "Error explanations:\n"
+            f"\t- Clinica expected the following path to be a file: {tsv_file}\n"
+            "\t- If you gave relative path, did you run Clinica on the good folder?"
         )
     ss_df = pd.io.parsers.read_csv(tsv_file, sep="\t")
     if "participant_id" not in list(ss_df.columns.values):
-        raise ClinicaException(
-            f"\n{Fore.RED}[Error] The TSV file does not contain participant_id column (path: {tsv_file}){Fore.RESET}"
-        )
+        raise ClinicaException(f"The TSV file does not contain participant_id column (path: {tsv_file})")
     if "session_id" not in list(ss_df.columns.values):
-        raise ClinicaException(
-            f"\n{Fore.RED}[Error] The TSV file does not contain session_id column (path: {tsv_file}){Fore.RESET}"
-        )
+        raise ClinicaException(f"The TSV file does not contain session_id column (path: {tsv_file})")
     participants = list(ss_df.participant_id)
     sessions = list(ss_df.session_id)
 

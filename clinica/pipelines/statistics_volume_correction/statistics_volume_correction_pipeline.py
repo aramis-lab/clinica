@@ -134,8 +134,8 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
                 fetch_file(FILE1, path_to_mask)
             except IOError as err:
                 cprint(
-                    "Unable to download required template (mni_icbm152) for processing:",
-                    err,
+                    msg=f"Unable to download required template (mni_icbm152) for processing: {err}",
+                    lvl="error",
                 )
 
         produce_fig_FDR_peak_correction = produce_fig_FWE_peak_correction.clone(

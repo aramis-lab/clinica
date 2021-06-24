@@ -1,62 +1,64 @@
-# coding: utf8
+from typing import Optional
 
-import clinica.engine as ce
+import click
+
+from clinica.pipelines import cli_param
+
+pipeline_name = "dwi-connectome"
 
 
-class DwiConnectomeCli(ce.CmdParser):
+@click.command(name=pipeline_name)
+@cli_param.argument.caps_directory
+@cli_param.option_group.pipeline_options
+@cli_param.option_group.option(
+    "-nt",
+    "--n_tracks",
+    default=1e6,
+    show_default=True,
+    help="Set the desired number of streamlines to generate the tractography and connectome.",
+)
+@cli_param.option_group.standard_options
+@cli_param.option.subjects_sessions_tsv
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+def cli(
+    caps_directory: str,
+    n_tracks: int = 1e6,
+    subjects_sessions_tsv: Optional[str] = None,
+    working_directory: Optional[str] = None,
+    n_procs: Optional[int] = None,
+) -> None:
+    """Connectome-based processing of DWI datasets.
 
-    def define_name(self):
-        """Define the sub-command name to run this pipeline."""
-        self._name = 'dwi-connectome'
+    See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_Connectome/
+    """
+    from networkx import Graph
 
-    def define_description(self):
-        """Define a description of this pipeline."""
-        self._description = ('Connectome-based processing of DWI datasets:\n'
-                             'https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DWI_Connectome/')
+    from clinica.utils.ux import print_end_pipeline
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+    from .dwi_connectome_pipeline import DwiConnectome
 
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
-        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
-        clinica_comp.add_argument("caps_directory",
-                                  help='Path to the CAPS directory.')
-        # Optional arguments (e.g. FWHM)
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-nt", "--n_tracks",
-                              metavar='N', type=int, default=1000000,
-                              help=('Set the desired number of streamlines to generate the tractography and connectome '
-                                    '(default: --n_tracks %(default)s).'))
-        # Clinica standard arguments (e.g. --n_procs)
-        self.add_clinica_standard_arguments()
+    parameters = {"n_tracks": n_tracks}
 
-    def run_command(self, args):
-        """Run the pipeline with defined args."""
-        from networkx import Graph
+    pipeline = DwiConnectome(
+        caps_directory=caps_directory,
+        tsv_file=subjects_sessions_tsv,
+        base_dir=working_directory,
+        parameters=parameters,
+        name=pipeline_name,
+    )
 
-        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
+    exec_pipeline = (
+        pipeline.run(plugin="MultiProc", plugin_args={"n_procs": n_procs})
+        if n_procs
+        else pipeline.run()
+    )
 
-        from .dwi_connectome_pipeline import DwiConnectome
-
-        parameters = {
-            'n_tracks': args.n_tracks
-        }
-        pipeline = DwiConnectome(
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters,
-            name=self.name
+    if isinstance(exec_pipeline, Graph):
+        print_end_pipeline(
+            pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
 
-        if args.n_procs:
-            exec_pipeline = pipeline.run(plugin='MultiProc',
-                                         plugin_args={'n_procs': args.n_procs})
-        else:
-            exec_pipeline = pipeline.run()
 
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
-        else:
-            print_crash_files_and_exit(args.logname, pipeline.base_dir)
+if __name__ == "__main__":
+    cli()
