@@ -1,88 +1,69 @@
-# coding: utf-8
+from typing import Optional
 
-import clinica.engine as ce
+import click
+
+from clinica.pipelines import cli_param
+
+pipeline_name = "pet-surface"
 
 
-class PetSurfaceCLI(ce.CmdParser):
-    def define_name(self):
-        """Define the sub-command name to run this pipeline."""
-        self._name = "pet-surface"
+@click.command(name=pipeline_name)
+@cli_param.argument.bids_directory
+@cli_param.argument.caps_directory
+@cli_param.argument.acq_label
+@cli_param.argument.suvr_reference_region
+@cli_param.argument.pvc_psf_tsv
+@cli_param.option_group.standard_options
+@cli_param.option.subjects_sessions_tsv
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+def cli(
+    bids_directory: str,
+    caps_directory: str,
+    acq_label: str,
+    suvr_reference_region: str,
+    pvc_psf_tsv: str,
+    subjects_sessions_tsv: Optional[str] = None,
+    working_directory: Optional[str] = None,
+    n_procs: Optional[int] = None,
+) -> None:
+    """Surface-based processing of PET images.
 
-    def define_description(self):
-        """Define a description of this pipeline."""
-        self._description = (
-            "Surface-based processing of PET images:\n"
-            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface/"
+    See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface/
+    """
+    from networkx import Graph
+
+    from clinica.utils.ux import print_end_pipeline
+
+    from .pet_surface_pipeline import PetSurface
+
+    parameters = {
+        "acq_label": acq_label,
+        "suvr_reference_region": suvr_reference_region,
+        "pvc_psf_tsv": pvc_psf_tsv,
+        "longitudinal": False,
+    }
+
+    pipeline = PetSurface(
+        bids_directory=bids_directory,
+        caps_directory=caps_directory,
+        tsv_file=subjects_sessions_tsv,
+        base_dir=working_directory,
+        parameters=parameters,
+        name=pipeline_name,
+    )
+
+    exec_pipeline = (
+        pipeline.run(plugin="MultiProc", plugin_args={"n_procs": n_procs})
+        if n_procs
+        else pipeline.run()
+    )
+
+    if isinstance(exec_pipeline, Graph):
+        print_end_pipeline(
+            pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
-        clinica_comp = self._args.add_argument_group(
-            PIPELINE_CATEGORIES["CLINICA_COMPULSORY"]
-        )
-        clinica_comp.add_argument("bids_directory", help="Path to the BIDS directory.")
-        clinica_comp.add_argument(
-            "caps_directory",
-            help="Path to the CAPS directory. (Filled with results from t1-freesurfer pipeline",
-        )
-        clinica_comp.add_argument(
-            "acq_label",
-            type=str,
-            help="Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).",
-        )
-        clinica_comp.add_argument(
-            "suvr_reference_region",
-            choices=LIST_SUVR_REFERENCE_REGIONS,
-            help="Intensity normalization using the average PET uptake in reference regions "
-            "resulting in a standardized uptake value ratio (SUVR) map. It can be "
-            "cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).",
-        )
-        clinica_comp.add_argument(
-            "pvc_psf_tsv",
-            help="TSV file containing for each PET image its point spread function (PSF) measured "
-            "in mm at x, y & z coordinates. Columns must contain: "
-            "participant_id, session_id, acq_label, psf_x, psf_y and psf_z.",
-        )
-        # Clinica standard arguments (e.g. --n_procs)
-        self.add_clinica_standard_arguments()
-
-    def run_command(self, args):
-        """Run the pipeline with defined args."""
-        from networkx import Graph
-
-        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
-
-        from .pet_surface_pipeline import PetSurface
-
-        parameters = {
-            "acq_label": args.acq_label,
-            "suvr_reference_region": args.suvr_reference_region,
-            "pvc_psf_tsv": self.absolute_path(args.pvc_psf_tsv),
-            "longitudinal": False,
-        }
-        pipeline = PetSurface(
-            bids_directory=self.absolute_path(args.bids_directory),
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters,
-            name=self.name,
-        )
-
-        if args.n_procs:
-            exec_pipeline = pipeline.run(
-                plugin="MultiProc", plugin_args={"n_procs": args.n_procs}
-            )
-        else:
-            exec_pipeline = pipeline.run()
-
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(
-                self.name, pipeline.base_dir, pipeline.base_dir_was_specified
-            )
-        else:
-            print_crash_files_and_exit(args.logname, pipeline.base_dir)
+if __name__ == "__main__":
+    cli()

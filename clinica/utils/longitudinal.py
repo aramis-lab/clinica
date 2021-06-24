@@ -80,7 +80,6 @@ def read_sessions(caps_dir, participant_id, long_id):
     import os
 
     import pandas
-    from colorama import Fore
 
     from clinica.utils.exceptions import ClinicaException
 
@@ -93,15 +92,15 @@ def read_sessions(caps_dir, participant_id, long_id):
     )
     if not os.path.isfile(sessions_file):
         raise ClinicaException(
-            f"\n{Fore.RED}[Error] The TSV file with sessions associated "
+            "The TSV file with sessions associated "
             f"to {participant_id} for longitudinal ID {long_id} is missing "
-            f"(expected path: {sessions_file}).{Fore.RESET}"
+            f"(expected path: {sessions_file})."
         )
     ss_df = pandas.read_csv(sessions_file, sep="\t")
     if "session_id" not in list(ss_df.columns.values):
         raise ClinicaException(
-            f"\n{Fore.RED}[Error] The TSV file does not contain session_id column "
-            f"(path: {sessions_file}){Fore.RESET}"
+            "The TSV file does not contain session_id column "
+            f"(path: {sessions_file})."
         )
 
     return list(ss_df.session_id)

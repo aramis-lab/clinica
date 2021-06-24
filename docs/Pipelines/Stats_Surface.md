@@ -34,18 +34,19 @@ Note that the Matlab `Statistics and Machine Learning Toolbox` is required.
 
 The pipeline can be run with the following command line:
 
-```Text
-clinica run statistics-surface <caps_directory> <group_label> <origin_input_data> <glm_type> <subject_visits_with_covariates_tsv> <contrast>
+```shell
+clinica run statistics-surface [OPTIONS] CAPS_DIRECTORY GROUP_LABEL {t1-freesurfer|pet-surface|custom-pipeline}
+                               {group_comparison|correlation} SUBJECT_VISITS_WITH_COVARIATES_TSV CONTRAST
 ```
 
 where:
 
-- `caps_directory` is the folder containing the results of the [`t1-freesurfer`](../T1_FreeSurfer) or [`pet-surface`](../PET_Surface) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS/Introduction).
-- `group_label` is a string defining the group label for the current analysis, which helps you keep track of different analyses.
-- `origin_input_data` is the type of surface-based feature: it can be `t1-freesurfer` for cortical thickness, `pet-surface` for projected PET data or `custom-pipeline` for you own data in CAPS directory (see below for details).
-- `glm_type` is a string defining the type of analysis of your model, choose one between `group_comparison` and `correlation`.
-- `subject_visits_with_covariates_tsv` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained in the [Example](../Stats_Surface/#comparison-analysis) subsection).
-- `contrast` is a string defining the contrast matrix or the variable of interest for the GLM, e.g. `group` or `age`.
+- `CAPS_DIRECTORY` is the folder containing the results of the [`t1-freesurfer`](../T1_FreeSurfer) or [`pet-surface`](../PET_Surface) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS/Introduction).
+- `GROUP_LABEL` is a string defining the group label for the current analysis, which helps you keep track of different analyses.
+- The third positional argument defines the type of surface-based feature: it can be `t1-freesurfer` for cortical thickness, `pet-surface` for projected PET data or `custom-pipeline` for you own data in CAPS directory (see below for details).
+- The fourth positional argument is a string defining the type of analysis of your model, choose one between `group_comparison` and `correlation`.
+- `SUBJECT_VISITS_WITH_COVARIATES_TSV` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained in the [Example](../Stats_Surface/#comparison-analysis) subsection).
+- `CONTRAST` is a string defining the contrast matrix or the variable of interest for the GLM, e.g. `group` or `age`.
 
 Pipeline options:
 

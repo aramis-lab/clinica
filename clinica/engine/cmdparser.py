@@ -7,14 +7,12 @@ from argparse import ArgumentParser
 from os import getcwd
 from os.path import expanduser, join
 
-from colorama import Fore
-
 PIPELINE_CATEGORIES = {
-    "CLINICA_COMPULSORY": f"{Fore.BLUE}Clinica mandatory arguments{Fore.RESET}",
-    "OPTIONAL": f"{Fore.BLUE}Pipeline options{Fore.RESET}",
-    "CLINICA_OPTIONAL": f"{Fore.BLUE}Clinica standard options{Fore.RESET}",
-    "ADVANCED": f"{Fore.BLUE}Pipelines advanced options{Fore.RESET}",
-    "IOTOOLS_OPTIONS": f"{Fore.BLUE}Optional arguments{Fore.RESET}",
+    "CLINICA_COMPULSORY": "Clinica mandatory arguments",
+    "OPTIONAL": "Pipeline options",
+    "CLINICA_OPTIONAL": "Clinica standard options",
+    "ADVANCED": "Pipelines advanced options",
+    "IOTOOLS_OPTIONS": "Optional arguments",
 }
 
 
@@ -43,20 +41,18 @@ class CmdParser:
         self._name = None
 
     def set_content(self):
-        from colorama import Fore
-
-        self._args._positionals.title = f"{Fore.BLUE}Mandatory arguments{Fore.RESET}"
-        self._args._optionals.title = f"{Fore.BLUE}Optional arguments{Fore.RESET}"
+        self._args._positionals.title = "Mandatory arguments"
+        self._args._optionals.title = "Optional arguments"
         if self._description is None:
             self._description = self._name
             self._args.description = (
-                f"{Fore.GREEN}If you are not familiar with Clinica, see:\n"
-                f"https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/{Fore.RESET}"
+                "If you are not familiar with Clinica, see:\n"
+                "https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/"
             )
         else:
             self._args.description = (
-                f"{Fore.GREEN}{self._description}\n\nIf you are not familiar with Clinica, see:\n"
-                f"https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/{Fore.RESET}"
+                f"{self._description}\n\nIf you are not familiar with Clinica, see:\n"
+                "https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/"
             )
 
     @property

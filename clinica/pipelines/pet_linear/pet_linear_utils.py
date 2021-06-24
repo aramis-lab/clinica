@@ -7,6 +7,7 @@
 def init_input_node(pet):
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
+
     # Extract image ID
     image_id = get_subject_id(pet)
     print_begin_image(image_id)

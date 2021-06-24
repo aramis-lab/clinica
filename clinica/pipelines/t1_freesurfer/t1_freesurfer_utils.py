@@ -40,10 +40,7 @@ def write_tsv_files(subjects_dir, image_id):
         If an error occurs, it will be detected by Nipype and the next nodes (including
         write_tsv_files will not be called).
     """
-    import datetime
     import os
-
-    from colorama import Fore
 
     from clinica.utils.freesurfer import generate_regional_measures
     from clinica.utils.stream import cprint
@@ -51,10 +48,12 @@ def write_tsv_files(subjects_dir, image_id):
     if os.path.isfile(os.path.join(subjects_dir, image_id, "mri", "aparc+aseg.mgz")):
         generate_regional_measures(subjects_dir, image_id)
     else:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            f"{Fore.YELLOW}[{now}] {image_id.replace('_', ' | ')} does not contain "
-            f"mri/aseg+aparc.mgz file. Creation of regional_measures/ folder will be skipped.{Fore.RESET}"
+            msg=(
+                f"{image_id.replace('_', ' | ')} does not contain "
+                f"mri/aseg+aparc.mgz file. Creation of regional_measures/ folder will be skipped."
+            ),
+            lvl="warning",
         )
     return image_id
 
@@ -75,11 +74,8 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
         We do not need to check the line "finished without error" in scripts/recon-all.log.
         If an error occurs, it will be detected by Nipype and the next nodes (i.e.  save_to_caps will not be called).
     """
-    import datetime
     import os
     import shutil
-
-    from colorama import Fore
 
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_end_image
@@ -129,9 +125,8 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
             )
         print_end_image(image_id)
     else:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            f"{Fore.YELLOW}[{now}] {image_id.replace('_', ' | ')} does not contain "
-            f"mri/aseg+aparc.mgz file. Copy will be skipped.{Fore.RESET}"
+            msg=f"{image_id.replace('_', ' | ')} does not contain mri/aseg+aparc.mgz file. Copy will be skipped.",
+            lvl="warning",
         )
     return image_id

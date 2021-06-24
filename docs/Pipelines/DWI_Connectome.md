@@ -20,16 +20,16 @@ You can find how to install these software packages on the [third-party](../../T
 The pipeline can be run with the following command line:
 
 ```Text
-clinica run dwi-connectome <caps_directory>
+clinica run dwi-connectome [OPTIONS] CAPS_DIRECTORY
 ```
 
 where:
 
-- `caps_directory` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your CAPS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
-!!! note "Number of streamlines (`--n_tracks` parameters)"
+!!! note "Number of streamlines (`--n_tracks` option)"
     The quality of the tractography and, as a result, the connectome mainly depends on the number of streamlines you can generate (the more the better).
     However, increasing the number of streamlines increases the need for computational resources and space to store the results.
     On default, 1 million streamlines are generated which represents 1 hour of computation time.

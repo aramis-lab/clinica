@@ -1,218 +1,174 @@
-# coding: utf8
+from typing import List, Optional
 
-import clinica.engine as ce
+import click
+
+from clinica.pipelines import cli_param
+
+pipeline_name = "statistics-surface"
 
 
-class StatisticsSurfaceCLI(ce.CmdParser):
-    def define_name(self):
-        """Define the sub-command name to run this pipeline."""
-        self._name = "statistics-surface"
+@click.command(name=pipeline_name)
+@cli_param.argument.caps_directory
+@cli_param.argument.group_label
+@click.argument(
+    "orig_input_data",
+    type=click.Choice(["t1-freesurfer", "pet-surface", "custom-pipeline"]),
+)
+@click.argument(
+    "glm_type",
+    type=click.Choice(["group_comparison", "correlation"]),
+)
+@click.argument(
+    "subject_visits_with_covariates_tsv",
+    type=click.Path(exists=True, resolve_path=True),
+)
+@cli_param.argument.contrast
+@cli_param.option_group.pipeline_options
+@cli_param.option_group.option(
+    "-c",
+    "--covariate",
+    multiple=True,
+    help=(
+        "List of covariates. Each covariate must match the column name of the TSV file. "
+        "By default, no covariate is taken."
+    ),
+)
+@cli_param.option_group.option(
+    "-fwhm",
+    "--full_width_at_half_maximum",
+    default=20,
+    show_default=True,
+    help="FWHM for the surface smoothing.",
+)
+@cli_param.option.acq_label
+@cli_param.option.suvr_reference_region
+@cli_param.option_group.option(
+    "-cf",
+    "--custom_file",
+    help=(
+        "Pattern of file inside CAPS directory using @subject, @session, "
+        "@fwhm, @hemi. This flag must be specified with the --measure_label flag). "
+        "See Wiki for an example."
+    ),
+)
+@cli_param.option_group.option(
+    "-ml",
+    "--measure_label",
+    help=(
+        "Name of the feature type, it will be saved on the CAPS "
+        "_measure-FEATURE_LABEL key-value association. "
+        "This flag must be specified with the --custom_file flag). "
+        "See Wiki for an example."
+    ),
+)
+@cli_param.option_group.standard_options
+@cli_param.option.working_directory
+@cli_param.option.n_procs
+@cli_param.option_group.advanced_options
+@cli_param.option_group.option(
+    "-ct",
+    "--cluster_threshold",
+    default=0.001,
+    show_default=True,
+    help="Threshold to define a cluster in the process of cluster-wise correction.",
+)
+def cli(
+    caps_directory: str,
+    group_label: str,
+    orig_input_data: str,
+    glm_type: str,
+    subject_visits_with_covariates_tsv: str,
+    contrast: str,
+    covariates: Optional[List[str]] = None,
+    full_width_at_half_maximum: int = 20,
+    acq_label: Optional[str] = None,
+    suvr_reference_region: Optional[str] = None,
+    custom_file: Optional[str] = None,
+    measure_label: Optional[str] = None,
+    cluster_threshold: float = 1e-3,
+    working_directory: Optional[str] = None,
+    n_procs: Optional[int] = None,
+) -> None:
+    """Surface-based mass-univariate analysis with SurfStat.
 
-    def define_description(self):
-        """Define a description of this pipeline."""
-        self._description = (
-            "Surface-based mass-univariate analysis with SurfStat:\n"
-            "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/"
-        )
+    See "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
+    """
+    from networkx import Graph
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.ux import print_end_pipeline
 
-        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
+    from .statistics_surface_pipeline import StatisticsSurface
+    from .statistics_surface_utils import (
+        get_pet_surface_custom_file,
+        get_t1_freesurfer_custom_file,
+    )
 
+    # PET-Surface pipeline
+    if orig_input_data == "pet-surface":
+        if acq_label is None:
+            raise ClinicaException(
+                "You selected pet-surface pipeline without setting --acq_label flag. "
+                "Clinica will now exit."
+            )
+        if suvr_reference_region is None:
+            raise ClinicaException(
+                "You selected pet-surface pipeline without setting --suvr_reference_region flag. "
+                "Clinica will now exit."
+            )
+
+    # FreeSurfer cortical thickness
+    if orig_input_data == "t1-freesurfer":
+        custom_file = get_t1_freesurfer_custom_file()
+        measure_label = "ct"
+    # PET cortical projection
+    elif orig_input_data == "pet-surface":
+        custom_file = get_pet_surface_custom_file(acq_label, suvr_reference_region)
+        measure_label = acq_label
+    else:
+        if (custom_file is None) or (measure_label is None):
+            raise ClinicaException(
+                "You must set --measure_label and --custom_file flags."
+            )
+
+    parameters = {
         # Clinica compulsory arguments
-        clinica_comp = self._args.add_argument_group(
-            PIPELINE_CATEGORIES["CLINICA_COMPULSORY"]
-        )
-        clinica_comp.add_argument("caps_directory", help="Path to the CAPS directory.")
-        clinica_comp.add_argument(
-            "group_label",
-            help="User-defined identifier for the provided group of subjects.",
-        )
-        clinica_comp.add_argument(
-            "orig_input_data",
-            help="Type of surface-based feature: type "
-            "'t1-freesurfer' to use cortical thickness, "
-            "'pet-surface' to use projected PET data or "
-            "'custom-pipeline' to use you own data in CAPS directory "
-            "(see Wiki for details).",
-            choices=["t1-freesurfer", "pet-surface", "custom-pipeline"],
-        )
-        clinica_comp.add_argument(
-            "glm_type",
-            help="String based on the GLM type for the hypothesis. "
-            "You can choose between 'group_comparison' and 'correlation'.",
-            choices=["group_comparison", "correlation"],
-        )
-        clinica_comp.add_argument(
-            "subject_visits_with_covariates_tsv",
-            help="TSV file containing a list of subjects with their sessions and all "
-            "the covariates and factors needed for the GLM.",
-        )
-        clinica_comp.add_argument(
-            "contrast",
-            help="String to define the contrast matrix for the GLM, e.g. group. Please note "
-            "that, when you want to perform negative correlation, the sign is ignored "
-            "by the command line.",
-        )
-        # Optional arguments (e.g. FWHM)
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES["OPTIONAL"])
-        optional.add_argument(
-            "-c",
-            "--covariates",
-            type=str,
-            default=None,
-            metavar="'covariate_1 ... covariate_n'",
-            help="Covariates of the form --covariates 'covariate_1 ... covariate_n'. "
-            "Each covariate must match the column name of the TSV file. "
-            "On default, no covariates are taken.",
-        )
-        optional.add_argument(
-            "-fwhm",
-            "--full_width_at_half_maximum",
-            type=int,
-            default=20,
-            help="FWHM for the surface smoothing "
-            "(default: --full_width_at_half_maximum %(default)s).",
-        )
+        "group_label": group_label,
+        "orig_input_data": orig_input_data,
+        "glm_type": glm_type,
+        "contrast": contrast,
+        # Optional arguments
+        "covariates": covariates,
+        "full_width_at_half_maximum": full_width_at_half_maximum,
         # Optional arguments for inputs from pet-surface pipeline
-        opt_pet = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you use inputs from pet-surface pipeline{Fore.RESET}"
-        )
-        opt_pet.add_argument(
-            "-acq",
-            "--acq_label",
-            type=str,
-            default=None,
-            help="Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).",
-        )
-        opt_pet.add_argument(
-            "-suvr",
-            "--suvr_reference_region",
-            choices=LIST_SUVR_REFERENCE_REGIONS,
-            default=None,
-            help="Intensity normalization using the average PET uptake in reference regions "
-            "resulting in a standardized uptake value ratio (SUVR) map. It can be "
-            "cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).",
-        )
+        "acq_label": acq_label,
+        "suvr_reference_region": suvr_reference_region,
         # Optional arguments for custom pipeline
-        opt_custom_input = self._args.add_argument_group(
-            f"{Fore.BLUE}Pipeline options if you selected custom-pipeline{Fore.RESET}"
-        )
-        opt_custom_input.add_argument(
-            "-cf",
-            "--custom_file",
-            type=str,
-            default=None,
-            help="Pattern of file inside CAPS directory using @subject, @session, "
-            "@fwhm, @hemi. "
-            "This flag must be specified with the --measure_label flag). "
-            "See Wiki for an example.",
-        )
-        opt_custom_input.add_argument(
-            "-ml",
-            "--measure_label",
-            type=str,
-            default=None,
-            help="Name of the feature type, it will be saved on the CAPS "
-            "_measure-FEATURE_LABEL key-value association. "
-            "This flag must be specified with the --custom_file flag). "
-            "See Wiki for an example.",
-        )
-        # Clinica standard arguments (e.g. --n_procs)
-        self.add_clinica_standard_arguments(add_tsv_flag=False)
+        "custom_file": custom_file,
+        "measure_label": measure_label,
         # Advanced arguments (i.e. tricky parameters)
-        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES["ADVANCED"])
-        advanced.add_argument(
-            "-ct",
-            "--cluster_threshold",
-            type=float,
-            default=0.001,
-            help="Threshold to define a cluster in the process of cluster-wise correction "
-            "(default: --cluster_threshold %(default)s).",
+        "cluster_threshold": cluster_threshold,
+    }
+
+    pipeline = StatisticsSurface(
+        caps_directory=caps_directory,
+        tsv_file=subject_visits_with_covariates_tsv,
+        base_dir=working_directory,
+        parameters=parameters,
+        name=pipeline_name,
+    )
+
+    exec_pipeline = (
+        pipeline.run(plugin="MultiProc", plugin_args={"n_procs": n_procs})
+        if n_procs
+        else pipeline.run()
+    )
+
+    if isinstance(exec_pipeline, Graph):
+        print_end_pipeline(
+            pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
 
-    def run_command(self, args):
-        """Run the pipeline with defined args."""
-        from colorama import Fore
-        from networkx import Graph
 
-        from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.ux import print_crash_files_and_exit, print_end_pipeline
-
-        from .statistics_surface_pipeline import StatisticsSurface
-        from .statistics_surface_utils import (
-            get_pet_surface_custom_file,
-            get_t1_freesurfer_custom_file,
-        )
-
-        # PET-Surface pipeline
-        if args.orig_input_data == "pet-surface":
-            if args.acq_label is None:
-                raise ClinicaException(
-                    f"{Fore.RED}You selected pet-surface pipeline without setting --acq_label flag. "
-                    f"Clinica will now exit.{Fore.RESET}"
-                )
-            if args.suvr_reference_region is None:
-                raise ClinicaException(
-                    f"{Fore.RED}You selected pet-surface pipeline without setting --suvr_reference_region flag. "
-                    f"Clinica will now exit.{Fore.RESET}"
-                )
-
-        # FreeSurfer cortical thickness
-        if args.orig_input_data == "t1-freesurfer":
-            args.custom_file = get_t1_freesurfer_custom_file()
-            args.measure_label = "ct"
-        # PET cortical projection
-        elif args.orig_input_data == "pet-surface":
-            args.custom_file = get_pet_surface_custom_file(
-                args.acq_label, args.suvr_reference_region
-            )
-            args.measure_label = args.acq_label
-        else:
-            if (args.custom_file is None) or (args.measure_label is None):
-                raise ClinicaException(
-                    "You must set --measure_label and --custom_file flags."
-                )
-
-        parameters = {
-            # Clinica compulsory arguments
-            "group_label": args.group_label,
-            "orig_input_data": args.orig_input_data,
-            "glm_type": args.glm_type,
-            "contrast": args.contrast,
-            # Optional arguments
-            "covariates": args.covariates,
-            "full_width_at_half_maximum": args.full_width_at_half_maximum,
-            # Optional arguments for inputs from pet-surface pipeline
-            "acq_label": args.acq_label,
-            "suvr_reference_region": args.suvr_reference_region,
-            # Optional arguments for custom pipeline
-            "custom_file": args.custom_file,
-            "measure_label": args.measure_label,
-            # Advanced arguments (i.e. tricky parameters)
-            "cluster_threshold": args.cluster_threshold,
-        }
-        pipeline = StatisticsSurface(
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subject_visits_with_covariates_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters,
-            name=self.name,
-        )
-
-        if args.n_procs:
-            exec_pipeline = pipeline.run(
-                plugin="MultiProc", plugin_args={"n_procs": args.n_procs}
-            )
-        else:
-            exec_pipeline = pipeline.run()
-
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(
-                self.name, pipeline.base_dir, pipeline.base_dir_was_specified
-            )
-        else:
-            print_crash_files_and_exit(args.logname, pipeline.base_dir)
+if __name__ == "__main__":
+    cli()

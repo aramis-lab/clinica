@@ -54,9 +54,9 @@ The input is the name of the classification algorithm used.
 
 No matter the combination of modules chosen, the inputs necessary are:
 
-- `caps_directory`: the folder containing the results of the [`t1-volume`](../T1_Volume) and/or the [`pet-volume`](../PET_Volume) pipeline (where TSV files are stored)
-- `subjects_visits_tsv`: the TSV file containing the `participant_id` and the `session_id` columns
-- `diagnoses_tsv`: a TSV file where the diagnosis for each participant (identified by a participant ID) is reported (e.g. AD, CN).
+- `CAPS_DIRECTORY`: the folder containing the results of the [`t1-volume`](../T1_Volume) and/or the [`pet-volume`](../PET_Volume) pipeline (where TSV files are stored)
+- `SUBJECTS_VISITS_TSV`: the TSV file containing the `participant_id` and the `session_id` columns
+- `DIAGNOSES_TSV`: a TSV file where the diagnosis for each participant (identified by a participant ID) is reported (e.g. AD, CN).
 It allows the algorithm to perform the dual classification (between the two labels reported).
 Example of a diagnosis TSV file:
 

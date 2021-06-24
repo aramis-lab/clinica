@@ -15,13 +15,13 @@ You can find how to install this software on the [third-party](../../Third-party
 The pipeline can be run with the following command line:
 
 ```Text
-clinica run t1-freesurfer <bids_directory> <caps_directory>
+clinica run t1-freesurfer [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY
 ```
 
 where:
 
-- `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
+- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
