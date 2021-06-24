@@ -650,7 +650,7 @@ def create_adni_sessions_dict(
             cprint(f"\tReading clinical data file: {location}")
 
             df_file = pd.read_csv(file_to_read_path, dtype=str)
-            df_filtered = filter_subj_bids(df_file, location, bids_ids)
+            df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
 
             if not df_filtered.empty:
                 df_filtered["session_id"] = df_filtered.apply(
