@@ -85,7 +85,10 @@ def create_merge_file(
         ]
         row_participant_df.reset_index(inplace=True, drop=True)
         if len(row_participant_df) == 0:
-            cprint(msg=f"Participant {subject} does not exist in participants.tsv", lvl="warning")
+            cprint(
+                msg=f"Participant {subject} does not exist in participants.tsv",
+                lvl="warning",
+            )
             row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
 
         if ignore_sessions_files:
@@ -160,6 +163,9 @@ def create_merge_file(
     col_list.insert(1, col_list.pop(col_list.index("session_id")))
     merged_df = merged_df[col_list]
 
+    tmp = merged_df.select_dtypes(include=[np.number])
+    # Round numeric values in dataframe to 12 floating point values
+    merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
     merged_df.to_csv(out_path, sep="\t", index=False)
     cprint("End of BIDS information merge.", lvl="debug")
 
@@ -221,6 +227,9 @@ def create_merge_file(
         summary_path = path.splitext(out_path)[0] + "_summary.tsv"
         merged_summary_df.to_csv(summary_path, sep="\t", index=False)
 
+        tmp = merged_df.select_dtypes(include=[np.number])
+        # Round numeric values in dataframe to 12 floating point values
+        merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
         merged_df.to_csv(out_path, sep="\t")
         cprint("End of CAPS information merge.", lvl="debug")
 
@@ -1060,9 +1069,7 @@ def check_volume_location_in_world_coordinate_system(
                 "%-" + str(file_width) + "s%-" + str(center_width) + "s%-25.2f\n"
             ) % (basename(file), str(center), l2)
 
-        cmd_line = (
-            f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
-        )
+        cmd_line = f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
 
         warning_message += (
             "\nIf you are trying to launch the t1-freesurfer pipeline, you can ignore this message "
