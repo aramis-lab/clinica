@@ -657,10 +657,9 @@ def create_adni_sessions_dict(
                     lambda x: get_visit_id(x, location), axis=1
                 )
                 if location == "ADNIMERGE.csv":
-                    df_filtered["age"] = df_filtered.apply(
+                    df_filtered["AGE"] = df_filtered.apply(
                         lambda x: update_age(x), axis=1
                     )
-
                 df_subj_session = update_sessions_df(
                     df_subj_session, df_filtered, df_sessions, location
                 )
@@ -700,6 +699,7 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
         (df_columns_to_add["ADNI"].isin(df_filtered.columns))
         & (~df_columns_to_add["BIDS CLINICA"].isin(df_subj_session.columns))
     ]
+
     df_temp = df_filtered[
         ["RID", "session_id"] + list(df_columns_to_add["ADNI"])
     ].copy()

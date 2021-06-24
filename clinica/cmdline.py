@@ -7,10 +7,10 @@ and gives to the user some other utils to work with the pipelines.
 """
 import click
 
-from .engine.template import cli as generate_cli
-from .iotools.converters.cli import cli as convert_cli
-from .iotools.utils.cli import cli as iotools_cli
-from .pipelines.cli import cli as run_cli
+from clinica.engine.template import cli as generate_cli
+from clinica.iotools.converters.cli import cli as convert_cli
+from clinica.iotools.utils.cli import cli as iotools_cli
+from clinica.pipelines.cli import cli as run_cli
 
 CONTEXT_SETTINGS = dict(
     # Extend content width to avoid shortening of pipeline help.
