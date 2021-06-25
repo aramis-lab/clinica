@@ -1,431 +1,431 @@
-Field	BIDS CLINICA	BIDS format	BIDS type	INSIGHT	INSIGHT location	CLINAD	AIBL	AIBL location	OASIS	OASIS location
-BIDS session id	session_id	Keyword 'ses-' followed by the original session id of each dataset without special characters or symbols	string							
-Date of the examination	examination_date	YYYY-MM-DD HH:MM:SS	string	 		date d'evaluation	EXAMDATE	aibl_neurobat_*.csv		
-Age at the session	age		float				PTDOB	aibl_ptdemog_*.csv		
-	current_study	free format								
-	adni_fdg	free format								
-	adni_pib	free format								
-	adni_av45	free format								
-	cdr_global						CDGLOBAL	aibl_cdr_*.csv	CDR	oasis_cross-sectional.csv
-	cdr_sb									
-	adas11									
-	adas13									
-Mini-mental state exam	MMS		int			MMS	MMSCORE	aibl_mmse_*.csv	MMSE	oasis_cross-sectional.csv
-	FAQ									
-	adni_ventricles_vol									
-	adni_hippocampus_vol									
-	adni_brain_vol									
-	adni_entorhinal_vol									
-Intracranial volume	adni_icv									
-Diagnosis at current session	diagnosis						DXCURREN	aibl_pdxconv_*.csv	CDR	oasis_cross-sectional.csv
-	cati_sacha_vol_left_hippocampus	cm3	float	vol_left_hippocampus	Analyses_INSIGHT_M0_20151201/Analyses_HPC_SACHA					
-	cati_sacha_vol_right_hippocampus	cm3	float	vol_right_hippocampus	Analyses_INSIGHT_M0_20151202/Analyses_HPC_SACHA					
-	cati_whasa_volume	cm3	float	volume (cm3)	Analyses_INSIGHT_M0_20151203/Analyses_HPC_WHASA					
-	mattis_attention									
-	mattis_initiation									
-	mattis_construction									
-	mattis_concepts									
-	mattis_memory									
-	MATTIS		int							
-	FBI									
-Verbal Fluency Test	categorical_fluency		int	Categorical Verbal Fluency	Tst_NRO_NP					
-Verbal Fluency Test	p_fluency		int							
-Grober and Buschke test	grober_buschke_free_cued_recall		int							
-Frontal assessment battery	FAB		int			BREF				
-	freesurfer_rh_mean_thickness			rh_MeanThickness_thickness (mm)	Analyses_INSIGHT_M0_20151201/Analyses_thichness_Freesurfer					
-	freesurfer_lh_mean_thickness			lh_MeanThickness_thickness (mm)	Analyses_INSIGHT_M0_20151201/Analyses_thichness_Freesurfer					
-	EQ			EQ_SCORE	TST_NRO_NL.xls/EQ5D					
-	SPPB			Total Score	TST_NRO_NL.xls/SPPB					
-	AD8			AD8_SCORE	Tst_NRO_NP.xlsx/AD8					
-	MEM			MEM_SCORE	Tst_NRO_NP.xlsx/MCQ					
-	AD			AD_SCORE	Tst_NRO_NP.xlsx/AD8					
-Grober and Buschke test	grober_buschke_free_recall		int			RL				
-Grober and Buschke test	grober_buschke_total_recall		int			RT				
-	grober_buschke_free_recall_delayed		int			RLD				
-	grober_buschke_total_recall_delayed		int			RTD				
-	motivation_starkstein			(Starkstein) Motivation scale	Tst_NRO_NP.xlsx/(Starkstein)					
-	verbal_fluency			Lexical Verbal Fluency Score	Tst_NRO_NP.xlsx/(Verbal Fluency)					
-Innotest amyloid/tau index	IATI		float			IATI				
-	clinad_CSF					CSF AD profile				
-	clinad_amyloidB		int			B-Amyloide				
-	clinad_tau		int			Tau				
-	clinad_p_tau		int			P-Tau				
-	clinad_p_tau_Aß		float			PTau/Aß				
-	clinad_delay_MRI_CSF					Délai IRM PL				
-	clinad_date_MRI_closest_to_CSF					Date IRM proche PL				
-										
-	prevdemals_benson_copy									
-	prevdemals_benson_rappel									
-	prevdemals_benson_total									
-	prevdemals_faux_pas									
-	praxies_dexterity									
-	praxies_gesture_kinetic									
-	praxies_non_meaning_gestures									
-	praxies_intransitive gestures									
-	praxies_transitive_gestures									
-	praxies_total									
-	prevdemals_emotion_total									
-	prevdemals_als									
-	prevdemals_ftd									
-										
-										
-										
-										
-										
-										
-	clinad_amnestic_syndrome_of_hippocampal_type					Sd amn hip				
-Number of words that was not cointaned in the original dataset of words	grober_buschke_intrusions					intrusions				
-										
-	clinad_reac_indic					Réac indic				
-	clinad_correct_recognitions					reconnaissances correctes				
-	clinad_false_recognitions					fausses reconnaissnces				
-										
-	clinad_date_csf					Date PL				
-	clinad_spm_vol_gm					Vol_SG				
-	clinad_spm_vol_wm					Vol_SB				
-	clinad_spm_vol_csf					Vol_CSF				
-	clinad_spm_vol_total					Vol_Total				
-	clinad_volbrain_scale_factor					Scale factor				
-	clinad_volbrain_snr		float			SNR				
-	clinad_volbrain_msnr		float			mSNR				
-	clinad_volbrain_qc		float			QC				
-	clinad_volbrain_tissue_wm_cm3		float			Tissue WM cm3				
-	clinad_volbrain_tissue_wm_%		float			Tissue WM %				
-	clinad_volbrain_tissue_gm_cm3		float			Tissue GM cm3				
-	clinad_volbrain_tissue_gm_%		float			Tissue GM %				
-	clinad_volbrain_tissue_csf_cm3		float			Tissue CSF cm3				
-	clinad_volbrain_tissue_csf_%		float			Tissue CSF %				
-	clinad_volbrain_tissue_brain_cm3		float			Tissue Brain cm3				
-	clinad_volbrain_tissue_brain_%		float			Tissue Brain %				
-	clinad_volbrain_tissue_ic_cm3		float			Tissue IC cm3				
-	clinad_volbrain_tissue_ic_%		float			Tissue IC %				
-	clinad_volbrain_cerebrum_total_cm3		float			Cerebrum Total cm3				
-	clinad_volbrain_cerebrum_total_%		float			Cerebrum Total %				
-	clinad_volbrain_cerebrum_t_gm_cm3		float			Cerebrum T GM cm3				
-	clinad_volbrain_cerebrum_t_gm_%		float			Cerebrum T GM %				
-	clinad_volbrain_cerebrum_t_wm_cm3		float			Cerebrum T WM cm3				
-	clinad_volbrain_cerebrum_t_wm_%		float			Cerebrum T WM %				
-	clinad_volbrain_cerebrum_right_cm3		float			Cerebrum Right cm3				
-	clinad_volbrain_cerebrum_right_%		float			Cerebrum Right %				
-	clinad_volbrain_cerebrum_r_gm_cm3		float			Cerebrum R GM cm3				
-	clinad_volbrain_cerebrum_r_gm_%		float			Cerebrum R GM %				
-	clinad_volbrain_cerebrum_r_wm_cm3		float			Cerebrum R WM cm3				
-	clinad_volbrain_cerebrum_r_wm_%		float			Cerebrum R WM %				
-	clinad_volbrain_cerebrum_left_cm3		float			Cerebrum Left cm3				
-	clinad_volbrain_cerebrum_left_%		float			Cerebrum Left %				
-	clinad_volbrain_cerebrum_l_gm_cm3		float			Cerebrum L GM cm3				
-	clinad_volbrain_cerebrum_l_gm_%		float			Cerebrum L GM %				
-	clinad_volbrain_cerebrum_l_wm_cm3		float			Cerebrum L WM cm3				
-	clinad_volbrain_cerebrum_l_wm_%		float			Cerebrum L WM %				
-	clinad_volbrain_cerebrum_assymetry		float			Cerebrum Assymetry				
-	clinad_volbrain_cerebelum_total_cm3		float			Cerebelum Total cm3				
-	clinad_volbrain_cerebelum_total_%		float			Cerebelum Total %				
-	clinad_volbrain_cerebelum_t_gm_cm3		float			Cerebelum T GM cm3				
-	clinad_volbrain_cerebelum_t_gm_%		float			Cerebelum T GM %				
-	clinad_volbrain_cerebelum_t_wm_cm3		float			Cerebelum T WM cm3				
-	clinad_volbrain_cerebelum_t_wm_%		float			Cerebelum T WM %				
-	clinad_volbrain_cerebelum_right_cm3		float			Cerebelum Right cm3				
-	clinad_volbrain_cerebelum_right_%		float			Cerebelum Right %				
-	clinad_volbrain_cerebelum_r_gm_cm3		float			Cerebelum R GM cm3				
-	clinad_volbrain_cerebelum_r_gm_%		float			Cerebelum R GM %				
-	clinad_volbrain_cerebelum_r_wm_cm3		float			Cerebelum R WM cm3				
-	clinad_volbrain_cerebelum_r_wm_%		float			Cerebelum R WM %				
-	clinad_volbrain_cerebelum_left_cm3		float			Cerebelum Left cm3				
-	clinad_volbrain_cerebelum_left_%		float			Cerebelum Left %				
-	clinad_volbrain_cerebelum_l_gm_cm3		float			Cerebelum L GM cm3				
-	clinad_volbrain_cerebelum_l_gm_%		float			Cerebelum L GM %				
-	clinad_volbrain_cerebelum_l_wm_cm3		float			Cerebelum L WM cm3				
-	clinad_volbrain_cerebelum_l_wm_%		float			Cerebelum L WM %				
-	clinad_volbrain_cerebelum_assymetry		float			Cerebelum Assymetry				
-	clinad_volbrain_brainstem_cm3		float			Brainstem cm3				
-	clinad_volbrain_brainstem_%		float			Brainstem %				
-	clinad_volbrain_lateral_ventricles_total_cm3		float			Lateral ventricles Total cm3				
-	clinad_volbrain_lateral_ventricles_total_%		float			Lateral ventricles Total %				
-	clinad_volbrain_lateral_ventricles_right_cm3		float			Lateral ventricles Right cm3				
-	clinad_volbrain_lateral_ventricles_right_%		float			Lateral ventricles Right %				
-	clinad_volbrain_lateral_ventricles_left_cm3		float			Lateral ventricles Left cm3				
-	clinad_volbrain_lateral_ventricles_left_%		float			Lateral ventricles Left %				
-	clinad_volbrain_lateral_ventricles_asymmetry		float			Lateral ventricles Asymmetry				
-	clinad_volbrain_caudate_total_cm3		float			Caudate Total cm3				
-	clinad_volbrain_caudate_total_%		float			Caudate Total %				
-	clinad_volbrain_caudate_right_cm3		float			Caudate Right cm3				
-	clinad_volbrain_caudate_right_%		float			Caudate Right %				
-	clinad_volbrain_caudate_left_cm3		float			Caudate Left cm3				
-	clinad_volbrain_caudate_left_%		float			Caudate Left %				
-	clinad_volbrain_caudate_asymmetry		float			Caudate Asymmetry				
-	clinad_volbrain_putamen_total_cm3		float			Putamen Total cm3				
-	clinad_volbrain_putamen_total_%		float			Putamen Total %				
-	clinad_volbrain_putamen_right_cm3		float			Putamen Right cm3				
-	clinad_volbrain_putamen_right_%		float			Putamen Right %				
-	clinad_volbrain_putamen_left_cm3		float			Putamen Left cm3				
-	clinad_volbrain_putamen_left_%		float			Putamen Left %				
-	clinad_volbrain_putamen_asymmetry		float			Putamen Asymmetry				
-	clinad_volbrain_thalamus_total_cm3		float			Thalamus Total cm3				
-	clinad_volbrain_thalamus_total_%		float			Thalamus Total %				
-	clinad_volbrain_thalamus_right_cm3		float			Thalamus Right cm3				
-	clinad_volbrain_thalamus_right_%		float			Thalamus Right %				
-	clinad_volbrain_thalamus_left_cm3		float			Thalamus Left cm3				
-	clinad_volbrain_thalamus_left_%		float			Thalamus Left %				
-	clinad_volbrain_thalamus_asymmetry		float			Thalamus Asymmetry				
-	clinad_volbrain_globus_pallidus_total_cm3		float			Globus Pallidus Total cm3				
-	clinad_volbrain_globus_pallidus_total_%		float			Globus Pallidus Total %				
-	clinad_volbrain_globus_pallidus_right_cm3		float			Globus Pallidus Right cm3				
-	clinad_volbrain_globus_pallidus_right_%		float			Globus Pallidus Right %				
-	clinad_volbrain_globus_pallidus_left_cm3		float			Globus Pallidus Left cm3				
-	clinad_volbrain_globus_pallidus_left_%		float			Globus Pallidus Left %				
-	clinad_volbrain_globus_pallidus_asymmetry		float			Globus Pallidus Asymmetry				
-	clinad_volbrain_hippocampus_total_cm3		float			Hippocampus Total cm3				
-	clinad_volbrain_hippocampus_total_%		float			Hippocampus Total %				
-	clinad_volbrain_hippocampus_right_cm3		float			Hippocampus Right cm3				
-	clinad_volbrain_hippocampus_right_%		float			Hippocampus Right %				
-	clinad_volbrain_hippocampus_left_cm3		float			Hippocampus Left cm3				
-	clinad_volbrain_hippocampus_left_%		float			Hippocampus Left %				
-	clinad_volbrain_hippocampus_asymmetry		float			Hippocampus Asymmetry				
-	clinad_volbrain_amygdala_total_cm3		float			Amygdala Total cm3				
-	clinad_volbrain_amygdala_total_%		float			Amygdala Total %				
-	clinad_volbrain_amygdala_right_cm3		float			Amygdala Right cm3				
-	clinad_volbrain_amygdala_right_%		float			Amygdala Right %				
-	clinad_volbrain_amygdala_left_cm3		float			Amygdala Left cm3				
-	clinad_volbrain_amygdala_left_%		float			Amygdala Left %				
-	clinad_volbrain_amygdala_asymmetry		float			Amygdala Asymmetry				
-	clinad_volbrain_accumbens_total_cm3					Accumbens Total cm3				
-	clinad_volbrain_accumbens_total_%					Accumbens Total %				
-	clinad_volbrain_accumbens_right_cm3					Accumbens Right cm3				
-	clinad_volbrain_accumbens_right_%					Accumbens Right %				
-	clinad_volbrain_accumbens_left_cm3					Accumbens Left cm3				
-	clinad_volbrain_accumbens_left_%					Accumbens Left %				
-	clinad_volbrain_accumbens_asymmetry					Accumbens Asymmetry				
-	clinad_brainreader_id_rm					MR ID				
-	clinad_brainreader_clinical_image_id					Clinical image id				
-	clinad_brainreader_filename					Filename				
-	clinad_brainreader_nr_version					NR version				
-	clinad_brainreader_mtiv_in_ml		float			The measured total intracranial volume (mTIV) in ml				
-	clinad_brainreader_hippocampal_left_right_asymmetry_index		float			Hippocampal Left-Right Asymmetry Index				
-	clinad_brainreader_hippocampal_left_right_asymmetry_index_nr_index		float			Hippocampal Left-Right Asymmetry Index NR Index				
-	clinad_brainreader_hippocampal_left_right_asymmetry_index_z_score		float			Hippocampal Left-Right Asymmetry Index z-score				
-	clinad_brainreader_hippocampal_left_right_asymmetry_index_percentile		float			Hippocampal Left-Right Asymmetry Index percentile				
-	clinad_brainreader_whole_brain_matter_volume_in_ml		float			Whole-Brain-Matter volume in ml				
-	clinad_brainreader_whole_brain_matter_vol_mtiv_ratio		float			Whole-Brain-Matter Vol/mTIV ratio				
-	clinad_brainreader_whole_brain_matter_nr_index		float			Whole-Brain-Matter NR Index				
-	clinad_brainreader_whole_brain_matter_z_score		float			Whole-Brain-Matter z-score				
-	clinad_brainreader_whole_brain_matter_percentile		float			Whole-Brain-Matter percentile				
-	clinad_brainreader_white_matter_volume_in_ml		float			White-Matter volume in ml				
-	clinad_brainreader_white_matter_vol_mtiv_ratio		float			White-Matter Vol/mTIV ratio				
-	clinad_brainreader_white_matter_nr_index		float			White-Matter NR Index				
-	clinad_brainreader_white_matter_z_score		float			White-Matter z-score				
-	clinad_brainreader_white_matter_percentile		float			White-Matter percentile				
-	clinad_brainreader_gray_matter_volume_in_ml		float			Gray-Matter volume in ml				
-	clinad_brainreader_gray_matter_vol_mtiv_ratio		float			Gray-Matter Vol/mTIV ratio				
-	clinad_brainreader_gray_matter_nr_index		float			Gray-Matter NR Index				
-	clinad_brainreader_gray_matter_z_score		float			Gray-Matter z-score				
-	clinad_brainreader_gray_matter_percentile		float			Gray-Matter percentile				
-	clinad_brainreader_csf_dura_volume_in_ml		float			CSF-(+-dura) volume in ml				
-	clinad_brainreader_csf_dura_vol_mtiv_ratio		float			CSF-(+-dura) Vol/mTIV ratio				
-	clinad_brainreader_csf_dura_nr_index		float			CSF-(+-dura) NR Index				
-	clinad_brainreader_csf_dura_z_score		float			CSF-(+-dura) z-score				
-	clinad_brainreader_csf_dura_percentile		float			CSF-(+-dura) percentile				
-	clinad_brainreader_left_hippocampus_volume_in_ml		float			Left-Hippocampus volume in ml				
-	clinad_brainreader_left_hippocampus_vol_mtiv_ratio		float			Left-Hippocampus Vol/mTIV ratio				
-	clinad_brainreader_left_hippocampus_nr_index		float			Left-Hippocampus NR Index				
-	clinad_brainreader_left_hippocampus_z_score		float			Left-Hippocampus z-score				
-	clinad_brainreader_left_hippocampus_percentile		float			Left-Hippocampus percentile				
-	clinad_brainreader_right_hippocampus_volume_in_ml		float			Right-Hippocampus volume in ml				
-	clinad_brainreader_right_hippocampus_vol_mtiv_ratio		float			Right-Hippocampus Vol/mTIV ratio				
-	clinad_brainreader_right_hippocampus_nr_index		float			Right-Hippocampus NR Index				
-	clinad_brainreader_right_hippocampus_z_score		float			Right-Hippocampus z-score				
-	clinad_brainreader_right_hippocampus_percentile		float			Right-Hippocampus percentile				
-	clinad_brainreader_hippocampus_volume_in_ml		float			Hippocampus volume in ml				
-	clinad_brainreader_hippocampus_vol_mtiv_ratio		float			Hippocampus Vol/mTIV ratio				
-	clinad_brainreader_hippocampus_nr_index		float			Hippocampus NR Index				
-	clinad_brainreader_hippocampus_z_score		float			Hippocampus z-score				
-	clinad_brainreader_hippocampus_percentile		float			Hippocampus percentile				
-	clinad_brainreader_left_amygdala_volume_in_ml		float			Left-Amygdala volume in ml				
-	clinad_brainreader_left_amygdala_vol_mtiv_ratio		float			Left-Amygdala Vol/mTIV ratio				
-	clinad_brainreader_left_amygdala_nr_index		float			Left-Amygdala NR Index				
-	clinad_brainreader_left_amygdala_z_score		float			Left-Amygdala z-score				
-	clinad_brainreader_left_amygdala_percentile		float			Left-Amygdala percentile				
-	clinad_brainreader_right_amygdala_volume_in_ml		float			Right-Amygdala volume in ml				
-	clinad_brainreader_right_amygdala_vol_mtiv_ratio		float			Right-Amygdala Vol/mTIV ratio				
-	clinad_brainreader_right_amygdala_nr_index		float			Right-Amygdala NR Index				
-	clinad_brainreader_right_amygdala_z_score		float			Right-Amygdala z-score				
-	clinad_brainreader_right_amygdala_percentile		float			Right-Amygdala percentile				
-	clinad_brainreader_amygdala_volume_in_ml		float			Amygdala volume in ml				
-	clinad_brainreader_amygdala_vol_mtiv_ratio		float			Amygdala Vol/mTIV ratio				
-	clinad_brainreader_amygdala_nr_index		float			Amygdala NR Index				
-	clinad_brainreader_amygdala_z_score		float			Amygdala z-score				
-	clinad_brainreader_amygdala_percentile		float			Amygdala percentile				
-	clinad_brainreader_brain_stem_volume_in_ml		float			Brain-Stem volume in ml				
-	clinad_brainreader_brain_stem_vol_mtiv_ratio		float			Brain-Stem Vol/mTIV ratio				
-	clinad_brainreader_brain_stem_nr_index		float			Brain-Stem NR Index				
-	clinad_brainreader_brain_stem_z_score		float			Brain-Stem z-score				
-	clinad_brainreader_brain_stem_percentile		float			Brain-Stem percentile				
-	clinad_brainreader_caudate_volume_in_ml		float			Caudate volume in ml				
-	clinad_brainreader_caudate_vol_mtiv_ratio		float			Caudate Vol/mTIV ratio				
-	clinad_brainreader_caudate_nr_index		float			Caudate NR Index				
-	clinad_brainreader_caudate_z_score		float			Caudate z-score				
-	clinad_brainreader_caudate_percentile		float			Caudate percentile				
-	clinad_brainreader_left_caudate_volume_in_ml		float			Left-Caudate volume in ml				
-	clinad_brainreader_left_caudate_vol_mtiv_ratio		float			Left-Caudate Vol/mTIV ratio				
-	clinad_brainreader_left_caudate_nr_index		float			Left-Caudate NR Index				
-	clinad_brainreader_left_caudate_z_score		float			Left-Caudate z-score				
-	clinad_brainreader_left_caudate_percentile		float			Left-Caudate percentile				
-	clinad_brainreader_right_caudate_volume_in_ml		float			Right-Caudate volume in ml				
-	clinad_brainreader_right_caudate_vol_mtiv_ratio		float			Right-Caudate Vol/mTIV ratio				
-	clinad_brainreader_right_caudate_nr_index		float			Right-Caudate NR Index				
-	clinad_brainreader_right_caudate_z_score		float			Right-Caudate z-score				
-	clinad_brainreader_right_caudate_percentile		float			Right-Caudate percentile				
-	clinad_brainreader_left_cerebellum_volume_in_ml		float			Left-Cerebellum volume in ml				
-	clinad_brainreader_left_cerebellum_vol_mtiv_ratio		float			Left-Cerebellum Vol/mTIV ratio				
-	clinad_brainreader_left_cerebellum_nr_index		float			Left-Cerebellum NR Index				
-	clinad_brainreader_left_cerebellum_z_score		float			Left-Cerebellum z-score				
-	clinad_brainreader_left_cerebellum_percentile		float			Left-Cerebellum percentile				
-	clinad_brainreader_right_cerebellum_volume_in_ml		float			Right-Cerebellum volume in ml				
-	clinad_brainreader_right_cerebellum_vol_mtiv_ratio		float			Right-Cerebellum Vol/mTIV ratio				
-	clinad_brainreader_right_cerebellum_nr_index		float			Right-Cerebellum NR Index				
-	clinad_brainreader_right_cerebellum_z_score		float			Right-Cerebellum z-score				
-	clinad_brainreader_right_cerebellum_percentile		float			Right-Cerebellum percentile				
-	clinad_brainreader_cerebellum_volume_in_ml		float			Cerebellum volume in ml				
-	clinad_brainreader_cerebellum_vol_mtiv_ratio		float			Cerebellum Vol/mTIV ratio				
-	clinad_brainreader_cerebellum_nr_index		float			Cerebellum NR Index				
-	clinad_brainreader_cerebellum_z_score		float			Cerebellum z-score				
-	clinad_brainreader_cerebellum_percentile		float			Cerebellum percentile				
-	clinad_brainreader_lateral_ventricle_volume_in_ml		float			Lateral-Ventricle volume in ml				
-	clinad_brainreader_lateral_ventricle_vol_mtiv_ratio		float			Lateral-Ventricle Vol/mTIV ratio				
-	clinad_brainreader_lateral_ventricle_nr_index		float			Lateral-Ventricle NR Index				
-	clinad_brainreader_lateral_ventricle_z_score		float			Lateral-Ventricle z-score				
-	clinad_brainreader_lateral_ventricle_percentile		float			Lateral-Ventricle percentile				
-	clinad_brainreader_left_lateral_ventricle_volume_in_ml		float			Left-Lateral-Ventricle volume in ml				
-	clinad_brainreader_left_lateral_ventricle_vol_mtiv_ratio		float			Left-Lateral-Ventricle Vol/mTIV ratio				
-	clinad_brainreader_left_lateral_ventricle_nr_index		float			Left-Lateral-Ventricle NR Index				
-	clinad_brainreader_left_lateral_ventricle_z_score		float			Left-Lateral-Ventricle z-score				
-	clinad_brainreader_left_lateral_ventricle_percentile		float			Left-Lateral-Ventricle percentile				
-	clinad_brainreader_right_lateral_ventricle_volume_in_ml		float			Right-Lateral-Ventricle volume in ml				
-	clinad_brainreader_right_lateral_ventricle_vol_mtiv_ratio		float			Right-Lateral-Ventricle Vol/mTIV ratio				
-	clinad_brainreader_right_lateral_ventricle_nr_index		float			Right-Lateral-Ventricle NR Index				
-	clinad_brainreader_right_lateral_ventricle_z_score		float			Right-Lateral-Ventricle z-score				
-	clinad_brainreader_right_lateral_ventricle_percentile		float			Right-Lateral-Ventricle percentile				
-	clinad_brainreader_putamen_volume_in_ml		float			Putamen volume in ml				
-	clinad_brainreader_putamen_vol_mtiv_ratio		float			Putamen Vol/mTIV ratio				
-	clinad_brainreader_putamen_nr_index		float			Putamen NR Index				
-	clinad_brainreader_putamen_z_score		float			Putamen z-score				
-	clinad_brainreader_putamen_percentile		float			Putamen percentile				
-	clinad_brainreader_left_putamen_volume_in_ml		float			Left-Putamen volume in ml				
-	clinad_brainreader_left_putamen_vol_mtiv_ratio		float			Left-Putamen Vol/mTIV ratio				
-	clinad_brainreader_left_putamen_nr_index		float			Left-Putamen NR Index				
-	clinad_brainreader_left_putamen_z_score		float			Left-Putamen z-score				
-	clinad_brainreader_left_putamen_percentile		float			Left-Putamen percentile				
-	clinad_brainreader_right_putamen_volume_in_ml		float			Right-Putamen volume in ml				
-	clinad_brainreader_right_putamen_vol_mtiv_ratio		float			Right-Putamen Vol/mTIV ratio				
-	clinad_brainreader_right_putamen_nr_index		float			Right-Putamen NR Index				
-	clinad_brainreader_right_putamen_z_score		float			Right-Putamen z-score				
-	clinad_brainreader_right_putamen_percentile		float			Right-Putamen percentile				
-	clinad_brainreader_thalamus_volume_in_ml		float			Thalamus volume in ml				
-	clinad_brainreader_thalamus_vol_mtiv_ratio		float			Thalamus Vol/mTIV ratio				
-	clinad_brainreader_thalamus_nr_index		float			Thalamus NR Index				
-	clinad_brainreader_thalamus_z_score		float			Thalamus z-score				
-	clinad_brainreader_thalamus_percentile		float			Thalamus percentile				
-	clinad_brainreader_left_thalamus_volume_in_ml		float			Left-Thalamus volume in ml				
-	clinad_brainreader_left_thalamus_vol_mtiv_ratio		float			Left-Thalamus Vol/mTIV ratio				
-	clinad_brainreader_left_thalamus_nr_index		float			Left-Thalamus NR Index				
-	clinad_brainreader_left_thalamus_z_score		float			Left-Thalamus z-score				
-	clinad_brainreader_left_thalamus_percentile		float			Left-Thalamus percentile				
-	clinad_brainreader_right_thalamus_volume_in_ml		float			Right-Thalamus volume in ml				
-	clinad_brainreader_right_thalamus_vol_mtiv_ratio		float			Right-Thalamus Vol/mTIV ratio				
-	clinad_brainreader_right_thalamus_nr_index		float			Right-Thalamus NR Index				
-	clinad_brainreader_right_thalamus_z_score		float			Right-Thalamus z-score				
-	clinad_brainreader_right_thalamus_percentile		float			Right-Thalamus percentile				
-	clinad_brainreader_ventral_diencephalon_volume_in_ml		float			Ventral-Diencephalon volume in ml				
-	clinad_brainreader_ventral_diencephalon_vol_mtiv_ratio		float			Ventral-Diencephalon Vol/mTIV ratio				
-	clinad_brainreader_ventral_diencephalon_nr_index		float			Ventral-Diencephalon NR Index				
-	clinad_brainreader_ventral_diencephalon_z_score		float			Ventral-Diencephalon z-score				
-	clinad_brainreader_ventral_diencephalon_percentile		float			Ventral-Diencephalon percentile				
-	clinad_brainreader_left_ventral_diencephalon_volume_in_ml		float			Left-Ventral-Diencephalon volume in ml				
-	clinad_brainreader_left_ventral_diencephalon_vol_mtiv_ratio		float			Left-Ventral-Diencephalon Vol/mTIV ratio				
-	clinad_brainreader_left_ventral_diencephalon_nr_index		float			Left-Ventral-Diencephalon NR Index				
-	clinad_brainreader_left_ventral_diencephalon_z_score		float			Left-Ventral-Diencephalon z-score				
-	clinad_brainreader_left_ventral_diencephalon_percentile		float			Left-Ventral-Diencephalon percentile				
-	clinad_brainreader_right_ventral_diencephalon_volume_in_ml		float			Right-Ventral-Diencephalon volume in ml				
-	clinad_brainreader_right_ventral_diencephalon_vol_mtiv_ratio		float			Right-Ventral-Diencephalon Vol/mTIV ratio				
-	clinad_brainreader_right_ventral_diencephalon_nr_index		float			Right-Ventral-Diencephalon NR Index				
-	clinad_brainreader_right_ventral_diencephalon_z_score		float			Right-Ventral-Diencephalon z-score				
-	clinad_brainreader_right_ventral_diencephalon_percentile		float			Right-Ventral-Diencephalon percentile				
-	clinad_brainreader_left_frontal_lobe_volume_in_ml		float			Left-Frontal-Lobe volume in ml				
-	clinad_brainreader_left_frontal_lobe_vol_mtiv_ratio		float			Left-Frontal-Lobe Vol/mTIV ratio				
-	clinad_brainreader_left_frontal_lobe_nr_index		float			Left-Frontal-Lobe NR Index				
-	clinad_brainreader_left_frontal_lobe_z_score		float			Left-Frontal-Lobe z-score				
-	clinad_brainreader_left_frontal_lobe_percentile		float			Left-Frontal-Lobe percentile				
-	clinad_brainreader_right_frontal_lobe_volume_in_ml		float			Right-Frontal-Lobe volume in ml				
-	clinad_brainreader_right_frontal_lobe_vol_mtiv_ratio		float			Right-Frontal-Lobe Vol/mTIV ratio				
-	clinad_brainreader_right_frontal_lobe_nr_index		float			Right-Frontal-Lobe NR Index				
-	clinad_brainreader_right_frontal_lobe_z_score		float			Right-Frontal-Lobe z-score				
-	clinad_brainreader_right_frontal_lobe_percentile		float			Right-Frontal-Lobe percentile				
-	clinad_brainreader_left_parietal_lobe_volume_in_ml		float			Left-Parietal-Lobe volume in ml				
-	clinad_brainreader_left_parietal_lobe_vol_mtiv_ratio		float			Left-Parietal-Lobe Vol/mTIV ratio				
-	clinad_brainreader_left_parietal_lobe_nr_index		float			Left-Parietal-Lobe NR Index				
-	clinad_brainreader_left_parietal_lobe_z_score		float			Left-Parietal-Lobe z-score				
-	clinad_brainreader_left_parietal_lobe_percentile		float			Left-Parietal-Lobe percentile				
-	clinad_brainreader_right_parietal_lobe_volume_in_ml		float			Right-Parietal-Lobe volume in ml				
-	clinad_brainreader_right_parietal_lobe_vol_mtiv_ratio		float			Right-Parietal-Lobe Vol/mTIV ratio				
-	clinad_brainreader_right_parietal_lobe_nr_index		float			Right-Parietal-Lobe NR Index				
-	clinad_brainreader_right_parietal_lobe_z_score		float			Right-Parietal-Lobe z-score				
-	clinad_brainreader_right_parietal_lobe_percentile		float			Right-Parietal-Lobe percentile				
-	clinad_brainreader_left_occipital_lobe_volume_in_ml		float			Left-Occipital-Lobe volume in ml				
-	clinad_brainreader_left_occipital_lobe_vol_mtiv_ratio		float			Left-Occipital-Lobe Vol/mTIV ratio				
-	clinad_brainreader_left_occipital_lobe_nr_index		float			Left-Occipital-Lobe NR Index				
-	clinad_brainreader_left_occipital_lobe_z_score		float			Left-Occipital-Lobe z-score				
-	clinad_brainreader_left_occipital_lobe_percentile		float			Left-Occipital-Lobe percentile				
-	clinad_brainreader_right_occipital_lobe_volume_in_ml		float			Right-Occipital-Lobe volume in ml				
-	clinad_brainreader_right_occipital_lobe_vol_mtiv_ratio		float			Right-Occipital-Lobe Vol/mTIV ratio				
-	clinad_brainreader_right_occipital_lobe_nr_index		float			Right-Occipital-Lobe NR Index				
-	clinad_brainreader_right_occipital_lobe_z_score		float			Right-Occipital-Lobe z-score				
-	clinad_brainreader_right_occipital_lobe_percentile		float			Right-Occipital-Lobe percentile				
-	clinad_brainreader_left_temporal_lobe_volume_in_ml		float			Left-Temporal-Lobe volume in ml				
-	clinad_brainreader_left_temporal_lobe_vol_mtiv_ratio		float			Left-Temporal-Lobe Vol/mTIV ratio				
-	clinad_brainreader_left_temporal_lobe_nr_index		float			Left-Temporal-Lobe NR Index				
-	clinad_brainreader_left_temporal_lobe_z_score		float			Left-Temporal-Lobe z-score				
-	clinad_brainreader_left_temporal_lobe_percentile		float			Left-Temporal-Lobe percentile				
-	clinad_brainreader_right_temporal_lobe_volume_in_ml		float			Right-Temporal-Lobe volume in ml				
-	clinad_brainreader_right_temporal_lobe_vol_mtiv_ratio		float			Right-Temporal-Lobe Vol/mTIV ratio				
-	clinad_brainreader_right_temporal_lobe_nr_index		float			Right-Temporal-Lobe NR Index				
-	clinad_brainreader_right_temporal_lobe_z_score		float			Right-Temporal-Lobe z-score				
-	clinad_brainreader_right_temporal_lobe_percentile		float			Right-Temporal-Lobe percentile				
-	clinad_brainreader_frontal_lobe_volume_in_ml		float			Frontal-Lobe volume in ml				
-	clinad_brainreader_frontal_lobe_vol_mtiv_ratio		float			Frontal-Lobe Vol/mTIV ratio				
-	clinad_brainreader_frontal_lobe_nr_index		float			Frontal-Lobe NR Index				
-	clinad_brainreader_frontal_lobe_z_score		float			Frontal-Lobe z-score				
-	clinad_brainreader_frontal_lobe_percentile		float			Frontal-Lobe percentile				
-	clinad_brainreader_parietal_lobe_volume_in_ml		float			Parietal-Lobe volume in ml				
-	clinad_brainreader_parietal_lobe_vol_mtiv_ratio		float			Parietal-Lobe Vol/mTIV ratio				
-	clinad_brainreader_parietal_lobe_nr_index		float			Parietal-Lobe NR Index				
-	clinad_brainreader_parietal_lobe_z_score		float			Parietal-Lobe z-score				
-	clinad_brainreader_parietal_lobe_percentile		float			Parietal-Lobe percentile				
-	clinad_brainreader_occipital_lobe_volume_in_ml		float			Occipital-Lobe volume in ml				
-	clinad_brainreader_occipital_lobe_vol_mtiv_ratio		float			Occipital-Lobe Vol/mTIV ratio				
-	clinad_brainreader_occipital_lobe_nr_index		float			Occipital-Lobe NR Index				
-	clinad_brainreader_occipital_lobe_z_score		float			Occipital-Lobe z-score				
-	clinad_brainreader_occipital_lobe_percentile		float			Occipital-Lobe percentile				
-	clinad_brainreader_temporal_lobe_volume_in_ml		float			Temporal-Lobe volume in ml				
-	clinad_brainreader_temporal_lobe_vol_mtiv_ratio		float			Temporal-Lobe Vol/mTIV ratio				
-	clinad_brainreader_temporal_lobe_nr_index		float			Temporal-Lobe NR Index				
-	clinad_brainreader_temporal_lobe_z_score		float			Temporal-Lobe z-score				
-	clinad_brainreader_temporal_lobe_percentile		float			Temporal-Lobe percentile				
-	clinad_brainreader_left_pallidum_volume_in_ml		float			Left-Pallidum volume in ml				
-	clinad_brainreader_left_pallidum_vol_mtiv_ratio		float			Left-Pallidum Vol/mTIV ratio				
-	clinad_brainreader_left_pallidum_nr_index		float			Left-Pallidum NR Index				
-	clinad_brainreader_left_pallidum_z_score		float			Left-Pallidum z-score				
-	clinad_brainreader_left_pallidum_percentile		float			Left-Pallidum percentile				
-	clinad_brainreader_right_pallidum_volume_in_ml		float			Right-Pallidum volume in ml				
-	clinad_brainreader_right_pallidum_vol_mtiv_ratio		float			Right-Pallidum Vol/mTIV ratio				
-	clinad_brainreader_right_pallidum_nr_index		float			Right-Pallidum NR Index				
-	clinad_brainreader_right_pallidum_z_score		float			Right-Pallidum z-score				
-	clinad_brainreader_right_pallidum_percentile		float			Right-Pallidum percentile				
-	clinad_brainreader_pallidum_volume_in_ml		float			Pallidum volume in ml				
-	clinad_brainreader_pallidum_vol_mtiv_ratio		float			Pallidum Vol/mTIV ratio				
-	clinad_brainreader_pallidum_nr_index		float			Pallidum NR Index				
-	clinad_brainreader_pallidum_z_score		float			Pallidum z-score				
-	clinad_brainreader_pallidum_percentile		float			Pallidum percentile				
-	clinad_brainreader_pallidum_volume_in_ml		float			Pallidum volume in ml				
-	clinad_brainreader_pallidum_vol_mtiv_ratio		float			Pallidum Vol/mTIV ratio				
-	clinad_brainreader_pallidum_nr_index		float			Pallidum NR Index				
-	clinad_brainreader_pallidum_z_score		float			Pallidum z-score				
-	clinad_brainreader_pallidum_percentile		float			Pallidum percentile				
+Field	BIDS CLINICA	BIDS format	BIDS type	INSIGHT	INSIGHT location	CLINAD	AIBL	AIBL location	OASIS	OASIS location	OASIS3	OASIS3 location
+BIDS session id	session_id	Keyword 'ses-' followed by the original session id of each dataset without special characters or symbols	string									
+Date of the examination	examination_date	YYYY-MM-DD HH:MM:SS	string	 		date d'evaluation	EXAMDATE	aibl_neurobat_*.csv				
+Age at the session	age		float				PTDOB	aibl_ptdemog_*.csv				
+	current_study	free format										
+	adni_fdg	free format										
+	adni_pib	free format										
+	adni_av45	free format										
+	cdr_global						CDGLOBAL	aibl_cdr_*.csv	CDR	oasis_cross-sectional.csv	CDR	oasis3_clinical.csv
+	cdr_sb											
+	adas11											
+	adas13											
+Mini-mental state exam	MMS		int			MMS	MMSCORE	aibl_mmse_*.csv	MMSE	oasis_cross-sectional.csv	MMSE	oasis3_clinical.csv
+	FAQ											
+	adni_ventricles_vol											
+	adni_hippocampus_vol											
+	adni_brain_vol											
+	adni_entorhinal_vol											
+Intracranial volume	adni_icv											
+Diagnosis at current session	diagnosis						DXCURREN	aibl_pdxconv_*.csv	CDR	oasis_cross-sectional.csv	CDR	oasis3_clinical.csv
+	cati_sacha_vol_left_hippocampus	cm3	float	vol_left_hippocampus	Analyses_INSIGHT_M0_20151201/Analyses_HPC_SACHA							
+	cati_sacha_vol_right_hippocampus	cm3	float	vol_right_hippocampus	Analyses_INSIGHT_M0_20151202/Analyses_HPC_SACHA							
+	cati_whasa_volume	cm3	float	volume (cm3)	Analyses_INSIGHT_M0_20151203/Analyses_HPC_WHASA							
+	mattis_attention											
+	mattis_initiation											
+	mattis_construction											
+	mattis_concepts											
+	mattis_memory											
+	MATTIS		int									
+	FBI											
+Verbal Fluency Test	categorical_fluency		int	Categorical Verbal Fluency	Tst_NRO_NP							
+Verbal Fluency Test	p_fluency		int									
+Grober and Buschke test	grober_buschke_free_cued_recall		int									
+Frontal assessment battery	FAB		int			BREF						
+	freesurfer_rh_mean_thickness			rh_MeanThickness_thickness (mm)	Analyses_INSIGHT_M0_20151201/Analyses_thichness_Freesurfer							
+	freesurfer_lh_mean_thickness			lh_MeanThickness_thickness (mm)	Analyses_INSIGHT_M0_20151201/Analyses_thichness_Freesurfer							
+	EQ			EQ_SCORE	TST_NRO_NL.xls/EQ5D							
+	SPPB			Total Score	TST_NRO_NL.xls/SPPB							
+	AD8			AD8_SCORE	Tst_NRO_NP.xlsx/AD8							
+	MEM			MEM_SCORE	Tst_NRO_NP.xlsx/MCQ							
+	AD			AD_SCORE	Tst_NRO_NP.xlsx/AD8							
+Grober and Buschke test	grober_buschke_free_recall		int			RL						
+Grober and Buschke test	grober_buschke_total_recall		int			RT						
+	grober_buschke_free_recall_delayed		int			RLD						
+	grober_buschke_total_recall_delayed		int			RTD						
+	motivation_starkstein			(Starkstein) Motivation scale	Tst_NRO_NP.xlsx/(Starkstein)							
+	verbal_fluency			Lexical Verbal Fluency Score	Tst_NRO_NP.xlsx/(Verbal Fluency)							
+Innotest amyloid/tau index	IATI		float			IATI						
+	clinad_CSF					CSF AD profile						
+	clinad_amyloidB		int			B-Amyloide						
+	clinad_tau		int			Tau						
+	clinad_p_tau		int			P-Tau						
+	clinad_p_tau_Aß		float			PTau/Aß						
+	clinad_delay_MRI_CSF					Délai IRM PL						
+	clinad_date_MRI_closest_to_CSF					Date IRM proche PL						
+												
+	prevdemals_benson_copy											
+	prevdemals_benson_rappel											
+	prevdemals_benson_total											
+	prevdemals_faux_pas											
+	praxies_dexterity											
+	praxies_gesture_kinetic											
+	praxies_non_meaning_gestures											
+	praxies_intransitive gestures											
+	praxies_transitive_gestures											
+	praxies_total											
+	prevdemals_emotion_total											
+	prevdemals_als											
+	prevdemals_ftd											
+												
+												
+												
+												
+												
+												
+	clinad_amnestic_syndrome_of_hippocampal_type					Sd amn hip						
+Number of words that was not cointaned in the original dataset of words	grober_buschke_intrusions					intrusions						
+												
+	clinad_reac_indic					Réac indic						
+	clinad_correct_recognitions					reconnaissances correctes						
+	clinad_false_recognitions					fausses reconnaissnces						
+												
+	clinad_date_csf					Date PL						
+	clinad_spm_vol_gm					Vol_SG						
+	clinad_spm_vol_wm					Vol_SB						
+	clinad_spm_vol_csf					Vol_CSF						
+	clinad_spm_vol_total					Vol_Total						
+	clinad_volbrain_scale_factor					Scale factor						
+	clinad_volbrain_snr		float			SNR						
+	clinad_volbrain_msnr		float			mSNR						
+	clinad_volbrain_qc		float			QC						
+	clinad_volbrain_tissue_wm_cm3		float			Tissue WM cm3						
+	clinad_volbrain_tissue_wm_%		float			Tissue WM %						
+	clinad_volbrain_tissue_gm_cm3		float			Tissue GM cm3						
+	clinad_volbrain_tissue_gm_%		float			Tissue GM %						
+	clinad_volbrain_tissue_csf_cm3		float			Tissue CSF cm3						
+	clinad_volbrain_tissue_csf_%		float			Tissue CSF %						
+	clinad_volbrain_tissue_brain_cm3		float			Tissue Brain cm3						
+	clinad_volbrain_tissue_brain_%		float			Tissue Brain %						
+	clinad_volbrain_tissue_ic_cm3		float			Tissue IC cm3						
+	clinad_volbrain_tissue_ic_%		float			Tissue IC %						
+	clinad_volbrain_cerebrum_total_cm3		float			Cerebrum Total cm3						
+	clinad_volbrain_cerebrum_total_%		float			Cerebrum Total %						
+	clinad_volbrain_cerebrum_t_gm_cm3		float			Cerebrum T GM cm3						
+	clinad_volbrain_cerebrum_t_gm_%		float			Cerebrum T GM %						
+	clinad_volbrain_cerebrum_t_wm_cm3		float			Cerebrum T WM cm3						
+	clinad_volbrain_cerebrum_t_wm_%		float			Cerebrum T WM %						
+	clinad_volbrain_cerebrum_right_cm3		float			Cerebrum Right cm3						
+	clinad_volbrain_cerebrum_right_%		float			Cerebrum Right %						
+	clinad_volbrain_cerebrum_r_gm_cm3		float			Cerebrum R GM cm3						
+	clinad_volbrain_cerebrum_r_gm_%		float			Cerebrum R GM %						
+	clinad_volbrain_cerebrum_r_wm_cm3		float			Cerebrum R WM cm3						
+	clinad_volbrain_cerebrum_r_wm_%		float			Cerebrum R WM %						
+	clinad_volbrain_cerebrum_left_cm3		float			Cerebrum Left cm3						
+	clinad_volbrain_cerebrum_left_%		float			Cerebrum Left %						
+	clinad_volbrain_cerebrum_l_gm_cm3		float			Cerebrum L GM cm3						
+	clinad_volbrain_cerebrum_l_gm_%		float			Cerebrum L GM %						
+	clinad_volbrain_cerebrum_l_wm_cm3		float			Cerebrum L WM cm3						
+	clinad_volbrain_cerebrum_l_wm_%		float			Cerebrum L WM %						
+	clinad_volbrain_cerebrum_assymetry		float			Cerebrum Assymetry						
+	clinad_volbrain_cerebelum_total_cm3		float			Cerebelum Total cm3						
+	clinad_volbrain_cerebelum_total_%		float			Cerebelum Total %						
+	clinad_volbrain_cerebelum_t_gm_cm3		float			Cerebelum T GM cm3						
+	clinad_volbrain_cerebelum_t_gm_%		float			Cerebelum T GM %						
+	clinad_volbrain_cerebelum_t_wm_cm3		float			Cerebelum T WM cm3						
+	clinad_volbrain_cerebelum_t_wm_%		float			Cerebelum T WM %						
+	clinad_volbrain_cerebelum_right_cm3		float			Cerebelum Right cm3						
+	clinad_volbrain_cerebelum_right_%		float			Cerebelum Right %						
+	clinad_volbrain_cerebelum_r_gm_cm3		float			Cerebelum R GM cm3						
+	clinad_volbrain_cerebelum_r_gm_%		float			Cerebelum R GM %						
+	clinad_volbrain_cerebelum_r_wm_cm3		float			Cerebelum R WM cm3						
+	clinad_volbrain_cerebelum_r_wm_%		float			Cerebelum R WM %						
+	clinad_volbrain_cerebelum_left_cm3		float			Cerebelum Left cm3						
+	clinad_volbrain_cerebelum_left_%		float			Cerebelum Left %						
+	clinad_volbrain_cerebelum_l_gm_cm3		float			Cerebelum L GM cm3						
+	clinad_volbrain_cerebelum_l_gm_%		float			Cerebelum L GM %						
+	clinad_volbrain_cerebelum_l_wm_cm3		float			Cerebelum L WM cm3						
+	clinad_volbrain_cerebelum_l_wm_%		float			Cerebelum L WM %						
+	clinad_volbrain_cerebelum_assymetry		float			Cerebelum Assymetry						
+	clinad_volbrain_brainstem_cm3		float			Brainstem cm3						
+	clinad_volbrain_brainstem_%		float			Brainstem %						
+	clinad_volbrain_lateral_ventricles_total_cm3		float			Lateral ventricles Total cm3						
+	clinad_volbrain_lateral_ventricles_total_%		float			Lateral ventricles Total %						
+	clinad_volbrain_lateral_ventricles_right_cm3		float			Lateral ventricles Right cm3						
+	clinad_volbrain_lateral_ventricles_right_%		float			Lateral ventricles Right %						
+	clinad_volbrain_lateral_ventricles_left_cm3		float			Lateral ventricles Left cm3						
+	clinad_volbrain_lateral_ventricles_left_%		float			Lateral ventricles Left %						
+	clinad_volbrain_lateral_ventricles_asymmetry		float			Lateral ventricles Asymmetry						
+	clinad_volbrain_caudate_total_cm3		float			Caudate Total cm3						
+	clinad_volbrain_caudate_total_%		float			Caudate Total %						
+	clinad_volbrain_caudate_right_cm3		float			Caudate Right cm3						
+	clinad_volbrain_caudate_right_%		float			Caudate Right %						
+	clinad_volbrain_caudate_left_cm3		float			Caudate Left cm3						
+	clinad_volbrain_caudate_left_%		float			Caudate Left %						
+	clinad_volbrain_caudate_asymmetry		float			Caudate Asymmetry						
+	clinad_volbrain_putamen_total_cm3		float			Putamen Total cm3						
+	clinad_volbrain_putamen_total_%		float			Putamen Total %						
+	clinad_volbrain_putamen_right_cm3		float			Putamen Right cm3						
+	clinad_volbrain_putamen_right_%		float			Putamen Right %						
+	clinad_volbrain_putamen_left_cm3		float			Putamen Left cm3						
+	clinad_volbrain_putamen_left_%		float			Putamen Left %						
+	clinad_volbrain_putamen_asymmetry		float			Putamen Asymmetry						
+	clinad_volbrain_thalamus_total_cm3		float			Thalamus Total cm3						
+	clinad_volbrain_thalamus_total_%		float			Thalamus Total %						
+	clinad_volbrain_thalamus_right_cm3		float			Thalamus Right cm3						
+	clinad_volbrain_thalamus_right_%		float			Thalamus Right %						
+	clinad_volbrain_thalamus_left_cm3		float			Thalamus Left cm3						
+	clinad_volbrain_thalamus_left_%		float			Thalamus Left %						
+	clinad_volbrain_thalamus_asymmetry		float			Thalamus Asymmetry						
+	clinad_volbrain_globus_pallidus_total_cm3		float			Globus Pallidus Total cm3						
+	clinad_volbrain_globus_pallidus_total_%		float			Globus Pallidus Total %						
+	clinad_volbrain_globus_pallidus_right_cm3		float			Globus Pallidus Right cm3						
+	clinad_volbrain_globus_pallidus_right_%		float			Globus Pallidus Right %						
+	clinad_volbrain_globus_pallidus_left_cm3		float			Globus Pallidus Left cm3						
+	clinad_volbrain_globus_pallidus_left_%		float			Globus Pallidus Left %						
+	clinad_volbrain_globus_pallidus_asymmetry		float			Globus Pallidus Asymmetry						
+	clinad_volbrain_hippocampus_total_cm3		float			Hippocampus Total cm3						
+	clinad_volbrain_hippocampus_total_%		float			Hippocampus Total %						
+	clinad_volbrain_hippocampus_right_cm3		float			Hippocampus Right cm3						
+	clinad_volbrain_hippocampus_right_%		float			Hippocampus Right %						
+	clinad_volbrain_hippocampus_left_cm3		float			Hippocampus Left cm3						
+	clinad_volbrain_hippocampus_left_%		float			Hippocampus Left %						
+	clinad_volbrain_hippocampus_asymmetry		float			Hippocampus Asymmetry						
+	clinad_volbrain_amygdala_total_cm3		float			Amygdala Total cm3						
+	clinad_volbrain_amygdala_total_%		float			Amygdala Total %						
+	clinad_volbrain_amygdala_right_cm3		float			Amygdala Right cm3						
+	clinad_volbrain_amygdala_right_%		float			Amygdala Right %						
+	clinad_volbrain_amygdala_left_cm3		float			Amygdala Left cm3						
+	clinad_volbrain_amygdala_left_%		float			Amygdala Left %						
+	clinad_volbrain_amygdala_asymmetry		float			Amygdala Asymmetry						
+	clinad_volbrain_accumbens_total_cm3					Accumbens Total cm3						
+	clinad_volbrain_accumbens_total_%					Accumbens Total %						
+	clinad_volbrain_accumbens_right_cm3					Accumbens Right cm3						
+	clinad_volbrain_accumbens_right_%					Accumbens Right %						
+	clinad_volbrain_accumbens_left_cm3					Accumbens Left cm3						
+	clinad_volbrain_accumbens_left_%					Accumbens Left %						
+	clinad_volbrain_accumbens_asymmetry					Accumbens Asymmetry						
+	clinad_brainreader_id_rm					MR ID						
+	clinad_brainreader_clinical_image_id					Clinical image id						
+	clinad_brainreader_filename					Filename						
+	clinad_brainreader_nr_version					NR version						
+	clinad_brainreader_mtiv_in_ml		float			The measured total intracranial volume (mTIV) in ml						
+	clinad_brainreader_hippocampal_left_right_asymmetry_index		float			Hippocampal Left-Right Asymmetry Index						
+	clinad_brainreader_hippocampal_left_right_asymmetry_index_nr_index		float			Hippocampal Left-Right Asymmetry Index NR Index						
+	clinad_brainreader_hippocampal_left_right_asymmetry_index_z_score		float			Hippocampal Left-Right Asymmetry Index z-score						
+	clinad_brainreader_hippocampal_left_right_asymmetry_index_percentile		float			Hippocampal Left-Right Asymmetry Index percentile						
+	clinad_brainreader_whole_brain_matter_volume_in_ml		float			Whole-Brain-Matter volume in ml						
+	clinad_brainreader_whole_brain_matter_vol_mtiv_ratio		float			Whole-Brain-Matter Vol/mTIV ratio						
+	clinad_brainreader_whole_brain_matter_nr_index		float			Whole-Brain-Matter NR Index						
+	clinad_brainreader_whole_brain_matter_z_score		float			Whole-Brain-Matter z-score						
+	clinad_brainreader_whole_brain_matter_percentile		float			Whole-Brain-Matter percentile						
+	clinad_brainreader_white_matter_volume_in_ml		float			White-Matter volume in ml						
+	clinad_brainreader_white_matter_vol_mtiv_ratio		float			White-Matter Vol/mTIV ratio						
+	clinad_brainreader_white_matter_nr_index		float			White-Matter NR Index						
+	clinad_brainreader_white_matter_z_score		float			White-Matter z-score						
+	clinad_brainreader_white_matter_percentile		float			White-Matter percentile						
+	clinad_brainreader_gray_matter_volume_in_ml		float			Gray-Matter volume in ml						
+	clinad_brainreader_gray_matter_vol_mtiv_ratio		float			Gray-Matter Vol/mTIV ratio						
+	clinad_brainreader_gray_matter_nr_index		float			Gray-Matter NR Index						
+	clinad_brainreader_gray_matter_z_score		float			Gray-Matter z-score						
+	clinad_brainreader_gray_matter_percentile		float			Gray-Matter percentile						
+	clinad_brainreader_csf_dura_volume_in_ml		float			CSF-(+-dura) volume in ml						
+	clinad_brainreader_csf_dura_vol_mtiv_ratio		float			CSF-(+-dura) Vol/mTIV ratio						
+	clinad_brainreader_csf_dura_nr_index		float			CSF-(+-dura) NR Index						
+	clinad_brainreader_csf_dura_z_score		float			CSF-(+-dura) z-score						
+	clinad_brainreader_csf_dura_percentile		float			CSF-(+-dura) percentile						
+	clinad_brainreader_left_hippocampus_volume_in_ml		float			Left-Hippocampus volume in ml						
+	clinad_brainreader_left_hippocampus_vol_mtiv_ratio		float			Left-Hippocampus Vol/mTIV ratio						
+	clinad_brainreader_left_hippocampus_nr_index		float			Left-Hippocampus NR Index						
+	clinad_brainreader_left_hippocampus_z_score		float			Left-Hippocampus z-score						
+	clinad_brainreader_left_hippocampus_percentile		float			Left-Hippocampus percentile						
+	clinad_brainreader_right_hippocampus_volume_in_ml		float			Right-Hippocampus volume in ml						
+	clinad_brainreader_right_hippocampus_vol_mtiv_ratio		float			Right-Hippocampus Vol/mTIV ratio						
+	clinad_brainreader_right_hippocampus_nr_index		float			Right-Hippocampus NR Index						
+	clinad_brainreader_right_hippocampus_z_score		float			Right-Hippocampus z-score						
+	clinad_brainreader_right_hippocampus_percentile		float			Right-Hippocampus percentile						
+	clinad_brainreader_hippocampus_volume_in_ml		float			Hippocampus volume in ml						
+	clinad_brainreader_hippocampus_vol_mtiv_ratio		float			Hippocampus Vol/mTIV ratio						
+	clinad_brainreader_hippocampus_nr_index		float			Hippocampus NR Index						
+	clinad_brainreader_hippocampus_z_score		float			Hippocampus z-score						
+	clinad_brainreader_hippocampus_percentile		float			Hippocampus percentile						
+	clinad_brainreader_left_amygdala_volume_in_ml		float			Left-Amygdala volume in ml						
+	clinad_brainreader_left_amygdala_vol_mtiv_ratio		float			Left-Amygdala Vol/mTIV ratio						
+	clinad_brainreader_left_amygdala_nr_index		float			Left-Amygdala NR Index						
+	clinad_brainreader_left_amygdala_z_score		float			Left-Amygdala z-score						
+	clinad_brainreader_left_amygdala_percentile		float			Left-Amygdala percentile						
+	clinad_brainreader_right_amygdala_volume_in_ml		float			Right-Amygdala volume in ml						
+	clinad_brainreader_right_amygdala_vol_mtiv_ratio		float			Right-Amygdala Vol/mTIV ratio						
+	clinad_brainreader_right_amygdala_nr_index		float			Right-Amygdala NR Index						
+	clinad_brainreader_right_amygdala_z_score		float			Right-Amygdala z-score						
+	clinad_brainreader_right_amygdala_percentile		float			Right-Amygdala percentile						
+	clinad_brainreader_amygdala_volume_in_ml		float			Amygdala volume in ml						
+	clinad_brainreader_amygdala_vol_mtiv_ratio		float			Amygdala Vol/mTIV ratio						
+	clinad_brainreader_amygdala_nr_index		float			Amygdala NR Index						
+	clinad_brainreader_amygdala_z_score		float			Amygdala z-score						
+	clinad_brainreader_amygdala_percentile		float			Amygdala percentile						
+	clinad_brainreader_brain_stem_volume_in_ml		float			Brain-Stem volume in ml						
+	clinad_brainreader_brain_stem_vol_mtiv_ratio		float			Brain-Stem Vol/mTIV ratio						
+	clinad_brainreader_brain_stem_nr_index		float			Brain-Stem NR Index						
+	clinad_brainreader_brain_stem_z_score		float			Brain-Stem z-score						
+	clinad_brainreader_brain_stem_percentile		float			Brain-Stem percentile						
+	clinad_brainreader_caudate_volume_in_ml		float			Caudate volume in ml						
+	clinad_brainreader_caudate_vol_mtiv_ratio		float			Caudate Vol/mTIV ratio						
+	clinad_brainreader_caudate_nr_index		float			Caudate NR Index						
+	clinad_brainreader_caudate_z_score		float			Caudate z-score						
+	clinad_brainreader_caudate_percentile		float			Caudate percentile						
+	clinad_brainreader_left_caudate_volume_in_ml		float			Left-Caudate volume in ml						
+	clinad_brainreader_left_caudate_vol_mtiv_ratio		float			Left-Caudate Vol/mTIV ratio						
+	clinad_brainreader_left_caudate_nr_index		float			Left-Caudate NR Index						
+	clinad_brainreader_left_caudate_z_score		float			Left-Caudate z-score						
+	clinad_brainreader_left_caudate_percentile		float			Left-Caudate percentile						
+	clinad_brainreader_right_caudate_volume_in_ml		float			Right-Caudate volume in ml						
+	clinad_brainreader_right_caudate_vol_mtiv_ratio		float			Right-Caudate Vol/mTIV ratio						
+	clinad_brainreader_right_caudate_nr_index		float			Right-Caudate NR Index						
+	clinad_brainreader_right_caudate_z_score		float			Right-Caudate z-score						
+	clinad_brainreader_right_caudate_percentile		float			Right-Caudate percentile						
+	clinad_brainreader_left_cerebellum_volume_in_ml		float			Left-Cerebellum volume in ml						
+	clinad_brainreader_left_cerebellum_vol_mtiv_ratio		float			Left-Cerebellum Vol/mTIV ratio						
+	clinad_brainreader_left_cerebellum_nr_index		float			Left-Cerebellum NR Index						
+	clinad_brainreader_left_cerebellum_z_score		float			Left-Cerebellum z-score						
+	clinad_brainreader_left_cerebellum_percentile		float			Left-Cerebellum percentile						
+	clinad_brainreader_right_cerebellum_volume_in_ml		float			Right-Cerebellum volume in ml						
+	clinad_brainreader_right_cerebellum_vol_mtiv_ratio		float			Right-Cerebellum Vol/mTIV ratio						
+	clinad_brainreader_right_cerebellum_nr_index		float			Right-Cerebellum NR Index						
+	clinad_brainreader_right_cerebellum_z_score		float			Right-Cerebellum z-score						
+	clinad_brainreader_right_cerebellum_percentile		float			Right-Cerebellum percentile						
+	clinad_brainreader_cerebellum_volume_in_ml		float			Cerebellum volume in ml						
+	clinad_brainreader_cerebellum_vol_mtiv_ratio		float			Cerebellum Vol/mTIV ratio						
+	clinad_brainreader_cerebellum_nr_index		float			Cerebellum NR Index						
+	clinad_brainreader_cerebellum_z_score		float			Cerebellum z-score						
+	clinad_brainreader_cerebellum_percentile		float			Cerebellum percentile						
+	clinad_brainreader_lateral_ventricle_volume_in_ml		float			Lateral-Ventricle volume in ml						
+	clinad_brainreader_lateral_ventricle_vol_mtiv_ratio		float			Lateral-Ventricle Vol/mTIV ratio						
+	clinad_brainreader_lateral_ventricle_nr_index		float			Lateral-Ventricle NR Index						
+	clinad_brainreader_lateral_ventricle_z_score		float			Lateral-Ventricle z-score						
+	clinad_brainreader_lateral_ventricle_percentile		float			Lateral-Ventricle percentile						
+	clinad_brainreader_left_lateral_ventricle_volume_in_ml		float			Left-Lateral-Ventricle volume in ml						
+	clinad_brainreader_left_lateral_ventricle_vol_mtiv_ratio		float			Left-Lateral-Ventricle Vol/mTIV ratio						
+	clinad_brainreader_left_lateral_ventricle_nr_index		float			Left-Lateral-Ventricle NR Index						
+	clinad_brainreader_left_lateral_ventricle_z_score		float			Left-Lateral-Ventricle z-score						
+	clinad_brainreader_left_lateral_ventricle_percentile		float			Left-Lateral-Ventricle percentile						
+	clinad_brainreader_right_lateral_ventricle_volume_in_ml		float			Right-Lateral-Ventricle volume in ml						
+	clinad_brainreader_right_lateral_ventricle_vol_mtiv_ratio		float			Right-Lateral-Ventricle Vol/mTIV ratio						
+	clinad_brainreader_right_lateral_ventricle_nr_index		float			Right-Lateral-Ventricle NR Index						
+	clinad_brainreader_right_lateral_ventricle_z_score		float			Right-Lateral-Ventricle z-score						
+	clinad_brainreader_right_lateral_ventricle_percentile		float			Right-Lateral-Ventricle percentile						
+	clinad_brainreader_putamen_volume_in_ml		float			Putamen volume in ml						
+	clinad_brainreader_putamen_vol_mtiv_ratio		float			Putamen Vol/mTIV ratio						
+	clinad_brainreader_putamen_nr_index		float			Putamen NR Index						
+	clinad_brainreader_putamen_z_score		float			Putamen z-score						
+	clinad_brainreader_putamen_percentile		float			Putamen percentile						
+	clinad_brainreader_left_putamen_volume_in_ml		float			Left-Putamen volume in ml						
+	clinad_brainreader_left_putamen_vol_mtiv_ratio		float			Left-Putamen Vol/mTIV ratio						
+	clinad_brainreader_left_putamen_nr_index		float			Left-Putamen NR Index						
+	clinad_brainreader_left_putamen_z_score		float			Left-Putamen z-score						
+	clinad_brainreader_left_putamen_percentile		float			Left-Putamen percentile						
+	clinad_brainreader_right_putamen_volume_in_ml		float			Right-Putamen volume in ml						
+	clinad_brainreader_right_putamen_vol_mtiv_ratio		float			Right-Putamen Vol/mTIV ratio						
+	clinad_brainreader_right_putamen_nr_index		float			Right-Putamen NR Index						
+	clinad_brainreader_right_putamen_z_score		float			Right-Putamen z-score						
+	clinad_brainreader_right_putamen_percentile		float			Right-Putamen percentile						
+	clinad_brainreader_thalamus_volume_in_ml		float			Thalamus volume in ml						
+	clinad_brainreader_thalamus_vol_mtiv_ratio		float			Thalamus Vol/mTIV ratio						
+	clinad_brainreader_thalamus_nr_index		float			Thalamus NR Index						
+	clinad_brainreader_thalamus_z_score		float			Thalamus z-score						
+	clinad_brainreader_thalamus_percentile		float			Thalamus percentile						
+	clinad_brainreader_left_thalamus_volume_in_ml		float			Left-Thalamus volume in ml						
+	clinad_brainreader_left_thalamus_vol_mtiv_ratio		float			Left-Thalamus Vol/mTIV ratio						
+	clinad_brainreader_left_thalamus_nr_index		float			Left-Thalamus NR Index						
+	clinad_brainreader_left_thalamus_z_score		float			Left-Thalamus z-score						
+	clinad_brainreader_left_thalamus_percentile		float			Left-Thalamus percentile						
+	clinad_brainreader_right_thalamus_volume_in_ml		float			Right-Thalamus volume in ml						
+	clinad_brainreader_right_thalamus_vol_mtiv_ratio		float			Right-Thalamus Vol/mTIV ratio						
+	clinad_brainreader_right_thalamus_nr_index		float			Right-Thalamus NR Index						
+	clinad_brainreader_right_thalamus_z_score		float			Right-Thalamus z-score						
+	clinad_brainreader_right_thalamus_percentile		float			Right-Thalamus percentile						
+	clinad_brainreader_ventral_diencephalon_volume_in_ml		float			Ventral-Diencephalon volume in ml						
+	clinad_brainreader_ventral_diencephalon_vol_mtiv_ratio		float			Ventral-Diencephalon Vol/mTIV ratio						
+	clinad_brainreader_ventral_diencephalon_nr_index		float			Ventral-Diencephalon NR Index						
+	clinad_brainreader_ventral_diencephalon_z_score		float			Ventral-Diencephalon z-score						
+	clinad_brainreader_ventral_diencephalon_percentile		float			Ventral-Diencephalon percentile						
+	clinad_brainreader_left_ventral_diencephalon_volume_in_ml		float			Left-Ventral-Diencephalon volume in ml						
+	clinad_brainreader_left_ventral_diencephalon_vol_mtiv_ratio		float			Left-Ventral-Diencephalon Vol/mTIV ratio						
+	clinad_brainreader_left_ventral_diencephalon_nr_index		float			Left-Ventral-Diencephalon NR Index						
+	clinad_brainreader_left_ventral_diencephalon_z_score		float			Left-Ventral-Diencephalon z-score						
+	clinad_brainreader_left_ventral_diencephalon_percentile		float			Left-Ventral-Diencephalon percentile						
+	clinad_brainreader_right_ventral_diencephalon_volume_in_ml		float			Right-Ventral-Diencephalon volume in ml						
+	clinad_brainreader_right_ventral_diencephalon_vol_mtiv_ratio		float			Right-Ventral-Diencephalon Vol/mTIV ratio						
+	clinad_brainreader_right_ventral_diencephalon_nr_index		float			Right-Ventral-Diencephalon NR Index						
+	clinad_brainreader_right_ventral_diencephalon_z_score		float			Right-Ventral-Diencephalon z-score						
+	clinad_brainreader_right_ventral_diencephalon_percentile		float			Right-Ventral-Diencephalon percentile						
+	clinad_brainreader_left_frontal_lobe_volume_in_ml		float			Left-Frontal-Lobe volume in ml						
+	clinad_brainreader_left_frontal_lobe_vol_mtiv_ratio		float			Left-Frontal-Lobe Vol/mTIV ratio						
+	clinad_brainreader_left_frontal_lobe_nr_index		float			Left-Frontal-Lobe NR Index						
+	clinad_brainreader_left_frontal_lobe_z_score		float			Left-Frontal-Lobe z-score						
+	clinad_brainreader_left_frontal_lobe_percentile		float			Left-Frontal-Lobe percentile						
+	clinad_brainreader_right_frontal_lobe_volume_in_ml		float			Right-Frontal-Lobe volume in ml						
+	clinad_brainreader_right_frontal_lobe_vol_mtiv_ratio		float			Right-Frontal-Lobe Vol/mTIV ratio						
+	clinad_brainreader_right_frontal_lobe_nr_index		float			Right-Frontal-Lobe NR Index						
+	clinad_brainreader_right_frontal_lobe_z_score		float			Right-Frontal-Lobe z-score						
+	clinad_brainreader_right_frontal_lobe_percentile		float			Right-Frontal-Lobe percentile						
+	clinad_brainreader_left_parietal_lobe_volume_in_ml		float			Left-Parietal-Lobe volume in ml						
+	clinad_brainreader_left_parietal_lobe_vol_mtiv_ratio		float			Left-Parietal-Lobe Vol/mTIV ratio						
+	clinad_brainreader_left_parietal_lobe_nr_index		float			Left-Parietal-Lobe NR Index						
+	clinad_brainreader_left_parietal_lobe_z_score		float			Left-Parietal-Lobe z-score						
+	clinad_brainreader_left_parietal_lobe_percentile		float			Left-Parietal-Lobe percentile						
+	clinad_brainreader_right_parietal_lobe_volume_in_ml		float			Right-Parietal-Lobe volume in ml						
+	clinad_brainreader_right_parietal_lobe_vol_mtiv_ratio		float			Right-Parietal-Lobe Vol/mTIV ratio						
+	clinad_brainreader_right_parietal_lobe_nr_index		float			Right-Parietal-Lobe NR Index						
+	clinad_brainreader_right_parietal_lobe_z_score		float			Right-Parietal-Lobe z-score						
+	clinad_brainreader_right_parietal_lobe_percentile		float			Right-Parietal-Lobe percentile						
+	clinad_brainreader_left_occipital_lobe_volume_in_ml		float			Left-Occipital-Lobe volume in ml						
+	clinad_brainreader_left_occipital_lobe_vol_mtiv_ratio		float			Left-Occipital-Lobe Vol/mTIV ratio						
+	clinad_brainreader_left_occipital_lobe_nr_index		float			Left-Occipital-Lobe NR Index						
+	clinad_brainreader_left_occipital_lobe_z_score		float			Left-Occipital-Lobe z-score						
+	clinad_brainreader_left_occipital_lobe_percentile		float			Left-Occipital-Lobe percentile						
+	clinad_brainreader_right_occipital_lobe_volume_in_ml		float			Right-Occipital-Lobe volume in ml						
+	clinad_brainreader_right_occipital_lobe_vol_mtiv_ratio		float			Right-Occipital-Lobe Vol/mTIV ratio						
+	clinad_brainreader_right_occipital_lobe_nr_index		float			Right-Occipital-Lobe NR Index						
+	clinad_brainreader_right_occipital_lobe_z_score		float			Right-Occipital-Lobe z-score						
+	clinad_brainreader_right_occipital_lobe_percentile		float			Right-Occipital-Lobe percentile						
+	clinad_brainreader_left_temporal_lobe_volume_in_ml		float			Left-Temporal-Lobe volume in ml						
+	clinad_brainreader_left_temporal_lobe_vol_mtiv_ratio		float			Left-Temporal-Lobe Vol/mTIV ratio						
+	clinad_brainreader_left_temporal_lobe_nr_index		float			Left-Temporal-Lobe NR Index						
+	clinad_brainreader_left_temporal_lobe_z_score		float			Left-Temporal-Lobe z-score						
+	clinad_brainreader_left_temporal_lobe_percentile		float			Left-Temporal-Lobe percentile						
+	clinad_brainreader_right_temporal_lobe_volume_in_ml		float			Right-Temporal-Lobe volume in ml						
+	clinad_brainreader_right_temporal_lobe_vol_mtiv_ratio		float			Right-Temporal-Lobe Vol/mTIV ratio						
+	clinad_brainreader_right_temporal_lobe_nr_index		float			Right-Temporal-Lobe NR Index						
+	clinad_brainreader_right_temporal_lobe_z_score		float			Right-Temporal-Lobe z-score						
+	clinad_brainreader_right_temporal_lobe_percentile		float			Right-Temporal-Lobe percentile						
+	clinad_brainreader_frontal_lobe_volume_in_ml		float			Frontal-Lobe volume in ml						
+	clinad_brainreader_frontal_lobe_vol_mtiv_ratio		float			Frontal-Lobe Vol/mTIV ratio						
+	clinad_brainreader_frontal_lobe_nr_index		float			Frontal-Lobe NR Index						
+	clinad_brainreader_frontal_lobe_z_score		float			Frontal-Lobe z-score						
+	clinad_brainreader_frontal_lobe_percentile		float			Frontal-Lobe percentile						
+	clinad_brainreader_parietal_lobe_volume_in_ml		float			Parietal-Lobe volume in ml						
+	clinad_brainreader_parietal_lobe_vol_mtiv_ratio		float			Parietal-Lobe Vol/mTIV ratio						
+	clinad_brainreader_parietal_lobe_nr_index		float			Parietal-Lobe NR Index						
+	clinad_brainreader_parietal_lobe_z_score		float			Parietal-Lobe z-score						
+	clinad_brainreader_parietal_lobe_percentile		float			Parietal-Lobe percentile						
+	clinad_brainreader_occipital_lobe_volume_in_ml		float			Occipital-Lobe volume in ml						
+	clinad_brainreader_occipital_lobe_vol_mtiv_ratio		float			Occipital-Lobe Vol/mTIV ratio						
+	clinad_brainreader_occipital_lobe_nr_index		float			Occipital-Lobe NR Index						
+	clinad_brainreader_occipital_lobe_z_score		float			Occipital-Lobe z-score						
+	clinad_brainreader_occipital_lobe_percentile		float			Occipital-Lobe percentile						
+	clinad_brainreader_temporal_lobe_volume_in_ml		float			Temporal-Lobe volume in ml						
+	clinad_brainreader_temporal_lobe_vol_mtiv_ratio		float			Temporal-Lobe Vol/mTIV ratio						
+	clinad_brainreader_temporal_lobe_nr_index		float			Temporal-Lobe NR Index						
+	clinad_brainreader_temporal_lobe_z_score		float			Temporal-Lobe z-score						
+	clinad_brainreader_temporal_lobe_percentile		float			Temporal-Lobe percentile						
+	clinad_brainreader_left_pallidum_volume_in_ml		float			Left-Pallidum volume in ml						
+	clinad_brainreader_left_pallidum_vol_mtiv_ratio		float			Left-Pallidum Vol/mTIV ratio						
+	clinad_brainreader_left_pallidum_nr_index		float			Left-Pallidum NR Index						
+	clinad_brainreader_left_pallidum_z_score		float			Left-Pallidum z-score						
+	clinad_brainreader_left_pallidum_percentile		float			Left-Pallidum percentile						
+	clinad_brainreader_right_pallidum_volume_in_ml		float			Right-Pallidum volume in ml						
+	clinad_brainreader_right_pallidum_vol_mtiv_ratio		float			Right-Pallidum Vol/mTIV ratio						
+	clinad_brainreader_right_pallidum_nr_index		float			Right-Pallidum NR Index						
+	clinad_brainreader_right_pallidum_z_score		float			Right-Pallidum z-score						
+	clinad_brainreader_right_pallidum_percentile		float			Right-Pallidum percentile						
+	clinad_brainreader_pallidum_volume_in_ml		float			Pallidum volume in ml						
+	clinad_brainreader_pallidum_vol_mtiv_ratio		float			Pallidum Vol/mTIV ratio						
+	clinad_brainreader_pallidum_nr_index		float			Pallidum NR Index						
+	clinad_brainreader_pallidum_z_score		float			Pallidum z-score						
+	clinad_brainreader_pallidum_percentile		float			Pallidum percentile						
+	clinad_brainreader_pallidum_volume_in_ml		float			Pallidum volume in ml						
+	clinad_brainreader_pallidum_vol_mtiv_ratio		float			Pallidum Vol/mTIV ratio						
+	clinad_brainreader_pallidum_nr_index		float			Pallidum NR Index						
+	clinad_brainreader_pallidum_z_score		float			Pallidum z-score						
+	clinad_brainreader_pallidum_percentile		float			Pallidum percentile						

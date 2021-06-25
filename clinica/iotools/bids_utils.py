@@ -17,8 +17,7 @@ def create_participants_df(
     Args:
         study_name: name of the study (Ex. ADNI)
         clinical_spec_path: path to the clinical file
-        clinical_data_dir: path to the directory where the clinical data are
-        stored
+        clinical_data_dir: path to the directory where the clinical data are stored
         bids_ids: list of bids ids
         delete_non_bids_info: if True delete all the rows of the subjects that
         are not available in the BIDS dataset
@@ -114,6 +113,8 @@ def create_participants_df(
     for i in range(0, len(participant_df)):
         if study_name == "OASIS":
             value = (participant_df["alternative_id_1"][i].split("_"))[1]
+        elif study_name == "OASIS3":
+            value = participant_df["alternative_id_1"][i].replace("OAS3", "")
         else:
             value = remove_space_and_symbols(participant_df["alternative_id_1"][i])
 
@@ -213,6 +214,8 @@ def create_sessions_dict(
                 subj_id_alpha = remove_space_and_symbols(subj_id)
                 if study_name == "OASIS":
                     subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
+                if study_name == "OASIS3":
+                    subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3:])
 
                 # Extract the corresponding BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
@@ -225,22 +228,22 @@ def create_sessions_dict(
                 else:
                     subj_bids = subj_bids[0]
                     sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
-                    if subj_bids in sessions_dict:
-                        (sessions_dict[subj_bids]["M00"]).update(
+
+                    subj_dir = path.join(
+                        path.dirname(path.dirname(clinical_data_dir)),
+                        "out",
+                        "bids",
+                        subj_bids,
+                    )
+                    session_names = get_bids_subjs_list(subj_dir)
+                    for s in session_names:
+                        s_name = s.replace("ses-", "")
+                        if subj_bids not in sessions_dict:
+                            sessions_dict.update({subj_bids: {}})
+                        if s_name not in sessions_dict[subj_bids].keys():
+                            sessions_dict[subj_bids].update({s_name: {"session_id": s}})
+                        (sessions_dict[subj_bids][s_name]).update(
                             {sessions_fields_bids[i]: row[sessions_fields[i]]}
-                        )
-                    else:
-                        sessions_dict.update(
-                            {
-                                subj_bids: {
-                                    "M00": {
-                                        "session_id": "ses-M00",
-                                        sessions_fields_bids[i]: row[
-                                            sessions_fields[i]
-                                        ],
-                                    }
-                                }
-                            }
                         )
 
     return sessions_dict
@@ -274,8 +277,6 @@ def create_scans_dict(
 
     import pandas as pd
 
-    from clinica.utils.stream import cprint
-
     scans_dict = {}
     prev_file = ""
     prev_sheet = ""
@@ -288,7 +289,7 @@ def create_scans_dict(
     # Init the dictionary with the subject ids
     for bids_id in bids_ids:
         scans_dict[bids_id] = dict()
-        for session_id in ses_dict.keys():
+        for session_id in {"ses-" + key for key in ses_dict[bids_id].keys()}:
             scans_dict[bids_id][session_id] = {
                 "T1/DWI/fMRI/FMAP": {},
                 "PIB": {},
@@ -340,7 +341,7 @@ def create_scans_dict(
 
         for bids_id in bids_ids:
             original_id = bids_id.replace("sub-" + study_name, "")
-            for session_name in ses_dict.keys():
+            for session_name in {"ses-" + key for key in ses_dict[bids_id].keys()}:
                 row_to_extract = file_to_read[
                     (file_to_read[name_column_ids] == int(original_id))
                     & (file_to_read[name_column_ses] == ses_dict[session_name])
@@ -453,12 +454,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
         bids_id = sp.split(os.sep)[-1]
 
         if bids_id in sessions_dict:
-            session_df = pd.DataFrame(
-                sessions_dict[bids_id]["M00"],
-                index=[
-                    "i",
-                ],
-            )
+            session_df = pd.DataFrame.from_dict(sessions_dict[bids_id], orient="index")
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
@@ -467,11 +463,10 @@ def write_sessions_tsv(bids_dir, sessions_dict):
             session_df = pd.DataFrame(columns=["session_id"])
             session_df["session_id"] = pd.Series("M00")
 
-        session_df = session_df.fillna("n/a")
+        session_df = session_df.set_index("session_id").fillna("n/a")
         session_df.to_csv(
             path.join(sp, bids_id + "_sessions.tsv"),
             sep="\t",
-            index=False,
             encoding="utf8",
         )
 
@@ -492,13 +487,11 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     import pandas as pd
 
     for bids_id in bids_ids:
-        # Create the file
         sessions_paths = glob(path.join(bids_dir, bids_id, "ses-*"))
         for session_path in sessions_paths:
-            scans_df = pd.DataFrame()
             session_name = session_path.split(os.sep)[-1]
+            scans_df = pd.DataFrame()
             tsv_name = bids_id + "_" + session_name + "_scans.tsv"
-
             # If the file already exists, remove it
             if os.path.exists(path.join(bids_dir, bids_id, session_name, tsv_name)):
                 os.remove(path.join(bids_dir, bids_id, session_name, tsv_name))
@@ -506,7 +499,12 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
             mod_available = glob(path.join(bids_dir, bids_id, session_name, "*"))
             for mod in mod_available:
                 mod_name = os.path.basename(mod)
-                files = glob(path.join(mod, "*"))
+                # Grab scan files excluding their sidecar JSON.
+                files = [
+                    file
+                    for file in glob(path.join(mod, "*"))
+                    if "json" not in os.path.splitext(file)[1]
+                ]
                 for file in files:
                     file_name = os.path.basename(file)
                     if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
@@ -517,9 +515,12 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                             for carac in file_name.split("_")
                             if "-" in carac
                         }
-                        f_type = description_dict["acq"].upper()
+                        f_type = description_dict["trc"].upper()
+                    elif mod_name == "swi":
+                        pass
                     else:
                         continue
+
                     row_to_append = pd.DataFrame(
                         scans_dict[bids_id][session_name][f_type], index=[0]
                     )
@@ -527,11 +528,10 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                     row_to_append.insert(0, "filename", path.join(mod_name, file_name))
                     scans_df = scans_df.append(row_to_append)
 
-            scans_df = scans_df.fillna("n/a")
+            scans_df = scans_df.set_index("filename").fillna("n/a")
             scans_df.to_csv(
                 path.join(bids_dir, bids_id, session_name, tsv_name),
                 sep="\t",
-                index=False,
                 encoding="utf8",
             )
 

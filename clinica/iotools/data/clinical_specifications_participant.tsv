@@ -1,40 +1,40 @@
-Field	BIDS CLINICA	BIDS format	BIDS type	AIBL	AIBL location	OASIS	OASIS location
-BIDS id of the participant	participant_id	Keyword 'sub-' followed by one of the original subject IDs without special characters or symbols	string				
-Second participant id	alternative_id_1		string	RID	aibl_ptdemog_*.csv	ID	oasis_cross-sectional.csv
-Third participant id	alternative_id_2		string				
-Fourth participant id	alternative_id_3		string				
-Type of subj in PrevDemAls dataset	prevdemals_status	A or R (A = patients, R = relatives)	char				
-Date of birth	date_of_birth	YYYY-MM-DD HH:MM:SS	string	PTDOB	aibl_ptdemog_*.csv		
-Sex	sex	M or F	char	PTGENDER	aibl_ptdemog_*.csv	M/F	oasis_cross-sectional.csv
-Educational level	education_level	Free format	string			Educ	oasis_cross-sectional.csv
-Deceased	deceased	Y or N					
-Age in years	age_bl	In years with, possibly, decimals	float			Age	oasis_cross-sectional.csv
-Civil status	marital_status	Free format	string				
-	adni_rid						
-Site in which the patient was studied	site	Free format	string	SITEID	aibl_ptdemog_*.csv		
-	original_study						
-	cdr					CDR	oasis_cross-sectional.csv
-Diagnosis at baseline	diagnosis_bl	AD=Alzheimer's disease - bvFTD=behavioral variant Fronto Temporal Dementia	string			CDR	oasis_cross-sectional.csv
-Score of mmse test at the baseline	mmse_bl						
-APOE (number of E4 alleles)	apoe4	0, 1 or 2 (number of E4 alleles)	int				
-	apoe_gen1			APGEN1	aibl_apoeres_*.csv		
-	apoe_gen2			APGEN2	aibl_apoeres_*.csv		
-	prevdemals_age_at_onset_patients	In years with, possibly, decimals	float				
-Laterality of the subject	laterality					Hand	oasis_cross-sectional.csv
-	inclusion_date	YYYY-MM-DD HH:MM:SS	string				
-							
-	prevdemals_parent_transmitting_ftd	Y or N	char				
-	prevdemals_parent_transmitting_als	Y or N	char				
-	prevdemals_parent_transmitting	father or mother	string				
-Indicate if the genotype is mutated or not	prevdemals_genetic_status_mutated	Y (mutated) or N (not mutated)	bool				
-							
-	prevdemals_aoo_transmitting_parent	in years					
-	prevdemals_family_phenotype_als	Y or N					
-	prevdemals_family_phenotype_ftd	Y or N					
-Average age onset disease in all the family memeber	prevdemals_aoo_mean_family		float				
-	prevdemals_expected_years_aoo_bl		signed float				
-	age_first_symptoms						
-	clinad_inclusion						
-	clinad_final_inclusion						
-	prevdemals_distance_aoo_transmitting_parent						
-	prevdemals_family_code						
+Field	BIDS CLINICA	BIDS format	BIDS type	AIBL	AIBL location	OASIS	OASIS location	OASIS3	OASIS3 location
+BIDS id of the participant	participant_id	Keyword 'sub-' followed by one of the original subject IDs without special characters or symbols	string						
+Second participant id	alternative_id_1		string	RID	aibl_ptdemog_*.csv	ID	oasis_cross-sectional.csv	ID	oasis3_clinical.csv
+Third participant id	alternative_id_2		string						
+Fourth participant id	alternative_id_3		string						
+Type of subj in PrevDemAls dataset	prevdemals_status	A or R (A = patients, R = relatives)	char						
+Date of birth	date_of_birth	YYYY-MM-DD HH:MM:SS	string	PTDOB	aibl_ptdemog_*.csv				
+Sex	sex	M or F	char	PTGENDER	aibl_ptdemog_*.csv	M/F	oasis_cross-sectional.csv	M/F	oasis3_clinical.csv
+Educational level	education_level	Free format	string			Educ	oasis_cross-sectional.csv	Educ	oasis3_clinical.csv
+Deceased	deceased	Y or N							
+Age in years	age_bl	In years with, possibly, decimals	float			Age	oasis_cross-sectional.csv	Age	oasis3_clinical.csv
+Civil status	marital_status	Free format	string						
+	adni_rid								
+Site in which the patient was studied	site	Free format	string	SITEID	aibl_ptdemog_*.csv				
+	original_study								
+	cdr					CDR	oasis_cross-sectional.csv	CDR	oasis3_clinical.csv
+Diagnosis at baseline	diagnosis_bl	AD=Alzheimer's disease - bvFTD=behavioral variant Fronto Temporal Dementia	string			CDR	oasis_cross-sectional.csv	CDR	oasis3_clinical.csv
+Score of mmse test at the baseline	mmse_bl								
+APOE (number of E4 alleles)	apoe4	0, 1 or 2 (number of E4 alleles)	int						
+	apoe_gen1			APGEN1	aibl_apoeres_*.csv				
+	apoe_gen2			APGEN2	aibl_apoeres_*.csv				
+	prevdemals_age_at_onset_patients	In years with, possibly, decimals	float						
+Laterality of the subject	laterality					Hand	oasis_cross-sectional.csv	Hand	oasis3_clinical.csv
+	inclusion_date	YYYY-MM-DD HH:MM:SS	string						
+									
+	prevdemals_parent_transmitting_ftd	Y or N	char						
+	prevdemals_parent_transmitting_als	Y or N	char						
+	prevdemals_parent_transmitting	father or mother	string						
+Indicate if the genotype is mutated or not	prevdemals_genetic_status_mutated	Y (mutated) or N (not mutated)	bool						
+									
+	prevdemals_aoo_transmitting_parent	in years							
+	prevdemals_family_phenotype_als	Y or N							
+	prevdemals_family_phenotype_ftd	Y or N							
+Average age onset disease in all the family memeber	prevdemals_aoo_mean_family		float						
+	prevdemals_expected_years_aoo_bl		signed float						
+	age_first_symptoms								
+	clinad_inclusion								
+	clinad_final_inclusion								
+	prevdemals_distance_aoo_transmitting_parent								
+	prevdemals_family_code								

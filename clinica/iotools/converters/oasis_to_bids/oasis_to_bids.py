@@ -72,7 +72,7 @@ class OasisToBids(Converter):
             bids_ids,
             "ID",
             "",
-            {"ses-M00": ""},
+            sessions_dict,
         )
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
