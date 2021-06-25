@@ -71,7 +71,7 @@ def b0_average(in_file, out_file=None):
         out_file = op.abspath("%s_avg_b0%s" % (fname, ext))
 
     imgs = np.array(nb.four_to_three(nb.load(in_file)))
-    b0s = [im.get_data().astype(np.float32) for im in imgs]
+    b0s = [im.get_fdata(dtype="float32").astype(np.float32) for im in imgs]
     b0 = np.average(np.array(b0s), axis=0)
 
     hdr = imgs[0].get_header().copy()
@@ -114,7 +114,7 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
     assert low_bval >= 0
 
     im = nib.load(in_dwi)
-    data = im.get_data()
+    data = im.get_fdata(dtype="float32")
     hdr = im.get_header().copy()
     bvals = np.loadtxt(in_bval)
     bvecs = np.loadtxt(in_bvec)
@@ -314,7 +314,7 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     import numpy as np
 
     im = nib.load(in_file)
-    data = im.get_data()
+    data = im.get_fdata(dtype="float32")
     hdr = im.get_header().copy()
     bval = np.loadtxt(in_bval)
 

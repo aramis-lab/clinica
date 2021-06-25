@@ -168,7 +168,7 @@ def test_run_SpatialSVM(cmdopt):
                 sub
                 + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz",
             )
-        ).get_data()
+        ).get_fdata(dtype="float32")
         for sub in subjects
     ]
     ref_data_REG_NIFTI = [
@@ -179,7 +179,7 @@ def test_run_SpatialSVM(cmdopt):
                 sub
                 + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz",
             )
-        ).get_data()
+        ).get_fdata(dtype="float32")
         for sub in subjects
     ]
     for i in range(len(out_data_REG_NIFTI)):

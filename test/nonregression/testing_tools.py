@@ -27,10 +27,10 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     import numpy as np
 
     print(" ** comparing " + os.path.basename(file1) + " **")
-    data1 = nib.load(file1).get_fdata()
+    data1 = nib.load(file1).get_fdata(dtype="float32")
     data1[np.isnan(data1)] = 0
 
-    data2 = nib.load(file2).get_fdata()
+    data2 = nib.load(file2).get_fdata(dtype="float32")
     data2[np.isnan(data2)] = 0
 
     # Get mask where data are 0 in data1 and data2
@@ -246,7 +246,7 @@ def list_files(startpath, filename=None):
     Returns:
         void
     """
-    from os import sep, walk, remove
+    from os import remove, sep, walk
     from os.path import abspath, basename, exists, expanduser, expandvars
 
     if exists(filename):

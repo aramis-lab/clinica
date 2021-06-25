@@ -23,7 +23,7 @@ def peak_correction(t_map, t_threshold, output_name=None):
     import nibabel as nib
 
     original_nifti = nib.load(t_map)
-    data = original_nifti.get_data()
+    data = original_nifti.get_fdata(dtype="float32")
     data[data < t_threshold] = 0
     new_data = nib.Nifti1Image(
         data, affine=original_nifti.affine, header=original_nifti.header
@@ -56,7 +56,7 @@ def cluster_correction(t_map, t_thresh, c_thresh, output_name=None):
     from scipy.ndimage.measurements import label
 
     original_nifti = nib.load(t_map)
-    data = original_nifti.get_data()
+    data = original_nifti.get_fdata(dtype="float32")
     data[data < t_thresh] = 0
     labeled_mask, num_features = label(data)
     for i in range(1, num_features + 1):

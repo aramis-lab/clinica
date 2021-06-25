@@ -11,7 +11,7 @@ def atlas_decomposition(dartel_input):
     import nibabel as nib
 
     dartel = nib.load(dartel_input)
-    dartel = dartel.get_data()
+    dartel = dartel.get_fdata(dtype="float32")
     atlas_1 = dartel[:, :, :, 0]
     atlas_2 = dartel[:, :, :, 1]
     atlas_3 = dartel[:, :, :, 2]
@@ -31,7 +31,7 @@ def spm_read(fname):
     import numpy as np
 
     img = nib.load(fname)
-    pico = img.get_data()
+    pico = img.get_fdata(dtype="float32")
     pico = np.array(pico, dtype="float32")
     mask = np.isnan(pico)
     pico[mask] = 0
@@ -1086,8 +1086,7 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     beta = sigma ** 2 / 2
 
     input_image_read = nib.load(input_image)
-    input_image_data = input_image_read.get_data()
-    input_image_data = np.array(input_image_data, dtype="float32")
+    input_image_data = input_image_read.get_fdata(dtype="float32")
 
     u = utils.heat_solver_tensor_3D_P1_grad_conj(
         input_image_data, g, beta, h, t_step, CL_value=None, epsilon=None

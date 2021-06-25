@@ -13,8 +13,8 @@ def convert_phase_in_radians(in_file, out_file=None):
     assert op.isfile(in_file)
 
     img = nb.load(in_file)
-    imin = np.amin(img.get_data())
-    imax = np.amax(img.get_data())
+    imin = np.amin(img.get_fdata(dtype="float32"))
+    imax = np.amax(img.get_fdata(dtype="float32"))
 
     if out_file is None:
         out_file = op.abspath("phase_in_rad.nii.gz")
@@ -27,9 +27,10 @@ def convert_phase_in_radians(in_file, out_file=None):
     )
     os.system(cmd)
 
-    data = (img2.get_data().astype(np.float32) - img1.get_data().astype(np.float32)) * (
-        1.0 / delta_te
-    )
+    data = (
+        img2.get_fdata(dtype="float32").astype(np.float32)
+        - img1.get_fdata(dtype="float32").astype(np.float32)
+    ) * (1.0 / delta_te)
     nb.Nifti1Image(data, img.get_affine(), img.get_header()).to_filename(out_file)
 
     return out_file
@@ -51,9 +52,10 @@ def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
 
     img1 = nb.load(in_phase1)
     img2 = nb.load(in_phase2)
-    data = (img2.get_data().astype(np.float32) - img1.get_data().astype(np.float32)) * (
-        1.0 / delta_te
-    )
+    data = (
+        img2.get_fdata(dtype="float32").astype(np.float32)
+        - img1.get_fdata(dtype="float32").astype(np.float32)
+    ) * (1.0 / delta_te)
     nb.Nifti1Image(data, img1.get_affine(), img1.get_header()).to_filename(out_file)
     return out_file
 
