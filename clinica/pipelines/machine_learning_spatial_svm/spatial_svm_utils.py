@@ -1087,7 +1087,6 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
 
     input_image_read = nib.load(input_image)
     input_image_data = input_image_read.get_fdata(dtype="float32")
-    input_image_data = np.array(input_image_data, dtype="float32")
 
     u = utils.heat_solver_tensor_3D_P1_grad_conj(
         input_image_data, g, beta, h, t_step, CL_value=None, epsilon=None
