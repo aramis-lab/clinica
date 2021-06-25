@@ -26,7 +26,6 @@ def create_participants_df(
     Returns: a pandas dataframe that contains the participants data
     """
     import os
-    import re
     from os import path
 
     import numpy as np
@@ -164,7 +163,6 @@ def create_sessions_dict(
         subj_to_remove: subjects to remove
     """
     import os
-    import re
     from os import path
 
     import numpy as np
@@ -279,8 +277,6 @@ def create_scans_dict(
     from os import path
 
     import pandas as pd
-
-    from clinica.utils.stream import cprint
 
     scans_dict = {}
     prev_file = ""
