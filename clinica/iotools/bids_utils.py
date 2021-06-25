@@ -164,11 +164,10 @@ def create_sessions_dict(
         subj_to_remove: subjects to remove
     """
     import os
+    import re
     from os import path
 
     import numpy as np
-    import os
-    import re
     import pandas as pd
 
     # Load data
@@ -237,11 +236,11 @@ def create_sessions_dict(
                         path.dirname(path.dirname(clinical_data_dir)),
                         "out",
                         "bids",
-                        subj_bids
+                        subj_bids,
                     )
                     session_names = get_bids_subjs_list(subj_dir)
                     for s in session_names:
-                        s_name = s.replace("ses-", '')
+                        s_name = s.replace("ses-", "")
                         if subj_bids not in sessions_dict:
                             sessions_dict.update({subj_bids: {}})
                         if s_name not in sessions_dict[subj_bids].keys():
@@ -490,6 +489,7 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     import os
     from glob import glob
     from os import path
+
     import pandas as pd
 
     for bids_id in bids_ids:
