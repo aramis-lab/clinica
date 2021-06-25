@@ -504,7 +504,12 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
             mod_available = glob(path.join(bids_dir, bids_id, session_name, "*"))
             for mod in mod_available:
                 mod_name = os.path.basename(mod)
-                files = glob(path.join(mod, "*"))
+                # Grab scan files excluding their sidecar JSON.
+                files = [
+                    file
+                    for file in glob(path.join(mod, "*"))
+                    if "json" not in os.path.splitext(file)[1]
+                ]
                 for file in files:
                     file_name = os.path.basename(file)
                     if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
