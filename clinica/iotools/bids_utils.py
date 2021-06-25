@@ -528,11 +528,10 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                     row_to_append.insert(0, "filename", path.join(mod_name, file_name))
                     scans_df = scans_df.append(row_to_append)
 
-            scans_df = scans_df.fillna("n/a")
+            scans_df = scans_df.set_index("filename").fillna("n/a")
             scans_df.to_csv(
                 path.join(bids_dir, bids_id, session_name, tsv_name),
                 sep="\t",
-                index=False,
                 encoding="utf8",
             )
 
