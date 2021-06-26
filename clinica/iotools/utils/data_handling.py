@@ -1151,6 +1151,8 @@ def get_world_coordinate_of_center(nii_volume):
     import nibabel as nib
     import numpy as np
 
+    from clinica.utils.stream import cprint
+
     assert isinstance(nii_volume, str), "input argument nii_volume must be a str"
     assert isfile(nii_volume), "input argument must be a path to a file"
 
