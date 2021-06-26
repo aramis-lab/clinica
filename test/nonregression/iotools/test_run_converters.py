@@ -22,41 +22,6 @@ from test.nonregression.testing_tools import (
 warnings.filterwarnings("ignore")
 
 
-def test_run_Nifd2Bids(cmdopt):
-    import shutil
-    from os.path import abspath, dirname, join
-
-    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import (
-        convert_clinical_data,
-        convert_images,
-    )
-
-    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "Nifd2Bids")
-
-    clean_folder(join(root, "out", "bids"), recreate=True)
-    clean_folder(join(root, "out", "clinical_data"), recreate=False)
-
-    shutil.copytree(
-        join(root, "in", "clinical_data"), join(root, "out", "clinical_data")
-    )
-
-    # Data location
-    dataset_directory = join(root, "in", "unorganized")
-    bids_directory = join(root, "out", "bids")
-    clinical_data_directory = join(root, "out", "clinical_data")
-
-    # Conversion
-    to_convert = convert_images(
-        dataset_directory, bids_directory, clinical_data_directory
-    )
-    convert_clinical_data(bids_directory, clinical_data_directory, to_convert)
-
-    compare_folders_structures(bids_directory, join(root, "ref", "hashes_nifd.p"))
-
-    clean_folder(join(root, "out", "bids"), recreate=True)
-    clean_folder(join(root, "out", "clinical_data"), recreate=False)
-
-
 def test_run_Oasis2Bids(cmdopt):
     from os.path import abspath, dirname, join
 
