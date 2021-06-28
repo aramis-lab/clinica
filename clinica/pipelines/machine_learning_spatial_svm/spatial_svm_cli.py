@@ -53,7 +53,7 @@ def cli(
 
     from .spatial_svm_pipeline import SpatialSVM
 
-    if orig_input_data == "pet-volume":
+    if orig_input_data_ml == "pet-volume":
         if acq_label is None:
             raise ClinicaException(
                 "You selected pet-volume pipeline without setting --acq_label flag. "
