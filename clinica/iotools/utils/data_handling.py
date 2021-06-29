@@ -85,7 +85,10 @@ def create_merge_file(
         ]
         row_participant_df.reset_index(inplace=True, drop=True)
         if len(row_participant_df) == 0:
-            cprint(msg=f"Participant {subject} does not exist in participants.tsv", lvl="warning")
+            cprint(
+                msg=f"Participant {subject} does not exist in participants.tsv",
+                lvl="warning",
+            )
             row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
 
         if ignore_sessions_files:
@@ -181,7 +184,7 @@ def create_merge_file(
             "t1-freesurfer": t1_freesurfer_pipeline,
         }
         merged_summary_df = pd.DataFrame()
-        if pipelines is None:
+        if not pipelines:
             for pipeline_name, pipeline_fn in pipeline_options.items():
                 merged_df, summary_df = pipeline_fn(caps_dir, merged_df, **kwargs)
                 if summary_df is not None:
@@ -1060,9 +1063,7 @@ def check_volume_location_in_world_coordinate_system(
                 "%-" + str(file_width) + "s%-" + str(center_width) + "s%-25.2f\n"
             ) % (basename(file), str(center), l2)
 
-        cmd_line = (
-            f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
-        )
+        cmd_line = f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
 
         warning_message += (
             "\nIf you are trying to launch the t1-freesurfer pipeline, you can ignore this message "
