@@ -123,7 +123,9 @@ def check_bids_folder(bids_directory):
         )
 
     if len(listdir(bids_directory)) == 0:
-        raise ClinicaBIDSError(f"The BIDS directory you provided is empty. ({bids_directory}).")
+        raise ClinicaBIDSError(
+            f"The BIDS directory you provided is empty. ({bids_directory})."
+        )
 
     if len([item for item in listdir(bids_directory) if item.startswith("sub-")]) == 0:
         raise ClinicaBIDSError(
@@ -254,6 +256,7 @@ def clinica_file_reader(
     from os.path import join
 
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
+    from clinica.utils.stream import cprint
 
     assert isinstance(
         information, dict
@@ -306,15 +309,13 @@ def clinica_file_reader(
                 error_str += f"\t\t{found_file}\n"
             error_encountered.append(error_str)
         elif len(current_glob_found) == 0:
-            error_encountered.append(
-                f"\t* ({sub} | {ses}): No file found\n"
-            )
+            error_encountered.append(f"\t* ({sub} | {ses}): No file found\n")
         # Otherwise the file found is added to the result
         else:
             results.append(current_glob_found[0])
 
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
-    if len(error_encountered) > 0 and raise_exception is True:
+    if len(error_encountered) > 0:
         error_message = (
             f"Clinica encountered {len(error_encountered)} "
             f"problem(s) while getting {information['description']}:\n"
@@ -327,10 +328,22 @@ def clinica_file_reader(
                 )
         for msg in error_encountered:
             error_message += msg
-        if is_bids:
-            raise ClinicaBIDSError(error_message)
-        else:
-            raise ClinicaCAPSError(error_message)
+
+        # If the input directory is not complete, as in files are missing, but not all of them,
+        # print an error message
+        if len(results) > 0:
+            cprint(
+                msg=(
+                    f"Error message in {'BIDS' if is_bids else 'CAPS'}:\n{error_message}"
+                ),
+                lvl="info",
+            )
+        # if all the files are missing from the input directory, raise an error
+        elif len(results) == 0 and raise_exception is True:
+            if is_bids:
+                raise ClinicaBIDSError(error_message)
+            else:
+                raise ClinicaCAPSError(error_message)
     return results
 
 
@@ -442,7 +455,10 @@ def fetch_file(remote, dirname=None):
         if hasattr(e, "reason"):
             cprint(msg=f"We failed to reach a server. Reason: {e.reason}", lvl="error")
         elif hasattr(e, "code"):
-            cprint(msg=f"The server could not fulfill the request. Error code: {e.code}", lvl="error")
+            cprint(
+                msg=f"The server could not fulfill the request. Error code: {e.code}",
+                lvl="error",
+            )
     else:
         try:
             with open(file_path, "wb") as out_file:
@@ -488,6 +504,9 @@ def get_file_from_server(remote_file, cache_path=None):
         try:
             local_file = fetch_file(remote_file, cache_clinica)
         except IOError as err:
-            cprint(msg="Unable to download {remote_file.filename} from {remote_file.url}: {err}", lvl="error")
+            cprint(
+                msg="Unable to download {remote_file.filename} from {remote_file.url}: {err}",
+                lvl="error",
+            )
 
     return local_file
