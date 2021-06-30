@@ -164,8 +164,8 @@ def create_merge_file(
     merged_df = merged_df[col_list]
 
     tmp = merged_df.select_dtypes(include=[np.number])
-    # Round numeric values in dataframe to 12 floating point values
-    merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
+    # Round numeric values in dataframe to 6 decimal values
+    merged_df.loc[:, tmp.columns] = np.round(tmp, 6)
     merged_df.to_csv(out_path, sep="\t", index=False)
     cprint("End of BIDS information merge.", lvl="debug")
 
