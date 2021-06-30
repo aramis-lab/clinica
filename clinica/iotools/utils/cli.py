@@ -55,24 +55,12 @@ def center_nifti(
         file_list = [
             file for file in listdir(output_bids_directory) if not file.startswith(".")
         ]
-        if len(file_list) > 0:
-            error_str = (
-                "Some files or directory have been found "
-                f"in {{abspath(args.output_bids_directory)}}: \n"
+        if file_list:
+            click.echo(
+                "Target BIDS directory is not empty. Existing files may be overwritten."
             )
-            for f in file_list:
-                error_str += "\t" + f + "\n"
-            error_str += "Do you wish to continue ? (If yes, this may overwrite the files mentioned above)."
-            cprint(error_str)
-            while True:
-                cprint("Your answer [yes/no]:")
-                answer = input()
-                if answer.lower() in ["yes", "no"]:
-                    break
-                else:
-                    cprint("You must answer `yes` or `no`.")
-            if answer.lower() == "no":
-                cprint("Clinica will now exit...")
+            if not click.confirm("Do you wish to continue?"):
+                click.echo("Clinica will now exit...")
                 sys.exit(0)
 
     cprint("Clinica is now centering the requested images.")

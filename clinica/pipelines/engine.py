@@ -7,6 +7,7 @@ Subclasses are located in clinica/pipeline/<pipeline_name>/<pipeline_name>_pipel
 
 import abc
 
+import click
 from nipype.pipeline.engine import Workflow
 
 
@@ -157,7 +158,9 @@ class Pipeline(Workflow):
 
         cprint(msg="Pipeline finished with errors.", lvl="error")
         cprint(msg="CAPS outputs were not found for some image(s):", lvl="error")
-        raise ClinicaException("Implementation on which image(s) failed will appear soon.")
+        raise ClinicaException(
+            "Implementation on which image(s) failed will appear soon."
+        )
 
     def init_nodes(self):
         """Init the basic workflow and I/O nodes necessary before build."""
@@ -520,31 +523,12 @@ class Pipeline(Workflow):
                         f") is greater than what is left on your hard drive ("
                         f"{bytes2human(free_space_wd)})\n"
                     )
-            if error != "":
+            if error:
                 cprint(msg=f"[SpaceError] {error}", lvl="error")
-                while True:
-                    cprint(
-                        msg=(
-                            "Do you still want to run the pipeline? (yes/no): "
-                            f"in {timeout} sec the pipeline will start if you do not answer."
-                        ),
-                        lvl="warning",
-                    )
-                    stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
-                    if stdin_answer:
-                        answer = str(sys.stdin.readline().strip())
-                    # Else: is taken when no answer is given (timeout)
-                    else:
-                        answer = "yes"
-
-                    if answer.lower() in ["yes", "no"]:
-                        break
-                    else:
-                        cprint(msg="Possible answers are 'yes' or 'no'.", lvl="warning")
-                if answer.lower() == "yes":
-                    cprint(msg="Running the pipeline anyway.", lvl="warning")
-                if answer.lower() == "no":
-                    cprint(msg="Exiting clinica...", lvl="warning")
+                if not click.confirm(
+                    "Space issues detected. Do you still want to run the pipeline?"
+                ):
+                    click.echo("Clinica will now exit...")
                     sys.exit()
 
         except KeyError:
@@ -600,34 +584,19 @@ class Pipeline(Workflow):
             ask_user = True
 
         if ask_user:
-            while True:
-                # While True allows to ask indefinitely until
-                # user gives a answer that has the correct format
-                # (here, positive integer) or timeout
-                cprint(
-                    msg=(
-                        f"How many threads do you want to use? If you do not answer within {timeout} sec, "
-                        f"default value of {n_cpu-1} will be taken. Set the --n_procs argument "
-                        "if you want to disable this message next time."
-                    ),
-                    lvl="warning",
-                )
-                stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
-                if stdin_answer:
-                    answer = str(sys.stdin.readline().strip())
-                else:
-                    answer = str(max(n_cpu - 1, 1))
-                if answer.isnumeric():
-                    if int(answer) > 0:
-                        break
-                cprint(msg="Your answer must be a positive integer", lvl="error")
-            # If plugin_args is None, create the dictionary
-            # If it already a dict, just update (or create -it is the same
-            # code-) the correct key / value
+            n_procs = click.prompt(
+                text="How many threads do you want to use?",
+                default=max(1, n_cpu - 1),
+                show_default=True,
+            )
+            click.echo(
+                f"Number of threads set to {n_procs}. You may set the --n_procs argument "
+                "to disable this message for future calls."
+            )
             if plugin_args is None:
-                plugin_args = {"n_procs": int(answer)}
+                plugin_args = {"n_procs": n_procs}
             else:
-                plugin_args["n_procs"] = int(answer)
+                plugin_args["n_procs"] = n_procs
 
         return plugin_args
 
@@ -816,22 +785,12 @@ class Pipeline(Workflow):
                     dirname(bids_dir), basename(bids_dir) + "_clinica_compliant"
                 )
 
-                while True:
-                    cprint(
-                        msg=(
-                            "Do you want to proceed to the conversion in an other "
-                            "folder? (your original BIDS folder will not be modified, "
-                            f"the folder {proposed_bids} will be created) (yes/no): "
-                        ),
-                        lvl="warning",
-                    )
-                    answer = input("")
-                    if answer.lower() in ["yes", "no"]:
-                        break
-                    else:
-                        cprint(msg="Possible answers are 'yes' or 'no'.", lvl="warning")
-                if answer.lower() == "no":
-                    cprint(msg="Exiting clinica...", lvl="warning")
+                if not click.confirm(
+                    "Do you want to proceed with the conversion in another "
+                    "folder? (Your original BIDS folder will not be modified "
+                    f"and the folder {proposed_bids} will be created.)"
+                ):
+                    click.echo("Clinica will now exit...")
                     sys.exit()
                 else:
                     cprint("Converting cross-sectional dataset into longitudinal...")

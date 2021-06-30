@@ -2,6 +2,8 @@
 
 """Data handling scripts."""
 
+import click
+
 
 def compute_default_filename(out_path):
     from os import path
@@ -85,7 +87,10 @@ def create_merge_file(
         ]
         row_participant_df.reset_index(inplace=True, drop=True)
         if len(row_participant_df) == 0:
-            cprint(msg=f"Participant {subject} does not exist in participants.tsv", lvl="warning")
+            cprint(
+                msg=f"Participant {subject} does not exist in participants.tsv",
+                lvl="warning",
+            )
             row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
 
         if ignore_sessions_files:
@@ -983,19 +988,11 @@ def check_relative_volume_location_in_world_coordinate_system(
             "of the volume at the origin of the world coordinates.\nUse the following "
             "command line to correct the header of the faulty NIFTI volumes in a new folder:\n\n"
             f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`\n\n"
-            "You will find more information on the command by typing `clinica iotools center-nifti` in the console.\n"
-            "Do you still want to launch the pipeline now?"
+            "You will find more information on the command by typing `clinica iotools center-nifti` in the console."
         )
         cprint(msg=warning_message, lvl="warning")
-        while True:
-            cprint(msg="Your answer [yes/no]: ", lvl="warning")
-            answer = input()
-            if answer.lower() in ["yes", "no"]:
-                break
-            else:
-                cprint(msg="You must answer 'yes' or 'no'", lvl="warning")
-        if answer.lower() == "no":
-            cprint(msg="Clinica will now exit...", lvl="warning")
+        if not click.confirm("Do you still want to launch the pipeline?"):
+            click.echo("Clinica will now exit...")
             sys.exit(0)
 
 
@@ -1020,9 +1017,8 @@ def check_volume_location_in_world_coordinate_system(
     import sys
     from os.path import abspath, basename
 
+    import click
     import numpy as np
-
-    from clinica.utils.stream import cprint
 
     list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
     if len(list_non_centered_files) > 0:
@@ -1060,9 +1056,7 @@ def check_volume_location_in_world_coordinate_system(
                 "%-" + str(file_width) + "s%-" + str(center_width) + "s%-25.2f\n"
             ) % (basename(file), str(center), l2)
 
-        cmd_line = (
-            f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
-        )
+        cmd_line = f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
 
         warning_message += (
             "\nIf you are trying to launch the t1-freesurfer pipeline, you can ignore this message "
@@ -1076,25 +1070,13 @@ def check_volume_location_in_world_coordinate_system(
             "You will find more information on the command by typing "
             "clinica iotools center-nifti in the console."
         )
-        cprint(warning_message)
-        if not skip_question:
-            cprint(
-                msg="Do you still want to launch the pipeline now?",
-                lvl="warning",
-            )
-            while True:
-                cprint(msg="Your answer [yes/no]:", lvl="warning")
-                answer = input()
-                if answer.lower() in ["yes", "no"]:
-                    break
-                else:
-                    cprint(msg="You must answer yes or no", lvl="warning")
-        else:
-            answer = "yes"
 
-        if answer.lower() == "no":
-            cprint(msg="Clinica will now exit...", lvl="warning")
-            sys.exit(0)
+        click.echo(warning_message)
+
+        if not skip_question:
+            if not click.confirm("Do you still want to launch the pipeline?"):
+                click.echo("Clinica will now exit...")
+                sys.exit(0)
 
 
 def is_centered(nii_volume, threshold_l2=50):
