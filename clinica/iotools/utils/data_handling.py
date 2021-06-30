@@ -165,6 +165,9 @@ def create_merge_file(
     col_list.insert(1, col_list.pop(col_list.index("session_id")))
     merged_df = merged_df[col_list]
 
+    tmp = merged_df.select_dtypes(include=[np.number])
+    # Round numeric values in dataframe to 6 decimal values
+    merged_df.loc[:, tmp.columns] = np.round(tmp, 6)
     merged_df.to_csv(out_path, sep="\t", index=False)
     cprint("End of BIDS information merge.", lvl="debug")
 
@@ -226,6 +229,9 @@ def create_merge_file(
         summary_path = path.splitext(out_path)[0] + "_summary.tsv"
         merged_summary_df.to_csv(summary_path, sep="\t", index=False)
 
+        tmp = merged_df.select_dtypes(include=[np.number])
+        # Round numeric values in dataframe to 12 floating point values
+        merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
         merged_df.to_csv(out_path, sep="\t")
         cprint("End of CAPS information merge.", lvl="debug")
 
