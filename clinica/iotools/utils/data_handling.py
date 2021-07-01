@@ -516,8 +516,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
         print_statistics,
     )
 
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+    os.makedirs(out_dir, exist_ok=True)
 
     # Find all the modalities and sessions available for the input dataset
     mods_and_sess = find_mods_and_sess(bids_dir)
@@ -673,8 +672,7 @@ def create_subs_sess_list(
 
     import pandas as pd
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
     if file_name is None:
         file_name = "subjects_sessions_list.tsv"

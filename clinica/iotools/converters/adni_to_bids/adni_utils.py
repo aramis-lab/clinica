@@ -492,8 +492,7 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     df_subj_sessions = df_subj_sessions.fillna("n/a")
 
     for sp in bids_subjs_paths:
-        if not path.exists(sp):
-            os.makedirs(sp)
+        os.makedirs(sp, exist_ok=True)
 
         bids_id = sp.split(os.sep)[-1]
 
