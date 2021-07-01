@@ -188,7 +188,7 @@ def volume_pipeline(
     if "participant_id" in df.columns.values:
         df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
-    if group_selection is None:
+    if not group_selection:
         try:
             group_selection = os.listdir(path.join(caps_dir, "groups"))
         except FileNotFoundError:
@@ -215,7 +215,7 @@ def volume_pipeline(
                 group_path = path.join(mod_path, group)
                 if os.path.exists(group_path):
                     # Looking for atlases
-                    if atlas_selection is None:
+                    if not atlas_selection:
                         atlas_paths = glob(
                             path.join(
                                 group_path,
@@ -235,7 +235,7 @@ def volume_pipeline(
                             )
 
                     # Filter pvc_restriction
-                    if pvc_restriction is not None:
+                    if pvc_restriction:
                         if pvc_restriction == 1:
                             atlas_paths = [
                                 atlas_path
@@ -250,7 +250,7 @@ def volume_pipeline(
                             ]
 
                     # Filter tracers
-                    if tracers_selection is not None:
+                    if tracers_selection:
                         atlas_paths = [
                             atlas_path
                             for atlas_path in atlas_paths

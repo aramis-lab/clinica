@@ -189,7 +189,7 @@ def create_merge_file(
             "t1-freesurfer": t1_freesurfer_pipeline,
         }
         merged_summary_df = pd.DataFrame()
-        if pipelines is None:
+        if not pipelines:
             for pipeline_name, pipeline_fn in pipeline_options.items():
                 merged_df, summary_df = pipeline_fn(caps_dir, merged_df, **kwargs)
                 if summary_df is not None:
