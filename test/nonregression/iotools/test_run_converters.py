@@ -79,6 +79,28 @@ def test_run_Oasis2Bids(cmdopt):
     clean_folder(join(root, "out", "bids"), recreate=True)
 
 
+def test_run_Oasis3ToBids(cmdopt):
+    from os.path import abspath, dirname, join
+
+    from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import Oasis3ToBids
+
+    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "Oasis3ToBids")
+
+    clean_folder(join(root, "out", "bids"), recreate=True)
+
+    # Data location
+    dataset_directory = join(root, "in", "unorganized")
+    bids_directory = join(root, "out", "bids")
+    clinical_data_directory = join(root, "in", "clinical_data")
+
+    oasis_to_bids = Oasis3ToBids()
+    oasis_to_bids.convert_images(dataset_directory, bids_directory)
+    oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+
+    compare_folders(join(root, "out"), join(root, "ref"), shared_folder_name="bids")
+    clean_folder(join(root, "out", "bids"), recreate=True)
+
+
 def test_run_Adni2Bids(cmdopt):
     from os.path import abspath, dirname, join
 
