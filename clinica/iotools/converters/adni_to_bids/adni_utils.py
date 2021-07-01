@@ -461,6 +461,8 @@ def replace_sequence_chars(sequence_name):
 
 
 def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
+    import pandas as pd
+
     """Write the result of method create_session_dict into several TSV files.
 
     Args:
@@ -491,6 +493,19 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
 
     df_subj_sessions = df_subj_sessions.fillna("n/a")
 
+    # compute the amyloid and ptau status
+    df_subj_sessions[
+        ["adni_av45", "adni_pib", "adni_abeta", "adni_ptau"]
+    ] = df_subj_sessions[["adni_av45", "adni_pib", "adni_abeta", "adni_ptau"]].apply(
+        pd.to_numeric, errors="coerce"
+    )
+    df_subj_sessions["a_stat"] = df_subj_sessions.apply(
+        lambda x: compute_amyloid_status(x), axis=1
+    )
+    df_subj_sessions["tau_stat"] = df_subj_sessions.apply(
+        lambda x: compute_ptau_status(x), axis=1
+    )
+
     for sp in bids_subjs_paths:
         if not path.exists(sp):
             os.makedirs(sp)
@@ -508,6 +523,34 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
                 index=False,
                 encoding="utf-8",
             )
+
+    def compute_amyloid_status(row, tau_status=False):
+        stat = ""
+        if (
+            pd.isnull(row["adni_av45"])
+            and pd.isnull(row["adni_pib"])
+            and isinstance(row["adni_abeta"], float)
+        ):
+            stat = "Au"
+        elif row["adni_av45"] > 1.1 or row["adni_pib"] > 1.5 or row["adni_abeta"] < 192:
+            stat = "A+"
+        elif (
+            (pd.isnull(row["adni_av45"]) or row["adni_av45"] < 1.1)
+            and (pd.isnull(row["adni_pib"]) or row["adni_pib"] < 1.5)
+            and (isinstance(row["adni_abeta"], float) or row["adni_abeta"] > 192)
+        ):
+            stat = "A-"
+        return stat
+
+    def compute_ptau_status(row):
+        stat = ""
+        if pd.isnull(row["adni_ptau"]):
+            stat = "Tu"
+        elif row["adni_ptau"] > 23:
+            stat = "T+"
+        else:
+            stat = "T-"
+        return stat
 
 
 def remove_fields_duplicated(bids_fields):
