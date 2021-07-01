@@ -85,7 +85,10 @@ def create_merge_file(
         ]
         row_participant_df.reset_index(inplace=True, drop=True)
         if len(row_participant_df) == 0:
-            cprint(msg=f"Participant {subject} does not exist in participants.tsv", lvl="warning")
+            cprint(
+                msg=f"Participant {subject} does not exist in participants.tsv",
+                lvl="warning",
+            )
             row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
 
         if ignore_sessions_files:
@@ -792,8 +795,6 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     if bids_dir == output_dir:
         raise ClinicaBIDSError("Input BIDS and output directories must be different")
 
-    # assert isinstance(modality, list), "modality arg must be a list of str"
-
     # check that input is a BIDS dir
     check_bids_folder(bids_dir)
 
@@ -1060,9 +1061,7 @@ def check_volume_location_in_world_coordinate_system(
                 "%-" + str(file_width) + "s%-" + str(center_width) + "s%-25.2f\n"
             ) % (basename(file), str(center), l2)
 
-        cmd_line = (
-            f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
-        )
+        cmd_line = f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
 
         warning_message += (
             "\nIf you are trying to launch the t1-freesurfer pipeline, you can ignore this message "
