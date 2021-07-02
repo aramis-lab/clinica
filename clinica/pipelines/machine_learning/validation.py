@@ -54,8 +54,7 @@ class KFoldCV(base.MLValidation):
         results_folds = []
         container_dir = path.join(output_dir, "folds")
 
-        if not path.exists(container_dir):
-            os.makedirs(container_dir)
+        os.makedirs(container_dir, exist_ok=True)
 
         for i in range(len(self._validation_results)):
             subjects_df = pd.DataFrame(
@@ -218,15 +217,13 @@ class RepeatedKFoldCV(base.MLValidation):
         for iteration in range(len(self._validation_results)):
 
             iteration_dir = path.join(output_dir, "iteration-" + str(iteration))
-            if not path.exists(iteration_dir):
-                os.makedirs(iteration_dir)
+            os.makedirs(iteration_dir, exist_ok=True)
 
             iteration_subjects_list = []
             iteration_results_list = []
             folds_dir = path.join(iteration_dir, "folds")
 
-            if not path.exists(folds_dir):
-                os.makedirs(folds_dir)
+            os.makedirs(folds_dir, exist_ok=True)
 
             for i in range(len(self._validation_results[iteration])):
                 subjects_df = pd.DataFrame(
@@ -413,8 +410,7 @@ class RepeatedHoldOut(base.MLValidation):
         for iteration in range(len(self._validation_results)):
 
             iteration_dir = path.join(output_dir, "iteration-" + str(iteration))
-            if not path.exists(iteration_dir):
-                os.makedirs(iteration_dir)
+            os.makedirs(iteration_dir, exist_ok=True)
             iteration_train_subjects_df = pd.DataFrame(
                 {
                     "iteration": iteration,
@@ -622,8 +618,7 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
                 iteration_dir = path.join(
                     learning_point_dir, "iteration-" + str(iteration)
                 )
-                if not path.exists(iteration_dir):
-                    os.makedirs(iteration_dir)
+                os.makedirs(iteration_dir, exist_ok=True)
                 iteration_subjects_df = pd.DataFrame(
                     {
                         "y": self._validation_results[learning_point][iteration]["y"],
@@ -786,15 +781,13 @@ class RepeatedKFoldCV_Multiclass(base.MLValidation):
         for iteration in range(len(self._repeated_validation_results)):
 
             iteration_dir = path.join(output_dir, "iteration-" + str(iteration))
-            if not path.exists(iteration_dir):
-                os.makedirs(iteration_dir)
+            os.makedirs(iteration_dir, exist_ok=True)
 
             iteration_subjects_list = []
             iteration_results_list = []
             folds_dir = path.join(iteration_dir, "folds")
 
-            if not path.exists(folds_dir):
-                os.makedirs(folds_dir)
+            os.makedirs(folds_dir, exist_ok=True)
 
             for i in range(len(self._repeated_validation_results[iteration])):
                 subjects_df = pd.DataFrame(

@@ -55,8 +55,7 @@ class MLWorkflow(ABC):
 
         # Creation of the directory to save results
         classifier_dir = path.join(self._output_dir, "classifier")
-        if not path.exists(classifier_dir):
-            makedirs(classifier_dir)
+        makedirs(classifier_dir, exist_ok=True)
 
         # Saving algorithm trained classifier
         self._algorithm.save_classifier(classifier, classifier_dir)
