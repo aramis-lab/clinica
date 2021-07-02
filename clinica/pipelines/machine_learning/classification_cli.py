@@ -5,7 +5,7 @@ import click
 from clinica.pipelines import cli_param
 from clinica.utils.atlas import T1_VOLUME_ATLASES
 
-pipeline_name = "machine-learning-classification"
+pipeline_name = "machinelearning-classification"
 
 
 @click.command(name=pipeline_name)
@@ -67,6 +67,27 @@ def cli(
     """Classification based on machine learning using scikit-learn.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/MachineLearning_Classification/
+
+    Mandatory arguments:
+
+        CAPS_DIRECTORY is the folder containing the results of the t1-volume and/or the pet-volume pipeline.
+
+        GROUP_LABEL is a string defining the group label for the current analysis, which helps you keep track of different analyses.
+
+        The third positional argument defines the type of features for classification. It can be RegionBased or VoxelBased.
+
+        The fourth positional argument defines the studied modality (T1w or PET)
+
+        The fifth positional argument defines the algorithm. It can be DualSVM, LogisticRegression or RandomForest.
+
+        The sixth positional argument defines the validation method. It can be RepeatedHoldOut or RepeatedKFoldCV.
+
+        SUBJECTS_VISITS_TSV is a TSV file containing the participant_id and the session_id columns
+
+        DIAGNOSES_TSV is a TSV file where the diagnosis for each participant (identified by a participant ID) is reported (e.g. AD, CN).
+        It allows the algorithm to perform the dual classification (between the two labels reported).
+
+        OUTPUT_DIRECTORY is the directory where outputs are saved
     """
     from clinica.utils.exceptions import ClinicaException
 
