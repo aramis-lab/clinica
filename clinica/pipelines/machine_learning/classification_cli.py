@@ -91,12 +91,11 @@ def cli(
                 "Clinica will now exit."
             )
 
-    if orig_input_data == "RegionBased":
-        if atlas is None:
-            raise ClinicaException(
-                "You selected region-based inputs without setting --atlas flag. "
-                "Clinica will now exit."
-            )
+    if orig_input_data == "RegionBased" and atlas is None:
+        raise ClinicaException(
+            "You selected region-based inputs without setting --atlas flag. "
+            "Clinica will now exit."
+        )
 
     if algorithm in ["LogisticRegression", "RandomForest"]:
         if orig_input_data != "RegionBased" or validation != "RepeatedHoldOut":
@@ -104,15 +103,6 @@ def cli(
                 "LogisticRegression or RandomForest algorithm can only work on region-based featured or RepeatedHoldOut algorithm. "
                 "Clinica will now exit."
             )
-
-    elif orig_input_data == "RegionBased":
-        if atlas is None:
-            raise ClinicaException(
-                "You selected region-based inputs without setting --atlas flag. "
-                "Clinica will now exit."
-            )
-    else:
-        raise ClinicaException("Unknown input")
 
     if (
         (orig_input_data == "RegionBased")
@@ -132,9 +122,9 @@ def cli(
             n_threads=n_procs,
         )
     elif (
-            (orig_input_data == "RegionBased")
-            and (validation == "RepeatedKFoldCV")
-            and (algorithm == "DualSVM")
+        (orig_input_data == "RegionBased")
+        and (validation == "RepeatedKFoldCV")
+        and (algorithm == "DualSVM")
     ):
         pipeline = RegionBasedRepKFoldDualSVM(
             caps_directory=caps_directory,
@@ -149,9 +139,9 @@ def cli(
             n_threads=n_procs,
         )
     elif (
-            (orig_input_data == "RegionBased")
-            and (validation == "RepeatedHoldOut")
-            and (algorithm == "LogisticRegression")
+        (orig_input_data == "RegionBased")
+        and (validation == "RepeatedHoldOut")
+        and (algorithm == "LogisticRegression")
     ):
         pipeline = RegionBasedRepHoldOutLogisticRegression(
             caps_directory=caps_directory,
@@ -166,9 +156,9 @@ def cli(
             n_threads=n_procs,
         )
     elif (
-            (orig_input_data == "RegionBased")
-            and (validation == "RepeatedHoldOut")
-            and (algorithm == "RandomForest")
+        (orig_input_data == "RegionBased")
+        and (validation == "RepeatedHoldOut")
+        and (algorithm == "RandomForest")
     ):
         pipeline = RegionBasedRepHoldOutRandomForest(
             caps_directory=caps_directory,
