@@ -1,4 +1,5 @@
-# Classification based on machine learning using scikit-learn
+<!-- markdownlint-disable MD007-->
+# `machinelearning-classification` - Classification based on machine learning using scikit-learn
 
 Clinica provides a modular way to perform classification based on machine learning.
 To build its own classification pipeline, the user can combine three modules based on [scikit-learn](http://scikit-learn.org/stable/index.html) [[Pedregosa et al., 2011](http://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf)]:
@@ -6,6 +7,9 @@ To build its own classification pipeline, the user can combine three modules bas
 - Input (e.g. gray matter maps obtained from T1-weighted MR images, FDG PET images)
 - Algorithm (e.g. support vector machine, logistic regression, random forest)
 - Validation (e.g. K-fold cross validation, repeated K-fold cross validation, repeated hold-out validation)
+
+This combination of modules is wrapped into the `machinelearning-classification` command line interface with default values [[Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)] for algorithm and validation modules.
+If you want to fine tune these parameters or create your own module(s), please refer to the [Going further](#going-further) section
 
 ## Prerequisites
 
@@ -15,48 +19,34 @@ You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-w
 
 If you installed the core of Clinica, this pipeline needs no further dependencies.
 
-## Classification modules
+## Running the pipeline
 
-### Input
+The pipeline can be run with the following command line:
 
-Two classes corresponding to the voxel-based and the region-based approaches are implemented in `input.py`:
+```shell
+clinica run machine-learning-classification [OPTIONS] CAPS_DIRECTORY GROUP_LABEL {VoxelBased|RegionBased} {T1w|PET}
+                                            {DualSVM|LogisticRegression|RandomForest} {RepeatedHoldOut|RepeatedKFoldCV} SUBJECTS_VISITS_TSV
+                                            DIAGNOSES_TSV OUTPUT_DIRECTORY
+```
 
-- `CAPSVoxelBasedInput`: all the voxels of the image are used as features.
-- `CAPSRegionBasedInput`: a list of values stored in a TSV file is used as features.
+where:
+
+- `CAPS_DIRECTORY` is the folder containing the results of the [`t1-volume`](../T1_Volume) and/or the [`pet-volume`](../PET_Volume) pipeline.
+- `GROUP_LABEL` is a string defining the group label for the current analysis, which helps you keep track of different analyses.
+- The third positional argument defines the type of features for classification. It can be:
+    - `RegionBased`: a list of values stored in a TSV file is used as features.
 This list corresponds to PET or T1 image intensities averaged over a set of regions obtained from a brain parcellation when running the [`t1-volume`](../T1_Volume) and/or [`pet-volume`](../PET_Volume) pipeline.
-
-!!! note
-    The atlases that can be used for the region-based approaches are listed [here](../../Atlases).
-
-### Algorithm
-
-Three classes corresponding to the machine learning-based classification algorithms are implemented in `algorithm.py`:
-
-- `DualSVMAlgorithm`: support vector machine (SVM) algorithm (input: all the data available or a kernel that can be pre-computed)
-- `LogisticReg`: logistic regression algorithm (input: all the data available)
-- `RandomForest`: random forest algorithm (input: all the data available)
-
-Each algorithm implements a grid search approach to choose the best parameters for the classification by looking at the value of the balanced accuracy.
-The area under the receiver operating characteristic (ROC) curve (AUC) is also reported.
-The labels are automatically assigned based on the `diagnoses_tsv` file.
-
-### Validation
-
-Three classes corresponding to the validation strategies are implemented in `validation.py`:
-
-- `KFoldCV`: K-fold cross validation
-- `RepeatedKFoldCV`: repeated K-fold cross validation
-- `RepeatedHoldOut`: repeated hold-out validation
-
-The input is the name of the classification algorithm used.
-
-## Running your pipeline
-
-No matter the combination of modules chosen, the inputs necessary are:
-
-- `CAPS_DIRECTORY`: the folder containing the results of the [`t1-volume`](../T1_Volume) and/or the [`pet-volume`](../PET_Volume) pipeline (where TSV files are stored)
-- `SUBJECTS_VISITS_TSV`: the TSV file containing the `participant_id` and the `session_id` columns
-- `DIAGNOSES_TSV`: a TSV file where the diagnosis for each participant (identified by a participant ID) is reported (e.g. AD, CN).
+    - `VoxelBased`: all the voxels of the image are used as features.
+- The fourth positional argument defines the studied modality (`T1w` or `PET`).
+- The fifth positional argument defines the algorithm. It can be:
+    - `DualSVM`: support vector machine (SVM) algorithm
+    - `LogisticRegression`: logistic regression algorithm
+    - `RandomForest`: random forest algorithm
+- The sixth positional argument defines the validation method. It can be:
+    - `RepeatedHoldOut`: repeated hold-out validation
+    - `RepeatedKFoldCV`: repeated K-fold cross validation
+- `SUBJECTS_VISITS_TSV` is a TSV file containing the `participant_id` and the `session_id` columns
+- `DIAGNOSES_TSV` is a TSV file where the diagnosis for each participant (identified by a participant ID) is reported (e.g. AD, CN).
 It allows the algorithm to perform the dual classification (between the two labels reported).
 Example of a diagnosis TSV file:
 
@@ -69,29 +59,18 @@ sub-CLNC0004      AD
 sub-CLNC0005      CN
 ````
 
-- `group_label`: the label of the group of subjects studied
-- `image_type`: a value to set the modality studied (`T1w` or `PET`)
-- `output_dir`: the directory where outputs are saved
-- `atlas`: the name of the atlas used for the brain parcellation in case of a region-based approach
-- `fwhm`: the FWHM value in mm used in the `t1-volume` or `pet-volume` pipeline
-- `modulated`: a flag to indicate if, when running the [`t1-volume`](../T1_Volume) pipeline, the image has been modulated or not (`on`, `off`)
-- `acq_label`: label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`)
-- `suvr_reference_region`: reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
-It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
-- `use_pvc_data`: use PET data with partial value correction (`True`/`False`).
-By default, PET data with no PVC are used)
-- `precomputed_kernel`: to load the precomputed kernel if it exists
-- `mask_zeros`: a flag to indicate if zero-valued voxels should be taken into account for the classification (`True`/`False`)
-- `n_iterations`: number of times a task is repeated
-- `grid_search_folds`: number of folds to use for the hyper-parameter grid search (e.g. 10)
-- `c_range`: range used to select the best value for the C parameter, in the logspace
-- `n_threads`: number of threads used if run in parallel
-- `test_size`: percentage (between 0 and 1) representing the size of the test set for each shuffle split
-- `balanced`:  option to balance the weights according to the number of samples
-- `penalty`: type of penalty ("l2" or "l1")
+- `OUTPUT_DIRECTORY`: the directory where outputs are saved
 
-!!! tip
-    Usage examples are available in `ml_workflows.py`.
+Pipeline options if you use region-based inputs:
+
+- `--atlas`: Name of the atlas used for the brain parcellation generated by the [`t1-volume`](../T1_Volume) and/or the [`pet-volume`](../PET_Volume) pipeline.
+It can be `AAL2`, `AICHA`, `Hammers`, `LPBA40` or `Neuromorphometrics` described [here](../../Atlases).
+
+Pipeline options if you specified `PET` inputs:
+
+- `--acq_label`: Name of the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
+- `--suvr_reference_region`: Reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
+It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
 
 ## Output
 
@@ -139,6 +118,65 @@ If `image_type` is `PET`:
         └── pvc-<pvc>
             └── ...
 ```
+
+## Going further
+
+### Fine tune algorithm and validation parameters
+
+The `machinelearning-classification` command uses sensible default options (defined in `ml_workflows.py`) that were used for classfication of patients with Alzheimer’s disease [[Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
+
+No matter the combination of modules chosen, the algorithm and validation parameters are:
+
+- `fwhm`: the FWHM value in mm used in the [`t1-volume`](../T1_Volume) and/or the [`pet-volume`](../PET_Volume) pipeline
+- `modulated`: a flag to indicate if, when running the [`t1-volume`](../T1_Volume) pipeline, the image has been modulated or not (`on`, `off`)
+- `use_pvc_data`: use PET data with partial value correction (`True`/`False`).
+By default, PET data with no PVC are used)
+- `precomputed_kernel`: to load the precomputed kernel if it exists
+- `mask_zeros`: a flag to indicate if zero-valued voxels should be taken into account for the classification (`True`/`False`)
+- `n_iterations`: number of times a task is repeated
+- `grid_search_folds`: number of folds to use for the hyper-parameter grid search (e.g. 10)
+- `c_range`: range used to select the best value for the C parameter, in the logspace
+- `test_size`: percentage (between 0 and 1) representing the size of the test set for each shuffle split
+- `balanced`:  option to balance the weights according to the number of samples
+- `penalty`: type of penalty (`l2` or `l1`)
+
+### Create or combine a set of modules
+
+!!! tip
+    Usage examples are available in `ml_workflows.py`.
+
+#### Input
+
+Two classes corresponding to the voxel-based and the region-based approaches are implemented in `input.py`:
+
+- `CAPSRegionBasedInput`: a list of values stored in a TSV file is used as features.
+This list corresponds to PET or T1 image intensities averaged over a set of regions obtained from a brain parcellation when running the [`t1-volume`](../T1_Volume) and/or [`pet-volume`](../PET_Volume) pipeline.
+- `CAPSVoxelBasedInput`: all the voxels of the image are used as features.
+
+!!! note
+    The atlases that can be used for the region-based approaches are listed [here](../../Atlases).
+
+#### Algorithm
+
+Three classes corresponding to the machine learning-based classification algorithms are implemented in `algorithm.py`:
+
+- `DualSVMAlgorithm`: support vector machine (SVM) algorithm (input: all the data available or a kernel that can be pre-computed)
+- `LogisticReg`: logistic regression algorithm (input: all the data available)
+- `RandomForest`: random forest algorithm (input: all the data available)
+
+Each algorithm implements a grid search approach to choose the best parameters for the classification by looking at the value of the balanced accuracy.
+The area under the receiver operating characteristic (ROC) curve (AUC) is also reported.
+The labels are automatically assigned based on the `DIAGNOSES_TSV` file.
+
+#### Validation
+
+Three classes corresponding to the validation strategies are implemented in `validation.py`:
+
+- `KFoldCV`: K-fold cross validation
+- `RepeatedKFoldCV`: repeated K-fold cross validation
+- `RepeatedHoldOut`: repeated hold-out validation
+
+The input is the name of the classification algorithm used.
 
 ## Describing this pipeline in your paper
 
