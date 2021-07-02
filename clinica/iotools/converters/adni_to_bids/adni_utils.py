@@ -531,15 +531,13 @@ def filter_subj_bids(df_files, location, bids_ids):
     # subjects ids
     bids_ids = [x[8:] for x in bids_ids if "sub-ADNI" in x]
     if location == "ADNIMERGE.csv":
-        df_files["RID"] = df_files["PTID"].apply(
-            lambda x: bids.remove_space_and_symbols(x)
-        )
-        df_files["RID"] = df_files["RID"].apply(lambda x: x[4:])
-        df_ret = df_files[df_files["RID"].isin([x[4:] for x in bids_ids])]
+        df_files.assign(RID=lambda x: bids.remove_space_and_symbols(list(x["PTID"])))
+        df_files.assign(RID=lambda x: x[4:])
+        df_files = df_files.loc[df_files["RID"].isin([x[4:] for x in bids_ids])]
     else:
-        df_files["RID"] = df_files["RID"].apply(lambda x: pad_id(x))
-        df_ret = df_files[df_files["RID"].isin([x[4:] for x in bids_ids])]
-    return df_ret
+        df_files.assign(RID=lambda x: pad_id(x["RID"]))
+        df_files = df_files.loc[df_files["RID"].isin([x[4:] for x in bids_ids])]
+    return df_files
 
 
 def update_age(row):
@@ -650,17 +648,16 @@ def create_adni_sessions_dict(
             cprint(f"\tReading clinical data file: {location}")
 
             df_file = pd.read_csv(file_to_read_path, dtype=str)
-            df_filtered = filter_subj_bids(df_file, location, bids_ids)
+            df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
 
             if not df_filtered.empty:
                 df_filtered["session_id"] = df_filtered.apply(
                     lambda x: get_visit_id(x, location), axis=1
                 )
                 if location == "ADNIMERGE.csv":
-                    df_filtered["age"] = df_filtered.apply(
+                    df_filtered["AGE"] = df_filtered.apply(
                         lambda x: update_age(x), axis=1
                     )
-
                 df_subj_session = update_sessions_df(
                     df_subj_session, df_filtered, df_sessions, location
                 )
@@ -700,6 +697,7 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
         (df_columns_to_add["ADNI"].isin(df_filtered.columns))
         & (~df_columns_to_add["BIDS CLINICA"].isin(df_subj_session.columns))
     ]
+
     df_temp = df_filtered[
         ["RID", "session_id"] + list(df_columns_to_add["ADNI"])
     ].copy()
