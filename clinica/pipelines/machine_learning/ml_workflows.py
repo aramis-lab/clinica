@@ -148,6 +148,8 @@ class RegionBasedRepHoldOutDualSVM(base.MLWorkflow):
         image_type,
         atlas,
         output_dir,
+        acq_label=None,
+        suvr_reference_region=None,
         use_pvc_data=False,
         n_threads=15,
         n_iterations=100,
