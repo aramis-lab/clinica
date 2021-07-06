@@ -130,7 +130,7 @@ No matter the combination of modules chosen, the algorithm and validation parame
 - `fwhm`: the FWHM value in mm used in the [`t1-volume`](../T1_Volume) and/or the [`pet-volume`](../PET_Volume) pipeline
 - `modulated`: a flag to indicate if, when running the [`t1-volume`](../T1_Volume) pipeline, the image has been modulated or not (`on`, `off`)
 - `use_pvc_data`: use PET data with partial value correction (`True`/`False`).
-By default, PET data with no PVC are used)
+By default, PET data with no PVC are used.
 - `precomputed_kernel`: to load the precomputed kernel if it exists
 - `mask_zeros`: a flag to indicate if zero-valued voxels should be taken into account for the classification (`True`/`False`)
 - `n_iterations`: number of times a task is repeated
