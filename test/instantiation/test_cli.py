@@ -79,6 +79,7 @@ def test_second_lv_iotools(generate_cli_second_lv_iotools):
         "pet-surface-longitudinal",
         "deeplearning-prepare-data",
         "machinelearning-prepare-spatial-svm",
+        "machinelearning-classification",
         "statistics-surface",
         "statistics-volume",
         "statistics-volume-correction",
