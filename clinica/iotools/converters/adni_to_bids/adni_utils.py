@@ -522,16 +522,19 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     df_subj_sessions = df_subj_sessions.fillna("n/a")
 
     # compute the amyloid and ptau status
-    df_subj_sessions[
-        ["adni_av45", "adni_pib", "adni_abeta", "adni_ptau"]
-    ] = df_subj_sessions[["adni_av45", "adni_pib", "adni_abeta", "adni_ptau"]].apply(
-        pd.to_numeric, errors="coerce"
-    )
     df_subj_sessions["a_stat"] = df_subj_sessions.apply(
-        lambda x: compute_amyloid_status(x), axis=1
+        lambda x: compute_amyloid_status(
+            x[["adni_av45", "adni_pib", "adni_abeta"]].apply(
+                pd.to_numeric, errors="coerce"
+            )
+        ),
+        axis=1,
     )
     df_subj_sessions["tau_stat"] = df_subj_sessions.apply(
-        lambda x: compute_ptau_status(x), axis=1
+        lambda x: compute_ptau_status(
+            x[["adni_ptau"]].apply(pd.to_numeric, errors="coerce")
+        ),
+        axis=1,
     )
 
     for sp in bids_subjs_paths:
