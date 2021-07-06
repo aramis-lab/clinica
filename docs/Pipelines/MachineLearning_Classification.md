@@ -45,7 +45,7 @@ This list corresponds to PET or T1 image intensities averaged over a set of regi
 - The sixth positional argument defines the validation method. It can be:
     - `RepeatedHoldOut`: repeated hold-out validation
     - `RepeatedKFoldCV`: repeated K-fold cross validation
-- `SUBJECTS_VISITS_TSV` is a TSV file containing the `participant_id` and the `session_id` columns
+- `SUBJECTS_VISITS_TSV` is a TSV file containing the `participant_id` and the `session_id` columns.
 - `DIAGNOSES_TSV` is a TSV file where the diagnosis for each participant (identified by a participant ID) is reported (e.g. AD, CN).
 It allows the algorithm to perform the dual classification (between the two labels reported).
 Example of a diagnosis TSV file:
