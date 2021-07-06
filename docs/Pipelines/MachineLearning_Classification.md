@@ -59,7 +59,7 @@ sub-CLNC0004      AD
 sub-CLNC0005      CN
 ````
 
-- `OUTPUT_DIRECTORY`: the directory where outputs are saved
+- `OUTPUT_DIRECTORY`: the directory where outputs are saved.
 
 Pipeline options if you use region-based inputs:
 
