@@ -135,13 +135,16 @@ class T1Linear(cpe.Pipeline):
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-
-        t1w_files = clinica_file_reader(
-            self.subjects,
-            self.sessions,
-            self.bids_directory,
-            T1W_NII,
-        )
+        try:
+            t1w_files = clinica_file_reader(
+                self.subjects, self.sessions, self.bids_directory, T1W_NII
+            )
+        except ClinicaException as e:
+            err = (
+                "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
+                + str(e)
+            )
+            raise ClinicaBIDSError(err)
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)

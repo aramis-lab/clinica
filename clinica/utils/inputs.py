@@ -256,7 +256,6 @@ def clinica_file_reader(
     from os.path import join
 
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
-    from clinica.utils.stream import cprint
 
     assert isinstance(
         information, dict
@@ -315,7 +314,7 @@ def clinica_file_reader(
             results.append(current_glob_found[0])
 
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
-    if len(error_encountered) > 0:
+    if len(error_encountered) > 0 and raise_exception is True:
         error_message = (
             f"Clinica encountered {len(error_encountered)} "
             f"problem(s) while getting {information['description']}:\n"
@@ -328,22 +327,10 @@ def clinica_file_reader(
                 )
         for msg in error_encountered:
             error_message += msg
-
-        # If the input directory is not complete, as in files are missing, but not all of them,
-        # print an error message
-        if len(results) > 0:
-            cprint(
-                msg=(
-                    f"Error message in {'BIDS' if is_bids else 'CAPS'}:\n{error_message}"
-                ),
-                lvl="info",
-            )
-        # if all the files are missing from the input directory, raise an error
-        elif len(results) == 0 and raise_exception is True:
-            if is_bids:
-                raise ClinicaBIDSError(error_message)
-            else:
-                raise ClinicaCAPSError(error_message)
+        if is_bids:
+            raise ClinicaBIDSError(error_message)
+        else:
+            raise ClinicaCAPSError(error_message)
     return results
 
 

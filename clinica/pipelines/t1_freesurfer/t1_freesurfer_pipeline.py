@@ -134,7 +134,7 @@ class T1FreeSurfer(cpe.Pipeline):
         # T1w file:
         try:
             t1w_files = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII, False
+                self.subjects, self.sessions, self.bids_directory, T1W_NII
             )
         except ClinicaException as e:
             err_msg = (
