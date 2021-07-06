@@ -9,7 +9,7 @@ To build its own classification pipeline, the user can combine three modules bas
 - Validation (e.g. K-fold cross validation, repeated K-fold cross validation, repeated hold-out validation)
 
 This combination of modules is wrapped into the `machinelearning-classification` command line interface with default values [[Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)] for algorithm and validation modules.
-If you want to fine tune these parameters or create your own module(s), please refer to the [Going further](#going-further) section
+If you want to fine tune these parameters or create your own module(s), please refer to the [Going further](#going-further) section.
 
 ## Prerequisites
 
