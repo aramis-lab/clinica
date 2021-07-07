@@ -62,7 +62,7 @@ Installation instructions are available [here](./ICMClusterInstallation).
 
 - Machine Learning
     - `machinelearning-prepare-spatial-svm` - [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
-    - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
+    - `machinelearning-classification` - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
 
 - Deep Learning
     - `deeplearning-prepare-data` - [Prepare input data for deep learning with PyTorch](Pipelines/DeepLearning_PrepareData)
