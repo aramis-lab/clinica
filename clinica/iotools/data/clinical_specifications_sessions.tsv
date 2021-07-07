@@ -6,18 +6,18 @@ Age at the session	age		float				PTDOB	aibl_ptdemog_*.csv
 	adni_fdg	free format										
 	adni_pib	free format										
 	adni_av45	free format										
-	cdr_global						CDGLOBAL	aibl_cdr_*.csv	CDR	oasis_cross-sectional.csv	CDR	oasis3_clinical.csv
+	cdr_global						CDGLOBAL	aibl_cdr_*.csv	CDR	oasis_cross-sectional.csv	cdr	oasis3_sessions.csv
 	cdr_sb											
 	adas11											
 	adas13											
-Mini-mental state exam	MMS		int			MMS	MMSCORE	aibl_mmse_*.csv	MMSE	oasis_cross-sectional.csv	MMSE	oasis3_clinical.csv
+Mini-mental state exam	MMS		int			MMS	MMSCORE	aibl_mmse_*.csv	MMSE	oasis_cross-sectional.csv	mmse	oasis3_sessions.csv
 	FAQ											
 	adni_ventricles_vol											
 	adni_hippocampus_vol											
 	adni_brain_vol											
 	adni_entorhinal_vol											
 Intracranial volume	adni_icv											
-Diagnosis at current session	diagnosis						DXCURREN	aibl_pdxconv_*.csv	CDR	oasis_cross-sectional.csv	CDR	oasis3_clinical.csv
+Diagnosis at current session	diagnosis						DXCURREN	aibl_pdxconv_*.csv	CDR	oasis_cross-sectional.csv	cdr	oasis3_sessions.csv
 	cati_sacha_vol_left_hippocampus	cm3	float	vol_left_hippocampus	Analyses_INSIGHT_M0_20151201/Analyses_HPC_SACHA							
 	cati_sacha_vol_right_hippocampus	cm3	float	vol_right_hippocampus	Analyses_INSIGHT_M0_20151202/Analyses_HPC_SACHA							
 	cati_whasa_volume	cm3	float	volume (cm3)	Analyses_INSIGHT_M0_20151203/Analyses_HPC_WHASA							

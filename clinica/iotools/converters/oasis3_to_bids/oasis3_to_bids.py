@@ -48,7 +48,7 @@ class Oasis3ToBids(Converter):
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict(
-            clinical_data_dir, "OASIS3", clinic_specs_path, bids_ids, "ID"
+            clinical_data_dir, "OASIS3", clinic_specs_path, bids_ids, "Subject"
         )
         for y in bids_ids:
             for z in sessions_dict[y].keys():
@@ -63,10 +63,10 @@ class Oasis3ToBids(Converter):
         # Note: We have no scans information for OASIS
         scans_dict = bids.create_scans_dict(
             clinical_data_dir,
-            "OASIS",
+            "OASIS3",
             clinic_specs_path,
             bids_ids,
-            "ID",
+            "Subject",
             "",
             sessions_dict
         )

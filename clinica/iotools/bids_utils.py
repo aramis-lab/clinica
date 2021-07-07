@@ -568,7 +568,7 @@ def contain_dicom(folder_path):
 
 def get_supported_dataset():
     """Return the list of supported datasets."""
-    return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "AIBL"]
+    return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
 
 
 def get_bids_subjs_list(bids_path):
