@@ -13,7 +13,7 @@ pipeline_name = "pet-surface-longitudinal"
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
 @cli_param.argument.pvc_psf_tsv
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs

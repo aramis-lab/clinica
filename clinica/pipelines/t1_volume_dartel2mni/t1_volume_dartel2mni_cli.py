@@ -11,13 +11,13 @@ pipeline_name = "t1-volume-dartel2mni"
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option.smooth
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
-@cli_param.option_group.advanced_options
+@cli_param.option_group.advanced_pipeline_options
 @cli_param.option.tissues
 @cli_param.option.modulate
 @cli_param.option.voxel_size
@@ -34,6 +34,7 @@ def cli(
     n_procs: Optional[int] = None,
 ) -> None:
     """Register DARTEL template to MNI space.
+    GROUP_LABEL is the label of the group that is associated to the DARTEL template that you had created when running the t1-volume pipeline.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """

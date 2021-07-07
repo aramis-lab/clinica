@@ -13,7 +13,7 @@ pipeline_name = "statistics-volume"
 @cli_param.argument.orig_input_data
 @cli_param.argument.subject_visits_with_covariates_tsv
 @cli_param.argument.contrast
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option_group.option(
     "-dartel",
     "--group_label_dartel",
@@ -52,10 +52,10 @@ pipeline_name = "statistics-volume"
         "See Wiki for an example."
     ),
 )
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.working_directory
 @cli_param.option.n_procs
-@cli_param.option_group.advanced_options
+@cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-ct",
     "--cluster_threshold",
@@ -80,7 +80,9 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Volume-based mass-univariate analysis with SPM.
+    """Volume-based mass-univariate analysis with SPM. GROUP_LABEL defines the group name for the analysis.
+    SUBJECT_VISITS_WITH_COVARIATES_TSV is a TSV file containing a list of subjects with their sessions and all the covariates and factors of the model.
+    CONTRAST is a string defining the contrast matrix or the variable of interest for the GLM.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Volume/
     """

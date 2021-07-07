@@ -13,13 +13,13 @@ pipeline_name = "pet-volume"
 @cli_param.argument.group_label
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option.pvc_psf_tsv
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
-@cli_param.option_group.advanced_options
+@cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-mask",
     "--mask_tissues",
@@ -68,6 +68,11 @@ def cli(
     n_procs: Optional[int] = None,
 ) -> None:
     """SPM-based pre-processing of PET images.
+
+    GROUP_LABEL is the label of the group that is associated to the DARTEL template that you had created when running the t1-volume pipeline.
+    ACQ_LABEL is the label given to the PET acquisition, specifying the tracer used.
+
+    Prerequisite: You need to have performed the t1-volume pipeline on your T1-weighted MR images.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Volume/
     """

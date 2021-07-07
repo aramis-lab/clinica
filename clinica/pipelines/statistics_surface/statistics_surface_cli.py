@@ -23,7 +23,7 @@ pipeline_name = "statistics-surface"
     type=click.Path(exists=True, resolve_path=True),
 )
 @cli_param.argument.contrast
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option_group.option(
     "-c",
     "--covariate",
@@ -61,10 +61,10 @@ pipeline_name = "statistics-surface"
         "See Wiki for an example."
     ),
 )
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.working_directory
 @cli_param.option.n_procs
-@cli_param.option_group.advanced_options
+@cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-ct",
     "--cluster_threshold",
@@ -89,9 +89,12 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Surface-based mass-univariate analysis with SurfStat.
+    """Surface-based mass-univariate analysis with SurfStat. ACQ_LABEL is the label given to the PET acquisition, specifying the tracer used.
+    SUBJECT_VISITS_WITH_COVARIATES_TSV is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model.
 
-    See "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
+    Prerequisite: You need to have performed the t1-freesurfer pipeline on your T1-weighted MR images or pet-surface pipeline for measurements of activity map from PET.
+
+        See "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
     """
     from networkx import Graph
 

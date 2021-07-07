@@ -20,7 +20,7 @@ pipeline_name = "deeplearning-prepare-data"
     type=click.Choice(["image", "slice", "patch"]),
     default="image",
 )
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option_group.option(
     "-uui",
     "--use_uncropped_image",
@@ -89,7 +89,7 @@ pipeline_name = "deeplearning-prepare-data"
         "`segm-whitematter_probability.nii.gz`"
     ),
 )
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
