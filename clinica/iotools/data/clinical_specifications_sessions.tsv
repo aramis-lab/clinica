@@ -1,7 +1,7 @@
 Field	BIDS CLINICA	BIDS format	BIDS type	INSIGHT	INSIGHT location	CLINAD	AIBL	AIBL location	OASIS	OASIS location	OASIS3	OASIS3 location
 BIDS session id	session_id	Keyword 'ses-' followed by the original session id of each dataset without special characters or symbols	string									
 Date of the examination	examination_date	YYYY-MM-DD HH:MM:SS	string	 		date d'evaluation	EXAMDATE	aibl_neurobat_*.csv				
-Age at the session	age		float				PTDOB	aibl_ptdemog_*.csv				
+Age at the session	age		float				PTDOB	aibl_ptdemog_*.csv			Age	oasis3_sessions.csv
 	current_study	free format										
 	adni_fdg	free format										
 	adni_pib	free format										
