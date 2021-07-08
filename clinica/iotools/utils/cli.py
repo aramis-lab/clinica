@@ -19,6 +19,7 @@ def cli() -> None:
 @click.option(
     "-m",
     "--modality",
+    "modalities",
     multiple=True,
     metavar="modalities",
     help="Process selected modalities.",
