@@ -16,7 +16,7 @@ class Oasis3ToBids(Converter):
         """
         from os import path
         import os
-        import numpy as np
+        from glob import glob
         import clinica.iotools.bids_utils as bids
         from clinica.utils.stream import cprint
 
@@ -50,14 +50,31 @@ class Oasis3ToBids(Converter):
         sessions_dict = bids.create_sessions_dict(
             clinical_data_dir, "OASIS3", clinic_specs_path, bids_ids, "Subject", [], participants_df
         )
-        print(sessions_dict)
-        print("#")
         for y in bids_ids:
             for z in sessions_dict[y].keys():
                 if sessions_dict[y][z]["diagnosis"] > 0:
                     sessions_dict[y][z]["diagnosis"] = "AD"
                 else:
                     sessions_dict[y][z]["diagnosis"] = "CN"
+
+        for bids_id in bids_ids:
+            bids_subj_folder = path.join(bids_dir, bids_id)
+            session_paths = glob(path.join(bids_subj_folder, "*"))
+            for s in session_paths:
+                # Get the session name in month differences
+                s_name = path.basename(s).replace("ses-", "")
+                diff_months = str(sessions_dict[bids_id][s_name]['diff_months'])
+                s_new_name = "M" + diff_months
+                # Replace the name of the sessions in the dictionary
+                sessions_dict[bids_id][s_new_name] = sessions_dict[bids_id].pop(s_name)
+                sessions_dict[bids_id][s_new_name]['session_id'] = "ses-" + s_new_name
+                # Replace it in for the folder
+                s_new_path = s.replace(s_name, s_new_name)
+                os.rename(s, s_new_path)
+                # Replace it for each file in its folder
+                file_paths = glob(path.join(s_new_path, "**/*"))
+                for f in file_paths:
+                    os.rename(f, f.replace(s_name, "M" + diff_months))
 
         bids.write_sessions_tsv(bids_dir, sessions_dict)
 

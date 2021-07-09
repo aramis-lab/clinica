@@ -253,9 +253,9 @@ def create_sessions_dict(
                         )
                         # Calculate the difference in months for OASIS3 only
                         if study_name is "OASIS3" and sessions_fields_bids[i] == "age":
-                            diff_years = int(sessions_dict[subj_bids][s_name]["age"]) - participants_df[participants_df["participant_id"] == subj_bids]["age_bl"]
+                            diff_years = float(sessions_dict[subj_bids][s_name]["age"]) - participants_df[participants_df["participant_id"] == subj_bids]["age_bl"]
                             (sessions_dict[subj_bids][s_name]).update(
-                                {"diff_months": years_to_months(int(diff_years))}
+                                {"diff_months": years_to_months(float(diff_years))}
                             )
 
     return sessions_dict
@@ -628,9 +628,10 @@ def compute_new_subjects(original_ids, bids_ids):
 
 def years_to_months(years):
     """Converts a number of years in decimal to a number of months rounded."""
+    from math import trunc
 
-    nb_years = round(years)
-    nb_months = (years - round(years)) * 12
+    nb_years = trunc(years)
+    nb_months = (years - nb_years) * 12
     return round(nb_months + nb_years * 12)
 
 
