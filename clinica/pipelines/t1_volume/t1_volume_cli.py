@@ -26,7 +26,9 @@ pipeline_name = "t1-volume"
 @cli_param.option.tissues
 @cli_param.option.modulate
 @cli_param.option.voxel_size
+@click.pass_context
 def cli(
+    ctx: click.Context,
     bids_directory: str,
     caps_directory: str,
     group_label: str,
@@ -82,7 +84,8 @@ def cli(
         )
 
     cprint("Part 1/4: Running t1-volume-segmentation pipeline.")
-    t1_volume_tissue_segmentation_cli.cli(
+    ctx.invoke(
+        t1_volume_tissue_segmentation_cli.cli,
         bids_directory=bids_directory,
         caps_directory=caps_directory,
         tissue_classes=tissue_classes,
@@ -96,7 +99,8 @@ def cli(
     )
 
     cprint("Part 2/4: Running t1-volume-create-dartel pipeline.")
-    t1_volume_create_dartel_cli.cli(
+    ctx.invoke(
+        t1_volume_create_dartel_cli.cli,
         bids_directory=bids_directory,
         caps_directory=caps_directory,
         group_label=group_label,
@@ -107,7 +111,8 @@ def cli(
     )
 
     cprint("Part 3/4: Running t1-volume-dartel2mni pipeline.")
-    t1_volume_dartel2mni_cli.cli(
+    ctx.invoke(
+        t1_volume_dartel2mni_cli.cli,
         bids_directory=bids_directory,
         caps_directory=caps_directory,
         group_label=group_label,
@@ -121,7 +126,8 @@ def cli(
     )
 
     cprint("Part 4/4: Running t1-volume-parcellation pipeline.")
-    t1_volume_parcellation_cli.cli(
+    ctx.invoke(
+        t1_volume_parcellation_cli.cli,
         caps_directory=caps_directory,
         group_label=group_label,
         subjects_sessions_tsv=subjects_sessions_tsv,
