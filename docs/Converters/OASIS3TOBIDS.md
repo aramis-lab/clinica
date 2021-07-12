@@ -31,25 +31,47 @@ The data needs to be formatted before downloading by following the step-by-step 
 
 1. From the menu on the right of the "Subjects" data table, click on the "Edit Columns" option.
 
+![](../img/OASIS3_download/edit_columns.png)
+
 2. Select "Education (Subject)" from the "Available Fields".
+
+![](../img/OASIS3_download/select_education.png)
 
 3. Click on the arrow to send it to the left, to "Current Fields".
 
+![](../img/OASIS3_download/add_education.png)
+
 4. From the menu on the right of the data table, load the "MR sessions" table.
+
+![](../img/OASIS3_download/add_mr_sessions.png)
 
 5. From the menu on the right of the loaded "MR Sessions" data table, click on the "Edit Columns" option, select "Age (MR Sessions)" from the "Available Fields" and click on the arrow to send it to the left, to "Current Fields".
 
+![](../img/OASIS3_download/add_age.png)
+
 6. Select "Age (MR Sessions)" from the "Current Fields" and click on the arrow to send it to the right, to "Available Fields".
+
+![](../img/OASIS3_download/remove_age.png)
 
 7. Check that the Age column in the "MR Sessions" table contains decimal values and not integers.
 
-8. From this "MR Sessions" table, click on the "Join to" option. 
+![](../img/OASIS3_download/check_age.png)
+
+8. From this "MR Sessions" table, click on the "Join to" option.
+
+![](../img/OASIS3_download/join_to_mr_sessions.png)
 
 9. Select the "ADRC Clinical Data" table.
 
+![](../img/OASIS3_download/select_clinical_data.png)
+
 10. Do the same "join" by going back to the "Subjects" table, then check the inclusion of the "mmse", "ageAtEntry" and "cdr" columns.
 
+![](../img/OASIS3_download/check_columns.png)
+
 11. In the options, export a "Spreadsheet" of the two tables "Subjects" and "MR Sessions".
+
+![](../img/OASIS3_download/export_spreadsheet.png)
 
 12. Rename the downloaded files to "oasis3_participants.csv" and "oasis3_sessions.csv" respectively.
 
