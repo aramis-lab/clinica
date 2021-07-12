@@ -27,7 +27,7 @@ def setup_logging(verbosity: int = 0) -> None:
         verbosity (int): The desired level of verbosity for logging.
             (0 (default): WARNING, 1: INFO, 2: DEBUG)
     """
-    from logging import DEBUG, INFO, WARNING, getLogger
+    from logging import getLogger
     from sys import stdout
 
     import nipype
@@ -38,7 +38,7 @@ def setup_logging(verbosity: int = 0) -> None:
 
     # Define the module level logger.
     logger = getLogger("clinica")
-    logging_level = [WARNING, INFO, DEBUG][verbosity]
+    logging_level = ["WARNING", "INFO", "DEBUG"][verbosity]
     logger.setLevel(logging_level)
 
     # Add console handler with custom formatting.
