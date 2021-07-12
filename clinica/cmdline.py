@@ -21,8 +21,8 @@ CONTEXT_SETTINGS = dict(
 
 
 def setup_logging(verbosity: int = 0) -> None:
-    """
-    Setup Clinica's logging facilities.
+    """Setup Clinica's logging facilities.
+
     Args:
         verbosity (int): The desired level of verbosity for logging.
             (0 (default): WARNING, 1: INFO, 2: DEBUG)
@@ -30,6 +30,7 @@ def setup_logging(verbosity: int = 0) -> None:
     from logging import DEBUG, INFO, WARNING, getLogger
     from sys import stdout
 
+    import nipype
     from colorlog import ColoredFormatter, StreamHandler
 
     # Cap max verbosity level to 2.
@@ -37,7 +38,8 @@ def setup_logging(verbosity: int = 0) -> None:
 
     # Define the module level logger.
     logger = getLogger("clinica")
-    logger.setLevel([WARNING, INFO, DEBUG][verbosity])
+    logging_level = [WARNING, INFO, DEBUG][verbosity]
+    logger.setLevel(logging_level)
 
     # Add console handler with custom formatting.
     console_handler = StreamHandler(stdout)
@@ -45,6 +47,11 @@ def setup_logging(verbosity: int = 0) -> None:
         ColoredFormatter("%(log_color)s%(asctime)s:%(levelname)s:%(message)s")
     )
     logger.addHandler(console_handler)
+
+    # Normalize nipype logging with Clinica's.
+    nipype.config.set("logging", "interface_level", logging_level)
+    nipype.config.set("logging", "workflow_level", logging_level)
+    nipype.logging.update_logging(nipype.config)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
