@@ -17,16 +17,44 @@
      PIB, AV45, and FDG, totaling over 1500 raw imaging scans and the accompanying post-processed files from
       the Pet Unified Pipeline (PUP) are also available in OASIS-3.
 
+  For more information about the images and the dataset you can read the [OASIS-3: Imaging Methods and Data Dictionary](https://www.oasis-brains.org/files/OASIS-3_Imaging_Data_Dictionary_v1.5.pdf).
+
 ## Dependencies
 
 If you installed the core of Clinica, this converter needs no further dependencies.
 
 ## Downloading OASIS-3
 
-The OASIS-3 to BIDS converter requires the user to have downloaded the OASIS-3 (also called *Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease*) imaging and clinical data. To do so, visit the [OASIS website](http://www.oasis-brains.org/), click on `DATASETS` then `OASIS-3`. You can download the data via FTP or XNAT (if you click on `Browse Data`).
+The OASIS-3 to BIDS converter requires the user to have downloaded the OASIS-3 (also called *Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease*) imaging and clinical data. To do so, visit the [OASIS website](http://www.oasis-brains.org/), click on `DATASETS` then `OASIS-3`. For the first access, you have to scroll down to click on `Apply To Access OASIS Data` in the bottom of the next "Data Use Agreement" section and follow the procedure. Then, you can download the data via XNAT (if you click on `Browse Data`).
+
+The data needs to be formatted before downloading by following the step-by-step procedure below.
+
+1. From the menu on the right of the "Subjects" data table, click on the "Edit Columns" option.
+
+2. Select "Education (Subject)" from the "Available Fields".
+
+3. Click on the arrow to send it to the left, to "Current Fields".
+
+4. From the menu on the right of the data table, load the "MR sessions" table.
+
+5. From the menu on the right of the loaded "MR Sessions" data table, click on the "Edit Columns" option, select "Age (MR Sessions)" from the "Available Fields" and click on the arrow to send it to the left, to "Current Fields".
+
+6. Select "Age (MR Sessions)" from the "Current Fields" and click on the arrow to send it to the right, to "Available Fields".
+
+7. Check that the Age column in the "MR Sessions" table contains decimal values and not integers.
+
+8. From this "MR Sessions" table, click on the "Join to" option. 
+
+9. Select the "ADRC Clinical Data" table.
+
+10. Do the same "join" by going back to the "Subjects" table, then check the inclusion of the "mmse", "ageAtEntry" and "cdr" columns.
+
+11. In the options, export a "Spreadsheet" of the two tables "Subjects" and "MR Sessions".
+
+12. Rename the downloaded files to "oasis3_participants.csv" and "oasis3_sessions.csv" respectively.
 
 !!! note
-    You do not have to modify the original folder name or rename the clinical data file before using the converter.
+    You do not have to modify the original folder name before using the converter.
 
 !!! warning
     We do not currently support the conversion of OASIS-2.
@@ -81,10 +109,6 @@ DATASET_DIRECTORY
     ├── BIDS
     │   └── dataset_description.json
     ├── OAS30002_AV45_PUPTIMECOURSE_d2340
-    │   ├── DATA
-    │   │   └── pet_proc
-    │   │       ├── BrainMask.4dfp.hdr
-    │   │       ├── ...
     │   └── SNAPSHOTS
     │       ├── OAS30002_AV45_d2340_m0_t.jpg
     │       ├── ...
