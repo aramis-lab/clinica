@@ -184,8 +184,6 @@ def create_sessions_dict(
             fields_bids.append(sessions_fields_bids[i])
             fields_dataset.append(sessions_fields[i])
 
-    # sessions_df = pd.DataFrame(columns=fields_bids)
-
     for i in range(0, len(sessions_fields)):
         # If the i-th field is available
         if not pd.isnull(sessions_fields[i]):
@@ -228,7 +226,6 @@ def create_sessions_dict(
                         )
                 else:
                     subj_bids = subj_bids[0]
-                    # sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
 
                     subj_dir = path.join(
                         path.dirname(path.dirname(clinical_data_dir)),
@@ -239,7 +236,7 @@ def create_sessions_dict(
                     session_names = get_bids_subjs_list(subj_dir)
                     for s in session_names:
                         s_name = s.replace("ses-", "")
-                        if study_name is not "OASIS3":
+                        if study_name != "OASIS3":
                             row = file_to_read.iloc[r]
                         else:
                             mr_id = subj_id + "_ClinicalData_" + s_name
@@ -252,10 +249,10 @@ def create_sessions_dict(
                             {sessions_fields_bids[i]: row[sessions_fields[i]]}
                         )
                         # Calculate the difference in months for OASIS3 only
-                        if study_name is "OASIS3" and sessions_fields_bids[i] == "age":
+                        if study_name == "OASIS3" and sessions_fields_bids[i] == "age":
                             diff_years = float(sessions_dict[subj_bids][s_name]["age"]) - participants_df[participants_df["participant_id"] == subj_bids]["age_bl"]
                             (sessions_dict[subj_bids][s_name]).update(
-                                {"diff_months": years_to_months(float(diff_years))}
+                                {"diff_months": round(float(diff_years) * 12)}
                             )
 
     return sessions_dict
@@ -624,15 +621,6 @@ def compute_new_subjects(original_ids, bids_ids):
             to_return.append(s)
 
     return to_return
-
-
-def years_to_months(years):
-    """Converts a number of years in decimal to a number of months rounded."""
-    from math import trunc
-
-    nb_years = trunc(years)
-    nb_months = (years - nb_years) * 12
-    return round(nb_months + nb_years * 12)
 
 
 def remove_space_and_symbols(data):
