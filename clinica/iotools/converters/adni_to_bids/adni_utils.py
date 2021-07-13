@@ -576,13 +576,12 @@ def filter_subj_bids(df_files, location, bids_ids):
     # subjects ids
     bids_ids = [x[8:] for x in bids_ids if "sub-ADNI" in x]
     if location == "ADNIMERGE.csv":
-        df_files.assign(RID=lambda x: bids.remove_space_and_symbols(list(x["PTID"])))
-        df_files.assign(RID=lambda x: x[4:])
-        df_files = df_files.loc[df_files["RID"].isin([x[4:] for x in bids_ids])]
+        df_files["RID"] = df_files["PTID"].apply(
+            lambda x: bids.remove_space_and_symbols(x)[4:]
+        )
     else:
-        df_files.assign(RID=lambda x: pad_id(x["RID"]))
-        df_files = df_files.loc[df_files["RID"].isin([x[4:] for x in bids_ids])]
-    return df_files
+        df_files["RID"] = df_files["RID"].apply(lambda x: pad_id(x))
+    return df_files.loc[df_files["RID"].isin([x[4:] for x in bids_ids])]
 
 
 def update_age(row):
