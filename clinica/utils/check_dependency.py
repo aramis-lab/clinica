@@ -102,6 +102,8 @@ def check_ants(version_requirements=None):
     """Check ANTs software."""
     from clinica.utils.exceptions import ClinicaMissingDependencyError
 
+    check_environment_variable("ANTSPATH", "ANTs")
+
     list_binaries = ["N4BiasFieldCorrection", "antsRegistrationSyNQuick.sh"]
     for binary in list_binaries:
         if not is_binary_present(binary):
