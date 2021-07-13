@@ -102,8 +102,6 @@ def check_ants(version_requirements=None):
     """Check ANTs software."""
     from clinica.utils.exceptions import ClinicaMissingDependencyError
 
-    check_environment_variable("ANTSPATH", "ANTs")
-
     list_binaries = ["N4BiasFieldCorrection", "antsRegistrationSyNQuick.sh"]
     for binary in list_binaries:
         if not is_binary_present(binary):
@@ -141,7 +139,9 @@ def check_fsl(version_requirements=None):
 
     try:
         if fsl.Info.version().split(".") < ["5", "0", "5"]:
-            raise ClinicaMissingDependencyError("FSL version must be greater than 5.0.5")
+            raise ClinicaMissingDependencyError(
+                "FSL version must be greater than 5.0.5"
+            )
     except Exception as e:
         cprint(msg=str(e), lvl="error")
 
@@ -214,4 +214,6 @@ def check_matlab():
     from clinica.utils.exceptions import ClinicaMissingDependencyError
 
     if not is_binary_present("matlab"):
-        raise ClinicaMissingDependencyError("Matlab was not found in PATH environment. Did you add it?")
+        raise ClinicaMissingDependencyError(
+            "Matlab was not found in PATH environment. Did you add it?"
+        )
