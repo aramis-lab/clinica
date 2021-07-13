@@ -114,7 +114,10 @@ class T1FreeSurfer(cpe.Pipeline):
                 cprint(msg=f"{image_id.replace('_', ' | ')}", lvl="warning")
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/freesurfer_cross_sectional"
-                cprint(msg=f"Output folders in {output_folder} will be recreated.", lvl="warning")
+                cprint(
+                    msg=f"Output folders in {output_folder} will be recreated.",
+                    lvl="warning",
+                )
             else:
                 cprint(msg="Image(s) will be ignored by Clinica.", lvl="warning")
                 input_ids = [
