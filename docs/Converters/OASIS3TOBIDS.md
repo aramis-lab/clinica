@@ -88,7 +88,9 @@ The data needs to be formatted before downloading by following the step-by-step 
 To download the images of the OASIS-3 dataset:
 
 1. From the page on which you were to donwload the clinical date, click on "Download Images" button. You will have a download interface with different options, such as shown below.
+
 <img width="959" alt="Screenshot 2021-07-15 at 10 48 45" src="https://user-images.githubusercontent.com/85217698/125761542-bfcfb824-af4f-4e0d-b597-510418986313.png">
+
 2. In the "Select Sessions" part, select the sessions you want to work with.
  
 3. For the "Select Image Data" part:
