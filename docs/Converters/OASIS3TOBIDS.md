@@ -23,7 +23,7 @@
 
 If you installed the core of Clinica, this converter needs no further dependencies.
 
-## Downloading OASIS-3
+## Downloading OASIS-3 clinical data
 
 The OASIS-3 to BIDS converter requires the user to have downloaded the OASIS-3 (also called *Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease*) imaging and clinical data. To do so, visit the [OASIS website](http://www.oasis-brains.org/), click on `DATASETS` then `OASIS-3`. For the first access, you have to scroll down to click on `Apply To Access OASIS Data` in the bottom of the next "Data Use Agreement" section and follow the procedure. Then, you can download the data via XNAT (if you click on `Browse Data`).
 
@@ -80,6 +80,26 @@ The data needs to be formatted before downloading by following the step-by-step 
 
 !!! warning
     We do not currently support the conversion of OASIS-2.
+    
+## Downloading OASIS-3 images
+
+To download the images of the OASIS-3 dataset:
+
+1. From the page on which you were to donwload the clinical date, click on "Download Images" button. You will have a download interface with different options, such as shown below.
+<img width="959" alt="Screenshot 2021-07-15 at 10 48 45" src="https://user-images.githubusercontent.com/85217698/125761542-bfcfb824-af4f-4e0d-b597-510418986313.png">
+2. In the "Select Sessions" part, select the sessions you want to work with.
+ 
+3. For the "Select Image Data" part:
+
+    a. For the "Scan Format" select BOTH "BIDS" and "NIFTI". Otherwise, you will be missing data.
+    
+    b. For the "Scan Types", select only T1w, since it is the only format converted right now.
+    
+    c. For the "Additionnal Ressources", select BIDS.
+    
+    d. For the "Assessments", do not select anything.
+    
+4. Click submit to download. We advise that you use the XNAT Desktop Client which will be more efficient than download through your web browser
 
 ## Modalities supported
 
