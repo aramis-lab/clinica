@@ -80,9 +80,15 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Volume-based mass-univariate analysis with SPM. GROUP_LABEL defines the group name for the analysis.
-    SUBJECT_VISITS_WITH_COVARIATES_TSV is a TSV file containing a list of subjects with their sessions and all the covariates and factors of the model.
-    CONTRAST is a string defining the contrast matrix or the variable of interest for the GLM.
+    """Volume-based mass-univariate analysis with SPM.
+
+       GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
+
+       The type of surface-based feature can be defined by using the third argument: t1-freesurfer for cortical thickness, pet-surface for projected PET data or custom-pipeline for you own data in CAPS directory.
+
+       SUBJECT_VISITS_WITH_COVARIATES_TSV is a TSV file containing a list of subjects with their sessions and all the covariates and factors of the model.
+
+       CONTRAST is a string defining the contrast matrix or the variable of interest for the GLM.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Volume/
     """
