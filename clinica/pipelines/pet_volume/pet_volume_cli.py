@@ -69,8 +69,9 @@ def cli(
 ) -> None:
     """SPM-based pre-processing of PET images.
 
-    GROUP_LABEL is the label of the group that is associated to the DARTEL template that you had created when running the t1-volume pipeline.
-    ACQ_LABEL is the label given to the PET acquisition, specifying the tracer used.
+       GROUP_LABEL is an user-defined identifier to target a specific group of subjects. For this pipeline, it is associated to the DARTEL template that you had created when running the t1-volume pipeline.
+
+       ACQ_LABEL is the label given to the PET acquisition, specifying the tracer used.
 
     Prerequisite: You need to have performed the t1-volume pipeline on your T1-weighted MR images.
 
