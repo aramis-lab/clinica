@@ -71,7 +71,10 @@ def cli(
 
        GROUP_LABEL is an user-defined identifier to target a specific group of subjects. For this pipeline, it is associated to the DARTEL template that you had created when running the t1-volume pipeline.
 
-       ACQ_LABEL is the label given to the PET acquisition, specifying the tracer used.
+       ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the tracer used. Frequently used values are 'fdg'
+     or 'av45'.
+
+       The reference region must be precised to perform intensity normalization. Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
 
     Prerequisite: You need to have performed the t1-volume pipeline on your T1-weighted MR images.
 
