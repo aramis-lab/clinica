@@ -44,8 +44,8 @@ def cli(
     n_procs: Optional[int] = None,
 ) -> None:
     """Volume-based processing of T1-weighted MR images.
-    
-    GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
+
+       GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """
