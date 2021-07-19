@@ -63,8 +63,8 @@ class Oasis3ToBids(Converter):
             for s in session_paths:
                 # Get the session name in month differences
                 s_name = path.basename(s).replace("ses-", "")
-                diff_months = str(sessions_dict[bids_id][s_name]['diff_months'])
-                s_new_name = "M" + diff_months
+                diff_months = sessions_dict[bids_id][s_name]['diff_months']
+                s_new_name = f"M{diff_months:02d}"
                 # Replace the name of the sessions in the dictionary
                 sessions_dict[bids_id][s_new_name] = sessions_dict[bids_id].pop(s_name)
                 sessions_dict[bids_id][s_new_name]['session_id'] = "ses-" + s_new_name
@@ -74,7 +74,7 @@ class Oasis3ToBids(Converter):
                 # Replace it for each file in its folder
                 file_paths = glob(path.join(s_new_path, "**/*"))
                 for f in file_paths:
-                    os.rename(f, f.replace(s_name, "M" + diff_months))
+                    os.rename(f, f.replace(s_name, s_new_name))
 
         bids.write_sessions_tsv(bids_dir, sessions_dict)
 
