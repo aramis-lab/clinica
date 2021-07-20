@@ -40,9 +40,17 @@ def cli(
 ) -> None:
     """Statistical correction of statistics-volume pipeline.
 
-    T_MAP is the name of the T statistic map used for the correction.
-    HEIGHT_THRESHOLD is the T value corresponding to an uncorrected p-value of 0.001.
-    FWEp is the Family-Wise Error peak threshold. FDRp is the False Discovery Rate peak threshold. Finally, FWEc and FDRc stand for the respective correction parameters.
+       T_MAP is the name of the T statistic map used for the correction.
+
+       HEIGHT_THRESHOLD is the T value corresponding to an uncorrected p-value of 0.001.
+
+       FWEp is the Family-Wise Error peak threshold.
+
+       FDRp is the False Discovery Rate peak threshold.
+
+       Finally, FWEc and FDRc stand for the respective correction parameters.
+
+    Prerequisite: You have to perform the statistics-volume pipeline before running this pipeline.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Volume/
     """

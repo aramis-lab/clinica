@@ -34,7 +34,8 @@ def cli(
     n_procs: Optional[int] = None,
 ) -> None:
     """Register DARTEL template to MNI space.
-    GROUP_LABEL is the label of the group that is associated to the DARTEL template that you had created when running the t1-volume pipeline.
+
+       GROUP_LABEL is an user-defined identifier to target a specific group of subjects. For this pipeline, it is associated to the DARTEL template that you had created when running the t1-volume pipeline.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """

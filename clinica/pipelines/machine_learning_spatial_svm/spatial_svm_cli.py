@@ -46,6 +46,12 @@ def cli(
 ) -> None:
     """Prepare input data for SVM with spatial and anatomical regularization.
 
+       GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
+
+       The third positional argument can be t1-volume to use tissue maps or pet-volume to use standardized uptake value ratio (SUVR) maps.
+
+    Prerequisites: You need to execute the t1-volume pipeline to run the pipeline on T1-weighted MRI data, and the t1-volume + pet-volume pipelines to apply it to PET data.
+
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/MachineLearning_PrepareSVM/"
     """
     from networkx import Graph
