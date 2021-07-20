@@ -53,7 +53,7 @@ class OasisToBids(Converter):
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict(
-            clinical_data_dir, "OASIS", clinic_specs_path, bids_ids, "ID"
+            clinical_data_dir, bids_dir, "OASIS", clinic_specs_path, bids_ids, "ID"
         )
         for y in bids_ids:
             if sessions_dict[y]["M00"]["diagnosis"] > 0:
