@@ -14,7 +14,9 @@ pipeline_name = "t1-freesurfer-longitudinal"
 @cli_param.option.working_directory
 @cli_param.option.n_procs
 @cli_param.option.overwrite_outputs
+@click.pass_context
 def cli(
+    ctx: click.Context,
     caps_directory: str,
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
@@ -51,7 +53,8 @@ def cli(
         )
 
     cprint("Part 1/2: Running t1-freesurfer-unbiased-template pipeline.")
-    t1_freesurfer_template_cli.cli(
+    ctx.invoke(
+        t1_freesurfer_longitudinal_correction_cli.cli,
         caps_directory=caps_directory,
         subjects_sessions_tsv=subjects_sessions_tsv,
         working_directory=working_directory,
@@ -60,7 +63,8 @@ def cli(
     )
 
     cprint("Part 2/2 Running t1-freesurfer-longitudinal-correction pipeline.")
-    t1_freesurfer_longitudinal_correction_cli.cli(
+    ctx.invoke(
+        t1_freesurfer_longitudinal_correction_cli.cli,
         caps_directory=caps_directory,
         subjects_sessions_tsv=subjects_sessions_tsv,
         working_directory=working_directory,

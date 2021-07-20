@@ -13,3 +13,7 @@ common_pipelines_options = optgroup.group(
 advanced_pipeline_options = optgroup.group(
     "Advanced pipeline options", help="For experts only"
 )
+
+
+def custom_pipeline_options(name: str, *args, **kwargs):
+    return optgroup.group(name=name, *args, **kwargs)

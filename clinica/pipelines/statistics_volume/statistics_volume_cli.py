@@ -28,9 +28,15 @@ pipeline_name = "statistics-volume"
     show_default=True,
     help="Full Width at Half Maximum (FWHM) of the smoothing used in your input files.",
 )
+@cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you use inputs from pet-volume pipeline"
+)
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
 @cli_param.option.use_pvc_data
+@cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you selected custom-pipeline"
+)
 @cli_param.option_group.option(
     "-cf",
     "--custom_file",

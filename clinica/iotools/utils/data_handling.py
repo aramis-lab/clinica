@@ -801,8 +801,6 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     if bids_dir == output_dir:
         raise ClinicaBIDSError("Input BIDS and output directories must be different")
 
-    assert isinstance(modality, list), "modality arg must be a list of str"
-
     # check that input is a BIDS dir
     check_bids_folder(bids_dir)
 

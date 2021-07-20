@@ -11,7 +11,9 @@ pipeline_name = "machinelearning-prepare-spatial-svm"
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
 @cli_param.argument.orig_input_data_ml
-@cli_param.option_group.pipeline_specific_options
+@cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you use inputs from pet-volume pipeline"
+)
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
 @cli_param.option.use_pvc_data
