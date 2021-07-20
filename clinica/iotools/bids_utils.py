@@ -143,7 +143,7 @@ def create_participants_df(
     return participant_df
 
 
-def get_sessions_map(bids_ids, bids_dir):
+def get_sessions_map_AIBL(bids_ids, bids_dir):
     """Create a dictionary map between BIDs session IDs and AIBL session ids
 
     Args:
