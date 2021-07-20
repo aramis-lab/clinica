@@ -52,7 +52,7 @@ class OasisToBids(Converter):
         )
 
         # --Create sessions files--
-        sessions_dict = bids.create_sessions_dict(
+        sessions_dict = bids.create_sessions_dict_OASIS(
             clinical_data_dir, bids_dir, "OASIS", clinic_specs_path, bids_ids, "ID"
         )
         for y in bids_ids:
