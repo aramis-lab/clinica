@@ -40,8 +40,14 @@ pipeline_name = "statistics-surface"
     show_default=True,
     help="FWHM for the surface smoothing.",
 )
+@cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you use inputs from pet-surface pipeline"
+)
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
+@cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you selected custom-pipeline"
+)
 @cli_param.option_group.option(
     "-cf",
     "--custom_file",
