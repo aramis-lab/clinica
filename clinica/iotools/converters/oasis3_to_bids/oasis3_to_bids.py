@@ -14,9 +14,11 @@ class Oasis3ToBids(Converter):
             clinical_data_dir: path to the folder with the original clinical data
             bids_dir: path to the BIDS directory
         """
-        from os import path
         import os
+        from os import path
+
         import numpy as np
+
         import clinica.iotools.bids_utils as bids
         from clinica.utils.stream import cprint
 
@@ -52,7 +54,7 @@ class Oasis3ToBids(Converter):
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict_OASIS(
-            clinical_data_dir, "OASIS3", clinic_specs_path, bids_ids, "ID"
+            clinical_data_dir, bids_dir, "OASIS3", clinic_specs_path, bids_ids, "ID"
         )
         for y in bids_ids:
             for z in sessions_dict[y].keys():
@@ -83,9 +85,9 @@ class Oasis3ToBids(Converter):
             source_dir: path to the OASIS dataset
             dest_dir: path to the BIDS directory
         """
-        from os import path
-        from glob import glob
         import os
+        from glob import glob
+        from os import path
 
         def convert_single_subject(subj_folder):
             import os

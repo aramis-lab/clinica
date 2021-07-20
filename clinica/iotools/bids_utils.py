@@ -164,6 +164,7 @@ def get_sessions_map(bids_ids, bids_dir):
 
 def create_sessions_dict_OASIS(
     clinical_data_dir,
+    bids_dir,
     study_name,
     clinical_spec_path,
     bids_ids,
@@ -250,9 +251,7 @@ def create_sessions_dict_OASIS(
                     sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
 
                     subj_dir = path.join(
-                        path.dirname(path.dirname(clinical_data_dir)),
-                        "out",
-                        "bids",
+                        bids_dir,
                         subj_bids,
                     )
                     session_names = get_bids_subjs_list(subj_dir)
