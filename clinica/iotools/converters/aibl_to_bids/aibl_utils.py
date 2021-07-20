@@ -934,7 +934,8 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
     ]
 
     # This dictionary should be automatically computed from the dataset
-    ses_dict = {"ses-M00": "bl", "ses-M18": "m18", "ses-M36": "m36", "ses-M54": "m54"}
+    #
+    ses_dict = bids.get_sessions_map(bids_ids, input_path)
 
     scans_dict = bids.create_scans_dict(
         clinical_data_dir,

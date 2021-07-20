@@ -35,7 +35,11 @@ class Oasis3ToBids(Converter):
         )
 
         # Replace the values of the diagnosis_bl column
-        participants_df["diagnosis_bl"] = participants_df["diagnosis_bl"].fillna(0).apply(lambda x: "AD" if x > 0 else "CN")
+        participants_df["diagnosis_bl"] = (
+            participants_df["diagnosis_bl"]
+            .fillna(0)
+            .apply(lambda x: "AD" if x > 0 else "CN")
+        )
         # Following line has no sense
         # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
         participants_df.to_csv(
@@ -47,7 +51,7 @@ class Oasis3ToBids(Converter):
         )
 
         # --Create sessions files--
-        sessions_dict = bids.create_sessions_dict(
+        sessions_dict = bids.create_sessions_dict_OASIS(
             clinical_data_dir, "OASIS3", clinic_specs_path, bids_ids, "ID"
         )
         for y in bids_ids:
@@ -68,7 +72,7 @@ class Oasis3ToBids(Converter):
             bids_ids,
             "ID",
             "",
-            sessions_dict
+            sessions_dict,
         )
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
@@ -102,14 +106,17 @@ class Oasis3ToBids(Converter):
                         new_filename = new_filename.replace("task-rest_", "")
                         new_filename = new_filename.replace("acq", "trc")
                         target = path.join(path.dirname(target), "pet")
-                    elif re.search(".*_(minIP|swi|dwi).(nii.gz|json)", new_filename) is not None:
+                    elif (
+                        re.search(".*_(minIP|swi|dwi).(nii.gz|json)", new_filename)
+                        is not None
+                    ):
                         target = path.join(path.dirname(target), "swi")
                     if not os.path.isdir(target):
                         os.mkdir(path.join(target))
                     shutil.copy(source, target)
                     os.rename(
                         path.join(target, path.basename(source)),
-                        path.join(target, new_filename)
+                        path.join(target, new_filename),
                     )
                 except IOError as e:
                     print("Unable to copy file. %s" % e)
@@ -117,7 +124,7 @@ class Oasis3ToBids(Converter):
             subj_id = os.path.basename(subj_folder)
             print("Converting ", subj_id)
             old_sess_fold = subj_id.split("_")
-            numerical_id = re.sub(r'^OAS3', '', old_sess_fold[0])
+            numerical_id = re.sub(r"^OAS3", "", old_sess_fold[0])
             bids_id = "sub-OASIS3" + str(numerical_id)
             bids_subj_folder = path.join(dest_dir, bids_id)
             if not os.path.isdir(bids_subj_folder):
@@ -128,16 +135,14 @@ class Oasis3ToBids(Converter):
             if not os.path.isdir(session_folder):
                 os.mkdir(path.join(session_folder))
 
-            nifti_files = glob(
-                path.join(subj_folder, "**/*.nii.gz"), recursive=True
-            )
+            nifti_files = glob(path.join(subj_folder, "**/*.nii.gz"), recursive=True)
 
             for nifti_file in nifti_files:
                 #  Get the json files
                 base_file_name = os.path.basename(nifti_file).split(".")[0]
                 json_file_paths = glob(
                     path.join(subj_folder, "**/" + base_file_name + ".json"),
-                    recursive=True
+                    recursive=True,
                 )
 
                 # Parse the path of the json or nifti
@@ -150,9 +155,7 @@ class Oasis3ToBids(Converter):
                 if regex.search(dir_name) is not None:
                     output_folder = regex.search(dir_name).group("folder")
                 elif regex.search(path.abspath(dir_name)) is not None:
-                    output_folder = regex.search(
-                        path.abspath(dir_name)
-                    ).group("folder")
+                    output_folder = regex.search(path.abspath(dir_name)).group("folder")
                 else:
                     output_folder = ""
 
