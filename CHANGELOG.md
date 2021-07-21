@@ -6,20 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## Clinica 0.5.0
 
 ### Added
 
-- *  [deeplearning-prepare-data]: Add option to run pipeline with `roi` for `tensor_format` option to extract region of interest according to a mask.
+[Docs] Add missing documentation on check-missing-processing iotool
+
+[deeplearning-prepare-data]: Add option to run pipeline with ROI for tensor_format option to extract region of interest according to a mask.
 
 ### Changed
+[Core] Improve Logging for Clinica
+[Core] Improve CLI through using CLI    
+[Core] Nibabel replace get_data() by get_fdata() method for dataobj_images (nibabel)
 
-- [Adni-to-bids]: Replace xlsx files with tsv
-- [Adni-to-bids]: Refactor 'sessions' converter 
-
+[Adni converter] Optimization of adni2bids clincal data extraction
+[Adni converter] Replace xlsx by tsv files for  clinical data specification
 
 ### Fixed
-
+[Core] fix bug in write_scan_tsv
+[Docs] Add documentation for check-missing-processing
+[Docs] Fix several small typos
+[Docs] Instructions for installing SPM dependency on MacOs Big Sur
+[CI] Fix several small issues with non-regression tests
+[CI] Fix typo in Jenkins script
+[CI] Automatically delete conda environments after PR is merged
+[ML] Fix unresolved reference in SVM pipeline
+[ML] Fix typo in parameters for SVC pipeline
 
 
 ## Clinica 0.4.1
