@@ -16,7 +16,7 @@ def create_participants_df(
 
     Args:
         study_name: name of the study (Ex. ADNI)
-        clinical_spec_path: path to the clinical file
+        clinical_spec_path: path to the clinical file of the study
         clinical_data_dir: path to the directory where the clinical data are stored
         bids_ids: list of bids ids
         delete_non_bids_info: if True delete all the rows of the subjects that
