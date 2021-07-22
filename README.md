@@ -147,6 +147,11 @@ This software is distributed under the MIT License.
 See [license file](https://github.com/aramis-lab/clinica/blob/dev/LICENSE.txt)
 for more information.
 
+## Citing us
+
+- Routier, A., Burgos, N., Díaz, M., Bacci, M., Bottani, S., El-Rifai O., Fontanella, S., Gori, P., Guillon, J., Guyot, A., Hassanaly, R., Jacquemont, T.,  Lu, P., Marcoux, A.,  Moreau, T., Samper-González, J., Teichmann, M., Thibeau-Sutre, E., Vaillant G., Wen, J., Wild, A., Habert, M.-O., Durrleman, S., and Colliot, O.: ‘Clinica: An Open Source Software Platform for Reproducible Clinical Neuroscience Studies’, 2021. [hal-02308126](https://hal.inria.fr/hal-02308126)
+
+
 ## Related Repositories
 
 - [AD-DL: Framework for the reproducible classification of Alzheimer's disease using
