@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 [Core] Improve Logging for Clinica
-[Core] Improve CLI through using CLI    
+[Core] Improve CLI through using Click    
 [Core] Nibabel replace get_data() by get_fdata() method for dataobj_images (nibabel)
 
 [Adni converter] Optimization of adni2bids clincal data extraction
