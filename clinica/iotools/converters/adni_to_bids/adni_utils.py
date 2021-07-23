@@ -715,6 +715,8 @@ def create_adni_sessions_dict(
                 ]
                 df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
 
+    if df_subj_session.empty:
+        raise Exception("Empty dataset detected. Clinical data can not be extracted")
     df_subj_session.drop(
         df_subj_session[df_subj_session.session_id == "sc"].index, inplace=True
     )
