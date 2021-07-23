@@ -17,11 +17,11 @@ pipeline_name = "machinelearning-prepare-spatial-svm"
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
 @cli_param.option.use_pvc_data
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
-@cli_param.option_group.advanced_options
+@cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-fwhm",
     "--full_width_half_maximum",
@@ -45,6 +45,12 @@ def cli(
     n_procs: Optional[int] = None,
 ) -> None:
     """Prepare input data for SVM with spatial and anatomical regularization.
+
+       GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
+
+       The third positional argument can be t1-volume to use tissue maps or pet-volume to use standardized uptake value ratio (SUVR) maps.
+
+    Prerequisites: You need to execute the t1-volume pipeline to run the pipeline on T1-weighted MRI data, and the t1-volume + pet-volume pipelines to apply it to PET data.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/MachineLearning_PrepareSVM/"
     """

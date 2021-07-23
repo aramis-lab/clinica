@@ -12,7 +12,7 @@ pipeline_name = "pet-linear"
 @cli_param.argument.caps_directory
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option_group.option(
     "-ui",
     "--uncropped_image",
@@ -24,7 +24,7 @@ pipeline_name = "pet-linear"
     is_flag=True,
     help="Save the PET image in the T1w space computed in the intermediate step of the pipeline",
 )
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
@@ -40,6 +40,12 @@ def cli(
     n_procs: Optional[int] = None,
 ) -> None:
     """Affine registration of PET images to the MNI standard space.
+
+       ACQ_LABEL corresponds the label given to the PET acquisition, specifying the tracer used. Frequently used values are 'fdg' or 'av45'.
+
+       The reference region must be precised to perform intensity normalization. Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
+
+    Prerequisite: You need to have performed the t1-linear pipeline on your T1-weighted MR images.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Linear/"
     """
