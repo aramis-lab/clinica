@@ -23,7 +23,7 @@ pipeline_name = "statistics-surface"
     type=click.Path(exists=True, resolve_path=True),
 )
 @cli_param.argument.contrast
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option_group.option(
     "-c",
     "--covariate",
@@ -40,8 +40,14 @@ pipeline_name = "statistics-surface"
     show_default=True,
     help="FWHM for the surface smoothing.",
 )
+@cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you use inputs from pet-surface pipeline"
+)
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
+@cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you selected custom-pipeline"
+)
 @cli_param.option_group.option(
     "-cf",
     "--custom_file",
@@ -61,10 +67,10 @@ pipeline_name = "statistics-surface"
         "See Wiki for an example."
     ),
 )
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.working_directory
 @cli_param.option.n_procs
-@cli_param.option_group.advanced_options
+@cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-ct",
     "--cluster_threshold",
@@ -90,6 +96,18 @@ def cli(
     n_procs: Optional[int] = None,
 ) -> None:
     """Surface-based mass-univariate analysis with SurfStat.
+
+       GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
+
+       The type of surface-based feature can be defined by using the third argument: t1-freesurfer for cortical thickness, pet-surface for projected PET data or custom-pipeline for you own data in CAPS directory.
+
+       The type of analysis of the model is defined by the argument 'group_comparison' or 'correlation'.
+
+       SUBJECT_VISITS_WITH_COVARIATES_TSV is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model.
+
+       CONTRAST s a string defining the contrast matrix or the variable of interest for the GLM, e.g. 'group' or 'age'
+
+    Prerequisite: You need to have performed the t1-freesurfer pipeline on your T1-weighted MR images or pet-surface pipeline for measurements of activity map from PET.
 
     See "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
     """

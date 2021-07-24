@@ -15,7 +15,7 @@ pipeline_name = "statistics-volume-correction"
 @click.argument("FDRp", type=float)
 @click.argument("FWEc", type=float)
 @click.argument("FDRc", type=float)
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option_group.option(
     "-nc",
     "--n_cuts",
@@ -23,7 +23,7 @@ pipeline_name = "statistics-volume-correction"
     show_default=True,
     help="Number of cuts along each direction",
 )
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.working_directory
 @cli_param.option.n_procs
 def cli(
@@ -39,6 +39,18 @@ def cli(
     n_procs: Optional[int] = None,
 ) -> None:
     """Statistical correction of statistics-volume pipeline.
+
+       T_MAP is the name of the T statistic map used for the correction.
+
+       HEIGHT_THRESHOLD is the T value corresponding to an uncorrected p-value of 0.001.
+
+       FWEp is the Family-Wise Error peak threshold.
+
+       FDRp is the False Discovery Rate peak threshold.
+
+       Finally, FWEc and FDRc stand for the respective correction parameters.
+
+    Prerequisite: You have to perform the statistics-volume pipeline before running this pipeline.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Volume/
     """

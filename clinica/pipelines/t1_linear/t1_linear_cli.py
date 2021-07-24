@@ -10,14 +10,14 @@ pipeline_name = "t1-linear"
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option_group.option(
     "-ui",
     "--uncropped_image",
     is_flag=True,
     help="Do not crop the image with template (cropped image are suggested for using with DL models)",
 )
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs

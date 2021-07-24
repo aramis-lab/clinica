@@ -13,7 +13,7 @@ pipeline_name = "statistics-volume"
 @cli_param.argument.orig_input_data
 @cli_param.argument.subject_visits_with_covariates_tsv
 @cli_param.argument.contrast
-@cli_param.option_group.pipeline_options
+@cli_param.option_group.pipeline_specific_options
 @cli_param.option_group.option(
     "-dartel",
     "--group_label_dartel",
@@ -28,9 +28,15 @@ pipeline_name = "statistics-volume"
     show_default=True,
     help="Full Width at Half Maximum (FWHM) of the smoothing used in your input files.",
 )
+@cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you use inputs from pet-volume pipeline"
+)
 @cli_param.option.acq_label
 @cli_param.option.suvr_reference_region
 @cli_param.option.use_pvc_data
+@cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you selected custom-pipeline"
+)
 @cli_param.option_group.option(
     "-cf",
     "--custom_file",
@@ -52,10 +58,10 @@ pipeline_name = "statistics-volume"
         "See Wiki for an example."
     ),
 )
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.working_directory
 @cli_param.option.n_procs
-@cli_param.option_group.advanced_options
+@cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-ct",
     "--cluster_threshold",
@@ -81,6 +87,14 @@ def cli(
     n_procs: Optional[int] = None,
 ) -> None:
     """Volume-based mass-univariate analysis with SPM.
+
+       GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
+
+       The type of surface-based feature can be defined by using the third argument: t1-freesurfer for cortical thickness, pet-surface for projected PET data or custom-pipeline for you own data in CAPS directory.
+
+       SUBJECT_VISITS_WITH_COVARIATES_TSV is a TSV file containing a list of subjects with their sessions and all the covariates and factors of the model.
+
+       CONTRAST is a string defining the contrast matrix or the variable of interest for the GLM.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Volume/
     """

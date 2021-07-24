@@ -9,7 +9,7 @@ pipeline_name = "t1-freesurfer-longitudinal"
 
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
-@cli_param.option_group.standard_options
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs

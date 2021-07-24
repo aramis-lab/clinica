@@ -143,8 +143,28 @@ def create_participants_df(
     return participant_df
 
 
-def create_sessions_dict(
+def get_sessions_map_AIBL(bids_ids, bids_dir):
+    """Create a dictionary map between BIDs session IDs and AIBL session ids
+
+    Args:
+        bids_ids: ids of all the subjects to be included in dictionary
+        bids_dir: for later use if the sessions are to be retrieve automatically
+
+    Returns: a dictionary with the map for each subject id
+    """
+
+    ses_dict = {}
+    ses_map = {"M00": "bl", "M18": "m18", "M36": "m36", "M54": "m54"}
+
+    for id in bids_ids:
+        ses_dict[id] = ses_map
+
+    return ses_dict
+
+
+def create_sessions_dict_OASIS(
     clinical_data_dir,
+    bids_dir,
     study_name,
     clinical_spec_path,
     bids_ids,
@@ -165,9 +185,9 @@ def create_sessions_dict(
     """
     import os
     from os import path
-
     import numpy as np
     import pandas as pd
+    from clinica.utils.stream import cprint
 
     # Load data
     location = study_name + " location"
@@ -221,16 +241,15 @@ def create_sessions_dict(
                 if len(subj_bids) == 0:
                     # If the subject is not an excluded one
                     if subj_id not in subj_to_remove:
-                        print(
-                            f"{sessions_fields[i]} for {subj_id} not found in the BIDS converted."
+                        cprint(
+                            f"{sessions_fields[i]} for {subj_id} not found in the BIDS converted.",
+                            "info",
                         )
                 else:
                     subj_bids = subj_bids[0]
 
                     subj_dir = path.join(
-                        path.dirname(path.dirname(clinical_data_dir)),
-                        "out",
-                        "bids",
+                        bids_dir,
                         subj_bids,
                     )
                     session_names = get_bids_subjs_list(subj_dir)
@@ -285,6 +304,8 @@ def create_scans_dict(
     from os import path
 
     import pandas as pd
+
+    from clinica.utils.stream import cprint
 
     scans_dict = {}
     prev_file = ""
@@ -351,9 +372,19 @@ def create_scans_dict(
         for bids_id in bids_ids:
             original_id = bids_id.replace("sub-" + study_name, "")
             for session_name in {"ses-" + key for key in ses_dict[bids_id].keys()}:
+                # When comparing sessions, remove the "-ses" prefix IF it exists
                 row_to_extract = file_to_read[
                     (file_to_read[name_column_ids] == int(original_id))
-                    & (file_to_read[name_column_ses] == ses_dict[session_name])
+                    & (
+                        list(
+                            filter(
+                                None, file_to_read[name_column_ses].str.split("ses-")
+                            )
+                        )[0]
+                        == ses_dict[bids_id][
+                            list(filter(None, session_name.split("ses-")))[0]
+                        ]
+                    )
                 ].index.tolist()
                 if len(row_to_extract) > 0:
                     row_to_extract = row_to_extract[0]
@@ -371,7 +402,10 @@ def create_scans_dict(
                         fields_bids[i]
                     ] = value
                 else:
-                    print(f"Scans information for {bids_id} {session_name} not found.")
+                    cprint(
+                        f"Scans information for {bids_id} {session_name} not found.",
+                        lvl="info",
+                    )
                     scans_dict[bids_id][session_name][fields_mod[i]][
                         fields_bids[i]
                     ] = "n/a"
@@ -524,7 +558,10 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                             for carac in file_name.split("_")
                             if "-" in carac
                         }
-                        f_type = description_dict["trc"].upper()
+                        if "trc" in description_dict.keys():
+                            f_type = description_dict["trc"].upper()
+                        elif "acq" in description_dict.keys():
+                            f_type = description_dict["acq"].upper()
                     elif mod_name == "swi":
                         pass
                     else:
@@ -565,16 +602,6 @@ def contain_dicom(folder_path):
     return False
 
 
-
-
-
-
-
-
-
-
-
-
 def get_supported_dataset():
     """Return the list of supported datasets."""
     return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
@@ -585,7 +612,11 @@ def get_bids_subjs_list(bids_path):
     import os
     from os import path
 
-    return [d for d in os.listdir(bids_path) if os.path.isdir(path.join(bids_path, d))]
+    return [
+        d
+        for d in os.listdir(bids_path)
+        if os.path.isdir(path.join(bids_path, d)) and d != "bids"
+    ]
 
 
 def get_bids_subjs_paths(bids_path):
