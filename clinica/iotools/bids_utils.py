@@ -170,6 +170,7 @@ def create_sessions_dict_OASIS(
     bids_ids,
     name_column_ids,
     subj_to_remove=[],
+    participants_df=None,
 ):
     """Extract the information regarding the sessions and store them in a dictionary (session M00 only).
 
@@ -180,6 +181,7 @@ def create_sessions_dict_OASIS(
         bids_ids: list of bids ids
         name_column_ids: name of the column where the subject ids are stored
         subj_to_remove: subjects to remove
+        participants_df: a pandas dataframe that contains the participants data (required for OASIS3 only)
     """
     import os
     from os import path
@@ -202,8 +204,6 @@ def create_sessions_dict_OASIS(
             fields_bids.append(sessions_fields_bids[i])
             fields_dataset.append(sessions_fields[i])
 
-    sessions_df = pd.DataFrame(columns=fields_bids)
-
     for i in range(0, len(sessions_fields)):
         # If the i-th field is available
         if not pd.isnull(sessions_fields[i]):
@@ -224,9 +224,8 @@ def create_sessions_dict_OASIS(
                 file_to_read = pd.read_csv(file_to_read_path)
 
             for r in range(0, len(file_to_read.values)):
-                row = file_to_read.iloc[r]
                 # Extracts the subject ids columns from the dataframe
-                subj_id = row[name_column_ids]
+                subj_id = file_to_read.iloc[r][name_column_ids]
                 if hasattr(subj_id, "dtype"):
                     if subj_id.dtype == np.int64:
                         subj_id = str(subj_id)
@@ -248,7 +247,6 @@ def create_sessions_dict_OASIS(
                         )
                 else:
                     subj_bids = subj_bids[0]
-                    sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
 
                     subj_dir = path.join(
                         bids_dir,
@@ -257,6 +255,11 @@ def create_sessions_dict_OASIS(
                     session_names = get_bids_subjs_list(subj_dir)
                     for s in session_names:
                         s_name = s.replace("ses-", "")
+                        if study_name != "OASIS3":
+                            row = file_to_read.iloc[r]
+                        else:
+                            mr_id = subj_id + "_ClinicalData_" + s_name
+                            row = file_to_read[file_to_read["MR ID"] == mr_id].iloc[0]
                         if subj_bids not in sessions_dict:
                             sessions_dict.update({subj_bids: {}})
                         if s_name not in sessions_dict[subj_bids].keys():
@@ -264,6 +267,12 @@ def create_sessions_dict_OASIS(
                         (sessions_dict[subj_bids][s_name]).update(
                             {sessions_fields_bids[i]: row[sessions_fields[i]]}
                         )
+                        # Calculate the difference in months for OASIS3 only
+                        if study_name == "OASIS3" and sessions_fields_bids[i] == "age":
+                            diff_years = float(sessions_dict[subj_bids][s_name]["age"]) - participants_df[participants_df["participant_id"] == subj_bids]["age_bl"]
+                            (sessions_dict[subj_bids][s_name]).update(
+                                {"diff_months": round(float(diff_years) * 12)}
+                            )
 
     return sessions_dict
 
@@ -595,7 +604,7 @@ def contain_dicom(folder_path):
 
 def get_supported_dataset():
     """Return the list of supported datasets."""
-    return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "AIBL"]
+    return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
 
 
 def get_bids_subjs_list(bids_path):
