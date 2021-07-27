@@ -11,7 +11,7 @@ numpy
 scikit-learn
 nilearn >= 0.6.0
 colorlog >= 5
-xgboost
+xgboost < 1
 xlrd >= 1.2.0, < 2.0.0
 scipy
 matplotlib
