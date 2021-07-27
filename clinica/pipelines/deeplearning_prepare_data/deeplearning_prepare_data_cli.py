@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import click
 
@@ -67,6 +67,33 @@ pipeline_name = "deeplearning-prepare-data"
     ),
 )
 @cli_param.option_group.custom_pipeline_options(
+    "Pipeline options if you chose `roi` extraction"
+)
+@cli_param.option_group.option(
+    "--roi_list",
+    multiple=True,
+    help="List of regions to be extracted.",
+)
+@cli_param.option_group.option(
+    "--roi_uncrop_output",
+    is_flag=True,
+    help="Disable cropping option so the output tensors have the same size than the whole image.",
+)
+@cli_param.option_group.option(
+    "-ct",
+    "--custom_template",
+    help="Name of the template used when modality is set to `custom`.",
+)
+@cli_param.option_group.option(
+    "-cmp",
+    "--custom_mask_pattern",
+    default="",
+    help=(
+        "Select only the masks containing this pattern. The mask with the shortest name is taken. "
+        "This argument is taken into account only when the modality is set to `custom`."
+    ),
+)
+@cli_param.option_group.custom_pipeline_options(
     "Pipeline options if you chose `pet-linear` pipeline"
 )
 @cli_param.option_group.option(
@@ -114,6 +141,10 @@ def cli(
     stride_size: int = 50,
     slice_direction: int = 0,
     slice_mode: str = "rgb",
+    roi_list: Optional[List[str]] = None,
+    roi_uncrop_output: bool = False,
+    custom_template: Optional[str] = None,
+    custom_mask_pattern: str = "",
     acq_label: Optional[str] = None,
     suvr_reference_region: Optional[str] = None,
     custom_suffix: str = "",
@@ -144,6 +175,10 @@ def cli(
         "stride_size": stride_size,
         "slice_direction": slice_direction,
         "slice_mode": slice_mode,
+        "roi_list": roi_list,
+        "roi_uncrop_output": roi_uncrop_output,
+        "custom_template": custom_template,
+        "custom_mask_pattern": custom_mask_pattern,
         "use_uncropped_image": use_uncropped_image,
         "custom_suffix": custom_suffix,
         "acq_label": acq_label,
