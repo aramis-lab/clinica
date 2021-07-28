@@ -58,6 +58,9 @@ You can choose between `image` to convert to PyTorch tensor the whole 3D image,
 `patch` to extract 3D patches, `slice` to extract 2D slices from the image and
 `roi` to extract 3D region of interest depending on the ROI mask.
 
+!!! warning
+    The `roi` option will only be avaible in release 0.5.0 and will then migrate to clinica-dl : https://github.com/aramis-lab/clinicadl
+
 By default, the features are extracted from the cropped image (see the
 documentation of the [`t1-linear` pipeline](T1_Linear.md)).
 You can deactivate this behaviour with the `--use_uncropped_image` flag.
