@@ -17,7 +17,7 @@ pipeline_name = "deeplearning-prepare-data"
 )
 @click.argument(
     "extract-method",
-    type=click.Choice(["image", "slice", "patch"]),
+    type=click.Choice(["image", "slice", "patch", "roi"]),
     default="image",
 )
 @cli_param.option_group.pipeline_specific_options
