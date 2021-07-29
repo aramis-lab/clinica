@@ -342,9 +342,7 @@ def find_mask_path(masks_location, roi, mask_pattern, cropping):
     )
     desc = f"The mask should follow the pattern {candidates_pattern} "
     candidates = glob(candidates_pattern)
-    if cropping is None:
-        desc += "."
-    elif cropping:
+    if cropping:
         candidates = [mask for mask in candidates if "_desc-Crop_" in mask]
         desc += f"and contain '_desc-Crop_' string."
     else:
