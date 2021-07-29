@@ -24,8 +24,10 @@ dartel_tissues = option(
 
 dont_save_warped_unmodulated = option(
     "-dswu",
-    "--dont_save_warped_unmodulated",
-    is_flag=True,
+    "--dont_save_warped_unmodulated/--save_warped_unmodulated",
+    "dont_save_warped_unmodulated",
+    default=False,
+    show_default=True,
     help="Do not save warped unmodulated images for tissues specified in --tissue_classes flag.",
 )
 
@@ -71,8 +73,10 @@ pvc_psf_tsv = option(
 
 save_warped_modulated = option(
     "-swm",
-    "--save_warped_modulated",
-    is_flag=True,
+    "--save_warped_modulated/--dont_save_warped_modulated",
+    "save_warped_modulated",
+    default=False,
+    show_default=True,
     help="Save warped modulated images for tissues specified in --tissue_classes flag.",
 )
 
@@ -133,10 +137,21 @@ tissue_probability_maps = option(
     help="Tissue probability maps to use for segmentation.",
 )
 
+uncropped_image = option(
+    "-ui",
+    "--uncropped_image/--cropped_image",
+    "uncropped_image",
+    default=False,
+    show_default=True,
+    help="Do not crop the image with template (cropped image are suggested for using with DL models)",
+)
+
 use_pvc_data = option(
     "-pvc",
-    "--use_pvc_data",
-    is_flag=True,
+    "--use_pvc_data/--dont_use_pvc_data",
+    "use_pvc_data",
+    default=False,
+    show_default=True,
     help="Use PET data with partial value correction.",
 )
 

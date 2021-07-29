@@ -13,15 +13,12 @@ pipeline_name = "pet-linear"
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
 @cli_param.option_group.pipeline_specific_options
+@cli_param.option.uncropped_image
 @cli_param.option_group.option(
-    "-ui",
-    "--uncropped_image",
-    is_flag=True,
-    help="Do not crop the image with template (cropped image are suggested for using with DL models)",
-)
-@cli_param.option_group.option(
-    "--save_pet_in_t1w_space",
-    is_flag=True,
+    "--save_pet_in_t1w_space/--dont_save_pet_in_t1w_space",
+    "save_pet_in_t1w_space",
+    default=False,
+    show_default=True,
     help="Save the PET image in the T1w space computed in the intermediate step of the pipeline",
 )
 @cli_param.option_group.common_pipelines_options
