@@ -1,6 +1,9 @@
 # coding: utf-8
 
 
+from clinica.iotools.bids_utils import run_dcm2niix
+
+
 def visits_to_timepoints(
     subject,
     mri_list_subj,
@@ -1032,6 +1035,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
     from numpy import nan
 
+    from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
 
@@ -1166,12 +1170,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
         if image.Is_Dicom:
             command = f"dcm2niix -b {generate_json} -z {zip_image} -o {output_path} -f {output_filename} {image_path}"
-            output_dcm2niix = subprocess.run(command, shell=True, capture_output=True)
-            if output_dcm2niix.returncode != 0:
-                cprint(
-                    msg=f'WARNING: errors may have occured.\nOutput:{output_dcm2niix.stdout.decode("utf-8")}\nError:{output_dcm2niix.stderr.decode("utf-8")}',
-                    lvl="warning",
-                )
+            run_dcm2niix(command)
 
             # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
             exception_t = glob(path.join(output_path, output_filename + "_t[0-9]*"))

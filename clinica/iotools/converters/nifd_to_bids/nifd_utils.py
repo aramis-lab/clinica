@@ -284,6 +284,7 @@ def convert_dcm_to_nii(single_tuple):
     import os
     import subprocess
 
+    from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.utils.stream import cprint
 
     filename = os.path.basename(single_tuple[1])
@@ -293,12 +294,7 @@ def convert_dcm_to_nii(single_tuple):
     cprint(
         msg=f'Converting {os.path.basename(filename).replace("_", " ")}', lvl="debug"
     )
-    output_dcm2niix = subprocess.run(command, shell=True, capture_output=True)
-    if output_dcm2niix.returncode != 0:
-        cprint(
-            msg=f'WARNING: errors may have occured.\nOutput:{output_dcm2niix.stdout.decode("utf-8")}\nError:{output_dcm2niix.stderr.decode("utf-8")}',
-            lvl="warning",
-        )
+    run_dcm2niix(command)
 
 
 def convert(list_tuples):
