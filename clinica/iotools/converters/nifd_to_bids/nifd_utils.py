@@ -290,10 +290,15 @@ def convert_dcm_to_nii(single_tuple):
     path_dest = os.path.dirname(single_tuple[1])
     create_folder(path_dest)
     command = f"dcm2niix -b y -z y -o {path_dest} -f {filename} {single_tuple[0]}"
-    cprint(msg=f'Converting {os.path.basename(filename).replace("_", " ")}', lvl="debug")
-    subprocess.run(
-        command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    cprint(
+        msg=f'Converting {os.path.basename(filename).replace("_", " ")}', lvl="debug"
     )
+    output_dcm2niix = subprocess.run(command, shell=True, capture_output=True)
+    if output_dcm2niix.returncode != 0:
+        cprint(
+            msg=f'WARNING: errors may have occured.\nOutput:{output_dcm2niix.stdout.decode("utf-8")}\nError:{output_dcm2niix.stderr.decode("utf-8")}',
+            lvl="warning",
+        )
 
 
 def convert(list_tuples):

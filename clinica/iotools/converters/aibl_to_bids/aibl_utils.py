@@ -218,7 +218,13 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
 
     # if image.Is_Dicom:
     command = f"dcm2niix -b n -z y -o {output_path} -f {output_filename} {image_path}"
-    subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
+    output_dcm2niix = subprocess.run(command, shell=True, capture_output=True)
+    if output_dcm2niix.returncode != 0:
+        cprint(
+            msg=f'WARNING: errors may have occured.\nOutput:{output_dcm2niix.stdout.decode("utf-8")}\nError:{output_dcm2niix.stderr.decode("utf-8")}',
+            lvl="warning",
+        )
+
     nifti_file = os.path.join(output_path, output_filename + ".nii.gz")
 
     if not exists(nifti_file):
