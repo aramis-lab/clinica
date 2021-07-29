@@ -14,7 +14,7 @@ pipeline](https://clinicadl.readthedocs.io/en/latest/Preprocessing/T1_Extensive/
 These pipelines are designed as a prerequisite for
 the deep learning classification algorithms presented in
 [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)] and showcased
-in the [AD-DL framework](https://github.com/aramis-lab/AD-DL).
+in the [ClinicaDL framework](https://github.com/aramis-lab/clinicadl).
 
 ## Prerequisites
 
@@ -59,7 +59,7 @@ You can choose between `image` to convert to PyTorch tensor the whole 3D image,
 `roi` to extract 3D region of interest depending on the ROI mask.
 
 !!! warning
-    The `roi` option will only be avaible in release 0.5.0 and will then migrate to clinica-dl : https://github.com/aramis-lab/clinicadl
+    The `roi` option will only be available in release 0.5.0 and will then migrate to ClinicaDL: <https://github.com/aramis-lab/clinicadl/>
 
 By default, the features are extracted from the cropped image (see the
 documentation of the [`t1-linear` pipeline](T1_Linear.md)).

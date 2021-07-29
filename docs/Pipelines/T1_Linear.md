@@ -75,7 +75,7 @@ affine transformation estimated with [ANTs](https://stnava.github.io/ANTs/).
 to prepare images to be used with the PyTorch library
 [[Paszke et al., 2019]](https://papers.nips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library)
 for classification based on deep learning using the
-[AD-DL framework](https://github.com/aramis-lab/AD-DL) presented in
+[ClinicaDL framework](https://github.com/aramis-lab/clinicadl) presented in
 [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
 
 ## Describing this pipeline in your paper
