@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 MD046-->
 # `pet-linear` - Linear processing of PET images
 
 This pipeline performs spatial normalization to the MNI space and intensity
@@ -36,7 +37,7 @@ clinica run pet-linear [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY ACQ_LABEL
 
 where:
 
-- ` BIDS_DIRECTORY` is the input folder containing the dataset in a
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a
 [BIDS](../../BIDS) hierarchy;
 - `CAPS_DIRECTORY` is the output folder containing the results in a
 [CAPS](../../CAPS/Introduction) hierarchy;

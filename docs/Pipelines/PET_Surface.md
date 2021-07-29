@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD033 MD046 -->
 # `pet-surface` - Surface-based processing of PET images
 
 This pipeline performs several processing steps for the analysis of PET data on the cortical surface
@@ -86,7 +86,6 @@ To mitigate this issue, you can do the following:
     ```
 
     This is under investigation (see [Issue #119](https://github.com/aramis-lab/clinica/issues/119) for details) and will be solved as soon as possible.
-
 
 ## Outputs
 
