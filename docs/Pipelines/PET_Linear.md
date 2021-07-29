@@ -97,7 +97,7 @@ framework](https://github.com/aramis-lab/AD-DL) presented in [[Wen et al.,
 
 !!! cite "Example of paragraph"
     These results have been obtained using the `pet-linear` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)].
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     This pipeline first performs intra-subject rigid registration of the PET
     image into the space of the subject’s T1-weighted (T1w) MR image using the
     SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)]

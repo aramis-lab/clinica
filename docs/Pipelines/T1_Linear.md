@@ -82,7 +82,7 @@ for classification based on deep learning using the
 
 !!! cite "Example of paragraph"
     These results have been obtained using the `t1-linear` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
     More precisely, bias field correction was applied using the N4ITK method
     [[Tustison et al., 2010](https://doi.org/10.1109/TMI.2010.2046908)].

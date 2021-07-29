@@ -66,7 +66,7 @@ SVM regularization of PET data that accounts for the spatial and anatomical stru
 
 !!! cite "Example of paragraph"
     The classification was performed using a spatially regularized support vector machine (SVM), as proposed in [[Cuingnet et al, 2013](https://doi.org/10.1109/TPAMI.2012.142)] and implemented in Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)].
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     In this approach, the standard regularization of the SVM is replaced with a regularization that accounts for the spatial and anatomical structure of neuroimaging data.
     More specifically, we used the Fisher regularization and tissue maps (gray matter, white matter and cerebrospinal fluid) as spatial priors.
     The decision function of the SVM is made regular with respect to these tissues and is thus easier to interpret in terms of anatomical regions.

@@ -144,7 +144,7 @@ More details regarding the `recon-all` output files can be found on the [FreeSur
 
 !!! cite "Example of paragraph (short version):"
     These results have been obtained using the `t1-freesurfer-longitudinal` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)].
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     This pipeline is a wrapper of different tools of the FreeSurfer software
     (<http://surfer.nmr.mgh.harvard.edu/>)
     [[Fischl et al, 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)].
@@ -153,7 +153,7 @@ More details regarding the `recon-all` output files can be found on the [FreeSur
 
 ??? cite "Example of paragraph (long version):"
     These results have been obtained using the `t1-freesurfer-longitudinal` pipeline of Clinica
-    [[Routier et al]](https://hal.inria.fr/hal-02308126/).
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675).
     This pipeline is a wrapper of different tools of the FreeSurfer software
     [[Fischl et al, 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)],
     which is documented and freely available for download online (<http://surfer.nmr.mgh.harvard.edu/>).

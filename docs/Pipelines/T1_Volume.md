@@ -134,7 +134,7 @@ The main output file is:
 
 !!! cite "Example of paragraph for the `t1-volume` pipeline:"
     Theses results have been obtained using the `t1-volume` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
     This pipeline is a wrapper of the `Segmentation`, `Run Dartel` and `Normalise to MNI Space` routines implemented in [SPM](http://www.fil.ion.ucl.ac.uk/spm/).
     First, the Unified Segmentation procedure [[Ashburner and Friston, 2005](http://dx.doi.org/10.1016/j.neuroimage.2005.02.018)] is used to simultaneously perform tissue segmentation, bias correction and spatial normalization of the input image

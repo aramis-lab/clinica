@@ -239,7 +239,7 @@ The key value following `desc` depends on the input and output image:
 
 !!! cite "Example of paragraph"
     These results have been obtained using the `deeplearning-prepare-data`
-    pipeline of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    pipeline of Clinica [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
     More precisely,
 

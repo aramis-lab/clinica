@@ -123,7 +123,7 @@ TSV files summarizing the regional statistics on the labelled atlases (Desikan a
 
 !!! cite "Example of paragraph:"
     These results have been obtained using the `pet-surface-longitudinal` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Marcoux et al., 2018](https://doi.org/10.3389/fninf.2018.00094)].
     The subject’s PET image was registered to the T1-weighted MRI using spmregister
     ([FreeSurfer](https://surfer.nmr.mgh.harvard.edu/)) and intensity normalized using

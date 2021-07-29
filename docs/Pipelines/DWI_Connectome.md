@@ -88,7 +88,7 @@ Do not forget to fill in the missing information (after the `=` signs) and do no
 
 !!! cite "Example of paragraph for the `dwi-connectome` pipeline"
     These results have been obtained using the `dwi-connectome` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)] relying on the **MRtrix3**
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)] relying on the **MRtrix3**
     [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)] software package.
     Fiber orientation distributions (FOD) at highly anisotropic voxels (FA >0.7) was computed to determine the response function, which was used for constrained spherical deconvolution to accurately estimate the FOD [[Tournier et al., 2007](https://doi.org/10.1016/j.neuroimage.2007.02.016)].
     Then, `<n_tracks>` fibers with a probabilistic tracking algorithm [[Tournier et al., 2010](https://cds.ismrm.org/protected/10MProceedings/files/1670_4298.pdf)] were generated.
