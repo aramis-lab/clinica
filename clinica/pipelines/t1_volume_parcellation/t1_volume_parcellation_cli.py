@@ -14,12 +14,15 @@ pipeline_name = "t1-volume-parcellation"
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option_group.advanced_pipeline_options
+@cli_param.option.modulate
 def cli(
     caps_directory: str,
     group_label: str,
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    modulate: bool = True,
 ) -> None:
     """Computation of mean GM concentration for a set of regions.
 
@@ -33,7 +36,7 @@ def cli(
 
     from .t1_volume_parcellation_pipeline import T1VolumeParcellation
 
-    parameters = {"group_label": group_label}
+    parameters = {"group_label": group_label, "modulate": modulate}
 
     pipeline = T1VolumeParcellation(
         caps_directory=caps_directory,
