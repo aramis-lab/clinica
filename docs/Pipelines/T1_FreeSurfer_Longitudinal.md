@@ -147,7 +147,7 @@ More details regarding the `recon-all` output files can be found on the [FreeSur
     [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     This pipeline is a wrapper of different tools of the FreeSurfer software
     (<http://surfer.nmr.mgh.harvard.edu/>)
-    [[Fischl et al, 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)].
+    [[Fischl et al., 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)].
     This processing builds a subject-dependent template space and
     extracts volume and thickness estimates in this space at different points in time.
 
@@ -155,12 +155,12 @@ More details regarding the `recon-all` output files can be found on the [FreeSur
     These results have been obtained using the `t1-freesurfer-longitudinal` pipeline of Clinica
     [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675).
     This pipeline is a wrapper of different tools of the FreeSurfer software
-    [[Fischl et al, 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)],
+    [[Fischl et al., 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)],
     which is documented and freely available for download online (<http://surfer.nmr.mgh.harvard.edu/>).
     The technical details of the procedures concerned with longitudinal analysis are described in prior publications
-    [[Reuter et al, 2010](https://doi.org/10.1016/j.neuroimage.2010.07.020);
-    [Reuter et al, M00](http://dx.doi.org/10.1016/j.neuroimage.M00.02.076);
-    [Reuter et al, 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.02.084)].
+    [[Reuter et al., 2010](https://doi.org/10.1016/j.neuroimage.2010.07.020);
+    [Reuter et al., M00](http://dx.doi.org/10.1016/j.neuroimage.M00.02.076);
+    [Reuter et al., 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.02.084)].
     The pipeline processes a series of images acquired at different time points for the same subject.
     It first produces an unbiased (with respect to any time point) template volume, and then, for each time point, uses the template as an initialisation (tailored to the subject) for the FreeSurfer cortical reconstruction process.
 

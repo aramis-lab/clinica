@@ -135,7 +135,7 @@ TSV files summarizing the regional statistics on the labelled atlases (Desikan a
     [[Thomas et al., 2016](https://doi.org/10.1088/0031-9155/61/22/7975)]
     with regions obtained from gtmseg ([FreeSurfer](https://surfer.nmr.mgh.harvard.edu/)).
     Based on the subject’s white surface and cortical thickness estimated with the longitudinal pipeline of FreeSurfer
-    [[Fischl et al, 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)] (`t1-freesurfer-longitudinal`),
+    [[Fischl et al., 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)] (`t1-freesurfer-longitudinal`),
     seven surfaces for each hemisphere were computed,
     ranging from 35% to 65% of the gray matter thickness.
     The partial volume corrected data were projected onto these meshes and

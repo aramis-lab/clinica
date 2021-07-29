@@ -70,7 +70,7 @@ TSV files summarizing the regional statistics are also created for each subject.
 
 !!! cite "Example of paragraph (short version):"
     These results have been obtained using the `t1-freesurfer` pipeline of Clinica [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
-    This pipeline is a wrapper of different tools of the FreeSurfer software (<http://surfer.nmr.mgh.harvard.edu/>) [[Fischl et al, 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)] .
+    This pipeline is a wrapper of different tools of the FreeSurfer software (<http://surfer.nmr.mgh.harvard.edu/>) [[Fischl et al., 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)].
     This processing includes segmentation of subcortical structures, extraction of cortical surfaces, cortical thickness estimation, spatial normalization onto the FreeSurfer surface template (FsAverage), and parcellation of cortical regions.
 
 ??? cite "Example of paragraph (long version):"
