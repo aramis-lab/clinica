@@ -772,6 +772,10 @@ def run_dcm2niix(command):
     output_dcm2niix = subprocess.run(command, shell=True, capture_output=True)
     if output_dcm2niix.returncode != 0:
         cprint(
-            msg=f'errors may have occured.\nOutput:{output_dcm2niix.stdout.decode("utf-8")}\nError:{output_dcm2niix.stderr.decode("utf-8")}',
+            msg=(
+                'DICOM to BIDS conversion with dcm2niix failed:\n'
+                f'stdout:{output_dcm2niix.stdout.decode("utf-8")}\n'
+                f'stderr:{output_dcm2niix.stderr.decode("utf-8")}'
+            ),
             lvl="warning",
         )
