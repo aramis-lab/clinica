@@ -145,9 +145,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                     self.masks_location,
                     self.roi_list,
                     self.mask_pattern,
-                    None
-                    if not self.parameters.get("use_uncropped_image")
-                    else not self.parameters.get("use_uncropped_image"),
+                    not self.parameters.get("use_uncropped_image"),
                 )
         else:
             self.masks_location = ""
@@ -351,10 +349,8 @@ class DeepLearningPrepareData(cpe.Pipeline):
         )
         extract_roi_node.inputs.masks_location = self.masks_location
         extract_roi_node.inputs.mask_pattern = self.mask_pattern
-        extract_roi_node.inputs.cropped_input = (
-            None
-            if not self.parameters.get("use_uncropped_image")
-            else not self.parameters.get("use_uncropped_image")
+        extract_roi_node.inputs.cropped_input = not self.parameters.get(
+            "use_uncropped_image"
         )
         extract_roi_node.inputs.roi_list = self.roi_list
         extract_roi_node.inputs.uncrop_output = self.parameters.get("roi_uncrop_output")
