@@ -37,9 +37,10 @@ low_bval = option(
 )
 
 modulate = option(
-    "-m",
-    "--modulate",
-    is_flag=True,
+    "--modulate/--no_modulate",
+    "modulate",
+    default=True,
+    show_default=True,
     help="Modulate output images, no modulation preserves concentrations.",
 )
 

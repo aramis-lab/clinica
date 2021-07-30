@@ -37,7 +37,7 @@ def cli(
     save_warped_modulated: bool = False,
     dartel_tissues: List[int] = (1, 2, 3),
     tissues: List[int] = (1, 2, 3),
-    modulate: bool = False,
+    modulate: bool = True,
     voxel_size: Tuple[float, float, float] = (1.5, 1.5, 1.5),
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
