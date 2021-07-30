@@ -189,5 +189,5 @@ The two main processing steps of the `t1-freesurfer-longitudinal` pipeline can b
     Command line:
 
     ```Text
-    clinica run t1-freesurfer-longitudinal CAPS_DIRECTORY
+    clinica run t1-freesurfer-longitudinal-correction CAPS_DIRECTORY
     ```
