@@ -51,10 +51,10 @@ Default value is: `8`.
 Default value is: `1, 2, 3` (GM, WM and CSF are saved).
 - `--dartel_tissues`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to use for the Dartel template calculation (in order: GM, WM, CSF, bone, soft-tissue, air/background).
 Default value is: `1, 2, 3` (GM, WM and CSF are used).
-- `--modulate`: a boolean.
-If `True` output images are modulated and volumes are preserved.
-If `False` they are not modulated and concentrations are preserved.
-Default value: `True`.
+- `--modulate / --no-modulate`: a flag.
+If enabled, output images are modulated and volumes are preserved.
+If disabled, they are not modulated and concentrations are preserved.
+Default value: `--modulate`.
 
 !!! note
     - The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
