@@ -124,7 +124,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             if self.parameters.get("modality") == "custom":
                 self.mask_pattern = self.parameters.get("custom_mask_pattern")
                 self.template = self.parameters.get("custom_template")
-                if self.template is None:
+                if not self.template:
                     raise ValueError(
                         "A custom template must be defined when the modality is set to custom."
                     )
@@ -138,16 +138,14 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 self.caps_directory, "masks", f"tpl-{self.template}"
             )
 
-            if self.roi_list is None:
+            if not self.roi_list:
                 raise ValueError("A list of regions must be given.")
             else:
                 check_mask_list(
                     self.masks_location,
                     self.roi_list,
                     self.mask_pattern,
-                    None
-                    if self.parameters.get("use_uncropped_image") is None
-                    else not self.parameters.get("use_uncropped_image"),
+                    not self.parameters.get("use_uncropped_image"),
                 )
         else:
             self.masks_location = ""
@@ -351,10 +349,8 @@ class DeepLearningPrepareData(cpe.Pipeline):
         )
         extract_roi_node.inputs.masks_location = self.masks_location
         extract_roi_node.inputs.mask_pattern = self.mask_pattern
-        extract_roi_node.inputs.cropped_input = (
-            None
-            if self.parameters.get("use_uncropped_image") is None
-            else not self.parameters.get("use_uncropped_image")
+        extract_roi_node.inputs.cropped_input = not self.parameters.get(
+            "use_uncropped_image"
         )
         extract_roi_node.inputs.roi_list = self.roi_list
         extract_roi_node.inputs.uncrop_output = self.parameters.get("roi_uncrop_output")
