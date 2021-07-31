@@ -232,7 +232,7 @@ The key value following `desc` depends on the input and output image:
 ## Going further
 
 - You can now perform classification based on deep learning using the
-[AD-DL framework](https://github.com/aramis-lab/AD-DL) presented in
+[ClinicaDL framework](https://github.com/aramis-lab/clinicadl) presented in
 [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
 
 ## Describing this pipeline in your paper
