@@ -136,7 +136,11 @@ def test_instantiate_DWIPreprocessingUsingT1():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, "data", "DWIPreprocessingUsingT1")
 
-    parameters = {"low_bval": 5}
+    parameters = {
+        "initrand": 1234,
+        "low_bval": 5,
+        "use_cuda": False,
+    }
     pipeline = DwiPreprocessingUsingT1(
         bids_directory=join(root, "in", "bids"),
         caps_directory=join(root, "in", "caps"),
@@ -156,7 +160,11 @@ def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, "data", "DWIPreprocessingUsingPhaseDiffFieldmap")
 
-    parameters = {"low_bval": 5}
+    parameters = {
+        "initrand": 1234,
+        "low_bval": 5,
+        "use_cuda": False,
+    }
     pipeline = DwiPreprocessingUsingPhaseDiffFMap(
         bids_directory=join(root, "in", "bids"),
         caps_directory=join(root, "in", "caps"),

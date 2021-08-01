@@ -28,7 +28,11 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
     clean_folder(join(root, "out", "caps"), recreate=True)
     clean_folder(join(working_dir, "DWIPreprocessingUsingT1"))
 
-    parameters = {"low_bval": 5}
+    parameters = {
+        "initrand": 1234,
+        "low_bval": 5,
+        "use_cuda": False,
+    }
     pipeline = DwiPreprocessingUsingT1(
         bids_directory=join(root, "in", "bids"),
         caps_directory=join(root, "out", "caps"),
@@ -82,7 +86,11 @@ def test_run_DWIPreprocessingUsingPhaseDiffFMap(cmdopt):
     clean_folder(join(root, "out", "caps"))
     clean_folder(join(working_dir, pipeline_name))
 
-    parameters = {"low_bval": 5}
+    parameters = {
+        "initrand": 1234,
+        "low_bval": 5,
+        "use_cuda": False,
+    }
     pipeline = DwiPreprocessingUsingPhaseDiffFMap(
         bids_directory=join(root, "in", "bids"),
         caps_directory=join(root, "out", "caps"),
