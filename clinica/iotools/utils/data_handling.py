@@ -212,20 +212,17 @@ def create_merge_file(
                 "No outputs were found for any pipeline in the CAPS folder. "
                 "The output only contains BIDS information."
             )
-        index_column_df = pd.DataFrame(
-            index=np.arange(n_atlas),
-            columns=["first_column_index", "last_column_index"],
-        )
-        index_column_df.iat[0, 0] = n_bids_columns
-        index_column_df.iat[n_atlas - 1, 1] = np.shape(merged_df)[1] - 1
-        for i in range(1, n_atlas):
-            index_column_df.iat[i, 0] = (
-                index_column_df.iat[i - 1, 0] + merged_summary_df.iat[i - 1, 5]
+        columns = merged_df.columns.values.tolist()
+        for idx in merged_summary_df.index:
+            first_column_name = merged_summary_df.loc[idx, "first_column_name"]
+            last_column_name = merged_summary_df.loc[idx, "last_column_name"]
+            merged_summary_df.loc[idx, "first_column_index"] = columns.index(
+                first_column_name
             )
-            index_column_df.iat[i - 1, 1] = index_column_df.iat[i, 0] - 1
+            merged_summary_df.loc[idx, "last_column_index"] = columns.index(
+                last_column_name
+            )
 
-        merged_summary_df.reset_index(inplace=True, drop=True)
-        merged_summary_df = pd.concat([merged_summary_df, index_column_df], axis=1)
         summary_path = path.splitext(out_path)[0] + "_summary.tsv"
         merged_summary_df.to_csv(summary_path, sep="\t", index=False)
 
