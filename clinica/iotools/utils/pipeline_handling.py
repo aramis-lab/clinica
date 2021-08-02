@@ -49,8 +49,93 @@ def pet_volume_pipeline(
     )
 
 
+def t1_freesurfer_longitudinal_pipeline(
+    caps_dir, df, freesurfer_atlas_selection=None, **kwargs
+):
+    """Merge the data of the T1FreesurferLongitudinal pipeline to the merged file containing the BIDS information.
+
+    Args:
+        caps_dir: the path to the CAPS directory
+        df: the DataFrame containing the BIDS information
+        freesurfer_atlas_selection: allows to choose the atlas to merge (default = 'all')
+
+    Returns:
+         final_df: a DataFrame containing the information of the bids and the pipeline
+    """
+
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        replace_sequence_chars,
+    )
+
+    # Ensures that df is correctly indexed
+    if "participant_id" in df.columns.values:
+        df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+
+    subjects_dir = path.join(caps_dir, "subjects")
+
+    pipeline_df = pd.DataFrame()
+
+    for participant_id, session_id in df.index.values:
+
+        ses_path = path.join(subjects_dir, participant_id, session_id)
+        mod_path = path.join(ses_path, "t1")
+
+        long_ids = [os.path.split(x)[-1] for x in glob(path.join(mod_path, "long*"))]
+        for long_id in long_ids:
+            mod_path = path.join(
+                mod_path, long_id, "freesurfer_longitudinal", "regional_measures"
+            )
+            ses_df = pd.DataFrame(
+                [[participant_id, session_id]], columns=["participant_id", "session_id"]
+            )
+            ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+
+            if os.path.exists(mod_path):
+                # Looking for atlases
+                atlas_paths = glob(
+                    path.join(mod_path, f"{participant_id}_{session_id}_*thickness.tsv")
+                )
+
+                for atlas_path in atlas_paths:
+                    atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
+                    if path.exists(atlas_path) and (
+                        freesurfer_atlas_selection is None
+                        or (
+                            freesurfer_atlas_selection is not None
+                            and atlas_name in freesurfer_atlas_selection
+                        )
+                    ):
+                        atlas_df = pd.read_csv(atlas_path, sep="\t")
+                        label_list = [
+                            "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
+                            for x in atlas_df.label_name.values
+                        ]
+                        ses_df[label_list] = atlas_df["label_value"].to_numpy()
+
+                # Always retrieve subcortical volumes
+                atlas_path = path.join(
+                    mod_path,
+                    f"{participant_id}_{session_id}_{long_id}_segmentationVolumes.tsv",
+                )
+                atlas_df = pd.read_csv(atlas_path, sep="\t")
+                label_list = [
+                    "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
+                    for x in atlas_df.label_name.values
+                ]
+                ses_df[label_list] = atlas_df["label_value"].to_numpy()
+
+            pipeline_df = pipeline_df.append(ses_df)
+
+    summary_df = generate_summary(
+        pipeline_df, "t1-freesurfer-longitudinal", ignore_groups=True
+    )
+    final_df = pd.concat([df, pipeline_df], axis=1)
+
+    return final_df, summary_df
+
+
 def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwargs):
-    """Merge the data of the PET-Volume pipeline to the merged file containing the BIDS information.
+    """Merge the data of the T1Freesurfer pipeline to the merged file containing the BIDS information.
 
     Args:
         caps_dir: the path to the CAPS directory
@@ -63,7 +148,6 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,
     )
-    from clinica.utils.stream import cprint
 
     # Ensures that df is correctly indexed
     if "participant_id" in df.columns.values:
