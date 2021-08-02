@@ -179,6 +179,7 @@ def create_merge_file(
         from .pipeline_handling import (
             pet_volume_pipeline,
             t1_freesurfer_pipeline,
+            t1_freesurfer_longitudinal_pipeline,
             t1_volume_pipeline,
         )
 
@@ -186,6 +187,7 @@ def create_merge_file(
             "t1-volume": t1_volume_pipeline,
             "pet-volume": pet_volume_pipeline,
             "t1-freesurfer": t1_freesurfer_pipeline,
+            "t1-freesurfer-longitudinal": t1_freesurfer_longitudinal_pipeline,
         }
         merged_summary_df = pd.DataFrame()
         if not pipelines:
@@ -695,7 +697,7 @@ def create_subs_sess_list(
             session_df = pd.read_csv(
                 path.join(sub_path, subj_id + "_sessions.tsv"), sep="\t"
             )
-            session_list = list(session_df["session_id"].to_numpy())
+            session_list = list(session_df["session_id"].dropna().to_numpy())
             for session in session_list:
                 subjs_sess_tsv.write(subj_id + "\t" + session + "\n")
 
