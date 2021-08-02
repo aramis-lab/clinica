@@ -95,7 +95,7 @@ To download the images of the OASIS-3 dataset:
  
 3. For the "Select Image Data" part:
 
-    a. For the "Scan Format" select BOTH "BIDS" and "NIFTI". Otherwise, you will be missing data.
+    a. For the "Scan Format" select *both* BIDS and NIFTI. Otherwise, you will be missing data.
     
     b. For the "Scan Types", select only T1w, since it is the only format converted right now.
     
