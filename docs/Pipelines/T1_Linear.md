@@ -75,14 +75,14 @@ affine transformation estimated with [ANTs](https://stnava.github.io/ANTs/).
 to prepare images to be used with the PyTorch library
 [[Paszke et al., 2019]](https://papers.nips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library)
 for classification based on deep learning using the
-[AD-DL framework](https://github.com/aramis-lab/AD-DL) presented in
+[ClinicaDL framework](https://github.com/aramis-lab/clinicadl) presented in
 [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
 
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph"
     These results have been obtained using the `t1-linear` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
     More precisely, bias field correction was applied using the N4ITK method
     [[Tustison et al., 2010](https://doi.org/10.1109/TMI.2010.2046908)].

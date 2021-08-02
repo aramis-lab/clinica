@@ -23,16 +23,20 @@
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
     <img src="https://anaconda.org/aramislab/clinica/badges/platforms.svg" alt="platform">
   </a>
+  <a href="https://github.com/psf/black">
+    <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Code style: black">
+  </a>
 </p>
 
 <p align="center">
   <a href="http://www.clinica.run">Homepage</a> |
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/">Documentation</a> |
-  <a href="https://hal.inria.fr/hal-02308126">Preprint</a> |
+  <a href="https://doi.org/10.3389/fninf.2021.689675">Paper</a> |
   <a href="https://groups.google.com/forum/#!forum/clinica-user">Forum</a> |
   See also:
   <a href="#related-repositories">AD-ML</a>,
   <a href="#related-repositories">AD-DL</a>
+  <a href="#related-repositories">ClinicaDL</a>
 </p>
 
 ## About The Project
@@ -73,7 +77,7 @@ learning or deep learning.
 Clinica is also showcased as a framework for the reproducible classification of
 Alzheimer's disease using
 [machine learning](https://github.com/aramis-lab/AD-ML) and
-[deep learning](https://github.com/aramis-lab/AD-DL).
+[deep learning](https://github.com/aramis-lab/clinicadl).
 
 ## Getting Started
 
@@ -133,13 +137,11 @@ with Alzheimer's disease and healthy controls from the ADNI database:
 - Use the [Clinica Google
   Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
 
-<!--
 ## Contributing
-We encourage you to contribute to Clinica! Please check out the [Contributing
-to Clinica guide](Contributing.md) for guidelines about how to proceed. Do not
-hesitate to ask questions if something is not clear for you, report an issue,
-etc.
--->
+
+We encourage you to contribute to Clinica!
+Please check out the [Contributing to Clinica guide](CONTRIBUTING.md) for guidelines about how to proceed.
+Do not hesitate to ask questions if something is not clear for you, report an issue, etc.
 
 ## License
 
@@ -149,12 +151,13 @@ for more information.
 
 ## Citing us
 
-- Routier, A., Burgos, N., Díaz, M., Bacci, M., Bottani, S., El-Rifai O., Fontanella, S., Gori, P., Guillon, J., Guyot, A., Hassanaly, R., Jacquemont, T.,  Lu, P., Marcoux, A.,  Moreau, T., Samper-González, J., Teichmann, M., Thibeau-Sutre, E., Vaillant G., Wen, J., Wild, A., Habert, M.-O., Durrleman, S., and Colliot, O.: ‘Clinica: An Open Source Software Platform for Reproducible Clinical Neuroscience Studies’, 2021. [hal-02308126](https://hal.inria.fr/hal-02308126)
-
+- Routier, A., Burgos, N., Díaz, M., Bacci, M., Bottani, S., El-Rifai O., Fontanella, S., Gori, P., Guillon, J., Guyot, A., Hassanaly, R., Jacquemont, T.,  Lu, P., Marcoux, A.,  Moreau, T., Samper-González, J., Teichmann, M., Thibeau-Sutre, E., Vaillant G., Wen, J., Wild, A., Habert, M.-O., Durrleman, S., and Colliot, O.:
+*Clinica: An Open Source Software Platform for Reproducible Clinical Neuroscience Studies* Frontiers in Neuroinformatics, 2021
+[doi:10.3389/fninf.2021.689675](https://doi.org/10.3389/fninf.2021.689675)
 
 ## Related Repositories
 
-- [AD-DL: Framework for the reproducible classification of Alzheimer's disease using
-deep learning](https://github.com/aramis-lab/AD-DL)
+- [AD-DL: Classification of Alzheimer's disease status with convolutional neural networks](https://github.com/aramis-lab/AD-DL)
 - [AD-ML: Framework for the reproducible classification of Alzheimer's disease using
 machine learning](https://github.com/aramis-lab/AD-ML)
+- [ClinicaDL: Framework for the reproducible processing of neuroimaging data with deep learning methods](https://github.com/aramis-lab/clinicadl)

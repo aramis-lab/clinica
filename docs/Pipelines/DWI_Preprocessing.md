@@ -74,7 +74,7 @@ brain extracted image based on the reference b0.
 
 ??? cite "Example of paragraph for the `dwi-preprocessing-using-t1` pipeline"
     These results have been obtained using the `dwi-preprocessing` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)].
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     For each subject, all raw DWI volumes were rigidly registered (6 degrees of freedom (dof)) to the reference b0 image (DWI volume with no diffusion sensitization) to correct for head motion.
     The diffusion weighting directions were appropriately updated [[Leemans & Jones, 2009](https://doi.org/10.1002/mrm.21890)].
     An affine registration (12 dof) was then performed between each DWI volume and
@@ -87,7 +87,7 @@ brain extracted image based on the reference b0.
 
 ??? cite "Example of paragraph for the `dwi-preprocessing-using-phasediff-fieldmap` pipeline"
     These results have been obtained using the `dwi-preprocessing` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)].
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     For each subject, all raw DWI volumes were rigidly registered (6 degrees of freedom (dof)) to the reference b0 image (DWI volume with no diffusion sensitization) to correct for head motion.
     The diffusion weighting directions were appropriately updated
     [[Leemans & Jones, 2009](https://doi.org/10.1002/mrm.21890)].

@@ -182,7 +182,7 @@ The input is the name of the classification algorithm used.
 
 !!! cite "Example of paragraph:"
     These results have been obtained using the machine learning-based classification modules of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
     Clinica provides a modular way to perform classification based on machine learning by combining different inputs (e.g. gray matter maps obtained from T1-weighted MR images, FDG PET images), algorithms (e.g. support vector machine, logistic regression, random forest) and validation strategies (e.g. K-fold cross validation, repeated K-fold cross validation, repeated hold-out validation).
     These modules rely on [scikit-learn](http://scikit-learn.org/stable/index.html) [[Pedregosa et al., 2011](http://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf)].
