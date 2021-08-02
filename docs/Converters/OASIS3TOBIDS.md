@@ -123,53 +123,53 @@ clinica convert oasis3-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTO
 
 where:
 
-- `DATASET_DIRECTORY` is the path to the original OASIS-3 images' directory.
-Its content looks like:
+- `DATASET_DIRECTORY` is the path to the original OASIS-3 imaging directory, which content should look like:
 
-```text
-DATASET_DIRECTORY
-├── OAS30001_MR_d0757
-│   ├── anat1
-│   │   ├── sub-OAS30001_ses-d0757_acq-TSE_T2w.json
-│   │   └── sub-OAS30001_ses-d0757_acq-TSE_T2w.nii.gz
-│   ├── anat2
-│   │   ├── ...
-│   ├── ...
-│   ├── dwi1
-│   │   ├── sub-OAS30001_ses-d0757_dwi.bval
-│   │   ├── sub-OAS30001_ses-d0757_dwi.bvec
-│   │   ├── sub-OAS30001_ses-d0757_dwi.json
-│   │   └── sub-OAS30001_ses-d0757_dwi.nii.gz
-│   ├── func1
-│   │   ├── sub-OAS30001_ses-d0757_task-rest_run-01_bold.json
-│   │   └── sub-OAS30001_ses-d0757_task-rest_run-01_bold.nii.gz
-│   ├── func2
-│   │   ├── ...
-│   ├── swi1
-│   │   ├── sub-OAS30001_ses-d0757_minIP.json
-│   │   └── sub-OAS30001_ses-d0757_minIP.nii.gz
-│   └── swi2
-│       ├── ...
-└── ...
-└── OAS30002_AV45_d2340
-    ├── BIDS
-    │   └── dataset_description.json
-    ├── OAS30002_AV45_PUPTIMECOURSE_d2340
-    │   └── SNAPSHOTS
-    │       ├── OAS30002_AV45_d2340_m0_t.jpg
+    ```text
+    DATASET_DIRECTORY
+    ├── OAS30001_MR_d0757
+    │   ├── anat1
+    │   │   ├── sub-OAS30001_ses-d0757_acq-TSE_T2w.json
+    │   │   └── sub-OAS30001_ses-d0757_acq-TSE_T2w.nii.gz
+    │   ├── anat2
+    │   │   ├── ...
+    │   ├── ...
+    │   ├── dwi1
+    │   │   ├── sub-OAS30001_ses-d0757_dwi.bval
+    │   │   ├── sub-OAS30001_ses-d0757_dwi.bvec
+    │   │   ├── sub-OAS30001_ses-d0757_dwi.json
+    │   │   └── sub-OAS30001_ses-d0757_dwi.nii.gz
+    │   ├── func1
+    │   │   ├── sub-OAS30001_ses-d0757_task-rest_run-01_bold.json
+    │   │   └── sub-OAS30001_ses-d0757_task-rest_run-01_bold.nii.gz
+    │   ├── func2
+    │   │   ├── ...
+    │   ├── swi1
+    │   │   ├── sub-OAS30001_ses-d0757_minIP.json
+    │   │   └── sub-OAS30001_ses-d0757_minIP.nii.gz
+    │   └── swi2
     │       ├── ...
-    └── pet1
+    └── ...
+    └── OAS30002_AV45_d2340
         ├── BIDS
-        │   ├── sub-OAS30002_ses-d2340_acq-AV45_pet.json
-        │   └── sub-OAS30002_ses-d2340_acq-AV45_pet.tsv
-        └── NIFTI
-            └── sub-OAS30002_ses-d2340_acq-AV45_pet.nii.gz
-└── ...
-```
+        │   └── dataset_description.json
+        ├── OAS30002_AV45_PUPTIMECOURSE_d2340
+        │   └── SNAPSHOTS
+        │       ├── OAS30002_AV45_d2340_m0_t.jpg
+        │       ├── ...
+        └── pet1
+            ├── BIDS
+            │   ├── sub-OAS30002_ses-d2340_acq-AV45_pet.json
+            │   └── sub-OAS30002_ses-d2340_acq-AV45_pet.tsv
+            └── NIFTI
+                └── sub-OAS30002_ses-d2340_acq-AV45_pet.nii.gz
+    └── ...
+    ```
 
-- `CLINICAL_DATA_DIRECTORY` is the path to the directory containing the clinical CSV files (that should be) called `oasis3_clinical.csv` and `oasis3_sessions.csv`.
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory containing the clinical CSV files. These files that should be
+  named `oasis3_clinical.csv` and `oasis3_sessions.csv`.
 
-- `BIDS_DIRECTORY` is the path to the output directory, where the BIDS-converted version of OASIS-3 will be stored.
+- `BIDS_DIRECTORY` is the path to the output directory where the BIDS-converted version of OASIS-3 will be stored.
 
 !!! note
     In order to improve the readability, the BIDS subject ID is different from the original OASIS-3 ID and is defined as follows:
