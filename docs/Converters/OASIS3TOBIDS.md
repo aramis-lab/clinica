@@ -105,13 +105,13 @@ To download the images of the OASIS-3 dataset:
     
 4. Click submit to download. We advise that you use the XNAT Desktop Client which will be more efficient than download through your web browser
 
-## Modalities supported
+## Supported modalities
 
-[REMOVE?] Currently, the converter converts only the T1-weighted MRI images and clinical data.
+Please note that this converter only processes T1-weighted MRI images and the clinical data. Support for additional
+modalities may be implemented later.
 
-To convert the imaging data to BIDS, the list of subjects is obtained from the downloaded folders.
-[REMOVE?] For each subject, among the multiple T1w MR images available, we select the average of the motion-corrected co-registered individual images resampled to 1 mm isotropic voxels, located in the `SUBJ_111` subfolder.
-The clinical data being converted are defined in files (`clinical_specifications_participant.tsv`, `clinical_specifications_scans.tsv` and `clinical_specifications_sessions.tsv`) available with the code of the converter, which the user can modify.
+For participants with multiple T1-weighted images available, the average of the motion-corrected co-registered
+individual images resampled to 1-mm isotropic resolution is given priority.
 
 ## Using the converter
 
