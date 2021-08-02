@@ -29,6 +29,13 @@ dont_save_warped_unmodulated = option(
     help="Do not save warped unmodulated images for tissues specified in --tissue_classes flag.",
 )
 
+initrand = option(
+    "--initrand",
+    default=None,
+    show_default=True,
+    help="Set the seed of the random number generator used when estimating hyperparameters in FSL eddy.",
+)
+
 low_bval = option(
     "--low_bval",
     default=5,
@@ -131,6 +138,13 @@ tissue_probability_maps = option(
     "--tissue_probability_maps",
     type=click.Path(exists=True, resolve_path=True),
     help="Tissue probability maps to use for segmentation.",
+)
+
+use_cuda = option(
+    "--use_cuda",
+    default=False,
+    show_default=True,
+    help="Use the CUDA implementation of FSL eddy. See https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#The_eddy_executables for details.",
 )
 
 use_pvc_data = option(

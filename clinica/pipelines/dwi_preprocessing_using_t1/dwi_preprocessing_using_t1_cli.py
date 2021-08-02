@@ -17,18 +17,8 @@ pipeline_name = "dwi-preprocessing-using-t1"
 @cli_param.option.working_directory
 @cli_param.option.n_procs
 @cli_param.option_group.advanced_pipeline_options
-@cli_param.option_group.option(
-    "--use_cuda",
-    default=False,
-    show_default=True,
-    help="Use the CUDA implementation of FSL eddy. See https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#The_eddy_executables for details.",
-)
-@cli_param.option_group.option(
-    "--initrand",
-    default=None,
-    show_default=True,
-    help="Set the seed of the random number generator used when estimating hyperparameters in FSL eddy.",
-)
+@cli_param.option.use_cuda
+@cli_param.option.initrand
 def cli(
     bids_directory: str,
     caps_directory: str,
