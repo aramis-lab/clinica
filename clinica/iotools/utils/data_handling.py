@@ -213,6 +213,7 @@ def create_merge_file(
                 "The output only contains BIDS information."
             )
         columns = merged_df.columns.values.tolist()
+        merged_summary_df.reset_index(inplace=True, drop=True)
         for idx in merged_summary_df.index:
             first_column_name = merged_summary_df.loc[idx, "first_column_name"]
             last_column_name = merged_summary_df.loc[idx, "last_column_name"]
