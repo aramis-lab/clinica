@@ -171,7 +171,6 @@ def create_merge_file(
     merged_df.to_csv(out_path, sep="\t", index=False)
     cprint("End of BIDS information merge.", lvl="debug")
 
-    n_bids_columns = len(merged_df.columns)
     merged_df.reset_index(drop=True, inplace=True)
 
     # CAPS
