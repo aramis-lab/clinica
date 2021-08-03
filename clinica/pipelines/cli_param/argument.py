@@ -6,11 +6,13 @@ from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 acq_label = click.argument("acq_label")
 
 bids_directory = click.argument(
-    "bids_directory", type=click.Path(exists=True, writable=True, resolve_path=True)
+    "bids_directory",
+    type=click.Path(exists=True, file_okay=False, resolve_path=True),
 )
 
 caps_directory = click.argument(
-    "caps_directory", type=click.Path(exists=True, writable=True, resolve_path=True)
+    "caps_directory",
+    type=click.Path(writable=True, file_okay=False, resolve_path=True),
 )
 
 contrast = click.argument("contrast")
@@ -28,12 +30,13 @@ orig_input_data_ml = click.argument(
 )
 
 pvc_psf_tsv = click.argument(
-    "pvc_psf_tsv", type=click.Path(exists=True, resolve_path=True)
+    "pvc_psf_tsv",
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
 )
 
 subject_visits_with_covariates_tsv = click.argument(
     "subject_visits_with_covariates_tsv",
-    type=click.Path(exists=True, resolve_path=True),
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
 )
 
 suvr_reference_region = click.argument(
