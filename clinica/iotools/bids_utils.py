@@ -185,8 +185,10 @@ def create_sessions_dict_OASIS(
     """
     import os
     from os import path
+
     import numpy as np
     import pandas as pd
+
     from clinica.utils.stream import cprint
 
     # Load data
@@ -269,7 +271,12 @@ def create_sessions_dict_OASIS(
                         )
                         # Calculate the difference in months for OASIS3 only
                         if study_name == "OASIS3" and sessions_fields_bids[i] == "age":
-                            diff_years = float(sessions_dict[subj_bids][s_name]["age"]) - participants_df[participants_df["participant_id"] == subj_bids]["age_bl"]
+                            diff_years = (
+                                float(sessions_dict[subj_bids][s_name]["age"])
+                                - participants_df[
+                                    participants_df["participant_id"] == subj_bids
+                                ]["age_bl"]
+                            )
                             (sessions_dict[subj_bids][s_name]).update(
                                 {"diff_months": round(float(diff_years) * 12)}
                             )
@@ -751,3 +758,23 @@ def json_from_dcm(dcm_dir, json_path):
             f.write(json)
     except IndexError:
         cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
+
+
+def run_dcm2niix(command):
+    """Runs the dcm2niix command using a subprocess.
+
+    Args: the dcm2niix command with the right arguments.
+    """
+    import subprocess
+
+    from clinica.utils.stream import cprint
+
+    output_dcm2niix = subprocess.run(command, shell=True, capture_output=True)
+    if output_dcm2niix.returncode != 0:
+        cprint(
+            msg=(
+                "DICOM to BIDS conversion with dcm2niix failed:\n"
+                f"{output_dcm2niix.stdout.decode('utf-8')}"
+            ),
+            lvl="warning",
+        )
