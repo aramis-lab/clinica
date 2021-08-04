@@ -87,7 +87,7 @@ export LANG=en_US.UTF-8
 source /path/to/your/Miniconda/etc/profile.d/conda.sh
 
 # ANTs
-export ANTSPATH="/path/to/your/ANTs"
+export ANTSPATH="/path/to/your/ANTs/"
 export PATH=${ANTSPATH}:${PATH}
 
 # FreeSurfer
