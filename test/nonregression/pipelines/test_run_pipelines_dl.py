@@ -44,25 +44,32 @@ def test_run_DLPrepareData(cmdopt):
     roi_params = {
         "extract_method": "roi",
         "roi_list": ["rightHippocampusBox", "leftHippocampusBox"],
-        "roi_uncrop_output": False,
+        # "roi_uncrop_output": False,
+        "use_uncropped_image": True,
     }
 
     data = [image_params, slice_params, patch_params, roi_params]
 
     for parameters in data:
+
         for modality in modalities:
+
             parameters["modality"] = modality
+
             if modality == "pet-linear":
                 parameters["acq_label"] = "av45"
                 parameters["suvr_reference_region"] = "pons2"
                 parameters["use_uncropped_image"] = False
                 DLPrepareData_Generic(root, working_dir, parameters)
+
             elif modality == "custom":
+                parameters["use_uncropped_image"] = True
                 parameters["custom_template"] = "Ixi549Space"
                 parameters[
                     "custom_suffix"
                 ] = "graymatter_space-Ixi549Space_modulated-off_probability.nii.gz"
                 DLPrepareData_Generic(root, working_dir, parameters)
+
             elif modality == "t1-linear":
                 for flag in uncropped_image:
                     parameters["use_uncropped_image"] = flag
