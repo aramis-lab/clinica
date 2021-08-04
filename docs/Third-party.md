@@ -109,10 +109,6 @@ export MATLAB_HOME="/path/to/your/matlab/bin/"
 export PATH=${MATLAB_HOME}:${PATH}
 export MATLABCMD="${MATLAB_HOME}/matlab"
 
-# MRtrix3
-export MRTRIX_HOME="/path/to/your/mrtrix3"
-export PATH="${MRTRIX_HOME}/bin":"${MRTRIX_HOME}/scripts":${PATH}
-
 # SPM
 export SPM_HOME="/path/to/your/spm12"
 
