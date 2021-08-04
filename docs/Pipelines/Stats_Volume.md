@@ -102,7 +102,7 @@ The full list of output files from the `statistics-volume-[correction]` pipeline
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph:"
-    These results have been obtained using the `statistics-volume` pipeline of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/)].
+    These results have been obtained using the `statistics-volume` pipeline of Clinica [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     This pipeline is a wrapper of the statistical analysis toolbox implemented in [SPM](http://www.fil.ion.ucl.ac.uk/spm/).
     More precisely, a point-wise, voxel-to-voxel model was used to conduct a group comparison of whole brain voxels.
     The data were smoothed using a Gaussian kernel with a full width at half maximum (FWHM) set to `<FWHM>` mm.

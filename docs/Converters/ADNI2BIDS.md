@@ -18,7 +18,7 @@
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2nii** and **dcm2niix** DICOM to NIfTI converters, and of **FreeSurfer**.
+If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2niix** DICOM to NIfTI converter and **FreeSurfer**.
 You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
 
 ## Downloading ADNI
@@ -301,7 +301,7 @@ clinica convert adni-to-bids -h
 !!! cite "Example of paragraph:"
     The ADNI data have been curated and converted to the Brain Imaging Data Structure (BIDS) format
     [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica
-    [[Routier et al.](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
 
 If you used the converter for DWI data, please also cite [[Wen et al., 2020](https://doi.org/10.1007/s12021-020-09469-5)].

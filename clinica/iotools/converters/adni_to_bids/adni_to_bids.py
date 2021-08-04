@@ -28,9 +28,8 @@ class AdniToBids(Converter):
 
     def check_adni_dependencies(self):
         """Check the dependencies of ADNI converter."""
-        from clinica.utils.check_dependency import check_dcm2nii, check_dcm2niix
+        from clinica.utils.check_dependency import check_dcm2niix
 
-        check_dcm2nii()
         check_dcm2niix()
 
     def convert_clinical_data(self, clinical_data_dir, out_path):

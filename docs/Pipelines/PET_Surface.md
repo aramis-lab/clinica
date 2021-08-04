@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD033 MD046 -->
 # `pet-surface` - Surface-based processing of PET images
 
 This pipeline performs several processing steps for the analysis of PET data on the cortical surface
@@ -87,7 +87,6 @@ To mitigate this issue, you can do the following:
 
     This is under investigation (see [Issue #119](https://github.com/aramis-lab/clinica/issues/119) for details) and will be solved as soon as possible.
 
-
 ## Outputs
 
 Results are stored in the following folder of the
@@ -122,7 +121,7 @@ The second row is the same signal for each subject, but warped to FsAverage afte
 
 !!! cite "Example of paragraph:"
     These results have been obtained using the `pet-surface` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Marcoux et al., 2018](https://doi.org/10.3389/fninf.2018.00094)].
     The subject’s PET image was registered to the T1-weighted MRI using spmregister
     ([FreeSurfer](https://surfer.nmr.mgh.harvard.edu/)) and intensity normalized using

@@ -76,17 +76,6 @@ def check_software_requirements(current_version, version_requirements, software_
         )
 
 
-def check_dcm2nii():
-    """Check dcm2nii software."""
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
-    if not is_binary_present("dcm2nii"):
-        raise ClinicaMissingDependencyError(
-            "Clinica could not find dcm2nii tool from MRIcron in your PATH environment: "
-            "this can be downloaded from https://www.nitrc.org/frs/?group_id=152 (choose the 2016 version)."
-        )
-
-
 def check_dcm2niix():
     """Check dcm2niix software."""
     from clinica.utils.exceptions import ClinicaMissingDependencyError

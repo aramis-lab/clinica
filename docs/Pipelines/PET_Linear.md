@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 MD046-->
 # `pet-linear` - Linear processing of PET images
 
 This pipeline performs spatial normalization to the MNI space and intensity
@@ -36,7 +37,7 @@ clinica run pet-linear [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY ACQ_LABEL
 
 where:
 
-- ` BIDS_DIRECTORY` is the input folder containing the dataset in a
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a
 [BIDS](../../BIDS) hierarchy;
 - `CAPS_DIRECTORY` is the output folder containing the results in a
 [CAPS](../../CAPS/Introduction) hierarchy;
@@ -89,15 +90,15 @@ You can now run the [`deeplearning-prepare-data`
 pipeline](../DeepLearning_PrepareData) to prepare images to be used with the
 PyTorch library [[Paszke et al.,
 2019]](https://papers.nips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library)
-for classification based on deep learning using the [AD-DL
-framework](https://github.com/aramis-lab/AD-DL) presented in [[Wen et al.,
+for classification based on deep learning using the [ClinicaDL
+framework](https://github.com/aramis-lab/clinicadl) presented in [[Wen et al.,
 2020](https://doi.org/10.1016/j.media.2020.101694)].
 
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph"
     These results have been obtained using the `pet-linear` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)].
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     This pipeline first performs intra-subject rigid registration of the PET
     image into the space of the subject’s T1-weighted (T1w) MR image using the
     SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)]

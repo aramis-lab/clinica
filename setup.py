@@ -31,7 +31,7 @@ setup(
     packages=find_packages(exclude=("tests", "tests.*")),
     include_package_data=True,
     zip_safe=False,
-    entry_points={"console_scripts": ["clinica = clinica.cmdline:cli"]},
+    entry_points={"console_scripts": ["clinica = clinica.cmdline:main"]},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",

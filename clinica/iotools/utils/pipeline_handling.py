@@ -205,6 +205,7 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
 
     summary_df = generate_summary(pipeline_df, "t1-freesurfer", ignore_groups=True)
     final_df = pd.concat([df, pipeline_df], axis=1)
+    final_df.reset_index(inplace=True)
 
     return final_df, summary_df
 
@@ -363,6 +364,7 @@ def volume_pipeline(
 
     summary_df = generate_summary(pipeline_df, pipeline_name)
     final_df = pd.concat([df, pipeline_df], axis=1)
+    final_df.reset_index(inplace=True)
 
     return final_df, summary_df
 

@@ -3,15 +3,18 @@
 import click
 
 dataset_directory = click.argument(
-    "dataset_directory", type=click.Path(exists=True, resolve_path=True)
+    "dataset_directory",
+    type=click.Path(exists=True, file_okay=False, resolve_path=True),
 )
 
 clinical_data_directory = click.argument(
-    "clinical_data_directory", type=click.Path(exists=True, resolve_path=True)
+    "clinical_data_directory",
+    type=click.Path(exists=True, file_okay=False, resolve_path=True),
 )
 
 bids_directory = click.argument(
-    "bids_directory", type=click.Path(exists=True, writable=True, resolve_path=True)
+    "bids_directory",
+    type=click.Path(writable=True, file_okay=False, resolve_path=True),
 )
 
 clinical_data_only = click.option(

@@ -5,12 +5,16 @@
 The aim of this module is to execute pipelines from the command line,
 and gives to the user some other utils to work with the pipelines.
 """
+import sys
+
 import click
 
 from clinica.engine.template import cli as generate_cli
 from clinica.iotools.converters.cli import cli as convert_cli
 from clinica.iotools.utils.cli import cli as iotools_cli
 from clinica.pipelines.cli import cli as run_cli
+from clinica.utils.exceptions import ClinicaException
+from clinica.utils.stream import cprint
 
 CONTEXT_SETTINGS = dict(
     # Extend content width to avoid shortening of pipeline help.
@@ -69,5 +73,13 @@ cli.add_command(iotools_cli)
 cli.add_command(run_cli)
 
 
+def main() -> None:
+    try:
+        cli()
+    except ClinicaException as e:
+        cprint(msg=e, lvl="error")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    cli()
+    main()
