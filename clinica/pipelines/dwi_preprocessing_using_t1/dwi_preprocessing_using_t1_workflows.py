@@ -1,12 +1,7 @@
 # coding: utf8
 
 
-def eddy_fsl_pipeline(
-    low_bval,
-    use_cuda=False,
-    seed_fsl_eddy=None,
-    name="eddy_fsl",
-):
+def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl",):
     """Use FSL eddy for head motion correction and eddy current distortion correction."""
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
@@ -54,8 +49,7 @@ def eddy_fsl_pipeline(
     eddy = pe.Node(interface=Eddy(), name="eddy_fsl")
     eddy.inputs.repol = True
     eddy.inputs.use_cuda = use_cuda
-    if seed_fsl_eddy:
-        eddy.inputs.initrand = seed_fsl_eddy
+    eddy.inputs.initrand = initrand
 
     outputnode = pe.Node(
         niu.IdentityInterface(

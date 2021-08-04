@@ -31,9 +31,9 @@ dont_save_warped_unmodulated = option(
 
 initrand = option(
     "--initrand",
-    default=None,
+    default=False,
     show_default=True,
-    help="Set the seed of the random number generator used when estimating hyperparameters in FSL eddy.",
+    help="Initialize the random number generator used when estimating hyperparameters in FSL eddy.",
 )
 
 low_bval = option(

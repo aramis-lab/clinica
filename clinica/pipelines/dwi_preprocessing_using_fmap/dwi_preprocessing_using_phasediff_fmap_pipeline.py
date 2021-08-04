@@ -44,6 +44,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         """Check pipeline parameters."""
         from clinica.utils.stream import cprint
 
+        self.parameters.setdefault("low_bval", 5)
         low_bval = self.parameters["low_bval"]
         if low_bval < 0:
             raise ValueError(
@@ -55,11 +56,8 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                 lvl="warning",
             )
 
-        if "use_cuda" not in self.parameters.keys():
-            self.parameters["use_cuda"] = False
-
-        if self.parameters["initrand"] not in self.parameters.keys():
-            self.parameters["initrand"] = None
+        self.parameters.setdefault("use_cuda", False)
+        self.parameters.setdefault("initrand", False)
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -373,8 +371,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         pre_eddy = npe.Node(name="1b-PreEddy", interface=Eddy())
         pre_eddy.inputs.repol = True
         pre_eddy.inputs.use_cuda = self.parameters["use_cuda"]
-        if self.parameters["initrand"]:
-            pre_eddy.inputs.initrand = self.parameters["initrand"]
+        pre_eddy.inputs.initrand = self.parameters["initrand"]
 
         # Compute the reference b0
         compute_ref_b0 = npe.Node(

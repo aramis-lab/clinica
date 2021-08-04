@@ -50,6 +50,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         """Check pipeline parameters."""
         from clinica.utils.stream import cprint
 
+        self.parameters.setdefault("low_bval", 5)
         low_bval = self.parameters["low_bval"]
         if low_bval < 0:
             raise ValueError(
@@ -58,14 +59,11 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         if self.parameters["low_bval"] > 100:
             cprint(
                 f"The low_bval parameter is {low_bval}: it should be close to zero.",
-                lvl="warning"
+                lvl="warning",
             )
 
-        if "use_cuda" not in self.parameters.keys():
-            self.parameters["use_cuda"] = False
-
-        if self.parameters["initrand"] not in self.parameters.keys():
-            self.parameters["initrand"] = None
+        self.parameters.setdefault("use_cuda", False)
+        self.parameters.setdefault("initrand", False)
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -305,7 +303,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         eddy_fsl = eddy_fsl_pipeline(
             low_bval=self.parameters["low_bval"],
             use_cuda=self.parameters["use_cuda"],
-            seed_fsl_eddy=self.parameters["initrand"],
+            initrand=self.parameters["initrand"],
         )
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(name="SusceptibilityDistortionCorrection")
