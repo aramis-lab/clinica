@@ -298,7 +298,6 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             get_grad_fsl,
             init_input_node,
             print_end_pipeline,
-            remove_filename_extension,
         )
         from .dwi_preprocessing_using_phasediff_fmap_workflows import (
             prepare_phasediff_fmap,
@@ -425,16 +424,6 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         smoothing = npe.Node(interface=fsl.maths.IsotropicSmooth(), name="2f-Smoothing")
         smoothing.inputs.sigma = 4.0
 
-        # Remove ".nii.gz" from fieldmap filename for eddy --field
-        rm_extension = npe.Node(
-            interface=nutil.Function(
-                input_names=["in_file"],
-                output_names=["file_without_extension"],
-                function=remove_filename_extension,
-            ),
-            name="2h-RemoveFNameExtension",
-        )
-
         # Step 3: Run FSL eddy
         # ====================
         eddy = pre_eddy.clone("3-Eddy")
@@ -532,8 +521,6 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                 (mask_ref_b0, fmap2b0, [("out_file", "reference")]),
                 # # Smooth the registered (calibrated) fmap
                 (fmap2b0, smoothing, [("out_file", "in_file")]),
-                # Remove ".nii.gz" from fieldmap filename for eddy --field
-                (smoothing, rm_extension, [("out_file", "in_file")]),
 
                 # Step 3: Run FSL eddy
                 # ====================
@@ -543,7 +530,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                                    ("image_id", "out_base")]),
                 (gen_acq_txt, eddy, [("out_acq", "in_acqp")]),
                 (gen_index_txt, eddy, [("out_index", "in_index")]),
-                (rm_extension, eddy, [("file_without_extension", "field")]),
+                (smoothing, eddy, [("out_file", "field")]),
                 (pre_mask_b0, eddy, [("out_file", "in_mask")]),
 
                 # Step 4: Bias correction

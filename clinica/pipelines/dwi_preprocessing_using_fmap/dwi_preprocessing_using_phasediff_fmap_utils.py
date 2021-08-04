@@ -248,15 +248,3 @@ def resample_fmap_to_b0(in_fmap, in_b0, out_file=None):
     nibabel.nifti1.save(resampled_fmap, out_resampled_fmap)
 
     return out_resampled_fmap
-
-
-def remove_filename_extension(in_file):
-    """Remove extension from `in_file`. This is needed for FSL eddy --field option."""
-    import os
-
-    from nipype.utils.filemanip import split_filename
-
-    path, source_file_dwi, _ = split_filename(in_file)
-    file_without_extension = os.path.join(path, source_file_dwi)
-
-    return file_without_extension
