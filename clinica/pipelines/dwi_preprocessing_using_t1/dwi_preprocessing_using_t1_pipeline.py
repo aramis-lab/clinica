@@ -367,7 +367,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 (eddy_fsl, sdc, [("outputnode.out_corrected", "inputnode.DWI")]),
                 (eddy_fsl, sdc, [("outputnode.out_rotated_bvecs", "inputnode.bvec")]),
                 # Bias correction
-                (init_node, bias, [("bval", "in_bval")]),
+                (prepare_b0, bias, [("out_updated_bval", "in_bval")]),
                 (sdc, bias, [("outputnode.DWIs_epicorrected", "in_file"),
                              ("outputnode.out_bvec", "in_bvec")]),
                 # Compute average b0 on corrected dataset (for brain mask extraction)
