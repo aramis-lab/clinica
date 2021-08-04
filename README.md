@@ -65,6 +65,7 @@ BIDS, namely:
 - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/AIBL2BIDS/)
 - [NIFD: Neuroimaging in Frontotemporal Dementia](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/NIFD2BIDS/)
 - [OASIS: Open Access Series of Imaging Studies](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/OASIS2BIDS/)
+- [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/OASIS3TOBIDS/)
 
 Clinica can process any BIDS-compliant dataset with a set of complex processing
 pipelines involving different software packages for the analysis of
