@@ -48,7 +48,7 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
             ".csv"
         ):
             name_ida = filename
-    if name_ida is None:
+    if not name_ida:
         name_ida = "idaSearch_all.csv"
 
     path_idaSearch = os.path.join(path_to_clinical, name_ida)
