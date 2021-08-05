@@ -44,7 +44,6 @@ def test_run_DLPrepareData(cmdopt):
     roi_params = {
         "extract_method": "roi",
         "roi_list": ["rightHippocampusBox", "leftHippocampusBox"],
-        # "roi_uncrop_output": False,
         "use_uncropped_image": True,
     }
 
