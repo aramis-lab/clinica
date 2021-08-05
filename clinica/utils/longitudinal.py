@@ -1,7 +1,7 @@
 # coding: utf8
-
-
 """This module contains utilities for longitudinal pipelines. See CAPS specifications for details about long ID."""
+
+from typing import Optional
 
 
 def get_long_id(list_session_id):
@@ -56,7 +56,7 @@ def get_participants_long_id(list_participant_id, list_session_id):
     return list_long_id
 
 
-def save_long_id(list_session_id, output_dir, file_name=None):
+def save_long_id(list_session_id, output_dir, file_name: Optional[str] = None):
     """Save long ID to `file_name`."""
     import os
 
@@ -64,8 +64,7 @@ def save_long_id(list_session_id, output_dir, file_name=None):
         os.makedirs(output_dir)
 
     long_id = get_long_id(list_session_id)
-    if file_name is None:
-        file_name = long_id + "_sessions.tsv"
+    file_name = file_name or f"{long_id}_sessions.tsv"
     sessions_tsv = open(os.path.join(output_dir, file_name), "w")
     sessions_tsv.write("session_id\n")
 

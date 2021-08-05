@@ -5,8 +5,10 @@
 Currently, it contains one function to generate TSV file containing mean map based on a parcellation.
 """
 
+from typing import Optional
 
-def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
+
+def statistics_on_atlas(in_normalized_map, in_atlas, out_file: Optional[str] = None):
     """Compute statistics of a map on an atlas.
 
     Given an atlas image with a set of ROIs, this function computes the mean of
@@ -35,7 +37,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     if not isinstance(in_atlas, AtlasAbstract):
         raise Exception("Atlas element must be an AtlasAbstract type")
 
-    if out_file is None:
+    if not out_file:
         fname, ext = op.splitext(op.basename(in_normalized_map))
         if ext == ".gz":
             fname, ext2 = op.splitext(fname)
