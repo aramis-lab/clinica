@@ -62,12 +62,12 @@ def cli(
     from .spatial_svm_pipeline import SpatialSVM
 
     if orig_input_data_ml == "pet-volume":
-        if acq_label is None:
+        if not acq_label:
             raise ClinicaException(
                 "You selected pet-volume pipeline without setting --acq_label flag. "
                 "Clinica will now exit."
             )
-        if suvr_reference_region is None:
+        if not suvr_reference_region:
             raise ClinicaException(
                 "You selected pet-volume pipeline without setting --suvr_reference_region flag. "
                 "Clinica will now exit."
