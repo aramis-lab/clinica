@@ -73,7 +73,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 FILE_TYPE = T1W_LINEAR_CROPPED
         if self.parameters.get("modality") == "t1-extensive":
             FILE_TYPE = T1W_EXTENSIVE
-            self.parameters["use_uncropped_image"] = True
+            self.parameters["use_uncropped_image"] = False
         if self.parameters.get("modality") == "pet-linear":
             FILE_TYPE = pet_linear_nii(
                 self.parameters.get("acq_label"),
@@ -85,7 +85,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 "pattern": f"*{self.parameters.get('custom_suffix')}",
                 "description": "Custom suffix",
             }
-            self.parameters["use_uncropped_image"] = True
+            self.parameters["use_uncropped_image"] = False
 
         # Input file:
         try:
