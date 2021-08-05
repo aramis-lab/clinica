@@ -31,10 +31,9 @@ def cli(
         convert_clinical_data,
         convert_images,
     )
-    from clinica.utils.check_dependency import check_dcm2niix, check_freesurfer
+    from clinica.utils.check_dependency import check_dcm2niix
 
     check_dcm2niix()
-    check_freesurfer()
 
     makedirs(bids_directory, exist_ok=True)
 

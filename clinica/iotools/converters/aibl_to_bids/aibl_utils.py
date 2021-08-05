@@ -224,32 +224,6 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
     nifti_file = os.path.join(output_path, output_filename + ".nii.gz")
 
     if not exists(nifti_file):
-        # Use mri_convert from freesurfer as fallback
-        dicom_image = listdir_nohidden(image_path)
-        dicom_image = [dcm for dcm in dicom_image if dcm.endswith(".dcm")]
-        try:
-            dicom_image = os.path.join(image_path, dicom_image[0])
-        except IndexError:
-            cprint(
-                msg=f"DICOM files not found in the following directory: {image_path}",
-                lvl="warning",
-            )
-
-        # it requires the installation of Freesurfer (checked at the beginning)
-        command = "mri_convert " + dicom_image + " " + nifti_file
-        if exists(os.path.expandvars("$FREESURFER_HOME/bin/mri_convert")):
-            subprocess.run(
-                command,
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        else:
-            cprint(
-                f"mri_convert (from FreeSurfer) not detected. {nifti_file} not created..."
-            )
-
-    if not exists(nifti_file):
         cprint(nifti_file + " should have been created but this did not happen")
     return nifti_file
 
