@@ -96,7 +96,7 @@ class CAPSInput(base.MLInput):
         if self._kernel is not None and not recompute_if_exists:
             return self._kernel
 
-        if self._x is None:
+        if not self._x:
             self.get_x()
 
         cprint("Computing kernel ...")
@@ -227,7 +227,7 @@ class CAPSVoxelBasedInput(CAPSInput):
 
     def save_weights_as_nifti(self, weights, output_dir):
 
-        if self._images is None:
+        if not self._images:
             self.get_images()
 
         output_filename = path.join(output_dir, "weights.nii.gz")
@@ -441,7 +441,7 @@ class CAPSVertexBasedInput(CAPSInput):
         import nibabel as nib
         import numpy as np
 
-        if self._images is None:
+        if not self._images:
             self.get_images()
 
         sample = nib.load(self._images[0][0])
@@ -643,7 +643,7 @@ class TsvInput(base.MLInput):
         if self._kernel is not None and not recompute_if_exists:
             return self._kernel
 
-        if self._x is None:
+        if not self._x:
             self.get_x()
 
         cprint("Computing kernel ...")
