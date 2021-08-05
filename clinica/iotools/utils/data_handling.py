@@ -191,7 +191,7 @@ def create_merge_file(
         if not pipelines:
             for pipeline_name, pipeline_fn in pipeline_options.items():
                 merged_df, summary_df = pipeline_fn(caps_dir, merged_df, **kwargs)
-                if summary_df:
+                if summary_df and not summary_df.empty:
                     merged_summary_df = pd.concat([merged_summary_df, summary_df])
 
                 if not summary_df or len(summary_df) == 0:
