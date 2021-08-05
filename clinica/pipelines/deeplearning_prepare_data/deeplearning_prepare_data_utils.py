@@ -339,9 +339,9 @@ def find_mask_path(
     from glob import glob
     from os import path
 
+    # Check that pattern begins and ends with _ to avoid mixing keys
     mask_pattern = mask_pattern or ""
 
-    # Check that pattern begins and ends with _ to avoid mixing keys
     if mask_pattern:
         if not mask_pattern.endswith("_"):
             mask_pattern += "_"
