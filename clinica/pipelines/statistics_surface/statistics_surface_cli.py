@@ -124,12 +124,12 @@ def cli(
 
     # PET-Surface pipeline
     if orig_input_data == "pet-surface":
-        if acq_label is None:
+        if not acq_label:
             raise ClinicaException(
                 "You selected pet-surface pipeline without setting --acq_label flag. "
                 "Clinica will now exit."
             )
-        if suvr_reference_region is None:
+        if not suvr_reference_region:
             raise ClinicaException(
                 "You selected pet-surface pipeline without setting --suvr_reference_region flag. "
                 "Clinica will now exit."
@@ -144,7 +144,7 @@ def cli(
         custom_file = get_pet_surface_custom_file(acq_label, suvr_reference_region)
         measure_label = acq_label
     else:
-        if (custom_file is None) or (measure_label is None):
+        if not all([custom_file, measure_label]):
             raise ClinicaException(
                 "You must set --measure_label and --custom_file flags."
             )
