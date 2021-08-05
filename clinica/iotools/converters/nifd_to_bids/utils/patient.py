@@ -194,7 +194,7 @@ class Patient(object):
                                             f"Warning : {str(conflit)} not in expected conflicts, files will not be converted [Subject ID: {pat}]"
                                         )
                                         select = None
-                                    if select is None:
+                                    if not select:
                                         ordered_bids[ses][dType][highest_priority][
                                             name
                                         ] = []

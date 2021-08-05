@@ -49,18 +49,18 @@ def get_containers(subjects, sessions):
     ]
 
 
-def get_caps_filenames(dwi_file):
+def get_caps_filenames(dwi_file: str):
 
     import re
 
-    m = re.search(r'\/(sub-[a-zA-Z0-9]+_ses-[a-zA-Z0-9]+.*)_preproc', dwi_file)
-    if m is None:
-        raise ValueError('Input filename is not in a CAPS compliant format.')
+    m = re.search(r"/(sub-[a-zA-Z0-9]+_ses-[a-zA-Z0-9]+.*)_preproc", dwi_file)
+    if not m:
+        raise ValueError(f"Input filename {dwi_file} is not in a CAPS compliant format.")
     source_file_caps = m.group(1)
 
-    m = re.search(r'\/(sub-[a-zA-Z0-9]+_ses-[a-zA-Z0-9]+.*)_space-[a-zA-Z0-9]+_preproc', dwi_file)
-    if m is None:
-        raise ValueError('Input filename is not in a CAPS compliant format.')
+    m = re.search(r"/(sub-[a-zA-Z0-9]+_ses-[a-zA-Z0-9]+.*)_space-[a-zA-Z0-9]+_preproc", dwi_file)
+    if not m:
+        raise ValueError(f"Input filename {dwi_file} is not in a CAPS compliant format.")
     source_file_bids = m.group(1)
 
     response = source_file_caps + '_model-CSD_responseFunction.txt'
@@ -76,7 +76,7 @@ def get_caps_filenames(dwi_file):
     return response, fod, tracts, nodes, connectomes
 
 
-def print_begin_pipeline(in_bids_or_caps_file):
+def print_begin_pipeline(in_bids_or_caps_file: str) -> None:
     """
     """
     import re
@@ -85,14 +85,15 @@ def print_begin_pipeline(in_bids_or_caps_file):
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
                   in_bids_or_caps_file)
-    if m is None:
+    if not m:
         raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.')
+            f"Input filename {in_bids_or_caps_file} is not in a BIDS or CAPS compliant format."
+        )
 
     cprint(f"Running pipeline for {m.group(0)}")
 
 
-def print_end_pipeline(in_bids_or_caps_file, final_file):
+def print_end_pipeline(in_bids_or_caps_file: str, final_file: str) -> None:
     """
     """
     import re
@@ -101,7 +102,9 @@ def print_end_pipeline(in_bids_or_caps_file, final_file):
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
                   in_bids_or_caps_file)
-    if m is None:
-        raise ValueError("Input filename is not in a BIDS or CAPS compliant format.")
+    if not m:
+        raise ValueError(
+            f"Input filename {in_bids_or_caps_file} is not in a BIDS or CAPS compliant format."
+        )
 
     cprint(f"...{m.group(0)} has completed.")

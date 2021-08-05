@@ -36,7 +36,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             self.parameters["save_warped_modulated"] = False
 
         # Get Tissue Probability Map from SPM
-        if self.parameters["tissue_probability_maps"] is None:
+        if not self.parameters["tissue_probability_maps"]:
             self.parameters["tissue_probability_maps"] = get_tpm()
 
     def get_input_fields(self):

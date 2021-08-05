@@ -1,4 +1,5 @@
 # coding: utf8
+from typing import List, Optional
 
 
 def extract_slices(input_tensor, slice_direction=0, slice_mode="single"):
@@ -305,13 +306,18 @@ def save_as_pt(input_img):
 # ROI extraction utils
 
 
-def check_mask_list(masks_location, roi_list, mask_pattern, cropping):
+def check_mask_list(
+    masks_location: str,
+    roi_list: List[str],
+    mask_pattern: Optional[str] = None,
+    cropping: Optional[bool] = None,
+):
     import nibabel as nib
     import numpy as np
 
     for roi in roi_list:
         roi_path, desc = find_mask_path(masks_location, roi, mask_pattern, cropping)
-        if roi_path is None:
+        if not roi_path:
             raise ValueError(
                 f"The ROI '{roi}' does not correspond to a mask in the CAPS directory. {desc}"
             )
@@ -323,15 +329,18 @@ def check_mask_list(masks_location, roi_list, mask_pattern, cropping):
             )
 
 
-def find_mask_path(masks_location, roi, mask_pattern, cropping):
+def find_mask_path(
+    masks_location: str,
+    roi: str,
+    mask_pattern: str = "",
+    cropping: Optional[bool] = None,
+):
     """Finds masks corresponding to the pattern asked and containing the adequate cropping description"""
     from glob import glob
     from os import path
 
     # Check that pattern begins and ends with _ to avoid mixing keys
-    if mask_pattern is None:
-        mask_pattern = ""
-    elif len(mask_pattern) != 0:
+    if mask_pattern:
         if not mask_pattern.endswith("_"):
             mask_pattern += "_"
         if not mask_pattern[0] == "_":

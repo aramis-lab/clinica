@@ -93,9 +93,9 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
             for atlas_path in atlas_paths:
                 atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
                 if path.exists(atlas_path) and (
-                    freesurfer_atlas_selection is None
+                    not freesurfer_atlas_selection
                     or (
-                        freesurfer_atlas_selection is not None
+                        freesurfer_atlas_selection
                         and atlas_name in freesurfer_atlas_selection
                     )
                 ):

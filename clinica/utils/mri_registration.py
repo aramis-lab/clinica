@@ -1,12 +1,13 @@
 # coding: utf8
-
-
 """This module contains functions used for the registration aspects."""
 
 
 def convert_flirt_transformation_to_mrtrix_transformation(
-    in_source_image, in_reference_image, in_flirt_matrix, name_output_matrix=None
-):
+    in_source_image: str,
+    in_reference_image: str,
+    in_flirt_matrix: str,
+    name_output_matrix: str = "mrtrix_matrix.mat",
+) -> str:
     """Convert flirt matrix to mrtrix matrix.
 
     This function converts a transformation matrix produced by FSL's flirt
@@ -20,8 +21,8 @@ def convert_flirt_transformation_to_mrtrix_transformation(
             FSL flirt with the -ref flag.
         in_flirt_matrix (str): File containing the transformation matrix
             obtained by FSL flirt.
-        name_output_matrix (Optional[str]): Name of the output matrix
-            (default=deformed_image.nii.gz).
+        name_output_matrix (str): Name of the output matrix
+            (default="mrtrix_matrix.mat").
 
     Returns:
         out_mrtrix_matrix (str): Transformation matrix in MRtrix format.
@@ -36,10 +37,7 @@ def convert_flirt_transformation_to_mrtrix_transformation(
     assert os.path.isfile(in_reference_image)
     assert os.path.isfile(in_flirt_matrix)
 
-    if name_output_matrix is None:
-        out_mrtrix_matrix = os.path.abspath("mrtrix_matrix.mat")
-    else:
-        out_mrtrix_matrix = os.path.abspath(name_output_matrix)
+    out_mrtrix_matrix = os.path.abspath(name_output_matrix)
 
     cmd = f"transformconvert {in_flirt_matrix} {in_source_image} {in_reference_image} flirt_import {out_mrtrix_matrix}"
     os.system(cmd)
@@ -48,11 +46,11 @@ def convert_flirt_transformation_to_mrtrix_transformation(
 
 
 def apply_ants_registration_syn_quick_transformation(
-    in_image,
-    in_reference_image,
-    in_affine_transformation,
-    in_bspline_transformation,
-    name_output_image=None,
+    in_image: str,
+    in_reference_image: str,
+    in_affine_transformation: str,
+    in_bspline_transformation: str,
+    name_output_image: str = "deformed_image.nii.gz",
 ):
     """Apply a transformation obtained with antsRegistrationSyNQuick.sh.
 
@@ -69,7 +67,7 @@ def apply_ants_registration_syn_quick_transformation(
         in_bspline_transformation (str): File containing the transformation
             matrix obtained by antsRegistrationSyNQuick (expected file:
             [Prefix]1Warp.nii.gz).
-        name_output_image (Optional[str]): Name of the output image
+        name_output_image (str): Name of the output image
             (default=deformed_image.nii.gz).
 
     Returns:
@@ -87,10 +85,7 @@ def apply_ants_registration_syn_quick_transformation(
     assert os.path.isfile(in_affine_transformation)
     assert os.path.isfile(in_bspline_transformation)
 
-    if name_output_image is None:
-        out_deformed_image = os.path.abspath("deformed_image.nii.gz")
-    else:
-        out_deformed_image = os.path.abspath(name_output_image)
+    out_deformed_image = os.path.abspath(name_output_image)
 
     cmd = (
         f"antsApplyTransforms -d 3 -e 0 -i {in_image} -o {out_deformed_image} "
@@ -102,7 +97,9 @@ def apply_ants_registration_syn_quick_transformation(
     return out_deformed_image
 
 
-def ants_registration_syn_quick(fix_image, moving_image, prefix_output=None):
+def ants_registration_syn_quick(
+    fix_image, moving_image, prefix_output: str = "SyN_Quick"
+):
     """Small wrapper for antsRegistrationSyNQuick.sh.
 
     This function calls antsRegistrationSyNQuick.sh in order to register
@@ -123,9 +120,6 @@ def ants_registration_syn_quick(fix_image, moving_image, prefix_output=None):
     from clinica.utils.check_dependency import check_ants
 
     check_ants()
-
-    if prefix_output is None:
-        prefix_output = "SyN_Quick"
 
     image_warped = os.path.abspath(prefix_output + "Warped.nii.gz")
     affine_matrix = os.path.abspath(prefix_output + "0GenericAffine.mat")

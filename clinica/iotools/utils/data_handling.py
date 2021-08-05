@@ -191,10 +191,10 @@ def create_merge_file(
         if not pipelines:
             for pipeline_name, pipeline_fn in pipeline_options.items():
                 merged_df, summary_df = pipeline_fn(caps_dir, merged_df, **kwargs)
-                if summary_df is not None:
+                if summary_df and not summary_df.empty:
                     merged_summary_df = pd.concat([merged_summary_df, summary_df])
 
-                if summary_df is None or len(summary_df) == 0:
+                if not summary_df or len(summary_df) == 0:
                     cprint(
                         f"{pipeline_name} outputs were not found in the CAPS folder."
                     )
@@ -671,7 +671,7 @@ def create_subs_sess_list(
 
     os.makedirs(output_dir, exist_ok=True)
 
-    if file_name is None:
+    if not file_name:
         file_name = "subjects_sessions_list.tsv"
     subjs_sess_tsv = open(path.join(output_dir, file_name), "w")
     subjs_sess_tsv.write("participant_id" + "\t" + "session_id" + "\n")

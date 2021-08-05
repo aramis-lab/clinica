@@ -43,7 +43,7 @@ class CmdParser:
     def set_content(self):
         self._args._positionals.title = "Mandatory arguments"
         self._args._optionals.title = "Optional arguments"
-        if self._description is None:
+        if not self._description:
             self._description = self._name
             self._args.description = (
                 "If you are not familiar with Clinica, see:\n"
@@ -154,7 +154,7 @@ class CmdParser:
 
     @staticmethod
     def absolute_path(arg):
-        if arg is None:
+        if not arg:
             return None
         elif arg[:1] == "~":
             return expanduser(arg)
