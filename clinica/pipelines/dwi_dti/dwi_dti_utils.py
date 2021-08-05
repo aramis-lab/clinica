@@ -1,7 +1,8 @@
 # coding: utf8
+from typing import Optional
 
 
-def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
+def statistics_on_atlases(in_registered_map: str, name_map: str, prefix_file: Optional[str] = None):
     """Computes a list of statistics files for each atlas.
 
     Args:
@@ -32,15 +33,15 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
         if not isinstance(atlas, AtlasAbstract):
             raise TypeError("Atlas element must be an AtlasAbstract type")
 
-        if prefix_file is None:
-            _, base, _ = split_filename(in_registered_map)
+        if prefix_file:
             filename = (
-                f"{base}_space-{atlas.get_name_atlas()}"
+                f"{prefix_file}_space-{atlas.get_name_atlas()}"
                 f"_res-{atlas.get_spatial_resolution()}_map-{name_map}_statistics.tsv"
             )
         else:
+            _, base, _ = split_filename(in_registered_map)
             filename = (
-                f"{prefix_file}_space-{atlas.get_name_atlas()}"
+                f"{base}_space-{atlas.get_name_atlas()}"
                 f"_res-{atlas.get_spatial_resolution()}_map-{name_map}_statistics.tsv"
             )
 
