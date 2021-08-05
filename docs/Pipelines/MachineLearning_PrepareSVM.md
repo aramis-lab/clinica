@@ -1,6 +1,6 @@
 # `machinelearning-prepare-spatial-svm` - Prepare input data for spatially regularized SVM
 
-This pipeline allows the preparation of T1-weighted MRI and PET data to perform classification with a support vector machine (SVM) with spatial and anatomical regularization [[Cuingnet et al, 2013](https://doi.org/10.1109/TPAMI.2012.142)].
+This pipeline allows the preparation of T1-weighted MRI and PET data to perform classification with a support vector machine (SVM) with spatial and anatomical regularization [[Cuingnet et al., 2013](https://doi.org/10.1109/TPAMI.2012.142)].
 In this approach, the standard regularization of the SVM is replaced with a regularization that accounts for the spatial and anatomical structure of neuroimaging data.
 More specifically, it is regularized with respect to the tissue maps (gray matter, white matter, cerebrospinal fluid [CSF]).
 As a result, the decision function learned by the algorithm will be more regular and anatomically interpretable.
@@ -65,8 +65,8 @@ SVM regularization of PET data that accounts for the spatial and anatomical stru
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph"
-    The classification was performed using a spatially regularized support vector machine (SVM), as proposed in [[Cuingnet et al, 2013](https://doi.org/10.1109/TPAMI.2012.142)] and implemented in Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)].
+    The classification was performed using a spatially regularized support vector machine (SVM), as proposed in [[Cuingnet et al., 2013](https://doi.org/10.1109/TPAMI.2012.142)] and implemented in Clinica
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     In this approach, the standard regularization of the SVM is replaced with a regularization that accounts for the spatial and anatomical structure of neuroimaging data.
     More specifically, we used the Fisher regularization and tissue maps (gray matter, white matter and cerebrospinal fluid) as spatial priors.
     The decision function of the SVM is made regular with respect to these tissues and is thus easier to interpret in terms of anatomical regions.
@@ -84,7 +84,7 @@ SVM regularization of PET data that accounts for the spatial and anatomical stru
 ## Advanced usage
 
 The approach is general and can make use of different types of spatial and anatomical regularizations, introduce different types of spatial priors and varying amounts of regularization.
-These different aspects are described in details in [[Cuingnet et al, 2013](https://doi.org/10.1109/TPAMI.2012.142)].
+These different aspects are described in details in [[Cuingnet et al., 2013](https://doi.org/10.1109/TPAMI.2012.142)].
 Currently, this pipeline implements only one type of regularization (Fisher regularization), which is the most general one and should fit the vast majority of purposes.
 As for the type of spatial prior, the pipeline currently only uses tissue maps (gray matter, white matter and CSF).
 The decision function of the SVM is made regular with respect to these tissues.

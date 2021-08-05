@@ -68,7 +68,7 @@ overwrite_outputs = option(
 pvc_psf_tsv = option(
     "-psf",
     "--pvc_psf_tsv",
-    type=click.Path(exists=True, resolve_path=True),
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help=(
         "TSV file containing for each PET image its point spread function (PSF) measured "
         "in mm at x, y & z coordinates. Columns must contain: "
@@ -95,7 +95,7 @@ smooth = option(
 subjects_sessions_tsv = option(
     "-tsv",
     "--subjects_sessions_tsv",
-    type=click.Path(exists=True, resolve_path=True),
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="TSV file containing a list of subjects with their sessions.",
 )
 
@@ -136,7 +136,7 @@ tissue_classes = option(
 tissue_probability_maps = option(
     "-tpm",
     "--tissue_probability_maps",
-    type=click.Path(exists=True, resolve_path=True),
+    type=click.Path(exists=True, dir_okay=False, resolve_path=True),
     help="Tissue probability maps to use for segmentation.",
 )
 
@@ -166,7 +166,7 @@ voxel_size = option(
 working_directory = option(
     "-wd",
     "--working_directory",
-    type=click.Path(exists=True, writable=True, resolve_path=True),
+    type=click.Path(file_okay=False, writable=True, resolve_path=True),
     help="Temporary directory to store pipelines intermediate results.",
 )
 

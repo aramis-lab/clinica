@@ -123,7 +123,7 @@ TSV files summarizing the regional statistics on the labelled atlases (Desikan a
 
 !!! cite "Example of paragraph:"
     These results have been obtained using the `pet-surface-longitudinal` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Marcoux et al., 2018](https://doi.org/10.3389/fninf.2018.00094)].
     The subject’s PET image was registered to the T1-weighted MRI using spmregister
     ([FreeSurfer](https://surfer.nmr.mgh.harvard.edu/)) and intensity normalized using
@@ -135,7 +135,7 @@ TSV files summarizing the regional statistics on the labelled atlases (Desikan a
     [[Thomas et al., 2016](https://doi.org/10.1088/0031-9155/61/22/7975)]
     with regions obtained from gtmseg ([FreeSurfer](https://surfer.nmr.mgh.harvard.edu/)).
     Based on the subject’s white surface and cortical thickness estimated with the longitudinal pipeline of FreeSurfer
-    [[Fischl et al, 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)] (`t1-freesurfer-longitudinal`),
+    [[Fischl et al., 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.01.021)] (`t1-freesurfer-longitudinal`),
     seven surfaces for each hemisphere were computed,
     ranging from 35% to 65% of the gray matter thickness.
     The partial volume corrected data were projected onto these meshes and

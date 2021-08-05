@@ -106,7 +106,7 @@ Clinica is distributed under the terms of the MIT license given
 ## Citing Clinica
 
 For publications or communications using Clinica, please cite
-[[Routier et al](https://hal.inria.fr/hal-02308126/)]
+[[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)]
 as well as the references mentioned on the wiki page of the pipelines you used.
 Each page includes text to cite the software packages that are used by Clinica
 (for example, citing SPM when using the `t1-volume` pipeline).

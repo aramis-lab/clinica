@@ -73,15 +73,6 @@ def check_software_requirements(current_version, version_requirements, software_
         )
 
 
-def check_dcm2nii():
-    """Check dcm2nii software."""
-    if not is_binary_present("dcm2nii"):
-        raise ClinicaMissingDependencyError(
-            "Clinica could not find dcm2nii tool from MRIcron in your PATH environment: "
-            "this can be downloaded from https://www.nitrc.org/frs/?group_id=152 (choose the 2016 version)."
-        )
-
-
 def check_dcm2niix():
     """Check dcm2niix software."""
     if not is_binary_present("dcm2niix"):
@@ -157,7 +148,7 @@ def check_fsl(version_requirements=None):
 
 def check_mrtrix(version_requirements=None):
     """Check MRtrix software."""
-    check_environment_variable("MRTRIX_HOME", "MRtrix")
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
 
     list_binaries = ["transformconvert", "mrtransform", "dwi2response", "tckgen"]
     for binary in list_binaries:

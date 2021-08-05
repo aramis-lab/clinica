@@ -78,7 +78,7 @@ It was built on anatomical MRI of 24 healthy subjects from which 74 cortical ROI
 It is possible to run the [`t1-volume`](../T1_Volume) and [`pet-volume`](../PET_Volume) <!--and [`dwi-dti`](../DWI_DTI)--> pipelines using a custom parcellation.
 To do so:
 
-- Install Clinica following the [developer instructions](../../Installation/#install-clinica);
+- Install Clinica following the [developer instructions](../Installation/#install-clinica);
 
 - In the `<clinica>/clinica/utils/atlas.py` file, modify the following two elements:
     - The label of the volume atlas that will be stored in CAPS filename(s):
