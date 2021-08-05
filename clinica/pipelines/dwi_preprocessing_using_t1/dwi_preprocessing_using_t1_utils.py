@@ -40,12 +40,14 @@ def dwi_container_from_filename(bids_dwi_filename):
     """
     import re
     from os.path import join
+
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', bids_dwi_filename)
 
-    if m is None:
+    if not m:
         raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format. '
-            + 'It does not contain the subject and session information.')
+            f"Input filename {bids_dwi_filename} is not in a BIDS or CAPS compliant format. "
+            "It does not contain the subject and session information."
+        )
 
     subject = m.group(1)
     session = m.group(2)
@@ -111,7 +113,7 @@ def rename_into_caps(in_bids_dwi,
         out_caps_bvec.outputs.out_file, out_caps_brainmask.outputs.out_file
 
 
-def print_begin_pipeline(in_bids_or_caps_file):
+def print_begin_pipeline(in_bids_or_caps_file: str) -> None:
     """
     """
     import re
@@ -120,14 +122,15 @@ def print_begin_pipeline(in_bids_or_caps_file):
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
                   in_bids_or_caps_file)
-    if m is None:
+    if not m:
         raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.')
+            f"Input filename {in_bids_or_caps_file} is not in a BIDS or CAPS compliant format."
+        )
 
     cprint(f"Running pipeline for {m.group(0)}...")
 
 
-def print_end_pipeline(in_bids_or_caps_file, final_file):
+def print_end_pipeline(in_bids_or_caps_file: str, final_file: str) -> None:
     """
     """
     import re
@@ -136,8 +139,9 @@ def print_end_pipeline(in_bids_or_caps_file, final_file):
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
                   in_bids_or_caps_file)
-    if m is None:
+    if not m:
         raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.')
+            f"Input filename {in_bids_or_caps_file} is not in a BIDS or CAPS compliant format."
+        )
 
     cprint(f"...{m.group(0)} has completed")

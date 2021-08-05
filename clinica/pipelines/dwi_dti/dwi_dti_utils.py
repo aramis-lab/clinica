@@ -53,20 +53,20 @@ def statistics_on_atlases(in_registered_map: str, name_map: str, prefix_file: Op
     return atlas_statistics_list
 
 
-def extract_bids_identifier_from_caps_filename(caps_dwi_filename):
+def extract_bids_identifier_from_caps_filename(caps_dwi_filename: str) -> str:
     """Extract BIDS identifier from CAPS filename."""
     import re
 
     m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi", caps_dwi_filename)
 
-    if m is None:
-        raise ValueError("Input filename is not in a CAPS compliant format.")
+    if not m:
+        raise ValueError(f"Input filename {caps_dwi_filename} is not in a CAPS compliant format.")
     bids_identifier = m.group(0)
 
     return bids_identifier
 
 
-def get_caps_filenames(caps_dwi_filename):
+def get_caps_filenames(caps_dwi_filename: str):
     """Prepare some filenames with CAPS naming convention."""
     import re
 
@@ -74,8 +74,8 @@ def get_caps_filenames(caps_dwi_filename):
         r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi_space-[a-zA-Z0-9]+",
         caps_dwi_filename,
     )
-    if m is None:
-        raise ValueError("Input filename is not in a CAPS compliant format.")
+    if not m:
+        raise ValueError(f"Input filename {caps_dwi_filename} is not in a CAPS compliant format.")
 
     caps_prefix = m.group(0)
     bids_source = f"{m.group(1)}_{m.group(2)}_dwi"

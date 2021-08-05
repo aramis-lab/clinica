@@ -83,15 +83,15 @@ def save_participants_sessions(participant_ids, session_ids, out_folder, out_fil
         raise e
 
 
-def get_subject_id(bids_or_caps_file):
+def get_subject_id(bids_or_caps_file: str) -> str:
     """Extract "sub-<participant_id>_ses-<session_label>" from BIDS or CAPS file."""
     import re
 
     m = re.search(r"(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)", bids_or_caps_file)
 
-    if m is None:
+    if not m:
         raise ValueError(
-            "Input filename is not in a BIDS or CAPS compliant format."
+            f"Input filename {bids_or_caps_file} is not in a BIDS or CAPS compliant format."
             " It does not contain the subject and session information."
         )
 
