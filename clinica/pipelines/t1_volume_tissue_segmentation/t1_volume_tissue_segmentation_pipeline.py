@@ -26,7 +26,6 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
         self.parameters.setdefault("tissue_classes", [1, 2, 3])
         self.parameters.setdefault("dartel_tissues", [1, 2, 3])
-        self.parameters.setdefault("tissue_probability_maps", None)
         self.parameters.setdefault("save_warped_unmodulated", True)
         self.parameters.setdefault("save_warped_modulated", False)
         self.parameters.setdefault("tissue_probability_maps", get_tpm())
