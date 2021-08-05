@@ -26,8 +26,8 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
-    use_cuda: Optional[bool] = False,
-    initrand: Optional[int] = None,
+    use_cuda: bool = False,
+    initrand: bool = False,
 ) -> None:
     """Preprocessing of raw DWI datasets using a T1w image.
 
