@@ -17,14 +17,10 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         if "group_label" not in self.parameters.keys():
             raise KeyError("Missing compulsory group_label key in pipeline parameter.")
 
-        if "tissues" not in self.parameters:
-            self.parameters["tissues"] = [1, 2, 3]
-        if "voxel_size" not in self.parameters:
-            self.parameters["voxel_size"] = None
-        if "modulate" not in self.parameters:
-            self.parameters["modulate"] = True
-        if "smooth" not in self.parameters:
-            self.parameters["smooth"] = [8]
+        self.parameters.setdefault("tissues", [1, 2, 3])
+        self.parameters.setdefault("voxel_size", None)
+        self.parameters.setdefault("modulate", True)
+        self.parameters.setdefault("smooth", [8])
 
         check_group_label(self.parameters["group_label"])
 

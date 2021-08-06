@@ -123,7 +123,7 @@ class StatisticsVolume(cpe.Pipeline):
             )
 
         elif self.parameters["orig_input_data"] == "custom-pipeline":
-            if self.parameters["custom_file"] is None:
+            if not self.parameters["custom_file"]:
                 raise ClinicaException(
                     "Custom pipeline was selected but no 'custom_file' was specified."
                 )

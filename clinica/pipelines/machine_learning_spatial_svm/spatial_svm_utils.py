@@ -680,12 +680,12 @@ def operateur(x, ginv, detg):
     return y
 
 
-def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
+def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon: float = 1e-6):
     """
 
     :param g: metric tensor
     :param h: space step
-    :param epsilon: stop criterion
+    :param epsilon: stop criterion (default: 1e-6)
     :return: lamba = the largest eigenvalues
 
     """
@@ -696,8 +696,6 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # parameters
-    if epsilon is None:
-        epsilon = 1e-6
     erreur = 1 + epsilon
 
     # tensors
@@ -851,7 +849,9 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
     return x
 
 
-def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsilon):
+def heat_solver_tensor_3D_P1_grad_conj(
+    f, g, t_final, h, t_step, CL_value, epsilon: float = 0.1
+):
     """
     It solves the poisson's equation in 1D on the regular mesh (with mesh of size h)
     :param f: approximation of a funcion of L^(/Omega)
@@ -868,12 +868,8 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # initialisation
-    if h is None:
-        h = 1
-    if CL_value is None:
-        CL_value = np.zeros(f.shape)
-    if epsilon is None:
-        epsilon = 0.1
+    h = h or 1
+    CL_value = CL_value or np.zeros(f.shape)
 
     # rigidity matrix
     b_h = f[1:-1, 1:-1, 1:-1] * (h * h * h)
@@ -895,7 +891,9 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     return u
 
 
-def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsilon):
+def heat_solver_tensor_2D_P1_grad_conj(
+    f, g, t_final, h, t_step, CL_value, epsilon: float = 1e-4
+):
     """
     It solves the poisson's equation in 1D on the regular mesh (with mesh of size h)
     :param f: approximation of a funcion of L^(/Omega)
@@ -912,12 +910,8 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # intiialisation
-    if h is None:
-        h = 1
-    if CL_value is None:
-        CL_value = np.zeros(f.shape)
-    if epsilon is None:
-        epsilon = 1e-4
+    h = h or 1
+    CL_value = CL_value or np.zeros(f.shape)
 
     # rigidity matrix
     b_h = utils.tensor_scalar_product((h * h), f[1:-1, 1:-1])

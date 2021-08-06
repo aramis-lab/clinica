@@ -165,7 +165,7 @@ def process_ida(path_ida, path_out=None):
     """
     import os
 
-    if path_out is None:
+    if not path_out:
         path_out = path_ida.split("/")[:-1]
         path_out = "/" + os.path.join(*path_out)
 

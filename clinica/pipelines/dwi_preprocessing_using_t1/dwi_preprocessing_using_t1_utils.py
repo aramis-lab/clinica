@@ -4,6 +4,7 @@
 def rename_into_caps(in_bids_dwi, fname_dwi, fname_bval, fname_bvec, fname_brainmask):
     """Rename the outputs of the pipelines into CAPS.
 
+
     Args:
         in_bids_dwi (str): Input BIDS DWI to extract the <source_file>
         fname_dwi (str): Preprocessed DWI file.
@@ -75,6 +76,7 @@ def change_itk_transform_type(input_affine_file):
     an FSL FLIRT affine.mat into the affine.txt) it then modifies the 'Transform Type' of
     this affine.txt so that it is compatible with the antsApplyTransforms tool and
     produces a new affine file titled 'updated_affine.txt'.
+
     """
     import os
 
@@ -88,6 +90,7 @@ def change_itk_transform_type(input_affine_file):
                     new_file_lines.append(transform_line)
             else:
                 new_file_lines.append(line)
+
 
     updated_affine_file = os.path.join(os.getcwd(), "updated_affine.txt")
 
@@ -130,6 +133,7 @@ def rotate_bvecs(in_bvec, in_matrix):
         The input affine matrix transforms points in the destination image to their corresponding
         coordinates in the original image. Therefore, this matrix should be inverted first, as
         we want to know the target position of :math:`\\vec{r}`.
+
     """
     import os
 

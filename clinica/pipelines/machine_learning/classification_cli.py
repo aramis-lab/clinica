@@ -95,18 +95,18 @@ def cli(
     )
 
     if image_type == "PET":
-        if acq_label is None:
+        if not acq_label:
             raise ClinicaException(
                 "You selected PET inputs without setting --acq_label flag. "
                 "Clinica will now exit."
             )
-        if suvr_reference_region is None:
+        if not suvr_reference_region:
             raise ClinicaException(
                 "You selected PET inputs without setting --suvr_reference_region flag. "
                 "Clinica will now exit."
             )
 
-    if orig_input_data == "RegionBased" and atlas is None:
+    if orig_input_data == "RegionBased" and not atlas:
         raise ClinicaException(
             "You selected region-based inputs without setting --atlas flag. "
             "Clinica will now exit."

@@ -1,5 +1,5 @@
 # coding: utf8
-
+from typing import Optional
 
 """This module contains utilities for DWI handling."""
 
@@ -40,8 +40,10 @@ def count_b0s(in_bval, low_bval=5.0):
     return num_b0s
 
 
-def b0_average(in_file, out_file=None):
-    """Average the b0 volumes.
+
+def b0_average(in_file: str, out_file: Optional[str] = None):
+    """
+    Average the b0 volumes.
 
     Args:
         in_file (str): The b0 volumes already registered.
@@ -58,8 +60,9 @@ def b0_average(in_file, out_file=None):
     import nibabel as nb
     import numpy as np
 
-    if out_file is None:
-        fname, ext = os.path.splitext(os.path.basename(in_file))
+
+    if not out_file:
+        fname, ext = op.splitext(op.basename(in_file))
         if ext == ".gz":
             fname, ext2 = os.path.splitext(fname)
             ext = ext2 + ext
