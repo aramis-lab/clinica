@@ -1,7 +1,7 @@
 # coding: utf8
 
 
-def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl",):
+def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     """Use FSL eddy for head motion correction and eddy current distortion correction."""
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
