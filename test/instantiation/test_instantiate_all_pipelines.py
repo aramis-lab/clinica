@@ -137,7 +137,7 @@ def test_instantiate_DWIPreprocessingUsingT1():
     root = join(root, "data", "DWIPreprocessingUsingT1")
 
     parameters = {
-        "initrand": 1234,
+        "initrand": False,
         "low_bval": 5,
         "use_cuda": False,
     }
@@ -161,7 +161,7 @@ def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
     root = join(root, "data", "DWIPreprocessingUsingPhaseDiffFieldmap")
 
     parameters = {
-        "initrand": 1234,
+        "initrand": False,
         "low_bval": 5,
         "use_cuda": False,
     }
