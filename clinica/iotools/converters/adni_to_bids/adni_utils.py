@@ -148,7 +148,7 @@ def get_closest_visit(image, pending_timepoints, subject, visit_field, scandate_
             min_db = db
             min_visit = timepoint
 
-    if not min_visit:
+    if min_visit is None or min_visit.empty:
         cprint(
             f"No corresponding timepoint in ADNIMERGE for subject {subject} in visit {image[visit_field]}"
         )
