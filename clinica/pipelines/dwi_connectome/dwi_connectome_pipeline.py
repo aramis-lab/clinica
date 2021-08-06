@@ -20,7 +20,7 @@ class DwiConnectome(cpe.Pipeline):
         """Check pipeline parameters."""
         if self.parameters["n_tracks"] < 0:
             raise ValueError(
-                f"The n_tracks is equals to {self.parameters['n_tracks']}: it should be positive."
+                f"The n_tracks parameter ({self.parameters['n_tracks']}) should be positive."
             )
 
     def check_custom_dependencies(self):
