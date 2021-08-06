@@ -332,20 +332,20 @@ def check_mask_list(
 def find_mask_path(
     masks_location: str,
     roi: str,
-    mask_pattern: str = "",
+    mask_pattern: Optional[str] = None,
     cropping: Optional[bool] = None,
 ):
     """Finds masks corresponding to the pattern asked and containing the adequate cropping description"""
     from glob import glob
     from os import path
 
+    mask_pattern = mask_pattern or ""
+
     # Check that pattern begins and ends with _ to avoid mixing keys
-    if not mask_pattern:
-        mask_pattern = ""
-    elif len(mask_pattern) != 0:
+    if mask_pattern:
         if not mask_pattern.endswith("_"):
             mask_pattern += "_"
-        if not mask_pattern[0] == "_":
+        if not mask_pattern.startswith("_"):
             mask_pattern = "_" + mask_pattern
 
     candidates_pattern = path.join(
