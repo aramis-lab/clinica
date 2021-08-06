@@ -28,7 +28,11 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         self.parameters.setdefault("dartel_tissues", [1, 2, 3])
         self.parameters.setdefault("save_warped_unmodulated", True)
         self.parameters.setdefault("save_warped_modulated", False)
-        self.parameters.setdefault("tissue_probability_maps", get_tpm())
+        self.parameters.setdefault("tissue_probability_maps", None)
+
+        # Fetch the TPM in case none was passed explicitly.
+        if not self.parameters["tissue_probability_maps"]:
+            self.parameters["tissue_probability_maps"] = get_tpm()
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
