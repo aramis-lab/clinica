@@ -1,16 +1,16 @@
 <!-- markdownlint-disable MD046-->
-# `dwi-preprocessing-*` – Preprocessing of raw diffusion weighted imaging (DWI) datasets
+# `dwi-preprocessing-*` – Preprocessing of raw DWI datasets
 
-This pipeline corrects DWI datasets for motion, eddy current, magnetic susceptibility and bias field distortions.
+This pipeline corrects diffusion weighted imaging (DWI) datasets for motion, eddy current, magnetic susceptibility and bias field distortions.
 
 In particular, head-motion and eddy current corrections are performed with the `eddy` tool [[Andersson et al., 2016a](https://dx.doi.org/10.1016%2Fj.neuroimage.2015.10.019); [Andersson et al., 2016b](https://doi.org/10.1016/j.neuroimage.2016.06.058)] from **FSL** [[Jenkinson et al., 2011](https://doi.org/10.1016/j.neuroimage.2011.09.015)].
 Depending on the data available (see below), the magnetic susceptibility correction can also be performed with the `eddy` tool or as a separate step.
 Finally, bias field correction is performed using the N4 algorithm [[Tustison et al., 2010](https://dx.doi.org/10.1109/TMI.2010.2046908)] from **ANTs** [[Avants et al., 2014](https://doi.org/10.3389/fninf.2014.00044)] by
-computing a single multiplicative bias field from the corrected b0 image(s) implemented in **MRtrix3** [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)].
+computing a single multiplicative bias field from the corrected b0 image(s) as implemented in **MRtrix3** [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)].
 
 !!! note "Notes regarding the fieldmaps for the magnetic susceptibility correction"
     Depending on the type of extra acquisition available (see details in the 'Fieldmap data' section of the [BIDS specifications](https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#fieldmap-data)), different magnetic susceptibility corrections are performed.
-    Two approaches are currently implemented in Clinica:
+    Clinica supports two scenarios:
 
     - Phase difference image and at least one magnitude image (case 1 in the [BIDS specifications](https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#case-1-phase-difference-map-and-at-least-one-magnitude-image)).
 
@@ -25,7 +25,7 @@ computing a single multiplicative bias field from the corrected b0 image(s) impl
 <!--If you installed the docker image of Clinica, nothing is required.-->
 
 If you only installed the core of Clinica, the `dwi-preprocessing-*` pipeline needs the installation of **ANTs**, **FSL**, and **MRtrix3** on your computer.
-Extra installation of **Convert3D** will be needed for `dwi-preprocessing-using-t1` pipeline.
+Extra installation of **Convert3D** will be needed for the `dwi-preprocessing-using-t1` pipeline.
 You can find how to install these software packages on the [third-party](../../Third-party) page.
 
 ## Running the pipeline
@@ -56,7 +56,7 @@ If you want to run the pipeline on a subset of your BIDS dataset, you can use th
 !!! tip "Decreasing computation time"
     By default, the `eddy` tool of FSL uses OpenMP for parallel computing.
     CUDA can be used instead to speed up processing.
-    To do so, see instructions in [FSL `eddy` wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#The_eddy_executables) for installation and configuration of `eddy_cuda`.
+    To do so, see instructions on the [`eddy` page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#The_eddy_executables) of the FSL wiki for installation and configuration of `eddy_cuda`.
     To check that CUDA has been installed properly, type the `eddy_cuda` command.
     If this type of message appears:
 
@@ -100,7 +100,7 @@ brain extracted image based on the reference b0.
     [Wen et al., 2020](https://doi.org/10.1007/s12021-020-09469-5)].
     For each subject, all the b0 images were rigidly registered to the first b0 image and averaged to create the b0 reference.
     Then, the raw DWIs were corrected for eddy current induced distortions and subject movements by simultaneously modelling the effects of diffusion eddy currents and movements on the image.
-    This step was performed using the FSL `eddy` tool
+    This step was performed using the `eddy` tool
     [[Andersson et al., 2016a](https://dx.doi.org/10.1016%2Fj.neuroimage.2015.10.019)] from FSL [[Jenkinson et al., 2012](https://doi.org/10.1016/j.neuroimage.2011.09.015)] with the replace outliers (`--repol`) option [[Andersson et al., 2016b](https://doi.org/10.1016/j.neuroimage.2016.06.058)].
     To correct for susceptibility induced distortions, the T1w MRI was used as fieldmap data.
     The reference b0 image was first skull-stripped.
@@ -109,10 +109,10 @@ brain extracted image based on the reference b0.
     SyN is an inverse-consistent registration algorithm allowing EPI induced susceptibility artifact correction [[Leow et al., 2007](https://doi.org/10.1109/TMI.2007.892646)].
     The resulting transformation was applied to the DWIs to correct for the susceptibility induced distortions and the diffusion weighting directions were appropriately updated [[Leemans & Jones, 2009](https://doi.org/10.1002/mrm.21890)].
     Lastly, the DWI volumes were corrected for nonuniform intensity using the ANTs N4 bias field correction algorithm [[Tustison et al., 2010](https://doi.org/10.1109/TMI.2010.2046908)] and
-    implemented in MRtrix3 [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)] software.
+    implemented in MRtrix3 [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)].
     A single multiplicative bias field from the reference b0 image was estimated,
     as suggested in [[Jeurissen et al., 2014](https://doi.org/10.1016/j.neuroimage.2014.07.061)].
-    Average b0 image was finally computed on corrected DWI volume in order to extract brain mask with FSL `bet` [[Smith, 2002](https://doi.org/10.1002/hbm.10062)].
+    The average b0 image was finally computed from the corrected DWI volumes in order to extract a brain mask with FSL `bet` [[Smith, 2002](https://doi.org/10.1002/hbm.10062)].
 
 ??? cite "Example of paragraph for the `dwi-preprocessing-using-phasediff-fmap` pipeline"
     These results have been obtained using the `dwi-preprocessing-using-fmap` pipeline of Clinica
@@ -125,8 +125,8 @@ brain extracted image based on the reference b0.
     Lastly, the DWI volumes were corrected for nonuniform intensity using the ANTs N4 bias field correction algorithm [[Tustison et al., 2010](https://doi.org/10.1109/TMI.2010.2046908)].
     A single multiplicative bias field from the corrected reference b0 image was estimated,
     as suggested in [[Jeurissen et al., 2014](https://doi.org/10.1016/j.neuroimage.2014.07.061)] and
-    implemented in MRtrix3 [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)] software.
-    Average b0 image was finally computed on corrected DWI volume in order to extract brain mask with FSL `bet` [[Smith, 2002](https://doi.org/10.1002/hbm.10062)].
+    implemented in MRtrix3 [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)].
+    The average b0 image was finally computed from the corrected DWI volumes in order to extract a brain mask with FSL `bet` [[Smith, 2002](https://doi.org/10.1002/hbm.10062)].
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/BJV73LU7).
