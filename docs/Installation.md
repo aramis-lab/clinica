@@ -46,10 +46,10 @@ pip install clinica
 ```
 
 !!! info
-    Since Clinica `v0.3.5`, Conda installation is not proposed anymore (i.e.
+    Since Clinica `v0.3.5`, Conda installation is no longer available (i.e.
     `conda create --name clinicaEnv python=3.6 clinica -c Aramislab -c conda-forge`
     will only install Clinica `v0.3.4`).
-    Pip is now the only way to install latest versions of Clinica.
+    Pip is now the only way to install the latest version of Clinica.
 
 ## Installation of the third-party software packages
 
