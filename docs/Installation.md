@@ -59,6 +59,30 @@ Not all the dependencies are necessary to run Clinica.
 Please refer to [this section](../Third-party) to determine which third-party
 libraries you need to install.
 
+## Shell completion (optional)
+
+Shell completion for Clinica is available for Bash, Fish and Zsh.
+
+For Bash, add this to `~/.bashrc`:
+
+```shell
+eval "$(_CLINICA_COMPLETE=source_bash clinica)"
+```
+
+For Fish, add this to `~/.config/fish/completions/clinica.fish`:
+
+```shell
+eval (env _CLINICA_COMPLETE=source_fish clinica)
+```
+
+For Zsh, add this to `~/.zshrc`:
+
+```shell
+eval "$(_CLINICA_COMPLETE=source_zsh clinica)"
+```
+
+Finally, open a new shell to enable completion.
+
 ## Run the Clinica environment
 
 ### Activation of the Clinica environment
