@@ -1,309 +1,320 @@
-# coding: utf8
+from os import PathLike
+from typing import BinaryIO, Iterable, List, Optional, Tuple, Union
 
-from clinica.iotools.converters.nifd_to_bids.utils.conv_image_folders import (
-    dict_conversion,
-    get_all_med_name,
-)
+from pandas import DataFrame
 
 
-def break_path(path):
-    return path.split("/")
+def find_clinical_data(clinical_data_directory: PathLike) -> Optional[DataFrame]:
+    from pathlib import Path
+
+    from pandas import read_excel
+
+    dataframe = None
+    for path in Path(clinical_data_directory).rglob("*.xlsx"):
+        try:
+            dataframe = (
+                read_excel(path, index_col=[0, 4])
+                .rename(columns=lambda x: x.lower().replace(" ", "_"))
+                .rename_axis(index=lambda x: x.lower().replace(" ", "_"))
+                .convert_dtypes()
+                .sort_index()
+            )
+        except (ValueError, IndexError):
+            continue
+
+    return dataframe
 
 
-def filter(l_paths, source_dir, descriptors):
-    """From a list of paths, remove paths that do not lead to an image described by any of the descriptor in descriptors.
+def read_clinical_data(clinical_data_directory: PathLike) -> DataFrame:
+    from pandas import NA, CategoricalDtype
 
-    Args:
-        l_paths: list of paths
-        source_dir: path to the NIFD dataset
-        descriptors: list of descriptor instances
+    dataframe = find_clinical_data(clinical_data_directory)
 
-    Returns:
-        list of paths
-    """
-    medical_images = get_all_med_name(source_dir)
+    if dataframe is None:
+        raise FileNotFoundError("Clinical data not found")
 
-    equivalences = dict_conversion(medical_images, descriptors)
-    sol = []
-    for path in l_paths:
-        for elt in break_path(path):
-            if elt in equivalences:
-                sol.append(path)
-                break
-    return sol
-
-
-def csv_to_path(csv_line, source_dir):
-    import os
-
-    def change_format_date(date):
-        sol = ""
-        new_date = date.split("/")
-        if len(new_date[0]) != 2:
-            new_date[0] = "0" + new_date[0]
-        if len(new_date[1]) != 2:
-            new_date[1] = "0" + new_date[1]
-        sol = new_date[2] + "-" + new_date[0] + "-" + new_date[1]
-        return sol
-
-    split = csv_line.split("\t")
-    if split[10] != "Original" and split[9] == "MT1; GradWarp; N3m <- Sag 3D MP-RAGE":
-        split[9] = "MT1__GradWarp__N3m"
-    split[9] = split[9].replace(" ", "_")
-    split[9] = split[9].replace(":", "_")
-    split[9] = split[9].replace("(", "_")
-    split[9] = split[9].replace(")", "_")
-    split[9] = split[9].replace("/", "_")
-    split[9] = split[9].replace(
-        "MT1;_GradWarp;_N3m_<-_Sag_3D_MP-RAGE", "MT1__GradWarp__N3m"
+    # Compute participant and session IDs.
+    dataframe = dataframe.rename_axis(
+        index={"loni_id": "participant_id", "visit_number": "session_id"}
     )
-    folder = os.path.join(source_dir, split[0], split[9])
-
-    try:
-        subfold = [f.path.split("/")[-1] for f in os.scandir(folder) if f.is_dir()]
-    except Exception:
-        return None
-    date = change_format_date(split[5])
-
-    if (
-        split[0] == "1_S_0005"
-        and date == "2011-06-13"
-        and split[9] in ("NIFD_DTI_b=1000_2.7mm3", "dti_b=2000_64dir", "dti_b=0_scans")
-    ):
-        date = "2011-06-15"
-    if (
-        split[0] == "1_S_0084"
-        and date == "2012-02-13"
-        and split[9]
-        in (
-            "NIFD_DTI_b1000_2.7mm3",
-            "dti_WIP_b2000_64dir",
-            "DTI_64_2.2iso_full_ky_fov220",
-            "DTI_b=0_2.2iso_full_ky_-_10_acqs",
-            "dti_WIP_b0_scans_aah",
-        )
-    ):
-        date = "2012-02-15"
-    if (
-        split[0] == "1_S_0316"
-        and date == "2013-10-30"
-        and split[9]
-        in (
-            "NIFD_DTI_b1000_2.7mm3_511E",
-            "ep2d-advdiff-511E_b2000_64dir",
-            "ep2d-advdiff-511E_b0_scan",
-        )
-    ):
-        date = "2013-10-31"
-
-    val = [fold for fold in subfold if fold.startswith(date)]
-
-    if val == []:
-        return None
-    path_date = os.path.join(folder, val[0])
-    full_path = os.path.join(
-        path_date, [f.path for f in os.scandir(path_date) if f.is_dir()][0]
+    dataframe.index = dataframe.index.map(
+        lambda x: (f"sub-NIFD{x[0].replace('_', '')}", f"ses-M{(6 * (x[1] - 1)):02d}")
     )
-    return full_path
 
-
-def get_patients_source_files(source_dir, path_ida):
-    """Return a dictionary containing the paths of all Dicom files for a patient.
-
-    Args:
-        source_dir: path to the NIFD dataset
-        path_ida : path to the ida.tsv file
-
-    Returns:
-        patients_source_files[subject_ID] = [paths_to_all_medical_images_of_subject]
-    """
-    sol = dict()
-    fich = open(path_ida, "r")
-    fich.readline()
-    for line in fich.readlines():
-        patient_id = line.split("\t")[0]
-        if patient_id not in sol:
-            sol[patient_id] = []
-        path = csv_to_path(line, source_dir)
-        if path is not None:
-            sol[patient_id].append(path)
-    return sol
-
-
-def filter_patients_source_files(patients_files, source_dir, descriptors):
-    """
-    Iterates over a dictionary containing all source files for a patient,
-    returns the same dictionary with only path to files that could be converted.
-
-    Args:
-        patients_files: patients_source_files[subject_ID] = [paths_to_all_medical_images_of_subject]
-        source_dir: path to the NIFD dataset
-        descriptors: list of descriptor instances
-
-    Returns:
-        patients_source_files[subject_ID] = [paths_to_medical_images_described_by_at_least_one_descriptor]
-    """
-    for patient in patients_files:
-        patients_files[patient] = filter(
-            patients_files[patient], source_dir, descriptors
+    # Keep relevant columns and rename them.
+    dataframe = (
+        dataframe[["dx", "site", "education", "race", "cdr_box_score", "mmse_tot"]]
+        .rename(columns={"dx": "diagnosis", "cdr_box_score": "cdr", "mmse_tot": "mmse"})
+        .astype(
+            dtype={
+                "diagnosis": CategoricalDtype(
+                    ["BV", "CON", "L_SD", "PATIENT (OTHER)", "PNFA", "SV"]
+                ),
+                "site": CategoricalDtype(["UCSF", "MAYO", "MGH"]),
+                "education": "int",
+                "race": "int",
+                "cdr": "float",
+                "mmse": "float",
+            }
         )
+        .replace({"education": {99: NA}, "race": {50: NA, 99: NA}})
+    )
 
-    return patients_files
-
-
-def create_folder(path):
-    """If the provided path does not exist, the required folders are created."""
-    import os
-
-    try:
-        os.makedirs(path, exist_ok=True)
-    except Exception:
-        pass
+    return dataframe
 
 
-def extract_date(path):
-    """Extract the name of the date associated with the given path.
+def find_collection_data(imaging_data_directory: PathLike) -> Optional[DataFrame]:
+    from pathlib import Path
 
-    Args:
-        path: Path to a DICOM file
+    from pandas import read_csv
 
-    Returns:
-        Date
-    """
-    path = break_path(path)
-    for i in path:
-        if i.startswith("20"):
-            sol = i.split("_")[0]
-            return sol
+    dataframe = None
+    for path in Path(imaging_data_directory).rglob("*.csv"):
+        try:
+            dataframe = (
+                read_csv(
+                    path,
+                    index_col="Image Data ID",
+                    parse_dates=["Acq Date"],
+                )
+                .rename(columns=lambda x: x.lower().replace(" ", "_"))
+                .rename_axis(index=lambda x: x.lower().replace(" ", "_"))
+                .convert_dtypes()
+                .sort_index()
+            )
+        except (ValueError, IndexError):
+            continue
 
-
-def extract_name_med_img(path, equivalences):
-    """Extract the name of the medical image associated with the given path.
-
-    Args:
-        path: Path to a Dicom file
-        equivalences: dictionary, equivalences['medical_image_name'] = (Descriptor_instance, modalityLabel)
-
-    Returns:
-        Medical name
-    """
-    path = break_path(path)
-    for i in path:
-        if i in equivalences:
-            return i
+    return dataframe
 
 
-def print_patients_source_files(dict):
-    """Pretty printer for a nested dictionary such as patients_source_files.
+def find_imaging_data(imaging_data_directory: PathLike) -> Iterable[Tuple[str, str]]:
+    import re
+    from pathlib import Path
 
-    Args:
-        dict: Data structure of the form dict['subject_ID'] = [paths/to/dcm]
-    """
-    from clinica.utils.stream import cprint
+    pattern = re.compile(
+        r"NIFD_(?:\d_S_\d{4})_(?:\w+)_(?:\d{4}_\d{2}_\d{2})_(?:\d+)_(?:S\d+)_(I\d+)$"
+    )
 
-    for key in dict:
-        cprint(key)
-        for elt in dict[key]:
-            cprint("\t" + str(elt))
-
-
-def print_orderedBIDS(dict):
-    """Pretty printer for a nested dictionary such as ordered_bids, final_bids.
-
-    Args:
-        dict: Data structure of the form dict['session_id']['dataType']['Priority']['Final_name'] = [paths/to/dcm]
-    """
-    from clinica.utils.stream import cprint
-
-    for ses in dict:
-        cprint(ses)
-        for dType in dict[ses]:
-            cprint("\t" + str(dType))
-            for priority in dict[ses][dType]:
-                cprint("\t\t" + str(priority))
-                for name in dict[ses][dType][priority]:
-                    cprint("\t\t\t" + str(name))
-                    for path in dict[ses][dType][priority][name]:
-                        cprint("\t\t\t\t" + str(path))
+    for path in Path(imaging_data_directory).rglob("NIFD*"):
+        if path.is_dir():
+            # path = path.relative_to(imaging_data_directory)
+            match = pattern.search(path.name)
+            if match:
+                yield match.group(1), path
 
 
-def collect_conversion_tuples(final_bids, dest_dir, patient):
-    """Return a list of tuples that will be the input of the convert function.
+def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
+    from pandas import DataFrame
 
-    If final_bids[session][datatype][priority][name] contains a path, it is added to
-    tuple[0], tuple[1] contains the path where the Nifti will be located (follows the BIDS format).
+    imaging_data = DataFrame.from_records(
+        data=find_imaging_data(imaging_data_directory),
+        columns=["image_data_id", "source_dir"],
+        index="image_data_id",
+    ).convert_dtypes()
 
-    Args:
-        final_bids: A data structure of the form : final_bids[session][datatype][priority][name]
-        dest_dir: Home of the BIDS directory
-        patient: Instantiation of the Patient class
+    if imaging_data.empty:
+        raise FileNotFoundError("No imaging data found")
 
-    Returns:
-        A list of tuples [(path/to/dicom, path/to/nifti), ...]
-    """
-    import os
+    collection_data = find_collection_data(imaging_data_directory)
 
-    sol = []
-    for ses in final_bids:
-        for dType in final_bids[ses]:
-            for priority in final_bids[ses][dType]:
-                for name in final_bids[ses][dType][priority]:
-                    if final_bids[ses][dType][priority][name] != []:
-                        path_source = final_bids[ses][dType][priority][name][0]
-                        path_dest = os.path.join(
-                            dest_dir, patient.get_name(), ses, dType, name
-                        )
-                        sol.append((path_source, path_dest))
-    return sol
+    if collection_data is None:
+        raise FileNotFoundError("No collection data found")
+
+    return collection_data.join(imaging_data)
 
 
-def supress_stdout(func):
-    """Wrapper, makes a function non-verbose.
+def parse_mri_description(description: str) -> dict:
+    from pandas import NA
 
-    Args:
-        func: function to be silenced
-    """
-    import contextlib
-    import os
+    description = description.lower().replace("-", "")
 
-    def wrapper(*a, **ka):
-        with open(os.devnull, "w") as devnull:
-            with contextlib.redirect_stdout(devnull):
-                func(*a, **ka)
+    if "mprage" in description:
+        return {"datatype": "anat", "suffix": "T1w"}
+    elif "flair" in description:
+        return {"datatype": "anat", "suffix": "FLAIR"}
+    elif "t2" in description:
+        return {"datatype": "anat", "suffix": "T2w"}
+    elif "asl" in description:
+        return {"datatype": "anat", "suffix": "PDw"}
+    elif any([x in description for x in ["mt1", "gradwarp", "n3m"]]):
+        return {"datatype": "anat", "suffix": "T1w"}
+    else:
+        return NA
 
-    return wrapper
+
+def parse_pet_description(description: str) -> dict:
+    import re
+
+    from pandas import NA
+
+    match = re.search(r"3D:(\w+):(\w+)", description)
+
+    if match:
+        return {
+            "datatype": "pet",
+            "suffix": "pet",
+            "trc_label": "11CPIB" if "PIB" in match.group(1) else "18FFDG",
+            "rec_label": "IR" if "IR" in match.group(2) else "RP",
+        }
+    else:
+        return NA
 
 
-def convert_dcm_to_nii(single_tuple):
-    """[Summary].
+def parse_preprocessing(description: str) -> dict:
+    description = description.lower()
 
-    Args:
-        single_tuple: tuple where tuple[0] is the path to the data,
-            and tuple[1] the path to the coverted data
-    """
-    import os
+    return {
+        "gradwarp": any([x in description for x in ["gradwarp", "dis3d"]]),
+        "n3": "n3m" in description,
+    }
+
+
+def dataset_to_bids(
+    imaging_data: DataFrame,
+    clinical_data: Optional[DataFrame] = None,
+) -> Tuple[DataFrame, DataFrame, DataFrame]:
+    from pandas import Series, notna
+
+    # Parse preprocessing information from scan descriptions.
+    preprocessing = imaging_data.description.apply(parse_preprocessing).apply(Series)
+
+    # Parse BIDS entities from scan descriptions.
+    bids = imaging_data.apply(
+        lambda x: parse_pet_description(x.description)
+        if x.modality == "PET"
+        else parse_mri_description(x.description),
+        axis=1,
+    ).apply(Series)
+
+    # Compute quality metric for each scan:
+    # - MRI: Applied preprocessing (0: None, 1: GradWarp, 2: N3)
+    # - PET: Reconstruction method (0: Fourier, 1: Iterative)
+    quality = (
+        preprocessing.sum(axis=1)
+        + bids.rec_label.apply(lambda x: 1 if x == "IR" else 0)
+    ).rename("quality")
+
+    # Select one scan per BIDS modality based on quality metric.
+    subset = ["subject", "visit", "datatype", "suffix", "trc_label"]
+    scans = (
+        imaging_data.join(bids)
+        .join(quality)
+        .sort_values(by=subset + ["quality"])
+        .drop_duplicates(subset=subset, keep="last")
+        .drop(columns="quality")
+    )
+
+    # Compute the BIDS-compliant participant, session and scan IDs.
+    scans = scans.assign(
+        participant_id=lambda df: df.subject.apply(
+            lambda x: f"sub-NIFD{x.replace('_', '')}"
+        ),
+        session_id=lambda df: df.visit.apply(lambda x: f"ses-M{(6 * (x - 1)):02d}"),
+        filename=lambda df: df.apply(
+            lambda x: f"{x.participant_id}/{x.session_id}/{x.datatype}/"
+            f"{x.participant_id}_{x.session_id}"
+            f"{'_trc-'+x.trc_label if notna(x.trc_label) else ''}"
+            f"{'_rec-'+x.rec_label if notna(x.rec_label) else ''}"
+            f"_{x.suffix}.nii.gz",
+            axis=1,
+        ),
+    )
+
+    # Prepare subjects manifest.
+    subjects = (
+        scans[["participant_id", "session_id", "group", "sex", "age"]]
+        .sort_values(by=["participant_id", "session_id"])
+        .drop(columns="session_id")
+        .drop_duplicates(subset="participant_id")
+        .set_index(["participant_id"], verify_integrity=True)
+        .sort_index()
+    ).join(clinical_data[["diagnosis", "site", "education", "race"]])
+
+    # Prepare sessions manifest.
+    sessions = (
+        scans[["participant_id", "session_id", "acq_date", "age"]]
+        .rename(columns={"acq_date": "date"})
+        .drop_duplicates()
+        .set_index(["participant_id", "session_id"], verify_integrity=True)
+        .sort_index()
+    ).join(clinical_data[["cdr", "mmse"]])
+
+    # Prepare scans manifest.
+    scans = scans[["filename", "source_dir", "format"]].set_index(
+        "filename", verify_integrity=True
+    )
+
+    return subjects, sessions, scans
+
+
+def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
+    # Save dataframe as a BIDS-compliant TSV file.
+    dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
+
+
+def convert_dicom(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     import subprocess
+    from pathlib import Path
 
-    from clinica.iotools.bids_utils import run_dcm2niix
-    from clinica.utils.stream import cprint
+    from fsspec.implementations.local import LocalFileSystem
 
-    filename = os.path.basename(single_tuple[1])
-    path_dest = os.path.dirname(single_tuple[1])
-    create_folder(path_dest)
-    command = f"dcm2niix -b y -z y -o {path_dest} -f {filename} {single_tuple[0]}"
-    cprint(
-        msg=f'Converting {os.path.basename(filename).replace("_", " ")}', lvl="debug"
+    output_fmt = str(Path(bids_filename).name).replace(".nii.gz", "")
+    output_dir = str(Path(bids_filename).parent)
+
+    # Ensure output directory is empty.
+    fs = LocalFileSystem()
+    if fs.exists(output_dir):
+        fs.rm(output_dir, recursive=True)
+    fs.makedirs(output_dir)
+
+    # Run conversion with dcm2niix with anonymization and maximum compression.
+    subprocess.run(
+        f"dcm2niix -9 -b y -ba y -f {output_fmt} -o {output_dir} -z i {sourcedata_dir}",
+        shell=True,
     )
-    run_dcm2niix(command)
 
 
-def convert(list_tuples):
-    """Convert a list of tuples = [(path/to/dicom, path/to/nifti), ...].
+def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
+    from fsspec.implementations.local import LocalFileSystem
 
-    Args:
-        list_tuples: list of tuples, tuple[0] contains a path to a Dicom file, tuple[1] contains the path where the Nifti file needs to be created.
-    """
-    from multiprocessing import Pool, cpu_count
+    fs = LocalFileSystem(auto_mkdir=True)
+    fs.cp_file(fs.ls(sourcedata_dir)[0], bids_filename)
 
-    p = Pool(max(cpu_count() - 1, 1))
-    p.map(convert_dcm_to_nii, list_tuples)
+
+def write_bids(
+    to: PathLike,
+    participants: DataFrame,
+    sessions: DataFrame,
+    scans: DataFrame,
+) -> List[PathLike]:
+    from pathlib import Path
+
+    from fsspec.implementations.local import LocalFileSystem
+
+    to = Path(to)
+    fs = LocalFileSystem(auto_mkdir=True)
+
+    # Ensure BIDS hierarchy is written first.
+    with fs.transaction:
+        with fs.open(to / "participants.tsv", "wb") as participant_file:
+            write_to_tsv(participants, participant_file)
+
+        for participant_id, sessions_group in sessions.groupby("participant_id"):
+            sessions_group = sessions_group.droplevel("participant_id")
+            sessions_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
+            with fs.open(sessions_filepath, "wb") as sessions_file:
+                write_to_tsv(sessions_group, sessions_file)
+
+    # Perform import of imaging data next.
+    for filename, metadata in scans.iterrows():
+        if metadata.format == "DCM":
+            convert_dicom(
+                sourcedata_dir=metadata.source_dir, bids_filename=to / filename
+            )
+        else:
+            install_nifti(
+                sourcedata_dir=metadata.source_dir, bids_filename=to / filename
+            )
+
+    return scans.index.to_list()
