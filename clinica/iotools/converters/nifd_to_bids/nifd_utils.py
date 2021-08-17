@@ -229,7 +229,11 @@ def dataset_to_bids(
         .drop_duplicates(subset="participant_id")
         .set_index(["participant_id"], verify_integrity=True)
         .sort_index()
-    ).join(clinical_data[["diagnosis", "site", "education", "race"]])
+    ).join(
+        clinical_data.xs("ses-M00", level="session_id")[
+            ["diagnosis", "site", "education", "race"]
+        ]
+    )
 
     # Prepare sessions manifest.
     sessions = (
