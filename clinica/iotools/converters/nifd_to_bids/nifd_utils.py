@@ -60,6 +60,9 @@ def read_clinical_data(clinical_data_directory: PathLike) -> DataFrame:
         .replace({"education": {99: NA}, "race": {50: NA, 99: NA}})
     )
 
+    # Keep positive MMSE values only.
+    dataframe.mmse = dataframe.mmse.mask(dataframe.mmse < 0)
+
     return dataframe
 
 
