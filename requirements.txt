@@ -12,7 +12,6 @@ scikit-learn == 0.23
 nilearn >= 0.6.0
 colorlog >= 5
 xgboost
-xlrd >= 1.2.0, < 2.0.0
 scipy == 1.2.3
 matplotlib
 niflow-nipype1-workflows
