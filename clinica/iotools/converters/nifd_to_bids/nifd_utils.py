@@ -101,7 +101,6 @@ def find_imaging_data(imaging_data_directory: PathLike) -> Iterable[Tuple[str, s
 
     for path in Path(imaging_data_directory).rglob("NIFD*"):
         if path.is_dir():
-            # path = path.relative_to(imaging_data_directory)
             match = pattern.search(path.name)
             if match:
                 yield match.group(1), path
