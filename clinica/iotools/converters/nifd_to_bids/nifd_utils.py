@@ -285,7 +285,11 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     from fsspec.implementations.local import LocalFileSystem
 
     fs = LocalFileSystem(auto_mkdir=True)
-    fs.cp_file(fs.ls(sourcedata_dir)[0], bids_filename)
+    source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
+    target_file = fs.open(bids_filename, mode="wb", compression="gzip")
+
+    with source_file as sf, target_file as tf:
+        tf.write(sf.read())
 
 
 def write_bids(
