@@ -12,16 +12,20 @@ def cli(
     clinical_data_directory: str,
     bids_directory: str,
 ) -> None:
-    """OASIS-3 to BIDS converter.
+    """NIFD to BIDS converter.
 
-    Convert the imaging and clinical data of OASIS-3 (http://oasis-brains.org/), located in DATASET_DIRECTORY and
+    Convert the imaging and clinical data of NIFD (http://4rtni-ftldni.ini.usc.edu/), located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import Oasis3ToBids
+    from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import convert_images
+    from clinica.utils.check_dependency import check_dcm2niix
+    from clinica.utils.stream import cprint
 
-    oasis3_to_bids = Oasis3ToBids()
-    oasis3_to_bids.convert_images(dataset_directory, bids_directory)
-    oasis3_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+    check_dcm2niix()
+
+    convert_images(dataset_directory, bids_directory, clinical_data_directory)
+
+    cprint("Conversion to BIDS succeeded.")
 
 
 if __name__ == "__main__":
