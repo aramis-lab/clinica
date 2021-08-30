@@ -1200,8 +1200,8 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             # Check if conversion worked (output files exist)
             if not nifti_exists or not dwi_bvec_and_bval_exist:
                 cprint(
-                    "WARNING: Conversion with dcm2niix failed, trying with dcm2nii "
-                    f"for subject {subject} and session {session}"
+                    msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
+                    lvl="warning",
                 )
                 return nan
 
