@@ -1,5 +1,5 @@
 from os import PathLike
-from typing import BinaryIO, Dict, Iterable, Union
+from typing import BinaryIO, Dict, Iterable, Optional, Union
 
 import pandas as pd
 from pandas import DataFrame, Series
@@ -126,7 +126,7 @@ def find_imaging_data(source_data_dir: PathLike) -> Iterable[PathLike]:
         ]
 
 
-def parse_imaging_data(paths: PathLike) -> DataFrame:
+def parse_imaging_data(paths: PathLike) -> Optional[DataFrame]:
     from pandas import Series, concat, to_datetime
 
     dataframe = Series(paths, name="source_location")
@@ -185,9 +185,9 @@ def install_nifti(source: PathLike, target: PathLike) -> None:
     zip_file = source.parent
     nifti_file = source.name
 
-    fo = fsspec.open(zip_file)
+    fo = fsspec.open(str(zip_file))
     fs = fsspec.filesystem("zip", fo=fo)
-    with fsspec.open(target, mode="wb") as f:
+    with fsspec.open(str(target), mode="wb") as f:
         f.write(fs.cat(nifti_file))
 
 
@@ -232,7 +232,7 @@ def write_bids(
     )
 
     participants_file = Path(rawdata) / "participants.tsv"
-    with fsspec.open(participants_file, mode="wb") as f:
+    with fsspec.open(str(participants_file), mode="wb") as f:
         write_to_tsv(participants, f)
 
     sessions = (
