@@ -32,7 +32,7 @@
   <a href="http://www.clinica.run">Homepage</a> |
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/">Documentation</a> |
   <a href="https://doi.org/10.3389/fninf.2021.689675">Paper</a> |
-  <a href="https://groups.google.com/forum/#!forum/clinica-user">Forum</a> |
+  <a href="https://github.com/aramis-lab/clinica/discussions">Forum</a> |
   See also:
   <a href="#related-repositories">AD-ML</a>,
   <a href="#related-repositories">AD-DL</a>
@@ -133,9 +133,9 @@ with Alzheimer's disease and healthy controls from the ADNI database:
 
 ## Support
 
-- [Report an issue on GitHub](https://github.com/aramis-lab/clinica/issues)
-- Use the [Clinica Google
-  Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
+- Check for [past answers](https://groups.google.com/forum/#!forum/clinica-user) in the old Clinica Google Group
+- Start a [discussion](https://github.com/aramis-lab/clinica/discussions) on Github
+- Report an [issue](https://github.com/aramis-lab/clinica/issues) on GitHub
 
 ## Contributing
 

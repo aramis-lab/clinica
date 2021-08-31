@@ -95,8 +95,9 @@ Find on [this page](ClinicaConferences) the presentations and demo materials use
 
 ## Support
 
-- [Report an issue on GitHub](https://github.com/aramis-lab/clinica/issues)
-- Use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
+- Check for [past answers](https://groups.google.com/forum/#!forum/clinica-user) in the old Clinica Google Group
+- Start a [discussion](https://github.com/aramis-lab/clinica/discussions) on Github
+- Report an [issue](https://github.com/aramis-lab/clinica/issues) on GitHub
 
 ## License
 
