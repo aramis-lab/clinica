@@ -36,7 +36,11 @@ def convert_images(
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)
 
     written = write_bids(
-        to=bids_dir, participants=participants, sessions=sessions, scans=scans
+        to=bids_dir,
+        participants=participants,
+        sessions=sessions,
+        scans=scans,
+        dataset_directory=path_to_dataset,
     )
 
     return written

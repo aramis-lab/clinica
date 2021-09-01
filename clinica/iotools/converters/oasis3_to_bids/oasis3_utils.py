@@ -59,8 +59,9 @@ def read_imaging_data(imaging_data_directory: PathLike) -> Iterable[Tuple[str, s
 
     s = pd.Series(find_imaging_data(imaging_data_directory), name="source_path")
 
+    b = s.str.rsplit(pat="/", n=1, expand=True).drop(columns=1)[0].rename("source_dir")
     a = s.str.split(pat="/", n=1, expand=True).drop(columns=1)[0].rename("path")
-    df_source = pd.concat([s, a, a.str.split("_", expand=True)], axis=1)
+    df_source = pd.concat([s, a, b, a.str.split("_", expand=True)], axis=1)
     df_source = df_source.rename(
         {0: "Subject", 1: "modality", 2: "Date"}, axis="columns"
     ).drop_duplicates()
@@ -157,7 +158,7 @@ def dataset_to_bids(df_source, df_small):
     )
     # df_session = df_session.merge(df_adrc)
     df_scan = pd.DataFrame(
-        {"filename": df_source.filename, "source_dir": df_source.source_path}
+        {"filename": df_source.filename, "source_dir": df_source.source_dir}
     )
     df_scan = df_scan.set_index(df_scan.filename)
     return df_participants, df_session, df_scan
@@ -180,7 +181,11 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
 
 
 def write_bids(
-    to: PathLike, participants: DataFrame, sessions: DataFrame, scans: DataFrame
+    to: PathLike,
+    participants: DataFrame,
+    sessions: DataFrame,
+    scans: DataFrame,
+    dataset_directory: PathLike,
 ) -> List[PathLike]:
     from pathlib import Path
 
@@ -204,5 +209,6 @@ def write_bids(
 
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
-        install_nifti(sourcedata_dir=metadata.source_dir, bids_filename=to / filename)
+        path = dataset_directory + "/" + metadata.source_dir
+        install_nifti(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
