@@ -196,7 +196,9 @@ def write_bids(
             write_to_tsv(participants, participant_file)
 
         for participant_id, sessions_group in sessions.groupby("participant_id"):
-            sessions_group = sessions_group.droplevel("participant_id")
+            sessions_group = sessions_group.set_index(
+                [sessions_group.participant_id, sessions_group.session_id]
+            ).droplevel("participant_id")
             sessions_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
             with fs.open(sessions_filepath, "wb") as sessions_file:
                 write_to_tsv(sessions_group, sessions_file)
