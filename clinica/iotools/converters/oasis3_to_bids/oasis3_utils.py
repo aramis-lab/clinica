@@ -115,23 +115,21 @@ def intersect_data(df_source, df_mri, df_subject, df_adrc):
         df_source.modality.map(
             {
                 "MR": {"datatype": "anat", "suffix": "T1w", "trc_label": ""},
-                "FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "acq-fdg_"},
-                "PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "acq-pib_"},
-                "AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "acq-av45_"},
+                "FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
+                "PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
+                "AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
             }
         ).apply(pd.Series)
     )
 
     df_source = df_source.assign(
-        Output_filename=lambda df: df.datatype
-        + "/sub-"
-        + df.Subject
-        + "_"
-        + df.ses
-        + "_"
-        + df.trc_label
-        + df.suffix
-        + ".nii.gz"
+        filename=lambda df: df.apply(
+            lambda x: f"{x.datatype}/"
+            f"{'sub-' + x.Subject}_{'ses-' + x.ses}"
+            f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
+            f"_{x.suffix}.nii.gz",
+            axis=1,
+        )
     )
     return df_source, df_small
 
@@ -159,7 +157,7 @@ def dataset_to_bids(df_source, df_small):
     )
     # df_session = df_session.merge(df_adrc)
     df_scan = pd.DataFrame(
-        {"filename": df_source.Output_filename, "source_dir": df_source.source_path}
+        {"filename": df_source.filename, "source_dir": df_source.source_path}
     )
     df_scan = df_scan.set_index(df_scan.filename)
     return df_participants, df_session, df_scan
