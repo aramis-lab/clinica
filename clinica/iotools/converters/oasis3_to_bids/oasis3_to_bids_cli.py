@@ -1,3 +1,5 @@
+from os import PathLike
+
 import click
 
 from clinica.iotools.converters import cli_param
@@ -8,9 +10,9 @@ from clinica.iotools.converters import cli_param
 @cli_param.clinical_data_directory
 @cli_param.bids_directory
 def cli(
-    dataset_directory: str,
-    clinical_data_directory: str,
-    bids_directory: str,
+    dataset_directory: PathLike,
+    clinical_data_directory: PathLike,
+    bids_directory: PathLike,
 ) -> None:
     """NIFD to BIDS converter.
 
