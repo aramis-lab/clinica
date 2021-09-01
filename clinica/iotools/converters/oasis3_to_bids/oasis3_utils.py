@@ -1,10 +1,12 @@
 from os import PathLike
-from typing import BinaryIO, Iterable, List, Optional, Tuple, Union
+from typing import BinaryIO, Iterable, List, Tuple, Union
 
 from pandas import DataFrame
 
 
-def find_clinical_data(clinical_data_directory: PathLike) -> Optional[DataFrame]:
+def find_clinical_data(
+    clinical_data_directory: PathLike,
+) -> Tuple[DataFrame, DataFrame, DataFrame, DataFrame, DataFrame]:
     from pathlib import Path
 
     import pandas as pd
@@ -45,14 +47,16 @@ def find_clinical_data(clinical_data_directory: PathLike) -> Optional[DataFrame]
     return df_pet, df_mri, df_subject, df_pup, df_adrc
 
 
-def read_clinical_data(clinical_data_directory: PathLike) -> DataFrame:
+def read_clinical_data(
+    clinical_data_directory: PathLike,
+) -> Tuple[DataFrame, DataFrame, DataFrame, DataFrame, DataFrame]:
     df_pet, df_mri, df_subject, df_pup, df_adrc = find_clinical_data(
         clinical_data_directory
     )
     return df_pet, df_mri, df_subject, df_pup, df_adrc
 
 
-def read_imaging_data(imaging_data_directory: PathLike) -> Iterable[Tuple[str, str]]:
+def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     import pandas as pd
 
     s = pd.Series(find_imaging_data(imaging_data_directory), name="source_path")
@@ -67,14 +71,19 @@ def read_imaging_data(imaging_data_directory: PathLike) -> Iterable[Tuple[str, s
     return df_source
 
 
-def find_imaging_data(path_to_source_data):
+def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
     from pathlib import Path
 
     for path in Path(path_to_source_data).rglob("*.nii.gz"):
         yield str(path.relative_to(path_to_source_data))
 
 
-def intersect_data(df_source, df_mri, df_subject, df_adrc):
+def intersect_data(
+    df_source: DataFrame,
+    df_mri: DataFrame,
+    df_subject: DataFrame,
+    df_adrc: DataFrame,
+) -> Tuple[DataFrame, DataFrame]:
     import pandas as pd
 
     df_adrc = df_adrc.assign(
@@ -133,7 +142,9 @@ def intersect_data(df_source, df_mri, df_subject, df_adrc):
     return df_source, df_small
 
 
-def dataset_to_bids(df_source, df_small):
+def dataset_to_bids(
+    df_source: DataFrame, df_small: DataFrame
+) -> Tuple[DataFrame, DataFrame, DataFrame]:
     import pandas as pd
 
     # build participants .tsv (subjects)
@@ -208,6 +219,6 @@ def write_bids(
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
         print("\nfilename: ", filename)
-        path = dataset_directory + "/" + metadata.source_dir
+        path = Path(dataset_directory) / metadata.source_dir
         install_nifti(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
