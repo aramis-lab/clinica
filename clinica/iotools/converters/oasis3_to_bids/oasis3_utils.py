@@ -151,8 +151,9 @@ def dataset_to_bids(df_source, df_small):
     # build sessions .tsv
     df_session = pd.DataFrame(
         {
+            "participant_id": df_source.Subject,
             "session_id": df_source.ses,
-            "date_from_bl": df_source["Date"],
+            "source_session_id": df_source["Date"],
             "age": df_source["age"].astype("int"),
         }
     )
@@ -180,7 +181,7 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
 
 
 def write_bids(
-    to: PathLike, participants: DataFrame, sessions: DataFrame, scans: DataFrame
+    to: PathLike, participants: DataFrame, sessions: DataFrame, scans=DataFrame
 ) -> List[PathLike]:
     from pathlib import Path
 
