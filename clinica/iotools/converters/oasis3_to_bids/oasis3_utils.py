@@ -161,6 +161,7 @@ def dataset_to_bids(df_source, df_small):
     df_scan = pd.DataFrame(
         {"filename": df_source.Output_filename, "source_dir": df_source.source_path}
     )
+    df_scan = df_scan.set_index(df_scan.filename)
     return df_participants, df_session, df_scan
 
 
