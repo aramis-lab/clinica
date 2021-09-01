@@ -145,32 +145,38 @@ def intersect_data(
 def dataset_to_bids(
     df_source: DataFrame, df_small: DataFrame
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
-    import pandas as pd
+    # Build participants dataframe
+    df_participants = (
+        df_small[["Subject", "ageAtEntry", "M/F", "Hand"]]
+        .rename(
+            columns={
+                "Subject": "participant_id",
+                "ageAtEntry": "age",
+                "M/F": "sex",
+                "Hand": "handedness",
+            }
+        )
+        .set_index("participant_id", verify_integrity=True)
+    )
 
-    # build participants .tsv (subjects)
-    df_participants = pd.DataFrame(
-        {
-            "participant_id": df_small["Subject"],
-            "age": df_small["ageAtEntry"],
-            "sex": df_small["M/F"],
-            "handedness": df_small["Hand"],
-        }
+    # Build sessions dataframe
+    df_session = (
+        df_source[["Subject", "ses", "Date", "age"]]
+        .rename(
+            columns={
+                "Subject": "participant_id",
+                "ses": "session_id",
+                "Date": "source_session_id",
+            }
+        )
+        .astype({"age": "int"})
+        .drop_duplicates(subset=["participant_id", "session_id"])
+        .set_index(["participant_id", "session_id"], verify_integrity=True)
     )
-    # build sessions .tsv
-    df_session = pd.DataFrame(
-        {
-            "participant_id": df_source.Subject,
-            "session_id": df_source.ses,
-            "source_session_id": df_source["Date"],
-            "age": df_source["age"].astype("int"),
-        }
-    )
-    df_session.set_index(["participant_id", "session_id"], verify_integrity=True)
 
-    df_scan = pd.DataFrame(
-        {"filename": df_source.filename, "source_dir": df_source.source_dir}
-    )
-    df_scan = df_scan.set_index(df_scan.filename)
+    # Build scans dataframe
+    df_scan = df_source[["filename", "source_dir"]].set_index("filename")
+
     return df_participants, df_session, df_scan
 
 
