@@ -23,8 +23,7 @@ def convert_images(
         write_bids,
     )
 
-    # reads the clinical csvs
-    # clinical_data = read_clinical_data(path_to_clinical)
+    # read the clinical data files
     df_pet, df_mri, df_subject, df_pup, df_adrc = read_clinical_data(path_to_clinical)
 
     # makes a df of the imaging data
@@ -32,12 +31,9 @@ def convert_images(
 
     # intersect the data
     imaging_data, df_small = intersect_data(imaging_data, df_mri, df_subject, df_adrc)
+
     # build the tsv
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)
-
-    # participants, sessions, scans = dataset_to_bids(
-    #     imaging_data=imaging_data, clinical_data=clinical_data
-    # )
 
     written = write_bids(
         to=bids_dir, participants=participants, sessions=sessions, scans=scans
