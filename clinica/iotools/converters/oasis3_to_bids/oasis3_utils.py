@@ -97,7 +97,7 @@ def intersect_data(
         df_adrc_small[["Subject", "ageAtEntry"]], how="inner", on="Subject"
     )
     df_source = df_source.assign(
-        age=lambda df: (df["ageAtEntry"]) + df["Date"].str[1:].astype("float") / 365
+        age=lambda df: (df["ageAtEntry"]) + df["Date"].str[1:].astype("float") / 365.25
     )
 
     df_subject_small = df_subject.merge(
@@ -110,7 +110,7 @@ def intersect_data(
     df_small = df_subject_small.merge(df_adrc_small, how="inner", on="Subject")
 
     df_source = df_source.assign(
-        session=lambda df: (round(df["Date"].str[1:].astype("int") / (364.25 / 2)) * 6)
+        session=lambda df: (round(df["Date"].str[1:].astype("int") / (365.25 / 2)) * 6)
     )
 
     df_source = df_source.assign(
