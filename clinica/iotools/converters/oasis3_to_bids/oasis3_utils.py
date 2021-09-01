@@ -46,8 +46,6 @@ def find_clinical_data(clinical_data_directory: PathLike) -> Optional[DataFrame]
 
 
 def read_clinical_data(clinical_data_directory: PathLike) -> DataFrame:
-    from pandas import NA, CategoricalDtype
-
     df_pet, df_mri, df_subject, df_pup, df_adrc = find_clinical_data(
         clinical_data_directory
     )
