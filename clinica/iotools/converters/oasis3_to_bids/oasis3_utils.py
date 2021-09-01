@@ -125,7 +125,7 @@ def intersect_data(df_source, df_mri, df_subject, df_adrc):
 
     df_source = df_source.assign(
         filename=lambda df: df.apply(
-            lambda x: f"{x.datatype}/"
+            lambda x: f"{x.Subject}/{x.ses}/{x.datatype}/"
             f"{'sub-' + x.Subject}_{'ses-' + x.ses}"
             f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
             f"_{x.suffix}.nii.gz",
@@ -209,6 +209,7 @@ def write_bids(
 
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
+        print("\nfilename: ", filename)
         path = dataset_directory + "/" + metadata.source_dir
         install_nifti(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
