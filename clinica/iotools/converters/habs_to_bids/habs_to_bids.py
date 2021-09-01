@@ -250,7 +250,7 @@ def write_bids(
         sessions_file = (
             Path(rawdata) / participant_id / f"{participant_id}_sessions.tsv"
         )
-        dataframe = dataframe.reset_index(level="participant_id", drop=True)
+        dataframe = dataframe.droplevel("participant_id")
         with fsspec.open(sessions_file, mode="wb") as f:
             write_to_tsv(dataframe, f)
 
@@ -261,7 +261,7 @@ def write_bids(
         bids_prefix = f"{participant_id}_{session_id}"
 
         dataframe = (
-            dataframe.reset_index(level=["participant_id", "session_id"], drop=True)
+            dataframe.droplevel(level=["participant_id", "session_id"])
             .reset_index()
             .assign(
                 filename=lambda df: df.apply(
