@@ -3,8 +3,6 @@
 from os import PathLike
 from typing import List
 
-from clinica.iotools.converters.oasis3_to_bids.oasis3_utils import build_tsv
-
 
 def convert_images(
     path_to_dataset: PathLike,
