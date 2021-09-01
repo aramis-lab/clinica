@@ -218,7 +218,6 @@ def write_bids(
 
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
-        print("\nfilename: ", filename)
         path = Path(dataset_directory) / metadata.source_dir
         install_nifti(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
