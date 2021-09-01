@@ -181,7 +181,7 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
 
 
 def write_bids(
-    to: PathLike, participants: DataFrame, sessions: DataFrame, scans=DataFrame
+    to: PathLike, participants: DataFrame, sessions: DataFrame, scans: DataFrame
 ) -> List[PathLike]:
     from pathlib import Path
 
