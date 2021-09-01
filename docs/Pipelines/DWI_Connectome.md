@@ -93,7 +93,7 @@ Do not forget to fill in the missing information (after the `=` signs) and do no
     Fiber orientation distributions (FOD) at highly anisotropic voxels (FA >0.7) was computed to determine the response function, which was used for constrained spherical deconvolution to accurately estimate the FOD [[Tournier et al., 2007](https://doi.org/10.1016/j.neuroimage.2007.02.016)].
     Then, `<n_tracks>` fibers with a probabilistic tracking algorithm [[Tournier et al., 2010](https://cds.ismrm.org/protected/10MProceedings/files/1670_4298.pdf)] were generated.
     Default parameters included minimum length 20 mm, a step size of 0.2 mm, minimum radius of curvature of 1 mm and FOD cutoff of 0.1.
-    All voxels in the 1-mm dilated white-matter mask were used as seeds and the tracking procedure was stopped if a fiber reached a voxel outside the mask or if a stopping criterion was met (high fiber curvature or low FOD).
+    All voxels in the white-matter mask were used as seeds and the tracking procedure was stopped if a fiber reached a voxel outside the mask or if a stopping criterion was met (high fiber curvature or low FOD).
     Finally, the connectome is estimated by counting the number of tracks connecting each pair of nodes according to the [Desikan|Destrieux] parcellation.
 
 !!! tip
