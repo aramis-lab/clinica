@@ -140,6 +140,32 @@ def intersect_data(
             axis=1,
         )
     )
+    df_adrc = df_adrc.merge(df_source["Subject"], how="inner", on="Subject")
+    df_adrc = df_adrc.assign(
+        session=lambda df: round(df["session_id"].str[1:].astype("int") / (364.25 / 2))
+        * 6
+    )
+    df_adrc = df_adrc.drop_duplicates().set_index(["Subject", "session_id"])
+    df_source = df_source.merge(
+        df_adrc[
+            [
+                "session",
+                "mmse",
+                "cdr",
+                "commun",
+                "dx1",
+                "homehobb",
+                "judgment",
+                "memory",
+                "orient",
+                "perscare",
+                "sumbox",
+                "apoe",
+            ]
+        ],
+        how="left",
+        on="session",
+    )
     return df_source, df_small
 
 
@@ -148,7 +174,7 @@ def dataset_to_bids(
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
     # Build participants dataframe
     df_participants = (
-        df_small[["participant_id", "ageAtEntry", "M/F", "Hand"]]
+        df_small[["participant_id", "ageAtEntry", "M/F", "Hand", "Education"]]
         .rename(
             columns={
                 "ageAtEntry": "age",
@@ -161,7 +187,25 @@ def dataset_to_bids(
 
     # Build sessions dataframe
     df_session = (
-        df_source[["participant_id", "ses", "Date", "age"]]
+        df_source[
+            [
+                "participant_id",
+                "ses",
+                "Date",
+                "age",
+                "mmse",
+                "cdr",
+                "commun",
+                "dx1",
+                "homehobb",
+                "judgment",
+                "memory",
+                "orient",
+                "perscare",
+                "sumbox",
+                "apoe",
+            ]
+        ]
         .rename(
             columns={
                 "ses": "session_id",
