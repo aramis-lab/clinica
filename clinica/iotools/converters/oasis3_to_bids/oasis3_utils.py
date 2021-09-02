@@ -53,7 +53,14 @@ def read_clinical_data(
     df_pet, df_mri, df_subject, df_pup, df_adrc = find_clinical_data(
         clinical_data_directory
     )
-    return df_pet, df_mri, df_subject, df_pup, df_adrc
+    dictionnary = {
+        "pet": df_pet,
+        "mri": df_mri,
+        "subject": df_subject,
+        "pup": df_pup,
+        "adrc": df_adrc,
+    }
+    return dictionnary
 
 
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
@@ -79,15 +86,10 @@ def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
         yield str(path.relative_to(path_to_source_data))
 
 
-def intersect_data(
-    df_source: DataFrame,
-    df_mri: DataFrame,
-    df_subject: DataFrame,
-    df_adrc: DataFrame,
-) -> Tuple[DataFrame, DataFrame]:
+def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, DataFrame]:
     import pandas as pd
 
-    df_adrc = df_adrc.assign(
+    df_adrc = dict_df["adrc"].assign(
         session_id=lambda df: df.index.map(lambda x: x.split("_")[2])
     )
     df_adrc_small = df_adrc[df_adrc.session_id == "d0000"]
@@ -101,11 +103,13 @@ def intersect_data(
         age=lambda df: (df["ageAtEntry"]) + df["Date"].str[1:].astype("float") / 365.25
     )
 
-    df_subject_small = df_subject.merge(
-        df_source["Subject"], how="inner", on="Subject"
-    ).drop_duplicates()
+    df_subject_small = (
+        dict_df["subject"]
+        .merge(df_source["Subject"], how="inner", on="Subject")
+        .drop_duplicates()
+    )
     df_source = df_source.merge(
-        df_mri["Scanner"], how="left", left_on="path", right_on="MR ID"
+        dict_df["mri"]["Scanner"], how="left", left_on="path", right_on="MR ID"
     )
 
     df_small = df_subject_small.merge(df_adrc_small, how="inner", on="Subject")
