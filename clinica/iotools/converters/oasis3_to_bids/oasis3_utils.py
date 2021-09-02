@@ -174,7 +174,11 @@ def dataset_to_bids(
     )
 
     # Build scans dataframe
-    df_scan = df_source[["filename", "source_dir"]].set_index("filename")
+    df_scan = (
+        df_source[["filename", "source_dir"]]
+        .drop_duplicates(subset=["filename"])
+        .set_index("filename", verify_integrity=True)
+    )
 
     return df_participants, df_session, df_scan
 
