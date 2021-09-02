@@ -3,7 +3,8 @@
 
 ## Converters
 
-If you want to run the `convert <dataset>-to-bids` commands (e.g. `adni-to-bids`), you may have to install the [**dcm2niix**](https://github.com/rordenlab/dcm2niix) tool.
+Some converters require a recent version of [dcm2niix](https://github.com/rordenlab/dcm2niix) to transform DICOM files
+into NIfTI:
 
 |                   | dcm2niix |
 |:------------------|:--------:|
@@ -12,13 +13,9 @@ If you want to run the `convert <dataset>-to-bids` commands (e.g. `adni-to-bids`
 | `nifd-to-bids`    |    x     |
 | `oasis-to-bids`   |          |
 
-Please refer to each tool’s website for installation instructions:
+Please check the installation instructions for all platforms [here](https://github.com/rordenlab/dcm2niix#install).
 
-- [**dcm2niix**](https://github.com/rordenlab/dcm2niix)
-  - Download [here](https://github.com/rordenlab/dcm2niix) and follow the installation instructions on the same page.
-  - For Mac users: use Homebrew to install `dcm2niix` with `brew install dcm2niix`.
-
-Do not forget to check the installations following each tool’s guidelines.
+Clinica requires dcm2niix version `1.0.20190902` or later.
 
 ## Pipeline-specific interfaces
 
