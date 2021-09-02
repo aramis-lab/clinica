@@ -122,7 +122,7 @@ def intersect_data(
     df_source = df_source.join(
         df_source.modality.map(
             {
-                "MR": {"datatype": "anat", "suffix": "T1w", "trc_label": ""},
+                "MR": {"datatype": "anat", "suffix": "T1w"},
                 "FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
                 "PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
                 "AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
@@ -133,7 +133,7 @@ def intersect_data(
     df_source = df_source.assign(
         filename=lambda df: df.apply(
             lambda x: f"{x.Subject}/{x.ses}/{x.datatype}/"
-            f"{'sub-' + x.Subject}_{'ses-' + x.ses}"
+            f"{'sub-' + x.Subject}_{x.ses}"
             f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
             f"_{x.suffix}.nii.gz",
             axis=1,
