@@ -68,6 +68,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         {0: "Subject", 1: "modality", 2: "Date"}, axis="columns"
     ).drop_duplicates()
 
+    df_source = df_source.assign(participant_id=lambda df: "sub-" + df.Subject)
     return df_source
 
 
@@ -108,7 +109,7 @@ def intersect_data(
     )
 
     df_small = df_subject_small.merge(df_adrc_small, how="inner", on="Subject")
-
+    df_small = df_small.assign(participant_id=lambda df: "sub-" + df.Subject)
     df_source = df_source.assign(
         session=lambda df: (round(df["Date"].str[1:].astype("int") / (365.25 / 2)) * 6)
     )
@@ -132,8 +133,8 @@ def intersect_data(
 
     df_source = df_source.assign(
         filename=lambda df: df.apply(
-            lambda x: f"{x.Subject}/{x.ses}/{x.datatype}/"
-            f"{'sub-' + x.Subject}_{x.ses}"
+            lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
+            f"{x.participant_id}_{x.ses}"
             f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
             f"_{x.suffix}.nii.gz",
             axis=1,
@@ -147,10 +148,9 @@ def dataset_to_bids(
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
     # Build participants dataframe
     df_participants = (
-        df_small[["Subject", "ageAtEntry", "M/F", "Hand"]]
+        df_small[["participant_id", "ageAtEntry", "M/F", "Hand"]]
         .rename(
             columns={
-                "Subject": "participant_id",
                 "ageAtEntry": "age",
                 "M/F": "sex",
                 "Hand": "handedness",
@@ -161,10 +161,9 @@ def dataset_to_bids(
 
     # Build sessions dataframe
     df_session = (
-        df_source[["Subject", "ses", "Date", "age"]]
+        df_source[["participant_id", "ses", "Date", "age"]]
         .rename(
             columns={
-                "Subject": "participant_id",
                 "ses": "session_id",
                 "Date": "source_session_id",
             }
