@@ -14,9 +14,9 @@ def cli(
     clinical_data_directory: PathLike,
     bids_directory: PathLike,
 ) -> None:
-    """NIFD to BIDS converter.
+    """OASIS3 to BIDS converter.
 
-    Convert the imaging and clinical data of NIFD (https://4rtni-ftldni.ini.usc.edu/), located in DATASET_DIRECTORY and
+    Convert the imaging and clinical data of OASIS3 (https://www.oasis-brains.org), located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
     from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import convert_images
