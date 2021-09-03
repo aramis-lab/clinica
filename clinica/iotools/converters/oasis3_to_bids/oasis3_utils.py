@@ -134,16 +134,25 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
             }
         ).apply(pd.Series)
     )
-
-    df_source = df_source.assign(
-        filename=lambda df: df.apply(
-            lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
-            f"{x.participant_id}_{x.ses}"
-            f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
-            f"_{x.suffix}.nii.gz",
-            axis=1,
+    if df_source.suffix.str.contains("pet").any():
+        df_source = df_source.assign(
+            filename=lambda df: df.apply(
+                lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
+                f"{x.participant_id}_{x.ses}"
+                f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
+                f"_{x.suffix}.nii.gz",
+                axis=1,
+            )
         )
-    )
+    else:
+        df_source = df_source.assign(
+            filename=lambda df: df.apply(
+                lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
+                f"{x.participant_id}_{x.ses}"
+                f"_{x.suffix}.nii.gz",
+                axis=1,
+            )
+        )
     df_adrc = df_adrc.merge(df_source["Subject"], how="inner", on="Subject")
     df_adrc = df_adrc.assign(
         session=lambda df: round(df["session_id"].str[1:].astype("int") / (364.25 / 2))
