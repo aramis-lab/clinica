@@ -11,6 +11,8 @@ def find_clinical_data(
 
     import pandas as pd
 
+    from clinica.utils.stream import cprint
+
     # Read the xls
     try:
         image_data_file = list(Path(clinical_data_directory).glob("*.csv"))
@@ -40,7 +42,7 @@ def find_clinical_data(
         and "df_adrc" in locals()
         and "df_pet" in locals()
     ):
-        print("All the clinical data have been found.")
+        cprint(msg="All clinical data have been found", lvl="info")
     else:
         raise FileNotFoundError("Clinical data not found or incomplete")
 
