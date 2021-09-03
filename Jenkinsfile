@@ -113,7 +113,8 @@ pipeline {
             environment {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              WORK_DIR = "/mnt/data/ci/working_dir_linux"
+              INPUT_DATA_DIR = "/mnt/data_ci"
               }
             steps {
               echo 'Testing pipeline instantation...'
@@ -130,7 +131,8 @@ pipeline {
                  taskset -c 0-21 pytest \
                     --junitxml=./test-reports/instantation_linux.xml \
                     --verbose \
-                    --working_directory=$WORK_DIR_LINUX \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
                     --disable-warnings \
                     --timeout=0 \
                     -n 6 \
@@ -150,6 +152,8 @@ pipeline {
             environment {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR = "/Volumes/data/working_dir_mac"
+              INPUT_DATA_DIR = "/Volume/data_ci"
               }
             steps {
               echo 'Testing pipeline instantation...'
@@ -165,6 +169,8 @@ pipeline {
                  ln -s /Volumes/data/data_ci ./data
                  pytest \
                     --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
                     --junitxml=./test-reports/instantation_mac.xml \
                     --disable-warnings \
                     ./instantiation/
