@@ -1,5 +1,5 @@
 from os import PathLike
-from typing import BinaryIO, Iterable, List, Optional, Tuple, Union
+from typing import BinaryIO, Dict, Iterable, List, Optional, Tuple, Union
 
 from pandas import DataFrame
 
@@ -133,29 +133,50 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     return collection_data.join(imaging_data)
 
 
-def parse_mri_description(description: str) -> dict:
-    from pandas import NA
-
+def parse_mri_description(description: str) -> Optional[Dict[str, Optional[str]]]:
     description = description.lower().replace("-", "")
 
     if "mprage" in description:
-        return {"datatype": "anat", "suffix": "T1w"}
+        return {
+            "datatype": "anat",
+            "suffix": "T1w",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif "flair" in description:
-        return {"datatype": "anat", "suffix": "FLAIR"}
+        return {
+            "datatype": "anat",
+            "suffix": "FLAIR",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif "t2" in description:
-        return {"datatype": "anat", "suffix": "T2w"}
+        return {
+            "datatype": "anat",
+            "suffix": "T2w",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif "asl" in description:
-        return {"datatype": "anat", "suffix": "PDw"}
+        return {
+            "datatype": "anat",
+            "suffix": "PDw",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif any([x in description for x in ["mt1", "gradwarp", "n3m"]]):
-        return {"datatype": "anat", "suffix": "T1w"}
+        return {
+            "datatype": "anat",
+            "suffix": "T1w",
+            "trc_label": None,
+            "rec_label": None,
+        }
     else:
-        return NA
+        return None
 
 
-def parse_pet_description(description: str) -> dict:
+def parse_pet_description(description: str) -> Optional[Dict[str, str]]:
     import re
-
-    from pandas import NA
 
     match = re.search(r"3D:(\w+):(\w+)", description)
 
@@ -167,7 +188,7 @@ def parse_pet_description(description: str) -> dict:
             "rec_label": "IR" if "IR" in match.group(2) else "RP",
         }
     else:
-        return NA
+        return None
 
 
 def parse_preprocessing(description: str) -> dict:
@@ -223,8 +244,8 @@ def dataset_to_bids(
         filename=lambda df: df.apply(
             lambda x: f"{x.participant_id}/{x.session_id}/{x.datatype}/"
             f"{x.participant_id}_{x.session_id}"
-            f"{'_trc-'+x.trc_label if notna(x.trc_label) else ''}"
-            f"{'_rec-'+x.rec_label if notna(x.rec_label) else ''}"
+            f"{'_trc-'+x.trc_label if x.trc_label else ''}"
+            f"{'_rec-'+x.rec_label if x.rec_label else ''}"
             f"_{x.suffix}.nii.gz",
             axis=1,
         ),
