@@ -134,7 +134,7 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
             }
         ).apply(pd.Series)
     )
-    if df_source.suffix.str.contains("pet").any():
+    if "trc_label" in df_source.columns:
         df_source = df_source.assign(
             filename=lambda df: df.apply(
                 lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
