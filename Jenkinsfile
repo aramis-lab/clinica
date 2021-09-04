@@ -127,7 +127,6 @@ pipeline {
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
-                 ln -s /mnt/data/ci/data_ci_linux ./data
                  taskset -c 0-21 pytest \
                     --junitxml=./test-reports/instantation_linux.xml \
                     --verbose \
@@ -153,7 +152,7 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR = "/Volumes/data/working_dir_mac"
-              INPUT_DATA_DIR = "/Volume/data_ci"
+              INPUT_DATA_DIR = "/Volumes/data_ci"
               }
             steps {
               echo 'Testing pipeline instantation...'
@@ -166,7 +165,6 @@ pipeline {
                  source /usr/local/opt/modules/init/bash
                  module load clinica.all
                  cd test
-                 ln -s /Volumes/data/data_ci ./data
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR \
