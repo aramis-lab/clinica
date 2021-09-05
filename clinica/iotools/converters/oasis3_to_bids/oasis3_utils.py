@@ -1,4 +1,4 @@
-from os import PathLike, path
+from os import PathLike
 from typing import BinaryIO, Iterable, List, Tuple, Union
 
 from pandas import DataFrame
