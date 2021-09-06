@@ -212,7 +212,7 @@ def compare_folders(out, ref, shared_folder_name):
     from os.path import join
 
     out_txt = join(out, "out_folder.txt")
-    ref_txt = join(ref, "ref_folder.txt")
+    ref_txt = join(out, "ref_folder.txt")
 
     list_files(join(out, shared_folder_name), filename=out_txt)
     list_files(join(ref, shared_folder_name), filename=ref_txt)
