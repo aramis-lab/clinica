@@ -900,7 +900,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
 
     Returns: Dataframe containing metadata and existing paths
     """
-    from os import path, walk
+    from pathlib import Path
 
     import pandas as pd
 
@@ -909,27 +909,32 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     is_dicom = []
     image_folders = []
 
-    for row in images.iterrows():
-        image = row[1]
-        seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
-        image_path = ""
-        for (dirpath, dirnames, filenames) in walk(seq_path):
-            found = False
-            for d in dirnames:
-                if d == prefix + str(image[id_field]):
-                    image_path = path.join(dirpath, d)
-                    found = True
-                    break
-            if found:
-                break
+    for _, image in images.iterrows():
+        # Base directory where to look for image files.
+        seq_path = Path(source_dir) / str(image["Subject_ID"])
 
-        dicom = True
-        for (dirpath, dirnames, filenames) in walk(image_path):
-            for f in filenames:
-                if f.endswith(".nii"):
-                    dicom = False
-                    image_path = path.join(dirpath, f)
-                    break
+        # Generator finding files containing the image ID.
+        find_file = filter(
+            lambda p: p.is_file(),
+            seq_path.rglob(f"*_I{image['Image_ID']}.*"),
+        )
+
+        # The "Original" field already describes whether a given image ID corresponds to an original DICOM
+        # or a preprocessed NIfTI. If the field is not present, assume the image is DICOM.
+        try:
+            dicom = image["Original"]
+        except KeyError:
+            dicom = True
+
+        try:
+            # Grab the first file from the generator.
+            next_file: Path = next(find_file)
+
+            # Compute the image path (DICOM folder or NIfTI path).
+            image_path = str(next_file.parent if dicom else next_file)
+        except StopIteration:
+            # In case no file is found.
+            image_path = ""
 
         is_dicom.append(dicom)
         image_folders.append(image_path)
