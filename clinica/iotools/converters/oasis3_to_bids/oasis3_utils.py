@@ -254,17 +254,17 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
 
     fs = LocalFileSystem(auto_mkdir=True)
 
-    path_end = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
-    parent_dir = sourcedata_dir.parent
-    filename_stem = Path(bids_filename.stem).stem
+    source_basename = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
+    source_dir = sourcedata_dir.parent
+    target_basename = Path(bids_filename.stem).stem
 
-    for path in Path.joinpath(parent_dir, "BIDS").rglob(str(path_end) + "*"):
+    for path in Path.joinpath(source_dir, "BIDS").rglob(f"{source_basename}*"):
         suffix = path.suffix
-        path_to_sidecar = Path.joinpath(parent_dir, "BIDS", path_end).with_suffix(
-            suffix
-        )
+        path_to_sidecar = Path.joinpath(
+            source_dir, "BIDS", source_basename
+        ).with_suffix(suffix)
         sidecar_filename = Path.joinpath(
-            bids_filename.parent, filename_stem
+            bids_filename.parent, target_basename
         ).with_suffix(suffix)
         source = fs.open(path_to_sidecar, mode="rb")
         target = fs.open(sidecar_filename, mode="wb")
