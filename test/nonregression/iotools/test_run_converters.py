@@ -7,7 +7,8 @@ different functions available in Clinica
 
 
 import warnings
-from os import pardir
+from os import fspath
+from pathlib import Path
 from test.nonregression.testing_tools import (
     clean_folder,
     compare_folders,
@@ -18,140 +19,114 @@ from test.nonregression.testing_tools import (
     same_missing_modality_tsv,
 )
 
+import pytest
+
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
 
 
-def test_run_Nifd2Bids(cmdopt):
+@pytest.fixture(
+    params=[
+        "Nifd2Bids",
+        "Oasis2Bids",
+        # "Oasis3ToBids",
+        "Adni2Bids",
+        "Aibl2Bids",
+    ]
+)
+def name(request):
+    return request.param
+
+
+def test_run_convertors(cmdopt, tmp_path, name):
     import shutil
-    from os.path import abspath, dirname, join
 
-    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import (
-        convert_clinical_data,
-        convert_images,
-    )
+    base_dir = Path(cmdopt["input"])
+    input_dir = base_dir / name / "in"
+    ref_dir = base_dir / name / "ref"
+    tmp_out_dir = tmp_path / name / "out"
+    tmp_out_dir.mkdir(parents=True)
+    dataset_directory = input_dir / "unorganized"
+    bids_directory = tmp_out_dir / "bids"
 
-    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "Nifd2Bids")
+    if name == "Nifd2Bids":
+        from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import convert_images
 
-    clean_folder(join(root, "out", "bids"), recreate=True)
-    clean_folder(join(root, "out", "clinical_data"), recreate=False)
+        # Arrange
+        shutil.copytree(input_dir / "clinical_data", tmp_out_dir / "clinical_data")
+        # Arrange - Data location
+        clinical_data_directory = tmp_out_dir / "clinical_data"
+        # Acte - Conversion
+        to_convert = convert_images(
+            dataset_directory, bids_directory, clinical_data_directory
+        )
+        # Asert
+        compare_folders_structures(
+            fspath(bids_directory), fspath(ref_dir / "hashes_nifd.p")
+        )
+    elif name == "Oasis2Bids":
+        from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
 
-    shutil.copytree(
-        join(root, "in", "clinical_data"), join(root, "out", "clinical_data")
-    )
+        # Arrange
+        clinical_data_directory = input_dir / "clinical_data"
+        # Act
+        oasis_to_bids = OasisToBids()
+        oasis_to_bids.convert_images(dataset_directory, bids_directory)
+        oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+        # Assert
+        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
+    elif name == "Oasis3ToBids":
+        from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import (
+            Oasis3ToBids,
+        )
 
-    # Data location
-    dataset_directory = join(root, "in", "unorganized")
-    bids_directory = join(root, "out", "bids")
-    clinical_data_directory = join(root, "out", "clinical_data")
+        # Arrange
+        clinical_data_directory = input_dir / "clinical_data"
+        # Act
+        oasis_to_bids = Oasis3ToBids()
+        oasis_to_bids.convert_images(dataset_directory, bids_directory)
+        oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+        # Assert
+        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
+    elif name == "Adni2Bids":
+        from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
 
-    # Conversion
-    to_convert = convert_images(
-        dataset_directory, bids_directory, clinical_data_directory
-    )
-    convert_clinical_data(bids_directory, clinical_data_directory, to_convert)
+        # Arrange
+        clinical_data_directory = input_dir / "clinical_data"
+        dataset_directory = input_dir / "unorganized_data"
+        subjects_list = input_dir / "subjects.txt"
+        modalities = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
+        # Act
+        adni_to_bids = AdniToBids()
+        adni_to_bids.check_adni_dependencies()
+        adni_to_bids.convert_images(
+            dataset_directory,
+            clinical_data_directory,
+            bids_directory,
+            subjects_list,
+            modalities,
+        )
+        adni_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+        # Assert
+        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
+    elif name == "Aibl2Bids":
+        from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import (
+            convert_clinical_data,
+            convert_images,
+        )
 
-    compare_folders_structures(bids_directory, join(root, "ref", "hashes_nifd.p"))
-
-    clean_folder(join(root, "out", "bids"), recreate=True)
-    clean_folder(join(root, "out", "clinical_data"), recreate=False)
-
-
-def test_run_Oasis2Bids(cmdopt):
-    from os.path import abspath, dirname, join
-
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
-
-    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "Oasis2Bids")
-
-    clean_folder(join(root, "out", "bids"), recreate=True)
-
-    # Data location
-    dataset_directory = join(root, "in", "unorganized")
-    bids_directory = join(root, "out", "bids")
-    clinical_data_directory = join(root, "in", "clinical_data")
-
-    oasis_to_bids = OasisToBids()
-    oasis_to_bids.convert_images(dataset_directory, bids_directory)
-    oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
-
-    compare_folders(join(root, "out"), join(root, "ref"), shared_folder_name="bids")
-    clean_folder(join(root, "out", "bids"), recreate=True)
-
-
-def test_run_Oasis3ToBids(cmdopt):
-    from os.path import abspath, dirname, join
-
-    from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import Oasis3ToBids
-
-    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "Oasis3ToBids")
-
-    clean_folder(join(root, "out", "bids"), recreate=True)
-
-    # Data location
-    dataset_directory = join(root, "in", "unorganized")
-    bids_directory = join(root, "out", "bids")
-    clinical_data_directory = join(root, "in", "clinical_data")
-
-    oasis_to_bids = Oasis3ToBids()
-    oasis_to_bids.convert_images(dataset_directory, bids_directory)
-    oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
-
-    compare_folders(join(root, "out"), join(root, "ref"), shared_folder_name="bids")
-    clean_folder(join(root, "out", "bids"), recreate=True)
-
-
-def test_run_Adni2Bids(cmdopt):
-    from os.path import abspath, dirname, join
-
-    from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
-
-    root = join(dirname(abspath(__file__)), pardir, pardir, "data", "Adni2Bids")
-
-    clean_folder(join(root, "out", "bids"), recreate=True)
-
-    adni_to_bids = AdniToBids()
-    adni_to_bids.check_adni_dependencies()
-
-    dataset_directory = join(root, "in", "unorganized_data")
-    clinical_data_directory = join(root, "in", "clinical_data")
-    bids_directory = join(root, "out", "bids")
-    subjects_list = join(root, "in", "subjects.txt")
-    modalities = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
-    adni_to_bids.convert_images(
-        dataset_directory,
-        clinical_data_directory,
-        bids_directory,
-        subjects_list,
-        modalities,
-    )
-    adni_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
-    # Generate tree of output files
-    compare_folders(join(root, "out"), join(root, "ref"), shared_folder_name="bids")
-    clean_folder(join(root, "out", "bids"), recreate=True)
-
-
-def test_run_Aibl2Bids(cmdopt):
-    from os.path import abspath, dirname, join
-
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import (
-        convert_clinical_data,
-        convert_images,
-    )
-
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "Aibl2Bids")
-
-    dataset_directory = join(root, "in", "unorganized_data")
-    clinical_data_directory = join(root, "in", "Data_extract_3.2.5")
-    bids_directory = join(root, "out", "bids")
-
-    clean_folder(join(root, "out", "bids"), recreate=True)
-
-    # Perform conversion of dataset
-    convert_images(dataset_directory, clinical_data_directory, bids_directory)
-    convert_clinical_data(bids_directory, clinical_data_directory)
-
-    # Evaluate difference between ref and out
-    compare_folders(join(root, "out"), join(root, "ref"), shared_folder_name="bids")
-    clean_folder(join(root, "out", "bids"), recreate=True)
+        # Arrange
+        clinical_data_directory = input_dir / "Data_extract_3.2.5"
+        dataset_directory = input_dir / "unorganized_data"
+        # Act
+        convert_images(
+            dataset_directory,
+            clinical_data_directory,
+            bids_directory,
+        )
+        convert_clinical_data(bids_directory, clinical_data_directory)
+        # Assert
+        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
+    else:
+        print(f"Test {name} not available.")
+        assert 0
