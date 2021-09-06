@@ -263,6 +263,8 @@ def install_bids(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     source_basename = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
     target_basename = Path(bids_filename.stem).stem
 
+    # The following part adds the sidecar files related to the nifti with the same name: it can be tsv or json files.
+    # It may or may not be used, since there might not be any sidecars.
     sidecar_dir = sourcedata_dir.parent / "BIDS"
     for source_sidecar in sidecar_dir.rglob(f"{source_basename}*"):
         target_sidecar = Path.joinpath(bids_filename.parent, target_basename).with_name(
