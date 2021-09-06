@@ -254,6 +254,12 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
 
     fs = LocalFileSystem(auto_mkdir=True)
 
+    source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
+    target_file = fs.open(bids_filename, mode="wb")
+
+    with source_file as sf, target_file as tf:
+        tf.write(sf.read())
+
     source_basename = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
     source_dir = sourcedata_dir.parent
     target_basename = Path(bids_filename.stem).stem
@@ -270,12 +276,6 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
         target = fs.open(sidecar_filename, mode="wb")
         with source as s, target as t:
             t.write(s.read())
-
-    source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
-    target_file = fs.open(bids_filename, mode="wb")
-
-    with source_file as sf, target_file as tf:
-        tf.write(sf.read())
 
 
 def write_bids(
