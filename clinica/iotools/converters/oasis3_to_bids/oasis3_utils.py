@@ -247,15 +247,33 @@ def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> Non
     dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
 
 
-def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
+def install_bids(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
+    from pathlib import Path
+
     from fsspec.implementations.local import LocalFileSystem
 
     fs = LocalFileSystem(auto_mkdir=True)
+
     source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
     target_file = fs.open(bids_filename, mode="wb")
 
     with source_file as sf, target_file as tf:
         tf.write(sf.read())
+
+    source_basename = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
+    target_basename = Path(bids_filename.stem).stem
+
+    # The following part adds the sidecar files related to the nifti with the same name: it can be tsv or json files.
+    # It may or may not be used, since there might not be any sidecars.
+    sidecar_dir = sourcedata_dir.parent / "BIDS"
+    for source_sidecar in sidecar_dir.rglob(f"{source_basename}*"):
+        target_sidecar = Path.joinpath(bids_filename.parent, target_basename).with_name(
+            f"{target_basename}{source_sidecar.suffix}"
+        )
+        source_file = fs.open(source_sidecar, mode="rb")
+        target_file = fs.open(target_sidecar, mode="wb")
+        with source_file as sf, target_file as tf:
+            tf.write(sf.read())
 
 
 def write_bids(
@@ -286,5 +304,5 @@ def write_bids(
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
         path = Path(dataset_directory) / metadata.source_dir
-        install_nifti(sourcedata_dir=path, bids_filename=to / filename)
+        install_bids(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
