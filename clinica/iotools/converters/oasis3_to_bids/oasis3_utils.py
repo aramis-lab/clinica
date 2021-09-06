@@ -1,7 +1,6 @@
 from os import PathLike
 from typing import BinaryIO, Iterable, List, Tuple, Union
 
-from numpy.lib.utils import source
 from pandas import DataFrame
 
 
@@ -249,7 +248,6 @@ def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> Non
 
 
 def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
-    import os
     from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
@@ -268,6 +266,16 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     target_json = fs.open(json_filename, mode="wb")
     with source_json as sj, target_json as tj:
         tj.write(sj.read())
+
+    if sourcedata_dir.parent.stem[:3] == "pet":
+        path_to_tsv = Path.joinpath(parent_dir, "BIDS", path_end).with_suffix(".tsv")
+        target_tsv = Path.joinpath(
+            bids_filename.parent, Path(bids_filename.stem).stem
+        ).with_suffix(".tsv")
+        source_tsv = fs.open(path_to_tsv, mode="rb")
+        target_tsv = fs.open(target_tsv, mode="wb")
+        with source_tsv as st, target_tsv as tt:
+            tt.write(st.read())
 
     source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
     target_file = fs.open(bids_filename, mode="wb")
