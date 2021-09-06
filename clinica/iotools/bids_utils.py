@@ -260,8 +260,10 @@ def create_sessions_dict_OASIS(
                         if study_name != "OASIS3":
                             row = file_to_read.iloc[r]
                         else:
-                            mr_id = subj_id + "_ClinicalData_" + s_name
-                            row = file_to_read[file_to_read["MR ID"] == mr_id].iloc[0]
+                            row = file_to_read[
+                                file_to_read["MR ID"].str.startswith(subj_id)
+                                & file_to_read["MR ID"].str.endswith(s_name)
+                            ].iloc[0]
                         if subj_bids not in sessions_dict:
                             sessions_dict.update({subj_bids: {}})
                         if s_name not in sessions_dict[subj_bids].keys():
@@ -774,6 +776,7 @@ def run_dcm2niix(command):
         cprint(
             msg=(
                 "DICOM to BIDS conversion with dcm2niix failed:\n"
+                f"command: {command}\n"
                 f"{output_dcm2niix.stdout.decode('utf-8')}"
             ),
             lvl="warning",

@@ -46,10 +46,10 @@ pip install clinica
 ```
 
 !!! info
-    Since Clinica `v0.3.5`, Conda installation is not proposed anymore (i.e.
+    Since Clinica `v0.3.5`, Conda installation is no longer available (i.e.
     `conda create --name clinicaEnv python=3.6 clinica -c Aramislab -c conda-forge`
     will only install Clinica `v0.3.4`).
-    Pip is now the only way to install latest versions of Clinica.
+    Pip is now the only way to install the latest version of Clinica.
 
 ## Installation of the third-party software packages
 
@@ -58,6 +58,30 @@ Depending on the pipeline that you want to use, you need to install
 Not all the dependencies are necessary to run Clinica.
 Please refer to [this section](../Third-party) to determine which third-party
 libraries you need to install.
+
+## Shell completion (optional)
+
+Shell completion for Clinica is available for Bash, Fish and Zsh.
+
+For Bash, add this to `~/.bashrc`:
+
+```shell
+eval "$(_CLINICA_COMPLETE=source_bash clinica)"
+```
+
+For Fish, add this to `~/.config/fish/completions/clinica.fish`:
+
+```shell
+eval (env _CLINICA_COMPLETE=source_fish clinica)
+```
+
+For Zsh, add this to `~/.zshrc`:
+
+```shell
+eval "$(_CLINICA_COMPLETE=source_zsh clinica)"
+```
+
+Finally, open a new shell to enable completion.
 
 ## Run the Clinica environment
 

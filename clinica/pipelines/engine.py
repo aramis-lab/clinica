@@ -112,21 +112,18 @@ class Pipeline(Workflow):
         )
         self._info = {}
 
-        if base_dir is None:
-            self.base_dir = mkdtemp()
-            self._base_dir_was_specified = False
-        else:
+        if base_dir:
             self.base_dir = base_dir
             self._base_dir_was_specified = True
-
-        if name:
-            self._name = name
         else:
-            self._name = self.__class__.__name__
+            self.base_dir = mkdtemp()
+            self._base_dir_was_specified = False
+
+        self._name = name or self.__class__.__name__
         self._parameters = parameters
 
-        if self._bids_directory is None:
-            if self._caps_directory is None:
+        if not self._bids_directory:
+            if not self._caps_directory:
                 raise RuntimeError(
                     f"The {self._name} pipeline does not contain "
                     "BIDS nor CAPS directory at the initialization."
@@ -593,10 +590,10 @@ class Pipeline(Workflow):
                 f"Number of threads set to {n_procs}. You may set the --n_procs argument "
                 "to disable this message for future calls."
             )
-            if plugin_args is None:
-                plugin_args = {"n_procs": n_procs}
-            else:
+            if plugin_args:
                 plugin_args["n_procs"] = n_procs
+            else:
+                plugin_args = {"n_procs": n_procs}
 
         return plugin_args
 

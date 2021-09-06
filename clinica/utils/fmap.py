@@ -1,7 +1,8 @@
 # coding: utf8
+from typing import Optional
 
 
-def convert_phase_in_radians(in_file, out_file=None):
+def convert_phase_in_radians(in_file: str, out_file: Optional[str] = None):
     """Convert phase image in radians."""
     import math
     import os
@@ -16,8 +17,7 @@ def convert_phase_in_radians(in_file, out_file=None):
     imin = np.amin(img.get_fdata(dtype="float32"))
     imax = np.amax(img.get_fdata(dtype="float32"))
 
-    if out_file is None:
-        out_file = op.abspath("phase_in_rad.nii.gz")
+    out_file = out_file or op.abspath("phase_in_rad.nii.gz")
 
     cmd = "fslmaths %s -mul %s -div %s %s -odt float" % (
         in_file,
@@ -36,7 +36,9 @@ def convert_phase_in_radians(in_file, out_file=None):
     return out_file
 
 
-def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
+def create_phase_in_radsec(
+    in_phase1, in_phase2, delta_te, out_file: Optional[str] = None
+):
     """Converts input (unwarpped) phase1 and phase2 map to into a fieldmap inrads.
 
     Warning:
@@ -47,8 +49,7 @@ def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
     import nibabel as nb
     import numpy as np
 
-    if out_file is None:
-        out_file = op.abspath("fmap_radsec.nii.gz")
+    out_file = out_file or op.abspath("fmap_radsec.nii.gz")
 
     img1 = nb.load(in_phase1)
     img2 = nb.load(in_phase2)
@@ -60,7 +61,7 @@ def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
     return out_file
 
 
-def resample_fmap_to_b0(in_fmap, in_b0, out_file=None):
+def resample_fmap_to_b0(in_fmap, in_b0, out_file: Optional[str] = None):
     """Resample fieldmap onto the b0 image.
 
     Warnings:
@@ -79,7 +80,7 @@ def resample_fmap_to_b0(in_fmap, in_b0, out_file=None):
     import nibabel
     from nilearn.image import resample_to_img
 
-    if out_file is None:
+    if not out_file:
         fname, ext = op.splitext(op.basename(in_fmap))
         if ext == ".gz":
             fname, ext2 = op.splitext(fname)

@@ -3,26 +3,19 @@
 
 ## Converters
 
-If you want to run the `convert <dataset>-to-bids` commands (e.g. `adni-to-bids`), you may have to install the [**dcm2niix**](https://github.com/rordenlab/dcm2niix), [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) and/or [**FreeSurfer**](http://surfer.nmr.mgh.harvard.edu/) tools.
+Some converters require a recent version of [dcm2niix](https://github.com/rordenlab/dcm2niix) to transform DICOM files
+into NIfTI:
 
-|                   | dcm2niix | FreeSurfer |
-|:------------------|:--------:|:----------:|
-| `adni-to-bids`    |    x     |            |
-| `aibl-to-bids`    |    x     |     x      |
-| `nifd-to-bids`    |    x     |            |
-| `oasis-to-bids`   |          |            |
+|                   | dcm2niix |
+|:------------------|:--------:|
+| `adni-to-bids`    |    x     |
+| `aibl-to-bids`    |    x     |
+| `nifd-to-bids`    |    x     |
+| `oasis-to-bids`   |          |
 
-Please refer to each tool’s website for installation instructions:
+Please check the installation instructions for all platforms [here](https://github.com/rordenlab/dcm2niix#install).
 
-- [**dcm2niix**](https://github.com/rordenlab/dcm2niix)
-  - Download [here](https://github.com/rordenlab/dcm2niix) and follow the installation instructions on the same page.
-  - For Mac users: use Homebrew to install `dcm2niix` with `brew install dcm2niix`.
-- [**FreeSurfer 6.0**](http://surfer.nmr.mgh.harvard.edu/)
-  - For Linux users, download and install FreeSurfer following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
-  Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` (a `sudo apt-get install tcsh libjpeg62` should do the job).
-  - For Mac users, download [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the FreeSurfer [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
-
-Do not forget to check the installations following each tool’s guidelines.
+Clinica requires dcm2niix version `1.0.20190902` or later.
 
 ## Pipeline-specific interfaces
 
@@ -87,7 +80,7 @@ export LANG=en_US.UTF-8
 source /path/to/your/Miniconda/etc/profile.d/conda.sh
 
 # ANTs
-export ANTSPATH="/path/to/your/ANTs"
+export ANTSPATH="/path/to/your/ANTs/"
 export PATH=${ANTSPATH}:${PATH}
 
 # FreeSurfer
@@ -106,10 +99,6 @@ source ${FSLDIR}/etc/fslconf/fsl.sh
 export MATLAB_HOME="/path/to/your/matlab/bin/"
 export PATH=${MATLAB_HOME}:${PATH}
 export MATLABCMD="${MATLAB_HOME}/matlab"
-
-# MRtrix3
-export MRTRIX_HOME="/path/to/your/mrtrix3"
-export PATH="${MRTRIX_HOME}/bin":"${MRTRIX_HOME}/scripts":${PATH}
 
 # SPM
 export SPM_HOME="/path/to/your/spm12"

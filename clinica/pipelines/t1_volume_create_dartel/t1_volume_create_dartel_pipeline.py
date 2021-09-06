@@ -16,8 +16,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         if "group_label" not in self.parameters.keys():
             raise KeyError("Missing compulsory group_label key in pipeline parameter.")
-        if "dartel_tissues" not in self.parameters.keys():
-            self.parameters["dartel_tissues"] = [1, 2, 3]
+        self.parameters.setdefault("dartel_tissues", [1, 2, 3])
 
         check_group_label(self.parameters["group_label"])
 

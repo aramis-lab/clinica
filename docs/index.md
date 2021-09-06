@@ -75,6 +75,7 @@ Clinica provides tools to curate several publicly available neuroimaging dataset
 - `aibl-2-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](Converters/AIBL2BIDS)
 - `nifd-2-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](Converters/NIFD2BIDS)
 - `oasis-2-bids` - [OASIS: Open Access Series of Imaging Studies](Converters/OASIS2BIDS)
+- `oasis3-2-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](Converters/OASIS3TOBIDS)
 
 !!! note
     We provide converters for the datasets used in the [Aramis Lab](http://www.aramislab.fr/).
@@ -95,8 +96,9 @@ Find on [this page](ClinicaConferences) the presentations and demo materials use
 
 ## Support
 
-- [Report an issue on GitHub](https://github.com/aramis-lab/clinica/issues)
-- Use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
+- Check for [past answers](https://groups.google.com/forum/#!forum/clinica-user) in the old Clinica Google Group
+- Start a [discussion](https://github.com/aramis-lab/clinica/discussions) on Github
+- Report an [issue](https://github.com/aramis-lab/clinica/issues) on GitHub
 
 ## License
 

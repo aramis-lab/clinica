@@ -149,8 +149,6 @@ def check_mrtrix(version_requirements=None):
     """Check MRtrix software."""
     from clinica.utils.exceptions import ClinicaMissingDependencyError
 
-    check_environment_variable("MRTRIX_HOME", "MRtrix")
-
     list_binaries = ["transformconvert", "mrtransform", "dwi2response", "tckgen"]
     for binary in list_binaries:
         if not is_binary_present(binary):
