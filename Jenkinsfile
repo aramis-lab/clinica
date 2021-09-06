@@ -167,7 +167,7 @@ pipeline {
                  module load clinica.all
                  cd test
                  taskset -c 0-21 pytest \
-                    --junitxml=./test-reports/instantation_linux.xml \
+                    --junitxml=./test-reports/run_converters_linux.xml \
                     --verbose \
                     --working_directory=$WORK_DIR \
                     --input_data_directory=$INPUT_DATA_DIR \
@@ -175,7 +175,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 6 \
-                   ./instantiation/
+                    ./nonregression/iotools/test_run_converters.py
                  module purge
                  conda deactivate
                  '''
@@ -247,9 +247,9 @@ pipeline {
                     --working_directory=$WORK_DIR \
                     --input_data_directory=$INPUT_DATA_DIR \
                     --basetemp=$TMP_BASE \
-                    --junitxml=./test-reports/instantation_mac.xml \
+                    --junitxml=./test-reports/run_converters_mac.xml \
                     --disable-warnings \
-                    ./instantiation/
+                    ./nonregression/iotools/test_run_converters.py
                  module purge
                  conda deactivate
                  '''
