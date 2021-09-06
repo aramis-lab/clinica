@@ -256,26 +256,20 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
 
     path_end = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
     parent_dir = sourcedata_dir.parent
-    path_to_json = Path.joinpath(parent_dir, "BIDS", path_end).with_suffix(".json")
+    filename_stem = Path(bids_filename.stem).stem
 
-    json_filename = Path.joinpath(
-        bids_filename.parent, Path(bids_filename.stem).stem
-    ).with_suffix(".json")
-
-    source_json = fs.open(path_to_json, mode="rb")
-    target_json = fs.open(json_filename, mode="wb")
-    with source_json as sj, target_json as tj:
-        tj.write(sj.read())
-
-    if sourcedata_dir.parent.stem[:3] == "pet":
-        path_to_tsv = Path.joinpath(parent_dir, "BIDS", path_end).with_suffix(".tsv")
-        target_tsv = Path.joinpath(
-            bids_filename.parent, Path(bids_filename.stem).stem
-        ).with_suffix(".tsv")
-        source_tsv = fs.open(path_to_tsv, mode="rb")
-        target_tsv = fs.open(target_tsv, mode="wb")
-        with source_tsv as st, target_tsv as tt:
-            tt.write(st.read())
+    for path in Path.joinpath(parent_dir, "BIDS").rglob(str(path_end) + "*"):
+        suffix = path.suffix
+        path_to_sidecar = Path.joinpath(parent_dir, "BIDS", path_end).with_suffix(
+            suffix
+        )
+        sidecar_filename = Path.joinpath(
+            bids_filename.parent, filename_stem
+        ).with_suffix(suffix)
+        source = fs.open(path_to_sidecar, mode="rb")
+        target = fs.open(sidecar_filename, mode="wb")
+        with source as s, target as t:
+            t.write(s.read())
 
     source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
     target_file = fs.open(bids_filename, mode="wb")
