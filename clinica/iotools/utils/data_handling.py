@@ -194,7 +194,7 @@ def create_merge_file(
                 if summary_df is not None and not summary_df.empty:
                     merged_summary_df = pd.concat([merged_summary_df, summary_df])
 
-                if summary_df is None or len(summary_df) == 0:
+                if summary_df is None or summary_df.empty:
                     cprint(
                         f"{pipeline_name} outputs were not found in the CAPS folder."
                     )
