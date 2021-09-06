@@ -265,6 +265,7 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     target_basename = Path(bids_filename.stem).stem
 
     for path in Path.joinpath(source_dir, "BIDS").rglob(f"{source_basename}*"):
+        print(path)
         suffix = path.suffix
         path_to_sidecar = Path.joinpath(
             source_dir, "BIDS", source_basename
@@ -272,10 +273,10 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
         sidecar_filename = Path.joinpath(
             bids_filename.parent, target_basename
         ).with_suffix(suffix)
-        source = fs.open(path_to_sidecar, mode="rb")
-        target = fs.open(sidecar_filename, mode="wb")
-        with source as s, target as t:
-            t.write(s.read())
+        source_file = fs.open(path_to_sidecar, mode="rb")
+        target_file = fs.open(sidecar_filename, mode="wb")
+        with source_file as sf, target_file as tf:
+            tf.write(sf.read())
 
 
 def write_bids(
