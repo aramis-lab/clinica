@@ -95,15 +95,22 @@ def find_imaging_data(imaging_data_directory: PathLike) -> Iterable[Tuple[str, s
     import re
     from pathlib import Path
 
-    pattern = re.compile(
-        r"NIFD_(?:\d_S_\d{4})_(?:\w+)_(?:\d{4}_\d{2}_\d{2})_(?:\d+)_(?:S\d+)_(I\d+)$"
-    )
+    # Pattern for extracting the image data ID from the NIFD files.
+    pattern = re.compile(r"(I\d{6})")
 
-    for path in Path(imaging_data_directory).rglob("NIFD*"):
-        if path.is_dir():
-            match = pattern.search(path.name)
-            if match:
-                yield match.group(1), path
+    def find_files(in_: PathLike) -> Iterable[Path]:
+        return filter(lambda x: x.is_file(), Path(in_).rglob("NIFD*.*"))
+
+    def extract_id_with_dir(files: Iterable[Path]) -> Tuple[str, str]:
+        for f in files:
+            found = pattern.search(f.name)
+            if found:
+                yield found.group(1), str(f.parent)
+
+    for image_data_id, source_dir in set(
+        sorted(extract_id_with_dir(find_files(imaging_data_directory)))
+    ):
+        yield image_data_id, source_dir
 
 
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
