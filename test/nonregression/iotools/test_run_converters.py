@@ -60,7 +60,7 @@ def test_run_convertors(cmdopt, tmp_path, name):
         to_convert = convert_images(
             dataset_directory, bids_directory, clinical_data_directory
         )
-        # Asert
+        # Assert
         compare_folders_structures(
             fspath(bids_directory), fspath(ref_dir / "hashes_nifd.p")
         )
@@ -74,7 +74,7 @@ def test_run_convertors(cmdopt, tmp_path, name):
         oasis_to_bids.convert_images(dataset_directory, bids_directory)
         oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
         # Assert
-        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
+        compare_folders(tmp_out_dir / "bids", ref_dir / "bids", tmp_path)
     elif name == "Oasis3ToBids":
         from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import (
             Oasis3ToBids,
@@ -87,7 +87,7 @@ def test_run_convertors(cmdopt, tmp_path, name):
         oasis_to_bids.convert_images(dataset_directory, bids_directory)
         oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
         # Assert
-        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
+        compare_folders(tmp_out_dir / "bids", ref_dir / "bids", tmp_path)
     elif name == "Adni2Bids":
         from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
 
@@ -108,7 +108,7 @@ def test_run_convertors(cmdopt, tmp_path, name):
         )
         adni_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
         # Assert
-        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
+        compare_folders(tmp_out_dir / "bids", ref_dir / "bids", tmp_path)
     elif name == "Aibl2Bids":
         from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import (
             convert_clinical_data,
@@ -126,7 +126,7 @@ def test_run_convertors(cmdopt, tmp_path, name):
         )
         convert_clinical_data(bids_directory, clinical_data_directory)
         # Assert
-        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
+        compare_folders(tmp_out_dir / "bids", ref_dir / "bids", tmp_path)
     else:
         print(f"Test {name} not available.")
         assert 0
