@@ -53,7 +53,11 @@ def test_run_convertors(cmdopt, tmp_path, name):
         from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import convert_images
 
         # Arrange
-        shutil.copytree(input_dir / "clinical_data", tmp_out_dir / "clinical_data")
+        shutil.copytree(
+            input_dir / "clinical_data",
+            tmp_out_dir / "clinical_data",
+            copy_function=shutil.copy,
+        )
         # Arrange - Data location
         clinical_data_directory = tmp_out_dir / "clinical_data"
         # Acte - Conversion
@@ -126,7 +130,7 @@ def test_run_convertors(cmdopt, tmp_path, name):
         )
         convert_clinical_data(bids_directory, clinical_data_directory)
         # Assert
-        compare_folders(tmp_out_dir / "bids", ref_dir / "bids", tmp_path)
+        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
     else:
         print(f"Test {name} not available.")
         assert 0
