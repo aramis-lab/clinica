@@ -919,22 +919,19 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
             seq_path.rglob(f"*_I{image['Image_ID']}.*"),
         )
 
-        # The "Original" field already describes whether a given image ID corresponds to an original DICOM
-        # or a preprocessed NIfTI. If the field is not present, assume the image is DICOM.
-        try:
-            dicom = image["Original"]
-        except KeyError:
-            dicom = True
-
         try:
             # Grab the first file from the generator.
             next_file: Path = next(find_file)
+
+            # Whether the image data are DICOM or not.
+            dicom = "dcm" in next_file.suffix
 
             # Compute the image path (DICOM folder or NIfTI path).
             image_path = str(next_file.parent if dicom else next_file)
         except StopIteration:
             # In case no file is found.
             image_path = ""
+            dicom = True
 
         is_dicom.append(dicom)
         image_folders.append(image_path)
