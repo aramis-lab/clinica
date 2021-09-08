@@ -106,7 +106,7 @@ pipeline {
           }
         }
       }
-      stage('Short Tests') {
+      stage('Instantiate Tests') {
         parallel {
           stage('Instantiate Linux') {
             agent { label 'ubuntu' }
@@ -134,48 +134,8 @@ pipeline {
                     --input_data_directory=$INPUT_DATA_DIR \
                     --disable-warnings \
                     --timeout=0 \
-                    -n 6 \
+                    -n 4 \
                    ./instantiation/
-                 module purge
-                 conda deactivate
-                 '''
-            }
-            post {
-              always {
-                junit 'test/test-reports/*.xml'
-              }
-            }  
-          }
-          stage('Run Converters Linux') {
-            agent { label 'ubuntu' }
-            environment {
-              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
-              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-              WORK_DIR = "/mnt/data/ci/working_dir_linux"
-              INPUT_DATA_DIR = "/mnt/data_ci"
-              TMP_BASE = "/mnt/data/ci/tmp"
-              }
-            steps {
-              echo 'Testing pipeline instantation...'
-              sh 'echo "Agent name: ${NODE_NAME}"'
-              sh '''
-                 set +x
-                 eval "$(conda shell.bash hook)"
-                 source ./.jenkins/scripts/find_env.sh
-                 conda activate clinica_env_$BRANCH_NAME
-                 source /usr/local/Modules/init/profile.sh
-                 module load clinica.all
-                 cd test
-                 taskset -c 0-21 pytest \
-                    --junitxml=./test-reports/run_converters_linux.xml \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --input_data_directory=$INPUT_DATA_DIR \
-                    --basetemp=$TMP_BASE \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 6 \
-                    ./nonregression/iotools/test_run_converters.py
                  module purge
                  conda deactivate
                  '''
@@ -222,7 +182,91 @@ pipeline {
               }
             }  
           }
-          stage('Run Converters Mac') {
+        }
+      }
+      stage('Non-regression Tests') {
+        parallel {
+          stage('Converters Linux') {
+            agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR = "/mnt/data/ci/working_dir_linux"
+              INPUT_DATA_DIR = "/mnt/data_ci"
+              TMP_BASE = "/mnt/data/ci/tmp"
+              }
+            steps {
+              echo 'Testing pipeline instantation...'
+              sh 'echo "Agent name: ${NODE_NAME}"'
+              sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source ./.jenkins/scripts/find_env.sh
+                 conda activate clinica_env_$BRANCH_NAME
+                 source /usr/local/Modules/init/profile.sh
+                 module load clinica.all
+                 cd test
+                 taskset -c 0-21 pytest \
+                    --junitxml=./test-reports/run_converters_linux.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_BASE \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 2 \
+                    ./nonregression/iotools/test_run_converters.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                junit 'test/test-reports/*.xml'
+              }
+            }  
+          }
+          stage('Iotools Linux') {
+            agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR = "/mnt/data/ci/working_dir_linux"
+              INPUT_DATA_DIR = "/mnt/data_ci"
+              TMP_BASE = "/mnt/data/ci/tmp"
+              }
+            steps {
+              echo 'Testing pipeline instantation...'
+              sh 'echo "Agent name: ${NODE_NAME}"'
+              sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source ./.jenkins/scripts/find_env.sh
+                 conda activate clinica_env_$BRANCH_NAME
+                 source /usr/local/Modules/init/profile.sh
+                 module load clinica.all
+                 cd test
+                 taskset -c 0-21 pytest \
+                    --junitxml=./test-reports/run_utils_linux.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_BASE \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 2 \
+                    ./nonregression/iotools/test_run_utils.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                junit 'test/test-reports/*.xml'
+              }
+            }  
+          }
+          stage('Converters Mac') {
             agent { label 'macos' }
             environment {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
@@ -250,6 +294,44 @@ pipeline {
                     --junitxml=./test-reports/run_converters_mac.xml \
                     --disable-warnings \
                     ./nonregression/iotools/test_run_converters.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                junit 'test/test-reports/*.xml'
+              }
+            }  
+          }
+          stage('Iotools Mac') {
+            agent { label 'macos' }
+            environment {
+              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR = "/Volumes/data/working_dir_mac"
+              INPUT_DATA_DIR = "/Volumes/data_ci"
+              TMP_BASE = "/Volumes/data/tmp"
+              }
+            steps {
+              echo 'Testing pipeline instantation...'
+              sh 'echo "Agent name: ${NODE_NAME}"'
+              sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source ./.jenkins/scripts/find_env.sh
+                 conda activate clinica_env_$BRANCH_NAME
+                 source /usr/local/opt/modules/init/bash
+                 module load clinica.all
+                 cd test
+                 pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_BASE \
+                    --junitxml=./test-reports/run_utils_mac.xml \
+                    --disable-warnings \
+                    ./nonregression/iotools/test_run_utils.py
                  module purge
                  conda deactivate
                  '''
