@@ -60,6 +60,8 @@ def test_run_iotools(cmdopt, tmp_path, name):
         from os import remove
         from os.path import abspath, dirname, join
 
+        import pandas as pd
+
         from clinica.iotools.utils import data_handling as dt
 
         # Arrange
@@ -80,6 +82,9 @@ def test_run_iotools(cmdopt, tmp_path, name):
         )
         # Assert
         ref_tsv = fspath(ref_dir / "output_file.tsv")
+        out_df = pd.read_csv(out_tsv, sep="/")
+        ref_df = pd.read_csv(ref_tsv, sep="/")
+        assert out_df.equals(ref_df)
         assert cmp(out_tsv, ref_tsv)
     elif name == "ComputeMissingModalities":
         from clinica.iotools.utils import data_handling as dt
