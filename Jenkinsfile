@@ -148,6 +148,11 @@ pipeline {
               always {
                 junit 'test/test-reports/*.xml'
               }
+              success {
+                sh '''
+                   rm -rf WORK_DIR/*
+                   ''' 
+              }
             }  
           }
           /*
@@ -184,6 +189,11 @@ pipeline {
             post {
               always {
                 junit 'test/test-reports/*.xml'
+              }
+              success {
+                sh '''
+                   rm -rf WORK_DIR/*
+                   ''' 
               }
             }  
           }
@@ -230,6 +240,12 @@ pipeline {
               always {
                 junit 'test/test-reports/*.xml'
               }
+              success {
+                sh '''
+                   rm -rf WORK_DIR/*
+                   rm -rf TMP_BASE/*
+                   ''' 
+              }
             }  
           }
           stage('Iotools Linux') {
@@ -270,6 +286,12 @@ pipeline {
               always {
                 junit 'test/test-reports/*.xml'
               }
+              success {
+                sh '''
+                   rm -rf WORK_DIR/*
+                   rm -rf TMP_BASE/*
+                   ''' 
+              }
             }  
           }
           stage('Converters Mac') {
@@ -308,6 +330,12 @@ pipeline {
               always {
                 junit 'test/test-reports/*.xml'
               }
+              success {
+                sh '''
+                   rm -rf WORK_DIR/*
+                   rm -rf TMP_BASE/*
+                   ''' 
+              }
             }  
           }
           stage('Iotools Mac') {
@@ -345,6 +373,12 @@ pipeline {
             post {
               always {
                 junit 'test/test-reports/*.xml'
+              }
+              success {
+                sh '''
+                   rm -rf WORK_DIR/*
+                   rm -rf TMP_BASE/*
+                   ''' 
               }
             }  
           }
