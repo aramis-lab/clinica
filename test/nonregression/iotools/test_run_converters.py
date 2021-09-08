@@ -130,7 +130,7 @@ def test_run_convertors(cmdopt, tmp_path, name):
         )
         convert_clinical_data(bids_directory, clinical_data_directory)
         # Assert
-        compare_folders(fspath(tmp_out_dir), fspath(ref_dir), shared_folder_name="bids")
+        compare_folders(tmp_out_dir / "bids", ref_dir / "bids", tmp_path)
     else:
         print(f"Test {name} not available.")
         assert 0
