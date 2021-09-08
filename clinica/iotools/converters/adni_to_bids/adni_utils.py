@@ -718,11 +718,11 @@ def create_adni_sessions_dict(
                 ]
                 df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
 
+    df_subj_session = df_subj_session[
+        (~df_subj_session.session_id.isin(["ses-Nv", "sc", False]))
+    ]
     if df_subj_session.empty:
         raise ValueError("Empty dataset detected. Clinical data cannot be extracted")
-    df_subj_session.drop(
-        df_subj_session[df_subj_session.session_id == "sc"].index, inplace=True
-    )
     write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
 
@@ -754,6 +754,11 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
 
     # if error in adni data (duplicate session id), keep only the first row
     df_temp.drop_duplicates(subset=["RID", "session_id"], keep="first", inplace=True)
+
+    if "diagnosis" in df_temp.columns:
+        df_temp["diagnosis"] = df_temp["diagnosis"].apply(
+            lambda x: convert_diagnosis_code(x)
+        )
 
     if df_subj_session.empty:
         df_subj_session = df_temp
