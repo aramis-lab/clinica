@@ -28,30 +28,30 @@ pipeline {
                  '''
             }
           }
-          stage('Build in Mac') {
-            agent { label 'macos' }
-            environment {
-              PATH = "$HOME/miniconda3/bin:$PATH"
-              }
-            when {
-              changeset 'requirements*'
-            }
-            steps {
-              echo 'My branch name is ${BRANCH_NAME}'
-              echo 'Building Conda environment... clinica_env_${BRANCH_NAME}'
-              sh '''
-                 eval "$(conda shell.bash hook)"
-                 conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
-                 conda activate clinica_env_$BRANCH_NAME
-                 pip install -r requirements-dev.txt
-                 '''
-            }
-          }
+          # stage('Build in Mac') {
+          #   agent { label 'macos' }
+          #   environment {
+          #     PATH = "$HOME/miniconda3/bin:$PATH"
+          #     }
+          #   when {
+          #     changeset 'requirements*'
+          #   }
+          #   steps {
+          #     echo 'My branch name is ${BRANCH_NAME}'
+          #     echo 'Building Conda environment... clinica_env_${BRANCH_NAME}'
+          #     sh '''
+          #        eval "$(conda shell.bash hook)"
+          #        conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
+          #        conda activate clinica_env_$BRANCH_NAME
+          #        pip install -r requirements-dev.txt
+          #        '''
+          #   }
+          # }
         }
       }
       stage('Install') {
         parallel {
-          stage('Launch in Linux') {
+          stage('Launch') {
             agent { label 'ubuntu' }
             environment {
               PATH = "$HOME/miniconda/bin:$PATH"
@@ -78,32 +78,32 @@ pipeline {
                '''
             }
           }
-          stage('Launch in MacOS') {
-            agent { label 'macos' }
-            environment {
-              PATH = "$HOME/miniconda3/bin:$PATH"
-              }
-            steps {
-            echo 'Installing Clinica sources in MacOS...'
-            sh 'echo "Agent name: ${NODE_NAME}"'
-            echo 'My branch name is ${BRANCH_NAME}'
-            echo "My conda env name is clinica_env_${BRANCH_NAME}"
-            sh '''
-               set +x
-               eval "$(conda shell.bash hook)"
-               echo $CONDA_PREFIX
-               source ./.jenkins/scripts/find_env.sh
-               conda activate clinica_env_$BRANCH_NAME
-               echo "Install clinica using pip..."
-               pip install --ignore-installed .
-               eval "$(register-python-argcomplete clinica)"
-               # Show clinica help message
-               echo "Display clinica help message"
-               clinica --help
-               conda deactivate
-            '''
-            }
-          }
+          # stage('Launch in MacOS') {
+          #   agent { label 'macos' }
+          #   environment {
+          #     PATH = "$HOME/miniconda3/bin:$PATH"
+          #     }
+          #   steps {
+          #   echo 'Installing Clinica sources in MacOS...'
+          #   sh 'echo "Agent name: ${NODE_NAME}"'
+          #   echo 'My branch name is ${BRANCH_NAME}'
+          #   echo "My conda env name is clinica_env_${BRANCH_NAME}"
+          #   sh '''
+          #      set +x
+          #      eval "$(conda shell.bash hook)"
+          #      echo $CONDA_PREFIX
+          #      source ./.jenkins/scripts/find_env.sh
+          #      conda activate clinica_env_$BRANCH_NAME
+          #      echo "Install clinica using pip..."
+          #      pip install --ignore-installed .
+          #      eval "$(register-python-argcomplete clinica)"
+          #      # Show clinica help message
+          #      echo "Display clinica help message"
+          #      clinica --help
+          #      conda deactivate
+          #   '''
+          #   }
+          # }
         }
       }
       stage('Instantiate Tests') {
