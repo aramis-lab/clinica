@@ -59,23 +59,13 @@ The data needs to be formatted before downloading by following the step-by-step 
 
 ![](../img/OASIS3_download/check_age.png)
 
-8. From this "MR Sessions" table, click on the "Join to" option.
+8. From the menu, load the table "ADRC Clinical Data" as well as "PETs" and "PUPs".
 
-![](../img/OASIS3_download/join_to_mr_sessions.png)
+9. In the options, export a "Spreadsheet" of the five tables "Subjects, "MR Sessions", "ADRC Clinical Data", "PETs" and "PUPs".
 
-9. Select the "ADRC Clinical Data" table.
+10. Put the spreadsheets in a folder.
 
-![](../img/OASIS3_download/select_clinical_data.png)
-
-10. Do the same "join" by going back to the "Subjects" table, then check the inclusion of the "mmse", "ageAtEntry" and "cdr" columns.
-
-![](../img/OASIS3_download/check_columns.png)
-
-11. In the options, export a "Spreadsheet" of the two tables "Subjects" and "MR Sessions".
-
-![](../img/OASIS3_download/export_spreadsheet.png)
-
-12. Rename the downloaded files to "oasis3_participants.csv" and "oasis3_sessions.csv" respectively.
+11. 
 
 !!! note
     You do not have to modify the original folder name before using the converter.
@@ -103,7 +93,7 @@ To download the images of the OASIS-3 dataset:
     
     d. For the "Assessments", do not select anything.
     
-4. Click submit to download. We advise that you use the XNAT Desktop Client which will be more efficient than download through your web browser
+4. Click submit to download. We advise that you use the XNAT Desktop Client which will be more efficient than download through your web browser.
 
 ## Supported modalities
 

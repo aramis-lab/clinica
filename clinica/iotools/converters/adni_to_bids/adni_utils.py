@@ -1169,7 +1169,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             zip_image = "y"
 
         if image.Is_Dicom:
-            command = f"dcm2niix -b {generate_json} -z {zip_image} -o {output_path} -f {output_filename} {image_path}"
+            command = f"dcm2niix -w 0 -b {generate_json} -z {zip_image} -o {output_path} -f {output_filename} {image_path}"
             run_dcm2niix(command)
 
             # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
@@ -1200,8 +1200,8 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             # Check if conversion worked (output files exist)
             if not nifti_exists or not dwi_bvec_and_bval_exist:
                 cprint(
-                    "WARNING: Conversion with dcm2niix failed, trying with dcm2nii "
-                    f"for subject {subject} and session {session}"
+                    msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
+                    lvl="warning",
                 )
                 return nan
 
