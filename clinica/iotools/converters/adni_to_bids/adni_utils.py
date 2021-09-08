@@ -755,10 +755,12 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
     # if error in adni data (duplicate session id), keep only the first row
     df_temp.drop_duplicates(subset=["RID", "session_id"], keep="first", inplace=True)
 
-    if "diagnosis" in df_temp.columns:
+    try:
         df_temp["diagnosis"] = df_temp["diagnosis"].apply(
             lambda x: convert_diagnosis_code(x)
         )
+    except KeyError:
+        pass
 
     if df_subj_session.empty:
         df_subj_session = df_temp
