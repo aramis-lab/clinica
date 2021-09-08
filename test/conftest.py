@@ -5,16 +5,6 @@
     different functions available in Clinica
 """
 
-__author__ = "Mauricio Diaz"
-__copyright__ = "Copyright 2016-2021 The Aramis Lab Team"
-__credits__ = ["Mauricio Diaz"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.5.1"
-__maintainer__ = "Mauricio Diaz"
-__email__ = "mauricio.diaz@inria.fr"
-__status__ = "Development"
-
-
 import pytest
 
 
