@@ -115,9 +115,9 @@ def t1_freesurfer_longitudinal_pipeline(
                 # Always retrieve subcortical volumes
                 atlas_path = path.join(
                     mod_path,
-                    f"{participant_id}_{session_id}_{long_id}_segmentationVolumes.tsv",
+                    f"{participant_id}_{session_id}*segmentationVolumes.tsv",
                 )
-                atlas_df = pd.read_csv(atlas_path, sep="\t")
+                atlas_df = pd.read_csv(glob(atlas_path)[0], sep="\t")
                 label_list = [
                     "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
                     for x in atlas_df.label_name.values

@@ -60,11 +60,14 @@ def create_merge_file(
             raise IOError("The path to the CAPS directory is wrong")
 
     if not os.path.isfile(path.join(bids_dir, "participants.tsv")):
-        raise IOError("participants.tsv not found in the specified BIDS directory")
-    participants_df = pd.read_csv(path.join(bids_dir, "participants.tsv"), sep="\t")
+        participants_df = create_participants_df(bids_dir)
+        # raise IOError("participants.tsv not found in the specified BIDS directory")
+
+    else:
+        participants_df = pd.read_csv(path.join(bids_dir, "participants.tsv"), sep="\t")
 
     sessions, subjects = get_subject_session_list(
-        bids_dir, ss_file=tsv_file, use_session_tsv=True
+        bids_dir, ss_file=tsv_file, use_session_tsv=(not ignore_sessions_files)
     )
     sub_ses_df = pd.DataFrame(
         [[subject, session] for subject, session in zip(subjects, sessions)],
@@ -233,6 +236,21 @@ def create_merge_file(
         merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
         merged_df.to_csv(out_path, sep="\t")
         cprint("End of CAPS information merge.", lvl="debug")
+
+
+def create_participants_df(bids_dir):
+    import pandas as pd
+    import os
+
+    subjects_ids = [
+        name
+        for name in os.listdir(bids_dir)
+        if os.path.isdir(os.path.join(bids_dir, name)) and "sub" in name
+    ]
+
+    participants_df = pd.DataFrame(subjects_ids, columns=["participant_id"])
+
+    return participants_df
 
 
 def find_mods_and_sess(bids_dir):
