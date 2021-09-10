@@ -237,35 +237,6 @@ def tree(dir: PathLike, file_out: PathLike):
     file_out.write_text(file_content)
 
 
-def compare_folders1(out, ref, shared_folder_name):
-    from filecmp import cmp
-    from os import remove
-    from os.path import join
-
-    out_txt = join(out, "out_folder.txt")
-    ref_txt = join(out, "ref_folder.txt")
-
-    list_files(join(out, shared_folder_name), filename=out_txt)
-    list_files(join(ref, shared_folder_name), filename=ref_txt)
-
-    # Compare them
-    if not cmp(out_txt, ref_txt):
-        with open(out_txt, "r") as fin:
-            out_message = fin.read()
-        with open(ref_txt, "r") as fin:
-            ref_message = fin.read()
-        remove(out_txt)
-        remove(ref_txt)
-        raise ValueError(
-            "Comparison of out and ref directories shows mismatch :\n "
-            "OUT :\n" + out_message + "\n REF :\n" + ref_message
-        )
-
-    # Clean folders
-    remove(out_txt)
-    remove(ref_txt)
-
-
 def list_files(startpath, filename=None):
     """
 
