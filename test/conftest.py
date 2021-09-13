@@ -5,20 +5,15 @@
     different functions available in Clinica
 """
 
-__author__ = "Mauricio Diaz"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Mauricio Diaz"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.2.0"
-__maintainer__ = "Mauricio Diaz"
-__email__ = "mauricio.diaz@inria.fr"
-__status__ = "Development"
-
-
 import pytest
 
 
 def pytest_addoption(parser):
+    parser.addoption(
+        "--input_data_directory",
+        action="store",
+        help="Directory for (only-read) inputs for tests",
+    )
     parser.addoption(
         "--working_directory", action="store", help="Working directory for tests"
     )
@@ -26,4 +21,7 @@ def pytest_addoption(parser):
 
 @pytest.fixture
 def cmdopt(request):
-    return request.config.getoption("--working_directory")
+    config_param = {}
+    config_param["input"] = request.config.getoption("--input_data_directory")
+    config_param["wd"] = request.config.getoption("--working_directory")
+    return config_param
