@@ -10,7 +10,6 @@ import warnings
 from os import PathLike, fspath
 from pathlib import Path
 from test.nonregression.testing_tools import (
-    clean_folder,
     create_list_hashes,
     identical_subject_list,
     same_missing_modality_tsv,
@@ -37,15 +36,17 @@ def test_name(request):
 def run_createsubjectsession(
     input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike
 ) -> None:
+    from pathlib import Path
+
     from clinica.iotools.utils import data_handling as dt
 
-    # Arrage
+    # Arrange
     tsv_name = "subject_session_list.tsv"
     # Act - Create subject_session file
-    dt.create_subs_sess_list(input_dir / "bids", output_dir, tsv_name)
+    dt.create_subs_sess_list(str(Path(input_dir) / "bids"), str(output_dir), tsv_name)
     # Assert
-    out_tsv = fspath(output_dir / tsv_name)
-    ref_tsv = fspath(ref_dir / tsv_name)
+    out_tsv = fspath(Path(output_dir) / tsv_name)
+    ref_tsv = fspath(Path(ref_dir) / tsv_name)
     assert identical_subject_list(out_tsv, ref_tsv)
 
 
@@ -54,21 +55,20 @@ def run_createmergefile(
 ) -> None:
     import shutil
     from filecmp import cmp
-    from os import remove
-    from os.path import abspath, dirname, join
+    from pathlib import Path
 
     import pandas as pd
 
     from clinica.iotools.utils import data_handling as dt
 
     # Arrange
-    out_tsv = output_dir / "output_file.tsv"
-    subject_session_tsv = input_dir / "subjects_sessions.tsv"
-    caps_directory = output_dir / "caps"
-    shutil.copytree(input_dir / "caps", caps_directory, copy_function=shutil.copy)
+    out_tsv = Path(output_dir) / "output_file.tsv"
+    subject_session_tsv = Path(input_dir) / "subjects_sessions.tsv"
+    caps_directory = Path(output_dir) / "caps"
+    shutil.copytree(Path(input_dir) / "caps", caps_directory, copy_function=shutil.copy)
     # Act
     dt.create_merge_file(
-        input_dir / "bids",
+        Path(input_dir) / "bids",
         out_tsv,
         caps_dir=caps_directory,
         tsv_file=subject_session_tsv,
@@ -78,7 +78,7 @@ def run_createmergefile(
         group_selection=None,
     )
     # Assert
-    ref_tsv = fspath(ref_dir / "output_file.tsv")
+    ref_tsv = fspath(Path(ref_dir) / "output_file.tsv")
     out_df = pd.read_csv(out_tsv, sep="/")
     ref_df = pd.read_csv(ref_tsv, sep="/")
     assert out_df.equals(ref_df)
@@ -88,10 +88,12 @@ def run_createmergefile(
 def run_computemissingmodalities(
     input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike
 ) -> None:
+    from pathlib import Path
+
     from clinica.iotools.utils import data_handling as dt
 
     output_name = "missing_modalities"
-    bids_dir = input_dir / "bids"
+    bids_dir = Path(input_dir) / "bids"
 
     dt.compute_missing_mods(bids_dir, output_dir, output_name)
 
@@ -104,12 +106,12 @@ def run_computemissingmodalities(
         "missing_modalities_ses-M48.tsv",
     ]
     for i in range(len(filenames)):
-        outname = output_dir / filenames[i]
-        refname = ref_dir / filenames[i]
+        outname = Path(output_dir) / filenames[i]
+        refname = Path(ref_dir) / filenames[i]
         if not outname.exists():
             raise FileNotFoundError(
                 "A file called "
-                + outname
+                + str(outname)
                 + " should have been generated, but it does not exists"
             )
         assert same_missing_modality_tsv(outname, refname)
@@ -118,10 +120,12 @@ def run_computemissingmodalities(
 def run_centernifti(
     input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike
 ) -> None:
+    from pathlib import Path
+
     from clinica.iotools.utils.data_handling import center_all_nifti
 
-    output_dir = output_dir / "bids_centered"
-    bids_dir = input_dir / "bids"
+    output_dir = Path(output_dir) / "bids_centered"
+    bids_dir = Path(input_dir) / "bids"
 
     all_modalities = [
         "t1w",
@@ -144,7 +148,7 @@ def run_centernifti(
         fspath(output_dir), extensions_to_keep=(".nii.gz", ".nii")
     )
     hashes_ref = create_list_hashes(
-        fspath(ref_dir / "bids_centered"), extensions_to_keep=(".nii.gz", ".nii")
+        fspath(Path(ref_dir) / "bids_centered"), extensions_to_keep=(".nii.gz", ".nii")
     )
     assert hashes_out == hashes_ref
 

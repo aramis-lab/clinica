@@ -13,8 +13,7 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
                             difference between 2 voxels to be considered different (ex: 1e-4). threshold[1] defines
                             the maximum proportion of voxels that can different for the test to be negative.
         (tuple) threshold2: defines the second criteria to meet.
-        (bool) display: If set to True, will display a useful graph to determine optimal threshold for the
-                        comparison
+        (bool) display: If set to True, will display a useful graph to determine optimal threshold for the comparison.
 
     Returns:
         (bool) True if file1 and file2 can be considered similar enough (meeting criterion expressed in threshold1
@@ -22,7 +21,6 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
 
     """
     import os
-    from pathlib import Path
 
     import matplotlib.pyplot as plt
     import nibabel as nib
@@ -208,7 +206,7 @@ def same_missing_modality_tsv(file1, file2):
     )
 
 
-def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path) -> bool:
+def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path) -> None:
     from filecmp import cmp
 
     file_out = tmp_path / "file_out.txt"
@@ -227,14 +225,17 @@ def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path) -> bool:
         )
 
 
-def tree(dir: PathLike, file_out: PathLike):
-    # Create a file (file_out) with a visual tree representing the file
-    # hierarchy at a giver directory
-    for path in sorted(dir.rglob("*")):
-        depth = len(path.relative_to(dir).parts)
+def tree(directory: PathLike, file_out: PathLike):
+    """Create a file (file_out) with a visual tree representing the file hierarchy at a given directory."""
+    from pathlib import Path
+
+    file_content = ""
+    for path in sorted(Path(directory).rglob("*")):
+        depth = len(path.relative_to(directory).parts)
         spacer = "    " * depth
-        file_content = f"{spacer}+ {path.name}\n"
-    file_out.write_text(file_content)
+        file_content += f"{spacer}+ {path.name}\n"
+
+    Path(file_out).write_text(file_content)
 
 
 def list_files(startpath, filename=None):
@@ -242,7 +243,7 @@ def list_files(startpath, filename=None):
 
     Args:
         startpath: starting point for the tree listing. Does not list hidden
-        files (to avoid problems with .DS_store for example
+                   files (to avoid problems with .DS_store for example
         filename: if None, display to stdout, otherwise write in the file
 
     Returns:
@@ -257,7 +258,7 @@ def list_files(startpath, filename=None):
     expanded_path = abspath(expanduser(expandvars(startpath)))
     for root, dirs, files in walk(expanded_path):
         level = root.replace(startpath, "").count(sep)
-        indent = " " * 4 * (level)
+        indent = " " * 4 * level
         rootstring = "{}{}/".format(indent, basename(root))
         # Do not deal with hidden files
         if not basename(root).startswith("."):
@@ -293,9 +294,7 @@ def clean_folder(path, recreate=True):
 
 
 def clean_PETLinear(caps_path):
-    from os import listdir, makedirs, path
-    from os.path import abspath, exists
-    from shutil import rmtree
+    from os import listdir, path
 
     # Handle subjects subdirectory
     abs_path_subjs = path.join(caps_path, "subjects")
@@ -329,9 +328,9 @@ def create_list_hashes(path_folder, extensions_to_keep=(".nii.gz", ".tsv", ".jso
     import hashlib
     import os
 
-    def file_as_bytes(file):
-        with file:
-            return file.read()
+    def file_as_bytes(file_):
+        with file_:
+            return file_.read()
 
     all_files = []
     for subdir, dirs, files in os.walk(path_folder):
