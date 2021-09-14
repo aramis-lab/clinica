@@ -109,13 +109,13 @@ def find_imaging_data(imaging_data_directory: PathLike) -> Iterable[Tuple[str, s
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     from pandas import DataFrame
 
-    imaging_data = DataFrame.from_records(
-        data=find_imaging_data(imaging_data_directory),
-        columns=["image_data_id", "source_dir"],
-        index="image_data_id",
-    ).convert_dtypes()
-
-    if imaging_data.empty:
+    try:
+        imaging_data = DataFrame.from_records(
+            data=find_imaging_data(imaging_data_directory),
+            columns=["image_data_id", "source_dir"],
+            index="image_data_id",
+        ).convert_dtypes()
+    except TypeError:
         raise FileNotFoundError("No imaging data found")
 
     collection_data = find_collection_data(imaging_data_directory)
