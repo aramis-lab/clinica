@@ -204,7 +204,7 @@ def dataset_to_bids(
     imaging_data: DataFrame,
     clinical_data: Optional[DataFrame] = None,
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
-    from pandas import Series, notna
+    from pandas import Series
 
     # Parse preprocessing information from scan descriptions.
     preprocessing = imaging_data.description.apply(parse_preprocessing).apply(Series)
