@@ -210,12 +210,16 @@ def dataset_to_bids(
     preprocessing = imaging_data.description.apply(parse_preprocessing).apply(Series)
 
     # Parse BIDS entities from scan descriptions.
-    bids = imaging_data.apply(
-        lambda x: parse_pet_description(x.description)
-        if x.modality == "PET"
-        else parse_mri_description(x.description),
-        axis=1,
-    ).apply(Series)
+    bids = (
+        imaging_data.apply(
+            lambda x: parse_pet_description(x.description)
+            if x.modality == "PET"
+            else parse_mri_description(x.description),
+            axis=1,
+        )
+        .dropna()
+        .apply(Series)
+    )
 
     # Compute quality metric for each scan:
     # - MRI: Applied preprocessing (0: None, 1: GradWarp, 2: N3)
@@ -228,8 +232,8 @@ def dataset_to_bids(
     # Select one scan per BIDS modality based on quality metric.
     subset = ["subject", "visit", "datatype", "suffix", "trc_label"]
     scans = (
-        imaging_data.join(bids)
-        .join(quality)
+        bids.join(quality)
+        .join(imaging_data)
         .sort_values(by=subset + ["quality"])
         .drop_duplicates(subset=subset, keep="last")
         .drop(columns="quality")
@@ -244,8 +248,8 @@ def dataset_to_bids(
         filename=lambda df: df.apply(
             lambda x: f"{x.participant_id}/{x.session_id}/{x.datatype}/"
             f"{x.participant_id}_{x.session_id}"
-            f"{'_trc-'+x.trc_label if x.trc_label else ''}"
-            f"{'_rec-'+x.rec_label if x.rec_label else ''}"
+            f"{'_trc-' + x.trc_label if x.trc_label else ''}"
+            f"{'_rec-' + x.rec_label if x.rec_label else ''}"
             f"_{x.suffix}.nii.gz",
             axis=1,
         ),
