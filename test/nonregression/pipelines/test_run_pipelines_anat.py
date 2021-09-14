@@ -443,7 +443,7 @@ def test_run_T1Linear(cmdopt):
     out_folder = join(root, "out")
     ref_folder = join(root, "ref")
 
-    compare_folders(out_folder, ref_folder, shared_folder_name="caps")
+    compare_folders(out_folder, ref_folder, tmp_path="caps")
 
     clean_folder(join(root, "out", "caps"), recreate=False)
     clean_folder(join(working_dir, "T1Linear"), recreate=False)
