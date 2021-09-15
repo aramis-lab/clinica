@@ -1,5 +1,5 @@
 from os import PathLike
-from typing import BinaryIO, Iterable, List, Optional, Tuple, Union
+from typing import BinaryIO, Dict, Iterable, List, Optional, Tuple, Union
 
 from pandas import DataFrame
 
@@ -133,29 +133,50 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     return collection_data.join(imaging_data)
 
 
-def parse_mri_description(description: str) -> dict:
-    from pandas import NA
-
+def parse_mri_description(description: str) -> Optional[Dict[str, Optional[str]]]:
     description = description.lower().replace("-", "")
 
     if "mprage" in description:
-        return {"datatype": "anat", "suffix": "T1w"}
+        return {
+            "datatype": "anat",
+            "suffix": "T1w",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif "flair" in description:
-        return {"datatype": "anat", "suffix": "FLAIR"}
+        return {
+            "datatype": "anat",
+            "suffix": "FLAIR",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif "t2" in description:
-        return {"datatype": "anat", "suffix": "T2w"}
+        return {
+            "datatype": "anat",
+            "suffix": "T2w",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif "asl" in description:
-        return {"datatype": "anat", "suffix": "PDw"}
+        return {
+            "datatype": "anat",
+            "suffix": "PDw",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif any([x in description for x in ["mt1", "gradwarp", "n3m"]]):
-        return {"datatype": "anat", "suffix": "T1w"}
+        return {
+            "datatype": "anat",
+            "suffix": "T1w",
+            "trc_label": None,
+            "rec_label": None,
+        }
     else:
-        return NA
+        return None
 
 
-def parse_pet_description(description: str) -> dict:
+def parse_pet_description(description: str) -> Optional[Dict[str, str]]:
     import re
-
-    from pandas import NA
 
     match = re.search(r"3D:(\w+):(\w+)", description)
 
@@ -167,7 +188,7 @@ def parse_pet_description(description: str) -> dict:
             "rec_label": "IR" if "IR" in match.group(2) else "RP",
         }
     else:
-        return NA
+        return None
 
 
 def parse_preprocessing(description: str) -> dict:
@@ -183,18 +204,22 @@ def dataset_to_bids(
     imaging_data: DataFrame,
     clinical_data: Optional[DataFrame] = None,
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
-    from pandas import Series, notna
+    from pandas import Series
 
     # Parse preprocessing information from scan descriptions.
     preprocessing = imaging_data.description.apply(parse_preprocessing).apply(Series)
 
     # Parse BIDS entities from scan descriptions.
-    bids = imaging_data.apply(
-        lambda x: parse_pet_description(x.description)
-        if x.modality == "PET"
-        else parse_mri_description(x.description),
-        axis=1,
-    ).apply(Series)
+    bids = (
+        imaging_data.apply(
+            lambda x: parse_pet_description(x.description)
+            if x.modality == "PET"
+            else parse_mri_description(x.description),
+            axis=1,
+        )
+        .dropna()
+        .apply(Series)
+    )
 
     # Compute quality metric for each scan:
     # - MRI: Applied preprocessing (0: None, 1: GradWarp, 2: N3)
@@ -207,8 +232,8 @@ def dataset_to_bids(
     # Select one scan per BIDS modality based on quality metric.
     subset = ["subject", "visit", "datatype", "suffix", "trc_label"]
     scans = (
-        imaging_data.join(bids)
-        .join(quality)
+        bids.join(quality)
+        .join(imaging_data)
         .sort_values(by=subset + ["quality"])
         .drop_duplicates(subset=subset, keep="last")
         .drop(columns="quality")
@@ -223,8 +248,8 @@ def dataset_to_bids(
         filename=lambda df: df.apply(
             lambda x: f"{x.participant_id}/{x.session_id}/{x.datatype}/"
             f"{x.participant_id}_{x.session_id}"
-            f"{'_trc-'+x.trc_label if notna(x.trc_label) else ''}"
-            f"{'_rec-'+x.rec_label if notna(x.rec_label) else ''}"
+            f"{'_trc-' + x.trc_label if x.trc_label else ''}"
+            f"{'_rec-' + x.rec_label if x.rec_label else ''}"
             f"_{x.suffix}.nii.gz",
             axis=1,
         ),
