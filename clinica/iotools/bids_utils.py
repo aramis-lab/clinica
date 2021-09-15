@@ -618,16 +618,11 @@ def get_supported_dataset():
     return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
 
 
-def get_bids_subjs_list(bids_path):
+def get_bids_subjs_list(bids_path: str) -> List[str]:
     """Given a BIDS compliant dataset, return the list of all the subjects available."""
-    import os
-    from os import path
+    from pathlib import Path
 
-    return [
-        d
-        for d in os.listdir(bids_path)
-        if os.path.isdir(path.join(bids_path, d)) and d != "bids"
-    ]
+    return [str(d.name) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
 def get_bids_sess_list(subj_path: str) -> List[str]:
