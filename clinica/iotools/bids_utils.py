@@ -634,16 +634,11 @@ def get_bids_sess_list(subj_path: str) -> List[str]:
     return [str(d.name) for d in Path(subj_path).glob("ses-*") if d.is_dir()]
 
 
-def get_bids_subjs_paths(bids_path):
+def get_bids_subjs_paths(bids_path: str) -> List[str]:
     """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders."""
-    import os
-    from os import path
+    from pathlib import Path
 
-    return [
-        path.join(bids_path, d)
-        for d in os.listdir(bids_path)
-        if os.path.isdir(path.join(bids_path, d))
-    ]
+    return [str(d) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
 def compute_new_subjects(original_ids, bids_ids):
