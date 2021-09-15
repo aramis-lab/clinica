@@ -6,10 +6,10 @@ from clinica.iotools.abstract_converter import Converter
 def get_bids_subjs_info(clinical_data_dir, out_path):
     from os import path
 
-    import pandas as pd
+    from pandas import read_csv
 
     adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
-    adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=",")
+    adni_merge = read_csv(adni_merge_path, sep=",")
     bids_ids = [
         "sub-ADNI" + subj.replace("_", "") for subj in list(adni_merge.PTID.unique())
     ]
@@ -41,8 +41,6 @@ class AdniToBids(Converter):
         """
         import os
         from os import path
-
-        import pandas as pd
 
         import clinica.iotools.bids_utils as bids
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
