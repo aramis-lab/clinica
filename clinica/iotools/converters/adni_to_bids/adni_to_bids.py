@@ -32,7 +32,9 @@ class AdniToBids(Converter):
 
         check_dcm2niix()
 
-    def convert_clinical_data(self, clinical_data_dir, out_path):
+    def convert_clinical_data(
+        self, clinical_data_dir, out_path, clinical_data_only: bool = False
+    ):
         """Convert the clinical data of ADNI specified into the file clinical_specifications_adni.xlsx.
 
         Args:
@@ -61,7 +63,7 @@ class AdniToBids(Converter):
         bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
         conversion_path = path.join(out_path, "conversion_info")
 
-        if not bids_ids:
+        if clinical_data_only:
             bids_ids, bids_subjs_path = get_bids_subjs_info(clinical_data_dir, out_path)
 
         # -- Creation of modality agnostic files --
