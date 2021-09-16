@@ -274,7 +274,6 @@ def find_mods_and_sess(bids_dir):
             for p in mods_paths_folders:
                 p = p[:-1]
                 mods_avail.append(p.split("/").pop())
-
             if "func" in mods_avail:
                 list_funcs_paths = glob(path.join(session, "func", "*bold.nii.gz"))
                 for func_path in list_funcs_paths:

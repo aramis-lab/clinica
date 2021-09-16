@@ -2,6 +2,8 @@
 
 """Methods used by BIDS converters."""
 
+from typing import List
+
 
 # -- Methods for the clinical data --
 # @ToDo:test this function
@@ -254,7 +256,7 @@ def create_sessions_dict_OASIS(
                         bids_dir,
                         subj_bids,
                     )
-                    session_names = get_bids_subjs_list(subj_dir)
+                    session_names = get_bids_sess_list(subj_dir)
                     for s in session_names:
                         s_name = s.replace("ses-", "")
                         if study_name != "OASIS3":
@@ -626,6 +628,15 @@ def get_bids_subjs_list(bids_path):
         for d in os.listdir(bids_path)
         if os.path.isdir(path.join(bids_path, d)) and d != "bids"
     ]
+
+
+def get_bids_sess_list(subj_path: str) -> List[str]:
+    """
+    Given a subject path, return the list of sessions available
+    """
+    from pathlib import Path
+
+    return [str(d.name) for d in Path(subj_path).glob("ses-*") if d.is_dir()]
 
 
 def get_bids_subjs_paths(bids_path):
