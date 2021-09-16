@@ -130,11 +130,9 @@ class AdniToBids(Converter):
         )
 
         # -- Creation of scans files --
-        cprint("Creating scans files...")
-        adni_utils.create_adni_scans_files(
-            conversion_path,
-            bids_subjs_paths,
-        )
+        if os.path.exists(conversion_path):
+            cprint("Creating scans files...")
+            adni_utils.create_adni_scans_files(conversion_path, bids_subjs_paths)
 
     def convert_images(
         self,
