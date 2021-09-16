@@ -8,7 +8,7 @@ from clinica.iotools.abstract_converter import Converter
 def get_bids_subjs_info(
     clinical_data_dir: str,
     out_path: str,
-    subjects_list_path: Optional[str],
+    subjects_list_path: Optional[str] = None,
 ):
     from os import path
 
