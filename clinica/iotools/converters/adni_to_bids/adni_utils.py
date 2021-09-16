@@ -718,13 +718,15 @@ def create_adni_sessions_dict(
                 ]
                 df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
 
-    # Nv/None refer to sessions whose session is undefined. "sc" is the screening session with unreliable (incomplete) data
+    if df_subj_session.empty:
+        raise ValueError("Empty dataset detected. Clinical data cannot be extracted.")
 
+    # Nv/None refer to sessions whose session is undefined. "sc" is the screening session with unreliable (incomplete)
+    # data.
     df_subj_session = df_subj_session[
         (~df_subj_session.session_id.isin(["ses-Nv", "sc", None]))
     ]
-    if df_subj_session.empty:
-        raise ValueError("Empty dataset detected. Clinical data cannot be extracted")
+
     write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
 

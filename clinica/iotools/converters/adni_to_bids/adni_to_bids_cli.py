@@ -67,7 +67,12 @@ def cli(
             force_new_extraction,
         )
 
-    adni_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+    adni_to_bids.convert_clinical_data(
+        clinical_data_dir=clinical_data_directory,
+        out_path=bids_directory,
+        clinical_data_only=clinical_data_only,
+        subjects_list_path=subjects_list,
+    )
 
 
 if __name__ == "__main__":
