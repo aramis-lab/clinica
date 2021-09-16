@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore")
 
 @pytest.fixture(
     params=[
-        # "Nifd2Bids",
+        "Nifd2Bids",
         "Oasis2Bids",
         # "Oasis3ToBids",
         "Adni2Bids",
