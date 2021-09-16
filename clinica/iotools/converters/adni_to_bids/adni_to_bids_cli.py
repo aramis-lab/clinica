@@ -71,6 +71,7 @@ def cli(
         clinical_data_dir=clinical_data_directory,
         out_path=bids_directory,
         clinical_data_only=clinical_data_only,
+        subjects_list_path=subjects_list,
     )
 
 

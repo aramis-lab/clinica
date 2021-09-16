@@ -1,20 +1,42 @@
 # coding: utf-8
 
+from typing import Optional
+
 from clinica.iotools.abstract_converter import Converter
 
 
-def get_bids_subjs_info(clinical_data_dir, out_path):
+def get_bids_subjs_info(
+    clinical_data_dir: str,
+    out_path: str,
+    subjects_list_path: Optional[str],
+):
     from os import path
 
     from pandas import read_csv
 
+    # Read optional list of participants.
+    subjects_list = (
+        set([line.rstrip("\n") for line in open(subjects_list_path)])
+        if subjects_list_path
+        else None
+    )
+
+    # Load all participants from ADNIMERGE.
     adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
-    adni_merge = read_csv(adni_merge_path, sep=",")
-    bids_ids = [
-        "sub-ADNI" + subj.replace("_", "") for subj in list(adni_merge.PTID.unique())
-    ]
-    bids_subjs_paths = [path.join(out_path, subj) for subj in bids_ids]
-    return bids_ids, bids_subjs_paths
+    participants = set(
+        read_csv(adni_merge_path, sep=",", usecols=["PTID"], squeeze=True).unique()
+    )
+
+    # Filter participants if requested.
+    participants = sorted(
+        participants & subjects_list if subjects_list else participants
+    )
+
+    # Compute their corresponding BIDS IDs and paths.
+    bids_ids = [f"sub-ADNI{p.replace('_', '')}" for p in participants]
+    bids_paths = [path.join(out_path, bids_id) for bids_id in bids_ids]
+
+    return bids_ids, bids_paths
 
 
 class AdniToBids(Converter):
@@ -33,7 +55,11 @@ class AdniToBids(Converter):
         check_dcm2niix()
 
     def convert_clinical_data(
-        self, clinical_data_dir, out_path, clinical_data_only: bool = False
+        self,
+        clinical_data_dir: str,
+        out_path: str,
+        clinical_data_only: bool = False,
+        subjects_list_path: Optional[str] = None,
     ):
         """Convert the clinical data of ADNI specified into the file clinical_specifications_adni.xlsx.
 
@@ -59,12 +85,17 @@ class AdniToBids(Converter):
             print("BIDS folder not found.")
             raise
 
-        bids_ids = bids.get_bids_subjs_list(out_path)
-        bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
         conversion_path = path.join(out_path, "conversion_info")
 
         if clinical_data_only:
-            bids_ids, bids_subjs_path = get_bids_subjs_info(clinical_data_dir, out_path)
+            bids_ids, bids_subjs_paths = get_bids_subjs_info(
+                clinical_data_dir=clinical_data_dir,
+                out_path=out_path,
+                subjects_list_path=subjects_list_path,
+            )
+        else:
+            bids_ids = bids.get_bids_subjs_list(out_path)
+            bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
 
         # -- Creation of modality agnostic files --
         cprint("Creating modality agnostic files...")
