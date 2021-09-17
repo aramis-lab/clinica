@@ -1,8 +1,10 @@
+from enum import Enum
 from os import PathLike
 from typing import BinaryIO, Dict, Iterable, Optional, Union
 
 import pandas as pd
 from pandas import DataFrame, Series
+from pydantic import BaseModel
 
 PROTOCOL_TO_BIDS = {
     "3DFLAIR": {"datatype": "anat", "modality": "FLAIR"},
@@ -29,6 +31,25 @@ PROTOCOL_TO_BIDS = {
         "trc_label": "11CPIB",
     },
 }
+
+
+class BidsDatasetDescription(BaseModel):
+    class DatasetType(Enum):
+        raw = "raw"
+        derivative = "derivative"
+
+    name: str
+    bids_version: str
+    dataset_type: DatasetType = DatasetType.raw
+
+    class Config:
+        fields = {"bids_version": "BIDSVersion"}
+        allow_population_by_field_name = True
+
+        @classmethod
+        def alias_generator(cls, string: str) -> str:
+            """Convert field to PascalCase alias."""
+            return "".join(word.capitalize() for word in string.split("_"))
 
 
 def source_participant_id_to_bids(dataframe: DataFrame) -> Series:
@@ -230,6 +251,13 @@ def write_bids(
         .xs("ses-M00", level="session_id")
         .reset_index(level="date", drop=True)
     )
+
+    with fsspec.open(rawdata / "dataset_description.json", mode="w") as f:
+        f.write(
+            BidsDatasetDescription(name="HABS", bids_version="1.6.0").json(
+                by_alias=True
+            )
+        )
 
     participants_file = Path(rawdata) / "participants.tsv"
     with fsspec.open(str(participants_file), mode="wb") as f:
