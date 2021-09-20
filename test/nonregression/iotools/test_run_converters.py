@@ -79,14 +79,14 @@ def run_oasis2bids(
 def run_oasis3tobids(
     input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike
 ) -> None:
-    from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import Oasis3ToBids
+    from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import convert_images
 
     # Arrange
     clinical_data_directory = input_dir / "clinical_data"
     # Act
-    oasis_to_bids = Oasis3ToBids()
-    oasis_to_bids.convert_images(input_dir / "unorganized", output_dir / "bids")
-    oasis_to_bids.convert_clinical_data(clinical_data_directory, output_dir / "bids")
+    convert_images(
+        input_dir / "unorganized", output_dir / "bids", clinical_data_directory
+    )
     # Assert
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
 
