@@ -29,7 +29,7 @@ warnings.filterwarnings("ignore")
     params=[
         "Nifd2Bids",
         "Oasis2Bids",
-        # "Oasis3ToBids",
+        "Oasis3ToBids",
         "Adni2Bids",
         "Aibl2Bids",
     ]
