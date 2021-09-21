@@ -74,16 +74,11 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         find_imaging_data(imaging_data_directory), name="source_path"
     )
 
-    source_dir_series = (
-        source_path_series.str.rsplit(pat="/", n=1, expand=True)
-        .drop(columns=1)[0]
-        .rename("source_dir")
-    )
     source_dir_series = source_path_series.apply(lambda x: Path(str(x)).parent).rename(
         "source_dir"
     )
 
-    file_spec_series = source_path_series.apply(lambda x: Path(str(x)).name).rename(
+    file_spec_series = source_path_series.apply(lambda x: Path(str(x)).parts[0]).rename(
         "path"
     )
 
