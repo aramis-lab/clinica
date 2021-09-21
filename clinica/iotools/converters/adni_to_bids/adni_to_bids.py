@@ -73,6 +73,7 @@ class AdniToBids(Converter):
         import clinica.iotools.bids_utils as bids
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
         from clinica.utils.stream import cprint
+        from .adni_json import create_json_metadata
 
         clinic_specs_path = path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
@@ -134,7 +135,7 @@ class AdniToBids(Converter):
             cprint("Creating scans files...")
             adni_utils.create_adni_scans_files(conversion_path, bids_subjs_paths)
 
-        adni_json.create_json_metadata(bids_ids)
+        create_json_metadata(bids_ids)
 
     def convert_images(
         self,
