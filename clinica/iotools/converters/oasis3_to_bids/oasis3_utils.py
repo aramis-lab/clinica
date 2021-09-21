@@ -79,19 +79,14 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         .drop(columns=1)[0]
         .rename("source_dir")
     )
-    print("source_dir_series: ", source_dir_series)
-    # source_dir_series_alt = Path(source_path_series).parent
-    # print("source_dir_series_alt: ", source_dir_series_alt)
     source_dir_series = source_path_series.apply(lambda x: Path(str(x)).parent).rename(
         "source_dir"
     )
-    file_spec_series = (
-        source_path_series.str.split(pat="/", n=1, expand=True)
-        .drop(columns=1)[0]
-        .rename("path")
+
+    file_spec_series = source_path_series.apply(lambda x: Path(str(x)).name).rename(
+        "path"
     )
-    # file_spec_series = source_path_series.apply(lambda x: Path(str(x)).name).rename("path")
-    print("path_series: ", file_spec_series)
+
     df_source = pd.concat(
         [
             source_path_series,
