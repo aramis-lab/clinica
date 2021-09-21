@@ -134,6 +134,8 @@ class AdniToBids(Converter):
             cprint("Creating scans files...")
             adni_utils.create_adni_scans_files(conversion_path, bids_subjs_paths)
 
+        adni_json.create_json_metadata(bids_ids)
+
     def convert_images(
         self,
         source_dir,
