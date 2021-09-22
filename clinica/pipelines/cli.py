@@ -72,6 +72,5 @@ cli.add_command(t1_volume_parcellation_cli.cli)
 cli.add_command(t1_freesurfer_template_cli.cli)
 cli.add_command(t1_freesurfer_longitudinal_correction_cli.cli)
 
-
 if __name__ == "__main__":
     cli()

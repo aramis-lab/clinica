@@ -130,3 +130,32 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
             lvl="warning",
         )
     return image_id
+
+
+def compute_atlases(
+    segmentation_path, subject_id, to_process_with_atlas, path_to_atlas
+):
+    import os
+    import subprocess
+    from pathlib import Path
+
+    larousse = {}
+    for path in Path(path_to_atlas).rglob("*6p0.gcs"):
+        hemisphere = os.path.split(path)[1].rsplit(".")[0]
+        atlas_name = os.path.split(path)[1].rsplit(".")[1].split("_")[0]
+        if subject_id == to_process_with_atlas[atlas_name]:
+            print("qqch")
+
+        # atlas_file = hemisphere + "." +  atlas_name + "_6p0.gcs"
+        # larousse.update({atlas_name:atlas_name})
+        # print("le meilleur dico est:", larousse)
+
+        # output_path_annot = segmentation_path + "/" + subject_id + "/label/" + hemisphere + "." + atlas_name + ".annot"
+        # command = f"mris_ca_label /{subject_id} {hemisphere} {segmentation_path}/{subject_id}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
+        # a = subprocess.run(command, shell=True, capture_output=True)
+
+        # output_path_stats = segmentation_path + "/" +subject_id + "/stats/"+hemisphere +"." + atlas_name + ".stats"
+        # command2 = f"mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {subject_id} {hemisphere}"
+        # c = subprocess.run(command2, shell=True, capture_output=True)
+
+    return larousse

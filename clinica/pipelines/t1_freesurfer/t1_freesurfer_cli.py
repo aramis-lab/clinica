@@ -28,6 +28,7 @@ pipeline_name = "t1-freesurfer"
 @cli_param.option.n_procs
 @cli_param.option.overwrite_outputs
 @cli_param.option.yes
+@cli_param.option.atlas_path
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -37,6 +38,7 @@ def cli(
     n_procs: Optional[int] = None,
     overwrite_outputs: bool = False,
     yes: bool = False,
+    atlas_path: Optional[str] = None,
 ) -> None:
     """Cross-sectional pre-processing of T1w images with FreeSurfer.
 
@@ -58,6 +60,7 @@ def cli(
         parameters=parameters,
         name=pipeline_name,
         overwrite_caps=overwrite_outputs,
+        atlas_path=atlas_path,
     )
 
     exec_pipeline = (
