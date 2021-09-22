@@ -1,6 +1,33 @@
 """Methods used by BIDS converters."""
-
+from enum import Enum
+from io import TextIOBase
 from typing import List
+
+from pydantic import BaseModel
+
+
+class BidsDatasetDescription(BaseModel):
+    """Model class for a BIDS description."""
+
+    class Config:
+        fields = {"bids_version": "BIDSVersion"}
+        allow_population_by_field_name = True
+
+        @classmethod
+        def alias_generator(cls, string: str) -> str:
+            """Generate an alias as PascalCase."""
+            return "".join(word.capitalize() for word in string.split("_"))
+
+    class DatasetType(Enum):
+        raw = "raw"
+        derivative = "derivative"
+
+    name: str
+    bids_version: str
+    dataset_type: DatasetType = DatasetType.raw
+
+    def write(self, to: TextIOBase) -> None:
+        to.write(self.json(by_alias=True))
 
 
 # -- Methods for the clinical data --
@@ -436,11 +463,8 @@ def write_modality_agnostic_files(study_name, bids_dir):
 
     import clinica
 
-    dataset_dict = {"Name": study_name, "BIDSVersion": "1.4.1", "DatasetType": "raw"}
-    dataset_json = json.dumps(dataset_dict, skipkeys=True, indent=4)
-    f = open(path.join(bids_dir, "dataset_description.json"), "w")
-    f.write(dataset_json)
-    f.close()
+    with open(path.join(bids_dir, "dataset_description.json"), "w") as f:
+        BidsDatasetDescription(name=study_name, bids_version="1.4.1").write(to=f)
 
     file = open(path.join(bids_dir, "README"), "w")
     file.write(
