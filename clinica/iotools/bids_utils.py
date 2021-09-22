@@ -27,7 +27,7 @@ class BidsDatasetDescription(BaseModel):
     dataset_type: DatasetType = DatasetType.raw
 
     def write(self, to: TextIOBase) -> None:
-        to.write(self.json(by_alias=True))
+        to.write(self.json(by_alias=True, indent=4))
 
 
 # -- Methods for the clinical data --
