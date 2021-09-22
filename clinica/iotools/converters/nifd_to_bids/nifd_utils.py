@@ -334,6 +334,8 @@ def write_bids(
 
     from fsspec.implementations.local import LocalFileSystem
 
+    from clinica.iotools.bids_utils import BidsDatasetDescription
+
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
 
@@ -347,6 +349,9 @@ def write_bids(
             sessions_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
             with fs.open(sessions_filepath, "w") as sessions_file:
                 write_to_tsv(sessions_group, sessions_file)
+
+        with fs.open(to / "dataset_description.json", mode="w") as f:
+            BidsDatasetDescription(name="NIFD", bids_version="1.6.0").write(to=f)
 
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
