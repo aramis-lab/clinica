@@ -1,7 +1,6 @@
 """Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS."""
 
 from clinica.iotools.abstract_converter import Converter
-from clinica.utils.stream import cprint
 
 
 class OasisToBids(Converter):
@@ -73,6 +72,8 @@ class OasisToBids(Converter):
             sessions_dict,
         )
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
+
+        bids.write_modality_agnostic_files(study_name="OASIS-1", bids_dir=bids_dir)
 
     def convert_images(self, source_dir, dest_dir):
         """Convert T1w images to BIDS.
