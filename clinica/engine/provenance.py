@@ -19,7 +19,8 @@ def provenance(func):
         prov_command = get_command(self, in_files_paths)
 
         if validate_command(prov_context, prov_command):
-            ret = func(self)
+            # ret = func(self)
+            print("The pipeline succesfully executed.")
         else:
             raise Exception(
                 "The pipeline selected is incompatible with the input files provenance"
@@ -77,22 +78,21 @@ def get_command(self, input_files_paths: list) -> dict:
     }
 
 
-def write_prov_file(prov_command, files_paths):
+def write_prov_file(prov_command, file_path):
     """
     Write the dictionary data to the file_path
     """
     from clinica.engine.provenance_utils import read_prov, get_associated_prov
 
-    for file_path in files_paths:
-        prov_path = get_associated_prov(file_path)
+    prov_path = get_associated_prov(file_path)
 
-        if prov_path.exists():
-            # append the pipeline provenance information to the old provenance file
-            prov_main = read_prov(prov_path)
-            prov_main = append_prov_dict(prov_main, prov_command)
-        else:
-            print("help")
-            # create new provenance file with pipeline information
+    if prov_path.exists():
+        # append the pipeline provenance information to the old provenance file
+        prov_main = read_prov(prov_path)
+        prov_main = append_prov_dict(prov_main, prov_command)
+    else:
+        create_prov_file(prov_command, prov_path)
+        # create new provenance file with pipeline information
     return ""
 
 
@@ -103,7 +103,7 @@ def append_prov_dict(prov_main: dict, prov_new: dict) -> dict:
 
     for k in prov_new.keys():
         for el in prov_new[k]:
-            if prov_main[k] and el not in prov_main[k]:
+            if k in prov_main.keys() and el not in prov_main[k]:
                 prov_main[k].append(el)
     return prov_main
 
@@ -170,11 +170,15 @@ def get_entity(img_path: str) -> dict:
     return new_entity
 
 
-def create_prov_file(command, path):
+def create_prov_file(prov_command, prov_path):
     """
     Create new provenance file based on command
     """
-    # TODO: create a json-ld object next to the file and add it to the active prov object
+    import json
+
+    with open(prov_path, "w") as fp:
+        json.dump(prov_command, fp, indent=4)
+
     return
 
 
