@@ -39,7 +39,7 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
             {
                 "pattern": self.parameters["t_map"] + "*",
                 "description": "statistics t map",
-                "needed_pipeline": "statistics-volume",
+                "output_from": "statistics-volume",
             },
         )
 

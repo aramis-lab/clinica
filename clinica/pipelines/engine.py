@@ -7,6 +7,7 @@ import abc
 
 import click
 from nipype.pipeline.engine import Workflow
+import clinica.engine.provenance as prov
 
 
 def postset(attribute, value):
@@ -234,6 +235,7 @@ class Pipeline(Workflow):
                 self.build_output_node()
         return self
 
+    @prov.provenance
     def run(self, plugin=None, plugin_args=None, update_hash=False, bypass_check=False):
         """Executes the Pipeline.
 
