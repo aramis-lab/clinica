@@ -1,5 +1,6 @@
 # coding: utf-8
 
+from re import X
 from typing import Optional
 
 from clinica.iotools.abstract_converter import Converter
@@ -60,6 +61,7 @@ class AdniToBids(Converter):
         out_path: str,
         clinical_data_only: bool = False,
         subjects_list_path: Optional[str] = None,
+        xml_path: Optional[str] = None,
     ):
         """Convert the clinical data of ADNI specified into the file clinical_specifications_adni.xlsx.
 
@@ -135,7 +137,8 @@ class AdniToBids(Converter):
             cprint("Creating scans files...")
             adni_utils.create_adni_scans_files(conversion_path, bids_subjs_paths)
 
-        create_json_metadata(bids_ids)
+        if xml_path and os.path.exists(xml_path):
+            create_json_metadata(bids_ids, xml_path)
 
     def convert_images(
         self,

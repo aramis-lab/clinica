@@ -1,10 +1,12 @@
-def read_xml_files(subj_ids=[]):
+def read_xml_files(subj_ids=[], xml_path=""):
     from glob import glob
+    from os import path
 
     if subj_ids:
-        xml_files = [
-            glob("Clinica_processed_metadata/ADNI_" + e + "*.xml") for e in subj_ids
-        ][0]
+        xml_files = []
+        xml_regex = [path.join(xml_path, ("ADNI_" + e + "*.xml")) for e in subj_ids]
+        for subj_files in xml_regex:
+            xml_files.extend(glob(subj_files))
     else:
         xml_files = glob("Clinica_processed_metadata/ADNI_*.xml")
 
@@ -100,6 +102,8 @@ def get_img_metadata(img):
 
 
 def parse_xml_file(xml_path):
+    import os
+    import xml.etree.ElementTree as ET
 
     try:
         tree = ET.parse(xml_path)
@@ -297,9 +301,6 @@ class func_with_exception:
             return None, e
 
 
-parser = func_with_exception(parse_xml_file)
-
-
 def run_parsers(xml_files):
     from concurrent.futures.process import ProcessPoolExecutor
     from joblib import Parallel, delayed
@@ -333,10 +334,11 @@ def run_parsers(xml_files):
     return imgs, exceps
 
 
-def create_json_metadata(bids_ids):
+def create_json_metadata(bids_ids, xml_path):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni
 
-    # Write the json_file
-    xml_files = read_xml_files(bids_ids)
+    loni_ids = [bids_id_to_loni(bids_id) for bids_id in bids_ids]
+    xml_files = read_xml_files(loni_ids, xml_path)
     imgs, excep = run_parsers(xml_files)
     df_meta = create_mri_meta_df(imgs)
     print(df_meta)
