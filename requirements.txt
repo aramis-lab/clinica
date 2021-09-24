@@ -8,14 +8,14 @@ pandas >= 0.24.2
 jinja2 >= 2.10.1
 xvfbwrapper == 0.2.9
 numpy >= 1.17
-scikit-learn == 0.23
+scikit-learn >= 0.23
 nilearn >= 0.6.0
 colorlog >= 5
 xgboost
-scipy == 1.2.3
+scipy >= 1.2.3
 matplotlib
 niflow-nipype1-workflows
-scikit-image == 0.16.2
+scikit-image >= 0.16.2
 torch > 1.0
 torchvision
 pydicom
