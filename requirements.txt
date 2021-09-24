@@ -6,7 +6,7 @@ nipype >= 1.4.0, < 2.0.0
 argcomplete >= 1.9.4
 pandas >= 0.24.2
 jinja2 >= 2.10.1
-xvfbwrapper == 0.2.9
+xvfbwrapper
 numpy >= 1.17
 scikit-learn >= 0.23
 nilearn >= 0.6.0
