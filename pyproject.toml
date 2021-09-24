@@ -19,6 +19,9 @@ pytest-timeout = {version = "*", optional = true}
 pytest-xdist = {version = "*", optional = true}
 
 [tool.poetry.dev-dependencies]
+black = "*"
+isort = "*"
+pre-commit = "*"
 
 [tool.poetry.extras]
 docs = [
