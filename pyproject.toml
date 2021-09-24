@@ -3,7 +3,21 @@ name = "clinica"
 version = "0.5.1"
 description = "Software platform for clinical neuroimaging studies"
 authors = ["ARAMIS Lab"]
+maintainer = "Clinica developers"
+maintainer_email = "clinica-user@inria.fr"
 license = "MIT"
+homepage = "https://www.clinica.run"
+documentation =  "https://aramislab.paris.inria.fr/clinica/docs/public/latest"
+readme = "readme.md"
+packages = [{include = "clinica"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python"
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
