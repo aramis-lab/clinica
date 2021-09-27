@@ -11,7 +11,7 @@ set -ex
 
 branch=$1
 mkdocs build || true
-mv site $branch
+mv site "$branch"
 
 ## Remotes refs are of the form "refs/remotes/origin/branch-name"
 ## so we strip the three first path components to keep only "branch-name".

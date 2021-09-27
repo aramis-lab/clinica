@@ -9,23 +9,23 @@
 
 
 CURRENT_DIR=$(pwd)
-echo $CURRENT_DIR
+echo "$CURRENT_DIR"
 
 # ensure we are in the right dir
-SCRIPT_DIR=`dirname $0`
-cd $SCRIPT_DIR
+SCRIPT_DIR=$(dirname "$0")
+cd "$SCRIPT_DIR"
 echo "Entering ${SCRIPT_DIR}/../../"
 cd "${SCRIPT_DIR}/../../"
 ls 
 
 # clean pycache stuff
 rm -rf dist build clinica.egg-info/
-find -name "*__pycache__*" -exec rm {} \-rf \;
-find -name "*.pyc*" -exec rm {} \-rf \;
+find . -name "*__pycache__*" -exec rm {} -rf \;
+find . -name "*.pyc*" -exec rm {} -rf \;
 
 set -o errexit
 set -e
 # generate wheel
 poetry build
 # come back to directory of
-cd $CURRENT_DIR
+cd "$CURRENT_DIR"
