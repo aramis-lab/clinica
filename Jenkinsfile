@@ -121,7 +121,7 @@ pipeline {
               INPUT_DATA_DIR = "/mnt/data_ci"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -165,7 +165,7 @@ pipeline {
               INPUT_DATA_DIR = "/Volumes/data_ci"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -212,7 +212,7 @@ pipeline {
               TMP_BASE = "/mnt/data/ci/tmp"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -258,7 +258,7 @@ pipeline {
               TMP_BASE = "/mnt/data/ci/tmp"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -304,7 +304,7 @@ pipeline {
               TMP_BASE = "/Volumes/data/tmp"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
