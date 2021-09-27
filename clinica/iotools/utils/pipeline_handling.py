@@ -93,15 +93,19 @@ def t1_freesurfer_longitudinal_pipeline(
             if os.path.exists(mod_path):
                 # Looking for atlases
                 atlas_paths = glob(
-                    path.join(mod_path, f"{participant_id}_{session_id}_*thickness.tsv")
+                    path.join(mod_path, f"{participant_id}_{session_id}_*volume.tsv")
                 )
-
+                atlas_paths = [
+                    x
+                    for x in atlas_paths
+                    if "-wm_volume" not in x and "-ba_volume" not in x
+                ]
                 for atlas_path in atlas_paths:
                     atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
                     if path.exists(atlas_path) and (
-                        freesurfer_atlas_selection is None
+                        not freesurfer_atlas_selection
                         or (
-                            freesurfer_atlas_selection is not None
+                            freesurfer_atlas_selection
                             and atlas_name in freesurfer_atlas_selection
                         )
                     ):
@@ -119,7 +123,7 @@ def t1_freesurfer_longitudinal_pipeline(
                 )
                 atlas_df = pd.read_csv(glob(atlas_path)[0], sep="\t")
                 label_list = [
-                    "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
+                    "t1-freesurfer-segmentationVolumes_" + x
                     for x in atlas_df.label_name.values
                 ]
                 ses_df[label_list] = atlas_df["label_value"].to_numpy()
