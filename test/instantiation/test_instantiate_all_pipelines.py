@@ -1,210 +1,201 @@
 # coding: utf8
 
 import warnings
+from os import fspath
+from pathlib import Path
 
 # Small unit tests for all pipelines
 ##
 # test if instantiation and building of workflows is working
-from os import pardir
+
 
 warnings.filterwarnings("ignore")
 
 
-def test_instantiate_T1FreeSurferCrossSectional():
-    from os.path import abspath, dirname, join
+def test_instantiate_T1FreeSurferCrossSectional(cmdopt):
 
     from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "T1FreeSurfer")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "T1Freesurfer"
 
     parameters = {"recon_all_args": "-qcache", "skip_question": False}
 
     pipeline = T1FreeSurfer(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_T1VolumeTissueSegmentation():
-    from os.path import abspath, dirname, join
+def test_instantiate_T1VolumeTissueSegmentation(cmdopt):
 
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import (
         T1VolumeTissueSegmentation,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "T1VolumeTissueSegmentation")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "T1VolumeTissueSegmentation"
 
     pipeline = T1VolumeTissueSegmentation(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
     )
     pipeline.build()
 
 
-def test_instantiate_T1VolumeCreateDartel():
-    from os.path import abspath, dirname, join
+def test_instantiate_T1VolumeCreateDartel(cmdopt):
 
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import (
         T1VolumeCreateDartel,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "T1VolumeCreateDartel")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "T1VolumeCreateDartel"
 
     parameters = {"group_label": "UnitTest"}
     pipeline = T1VolumeCreateDartel(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_T1VolumeDartel2MNI():
-    from os.path import abspath, dirname, join
+def test_instantiate_T1VolumeDartel2MNI(cmdopt):
 
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import (
         T1VolumeDartel2MNI,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "T1VolumeDartel2MNI")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "T1VolumeDartel2MNI"
 
     parameters = {"group_label": "UnitTest"}
     pipeline = T1VolumeDartel2MNI(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_T1VolumeRegisterDartel():
-    from os.path import abspath, dirname, join
+def test_instantiate_T1VolumeRegisterDartel(cmdopt):
 
     from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_pipeline import (
         T1VolumeRegisterDartel,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "T1VolumeExistingDartel")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "T1VolumeExistingDartel"
 
     parameters = {"group_label": "UnitTest"}
     pipeline = T1VolumeRegisterDartel(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_T1VolumeParcellation():
-    from os.path import abspath, dirname, join
+def test_instantiate_T1VolumeParcellation(cmdopt):
 
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import (
         T1VolumeParcellation,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "T1VolumeParcellation")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "T1VolumeParcellation"
 
     parameters = {"group_label": "UnitTest"}
     pipeline = T1VolumeParcellation(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_DWIPreprocessingUsingT1():
-    from os.path import abspath, dirname, join
+def test_instantiate_DWIPreprocessingUsingT1(cmdopt):
 
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import (
         DwiPreprocessingUsingT1,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "DWIPreprocessingUsingT1")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "DWIPreprocessingUsingT1"
 
     parameters = {"low_bval": 5}
     pipeline = DwiPreprocessingUsingT1(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
-    from os.path import abspath, dirname, join
+def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
 
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import (
         DwiPreprocessingUsingPhaseDiffFieldmap,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "DWIPreprocessingUsingPhaseDiffFieldmap")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "DWIPreprocessingUsingPhaseDiffFieldmap"
 
     parameters = {"low_bval": 5}
     pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_DWIDTI():
-    from os.path import abspath, dirname, join
+def test_instantiate_DWIDTI(cmdopt):
 
     from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "DWIDTI")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "DWIDTI"
 
     pipeline = DwiDti(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
     )
     pipeline.build()
 
 
-def test_instantiate_DWIConnectome():
-    from os.path import abspath, dirname, join
+def test_instantiate_DWIConnectome(cmdopt):
 
     from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "DWIConnectome")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "DWIConnectome"
 
     parameters = {"n_tracks": 1000}
     pipeline = DwiConnectome(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_PETVolume():
-    from os.path import abspath, dirname, join
+def test_instantiate_PETVolume(cmdopt):
 
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "PETVolume")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "PETVolume"
 
     parameters = {
         "group_label": "UnitTest",
@@ -212,41 +203,39 @@ def test_instantiate_PETVolume():
         "suvr_reference_region": "pons",
     }
     pipeline = PETVolume(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_PETLinear():
-    from os.path import abspath, dirname, join
+def test_instantiate_PETLinear(cmdopt):
 
     from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "PETLinear")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "PETLinear"
 
     parameters = {"acq_label": "fdg", "suvr_reference_region": "cerebellumPons2"}
     pipeline = PETLinear(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build
 
 
-def test_instantiate_StatisticsSurface():
-    from os.path import abspath, dirname, join
+def test_instantiate_StatisticsSurface(cmdopt):
 
     from clinica.pipelines.statistics_surface.statistics_surface_pipeline import (
         StatisticsSurface,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "StatisticsSurface")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "StatisticsSurface"
 
     parameters = {
         # Clinica compulsory parameters
@@ -258,31 +247,32 @@ def test_instantiate_StatisticsSurface():
         "covariates": "age sex",
     }
     pipeline = StatisticsSurface(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
 
     pipeline.build()
 
 
-def test_instantiate_PETSurfaceCrossSectional():
+def test_instantiate_PETSurfaceCrossSectional(cmdopt):
     from os.path import abspath, dirname, join
 
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "PETSurface")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "PETSurface"
+
     parameters = {
         "acq_label": "FDG",
         "suvr_reference_region": "pons",
-        "pvc_psf_tsv": join(root, "in", "subjects.tsv"),
+        "pvc_psf_tsv": fspath(root / "in" / "subjects.tsv"),
         "longitudinal": False,
     }
     pipeline = PetSurface(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
@@ -309,7 +299,7 @@ def test_instantiate_PETSurfaceCrossSectional():
 #     pipeline.build()
 
 
-def test_instantiate_InputsML():
+def test_instantiate_InputsML(cmdopt):
     from os.path import abspath, dirname, exists, join
 
     from clinica.pipelines.machine_learning.input import (
@@ -318,11 +308,12 @@ def test_instantiate_InputsML():
         CAPSVoxelBasedInput,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "InputsML")
-    caps_dir = join(root, "in", "caps")
-    tsv = join(root, "in", "subjects.tsv")
-    diagnoses_tsv = join(root, "in", "diagnosis.tsv")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "InputsML"
+
+    caps_dir = fspath(root / "in" / "caps")
+    tsv = fspath(root / "in" / "subjects.tsv")
+    diagnoses_tsv = fspath(root / "in" / "diagnosis.tsv")
     group_label = "allADNIdartel"
     image_type = ["T1w", "PET"]
     atlases = ["AAL2", "Neuromorphometrics", "AICHA", "LPBA40", "Hammers"]
@@ -391,105 +382,99 @@ def test_instantiate_InputsML():
                 raise ValueError("An error occurred...")
 
 
-def test_instantiate_SpatialSVM():
-    from os.path import abspath, dirname, join
+def test_instantiate_SpatialSVM(cmdopt):
 
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import (
         SpatialSVM,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "SpatialSVM")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "SpatialSVM"
 
     parameters = {"group_label": "ADNIbl", "orig_input_data": "t1-volume"}
     pipeline = SpatialSVM(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_T1FreeSurferTemplate():
-    from os.path import abspath, dirname, join
+def test_instantiate_T1FreeSurferTemplate(cmdopt):
 
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import (
         T1FreeSurferTemplate,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "T1FreeSurferTemplate")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "T1FreeSurferTemplate"
 
     pipeline = T1FreeSurferTemplate(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
     )
     pipeline.build()
 
 
-def test_instantiate_T1FreeSurferLongitudinalCorrection():
-    from os.path import abspath, dirname, join
+def test_instantiate_T1FreeSurferLongitudinalCorrection(cmdopt):
 
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import (
         T1FreeSurferLongitudinalCorrection,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "T1FreeSurferLongitudinalCorrection")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "T1FreeSurferLongitudinalCorrection"
 
     pipeline = T1FreeSurferLongitudinalCorrection(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
     )
     pipeline.build()
 
 
-def test_instantiate_T1Linear():
-    from os.path import abspath, dirname, join
+def test_instantiate_T1Linear(cmdopt):
 
     from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "T1Linear")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "T1Linear"
 
     parameters = {"uncropped_image": False}
 
     pipeline = T1Linear(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(root / "in" / "bids"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
     )
     pipeline.build()
 
 
-def test_instantiate_DLPrepareData():
-    from os.path import abspath, dirname, join
+def test_instantiate_DLPrepareData(cmdopt):
 
     from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_pipeline import (
         DeepLearningPrepareData,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "DeepLearningPrepareData")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "DeepLearningPrepareData"
 
     parameters = {"modality": "t1-linear", "extract_method": "image"}
     pipeline = DeepLearningPrepareData(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "subjects.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_StatisticsVolume():
-    from os.path import abspath, dirname, join
+def test_instantiate_StatisticsVolume(cmdopt):
 
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "StatisticsVolume")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "StatisticsVolume"
 
     # Instantiate pipeline and run()
     parameters = {
@@ -504,22 +489,21 @@ def test_instantiate_StatisticsVolume():
     }
 
     pipeline = StatisticsVolume(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "group-UnitTest_covariates.tsv"),
+        caps_directory=fspath(root / "in" / "caps"),
+        tsv_file=fspath(root / "in" / "group-UnitTest_covariates.tsv"),
         parameters=parameters,
     )
     pipeline.build()
 
 
-def test_instantiate_StatisticsVolumeCorrection():
-    from os.path import abspath, dirname, join
+def test_instantiate_StatisticsVolumeCorrection(cmdopt):
 
     from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import (
         StatisticsVolumeCorrection,
     )
 
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, "data", "StatisticsVolumeCorrection")
+    input_dir = Path(cmdopt["input"])
+    root = input_dir / "StatisticsVolumeCorrection"
 
     # Instantiate pipeline and run()
     parameters = {
@@ -532,6 +516,6 @@ def test_instantiate_StatisticsVolumeCorrection():
         "n_cuts": 15,
     }
     pipeline = StatisticsVolumeCorrection(
-        caps_directory=join(root, "in", "caps"), parameters=parameters
+        caps_directory=fspath(root / "in" / "caps"), parameters=parameters
     )
     pipeline.build()

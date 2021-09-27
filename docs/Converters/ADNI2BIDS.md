@@ -33,16 +33,23 @@ To do so, from the [main page](https://ida.loni.usc.edu/login.jsp?returnPage=Use
 click on `PROJECTS` and `ADNI`. To download the imaging data, click on `Download` and choose `Image collections`.
 
 In the `Advanced search` tab:
-    1. pick the images you wish to download (for example tick `MRI` to download all the MR images),
-    2. tick all the boxes in the `IMAGE TYPES` section (`Original`, `Pre-processed`, `Post-processed`),
-    3. click on `SEARCH`.
-In the `Advanced search results` tab, click `Select All` and `Add To Collection`.
-Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and
-click on `Advanced download`.
-We advise you to group files as 10 zip files.
 
-To download the clinical data, click on `Download` and choose `Study Data`.
-Select all the CSV files which are present in ALL by ticking `Select ALL tabular data` and click `Download`.
+1. pick the images you wish to download (for example tick `MRI` to download all the MR images),
+
+2. tick all the boxes in the `IMAGE TYPES` section (`Original`, `Pre-processed`, `Post-processed`),
+
+3. click on `SEARCH`.
+
+In the `Advanced search results` tab, click `Select All` and `Add To Collection`.
+Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and click
+on `Advanced download`. We advise you to group files as 10 zip files. Once downloaded, unzip each archive and merge
+their respective content within the root folder (named `ADNI` by default) to a common location. This location will be
+referred to as `DATASET_DIRECTORY` later on.
+
+To download the clinical data, click on `Download` and choose `Study Data`. Select all the CSV files which are present
+in ALL by ticking `Select ALL tabular data` and click `Download`. Once downloaded, unzip the content of the archive and
+verify that the extracted folder contains a collection of CSV files. This folder will be referred to as
+`CLINICAL_DATA_DIRECTORY` later on.
 
 !!! note
     You do not have to modify the original folder name or rename the clinical data files before using the converter.
@@ -51,8 +58,8 @@ Select all the CSV files which are present in ALL by ticking `Select ALL tabular
 
 Currently, the modalities supported by our converter are:
 
-|                                           | ADNI 1 | ADNI GO/2 | ADNI 3 |
-| :----------------------------------------:|:------:|:---------:|:------:|
+|                                           | ADNI 1 | ADNI GO/2 | ADNI 3 |
+|:------------------------------------------|:------:|:---------:|:------:|
 | T1-weighted MRI                           | ✓      | ✓         | ✓      |
 | Diffusion weighted imaging (DWI)          | -      | ✓         | ✓      |
 | FLAIR MRI                                 | -      | ✓         | ✓      |

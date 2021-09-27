@@ -66,13 +66,31 @@ def read_clinical_data(
 
 
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
+    from pathlib import Path
+
     import pandas as pd
 
-    s = pd.Series(find_imaging_data(imaging_data_directory), name="source_path")
+    source_path_series = pd.Series(
+        find_imaging_data(imaging_data_directory), name="source_path"
+    )
 
-    b = s.str.rsplit(pat="/", n=1, expand=True).drop(columns=1)[0].rename("source_dir")
-    a = s.str.split(pat="/", n=1, expand=True).drop(columns=1)[0].rename("path")
-    df_source = pd.concat([s, a, b, a.str.split("_", expand=True)], axis=1)
+    source_dir_series = source_path_series.apply(lambda x: Path(str(x)).parent).rename(
+        "source_dir"
+    )
+
+    file_spec_series = source_path_series.apply(lambda x: Path(str(x)).parts[0]).rename(
+        "path"
+    )
+
+    df_source = pd.concat(
+        [
+            source_path_series,
+            file_spec_series,
+            source_dir_series,
+            file_spec_series.str.split("_", expand=True),
+        ],
+        axis=1,
+    )
     df_source = df_source.rename(
         {0: "Subject", 1: "modality", 2: "Date"}, axis="columns"
     ).drop_duplicates()

@@ -1,5 +1,5 @@
 from os import PathLike
-from typing import BinaryIO, Iterable, List, Optional, Tuple, Union
+from typing import BinaryIO, Dict, Iterable, List, Optional, Tuple, Union
 
 from pandas import DataFrame
 
@@ -95,27 +95,34 @@ def find_imaging_data(imaging_data_directory: PathLike) -> Iterable[Tuple[str, s
     import re
     from pathlib import Path
 
-    pattern = re.compile(
-        r"NIFD_(?:\d_S_\d{4})_(?:\w+)_(?:\d{4}_\d{2}_\d{2})_(?:\d+)_(?:S\d+)_(I\d+)$"
-    )
+    # Pattern for extracting the image data ID from the NIFD files.
+    pattern = re.compile(r"(I\d{6})")
 
-    for path in Path(imaging_data_directory).rglob("NIFD*"):
-        if path.is_dir():
-            match = pattern.search(path.name)
-            if match:
-                yield match.group(1), path
+    def find_files(in_: PathLike) -> Iterable[Path]:
+        return filter(lambda x: x.is_file(), Path(in_).rglob("NIFD*.*"))
+
+    def extract_id_with_dir(files: Iterable[Path]) -> Tuple[str, str]:
+        for f in files:
+            found = pattern.search(f.name)
+            if found:
+                yield found.group(1), str(f.parent)
+
+    for image_data_id, source_dir in set(
+        sorted(extract_id_with_dir(find_files(imaging_data_directory)))
+    ):
+        yield image_data_id, source_dir
 
 
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     from pandas import DataFrame
 
-    imaging_data = DataFrame.from_records(
-        data=find_imaging_data(imaging_data_directory),
-        columns=["image_data_id", "source_dir"],
-        index="image_data_id",
-    ).convert_dtypes()
-
-    if imaging_data.empty:
+    try:
+        imaging_data = DataFrame.from_records(
+            data=find_imaging_data(imaging_data_directory),
+            columns=["image_data_id", "source_dir"],
+            index="image_data_id",
+        ).convert_dtypes()
+    except TypeError:
         raise FileNotFoundError("No imaging data found")
 
     collection_data = find_collection_data(imaging_data_directory)
@@ -126,29 +133,50 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     return collection_data.join(imaging_data)
 
 
-def parse_mri_description(description: str) -> dict:
-    from pandas import NA
-
+def parse_mri_description(description: str) -> Optional[Dict[str, Optional[str]]]:
     description = description.lower().replace("-", "")
 
     if "mprage" in description:
-        return {"datatype": "anat", "suffix": "T1w"}
+        return {
+            "datatype": "anat",
+            "suffix": "T1w",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif "flair" in description:
-        return {"datatype": "anat", "suffix": "FLAIR"}
+        return {
+            "datatype": "anat",
+            "suffix": "FLAIR",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif "t2" in description:
-        return {"datatype": "anat", "suffix": "T2w"}
+        return {
+            "datatype": "anat",
+            "suffix": "T2w",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif "asl" in description:
-        return {"datatype": "anat", "suffix": "PDw"}
+        return {
+            "datatype": "anat",
+            "suffix": "PDw",
+            "trc_label": None,
+            "rec_label": None,
+        }
     elif any([x in description for x in ["mt1", "gradwarp", "n3m"]]):
-        return {"datatype": "anat", "suffix": "T1w"}
+        return {
+            "datatype": "anat",
+            "suffix": "T1w",
+            "trc_label": None,
+            "rec_label": None,
+        }
     else:
-        return NA
+        return None
 
 
-def parse_pet_description(description: str) -> dict:
+def parse_pet_description(description: str) -> Optional[Dict[str, str]]:
     import re
-
-    from pandas import NA
 
     match = re.search(r"3D:(\w+):(\w+)", description)
 
@@ -160,7 +188,7 @@ def parse_pet_description(description: str) -> dict:
             "rec_label": "IR" if "IR" in match.group(2) else "RP",
         }
     else:
-        return NA
+        return None
 
 
 def parse_preprocessing(description: str) -> dict:
@@ -176,18 +204,22 @@ def dataset_to_bids(
     imaging_data: DataFrame,
     clinical_data: Optional[DataFrame] = None,
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
-    from pandas import Series, notna
+    from pandas import Series
 
     # Parse preprocessing information from scan descriptions.
     preprocessing = imaging_data.description.apply(parse_preprocessing).apply(Series)
 
     # Parse BIDS entities from scan descriptions.
-    bids = imaging_data.apply(
-        lambda x: parse_pet_description(x.description)
-        if x.modality == "PET"
-        else parse_mri_description(x.description),
-        axis=1,
-    ).apply(Series)
+    bids = (
+        imaging_data.apply(
+            lambda x: parse_pet_description(x.description)
+            if x.modality == "PET"
+            else parse_mri_description(x.description),
+            axis=1,
+        )
+        .dropna()
+        .apply(Series)
+    )
 
     # Compute quality metric for each scan:
     # - MRI: Applied preprocessing (0: None, 1: GradWarp, 2: N3)
@@ -200,8 +232,8 @@ def dataset_to_bids(
     # Select one scan per BIDS modality based on quality metric.
     subset = ["subject", "visit", "datatype", "suffix", "trc_label"]
     scans = (
-        imaging_data.join(bids)
-        .join(quality)
+        bids.join(quality)
+        .join(imaging_data)
         .sort_values(by=subset + ["quality"])
         .drop_duplicates(subset=subset, keep="last")
         .drop(columns="quality")
@@ -216,8 +248,8 @@ def dataset_to_bids(
         filename=lambda df: df.apply(
             lambda x: f"{x.participant_id}/{x.session_id}/{x.datatype}/"
             f"{x.participant_id}_{x.session_id}"
-            f"{'_trc-'+x.trc_label if notna(x.trc_label) else ''}"
-            f"{'_rec-'+x.rec_label if notna(x.rec_label) else ''}"
+            f"{'_trc-' + x.trc_label if x.trc_label else ''}"
+            f"{'_rec-' + x.rec_label if x.rec_label else ''}"
             f"_{x.suffix}.nii.gz",
             axis=1,
         ),

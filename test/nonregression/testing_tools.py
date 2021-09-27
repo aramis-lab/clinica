@@ -1,4 +1,5 @@
 # coding: utf8
+from os import PathLike
 
 
 def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
@@ -21,6 +22,7 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
 
     """
     import os
+    from pathlib import Path
 
     import matplotlib.pyplot as plt
     import nibabel as nib
@@ -206,33 +208,33 @@ def same_missing_modality_tsv(file1, file2):
     )
 
 
-def compare_folders(out, ref, shared_folder_name):
+def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path) -> bool:
     from filecmp import cmp
-    from os import remove
-    from os.path import join
 
-    out_txt = join(out, "out_folder.txt")
-    ref_txt = join(ref, "ref_folder.txt")
+    file_out = tmp_path / "file_out.txt"
+    file_ref = tmp_path / "file_ref.txt"
+    tree(outdir, file_out)
+    tree(refdir, file_ref)
 
-    list_files(join(out, shared_folder_name), filename=out_txt)
-    list_files(join(ref, shared_folder_name), filename=ref_txt)
-
-    # Compare them
-    if not cmp(out_txt, ref_txt):
-        with open(out_txt, "r") as fin:
+    if not cmp(file_out, file_ref):
+        with open(file_out, "r") as fin:
             out_message = fin.read()
-        with open(ref_txt, "r") as fin:
+        with open(file_ref, "r") as fin:
             ref_message = fin.read()
-        remove(out_txt)
-        remove(ref_txt)
         raise ValueError(
             "Comparison of out and ref directories shows mismatch :\n "
             "OUT :\n" + out_message + "\n REF :\n" + ref_message
         )
 
-    # Clean folders
-    remove(out_txt)
-    remove(ref_txt)
+
+def tree(dir: PathLike, file_out: PathLike):
+    # Create a file (file_out) with a visual tree representing the file
+    # hierarchy at a giver directory
+    for path in sorted(dir.rglob("*")):
+        depth = len(path.relative_to(dir).parts)
+        spacer = "    " * depth
+        file_content = f"{spacer}+ {path.name}\n"
+    file_out.write_text(file_content)
 
 
 def list_files(startpath, filename=None):

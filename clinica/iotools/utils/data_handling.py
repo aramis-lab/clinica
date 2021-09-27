@@ -294,7 +294,6 @@ def find_mods_and_sess(bids_dir):
             for p in mods_paths_folders:
                 p = p[:-1]
                 mods_avail.append(p.split("/").pop())
-
             if "func" in mods_avail:
                 list_funcs_paths = glob(path.join(session, "func", "*bold.nii.gz"))
                 for func_path in list_funcs_paths:
@@ -809,7 +808,7 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     from glob import glob
     from os import listdir
     from os.path import basename, isdir, isfile, join
-    from shutil import copy2, copytree
+    from shutil import copy, copy2, copytree
 
     from clinica.utils.exceptions import ClinicaBIDSError
     from clinica.utils.inputs import check_bids_folder
@@ -823,9 +822,9 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
 
     for f in listdir(bids_dir):
         if isdir(join(bids_dir, f)) and not isdir(join(output_dir, f)):
-            copytree(join(bids_dir, f), join(output_dir, f))
+            copytree(join(bids_dir, f), join(output_dir, f), copy_function=copy)
         elif isfile(join(bids_dir, f)) and not isfile(join(output_dir, f)):
-            copy2(join(bids_dir, f), output_dir)
+            copy(join(bids_dir, f), output_dir)
 
     pattern = join(output_dir, "**/*.nii*")
     nifti_files = glob(pattern, recursive=True)
