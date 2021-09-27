@@ -26,6 +26,6 @@ find -name "*.pyc*" -exec rm {} \-rf \;
 set -o errexit
 set -e
 # generate wheel
-python setup.py sdist bdist_wheel
+poetry build
 # come back to directory of
 cd $CURRENT_DIR
