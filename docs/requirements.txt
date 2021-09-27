@@ -1,6 +1,0 @@
-################  Requirements to build the doc  ######################
-##### clinicadl doc ####
-
-mkdocs>=1.1
-mkdocs-material
-pymdown-extensions
