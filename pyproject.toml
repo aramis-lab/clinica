@@ -9,6 +9,13 @@ readme = "readme.md"
 homepage = "https://www.clinica.run"
 repository = "https://github.com/aramis-lab/clinica.git"
 documentation =  "https://aramislab.paris.inria.fr/clinica/docs/public/latest"
+keywords = [
+    "bids",
+    "image processing",
+    "machine learning",
+    "neuroimaging",
+    "neuroscience"
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
