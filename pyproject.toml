@@ -25,7 +25,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
     "Topic :: Scientific/Engineering :: Image Processing"
 ]
-packages = [{include = "clinica"}]
 
 [tool.poetry.dependencies]
 python = "^3.6"
