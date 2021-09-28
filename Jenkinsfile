@@ -14,12 +14,6 @@ pipeline {
             environment {
               PATH = "$HOME/miniconda/bin:$PATH"
               }
-            when {
-              anyOf {
-                changeset 'environment.yml'
-                changeset 'pyproject.toml'
-              }
-            }
             steps {
               echo 'My branch name is ${BRANCH_NAME}'
               echo 'Building Conda environment... clinica_env_${BRANCH_NAME}'
