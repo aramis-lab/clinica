@@ -21,75 +21,6 @@ class T1FreeSurfer(cpe.Pipeline):
         A clinica pipeline object containing the T1FreeSurfer pipeline.
     """
 
-    def __init__(
-        self,
-        bids_directory,
-        caps_directory,
-        tsv_file,
-        base_dir,
-        parameters,
-        name,
-        overwrite_caps,
-        atlas_path: Optional[str] = None,
-    ):
-        self.atlas_path = atlas_path
-        super().__init__(
-            bids_directory,
-            caps_directory,
-            tsv_file,
-            overwrite_caps,
-            base_dir,
-            parameters,
-            name,
-        )
-
-    @staticmethod
-    def get_to_process_with_atlases(
-        caps_directory, subjects, sessions, atlas_dir_path, to_process_ids
-    ):
-        import os
-
-        from clinica.utils.filemanip import extract_image_ids
-        from clinica.utils.input_files import T1_FS_DESTRIEUX
-        from clinica.utils.inputs import clinica_file_reader
-
-        dictionnaire_des_atlas_qui_ne_sont_pas_la = dict()
-        atlas_list = []
-        for path in Path(atlas_dir_path).rglob("*rh*6p0.gcs"):
-            atlas_name = path.name.split(".")[1].split("_")[0]
-            atlas_list.append(atlas_name)
-
-        if os.path.isdir(caps_directory):
-            for atlas in atlas_list:
-
-                atlas_info = dict(
-                    {
-                        "pattern": "t1/freesurfer_cross_sectional/sub-*_ses-*/stats/rh."
-                        + atlas
-                        + ".stats",
-                        "description": atlas + "-based segmentation",
-                        "needed_pipeline": "t1-freesurfer",
-                    }
-                )
-                t1_freesurfer_output = clinica_file_reader(
-                    subjects, sessions, caps_directory, T1_FS_DESTRIEUX, False
-                )
-                t1_freesurfer_files = clinica_file_reader(
-                    subjects, sessions, caps_directory, atlas_info, False
-                )
-
-                image_ids = extract_image_ids(t1_freesurfer_files)
-                image_ids_2 = extract_image_ids(t1_freesurfer_output)
-                to_process = list(set(image_ids_2) - set(image_ids))
-                dictionnaire_des_atlas_qui_ne_sont_pas_la.update({atlas: to_process})
-                for id in to_process_ids:
-                    dictionnaire_des_atlas_qui_ne_sont_pas_la[atlas].append(id)
-        print(
-            "dictionnaire_des_atlas_qui_ne_sont_pas_la:\n",
-            dictionnaire_des_atlas_qui_ne_sont_pas_la,
-        )
-        return dictionnaire_des_atlas_qui_ne_sont_pas_la
-
     @staticmethod
     def get_processed_images(caps_directory, subjects, sessions):
         import os
@@ -133,7 +64,7 @@ class T1FreeSurfer(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-        return ["t1w", "to_process_with_atlases"]
+        return ["t1w"]
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -200,27 +131,9 @@ class T1FreeSurfer(cpe.Pipeline):
                 ]
                 to_process_ids = list(set(input_ids) - set(processed_ids))
 
-                to_process_with_atlases = self.get_to_process_with_atlases(
-                    self.caps_directory,
-                    self.subjects,
-                    self.sessions,
-                    atlas_dir_path=self.atlas_path,
-                    to_process_ids=to_process_ids,
-                )
                 self.subjects, self.sessions = extract_subjects_sessions_from_filename(
                     to_process_ids
                 )
-        else:
-            input_ids = [
-                p_id + "_" + s_id for p_id, s_id in zip(self.subjects, self.sessions)
-            ]
-            to_process_with_atlases = self.get_to_process_with_atlases(
-                self.caps_directory,
-                self.subjects,
-                self.sessions,
-                atlas_dir_path=self.atlas_path,
-                to_process_ids=input_ids,
-            )
 
         # Inputs from anat/ folder
         # ========================
@@ -254,7 +167,6 @@ class T1FreeSurfer(cpe.Pipeline):
             name="ReadingFiles",
             iterables=[
                 ("t1w", t1w_files),
-                ("to_process_with_atlases", to_process_with_atlases),
             ],
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
@@ -264,20 +176,10 @@ class T1FreeSurfer(cpe.Pipeline):
             self.bids_directory,
             skip_question=self.parameters["skip_question"],
         )
-        print("la liste des sujets a traiter avec recon-all: ", t1w_files)
-        print(
-            "la liste des sujets quon veut traiter avec les autres atlas: ",
-            to_process_with_atlases,
-        )
 
         self.connect(
             [
                 (read_node, self.input_node, [("t1w", "t1w")]),
-                (
-                    read_node,
-                    self.input_node,
-                    [("to_process_with_atlases", "to_process_with_atlases")],
-                ),
             ]
         )
 
@@ -318,11 +220,7 @@ class T1FreeSurfer(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
 
-        from .t1_freesurfer_utils import (
-            compute_atlases,
-            init_input_node,
-            write_tsv_files,
-        )
+        from .t1_freesurfer_utils import init_input_node, write_tsv_files
 
         # Nodes declaration
         # =================
@@ -349,22 +247,6 @@ class T1FreeSurfer(cpe.Pipeline):
         recon_all = npe.Node(interface=ReconAll(), name="1-SegmentationReconAll")
         recon_all.inputs.directive = "all"
 
-        # Run an additional two Freesurfer commands if there is an atlas_path specified
-        compute_additional_atlases = npe.Node(
-            interface=nutil.Function(
-                input_names=[
-                    "subjects_dir",
-                    "image_id",
-                    "to_process_with_atlases",
-                    "path_to_atlas",
-                ],
-                output_names=["larousse"],
-                function=compute_atlases,
-            ),
-            name="1bis-ComputeOtherAtlases",
-        )
-        compute_additional_atlases.inputs.path_to_atlas = self.atlas_path
-
         # Generate TSV files containing a summary of the regional statistics
         # in <subjects_dir>/regional_measures
         create_tsv = npe.Node(
@@ -389,10 +271,6 @@ class T1FreeSurfer(cpe.Pipeline):
                                          ("image_id", "subject_id"),
                                          ("flags", "flags")],
                 ),
-                # Run other atlases
-                (self.input_node, compute_additional_atlases, [("to_process_with_atlases", "to_process_with_atlases")]),
-                (init_input, compute_additional_atlases, [("subjects_dir", "subjects_dir")]),
-                (recon_all, compute_additional_atlases, [("subject_id", "image_id")]),
                 # Generate TSV files
                 (init_input, create_tsv, [("subjects_dir", "subjects_dir")]),
                 (recon_all, create_tsv, [("subject_id", "image_id")]),

@@ -29,7 +29,9 @@ pipeline_name = "t1-freesurfer"
 @cli_param.option.overwrite_outputs
 @cli_param.option.yes
 @cli_param.option.atlas_path
+@click.pass_context
 def cli(
+    ctx: click.Context,
     bids_directory: str,
     caps_directory: str,
     recon_all_args: str,
@@ -48,6 +50,7 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
+    from ..atlas import compute_atlas_cli
     from .t1_freesurfer_pipeline import T1FreeSurfer
 
     parameters = {"recon_all_args": recon_all_args, "skip_question": yes}
@@ -60,7 +63,6 @@ def cli(
         parameters=parameters,
         name=pipeline_name,
         overwrite_caps=overwrite_outputs,
-        atlas_path=atlas_path,
     )
 
     exec_pipeline = (
@@ -72,6 +74,14 @@ def cli(
     if isinstance(exec_pipeline, Graph):
         print_end_pipeline(
             pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
+        )
+
+    if atlas_path != None:
+        ctx.invoke(
+            compute_atlas_cli.cli,
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            atlas_path=atlas_path,
         )
 
 
