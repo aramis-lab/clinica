@@ -41,7 +41,7 @@ class ComputeAtlas(cpe.Pipeline):
         from clinica.utils.input_files import T1_FS_DESTRIEUX
         from clinica.utils.inputs import clinica_file_reader
 
-        dictionnaire_des_atlas_qui_ne_sont_pas_la = []
+        initial_list_to_process = []
         atlas_list = []
         for path in Path(atlas_dir_path).rglob("*rh*6p0.gcs"):
             atlas_name = path.name.split(".")[1].split("_")[0]
@@ -69,21 +69,13 @@ class ComputeAtlas(cpe.Pipeline):
                 image_ids = extract_image_ids(t1_freesurfer_files)
                 image_ids_2 = extract_image_ids(t1_freesurfer_output)
                 to_process = list(set(image_ids_2) - set(image_ids))
-                dictionnaire_des_atlas_qui_ne_sont_pas_la.append(([atlas], to_process))
+                initial_list_to_process.append(([atlas], to_process))
 
-        print(
-            "\ndictionnaire_des_atlas_qui_ne_sont_pas_la:\n",
-            dictionnaire_des_atlas_qui_ne_sont_pas_la,
-            "\n\n",
-        )
-        ze_perfect_optimus_prime = []
-        for i in dictionnaire_des_atlas_qui_ne_sont_pas_la:
+        list_to_process = []
+        for i in initial_list_to_process:
             if list(itertools.product(i[0], i[1])) != []:
-                ze_perfect_optimus_prime.append(list(itertools.product(i[0], i[1])))
-        # for i in itertools.product(dictionnaire_des_atlas_qui_ne_sont_pas_la[0],dictionnaire_des_atlas_qui_ne_sont_pas_la[1]):
-        #     ze_perfect_optimus_prime.append(i)
-        print("wish i were real \n", ze_perfect_optimus_prime)
-        return ze_perfect_optimus_prime
+                list_to_process.append(list(itertools.product(i[0], i[1])))
+        return list_to_process
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -172,8 +164,6 @@ class ComputeAtlas(cpe.Pipeline):
 
         self.connect(
             [
-                # Get <image_id> from input_node and print begin message
-                # (self.input_node, init_input, [("to_process_with_atlases", "to_process_with_atlases ")]),
                 # Run compute_atlases command
                 (
                     self.input_node,
@@ -184,7 +174,5 @@ class ComputeAtlas(cpe.Pipeline):
                 (compute_other_atlases, create_tsv, [("subject_dir", "subject_dir")]),
                 (compute_other_atlases, create_tsv, [("image_id", "image_id")]),
                 (compute_other_atlases, create_tsv, [("atlas", "atlas")]),
-                # Output node
-                # (create_tsv, self.output_node, [("image_id", "image_id")]),
             ]
         )

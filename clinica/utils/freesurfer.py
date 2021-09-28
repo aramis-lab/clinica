@@ -47,7 +47,6 @@ def generate_regional_measures_alt(
         stats_folder = os.path.join(
             os.path.expanduser(segmentation_path), subject_id, "stats"
         )
-        print("\na magifik :\n", stats_folder)
         if not os.path.isdir(stats_folder):
             raise IOError(
                 "Image %s does not contain FreeSurfer segmentation"

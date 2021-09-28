@@ -33,35 +33,16 @@ def compute_atlases(caps_directory, to_process_with_atlases, path_to_atlas):
 
     from clinica.utils.freesurfer import generate_regional_measures_alt
 
-    print("\n\nqqch")
-    print("ze caps: ", caps_directory)
-    print("ze atlas path: ", path_to_atlas)
-    print("ze current subject and session: ", "something smart")
-    print("ze NOT dictionnary: ", to_process_with_atlases, "\n\n")
-
-    # for sub_n_ses in to_process_with_atlases[0]:
-    #     print("my favorite atlas: ", to_process_with_atlases[0],
-    #     "\nandis sub_n_ses: ", sub_n_ses)
     subject_dir = ""
     image_id = ""
     atlas = ""
-    print("to_process_with_atlases: ", to_process_with_atlases)
     if to_process_with_atlases != []:
-        print(
-            "ze atlas: ",
-            to_process_with_atlases[0][0],
-            "\nand ze subject: ",
-            to_process_with_atlases[0][1],
-        )
-
         for path in Path(path_to_atlas).rglob(
             "*" + to_process_with_atlases[0][0] + "_6p0.gcs"
         ):
             hemisphere = os.path.split(path)[1].rsplit(".")[0]
             atlas_name = os.path.split(path)[1].rsplit(".")[1].split("_")[0]
             sub, ses = to_process_with_atlases[0][1].split("_")
-            print("sub: ", sub)
-            print("ses: ", ses)
 
             atlas_file = hemisphere + "." + atlas_name + "_6p0.gcs"
             subject_dir = (
@@ -91,7 +72,6 @@ def compute_atlases(caps_directory, to_process_with_atlases, path_to_atlas):
             )
 
             command = f"mris_ca_label {to_process_with_atlases[0][1]} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
-            # print("\n\nze command: ", command, "\n\n")
             a = subprocess.run(command, shell=True, capture_output=True)
 
             output_path_stats = (
@@ -104,15 +84,6 @@ def compute_atlases(caps_directory, to_process_with_atlases, path_to_atlas):
             )
             command2 = f"mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {to_process_with_atlases[0][1]} {hemisphere}"
             c = subprocess.run(command2, shell=True, capture_output=True)
-            print(
-                "calling with: \n",
-                "path_to_freesurfer_cross: ",
-                path_to_freesurfer_cross,
-                "\nsubnses: ",
-                to_process_with_atlases[0][1],
-                "\natlas: ",
-                to_process_with_atlases[0][0],
-            )
 
             image_id, atlas = (
                 to_process_with_atlases[0][1],
