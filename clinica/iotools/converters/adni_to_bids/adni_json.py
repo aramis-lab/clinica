@@ -96,7 +96,7 @@ def get_img_metadata(img):
         "IMAGE_ORIG_SEQ": xml_check_and_get_text(
             img[1], "description"
         ),  # .replace('|', ' '),
-        "IMAGE_ORIG_RATING": img_rating_val,  # desc is same thing
+        # "IMAGE_ORIG_RATING": img_rating_val,  # desc is same thing
         **proto_d,
     }
 
@@ -231,17 +231,16 @@ def parse_xml_file(xml_path):
     row_d = {
         "ID": xml_check_and_get_text(subj[0], "subjectIdentifier"),
         # subject cofactor to check
-        "GENDER": xml_check_and_get_text(subj[2], "subjectSex"),
+        # "GENDER": xml_check_and_get_text(subj[2], "subjectSex"),
         # include apoe as well?
-        "VISIT_DESC": vis_desc,  # to join visit ?
-        "VISIT_AGE": xml_check_and_get_text(
-            study[1], "subjectAge", cast=float
-        ),  # to join visit ?
-        # ageQualifier ??
-        "SCAN_DATE": xml_check_and_get_text(series[2], "dateAcquired"),
-        "STUDY_ID": xml_check_and_get_text(study[0], "studyIdentifier", cast=int),
+        # "VISIT_DESC": vis_desc,  # to join visit ?
+        # "VISIT_AGE": xml_check_and_get_text(
+        #    study[1], "subjectAge", cast=float
+        # ),  # to join visit ?
+        # "SCAN_DATE": xml_check_and_get_text(series[2], "dateAcquired"),
+        # "STUDY_ID": xml_check_and_get_text(study[0], "studyIdentifier", cast=int),
         # series
-        "SERIES_ID": xml_check_and_get_text(series[0], "seriesIdentifier", cast=int),
+        # "SERIES_ID": xml_check_and_get_text(series[0], "seriesIdentifier", cast=int),
         # (original) imagingProtocol
         **orig_img_d,
         # derived image props
@@ -266,12 +265,12 @@ def create_mri_meta_df(imgs):
         [
             "T1w_scan_id",
             "ID",
-            "GENDER",
-            "VISIT_DESC",
-            "VISIT_AGE",
-            "SCAN_DATE",
-            "STUDY_ID",
-            "SERIES_ID",
+            # "GENDER",
+            # "VISIT_DESC",
+            # "VISIT_AGE",
+            # "SCAN_DATE",
+            # "STUDY_ID",
+            # "SERIES_ID",
         ],
         inplace=True,
     )
