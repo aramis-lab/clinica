@@ -397,8 +397,7 @@ pipeline {
           sh 'echo "Agent name: ${NODE_NAME}"'
           sh '''
           eval "$(conda shell.bash hook)"
-          conda create --yes --name build_doc python=3.8 poetry
-          conda activate build_doc
+          conda activate clinica_env_$BRANCH_NAME
           LC_ALL=C.UTF-8 poetry install --no-dev --no-root --extras docs
           ./.jenkins/scripts/publish.sh ${BRANCH_NAME}
           '''
