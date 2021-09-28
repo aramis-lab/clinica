@@ -27,11 +27,11 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7.1"
 nibabel = "^2.3.3"
 nipype = "^1.4"
 argcomplete = "^1.9.4"
-pandas = "^0.24.2"
+pandas = "^1.2"
 jinja2 = "^2.10.1"
 xvfbwrapper = "*"
 numpy = "^1.17"
@@ -49,6 +49,7 @@ pydicom = "*"
 networkx = "*"
 click = "^7"
 click-option-group = "^0.5"
+xlrd = "*"
 openpyxl = "*"
 fsspec = "*"
 # docs
