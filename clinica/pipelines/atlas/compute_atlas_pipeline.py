@@ -121,10 +121,7 @@ class ComputeAtlas(cpe.Pipeline):
         )
         # fmt: off
         self.connect(
-            [
-                (read_node, self.input_node,[("to_process_with_atlases", "to_process_with_atlases")],
-                ),
-            ]
+            [(read_node, self.input_node, [("to_process_with_atlases", "to_process_with_atlases")])]
         )
         # fmt: on
 

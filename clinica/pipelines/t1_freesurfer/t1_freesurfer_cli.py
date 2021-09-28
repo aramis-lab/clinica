@@ -76,7 +76,7 @@ def cli(
             pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
 
-    if atlas_path != None:
+    if atlas_path is not None:
         ctx.invoke(
             compute_atlas_cli.cli,
             bids_directory=bids_directory,
