@@ -66,6 +66,7 @@ def t1_freesurfer_longitudinal_pipeline(
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,
     )
+    from clinica.utils.stream import cprint
 
     # Ensures that df is correctly indexed
     if "participant_id" in df.columns.values:
@@ -81,54 +82,60 @@ def t1_freesurfer_longitudinal_pipeline(
         mod_path = path.join(ses_path, "t1")
 
         long_ids = [os.path.split(x)[-1] for x in glob(path.join(mod_path, "long*"))]
-        for long_id in long_ids:
-            mod_path = path.join(
-                mod_path, long_id, "freesurfer_longitudinal", "regional_measures"
+
+        if long_ids and len(long_ids) > 1:
+            cprint(
+                "Only one longitudinal study can be processed for a given subject",
+                lvl="warning",
             )
-            ses_df = pd.DataFrame(
-                [[participant_id, session_id]], columns=["participant_id", "session_id"]
+        long_id = long_ids[0]
+        mod_path = path.join(
+            mod_path, long_id, "freesurfer_longitudinal", "regional_measures"
+        )
+        ses_df = pd.DataFrame(
+            [[participant_id, session_id]], columns=["participant_id", "session_id"]
+        )
+        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+
+        if os.path.exists(mod_path):
+            # Looking for atlases
+            atlas_paths = glob(
+                path.join(mod_path, f"{participant_id}_{session_id}_*volume.tsv")
             )
-            ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+            atlas_paths = [
+                x
+                for x in atlas_paths
+                if "-wm_volume" not in x and "-ba_volume" not in x
+            ]
+            for atlas_path in atlas_paths:
+                atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
+                if path.exists(atlas_path) and (
+                    not freesurfer_atlas_selection
+                    or (
+                        freesurfer_atlas_selection
+                        and atlas_name in freesurfer_atlas_selection
+                    )
+                ):
+                    atlas_df = pd.read_csv(atlas_path, sep="\t")
+                    label_list = [
+                        "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
+                        for x in atlas_df.label_name.values
+                    ]
+                    ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
-            if os.path.exists(mod_path):
-                # Looking for atlases
-                atlas_paths = glob(
-                    path.join(mod_path, f"{participant_id}_{session_id}_*volume.tsv")
-                )
-                atlas_paths = [
-                    x
-                    for x in atlas_paths
-                    if "-wm_volume" not in x and "-ba_volume" not in x
-                ]
-                for atlas_path in atlas_paths:
-                    atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
-                    if path.exists(atlas_path) and (
-                        not freesurfer_atlas_selection
-                        or (
-                            freesurfer_atlas_selection
-                            and atlas_name in freesurfer_atlas_selection
-                        )
-                    ):
-                        atlas_df = pd.read_csv(atlas_path, sep="\t")
-                        label_list = [
-                            "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
-                            for x in atlas_df.label_name.values
-                        ]
-                        ses_df[label_list] = atlas_df["label_value"].to_numpy()
+            # Always retrieve subcortical volumes
+            atlas_path = path.join(
+                mod_path,
+                f"{participant_id}_{session_id}*segmentationVolumes.tsv",
+            )
+            atlas_df = pd.read_csv(glob(atlas_path)[0], sep="\t")
+            label_list = [
+                "t1-freesurfer-segmentationVolumes_" + x
+                for x in atlas_df.label_name.values
+            ]
+            ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
-                # Always retrieve subcortical volumes
-                atlas_path = path.join(
-                    mod_path,
-                    f"{participant_id}_{session_id}*segmentationVolumes.tsv",
-                )
-                atlas_df = pd.read_csv(glob(atlas_path)[0], sep="\t")
-                label_list = [
-                    "t1-freesurfer-segmentationVolumes_" + x
-                    for x in atlas_df.label_name.values
-                ]
-                ses_df[label_list] = atlas_df["label_value"].to_numpy()
-
-            pipeline_df = pipeline_df.append(ses_df)
+        pipeline_df = pipeline_df.append(ses_df)
 
     summary_df = generate_summary(
         pipeline_df, "t1-freesurfer-longitudinal", ignore_groups=True
