@@ -26,6 +26,6 @@ find . -name "*.pyc*" -exec rm {} -rf \;
 set -o errexit
 set -e
 # generate wheel
-poetry build
+LC_ALL=C.UTF-8 poetry build
 # come back to directory of
 cd "$CURRENT_DIR"

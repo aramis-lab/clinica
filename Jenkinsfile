@@ -24,7 +24,7 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
                  conda activate clinica_env_$BRANCH_NAME
-                 poetry install --no-dev --no-root --extras test
+                 LC_ALL=C.UTF-8 poetry install --no-dev --no-root --extras test
                  '''
             }
           }
@@ -35,7 +35,10 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:$PATH"
               }
             when {
-              changeset 'requirements*'
+              anyOf {
+                changeset 'environment.yml'
+                changeset 'pyproject.toml'
+              }
             }
             steps {
               echo 'My branch name is ${BRANCH_NAME}'
@@ -44,7 +47,7 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
                  conda activate clinica_env_$BRANCH_NAME
-                 poetry install --no-dev --no-root --extras test
+                 LC_ALL=C.UTF-8 poetry install --no-dev --no-root --extras test
                  '''
             }
           }
@@ -71,7 +74,7 @@ pipeline {
                eval "$(conda shell.bash hook)"
                conda activate clinica_env_$BRANCH_NAME
                echo "Install clinica using poetry..."
-               poetry install --no-dev
+               LC_ALL=C.UTF-8 poetry install --no-dev
                eval "$(register-python-argcomplete clinica)"
                # Show clinica help message
                echo "Display clinica help message"
@@ -98,7 +101,7 @@ pipeline {
                source ./.jenkins/scripts/find_env.sh
                conda activate clinica_env_$BRANCH_NAME
                echo "Install clinica using poetry..."
-               poetry install --no-dev
+               LC_ALL=C.UTF-8 poetry install --no-dev
                eval "$(register-python-argcomplete clinica)"
                # Show clinica help message
                echo "Display clinica help message"
@@ -396,7 +399,7 @@ pipeline {
           eval "$(conda shell.bash hook)"
           conda create --yes --name build_doc python=3.8 poetry
           conda activate build_doc
-          poetry install --no-dev --no-root --extras docs
+          LC_ALL=C.UTF-8 poetry install --no-dev --no-root --extras docs
           ./.jenkins/scripts/publish.sh ${BRANCH_NAME}
           '''
         }
@@ -420,7 +423,7 @@ pipeline {
              eval "$(conda shell.bash hook)"
              source ./.jenkins/scripts/find_env.sh
              conda activate clinica_env_$BRANCH_NAME
-             poetry install --no-dev
+             LC_ALL=C.UTF-8 poetry install --no-dev
              clinica --help
              cd $WORKSPACE/.jenkins/scripts
              ./generate_wheels.sh

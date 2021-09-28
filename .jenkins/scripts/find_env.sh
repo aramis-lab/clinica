@@ -28,7 +28,7 @@ done
   echo "Conda env $CLINICA_ENV_BRANCH was created."
   eval "$(conda shell.bash hook)"
   conda activate "$CLINICA_ENV_BRANCH"
-  poetry install --no-dev --no-root --extras test
+  LC_ALL=C.UTF-8 poetry install --no-dev --no-root --extras test
   echo "Development requirements has been installed in  $CLINICA_ENV_BRANCH."
   conda deactivate
 #fi
