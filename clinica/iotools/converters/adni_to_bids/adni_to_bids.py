@@ -137,8 +137,14 @@ class AdniToBids(Converter):
             cprint("Creating scans files...")
             adni_utils.create_adni_scans_files(conversion_path, bids_subjs_paths)
 
-        if xml_path and os.path.exists(xml_path):
-            create_json_metadata(bids_ids, xml_path)
+        if xml_path:
+            if os.path.exists(xml_path):
+                create_json_metadata(bids_subjs_paths, bids_ids, xml_path)
+            else:
+                cprint(
+                    msg=f"Clinica was unable to find {xml_path}, skipping xml metadata extraction.",
+                    lvl="warning",
+                )
 
     def convert_images(
         self,

@@ -302,27 +302,19 @@ class func_with_exception:
 
 
 def run_parsers(xml_files):
-    from concurrent.futures.process import ProcessPoolExecutor
-    from joblib import Parallel, delayed
+
     import os
 
     # from concurrent.futures import ProcessPoolExecutor, as_completed #ThreadPoolExecutor
     from math import ceil
 
-    n_jobs = 4
-
     parser = func_with_exception(parse_xml_file)
-    imgs_with_excep = Parallel(n_jobs=4, verbose=0)(
-        delayed(parser)(xml_p) for xml_p in xml_files
-    )
-
-    with ProcessPoolExecutor(max_workers=n_jobs) as pp:
-        imgs_with_excep = dict(
-            zip(
-                xml_files,  # tqdm is buggy when chunksize > 1
-                pp.map(parser, xml_files, chunksize=ceil(len(xml_files) / n_jobs)),
-            )
+    imgs_with_excep = dict(
+        zip(
+            xml_files,  # tqdm is buggy when chunksize > 1
+            [parser(xml_file) for xml_file in xml_files],
         )
+    )
 
     imgs = [img for img, e in imgs_with_excep.values() if e is None]
     exceps = {
@@ -334,14 +326,16 @@ def run_parsers(xml_files):
     return imgs, exceps
 
 
-def create_json_metadata(bids_ids, xml_path):
+def create_json_metadata(bids_subjs_paths, bids_ids, xml_path):
     from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni
 
     loni_ids = [bids_id_to_loni(bids_id) for bids_id in bids_ids]
     xml_files = read_xml_files(loni_ids, xml_path)
     imgs, excep = run_parsers(xml_files)
     df_meta = create_mri_meta_df(imgs)
-    print(df_meta)
+    df_meta.reset_index(drop=True).to_json(
+        "adni_xml_metadata.json", orient="records", lines=False, indent=4
+    )
     # write_json(df_meta)
 
 
