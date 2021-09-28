@@ -131,7 +131,7 @@ pipeline {
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
-                 taskset -c 0-21 pytest \
+                 taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/instantation_linux.xml \
                     --verbose \
                     --working_directory=$WORK_DIR \
@@ -175,7 +175,7 @@ pipeline {
                  source /usr/local/opt/modules/init/bash
                  module load clinica.all
                  cd test
-                 pytest \
+                 poetry run pytest \
                     --verbose \
                     --working_directory=$WORK_DIR \
                     --input_data_directory=$INPUT_DATA_DIR \
@@ -222,7 +222,7 @@ pipeline {
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
-                 taskset -c 0-21 pytest \
+                 taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/run_converters_linux.xml \
                     --verbose \
                     --working_directory=$WORK_DIR \
@@ -268,7 +268,7 @@ pipeline {
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
-                 taskset -c 0-21 pytest \
+                 taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/run_utils_linux.xml \
                     --verbose \
                     --working_directory=$WORK_DIR \
@@ -314,7 +314,7 @@ pipeline {
                  source /usr/local/opt/modules/init/bash
                  module load clinica.all
                  cd test
-                 pytest \
+                 poetry run pytest \
                     --verbose \
                     --working_directory=$WORK_DIR \
                     --input_data_directory=$INPUT_DATA_DIR \
@@ -358,7 +358,7 @@ pipeline {
                  source /usr/local/opt/modules/init/bash
                  module load clinica.all
                  cd test
-                 pytest \
+                 poetry run pytest \
                     --verbose \
                     --working_directory=$WORK_DIR \
                     --input_data_directory=$INPUT_DATA_DIR \
