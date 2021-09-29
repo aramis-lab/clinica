@@ -34,6 +34,9 @@ If you want to run the pipeline on a subset of your BIDS dataset, you can use th
     If you want to add some custom flags, you can do it in Clinica with the `--recon_all_args` flag (e.g. `--recon_all_args="-bigventricles -qcache"`).
     Please note that `=` is compulsory (this is not the case for other flags).
 
+!!! note
+    If you wish to obtain your results with another atlas, you can specify the option -ap/--atlas_path with the path to the atlas folder. Your atlas will need to be in FreeSurfer format, as in `.gcs` format. The atlases files should have this format: `hemisphere.atlasname_6p0.gcs`.
+
 ## Outputs
 
 Results are stored in the following folder of the
