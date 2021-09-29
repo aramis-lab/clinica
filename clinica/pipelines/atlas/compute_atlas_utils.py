@@ -1,6 +1,9 @@
 # coding: utf8
 
 
+from clinica.utils.stream import cprint
+
+
 def init_input_node(t1w, recon_all_args, output_dir):
     """Initialize the pipeline.
 
@@ -31,7 +34,7 @@ def compute_atlases(caps_directory, to_process_with_atlases, path_to_atlas):
     import subprocess
     from pathlib import Path
 
-    from clinica.utils.freesurfer import generate_regional_measures_alt
+    from clinica.utils.stream import cprint
 
     subject_dir = ""
     image_id = ""
@@ -44,15 +47,6 @@ def compute_atlases(caps_directory, to_process_with_atlases, path_to_atlas):
             atlas_name = os.path.split(path)[1].rsplit(".")[1].split("_")[0]
             sub, ses = to_process_with_atlases[0][1].split("_")
 
-            atlas_file = hemisphere + "." + atlas_name + "_6p0.gcs"
-            subject_dir = (
-                caps_directory
-                + "/subjects/"
-                + sub
-                + "/"
-                + ses
-                + "/t1/freesurfer_cross_sectional/"
-            )
             path_to_freesurfer_cross = (
                 caps_directory
                 + "/subjects/"
@@ -70,7 +64,14 @@ def compute_atlases(caps_directory, to_process_with_atlases, path_to_atlas):
                 + atlas_name
                 + ".annot"
             )
-
+            sphere_reg = (
+                path_to_freesurfer_cross + "/surf/" + hemisphere + ".sphere.reg"
+            )
+            if not os.path.isfile(sphere_reg):
+                cprint(
+                    f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[0][1]} will not be processed with {to_process_with_atlases[0][0]}",
+                    lvl="warning",
+                )
             command = f"mris_ca_label {to_process_with_atlases[0][1]} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
             a = subprocess.run(command, shell=True, capture_output=True)
 
