@@ -21,14 +21,12 @@ class ComputeAtlas(cpe.Pipeline):
 
     def __init__(
         self,
-        bids_directory,
         caps_directory,
         atlas_path: Optional[str] = None,
     ):
         self.atlas_path = atlas_path
         super().__init__(
-            bids_directory,
-            caps_directory,
+            caps_directory=caps_directory,
         )
 
     @staticmethod

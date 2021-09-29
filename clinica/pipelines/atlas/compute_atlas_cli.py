@@ -8,11 +8,9 @@ pipeline_name = "compute-atlas"
 
 
 @click.command(name=pipeline_name)
-@cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.option.atlas_path
 def cli(
-    bids_directory: str,
     caps_directory: str,
     atlas_path: Optional[str] = None,
 ) -> None:
@@ -27,7 +25,6 @@ def cli(
     from .compute_atlas_pipeline import ComputeAtlas
 
     pipeline = ComputeAtlas(
-        bids_directory=bids_directory,
         caps_directory=caps_directory,
         atlas_path=atlas_path,
     )

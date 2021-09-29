@@ -79,7 +79,6 @@ def cli(
     if atlas_path is not None:
         ctx.invoke(
             compute_atlas_cli.cli,
-            bids_directory=bids_directory,
             caps_directory=caps_directory,
             atlas_path=atlas_path,
         )
