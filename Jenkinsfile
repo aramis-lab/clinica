@@ -9,11 +9,17 @@ pipeline {
     stages {
       stage('Build Env') {
         parallel {
-          stage('Build in Linux') {
+          stage('Build on Linux') {
             agent { label 'ubuntu' }
             environment {
               PATH = "$HOME/miniconda/bin:$PATH"
               }
+            when {
+              anyOf {
+                changeset 'environment.yml'
+                changeset 'poetry.lock'
+              }
+            }
             steps {
               echo 'My branch name is ${BRANCH_NAME}'
               echo 'Building Conda environment... clinica_env_${BRANCH_NAME}'
@@ -25,8 +31,7 @@ pipeline {
                  '''
             }
           }
-          /*
-          stage('Build in Mac') {
+          stage('Build on macOS') {
             agent { label 'macos' }
             environment {
               PATH = "$HOME/miniconda3/bin:$PATH"
@@ -34,7 +39,7 @@ pipeline {
             when {
               anyOf {
                 changeset 'environment.yml'
-                changeset 'pyproject.toml'
+                changeset 'poetry.lock'
               }
             }
             steps {
@@ -48,7 +53,6 @@ pipeline {
                  '''
             }
           }
-          */
         }
       }
       stage('Install') {
