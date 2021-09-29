@@ -49,8 +49,8 @@ pydicom = "*"
 networkx = "*"
 click = "^7"
 click-option-group = "^0.5"
-xlrd = "*"
-openpyxl = "*"
+xlrd = ">= 1.2"
+openpyxl = ">= 2.6"
 fsspec = "*"
 # docs
 mkdocs = {version = "^1.1", optional = true}
