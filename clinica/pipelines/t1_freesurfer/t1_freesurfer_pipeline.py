@@ -35,7 +35,6 @@ class T1FreeSurfer(cpe.Pipeline):
                 subjects, sessions, caps_directory, T1_FS_DESTRIEUX, False
             )
             image_ids = extract_image_ids(t1_freesurfer_files)
-            print("ptrocessed images: ", image_ids)
         return image_ids
 
     def check_pipeline_parameters(self):

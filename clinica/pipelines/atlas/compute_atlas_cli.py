@@ -16,9 +16,9 @@ def cli(
     caps_directory: str,
     atlas_path: Optional[str] = None,
 ) -> None:
-    """Cross-sectional pre-processing of T1w images with FreeSurfer.
+    """Projection of the results of t1-freesurfer on another atlas.
 
-    https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_FreeSurfer/
+    Link to documentation
     """
     from networkx import Graph
 
