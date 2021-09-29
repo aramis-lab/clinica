@@ -4,7 +4,6 @@ dist/
 Clinica.egg-info
 *egg-info
 *.log
-*.lock
 *.pyc
 *.o
 *.lib
