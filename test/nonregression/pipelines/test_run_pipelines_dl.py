@@ -17,7 +17,7 @@ def test_run_DLPrepareData(cmdopt):
     import shutil
     from os.path import abspath, dirname, join
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "DeepLearningPrepareData")
 

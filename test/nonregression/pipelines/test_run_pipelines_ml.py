@@ -129,7 +129,7 @@ def test_run_SpatialSVM(cmdopt):
         SpatialSVM,
     )
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "SpatialSVM")
 

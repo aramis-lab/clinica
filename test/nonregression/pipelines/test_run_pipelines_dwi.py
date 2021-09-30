@@ -20,7 +20,7 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
         DwiPreprocessingUsingT1,
     )
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "DWIPreprocessingUsingT1")
 
@@ -72,7 +72,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
 
     warnings.filterwarnings("ignore")
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "DWIPreprocessingUsingPhaseDiffFieldmap")
 

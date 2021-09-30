@@ -24,7 +24,7 @@ def test_run_StatisticsSurface(cmdopt):
         StatisticsSurface,
     )
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "StatisticsSurface")
 
@@ -85,7 +85,7 @@ def test_run_StatisticsVolume(cmdopt):
         StatisticsVolume,
     )
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "StatisticsVolume")
 
@@ -156,7 +156,7 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
         StatisticsVolumeCorrection,
     )
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "StatisticsVolumeCorrection")
 
