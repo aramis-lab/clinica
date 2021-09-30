@@ -19,7 +19,7 @@ def test_run_PETVolume(cmdopt):
 
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "PETVolume")
 
@@ -82,7 +82,7 @@ def test_run_PETLinear(cmdopt):
 
     from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "PETLinear")
 
@@ -121,7 +121,7 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
 
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
 
-    working_dir = cmdopt
+    working_dir = cmdopt["wd"]
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     root = join(root, "data", "PETSurface")
 

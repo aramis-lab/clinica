@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 def read_xml_files(subj_ids=[], xml_path=""):
     from glob import glob
     from os import path
@@ -104,6 +107,7 @@ def get_img_metadata(img):
 def parse_xml_file(xml_path):
     import os
     import xml.etree.ElementTree as ET
+    from clinica.utils.stream import cprint
 
     try:
         tree = ET.parse(xml_path)
@@ -224,9 +228,11 @@ def parse_xml_file(xml_path):
         orig_img_d = get_img_metadata(orig_img)
 
     if proc_img_rating is not None:
-        assert proc_img_rating == orig_img_d.get(
-            "IMAGE_ORIG_RATING", None
-        ), "Image rating not consistent"
+        if proc_img_rating != orig_img_d.get("IMAGE_ORIG_RATING", None):
+            cprint(
+                msg=f"Image rating for processed image {derived_d.get('IMAGE_PROC_ID')} not consistent with rating of original image",
+                lvl="info",
+            )
 
     row_d = {
         "ID": xml_check_and_get_text(subj[0], "subjectIdentifier"),
@@ -326,18 +332,46 @@ def run_parsers(xml_files):
 
 
 def create_json_metadata(bids_subjs_paths, bids_ids, xml_path):
+    """
+    Create json metadata dictionary and add the columns to the appropriate scans.tsv files
+    """
+
     from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni
 
     loni_ids = [bids_id_to_loni(bids_id) for bids_id in bids_ids]
     xml_files = read_xml_files(loni_ids, xml_path)
-    imgs, excep = run_parsers(xml_files)
+    imgs, _ = run_parsers(xml_files)
     df_meta = create_mri_meta_df(imgs)
-    df_meta.reset_index(drop=True).to_json(
-        "adni_xml_metadata.json", orient="records", lines=False, indent=4
-    )
-    # write_json(df_meta)
+
+    add_metadata_to_scans(df_meta, bids_subjs_paths)
+
+    # df_meta.reset_index(drop=True).to_json(
+    #    "adni_xml_metadata.json", orient="records", lines=False, indent=4
+    # )
 
 
-def write_json(df_meta):
-    # TODO write the json files in the appropirate BIDS paths
-    return None
+def add_metadata_to_scans(df_meta, bids_subjs_paths: list) -> None:
+    """
+    Add the metadata to the appropriate scans.tsv file
+    """
+    import pandas as pd
+    from pathlib import Path
+    from clinica.iotools.bids_utils import get_bids_sess_list
+
+    for subj_path in bids_subjs_paths:
+        sess_list = get_bids_sess_list(subj_path)
+        subj_id = Path(subj_path).name
+        if sess_list:
+            for sess in sess_list:
+                scans_tsv_path = Path(subj_path) / sess / f"{subj_id}_{sess}_scans.tsv"
+                if scans_tsv_path.exists():
+                    df_scans = pd.read_csv(scans_tsv_path, sep="\t")
+                    df_merged = pd.merge(
+                        df_scans,
+                        df_meta,
+                        how="left",
+                        left_on="scan_id",
+                        right_on="T1w_scan_id",
+                    )
+                    df_merged.to_csv(scans_tsv_path, sep="\t")
+    return
