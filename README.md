@@ -12,8 +12,8 @@
 <p align="center"><strong>Software platform for clinical neuroimaging studies</strong></p>
 
 <p align="center">
-  <a href="https://ci.inria.fr/clinica-aramis/job/clinica/job/master/">
-    <img src="https://ci.inria.fr/clinica-aramis/buildStatus/icon?job=clinica%2Fmaster" alt="Build Status">
+  <a href="https://ci.inria.fr/clinica-aramis/job/clinica/job/dev/">
+    <img src="https://ci.inria.fr/clinica-aramis/buildStatus/icon?job=clinica%2Fdev" alt="Build Status">
   </a>
   <a href="https://badge.fury.io/py/clinica">
     <img src="https://badge.fury.io/py/clinica.svg" alt="PyPI version">
