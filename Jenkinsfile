@@ -27,7 +27,7 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
                  conda activate clinica_env_$BRANCH_NAME
-                 LC_ALL=C.UTF-8 poetry install --no-root
+                 poetry install --no-root
                  '''
             }
           }
@@ -49,7 +49,7 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
                  conda activate clinica_env_$BRANCH_NAME
-                 LC_ALL=C.UTF-8 poetry install --no-root
+                 poetry install --no-root
                  '''
             }
           }
@@ -75,7 +75,7 @@ pipeline {
                eval "$(conda shell.bash hook)"
                conda activate clinica_env_$BRANCH_NAME
                echo "Install clinica using poetry..."
-               LC_ALL=C.UTF-8 poetry install
+               poetry install
                eval "$(register-python-argcomplete clinica)"
                # Show clinica help message
                echo "Display clinica help message"
@@ -102,7 +102,7 @@ pipeline {
                source ./.jenkins/scripts/find_env.sh
                conda activate clinica_env_$BRANCH_NAME
                echo "Install clinica using poetry..."
-               LC_ALL=C.UTF-8 poetry install
+               poetry install
                eval "$(register-python-argcomplete clinica)"
                # Show clinica help message
                echo "Display clinica help message"
@@ -399,7 +399,7 @@ pipeline {
           sh '''
           eval "$(conda shell.bash hook)"
           conda activate clinica_env_$BRANCH_NAME
-          LC_ALL=C.UTF-8 poetry install --extras docs
+          poetry install --extras docs
           ./.jenkins/scripts/publish.sh ${BRANCH_NAME}
           '''
         }
@@ -423,7 +423,7 @@ pipeline {
              eval "$(conda shell.bash hook)"
              source ./.jenkins/scripts/find_env.sh
              conda activate clinica_env_$BRANCH_NAME
-             LC_ALL=C.UTF-8 poetry install
+             poetry install
              clinica --help
              cd $WORKSPACE/.jenkins/scripts
              ./generate_wheels.sh
