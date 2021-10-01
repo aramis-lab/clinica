@@ -154,7 +154,7 @@ def run_PETSurfaceCrossSectional(
                 + "_fwhm-"
                 + str(f)
                 + "_projection.mgh"
-            ),
+            )
         )
         for h in ["lh", "rh"]
         for f in [0, 5, 10, 15, 20, 25]
@@ -168,7 +168,7 @@ def run_PETSurfaceCrossSectional(
                 + "_fwhm-"
                 + str(f)
                 + "_projection.mgh"
-            ),
+            )
         )
         for h in ["lh", "rh"]
         for f in [0, 5, 10, 15, 20, 25]
@@ -176,8 +176,8 @@ def run_PETSurfaceCrossSectional(
 
     for i in range(len(out_files)):
         assert np.allclose(
-            np.squeeze(nib.load(out_files[i]).get_fdata(dtype="float32")),
-            np.squeeze(nib.load(ref_files[i]).get_fdata(dtype="float32")),
+            np.squeeze(nib.load(fspath(out_files[i])).get_fdata(dtype="float32")),
+            np.squeeze(nib.load(fspath(ref_files[i])).get_fdata(dtype="float32")),
             rtol=3e-2,
             equal_nan=True,
         )
@@ -201,7 +201,10 @@ def test_run_pet(cmdopt, tmp_path, test_name):
 
     elif test_name == "PETSurfaceCrossSectional":
         run_PETSurfaceCrossSectional(
-            base_dir / "PetSurface" / "in", tmp_out_dir, ref_dir, working_dir
+            base_dir / "PetSurface" / "in",
+            tmp_out_dir,
+            base_dir / "PetSurface" / "ref",
+            working_dir,
         )
     else:
         print(f"Test {test_name} not available.")
