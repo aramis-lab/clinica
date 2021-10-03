@@ -112,7 +112,7 @@ brain extracted image based on the reference b0.
     implemented in MRtrix3 [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)].
     A single multiplicative bias field from the reference b0 image was estimated,
     as suggested in [[Jeurissen et al., 2014](https://doi.org/10.1016/j.neuroimage.2014.07.061)].
-    The average b0 image was finally computed from the corrected DWI volumes in order to extract a brain mask with FSL `bet` [[Smith, 2002](https://doi.org/10.1002/hbm.10062)].
+    These steps lead to the corrected DWI volume from which a brain mask was computed with FSL `bet` [[Smith, 2002](https://doi.org/10.1002/hbm.10062)].
 
 ??? cite "Example of paragraph for the `dwi-preprocessing-using-phasediff-fmap` pipeline"
     These results have been obtained using the `dwi-preprocessing-using-fmap` pipeline of Clinica
@@ -126,7 +126,7 @@ brain extracted image based on the reference b0.
     A single multiplicative bias field from the corrected reference b0 image was estimated,
     as suggested in [[Jeurissen et al., 2014](https://doi.org/10.1016/j.neuroimage.2014.07.061)] and
     implemented in MRtrix3 [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)].
-    The average b0 image was finally computed from the corrected DWI volumes in order to extract a brain mask with FSL `bet` [[Smith, 2002](https://doi.org/10.1002/hbm.10062)].
+    These steps lead to the corrected DWI volume from which a brain mask was computed with FSL `bet` [[Smith, 2002](https://doi.org/10.1002/hbm.10062)].
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/BJV73LU7).
