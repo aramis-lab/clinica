@@ -369,7 +369,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 (sdc, bias, [("outputnode.DWIs_epicorrected", "in_file"),
                              ("outputnode.out_bvec", "in_bvec")]),
                 # Compute average b0 on corrected dataset (for brain mask extraction)
-                (init_node, compute_avg_b0, [("bval", "in_bval")]),
+                (prepare_b0, compute_avg_b0, [("out_updated_bval", "in_bval")]),
                 (bias, compute_avg_b0, [("out_file", "in_dwi")]),
                 # Compute b0 mask on corrected avg b0
                 (compute_avg_b0, mask_avg_b0, [("out_b0_average", "in_file")]),
