@@ -6,7 +6,7 @@
 import os
 from glob import glob
 from os import path
-
+from typing import Tuple
 import pandas as pd
 
 
@@ -50,8 +50,8 @@ def pet_volume_pipeline(
 
 
 def t1_freesurfer_longitudinal_pipeline(
-    caps_dir, df, freesurfer_atlas_selection=None, **kwargs
-):
+    caps_dir: str, df: pd.DataFrame, freesurfer_atlas_selection=None, **kwargs
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Merge the data of the T1FreesurferLongitudinal pipeline to the merged file containing the BIDS information.
 
     Args:
@@ -67,19 +67,20 @@ def t1_freesurfer_longitudinal_pipeline(
         replace_sequence_chars,
     )
     from clinica.utils.stream import cprint
+    from pathlib import Path
 
     # Ensures that df is correctly indexed
     if "participant_id" in df.columns.values:
         df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
-    subjects_dir = path.join(caps_dir, "subjects")
+    subjects_dir = Path(caps_dir) / "subjects"
 
     pipeline_df = pd.DataFrame()
 
     for participant_id, session_id in df.index.values:
 
-        ses_path = path.join(subjects_dir, participant_id, session_id)
-        mod_path = path.join(ses_path, "t1")
+        ses_path = subjects_dir / participant_id / session_id
+        mod_path = ses_path / "t1"
 
         long_ids = [os.path.split(x)[-1] for x in glob(path.join(mod_path, "long*"))]
 
@@ -89,46 +90,43 @@ def t1_freesurfer_longitudinal_pipeline(
                 lvl="warning",
             )
         long_id = long_ids[0]
-        mod_path = path.join(
-            mod_path, long_id, "freesurfer_longitudinal", "regional_measures"
-        )
+        mod_path = mod_path / long_id / "freesurfer_longitudinal" / "regional_measures"
+
         ses_df = pd.DataFrame(
             [[participant_id, session_id]], columns=["participant_id", "session_id"]
         )
         ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
-        if os.path.exists(mod_path):
+        if mod_path.exists():
             # Looking for atlases
-            atlas_paths = glob(
-                path.join(mod_path, f"{participant_id}_{session_id}_*volume.tsv")
-            )
-            atlas_paths = [
-                x
-                for x in atlas_paths
-                if "-wm_volume" not in x and "-ba_volume" not in x
-            ]
+            atlas_paths = (mod_path).glob(f"{participant_id}_{session_id}_*volume.tsv")
             for atlas_path in atlas_paths:
-                atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
-                if path.exists(atlas_path) and (
-                    not freesurfer_atlas_selection
-                    or (
-                        freesurfer_atlas_selection
-                        and atlas_name in freesurfer_atlas_selection
-                    )
+                if "-wm_volume" not in str(atlas_path) and "-ba_volume" not in str(
+                    atlas_path
                 ):
-                    atlas_df = pd.read_csv(atlas_path, sep="\t")
-                    label_list = [
-                        "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
-                        for x in atlas_df.label_name.values
+                    atlas_name = atlas_path.stem.split("_parcellation-")[1].split("_")[
+                        0
                     ]
-                    ses_df[label_list] = atlas_df["label_value"].to_numpy()
+                    if atlas_path.exists() and (
+                        not freesurfer_atlas_selection
+                        or (
+                            freesurfer_atlas_selection
+                            and atlas_name in freesurfer_atlas_selection
+                        )
+                    ):
+                        atlas_df = pd.read_csv(atlas_path, sep="\t")
+                        label_list = [
+                            "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
+                            for x in atlas_df.label_name.values
+                        ]
+                        ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
             # Always retrieve subcortical volumes
-            atlas_path = path.join(
-                mod_path,
-                f"{participant_id}_{session_id}*segmentationVolumes.tsv",
+            atlas_path = (
+                mod_path / f"{participant_id}_{session_id}_segmentationVolumes.tsv"
             )
-            atlas_df = pd.read_csv(glob(atlas_path)[0], sep="\t")
+
+            atlas_df = pd.read_csv(atlas_path, sep="\t")
             label_list = [
                 "t1-freesurfer-segmentationVolumes_" + x
                 for x in atlas_df.label_name.values

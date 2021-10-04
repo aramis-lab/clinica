@@ -3,6 +3,7 @@
 """Data handling scripts."""
 
 import click
+import pandas
 
 
 def compute_default_filename(out_path):
@@ -238,7 +239,10 @@ def create_merge_file(
         cprint("End of CAPS information merge.", lvl="debug")
 
 
-def create_participants_df(bids_dir):
+def create_participants_df(bids_dir: str) -> pandas.DataFrame:
+    """
+    Function to create participant.tsv "on the fly" in case it is not found in the BIDS directory
+    """
     import pandas as pd
     import os
 
