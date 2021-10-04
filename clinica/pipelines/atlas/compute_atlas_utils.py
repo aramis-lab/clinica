@@ -1,18 +1,21 @@
 # coding: utf8
 
 
+from typing import BinaryIO, Dict, Iterable, List, Optional, Tuple, Union
+
 from clinica.utils.stream import cprint
 
 
 def compute_atlases(
-    caps_directory: str, to_process_with_atlases: tuple, path_to_atlas: str
-) -> tuple(str, str, str):
+    caps_directory: str, to_process_with_atlases: list, path_to_atlas: str
+):
     import os
     import subprocess
     from pathlib import Path
 
     from clinica.utils.stream import cprint
 
+    print("to process with atlas: ", to_process_with_atlases)
     subject_dir = ""
     image_id = ""
     atlas = ""
