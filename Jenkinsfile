@@ -100,7 +100,7 @@ pipeline {
                eval "$(conda shell.bash hook)"
                echo $CONDA_PREFIX
                source ./.jenkins/scripts/find_env.sh
-               conda activate clinica_env_$BRANCH_NAME
+               conda activate clinica_env_${BRANCH_NAME}
                echo "Install clinica using poetry..."
                poetry install
                eval "$(register-python-argcomplete clinica)"
@@ -154,7 +154,7 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
+                   rm -rf $WORK_DIR/*
                    ''' 
               }
             }  
@@ -196,7 +196,7 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
+                   rm -rf $WORK_DIR/*
                    ''' 
               }
             }  
@@ -246,8 +246,8 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
-                   rm -rf TMP_BASE/*
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
                    ''' 
               }
             }  
@@ -292,8 +292,8 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
-                   rm -rf TMP_BASE/*
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
                    ''' 
               }
             }  
@@ -336,8 +336,8 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
-                   rm -rf TMP_BASE/*
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
                    ''' 
               }
             }  
@@ -380,8 +380,8 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
-                   rm -rf TMP_BASE/*
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
                    ''' 
               }
             }  
