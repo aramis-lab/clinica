@@ -1,7 +1,9 @@
-from typing import Optional
+import xml.etree.ElementTree
+from typing import Tuple
+import pandas as pd
 
 
-def read_xml_files(subj_ids=[], xml_path=""):
+def read_xml_files(subj_ids=[], xml_path="") -> list:
     from glob import glob
     from os import path
 
@@ -19,7 +21,9 @@ def read_xml_files(subj_ids=[], xml_path=""):
         raise IndexError("No ADNI xml files were found for reading the metadata.")
 
 
-def xml_check(xml_el, exp_tag, exp_nb_children=None):
+def xml_check(
+    xml_el: xml.etree.ElementTree.Element, exp_tag: str, exp_nb_children=None
+) -> xml.etree.ElementTree.Element:
     """
     Check that xml element is as expected (tag name + nb of children)
     """
@@ -42,7 +46,9 @@ def xml_check(xml_el, exp_tag, exp_nb_children=None):
     return xml_el
 
 
-def xml_check_and_get_text(xml_el, exp_tag, *, cast=None):
+def xml_check_and_get_text(
+    xml_el: xml.etree.ElementTree.Element, exp_tag: str, *, cast=None
+) -> str:
     """
     Check xml element and return its text (leaf)
     """
@@ -53,7 +59,7 @@ def xml_check_and_get_text(xml_el, exp_tag, *, cast=None):
     return val
 
 
-def get_img_rating(img_rating):
+def get_img_rating(img_rating: xml.etree.ElementTree.Element) -> int:
 
     xml_check(img_rating, "imageRating", 2)
 
@@ -104,7 +110,7 @@ def get_img_metadata(img):
     }
 
 
-def parse_xml_file(xml_path):
+def parse_xml_file(xml_path: str) -> dict:
     import os
     import xml.etree.ElementTree as ET
     from clinica.utils.stream import cprint
@@ -256,8 +262,7 @@ def parse_xml_file(xml_path):
     return row_d
 
 
-def create_mri_meta_df(imgs):
-    import pandas as pd
+def create_mri_meta_df(imgs: list) -> pd.DataFrame:
 
     mri_meta = pd.DataFrame(imgs).convert_dtypes()
 
@@ -285,13 +290,6 @@ def create_mri_meta_df(imgs):
     return mri_meta
 
 
-def create_json_metadata(mri_meta):
-    # ‘split’, ‘records’, ‘index’, ‘columns’, ‘values’, ‘table’
-    mri_meta.reset_index(drop=True).iloc[0:2].to_json(
-        "output_file.json", orient="records", lines=False, indent=4
-    )
-
-
 class func_with_exception:
     def __init__(self, f):
         self.f = f
@@ -306,7 +304,7 @@ class func_with_exception:
             return None, e
 
 
-def run_parsers(xml_files):
+def run_parsers(xml_files: list) -> Tuple[list, dict]:
 
     import os
 
@@ -331,7 +329,7 @@ def run_parsers(xml_files):
     return imgs, exceps
 
 
-def create_json_metadata(bids_subjs_paths, bids_ids, xml_path):
+def create_json_metadata(bids_subjs_paths: str, bids_ids: list, xml_path: str) -> None:
     """
     Create json metadata dictionary and add the columns to the appropriate scans.tsv files
     """
@@ -344,17 +342,13 @@ def create_json_metadata(bids_subjs_paths, bids_ids, xml_path):
     df_meta = create_mri_meta_df(imgs)
 
     add_metadata_to_scans(df_meta, bids_subjs_paths)
-
-    # df_meta.reset_index(drop=True).to_json(
-    #    "adni_xml_metadata.json", orient="records", lines=False, indent=4
-    # )
+    return
 
 
 def add_metadata_to_scans(df_meta, bids_subjs_paths: list) -> None:
     """
     Add the metadata to the appropriate scans.tsv file
     """
-    import pandas as pd
     from pathlib import Path
     from clinica.iotools.bids_utils import get_bids_sess_list
 
