@@ -4,32 +4,9 @@
 from clinica.utils.stream import cprint
 
 
-def init_input_node(t1w, recon_all_args, output_dir):
-    """Initialize the pipeline.
-
-    This function will:
-        - Extract <image_id> (e.g. sub-CLNC01_ses-M00) T1w filename;
-        - Check FOV of T1w;
-        - Create SUBJECTS_DIR for recon-all (otherwise, the command won't run);
-        - Print begin execution message.
-    """
-    import os
-
-    from clinica.utils.filemanip import get_subject_id
-    from clinica.utils.freesurfer import check_flags
-    from clinica.utils.ux import print_begin_image
-
-    # Extract <image_id>
-    image_id = get_subject_id(t1w)
-
-    # Create SUBJECTS_DIR for recon-all (otherwise, the command won't run)
-    subjects_dir = os.path.join(output_dir, image_id)
-    os.makedirs(subjects_dir, exist_ok=True)
-
-    return image_id, t1w, subjects_dir
-
-
-def compute_atlases(caps_directory, to_process_with_atlases, path_to_atlas):
+def compute_atlases(
+    caps_directory: str, to_process_with_atlases: tuple, path_to_atlas: str
+) -> tuple(str, str, str):
     import os
     import subprocess
     from pathlib import Path
@@ -93,7 +70,7 @@ def compute_atlases(caps_directory, to_process_with_atlases, path_to_atlas):
     return subject_dir, image_id, atlas
 
 
-def write_tsv_files(subject_dir, image_id, atlas):
+def write_tsv_files(subject_dir: str, image_id: str, atlas: str) -> str:
     """
     Generate statistics TSV files in `subjects_dir`/regional_measures folder for `image_id`.
 
