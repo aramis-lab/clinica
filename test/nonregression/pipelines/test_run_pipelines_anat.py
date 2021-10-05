@@ -6,156 +6,210 @@ different functions available in Clinica
 """
 
 import warnings
-from os import pardir
+from os import fspath
+from pathlib import Path
 from test.nonregression.testing_tools import *
+
+import pytest
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
 
 
-def test_run_T1FreeSurferCrossSectional(cmdopt):
+@pytest.fixture(
+    params=[
+        "T1FreeSurferCrossSectional",
+        "T1VolumeTissueSegmentation",
+        "T1VolumeCreateDartel",
+        "T1VolumeDartel2MNI",
+        "T1VolumeRegisterDartel",
+        "T1VolumeParcellation",
+        "T1Linear",
+        "T1FreeSurferTemplate",
+        "T1FreeSurferLongitudinalCorrection",
+    ]
+)
+def test_name(request):
+    return request.param
+
+
+def test_run_anat(cmdopt, tmp_path, test_name):
+    import shutil
+
+    base_dir = Path(cmdopt["input"])
+    input_dir = base_dir / test_name / "in"
+    ref_dir = base_dir / test_name / "ref"
+    tmp_out_dir = tmp_path / test_name / "out"
+    tmp_out_dir.mkdir(parents=True)
+    working_dir = Path(cmdopt["wd"])
+
+    if test_name == "T1FreeSurferCrossSectional":
+        run_T1FreeSurferCrossSectional(
+            base_dir / "T1FreeSurfer" / "in", tmp_out_dir, ref_dir, working_dir
+        )
+
+    elif test_name == "T1VolumeTissueSegmentation":
+        run_T1VolumeTissueSegmentation(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "T1VolumeCreateDartel":
+        run_T1VolumeCreateDartel(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "T1VolumeDartel2MNI":
+        run_T1VolumeDartel2MNI(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "T1VolumeRegisterDartel":
+        run_T1VolumeRegisterDartel(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "T1VolumeParcellation":
+        run_T1VolumeParcellation(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "T1Linear":
+        run_T1VolumeCreateDartel(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "T1FreeSurferTemplate":
+        run_T1FreeSurferTemplate(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "T1FreeSurferLongitudinalCorrection":
+        run_T1FreeSurferLongitudinalCorrection(
+            input_dir, tmp_out_dir, ref_dir, working_dir
+        )
+
+    else:
+        print(f"Test {test_name} not available.")
+        assert 0
+
+
+def run_T1FreeSurferCrossSectional(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     # Data for this functional test comes from https://openneuro.org/datasets/ds000204
-    from os.path import abspath, dirname, join
 
     from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
-
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "T1FreeSurfer")
-
-    # Remove potential residual of previous tests
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1FreeSurfer"))
 
     parameters = {"recon_all_args": "-qcache", "skip_question": False}
 
     pipeline = T1FreeSurfer(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
         parameters=parameters,
-        base_dir=join(working_dir, "T1FreeSurfer"),
+        base_dir=fspath(working_dir),
     )
-    pipeline.base_dir = join(working_dir, "T1FreeSurfer")
     pipeline.run(bypass_check=True)
 
     # We only check that folders are the same meaning that FreeSurfer finished without error
     # surf/ folder is ignored because it contains sym links that makes hard to check with ref data
     # (sym links of ref data are ignored after rsync on CI machines)
-    def path_to_caps_fs(part_id, sess_id):
-        import os
+    def path_to_caps_fs(part_id: str, sess_id: str) -> Path:
 
-        output_folder = os.path.join(
-            "caps", "subjects", part_id, sess_id, "t1", "freesurfer_cross_sectional"
+        output_folder = Path(
+            "caps"
+            / "subjects"
+            / part_id
+            / sess_id
+            / "t1"
+            / "freesurfer_cross_sectional"
         )
         return output_folder
 
+    folder1 = path_to_caps_fs("sub-01", "ses-2011")
     compare_folders(
-        join(root, "out"),
-        join(root, "ref"),
-        join(path_to_caps_fs("sub-01", "ses-2011"), "regional_measures"),
+        output_dir / folder1 / "regional_meaasures",
+        ref_dir / folder1 / "regional_measures",
+        output_dir,
     )
     compare_folders(
-        join(root, "out"),
-        join(root, "ref"),
-        join(path_to_caps_fs("sub-01", "ses-2011"), "sub-01_ses-2011", "label"),
+        output_dir / folder1 / "sub-01_ses-2011" / "label",
+        ref_dir / folder1 / "sub-01_ses-2011" / "label",
+        output_dir,
     )
     compare_folders(
-        join(root, "out"),
-        join(root, "ref"),
-        join(path_to_caps_fs("sub-01", "ses-2011"), "sub-01_ses-2011", "mri"),
+        output_dir / folder1 / "sub-01_ses-2011" / "mri",
+        ref_dir / folder1 / "sub-01_ses-2011" / "mri",
+        output_dir,
     )
     compare_folders(
-        join(root, "out"),
-        join(root, "ref"),
-        join(path_to_caps_fs("sub-01", "ses-2011"), "sub-01_ses-2011", "stats"),
+        output_dir / folder1 / "sub-01_ses-2011" / "stats",
+        ref_dir / folder1 / "sub-01_ses-2011" / "stats",
+        output_dir,
     )
 
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1FreeSurfer"), recreate=False)
 
-
-def test_run_T1VolumeTissueSegmentation(cmdopt):
-    import os
-    from os.path import abspath, dirname, join
+def run_T1VolumeTissueSegmentation(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
 
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import (
         T1VolumeTissueSegmentation,
     )
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "T1VolumeTissueSegmentation")
-    clean_folder(join(working_dir, "T1VolumeTissueSegmentation"))
-    clean_folder(join(root, "out", "caps"))
-
     pipeline = T1VolumeTissueSegmentation(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "T1VolumeTissueSegmentation"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
     )
     pipeline.build()
     pipeline.run(bypass_check=True)
 
-    out_file = join(
-        root,
-        "out/caps/subjects/sub-ADNI011S4105/ses-M00/t1/spm/segmentation/dartel_input/"
-        + "sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz",
+    out_file = fspath(
+        output_dir
+        / "caps"
+        / "subjects"
+        / "sub-ADNI011S4105"
+        / "ses-M00"
+        / "t1"
+        / "spm"
+        / "segmentation"
+        / "dartel_input"
+        / "sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz",
     )
-    if not os.path.exists(out_file):
-        raise IOError(
-            "Pipeline did not produce file: "
-            + out_file
-            + ". Consider rerunning test_run_T1VolumeTissueSegmentation"
-        )
 
-    ref_file = join(
-        root,
-        "ref/caps/subjects/sub-ADNI011S4105/ses-M00/t1/spm/segmentation/dartel_input/"
-        + "sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz",
+    ref_file = fspath(
+        ref_dir
+        / "caps"
+        / "subjects"
+        / "sub-ADNI011S4105"
+        / "ses-M00"
+        / "t1"
+        / "spm"
+        / "segmentation"
+        / "dartel_input"
+        / "sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz",
     )
 
     assert likeliness_measure(out_file, ref_file, (1e-1, 0.02), (0.4, 0.01))
 
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1VolumeTissueSegmentation"), recreate=False)
 
-
-def test_run_T1VolumeCreateDartel(cmdopt):
+def run_T1VolumeCreateDartel(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     import shutil
-    from os.path import abspath, dirname, join
 
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import (
         T1VolumeCreateDartel,
     )
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "T1VolumeCreateDartel")
-
-    # Remove potential residual of previous UT
-    clean_folder(join(working_dir, "T1VolumeCreateDartel"))
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
+    # Copy necessary data from in to out
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     parameters = {"group_label": "UnitTest"}
     # Instantiate pipeline
     pipeline = T1VolumeCreateDartel(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "T1VolumeCreateDartel"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         parameters=parameters,
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     # Check output vs ref
-    out_data_template = join(
-        root, "out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz"
+    out_data_template = fspath(
+        output_dir / "caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz"
     )
-    ref_data_template = join(root, "ref/group-UnitTest_template.nii.gz")
+    ref_data_template = fspath(ref_dir / "group-UnitTest_template.nii.gz")
     assert likeliness_measure(
         out_data_template, ref_data_template, (1e-3, 0.1), (1e-2, 0.1)
     )
@@ -167,28 +221,30 @@ def test_run_T1VolumeCreateDartel(cmdopt):
         "sub-ADNI128S4832",
     ]
     out_data_forward_def = [
-        join(
-            root,
-            "out",
-            "caps",
-            "subjects",
-            sub,
-            "ses-M00",
-            "t1",
-            "spm",
-            "dartel",
-            "group-UnitTest",
-            sub
-            + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz",
+        fspath(
+            output_dir
+            / "caps"
+            / "subjects"
+            / sub
+            / "ses-M00"
+            / "t1"
+            / "spm"
+            / "dartel"
+            / "group-UnitTest"
+            / (
+                sub
+                + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
+            )
         )
         for sub in subjects
     ]
     ref_data_forward_def = [
-        join(
-            root,
-            "ref",
-            sub
-            + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz",
+        fspath(
+            ref_dir
+            / (
+                sub
+                + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
+            )
         )
         for sub in subjects
     ]
@@ -198,37 +254,26 @@ def test_run_T1VolumeCreateDartel(cmdopt):
             out_data_forward_def[i], ref_data_forward_def[i], (1e-3, 0.25), (1e-2, 0.1)
         )
 
-    # Remove data in out folder
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1VolumeCreateDartel"), recreate=False)
 
-
-def test_run_T1VolumeDartel2MNI(cmdopt):
+def run_T1VolumeDartel2MNI(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     import shutil
-    from os.path import abspath, dirname, join
 
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import (
         T1VolumeDartel2MNI,
     )
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "T1VolumeDartel2MNI")
-
-    # Remove potential residual of previous UT
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1VolumeDartel2MNI"))
-
     # Copy necessary data from in to out
-    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     parameters = {"group_label": "UnitTest"}
     # Instantiate pipeline and run()
     pipeline = T1VolumeDartel2MNI(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "T1VolumeDartel2MNI"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         parameters=parameters,
     )
     pipeline.build()
@@ -242,28 +287,30 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
         "sub-ADNI128S4832",
     ]
     out_data_GM_MNI = [
-        join(
-            root,
-            "out",
-            "caps",
-            "subjects",
-            sub,
-            "ses-M00",
-            "t1",
-            "spm",
-            "dartel",
-            "group-UnitTest",
-            sub
-            + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz",
+        fspath(
+            output_dir
+            / "caps"
+            / "subjects"
+            / sub
+            / "ses-M00"
+            / "t1"
+            / "spm"
+            / "dartel"
+            / "group-UnitTest"
+            / (
+                sub
+                + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz"
+            )
         )
         for sub in subjects
     ]
     ref_data_GM_MNI = [
-        join(
-            root,
-            "ref",
-            sub
-            + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz",
+        fspath(
+            ref_dir
+            / (
+                sub
+                + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz"
+            )
         )
         for sub in subjects
     ]
@@ -272,12 +319,10 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
             out_data_GM_MNI[i], ref_data_GM_MNI[i], (1e-4, 0.15), (1, 0.02)
         )
 
-    # Remove data in out folder
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1VolumeDartel2MNI"), recreate=False)
 
-
-def test_run_T1VolumeRegisterDartel(cmdopt):
+def run_T1VolumeRegisterDartel(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     import shutil
     from os.path import abspath, dirname, join
 
@@ -285,22 +330,16 @@ def test_run_T1VolumeRegisterDartel(cmdopt):
         T1VolumeRegisterDartel,
     )
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "T1VolumeExistingDartel")
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1VolumeExistingDartel"))
-
-    # Copy necessary data to run pipeline
-    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
+    # Copy necessary data from in to out
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     # Instantiate and run pipeline
     parameters = {"group_label": "UnitTest"}
     pipeline = T1VolumeRegisterDartel(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "T1VolumeExistingDartel"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         parameters=parameters,
     )
     pipeline.build()
@@ -314,28 +353,30 @@ def test_run_T1VolumeRegisterDartel(cmdopt):
         "sub-ADNI128S4832",
     ]
     out_data_forward_def = [
-        join(
-            root,
-            "out",
-            "caps",
-            "subjects",
-            sub,
-            "ses-M00",
-            "t1",
-            "spm",
-            "dartel",
-            "group-UnitTest",
-            sub
-            + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz",
+        fspath(
+            output_dir
+            / "caps"
+            / "subjects"
+            / sub
+            / "ses-M00"
+            / "t1"
+            / "spm"
+            / "dartel"
+            / "group-UnitTest"
+            / (
+                sub
+                + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
+            )
         )
         for sub in subjects
     ]
     ref_data_forward_def = [
-        join(
-            root,
-            "ref",
-            sub
-            + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz",
+        fspath(
+            ref_dir
+            / (
+                sub
+                + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
+            )
         )
         for sub in subjects
     ]
@@ -345,14 +386,11 @@ def test_run_T1VolumeRegisterDartel(cmdopt):
             out_data_forward_def[i], ref_data_forward_def[i], (1e-3, 0.25), (1e-2, 0.1)
         )
 
-    # Remove data in out folder
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1VolumeExistingDartel"), recreate=False)
 
-
-def test_run_T1VolumeParcellation(cmdopt):
+def run_T1VolumeParcellation(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     import shutil
-    from os.path import abspath, dirname, join
 
     import numpy as np
     import pandas as pds
@@ -361,42 +399,48 @@ def test_run_T1VolumeParcellation(cmdopt):
         T1VolumeParcellation,
     )
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "T1VolumeParcellation")
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1VolumeParcellation"))
-
-    # Copy data for use of pipeline
-    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
+    # Copy necessary data from in to out
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     # Instantiate pipeline
     parameters = {"group_label": "UnitTest"}
     pipeline = T1VolumeParcellation(
-        caps_directory=join(root, "in", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "T1VolumeParcellation"),
+        caps_directory=join(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         parameters=parameters,
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     out_files = [
-        join(
-            root,
-            "out/caps/subjects/sub-ADNI018S4696/ses-M00/t1/spm/dartel/group-UnitTest/atlas_statistics",
-            "sub-ADNI018S4696_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-"
-            + atlas
-            + "_map-graymatter_statistics.tsv",
+        fspath(
+            output_dir
+            / "caps"
+            / "subjects"
+            / "sub-ADNI018S4696"
+            / "ses-M00"
+            / "t1"
+            / "spm"
+            / "dartel"
+            / "group-UnitTest"
+            / "atlas_statistics"
+            / (
+                "sub-ADNI018S4696_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-"
+                + atlas
+                + "_map-graymatter_statistics.tsv"
+            )
         )
         for atlas in pipeline.parameters["atlases"]
     ]
     ref_files = [
-        join(
-            root,
-            "ref/sub-ADNI018S4696_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-"
-            + atlas
-            + "_map-graymatter_statistics.tsv",
+        fspath(
+            ref_dir
+            / (
+                "sub-ADNI018S4696_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-"
+                + atlas
+                + "_map-graymatter_statistics.tsv"
+            )
         )
         for atlas in pipeline.parameters["atlases"]
     ]
@@ -411,186 +455,133 @@ def test_run_T1VolumeParcellation(cmdopt):
             equal_nan=True,
         )
 
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1VolumeParcellation"), recreate=False)
 
-
-def test_run_T1Linear(cmdopt):
+def run_T1Linear(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     from os.path import abspath, dirname, join
 
     from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "T1Linear")
-
-    # Remove potential residual of previous UT
-    clean_folder(join(working_dir, "T1Linear"))
-    clean_folder(join(root, "out", "caps"), recreate=False)
-
     parameters = {"uncropped_image": False}
     # Instantiate pipeline
     pipeline = T1Linear(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "T1Linear"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         parameters=parameters,
     )
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
-    # Check output vs ref
-    out_folder = join(root, "out")
-    ref_folder = join(root, "ref")
-
-    compare_folders(out_folder, ref_folder, tmp_path="caps")
-
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1Linear"), recreate=False)
+    compare_folders(output_dir / "caps", ref_dir / "caps", output_dir)
 
 
-def test_run_T1FreeSurferTemplate(cmdopt):
+def run_T1FreeSurferTemplate(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     # Data for this functional test comes from https://openneuro.org/datasets/ds000204
     # sub-01 was duplicated into to sub-02 with one session in order to test the "one time point" case
     import shutil
-    from os.path import abspath, dirname, join
 
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import (
         T1FreeSurferTemplate,
     )
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "T1FreeSurferTemplate")
-
-    # Remove potential residual of previous tests
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1FreeSurferTemplate"))
-
     # Copy necessary data from in to out
-    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     pipeline = T1FreeSurferTemplate(
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "T1FreeSurferTemplate"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
     )
-    pipeline.base_dir = join(working_dir, "T1FreeSurferTemplate")
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 2}, bypass_check=True)
 
     # We only check that folders are the same meaning that FreeSurfer finished without error
     # surf/ folder is ignored because it contains sym links that makes hard to check with ref data
     # (sym links of ref data are ignored after rsync on CI machines)
-    def path_to_caps_fs(part_id, long_id):
-        import os
+    def path_to_caps_fs(part_id: str, long_id: str) -> Path:
 
-        output_folder = os.path.join(
-            "caps", "subjects", part_id, long_id, "freesurfer_unbiased_template"
+        output_folder = Path(
+            "caps" / "subjects" / part_id / long_id / "freesurfer_unbiased_template"
         )
         return output_folder
 
     for (p_id, l_id) in zip(["sub-01", "sub-02"], ["long-20112015", "long-2011"]):
+
+        folder1 = path_to_caps_fs(p_id, l_id) / (p_id + "_" + l_id)
         compare_folders(
-            join(root, "out"),
-            join(root, "ref"),
-            join(path_to_caps_fs(p_id, l_id), p_id + "_" + l_id, "label"),
+            output_dir / folder1 / "label",
+            ref_dir / folder1 / "label",
+            output_dir,
         )
         compare_folders(
-            join(root, "out"),
-            join(root, "ref"),
-            join(path_to_caps_fs(p_id, l_id), p_id + "_" + l_id, "mri"),
+            output_dir / folder1 / "mri",
+            ref_dir / folder1 / "mri",
+            output_dir,
         )
         compare_folders(
-            join(root, "out"),
-            join(root, "ref"),
-            join(path_to_caps_fs(p_id, l_id), p_id + "_" + l_id, "stats"),
+            output_dir / folder1 / "stats",
+            ref_dir / folder1 / "stats",
+            output_dir,
         )
 
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1FreeSurferTemplate"), recreate=False)
 
-
-def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
+def run_T1FreeSurferLongitudinalCorrection(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     # Data for this functional test comes from https://openneuro.org/datasets/ds000204
     import shutil
-    from os.path import abspath, dirname, join
 
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import (
         T1FreeSurferLongitudinalCorrection,
     )
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "T1FreeSurferLongitudinalCorrection")
-
-    # Remove potential residual of previous tests
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "T1FreeSurferLongitudinalCorrection"))
-
     # Copy necessary data from in to out
-    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     pipeline = T1FreeSurferLongitudinalCorrection(
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "T1FreeSurferLongitudinalCorrection"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
     )
-    pipeline.base_dir = join(working_dir, "T1FreeSurferLongitudinalCorrection")
     pipeline.run(bypass_check=True)
 
     # We only check that folders are the same meaning that FreeSurfer finished without error
     # surf/ folder is ignored because it contains sym links that makes hard to check with ref data
     # (sym links of ref data are ignored after rsync on CI machines)
-    def path_to_caps_fs(part_id, sess_id, long_id):
-        import os
+    def path_to_caps_fs(part_id: str, sess_id: str, long_id: str) -> Path:
 
-        output_folder = os.path.join(
-            "caps",
-            "subjects",
-            part_id,
-            sess_id,
-            "t1",
-            long_id,
-            "freesurfer_longitudinal",
+        output_folder = Path(
+            "caps"
+            / "subjects"
+            / part_id
+            / sess_id
+            / "t1"
+            / long_id
+            / "freesurfer_longitudinal"
         )
         return output_folder
 
+    folder1 = path_to_caps_fs("sub-01", "ses-2011", "long-20112015")
     compare_folders(
-        join(root, "out"),
-        join(root, "ref"),
-        join(
-            path_to_caps_fs("sub-01", "ses-2011", "long-20112015"), "regional_measures"
-        ),
+        output_dir / folder1 / "regional_measures",
+        ref_dir / folder1 / "regional_measures",
+        output_dir,
     )
     compare_folders(
-        join(root, "out"),
-        join(root, "ref"),
-        join(
-            path_to_caps_fs("sub-01", "ses-2011", "long-20112015"),
-            "sub-01_ses-2011.long.sub-01_long-20112015",
-            "label",
-        ),
+        output_dir / folder1 / "sub-01_ses-2011.long.sub-01_long-20112015" / "label",
+        ref_dir / folder1 / "sub-01_ses-2011.long.sub-01_long-20112015" / "label",
+        output_dir,
     )
     compare_folders(
-        join(root, "out"),
-        join(root, "ref"),
-        join(
-            path_to_caps_fs("sub-01", "ses-2011", "long-20112015"),
-            "sub-01_ses-2011.long.sub-01_long-20112015",
-            "mri",
-        ),
+        output_dir / folder1 / "sub-01_ses-2011.long.sub-01_long-20112015" / "mri",
+        ref_dir / folder1 / "sub-01_ses-2011.long.sub-01_long-20112015" / "mri",
+        output_dir,
     )
     compare_folders(
-        join(root, "out"),
-        join(root, "ref"),
-        join(
-            path_to_caps_fs("sub-01", "ses-2011", "long-20112015"),
-            "sub-01_ses-2011.long.sub-01_long-20112015",
-            "stats",
-        ),
-    )
-
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(
-        join(working_dir, "T1FreeSurferLongitudinalCorrection"), recreate=False
+        output_dir / folder1 / "sub-01_ses-2011.long.sub-01_long-20112015" / "stats",
+        ref_dir / folder1 / "sub-01_ses-2011.long.sub-01_long-20112015" / "stats",
+        output_dir,
     )
