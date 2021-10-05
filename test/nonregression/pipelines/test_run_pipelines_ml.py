@@ -6,7 +6,7 @@ different functions available in Clinica
 """
 
 import warnings
-from os import fspath, pardir
+from os import fspath
 from pathlib import Path
 from test.nonregression.testing_tools import *
 
@@ -62,11 +62,6 @@ def run_WorkflowsML(
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     warnings.filterwarnings("ignore", category=UserWarning)
     warnings.filterwarnings("ignore", category=FutureWarning)
-
-    # root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    # root = join(root, "data", "WorkflowsML")
-    # root_input = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    # root_input = join(root_input, "data", "InputsML")
 
     caps_dir = input_dir / "caps"
     tsv = input_dir / "subjects.tsv"
