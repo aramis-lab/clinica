@@ -32,7 +32,7 @@ class ComputeAtlas(cpe.Pipeline):
     @staticmethod
     def get_to_process_with_atlases(
         caps_directory: str, subjects: list, sessions: list, atlas_dir_path: str
-    ):
+    ) -> list:
         import itertools
         import os
         from pathlib import Path

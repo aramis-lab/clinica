@@ -1,8 +1,6 @@
 # coding: utf8
 
 
-from typing import BinaryIO, Dict, Iterable, List, Optional, Tuple, Union
-
 from clinica.utils.stream import cprint
 
 
