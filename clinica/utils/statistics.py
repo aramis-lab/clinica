@@ -36,8 +36,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     if not out_file:
         fname, ext = op.splitext(op.basename(in_normalized_map))
         if ext == ".gz":
-            fname, ext2 = op.splitext(fname)
-            ext = ext2 + ext
+            fname, _ = op.splitext(fname)
         out_file = op.abspath(f"{fname}_statistics_{in_atlas.get_name_atlas()}.tsv")
 
     atlas_labels = nib.load(in_atlas.get_atlas_labels())
