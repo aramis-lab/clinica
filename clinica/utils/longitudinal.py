@@ -1,7 +1,4 @@
-# coding: utf8
 """This module contains utilities for longitudinal pipelines. See CAPS specifications for details about long ID."""
-
-from typing import Optional
 
 
 def get_long_id(list_session_id):
@@ -56,7 +53,7 @@ def get_participants_long_id(list_participant_id, list_session_id):
     return list_long_id
 
 
-def save_long_id(list_session_id, output_dir, file_name: Optional[str] = None):
+def save_long_id(list_session_id, output_dir, file_name=None):
     """Save long ID to `file_name`."""
     import os
 
