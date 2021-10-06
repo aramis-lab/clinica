@@ -1,5 +1,3 @@
-# coding: utf8
-
 def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     """Computes a list of statistics files for each atlas.
 
