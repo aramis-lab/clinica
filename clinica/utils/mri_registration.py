@@ -1,14 +1,11 @@
-# coding: utf8
 """This module contains functions used for the registration aspects."""
-
-from typing import Optional
 
 
 def convert_flirt_transformation_to_mrtrix_transformation(
     in_source_image: str,
     in_reference_image: str,
     in_flirt_matrix: str,
-    name_output_matrix: Optional[str] = None,
+    name_output_matrix=None,
 ) -> str:
     """Convert flirt matrix to mrtrix matrix.
 
@@ -52,7 +49,7 @@ def apply_ants_registration_syn_quick_transformation(
     in_reference_image: str,
     in_affine_transformation: str,
     in_bspline_transformation: str,
-    name_output_image: Optional[str] = None,
+    name_output_image=None,
 ):
     """Apply a transformation obtained with antsRegistrationSyNQuick.sh.
 
@@ -100,7 +97,7 @@ def apply_ants_registration_syn_quick_transformation(
 
 
 def ants_registration_syn_quick(
-    fix_image, moving_image, prefix_output: Optional[str] = None
+    fix_image, moving_image, prefix_output=None
 ):
     """Small wrapper for antsRegistrationSyNQuick.sh.
 
