@@ -1,8 +1,4 @@
-# coding: utf8
-from typing import Optional
-
-
-def statistics_on_atlases(in_registered_map: str, name_map: str, prefix_file: Optional[str] = None):
+def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     """Computes a list of statistics files for each atlas.
 
     Args:

@@ -1,14 +1,10 @@
-# coding: utf8
-
 """This module contains utilities for statistics.
 
 Currently, it contains one function to generate TSV file containing mean map based on a parcellation.
 """
 
-from typing import Optional
 
-
-def statistics_on_atlas(in_normalized_map, in_atlas, out_file: Optional[str] = None):
+def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     """Compute statistics of a map on an atlas.
 
     Given an atlas image with a set of ROIs, this function computes the mean of
@@ -40,8 +36,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file: Optional[str] = N
     if not out_file:
         fname, ext = op.splitext(op.basename(in_normalized_map))
         if ext == ".gz":
-            fname, ext2 = op.splitext(fname)
-            ext = ext2 + ext
+            fname, _ = op.splitext(fname)
         out_file = op.abspath(f"{fname}_statistics_{in_atlas.get_name_atlas()}.tsv")
 
     atlas_labels = nib.load(in_atlas.get_atlas_labels())
@@ -50,7 +45,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file: Optional[str] = N
     img = nib.load(in_normalized_map)
     img_data = img.get_fdata(dtype="float32")
 
-    atlas_correspondence = pandas.io.parsers.read_csv(in_atlas.get_tsv_roi(), sep="\t")
+    atlas_correspondence = pandas.read_csv(in_atlas.get_tsv_roi(), sep="\t")
     label_name = list(atlas_correspondence.roi_name)
     label_value = list(
         atlas_correspondence.roi_value

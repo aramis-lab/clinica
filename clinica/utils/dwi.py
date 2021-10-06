@@ -1,6 +1,3 @@
-# coding: utf8
-from typing import Optional
-
 """This module contains utilities for DWI handling."""
 
 
@@ -40,7 +37,7 @@ def count_b0s(in_bval, low_bval=5.0):
     return num_b0s
 
 
-def b0_average(in_file: str, out_file: Optional[str] = None):
+def b0_average(in_file, out_file=None):
     """
     Average the b0 volumes.
 
@@ -277,8 +274,8 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
         data = data[..., :-1]
         bval = bval[:-1]
     else:
-        data = np.concatenate((data[..., :volid], data[..., (volid + 1) :]), axis=3)
-        bval = np.hstack((bval[:volid], bval[(volid + 1) :]))
+        data = np.concatenate((data[..., :volid], data[..., (volid + 1):]), axis=3)
+        bval = np.hstack((bval[:volid], bval[(volid + 1):]))
 
     out_mov = op.abspath("hmc_mov.nii.gz")
     out_bval = op.abspath("bval_split.txt")
