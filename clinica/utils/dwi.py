@@ -1,6 +1,3 @@
-# coding: utf8
-from typing import Optional
-
 """This module contains utilities for DWI handling."""
 
 
@@ -40,7 +37,7 @@ def count_b0s(in_bval, low_bval=5.0):
     return num_b0s
 
 
-def b0_average(in_file: str, out_file: Optional[str] = None):
+def b0_average(in_file, out_file=None):
     """
     Average the b0 volumes.
 
