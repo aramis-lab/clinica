@@ -10,7 +10,7 @@ def zip_nii(in_file: str, same_dir: bool = False):
     from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
 
-    if not in_file or isinstance(in_file, _Undefined):
+    if (in_file is None) or isinstance(in_file, _Undefined):
         return None
 
     if not isinstance(in_file, str):  # type(in_file) is list:
@@ -36,7 +36,7 @@ def unzip_nii(in_file: str):
     from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
 
-    if not in_file or isinstance(in_file, _Undefined):
+    if (in_file is None) or isinstance(in_file, _Undefined):
         return None
 
     if not isinstance(in_file, str):  # type(in_file) is list:

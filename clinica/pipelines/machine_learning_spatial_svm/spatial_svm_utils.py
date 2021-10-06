@@ -850,7 +850,7 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
 
 
 def heat_solver_tensor_3D_P1_grad_conj(
-    f, g, t_final, h, t_step, CL_value, epsilon: float = 0.1
+    f, g, t_final, h, t_step, CL_value=None, epsilon: float = 0.1
 ):
     """
     It solves the poisson's equation in 1D on the regular mesh (with mesh of size h)
@@ -892,7 +892,7 @@ def heat_solver_tensor_3D_P1_grad_conj(
 
 
 def heat_solver_tensor_2D_P1_grad_conj(
-    f, g, t_final, h, t_step, CL_value, epsilon: float = 1e-4
+    f, g, t_final, h, t_step, CL_value=None, epsilon: float = 1e-4
 ):
     """
     It solves the poisson's equation in 1D on the regular mesh (with mesh of size h)
@@ -1065,7 +1065,6 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     import os
 
     import nibabel as nib
-    import numpy as np
 
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
@@ -1082,9 +1081,7 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     input_image_read = nib.load(input_image)
     input_image_data = input_image_read.get_fdata(dtype="float32")
 
-    u = utils.heat_solver_tensor_3D_P1_grad_conj(
-        input_image_data, g, beta, h, t_step, CL_value=None, epsilon=None
-    )
+    u = utils.heat_solver_tensor_3D_P1_grad_conj(input_image_data, g, beta, h, t_step)
 
     img = utils.spm_write_vol(input_image, u)
 

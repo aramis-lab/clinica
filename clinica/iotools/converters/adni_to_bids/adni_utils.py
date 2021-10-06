@@ -642,7 +642,7 @@ def get_visit_id(row, location):
 
     if location in locations_visicode2:
         if pd.isnull(row["VISCODE2"]) or row["VISCODE2"] == "f":
-            return False
+            return None
         if row["VISCODE2"] == "sc":
             return "sc"  # visit_id = "bl"
         else:
@@ -719,10 +719,14 @@ def create_adni_sessions_dict(
                 df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
 
     if df_subj_session.empty:
-        raise ValueError("Empty dataset detected. Clinical data cannot be extracted")
-    df_subj_session.drop(
-        df_subj_session[df_subj_session.session_id == "sc"].index, inplace=True
-    )
+        raise ValueError("Empty dataset detected. Clinical data cannot be extracted.")
+
+    # Nv/None refer to sessions whose session is undefined. "sc" is the screening session with unreliable (incomplete)
+    # data.
+    df_subj_session = df_subj_session[
+        (~df_subj_session.session_id.isin(["ses-Nv", "sc", None]))
+    ]
+
     write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
 
@@ -754,6 +758,13 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
 
     # if error in adni data (duplicate session id), keep only the first row
     df_temp.drop_duplicates(subset=["RID", "session_id"], keep="first", inplace=True)
+
+    try:
+        df_temp["diagnosis"] = df_temp["diagnosis"].apply(
+            lambda x: convert_diagnosis_code(x)
+        )
+    except KeyError:
+        pass
 
     if df_subj_session.empty:
         df_subj_session = df_temp
@@ -900,7 +911,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
 
     Returns: Dataframe containing metadata and existing paths
     """
-    from os import path, walk
+    from pathlib import Path
 
     import pandas as pd
 
@@ -909,27 +920,29 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     is_dicom = []
     image_folders = []
 
-    for row in images.iterrows():
-        image = row[1]
-        seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
-        image_path = ""
-        for (dirpath, dirnames, filenames) in walk(seq_path):
-            found = False
-            for d in dirnames:
-                if d == prefix + str(image[id_field]):
-                    image_path = path.join(dirpath, d)
-                    found = True
-                    break
-            if found:
-                break
+    for _, image in images.iterrows():
+        # Base directory where to look for image files.
+        seq_path = Path(source_dir) / str(image["Subject_ID"])
 
-        dicom = True
-        for (dirpath, dirnames, filenames) in walk(image_path):
-            for f in filenames:
-                if f.endswith(".nii"):
-                    dicom = False
-                    image_path = path.join(dirpath, f)
-                    break
+        # Generator finding files containing the image ID.
+        find_file = filter(
+            lambda p: p.is_file(),
+            seq_path.rglob(f"*_I{image['Image_ID']}.*"),
+        )
+
+        try:
+            # Grab the first file from the generator.
+            next_file: Path = next(find_file)
+
+            # Whether the image data are DICOM or not.
+            dicom = "dcm" in next_file.suffix
+
+            # Compute the image path (DICOM folder or NIfTI path).
+            image_path = str(next_file.parent if dicom else next_file)
+        except StopIteration:
+            # In case no file is found.
+            image_path = ""
+            dicom = True
 
         is_dicom.append(dicom)
         image_folders.append(image_path)
@@ -1169,7 +1182,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             zip_image = "y"
 
         if image.Is_Dicom:
-            command = f"dcm2niix -b {generate_json} -z {zip_image} -o {output_path} -f {output_filename} {image_path}"
+            command = f"dcm2niix -w 0 -b {generate_json} -z {zip_image} -o {output_path} -f {output_filename} {image_path}"
             run_dcm2niix(command)
 
             # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
@@ -1200,8 +1213,8 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             # Check if conversion worked (output files exist)
             if not nifti_exists or not dwi_bvec_and_bval_exist:
                 cprint(
-                    "WARNING: Conversion with dcm2niix failed, trying with dcm2nii "
-                    f"for subject {subject} and session {session}"
+                    msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
+                    lvl="warning",
                 )
                 return nan
 

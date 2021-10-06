@@ -2,6 +2,8 @@
 
 """Methods used by BIDS converters."""
 
+from typing import List
+
 
 # -- Methods for the clinical data --
 # @ToDo:test this function
@@ -254,14 +256,16 @@ def create_sessions_dict_OASIS(
                         bids_dir,
                         subj_bids,
                     )
-                    session_names = get_bids_subjs_list(subj_dir)
+                    session_names = get_bids_sess_list(subj_dir)
                     for s in session_names:
                         s_name = s.replace("ses-", "")
                         if study_name != "OASIS3":
                             row = file_to_read.iloc[r]
                         else:
-                            mr_id = subj_id + "_ClinicalData_" + s_name
-                            row = file_to_read[file_to_read["MR ID"] == mr_id].iloc[0]
+                            row = file_to_read[
+                                file_to_read["MR ID"].str.startswith(subj_id)
+                                & file_to_read["MR ID"].str.endswith(s_name)
+                            ].iloc[0]
                         if subj_bids not in sessions_dict:
                             sessions_dict.update({subj_bids: {}})
                         if s_name not in sessions_dict[subj_bids].keys():
@@ -614,28 +618,27 @@ def get_supported_dataset():
     return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
 
 
-def get_bids_subjs_list(bids_path):
+def get_bids_subjs_list(bids_path: str) -> List[str]:
     """Given a BIDS compliant dataset, return the list of all the subjects available."""
-    import os
-    from os import path
+    from pathlib import Path
 
-    return [
-        d
-        for d in os.listdir(bids_path)
-        if os.path.isdir(path.join(bids_path, d)) and d != "bids"
-    ]
+    return [str(d.name) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
-def get_bids_subjs_paths(bids_path):
+def get_bids_sess_list(subj_path: str) -> List[str]:
+    """
+    Given a subject path, return the list of sessions available
+    """
+    from pathlib import Path
+
+    return [str(d.name) for d in Path(subj_path).glob("ses-*") if d.is_dir()]
+
+
+def get_bids_subjs_paths(bids_path: str) -> List[str]:
     """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders."""
-    import os
-    from os import path
+    from pathlib import Path
 
-    return [
-        path.join(bids_path, d)
-        for d in os.listdir(bids_path)
-        if os.path.isdir(path.join(bids_path, d))
-    ]
+    return [str(d) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
 def compute_new_subjects(original_ids, bids_ids):
@@ -774,6 +777,7 @@ def run_dcm2niix(command):
         cprint(
             msg=(
                 "DICOM to BIDS conversion with dcm2niix failed:\n"
+                f"command: {command}\n"
                 f"{output_dcm2niix.stdout.decode('utf-8')}"
             ),
             lvl="warning",
