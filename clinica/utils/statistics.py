@@ -46,7 +46,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     img = nib.load(in_normalized_map)
     img_data = img.get_fdata(dtype="float32")
 
-    atlas_correspondence = pandas.io.parsers.read_csv(in_atlas.get_tsv_roi(), sep="\t")
+    atlas_correspondence = pandas.read_csv(in_atlas.get_tsv_roi(), sep="\t")
     label_name = list(atlas_correspondence.roi_name)
     label_value = list(
         atlas_correspondence.roi_value
