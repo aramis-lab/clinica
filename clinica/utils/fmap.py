@@ -1,8 +1,7 @@
 # coding: utf8
-from typing import Optional
 
 
-def convert_phase_in_radians(in_file: str, out_file: Optional[str] = None):
+def convert_phase_in_radians(in_file, out_file=None):
     """Convert phase image in radians."""
     import math
     import os
@@ -37,7 +36,7 @@ def convert_phase_in_radians(in_file: str, out_file: Optional[str] = None):
 
 
 def create_phase_in_radsec(
-    in_phase1, in_phase2, delta_te, out_file: Optional[str] = None
+    in_phase1, in_phase2, delta_te, out_file=None
 ):
     """Converts input (unwarpped) phase1 and phase2 map to into a fieldmap inrads.
 
@@ -61,7 +60,7 @@ def create_phase_in_radsec(
     return out_file
 
 
-def resample_fmap_to_b0(in_fmap, in_b0, out_file: Optional[str] = None):
+def resample_fmap_to_b0(in_fmap, in_b0, out_file=None):
     """Resample fieldmap onto the b0 image.
 
     Warnings:
