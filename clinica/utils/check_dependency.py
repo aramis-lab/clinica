@@ -5,6 +5,7 @@
 
 These functions can check binaries, software (e.g. FreeSurfer) or toolboxes (e.g. SPM).
 """
+from clinica.utils.exceptions import ClinicaMissingDependencyError
 
 
 def is_binary_present(binary):
@@ -39,8 +40,6 @@ def is_binary_present(binary):
 def check_environment_variable(environment_variable, software_name):
     import os
 
-    from .exceptions import ClinicaMissingDependencyError
-
     content_var = os.environ.get(environment_variable, "")
     if not content_var:
         raise ClinicaMissingDependencyError(
@@ -57,8 +56,6 @@ def check_environment_variable(environment_variable, software_name):
 
 def check_software_requirements(current_version, version_requirements, software_name):
     from string import punctuation
-
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
 
     comparison_operator = "".join(
         [c for c in version_requirements if c in punctuation.replace(".", "")]
@@ -78,8 +75,6 @@ def check_software_requirements(current_version, version_requirements, software_
 
 def check_dcm2niix():
     """Check dcm2niix software."""
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     if not is_binary_present("dcm2niix"):
         raise ClinicaMissingDependencyError(
             "Clinica could not find dcm2niix software in your PATH environment: "
@@ -89,8 +84,6 @@ def check_dcm2niix():
 
 def check_ants(version_requirements=None):
     """Check ANTs software."""
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     check_environment_variable("ANTSPATH", "ANTs")
 
     list_binaries = ["N4BiasFieldCorrection", "antsRegistrationSyNQuick.sh"]
@@ -102,10 +95,19 @@ def check_ants(version_requirements=None):
             )
 
 
+def check_convert3d(version_requirements=None):
+    """Check Convert3D software."""
+    list_binaries = ["c3d_affine_tool", "c3d"]
+    for binary in list_binaries:
+        if not is_binary_present(binary):
+            raise ClinicaMissingDependencyError(
+                f"[Error] Clinica could not find Convert3D software: "
+                f"the {binary} command is not present in your PATH environment."
+            )
+
+
 def check_freesurfer(version_requirements=None):
     """Check FreeSurfer software."""
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     check_environment_variable("FREESURFER_HOME", "FreeSurfer")
 
     list_binaries = ["mri_convert", "recon-all"]
@@ -123,7 +125,6 @@ def check_fsl(version_requirements=None):
     """Check FSL software."""
     import nipype.interfaces.fsl as fsl
 
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
     from clinica.utils.stream import cprint
 
     check_environment_variable("FSLDIR", "FSL")
@@ -160,8 +161,6 @@ def check_mrtrix(version_requirements=None):
 
 def check_petpvc(version_requirements=None):
     """Check PETPVC software."""
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     list_binaries = [
         "petpvc",
         "pvc_diy",
@@ -200,8 +199,6 @@ def check_spm(version_requirements=None):
 
 def check_matlab():
     """Check Matlab toolbox."""
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     if not is_binary_present("matlab"):
         raise ClinicaMissingDependencyError(
             "Matlab was not found in PATH environment. Did you add it?"

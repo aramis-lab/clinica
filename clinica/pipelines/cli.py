@@ -3,9 +3,7 @@ import click
 from .deeplearning_prepare_data import deeplearning_prepare_data_cli
 from .dwi_connectome import dwi_connectome_cli
 from .dwi_dti import dwi_dti_cli
-from .dwi_preprocessing_using_phasediff_fieldmap import (
-    dwi_preprocessing_using_phasediff_fieldmap_cli,
-)
+from .dwi_preprocessing_using_fmap import dwi_preprocessing_using_phasediff_fmap_cli
 from .dwi_preprocessing_using_t1 import dwi_preprocessing_using_t1_cli
 from .machine_learning import classification_cli
 from .machine_learning_spatial_svm import spatial_svm_cli
@@ -49,7 +47,7 @@ cli.add_command(t1_freesurfer_cli.cli)
 cli.add_command(t1_volume_cli.cli)
 cli.add_command(t1_freesurfer_longitudinal_cli.cli)
 cli.add_command(t1_linear_cli.cli)
-cli.add_command(dwi_preprocessing_using_phasediff_fieldmap_cli.cli)
+cli.add_command(dwi_preprocessing_using_phasediff_fmap_cli.cli)
 cli.add_command(dwi_preprocessing_using_t1_cli.cli)
 cli.add_command(dwi_dti_cli.cli)
 cli.add_command(dwi_connectome_cli.cli)

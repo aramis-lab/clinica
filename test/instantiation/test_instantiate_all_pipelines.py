@@ -131,7 +131,11 @@ def test_instantiate_DWIPreprocessingUsingT1(cmdopt):
     input_dir = Path(cmdopt["input"])
     root = input_dir / "DWIPreprocessingUsingT1"
 
-    parameters = {"low_bval": 5}
+    parameters = {
+        "initrand": False,
+        "low_bval": 5,
+        "use_cuda": False,
+    }
     pipeline = DwiPreprocessingUsingT1(
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
@@ -143,18 +147,24 @@ def test_instantiate_DWIPreprocessingUsingT1(cmdopt):
 
 def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
 
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import (
-        DwiPreprocessingUsingPhaseDiffFieldmap,
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_pipeline import (
+        DwiPreprocessingUsingPhaseDiffFMap,
     )
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "DWIPreprocessingUsingPhaseDiffFieldmap"
 
-    parameters = {"low_bval": 5}
-    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
+
+    parameters = {
+        "initrand": False,
+        "low_bval": 5,
+        "use_cuda": False,
+    }
+    pipeline = DwiPreprocessingUsingPhaseDiffFMap(
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
+
         parameters=parameters,
     )
     pipeline.build()

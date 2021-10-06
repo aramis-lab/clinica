@@ -69,7 +69,7 @@ def test_second_lv_iotools(generate_cli_second_lv_iotools):
         "t1-volume",
         "t1-freesurfer-longitudinal",
         "t1-linear",
-        "dwi-preprocessing-using-phasediff-fieldmap",
+        "dwi-preprocessing-using-phasediff-fmap",
         "dwi-preprocessing-using-t1",
         "dwi-dti",
         "dwi-connectome",

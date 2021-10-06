@@ -4,7 +4,7 @@ import click
 
 from clinica.pipelines import cli_param
 
-pipeline_name = "dwi-preprocessing-using-phasediff-fieldmap"
+pipeline_name = "dwi-preprocessing-using-phasediff-fmap"
 
 
 @click.command(name=pipeline_name)
@@ -16,6 +16,9 @@ pipeline_name = "dwi-preprocessing-using-phasediff-fieldmap"
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option_group.advanced_pipeline_options
+@cli_param.option.use_cuda
+@cli_param.option.initrand
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -23,6 +26,8 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    use_cuda: bool = False,
+    initrand: bool = False,
 ) -> None:
     """Preprocessing of raw DWI datasets using a phase difference image.
 
@@ -32,13 +37,17 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
-    from .dwi_preprocessing_using_phasediff_fieldmap_pipeline import (
-        DwiPreprocessingUsingPhaseDiffFieldmap,
+    from .dwi_preprocessing_using_phasediff_fmap_pipeline import (
+        DwiPreprocessingUsingPhaseDiffFMap,
     )
 
-    parameters = {"low_bval": low_bval}
+    parameters = {
+        "low_bval": low_bval,
+        "use_cuda": use_cuda,
+        "initrand": initrand,
+    }
 
-    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
+    pipeline = DwiPreprocessingUsingPhaseDiffFMap(
         bids_directory=bids_directory,
         caps_directory=caps_directory,
         tsv_file=subjects_sessions_tsv,

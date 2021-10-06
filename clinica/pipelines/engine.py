@@ -344,6 +344,7 @@ class Pipeline(Workflow):
         check_software = {
             # 'matlab': chk.check_matlab,
             "ants": chk.check_ants,
+            "convert3d": chk.check_convert3d,
             "spm": chk.check_spm,
             "freesurfer": chk.check_freesurfer,
             "fsl": chk.check_fsl,
