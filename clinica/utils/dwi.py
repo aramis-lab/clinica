@@ -274,8 +274,8 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
         data = data[..., :-1]
         bval = bval[:-1]
     else:
-        data = np.concatenate((data[..., :volid], data[..., (volid + 1) :]), axis=3)
-        bval = np.hstack((bval[:volid], bval[(volid + 1) :]))
+        data = np.concatenate((data[..., :volid], data[..., (volid + 1):]), axis=3)
+        bval = np.hstack((bval[:volid], bval[(volid + 1):]))
 
     out_mov = op.abspath("hmc_mov.nii.gz")
     out_bval = op.abspath("bval_split.txt")
