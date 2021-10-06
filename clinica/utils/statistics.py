@@ -1,14 +1,10 @@
-# coding: utf8
-
 """This module contains utilities for statistics.
 
 Currently, it contains one function to generate TSV file containing mean map based on a parcellation.
 """
 
-from typing import Optional
 
-
-def statistics_on_atlas(in_normalized_map, in_atlas, out_file: Optional[str] = None):
+def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     """Compute statistics of a map on an atlas.
 
     Given an atlas image with a set of ROIs, this function computes the mean of
