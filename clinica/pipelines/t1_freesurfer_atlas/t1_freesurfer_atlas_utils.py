@@ -13,27 +13,26 @@ def compute_atlases(
 
     from clinica.utils.stream import cprint
 
-    print("to process with atlas: ", to_process_with_atlases)
     subject_dir = ""
     image_id = ""
     atlas = ""
     if to_process_with_atlases != []:
         for path in Path(path_to_atlas).rglob(
-            "*" + to_process_with_atlases[0][0] + "_6p0.gcs"
+            "*" + to_process_with_atlases[0] + "_6p0.gcs"
         ):
             hemisphere = os.path.split(path)[1].rsplit(".")[0]
             atlas_name = os.path.split(path)[1].rsplit(".")[1].split("_")[0]
-            sub, ses = to_process_with_atlases[0][1].split("_")
-
-            path_to_freesurfer_cross = (
+            sub, ses = to_process_with_atlases[1].split("_")
+            subject_dir = (
                 caps_directory
                 + "/subjects/"
                 + sub
                 + "/"
                 + ses
-                + "/t1/freesurfer_cross_sectional/"
-                + to_process_with_atlases[0][1]
+                + "/t1/freesurfer_cross_sectional"
             )
+
+            path_to_freesurfer_cross = subject_dir + "/" + to_process_with_atlases[1]
             output_path_annot = (
                 path_to_freesurfer_cross
                 + "/label/"
@@ -47,10 +46,10 @@ def compute_atlases(
             )
             if not os.path.isfile(sphere_reg):
                 cprint(
-                    f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[0][1]} will not be processed with {to_process_with_atlases[0][0]}",
+                    f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
                     lvl="warning",
                 )
-            command = f"mris_ca_label {to_process_with_atlases[0][1]} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
+            command = f"mris_ca_label -sdir {subject_dir} {to_process_with_atlases[1]} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
             a = subprocess.run(command, shell=True, capture_output=True)
 
             output_path_stats = (
@@ -61,12 +60,11 @@ def compute_atlases(
                 + atlas_name
                 + ".stats"
             )
-            command2 = f"mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {to_process_with_atlases[0][1]} {hemisphere}"
+            command2 = f"export SUBJECTS_DIR={subject_dir}\nmris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {to_process_with_atlases[1]} {hemisphere}"
             c = subprocess.run(command2, shell=True, capture_output=True)
-
             image_id, atlas = (
-                to_process_with_atlases[0][1],
-                to_process_with_atlases[0][0],
+                to_process_with_atlases[1],
+                to_process_with_atlases[0],
             )
     return subject_dir, image_id, atlas
 

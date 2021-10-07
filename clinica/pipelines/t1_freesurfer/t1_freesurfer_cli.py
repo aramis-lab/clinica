@@ -50,7 +50,7 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
-    from ..atlas import compute_atlas_cli
+    from ..t1_freesurfer_atlas import t1_freesurfer_atlas_cli
     from .t1_freesurfer_pipeline import T1FreeSurfer
 
     parameters = {"recon_all_args": recon_all_args, "skip_question": yes}
@@ -78,7 +78,7 @@ def cli(
 
     if atlas_path is not None:
         ctx.invoke(
-            compute_atlas_cli.cli,
+            t1_freesurfer_atlas_cli.cli,
             caps_directory=caps_directory,
             atlas_path=atlas_path,
         )

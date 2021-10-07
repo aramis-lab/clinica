@@ -12,11 +12,11 @@ cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class ComputeAtlas(cpe.Pipeline):
-    """FreeSurfer-based processing of T1-weighted MR images.
+class T1FreeSurferAtlas(cpe.Pipeline):
+    """Projection of the results of t1-freesurfer on another atlass
 
     Returns:
-        A clinica pipeline object containing the T1FreeSurfer pipeline.
+        A clinica pipeline object containing the T1FreeSurfer atlas projection pipeline.
     """
 
     def __init__(
@@ -74,15 +74,15 @@ class ComputeAtlas(cpe.Pipeline):
         list_to_process = []
         for i in initial_list_to_process:
             if list(itertools.product(i[0], i[1])) != []:
-                list_to_process.append(list(itertools.product(i[0], i[1])))
+                list_to_process = list_to_process + list(itertools.product(i[0], i[1]))
         return list_to_process
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
 
         Note:
-            The list of inputs of the T1FreeSurfer pipeline is:
-                * t1w (str): Path of the T1 weighted image in BIDS format
+            The list of inputs of the T1FreeSurferAtlas pipeline is:
+                * to_process_with_atlases (str): list of the tuples (atlas, sub-ses) to process
 
         Returns:
             A list of (string) input fields name.
@@ -132,7 +132,7 @@ class ComputeAtlas(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from .compute_atlas_utils import compute_atlases, write_tsv_files
+        from .t1_freesurfer_atlas_utils import compute_atlases, write_tsv_files
 
         # Run an additional two Freesurfer commands if there is an atlas_path specified
         compute_other_atlases = npe.Node(

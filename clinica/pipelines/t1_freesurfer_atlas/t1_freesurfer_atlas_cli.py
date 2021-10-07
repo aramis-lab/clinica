@@ -16,15 +16,15 @@ def cli(
 ) -> None:
     """Projection of the results of t1-freesurfer on another atlas.
 
-    Link to documentation
+    https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_FreeSurfer/
     """
     from networkx import Graph
 
     from clinica.utils.ux import print_end_pipeline
 
-    from .compute_atlas_pipeline import ComputeAtlas
+    from .t1_freeesurfer_atlas_pipeline import T1FreeSurferAtlas
 
-    pipeline = ComputeAtlas(
+    pipeline = T1FreeSurferAtlas(
         caps_directory=caps_directory,
         atlas_path=atlas_path,
     )
