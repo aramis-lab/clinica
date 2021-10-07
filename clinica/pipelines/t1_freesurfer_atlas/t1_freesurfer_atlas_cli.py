@@ -14,7 +14,7 @@ pipeline_name = "compute-atlas"
 def cli(
     caps_directory: str,
     atlas_path: Optional[str] = None,
-    n_procs: Optional[str] = None,
+    n_procs: Optional[int] = None,
 ) -> None:
     """Projection of the results of t1-freesurfer on another atlas.
 
