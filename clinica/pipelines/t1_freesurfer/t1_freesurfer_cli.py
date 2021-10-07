@@ -81,6 +81,7 @@ def cli(
             t1_freesurfer_atlas_cli.cli,
             caps_directory=caps_directory,
             atlas_path=atlas_path,
+            n_procs=n_procs,
         )
 
 
