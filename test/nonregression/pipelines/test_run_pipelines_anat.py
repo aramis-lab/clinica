@@ -64,7 +64,7 @@ def test_run_anat(cmdopt, tmp_path, test_name):
         run_T1VolumeParcellation(input_dir, tmp_out_dir, ref_dir, working_dir)
 
     elif test_name == "T1Linear":
-        run_T1VolumeCreateDartel(input_dir, tmp_out_dir, ref_dir, working_dir)
+        run_T1Linear(input_dir, tmp_out_dir, ref_dir, working_dir)
 
     elif test_name == "T1FreeSurferTemplate":
         run_T1FreeSurferTemplate(input_dir, tmp_out_dir, ref_dir, working_dir)
@@ -102,8 +102,8 @@ def run_T1FreeSurferCrossSectional(
     # (sym links of ref data are ignored after rsync on CI machines)
     def path_to_caps_fs(part_id: str, sess_id: str) -> Path:
 
-        output_folder = Path(
-            "caps"
+        output_folder = (
+            Path("caps")
             / "subjects"
             / part_id
             / sess_id
@@ -405,7 +405,7 @@ def run_T1VolumeParcellation(
     # Instantiate pipeline
     parameters = {"group_label": "UnitTest"}
     pipeline = T1VolumeParcellation(
-        caps_directory=join(output_dir / "caps"),
+        caps_directory=fspath(output_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters=parameters,
@@ -503,8 +503,12 @@ def run_T1FreeSurferTemplate(
     # (sym links of ref data are ignored after rsync on CI machines)
     def path_to_caps_fs(part_id: str, long_id: str) -> Path:
 
-        output_folder = Path(
-            "caps" / "subjects" / part_id / long_id / "freesurfer_unbiased_template"
+        output_folder = (
+            Path("caps")
+            / "subjects"
+            / part_id
+            / long_id
+            / "freesurfer_unbiased_template"
         )
         return output_folder
 
@@ -553,8 +557,8 @@ def run_T1FreeSurferLongitudinalCorrection(
     # (sym links of ref data are ignored after rsync on CI machines)
     def path_to_caps_fs(part_id: str, sess_id: str, long_id: str) -> Path:
 
-        output_folder = Path(
-            "caps"
+        output_folder = (
+            Path("caps")
             / "subjects"
             / part_id
             / sess_id
