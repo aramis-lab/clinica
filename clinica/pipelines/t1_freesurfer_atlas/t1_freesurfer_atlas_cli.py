@@ -10,9 +10,11 @@ pipeline_name = "compute-atlas"
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.option.atlas_path
+@cli_param.option.n_procs
 def cli(
     caps_directory: str,
     atlas_path: Optional[str] = None,
+    n_procs: Optional[str] = None,
 ) -> None:
     """Projection of the results of t1-freesurfer on another atlas.
 
@@ -29,7 +31,11 @@ def cli(
         atlas_path=atlas_path,
     )
 
-    exec_pipeline = pipeline.run()
+    exec_pipeline = (
+        pipeline.run(plugin="MultiProc", plugin_args={"n_procs": n_procs})
+        if n_procs
+        else pipeline.run()
+    )
 
     if isinstance(exec_pipeline, Graph):
         print_end_pipeline(

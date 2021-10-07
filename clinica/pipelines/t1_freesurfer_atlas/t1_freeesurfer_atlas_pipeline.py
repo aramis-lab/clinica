@@ -132,7 +132,7 @@ class T1FreeSurferAtlas(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from .t1_freesurfer_atlas_utils import compute_atlases, write_tsv_files
+        from .t1_freesurfer_atlas_utils import compute_atlas, write_tsv_files
 
         # Run an additional two Freesurfer commands if there is an atlas_path specified
         compute_other_atlases = npe.Node(
@@ -143,7 +143,7 @@ class T1FreeSurferAtlas(cpe.Pipeline):
                     "path_to_atlas",
                 ],
                 output_names=["subject_dir", "image_id", "atlas"],
-                function=compute_atlases,
+                function=compute_atlas,
             ),
             name="1-ComputeOtherAtlases",
         )
