@@ -154,7 +154,6 @@ def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     input_dir = Path(cmdopt["input"])
     root = input_dir / "DWIPreprocessingUsingPhaseDiffFieldmap"
 
-
     parameters = {
         "initrand": False,
         "low_bval": 5,
@@ -164,7 +163,6 @@ def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
-
         parameters=parameters,
     )
     pipeline.build()
@@ -455,24 +453,6 @@ def test_instantiate_T1Linear(cmdopt):
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
-    )
-    pipeline.build()
-
-
-def test_instantiate_DLPrepareData(cmdopt):
-
-    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_pipeline import (
-        DeepLearningPrepareData,
-    )
-
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "DeepLearningPrepareData"
-
-    parameters = {"modality": "t1-linear", "extract_method": "image"}
-    pipeline = DeepLearningPrepareData(
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
     )
     pipeline.build()
 
