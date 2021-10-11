@@ -14,7 +14,7 @@ SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004
 cropping of the registered images to remove the background.
 
 This pipeline was designed as a prerequisite for the
-[`deeplearning-prepare-data` pipeline](../DeepLearning_PrepareData) and
+[`extract](https://clinicadl.readthedocs.io/en/stable/Preprocessing/Extract/) and
 deep learning classification algorithms presented in
 [[Wen et al., 2020](https://arxiv.org/abs/1904.07773)].
 
@@ -70,8 +70,8 @@ affine transformation estimated with [ANTs](https://stnava.github.io/ANTs/).
 
 ## Going further
 
-- You can now run the
-[`deeplearning-prepare-data` pipeline](../DeepLearning_PrepareData)
+- You can use the
+[`extract pipeline`](https://clinicadl.readthedocs.io/en/stable/Preprocessing/Extract/)
 to prepare images to be used with the PyTorch library
 [[Paszke et al., 2019]](https://papers.nips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library)
 for classification based on deep learning using the
