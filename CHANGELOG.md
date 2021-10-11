@@ -6,6 +6,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## Clinica 0.5.2
+
+### Changed
+[DWI-preprocessing] Rewrite of DWI-preprocessing pipelines using FSL's eddy tool
+
+
+### Fixed
+ 
+[Oasis3/NIFD] Change code for backward compatibility with pandas 1.1.x
+[T1-Freesurfer/DWI] Remove Typing for compatibility with Nipype
+
+
+## Clinica 0.5.1
+
+### Added
+[Oassis3-to-bids] add converter
+[Github] Add citation file 
+ 
+### Changed
+ 
+[adni-to-bids] Improve fetching of participants
+[adni-to-bids] Image path finder more robust
+[doc] Update the OASIS3 documentation
+[CI] Code refactoring/cleanup
+
+### Fixed
+ 
+[Atlas] Fix ROI index for left amygdala in AAL2 atlas
+[adni-to-bids] Prevent crash when files exists
+[adni-to-bids] Revert behavior to encode Dementia as AD
+[adni-to-bids] Remove entries with incoherent session names
+[nifd-to-bids] Several bugfixes and enhancements
+[iotools]Fix bug on empty dataframe
+[CI] Fix bash instruction to init conda
+
+[doc] Correct DWI-Connectome description paragraph
+
+
+
+
 ## Clinica 0.5.0
 
 ### Added
