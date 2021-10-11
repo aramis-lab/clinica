@@ -892,7 +892,13 @@ def write_list_of_files(file_list, output_file):
 
 
 def check_relative_volume_location_in_world_coordinate_system(
-    label_1, nifti_list1, label_2, nifti_list2, bids_dir, modality
+    label_1,
+    nifti_list1,
+    label_2,
+    nifti_list2,
+    bids_dir,
+    modality,
+    skip_question=False,
 ):
     """
     Check if the NIfTI file list nifti_list1 and nifti_list2 provided in argument are not too far apart (otherwise coreg
@@ -989,9 +995,11 @@ def check_relative_volume_location_in_world_coordinate_system(
             "You will find more information on the command by typing `clinica iotools center-nifti` in the console."
         )
         cprint(msg=warning_message, lvl="warning")
-        if not click.confirm("Do you still want to launch the pipeline?"):
-            click.echo("Clinica will now exit...")
-            sys.exit(0)
+
+        if not skip_question:
+            if not click.confirm("Do you still want to launch the pipeline?"):
+                click.echo("Clinica will now exit...")
+                sys.exit(0)
 
 
 def check_volume_location_in_world_coordinate_system(
