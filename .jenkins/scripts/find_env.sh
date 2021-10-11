@@ -22,7 +22,7 @@ do
     break
   fi;
 done
-if [ "$ENV_EXISTS" = 0 ]; then
+#if [ "$ENV_EXISTS" = 0 ]; then
   echo "Conda env $CLINICA_ENV_BRANCH not found... Creating"
   conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
   echo "Conda env $CLINICA_ENV_BRANCH was created."
@@ -31,4 +31,4 @@ if [ "$ENV_EXISTS" = 0 ]; then
   pip install -r requirements-dev.txt
   echo "Developement requirements has been installed in  $CLINICA_ENV_BRANCH."
   conda deactivate
-fi
+#fi
