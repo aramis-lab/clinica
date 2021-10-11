@@ -17,6 +17,7 @@ pipeline_name = "t1-volume"
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option.yes
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.tissue_classes
 @cli_param.option.tissue_probability_maps
@@ -44,6 +45,7 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    yes: bool = False,
 ) -> None:
     """Volume-based processing of T1-weighted MR images.
 
@@ -98,6 +100,7 @@ def cli(
         subjects_sessions_tsv=subjects_sessions_tsv,
         working_directory=working_directory,
         n_procs=n_procs,
+        yes=yes,
     )
 
     cprint("Part 2/4: Running t1-volume-create-dartel pipeline.")
