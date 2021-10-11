@@ -1,5 +1,3 @@
-# coding: utf-8
-
 from typing import Optional
 
 from clinica.iotools.abstract_converter import Converter

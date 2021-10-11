@@ -1,6 +1,3 @@
-# coding: utf-8
-
-
 def bids_dir_to_fsl_dir(bids_dir):
     """
     Converts BIDS PhaseEncodingDirection parameters (i,j,k,i-,j-,k-) to

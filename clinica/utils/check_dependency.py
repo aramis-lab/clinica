@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 """This module contains utilities to check dependencies before running Clinica.
 
 These functions can check binaries, software (e.g. FreeSurfer) or toolboxes (e.g. SPM).

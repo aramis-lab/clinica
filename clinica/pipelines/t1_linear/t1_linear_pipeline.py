@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config

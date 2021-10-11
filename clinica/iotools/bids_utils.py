@@ -1,5 +1,3 @@
-# coding: utf-8
-
 """Methods used by BIDS converters."""
 
 from typing import List

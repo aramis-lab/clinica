@@ -1,5 +1,3 @@
-# coding: utf8
-
 import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names

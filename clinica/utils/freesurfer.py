@@ -1,4 +1,3 @@
-# coding: utf8
 """This module contains FreeSurfer utilities."""
 
 

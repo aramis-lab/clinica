@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def get_luts():
     import os
 

@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains functions to deal with longitudinal datasets.
 
 Currently, Clinica Pipeline class and clinica/utils folder can not handle the case

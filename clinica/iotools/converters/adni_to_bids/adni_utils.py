@@ -1,6 +1,3 @@
-# coding: utf-8
-
-
 from clinica.iotools.bids_utils import run_dcm2niix
 
 

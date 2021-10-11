@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def zip_nii(in_file: str, same_dir: bool = False):
     import gzip
     import shutil

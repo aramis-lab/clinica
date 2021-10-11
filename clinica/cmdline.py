@@ -1,5 +1,3 @@
-# coding: utf8
-
 """The 'clinica' executable command line, installed with the clinica package, calls this module.
 
 The aim of this module is to execute pipelines from the command line,

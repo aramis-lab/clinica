@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def sort_session_list(session_list):
     session_idx = [int(session[5:]) for session in session_list]
     session_idx.sort()

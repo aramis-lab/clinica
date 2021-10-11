@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains utilities to grab or download files for Clinica."""
 
 import hashlib

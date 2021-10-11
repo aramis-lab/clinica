@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains dictionaries used in inputs.py::clinica_{file|group}_reader().
 
 These dictionaries describe files to grab.

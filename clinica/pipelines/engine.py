@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains the Pipeline abstract class needed for Clinica.
 
 Subclasses are located in clinica/pipeline/<pipeline_name>/<pipeline_name>_pipeline.py

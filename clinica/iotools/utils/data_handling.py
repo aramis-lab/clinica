@@ -1,5 +1,3 @@
-# coding: utf8
-
 """Data handling scripts."""
 
 import click

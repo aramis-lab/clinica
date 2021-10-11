@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def prepare_phasediff_fmap(name="prepare_phasediff_fmap"):
     """This workflow adapts the fsl_prepare_fieldmap script from FSL for the FSL eddy command.
 

@@ -1,5 +1,3 @@
-# coding: utf8
-
 import os
 from multiprocessing.pool import ThreadPool
 from os import path

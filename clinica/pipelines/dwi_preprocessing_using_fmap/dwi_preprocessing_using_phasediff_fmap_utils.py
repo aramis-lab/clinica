@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def rename_into_caps(
     in_bids_dwi,
     fname_dwi,

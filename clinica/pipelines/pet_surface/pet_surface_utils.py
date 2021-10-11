@@ -1,6 +1,3 @@
-# coding: utf-8
-
-
 def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
     """Extract SUBJECT_DIR.
 

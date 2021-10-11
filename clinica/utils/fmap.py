@@ -1,6 +1,4 @@
-def create_phase_in_radsec(
-    in_phase1, in_phase2, delta_te, out_file=None
-):
+def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
     """Converts input (unwarpped) phase1 and phase2 map to into a fieldmap inrads.
 
     Warning:
