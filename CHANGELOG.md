@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [DWI-preprocessing] Rewrite of DWI-preprocessing pipelines using FSL's eddy tool
 
 
+### Removed
+
+[Deeplearning-PrepareData] Migration of pipeline to ClinicaDL
+
 ### Fixed
  
 [Oasis3/NIFD] Change code for backward compatibility with pandas 1.1.x
