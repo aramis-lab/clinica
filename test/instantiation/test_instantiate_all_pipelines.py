@@ -317,8 +317,8 @@ def test_instantiate_PETSurfaceCrossSectional(cmdopt):
 #     pipeline.build()
 
 
-def test_instantiate_InputsML(cmdopt):
-    from os.path import abspath, dirname, exists, join
+def test_instantiate_WorlflowsML(cmdopt):
+    from os.path import exists
 
     from clinica.pipelines.machine_learning.input import (
         CAPSRegionBasedInput,
@@ -327,7 +327,7 @@ def test_instantiate_InputsML(cmdopt):
     )
 
     input_dir = Path(cmdopt["input"])
-    root = input_dir / "InputsML"
+    root = input_dir / "WorkflowsML"
 
     caps_dir = fspath(root / "in" / "caps")
     tsv = fspath(root / "in" / "subjects.tsv")
