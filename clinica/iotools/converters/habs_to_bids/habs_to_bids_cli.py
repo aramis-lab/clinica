@@ -4,9 +4,15 @@ import click
 
 
 @click.command(name="habs-to-bids")
-@click.argument("sourcedata", type=click.Path(exists=True, path_type=Path))
-@click.argument("rawdata", type=click.Path(writable=True, path_type=Path))
-def cli(sourcedata: Path, rawdata: Path) -> None:
+@click.argument(
+    "sourcedata",
+    type=click.Path(exists=True, resolve_path=True, path_type=Path),
+)
+@click.argument(
+    "rawdata",
+    type=click.Path(writable=True, resolve_path=True, path_type=Path),
+)
+def cli(sourcedata: str, rawdata: str) -> None:
     """HABS to BIDS converter."""
     from pandas import concat
 
@@ -19,7 +25,7 @@ def cli(sourcedata: Path, rawdata: Path) -> None:
     )
 
     clinical_data = {
-        k: read_clinical_data(Path(sourcedata) / p, c)
+        k: read_clinical_data(sourcedata / p, c)
         for k, p, c in find_clinical_data(sourcedata)
     }
 
