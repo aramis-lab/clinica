@@ -1,11 +1,81 @@
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-line_length = 88
-skip_gitignore = true
+[tool.poetry]
+name = "clinica"
+version = "0.5.1"
+description = "Software platform for clinical neuroimaging studies"
+license = "MIT"
+authors = ["ARAMIS Lab"]
+maintainers = ["Clinica developers <clinica-user@inria.fr>"]
+readme = "README.md"
+homepage = "https://www.clinica.run"
+repository = "https://github.com/aramis-lab/clinica.git"
+documentation =  "https://aramislab.paris.inria.fr/clinica/docs/public/latest"
+keywords = [
+    "bids",
+    "image processing",
+    "machine learning",
+    "neuroimaging",
+    "neuroscience"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Image Processing"
+]
+
+[tool.poetry.dependencies]
+python = "^3.7.1"
+nibabel = "^2.3.3"
+nipype = "^1.4"
+argcomplete = "^1.9.4"
+pandas = "^1.2"
+jinja2 = "^2.10.1"
+xvfbwrapper = "*"
+numpy = "^1.17"
+scikit-learn = "^0.23"
+nilearn = "^0.6"
+colorlog = "^5"
+xgboost = "*"
+scipy = "^1.2.3"
+matplotlib = "*"
+niflow-nipype1-workflows = "*"
+scikit-image = "^0.16.2"
+pydicom = "*"
+networkx = "*"
+click = "^7"
+click-option-group = "^0.5"
+xlrd = "*"
+openpyxl = "*"
+fsspec = "*"
+# docs
+mkdocs = {version = "^1.1", optional = true}
+mkdocs-material = {version = "*", optional = true}
+pymdown-extensions = {version = "*", optional = true}
+
+[tool.poetry.dev-dependencies]
+black = "*"
+isort = "*"
+pre-commit = "*"
+pytest = "*"
+pytest-timeout = "*"
+pytest-xdist = "*"
+
+[tool.poetry.extras]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "pymdown-extensions"
+]
+
+[tool.poetry.scripts]
+clinica = "clinica.cmdline:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
@@ -32,3 +102,6 @@ force-exclude = '''
   | clinica/lib
 )/
 '''
+
+[tool.isort]
+profile = "black"

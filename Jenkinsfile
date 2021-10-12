@@ -9,13 +9,16 @@ pipeline {
     stages {
       stage('Build Env') {
         parallel {
-          stage('Build in Linux') {
+          stage('Build on Linux') {
             agent { label 'ubuntu' }
             environment {
               PATH = "$HOME/miniconda/bin:$PATH"
               }
-            when { 
-              changeset 'requirements*'
+            when {
+              anyOf {
+                changeset 'environment.yml'
+                changeset 'poetry.lock'
+              }
             }
             steps {
               echo 'My branch name is ${BRANCH_NAME}'
@@ -24,18 +27,20 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
                  conda activate clinica_env_$BRANCH_NAME
-                 pip install -r requirements-dev.txt
+                 poetry install --no-root
                  '''
             }
           }
-          /*
-          stage('Build in Mac') {
+          stage('Build on macOS') {
             agent { label 'macos' }
             environment {
               PATH = "$HOME/miniconda3/bin:$PATH"
               }
             when {
-              changeset 'requirements*'
+              anyOf {
+                changeset 'environment.yml'
+                changeset 'poetry.lock'
+              }
             }
             steps {
               echo 'My branch name is ${BRANCH_NAME}'
@@ -44,11 +49,10 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
                  conda activate clinica_env_$BRANCH_NAME
-                 pip install -r requirements-dev.txt
+                 poetry install --no-root
                  '''
             }
           }
-          */
         }
       }
       stage('Install') {
@@ -70,8 +74,8 @@ pipeline {
                conda info --envs
                eval "$(conda shell.bash hook)"
                conda activate clinica_env_$BRANCH_NAME
-               echo "Install clinica using pip..."
-               pip install --ignore-installed .
+               echo "Install clinica using poetry..."
+               poetry install
                eval "$(register-python-argcomplete clinica)"
                # Show clinica help message
                echo "Display clinica help message"
@@ -96,9 +100,9 @@ pipeline {
                eval "$(conda shell.bash hook)"
                echo $CONDA_PREFIX
                source ./.jenkins/scripts/find_env.sh
-               conda activate clinica_env_$BRANCH_NAME
-               echo "Install clinica using pip..."
-               pip install --ignore-installed .
+               conda activate clinica_env_${BRANCH_NAME}
+               echo "Install clinica using poetry..."
+               poetry install
                eval "$(register-python-argcomplete clinica)"
                # Show clinica help message
                echo "Display clinica help message"
@@ -121,7 +125,7 @@ pipeline {
               INPUT_DATA_DIR = "/mnt/data_ci"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -131,7 +135,7 @@ pipeline {
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
-                 taskset -c 0-21 pytest \
+                 taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/instantation_linux.xml \
                     --verbose \
                     --working_directory=$WORK_DIR \
@@ -150,7 +154,7 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
+                   rm -rf $WORK_DIR/*
                    ''' 
               }
             }  
@@ -165,7 +169,7 @@ pipeline {
               INPUT_DATA_DIR = "/Volumes/data_ci"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -175,7 +179,7 @@ pipeline {
                  source /usr/local/opt/modules/init/bash
                  module load clinica.all
                  cd test
-                 pytest \
+                 poetry run pytest \
                     --verbose \
                     --working_directory=$WORK_DIR \
                     --input_data_directory=$INPUT_DATA_DIR \
@@ -192,7 +196,7 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
+                   rm -rf $WORK_DIR/*
                    ''' 
               }
             }  
@@ -212,7 +216,7 @@ pipeline {
               TMP_BASE = "/mnt/data/ci/tmp"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -222,7 +226,7 @@ pipeline {
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
-                 taskset -c 0-21 pytest \
+                 taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/run_converters_linux.xml \
                     --verbose \
                     --working_directory=$WORK_DIR \
@@ -242,8 +246,8 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
-                   rm -rf TMP_BASE/*
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
                    ''' 
               }
             }  
@@ -258,7 +262,7 @@ pipeline {
               TMP_BASE = "/mnt/data/ci/tmp"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -268,7 +272,7 @@ pipeline {
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
-                 taskset -c 0-21 pytest \
+                 taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/run_utils_linux.xml \
                     --verbose \
                     --working_directory=$WORK_DIR \
@@ -288,8 +292,8 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
-                   rm -rf TMP_BASE/*
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
                    ''' 
               }
             }  
@@ -304,7 +308,7 @@ pipeline {
               TMP_BASE = "/Volumes/data/tmp"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -314,7 +318,7 @@ pipeline {
                  source /usr/local/opt/modules/init/bash
                  module load clinica.all
                  cd test
-                 pytest \
+                 poetry run pytest \
                     --verbose \
                     --working_directory=$WORK_DIR \
                     --input_data_directory=$INPUT_DATA_DIR \
@@ -332,8 +336,8 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
-                   rm -rf TMP_BASE/*
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
                    ''' 
               }
             }  
@@ -358,7 +362,7 @@ pipeline {
                  source /usr/local/opt/modules/init/bash
                  module load clinica.all
                  cd test
-                 pytest \
+                 poetry run pytest \
                     --verbose \
                     --working_directory=$WORK_DIR \
                     --input_data_directory=$INPUT_DATA_DIR \
@@ -376,8 +380,8 @@ pipeline {
               }
               success {
                 sh '''
-                   rm -rf WORK_DIR/*
-                   rm -rf TMP_BASE/*
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
                    ''' 
               }
             }  
@@ -394,9 +398,8 @@ pipeline {
           sh 'echo "Agent name: ${NODE_NAME}"'
           sh '''
           eval "$(conda shell.bash hook)"
-          conda create --name build_doc python=3.8
-          conda activate build_doc
-          pip install -r docs/requirements.txt
+          conda activate clinica_env_$BRANCH_NAME
+          poetry install --extras docs
           ./.jenkins/scripts/publish.sh ${BRANCH_NAME}
           '''
         }
@@ -420,7 +423,7 @@ pipeline {
              eval "$(conda shell.bash hook)"
              source ./.jenkins/scripts/find_env.sh
              conda activate clinica_env_$BRANCH_NAME
-             pip install -e .
+             poetry install
              clinica --help
              cd $WORKSPACE/.jenkins/scripts
              ./generate_wheels.sh

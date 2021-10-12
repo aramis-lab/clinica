@@ -39,7 +39,7 @@ Conda is installed, check the version and show your Miniconda path.
 The latest release of Clinica can be installed by using the conventional
 [PyPI package manager](https://pypi.org/project/clinica/) as follows:
 
-```bash
+```shell
 conda create --name clinicaEnv python=3.7
 conda activate clinicaEnv
 pip install clinica
@@ -132,26 +132,34 @@ conda deactivate
 
 ## Developer instructions
 
-If you plan to contribute to Clinica or want to test the current development version:
+This section is intended for users who plan to contribute to Clinica or test the current development version.
 
-- Clone the Git repository
+Clinica uses [Poetry](https://python-poetry.org) to manage its development environment. Please follow
+these [installation instructions](https://python-poetry.org/docs/#installation) and verify the `poetry` command is
+correctly setup.
 
-    ```sh
-    git clone https://github.com/aramis-lab/clinica.git
-    cd clinica
-    git checkout dev
-    ```
+First, create a separate development environment:
 
-- Create a separate environment and install the necessary dependencies
+```shell
+conda create --name clinicaDev python=3.7
+conda activate clinicaDev
+```
 
-    ```sh
-    conda create -n clinicaDev python=3.7
-    conda activate clinicaDev
-    pip install -r requirements-dev.txt
-    ```
+Then, clone the development branch of Clinica:
 
-- Install Clinica from the repository
+```shell
+git clone --branch dev https://github.com/aramis-lab/clinica.git
+cd clinica
+```
 
-    ```sh
-    pip install -e .
-    ```
+Finally, install Clinica with the necessary development dependencies:
+
+```shell
+poetry install
+```
+
+In case you need to test the documentation locally, install the additional dependencies with:
+
+```shell
+poetry install --extras docs
+```

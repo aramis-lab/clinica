@@ -83,7 +83,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -184,7 +184,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -266,7 +266,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -348,7 +348,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -430,7 +430,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -512,7 +512,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
