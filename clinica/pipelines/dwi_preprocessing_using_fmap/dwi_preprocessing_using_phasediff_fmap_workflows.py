@@ -19,7 +19,7 @@ def prepare_phasediff_fmap(name="prepare_phasediff_fmap"):
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.utility as nutil
     import nipype.pipeline.engine as npe
-    from nipype.workflows.dmri.fsl.utils import (
+    from niflow.nipype1.workflows.dmri.fsl.utils import (
         cleanup_edge_pipeline,
         demean_image,
         siemens2rads,
