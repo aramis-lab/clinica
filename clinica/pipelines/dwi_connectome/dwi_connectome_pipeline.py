@@ -72,15 +72,15 @@ class DwiConnectome(cpe.Pipeline):
             self.caps_directory,
             [
                 # Inputs from t1-freesurfer pipeline
-                input_files.T1_FS_WM, # list_caps_files[0]
-                input_files.T1_FS_DESIKAN, # list_caps_files[1]
-                input_files.T1_FS_DESTRIEUX, # list_caps_files[2]
-                input_files.T1_FS_BRAIN, # list_caps_files[3]
+                input_files.T1_FS_WM,  # list_caps_files[0]
+                input_files.T1_FS_DESIKAN,  # list_caps_files[1]
+                input_files.T1_FS_DESTRIEUX,  # list_caps_files[2]
+                input_files.T1_FS_BRAIN,  # list_caps_files[3]
                 # Inputs from dwi-preprocessing pipeline
-                input_files.DWI_PREPROC_NII, # list_caps_files[4]
-                input_files.DWI_PREPROC_BRAINMASK, # list_caps_files[5]
-                input_files.DWI_PREPROC_BVEC, # list_caps_files[6]
-                input_files.DWI_PREPROC_BVAL # list_caps_files[7]
+                input_files.DWI_PREPROC_NII,  # list_caps_files[4]
+                input_files.DWI_PREPROC_BRAINMASK,  # list_caps_files[5]
+                input_files.DWI_PREPROC_BVEC,  # list_caps_files[6]
+                input_files.DWI_PREPROC_BVAL  # list_caps_files[7]
             ],
             raise_exception=True,
         )
