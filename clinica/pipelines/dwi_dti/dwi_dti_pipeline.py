@@ -65,7 +65,6 @@ class DwiDti(cpe.Pipeline):
         import nipype.pipeline.engine as npe
 
         import clinica.utils.input_files as input_files
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
