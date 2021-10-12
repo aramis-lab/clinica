@@ -7,7 +7,6 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
-from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -29,8 +28,6 @@ def test_name(request):
 
 
 def test_run_dwi(cmdopt, tmp_path, test_name):
-    import shutil
-
     base_dir = Path(cmdopt["input"])
     input_dir = base_dir / test_name / "in"
     ref_dir = base_dir / test_name / "ref"
@@ -60,8 +57,6 @@ def test_run_dwi(cmdopt, tmp_path, test_name):
 def run_DWIPreprocessingUsingT1(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from os.path import abspath, dirname, join
-
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import (
         DwiPreprocessingUsingT1,
     )
