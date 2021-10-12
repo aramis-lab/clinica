@@ -35,22 +35,38 @@ PROTOCOL_TO_BIDS = {
 
 
 class BidsDatasetDescription(BaseModel):
-    class DatasetType(Enum):
+    class DatasetType(str, Enum):
         raw = "raw"
         derivative = "derivative"
 
     name: str
-    bids_version: str
+    bids_version: str = "1.6.0"
+    hed_version: Optional[str]
     dataset_type: DatasetType = DatasetType.raw
+    license: Optional[str]
+    authors: Optional[List[str]]
+    acknowledgements: Optional[str]
+    how_to_acknowledge: Optional[str]
+    funding: Optional[List[str]]
+    ethics_approvals: Optional[List[str]]
+    references_and_links: Optional[List[str]]
+    dataset_doi: Optional[str]
 
     class Config:
-        fields = {"bids_version": "BIDSVersion"}
         allow_population_by_field_name = True
 
         @classmethod
         def alias_generator(cls, string: str) -> str:
-            """Convert field to PascalCase alias."""
-            return "".join(word.capitalize() for word in string.split("_"))
+            """Convert field to PascalCase, leaving known acronyms all capitalized."""
+            acronyms = ["bids", "doi", "hed"]
+
+            return "".join(
+                word.upper() if word in acronyms else word.capitalize()
+                for word in string.split("_")
+            )
+
+    def save(self, to: TextIOBase):
+        return to.write(self.json(by_alias=True, indent=4, exclude_none=True))
 
 
 def source_participant_id_to_bids(dataframe: DataFrame) -> Series:
@@ -241,12 +257,8 @@ def write_bids(
         .reset_index(level="date", drop=True)
     )
 
-    with fsspec.open(str(rawdata / "dataset_description.json"), mode="w") as f:
-        f.write(
-            BidsDatasetDescription(name="HABS", bids_version="1.6.0").json(
-                by_alias=True
-            )
-        )
+    with fsspec.open(str(rawdata / "dataset_description.json"), mode="wt") as f:
+        BidsDatasetDescription(name="HABS").save(to=f)
 
     participants_file = rawdata / "participants.tsv"
     with fsspec.open(str(participants_file), mode="wb") as f:
