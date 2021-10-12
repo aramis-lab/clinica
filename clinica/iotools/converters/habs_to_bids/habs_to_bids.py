@@ -1,7 +1,7 @@
 from enum import Enum
 from io import TextIOBase
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from pandas import DataFrame, Series
@@ -128,23 +128,25 @@ def read_clinical_data(path: Path, rename_columns: Dict[str, str]) -> DataFrame:
     )
 
 
-def find_imaging_data(sourcedata: Path) -> List[Path]:
+def find_imaging_data(sourcedata: Path) -> List[Tuple[str, str]]:
     from zipfile import ZipFile
 
     ext = ".nii.gz"
 
     for z in sourcedata.rglob("*HABS_DataRelease*.zip"):
         yield [
-            z.relative_to(sourcedata) / f
+            (str(z.relative_to(sourcedata)), f)
             for f in ZipFile(z).namelist()
             if f.endswith(ext)
         ]
 
 
-def parse_imaging_data(paths: List[Path]) -> Optional[DataFrame]:
-    from pandas import Series, concat, to_datetime
+def parse_imaging_data(paths: List[Tuple[str, str]]) -> Optional[DataFrame]:
+    from pandas import concat, to_datetime
 
-    dataframe = Series(paths, dtype="str", name="source_location")
+    dataframe = DataFrame.from_records(
+        paths, columns=["source_zipfile", "source_filename"]
+    )
 
     # Parse imaging metadata from file paths.
     pattern = (
@@ -155,7 +157,8 @@ def parse_imaging_data(paths: List[Path]) -> Optional[DataFrame]:
     )
 
     dataframe = concat(
-        [dataframe, dataframe.str.extract(pattern)], axis="columns"
+        [dataframe, dataframe["source_filename"].str.extract(pattern)],
+        axis="columns",
     ).assign(date=lambda df: to_datetime(df.date))
 
     # Map protocol to BIDS entities.
@@ -191,16 +194,13 @@ def write_to_tsv(dataframe: DataFrame, buffer: TextIOBase) -> None:
     dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
 
 
-def install_nifti(source: Path, target: Path) -> None:
+def install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
     import fsspec
 
-    zip_file = source.parent
-    nifti_file = source.name
-
-    fo = fsspec.open(str(zip_file))
+    fo = fsspec.open(zipfile)
     fs = fsspec.filesystem("zip", fo=fo)
-    with fsspec.open(str(target), mode="wb") as f:
-        f.write(fs.cat(nifti_file))
+    with fsspec.open(bids_path, mode="wb") as f:
+        f.write(fs.cat(filename))
 
 
 def write_bids(
@@ -294,11 +294,12 @@ def write_bids(
 
         for filename, row in dataframe.iterrows():
             install_nifti(
-                source=sourcedata / row.source_location,
-                target=bids_basedir / filename,
+                zipfile=str(sourcedata / row.source_zipfile),
+                filename=row.source_filename,
+                bids_path=str(bids_basedir / filename),
             )
 
-        dataframe = dataframe.drop(columns="source_location")
+        dataframe = dataframe.drop(columns=["source_zipfile", "source_filename"])
 
         with fsspec.open(bids_basedir / "scans.tsv", mode="wb") as f:
             write_to_tsv(dataframe, f)
