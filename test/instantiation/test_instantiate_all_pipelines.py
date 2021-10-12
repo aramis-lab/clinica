@@ -19,8 +19,10 @@ def test_instantiate_T1FreeSurferCrossSectional(cmdopt):
     input_dir = Path(cmdopt["input"])
     root = input_dir / "T1Freesurfer"
 
-    parameters = {"recon_all_args": "-qcache", "skip_question": False}
-
+    parameters = {
+        "recon_all_args": "-qcache",
+        "skip_question": True,
+    }
     pipeline = T1FreeSurfer(
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
@@ -39,10 +41,12 @@ def test_instantiate_T1VolumeTissueSegmentation(cmdopt):
     input_dir = Path(cmdopt["input"])
     root = input_dir / "T1VolumeTissueSegmentation"
 
+    parameters = {"skip_question": True}
     pipeline = T1VolumeTissueSegmentation(
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
+        parameters=parameters,
     )
     pipeline.build()
 
@@ -209,6 +213,7 @@ def test_instantiate_PETVolume(cmdopt):
         "group_label": "UnitTest",
         "acq_label": "fdg",
         "suvr_reference_region": "pons",
+        "skip_question": True,
     }
     pipeline = PETVolume(
         bids_directory=fspath(root / "in" / "bids"),
@@ -226,7 +231,11 @@ def test_instantiate_PETLinear(cmdopt):
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETLinear"
 
-    parameters = {"acq_label": "fdg", "suvr_reference_region": "cerebellumPons2"}
+    parameters = {
+        "acq_label": "fdg",
+        "suvr_reference_region": "cerebellumPons2",
+        "skip_question": True,
+    }
     pipeline = PETLinear(
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
@@ -276,6 +285,7 @@ def test_instantiate_PETSurfaceCrossSectional(cmdopt):
         "suvr_reference_region": "pons",
         "pvc_psf_tsv": fspath(root / "in" / "subjects.tsv"),
         "longitudinal": False,
+        "skip_question": True,
     }
     pipeline = PetSurface(
         bids_directory=fspath(root / "in" / "bids"),

@@ -17,6 +17,7 @@ pipeline_name = "pet-surface-longitudinal"
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option.yes
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -26,6 +27,7 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    yes: bool = False,
 ) -> None:
     """Longitudinal surface-based processing of PET images.
 
@@ -49,6 +51,7 @@ def cli(
         "suvr_reference_region": suvr_reference_region,
         "pvc_psf_tsv": pvc_psf_tsv,
         "longitudinal": True,
+        "skip_question": yes,
     }
 
     pipeline = PetSurface(
