@@ -1,10 +1,3 @@
-# coding: utf-8
-
-"""
-StatisticsVolumeCorrection - Clinica Utilities.
-"""
-
-
 def peak_correction(t_map, t_threshold, output_name=None):
     """
     Threshold the t_map with t_threshold. Pixel intensities that are less than t_threshold are set to 0, other values

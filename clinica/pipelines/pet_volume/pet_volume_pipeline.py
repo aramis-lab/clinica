@@ -1,5 +1,3 @@
-# coding: utf8
-
 from nipype import config
 
 import clinica.pipelines.engine as cpe

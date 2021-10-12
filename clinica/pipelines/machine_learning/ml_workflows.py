@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 import numpy as np
 
 from clinica.pipelines.machine_learning import algorithm, base, input, validation

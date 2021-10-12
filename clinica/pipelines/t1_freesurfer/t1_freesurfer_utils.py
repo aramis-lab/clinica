@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def init_input_node(t1w, recon_all_args, output_dir):
     """Initialize the pipeline.
 

@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module handles stream and log redirection."""
 
 from enum import Enum

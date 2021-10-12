@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains some functions to be used together with some Nipype functions.
 
 In particular, this module currently contains functions used for Nipype DataSink.

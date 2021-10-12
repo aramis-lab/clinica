@@ -1,5 +1,3 @@
-# coding: utf8
-
 """Define the command line parser for each utility (pipeline, iotools, etc.)."""
 
 import abc

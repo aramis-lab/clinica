@@ -1,5 +1,3 @@
-# coding: utf8
-
 """Utils to convert AIBL dataset in BIDS."""
 
 

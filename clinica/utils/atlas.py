@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains utilities to handle atlases in Clinica.
 
 An atlas is currently defined by its name and a set of labels in a template space.

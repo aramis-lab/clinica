@@ -1,5 +1,3 @@
-# coding: utf8
-
 """Methods to find information in the different pipelines of Clinica."""
 
 

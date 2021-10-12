@@ -1,5 +1,3 @@
-# coding: utf8
-
 """Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS."""
 
 from clinica.iotools.abstract_converter import Converter

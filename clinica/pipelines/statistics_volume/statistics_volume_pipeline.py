@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import clinica.pipelines.engine as cpe
 
 
