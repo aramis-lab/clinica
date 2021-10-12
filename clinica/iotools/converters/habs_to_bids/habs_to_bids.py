@@ -1,6 +1,7 @@
 from enum import Enum
-from os import PathLike
-from typing import BinaryIO, Dict, Iterable, Optional, Union
+from io import TextIOBase
+from pathlib import Path
+from typing import Dict, List, Optional
 
 import pandas as pd
 from pandas import DataFrame, Series
@@ -94,17 +95,14 @@ def source_filename_to_bids(dataframe: DataFrame) -> Series:
     )
 
 
-def find_clinical_data(sourcedata: PathLike) -> Iterable[PathLike]:
+def find_clinical_data(sourcedata: Path):
     from csv import DictReader
-    from pathlib import Path
 
-    path = Path(sourcedata)
-
-    for f in path.rglob("*HABS_DataRelease*.csv"):
+    for f in sourcedata.rglob("*HABS_DataRelease*.csv"):
         header = DictReader(open(f, encoding="utf-8-sig")).fieldnames
         yield (
             f.name.split("_")[0],
-            str(f.relative_to(path)),
+            f.relative_to(sourcedata),
             {
                 header[0]: "source_participant_id",
                 header[1]: "source_session_id",
@@ -113,13 +111,11 @@ def find_clinical_data(sourcedata: PathLike) -> Iterable[PathLike]:
         )
 
 
-def read_clinical_data(path: PathLike, rename_columns: Dict[str, str]) -> DataFrame:
-    from pathlib import Path
-
+def read_clinical_data(path: Path, rename_columns: Dict[str, str]) -> DataFrame:
     from pandas import read_csv
 
     return (
-        read_csv(Path(path))
+        read_csv(path)
         .rename(columns=rename_columns)
         .assign(date=lambda df: pd.to_datetime(df.date))
         .assign(participant_id=source_participant_id_to_bids)
@@ -132,25 +128,23 @@ def read_clinical_data(path: PathLike, rename_columns: Dict[str, str]) -> DataFr
     )
 
 
-def find_imaging_data(source_data_dir: PathLike) -> Iterable[PathLike]:
-    from pathlib import Path
+def find_imaging_data(sourcedata: Path) -> List[Path]:
     from zipfile import ZipFile
 
-    path = Path(source_data_dir)
     ext = ".nii.gz"
 
-    for z in path.rglob("*HABS_DataRelease*.zip"):
+    for z in sourcedata.rglob("*HABS_DataRelease*.zip"):
         yield [
-            str(z.relative_to(path) / f)
+            z.relative_to(sourcedata) / f
             for f in ZipFile(z).namelist()
             if f.endswith(ext)
         ]
 
 
-def parse_imaging_data(paths: PathLike) -> Optional[DataFrame]:
+def parse_imaging_data(paths: List[Path]) -> Optional[DataFrame]:
     from pandas import Series, concat, to_datetime
 
-    dataframe = Series(paths, name="source_location")
+    dataframe = Series(paths, dtype="str", name="source_location")
 
     # Parse imaging metadata from file paths.
     pattern = (
@@ -192,17 +186,14 @@ def parse_imaging_data(paths: PathLike) -> Optional[DataFrame]:
     return dataframe
 
 
-def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
+def write_to_tsv(dataframe: DataFrame, buffer: TextIOBase) -> None:
     # Save dataframe as a BIDS-compliant TSV file.
     dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
 
 
-def install_nifti(source: PathLike, target: PathLike) -> None:
-    from pathlib import Path
-
+def install_nifti(source: Path, target: Path) -> None:
     import fsspec
 
-    source = Path(source)
     zip_file = source.parent
     nifti_file = source.name
 
@@ -213,13 +204,11 @@ def install_nifti(source: PathLike, target: PathLike) -> None:
 
 
 def write_bids(
-    sourcedata: PathLike,
-    rawdata: PathLike,
+    sourcedata: Path,
+    rawdata: Path,
     imaging_data: DataFrame,
     clinical_data: Dict[str, DataFrame],
 ):
-    from pathlib import Path
-
     import fsspec
     from pandas import notna
 
@@ -252,14 +241,14 @@ def write_bids(
         .reset_index(level="date", drop=True)
     )
 
-    with fsspec.open(rawdata / "dataset_description.json", mode="w") as f:
+    with fsspec.open(str(rawdata / "dataset_description.json"), mode="w") as f:
         f.write(
             BidsDatasetDescription(name="HABS", bids_version="1.6.0").json(
                 by_alias=True
             )
         )
 
-    participants_file = Path(rawdata) / "participants.tsv"
+    participants_file = rawdata / "participants.tsv"
     with fsspec.open(str(participants_file), mode="wb") as f:
         write_to_tsv(participants, f)
 
@@ -275,9 +264,7 @@ def write_bids(
     )
 
     for participant_id, dataframe in sessions.groupby(["participant_id"]):
-        sessions_file = (
-            Path(rawdata) / participant_id / f"{participant_id}_sessions.tsv"
-        )
+        sessions_file = rawdata / participant_id / f"{participant_id}_sessions.tsv"
         dataframe = dataframe.droplevel("participant_id")
         with fsspec.open(sessions_file, mode="wb") as f:
             write_to_tsv(dataframe, f)
@@ -285,7 +272,7 @@ def write_bids(
     for grouped_by, dataframe in imaging_data.groupby(["participant_id", "session_id"]):
         participant_id, session_id = grouped_by
 
-        bids_basedir = Path(rawdata) / participant_id / session_id
+        bids_basedir = rawdata / participant_id / session_id
         bids_prefix = f"{participant_id}_{session_id}"
 
         dataframe = (
@@ -307,8 +294,8 @@ def write_bids(
 
         for filename, row in dataframe.iterrows():
             install_nifti(
-                source=Path(sourcedata) / row.source_location,
-                target=Path(bids_basedir) / filename,
+                source=sourcedata / row.source_location,
+                target=bids_basedir / filename,
             )
 
         dataframe = dataframe.drop(columns="source_location")
