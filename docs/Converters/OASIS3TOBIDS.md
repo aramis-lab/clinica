@@ -156,8 +156,7 @@ where:
     └── ...
     ```
 
-- `CLINICAL_DATA_DIRECTORY` is the path to the directory containing the clinical CSV files. These files that should be
-  named `oasis3_clinical.csv` and `oasis3_sessions.csv`.
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory containing the clinical CSV files.
 
 - `BIDS_DIRECTORY` is the path to the output directory where the BIDS-converted version of OASIS-3 will be stored.
 
