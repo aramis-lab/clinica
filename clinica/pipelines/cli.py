@@ -1,6 +1,5 @@
 import click
 
-from .deeplearning_prepare_data import deeplearning_prepare_data_cli
 from .dwi_connectome import dwi_connectome_cli
 from .dwi_dti import dwi_dti_cli
 from .dwi_preprocessing_using_fmap import dwi_preprocessing_using_phasediff_fmap_cli
@@ -55,7 +54,6 @@ cli.add_command(pet_linear_cli.cli)
 cli.add_command(pet_volume_cli.cli)
 cli.add_command(pet_surface_cli.cli)
 cli.add_command(pet_surface_longitudinal_cli.cli)
-cli.add_command(deeplearning_prepare_data_cli.cli)
 cli.add_command(spatial_svm_cli.cli)
 cli.add_command(classification_cli.cli)
 cli.add_command(statistics_surface_cli.cli)
