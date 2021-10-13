@@ -88,7 +88,7 @@ def run_oasis3tobids(
         input_dir / "unorganized", output_dir / "bids", clinical_data_directory
     )
     # Assert
-    compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
+    compare_folders(output_dir / "bids", ref_dir, output_dir)
 
 
 def run_adni2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) -> None:
