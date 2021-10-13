@@ -176,3 +176,10 @@ yes = option(
     is_flag=True,
     help="Execute the pipeline even if input images are not centered without asking for more user input.",
 )
+
+atlas_path = option(
+    "-ap",
+    "--atlas_path",
+    type=click.Path(exists=True, dir_okay=True, resolve_path=True),
+    help="Compute atlases at the end of the path",
+)
