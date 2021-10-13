@@ -233,59 +233,6 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
     return out_dwi, out_bvals, out_bvecs
 
 
-def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
-    """Select the reference and moving volumes from a DWI dataset for the purpose of head motion correction (HMC).
-
-    Args:
-        in_file (str): DWI dataset.
-        in_bval (str): File describing the b-values of the DWI dataset.
-        ref_num (int, optional): The reference volume in the dwi dataset. Defaults to 0.
-        lowbval (int, optional): Define the b0 volumes as all volume bval <= lowbval. Defaults to 5.0.
-
-    Returns:
-        out_ref (str): The reference volume.
-        out_mov (str): The moving volume to align to the reference volume.
-        out_bval (str): The b-values corresponding to the moving volume.
-        volid (int): Index of the reference volume.
-    """
-    import os.path as op
-
-    import nibabel as nib
-    import numpy as np
-
-    im = nib.load(in_file)
-    data = im.get_fdata(dtype="float32")
-    hdr = im.get_header().copy()
-    bval = np.loadtxt(in_bval)
-
-    lowbs = np.where(bval <= lowbval)[0]
-    assert ref_num in lowbs
-    volid = ref_num
-
-    out_ref = op.abspath("hmc_ref.nii.gz")
-    refdata = data[..., volid]
-    hdr.set_data_shape(refdata.shape)
-    nib.Nifti1Image(refdata, im.get_affine(), hdr).to_filename(out_ref)
-
-    if volid == 0:
-        data = data[..., 1:]
-        bval = bval[1:]
-    elif volid == (data.shape[-1] - 1):
-        data = data[..., :-1]
-        bval = bval[:-1]
-    else:
-        data = np.concatenate((data[..., :volid], data[..., (volid + 1):]), axis=3)
-        bval = np.hstack((bval[:volid], bval[(volid + 1):]))
-
-    out_mov = op.abspath("hmc_mov.nii.gz")
-    out_bval = op.abspath("bval_split.txt")
-
-    hdr.set_data_shape(data.shape)
-    nib.Nifti1Image(data, im.get_affine(), hdr).to_filename(out_mov)
-    np.savetxt(out_bval, bval)
-    return out_ref, out_mov, out_bval, volid
-
-
 def check_dwi_volume(in_dwi, in_bvec, in_bval):
     """Check that # DWI = # B-val = # B-vec.
 
@@ -309,30 +256,6 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
             f"Number of DWIs, b-vals and b-vecs mismatch "
             f"(# DWI = {num_dwis}, # B-vec = {num_b_vecs}, #B-val = {num_b_vals}) "
         )
-
-
-def find_b0_indices(in_bval, low_bval=5.0):
-    """Return indices of bval <= low_bval.
-
-    Args:
-        in_bval (str): Bval file.
-        low_bval (Optional[int]): Define the b0 volumes as all volume
-            bval <= low_bval. (Default=5.0)
-
-    Returns:
-        out_indices (int): Indices of bval <= low_bval.
-    """
-    import os.path as op
-
-    import numpy as np
-
-    assert op.isfile(in_bval)
-    bvals = np.loadtxt(in_bval)
-
-    idx_low_bvals = np.where(bvals <= low_bval)
-    out_indices = idx_low_bvals[0].tolist()
-
-    return out_indices
 
 
 def generate_index_file(in_bval, low_bval=5.0, image_id=None):
