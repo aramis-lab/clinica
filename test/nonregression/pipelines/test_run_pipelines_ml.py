@@ -178,26 +178,30 @@ def run_SpatialSVM(
     subjects = ["sub-ADNI011S0023", "sub-ADNI013S0325"]
     out_data_REG_NIFTI = [
         nib.load(
-            caps_dir
-            / "subjects"
-            / sub
-            / "ses-M00"
-            / "machine_learning"
-            / "input_spatial_svm"
-            / "group-ADNIbl"
-            / (
-                sub
-                + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
+            fspath(
+                caps_dir
+                / "subjects"
+                / sub
+                / "ses-M00"
+                / "machine_learning"
+                / "input_spatial_svm"
+                / "group-ADNIbl"
+                / (
+                    sub
+                    + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
+                )
             )
         ).get_fdata(dtype="float32")
         for sub in subjects
     ]
     ref_data_REG_NIFTI = [
         nib.load(
-            ref_dir
-            / (
-                sub
-                + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
+            fspath(
+                ref_dir
+                / (
+                    sub
+                    + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
+                )
             )
         ).get_fdata(dtype="float32")
         for sub in subjects
