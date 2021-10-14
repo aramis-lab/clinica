@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD046 -->
-# `aibl-2-bids` – Conversion of the Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing (AIBL) to BIDS
+# `aibl-to-bids` – Conversion of the Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing (AIBL) to BIDS
 
 !!! quote "Description reproduced from the [AIBL's Study Design webpage](http://adni.loni.usc.edu/study-design/collaborative-studies/aibl/)"
     The Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing (AIBL) seeks to discover which biomarkers, cognitive characteristics, and health and lifestyle factors determine the development of AD.
