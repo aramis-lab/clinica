@@ -34,7 +34,7 @@ def run_PETVolume(
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
 
     # Arrange
-    shutil.copytree(input_dir / "caps", output_dir / "caps")
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     parameters = {
         "group_label": "UnitTest",
@@ -201,9 +201,9 @@ def test_run_pet(cmdopt, tmp_path, test_name):
 
     elif test_name == "PETSurfaceCrossSectional":
         run_PETSurfaceCrossSectional(
-            base_dir / "PetSurface" / "in",
+            base_dir / "PETSurface" / "in",
             tmp_out_dir,
-            base_dir / "PetSurface" / "ref",
+            base_dir / "PETSurface" / "ref",
             working_dir,
         )
     else:
