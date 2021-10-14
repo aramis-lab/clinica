@@ -103,7 +103,10 @@ def run_StatisticsSurface(
     ref_file_mat = loadmat(fspath(ref_file))["correctedpvaluesstruct"]
     for i in range(4):
         assert np.allclose(
-            out_file_mat[0][0][i], ref_file_mat[0][0][i], rtol=1e-8, equal_nan=True
+            out_file_mat[0][0][i],
+            ref_file_mat[0][0][i],
+            rtol=1e-8,
+            equal_nan=True,
         )
 
 
@@ -165,8 +168,8 @@ def run_StatisticsVolume(
     )
 
     assert np.allclose(
-        nib.load(output_t_stat).get_fdata(dtype="float32"),
-        nib.load(ref_t_stat).get_fdata(dtype="float32"),
+        nib.load(fspath(output_t_stat)).get_fdata(dtype="float32"),
+        nib.load(fspath(ref_t_stat)).get_fdata(dtype="float32"),
     )
 
     # Remove data in out folder
