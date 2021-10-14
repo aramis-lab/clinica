@@ -32,6 +32,7 @@ dont_save_warped_unmodulated = option(
 initrand = option(
     "--initrand",
     default=False,
+    is_flag=True,
     show_default=True,
     help="Initialize the random number generator used when estimating hyperparameters in FSL eddy.",
 )
@@ -143,6 +144,7 @@ tissue_probability_maps = option(
 use_cuda = option(
     "--use_cuda",
     default=False,
+    is_flag=True,
     show_default=True,
     help="Use the CUDA implementation of FSL eddy. See https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#The_eddy_executables for details.",
 )
