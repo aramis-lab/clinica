@@ -1,5 +1,6 @@
 # coding: utf8
 from os import PathLike
+from pathlib import Path
 
 
 def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
@@ -22,7 +23,6 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
 
     """
     import os
-    from pathlib import Path
 
     import matplotlib.pyplot as plt
     import nibabel as nib
@@ -208,7 +208,7 @@ def same_missing_modality_tsv(file1, file2):
     )
 
 
-def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path) -> bool:
+def compare_folders(outdir: Path, refdir: Path, tmp_path) -> bool:
     from filecmp import cmp
 
     file_out = tmp_path / "file_out.txt"
@@ -226,14 +226,20 @@ def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path) -> bool:
             "OUT :\n" + out_message + "\n REF :\n" + ref_message
         )
 
+    return True
 
-def tree(dir: PathLike, file_out: PathLike):
+
+def tree(dir: Path, file_out: Path):
+
     # Create a file (file_out) with a visual tree representing the file
-    # hierarchy at a giver directory
+    # hierarchy at a given directory
+    print(type(dir))
+    file_content = ""
     for path in sorted(dir.rglob("*")):
         depth = len(path.relative_to(dir).parts)
         spacer = "    " * depth
-        file_content = f"{spacer}+ {path.name}\n"
+        file_content = file_content + f"{spacer}+ {path.name}\n"
+    print(file_content)
     file_out.write_text(file_content)
 
 
