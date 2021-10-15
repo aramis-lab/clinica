@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD007 MD046 -->
-# `adni-2-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
+# `adni-to-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
 
 !!! quote "Description adapted from the [ADNI website](http://adni.loni.usc.edu)"
     ADNI is a global research effort that actively supports the investigation and development of treatments that slow or stop the progression of Alzheimer's disease (AD).
@@ -318,7 +318,7 @@ If you used the converter for DWI data, please also cite [[Wen et al., 2020](htt
 
 ## (Advanced) Appendix - How ADNI is converting into BIDS?
 
-For all the imaging modalities, the `adni-2-bids` converter performs three steps:
+For all the imaging modalities, the `adni-to-bids` converter performs three steps:
 
 1. Image selection from subject and imaging metadata
 2. Path extraction

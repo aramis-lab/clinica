@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD046 -->
-# `oasis-2-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS) to BIDS
+# `oasis-to-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS) to BIDS
 
 !!! quote "Description reproduced from the [OASIS' webpage](http://oasis-brains.org/)"
     The Open Access Series of Imaging Studies (OASIS) is a project aimed at making MRI data sets of the brain freely available to the scientific community.

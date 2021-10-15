@@ -1,4 +1,4 @@
-# `nifd-2-bids` – Conversion of Neuroimaging in Frontotemporal Dementia (NIFD) to BIDS
+# `nifd-to-bids` – Conversion of Neuroimaging in Frontotemporal Dementia (NIFD) to BIDS
 
 !!! quote "Description reproduced from the [NIFD's LONI Image & Data Archive (IDA) webpage](https://ida.loni.usc.edu/home/projectPage.jsp?project=NIFD&page=HOME&subPage=OVERVIEW_PR#)"
     NIFD is the nickname for the frontotemporal lobar degeneration neuroimaging initiative (FTLDNI, AG032306), which was funded by the NIA and NINDS to characterize longitudinal clinical and imaging changes in FTLD.
