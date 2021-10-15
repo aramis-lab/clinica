@@ -1,5 +1,8 @@
 import click
 
+from .deeplearning_prepare_data import (
+    deeplearning_prepare_data_cli as deeplearning_prepare_data_cli,
+)
 from .dwi_connectome import dwi_connectome_cli
 from .dwi_dti import dwi_dti_cli
 from .dwi_preprocessing_using_fmap import dwi_preprocessing_using_phasediff_fmap_cli
@@ -67,6 +70,8 @@ cli.add_command(t1_volume_dartel2mni_cli.cli)
 cli.add_command(t1_volume_parcellation_cli.cli)
 cli.add_command(t1_freesurfer_template_cli.cli)
 cli.add_command(t1_freesurfer_longitudinal_correction_cli.cli)
+cli.add_command(deeplearning_prepare_data_cli.cli)
+
 
 if __name__ == "__main__":
     cli()
