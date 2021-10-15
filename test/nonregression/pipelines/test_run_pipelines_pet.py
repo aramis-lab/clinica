@@ -40,6 +40,7 @@ def run_PETVolume(
         "group_label": "UnitTest",
         "acq_label": "fdg",
         "suvr_reference_region": "pons",
+        "skip_question": False,
     }
     pipeline = PETVolume(
         bids_directory=fspath(input_dir / "bids"),
@@ -132,6 +133,7 @@ def run_PETSurfaceCrossSectional(
         "suvr_reference_region": "pons",
         "pvc_psf_tsv": fspath(input_dir / "subjects.tsv"),
         "longitudinal": False,
+        "skip_question": False,
     }
     pipeline = PetSurface(
         bids_directory=fspath(input_dir / "bids"),

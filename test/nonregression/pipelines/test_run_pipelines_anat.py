@@ -143,10 +143,12 @@ def run_T1VolumeTissueSegmentation(
         T1VolumeTissueSegmentation,
     )
 
+    parameters = {"skip_question": False}
     pipeline = T1VolumeTissueSegmentation(
         bids_directory=fspath(input_dir / "bids"),
         caps_directory=fspath(output_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
+        parameters=parameters,
         base_dir=fspath(working_dir),
     )
     pipeline.build()
