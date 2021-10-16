@@ -97,8 +97,6 @@ nav:
     - Statistics:
       - Surface-based mass-univariate analysis: Pipelines/Stats_Surface.md
       - Volume-based mass-univariate analysis: Pipelines/Stats_Volume.md
-    - Deep Learning:
-      - Prepare input data for deep learning: Pipelines/DeepLearning_PrepareData.md
     - Machine Learning:
       - Prepare input data for spatially regularized SVM: Pipelines/MachineLearning_PrepareSVM.md
       - Classification based on machine learning: Pipelines/MachineLearning_Classification.md
