@@ -1,6 +1,11 @@
 name: clinica_env
 channels:
   - defaults
+  - conda-forge
+  - mrtrix3
 dependencies:
   - python=3.7
   - poetry
+  - dcm2niix
+  - petpvc
+  - mrtrix3  
