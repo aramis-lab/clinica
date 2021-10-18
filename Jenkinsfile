@@ -137,6 +137,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica/matlab \
                    clinica/spm12/r7487
                  cd test
                  taskset -c 0-21 poetry run pytest \
@@ -232,6 +233,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica/matlab \
                    clinica/spm12/r7487
                  cd test
                  taskset -c 0-21 poetry run pytest \
@@ -282,6 +284,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica.matlab \
                    clinica/spm12/r7487
                  cd test
                  taskset -c 0-21 poetry run pytest \
@@ -332,6 +335,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica/matlab \
                    clinica/spm12/r7487
                  cd test
                  poetry run pytest \
@@ -380,6 +384,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica/matlab \
                    clinica/spm12/r7487
                  cd test
                  poetry run pytest \
