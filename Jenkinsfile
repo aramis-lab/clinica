@@ -134,9 +134,10 @@ pipeline {
                  conda activate clinica_env_$BRANCH_NAME
                  source /usr/local/Modules/init/profile.sh
                  module load \
-                   clinica/ants/2.2.0 \
+                   clinica/ants \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica/mrtrix \
                    clinica/matlab \
                    clinica/spm12/r7487
                  cd test
@@ -233,6 +234,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica/mrtrix \
                    clinica/matlab \
                    clinica/spm12/r7487
                  cd test
@@ -284,6 +286,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica/mrtrix \
                    clinica.matlab \
                    clinica/spm12/r7487
                  cd test
@@ -335,6 +338,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica/mrtrix \
                    clinica/matlab \
                    clinica/spm12/r7487
                  cd test
@@ -384,6 +388,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
+                   clinica/mrtrix \
                    clinica/matlab \
                    clinica/spm12/r7487
                  cd test
