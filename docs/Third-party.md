@@ -3,26 +3,19 @@
 
 ## Converters
 
-If you want to run the `convert <dataset>-to-bids` commands (e.g. `adni-to-bids`), you may have to install the [**dcm2niix**](https://github.com/rordenlab/dcm2niix), [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) and/or [**FreeSurfer**](http://surfer.nmr.mgh.harvard.edu/) tools.
+Some converters require a recent version of [dcm2niix](https://github.com/rordenlab/dcm2niix) to transform DICOM files
+into NIfTI:
 
-|                   | dcm2nii | dcm2niix | FreeSurfer |
-|:------------------|:-------:|:--------:|:----------:|
-| `adni-to-bids`    |    x    |    x     |            |
-| `aibl-to-bids`    |    x    |    x     |     x      |
-| `nifd-to-bids`    |         |    x     |            |
-| `oasis-to-bids`   |         |          |            |
+|                   | dcm2niix |
+|:------------------|:--------:|
+| `adni-to-bids`    |    x     |
+| `aibl-to-bids`    |    x     |
+| `nifd-to-bids`    |    x     |
+| `oasis-to-bids`   |          |
 
-Please refer to each tool’s website for installation instructions:
+Please check the installation instructions for all platforms [here](https://github.com/rordenlab/dcm2niix#install).
 
-- [**dcm2niix**](https://github.com/rordenlab/dcm2niix) Download [here](https://github.com/rordenlab/dcm2niix) and follow the installation instructions on the same page.
-- [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) `dcm2nii` is incuded in MRIcron and can be downloaded [here](https://www.nitrc.org/frs/?group_id=152).
-Please download the 2016 version since `dcm2nii` is no more available afterwards.
-- [**FreeSurfer 6.0**](http://surfer.nmr.mgh.harvard.edu/)
-  - For Linux users, download and install FreeSurfer following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
-  Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` (a `sudo apt-get install tcsh libjpeg62` should do the job).
-  - For Mac users, download [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the FreeSurfer [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
-
-Do not forget to check the installations following each tool’s guidelines.
+Clinica requires dcm2niix version `1.0.20190902` or later.
 
 ## Pipeline-specific interfaces
 
@@ -51,7 +44,7 @@ _*You only need to install ITK if you plan to perform partial volume correction 
 Depending on the architecture and OS of your system, setup of third party libraries can change.
 Please refer to each tool’s website for installation instructions:
 
-- [**ANTs v2.3.1**](http://picsl.upenn.edu/software/ants/) Download [here](https://github.com/stnava/ANTs/releases) and follow the instructions on the ANTs [wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
+- [**ANTs v2.3.1**](http://stnava.github.io/ANTs/) Download [here](https://github.com/stnava/ANTs/releases) and follow the instructions on the ANTs [wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
 - [**Convert3D**](http://www.itksnap.org/pmwiki/pmwiki.php?n=Convert3D.Convert3D) Download [here](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
 - [**FreeSurfer**](http://surfer.nmr.mgh.harvard.edu/)
   - For Linux users, download and install FreeSurfer following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
@@ -59,12 +52,14 @@ Please refer to each tool’s website for installation instructions:
   - For Mac users, download [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the FreeSurfer [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
 - [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/) Download [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the FSL wiki (this [page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/Linux) for Linux users and this [page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/MacOsX) for Mac users).
 - [**ITK**](https://itk.org/) Follow the instructions on the ITK blog (this [page](https://blog.kitware.com/itk-packages-in-linux-distributions/) for Linux users and this [page](https://blog.kitware.com/kitware-packages-on-os-x-with-homebrew/) for Mac users).
-- [**MRtrix3**](http://www.mrtrix.org) Follow the instructions on the MRtrix website (this [page](https://mrtrix.readthedocs.io/en/latest/installation/linux_install.html) for Linux users and this [page](https://mrtrix.readthedocs.io/en/latest/installation/mac_install.html) for Mac users).
-Note for Mac users: the fastest solution is to use Homebrew: a `brew tap MRtrix3/mrtrix3` command followed by `brew install mrtrix3` will install MRtrix3.
+- [**MRtrix3**](http://www.mrtrix.org) Follow the instructions on the MRtrix [website](https://www.mrtrix.org/download/)
+  - For Linux users: use the official package for [Anaconda](https://www.mrtrix.org/download/linux-anaconda/) or follow this set of [instructions](https://mrtrix.readthedocs.io/en/latest/installation/build_from_source.html#linux) to build it from source.
+  - For Mac users: use the official package for [Anaconda](https://www.mrtrix.org/download/macos-anaconda/) or the official [installer](https://www.mrtrix.org/download/macos-application/). There is also this [Homebrew formula](https://github.com/MRtrix3/homebrew-mrtrix3), although large dependencies such as XCode and Qt5 are required.
 - [**Matlab**](https://fr.mathworks.com/products/matlab/)
 - [**PETPVC 1.2.4**](https://github.com/UCL/PETPVC) Follow the instructions [here](https://github.com/UCL/PETPVC).
 Do not forget to compile in RELEASE mode, otherwise, partial volume correction will be very slow.
 - [**SPM12**](http://www.fil.ion.ucl.ac.uk/spm/) Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the SPM wiki (this [page](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux) for Linux users and this [page](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)) for Mac users).
+  - For systems running on MacOS Big Sur, a development version of SPM12 (check [here](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) for updates) as well as a more recent release of the MCR (minimum 2019a) are required.
 
 Do not forget to check the installations following each tool’s guidelines.
 
@@ -85,7 +80,7 @@ export LANG=en_US.UTF-8
 source /path/to/your/Miniconda/etc/profile.d/conda.sh
 
 # ANTs
-export ANTSPATH="/path/to/your/ANTs"
+export ANTSPATH="/path/to/your/ANTs/"
 export PATH=${ANTSPATH}:${PATH}
 
 # FreeSurfer
@@ -105,15 +100,8 @@ export MATLAB_HOME="/path/to/your/matlab/bin/"
 export PATH=${MATLAB_HOME}:${PATH}
 export MATLABCMD="${MATLAB_HOME}/matlab"
 
-# MRtrix3
-export MRTRIX_HOME="/path/to/your/mrtrix3"
-export PATH="${MRTRIX_HOME}/bin":"${MRTRIX_HOME}/scripts":${PATH}
-
 # SPM
 export SPM_HOME="/path/to/your/spm12"
-
-# Dcm2nii
-export PATH="/path/to/your/dcm2nii:$PATH"
 ```
 
 <!-- # Autocomplete system

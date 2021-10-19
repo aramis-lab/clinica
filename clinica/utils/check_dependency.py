@@ -1,10 +1,8 @@
-# coding: utf8
-
-
 """This module contains utilities to check dependencies before running Clinica.
 
 These functions can check binaries, software (e.g. FreeSurfer) or toolboxes (e.g. SPM).
 """
+from clinica.utils.exceptions import ClinicaMissingDependencyError
 
 
 def is_binary_present(binary):
@@ -24,12 +22,8 @@ def is_binary_present(binary):
     """
     import os
     import subprocess
-    import sys
 
-    if sys.version_info[0] >= 3 and sys.version_info[1] >= 7:
-        import errno
-    else:
-        errno = os.errno
+    from clinica.compat import errno
 
     try:
         devnull = open(os.devnull)
@@ -43,30 +37,22 @@ def is_binary_present(binary):
 def check_environment_variable(environment_variable, software_name):
     import os
 
-    from colorama import Fore
-
-    from .exceptions import ClinicaMissingDependencyError
-
     content_var = os.environ.get(environment_variable, "")
     if not content_var:
         raise ClinicaMissingDependencyError(
-            f"{Fore.RED}\n[Error] Clinica could not find {software_name} software: "
-            f"the {environment_variable} variable is not set.{Fore.RESET}"
+            f"Clinica could not find {software_name} software: "
+            f"the {environment_variable} variable is not set."
         )
     if not os.path.isdir(content_var):
         raise ClinicaMissingDependencyError(
-            f"{Fore.RED}\n[Error] The {environment_variable} environment variable "
-            f"you gave is not a folder (content: {content_var}).{Fore.RESET}"
+            f"The {environment_variable} environment variable "
+            f"you gave is not a folder (content: {content_var})."
         )
     return content_var
 
 
 def check_software_requirements(current_version, version_requirements, software_name):
     from string import punctuation
-
-    from colorama import Fore
-
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
 
     comparison_operator = "".join(
         [c for c in version_requirements if c in punctuation.replace(".", "")]
@@ -79,80 +65,63 @@ def check_software_requirements(current_version, version_requirements, software_
 
     if not satisfy_version:
         raise ClinicaMissingDependencyError(
-            f"{Fore.RED}\n[Error] Your {software_name} version ({current_version}) "
-            f"does not satisfy version requirements ({version_requirements}).{Fore.RESET}"
-        )
-
-
-def check_dcm2nii():
-    """Check dcm2nii software."""
-    from colorama import Fore
-
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
-    if not is_binary_present("dcm2nii"):
-        raise ClinicaMissingDependencyError(
-            f"{Fore.RED}\n[Error] Clinica could not find dcm2nii tool from MRIcron in your PATH environment: "
-            f"this can be downloaded from https://www.nitrc.org/frs/?group_id=152 (choose the 2016 version).{Fore.RESET}"
+            f"Your {software_name} version ({current_version}) "
+            f"does not satisfy version requirements ({version_requirements})."
         )
 
 
 def check_dcm2niix():
     """Check dcm2niix software."""
-    from colorama import Fore
-
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     if not is_binary_present("dcm2niix"):
         raise ClinicaMissingDependencyError(
-            f"{Fore.RED}\n[Error] Clinica could not find dcm2niix software in your PATH environment: "
-            f"this can be downloaded or installed from https://github.com/rordenlab/dcm2niix.{Fore.RESET}"
+            "Clinica could not find dcm2niix software in your PATH environment: "
+            "this can be downloaded or installed from https://github.com/rordenlab/dcm2niix."
         )
 
 
 def check_ants(version_requirements=None):
     """Check ANTs software."""
-    from colorama import Fore
-
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     check_environment_variable("ANTSPATH", "ANTs")
 
     list_binaries = ["N4BiasFieldCorrection", "antsRegistrationSyNQuick.sh"]
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise ClinicaMissingDependencyError(
-                f"{Fore.RED}\n[Error] Clinica could not find ANTs software: "
-                f"the {binary} command is not present in your PATH environment.{Fore.RESET}"
+                "Clinica could not find ANTs software: "
+                f"the {binary} command is not present in your PATH environment."
+            )
+
+
+def check_convert3d(version_requirements=None):
+    """Check Convert3D software."""
+    list_binaries = ["c3d_affine_tool", "c3d"]
+    for binary in list_binaries:
+        if not is_binary_present(binary):
+            raise ClinicaMissingDependencyError(
+                f"[Error] Clinica could not find Convert3D software: "
+                f"the {binary} command is not present in your PATH environment."
             )
 
 
 def check_freesurfer(version_requirements=None):
     """Check FreeSurfer software."""
-    import nipype.interfaces.freesurfer as freesurfer
-    from colorama import Fore
-
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     check_environment_variable("FREESURFER_HOME", "FreeSurfer")
 
     list_binaries = ["mri_convert", "recon-all"]
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise ClinicaMissingDependencyError(
-                f"{Fore.RED}\n[Error] Clinica could not find FreeSurfer software: "
+                "Clinica could not find FreeSurfer software: "
                 f"the {binary} command is not present in your PATH environment: "
-                f"did you have the line source ${{FREESURFER_HOME}}/SetUpFreeSurfer.sh "
-                f"in your configuration file?{Fore.RESET}"
+                "did you have the line `source $FREESURFER_HOME/SetUpFreeSurfer.sh` "
+                "in your configuration file?"
             )
 
 
 def check_fsl(version_requirements=None):
     """Check FSL software."""
     import nipype.interfaces.fsl as fsl
-    from colorama import Fore
 
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
     from clinica.utils.stream import cprint
 
     check_environment_variable("FSLDIR", "FSL")
@@ -160,43 +129,35 @@ def check_fsl(version_requirements=None):
     try:
         if fsl.Info.version().split(".") < ["5", "0", "5"]:
             raise ClinicaMissingDependencyError(
-                f"{Fore.RED}FSL version must be greater than 5.0.5{Fore.RESET}"
+                "FSL version must be greater than 5.0.5"
             )
     except Exception as e:
-        cprint(str(e))
+        cprint(msg=str(e), lvl="error")
 
     list_binaries = ["bet", "flirt", "fast", "first"]
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise ClinicaMissingDependencyError(
-                f"{Fore.RED}\n[Error] Clinica could not find FSL software: "
-                f"the {binary} command is not present in your PATH environment.{Fore.RESET}"
+                "Clinica could not find FSL software: "
+                f"the {binary} command is not present in your PATH environment."
             )
 
 
 def check_mrtrix(version_requirements=None):
     """Check MRtrix software."""
-    from colorama import Fore
-
     from clinica.utils.exceptions import ClinicaMissingDependencyError
-
-    check_environment_variable("MRTRIX_HOME", "MRtrix")
 
     list_binaries = ["transformconvert", "mrtransform", "dwi2response", "tckgen"]
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise ClinicaMissingDependencyError(
-                f"{Fore.RED}\n[Error] Clinica could not find MRtrix software: "
-                f"the {binary} command is not present in your PATH environment.{Fore.RESET}"
+                f"Clinica could not find MRtrix software: "
+                f"the {binary} command is not present in your PATH environment."
             )
 
 
 def check_petpvc(version_requirements=None):
     """Check PETPVC software."""
-    from colorama import Fore
-
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     list_binaries = [
         "petpvc",
         "pvc_diy",
@@ -216,8 +177,8 @@ def check_petpvc(version_requirements=None):
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise ClinicaMissingDependencyError(
-                f"{Fore.RED}\n[Error] Clinica could not find PETPVC software: the "
-                f"{binary} command is not present in your PATH environment.{Fore.RESET}"
+                "Clinica could not find PETPVC software: "
+                f"the {binary} command is not present in your PATH environment."
             )
 
 
@@ -235,11 +196,7 @@ def check_spm(version_requirements=None):
 
 def check_matlab():
     """Check Matlab toolbox."""
-    from colorama import Fore
-
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
     if not is_binary_present("matlab"):
         raise ClinicaMissingDependencyError(
-            f"{Fore.RED}Matlab was not found in PATH environment. Did you add it?{Fore.RESET}"
+            "Matlab was not found in PATH environment. Did you add it?"
         )

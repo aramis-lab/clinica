@@ -1,16 +1,12 @@
-# coding: utf8
-
 """
 Convert the AIBL dataset (http://www.aibl.csiro.au/) into BIDS.
 """
 
 
-def convert_images(path_to_dataset, path_to_csv, bids_dir):
+def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
 
     # Conversion of the entire dataset in BIDS
     from os.path import exists
-
-    from colorama import Fore
 
     from clinica.iotools.converters.aibl_to_bids.aibl_utils import paths_to_bids
     from clinica.utils.stream import cprint
@@ -19,7 +15,9 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir):
 
     for modality in ["t1", "av45", "flute", "pib"]:
         list_of_created_files.append(
-            paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality)
+            paths_to_bids(
+                path_to_dataset, path_to_csv, bids_dir, modality, overwrite=overwrite
+            )
         )
 
     error_string = ""
@@ -28,10 +26,7 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir):
             if not exists(str(file)):
                 error_string = error_string + str(file) + "\n"
     if error_string != "":
-        cprint(
-            f"{Fore.RED}The following file were not converted "
-            f"(nan means no path was found):{error_string}{Fore.RESET}\n"
-        )
+        cprint(msg=f"The following file were not converted: {error_string}", lvl="warning")
 
 
 def convert_clinical_data(bids_dir, path_to_csv):
@@ -47,12 +42,12 @@ def convert_clinical_data(bids_dir, path_to_csv):
     from clinica.utils.stream import cprint
 
     clinical_spec_path = join(
-        split(realpath(__file__))[0], "../../data/clinical_specifications.xlsx"
+        split(realpath(__file__))[0], "../../data/clinical_specifications"
     )
-    if not exists(clinical_spec_path):
-        raise FileNotFoundError(
-            f"{clinical_spec_path} file not found ! This is an internal file of Clinica."
-        )
+    # if not exists(clinical_spec_path):
+    #    raise FileNotFoundError(
+    #        f"{clinical_spec_path} file not found ! This is an internal file of Clinica."
+    #    )
 
     cprint("Creating modality agnostic files...")
     bids.write_modality_agnostic_files("AIBL", bids_dir)

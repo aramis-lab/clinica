@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def atlas_decomposition(dartel_input):
     """
 
@@ -11,7 +8,7 @@ def atlas_decomposition(dartel_input):
     import nibabel as nib
 
     dartel = nib.load(dartel_input)
-    dartel = dartel.get_data()
+    dartel = dartel.get_fdata(dtype="float32")
     atlas_1 = dartel[:, :, :, 0]
     atlas_2 = dartel[:, :, :, 1]
     atlas_3 = dartel[:, :, :, 2]
@@ -31,7 +28,7 @@ def spm_read(fname):
     import numpy as np
 
     img = nib.load(fname)
-    pico = img.get_data()
+    pico = img.get_fdata(dtype="float32")
     pico = np.array(pico, dtype="float32")
     mask = np.isnan(pico)
     pico[mask] = 0
@@ -680,12 +677,12 @@ def operateur(x, ginv, detg):
     return y
 
 
-def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
+def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon: float = 1e-6):
     """
 
     :param g: metric tensor
     :param h: space step
-    :param epsilon: stop criterion
+    :param epsilon: stop criterion (default: 1e-6)
     :return: lamba = the largest eigenvalues
 
     """
@@ -696,8 +693,6 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # parameters
-    if epsilon is None:
-        epsilon = 1e-6
     erreur = 1 + epsilon
 
     # tensors
@@ -851,7 +846,9 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
     return x
 
 
-def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsilon):
+def heat_solver_tensor_3D_P1_grad_conj(
+    f, g, t_final, h, t_step, CL_value=None, epsilon: float = 0.1
+):
     """
     It solves the poisson's equation in 1D on the regular mesh (with mesh of size h)
     :param f: approximation of a funcion of L^(/Omega)
@@ -868,12 +865,8 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # initialisation
-    if h is None:
-        h = 1
-    if CL_value is None:
-        CL_value = np.zeros(f.shape)
-    if epsilon is None:
-        epsilon = 0.1
+    h = h or 1
+    CL_value = CL_value or np.zeros(f.shape)
 
     # rigidity matrix
     b_h = f[1:-1, 1:-1, 1:-1] * (h * h * h)
@@ -895,7 +888,9 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     return u
 
 
-def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsilon):
+def heat_solver_tensor_2D_P1_grad_conj(
+    f, g, t_final, h, t_step, CL_value=None, epsilon: float = 1e-4
+):
     """
     It solves the poisson's equation in 1D on the regular mesh (with mesh of size h)
     :param f: approximation of a funcion of L^(/Omega)
@@ -912,12 +907,8 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     # intiialisation
-    if h is None:
-        h = 1
-    if CL_value is None:
-        CL_value = np.zeros(f.shape)
-    if epsilon is None:
-        epsilon = 1e-4
+    h = h or 1
+    CL_value = CL_value or np.zeros(f.shape)
 
     # rigidity matrix
     b_h = utils.tensor_scalar_product((h * h), f[1:-1, 1:-1])
@@ -1071,7 +1062,6 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     import os
 
     import nibabel as nib
-    import numpy as np
 
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
@@ -1086,12 +1076,9 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     beta = sigma ** 2 / 2
 
     input_image_read = nib.load(input_image)
-    input_image_data = input_image_read.get_data()
-    input_image_data = np.array(input_image_data, dtype="float32")
+    input_image_data = input_image_read.get_fdata(dtype="float32")
 
-    u = utils.heat_solver_tensor_3D_P1_grad_conj(
-        input_image_data, g, beta, h, t_step, CL_value=None, epsilon=None
-    )
+    u = utils.heat_solver_tensor_3D_P1_grad_conj(input_image_data, g, beta, h, t_step)
 
     img = utils.spm_write_vol(input_image, u)
 

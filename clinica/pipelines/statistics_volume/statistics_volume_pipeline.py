@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import clinica.pipelines.engine as cpe
 
 
@@ -84,7 +82,6 @@ class StatisticsVolume(cpe.Pipeline):
         """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.input_files import (
@@ -120,13 +117,13 @@ class StatisticsVolume(cpe.Pipeline):
         elif self.parameters["orig_input_data"] == "t1-volume":
             self.parameters["measure_label"] = "graymatter"
             information_dict = t1_volume_template_tpm_in_mni(
-                self.parameters["group_label_dartel"], 0, True
+                self.parameters["group_label_dartel"], 1, True
             )
 
         elif self.parameters["orig_input_data"] == "custom-pipeline":
-            if self.parameters["custom_file"] is None:
+            if not self.parameters["custom_file"]:
                 raise ClinicaException(
-                    f"{Fore.RED}Custom pipeline was selected but no 'custom_file' was specified.{Fore.RESET}"
+                    "Custom pipeline was selected but no 'custom_file' was specified."
                 )
             # If custom file are grabbed, information of fwhm is irrelevant and should not appear on final filenames
             self.parameters["full_width_at_half_maximum"] = None

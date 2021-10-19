@@ -9,13 +9,16 @@ pipeline {
     stages {
       stage('Build Env') {
         parallel {
-          stage('Build in Linux') {
+          stage('Build on Linux') {
             agent { label 'ubuntu' }
             environment {
               PATH = "$HOME/miniconda/bin:$PATH"
               }
-            when { 
-              changeset 'requirements*'
+            when {
+              anyOf {
+                changeset 'environment.yml'
+                changeset 'poetry.lock'
+              }
             }
             steps {
               echo 'My branch name is ${BRANCH_NAME}'
@@ -24,17 +27,20 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
                  conda activate clinica_env_$BRANCH_NAME
-                 pip install -r requirements-dev.txt
+                 poetry install --no-root
                  '''
             }
           }
-          stage('Build in Mac') {
+          stage('Build on macOS') {
             agent { label 'macos' }
             environment {
               PATH = "$HOME/miniconda3/bin:$PATH"
               }
             when {
-              changeset 'requirements*'
+              anyOf {
+                changeset 'environment.yml'
+                changeset 'poetry.lock'
+              }
             }
             steps {
               echo 'My branch name is ${BRANCH_NAME}'
@@ -43,7 +49,7 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
                  conda activate clinica_env_$BRANCH_NAME
-                 pip install -r requirements-dev.txt
+                 poetry install --no-root
                  '''
             }
           }
@@ -51,7 +57,7 @@ pipeline {
       }
       stage('Install') {
         parallel {
-          stage('Launch in Linux') {
+          stage('Launch') {
             agent { label 'ubuntu' }
             environment {
               PATH = "$HOME/miniconda/bin:$PATH"
@@ -68,8 +74,8 @@ pipeline {
                conda info --envs
                eval "$(conda shell.bash hook)"
                conda activate clinica_env_$BRANCH_NAME
-               echo "Install clinica using pip..."
-               pip install --ignore-installed .
+               echo "Install clinica using poetry..."
+               poetry install
                eval "$(register-python-argcomplete clinica)"
                # Show clinica help message
                echo "Display clinica help message"
@@ -78,6 +84,7 @@ pipeline {
                '''
             }
           }
+          /*
           stage('Launch in MacOS') {
             agent { label 'macos' }
             environment {
@@ -93,9 +100,9 @@ pipeline {
                eval "$(conda shell.bash hook)"
                echo $CONDA_PREFIX
                source ./.jenkins/scripts/find_env.sh
-               conda activate clinica_env_$BRANCH_NAME
-               echo "Install clinica using pip..."
-               pip install --ignore-installed .
+               conda activate clinica_env_${BRANCH_NAME}
+               echo "Install clinica using poetry..."
+               poetry install
                eval "$(register-python-argcomplete clinica)"
                # Show clinica help message
                echo "Display clinica help message"
@@ -104,19 +111,21 @@ pipeline {
             '''
             }
           }
+          */
         }
       }
-      stage('Short Tests') {
+      stage('Instantiate Tests') {
         parallel {
           stage('Instantiate Linux') {
             agent { label 'ubuntu' }
             environment {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              WORK_DIR = "/mnt/data/ci/working_dir_linux"
+              INPUT_DATA_DIR = "/mnt/data_ci"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
@@ -126,15 +135,15 @@ pipeline {
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
-                 ln -s /mnt/data/ci/data_ci_linux ./data
-                 taskset -c 0-21 pytest \
+                 taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/instantation_linux.xml \
                     --verbose \
-                    --working_directory=$WORK_DIR_LINUX \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
                     --disable-warnings \
                     --timeout=0 \
-                    -n 6 \
-                    -k 'test_instantiate'
+                    -n 4 \
+                   ./instantiation/
                  module purge
                  conda deactivate
                  '''
@@ -143,13 +152,204 @@ pipeline {
               always {
                 junit 'test/test-reports/*.xml'
               }
+              success {
+                sh '''
+                   rm -rf $WORK_DIR/*
+                   ''' 
+              }
             }  
           }
+          /*
           stage('Instantiate Mac') {
             agent { label 'macos' }
             environment {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR = "/Volumes/data/working_dir_mac"
+              INPUT_DATA_DIR = "/Volumes/data_ci"
+              }
+            steps {
+              echo 'Testing pipeline instantiation...'
+              sh 'echo "Agent name: ${NODE_NAME}"'
+              sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source ./.jenkins/scripts/find_env.sh
+                 conda activate clinica_env_$BRANCH_NAME
+                 source /usr/local/opt/modules/init/bash
+                 module load clinica.all
+                 cd test
+                 poetry run pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --junitxml=./test-reports/instantation_mac.xml \
+                    --disable-warnings \
+                    ./instantiation/
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                junit 'test/test-reports/*.xml'
+              }
+              success {
+                sh '''
+                   rm -rf $WORK_DIR/*
+                   ''' 
+              }
+            }  
+          }
+          */
+        }
+      }
+      stage('Non-regression Tests') {
+        parallel {
+          stage('Converters Linux') {
+            agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR = "/mnt/data/ci/working_dir_linux"
+              INPUT_DATA_DIR = "/mnt/data_ci"
+              TMP_BASE = "/mnt/data/ci/tmp"
+              }
+            steps {
+              echo 'Testing pipeline instantiation...'
+              sh 'echo "Agent name: ${NODE_NAME}"'
+              sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source ./.jenkins/scripts/find_env.sh
+                 conda activate clinica_env_$BRANCH_NAME
+                 source /usr/local/Modules/init/profile.sh
+                 module load clinica.all
+                 cd test
+                 taskset -c 0-21 poetry run pytest \
+                    --junitxml=./test-reports/run_converters_linux.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_BASE \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 2 \
+                    ./nonregression/iotools/test_run_converters.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                junit 'test/test-reports/*.xml'
+              }
+              success {
+                sh '''
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
+                   ''' 
+              }
+            }  
+          }
+          stage('Iotools Linux') {
+            agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR = "/mnt/data/ci/working_dir_linux"
+              INPUT_DATA_DIR = "/mnt/data_ci"
+              TMP_BASE = "/mnt/data/ci/tmp"
+              }
+            steps {
+              echo 'Testing pipeline instantiation...'
+              sh 'echo "Agent name: ${NODE_NAME}"'
+              sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source ./.jenkins/scripts/find_env.sh
+                 conda activate clinica_env_$BRANCH_NAME
+                 source /usr/local/Modules/init/profile.sh
+                 module load clinica.all
+                 cd test
+                 taskset -c 0-21 poetry run pytest \
+                    --junitxml=./test-reports/run_utils_linux.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_BASE \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 2 \
+                    ./nonregression/iotools/test_run_utils.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                junit 'test/test-reports/*.xml'
+              }
+              success {
+                sh '''
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
+                   ''' 
+              }
+            }  
+          }
+          stage('Converters Mac') {
+            agent { label 'macos' }
+            environment {
+              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR = "/Volumes/data/working_dir_mac"
+              INPUT_DATA_DIR = "/Volumes/data_ci"
+              TMP_BASE = "/Volumes/data/tmp"
+              }
+            steps {
+              echo 'Testing pipeline instantiation...'
+              sh 'echo "Agent name: ${NODE_NAME}"'
+              sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source ./.jenkins/scripts/find_env.sh
+                 conda activate clinica_env_$BRANCH_NAME
+                 source /usr/local/opt/modules/init/bash
+                 module load clinica.all
+                 cd test
+                 poetry run pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_BASE \
+                    --junitxml=./test-reports/run_converters_mac.xml \
+                    --disable-warnings \
+                    ./nonregression/iotools/test_run_converters.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                junit 'test/test-reports/*.xml'
+              }
+              success {
+                sh '''
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
+                   ''' 
+              }
+            }  
+          }
+          stage('Iotools Mac') {
+            agent { label 'macos' }
+            environment {
+              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR = "/Volumes/data/working_dir_mac"
+              INPUT_DATA_DIR = "/Volumes/data_ci"
+              TMP_BASE = "/Volumes/data/tmp"
               }
             steps {
               echo 'Testing pipeline instantation...'
@@ -162,12 +362,14 @@ pipeline {
                  source /usr/local/opt/modules/init/bash
                  module load clinica.all
                  cd test
-                 ln -s /Volumes/data/data_ci ./data
-                 pytest \
+                 poetry run pytest \
                     --verbose \
-                    --junitxml=./test-reports/instantation_mac.xml \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_BASE \
+                    --junitxml=./test-reports/run_utils_mac.xml \
                     --disable-warnings \
-                    -k 'test_instantiate'
+                    ./nonregression/iotools/test_run_utils.py
                  module purge
                  conda deactivate
                  '''
@@ -175,6 +377,12 @@ pipeline {
             post {
               always {
                 junit 'test/test-reports/*.xml'
+              }
+              success {
+                sh '''
+                   rm -rf $WORK_DIR/*
+                   rm -rf $TMP_BASE/*
+                   ''' 
               }
             }  
           }
@@ -190,9 +398,8 @@ pipeline {
           sh 'echo "Agent name: ${NODE_NAME}"'
           sh '''
           eval "$(conda shell.bash hook)"
-          conda create --name build_doc python=3.8
-          conda activate build_doc
-          pip install -r docs/requirements.txt
+          conda activate clinica_env_$BRANCH_NAME
+          poetry install --extras docs
           ./.jenkins/scripts/publish.sh ${BRANCH_NAME}
           '''
         }
@@ -216,7 +423,7 @@ pipeline {
              eval "$(conda shell.bash hook)"
              source ./.jenkins/scripts/find_env.sh
              conda activate clinica_env_$BRANCH_NAME
-             pip install -e .
+             poetry install
              clinica --help
              cd $WORKSPACE/.jenkins/scripts
              ./generate_wheels.sh

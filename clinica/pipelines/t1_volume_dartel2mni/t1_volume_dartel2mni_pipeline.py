@@ -1,5 +1,3 @@
-# coding: utf8
-
 import clinica.pipelines.engine as cpe
 
 
@@ -17,14 +15,10 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         if "group_label" not in self.parameters.keys():
             raise KeyError("Missing compulsory group_label key in pipeline parameter.")
 
-        if "tissues" not in self.parameters:
-            self.parameters["tissues"] = [1, 2, 3]
-        if "voxel_size" not in self.parameters:
-            self.parameters["voxel_size"] = None
-        if "modulate" not in self.parameters:
-            self.parameters["modulate"] = True
-        if "smooth" not in self.parameters:
-            self.parameters["smooth"] = [8]
+        self.parameters.setdefault("tissues", [1, 2, 3])
+        self.parameters.setdefault("voxel_size", None)
+        self.parameters.setdefault("modulate", True)
+        self.parameters.setdefault("smooth", [8])
 
         check_group_label(self.parameters["group_label"])
 
@@ -53,7 +47,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.input_files import (
@@ -76,8 +69,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         ):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"{Fore.RED}Group {self.parameters['group_label']} does not exist. "
-                f"Did you run t1-volume or t1-volume-create-dartel pipeline?{Fore.RESET}"
+                f"Group {self.parameters['group_label']} does not exist. "
+                "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
 
         all_errors = []

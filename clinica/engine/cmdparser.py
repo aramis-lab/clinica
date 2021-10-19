@@ -1,5 +1,3 @@
-# coding: utf8
-
 """Define the command line parser for each utility (pipeline, iotools, etc.)."""
 
 import abc
@@ -7,14 +5,12 @@ from argparse import ArgumentParser
 from os import getcwd
 from os.path import expanduser, join
 
-from colorama import Fore
-
 PIPELINE_CATEGORIES = {
-    "CLINICA_COMPULSORY": f"{Fore.BLUE}Clinica mandatory arguments{Fore.RESET}",
-    "OPTIONAL": f"{Fore.BLUE}Pipeline options{Fore.RESET}",
-    "CLINICA_OPTIONAL": f"{Fore.BLUE}Clinica standard options{Fore.RESET}",
-    "ADVANCED": f"{Fore.BLUE}Pipelines advanced options{Fore.RESET}",
-    "IOTOOLS_OPTIONS": f"{Fore.BLUE}Optional arguments{Fore.RESET}",
+    "CLINICA_COMPULSORY": "Clinica mandatory arguments",
+    "OPTIONAL": "Pipeline options",
+    "CLINICA_OPTIONAL": "Clinica standard options",
+    "ADVANCED": "Pipelines advanced options",
+    "IOTOOLS_OPTIONS": "Optional arguments",
 }
 
 
@@ -43,20 +39,18 @@ class CmdParser:
         self._name = None
 
     def set_content(self):
-        from colorama import Fore
-
-        self._args._positionals.title = f"{Fore.BLUE}Mandatory arguments{Fore.RESET}"
-        self._args._optionals.title = f"{Fore.BLUE}Optional arguments{Fore.RESET}"
-        if self._description is None:
+        self._args._positionals.title = "Mandatory arguments"
+        self._args._optionals.title = "Optional arguments"
+        if not self._description:
             self._description = self._name
             self._args.description = (
-                f"{Fore.GREEN}If you are not familiar with Clinica, see:\n"
-                f"https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/{Fore.RESET}"
+                "If you are not familiar with Clinica, see:\n"
+                "https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/"
             )
         else:
             self._args.description = (
-                f"{Fore.GREEN}{self._description}\n\nIf you are not familiar with Clinica, see:\n"
-                f"https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/{Fore.RESET}"
+                f"{self._description}\n\nIf you are not familiar with Clinica, see:\n"
+                "https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/"
             )
 
     @property
@@ -158,7 +152,7 @@ class CmdParser:
 
     @staticmethod
     def absolute_path(arg):
-        if arg is None:
+        if not arg:
             return None
         elif arg[:1] == "~":
             return expanduser(arg)
@@ -206,18 +200,3 @@ def init_cmdparser_objects(root_parser, parser, objects):
             init(x)
         except BaseException:
             pass
-
-
-def get_cmdparser_names(objects=None):
-    """Return the names of all pipelines.
-
-    Args:
-        objects: All CmdParser instances of this file
-
-    Returns:
-        The names of all pipelines
-    """
-    if objects is None:
-        objects = get_cmdparser_objects()
-    for x in objects:
-        yield x.name

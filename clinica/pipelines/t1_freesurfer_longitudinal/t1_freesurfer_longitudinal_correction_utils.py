@@ -1,14 +1,8 @@
-# coding: utf8
-
-
 def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
     """Initialize the pipeline."""
-    import datetime
     import os
     import platform
     from tempfile import mkdtemp
-
-    from colorama import Fore
 
     from clinica.utils.longitudinal import read_sessions
     from clinica.utils.stream import cprint
@@ -22,10 +16,12 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
         # Special case: On macOS, 'recon-all -long' can failed if the $SUBJECTS_DIR is too long
         # To circumvent this issue, we create a sym link in $(TMP) so that $SUBJECTS_DIR is a short path
         subjects_dir = mkdtemp()
-        now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            f"{Fore.YELLOW}[{now}] Needs to create a $SUBJECTS_DIR folder "
-            f"in {subjects_dir} for {image_id.replace('_', ' | ')} (macOS case). {Fore.RESET}"
+            msg=(
+                f"Needs to create a $SUBJECTS_DIR folder "
+                f"in {subjects_dir} for {image_id.replace('_', ' | ')} (macOS case)."
+            ),
+            lvl="warning",
         )
     else:
         subjects_dir = os.path.join(output_dir, image_id)
@@ -115,10 +111,7 @@ def write_tsv_files(subjects_dir, subject_id):
         If an error occurs, it will be detected by Nipype and the next nodes (i.e.
         write_tsv_files will not be called).
     """
-    import datetime
     import os
-
-    from colorama import Fore
 
     from clinica.utils.freesurfer import (
         extract_image_id_from_longitudinal_segmentation,
@@ -133,10 +126,12 @@ def write_tsv_files(subjects_dir, subject_id):
     if os.path.isfile(os.path.join(subjects_dir, subject_id, "mri", "aparc+aseg.mgz")):
         generate_regional_measures(subjects_dir, subject_id)
     else:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            f"{Fore.YELLOW}[{now}] {str_image_id.replace('_', ' | ')} does not contain mri/aseg+aparc.mgz file. "
-            f"Creation of regional_measures/ folder will be skipped.{Fore.RESET}"
+            msg=(
+                f"{str_image_id.replace('_', ' | ')} does not contain mri/aseg+aparc.mgz file. "
+                "Creation of regional_measures/ folder will be skipped."
+            ),
+            lvl="warning",
         )
     return subject_id
 
@@ -157,11 +152,8 @@ def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
     Returns:
         subject_id for node connection with Nipype
     """
-    import datetime
     import os
     import shutil
-
-    from colorama import Fore
 
     from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
     from clinica.utils.stream import cprint
@@ -183,10 +175,12 @@ def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
             symlinks=True,
         )
         shutil.rmtree(subjects_dir)
-        now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            f"{Fore.YELLOW}[{now}] Segmentation of {subject_id.replace('_', ' | ')} "
-            f"has moved to working directory and $SUBJECTS_DIR folder ({subjects_dir}) was deleted{Fore.RESET}"
+            msg=(
+                f"Segmentation of {subject_id.replace('_', ' | ')} "
+                f"has moved to working directory and $SUBJECTS_DIR folder ({subjects_dir}) was deleted."
+            ),
+            lvl="warning",
         )
 
     return subject_id
@@ -209,11 +203,8 @@ def save_to_caps(source_dir, subject_id, caps_dir, overwrite_caps=False):
         We do not need to check the line "finished without error" in scripts/recon-all.log.
         If an error occurs, it will be detected by Nipype and the next nodes (i.e. save_to_caps will not be called).
     """
-    import datetime
     import os
     import shutil
-
-    from colorama import Fore
 
     from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
     from clinica.utils.stream import cprint
@@ -270,10 +261,9 @@ def save_to_caps(source_dir, subject_id, caps_dir, overwrite_caps=False):
             )
         print_end_image(str_image_id)
     else:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
         cprint(
-            f"{Fore.YELLOW}[{now}] {subject_id.replace('_', ' | ')}  does not contain "
-            f"mri/aseg+aparc.mgz file. Copy will be skipped.{Fore.RESET}"
+            msg=f"{subject_id.replace('_', ' | ')}  does not contain mri/aseg+aparc.mgz file. Copy will be skipped.",
+            lvl="warning",
         )
 
     return str_image_id

@@ -1,6 +1,6 @@
-# coding: utf-8
-
 """Methods used by BIDS converters."""
+
+from typing import List
 
 
 # -- Methods for the clinical data --
@@ -17,8 +17,7 @@ def create_participants_df(
     Args:
         study_name: name of the study (Ex. ADNI)
         clinical_spec_path: path to the clinical file
-        clinical_data_dir: path to the directory where the clinical data are
-        stored
+        clinical_data_dir: path to the directory where the clinical data are stored
         bids_ids: list of bids ids
         delete_non_bids_info: if True delete all the rows of the subjects that
         are not available in the BIDS dataset
@@ -40,7 +39,7 @@ def create_participants_df(
     location_name = study_name + " location"
 
     # Load the data from the clincal specification file
-    participants_specs = pd.read_excel(clinical_spec_path, sheet_name="participant.tsv")
+    participants_specs = pd.read_csv(clinical_spec_path + "_participant.tsv", sep="\t")
     participant_fields_db = participants_specs[study_name]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
@@ -114,6 +113,8 @@ def create_participants_df(
     for i in range(0, len(participant_df)):
         if study_name == "OASIS":
             value = (participant_df["alternative_id_1"][i].split("_"))[1]
+        elif study_name == "OASIS3":
+            value = participant_df["alternative_id_1"][i].replace("OAS3", "")
         else:
             value = remove_space_and_symbols(participant_df["alternative_id_1"][i])
 
@@ -127,8 +128,11 @@ def create_participants_df(
 
     if len(subjects_to_drop) > 0:
         cprint(
-            "The following subjects of dataset directory were not found in your BIDS folder :\n"
-            + ", ".join(subjects_to_drop)
+            msg=(
+                "The following subjects of dataset directory were not found in your BIDS folder :\n"
+                + ", ".join(subjects_to_drop)
+            ),
+            lvl="info",
         )
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
@@ -139,13 +143,34 @@ def create_participants_df(
     return participant_df
 
 
-def create_sessions_dict(
+def get_sessions_map_AIBL(bids_ids, bids_dir):
+    """Create a dictionary map between BIDs session IDs and AIBL session ids
+
+    Args:
+        bids_ids: ids of all the subjects to be included in dictionary
+        bids_dir: for later use if the sessions are to be retrieve automatically
+
+    Returns: a dictionary with the map for each subject id
+    """
+
+    ses_dict = {}
+    ses_map = {"M00": "bl", "M18": "m18", "M36": "m36", "M54": "m54"}
+
+    for id in bids_ids:
+        ses_dict[id] = ses_map
+
+    return ses_dict
+
+
+def create_sessions_dict_OASIS(
     clinical_data_dir,
+    bids_dir,
     study_name,
     clinical_spec_path,
     bids_ids,
     name_column_ids,
     subj_to_remove=[],
+    participants_df=None,
 ):
     """Extract the information regarding the sessions and store them in a dictionary (session M00 only).
 
@@ -156,6 +181,7 @@ def create_sessions_dict(
         bids_ids: list of bids ids
         name_column_ids: name of the column where the subject ids are stored
         subj_to_remove: subjects to remove
+        participants_df: a pandas dataframe that contains the participants data (required for OASIS3 only)
     """
     import os
     from os import path
@@ -163,9 +189,11 @@ def create_sessions_dict(
     import numpy as np
     import pandas as pd
 
+    from clinica.utils.stream import cprint
+
     # Load data
     location = study_name + " location"
-    sessions = pd.read_excel(clinical_spec_path, sheet_name="sessions.tsv")
+    sessions = pd.read_csv(clinical_spec_path + "_sessions.tsv", sep="\t")
     sessions_fields = sessions[study_name]
     field_location = sessions[location]
     sessions_fields_bids = sessions["BIDS CLINICA"]
@@ -177,8 +205,6 @@ def create_sessions_dict(
         if not pd.isnull(sessions_fields[i]):
             fields_bids.append(sessions_fields_bids[i])
             fields_dataset.append(sessions_fields[i])
-
-    sessions_df = pd.DataFrame(columns=fields_bids)
 
     for i in range(0, len(sessions_fields)):
         # If the i-th field is available
@@ -200,9 +226,8 @@ def create_sessions_dict(
                 file_to_read = pd.read_csv(file_to_read_path)
 
             for r in range(0, len(file_to_read.values)):
-                row = file_to_read.iloc[r]
                 # Extracts the subject ids columns from the dataframe
-                subj_id = row[name_column_ids]
+                subj_id = file_to_read.iloc[r][name_column_ids]
                 if hasattr(subj_id, "dtype"):
                     if subj_id.dtype == np.int64:
                         subj_id = str(subj_id)
@@ -210,35 +235,53 @@ def create_sessions_dict(
                 subj_id_alpha = remove_space_and_symbols(subj_id)
                 if study_name == "OASIS":
                     subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
+                if study_name == "OASIS3":
+                    subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3:])
 
                 # Extract the corresponding BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
                 if len(subj_bids) == 0:
                     # If the subject is not an excluded one
                     if subj_id not in subj_to_remove:
-                        print(
-                            f"{sessions_fields[i]} for {subj_id} not found in the BIDS converted."
+                        cprint(
+                            f"{sessions_fields[i]} for {subj_id} not found in the BIDS converted.",
+                            "info",
                         )
                 else:
                     subj_bids = subj_bids[0]
-                    sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
-                    if subj_bids in sessions_dict:
-                        (sessions_dict[subj_bids]["M00"]).update(
+
+                    subj_dir = path.join(
+                        bids_dir,
+                        subj_bids,
+                    )
+                    session_names = get_bids_sess_list(subj_dir)
+                    for s in session_names:
+                        s_name = s.replace("ses-", "")
+                        if study_name != "OASIS3":
+                            row = file_to_read.iloc[r]
+                        else:
+                            row = file_to_read[
+                                file_to_read["MR ID"].str.startswith(subj_id)
+                                & file_to_read["MR ID"].str.endswith(s_name)
+                            ].iloc[0]
+                        if subj_bids not in sessions_dict:
+                            sessions_dict.update({subj_bids: {}})
+                        if s_name not in sessions_dict[subj_bids].keys():
+                            sessions_dict[subj_bids].update({s_name: {"session_id": s}})
+                        (sessions_dict[subj_bids][s_name]).update(
                             {sessions_fields_bids[i]: row[sessions_fields[i]]}
                         )
-                    else:
-                        sessions_dict.update(
-                            {
-                                subj_bids: {
-                                    "M00": {
-                                        "session_id": "ses-M00",
-                                        sessions_fields_bids[i]: row[
-                                            sessions_fields[i]
-                                        ],
-                                    }
-                                }
-                            }
-                        )
+                        # Calculate the difference in months for OASIS3 only
+                        if study_name == "OASIS3" and sessions_fields_bids[i] == "age":
+                            diff_years = (
+                                float(sessions_dict[subj_bids][s_name]["age"])
+                                - participants_df[
+                                    participants_df["participant_id"] == subj_bids
+                                ]["age_bl"]
+                            )
+                            (sessions_dict[subj_bids][s_name]).update(
+                                {"diff_months": round(float(diff_years) * 12)}
+                            )
 
     return sessions_dict
 
@@ -271,6 +314,8 @@ def create_scans_dict(
 
     import pandas as pd
 
+    from clinica.utils.stream import cprint
+
     scans_dict = {}
     prev_file = ""
     prev_sheet = ""
@@ -283,7 +328,7 @@ def create_scans_dict(
     # Init the dictionary with the subject ids
     for bids_id in bids_ids:
         scans_dict[bids_id] = dict()
-        for session_id in ses_dict.keys():
+        for session_id in {"ses-" + key for key in ses_dict[bids_id].keys()}:
             scans_dict[bids_id][session_id] = {
                 "T1/DWI/fMRI/FMAP": {},
                 "PIB": {},
@@ -292,7 +337,7 @@ def create_scans_dict(
                 "FDG": {},
             }
 
-    scans_specs = pd.read_excel(clinic_specs_path, sheet_name="scans.tsv")
+    scans_specs = pd.read_csv(clinic_specs_path + "_scans.tsv", sep="\t")
     fields_dataset = []
     fields_location = []
     fields_bids = []
@@ -327,16 +372,28 @@ def create_scans_dict(
                     glob.glob(file_to_read_path)[0], sheet_name=sheet
                 )
             elif file_ext == ".csv":
-                file_to_read = pd.read_csv(glob.glob(file_to_read_path)[0])
+                file_to_read = pd.read_csv(
+                    glob.glob(file_to_read_path)[0], sep=None, engine="python"
+                )
             prev_file = file_name
             prev_sheet = sheet
 
         for bids_id in bids_ids:
             original_id = bids_id.replace("sub-" + study_name, "")
-            for session_name in ses_dict.keys():
+            for session_name in {"ses-" + key for key in ses_dict[bids_id].keys()}:
+                # When comparing sessions, remove the "-ses" prefix IF it exists
                 row_to_extract = file_to_read[
                     (file_to_read[name_column_ids] == int(original_id))
-                    & (file_to_read[name_column_ses] == ses_dict[session_name])
+                    & (
+                        list(
+                            filter(
+                                None, file_to_read[name_column_ses].str.split("ses-")
+                            )
+                        )[0]
+                        == ses_dict[bids_id][
+                            list(filter(None, session_name.split("ses-")))[0]
+                        ]
+                    )
                 ].index.tolist()
                 if len(row_to_extract) > 0:
                     row_to_extract = row_to_extract[0]
@@ -354,7 +411,10 @@ def create_scans_dict(
                         fields_bids[i]
                     ] = value
                 else:
-                    print(f"Scans information for {bids_id} {session_name} not found.")
+                    cprint(
+                        f"Scans information for {bids_id} {session_name} not found.",
+                        lvl="info",
+                    )
                     scans_dict[bids_id][session_name][fields_mod[i]][
                         fields_bids[i]
                     ] = "n/a"
@@ -446,12 +506,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
         bids_id = sp.split(os.sep)[-1]
 
         if bids_id in sessions_dict:
-            session_df = pd.DataFrame(
-                sessions_dict[bids_id]["M00"],
-                index=[
-                    "i",
-                ],
-            )
+            session_df = pd.DataFrame.from_dict(sessions_dict[bids_id], orient="index")
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
@@ -460,11 +515,10 @@ def write_sessions_tsv(bids_dir, sessions_dict):
             session_df = pd.DataFrame(columns=["session_id"])
             session_df["session_id"] = pd.Series("M00")
 
-        session_df = session_df.fillna("n/a")
+        session_df = session_df.set_index("session_id").fillna("n/a")
         session_df.to_csv(
             path.join(sp, bids_id + "_sessions.tsv"),
             sep="\t",
-            index=False,
             encoding="utf8",
         )
 
@@ -485,13 +539,11 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     import pandas as pd
 
     for bids_id in bids_ids:
-        # Create the file
         sessions_paths = glob(path.join(bids_dir, bids_id, "ses-*"))
         for session_path in sessions_paths:
-            scans_df = pd.DataFrame()
             session_name = session_path.split(os.sep)[-1]
+            scans_df = pd.DataFrame()
             tsv_name = bids_id + "_" + session_name + "_scans.tsv"
-
             # If the file already exists, remove it
             if os.path.exists(path.join(bids_dir, bids_id, session_name, tsv_name)):
                 os.remove(path.join(bids_dir, bids_id, session_name, tsv_name))
@@ -499,7 +551,12 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
             mod_available = glob(path.join(bids_dir, bids_id, session_name, "*"))
             for mod in mod_available:
                 mod_name = os.path.basename(mod)
-                files = glob(path.join(mod, "*"))
+                # Grab scan files excluding their sidecar JSON.
+                files = [
+                    file
+                    for file in glob(path.join(mod, "*"))
+                    if "json" not in os.path.splitext(file)[1]
+                ]
                 for file in files:
                     file_name = os.path.basename(file)
                     if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
@@ -510,7 +567,14 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                             for carac in file_name.split("_")
                             if "-" in carac
                         }
-                        f_type = description_dict["acq"].upper()
+                        if "trc" in description_dict.keys():
+                            f_type = description_dict["trc"].upper()
+                        elif "acq" in description_dict.keys():
+                            f_type = description_dict["acq"].upper()
+                    elif mod_name == "swi":
+                        pass
+                    else:
+                        continue
 
                     row_to_append = pd.DataFrame(
                         scans_dict[bids_id][session_name][f_type], index=[0]
@@ -519,11 +583,10 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                     row_to_append.insert(0, "filename", path.join(mod_name, file_name))
                     scans_df = scans_df.append(row_to_append)
 
-            scans_df = scans_df.fillna("n/a")
+            scans_df = scans_df.set_index("filename").fillna("n/a")
             scans_df.to_csv(
                 path.join(bids_dir, bids_id, session_name, tsv_name),
                 sep="\t",
-                index=False,
                 encoding="utf8",
             )
 
@@ -550,27 +613,30 @@ def contain_dicom(folder_path):
 
 def get_supported_dataset():
     """Return the list of supported datasets."""
-    return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "AIBL"]
+    return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
 
 
-def get_bids_subjs_list(bids_path):
+def get_bids_subjs_list(bids_path: str) -> List[str]:
     """Given a BIDS compliant dataset, return the list of all the subjects available."""
-    import os
-    from os import path
+    from pathlib import Path
 
-    return [d for d in os.listdir(bids_path) if os.path.isdir(path.join(bids_path, d))]
+    return [str(d.name) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
-def get_bids_subjs_paths(bids_path):
+def get_bids_sess_list(subj_path: str) -> List[str]:
+    """
+    Given a subject path, return the list of sessions available
+    """
+    from pathlib import Path
+
+    return [str(d.name) for d in Path(subj_path).glob("ses-*") if d.is_dir()]
+
+
+def get_bids_subjs_paths(bids_path: str) -> List[str]:
     """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders."""
-    import os
-    from os import path
+    from pathlib import Path
 
-    return [
-        path.join(bids_path, d)
-        for d in os.listdir(bids_path)
-        if os.path.isdir(path.join(bids_path, d))
-    ]
+    return [str(d) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
 def compute_new_subjects(original_ids, bids_ids):
@@ -641,3 +707,76 @@ def compress_nii(file_path):
         with gzip.open(file_path + ".gz", "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
     remove(file_path)
+
+
+def json_from_dcm(dcm_dir, json_path):
+    """
+    Writes descriptive JSON file from DICOM header
+
+    Args:
+        dcm_dir (str): Path to the DICOM directory
+        json_path (str): Path to the output JSON file
+    """
+    import json
+    from glob import glob
+    from os import path
+
+    from pydicom import dcmread
+    from pydicom.tag import Tag
+
+    from clinica.utils.stream import cprint
+
+    fields_dict = {
+        "DeviceSerialNumber": Tag(("0018", "1000")),
+        "Manufacturer": Tag(("0008", "0070")),
+        "ManufacturersModelName": Tag(("0008", "1090")),
+        "SoftwareVersions": Tag(("0018", "1020")),
+        "BodyPart": Tag(("0018", "0015")),
+        "Units": Tag(("0054", "1001")),
+        # Institution
+        "InstitutionName": Tag(("0008", "0080")),
+        "InstitutionAddress": Tag(("0008", "0081")),
+        "InstitutionalDepartmentName": Tag(("0008", "1040")),
+        # MRI
+        "MagneticFieldStrength": Tag(("0018", "0087")),
+        # PET
+        "InjectedRadioactivity": Tag(("0018", "1074")),
+        "MolarActivity": Tag(("0018", "1077")),
+        "InjectionStart": Tag(("0018", "1042")),
+        "FrameDuration": Tag(("0018", "1242")),
+    }
+
+    try:
+        dcm_path = glob(path.join(dcm_dir, "*.dcm"))[0]
+        ds = dcmread(dcm_path)
+        json_dict = dict()
+        for key, tag in fields_dict.items():
+            if tag in ds.keys():
+                json_dict[key] = ds.get(tag).value
+
+        json = json.dumps(json_dict, skipkeys=True, indent=4)
+        with open(json_path, "w") as f:
+            f.write(json)
+    except IndexError:
+        cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
+
+
+def run_dcm2niix(command):
+    """Runs the dcm2niix command using a subprocess.
+
+    Args: the dcm2niix command with the right arguments.
+    """
+    import subprocess
+
+    from clinica.utils.stream import cprint
+
+    output_dcm2niix = subprocess.run(command, shell=True, capture_output=True)
+    if output_dcm2niix.returncode != 0:
+        cprint(
+            msg=(
+                "DICOM to BIDS conversion with dcm2niix failed:\n"
+                f"command: {command}\n"
+                f"{output_dcm2niix.stdout.decode('utf-8')}"
+            ),
+            lvl="warning",
+        )

@@ -12,28 +12,31 @@
 <p align="center"><strong>Software platform for clinical neuroimaging studies</strong></p>
 
 <p align="center">
-  <a href="https://ci.inria.fr/clinica-aramis/job/clinica/job/master/">
-    <img src="https://ci.inria.fr/clinica-aramis/buildStatus/icon?job=clinica%2Fmaster" alt="Build Status">
+  <a href="https://ci.inria.fr/clinica-aramis/job/clinica/job/dev/">
+    <img src="https://ci.inria.fr/clinica-aramis/buildStatus/icon?job=clinica%2Fdev" alt="Build Status">
   </a>
   <a href="https://badge.fury.io/py/clinica">
     <img src="https://badge.fury.io/py/clinica.svg" alt="PyPI version">
   </a>
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
-    <img src="https://anaconda.org/aramislab/clinica/badges/installer/conda.svg" alt="conda install">
   </a>
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
     <img src="https://anaconda.org/aramislab/clinica/badges/platforms.svg" alt="platform">
+  </a>
+  <a href="https://github.com/psf/black">
+    <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Code style: black">
   </a>
 </p>
 
 <p align="center">
   <a href="http://www.clinica.run">Homepage</a> |
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/">Documentation</a> |
-  <a href="https://hal.inria.fr/hal-02308126">Preprint</a> |
-  <a href="https://groups.google.com/forum/#!forum/clinica-user">Forum</a> |
+  <a href="https://doi.org/10.3389/fninf.2021.689675">Paper</a> |
+  <a href="https://github.com/aramis-lab/clinica/discussions">Forum</a> |
   See also:
   <a href="#related-repositories">AD-ML</a>,
   <a href="#related-repositories">AD-DL</a>
+  <a href="#related-repositories">ClinicaDL</a>
 </p>
 
 ## About The Project
@@ -62,6 +65,7 @@ BIDS, namely:
 - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/AIBL2BIDS/)
 - [NIFD: Neuroimaging in Frontotemporal Dementia](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/NIFD2BIDS/)
 - [OASIS: Open Access Series of Imaging Studies](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/OASIS2BIDS/)
+- [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/OASIS3TOBIDS/)
 
 Clinica can process any BIDS-compliant dataset with a set of complex processing
 pipelines involving different software packages for the analysis of
@@ -74,7 +78,7 @@ learning or deep learning.
 Clinica is also showcased as a framework for the reproducible classification of
 Alzheimer's disease using
 [machine learning](https://github.com/aramis-lab/AD-ML) and
-[deep learning](https://github.com/aramis-lab/AD-DL).
+[deep learning](https://github.com/aramis-lab/clinicadl).
 
 ## Getting Started
 
@@ -130,17 +134,15 @@ with Alzheimer's disease and healthy controls from the ADNI database:
 
 ## Support
 
-- [Report an issue on GitHub](https://github.com/aramis-lab/clinica/issues)
-- Use the [Clinica Google
-  Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
+- Check for [past answers](https://groups.google.com/forum/#!forum/clinica-user) in the old Clinica Google Group
+- Start a [discussion](https://github.com/aramis-lab/clinica/discussions) on Github
+- Report an [issue](https://github.com/aramis-lab/clinica/issues) on GitHub
 
-<!--
 ## Contributing
-We encourage you to contribute to Clinica! Please check out the [Contributing
-to Clinica guide](Contributing.md) for guidelines about how to proceed. Do not
-hesitate to ask questions if something is not clear for you, report an issue,
-etc.
--->
+
+We encourage you to contribute to Clinica!
+Please check out the [Contributing to Clinica guide](CONTRIBUTING.md) for guidelines about how to proceed.
+Do not hesitate to ask questions if something is not clear for you, report an issue, etc.
 
 ## License
 
@@ -148,9 +150,15 @@ This software is distributed under the MIT License.
 See [license file](https://github.com/aramis-lab/clinica/blob/dev/LICENSE.txt)
 for more information.
 
+## Citing us
+
+- Routier, A., Burgos, N., Díaz, M., Bacci, M., Bottani, S., El-Rifai O., Fontanella, S., Gori, P., Guillon, J., Guyot, A., Hassanaly, R., Jacquemont, T.,  Lu, P., Marcoux, A.,  Moreau, T., Samper-González, J., Teichmann, M., Thibeau-Sutre, E., Vaillant G., Wen, J., Wild, A., Habert, M.-O., Durrleman, S., and Colliot, O.:
+*Clinica: An Open Source Software Platform for Reproducible Clinical Neuroscience Studies* Frontiers in Neuroinformatics, 2021
+[doi:10.3389/fninf.2021.689675](https://doi.org/10.3389/fninf.2021.689675)
+
 ## Related Repositories
 
-- [AD-DL: Framework for the reproducible classification of Alzheimer's disease using
-deep learning](https://github.com/aramis-lab/AD-DL)
+- [AD-DL: Classification of Alzheimer's disease status with convolutional neural networks](https://github.com/aramis-lab/AD-DL)
 - [AD-ML: Framework for the reproducible classification of Alzheimer's disease using
 machine learning](https://github.com/aramis-lab/AD-ML)
+- [ClinicaDL: Framework for the reproducible processing of neuroimaging data with deep learning methods](https://github.com/aramis-lab/clinicadl)

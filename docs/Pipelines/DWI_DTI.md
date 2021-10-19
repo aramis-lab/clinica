@@ -23,12 +23,12 @@ You can find how to install these software packages on the [third-party](../../T
 The `dwi-dti` pipeline can be run with the following command line:
 
 ```Text
-clinica run dwi-dti <caps_directory>
+clinica run dwi-dti CAPS_DIRECTORY
 ```
 
 where:
 
-- `caps_directory` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your CAPS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
@@ -69,7 +69,7 @@ The main output files are:
 
 ??? cite "Example of paragraph for the `dwi-dti` pipeline:"
     These results have been obtained using the `dwi-dti` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)].
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     A diffusion tensor imaging (DTI) model was fitted to each voxel to calculate the fractional anisotropy (FA), mean diffusivity (MD), radial diffusivity (RD) and axial diffusivity (AD) maps using **MRtrix** [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)].
     The FA map of each subject was then registered to the FA map of the JHU atlas template with the ANTs SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)], and the estimated non-linear deformation was applied to the MD, AD and RD maps to have, for each individual, all the DTI-based maps in the space of the JHU atlas.
 

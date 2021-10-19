@@ -19,12 +19,11 @@ def convert_adni_dwi(
     from os import path
 
     import pandas as pd
-    from colorama import Fore
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
-    if subjs_list is None:
+    if not subjs_list:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
@@ -38,7 +37,7 @@ def convert_adni_dwi(
     cprint("Paths of DWI images found. Exporting images into BIDS ...")
     # dwi_paths_to_bids(images, dest_dir)
     paths_to_bids(images, dest_dir, "dwi", mod_to_update=mod_to_update)
-    cprint(f"{Fore.GREEN}DWI conversion done.{Fore.RESET}")
+    cprint(msg="DWI conversion done.", lvl="debug")
 
 
 def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
@@ -256,7 +255,7 @@ def dwi_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
     )
 
     sel_image = select_image_qc(list(visit_mri_list.IMAGEUID), mri_qc_subj)
-    if sel_image is None:
+    if not sel_image:
         return None
 
     sel_scan = visit_mri_list[visit_mri_list.IMAGEUID == sel_image].iloc[0]

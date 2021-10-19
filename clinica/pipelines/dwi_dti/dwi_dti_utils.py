@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     """Computes a list of statistics files for each atlas.
 
@@ -32,15 +29,15 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
         if not isinstance(atlas, AtlasAbstract):
             raise TypeError("Atlas element must be an AtlasAbstract type")
 
-        if prefix_file is None:
-            _, base, _ = split_filename(in_registered_map)
+        if prefix_file:
             filename = (
-                f"{base}_space-{atlas.get_name_atlas()}"
+                f"{prefix_file}_space-{atlas.get_name_atlas()}"
                 f"_res-{atlas.get_spatial_resolution()}_map-{name_map}_statistics.tsv"
             )
         else:
+            _, base, _ = split_filename(in_registered_map)
             filename = (
-                f"{prefix_file}_space-{atlas.get_name_atlas()}"
+                f"{base}_space-{atlas.get_name_atlas()}"
                 f"_res-{atlas.get_spatial_resolution()}_map-{name_map}_statistics.tsv"
             )
 
@@ -52,20 +49,20 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     return atlas_statistics_list
 
 
-def extract_bids_identifier_from_caps_filename(caps_dwi_filename):
+def extract_bids_identifier_from_caps_filename(caps_dwi_filename: str) -> str:
     """Extract BIDS identifier from CAPS filename."""
     import re
 
     m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi", caps_dwi_filename)
 
-    if m is None:
-        raise ValueError("Input filename is not in a CAPS compliant format.")
+    if not m:
+        raise ValueError(f"Input filename {caps_dwi_filename} is not in a CAPS compliant format.")
     bids_identifier = m.group(0)
 
     return bids_identifier
 
 
-def get_caps_filenames(caps_dwi_filename):
+def get_caps_filenames(caps_dwi_filename: str):
     """Prepare some filenames with CAPS naming convention."""
     import re
 
@@ -73,8 +70,8 @@ def get_caps_filenames(caps_dwi_filename):
         r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi_space-[a-zA-Z0-9]+",
         caps_dwi_filename,
     )
-    if m is None:
-        raise ValueError("Input filename is not in a CAPS compliant format.")
+    if not m:
+        raise ValueError(f"Input filename {caps_dwi_filename} is not in a CAPS compliant format.")
 
     caps_prefix = m.group(0)
     bids_source = f"{m.group(1)}_{m.group(2)}_dwi"
@@ -84,8 +81,9 @@ def get_caps_filenames(caps_dwi_filename):
     out_md = f"{caps_prefix}_MD.nii.gz"
     out_ad = f"{caps_prefix}_AD.nii.gz"
     out_rd = f"{caps_prefix}_RD.nii.gz"
+    out_evec = f"{caps_prefix}_DECFA.nii.gz"
 
-    return bids_source, out_dti, out_fa, out_md, out_ad, out_rd
+    return bids_source, out_dti, out_fa, out_md, out_ad, out_rd, out_evec
 
 
 def rename_into_caps(

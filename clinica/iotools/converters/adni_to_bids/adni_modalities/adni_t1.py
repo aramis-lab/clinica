@@ -18,13 +18,12 @@ def convert_adni_t1(
     """
     from os import path
 
-    from colorama import Fore
     from pandas.io import parsers
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
-    if subjs_list is None:
+    if not subjs_list:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
         adni_merge = parsers.read_csv(adni_merge_path, sep=",", low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
@@ -35,7 +34,7 @@ def convert_adni_t1(
     images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
     cprint("Paths of T1 images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "t1", mod_to_update=mod_to_update)
-    cprint(f"{Fore.GREEN}T1 conversion done.{Fore.RESET}")
+    cprint(msg="T1 conversion done.", lvl="debug")
 
 
 def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
@@ -230,6 +229,12 @@ def adni1go2_image(
         replace_sequence_chars,
     )
 
+    # filter out images that do not pass QC
+    mprage_meta_subj = mprage_meta_subj[
+        mprage_meta_subj.apply(
+            lambda x: check_qc(x, subject_id, visit_str, mri_quality_subj), axis=1
+        )
+    ]
     filtered_mprage = preferred_processed_scan(mprage_meta_subj, visit_str)
 
     # If no N3 processed image found (it means there are no processed images at all), get best original image
@@ -252,22 +257,6 @@ def adni1go2_image(
     # Sort by Series ID in case there are several images, so we keep the one acquired first
     filtered_mprage = filtered_mprage.sort_values("SeriesID")
     scan = filtered_mprage.iloc[0]
-
-    # Check if selected scan passes QC (if QC exists)
-    if not check_qc(scan, subject_id, visit_str, mri_quality_subj):
-
-        # If not passed, look for another scan in the visit from a different acquisition
-        filtered_mprage = preferred_processed_scan(
-            mprage_meta_subj, visit_str, unwanted_series_id=[scan.SeriesID]
-        )
-
-        if filtered_mprage.empty:
-            return None
-
-        scan = filtered_mprage.iloc[0]
-        # Check QC for second scan
-        if not check_qc(scan, subject_id, visit_str, mri_quality_subj):
-            return None
 
     n3 = scan.Sequence.find("N3")
     # Sequence ends in 'N3' or in 'N3m'
@@ -536,7 +525,7 @@ def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
 
             # If we did not find an image passing QC for the preferred magnetic field strength,
             # then we will choose between the other available images with other magnetic field strength
-            if selected_image is None and multiple_mag_strength:
+            if not selected_image and multiple_mag_strength:
                 scans_meta = not_preferred_scan
             else:
                 scan = scans_meta[scans_meta.ImageUID == int(selected_image)].iloc[0]

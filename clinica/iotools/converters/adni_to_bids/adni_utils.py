@@ -1,4 +1,4 @@
-# coding: utf-8
+from clinica.iotools.bids_utils import run_dcm2niix
 
 
 def visits_to_timepoints(
@@ -145,25 +145,34 @@ def get_closest_visit(image, pending_timepoints, subject, visit_field, scandate_
             min_db = db
             min_visit = timepoint
 
-    if min_visit is None:
+    if min_visit is None or min_visit.empty:
         cprint(
             f"No corresponding timepoint in ADNIMERGE for subject {subject} in visit {image[visit_field]}"
         )
-        cprint(image)
+        cprint(image, lvl="debug")
         return None
 
     if min_visit2 is not None and min_db > 90:
         cprint(
-            f"More than 60 days for corresponding timepoint in ADNIMERGE for "
-            f"subject {subject} in visit {image[visit_field]} on {image[scandate_field]}"
+            msg=(
+                f"More than 60 days for corresponding timepoint in ADNIMERGE for "
+                f"subject {subject} in visit {image[visit_field]} on {image[scandate_field]}"
+            ),
+            lvl="debug",
         )
         cprint(
-            f"Timepoint 1: {min_visit.VISCODE} - {min_visit.ORIGPROT} "
-            f"on {min_visit.EXAMDATE} (Distance: {min_db} days)"
+            msg=(
+                f"Timepoint 1: {min_visit.VISCODE} - {min_visit.ORIGPROT} "
+                f"on {min_visit.EXAMDATE} (Distance: {min_db} days)"
+            ),
+            lvl="debug",
         )
         cprint(
-            f"Timepoint 2: {min_visit2.VISCODE} - {min_visit2.ORIGPROT} "
-            f"on {min_visit2.EXAMDATE} (Distance: {min_db2} days)"
+            msg=(
+                f"Timepoint 2: {min_visit2.VISCODE} - {min_visit2.ORIGPROT} "
+                f"on {min_visit2.EXAMDATE} (Distance: {min_db2} days)"
+            ),
+            lvl="debug",
         )
 
         # If image is too close to the date between two visits we prefer the earlier visit
@@ -176,7 +185,7 @@ def get_closest_visit(image, pending_timepoints, subject, visit_field, scandate_
             if abs((dif / 2.0) - min_db) < 30:
                 min_visit = min_visit2
 
-        cprint(f"We prefer {min_visit.VISCODE}")
+        cprint(msg=f"We prefer {min_visit.VISCODE}", lvl="debug")
 
     key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
 
@@ -360,7 +369,11 @@ def get_images_pet(
                 tracer = "FBB"
             else:
                 cprint(
-                    f"Unknown tracer for Amyloid PET image metadata for subject {subject} for visit {qc_visit[viscode_field]}"
+                    msg=(
+                        f"Unknown tracer for Amyloid PET image metadata for subject {subject} "
+                        f"for visit {qc_visit[viscode_field]}"
+                    ),
+                    lvl="warning",
                 )
                 continue
 
@@ -447,103 +460,94 @@ def replace_sequence_chars(sequence_name):
     return re.sub("[ /;*()<>:]", "_", sequence_name)
 
 
-def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
+def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
+    import pandas as pd
+
     """Write the result of method create_session_dict into several TSV files.
 
     Args:
-        sessions_dict: dictonary coming from the method create_sessions_dict
-        fields_bids: fields bids to convert
+        df_subj_sessions: global dataframe containing clinical sessions data for all subjects
         bids_subjs_paths: a list with the path to all bids subjects
     """
     import os
     from os import path
 
-    import pandas as pd
+    def compute_amyloid_status(row, tau_status=False):
+        stat = ""
+        if (
+            pd.isnull(row["adni_av45"])
+            and pd.isnull(row["adni_pib"])
+            and isinstance(row["adni_abeta"], float)
+        ):
+            stat = "Au"
+        elif row["adni_av45"] > 1.1 or row["adni_pib"] > 1.5 or row["adni_abeta"] < 192:
+            stat = "A+"
+        elif (
+            (pd.isnull(row["adni_av45"]) or row["adni_av45"] < 1.1)
+            and (pd.isnull(row["adni_pib"]) or row["adni_pib"] < 1.5)
+            and (isinstance(row["adni_abeta"], float) or row["adni_abeta"] > 192)
+        ):
+            stat = "A-"
+        return stat
 
-    columns_order = remove_fields_duplicated(fields_bids)
+    def compute_ptau_status(row):
+        stat = ""
+        if pd.isnull(row["adni_ptau"]):
+            stat = "Tu"
+        elif row["adni_ptau"] > 23:
+            stat = "T+"
+        else:
+            stat = "T-"
+        return stat
 
-    columns_order.insert(0, "session_id")
+    df_subj_sessions["adas_memory"] = (
+        df_subj_sessions["adas_Q1"]
+        + df_subj_sessions["adas_Q4"]
+        + df_subj_sessions["adas_Q7"]
+        + df_subj_sessions["adas_Q8"]
+        + df_subj_sessions["adas_Q9"]
+    )  # / 45
+    df_subj_sessions["adas_language"] = (
+        df_subj_sessions["adas_Q2"]
+        + df_subj_sessions["adas_Q5"]
+        + df_subj_sessions["adas_Q10"]
+        + df_subj_sessions["adas_Q11"]
+        + df_subj_sessions["adas_Q12"]
+    )  # / 25
+    df_subj_sessions["adas_praxis"] = (
+        df_subj_sessions["adas_Q3"] + df_subj_sessions["adas_Q6"]
+    )  # / 10
+    df_subj_sessions["adas_concentration"] = df_subj_sessions["adas_Q13"]  # / 5
+
+    df_subj_sessions = df_subj_sessions.fillna("n/a")
+
+    # compute the amyloid and ptau status
+    df_subj_sessions["a_stat"] = df_subj_sessions.apply(
+        lambda x: compute_amyloid_status(
+            x[["adni_av45", "adni_pib", "adni_abeta"]].apply(
+                pd.to_numeric, errors="coerce"
+            )
+        ),
+        axis=1,
+    )
+    df_subj_sessions["tau_stat"] = df_subj_sessions.apply(
+        lambda x: compute_ptau_status(
+            x[["adni_ptau"]].apply(pd.to_numeric, errors="coerce")
+        ),
+        axis=1,
+    )
+
     for sp in bids_subjs_paths:
-
-        if not path.exists(sp):
-            os.makedirs(sp)
+        os.makedirs(sp, exist_ok=True)
 
         bids_id = sp.split(os.sep)[-1]
 
-        fields_bids = list(set(fields_bids))
-        sessions_df = pd.DataFrame(columns=fields_bids)
+        if bids_id == "conversion_info":
+            continue
+        else:
+            df_tmp = df_subj_sessions[df_subj_sessions["RID"] == bids_id[12:]]
 
-        if bids_id in sessions_dict:
-            sess_aval = sessions_dict[bids_id].keys()
-            for ses in sess_aval:
-                sessions_df = sessions_df.append(
-                    pd.DataFrame(
-                        sessions_dict[bids_id][ses],
-                        index=[
-                            "i",
-                        ],
-                    )
-                )
-
-            sessions_df = sessions_df[columns_order]
-
-            sessions_df[
-                [
-                    "adas_Q1",
-                    "adas_Q2",
-                    "adas_Q3",
-                    "adas_Q4",
-                    "adas_Q5",
-                    "adas_Q6",
-                    "adas_Q7",
-                    "adas_Q8",
-                    "adas_Q9",
-                    "adas_Q10",
-                    "adas_Q11",
-                    "adas_Q12",
-                    "adas_Q13",
-                ]
-            ] = sessions_df[
-                [
-                    "adas_Q1",
-                    "adas_Q2",
-                    "adas_Q3",
-                    "adas_Q4",
-                    "adas_Q5",
-                    "adas_Q6",
-                    "adas_Q7",
-                    "adas_Q8",
-                    "adas_Q9",
-                    "adas_Q10",
-                    "adas_Q11",
-                    "adas_Q12",
-                    "adas_Q13",
-                ]
-            ].apply(
-                pd.to_numeric
-            )
-
-            sessions_df["adas_memory"] = (
-                sessions_df["adas_Q1"]
-                + sessions_df["adas_Q4"]
-                + sessions_df["adas_Q7"]
-                + sessions_df["adas_Q8"]
-                + sessions_df["adas_Q9"]
-            )  # / 45
-            sessions_df["adas_language"] = (
-                sessions_df["adas_Q2"]
-                + sessions_df["adas_Q5"]
-                + sessions_df["adas_Q10"]
-                + sessions_df["adas_Q11"]
-                + sessions_df["adas_Q12"]
-            )  # / 25
-            sessions_df["adas_praxis"] = (
-                sessions_df["adas_Q3"] + sessions_df["adas_Q6"]
-            )  # / 10
-            sessions_df["adas_concentration"] = sessions_df["adas_Q13"]  # / 5
-
-            sessions_df = sessions_df.fillna("n/a")
-            sessions_df.to_csv(
+            df_tmp.to_csv(
                 path.join(sp, f"{bids_id}_sessions.tsv"),
                 sep="\t",
                 index=False,
@@ -564,237 +568,208 @@ def remove_fields_duplicated(bids_fields):
     return [x for x in bids_fields if not (x in seen or seen_add(x))]
 
 
+def filter_subj_bids(df_files, location, bids_ids):
+    import clinica.iotools.bids_utils as bids
+
+    # Depending of the file that needs to be open, identify and
+    # do needed preprocessing on the column that contains the
+    # subjects ids
+    bids_ids = [x[8:] for x in bids_ids if "sub-ADNI" in x]
+    if location == "ADNIMERGE.csv":
+        df_files["RID"] = df_files["PTID"].apply(
+            lambda x: bids.remove_space_and_symbols(x)[4:]
+        )
+    else:
+        df_files["RID"] = df_files["RID"].apply(lambda x: pad_id(x))
+    return df_files.loc[df_files["RID"].isin([x[4:] for x in bids_ids])]
+
+
+def update_age(row):
+    """Update age with time passed since bl to current visit"""
+    from datetime import datetime
+
+    if row["session_id"] != "ses-M00":
+        examdate = datetime.strptime(row["EXAMDATE"], "%Y-%m-%d")
+        examdate_bl = datetime.strptime(row["EXAMDATE_bl"], "%Y-%m-%d")
+        delta = examdate - examdate_bl
+
+        updated_age = round(
+            float(row["AGE"]) + (delta.days / 365.25),
+            1,
+        )
+    else:
+        updated_age = row["AGE"]
+    return updated_age
+
+
+def pad_id(ref_id):
+    """Add leading zeros to the RID to keep à length of 4"""
+    rid = str(ref_id)
+    # Fill the rid with the needed number of zero
+    if 4 - len(rid) > 0:
+        zeros_to_add = 4 - len(rid)
+        rid = "0" * zeros_to_add + rid
+    return rid
+
+
+def get_visit_id(row, location):
+    """Return a common visit ID across different files"""
+    import pandas as pd
+
+    locations_visicode2 = [
+        "ADAS_ADNIGO2.csv",
+        "DXSUM_PDXCONV_ADNIALL.csv",
+        "CDR.csv",
+        "NEUROBAT.csv",
+        "GDSCALE.csv",
+        "MODHACH.csv",
+        "MOCA.csv",
+        "NPIQ.csv",
+        "MEDHIST.csv",
+        "VITALS.csv",
+        "UWNPSYCHSUM_03_07_19.csv",
+        "UWNPSYCHSUM_03_26_20.csv",
+        "ECOGPT.csv",
+        "ECOGSP.csv",
+        "FCI.csv",
+        "CCI.csv",
+        "NPIQ.csv",
+        "NPI.csv",
+    ]
+
+    if location in locations_visicode2:
+        if pd.isnull(row["VISCODE2"]) or row["VISCODE2"] == "f":
+            return None
+        if row["VISCODE2"] == "sc":
+            return "sc"  # visit_id = "bl"
+        else:
+            visit_id = row["VISCODE2"]
+    elif location in [
+        "BHR_EVERYDAY_COGNITION.csv",
+        "BHR_BASELINE_QUESTIONNAIRE.csv",
+        "BHR_LONGITUDINAL_QUESTIONNAIRE.csv",
+    ]:
+        visit_id = row["Timepoint"]
+    else:
+        visit_id = row["VISCODE"]
+    return viscode_to_session(visit_id)
+
+
 def create_adni_sessions_dict(
     bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths
 ):
     """Extract all the data required for the sessions files and organize them in a dictionary.
 
     Args:
-        bids_ids:
+        bids_ids: list of subject IDs to process
         clinic_specs_path: path to the specifications for converting the clinical data
         clinical_data_dir: path to the clinical data folder
         bids_subjs_paths: a list with the path to all the BIDS subjects
     """
-    from datetime import datetime
+
     from os import path
 
     import pandas as pd
 
-    import clinica.iotools.bids_utils as bids
     from clinica.utils.stream import cprint
 
     # Load data
-    sessions = pd.read_excel(clinic_specs_path, sheet_name="sessions.tsv")
-    sessions_fields = sessions["ADNI"]
-    field_location = sessions["ADNI location"]
-    sessions_fields_bids = sessions["BIDS CLINICA"]
-    fields_dataset = []
-    previous_location = ""
-    fields_bids = []
-    sessions_dict = {}
+    df_sessions = pd.read_csv(clinic_specs_path + "_sessions.tsv", sep="\t")
 
-    for i in range(0, len(sessions_fields)):
-        if not pd.isnull(sessions_fields[i]):
-            fields_bids.append(sessions_fields_bids[i])
-            fields_dataset.append(sessions_fields[i])
+    files = list(df_sessions["ADNI location"].unique())
+    files = [x for x in files if not pd.isnull(x)]
+    df_subj_session = pd.DataFrame()
+    # write line to get field_bids = sessions['BIDS CLINICA'] without the null values
 
-    sessions_df = pd.DataFrame(columns=fields_bids)
+    # Iterate over the metadata files
 
-    for i in range(0, len(field_location)):
-        # If the i-th field is available
-        if (not pd.isnull(field_location[i])) and path.exists(
-            path.join(clinical_data_dir, field_location[i].split("/")[0])
-        ):
-            # Load the file
-            tmp = field_location[i].split("/")
-            location = tmp[0]
-            if location != previous_location:
-                previous_location = location
-                file_to_read_path = path.join(clinical_data_dir, location)
-                cprint(f"\tReading clinical data file: {location}")
-                file_to_read = pd.read_csv(file_to_read_path, dtype=str)
+    for location in files:
 
-                for r in range(0, len(file_to_read.values)):
-                    row = file_to_read.iloc[r]
+        location = location.split("/")[0]
+        if path.exists(path.join(clinical_data_dir, location)):
 
-                    # Depending of the file that needs to be open, identify and
-                    # do needed preprocessing on the column that contains the
-                    # subjects ids
-                    if location == "ADNIMERGE.csv":
-                        id_ref = "PTID"
-                        # What was the meaning of this line ?
-                        # subj_id = row[id_ref.decode('utf-8')]
-                        subj_id = row[id_ref]
-                        subj_id = bids.remove_space_and_symbols(subj_id)
-                    else:
-                        id_ref = "RID"
-                        rid = str(row[id_ref])
+            file_to_read_path = path.join(clinical_data_dir, location)
+            cprint(f"\tReading clinical data file: {location}")
 
-                        # Fill the rid with the needed number of zero
-                        if 4 - len(rid) > 0:
-                            zeros_to_add = 4 - len(rid)
-                            subj_id = "0" * zeros_to_add + rid
-                        else:
-                            subj_id = rid
+            df_file = pd.read_csv(file_to_read_path, dtype=str)
+            df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
 
-                    # Extract the BIDS subject id related with the original
-                    # subject id
-                    subj_bids = [s for s in bids_ids if subj_id in s]
-
-                    if len(subj_bids) == 0:
-                        pass
-                    elif len(subj_bids) > 1:
-                        raise ("Error: multiple subjects found for the same RID")
-                    else:
-                        subj_bids = subj_bids[0]
-                        for j in range(0, len(sessions_fields)):
-                            # If the i-th field is available
-                            if not pd.isnull(sessions_fields[j]):
-                                # Extract only the fields related to the current file opened
-                                if location in field_location[i]:
-                                    if location in [
-                                        "ADAS_ADNIGO2.csv",
-                                        "DXSUM_PDXCONV_ADNIALL.csv",
-                                        "CDR.csv",
-                                        "NEUROBAT.csv",
-                                        "GDSCALE.csv",
-                                        "MODHACH.csv",
-                                        "MOCA.csv",
-                                        "NPIQ.csv",
-                                        "MEDHIST.csv",
-                                        "VITALS.csv",
-                                        "UWNPSYCHSUM_03_07_19.csv",
-                                        "ECOGPT.csv",
-                                        "ECOGSP.csv",
-                                        "FCI.csv",
-                                        "CCI.csv",
-                                        "NPIQ.csv",
-                                        "NPI.csv",
-                                    ]:
-                                        if (
-                                            pd.isnull(row["VISCODE2"])
-                                            or row["VISCODE2"] == "f"
-                                        ):
-                                            continue
-                                        visit_id = row["VISCODE2"]
-                                        # Convert sc to bl
-                                        if visit_id == "sc":
-                                            visit_id = "bl"
-                                    elif location in [
-                                        "BHR_EVERYDAY_COGNITION.csv",
-                                        "BHR_BASELINE_QUESTIONNAIRE.csv",
-                                        "BHR_LONGITUDINAL_QUESTIONNAIRE.csv",
-                                    ]:
-                                        visit_id = row["Timepoint"]
-                                    else:
-                                        visit_id = row["VISCODE"]
-                                    try:
-                                        field_value = row[sessions_fields[j]]
-                                        bids_field_name = sessions_fields_bids[j]
-
-                                        # Calculating age from ADNIMERGE
-                                        if (sessions_fields[j] == "AGE") and (
-                                            visit_id != "bl"
-                                        ):
-                                            examdate = datetime.strptime(
-                                                row["EXAMDATE"], "%Y-%m-%d"
-                                            )
-                                            examdate_bl = datetime.strptime(
-                                                row["EXAMDATE_bl"], "%Y-%m-%d"
-                                            )
-                                            delta = examdate - examdate_bl
-
-                                            # Adding time passed since bl to patient's age in current visit
-                                            field_value = round(
-                                                float(field_value)
-                                                + (delta.days / 365.25),
-                                                1,
-                                            )
-
-                                        sessions_dict = update_sessions_dict(
-                                            sessions_dict,
-                                            subj_bids,
-                                            visit_id,
-                                            field_value,
-                                            bids_field_name,
-                                        )
-                                    except KeyError:
-                                        pass
-                                        # cprint('Field value ' + Fore.RED + sessions_fields[j] + Fore.RESET +
-                                        # ' could not be added to sessions.tsv')
+            if not df_filtered.empty:
+                df_filtered["session_id"] = df_filtered.apply(
+                    lambda x: get_visit_id(x, location), axis=1
+                )
+                if location == "ADNIMERGE.csv":
+                    df_filtered["AGE"] = df_filtered.apply(
+                        lambda x: update_age(x), axis=1
+                    )
+                df_subj_session = update_sessions_df(
+                    df_subj_session, df_filtered, df_sessions, location
+                )
             else:
-                continue
+                dict_column_correspondance = dict(
+                    zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
+                )
+                df_filtered.rename(columns=dict_column_correspondance, inplace=True)
+                df_filtered = df_filtered.loc[
+                    :, (~df_filtered.columns.isin(df_subj_session.columns))
+                ]
+                df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
 
-    # Write the sessions dictionary created in several tsv files
-    write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths)
+    if df_subj_session.empty:
+        raise ValueError("Empty dataset detected. Clinical data cannot be extracted.")
+
+    # Nv/None refer to sessions whose session is undefined. "sc" is the screening session with unreliable (incomplete)
+    # data.
+    df_subj_session = df_subj_session[
+        (~df_subj_session.session_id.isin(["ses-Nv", "sc", None]))
+    ]
+
+    write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
 
-def update_sessions_dict(
-    sessions_dict, subj_bids, visit_id, field_value, bids_field_name
-):
-    """
-    Update the sessions dictionary for the bids subject specified by subj_bids
-    created by the method create_adni_sessions_dict
+def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
+    """Update the sessions dataframe with data of current subject.
 
     Args:
-        sessions_dict: the session_dict created by the method create_adni_sessions_dict
-        subj_bids: bids is of the subject for which the information need to be updated
-        visit_id: session name (ex m54)
-        field_value: value of the field extracted from the original clinical data
-        bids_field_name: BIDS name of the field to update (Ex: diagnosis or examination date)
-
-    Returns:
-        session_dict: the dictonary updated
+        df_subj_session: dataframe containing aggregate sessions
+        df_filtered: dataframe with current subject sessions data
+        df_sessions: dataframe with the the metadata information
+        location: the clinica data filename
     """
-    from pandas import isna
 
-    if visit_id == "sc" or visit_id == "uns1":
-        return sessions_dict
+    import pandas as pd
 
-    visit_id = viscode_to_session(visit_id)
+    df_columns_to_add = df_sessions[
+        df_sessions["ADNI location"].str.contains(location, na=False)
+    ][["BIDS CLINICA", "ADNI"]]
 
-    if bids_field_name == "diagnosis":
-        field_value = convert_diagnosis_code(field_value)
+    df_columns_to_add = df_columns_to_add[
+        (df_columns_to_add["ADNI"].isin(df_filtered.columns))
+        & (~df_columns_to_add["BIDS CLINICA"].isin(df_subj_session.columns))
+    ]
 
-    # If the dictionary already contain the subject add or update information
-    # regarding a specific session, otherwise create the entry
-    if subj_bids in sessions_dict:
-        sess_available = sessions_dict[subj_bids].keys()
+    df_temp = df_filtered[
+        ["RID", "session_id"] + list(df_columns_to_add["ADNI"])
+    ].copy()
+    df_temp.columns = ["RID", "session_id"] + list(df_columns_to_add["BIDS CLINICA"])
 
-        if visit_id in sess_available:
-            # If a value is already contained, update it only if the previous value is nan
-            if bids_field_name in sessions_dict[subj_bids][visit_id]:
+    # if error in adni data (duplicate session id), keep only the first row
+    df_temp.drop_duplicates(subset=["RID", "session_id"], keep="first", inplace=True)
 
-                if isna(sessions_dict[subj_bids][visit_id][bids_field_name]):
-                    sessions_dict[subj_bids][visit_id].update(
-                        {bids_field_name: field_value}
-                    )
-            else:
-                sessions_dict[subj_bids][visit_id].update(
-                    {bids_field_name: field_value}
-                )
-        else:
-            sessions_dict[subj_bids].update(
-                {
-                    visit_id: {
-                        "session_id": f"ses-{visit_id}",
-                        bids_field_name: field_value,
-                    }
-                }
-            )
-    else:
-        sessions_dict.update(
-            {
-                subj_bids: {
-                    visit_id: {
-                        "session_id": f"ses-{visit_id}",
-                        bids_field_name: field_value,
-                    }
-                }
-            }
+    try:
+        df_temp["diagnosis"] = df_temp["diagnosis"].apply(
+            lambda x: convert_diagnosis_code(x)
         )
+    except KeyError:
+        pass
 
-    return sessions_dict
+    if df_subj_session.empty:
+        df_subj_session = df_temp
+    else:
+        df_subj_session = pd.merge(
+            df_temp, df_subj_session, on=["RID", "session_id"], how="outer"
+        )
+    return df_subj_session
 
 
 def convert_diagnosis_code(diagnosis_code):
@@ -830,7 +805,6 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
     from os.path import normpath
 
     import pandas as pd
-    from colorama import Fore
 
     from clinica.utils.stream import cprint
 
@@ -890,7 +864,8 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                             scans_df["mri_field"] = field_strength
                     except KeyError:
                         cprint(
-                            f"{Fore.RED}No information found for file {file_name}.{Fore.RESET}"
+                            msg=f"No information found for file {file_name}",
+                            lvl="warning",
                         )
 
                     scans_df = scans_df.fillna("n/a")
@@ -933,7 +908,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
 
     Returns: Dataframe containing metadata and existing paths
     """
-    from os import path, walk
+    from pathlib import Path
 
     import pandas as pd
 
@@ -942,33 +917,39 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     is_dicom = []
     image_folders = []
 
-    for row in images.iterrows():
-        image = row[1]
-        seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
-        image_path = ""
-        for (dirpath, dirnames, filenames) in walk(seq_path):
-            found = False
-            for d in dirnames:
-                if d == prefix + str(image[id_field]):
-                    image_path = path.join(dirpath, d)
-                    found = True
-                    break
-            if found:
-                break
+    for _, image in images.iterrows():
+        # Base directory where to look for image files.
+        seq_path = Path(source_dir) / str(image["Subject_ID"])
 
-        dicom = True
-        for (dirpath, dirnames, filenames) in walk(image_path):
-            for f in filenames:
-                if f.endswith(".nii"):
-                    dicom = False
-                    image_path = path.join(dirpath, f)
-                    break
+        # Generator finding files containing the image ID.
+        find_file = filter(
+            lambda p: p.is_file(),
+            seq_path.rglob(f"*_I{image['Image_ID']}.*"),
+        )
+
+        try:
+            # Grab the first file from the generator.
+            next_file: Path = next(find_file)
+
+            # Whether the image data are DICOM or not.
+            dicom = "dcm" in next_file.suffix
+
+            # Compute the image path (DICOM folder or NIfTI path).
+            image_path = str(next_file.parent if dicom else next_file)
+        except StopIteration:
+            # In case no file is found.
+            image_path = ""
+            dicom = True
 
         is_dicom.append(dicom)
         image_folders.append(image_path)
         if image_path == "":
             cprint(
-                f"No {modality} image path found for subject {image.Subject_ID} in visit {image.VISCODE} with image ID {image.Image_ID}"
+                msg=(
+                    f"No {modality} image path found for subject {image.Subject_ID} in visit {image.VISCODE} "
+                    f"with image ID {image.Image_ID}"
+                ),
+                lvl="info",
             )
 
     images.loc[:, "Is_Dicom"] = pd.Series(is_dicom, index=images.index)
@@ -1062,9 +1043,9 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
     from glob import glob
     from os import path
 
-    from colorama import Fore
     from numpy import nan
 
+    from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
 
@@ -1136,12 +1117,19 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         counter.value += 1
         if image.Path == "":
             cprint(
-                f"{Fore.RED}[{modality.upper()}] No path specified for {image.Subject_ID} "
-                f"in session {image.VISCODE} {counter.value}/{total}{Fore.RESET}"
+                msg=(
+                    f"[{modality.upper()}] No path specified for {image.Subject_ID} "
+                    f"in session {image.VISCODE} {counter.value}/{total}"
+                ),
+                lvl="info",
             )
         else:
             cprint(
-                f"[{modality.upper()}] Processing subject {subject} - session {image.VISCODE}, {counter.value}/{total}"
+                msg=(
+                    f"[{modality.upper()}] Processing subject {subject} - session {image.VISCODE},"
+                    f" {counter.value}/{total}"
+                ),
+                lvl="info",
             )
 
     if image.Path == "":
@@ -1158,13 +1146,13 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
     output_path = path.join(
         bids_dir,
         "sub-ADNI" + bids_subj,
-        "ses-" + session,
+        session,
         modality_specific[modality]["output_path"],
     )
     output_filename = (
         "sub-ADNI"
         + bids_subj
-        + "_ses-"
+        + "_"
         + session
         + modality_specific[modality]["output_filename"]
     )
@@ -1191,13 +1179,8 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             zip_image = "y"
 
         if image.Is_Dicom:
-            command = f"dcm2niix -b {generate_json} -z {zip_image} -o {output_path} -f {output_filename} {image_path}"
-            subprocess.run(
-                command,
-                shell=True,
-                stderr=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-            )
+            command = f"dcm2niix -w 0 -b {generate_json} -z {zip_image} -o {output_path} -f {output_filename} {image_path}"
+            run_dcm2niix(command)
 
             # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
             exception_t = glob(path.join(output_path, output_filename + "_t[0-9]*"))
@@ -1226,81 +1209,19 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
             # Check if conversion worked (output files exist)
             if not nifti_exists or not dwi_bvec_and_bval_exist:
-
                 cprint(
-                    f"WARNING: Conversion with dcm2niix failed, trying with dcm2nii "
-                    f"for subject {subject} and session {session}"
+                    msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
+                    lvl="warning",
                 )
-                command = f"dcm2nii -a n -d n -e n -i y -g {zip_image} -p n -m n -r n -x n -o {output_path} {image_path}"
-                subprocess.run(
-                    command,
-                    shell=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-
-                # If modality is DWI we check if .bvec and .bval files are also present
-                if modality == "dwi":
-                    bvec_file = path.join(
-                        output_path, subject.replace("_", "") + ".bvec"
-                    )
-                    bval_file = path.join(
-                        output_path, subject.replace("_", "") + ".bval"
-                    )
-
-                    if os.path.exists(bvec_file) and os.path.exists(bval_file):
-                        os.rename(
-                            bvec_file, path.join(output_path, output_filename + ".bvec")
-                        )
-                        os.rename(
-                            bval_file, path.join(output_path, output_filename + ".bval")
-                        )
-                    else:
-                        cprint(
-                            f"{Fore.RED}WARNING: bvec and bval not generated by dcm2nii "
-                            f"for subject {subject} and session {session}{Fore.RESET}"
-                        )
-
-                nifti_files = glob(
-                    path.join(output_path, subject.replace("_", "") + ".nii*")
-                )
-                output_image = path.join(output_path, output_filename + ".nii.gz")
-
-                # If no NIFTI files were converted then conversion failed
-                if nifti_files:
-                    nifti_file = nifti_files[0]
-                    conversion_failed = False
-                else:
-                    conversion_failed = True
-
-                # If image is not going to be centered, then it is already a .nii.gz file
-                # and we only need to rename it to the output image filename
-                if (
-                    not conversion_failed
-                    and not modality_specific[modality]["to_center"]
-                ):
-                    os.rename(nifti_file, output_image)
-
-                # We check if neither the NIFTI file to be centered
-                # nor the final compressed NIFTI file exist. In this case, conversion failed
-                if conversion_failed or (
-                    not path.isfile(nifti_file) and not path.isfile(output_image)
-                ):
-                    cprint(
-                        f"{Fore.RED} WARNING: Conversion of the dicom failed "
-                        f"for subject {subject} and session {session}. Image path: {image_path}{Fore.RESET}"
-                    )
-                    # If conversion failed we remove the folder if it is empty
-                    if not os.listdir(output_path):
-                        os.rmdir(output_path)
-                    return nan
+                return nan
 
             # Case when JSON file was expected, but not generated by dcm2niix
             elif generate_json == "y" and not os.path.exists(
                 path.join(output_path, output_filename + ".json")
             ):
                 cprint(
-                    f"WARNING: JSON file not generated by dcm2niix for subject {subject} and session {session}"
+                    msg=f"JSON file not generated by dcm2niix for subject {subject} and session {session}",
+                    lvl="warning",
                 )
 
             if modality_specific[modality]["to_center"]:
@@ -1311,10 +1232,13 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             output_image = path.join(output_path, output_filename + ".nii.gz")
             if modality_specific[modality]["to_center"]:
                 center_nifti_origin(image_path, output_image)
-                if output_image is None:
+                if not output_image:
                     cprint(
-                        f"Error: For subject {subject} in session {session}, "
-                        f"an error occurred recentering Nifti image: {image_path}"
+                        msg=(
+                            f"For subject {subject} in session {session}, "
+                            f"an error occurred whilst recentering Nifti image: {image_path}"
+                        ),
+                        lvl="error",
                     )
             else:
                 shutil.copy(image_path, output_image)
@@ -1337,9 +1261,9 @@ def viscode_to_session(viscode):
         M00 if is the baseline session or the original session name capitalized
     """
     if viscode == "bl":
-        return "M00"
+        return "ses-M00"
     else:
-        return viscode.capitalize()
+        return "ses-" + viscode.capitalize()
 
 
 def session_to_viscode(session_name):

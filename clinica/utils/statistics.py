@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains utilities for statistics.
 
 Currently, it contains one function to generate TSV file containing mean map based on a parcellation.
@@ -35,20 +33,19 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     if not isinstance(in_atlas, AtlasAbstract):
         raise Exception("Atlas element must be an AtlasAbstract type")
 
-    if out_file is None:
+    if not out_file:
         fname, ext = op.splitext(op.basename(in_normalized_map))
         if ext == ".gz":
-            fname, ext2 = op.splitext(fname)
-            ext = ext2 + ext
+            fname, _ = op.splitext(fname)
         out_file = op.abspath(f"{fname}_statistics_{in_atlas.get_name_atlas()}.tsv")
 
     atlas_labels = nib.load(in_atlas.get_atlas_labels())
-    atlas_labels_data = atlas_labels.get_data()
+    atlas_labels_data = atlas_labels.get_fdata(dtype="float32")
 
     img = nib.load(in_normalized_map)
-    img_data = img.get_data()
+    img_data = img.get_fdata(dtype="float32")
 
-    atlas_correspondence = pandas.io.parsers.read_csv(in_atlas.get_tsv_roi(), sep="\t")
+    atlas_correspondence = pandas.read_csv(in_atlas.get_tsv_roi(), sep="\t")
     label_name = list(atlas_correspondence.roi_name)
     label_value = list(
         atlas_correspondence.roi_value
@@ -67,7 +64,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         )
         data.to_csv(out_file, sep="\t", index=True, encoding="utf-8")
     except Exception as e:
-        cprint(f"Impossible to save {out_file} with pandas")
+        cprint(msg=f"Impossible to save {out_file} with pandas", lvl="error")
         raise e
 
     return out_file

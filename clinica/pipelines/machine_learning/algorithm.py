@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 import itertools
 import json
 from multiprocessing.pool import ThreadPool
@@ -662,7 +659,7 @@ class RandomForest(base.MLAlgorithm):
         for result in results_list:
             result_feat = result["best_parameter"]["max_features"]
 
-            if result_feat is None:
+            if not result_feat:
                 max_features = 1.0
             elif result_feat in ["auto", "sqrt"]:
                 max_features = np.sqrt(n_features) / n_features

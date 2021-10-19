@@ -1,4 +1,6 @@
 # coding: utf8
+from os import PathLike
+from pathlib import Path
 
 
 def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
@@ -27,10 +29,10 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     import numpy as np
 
     print(" ** comparing " + os.path.basename(file1) + " **")
-    data1 = nib.load(file1).get_fdata()
+    data1 = nib.load(file1).get_fdata(dtype="float32")
     data1[np.isnan(data1)] = 0
 
-    data2 = nib.load(file2).get_fdata()
+    data2 = nib.load(file2).get_fdata(dtype="float32")
     data2[np.isnan(data2)] = 0
 
     # Get mask where data are 0 in data1 and data2
@@ -175,10 +177,18 @@ def same_missing_modality_tsv(file1, file2):
     func_task_rest2 = list(df2["func_task-rest"])
 
     # Subjects are sorted in alphabetical order. The same permutation of element is applied on each column
-    subjects1_sorted, pet_AV45_1 = (list(t) for t in zip(*sorted(zip(subjects1, pet_AV45_1))))
-    subjects2_sorted, pet_AV45_2 = (list(t) for t in zip(*sorted(zip(subjects2, pet_AV45_2))))
-    subjects1_sorted, pet_FDG_1 = (list(t) for t in zip(*sorted(zip(subjects1, pet_FDG_1))))
-    subjects2_sorted, pet_FDG_2 = (list(t) for t in zip(*sorted(zip(subjects2, pet_FDG_2))))
+    subjects1_sorted, pet_AV45_1 = (
+        list(t) for t in zip(*sorted(zip(subjects1, pet_AV45_1)))
+    )
+    subjects2_sorted, pet_AV45_2 = (
+        list(t) for t in zip(*sorted(zip(subjects2, pet_AV45_2)))
+    )
+    subjects1_sorted, pet_FDG_1 = (
+        list(t) for t in zip(*sorted(zip(subjects1, pet_FDG_1)))
+    )
+    subjects2_sorted, pet_FDG_2 = (
+        list(t) for t in zip(*sorted(zip(subjects2, pet_FDG_2)))
+    )
     subjects1_sorted, t1w1 = (list(t) for t in zip(*sorted(zip(subjects1, t1w1))))
     subjects2_sorted, t1w2 = (list(t) for t in zip(*sorted(zip(subjects2, t1w2))))
     subjects1_sorted, func_task_rest1 = (
@@ -198,33 +208,39 @@ def same_missing_modality_tsv(file1, file2):
     )
 
 
-def compare_folders(out, ref, shared_folder_name):
+def compare_folders(outdir: Path, refdir: Path, tmp_path) -> bool:
     from filecmp import cmp
-    from os import remove
-    from os.path import join
 
-    out_txt = join(out, "out_folder.txt")
-    ref_txt = join(ref, "ref_folder.txt")
+    file_out = tmp_path / "file_out.txt"
+    file_ref = tmp_path / "file_ref.txt"
+    tree(outdir, file_out)
+    tree(refdir, file_ref)
 
-    list_files(join(out, shared_folder_name), filename=out_txt)
-    list_files(join(ref, shared_folder_name), filename=ref_txt)
-
-    # Compare them
-    if not cmp(out_txt, ref_txt):
-        with open(out_txt, "r") as fin:
+    if not cmp(file_out, file_ref):
+        with open(file_out, "r") as fin:
             out_message = fin.read()
-        with open(ref_txt, "r") as fin:
+        with open(file_ref, "r") as fin:
             ref_message = fin.read()
-        remove(out_txt)
-        remove(ref_txt)
         raise ValueError(
             "Comparison of out and ref directories shows mismatch :\n "
             "OUT :\n" + out_message + "\n REF :\n" + ref_message
         )
 
-    # Clean folders
-    remove(out_txt)
-    remove(ref_txt)
+    return True
+
+
+def tree(dir: Path, file_out: Path):
+
+    # Create a file (file_out) with a visual tree representing the file
+    # hierarchy at a given directory
+    print(type(dir))
+    file_content = ""
+    for path in sorted(dir.rglob("*")):
+        depth = len(path.relative_to(dir).parts)
+        spacer = "    " * depth
+        file_content = file_content + f"{spacer}+ {path.name}\n"
+    print(file_content)
+    file_out.write_text(file_content)
 
 
 def list_files(startpath, filename=None):
@@ -238,15 +254,12 @@ def list_files(startpath, filename=None):
     Returns:
         void
     """
-    from os import sep, walk
+    from os import remove, sep, walk
     from os.path import abspath, basename, exists, expanduser, expandvars
 
     if exists(filename):
-        raise RuntimeError(
-            filename
-            + " already exists. Remove it before "
-            + "launching this tree-like function."
-        )
+        remove(filename)
+
     expanded_path = abspath(expanduser(expandvars(startpath)))
     for root, dirs, files in walk(expanded_path):
         level = root.replace(startpath, "").count(sep)

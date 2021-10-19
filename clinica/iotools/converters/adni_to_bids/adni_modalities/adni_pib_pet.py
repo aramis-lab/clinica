@@ -19,12 +19,11 @@ def convert_adni_pib_pet(
     from os import path
 
     import pandas as pd
-    from colorama import Fore
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
-    if subjs_list is None:
+    if not subjs_list:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
@@ -37,7 +36,7 @@ def convert_adni_pib_pet(
     )
     cprint("Paths of PIB PET images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "pib", mod_to_update=mod_to_update)
-    cprint(f"{Fore.GREEN}PIB PET conversion done.{Fore.RESET}")
+    cprint(msg="PIB PET conversion done.", lvl="debug")
 
 
 def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):

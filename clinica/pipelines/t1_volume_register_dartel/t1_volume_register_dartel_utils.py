@@ -1,5 +1,3 @@
-# coding: utf8
-
 import os
 
 from nipype.interfaces.base import File, TraitedSpec, traits
@@ -128,7 +126,7 @@ def create_iteration_parameters(dartel_templates, iteration_parameters):
             "Wrong number of templates. 6 templates were expected, one for each DARTEL iteration."
         )
 
-    if iteration_parameters is None:
+    if not iteration_parameters:
         iter1 = (3, (4, 2, 1e-06), 0, dartel_templates[0])
         iter2 = (3, (2, 1, 1e-06), 0, dartel_templates[1])
         iter3 = (3, (1, 0.5, 1e-06), 1, dartel_templates[2])

@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config
@@ -57,7 +54,6 @@ class PETLinear(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import (
             ClinicaBIDSError,
@@ -104,16 +100,16 @@ class PETLinear(cpe.Pipeline):
                 fetch_file(FILE1, path_to_mask)
             except IOError as err:
                 cprint(
-                    "Unable to download required template (mni_icbm152) for processing:"
-                    + err
+                    msg=f"Unable to download required template (mni_icbm152) for processing: {err}",
+                    lvl="error",
                 )
         if not (exists(self.ref_crop)):
             try:
                 fetch_file(FILE2, path_to_mask)
             except IOError as err:
                 cprint(
-                    "Unable to download required template (ref_crop) for processing:"
-                    + err
+                    msg=f"Unable to download required template (ref_crop) for processing: {err}",
+                    lvl="error",
                 )
 
         # Inputs from BIDS directory

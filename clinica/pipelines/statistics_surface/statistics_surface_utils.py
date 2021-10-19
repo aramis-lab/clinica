@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def get_t1_freesurfer_custom_file():
     import os
 

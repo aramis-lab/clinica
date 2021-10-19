@@ -67,6 +67,13 @@ git push origin <branch_name>
   The pull request will update automatically and will finally be merged by the
   reviewer(s).
 
+Note: In order to normalize code style across Clinica, we use the [Black code
+formatter](https://black.readthedocs.io).  A nice idea is to use it in
+combination of a pre-commit hook. Please see [instructions
+here](https://pre-commit.com/) about how to install the precommit hook in your
+local copy (shortly: run `pre-commit install` inside the cloned folder). 
+
+
 ### Keeping your fork up to date
 
 If you plan to contribute regularly to Clinica, you have to synchronize your
@@ -151,6 +158,10 @@ Guide](https://google.github.io/styleguide/pyguide.html) for docstrings. The [PE
 8](https://www.python.org/dev/peps/pep-0008/) convention is used but some rules
 are ignored (they are listed in the [`.pep8speaks.yml` configuration
 file](https://github.com/aramis-lab/clinica/blob/dev/.pep8speaks.yml).
+
+Recently, we start using [Black code formatter](https://black.readthedocs.io).
+Please, be sure that you run it before commiting your new code. To
+automatically do it, you can install a pre-commit hook, as described above.
 
 For Markdown files, currently we don't have a consistent style (but try to keep
 line length under 80 characters :)).

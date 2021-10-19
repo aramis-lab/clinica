@@ -1,0 +1,3 @@
+Field	BIDS CLINICA	Modalities related	BIDS format	Type
+Corresponding Image_ID in ADNI	scan_id		<modality_folder_label>/<filename> Ex: anat/example_T1w.nii.gz	string
+Strength of the MRI field	mri_field	T1/DWI/fMRI	1.0 or 1.5 or 3.0 or 7.0	float

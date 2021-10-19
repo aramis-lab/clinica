@@ -1,7 +1,4 @@
-# coding: utf8
-
-
-def zip_nii(in_file, same_dir=False):
+def zip_nii(in_file: str, same_dir: bool = False):
     import gzip
     import shutil
     from os import getcwd
@@ -23,10 +20,7 @@ def zip_nii(in_file, same_dir=False):
         return in_file
     # Not compressed
 
-    if same_dir:
-        out_file = abspath(join(orig_dir, base + ext + ".gz"))
-    else:
-        out_file = abspath(join(getcwd(), base + ext + ".gz"))
+    out_file = abspath(join(orig_dir if same_dir else getcwd(), base + ext + ".gz"))
 
     with open(in_file, "rb") as f_in, gzip.open(out_file, "wb") as f_out:
         shutil.copyfileobj(f_in, f_out)
@@ -34,7 +28,7 @@ def zip_nii(in_file, same_dir=False):
     return out_file
 
 
-def unzip_nii(in_file):
+def unzip_nii(in_file: str):
     from nipype.algorithms.misc import Gunzip
     from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
@@ -82,19 +76,19 @@ def save_participants_sessions(participant_ids, session_ids, out_folder, out_fil
         )
         data.to_csv(tsv_file, sep="\t", index=False, encoding="utf-8")
     except Exception as e:
-        cprint(f"Impossible to save {out_file} with pandas")
+        cprint(msg=f"Impossible to save {out_file} with pandas", lvl="error")
         raise e
 
 
-def get_subject_id(bids_or_caps_file):
+def get_subject_id(bids_or_caps_file: str) -> str:
     """Extract "sub-<participant_id>_ses-<session_label>" from BIDS or CAPS file."""
     import re
 
     m = re.search(r"(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)", bids_or_caps_file)
 
-    if m is None:
+    if not m:
         raise ValueError(
-            "Input filename is not in a BIDS or CAPS compliant format."
+            f"Input filename {bids_or_caps_file} is not in a BIDS or CAPS compliant format."
             " It does not contain the subject and session information."
         )
 
@@ -160,25 +154,24 @@ def read_participant_tsv(tsv_file):
     import os
 
     import pandas as pd
-    from colorama import Fore
 
     from clinica.utils.exceptions import ClinicaException
 
     if not os.path.isfile(tsv_file):
         raise ClinicaException(
-            f"\n{Fore.RED}[Error] The TSV file you gave is not a file.{Fore.RESET}\n"
-            f"\n{Fore.YELLOW}Error explanations:{Fore.RESET}\n"
-            f" - Clinica expected the following path to be a file: {Fore.BLUE}{tsv_file}{Fore.RESET}\n"
-            f" - If you gave relative path, did you run Clinica on the good folder?"
+            "The TSV file you gave is not a file.\n"
+            "Error explanations:\n"
+            f"\t- Clinica expected the following path to be a file: {tsv_file}\n"
+            "\t- If you gave relative path, did you run Clinica on the good folder?"
         )
     ss_df = pd.io.parsers.read_csv(tsv_file, sep="\t")
     if "participant_id" not in list(ss_df.columns.values):
         raise ClinicaException(
-            f"\n{Fore.RED}[Error] The TSV file does not contain participant_id column (path: {tsv_file}){Fore.RESET}"
+            f"The TSV file does not contain participant_id column (path: {tsv_file})"
         )
     if "session_id" not in list(ss_df.columns.values):
         raise ClinicaException(
-            f"\n{Fore.RED}[Error] The TSV file does not contain session_id column (path: {tsv_file}){Fore.RESET}"
+            f"The TSV file does not contain session_id column (path: {tsv_file})"
         )
     participants = list(ss_df.participant_id)
     sessions = list(ss_df.session_id)
@@ -187,3 +180,31 @@ def read_participant_tsv(tsv_file):
     return [sub.strip(" ") for sub in participants], [
         ses.strip(" ") for ses in sessions
     ]
+
+
+def extract_metadata_from_json(json_file, list_keys):
+    """Extract fields from JSON file."""
+    import json
+    import datetime
+    from clinica.utils.exceptions import ClinicaException
+
+    list_values = []
+    try:
+        with open(json_file, "r") as file:
+            data = json.load(file)
+            for key in list_keys:
+                list_values.append(data[key])
+    except EnvironmentError:
+        raise EnvironmentError(
+            f"[Error] Clinica could not open the following JSON file: {json_file}"
+        )
+    except KeyError as e:
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        error_message = (
+            f"[{now}] Error: Clinica could not find the e key in the following JSON file: {json_file}"
+        )
+        raise ClinicaException(error_message)
+    finally:
+        file.close()
+
+    return list_values

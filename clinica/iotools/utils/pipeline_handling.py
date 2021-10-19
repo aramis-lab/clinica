@@ -1,5 +1,3 @@
-# coding: utf8
-
 """Methods to find information in the different pipelines of Clinica."""
 
 
@@ -93,9 +91,9 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
             for atlas_path in atlas_paths:
                 atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
                 if path.exists(atlas_path) and (
-                    freesurfer_atlas_selection is None
+                    not freesurfer_atlas_selection
                     or (
-                        freesurfer_atlas_selection is not None
+                        freesurfer_atlas_selection
                         and atlas_name in freesurfer_atlas_selection
                     )
                 ):
@@ -121,6 +119,7 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
 
     summary_df = generate_summary(pipeline_df, "t1-freesurfer", ignore_groups=True)
     final_df = pd.concat([df, pipeline_df], axis=1)
+    final_df.reset_index(inplace=True)
 
     return final_df, summary_df
 
@@ -188,7 +187,7 @@ def volume_pipeline(
     if "participant_id" in df.columns.values:
         df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
-    if group_selection is None:
+    if not group_selection:
         try:
             group_selection = os.listdir(path.join(caps_dir, "groups"))
         except FileNotFoundError:
@@ -215,7 +214,7 @@ def volume_pipeline(
                 group_path = path.join(mod_path, group)
                 if os.path.exists(group_path):
                     # Looking for atlases
-                    if atlas_selection is None:
+                    if not atlas_selection:
                         atlas_paths = glob(
                             path.join(
                                 group_path,
@@ -235,7 +234,7 @@ def volume_pipeline(
                             )
 
                     # Filter pvc_restriction
-                    if pvc_restriction is not None:
+                    if pvc_restriction:
                         if pvc_restriction == 1:
                             atlas_paths = [
                                 atlas_path
@@ -250,7 +249,7 @@ def volume_pipeline(
                             ]
 
                     # Filter tracers
-                    if tracers_selection is not None:
+                    if tracers_selection:
                         atlas_paths = [
                             atlas_path
                             for atlas_path in atlas_paths
@@ -279,6 +278,7 @@ def volume_pipeline(
 
     summary_df = generate_summary(pipeline_df, pipeline_name)
     final_df = pd.concat([df, pipeline_df], axis=1)
+    final_df.reset_index(inplace=True)
 
     return final_df, summary_df
 

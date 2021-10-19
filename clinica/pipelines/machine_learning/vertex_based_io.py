@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def load_data(mgh_list):
     """
 
@@ -28,6 +25,8 @@ def load_data(mgh_list):
     N_cumul = np.concatenate(([0], np.cumsum(N_vertex)))
     for s in range(len(mgh_list)):
         for h in range(len(mgh_list[s])):
-            current_data = np.squeeze(nib.load(mgh_list[s][h]).get_data())
+            current_data = np.squeeze(
+                nib.load(mgh_list[s][h]).get_fdata(dtype="float32")
+            )
             data[s, N_cumul[h] : N_cumul[h + 1]] = current_data
     return data

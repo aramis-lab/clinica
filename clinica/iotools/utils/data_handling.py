@@ -1,6 +1,6 @@
-# coding: utf8
-
 """Data handling scripts."""
+
+import click
 
 
 def compute_default_filename(out_path):
@@ -41,6 +41,7 @@ def create_merge_file(
         ignore_sessions_files: If True the information related to sessions and scans is not read (optional)
         pipelines: when adding CAPS information, indicates the pipelines that will be merged (optional)
     """
+    import json
     import os
     from os import path
 
@@ -71,7 +72,8 @@ def create_merge_file(
 
     out_path = compute_default_filename(out_tsv)
     out_dir = path.dirname(out_path)
-    os.makedirs(out_dir, exist_ok=True)
+    if len(out_dir) > 0:
+        os.makedirs(out_dir, exist_ok=True)
 
     merged_df = pd.DataFrame(columns=participants_df.columns.values)
 
@@ -83,7 +85,10 @@ def create_merge_file(
         ]
         row_participant_df.reset_index(inplace=True, drop=True)
         if len(row_participant_df) == 0:
-            cprint(f"Warning: participant {subject} does not exist in participants.tsv")
+            cprint(
+                msg=f"Participant {subject} does not exist in participants.tsv",
+                lvl="warning",
+            )
             row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
 
         if ignore_sessions_files:
@@ -118,15 +123,31 @@ def create_merge_file(
                     scans_df = pd.read_csv(scan_path, sep="\t")
                     for idx in scans_df.index.values:
                         filepath = scans_df.loc[idx, "filename"]
-                        filename = path.basename(filepath).split(".")[0]
-                        modality = "_".join(filename.split("_")[2::])
-                        for col in scans_df.columns.values:
-                            if col == "filename":
-                                pass
-                            else:
-                                value = scans_df.loc[idx, col]
-                                new_col_name = f"{modality}_{col}"
-                                scans_dict.update({new_col_name: value})
+                        if filepath.endswith(".nii.gz"):
+                            filename = path.basename(filepath).split(".")[0]
+                            modality = "_".join(filename.split("_")[2::])
+                            for col in scans_df.columns.values:
+                                if col == "filename":
+                                    pass
+                                else:
+                                    value = scans_df.loc[idx, col]
+                                    new_col_name = f"{modality}_{col}"
+                                    scans_dict.update({new_col_name: value})
+                            json_path = path.join(
+                                bids_dir,
+                                subject,
+                                session,
+                                filepath.split(".")[0] + ".json",
+                            )
+                            if path.exists(json_path):
+                                with open(json_path, "r") as f:
+                                    json_dict = json.load(f)
+                                for key, value in json_dict.items():
+                                    new_col_name = f"{modality}_{key}"
+                                    scans_dict.update({new_col_name: value})
+                    scans_dict = {
+                        str(key): str(value) for key, value in scans_dict.items()
+                    }
                     row_scans_df = pd.DataFrame(scans_dict, index=[0])
                 else:
                     row_scans_df = pd.DataFrame()
@@ -142,10 +163,12 @@ def create_merge_file(
     col_list.insert(1, col_list.pop(col_list.index("session_id")))
     merged_df = merged_df[col_list]
 
+    tmp = merged_df.select_dtypes(include=[np.number])
+    # Round numeric values in dataframe to 6 decimal values
+    merged_df.loc[:, tmp.columns] = np.round(tmp, 6)
     merged_df.to_csv(out_path, sep="\t", index=False)
-    cprint("End of BIDS information merge.")
+    cprint("End of BIDS information merge.", lvl="debug")
 
-    n_bids_columns = len(merged_df.columns)
     merged_df.reset_index(drop=True, inplace=True)
 
     # CAPS
@@ -163,13 +186,13 @@ def create_merge_file(
             "t1-freesurfer": t1_freesurfer_pipeline,
         }
         merged_summary_df = pd.DataFrame()
-        if pipelines is None:
+        if not pipelines:
             for pipeline_name, pipeline_fn in pipeline_options.items():
                 merged_df, summary_df = pipeline_fn(caps_dir, merged_df, **kwargs)
-                if summary_df is not None:
+                if summary_df is not None and not summary_df.empty:
                     merged_summary_df = pd.concat([merged_summary_df, summary_df])
 
-                if summary_df is None or len(summary_df) == 0:
+                if summary_df is None or summary_df.empty:
                     cprint(
                         f"{pipeline_name} outputs were not found in the CAPS folder."
                     )
@@ -186,25 +209,26 @@ def create_merge_file(
                 "No outputs were found for any pipeline in the CAPS folder. "
                 "The output only contains BIDS information."
             )
-        index_column_df = pd.DataFrame(
-            index=np.arange(n_atlas),
-            columns=["first_column_index", "last_column_index"],
-        )
-        index_column_df.iat[0, 0] = n_bids_columns
-        index_column_df.iat[n_atlas - 1, 1] = np.shape(merged_df)[1] - 1
-        for i in range(1, n_atlas):
-            index_column_df.iat[i, 0] = (
-                index_column_df.iat[i - 1, 0] + merged_summary_df.iat[i - 1, 5]
-            )
-            index_column_df.iat[i - 1, 1] = index_column_df.iat[i, 0] - 1
-
+        columns = merged_df.columns.values.tolist()
         merged_summary_df.reset_index(inplace=True, drop=True)
-        merged_summary_df = pd.concat([merged_summary_df, index_column_df], axis=1)
+        for idx in merged_summary_df.index:
+            first_column_name = merged_summary_df.loc[idx, "first_column_name"]
+            last_column_name = merged_summary_df.loc[idx, "last_column_name"]
+            merged_summary_df.loc[idx, "first_column_index"] = columns.index(
+                first_column_name
+            )
+            merged_summary_df.loc[idx, "last_column_index"] = columns.index(
+                last_column_name
+            )
+
         summary_path = path.splitext(out_path)[0] + "_summary.tsv"
         merged_summary_df.to_csv(summary_path, sep="\t", index=False)
 
+        tmp = merged_df.select_dtypes(include=[np.number])
+        # Round numeric values in dataframe to 12 floating point values
+        merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
         merged_df.to_csv(out_path, sep="\t")
-        cprint("End of CAPS information merge.")
+        cprint("End of CAPS information merge.", lvl="debug")
 
 
 def find_mods_and_sess(bids_dir):
@@ -248,7 +272,6 @@ def find_mods_and_sess(bids_dir):
             for p in mods_paths_folders:
                 p = p[:-1]
                 mods_avail.append(p.split("/").pop())
-
             if "func" in mods_avail:
                 list_funcs_paths = glob(path.join(session, "func", "*bold.nii.gz"))
                 for func_path in list_funcs_paths:
@@ -487,8 +510,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
         print_statistics,
     )
 
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+    os.makedirs(out_dir, exist_ok=True)
 
     # Find all the modalities and sessions available for the input dataset
     mods_and_sess = find_mods_and_sess(bids_dir)
@@ -644,10 +666,9 @@ def create_subs_sess_list(
 
     import pandas as pd
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
 
-    if file_name is None:
+    if not file_name:
         file_name = "subjects_sessions_list.tsv"
     subjs_sess_tsv = open(path.join(output_dir, file_name), "w")
     subjs_sess_tsv.write("participant_id" + "\t" + "session_id" + "\n")
@@ -700,20 +721,18 @@ def center_nifti_origin(input_image, output_image):
 
     import nibabel as nib
     import numpy as np
-    from colorama import Fore
     from nibabel.spatialimages import ImageFileError
 
     error_str = None
     try:
         img = nib.load(input_image)
     except FileNotFoundError:
-        error_str = Fore.RED + "[Error] No such file " + input_image + Fore.RESET
+        error_str = f"No such file {input_image}"
     except ImageFileError:
-        error_str = (
-            f"{Fore.RED}[Error] File {input_image} could not be read.{Fore.RESET}"
-        )
+        error_str = f"File {input_image} could not be read"
+
     except Exception as e:
-        error_str = f"{Fore.RED}[Error] File {input_image} could not be loaded with nibabel: {e}{Fore.RESET}"
+        error_str = f"File {input_image} could not be loaded with nibabel: {e}"
 
     if not error_str:
         try:
@@ -735,17 +754,15 @@ def center_nifti_origin(input_image, output_image):
             nib.save(new_img, output_image)
             if not isfile(output_image):
                 error_str = (
-                    f"{Fore.RED}[Error] NIfTI file created but Clinica could not save it to {output_image}. "
-                    f"Please check that the output folder has the correct permissions.{Fore.RESET}"
+                    f"NIfTI file created but Clinica could not save it to {output_image}. "
+                    "Please check that the output folder has the correct permissions."
                 )
         except Exception as e:
             error_str = (
-                Fore.RED
-                + "[Error] File "
+                "File "
                 + input_image
                 + " could not be processed with nibabel: "
                 + str(e)
-                + Fore.RESET
             )
 
     return output_image, error_str
@@ -769,31 +786,23 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     from glob import glob
     from os import listdir
     from os.path import basename, isdir, isfile, join
-    from shutil import copy2, copytree
-
-    from colorama import Fore
+    from shutil import copy, copy2, copytree
 
     from clinica.utils.exceptions import ClinicaBIDSError
     from clinica.utils.inputs import check_bids_folder
 
     # output and input must be different, so that we do not mess with user's data
     if bids_dir == output_dir:
-        raise ClinicaBIDSError(
-            Fore.RED
-            + "[Error] Input BIDS and output directories must be different"
-            + Fore.RESET
-        )
-
-    assert isinstance(modality, list), "modality arg must be a list of str"
+        raise ClinicaBIDSError("Input BIDS and output directories must be different")
 
     # check that input is a BIDS dir
     check_bids_folder(bids_dir)
 
     for f in listdir(bids_dir):
         if isdir(join(bids_dir, f)) and not isdir(join(output_dir, f)):
-            copytree(join(bids_dir, f), join(output_dir, f))
+            copytree(join(bids_dir, f), join(output_dir, f), copy_function=copy)
         elif isfile(join(bids_dir, f)) and not isfile(join(output_dir, f)):
-            copy2(join(bids_dir, f), output_dir)
+            copy(join(bids_dir, f), output_dir)
 
     pattern = join(output_dir, "**/*.nii*")
     nifti_files = glob(pattern, recursive=True)
@@ -822,8 +831,7 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
             all_errors.append(current_error)
     if len(all_errors) > 0:
         final_error_msg = (
-            Fore.RED
-            + "[Error] Clinica encoutered "
+            "Clinica encoutered "
             + str(len(all_errors))
             + " error(s) while trying to center all NIfTI images.\n"
         )
@@ -882,7 +890,13 @@ def write_list_of_files(file_list, output_file):
 
 
 def check_relative_volume_location_in_world_coordinate_system(
-    label_1, nifti_list1, label_2, nifti_list2, bids_dir, modality
+    label_1,
+    nifti_list1,
+    label_2,
+    nifti_list2,
+    bids_dir,
+    modality,
+    skip_question=False,
 ):
     """
     Check if the NIfTI file list nifti_list1 and nifti_list2 provided in argument are not too far apart (otherwise coreg
@@ -901,7 +915,6 @@ def check_relative_volume_location_in_world_coordinate_system(
     from os.path import abspath, basename
 
     import numpy as np
-    from colorama import Fore
 
     from clinica.utils.stream import cprint
 
@@ -916,9 +929,9 @@ def check_relative_volume_location_in_world_coordinate_system(
 
     if len(pairs_with_problems) > 0:
         warning_message = (
-            f"{Fore.YELLOW}[Warning] It appears that {str(len(pairs_with_problems))} "
-            f"pairs of files have an important relative offset. "
-            f"SPM coregistration has a high probability to fail on these files:\n\n"
+            f"It appears that {str(len(pairs_with_problems))} "
+            "pairs of files have an important relative offset. "
+            "SPM coregistration has a high probability to fail on these files:\n\n"
         )
 
         # File column width : 3 spaces more than the longest string to display
@@ -976,22 +989,15 @@ def check_relative_volume_location_in_world_coordinate_system(
             "\nClinica provides a tool to counter this problem by replacing the center "
             "of the volume at the origin of the world coordinates.\nUse the following "
             "command line to correct the header of the faulty NIFTI volumes in a new folder:\n\n"
-            f'{Fore.BLUE}clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality "{modality}"{Fore.RESET}\n\n'
-            f"{Fore.YELLOW}You will find more information on the command by typing {Fore.RESET}"
-            f"{Fore.BLUE}clinica iotools center-nifti{Fore.RESET}"
-            f"{Fore.YELLOW} in the console.\nDo you still want to launch the pipeline now?{Fore.RESET}"
+            f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`\n\n"
+            "You will find more information on the command by typing `clinica iotools center-nifti` in the console."
         )
-        cprint(warning_message)
-        while True:
-            cprint("Your answer [yes/no]:")
-            answer = input()
-            if answer.lower() in ["yes", "no"]:
-                break
-            else:
-                cprint(Fore.RED + "You must answer yes or no" + Fore.RESET)
-        if answer.lower() == "no":
-            cprint(Fore.RED + "Clinica will now exit..." + Fore.RESET)
-            sys.exit(0)
+        cprint(msg=warning_message, lvl="warning")
+
+        if not skip_question:
+            if not click.confirm("Do you still want to launch the pipeline?"):
+                click.echo("Clinica will now exit...")
+                sys.exit(0)
 
 
 def check_volume_location_in_world_coordinate_system(
@@ -1015,10 +1021,8 @@ def check_volume_location_in_world_coordinate_system(
     import sys
     from os.path import abspath, basename
 
+    import click
     import numpy as np
-    from colorama import Fore
-
-    from clinica.utils.stream import cprint
 
     list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
     if len(list_non_centered_files) > 0:
@@ -1036,7 +1040,7 @@ def check_volume_location_in_world_coordinate_system(
         )
 
         warning_message = (
-            f"{Fore.YELLOW}[Warning] It appears that {str(len(list_non_centered_files))} files "
+            f"It appears that {str(len(list_non_centered_files))} files "
             "have a center way out of the origin of the world coordinate system. SPM has a high "
             "probability to fail on these files (for coregistration or segmentation):\n\n"
         )
@@ -1056,11 +1060,7 @@ def check_volume_location_in_world_coordinate_system(
                 "%-" + str(file_width) + "s%-" + str(center_width) + "s%-25.2f\n"
             ) % (basename(file), str(center), l2)
 
-        cmd_line = (
-            f"{Fore.BLUE}\n"
-            f'clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality "{modality}"'
-            f"\n\n{Fore.YELLOW}"
-        )
+        cmd_line = f"`clinica iotools center-nifti {abspath(bids_dir)} {abspath(bids_dir)}_centered --modality {modality}`"
 
         warning_message += (
             "\nIf you are trying to launch the t1-freesurfer pipeline, you can ignore this message "
@@ -1071,27 +1071,16 @@ def check_volume_location_in_world_coordinate_system(
             "\nClinica provides a tool to counter this problem by replacing the center of the volume"
             " at the origin of the world coordinates.\nUse the following command line to correct the "
             f"header of the faulty NIFTI volumes in a new folder:\n{cmd_line}"
-            f"You will find more information on the command by typing "
-            f"{Fore.BLUE}clinica iotools center-nifti{Fore.RESET} {Fore.YELLOW}in the console.{Fore.RESET}"
+            "You will find more information on the command by typing "
+            "clinica iotools center-nifti in the console."
         )
-        cprint(warning_message)
-        if not skip_question:
-            cprint(
-                f"{Fore.YELLOW}Do you still want to launch the pipeline now?{Fore.RESET}"
-            )
-            while True:
-                cprint("Your answer [yes/no]:")
-                answer = input()
-                if answer.lower() in ["yes", "no"]:
-                    break
-                else:
-                    cprint(Fore.RED + "You must answer yes or no" + Fore.RESET)
-        else:
-            answer = "yes"
 
-        if answer.lower() == "no":
-            cprint(Fore.RED + "Clinica will now exit..." + Fore.RESET)
-            sys.exit(0)
+        click.echo(warning_message)
+
+        if not skip_question:
+            if not click.confirm("Do you still want to launch the pipeline?"):
+                click.echo("Clinica will now exit...")
+                sys.exit(0)
 
 
 def is_centered(nii_volume, threshold_l2=50):
@@ -1147,7 +1136,8 @@ def get_world_coordinate_of_center(nii_volume):
 
     import nibabel as nib
     import numpy as np
-    from colorama import Fore
+
+    from clinica.utils.stream import cprint
 
     assert isinstance(nii_volume, str), "input argument nii_volume must be a str"
     assert isfile(nii_volume), "input argument must be a path to a file"
@@ -1155,8 +1145,9 @@ def get_world_coordinate_of_center(nii_volume):
     try:
         orig_nifti = nib.load(nii_volume)
     except nib.filebasedimages.ImageFileError:
-        print(
-            f"{Fore.RED}[Error] {nii_volume}  could not be read by nibabel. Is it a valid NIfTI file ?{Fore.RESET}"
+        cprint(
+            msg=f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI file ?",
+            lvl="warning",
         )
         return np.nan
 

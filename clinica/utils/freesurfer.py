@@ -1,5 +1,194 @@
-# coding: utf8
 """This module contains FreeSurfer utilities."""
+
+
+def generate_regional_measures_alt(
+    segmentation_path, subject_id, atlas, output_dir=None
+):
+    """
+    Read stats files located in
+    <segmentation_path>/<subject_id>/stats/*.stats
+    and generate TSV files in <segmentation_path>/regional_measures
+    folder.
+
+    Note: the .stats files contain both 1) a table with statistical
+    information (e.g., structure volume) and 2) 'secondary' statistical
+    information with all lines starting with the sentence '# Measure'.
+    The .tsv files return the relevant statistical information from both
+    sources.
+
+    Args:
+        segmentation_path (string): Path to the FreeSurfer segmentation.
+        subject_id (string): Subject ID in the form sub-CLNC01_ses-M00, sub-CLNC01_long-M00M18 or
+            sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18
+        output_dir (string): folder where the .tsv stats files will be
+            stored. Will be [path_segmentation]/regional_measures if no
+            dir is provided by the user
+    """
+    import errno
+    import os
+
+    import pandas
+
+    from clinica.utils.freesurfer import (
+        extract_image_id_from_longitudinal_segmentation,
+        get_secondary_stats,
+        write_tsv_file,
+    )
+
+    if segmentation_path != "":
+        image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
+        prefix = image_id.participant_id
+        if image_id.session_id:
+            prefix = prefix + "_" + image_id.session_id
+        if image_id.long_id:
+            prefix = prefix + "_" + image_id.long_id
+
+        stats_folder = os.path.join(
+            os.path.expanduser(segmentation_path), subject_id, "stats"
+        )
+        if not os.path.isdir(stats_folder):
+            raise IOError(
+                "Image %s does not contain FreeSurfer segmentation"
+                % prefix.replace("_", " | ")
+            )
+
+        if not output_dir:
+            output_dir = os.path.join(segmentation_path, "regional_measures")
+        try:
+            os.makedirs(output_dir)
+        except OSError as exception:
+            # if dest_dir exists, go on, if its other error, raise
+            if exception.errno != errno.EEXIST:
+                raise
+
+        # Generate TSV files for parcellation files
+        #
+        # Columns in ?h.BA.stats, ?h.aparc.stats or ?h.aparc.a2009s.stats file
+        columns_parcellation = [
+            "StructName",
+            "NumVert",
+            "SurfArea",
+            "GrayVol",
+            "ThickAvg",
+            "ThickStd",
+            "MeanCurv",
+            "GausCurv",
+            "FoldInd",
+            "CurvInd",
+        ]
+        hemi_dict = {"left": "lh", "right": "rh"}
+        atlas_dict = {
+            atlas: atlas,
+        }
+        info_dict = {
+            "volume": "GrayVol",
+            "thickness": "ThickAvg",
+            "area": "SurfArea",
+            "meancurv": "MeanCurv",
+        }
+        for atlas in [atlas]:
+            stats_filename_dict = dict()
+            df_dict = dict()
+            # read both left and right .stats files
+            for hemi in ("left", "right"):
+                stats_filename_dict[hemi] = os.path.join(
+                    stats_folder,
+                    "{0}.{1}.stats".format(hemi_dict[hemi], atlas_dict[atlas]),
+                )
+                df_dict[hemi] = pandas.read_csv(
+                    stats_filename_dict[hemi],
+                    names=columns_parcellation,
+                    comment="#",
+                    header=None,
+                    delimiter="\s+",
+                    dtype=str,
+                )
+            # generate .tsv from 1) the table in .stats file and 2) the
+            # secondary (commented out) information common to both 'left'
+            # and 'right' .stats file
+            for info in ("volume", "thickness", "area", "meancurv"):
+                # Secondary information (common to 'left' and 'right')
+                secondary_stats_dict = get_secondary_stats(
+                    stats_filename_dict["left"], info
+                )
+                # Join primary and secondary information
+                key_list = (
+                    list("lh_" + df_dict["left"]["StructName"])
+                    + list("rh_" + df_dict["right"]["StructName"])
+                    + list(secondary_stats_dict.keys())
+                )
+                col_name = info_dict[info]
+                value_list = (
+                    list(df_dict["left"][col_name])
+                    + list(df_dict["right"][col_name])
+                    + list(secondary_stats_dict.values())
+                )
+                # Write .tsv
+                write_tsv_file(
+                    os.path.join(
+                        output_dir,
+                        "{0}_parcellation-{1}_{2}.tsv".format(prefix, atlas, info),
+                    ),
+                    key_list,
+                    info,
+                    value_list,
+                )
+
+        # Generate TSV files for segmentation files
+        #
+        # Columns in aseg.stats or wmparc.stats file
+        columns_segmentation = [
+            "Index",
+            "SegId",
+            "NVoxels",
+            "Volume_mm3",
+            "StructName",
+            "normMean",
+            "normStdDev",
+            "normMin",
+            "normMax",
+            "normRange",
+        ]
+
+        # Parsing aseg.stats
+        stats_filename = os.path.join(stats_folder, "aseg.stats")
+        df = pandas.read_csv(
+            stats_filename,
+            comment="#",
+            header=None,
+            delimiter="\s+",
+            dtype=str,
+            names=columns_segmentation,
+        )
+        secondary_stats_dict = get_secondary_stats(stats_filename, "volume")
+        key_list = list(df["StructName"]) + list(secondary_stats_dict.keys())
+        value_list = list(df["Volume_mm3"]) + list(secondary_stats_dict.values())
+        write_tsv_file(
+            os.path.join(output_dir, prefix + "_segmentationVolumes.tsv"),
+            key_list,
+            "volume",
+            value_list,
+        )
+
+        # Parsing wmparc.stats
+        stats_filename = os.path.join(stats_folder, "wmparc.stats")
+        df = pandas.read_csv(
+            stats_filename,
+            comment="#",
+            header=None,
+            delimiter="\s+",
+            dtype=str,
+            names=columns_segmentation,
+        )
+        secondary_stats_dict = get_secondary_stats(stats_filename, "volume")
+        key_list = list(df["StructName"]) + list(secondary_stats_dict.keys())
+        value_list = list(df["Volume_mm3"]) + list(secondary_stats_dict.values())
+        write_tsv_file(
+            os.path.join(output_dir, prefix + "_parcellation-wm_volume.tsv"),
+            key_list,
+            "volume",
+            value_list,
+        )
 
 
 def extract_image_id_from_longitudinal_segmentation(freesurfer_id):

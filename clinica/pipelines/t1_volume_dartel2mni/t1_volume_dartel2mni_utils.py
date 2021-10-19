@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def prepare_flowfields(flow_fields, tissues):
     return [[f] * len(tissues) for f in flow_fields]
 

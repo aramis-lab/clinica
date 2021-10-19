@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains SPM utilities."""
 
 INDEX_TISSUE_MAP = {
@@ -17,8 +15,6 @@ def check_spm_home():
     import os
     import platform
 
-    from colorama import Fore
-
     from .check_dependency import check_environment_variable
     from .exceptions import ClinicaMissingDependencyError
 
@@ -28,8 +24,8 @@ def check_spm_home():
     if spm_standalone_home:
         if not os.path.isdir(spm_standalone_home):
             raise ClinicaMissingDependencyError(
-                f"{Fore.RED}\n[Error] The SPMSTANDALONE_HOME environment variable you "
-                f"gave is not a folder (content: {spm_standalone_home}).{Fore.RESET}"
+                "The SPMSTANDALONE_HOME environment variable you "
+                f"gave is not a folder (content: {spm_standalone_home})."
             )
         if platform.system() == "Darwin":
             spm_home = os.path.join(
@@ -100,7 +96,6 @@ def use_spm_standalone():
     import os
     import platform
 
-    from colorama import Fore
     from nipype.interfaces import spm
 
     from clinica.utils.stream import cprint
@@ -110,9 +105,7 @@ def use_spm_standalone():
         spm_standalone_home = os.getenv("SPMSTANDALONE_HOME")
         mcr_home = os.getenv("MCR_HOME")
         if os.path.exists(spm_standalone_home) and os.path.exists(mcr_home):
-            cprint(
-                f"{Fore.GREEN}SPM standalone has been found and will be used in this pipeline{Fore.RESET}"
-            )
+            cprint("SPM standalone has been found and will be used in this pipeline")
             if platform.system().lower().startswith("darwin"):
                 matlab_cmd = (
                     f"cd {spm_standalone_home} && ./run_spm12.sh {mcr_home} script"

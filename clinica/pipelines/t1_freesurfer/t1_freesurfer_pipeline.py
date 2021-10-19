@@ -1,7 +1,9 @@
-# coding: utf8
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
+from pathlib import Path
+from typing import Optional
+
+from networkx.generators import atlas
 from nipype import config
 
 import clinica.pipelines.engine as cpe
@@ -35,14 +37,15 @@ class T1FreeSurfer(cpe.Pipeline):
 
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
-        from colorama import Fore
-
         from clinica.utils.stream import cprint
 
         if "-dontrun" in self.parameters["recon_all_args"].split(" "):
             cprint(
-                f"{Fore.YELLOW}[Warning] Found -dontrun flag for FreeSurfer recon-all. "
-                f"Please note that this will not run the segmentation.{Fore.RESET}"
+                msg=(
+                    "Found -dontrun flag for FreeSurfer recon-all. "
+                    "Please note that this will not run the segmentation."
+                ),
+                lvl="warning",
             )
 
     def check_custom_dependencies(self):
@@ -82,7 +85,6 @@ class T1FreeSurfer(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.iotools.utils.data_handling import (
             check_volume_location_in_world_coordinate_system,
@@ -104,25 +106,28 @@ class T1FreeSurfer(cpe.Pipeline):
         )
         if len(processed_ids) > 0:
             cprint(
-                f"{Fore.YELLOW}Clinica found {len(processed_ids)} image(s) "
-                f"already processed in CAPS directory:{Fore.RESET}"
+                msg=(
+                    f"Clinica found {len(processed_ids)} image(s) "
+                    "already processed in CAPS directory:"
+                ),
+                lvl="warning",
             )
             for image_id in processed_ids:
-                cprint(f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}")
+                cprint(msg=f"{image_id.replace('_', ' | ')}", lvl="warning")
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/freesurfer_cross_sectional"
                 cprint(
-                    f"{Fore.YELLOW}\nOutput folders in {output_folder} will be recreated.\n{Fore.RESET}"
+                    msg=f"Output folders in {output_folder} will be recreated.",
+                    lvl="warning",
                 )
             else:
-                cprint(
-                    f"{Fore.YELLOW}\nImage(s) will be ignored by Clinica.\n{Fore.RESET}"
-                )
+                cprint(msg="Image(s) will be ignored by Clinica.", lvl="warning")
                 input_ids = [
                     p_id + "_" + s_id
                     for p_id, s_id in zip(self.subjects, self.sessions)
                 ]
                 to_process_ids = list(set(input_ids) - set(processed_ids))
+
                 self.subjects, self.sessions = extract_subjects_sessions_from_filename(
                     to_process_ids
                 )
@@ -168,6 +173,7 @@ class T1FreeSurfer(cpe.Pipeline):
             self.bids_directory,
             skip_question=self.parameters["skip_question"],
         )
+
         self.connect(
             [
                 (read_node, self.input_node, [("t1w", "t1w")]),

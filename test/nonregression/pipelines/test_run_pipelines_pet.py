@@ -6,42 +6,54 @@ different functions available in Clinica
 """
 
 import warnings
-from os import pardir
+from os import fspath
+from pathlib import Path
 from test.nonregression.testing_tools import *
 
-# Determine location for working_directory
+import pytest
+
 warnings.filterwarnings("ignore")
 
 
-def test_run_PETVolume(cmdopt):
+@pytest.fixture(
+    params=[
+        "PETVolume",
+        "PETLinear",
+        "PETSurfaceCrossSectional",
+    ]
+)
+def test_name(request):
+    return request.param
+
+
+def run_PETVolume(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     import shutil
-    from os.path import abspath, dirname, join
 
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "PETVolume")
-
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "PETVolume"))
-    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
+    # Arrange
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     parameters = {
         "group_label": "UnitTest",
         "acq_label": "fdg",
         "suvr_reference_region": "pons",
+        "skip_question": False,
     }
     pipeline = PETVolume(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "PETVolume"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         parameters=parameters,
     )
+    # Acte
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
+    # Assert
     subjects = [
         "sub-ADNI011S4105",
         "sub-ADNI023S4020",
@@ -49,20 +61,26 @@ def test_run_PETVolume(cmdopt):
         "sub-ADNI128S4832",
     ]
     out_files = [
-        join(
-            root,
-            "out/caps/subjects/" + sub + "/ses-M00/pet/preprocessing/group-UnitTest",
-            sub
-            + "_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz",
+        (
+            output_dir
+            / "caps"
+            / "subjects"
+            / sub
+            / "ses-M00/pet/preprocessing/group-UnitTest"
+            / (
+                sub
+                + "_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+            )
         )
         for sub in subjects
     ]
     ref_files = [
-        join(
-            root,
-            "ref",
-            sub
-            + "_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz",
+        (
+            ref_dir
+            / (
+                sub
+                + "_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+            )
         )
         for sub in subjects
     ]
@@ -72,74 +90,56 @@ def test_run_PETVolume(cmdopt):
             out_files[i], ref_files[i], (1e-2, 0.25), (1e-1, 0.001)
         )
 
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "PETVolume"), recreate=False)
 
+def run_PETLinear(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
 
-def test_run_PETLinear(cmdopt):
     import shutil
-    from os.path import abspath, dirname, join
 
     from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "PETLinear")
-
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "PETLinear"))
-    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     parameters = {"acq_label": "fdg", "suvr_reference_region": "pons"}
 
     # Instantiate pipeline
     pipeline = PETLinear(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "PETLinear"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         parameters=parameters,
     )
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
-    # Check output vs ref
-    out_folder = join(root, "out")
-    ref_folder = join(root, "ref")
-
-    compare_folders(out_folder, ref_folder, shared_folder_name="caps")
-
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "PETLinear"), recreate=False)
+    compare_folders(output_dir / "caps", ref_dir / "caps", output_dir)
 
 
-def test_run_PETSurfaceCrossSectional(cmdopt):
+def run_PETSurfaceCrossSectional(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
     import shutil
-    from os.path import abspath, dirname, join
 
     import nibabel as nib
     import numpy as np
 
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
 
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    root = join(root, "data", "PETSurface")
-
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "PETSurface"))
-    shutil.copytree(join(root, "in", "caps"), join(root, "out", "caps"))
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     parameters = {
         "acq_label": "FDG",
         "suvr_reference_region": "pons",
-        "pvc_psf_tsv": join(root, "in", "subjects.tsv"),
+        "pvc_psf_tsv": fspath(input_dir / "subjects.tsv"),
         "longitudinal": False,
+        "skip_question": False,
     }
     pipeline = PetSurface(
-        bids_directory=join(root, "in", "bids"),
-        caps_directory=join(root, "out", "caps"),
-        tsv_file=join(root, "in", "subjects.tsv"),
-        base_dir=join(working_dir, "PETSurface"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         parameters=parameters,
     )
     pipeline.build()
@@ -147,27 +147,30 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
 
     # Check files
     out_files = [
-        join(
-            root,
-            "out/caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface",
-            "sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
-            + h
-            + "_fwhm-"
-            + str(f)
-            + "_projection.mgh",
+        (
+            output_dir
+            / "caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface"
+            / (
+                "sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
+                + h
+                + "_fwhm-"
+                + str(f)
+                + "_projection.mgh"
+            )
         )
         for h in ["lh", "rh"]
         for f in [0, 5, 10, 15, 20, 25]
     ]
     ref_files = [
-        join(
-            root,
-            "ref",
-            "sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
-            + h
-            + "_fwhm-"
-            + str(f)
-            + "_projection.mgh",
+        (
+            ref_dir
+            / (
+                "sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
+                + h
+                + "_fwhm-"
+                + str(f)
+                + "_projection.mgh"
+            )
         )
         for h in ["lh", "rh"]
         for f in [0, 5, 10, 15, 20, 25]
@@ -175,14 +178,39 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
 
     for i in range(len(out_files)):
         assert np.allclose(
-            np.squeeze(nib.load(out_files[i]).get_data()),
-            np.squeeze(nib.load(ref_files[i]).get_data()),
+            np.squeeze(nib.load(fspath(out_files[i])).get_fdata(dtype="float32")),
+            np.squeeze(nib.load(fspath(ref_files[i])).get_fdata(dtype="float32")),
             rtol=3e-2,
             equal_nan=True,
         )
 
-    clean_folder(join(root, "out", "caps"), recreate=False)
-    clean_folder(join(working_dir, "PETSurface"), recreate=False)
+
+def test_run_pet(cmdopt, tmp_path, test_name):
+    import shutil
+
+    base_dir = Path(cmdopt["input"])
+    input_dir = base_dir / test_name / "in"
+    ref_dir = base_dir / test_name / "ref"
+    tmp_out_dir = tmp_path / test_name / "out"
+    tmp_out_dir.mkdir(parents=True)
+    working_dir = Path(cmdopt["wd"])
+
+    if test_name == "PETVolume":
+        run_PETVolume(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "PETLinear":
+        run_PETLinear(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "PETSurfaceCrossSectional":
+        run_PETSurfaceCrossSectional(
+            base_dir / "PETSurface" / "in",
+            tmp_out_dir,
+            base_dir / "PETSurface" / "ref",
+            working_dir,
+        )
+    else:
+        print(f"Test {test_name} not available.")
+        assert 0
 
 
 # def test_run_PETSurfaceLongitudinal(cmdopt):
@@ -234,7 +262,7 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
 #
 #     # Tolerance values were taken from PETSurface - Cross-sectional case
 #     for i in range(len(out_files)):
-#         assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
-#                            np.squeeze(nib.load(ref_files[i]).get_data()),
+#         assert np.allclose(np.squeeze(nib.load(out_files[i]).get_fdata(dtype="float32")),
+#                            np.squeeze(nib.load(ref_files[i]).get_fdata(dtype="float32")),
 #                            rtol=3e-2, equal_nan=True)
 #     clean_folder(join(root, 'out', 'caps'), recreate=False)

@@ -12,88 +12,6 @@ pipeline {
     stages {
       stage('Run Tests') {
         parallel {
-          stage('Linux:iotools') {
-            agent { label 'ubuntu' }
-            when { 
-              branch 'dev'
-            }
-            environment {
-              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
-              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
-              }
-            steps {
-              echo 'Testing pipeline run...'
-              sh 'echo "Agent name: ${NODE_NAME}"' 
-              sh '''
-                 set +x
-                 eval "$(conda shell.bash hook)"
-                 source /usr/local/Modules/init/profile.sh
-                 source ./.jenkins/scripts/find_env.sh
-                 conda activate ${CLINICA_ENV_BRANCH}
-                 module load clinica.all
-                 cd test
-                 ln -s /mnt/data/ci/data_ci_linux ./data
-                 pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR_LINUX \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    nonregression/iotools
-                 module purge
-                 conda deactivate
-                 '''
-            }
-            post {
-              always {
-                sh '''
-                   rm -rf "${WORK_DIR_LINUX}/*"
-                   '''
-              }
-            }
-          }
-          stage('Mac:iotools') {
-            agent { label 'macos' }
-            when { 
-              branch 'dev'
-            }
-            environment {
-              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
-              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-              WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
-              }
-            steps {
-              echo 'Testing pipeline instantation...'
-              sh 'echo "Agent name: ${NODE_NAME}"' 
-              sh '''
-                 set +x
-                 eval "$(conda shell.bash hook)"
-                 source /usr/local/opt/modules/init/bash
-                 source ./.jenkins/scripts/find_env.sh
-                 conda activate ${CLINICA_ENV_BRANCH}
-                 module load clinica.all
-                 cd test
-                 ln -s /Volumes/data/data_ci ./data
-                 pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR_MAC \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    nonregression/iotools
-                 module purge
-                 conda deactivate
-                 '''
-            }
-            post {
-              always {
-                sh '''
-                   rm -rf "${WORK_DIR_MAC}/*"
-                   '''
-              }
-            }
-          }
           stage('Linux:pipAnat') {
             agent { label 'ubuntu && long' }
             when { 
@@ -121,8 +39,25 @@ pipeline {
                     --working_directory=$WORK_DIR_LINUX \
                     --disable-warnings \
                     --timeout=0 \
+                    -k "T1Volume" \
                     -n 4 \
                     nonregression/pipelines/test_run_pipelines_anat.py
+                 pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR_LINUX \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -k "T1Linear" \
+                    -n 4 \
+                    nonregression/pipelines/test_run_pipelines_anat.py
+                  # pytest \
+                  #  --verbose \
+                  #  --working_directory=$WORK_DIR_LINUX \
+                  #  --disable-warnings \
+                  #  --timeout=0 \
+                  #  -k "T1Freesurfer" \
+                  #  -n 4 \
+                  #  nonregression/pipelines/test_run_pipelines_anat.py  
                  module purge
                  conda deactivate
                  '''
@@ -131,6 +66,8 @@ pipeline {
               always {
                 sh '''
                    rm -rf "${WORK_DIR_LINUX}/*"
+                   cd test/
+                   # ./deleteOut.sh
                    '''
               }
             }
@@ -146,12 +83,12 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
                  eval "$(conda shell.bash hook)"
-                 source /usr/local/opt/modules/init/bash
+                 source /usr/local/opt/modules/init/bash 
                  source ./.jenkins/scripts/find_env.sh
                  conda activate ${CLINICA_ENV_BRANCH}
                  module load clinica.all
@@ -162,8 +99,25 @@ pipeline {
                     --working_directory=$WORK_DIR_MAC \
                     --disable-warnings \
                     --timeout=0 \
+                    -k "T1Volume" \
                     -n 4 \
                     nonregression/pipelines/test_run_pipelines_anat.py
+                 pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR_MAC \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -k "T1Linear" \
+                    -n 4 \
+                    nonregression/pipelines/test_run_pipelines_anat.py
+                  # pytest \
+                  #  --verbose \
+                  #  --working_directory=$WORK_DIR_MAC \
+                  #  --disable-warnings \
+                  #  --timeout=0 \
+                  #  -k "T1Freesurfer" \
+                  #  -n 4 \
+                  #  nonregression/pipelines/test_run_pipelines_anat.py  
                  module purge
                  conda deactivate
                  '''
@@ -172,6 +126,8 @@ pipeline {
               always {
                 sh '''
                    rm -rf "${WORK_DIR_MAC}/*"
+                   cd test/
+                   # ./deleteOut.sh
                    '''
               }
             }
@@ -228,7 +184,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -310,7 +266,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -392,7 +348,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -474,7 +430,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -556,7 +512,7 @@ pipeline {
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline instantiation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x

@@ -14,7 +14,7 @@ SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004
 cropping of the registered images to remove the background.
 
 This pipeline was designed as a prerequisite for the
-[`deeplearning-prepare-data` pipeline](../DeepLearning_PrepareData) and
+[`extract](https://clinicadl.readthedocs.io/en/stable/Preprocessing/Extract/) and
 deep learning classification algorithms presented in
 [[Wen et al., 2020](https://arxiv.org/abs/1904.07773)].
 
@@ -29,19 +29,19 @@ You can find how to install this software package on the [third-party](../../Thi
 The pipeline can be run with the following command line:
 
 ```Text
-clinica run t1-linear <bids_directory> <caps_directory>
+clinica run t1-linear [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY
 ```
 
 where:
 
-- `bids_directory` is the input folder containing the dataset in a
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a
 [BIDS](../../BIDS) hierarchy.
-- `caps_directory` is the output folder containing the results in a
+- `CAPS_DIRECTORY` is the output folder containing the results in a
 [CAPS](../../CAPS/Introduction) hierarchy.
 
 On default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are
 generated to reduce the computing power required when training deep learning models.
-Use `--uncropped_image` flag if you do not want to crop the image.
+Use the option `--uncropped_image` if you do not want to crop the image.
 
 !!! note
     The arguments common to all Clinica pipelines are described in
@@ -70,19 +70,19 @@ affine transformation estimated with [ANTs](https://stnava.github.io/ANTs/).
 
 ## Going further
 
-- You can now run the
-[`deeplearning-prepare-data` pipeline](../DeepLearning_PrepareData)
+- You can use the
+[`extract pipeline`](https://clinicadl.readthedocs.io/en/stable/Preprocessing/Extract/)
 to prepare images to be used with the PyTorch library
 [[Paszke et al., 2019]](https://papers.nips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library)
 for classification based on deep learning using the
-[AD-DL framework](https://github.com/aramis-lab/AD-DL) presented in
+[ClinicaDL framework](https://github.com/aramis-lab/clinicadl) presented in
 [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
 
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph"
     These results have been obtained using the `t1-linear` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
     More precisely, bias field correction was applied using the N4ITK method
     [[Tustison et al., 2010](https://doi.org/10.1109/TMI.2010.2046908)].

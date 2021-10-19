@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains utilities to handle atlases in Clinica.
 
 An atlas is currently defined by its name and a set of labels in a template space.
@@ -88,7 +86,7 @@ class AtlasAbstract:
         import numpy as np
 
         img_labels = nib.load(self.get_atlas_labels())
-        img_labels = img_labels.get_data()
+        img_labels = img_labels.get_fdata(dtype="float32")
         labels = list(set(img_labels.ravel()))
         index_vector = np.zeros(len(labels))
         for index, n in enumerate(labels):

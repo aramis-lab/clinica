@@ -1,5 +1,3 @@
-# coding: utf8
-
 import nibabel as nib
 import numpy as np
 
@@ -21,14 +19,14 @@ def load_data(image_list, mask=True):
 
     for i in range(len(image_list)):
         subj = nib.load(image_list[i])
-        subj_data = np.nan_to_num(subj.get_data().flatten())
+        subj_data = np.nan_to_num(subj.get_fdata(dtype="float32").flatten())
 
         # Memory allocation for ndarray containing all data to avoid copying the array for each new subject
         if first:
             data = np.ndarray(
                 shape=(len(image_list), subj_data.shape[0]), dtype=float, order="C"
             )
-            shape = subj.get_data().shape
+            shape = subj.get_fdata(dtype="float32").shape
             first = False
 
         data[i, :] = subj_data
@@ -74,12 +72,12 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mas
 
     sv_images = [image_list[i] for i in sv_indices]
 
-    shape = nib.load(sv_images[0]).get_data().shape
+    shape = nib.load(sv_images[0]).get_fdata(dtype="float32").shape
     weights = np.zeros(shape)
 
     for i in range(len(sv_images)):
         subj = nib.load(sv_images[i])
-        subj_data = np.nan_to_num(subj.get_data())
+        subj_data = np.nan_to_num(subj.get_fdata(dtype="float32"))
 
         if scaler is not None and mask is not None:
             subj_data = subj_data.flatten()[mask]

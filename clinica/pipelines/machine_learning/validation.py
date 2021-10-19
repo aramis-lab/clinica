@@ -1,5 +1,3 @@
-# coding: utf8
-
 import os
 from multiprocessing.pool import ThreadPool
 from os import path
@@ -14,7 +12,7 @@ from clinica.pipelines.machine_learning import base
 class KFoldCV(base.MLValidation):
     def validate(self, y):
 
-        if self._validation_params["splits_indices"] is None:
+        if not self._validation_params["splits_indices"]:
             skf = StratifiedKFold(
                 n_splits=self._validation_params["n_folds"], shuffle=True
             )
@@ -44,8 +42,8 @@ class KFoldCV(base.MLValidation):
 
         return self._classifier, self._best_params, self._validation_results
 
-    def save_results(self, output_dir):
-        if self._validation_results is None:
+    def save_results(self, output_dir: str):
+        if not self._validation_results:
             raise Exception(
                 "No results to save. Method validate() must be run before save_results()."
             )
@@ -54,8 +52,7 @@ class KFoldCV(base.MLValidation):
         results_folds = []
         container_dir = path.join(output_dir, "folds")
 
-        if not path.exists(container_dir):
-            os.makedirs(container_dir)
+        os.makedirs(container_dir, exist_ok=True)
 
         for i in range(len(self._validation_results)):
             subjects_df = pd.DataFrame(
@@ -157,7 +154,7 @@ class KFoldCV(base.MLValidation):
 class RepeatedKFoldCV(base.MLValidation):
     def validate(self, y):
 
-        if self._validation_params["splits_indices"] is None:
+        if not self._validation_params["splits_indices"]:
             self._validation_params["splits_indices"] = []
 
             for i in range(self._validation_params["n_iterations"]):
@@ -206,8 +203,8 @@ class RepeatedKFoldCV(base.MLValidation):
 
         return self._classifier, self._best_params, self._validation_results
 
-    def save_results(self, output_dir):
-        if self._validation_results is None:
+    def save_results(self, output_dir: str):
+        if not self._validation_results:
             raise Exception(
                 "No results to save. Method validate() must be run before save_results()."
             )
@@ -218,15 +215,13 @@ class RepeatedKFoldCV(base.MLValidation):
         for iteration in range(len(self._validation_results)):
 
             iteration_dir = path.join(output_dir, "iteration-" + str(iteration))
-            if not path.exists(iteration_dir):
-                os.makedirs(iteration_dir)
+            os.makedirs(iteration_dir, exist_ok=True)
 
             iteration_subjects_list = []
             iteration_results_list = []
             folds_dir = path.join(iteration_dir, "folds")
 
-            if not path.exists(folds_dir):
-                os.makedirs(folds_dir)
+            os.makedirs(folds_dir, exist_ok=True)
 
             for i in range(len(self._validation_results[iteration])):
                 subjects_df = pd.DataFrame(
@@ -365,7 +360,7 @@ class RepeatedKFoldCV(base.MLValidation):
 class RepeatedHoldOut(base.MLValidation):
     def validate(self, y):
 
-        if self._validation_params["splits_indices"] is None:
+        if not self._validation_params["splits_indices"]:
             splits = StratifiedShuffleSplit(
                 n_splits=self._validation_params["n_iterations"],
                 test_size=self._validation_params["test_size"],
@@ -400,8 +395,8 @@ class RepeatedHoldOut(base.MLValidation):
         )
         return self._classifier, self._best_params, self._validation_results
 
-    def save_results(self, output_dir):
-        if self._validation_results is None:
+    def save_results(self, output_dir: str):
+        if not self._validation_results:
             raise Exception(
                 "No results to save. Method validate() must be run before save_results()."
             )
@@ -413,8 +408,7 @@ class RepeatedHoldOut(base.MLValidation):
         for iteration in range(len(self._validation_results)):
 
             iteration_dir = path.join(output_dir, "iteration-" + str(iteration))
-            if not path.exists(iteration_dir):
-                os.makedirs(iteration_dir)
+            os.makedirs(iteration_dir, exist_ok=True)
             iteration_train_subjects_df = pd.DataFrame(
                 {
                     "iteration": iteration,
@@ -549,7 +543,7 @@ class RepeatedHoldOut(base.MLValidation):
 class LearningCurveRepeatedHoldOut(base.MLValidation):
     def validate(self, y):
 
-        if self._validation_params["splits_indices"] is None:
+        if not self._validation_params["splits_indices"]:
             splits = StratifiedShuffleSplit(
                 n_splits=self._validation_params["n_iterations"],
                 test_size=self._validation_params["test_size"],
@@ -602,8 +596,8 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
 
         return self._classifier, self._best_params, self._validation_results
 
-    def save_results(self, output_dir):
-        if self._validation_results is None:
+    def save_results(self, output_dir: str):
+        if not self._validation_results:
             raise Exception(
                 "No results to save. Method validate() must be run before save_results()."
             )
@@ -622,8 +616,7 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
                 iteration_dir = path.join(
                     learning_point_dir, "iteration-" + str(iteration)
                 )
-                if not path.exists(iteration_dir):
-                    os.makedirs(iteration_dir)
+                os.makedirs(iteration_dir, exist_ok=True)
                 iteration_subjects_df = pd.DataFrame(
                     {
                         "y": self._validation_results[learning_point][iteration]["y"],
@@ -774,8 +767,8 @@ class RepeatedKFoldCV_Multiclass(base.MLValidation):
 
         return self._classifier, self._best_params, self._repeated_validation_results
 
-    def save_results(self, output_dir):
-        if self._repeated_validation_results is None:
+    def save_results(self, output_dir: str):
+        if not self._repeated_validation_results:
             raise Exception(
                 "No results to save. Method validate() must be run before save_results()."
             )
@@ -786,15 +779,13 @@ class RepeatedKFoldCV_Multiclass(base.MLValidation):
         for iteration in range(len(self._repeated_validation_results)):
 
             iteration_dir = path.join(output_dir, "iteration-" + str(iteration))
-            if not path.exists(iteration_dir):
-                os.makedirs(iteration_dir)
+            os.makedirs(iteration_dir, exist_ok=True)
 
             iteration_subjects_list = []
             iteration_results_list = []
             folds_dir = path.join(iteration_dir, "folds")
 
-            if not path.exists(folds_dir):
-                os.makedirs(folds_dir)
+            os.makedirs(folds_dir, exist_ok=True)
 
             for i in range(len(self._repeated_validation_results[iteration])):
                 subjects_df = pd.DataFrame(

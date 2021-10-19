@@ -1,5 +1,3 @@
-# coding: utf8
-
 """Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS."""
 
 from clinica.iotools.abstract_converter import Converter
@@ -26,9 +24,7 @@ class OasisToBids(Converter):
         bids_ids = bids.get_bids_subjs_list(bids_dir)
 
         iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        clinic_specs_path = path.join(
-            iotools_folder, "data", "clinical_specifications.xlsx"
-        )
+        clinic_specs_path = path.join(iotools_folder, "data", "clinical_specifications")
 
         # -- Creation of modality agnostic files --
         bids.write_modality_agnostic_files("OASIS-1", bids_dir)
@@ -54,8 +50,8 @@ class OasisToBids(Converter):
         )
 
         # --Create sessions files--
-        sessions_dict = bids.create_sessions_dict(
-            clinical_data_dir, "OASIS", clinic_specs_path, bids_ids, "ID"
+        sessions_dict = bids.create_sessions_dict_OASIS(
+            clinical_data_dir, bids_dir, "OASIS", clinic_specs_path, bids_ids, "ID"
         )
         for y in bids_ids:
             if sessions_dict[y]["M00"]["diagnosis"] > 0:
@@ -74,7 +70,7 @@ class OasisToBids(Converter):
             bids_ids,
             "ID",
             "",
-            {"ses-M00": ""},
+            sessions_dict,
         )
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
@@ -154,9 +150,9 @@ class OasisToBids(Converter):
             hdr["xyzt_units"] = 10
 
             img_with_good_orientation_nifti = nb.Nifti1Image(
-                np.round(img_with_wrong_orientation_analyze.get_data()).astype(
-                    np.int16
-                ),
+                np.round(
+                    img_with_wrong_orientation_analyze.get_fdata(dtype="float32")
+                ).astype(np.int16),
                 s_form,
                 header=hdr,
             )

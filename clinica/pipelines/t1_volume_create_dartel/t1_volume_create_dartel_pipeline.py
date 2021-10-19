@@ -1,5 +1,3 @@
-# coding: utf8
-
 import clinica.pipelines.engine as cpe
 
 
@@ -16,8 +14,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         if "group_label" not in self.parameters.keys():
             raise KeyError("Missing compulsory group_label key in pipeline parameter.")
-        if "dartel_tissues" not in self.parameters.keys():
-            self.parameters["dartel_tissues"] = [1, 2, 3]
+        self.parameters.setdefault("dartel_tissues", [1, 2, 3])
 
         check_group_label(self.parameters["group_label"])
 
@@ -47,7 +44,6 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.input_files import t1_volume_dartel_input_tissue
@@ -68,8 +64,11 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         )
         if os.path.exists(representative_output):
             cprint(
-                f"{Fore.YELLOW}DARTEL template for {self.parameters['group_label']} already exists. "
-                f"Currently, Clinica does not propose to overwrite outputs for this pipeline.{Fore.RESET}"
+                msg=(
+                    f"DARTEL template for {self.parameters['group_label']} already exists. "
+                    "Currently, Clinica does not propose to overwrite outputs for this pipeline."
+                ),
+                lvl="warning",
             )
             print_groups_in_caps_directory(self.caps_directory)
             sys.exit(0)
@@ -77,8 +76,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         # Check that there is at least 2 subjects
         if len(self.subjects) <= 1:
             raise ClinicaException(
-                f"{Fore.RED}This pipeline needs at least 2 images to create DARTEL "
-                f"template but Clinica only found {len(self.subjects)}.{Fore.RESET}"
+                "This pipeline needs at least 2 images to create DARTEL "
+                f"template but Clinica only found {len(self.subjects)}."
             )
 
         read_parameters_node = npe.Node(
@@ -114,9 +113,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
-            cprint(
-                "Computational time for DARTEL creation will depend on the number of images."
-            )
+            cprint("Computational time for DARTEL creation will depend on the number of images.")
             print_begin_image(f"group-{self.parameters['group_label']}")
 
         # fmt: off

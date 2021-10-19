@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD033 MD046 -->
 # `pet-surface` - Surface-based processing of PET images
 
 This pipeline performs several processing steps for the analysis of PET data on the cortical surface
@@ -28,18 +28,19 @@ You can find how to install these software packages on the [third-party](../../T
 
 The pipeline can be run with the following command line:
 
-```Text
-clinica run pet-surface <bids_directory> <caps_directory> <acq_label> <suvr_reference_region> <pvc_psf_tsv>
+```shell
+clinica run pet-surface [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY ACQ_LABEL
+                        {pons|cerebellumPons|pons2|cerebellumPons2} PVC_PSF_TSV 
 ```
 
 where:
 
-- `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `caps_directory` acts both as an input folder (where the results of the `t1-freesurfer` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-- `acq_label` is the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
-- `suvr_reference_region` is the reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
-It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
-- `pvc_psf_tsv` is the TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image.
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
+- `CAPS_DIRECTORY` acts both as an input folder (where the results of the `t1-freesurfer` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
+- The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
+It can be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) or `pons` or `pons2` (used for FDG).
+- `PVC_PSF_TSV` is the TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image.
 More explanation is given in [PET Introduction](../PET_Introduction) page.
 
 !!! info
@@ -86,7 +87,6 @@ To mitigate this issue, you can do the following:
 
     This is under investigation (see [Issue #119](https://github.com/aramis-lab/clinica/issues/119) for details) and will be solved as soon as possible.
 
-
 ## Outputs
 
 Results are stored in the following folder of the
@@ -107,7 +107,7 @@ TSV files summarizing the regional statistics on the labelled atlases (Desikan a
 !!! note
     The full list of output files from the `pet-surface` pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-surface-surface-based-processing-of-pet-images).
 
-<center>![PET surface results](../../img/PET_Surface.jpg)</center>
+<center>![PET surface results](../img/PET_Surface/PET_Surface.jpg)</center>
 *<center><small>FDG PET SUVR projected onto the cortical surface (left hemisphere) for (from left to right) a cognitively normal subject (CN), a patient with Alzheimer’s disease (AD), a patient with semantic variant primary progressive aphasia (svPPA) and a patient with logopenic variant primary progressive aphasia (lvPPA).
 The first row is the projection in the subject’s space.
 The second row is the same signal for each subject, but warped to FsAverage after smoothing with a 20 mm Gaussian kernel.</small></center>*
@@ -121,7 +121,7 @@ The second row is the same signal for each subject, but warped to FsAverage afte
 
 !!! cite "Example of paragraph:"
     These results have been obtained using the `pet-surface` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Marcoux et al., 2018](https://doi.org/10.3389/fninf.2018.00094)].
     The subject’s PET image was registered to the T1-weighted MRI using spmregister
     ([FreeSurfer](https://surfer.nmr.mgh.harvard.edu/)) and intensity normalized using
@@ -198,7 +198,7 @@ Keep in mind that if you want to manipulate the data vector within this object, 
 Indeed, if you do the following:
 
 ```python
-raw_data = mydata.get_data()
+raw_data = mydata.get_fdata(dtype="float32")
 print(raw_data.shape)
 ```
 

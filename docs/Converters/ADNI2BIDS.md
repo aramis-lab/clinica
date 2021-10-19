@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD007 MD046 -->
-# `adni-2-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
+# `adni-to-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
 
 !!! quote "Description adapted from the [ADNI website](http://adni.loni.usc.edu)"
     ADNI is a global research effort that actively supports the investigation and development of treatments that slow or stop the progression of Alzheimer's disease (AD).
@@ -18,7 +18,7 @@
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2nii** and **dcm2niix** DICOM to NIfTI converters, and of **FreeSurfer**.
+If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2niix** DICOM to NIfTI converter.
 You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
 
 ## Downloading ADNI
@@ -33,16 +33,23 @@ To do so, from the [main page](https://ida.loni.usc.edu/login.jsp?returnPage=Use
 click on `PROJECTS` and `ADNI`. To download the imaging data, click on `Download` and choose `Image collections`.
 
 In the `Advanced search` tab:
-    1. pick the images you wish to download (for example tick `MRI` to download all the MR images),
-    2. tick all the boxes in the `IMAGE TYPES` section (`Original`, `Pre-processed`, `Post-processed`),
-    3. click on `SEARCH`.
-In the `Advanced search results` tab, click `Select All` and `Add To Collection`.
-Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and
-click on `Advanced download`.
-We advise you to group files as 10 zip files.
 
-To download the clinical data, click on `Download` and choose `Study Data`.
-Select all the CSV files which are present in ALL by ticking `Select ALL tabular data` and click `Download`.
+1. pick the images you wish to download (for example tick `MRI` to download all the MR images),
+
+2. tick all the boxes in the `IMAGE TYPES` section (`Original`, `Pre-processed`, `Post-processed`),
+
+3. click on `SEARCH`.
+
+In the `Advanced search results` tab, click `Select All` and `Add To Collection`.
+Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and click
+on `Advanced download`. We advise you to group files as 10 zip files. Once downloaded, unzip each archive and merge
+their respective content within the root folder (named `ADNI` by default) to a common location. This location will be
+referred to as `DATASET_DIRECTORY` later on.
+
+To download the clinical data, click on `Download` and choose `Study Data`. Select all the CSV files which are present
+in ALL by ticking `Select ALL tabular data` and click `Download`. Once downloaded, unzip the content of the archive and
+verify that the extracted folder contains a collection of CSV files. This folder will be referred to as
+`CLINICAL_DATA_DIRECTORY` later on.
 
 !!! note
     You do not have to modify the original folder name or rename the clinical data files before using the converter.
@@ -51,8 +58,8 @@ Select all the CSV files which are present in ALL by ticking `Select ALL tabular
 
 Currently, the modalities supported by our converter are:
 
-|                                           | ADNI 1 | ADNI GO/2 | ADNI 3 |
-| :----------------------------------------:|:------:|:---------:|:------:|
+|                                           | ADNI 1 | ADNI GO/2 | ADNI 3 |
+|:------------------------------------------|:------:|:---------:|:------:|
 | T1-weighted MRI                           | ✓      | ✓         | ✓      |
 | Diffusion weighted imaging (DWI)          | -      | ✓         | ✓      |
 | FLAIR MRI                                 | -      | ✓         | ✓      |
@@ -98,16 +105,16 @@ For further details regarding clinica data, we recommend to look at the [ADNI Da
 The converter can be run with the following command line:
 
 ```Text
-clinica convert adni-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
+clinica convert adni-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY
 ```
 
 where:
 
-- `dataset_directory` is the path to the downloaded ADNI images' directory.
+- `DATASET_DIRECTORY` is the path to the downloaded ADNI images' directory.
 Its content looks like:
 
 ```text
-<dataset_directory>
+DATASET_DIRECTORY
 ├── 027_S_0074
 │   ├── 3-plane_localizer
 │   │   ├── ...
@@ -131,11 +138,11 @@ Its content looks like:
 ├── ...
 ```
 
-- `clinical_data_directory` is the path to the directory where the CSV files with the clinical data are located.
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory where the CSV files with the clinical data are located.
 Its content looks like:
 
 ```text
-<clinical_data_directory>
+CLINICAL_DATA_DIRECTORY
 ├── ADAS_ADNI1.csv
 ├── ADAS_ADNIGO23.csv
 ├── ...
@@ -143,7 +150,7 @@ Its content looks like:
 └── VITALS.csv
 ```
 
-- `bids_directory` is the path to the output directory, where the BIDS-converted version of ADNI will be stored.
+- `BIDS_DIRECTORY` is the path to the output directory, where the BIDS-converted version of ADNI will be stored.
 
 ### Optional parameters
 
@@ -301,7 +308,7 @@ clinica convert adni-to-bids -h
 !!! cite "Example of paragraph:"
     The ADNI data have been curated and converted to the Brain Imaging Data Structure (BIDS) format
     [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica
-    [[Routier et al.](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
 
 If you used the converter for DWI data, please also cite [[Wen et al., 2020](https://doi.org/10.1007/s12021-020-09469-5)].
@@ -311,7 +318,7 @@ If you used the converter for DWI data, please also cite [[Wen et al., 2020](htt
 
 ## (Advanced) Appendix - How ADNI is converting into BIDS?
 
-For all the imaging modalities, the `adni-2-bids` converter performs three steps:
+For all the imaging modalities, the `adni-to-bids` converter performs three steps:
 
 1. Image selection from subject and imaging metadata
 2. Path extraction
@@ -358,30 +365,28 @@ Known conversion exceptions are removed from the list.
 
 ??? abstract "Criteria for T1-weighted MRI"
     - First, since the `ADNIMERGE` and `MPRAGEMETA` files have different notations for the visits, a correspondence must be established.
-    For each subject, we pair the closest dates from the two files as the same visit (`visits_to_timepoints_t1`).
+    - For each subject, we pair the closest dates from the two files as the same visit (`visits_to_timepoints_t1`)
     - For each visit, the image is processed differently according to which cohort it belongs.
         - If the visit occurs in ADNI 1, GO or 2 (`adni1go2_image`):
+            - Filter out images which do not pass QC check based on `MRIQUALITY.csv`.
             - Since there might be several acquisitions (each acquisition corresponds to a different series ID, which is the same for all the processed images associated to the corresponding original acquisition), we have to choose a series.
-             - The first option is to look at which one has been further processed (preferred series).
-             The last processing step is scaling.
-             So we look for a ‘Processed’ image with its sequence name ending by ‘Scaled’ (preferred_processed_scan).
+            - The first option is to look at which one has been further processed (preferred series).
+            The last processing step is scaling.
+            So we look for a ‘Processed’ image with its sequence name ending by ‘Scaled’ (preferred_processed_scan
             - If not found, we look for images with the previous processing step, N3 bias field correction.
-            So we look for a `Processed` image with its sequence name ending by `N3m` (`preferred_processed_scan`).
+            So we look for a `Processed` image with its sequence name ending by `N3m` (`preferred_processed_scan`)
             - If there is no N3 processed image, we can only use the original image (original_image).
                 - We keep images that are MPRAGE (`mprage|mp-rage|mp rage` in the sequence, but no `2`, to keep the first acquisition) or SPGR (`spgr` in sequence name, but no `acc`, since for ADNI 2 we have a single standard acquisition and sometimes a second accelerated acquisition).
-                - QC check is done with `select_scan_from_qc`.
             - If there are images with different magnetic field strengths it means the image was acquired during ADNI1, so we filter and keep preferred 1.5 T.
             - If we have several processed images, we keep the one with the lower series ID (acquired first).
-            - If QC check fails, we look for a second scan with a different series ID (preferred_processed_scan) and recheck QC.
-            - We save as sequence name of the image we want to use, the current sequence up to the point after where the processed scan contains N3m or N3.
-            We do this because we do not want to keep Scaled images.
+            - We save as sequence name of the image we want to use, the current sequence up to the point after where the processed scan contains N3m or N3. We do this because we do not want to keep Scaled images
+            - !!! Warning
+                The imageID saved in the t1_paths.csv file corresponds to that of the scaled image
         - If the visit occurs in ADNI 3 (`adni3_image`), the selection criteria are (for the current visit and patient):
             - Original images (All the previous preprocessing steps are now done directly on the scanners, so we only need the original image.)
             - Containing `accel` in the sequence name (In the ADNI 3 T1 protocol all the sequences are `accelerated`.)
             - Not containing `_nd` in the sequence name.
-              > [The `_ND` suffix is an automated output from some Siemens scanners when distortion correction is applied.
-              The ND stands for No Distortion correction, so they system provides the distortion corrected images and the non corrected images.](http://adni.loni.usc.edu/support/experts-knowledge-base/question/?QID=1191)
-
+              > [The `_ND` suffix is an automated output from some Siemens scanners when distortion correction is applied. The ND stands for No Distortion correction, so they system provides the distortion corrected images and the non corrected images.](http://adni.loni.usc.edu/support/experts-knowledge-base/question/?QID=1191)
             - QC check is done with `select_scan_from_qc`.
         - To check QC in the case of an original image for ADNI1, GO and 2, or always for ADNI 3, the function `select_scan_from_qc` is used:
             - We separate the scans according to the preferred magnetic field strength

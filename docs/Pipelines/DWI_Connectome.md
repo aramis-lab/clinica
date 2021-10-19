@@ -20,16 +20,16 @@ You can find how to install these software packages on the [third-party](../../T
 The pipeline can be run with the following command line:
 
 ```Text
-clinica run dwi-connectome <caps_directory>
+clinica run dwi-connectome [OPTIONS] CAPS_DIRECTORY
 ```
 
 where:
 
-- `caps_directory` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your CAPS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
-!!! note "Number of streamlines (`--n_tracks` parameters)"
+!!! note "Number of streamlines (`--n_tracks` option)"
     The quality of the tractography and, as a result, the connectome mainly depends on the number of streamlines you can generate (the more the better).
     However, increasing the number of streamlines increases the need for computational resources and space to store the results.
     On default, 1 million streamlines are generated which represents 1 hour of computation time.
@@ -88,12 +88,12 @@ Do not forget to fill in the missing information (after the `=` signs) and do no
 
 !!! cite "Example of paragraph for the `dwi-connectome` pipeline"
     These results have been obtained using the `dwi-connectome` pipeline of Clinica
-    [[Routier et al](https://hal.inria.fr/hal-02308126/)] relying on the **MRtrix3**
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)] relying on the **MRtrix3**
     [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)] software package.
     Fiber orientation distributions (FOD) at highly anisotropic voxels (FA >0.7) was computed to determine the response function, which was used for constrained spherical deconvolution to accurately estimate the FOD [[Tournier et al., 2007](https://doi.org/10.1016/j.neuroimage.2007.02.016)].
     Then, `<n_tracks>` fibers with a probabilistic tracking algorithm [[Tournier et al., 2010](https://cds.ismrm.org/protected/10MProceedings/files/1670_4298.pdf)] were generated.
     Default parameters included minimum length 20 mm, a step size of 0.2 mm, minimum radius of curvature of 1 mm and FOD cutoff of 0.1.
-    All voxels in the 1-mm dilated white-matter mask were used as seeds and the tracking procedure was stopped if a fiber reached a voxel outside the mask or if a stopping criterion was met (high fiber curvature or low FOD).
+    All voxels in the white-matter mask were used as seeds and the tracking procedure was stopped if a fiber reached a voxel outside the mask or if a stopping criterion was met (high fiber curvature or low FOD).
     Finally, the connectome is estimated by counting the number of tracks connecting each pair of nodes according to the [Desikan|Destrieux] parcellation.
 
 !!! tip

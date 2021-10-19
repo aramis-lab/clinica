@@ -1,5 +1,3 @@
-# coding: utf8
-
 import clinica.pipelines.engine as cpe
 
 
@@ -22,6 +20,7 @@ class T1VolumeParcellation(cpe.Pipeline):
         check_group_label(self.parameters["group_label"])
 
         self.parameters.setdefault("atlases", T1_VOLUME_ATLASES)
+        self.parameters.setdefault("modulate", True)
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -44,7 +43,6 @@ class T1VolumeParcellation(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.input_files import t1_volume_template_tpm_in_mni
@@ -63,8 +61,8 @@ class T1VolumeParcellation(cpe.Pipeline):
         ):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"%{Fore.RED}Group {self.parameters['group_label']} does not exist. "
-                f"Did you run t1-volume or t1-volume-create-dartel pipeline?{Fore.RESET}"
+                f"Group {self.parameters['group_label']} does not exist. "
+                "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
 
         try:
@@ -72,7 +70,11 @@ class T1VolumeParcellation(cpe.Pipeline):
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                t1_volume_template_tpm_in_mni(self.parameters["group_label"], 1, True),
+                t1_volume_template_tpm_in_mni(
+                    group_label=self.parameters["group_label"],
+                    tissue_number=1,
+                    modulation=self.parameters["modulate"],
+                ),
             )
         except ClinicaException as e:
             final_error_str = "Clinica faced error(s) while trying to read files in your CAPS directory.\n"

@@ -11,7 +11,7 @@ assignees: ''
 What is happening?
 
 **Pipeline**
-Which Clinica's Pipeline is concerned ?
+Which Clinica's Pipeline is concerned?
 E.g.
 - pet-volume
 - t1-linear
@@ -19,15 +19,16 @@ E.g.
 ...
 
 **Converters**
-Which Clinica's converter is concerned ?
-E.g.
-- adni-2-bids
-- aibl-2-bids
-- oasis-2-bids
-...
+Which Clinica's converter is concerned?
+
+- adni-to-bids
+- aibl-to-bids
+- nifd-to-bids
+- oasis-to-bids
+- oasis3-to-bids
 
 **I/O tools**
-Which Clinica's tool is concerned ?
+Which Clinica's tool is concerned?
 E.g.
 - merge-tsv
 - create-subjects-visits

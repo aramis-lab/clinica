@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def get_substitutions_datasink(bids_file):
 
     substitutions_ls = [  # registration

@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD046 -->
-# `oasis-2-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS) to BIDS
+# `oasis-to-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS) to BIDS
 
 !!! quote "Description reproduced from the [OASIS' webpage](http://oasis-brains.org/)"
     The Open Access Series of Imaging Studies (OASIS) is a project aimed at making MRI data sets of the brain freely available to the scientific community.
@@ -41,16 +41,16 @@ The clinical data being converted are defined in a spreadsheet (`clinical_specif
 The converter can be run with the following command line:
 
 ```Text
-clinica convert oasis-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
+clinica convert oasis-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY 
 ```
 
 where:
 
-- `dataset_directory` is the path to the original OASIS images' directory.
+- `DATASET_DIRECTORY` is the path to the original OASIS images' directory.
 Its content looks like:
 
 ```text
-<dataset_directory>
+DATASET_DIRECTORY
 ├── OAS1_0001_MR1
 │   ├── FSL_SEG
 │   ├── PROCESSED
@@ -62,9 +62,9 @@ Its content looks like:
 ├── ...
 ```
 
-- `clinical_data_directory` is the path to the directory containing the CSV file called `oasis_cross-sectional.csv`.
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory containing the CSV file called `oasis_cross-sectional.csv`.
 
-- `bids_directory` is the path to the output directory, where the BIDS-converted version of OASIS will be stored.
+- `BIDS_DIRECTORY` is the path to the output directory, where the BIDS-converted version of OASIS will be stored.
 
 !!! note
     In order to improve the readability, the BIDS subject ID is different from the original OASIS ID and is defined as follows:
@@ -79,7 +79,7 @@ Its content looks like:
 ## Citing this converter in your paper
 
 !!! cite "Example of paragraph:"
-    The OASIS data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica [[Routier et al.](https://hal.inria.fr/hal-02308126/); [Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
+    The OASIS data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675); [Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/NASGJPVL).

@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD046 -->
-# `aibl-2-bids` – Conversion of the Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing (AIBL) to BIDS
+# `aibl-to-bids` – Conversion of the Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing (AIBL) to BIDS
 
 !!! quote "Description reproduced from the [AIBL's Study Design webpage](http://adni.loni.usc.edu/study-design/collaborative-studies/aibl/)"
     The Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing (AIBL) seeks to discover which biomarkers, cognitive characteristics, and health and lifestyle factors determine the development of AD.
@@ -21,7 +21,7 @@
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2nii** and **dcm2niix** DICOM to NIfTI converters, and of **FreeSurfer**.
+If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2niix** DICOM to NIfTI converter.
 You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
 
 ### Downloading AIBL
@@ -64,21 +64,21 @@ The clinical data being converted are defined in a spreadsheet (`clinical_specif
 The converter can be run with the following command line:
 
 ```shell
-clinica convert aibl-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
+clinica convert aibl-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY 
 ```
 
 where:
 
-- `dataset_directory` is the path to the original AIBL images' directory;
-- `clinical_data_directory` is the path to the directory where the csv file with the clinical data is located;
-- `bids_directory` is the path to the output directory, where the BIDS-converted version of AIBL will be stored.
+- `DATASET_DIRECTORY` is the path to the original AIBL images' directory;
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory where the csv file with the clinical data is located;
+- `BIDS_DIRECTORY` is the path to the output directory, where the BIDS-converted version of AIBL will be stored.
 
 ## Citing this converter in your paper
 
 !!! cite "Example of paragraph:"
     The AIBL data have been curated and converted to the Brain Imaging Data Structure (BIDS) format
     [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica
-    [[Routier et al.](https://hal.inria.fr/hal-02308126/);
+    [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
 
 !!! tip

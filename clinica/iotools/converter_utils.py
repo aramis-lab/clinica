@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def sort_session_list(session_list):
     session_idx = [int(session[5:]) for session in session_list]
     session_idx.sort()
@@ -96,7 +93,10 @@ def print_longitudinal_analysis(
             for subject in subjects_avail:
                 subj_tsv_path = path.join(bids_dir, subject, f"{subject}_sessions.tsv")
                 subj_df = pd.read_csv(subj_tsv_path, sep="\t").set_index("session_id")
-                if ses in subj_df.index.values:
+                if (
+                    ses in subj_df.index.values
+                    and "diagnosis" in subj_df.columns.values
+                ):
                     diagnosis = subj_df.loc[ses, "diagnosis"]
                     if isinstance(diagnosis, str):
                         increment_dict(diagnosis_dict, diagnosis)

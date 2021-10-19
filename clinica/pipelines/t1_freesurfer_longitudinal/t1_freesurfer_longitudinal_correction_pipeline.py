@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 import clinica.pipelines.engine as cpe
 
 
@@ -50,7 +47,6 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.input_files import T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX
@@ -87,19 +83,16 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         )
         if len(processed_ids) > 0:
             cprint(
-                f"{Fore.YELLOW}Clinica found {len(processed_ids)} images(s) already processed in CAPS directory:{Fore.RESET}"
+                msg=f"Clinica found {len(processed_ids)} images(s) already processed in CAPS directory:",
+                lvl="warning",
             )
             for image_id in processed_ids:
-                cprint(f"{Fore.YELLOW}\t{image_id.replace('_', ' | ')}{Fore.RESET}")
+                cprint(f"{image_id.replace('_', ' | ')}", lvl="warning")
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/<long_id>/freesurfer_longitudinal/"
-                cprint(
-                    f"{Fore.YELLOW}\nOutput folders in {output_folder} will be recreated.\n{Fore.RESET}"
-                )
+                cprint(msg=f"Output folders in {output_folder} will be recreated.", lvl="warning")
             else:
-                cprint(
-                    "{Fore.YELLOW}\nImage(s) will be ignored by Clinica.\n{Fore.RESET}"
-                )
+                cprint("Image(s) will be ignored by Clinica.", lvl="warning")
                 input_ids = [
                     p_id + "_" + s_id + "_" + l_id
                     for p_id, s_id, l_id in zip(

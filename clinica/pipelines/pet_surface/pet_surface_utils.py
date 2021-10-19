@@ -1,6 +1,3 @@
-# coding: utf-8
-
-
 def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
     """Extract SUBJECT_DIR.
 
@@ -138,7 +135,7 @@ def remove_nan(volname):
 
     # Load the volume and get the data
     nifti_in = nib.load(volname)
-    data = np.nan_to_num(nifti_in.get_data())
+    data = np.nan_to_num(nifti_in.get_fdata(dtype="float32"))
 
     # Now create final image (using header of original image), and save it in current directory
     nifti_out = nib.Nifti1Image(data, nifti_in.affine, header=nifti_in.header)
@@ -178,7 +175,7 @@ def make_label_conversion(gtmsegfile, csv):
     # Read label from gtmsegfile, change data into integers in order to have no problems when testing equality of labels
     label = nib.load(gtmsegfile)
     label.header.set_data_dtype("int8")
-    volume = label.get_data()
+    volume = label.get_fdata(dtype="float32")
 
     # Unique function gives a list where each label of the volume is listed once
     old_labels = numpy.unique(volume)
@@ -373,12 +370,12 @@ def suvr_normalization(pet_path, mask):
 
     # Load mask
     eroded_mask_nifti = nib.load(mask)
-    eroded_mask = eroded_mask_nifti.get_data()
+    eroded_mask = eroded_mask_nifti.get_fdata(dtype="float32")
     eroded_mask = eroded_mask > 0
 
     # Load PET data (they must be in gtmsegspace, or same space as label file)
     pet = nib.load(pet_path)
-    pet_data = pet.get_data()
+    pet_data = pet.get_fdata(dtype="float32")
 
     # check that eroded mask is not null
     mask_size = sum(sum(sum(eroded_mask)))
@@ -683,7 +680,7 @@ def weighted_mean(in_surfaces):
 
     for i in range(len(in_surfaces)):
         current_surf = nib.load(in_surfaces[i])
-        data_normalized += current_surf.get_data() * coefficient[i]
+        data_normalized += current_surf.get_fdata(dtype="float32") * coefficient[i]
 
     # hemisphere name will always be in our case the first 2 letters of the filename
     hemi = os.path.basename(in_surfaces[0])[0:2]
@@ -825,8 +822,8 @@ def produce_tsv(pet, atlas_files):
     from clinica.utils.stream import cprint
 
     # Extract data from projected PET data
-    lh_pet_mgh = np.squeeze(nib.load(pet[0]).get_data())
-    rh_pet_mgh = np.squeeze(nib.load(pet[1]).get_data())
+    lh_pet_mgh = np.squeeze(nib.load(pet[0]).get_fdata(dtype="float32"))
+    rh_pet_mgh = np.squeeze(nib.load(pet[1]).get_fdata(dtype="float32"))
 
     filename_tsv = []
     for atlas in atlas_files:
@@ -929,14 +926,12 @@ def get_wf(
     Returns:
         Void
     """
-    import datetime
     import os
 
     import nibabel as nib
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
-    from colorama import Fore
     from nipype.interfaces.freesurfer import ApplyVolTransform, MRIConvert, Tkregister2
     from nipype.interfaces.fsl import Merge
     from nipype.interfaces.petpvc import PETPVC
@@ -952,12 +947,8 @@ def get_wf(
     # Check that the PET file is a 3D volume
     img = nib.load(pet)
     if len(img.shape) == 4:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        error_msg = (
-            f"{Fore.RED}[{now}] Error: Clinica does not handle 4D volumes "
-            f"for {subject_id} | {session_id}{Fore.RESET}"
-        )
-        cprint(error_msg)
+        error_msg = f"Clinica does not handle 4D volumes for {subject_id} | {session_id}"
+        cprint(error_msg, lvl="error")
         raise NotImplementedError(error_msg)
 
     print_begin_image(subject_id + "_" + session_id)

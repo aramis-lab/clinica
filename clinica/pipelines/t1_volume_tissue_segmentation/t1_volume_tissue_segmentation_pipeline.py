@@ -1,5 +1,3 @@
-# coding: utf8
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config
@@ -24,19 +22,14 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """Check pipeline parameters."""
         from clinica.utils.spm import get_tpm
 
-        if "tissue_classes" not in self.parameters.keys():
-            self.parameters["tissue_classes"] = [1, 2, 3]
-        if "dartel_tissues" not in self.parameters.keys():
-            self.parameters["dartel_tissues"] = [1, 2, 3]
-        if "tissue_probability_maps" not in self.parameters.keys():
-            self.parameters["tissue_probability_maps"] = None
-        if "save_warped_unmodulated" not in self.parameters.keys():
-            self.parameters["save_warped_unmodulated"] = True
-        if "save_warped_modulated" not in self.parameters.keys():
-            self.parameters["save_warped_modulated"] = False
+        self.parameters.setdefault("tissue_classes", [1, 2, 3])
+        self.parameters.setdefault("dartel_tissues", [1, 2, 3])
+        self.parameters.setdefault("save_warped_unmodulated", True)
+        self.parameters.setdefault("save_warped_modulated", False)
+        self.parameters.setdefault("tissue_probability_maps", None)
 
-        # Get Tissue Probability Map from SPM
-        if self.parameters["tissue_probability_maps"] is None:
+        # Fetch the TPM in case none was passed explicitly.
+        if not self.parameters["tissue_probability_maps"]:
             self.parameters["tissue_probability_maps"] = get_tpm()
 
     def get_input_fields(self):
@@ -95,7 +88,11 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             err = f"Clinica faced error(s) while trying to read files in your BIDS directory.\n{str(e)}"
             raise ClinicaBIDSError(err)
 
-        check_volume_location_in_world_coordinate_system(t1w_files, self.bids_directory)
+        check_volume_location_in_world_coordinate_system(
+            t1w_files,
+            self.bids_directory,
+            skip_question=self.parameters["skip_question"],
+        )
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)

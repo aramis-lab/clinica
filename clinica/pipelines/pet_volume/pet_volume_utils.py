@@ -1,11 +1,5 @@
-# coding: utf8
-
-
 def init_input_node(pet_nii):
-    import datetime
-
     import nibabel as nib
-    from colorama import Fore
 
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.stream import cprint
@@ -17,12 +11,8 @@ def init_input_node(pet_nii):
     # Check that the PET file is a 3D volume
     img = nib.load(pet_nii)
     if len(img.shape) == 4:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        error_msg = (
-            f"{Fore.RED}[{now}] Error: Clinica does not handle 4D volumes "
-            f"for {image_id.replace('_', ' | ')}{Fore.RESET}"
-        )
-        cprint(error_msg)
+        error_msg = f"Clinica does not handle 4D volumes for {image_id.replace('_', ' | ')}"
+        cprint(error_msg, lvl="error")
         raise NotImplementedError(error_msg)
 
     # Print begin message
@@ -44,12 +34,12 @@ def create_binary_mask(tissues, threshold=0.3):
         )
 
     img_0 = nib.load(tissues[0])
-    shape = list(img_0.get_data().shape)
+    shape = list(img_0.get_fdata(dtype="float32").shape)
 
     data = np.zeros(shape=shape)
 
     for image in tissues:
-        data = data + nib.load(image).get_data()
+        data = data + nib.load(image).get_fdata(dtype="float32")
 
     data = (data > threshold) * 1.0
     out_mask = join(getcwd(), basename(tissues[0]) + "_brainmask.nii")
@@ -68,7 +58,7 @@ def apply_binary_mask(image, binary_mask):
     original_image = nib.load(image)
     mask = nib.load(binary_mask)
 
-    data = original_image.get_data() * mask.get_data()
+    data = original_image.get_fdata(dtype="float32") * mask.get_fdata(dtype="float32")
 
     masked_image_path = join(getcwd(), "masked_" + basename(image))
     masked_image = nib.Nifti1Image(
@@ -92,7 +82,7 @@ def create_pvc_mask(tissues):
         )
 
     img_0 = nib.load(tissues[0])
-    shape = img_0.get_data().shape
+    shape = img_0.get_fdata(dtype="float32").shape
     background = np.zeros(shape=shape)
 
     shape += tuple([len(tissues) + 1])
@@ -100,8 +90,8 @@ def create_pvc_mask(tissues):
 
     for i in range(len(tissues)):
         image = nib.load(tissues[i])
-        data[..., i] = np.array(image.get_data())
-        background = background + image.get_data()
+        data[..., i] = np.array(image.get_fdata(dtype="float32"))
+        background = background + image.get_fdata(dtype="float32")
 
     background = 1.0 - background
     data[..., len(tissues)] = np.array(background)
@@ -129,10 +119,10 @@ def normalize_to_reference(pet_image, region_mask):
     pet = nib.load(pet_image)
     ref = nib.load(region_mask)
 
-    region = np.multiply(pet.get_data(), ref.get_data())
+    region = np.multiply(pet.get_fdata(dtype="float32"), ref.get_fdata(dtype="float32"))
     region_mean = np.nanmean(np.where(region != 0, region, np.nan))
 
-    data = pet.get_data() / region_mean
+    data = pet.get_fdata(dtype="float32") / region_mean
 
     suvr_pet_path = join(getcwd(), "suvr_" + basename(pet_image))
 

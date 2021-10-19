@@ -1,5 +1,3 @@
-# coding: utf8
-
 import clinica.pipelines.engine as cpe
 
 
@@ -56,7 +54,6 @@ class SpatialSVM(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.input_files import (
@@ -74,8 +71,8 @@ class SpatialSVM(cpe.Pipeline):
         ):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                "%sGroup %s does not exist. Did you run pet-volume, t1-volume or t1-volume-create-dartel pipeline?%s"
-                % (Fore.RED, self.parameters["group_label"], Fore.RESET)
+                f"Group {self.parameters['group_label']} does not exist. "
+                "Did you run pet-volume, t1-volume or t1-volume-create-dartel pipeline?"
             )
 
         read_parameters_node = npe.Node(

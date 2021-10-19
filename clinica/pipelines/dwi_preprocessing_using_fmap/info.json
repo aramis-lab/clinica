@@ -1,0 +1,25 @@
+{
+    "id": "aramislab/dwi-preprocessing-using-phasediff-fmap",
+    "author": ["Alexandre Routier"],
+    "credits": ["Nipype"],
+    "version": "0.2.0",
+    "space_caps": "250M",
+    "space_wd": "6G",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "fsl",
+            "version": ">=6.0.1"
+        },
+        {
+            "type": "software",
+            "name": "ants",
+            "version": ""
+        },
+        {
+            "type": "software",
+            "name": "mrtrix",
+            "version": ""
+        }
+    ]
+}

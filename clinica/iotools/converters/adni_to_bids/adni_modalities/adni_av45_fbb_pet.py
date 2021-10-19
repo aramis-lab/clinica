@@ -19,12 +19,11 @@ def convert_adni_av45_fbb_pet(
     from os import path
 
     import pandas as pd
-    from colorama import Fore
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
-    if subjs_list is None:
+    if not subjs_list:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
@@ -39,7 +38,7 @@ def convert_adni_av45_fbb_pet(
         "Paths of AV45 and Florbetaben PET images found. Exporting images into BIDS ..."
     )
     paths_to_bids(images, dest_dir, "av45_fbb", mod_to_update=mod_to_update)
-    cprint(f"{Fore.GREEN}AV45 and Florbetaben PET conversion done.{Fore.RESET}")
+    cprint(msg="AV45 and Florbetaben PET conversion done.", lvl="debug")
 
 
 def compute_av45_fbb_pet_paths(

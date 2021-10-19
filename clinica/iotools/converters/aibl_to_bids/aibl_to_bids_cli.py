@@ -1,52 +1,48 @@
-# coding: utf8
+import click
 
-import clinica.engine as ce
+from clinica.iotools.converters import cli_param
 
 
-class AiblToBidsCLI(ce.CmdParser):
-    def define_name(self):
-        """Define the sub-command name to run this command."""
-        self._name = "aibl-to-bids"
+@click.command(name="aibl-to-bids")
+@cli_param.dataset_directory
+@cli_param.clinical_data_directory
+@cli_param.bids_directory
+@cli_param.clinical_data_only
+@click.option(
+    "--overwrite",
+    is_flag=True,
+    help="Overwrites previously written nifti and json files.",
+)
+def cli(
+    dataset_directory: str,
+    clinical_data_directory: str,
+    bids_directory: str,
+    clinical_data_only: bool = False,
+    overwrite: bool = False,
+) -> None:
+    """AIBL to BIDS converter.
 
-    def define_description(self):
-        """Define a description of this command."""
-        self._description = (
-            "Convert AIBL (https://aibl.csiro.au/adni/index.html) into BIDS."
-        )
+    Convert the imaging and clinical data of AIBL (https://aibl.csiro.au/adni/index.html), located in DATASET_DIRECTORY
+    and CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
+    """
+    from os import makedirs
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        self._args.add_argument(
-            "dataset_directory", help="Path to the AIBL images directory."
-        )
-        self._args.add_argument(
-            "clinical_data_directory", help="Path to the AIBL clinical data directory."
-        )
-        self._args.add_argument("bids_directory", help="Path to the BIDS directory.")
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import (
+        convert_clinical_data,
+        convert_images,
+    )
+    from clinica.utils.check_dependency import check_dcm2niix
 
-    def run_command(self, args):
-        """Run the converter with defined args."""
-        from os import makedirs
-        from os.path import exists
+    check_dcm2niix()
 
-        from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import (
-            convert_clinical_data,
-            convert_images,
-        )
-        from clinica.utils.check_dependency import (
-            check_dcm2nii,
-            check_dcm2niix,
-            check_freesurfer,
-        )
+    makedirs(bids_directory, exist_ok=True)
 
-        check_dcm2nii()
-        check_dcm2niix()
-        check_freesurfer()
-
-        if not exists(args.bids_directory):
-            makedirs(args.bids_directory)
-
+    if not clinical_data_only:
         convert_images(
-            args.dataset_directory, args.clinical_data_directory, args.bids_directory
+            dataset_directory,
+            clinical_data_directory,
+            bids_directory,
+            overwrite,
         )
-        convert_clinical_data(args.bids_directory, args.clinical_data_directory)
+
+    convert_clinical_data(bids_directory, clinical_data_directory)

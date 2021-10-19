@@ -1,84 +1,79 @@
-# coding: utf-8
+from typing import List, Optional
 
-import clinica.engine as ce
+import click
+
+from clinica.iotools.converters import cli_param
+
+ALL_MODALITIES = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
 
 
-class AdniToBidsCLI(ce.CmdParser):
-    def define_name(self):
-        """Define the sub-command name to run this command."""
-        self._name = "adni-to-bids"
+@click.command(name="adni-to-bids")
+@cli_param.dataset_directory
+@cli_param.clinical_data_directory
+@cli_param.bids_directory
+@cli_param.subjects_list
+@click.option(
+    "-c",
+    "--clinical-data-only",
+    is_flag=True,
+    help="Convert clinical data only.",
+)
+@click.option(
+    "-f",
+    "--force-new-extraction",
+    is_flag=True,
+    help="Force new data extraction.",
+)
+@click.option(
+    "-m",
+    "--modalities",
+    multiple=True,
+    type=click.Choice(ALL_MODALITIES),
+    default=ALL_MODALITIES,
+    help="Convert only the selected modality. By default, all available modalities are converted.",
+)
+def cli(
+    dataset_directory: str,
+    clinical_data_directory: str,
+    bids_directory: str,
+    subjects_list: Optional[str] = None,
+    clinical_data_only: bool = False,
+    force_new_extraction: bool = False,
+    modalities: List[str] = ALL_MODALITIES,
+) -> None:
+    """ADNI to BIDS converter.
 
-    def define_description(self):
-        """Define a description of this command."""
-        self._description = "Convert ADNI (http://adni.loni.usc.edu/) into BIDS"
+    Convert the imaging and clinical data of ADNI (http://adni.loni.usc.edu/), located in DATASET_DIRECTORY and
+    CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
+    """
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
+    from clinica.utils.exceptions import ClinicaParserError
 
-    def define_options(self):
-        """Define the sub-command arguments."""
-        self._args.add_argument(
-            "dataset_directory", help="Path to the ADNI images directory."
+    adni_to_bids = AdniToBids()
+    adni_to_bids.check_adni_dependencies()
+
+    if clinical_data_only and force_new_extraction:
+        raise ClinicaParserError(
+            "Arguments `clinical_data_only` and `force_new_extraction` are mutually exclusive."
         )
-        self._args.add_argument(
-            "clinical_data_directory", help="Path to the ADNI clinical data directory."
-        )
-        self._args.add_argument("bids_directory", help="Path to the BIDS directory.")
-        self._args.add_argument(
-            "-c",
-            "--clinical_data_only",
-            action="store_true",
-            help="(Optional) Given the path to an already existing ADNI BIDS folder, convert only "
-            "the clinical data. Mutually exclusive with --force_new_extraction",
-        )
-        self._args.add_argument(
-            "-f",
-            "--force_new_extraction",
-            action="store_true",
-            help="(Optional) Forces the extraction of data even if the image already exists in the "
-            "bids_directory. Mutually exclusive with --clinical_data_only",
-        )
-        self._args.add_argument(
-            "-sl",
-            "--subjects_list",
-            help="(Optional) A path to a .txt file containing a list of subject to convert "
-            "(one for each row).",
-        )
-        self._args.add_argument(
-            "-m",
-            "--modalities",
-            nargs="+",
-            default=["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"],
-            choices=["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"],
-            help="(Optional) Convert only the list of selected modalities. "
-            "By default all modalities are converted. Modalities available: "
-            "T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI.",
+
+    if not clinical_data_only:
+        adni_to_bids.convert_images(
+            dataset_directory,
+            clinical_data_directory,
+            bids_directory,
+            subjects_list,
+            modalities,
+            force_new_extraction,
         )
 
-    def run_command(self, args):
-        from colorama import Fore
+    adni_to_bids.convert_clinical_data(
+        clinical_data_dir=clinical_data_directory,
+        out_path=bids_directory,
+        clinical_data_only=clinical_data_only,
+        subjects_list_path=subjects_list,
+    )
 
-        from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
-        from clinica.utils.exceptions import ClinicaParserError
 
-        adni_to_bids = AdniToBids()
-
-        # Check dcm2nii and dcm2niix dependencies
-        adni_to_bids.check_adni_dependencies()
-
-        if args.clinical_data_only and args.force_new_extraction:
-            raise ClinicaParserError(
-                f"{Fore.RED}\n[Error] Arguments clinical_data_only and force_new_extraction are mutually exclusive.{Fore.RESET}"
-            )
-
-        if not args.clinical_data_only:
-            adni_to_bids.convert_images(
-                self.absolute_path(args.dataset_directory),
-                self.absolute_path(args.clinical_data_directory),
-                self.absolute_path(args.bids_directory),
-                args.subjects_list,
-                args.modalities,
-                args.force_new_extraction,
-            )
-
-        adni_to_bids.convert_clinical_data(
-            self.absolute_path(args.clinical_data_directory),
-            self.absolute_path(args.bids_directory),
-        )
+if __name__ == "__main__":
+    cli()

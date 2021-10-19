@@ -39,39 +39,17 @@ Conda is installed, check the version and show your Miniconda path.
 The latest release of Clinica can be installed by using the conventional
 [PyPI package manager](https://pypi.org/project/clinica/) as follows:
 
-```bash
+```shell
 conda create --name clinicaEnv python=3.7
 conda activate clinicaEnv
 pip install clinica
 ```
 
 !!! info
-    Since Clinica `v0.3.5`, Conda installation is not proposed anymore (i.e.
+    Since Clinica `v0.3.5`, Conda installation is no longer available (i.e.
     `conda create --name clinicaEnv python=3.6 clinica -c Aramislab -c conda-forge`
     will only install Clinica `v0.3.4`).
-    Pip is now the only way to install latest versions of Clinica.
-
-??? info "Developer installation (Advanced)"
-    If you plan to contribute to Clinica or if you want to have the current development
-    version, you can either:
-
-    - Download the tarball for a specific version from our
-    [repository](https://github.com/aramis-lab/clinica/releases).
-    Then decompress it.
-    - Clone Clinica's repository from GitHub:
-
-    ```bash
-    git clone https://github.com/aramis-lab/clinica.git
-    ```
-
-    We suggest creating a custom Conda environment and installing Clinica inside it:
-    ```bash
-    cd clinica
-    conda create --name clinicaEnv python=3.7
-    conda activate clinicaEnv
-    pip install -r requirements-dev.txt
-    pip install -e .
-    ```
+    Pip is now the only way to install the latest version of Clinica.
 
 ## Installation of the third-party software packages
 
@@ -80,6 +58,30 @@ Depending on the pipeline that you want to use, you need to install
 Not all the dependencies are necessary to run Clinica.
 Please refer to [this section](../Third-party) to determine which third-party
 libraries you need to install.
+
+## Shell completion (optional)
+
+Shell completion for Clinica is available for Bash, Fish and Zsh.
+
+For Bash, add this to `~/.bashrc`:
+
+```shell
+eval "$(_CLINICA_COMPLETE=source_bash clinica)"
+```
+
+For Fish, add this to `~/.config/fish/completions/clinica.fish`:
+
+```shell
+eval (env _CLINICA_COMPLETE=source_fish clinica)
+```
+
+For Zsh, add this to `~/.zshrc`:
+
+```shell
+eval "$(_CLINICA_COMPLETE=source_zsh clinica)"
+```
+
+Finally, open a new shell to enable completion.
 
 ## Run the Clinica environment
 
@@ -126,4 +128,38 @@ At the end of your session, remember to deactivate your Conda environment:
 
 ```{.sourceCode .bash}
 conda deactivate
+```
+
+## Developer instructions
+
+This section is intended for users who plan to contribute to Clinica or test the current development version.
+
+Clinica uses [Poetry](https://python-poetry.org) to manage its development environment. Please follow
+these [installation instructions](https://python-poetry.org/docs/#installation) and verify the `poetry` command is
+correctly setup.
+
+First, create a separate development environment:
+
+```shell
+conda create --name clinicaDev python=3.7
+conda activate clinicaDev
+```
+
+Then, clone the development branch of Clinica:
+
+```shell
+git clone --branch dev https://github.com/aramis-lab/clinica.git
+cd clinica
+```
+
+Finally, install Clinica with the necessary development dependencies:
+
+```shell
+poetry install
+```
+
+In case you need to test the documentation locally, install the additional dependencies with:
+
+```shell
+poetry install --extras docs
 ```

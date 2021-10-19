@@ -62,19 +62,17 @@ Installation instructions are available [here](./ICMClusterInstallation).
 
 - Machine Learning
     - `machinelearning-prepare-spatial-svm` - [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
-    - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
-
-- Deep Learning
-    - `deeplearning-prepare-data` - [Prepare input data for deep learning with PyTorch](Pipelines/DeepLearning_PrepareData)
+    - `machinelearning-classification` - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
 
 ### Dataset converters (`clinica convert`)
 
 Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to BIDS namely:
 
-- `adni-2-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](Converters/ADNI2BIDS)
-- `aibl-2-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](Converters/AIBL2BIDS)
-- `nifd-2-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](Converters/NIFD2BIDS)
-- `oasis-2-bids` - [OASIS: Open Access Series of Imaging Studies](Converters/OASIS2BIDS)
+- `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](Converters/ADNI2BIDS)
+- `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](Converters/AIBL2BIDS)
+- `nifd-to-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](Converters/NIFD2BIDS)
+- `oasis-to-bids` - [OASIS: Open Access Series of Imaging Studies](Converters/OASIS2BIDS)
+- `oasis3-to-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](Converters/OASIS3TOBIDS)
 
 !!! note
     We provide converters for the datasets used in the [Aramis Lab](http://www.aramislab.fr/).
@@ -95,8 +93,9 @@ Find on [this page](ClinicaConferences) the presentations and demo materials use
 
 ## Support
 
-- [Report an issue on GitHub](https://github.com/aramis-lab/clinica/issues)
-- Use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
+- Check for [past answers](https://groups.google.com/forum/#!forum/clinica-user) in the old Clinica Google Group
+- Start a [discussion](https://github.com/aramis-lab/clinica/discussions) on Github
+- Report an [issue](https://github.com/aramis-lab/clinica/issues) on GitHub
 
 ## License
 
@@ -106,7 +105,7 @@ Clinica is distributed under the terms of the MIT license given
 ## Citing Clinica
 
 For publications or communications using Clinica, please cite
-[[Routier et al](https://hal.inria.fr/hal-02308126/)]
+[[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)]
 as well as the references mentioned on the wiki page of the pipelines you used.
 Each page includes text to cite the software packages that are used by Clinica
 (for example, citing SPM when using the `t1-volume` pipeline).

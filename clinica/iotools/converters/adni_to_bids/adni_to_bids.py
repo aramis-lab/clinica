@@ -1,6 +1,40 @@
-# coding: utf-8
+from typing import Optional
 
 from clinica.iotools.abstract_converter import Converter
+
+
+def get_bids_subjs_info(
+    clinical_data_dir: str,
+    out_path: str,
+    subjects_list_path: Optional[str] = None,
+):
+    from os import path
+
+    from pandas import read_csv
+
+    # Read optional list of participants.
+    subjects_list = (
+        set([line.rstrip("\n") for line in open(subjects_list_path)])
+        if subjects_list_path
+        else None
+    )
+
+    # Load all participants from ADNIMERGE.
+    adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
+    participants = set(
+        read_csv(adni_merge_path, sep=",", usecols=["PTID"], squeeze=True).unique()
+    )
+
+    # Filter participants if requested.
+    participants = sorted(
+        participants & subjects_list if subjects_list else participants
+    )
+
+    # Compute their corresponding BIDS IDs and paths.
+    bids_ids = [f"sub-ADNI{p.replace('_', '')}" for p in participants]
+    bids_paths = [path.join(out_path, bids_id) for bids_id in bids_ids]
+
+    return bids_ids, bids_paths
 
 
 class AdniToBids(Converter):
@@ -14,12 +48,17 @@ class AdniToBids(Converter):
 
     def check_adni_dependencies(self):
         """Check the dependencies of ADNI converter."""
-        from clinica.utils.check_dependency import check_dcm2nii, check_dcm2niix
+        from clinica.utils.check_dependency import check_dcm2niix
 
-        check_dcm2nii()
         check_dcm2niix()
 
-    def convert_clinical_data(self, clinical_data_dir, out_path):
+    def convert_clinical_data(
+        self,
+        clinical_data_dir: str,
+        out_path: str,
+        clinical_data_only: bool = False,
+        subjects_list_path: Optional[str] = None,
+    ):
         """Convert the clinical data of ADNI specified into the file clinical_specifications_adni.xlsx.
 
         Args:
@@ -29,8 +68,6 @@ class AdniToBids(Converter):
         import os
         from os import path
 
-        import pandas as pd
-
         import clinica.iotools.bids_utils as bids
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
         from clinica.utils.stream import cprint
@@ -38,7 +75,7 @@ class AdniToBids(Converter):
         clinic_specs_path = path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "data",
-            "clinical_specifications_adni.xlsx",
+            "clinical_specifications_adni",
         )
         try:
             os.path.exists(out_path)
@@ -46,18 +83,17 @@ class AdniToBids(Converter):
             print("BIDS folder not found.")
             raise
 
-        bids_ids = bids.get_bids_subjs_list(out_path)
-        bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
         conversion_path = path.join(out_path, "conversion_info")
 
-        if not bids_ids:
-            adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
-            adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=",")
-            bids_ids = [
-                "sub-ADNI" + subj.replace("_", "")
-                for subj in list(adni_merge.PTID.unique())
-            ]
-            bids_subjs_paths = [path.join(out_path, subj) for subj in bids_ids]
+        if clinical_data_only:
+            bids_ids, bids_subjs_paths = get_bids_subjs_info(
+                clinical_data_dir=clinical_data_dir,
+                out_path=out_path,
+                subjects_list_path=subjects_list_path,
+            )
+        else:
+            bids_ids = bids.get_bids_subjs_list(out_path)
+            bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
 
         # -- Creation of modality agnostic files --
         cprint("Creating modality agnostic files...")
@@ -92,11 +128,9 @@ class AdniToBids(Converter):
         )
 
         # -- Creation of scans files --
-        cprint("Creating scans files...")
-        adni_utils.create_adni_scans_files(
-            conversion_path,
-            bids_subjs_paths,
-        )
+        if os.path.exists(conversion_path):
+            cprint("Creating scans files...")
+            adni_utils.create_adni_scans_files(conversion_path, bids_subjs_paths)
 
     def convert_images(
         self,
@@ -122,7 +156,6 @@ class AdniToBids(Converter):
         from os import path
 
         import pandas as pd
-        from colorama import Fore
 
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
@@ -148,7 +181,8 @@ class AdniToBids(Converter):
                 adnimerge_subj = adni_merge[adni_merge.PTID == subj]
                 if len(adnimerge_subj) == 0:
                     cprint(
-                        f"{Fore.RED}Subject with PTID {subj} does not exist. Please check your subjects list.{Fore.RESET}"
+                        msg=f"Subject with PTID {subj} does not exist. Please check your subjects list.",
+                        lvl="warning",
                     )
                     subjs_list.remove(subj)
             del subjs_list_copy
@@ -163,7 +197,7 @@ class AdniToBids(Converter):
         version_number = len(os.listdir(path.join(dest_dir, "conversion_info")))
         conversion_dir = path.join(dest_dir, "conversion_info", f"v{version_number}")
         os.makedirs(conversion_dir)
-        cprint(dest_dir)
+        cprint(dest_dir, lvl="debug")
 
         converters = {
             "T1": [adni_t1.convert_adni_t1],

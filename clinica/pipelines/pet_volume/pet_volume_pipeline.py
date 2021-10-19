@@ -1,5 +1,3 @@
-# coding: utf8
-
 from nipype import config
 
 import clinica.pipelines.engine as cpe
@@ -83,7 +81,6 @@ class PETVolume(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
 
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
@@ -114,8 +111,8 @@ class PETVolume(cpe.Pipeline):
         ):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"{Fore.RED}Group {self.parameters['group_label']} does not exist. "
-                f"Did you run t1-volume or t1-volume-create-dartel pipeline?{Fore.RESET}"
+                f"Group {self.parameters['group_label']} does not exist. "
+                "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
 
         # Tissues DataGrabber
@@ -233,6 +230,7 @@ class PETVolume(cpe.Pipeline):
             pet_bids,
             self.bids_directory,
             self.parameters["acq_label"],
+            skip_question=self.parameters["skip_question"],
         )
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
