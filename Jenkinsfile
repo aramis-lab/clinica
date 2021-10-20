@@ -133,7 +133,13 @@ pipeline {
                  source ./.jenkins/scripts/find_env.sh
                  conda activate clinica_env_$BRANCH_NAME
                  source /usr/local/Modules/init/profile.sh
-                 module load clinica.all
+                 module load \
+                   clinica/ants \
+                   clinica/freesurfer/6.0.0 \
+                   clinica/fsl/6.0.3 \
+                   clinica/mrtrix3/3.0.RC3 \
+                   clinica/matlab \
+                   clinica/spm12/r7487
                  cd test
                  taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/instantation_linux.xml \
@@ -224,7 +230,13 @@ pipeline {
                  source ./.jenkins/scripts/find_env.sh
                  conda activate clinica_env_$BRANCH_NAME
                  source /usr/local/Modules/init/profile.sh
-                 module load clinica.all
+                 module load \
+                   clinica/ants/2.2.0 \
+                   clinica/freesurfer/6.0.0 \
+                   clinica/fsl/6.0.3 \
+                   clinica/mrtrix3/3.0.RC3 \
+                   clinica/matlab \
+                   clinica/spm12/r7487
                  cd test
                  taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/run_converters_linux.xml \
@@ -270,7 +282,13 @@ pipeline {
                  source ./.jenkins/scripts/find_env.sh
                  conda activate clinica_env_$BRANCH_NAME
                  source /usr/local/Modules/init/profile.sh
-                 module load clinica.all
+                 module load \
+                   clinica/ants/2.2.0 \
+                   clinica/freesurfer/6.0.0 \
+                   clinica/fsl/6.0.3 \
+                   clinica/mrtrix3/3.0.RC3 \
+                   clinica/matlab \
+                   clinica/spm12/r7487
                  cd test
                  taskset -c 0-21 poetry run pytest \
                     --junitxml=./test-reports/run_utils_linux.xml \
@@ -316,7 +334,13 @@ pipeline {
                  source ./.jenkins/scripts/find_env.sh
                  conda activate clinica_env_$BRANCH_NAME
                  source /usr/local/opt/modules/init/bash
-                 module load clinica.all
+                 module load \
+                   clinica/ants/2.2.0 \
+                   clinica/freesurfer/6.0.0 \
+                   clinica/fsl/6.0.3 \
+                   clinica/mrtrix3/3.0.RC3 \
+                   clinica/matlab \
+                   clinica/spm12/r7487
                  cd test
                  poetry run pytest \
                     --verbose \
@@ -360,7 +384,13 @@ pipeline {
                  source ./.jenkins/scripts/find_env.sh
                  conda activate clinica_env_$BRANCH_NAME
                  source /usr/local/opt/modules/init/bash
-                 module load clinica.all
+                 module load \
+                   clinica/ants/2.2.0 \
+                   clinica/freesurfer/6.0.0 \
+                   clinica/fsl/6.0.3 \
+                   clinica/mrtrix3/3.0.RC3 \
+                   clinica/matlab \
+                   clinica/spm12/r7487
                  cd test
                  poetry run pytest \
                     --verbose \

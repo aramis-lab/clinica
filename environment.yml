@@ -1,6 +1,10 @@
 name: clinica_env
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - python=3.7
   - poetry
+  - dcm2niix
+  - petpvc
+  - convert3d  
