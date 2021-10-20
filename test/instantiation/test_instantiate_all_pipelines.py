@@ -96,7 +96,7 @@ def test_instantiate_T1VolumeRegisterDartel(cmdopt):
     )
 
     input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1VolumeExistingDartel"
+    root = input_dir / "T1VolumeRegisterDartel"
 
     parameters = {"group_label": "UnitTest"}
     pipeline = T1VolumeRegisterDartel(
