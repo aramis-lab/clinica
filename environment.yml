@@ -7,3 +7,4 @@ dependencies:
   - poetry
   - dcm2niix
   - petpvc
+  - convert3d  
