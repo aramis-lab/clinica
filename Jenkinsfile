@@ -137,7 +137,7 @@ pipeline {
                    clinica/ants \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
-                   clinica/mrtrix \
+                   clinica/mrtrix3/3.0.RC3 \
                    clinica/matlab \
                    clinica/spm12/r7487
                  cd test
@@ -234,7 +234,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
-                   clinica/mrtrix \
+                   clinica/mrtrix3/3.0.RC3 \
                    clinica/matlab \
                    clinica/spm12/r7487
                  cd test
@@ -286,7 +286,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
-                   clinica/mrtrix \
+                   clinica/mrtrix3/3.0.RC3 \
                    clinica.matlab \
                    clinica/spm12/r7487
                  cd test
@@ -338,7 +338,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
-                   clinica/mrtrix \
+                   clinica/mrtrix3/3.0.RC3 \
                    clinica/matlab \
                    clinica/spm12/r7487
                  cd test
@@ -388,7 +388,7 @@ pipeline {
                    clinica/ants/2.2.0 \
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
-                   clinica/mrtrix \
+                   clinica/mrtrix3/3.0.RC3 \
                    clinica/matlab \
                    clinica/spm12/r7487
                  cd test
