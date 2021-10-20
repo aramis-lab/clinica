@@ -61,7 +61,7 @@ def run_PETVolume(
         "sub-ADNI128S4832",
     ]
     out_files = [
-        (
+        fspath(
             output_dir
             / "caps"
             / "subjects"
@@ -75,7 +75,7 @@ def run_PETVolume(
         for sub in subjects
     ]
     ref_files = [
-        (
+        fspath(
             ref_dir
             / (
                 sub
