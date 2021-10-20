@@ -287,7 +287,7 @@ pipeline {
                    clinica/freesurfer/6.0.0 \
                    clinica/fsl/6.0.3 \
                    clinica/mrtrix3/3.0.RC3 \
-                   clinica.matlab \
+                   clinica/matlab \
                    clinica/spm12/r7487
                  cd test
                  taskset -c 0-21 poetry run pytest \
