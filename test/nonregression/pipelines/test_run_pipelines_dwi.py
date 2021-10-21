@@ -65,7 +65,7 @@ def run_DWIPreprocessingUsingT1(
     tsv = input_dir / "subjects.tsv"
 
     parameters = {
-        "initrand": 1234,
+        "initrand": True,
         "low_bval": 5,
         "use_cuda": False,
     }
@@ -109,7 +109,7 @@ def run_DWIPreprocessingUsingPhaseDiffFieldmap(
     tsv = input_dir / "subjects.tsv"
 
     parameters = {
-        "initrand": 1234,
+        "initrand": True,
         "low_bval": 5,
         "use_cuda": False,
     }
