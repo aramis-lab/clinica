@@ -64,6 +64,10 @@ Installation instructions are available [here](./ICMClusterInstallation).
     - `machinelearning-prepare-spatial-svm` - [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
     - `machinelearning-classification` - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
 
+!!! note "Clinica & deep learning"
+    Since the release of Clinica v0.5.2, preparation of input data for deep learning with PyTorch (aka `deeplearning-prepare-data` pipeline) has moved to its sibling project:
+    the [ClinicaDL framework](https://clinicadl.readthedocs.io/) for the reproducible processing of neuroimaging data with deep learning methods.
+
 ### Dataset converters (`clinica convert`)
 
 Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to BIDS namely:

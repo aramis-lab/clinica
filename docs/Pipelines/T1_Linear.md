@@ -70,13 +70,8 @@ affine transformation estimated with [ANTs](https://stnava.github.io/ANTs/).
 
 ## Going further
 
-- You can use the
-[`extract pipeline`](https://clinicadl.readthedocs.io/en/stable/Preprocessing/Extract/)
-to prepare images to be used with the PyTorch library
-[[Paszke et al., 2019]](https://papers.nips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library)
-for classification based on deep learning using the
-[ClinicaDL framework](https://github.com/aramis-lab/clinicadl) presented in
-[[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
+You can now use the [ClinicaDL framework](https://clinicadl.readthedocs.io/) presented in [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)]
+for classification or registration quality check based on deep learning methods.
 
 ## Describing this pipeline in your paper
 
