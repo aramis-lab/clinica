@@ -95,10 +95,6 @@ force-exclude = '''
   | build
   | dist
   | docs
-  | clinica/pipelines/dwi_connectome
-  | clinica/pipelines/dwi_dti
-  | clinica/pipelines/dwi_preprocessing_using_phasediff_fieldmap
-  | clinica/pipelines/dwi_preprocessing_using_t1
   | clinica/lib
 )/
 '''
