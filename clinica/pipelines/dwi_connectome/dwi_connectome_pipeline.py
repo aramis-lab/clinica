@@ -243,16 +243,15 @@ class DwiConnectome(cpe.Pipeline):
         import nipype.interfaces.mrtrix3 as mrtrix3
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
+        from nipype.interfaces.mrtrix3.tracking import Tractography
 
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
         from clinica.lib.nipype.interfaces.mrtrix3.reconst import EstimateFOD
-        from clinica.lib.nipype.interfaces.mrtrix3.tracking import Tractography
         from clinica.lib.nipype.interfaces.mrtrix.preprocess import MRTransform
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.mri_registration import (
             convert_flirt_transformation_to_mrtrix_transformation,
         )
-        from clinica.utils.stream import cprint
 
         # Nodes
         # =====
