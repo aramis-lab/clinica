@@ -29,7 +29,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.7.1"
 nibabel = "^2.3.3"
-nipype = "^1.4"
+nipype = "^1.7.0"
 argcomplete = "^1.9.4"
 pandas = "^1.2"
 jinja2 = "^2.10.1"
