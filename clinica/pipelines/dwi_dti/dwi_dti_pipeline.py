@@ -213,9 +213,9 @@ class DwiDti(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.ants import ApplyTransforms, RegistrationSynQuick
+        from nipype.interfaces.mrtrix.preprocess import DWI2Tensor
 
         from clinica.lib.nipype.interfaces.mrtrix3.utils import TensorMetrics
-        from clinica.lib.nipype.interfaces.mrtrix.preprocess import DWI2Tensor
         from clinica.utils.check_dependency import check_environment_variable
 
         from .dwi_dti_utils import (
@@ -265,7 +265,9 @@ class DwiDti(cpe.Pipeline):
 
         register_fa = npe.Node(interface=RegistrationSynQuick(), name="3a-Register_FA")
         fsl_dir = check_environment_variable("FSLDIR", "FSL")
-        fa_map = os.path.join(fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-FA-1mm.nii.gz")
+        fa_map = os.path.join(
+            fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-FA-1mm.nii.gz"
+        )
         register_fa.inputs.fixed_image = fa_map
 
         ants_transforms = npe.Node(
@@ -358,7 +360,7 @@ class DwiDti(cpe.Pipeline):
                 (self.input_node, convert_gradients, [("preproc_bval", "bval_file"),
                                                       ("preproc_bvec", "bvec_file")]),
                 # Computation of the DTI model
-                (self.input_node, dwi_to_dti, [("b0_mask", "in_mask"),
+                (self.input_node, dwi_to_dti, [("b0_mask", "mask"),
                                                ("preproc_dwi", "in_file")]),
                 (convert_gradients, dwi_to_dti, [("encoding_file", "encoding_file")]),
                 (get_caps_filenames, dwi_to_dti, [("out_dti", "out_filename")]),
