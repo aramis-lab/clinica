@@ -82,14 +82,19 @@ def t1_freesurfer_longitudinal_pipeline(
         ses_path = subjects_dir / participant_id / session_id
         mod_path = ses_path / "t1"
 
-        long_ids = [os.path.split(x)[-1] for x in glob(path.join(mod_path, "long*"))]
-
-        if long_ids and len(long_ids) > 1:
+        try:
+            flag_skip = False
+            long_id = next(mod_path.glob("long*")).name
+        except StopIteration:
             cprint(
-                "Only one longitudinal study can be processed for a given subject",
+                f"Could not find a longitudinal dataset for participant {participant_id} {session_id}",
                 lvl="warning",
             )
-        long_id = long_ids[0]
+            flag_skip = True
+
+        if flag_skip:
+            continue
+
         mod_path = mod_path / long_id / "freesurfer_longitudinal" / "regional_measures"
 
         ses_df = pd.DataFrame(
@@ -122,8 +127,10 @@ def t1_freesurfer_longitudinal_pipeline(
                         ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
             # Always retrieve subcortical volumes
-            atlas_path = (
-                mod_path / f"{participant_id}_{session_id}_segmentationVolumes.tsv"
+            atlas_path = next(
+                (mod_path).glob(
+                    f"{participant_id}_{session_id}_*segmentationVolumes.tsv"
+                )
             )
 
             atlas_df = pd.read_csv(atlas_path, sep="\t")
