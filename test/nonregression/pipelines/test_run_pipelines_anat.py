@@ -45,7 +45,10 @@ def test_run_anat(cmdopt, tmp_path, test_name):
 
     if test_name == "T1FreeSurferCrossSectional":
         run_T1FreeSurferCrossSectional(
-            base_dir / "T1FreeSurfer" / "in", tmp_out_dir, ref_dir, working_dir
+            base_dir / "T1FreeSurfer" / "in",
+            tmp_out_dir,
+            base_dir / "T1FreeSurfer" / "ref",
+            working_dir,
         )
 
     elif test_name == "T1VolumeTissueSegmentation":
@@ -114,7 +117,7 @@ def run_T1FreeSurferCrossSectional(
 
     folder1 = path_to_caps_fs("sub-01", "ses-2011")
     compare_folders(
-        output_dir / folder1 / "regional_meaasures",
+        output_dir / folder1 / "regional_measures",
         ref_dir / folder1 / "regional_measures",
         output_dir,
     )
