@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 @pytest.fixture(
     params=[
         "CreateSubjectSessionList",
-        # "CreateMergeFile",
+        "CreateMergeFile",
         "ComputeMissingModalities",
         "CenterNifti",
     ]

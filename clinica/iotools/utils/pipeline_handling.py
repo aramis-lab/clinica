@@ -84,10 +84,11 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
 
         if os.path.exists(mod_path):
             # Looking for atlases
-            atlas_paths = glob(
-                path.join(mod_path, f"{participant_id}_{session_id}_*thickness.tsv")
+            atlas_paths = sorted(
+                glob(
+                    path.join(mod_path, f"{participant_id}_{session_id}_*thickness.tsv")
+                )
             )
-
             for atlas_path in atlas_paths:
                 atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
                 if path.exists(atlas_path) and (
@@ -215,21 +216,25 @@ def volume_pipeline(
                 if os.path.exists(group_path):
                     # Looking for atlases
                     if not atlas_selection:
-                        atlas_paths = glob(
-                            path.join(
-                                group_path,
-                                "atlas_statistics",
-                                f"{participant_id}_{session_id}_*_statistics.tsv",
+                        atlas_paths = sorted(
+                            glob(
+                                path.join(
+                                    group_path,
+                                    "atlas_statistics",
+                                    f"{participant_id}_{session_id}_*_statistics.tsv",
+                                )
                             )
                         )
                     else:
                         atlas_paths = list()
                         for atlas in atlas_selection:
-                            atlas_paths += glob(
-                                path.join(
-                                    group_path,
-                                    "atlas_statistics",
-                                    f"{participant_id}_{session_id}_*{atlas}*_statistics.tsv",
+                            atlas_paths += sorted(
+                                glob(
+                                    path.join(
+                                        group_path,
+                                        "atlas_statistics",
+                                        f"{participant_id}_{session_id}_*{atlas}*_statistics.tsv",
+                                    )
                                 )
                             )
 
