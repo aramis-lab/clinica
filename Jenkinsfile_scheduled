@@ -21,9 +21,10 @@ pipeline {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              DATA_DIR_LINUX = "/mnt/data_ci/"
               }
             steps {
-              echo 'Testing pipeline run...'
+              echo 'Testing pipeline run anat...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -37,27 +38,11 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
+                    --input_data_directory=$DATA_DIR_LINUX \
                     --disable-warnings \
                     --timeout=0 \
-                    -k "T1Volume" \
                     -n 4 \
                     nonregression/pipelines/test_run_pipelines_anat.py
-                 pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR_LINUX \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -k "T1Linear" \
-                    -n 4 \
-                    nonregression/pipelines/test_run_pipelines_anat.py
-                  # pytest \
-                  #  --verbose \
-                  #  --working_directory=$WORK_DIR_LINUX \
-                  #  --disable-warnings \
-                  #  --timeout=0 \
-                  #  -k "T1Freesurfer" \
-                  #  -n 4 \
-                  #  nonregression/pipelines/test_run_pipelines_anat.py  
                  module purge
                  conda deactivate
                  '''
@@ -66,8 +51,6 @@ pipeline {
               always {
                 sh '''
                    rm -rf "${WORK_DIR_LINUX}/*"
-                   cd test/
-                   # ./deleteOut.sh
                    '''
               }
             }
@@ -81,6 +64,7 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+              DATA_DIR_MAC = "/Volumes/data_ci/"
               }
             steps {
               echo 'Testing pipeline instantiation...'
@@ -97,27 +81,11 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
+                    --input_data_directory=$DATA_DIR_MAC \
                     --disable-warnings \
                     --timeout=0 \
-                    -k "T1Volume" \
                     -n 4 \
                     nonregression/pipelines/test_run_pipelines_anat.py
-                 pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR_MAC \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -k "T1Linear" \
-                    -n 4 \
-                    nonregression/pipelines/test_run_pipelines_anat.py
-                  # pytest \
-                  #  --verbose \
-                  #  --working_directory=$WORK_DIR_MAC \
-                  #  --disable-warnings \
-                  #  --timeout=0 \
-                  #  -k "T1Freesurfer" \
-                  #  -n 4 \
-                  #  nonregression/pipelines/test_run_pipelines_anat.py  
                  module purge
                  conda deactivate
                  '''
@@ -126,8 +94,6 @@ pipeline {
               always {
                 sh '''
                    rm -rf "${WORK_DIR_MAC}/*"
-                   cd test/
-                   # ./deleteOut.sh
                    '''
               }
             }
@@ -141,6 +107,7 @@ pipeline {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              DATA_DIR_LINUX = "/mnt/data_ci/"
               }
             steps {
               echo 'Testing pipeline run...'
@@ -157,6 +124,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
+                    --input_data_directory=$DATA_DIR_LINUX \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -182,6 +150,7 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+              DATA_DIR_MAC = "/Volumes/data_ci/"
               }
             steps {
               echo 'Testing pipeline instantiation...'
@@ -198,6 +167,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
+                    --input_data_directory=$DATA_DIR_MAC \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -223,6 +193,7 @@ pipeline {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              DATA_DIR_LINUX = "/mnt/data_ci/"
               }
             steps {
               echo 'Testing pipeline run...'
@@ -239,6 +210,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
+                    --input_data_directory=$DATA_DIR_LINUX \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -264,6 +236,7 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+              DATA_DIR_MAC = "/Volumes/data_ci/"
               }
             steps {
               echo 'Testing pipeline instantiation...'
@@ -280,6 +253,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
+                    --input_data_directory=$DATA_DIR_MAC \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -305,6 +279,7 @@ pipeline {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              DATA_DIR_LINUX = "/mnt/data_ci/"
               }
             steps {
               echo 'Testing pipeline run...'
@@ -321,6 +296,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
+                    --input_data_directory=$DATA_DIR_LINUX \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -346,6 +322,7 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+              DATA_DIR_MAC = "/Volumes/data_ci/"
               }
             steps {
               echo 'Testing pipeline instantiation...'
@@ -362,6 +339,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
+                    --input_data_directory=$DATA_DIR_MAC \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -387,6 +365,7 @@ pipeline {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              DATA_DIR_LINUX = "/mnt/data_ci/"
               }
             steps {
               echo 'Testing pipeline run...'
@@ -403,6 +382,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
+                    --input_data_directory=$DATA_DIR_LINUX \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -428,6 +408,7 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+              DATA_DIR_MAC = "/Volumes/data_ci/"
               }
             steps {
               echo 'Testing pipeline instantiation...'
@@ -444,6 +425,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
+                    --input_data_directory=$DATA_DIR_MAC \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -469,6 +451,7 @@ pipeline {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              DATA_DIR_LINUX = "/mnt/data_ci/"
               }
             steps {
               echo 'Testing pipeline run...'
@@ -485,6 +468,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
+                    --input_data_directory=$DATA_DIR_LINUX \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -510,6 +494,7 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+              DATA_DIR_MAC = "/Volumes/data_ci/"
               }
             steps {
               echo 'Testing pipeline instantiation...'
@@ -526,6 +511,7 @@ pipeline {
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
+                    --input_data_directory=$DATA_DIR_MAC \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
