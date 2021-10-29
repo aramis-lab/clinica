@@ -12,98 +12,98 @@ pipeline {
     stages {
       stage('Run Tests') {
         parallel {
-          stage('Linux:pipAnat') {
-            agent { label 'ubuntu && long' }
-            when { 
-              branch 'dev'
-            }
-            environment {
-              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
-              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
-              DATA_DIR_LINUX = "/mnt/data_ci/"
-              TMP_DIR = "/mnt/data/ci/tmp"
-              }
-            steps {
-              echo 'Testing pipeline run anat...'
-              sh 'echo "Agent name: ${NODE_NAME}"' 
-              sh '''
-                 set +x
-                 eval "$(conda shell.bash hook)"
-                 source /usr/local/Modules/init/profile.sh
-                 source ./.jenkins/scripts/find_env.sh
-                 conda activate ${CLINICA_ENV_BRANCH}
-                 module load clinica.all
-                 cd test
-                 ln -s /mnt/data/ci/data_ci_linux ./data
-                 pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR_LINUX \
-                    --input_data_directory=$DATA_DIR_LINUX \
-                    --basetemp=$TMP_DIR \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    nonregression/pipelines/test_run_pipelines_anat.py
-                 module purge
-                 conda deactivate
-                 '''
-            }
-            post {
-              always {
-                sh '''
-                   rm -rf "${WORK_DIR_LINUX}/*"
-                   rm -rf "${TMP_DIR}/*"
-                   '''
-              }
-            }
-          }
-          stage('Mac:pipAnat') {
-            agent { label 'macos && long' }
-            when { 
-              branch 'dev'
-            }
-            environment {
-              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
-              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-              WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
-              DATA_DIR_MAC = "/Volumes/data_ci/"
-              TMP_DIR = "/Volumes/data/tmp"
-              }
-            steps {
-              echo 'Testing pipeline instantiation...'
-              sh 'echo "Agent name: ${NODE_NAME}"' 
-              sh '''
-                 set +x
-                 eval "$(conda shell.bash hook)"
-                 source /usr/local/opt/modules/init/bash 
-                 source ./.jenkins/scripts/find_env.sh
-                 conda activate ${CLINICA_ENV_BRANCH}
-                 module load clinica.all
-                 cd test
-                 ln -s /Volumes/data/data_ci ./data
-                 pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR_MAC \
-                    --input_data_directory=$DATA_DIR_MAC \
-                    --basetemp=$TMP_DIR \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    nonregression/pipelines/test_run_pipelines_anat.py
-                 module purge
-                 conda deactivate
-                 '''
-            }
-            post {
-              always {
-                sh '''
-                   rm -rf "${WORK_DIR_MAC}/*"
-                   rm -rf "${TMP_DIR}/*"
-                   '''
-              }
-            }
-          }
+          // stage('Linux:pipAnat') {
+          //   agent { label 'ubuntu && long' }
+          //   when { 
+          //     branch 'dev'
+          //   }
+          //   environment {
+          //     PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+          //     CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+          //     WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+          //     DATA_DIR_LINUX = "/mnt/data_ci/"
+          //     TMP_DIR = "/mnt/data/ci/tmp"
+          //     }
+          //   steps {
+          //     echo 'Testing pipeline run anat...'
+          //     sh 'echo "Agent name: ${NODE_NAME}"' 
+          //     sh '''
+          //        set +x
+          //        eval "$(conda shell.bash hook)"
+          //        source /usr/local/Modules/init/profile.sh
+          //        source ./.jenkins/scripts/find_env.sh
+          //        conda activate ${CLINICA_ENV_BRANCH}
+          //        module load clinica.all
+          //        cd test
+          //        ln -s /mnt/data/ci/data_ci_linux ./data
+          //        pytest \
+          //           --verbose \
+          //           --working_directory=$WORK_DIR_LINUX \
+          //           --input_data_directory=$DATA_DIR_LINUX \
+          //           --basetemp=$TMP_DIR \
+          //           --disable-warnings \
+          //           --timeout=0 \
+          //           -n 4 \
+          //           nonregression/pipelines/test_run_pipelines_anat.py
+          //        module purge
+          //        conda deactivate
+          //        '''
+          //   }
+          //   post {
+          //     always {
+          //       sh '''
+          //          rm -rf "${WORK_DIR_LINUX}/*"
+          //          rm -rf "${TMP_DIR}/*"
+          //          '''
+          //     }
+          //   }
+          // }
+          // stage('Mac:pipAnat') {
+          //   agent { label 'macos && long' }
+          //   when { 
+          //     branch 'dev'
+          //   }
+          //   environment {
+          //     PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
+          //     CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+          //     WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+          //     DATA_DIR_MAC = "/Volumes/data_ci/"
+          //     TMP_DIR = "/Volumes/data/tmp"
+          //     }
+          //   steps {
+          //     echo 'Testing pipeline instantiation...'
+          //     sh 'echo "Agent name: ${NODE_NAME}"' 
+          //     sh '''
+          //        set +x
+          //        eval "$(conda shell.bash hook)"
+          //        source /usr/local/opt/modules/init/bash 
+          //        source ./.jenkins/scripts/find_env.sh
+          //        conda activate ${CLINICA_ENV_BRANCH}
+          //        module load clinica.all
+          //        cd test
+          //        ln -s /Volumes/data/data_ci ./data
+          //        pytest \
+          //           --verbose \
+          //           --working_directory=$WORK_DIR_MAC \
+          //           --input_data_directory=$DATA_DIR_MAC \
+          //           --basetemp=$TMP_DIR \
+          //           --disable-warnings \
+          //           --timeout=0 \
+          //           -n 4 \
+          //           nonregression/pipelines/test_run_pipelines_anat.py
+          //        module purge
+          //        conda deactivate
+          //        '''
+          //   }
+          //   post {
+          //     always {
+          //       sh '''
+          //          rm -rf "${WORK_DIR_MAC}/*"
+          //          rm -rf "${TMP_DIR}/*"
+          //          '''
+          //     }
+          //   }
+          // }
           stage('Linux:pipPET') {
             agent { label 'ubuntu && long' }
             when { 
@@ -426,51 +426,51 @@ pipeline {
               }
             }
           }
-          stage('Mac:pipDWI') {
-            agent { label 'macos && long' }
-            when { 
-              branch 'dev'
-            }
-            environment {
-              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
-              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-              WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
-              DATA_DIR_MAC = "/Volumes/data_ci/"
-              }
-            steps {
-              echo 'Testing pipeline instantiation...'
-              sh 'echo "Agent name: ${NODE_NAME}"' 
-              sh '''
-                 set +x
-                 eval "$(conda shell.bash hook)"
-                 source /usr/local/opt/modules/init/bash
-                 source ./.jenkins/scripts/find_env.sh
-                 conda activate ${CLINICA_ENV_BRANCH}
-                 module load clinica.all
-                 cd test
-                 ln -s /Volumes/data/data_ci ./data
-                 pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR_MAC \
-                    --input_data_directory=$DATA_DIR_MAC \
-                    --basetemp=$TMP_DIR \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    nonregression/pipelines/test_run_pipelines_dwi.py
-                 module purge
-                 conda deactivate
-                 '''
-            }
-            post {
-              always {
-                sh '''
-                   rm -rf "${WORK_DIR_MAC}/*"
-                   rm -rf "${TMP_DIR}/*"
-                   '''
-              }
-            }
-          }
+          // stage('Mac:pipDWI') {
+          //   agent { label 'macos && long' }
+          //   when { 
+          //     branch 'dev'
+          //   }
+          //   environment {
+          //     PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
+          //     CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+          //     WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+          //     DATA_DIR_MAC = "/Volumes/data_ci/"
+          //     }
+          //   steps {
+          //     echo 'Testing pipeline instantiation...'
+          //     sh 'echo "Agent name: ${NODE_NAME}"' 
+          //     sh '''
+          //        set +x
+          //        eval "$(conda shell.bash hook)"
+          //        source /usr/local/opt/modules/init/bash
+          //        source ./.jenkins/scripts/find_env.sh
+          //        conda activate ${CLINICA_ENV_BRANCH}
+          //        module load clinica.all
+          //        cd test
+          //        ln -s /Volumes/data/data_ci ./data
+          //        pytest \
+          //           --verbose \
+          //           --working_directory=$WORK_DIR_MAC \
+          //           --input_data_directory=$DATA_DIR_MAC \
+          //           --basetemp=$TMP_DIR \
+          //           --disable-warnings \
+          //           --timeout=0 \
+          //           -n 4 \
+          //           nonregression/pipelines/test_run_pipelines_dwi.py
+          //        module purge
+          //        conda deactivate
+          //        '''
+          //   }
+          //   post {
+          //     always {
+          //       sh '''
+          //          rm -rf "${WORK_DIR_MAC}/*"
+          //          rm -rf "${TMP_DIR}/*"
+          //          '''
+          //     }
+          //   }
+          // }
         }
       }
     }
