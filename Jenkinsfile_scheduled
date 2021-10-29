@@ -132,6 +132,7 @@ pipeline {
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
                     --input_data_directory=$DATA_DIR_LINUX \
+                    --basetemp=$TMP_DIR \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -177,6 +178,7 @@ pipeline {
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
                     --input_data_directory=$DATA_DIR_MAC \
+                    --basetemp=$TMP_DIR \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -222,6 +224,7 @@ pipeline {
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
                     --input_data_directory=$DATA_DIR_LINUX \
+                    --basetemp=$TMP_DIR \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -267,6 +270,7 @@ pipeline {
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
                     --input_data_directory=$DATA_DIR_MAC \
+                    --basetemp=$TMP_DIR \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -312,6 +316,7 @@ pipeline {
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
                     --input_data_directory=$DATA_DIR_LINUX \
+                    --basetemp=$TMP_DIR \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -357,6 +362,7 @@ pipeline {
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
                     --input_data_directory=$DATA_DIR_MAC \
+                    --basetemp=$TMP_DIR \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -402,6 +408,7 @@ pipeline {
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
                     --input_data_directory=$DATA_DIR_LINUX \
+                    --basetemp=$TMP_DIR \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
@@ -446,6 +453,7 @@ pipeline {
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
                     --input_data_directory=$DATA_DIR_MAC \
+                    --basetemp=$TMP_DIR \
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
