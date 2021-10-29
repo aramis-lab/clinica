@@ -574,7 +574,7 @@ sklearn = "*"
 
 [[package]]
 name = "nipype"
-version = "1.6.1"
+version = "1.7.0"
 description = "Neuroimaging in Python: Pipelines and Interfaces"
 category = "main"
 optional = false
@@ -597,9 +597,9 @@ simplejson = ">=3.8.0"
 traits = ">=4.6,<5.0 || >5.0"
 
 [package.extras]
-all = ["pytest-env", "matplotlib", "black", "paramiko", "datalad", "pybids (>=0.7.0)", "nitime", "ipython", "sphinxcontrib-napoleon", "nipy", "xvfbwrapper", "nbsphinx", "pytest-cov", "codecov", "duecredit", "psutil (>=5.0)", "sphinx (>=2.1.2)", "pytest", "sphinxcontrib-apidoc", "dipy (!=1.4.1)", "nilearn", "coverage (<5)", "pytest-timeout", "sphinx-argparse"]
+all = ["datalad", "pytest", "dipy (!=1.4.1)", "psutil (>=5.0)", "duecredit", "matplotlib", "nilearn", "paramiko", "sphinx-argparse", "sphinxcontrib-napoleon", "black", "pybids (>=0.7.0)", "xvfbwrapper", "nipy", "pytest-env", "coverage (<5)", "codecov", "nitime", "pytest-timeout", "sphinx (>=2.1.2)", "sphinxcontrib-apidoc", "nbsphinx", "pytest-cov", "ipython"]
 data = ["datalad"]
-dev = ["sphinx (>=2.1.2)", "pytest", "sphinxcontrib-napoleon", "sphinxcontrib-apidoc", "ipython", "dipy (!=1.4.1)", "pytest-env", "sphinx-argparse", "black", "nbsphinx", "pytest-cov", "coverage (<5)", "pytest-timeout", "matplotlib", "codecov"]
+dev = ["pytest", "matplotlib", "pytest-timeout", "sphinx (>=2.1.2)", "sphinxcontrib-apidoc", "dipy (!=1.4.1)", "pytest-env", "coverage (<5)", "nbsphinx", "sphinx-argparse", "sphinxcontrib-napoleon", "black", "pytest-cov", "codecov", "ipython"]
 doc = ["dipy (!=1.4.1)", "ipython", "matplotlib", "nbsphinx", "sphinx-argparse", "sphinx (>=2.1.2)", "sphinxcontrib-apidoc", "sphinxcontrib-napoleon"]
 duecredit = ["duecredit"]
 nipy = ["nitime", "nilearn", "dipy (!=1.4.1)", "nipy", "matplotlib"]
@@ -1523,8 +1523,8 @@ nilearn = [
     {file = "nilearn-0.6.2.tar.gz", hash = "sha256:cfc6cfda59a6f4247189f8ccf92e364de450460a15c0ec21bdb857c420dd198c"},
 ]
 nipype = [
-    {file = "nipype-1.6.1-py3-none-any.whl", hash = "sha256:8d36685ff6ae7773e9e4f3b99fc95c94034d370d64afd83d4eb2caf0de6299f4"},
-    {file = "nipype-1.6.1.tar.gz", hash = "sha256:8428cfc633d8e3b8c5650e241e9eedcf637b7969bcd40f3423334d4c6b0992b5"},
+    {file = "nipype-1.7.0-py3-none-any.whl", hash = "sha256:21e64add7c892e14dd7bc2463523af727b19c8128b73f0fef86ee23cbb47006a"},
+    {file = "nipype-1.7.0.tar.gz", hash = "sha256:e689fe2e5049598c9cd3708e8df1cac732fa1a88696f283e3bc0a70fecb8ab51"},
 ]
 nodeenv = [
     {file = "nodeenv-1.6.0-py2.py3-none-any.whl", hash = "sha256:621e6b7076565ddcacd2db0294c0381e01fd28945ab36bcf00f41c5daf63bef7"},

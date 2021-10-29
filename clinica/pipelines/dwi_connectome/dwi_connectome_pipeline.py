@@ -80,7 +80,7 @@ class DwiConnectome(cpe.Pipeline):
                 input_files.DWI_PREPROC_NII,  # list_caps_files[4]
                 input_files.DWI_PREPROC_BRAINMASK,  # list_caps_files[5]
                 input_files.DWI_PREPROC_BVEC,  # list_caps_files[6]
-                input_files.DWI_PREPROC_BVAL  # list_caps_files[7]
+                input_files.DWI_PREPROC_BVAL,  # list_caps_files[7]
             ],
             raise_exception=True,
         )
@@ -104,7 +104,9 @@ class DwiConnectome(cpe.Pipeline):
             )
         ]
 
-        list_grad_fsl = [(bvec, bval) for bvec, bval in zip(list_caps_files[6], list_caps_files[7])]
+        list_grad_fsl = [
+            (bvec, bval) for bvec, bval in zip(list_caps_files[6], list_caps_files[7])
+        ]
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
@@ -243,16 +245,15 @@ class DwiConnectome(cpe.Pipeline):
         import nipype.interfaces.mrtrix3 as mrtrix3
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
+        from nipype.interfaces.mrtrix3.tracking import Tractography
+        from nipype.interfaces.mrtrix.preprocess import MRTransform
 
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
         from clinica.lib.nipype.interfaces.mrtrix3.reconst import EstimateFOD
-        from clinica.lib.nipype.interfaces.mrtrix3.tracking import Tractography
-        from clinica.lib.nipype.interfaces.mrtrix.preprocess import MRTransform
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.mri_registration import (
             convert_flirt_transformation_to_mrtrix_transformation,
         )
-        from clinica.utils.stream import cprint
 
         # Nodes
         # =====
