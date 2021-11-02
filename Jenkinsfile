@@ -449,6 +449,9 @@ pipeline {
       }
     }
     post {
+      always {
+        cleanWs()
+      }
       failure {
         mail to: 'clinica-ci@inria.fr',
           subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
