@@ -126,7 +126,7 @@ class JHUDTI811mm(AtlasAbstract):
         else:
             expected_checksum = fsl_atlas_checksums["new"]
 
-        if _sha256(atlas_labels) not in expected_checksum:
+        if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
                 f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
                 f"differing from expected ({expected_checksum}), "
