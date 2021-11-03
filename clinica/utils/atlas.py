@@ -113,13 +113,17 @@ class JHUDTI811mm(AtlasAbstract):
         atlas_labels = os.path.join(
             fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-labels-1mm.nii.gz"
         )
-        expected_checksum = (
-            "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69"
-        )
-        if _sha256(atlas_labels) != expected_checksum:
+
+        # Adding checksum for updated file with version 6.0.5 of fsl
+        expected_checksum = [
+            "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69",
+            "3c3f5d2f1250a3df60982acff35a75b99fd549a05d5f8124a63f78221aa0ec16",
+        ]
+
+        if _sha256(atlas_labels) not in expected_checksum:
             raise IOError(
                 f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
-                f"differing from expected ({expected_checksum}), "
+                f"differing from one of expected ({expected_checksum}), "
                 f"file may be corrupted and changed with newer version of FSL."
             )
         return atlas_labels
