@@ -44,7 +44,7 @@ def test_run_stats(cmdopt, tmp_path, test_name):
         run_StatisticsVolume(input_dir, tmp_out_dir, ref_dir, working_dir)
 
     elif test_name == "StatisticsVolumeCorrection":
-        run_StatisticsVolume(input_dir, tmp_out_dir, ref_dir, working_dir)
+        run_StatisticsVolumeCorrection(input_dir, tmp_out_dir, ref_dir, working_dir)
 
     else:
         print(f"Test {test_name} not available.")
