@@ -35,6 +35,11 @@ PROTOCOL_TO_BIDS = {
 
 
 class BidsDatasetDescription(BaseModel):
+    """Model representing a BIDS dataset description.
+
+    See https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html
+    """
+
     class DatasetType(str, Enum):
         raw = "raw"
         derivative = "derivative"
@@ -206,11 +211,12 @@ def parse_imaging_data(paths: List[Tuple[str, str]]) -> Optional[DataFrame]:
 
 
 def write_to_tsv(dataframe: DataFrame, buffer: TextIOBase) -> None:
-    # Save dataframe as a BIDS-compliant TSV file.
+    """Save the input dataframe to a BIDS-compliant TSV format."""
     dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
 
 
 def install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
+    """Install a NIfTI file from a source archive to the target BIDS path."""
     import fsspec
 
     fo = fsspec.open(zipfile)
