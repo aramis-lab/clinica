@@ -206,4 +206,4 @@ def run_StatisticsVolumeCorrection(
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
-    compare_folders(output_dir / "caps", ref_dir / "caps", output_dir)
+    compare_folders(output_dir / "caps/groups", ref_dir / "caps/groups", output_dir)
