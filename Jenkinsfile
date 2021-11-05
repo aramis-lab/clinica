@@ -302,7 +302,7 @@ pipeline {
               conda activate "${WORKSPACE}/env"
               poetry install --extras docs
               ./.jenkins/scripts/publish.sh "${BRANCH_NAME}"
-              scp -r ${BRANCH_NAME} aramislab:~/clinica/docs/public/
+              scp -r "${BRANCH_NAME}" aramislab:~/clinica/docs/public/
             '''
           }
           post {
@@ -310,6 +310,40 @@ pipeline {
               cleanWs()
             }
           }
+        }
+      }
+    }
+    stage('Deploy') {
+      agent {
+        label 'ubuntu'
+      }
+      when {
+        buildingTag()
+      }
+      environment {
+        CONDA_HOME = "$HOME/miniconda"
+      }
+      steps {
+        sh '''
+          source "${CONDA_HOME}/etc/profile.d/conda.sh"
+          conda create -p "${WORKSPACE}/env" python=3.8 poetry
+          conda activate "${WORKSPACE}/env"
+          cd "${WORKSPACE}/.jenkins/scripts"
+          ./generate_wheels.sh
+        '''
+        withCredentials(
+          [
+            usernamePassword(
+              credentialsId: 'jenkins-pass-for-pypi-aramis',
+              usernameVariable: 'USERNAME',
+              passwordVariable: 'PASSWORD'
+            )
+          ]
+        ) {
+          sh '''
+            cd "${WORKSPACE}"
+            twine upload -u "${USERNAME}" -p "${PASSWORD}" ./dist/*
+          '''
         }
       }
     }
