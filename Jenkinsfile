@@ -14,6 +14,7 @@ pipeline {
           stages {
             stage('Build environment') {
               steps {
+                sh 'echo "Agent name is ${NODE_NAME}"'
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda env create -f environment.yml -p "${WORKSPACE}/env"
@@ -159,6 +160,7 @@ pipeline {
           stages {
             stage("Build environment") {
               steps {
+                sh 'echo "Agent name is ${NODE_NAME}"'
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda env create -f environment.yml -p "${WORKSPACE}/env"
