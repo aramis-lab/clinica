@@ -288,6 +288,29 @@ pipeline {
             }
           }
         }
+        stage('Build and publish docs') {
+          agent {
+            label 'ubuntu && short'
+          }
+          environment {
+            CONDA_HOME = "$HOME/miniconda"
+          }
+          steps {
+            sh '''
+              source "${CONDA_HOME}/etc/profile.d/conda.sh"
+              conda create -p "${WORKSPACE}/env" python=3.8 poetry
+              conda activate "${WORKSPACE}/env"
+              poetry install --extras docs
+              ./.jenkins/scripts/publish.sh "${BRANCH_NAME}"
+              scp -r ${BRANCH_NAME} aramislab:~/clinica/docs/public/
+            '''
+          }
+          post {
+            always {
+              cleanWs()
+            }
+          }
+        }
       }
     }
   }
