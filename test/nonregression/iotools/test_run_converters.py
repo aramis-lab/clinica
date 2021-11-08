@@ -32,6 +32,7 @@ warnings.filterwarnings("ignore")
         "Oasis3ToBids",
         "Adni2Bids",
         "Aibl2Bids",
+        "HabsToBids",
     ]
 )
 def test_name(request):
@@ -134,6 +135,18 @@ def run_aibl2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) 
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
 
 
+def run_habs_to_bids(input_dir: Path, output_dir: Path, ref_dir: Path):
+    from click.testing import CliRunner
+
+    from clinica.iotools.converters.habs_to_bids.habs_to_bids_cli import cli
+
+    runner = CliRunner()
+    result = runner.invoke(cli, [str(input_dir), str(output_dir)])
+
+    assert result.exit_code == 0
+    compare_folders(output_dir, ref_dir, output_dir)
+
+
 def test_run_convertors(cmdopt, tmp_path, test_name):
     import shutil
 
@@ -157,6 +170,9 @@ def test_run_convertors(cmdopt, tmp_path, test_name):
 
     elif test_name == "Aibl2Bids":
         run_aibl2bids(input_dir, tmp_out_dir, ref_dir)
+
+    elif test_name == "HabsToBids":
+        run_habs_to_bids(input_dir, tmp_out_dir, ref_dir)
 
     else:
         print(f"Test {test_name} not available.")
