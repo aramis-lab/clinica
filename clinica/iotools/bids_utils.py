@@ -1,33 +1,49 @@
 """Methods used by BIDS converters."""
 from enum import Enum
 from io import TextIOBase
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
 
 class BidsDatasetDescription(BaseModel):
-    """Model class for a BIDS description."""
+    """Model representing a BIDS dataset description.
 
-    class Config:
-        fields = {"bids_version": "BIDSVersion"}
-        allow_population_by_field_name = True
+    See https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html
+    """
 
-        @classmethod
-        def alias_generator(cls, string: str) -> str:
-            """Generate an alias as PascalCase."""
-            return "".join(word.capitalize() for word in string.split("_"))
-
-    class DatasetType(Enum):
+    class DatasetType(str, Enum):
         raw = "raw"
         derivative = "derivative"
 
     name: str
-    bids_version: str
+    bids_version: str = "1.6.0"
+    hed_version: Optional[str]
     dataset_type: DatasetType = DatasetType.raw
+    license: Optional[str]
+    authors: Optional[List[str]]
+    acknowledgements: Optional[str]
+    how_to_acknowledge: Optional[str]
+    funding: Optional[List[str]]
+    ethics_approvals: Optional[List[str]]
+    references_and_links: Optional[List[str]]
+    dataset_doi: Optional[str]
 
-    def write(self, to: TextIOBase) -> None:
-        to.write(self.json(by_alias=True, indent=4))
+    class Config:
+        allow_population_by_field_name = True
+
+        @classmethod
+        def alias_generator(cls, string: str) -> str:
+            """Convert field to PascalCase, leaving known acronyms all capitalized."""
+            acronyms = ["bids", "doi", "hed"]
+
+            return "".join(
+                word.upper() if word in acronyms else word.capitalize()
+                for word in string.split("_")
+            )
+
+    def save(self, to: TextIOBase):
+        return to.write(self.json(by_alias=True, indent=4, exclude_none=True))
 
 
 # -- Methods for the clinical data --
@@ -464,7 +480,7 @@ def write_modality_agnostic_files(study_name, bids_dir):
     import clinica
 
     with open(path.join(bids_dir, "dataset_description.json"), "w") as f:
-        BidsDatasetDescription(name=study_name, bids_version="1.4.1").write(to=f)
+        BidsDatasetDescription(name=study_name, bids_version="1.4.1").save(to=f)
 
     file = open(path.join(bids_dir, "README"), "w")
     file.write(

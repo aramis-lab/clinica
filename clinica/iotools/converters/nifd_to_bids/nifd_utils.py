@@ -351,7 +351,7 @@ def write_bids(
                 write_to_tsv(sessions_group, sessions_file)
 
         with fs.open(to / "dataset_description.json", mode="w") as f:
-            BidsDatasetDescription(name="NIFD", bids_version="1.6.0").write(to=f)
+            BidsDatasetDescription(name="NIFD").save(to=f)
 
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():

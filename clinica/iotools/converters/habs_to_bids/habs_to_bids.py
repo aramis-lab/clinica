@@ -5,7 +5,8 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from pandas import DataFrame, Series
-from pydantic import BaseModel
+
+from clinica.iotools.bids_utils import BidsDatasetDescription
 
 PROTOCOL_TO_BIDS = {
     "3DFLAIR": {"datatype": "anat", "modality": "FLAIR"},
@@ -32,46 +33,6 @@ PROTOCOL_TO_BIDS = {
         "trc_label": "11CPIB",
     },
 }
-
-
-class BidsDatasetDescription(BaseModel):
-    """Model representing a BIDS dataset description.
-
-    See https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html
-    """
-
-    class DatasetType(str, Enum):
-        raw = "raw"
-        derivative = "derivative"
-
-    name: str
-    bids_version: str = "1.6.0"
-    hed_version: Optional[str]
-    dataset_type: DatasetType = DatasetType.raw
-    license: Optional[str]
-    authors: Optional[List[str]]
-    acknowledgements: Optional[str]
-    how_to_acknowledge: Optional[str]
-    funding: Optional[List[str]]
-    ethics_approvals: Optional[List[str]]
-    references_and_links: Optional[List[str]]
-    dataset_doi: Optional[str]
-
-    class Config:
-        allow_population_by_field_name = True
-
-        @classmethod
-        def alias_generator(cls, string: str) -> str:
-            """Convert field to PascalCase, leaving known acronyms all capitalized."""
-            acronyms = ["bids", "doi", "hed"]
-
-            return "".join(
-                word.upper() if word in acronyms else word.capitalize()
-                for word in string.split("_")
-            )
-
-    def save(self, to: TextIOBase):
-        return to.write(self.json(by_alias=True, indent=4, exclude_none=True))
 
 
 def source_participant_id_to_bids(dataframe: DataFrame) -> Series:
