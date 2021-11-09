@@ -562,19 +562,20 @@ nipype = "*"
 
 [[package]]
 name = "nilearn"
-version = "0.6.2"
+version = "0.7.1"
 description = "Statistical learning for neuroimaging in Python"
 category = "main"
 optional = false
 python-versions = ">=3.5"
 
 [package.dependencies]
-joblib = ">=0.11"
+joblib = ">=0.12"
 nibabel = ">=2.0.2"
 numpy = ">=1.11"
+pandas = ">=0.18.0"
+requests = ">=2"
 scikit-learn = ">=0.19"
 scipy = ">=0.19"
-sklearn = "*"
 
 [[package]]
 name = "nipype"
@@ -1035,17 +1036,6 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
-name = "sklearn"
-version = "0.0"
-description = "A set of python modules for machine learning and data mining"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-scikit-learn = "*"
-
-[[package]]
 name = "threadpoolctl"
 version = "2.2.0"
 description = "threadpoolctl"
@@ -1200,7 +1190,7 @@ docs = ["mkdocs", "mkdocs-material", "pymdown-extensions"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "e887f608b341976c13ae64b095e88d7b2eacd836fea422d749649af0815b64df"
+content-hash = "36598c6628516149f47c7d5e3f525050c72f624ed0725068d465f93f9e2c2bec"
 
 [metadata.files]
 argcomplete = [
@@ -1538,8 +1528,8 @@ niflow-nipype1-workflows = [
     {file = "niflow_nipype1_workflows-0.0.5-py2.py3-none-any.whl", hash = "sha256:c444c8d698efe7d6c1add4b359403e94bbd6d982fadb9a23f84cb050146f5e10"},
 ]
 nilearn = [
-    {file = "nilearn-0.6.2-py3-none-any.whl", hash = "sha256:3872b34b860524f579cfe94e48bf37d92d3e36253bb642cde48ef122b261d9c9"},
-    {file = "nilearn-0.6.2.tar.gz", hash = "sha256:cfc6cfda59a6f4247189f8ccf92e364de450460a15c0ec21bdb857c420dd198c"},
+    {file = "nilearn-0.7.1-py3-none-any.whl", hash = "sha256:9d2681c7e828f6e1a8715470416c2f3bc752f06fcd1308b0ed0b7bb33fd32c3d"},
+    {file = "nilearn-0.7.1.tar.gz", hash = "sha256:8b1409a5e1f0f6d1a1f02555c2f11115a2364f45f1e57bcb5fb3c9ea11f346fa"},
 ]
 nipype = [
     {file = "nipype-1.7.0-py3-none-any.whl", hash = "sha256:21e64add7c892e14dd7bc2463523af727b19c8128b73f0fef86ee23cbb47006a"},
@@ -1982,9 +1972,6 @@ simplejson = [
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
-]
-sklearn = [
-    {file = "sklearn-0.0.tar.gz", hash = "sha256:e23001573aa194b834122d2b9562459bf5ae494a2d59ca6b8aa22c85a44c0e31"},
 ]
 threadpoolctl = [
     {file = "threadpoolctl-2.2.0-py3-none-any.whl", hash = "sha256:e5a995e3ffae202758fa8a90082e35783b9370699627ae2733cd1c3a73553616"},
