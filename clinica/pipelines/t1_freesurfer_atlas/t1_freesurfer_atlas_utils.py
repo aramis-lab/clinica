@@ -1,7 +1,87 @@
 # coding: utf8
 
 
+from pathlib import Path
+
 from clinica.utils.stream import cprint
+
+
+def path_cross(caps_directory: str, to_process_with_atlases: tuple, path: Path):
+    import os
+
+    hemisphere = Path(path.stem).stem
+    atlas_name = Path(path.stem).suffix[1:].split("_")[0]
+    sub, ses = to_process_with_atlases[1].split("_")
+    subject_dir = (
+        caps_directory
+        + "/subjects/"
+        + sub
+        + "/"
+        + ses
+        + "/t1/freesurfer_cross_sectional"
+    )
+
+    path_to_freesurfer_cross = subject_dir + "/" + to_process_with_atlases[1]
+    output_path_annot = (
+        path_to_freesurfer_cross + "/label/" + hemisphere + "." + atlas_name + ".annot"
+    )
+    sphere_reg = path_to_freesurfer_cross + "/surf/" + hemisphere + ".sphere.reg"
+    if not os.path.isfile(sphere_reg):
+        cprint(
+            f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
+            lvl="warning",
+        )
+    output_path_stats = (
+        path_to_freesurfer_cross + "/stats/" + hemisphere + "." + atlas_name + ".stats"
+    )
+    return (
+        subject_dir,
+        path_to_freesurfer_cross,
+        output_path_annot,
+        output_path_stats,
+        hemisphere,
+    )
+
+
+def path_long(caps_directory: str, to_process_with_atlases: tuple, path: Path):
+    import os
+    from pathlib import Path
+
+    hemisphere = Path(path.stem).stem
+    atlas_name = Path(path.stem).suffix[1:].split("_")[0]
+    sub, ses, long = to_process_with_atlases[1].split("_")
+    subject_dir = (
+        caps_directory
+        + "/subjects/"
+        + sub
+        + "/"
+        + ses
+        + "/t1/"
+        + long
+        + "freesurfer_longitudinal"
+    )
+    path_to_freesurfer_long = (
+        subject_dir + "/" + sub + "_" + ses + ".long." + sub + "_" + long
+    )
+    output_path_annot = (
+        path_to_freesurfer_long + "/label/" + hemisphere + "." + atlas_name + ".annot"
+    )
+    sphere_reg = path_to_freesurfer_long + "/surf/" + hemisphere + ".sphere.reg"
+    if not os.path.isfile(sphere_reg):
+        cprint(
+            f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
+            lvl="warning",
+        )
+    output_path_stats = (
+        path_to_freesurfer_long + "/stats/" + hemisphere + "." + atlas_name + ".stats"
+    )
+    return (
+        subject_dir,
+        path_to_freesurfer_long,
+        output_path_annot,
+        output_path_stats,
+        hemisphere,
+    )
 
 
 def compute_atlas(
@@ -21,48 +101,97 @@ def compute_atlas(
     for path in Path(path_to_atlas).rglob(
         "*" + to_process_with_atlases[0] + "_6p0.gcs"
     ):
-        hemisphere = Path(path.stem).stem
-        atlas_name = Path(path.stem).suffix[1:].split("_")[0]
-        sub, ses = to_process_with_atlases[1].split("_")
-        subject_dir = (
-            caps_directory
-            + "/subjects/"
-            + sub
-            + "/"
-            + ses
-            + "/t1/freesurfer_cross_sectional"
-        )
-
-        path_to_freesurfer_cross = subject_dir + "/" + to_process_with_atlases[1]
-        output_path_annot = (
-            path_to_freesurfer_cross
-            + "/label/"
-            + hemisphere
-            + "."
-            + atlas_name
-            + ".annot"
-        )
-        sphere_reg = path_to_freesurfer_cross + "/surf/" + hemisphere + ".sphere.reg"
-        if not os.path.isfile(sphere_reg):
-            cprint(
-                f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
-                lvl="warning",
+        if len(to_process_with_atlases[1].split("_")) == 2:
+            hemisphere = Path(path.stem).stem
+            atlas_name = Path(path.stem).suffix[1:].split("_")[0]
+            sub, ses = to_process_with_atlases[1].split("_")
+            subject_dir = (
+                caps_directory
+                + "/subjects/"
+                + sub
+                + "/"
+                + ses
+                + "/t1/freesurfer_cross_sectional"
             )
-        mris_ca_label_command = f"mris_ca_label -sdir {subject_dir} {to_process_with_atlases[1]} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
-        a = subprocess.run(mris_ca_label_command, shell=True, capture_output=True)
 
-        output_path_stats = (
-            path_to_freesurfer_cross
-            + "/stats/"
-            + hemisphere
-            + "."
-            + atlas_name
-            + ".stats"
-        )
-        mris_anatomical_stats_command = f"export SUBJECTS_DIR={subject_dir}; mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {to_process_with_atlases[1]} {hemisphere}"
+            path_to_freesurfer_cross = subject_dir + "/" + to_process_with_atlases[1]
+            output_path_annot = (
+                path_to_freesurfer_cross
+                + "/label/"
+                + hemisphere
+                + "."
+                + atlas_name
+                + ".annot"
+            )
+            sphere_reg = (
+                path_to_freesurfer_cross + "/surf/" + hemisphere + ".sphere.reg"
+            )
+            if not os.path.isfile(sphere_reg):
+                cprint(
+                    f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
+                    lvl="warning",
+                )
+            output_path_stats = (
+                path_to_freesurfer_cross
+                + "/stats/"
+                + hemisphere
+                + "."
+                + atlas_name
+                + ".stats"
+            )
+            matthieulejoyeux = to_process_with_atlases[1]
+        elif len(to_process_with_atlases[1].split("_")) == 3:
+            hemisphere = Path(path.stem).stem
+            atlas_name = Path(path.stem).suffix[1:].split("_")[0]
+            sub, ses, long = to_process_with_atlases[1].split("_")
+            subject_dir = (
+                caps_directory
+                + "/subjects/"
+                + sub
+                + "/"
+                + ses
+                + "/t1/"
+                + long
+                + "/freesurfer_longitudinal"
+            )
+            path_to_freesurfer_cross = subject_dir + "/" + sub + "_" + ses + "_" + long
+            output_path_annot = (
+                path_to_freesurfer_cross
+                + "/label/"
+                + hemisphere
+                + "."
+                + atlas_name
+                + ".annot"
+            )
+            sphere_reg = (
+                path_to_freesurfer_cross + "/surf/" + hemisphere + ".sphere.reg"
+            )
+            print("ZE SPHERE REG PATH: ", sphere_reg)
+            if not os.path.isfile(sphere_reg):
+                cprint(
+                    f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
+                    lvl="warning",
+                )
+            output_path_stats = (
+                path_to_freesurfer_cross
+                + "/stats/"
+                + hemisphere
+                + "."
+                + atlas_name
+                + ".stats"
+            )
+            matthieulejoyeux = sub + "_" + ses + "_" + long
+
+        mris_ca_label_command = f"mris_ca_label -sdir {subject_dir} {matthieulejoyeux} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
+        a = subprocess.run(mris_ca_label_command, shell=True, capture_output=True)
+        print("stderr: ", a.stderr.decode("utf-8"))
+        print("stdout: ", a.stdout.decode("utf-8"))
+        mris_anatomical_stats_command = f"export SUBJECTS_DIR={subject_dir}; mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {matthieulejoyeux} {hemisphere}"
         c = subprocess.run(
             mris_anatomical_stats_command, shell=True, capture_output=True
         )
+        print("stderr: ", c.stderr.decode("utf-8"))
+        print("stdout: ", c.stdout.decode("utf-8"))
         image_id, atlas = (
             to_process_with_atlases[1],
             to_process_with_atlases[0],
@@ -84,14 +213,32 @@ def write_tsv_files(subject_dir: str, image_id: str, atlas: str) -> str:
     from clinica.utils.freesurfer import generate_regional_measures_alt
     from clinica.utils.stream import cprint
 
-    if os.path.isfile(os.path.join(subject_dir, image_id, "mri", "aparc+aseg.mgz")):
-        generate_regional_measures_alt(subject_dir, image_id, atlas)
-    else:
-        cprint(
-            msg=(
-                f"{image_id.replace('_', ' | ')} does not contain "
-                f"mri/aseg+aparc.mgz file. Creation of regional_measures/ folder will be skipped."
-            ),
-            lvl="warning",
-        )
+    print(
+        "i hope ze paf is fun: ",
+        os.path.join(subject_dir, image_id, "mri", "aparc+aseg.mgz"),
+    )
+    if len(image_id.split("_")) == 2:
+        if os.path.isfile(os.path.join(subject_dir, image_id, "mri", "aparc+aseg.mgz")):
+            generate_regional_measures_alt(subject_dir, image_id, atlas)
+        else:
+            cprint(
+                msg=(
+                    f"{image_id.replace('_', ' | ')} does not contain "
+                    f"mri/aseg+aparc.mgz file. Creation of regional_measures/ folder will be skipped."
+                ),
+                lvl="warning",
+            )
+    elif len(image_id.split("_")) == 3:
+        sub, ses, long = image_id.split("_")
+        folder = sub + "_" + ses + ".long." + sub + "_" + long
+        if os.path.isfile(os.path.join(subject_dir, folder, "mri", "aparc+aseg.mgz")):
+            generate_regional_measures_alt(subject_dir, folder, atlas)
+        else:
+            cprint(
+                msg=(
+                    f"{image_id.replace('_', ' | ')} does not contain "
+                    f"mri/aseg+aparc.mgz file. Creation of regional_measures/ folder will be skipped."
+                ),
+                lvl="warning",
+            )
     return image_id

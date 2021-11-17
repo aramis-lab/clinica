@@ -290,7 +290,7 @@ def get_processed_images(caps_directory, part_ids, sess_ids, long_ids, atlas=Fal
                     "t1",
                     long_id,
                     "freesurfer_longitudinal",
-                    f"{participant_id}_{session_id}.long.{participant_id}_{long_id}",
+                    f"{participant_id}_{session_id}_{long_id}",
                     "stat",
                     "rh.",
                     atlas,
@@ -311,7 +311,7 @@ def get_processed_images(caps_directory, part_ids, sess_ids, long_ids, atlas=Fal
                     "t1",
                     long_id,
                     "freesurfer_longitudinal",
-                    f"{participant_id}_{session_id}.long.{participant_id}_{long_id}",
+                    f"{participant_id}_{session_id}_{long_id}",
                     "mri",
                     "aparc+aseg.mgz",
                 )
