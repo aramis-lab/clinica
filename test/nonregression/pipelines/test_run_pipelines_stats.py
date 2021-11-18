@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
     params=[
         "StatisticsSurface",
         "StatisticsVolume",
-        # "StatisticsVolumeCorrection",
+        "StatisticsVolumeCorrection",
     ]
 )
 def test_name(request):
