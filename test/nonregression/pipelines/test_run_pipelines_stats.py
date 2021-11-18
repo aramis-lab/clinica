@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
     params=[
         "StatisticsSurface",
         "StatisticsVolume",
-        "StatisticsVolumeCorrection",
+        # "StatisticsVolumeCorrection",
     ]
 )
 def test_name(request):
@@ -76,7 +76,7 @@ def run_StatisticsSurface(
         "glm_type": "group_comparison",
         "contrast": "group",
         # Optional parameters
-        "covariates": "age sex",
+        "covariates": ["age", "sex"],
     }
     pipeline = StatisticsSurface(
         caps_directory=fspath(caps_dir),
