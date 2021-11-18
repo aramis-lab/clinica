@@ -24,6 +24,11 @@ orig_input_data = click.argument(
     type=click.Choice(["t1-freesurfer", "pet-surface", "custom-pipeline"]),
 )
 
+orig_input_data_volume = click.argument(
+    "orig_input_data",
+    type=click.Choice(["t1-volume", "pet-volume", "custom-pipeline"]),
+)
+
 orig_input_data_ml = click.argument(
     "orig_input_data_ml",
     type=click.Choice(["t1-volume", "pet-surface"]),

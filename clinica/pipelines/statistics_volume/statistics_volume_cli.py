@@ -10,7 +10,7 @@ pipeline_name = "statistics-volume"
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
-@cli_param.argument.orig_input_data
+@cli_param.argument.orig_input_data_volume
 @cli_param.argument.subject_visits_with_covariates_tsv
 @cli_param.argument.contrast
 @cli_param.option_group.pipeline_specific_options
@@ -72,7 +72,7 @@ pipeline_name = "statistics-volume"
 def cli(
     caps_directory: str,
     group_label: str,
-    orig_input_data: str,
+    orig_input_data_volume: str,
     subject_visits_with_covariates_tsv: str,
     contrast: str,
     group_label_dartel: str = "*",
@@ -90,7 +90,7 @@ def cli(
 
        GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
 
-       The type of surface-based feature can be defined by using the third argument: t1-freesurfer for cortical thickness, pet-surface for projected PET data or custom-pipeline for you own data in CAPS directory.
+       The type of volume-based feature can be defined by using the third argument: t1-volume to use gray matter maps, pet-volume to use PET data or custom-pipeline for you own data in CAPS directory.
 
        SUBJECT_VISITS_WITH_COVARIATES_TSV is a TSV file containing a list of subjects with their sessions and all the covariates and factors of the model.
 
@@ -106,7 +106,7 @@ def cli(
     from .statistics_volume_pipeline import StatisticsVolume
 
     # PET-Volume pipeline
-    if orig_input_data == "pet-volume":
+    if orig_input_data_volume == "pet-volume":
         if not acq_label:
             raise ClinicaException(
                 "You selected pet-volume pipeline without setting --acq_label flag. "
@@ -119,7 +119,7 @@ def cli(
             )
 
     # Custom pipeline
-    if orig_input_data == "custom-pipeline":
+    if orig_input_data_volume == "custom-pipeline":
         if not all([custom_file, measure_label]):
             raise ClinicaException(
                 "You must set --measure_label and --custom_file flags."
@@ -128,7 +128,7 @@ def cli(
     parameters = {
         # Clinica compulsory arguments
         "group_label": group_label,
-        "orig_input_data": orig_input_data,
+        "orig_input_data": orig_input_data_volume,
         "contrast": contrast,
         # Optional arguments
         "group_label_dartel": group_label_dartel,
