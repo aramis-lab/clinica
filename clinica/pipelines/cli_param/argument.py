@@ -25,7 +25,7 @@ orig_input_data = click.argument(
 )
 
 orig_input_data_volume = click.argument(
-    "orig_input_data",
+    "orig_input_data_volume",
     type=click.Choice(["t1-volume", "pet-volume", "custom-pipeline"]),
 )
 
