@@ -128,7 +128,7 @@ def cli(
     parameters = {
         # Clinica compulsory arguments
         "group_label": group_label,
-        "orig_input_data": orig_input_data_volume,
+        "orig_input_data_volume": orig_input_data_volume,
         "contrast": contrast,
         # Optional arguments
         "group_label_dartel": group_label_dartel,
