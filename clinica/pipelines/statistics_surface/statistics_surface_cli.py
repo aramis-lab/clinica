@@ -26,7 +26,7 @@ pipeline_name = "statistics-surface"
 @cli_param.option_group.pipeline_specific_options
 @cli_param.option_group.option(
     "-c",
-    "--covariate",
+    "--covariates",
     multiple=True,
     help=(
         "List of covariates. Each covariate must match the column name of the TSV file. "
