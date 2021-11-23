@@ -11,8 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-
-- [`t1-freesurfer`] Add option to t1-freesurfer to project the results of `recon-all` on another atlas
+- [`t1-freesurfer`] Add option to t1-freesurfer to project the results of `recon-all` onto another atlas
 - [`CI`] Use `poetry` for dependency management
 
 ### Changed
