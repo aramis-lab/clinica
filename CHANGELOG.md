@@ -23,11 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - [`t1-volume*/pet*`] Add command line argument `yes` for turning interactivity off
+- [`t1-volume-existing-template] Fix chained invocation
+- [`t1-volume*/pet-volume*] Fix default value of `--smooth` parameter for click compatibility
+- [`dwi-connectome`] Set `--n_tracks`'s type for for click compatibility 
 - [`dwi-preprocessing*`] Change type of `initrand` and `use_cuda` to bool 
 - [`t1-freesurfer-longitudinal`] Fix broken pipeline due to typo in code
 - [`Documentation`] Update OASIS3_to_bids instructions for conversion
 - [`StatisticsSurface`] Fix type in `covariate` argument
 - [`StatisticsVolume`] Fix bug in `feature` argument 
+
 ## Clinica 0.5.2
 
 ### Changed
