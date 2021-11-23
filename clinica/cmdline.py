@@ -32,6 +32,7 @@ def setup_logging(verbose: bool = False) -> None:
     """
     import logging
     import sys
+    from logging.handlers import RotatingFileHandler as RFHandler
 
     import nipype
     from colorlog import ColoredFormatter, StreamHandler
@@ -52,6 +53,8 @@ def setup_logging(verbose: bool = False) -> None:
     clinica_logger.addHandler(console_handler)
 
     # Nipype logger configuration.
+    # Monkey-patch nipype to use Python's RFH logger.
+    nipype.utils.logger.RFHandler = RFHandler
     # Setup debug logging to file.
     nipype.config.enable_debug_mode()
     nipype.config.update_config(
