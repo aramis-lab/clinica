@@ -332,7 +332,7 @@ pipeline {
       steps {
         sh '''
           source "${CONDA_HOME}/etc/profile.d/conda.sh"
-          conda create -p "${WORKSPACE}/env" python=3.8 poetry
+          conda create -p "${WORKSPACE}/env" python=3.8 poetry twine
           conda activate "${WORKSPACE}/env"
           cd "${WORKSPACE}/.jenkins/scripts"
           ./generate_wheels.sh
