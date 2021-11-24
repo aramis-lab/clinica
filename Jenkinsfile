@@ -330,25 +330,20 @@ pipeline {
         CONDA_HOME = "$HOME/miniconda"
       }
       steps {
-        sh '''
-          source "${CONDA_HOME}/etc/profile.d/conda.sh"
-          conda create -p "${WORKSPACE}/env" python=3.8 poetry twine
-          conda activate "${WORKSPACE}/env"
-          cd "${WORKSPACE}/.jenkins/scripts"
-          ./generate_wheels.sh
-        '''
         withCredentials(
           [
             usernamePassword(
-              credentialsId: 'jenkins-pass-for-pypi-aramis',
+              credentialsId: 'jenkins-token-for-pypi-clinica',
               usernameVariable: 'USERNAME',
               passwordVariable: 'PASSWORD'
             )
           ]
         ) {
           sh '''
-            cd "${WORKSPACE}"
-            twine upload -u "${USERNAME}" -p "${PASSWORD}" ./dist/*
+            source "${CONDA_HOME}/etc/profile.d/conda.sh"
+            conda create -p "${WORKSPACE}/env" python=3.8 poetry
+            conda activate "${WORKSPACE}/env"
+            poetry publish --build -u "${USERNAME}" -p "${PASSWORD}"
           '''
         }
       }
