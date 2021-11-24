@@ -17,7 +17,7 @@ def test_instantiate_T1FreeSurferCrossSectional(cmdopt):
     from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
 
     input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1Freesurfer"
+    root = input_dir / "T1FreeSurfer"
 
     parameters = {
         "recon_all_args": "-qcache",
