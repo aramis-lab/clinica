@@ -17,8 +17,8 @@ warnings.filterwarnings("ignore")
 
 @pytest.fixture(
     params=[
-        "DWIPreprocessingUsingT1",
-        "DWIPreprocessingUsingPhaseDiffFieldmap",
+        # "DWIPreprocessingUsingT1",
+        # "DWIPreprocessingUsingPhaseDiffFieldmap",
         "DWIDTI",
         "DWIConnectome",
     ]
