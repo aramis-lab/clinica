@@ -9,6 +9,7 @@ pipeline {
   agent none
   stages {
     stage('Checkout') {
+      failFast true
       parallel {
         stage('Linux') {
           agent {
