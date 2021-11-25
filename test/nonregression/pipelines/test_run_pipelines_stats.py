@@ -132,7 +132,7 @@ def run_StatisticsVolume(
     parameters = {
         # Clinica compulsory parameters
         "group_label": "UnitTest",
-        "orig_input_data": "pet-volume",
+        "orig_input_data_volume": "pet-volume",
         "contrast": "group",
         # Optional arguments for inputs from pet-volume pipeline
         "acq_label": "FDG",
