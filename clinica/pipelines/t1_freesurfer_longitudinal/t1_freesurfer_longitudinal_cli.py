@@ -55,25 +55,25 @@ def cli(
             l_part, l_sess, l_long, os.getcwd(), subjects_sessions_tsv
         )
 
-    # cprint("Part 1/2: Running t1-freesurfer-unbiased-template pipeline.")
-    # ctx.invoke(
-    #     t1_freesurfer_template_cli.cli,
-    #     caps_directory=caps_directory,
-    #     subjects_sessions_tsv=subjects_sessions_tsv,
-    #     working_directory=working_directory,
-    #     n_procs=n_procs,
-    #     overwrite_outputs=overwrite_outputs,
-    # )
+    cprint("Part 1/2: Running t1-freesurfer-unbiased-template pipeline.")
+    ctx.invoke(
+        t1_freesurfer_template_cli.cli,
+        caps_directory=caps_directory,
+        subjects_sessions_tsv=subjects_sessions_tsv,
+        working_directory=working_directory,
+        n_procs=n_procs,
+        overwrite_outputs=overwrite_outputs,
+    )
 
-    # cprint("Part 2/2 Running t1-freesurfer-longitudinal-correction pipeline.")
-    # ctx.invoke(
-    #     t1_freesurfer_longitudinal_correction_cli.cli,
-    #     caps_directory=caps_directory,
-    #     subjects_sessions_tsv=subjects_sessions_tsv,
-    #     working_directory=working_directory,
-    #     n_procs=n_procs,
-    #     overwrite_outputs=overwrite_outputs,
-    # )
+    cprint("Part 2/2 Running t1-freesurfer-longitudinal-correction pipeline.")
+    ctx.invoke(
+        t1_freesurfer_longitudinal_correction_cli.cli,
+        caps_directory=caps_directory,
+        subjects_sessions_tsv=subjects_sessions_tsv,
+        working_directory=working_directory,
+        n_procs=n_procs,
+        overwrite_outputs=overwrite_outputs,
+    )
 
     if atlas_path is not None:
         ctx.invoke(
