@@ -1,6 +1,6 @@
 pipeline {
   triggers {
-      cron('H 21 */2 * *')
+      cron('H 21 * * 5')
     }
   options {
     timeout(time: 15, unit: 'HOURS')
@@ -257,41 +257,41 @@ pipeline {
                 '''
               }
             }
-            stage("PET:nonreg") {
-              environment {
-                WORK_DIR = "/Volumes/data/working_dir_mac/PET"
-                INPUT_DATA_DIR = "/Volumes/data_ci"
-                TMP_DIR = "/Volumes/data/tmp"
-              }
-              steps {
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${WORKSPACE}/env"
-                  source /usr/local/opt/modules/init/bash
-                  mkdir -p $WORK_DIR
-                  module load clinica.all
-                  cd test
-                  poetry run pytest \
-                    --junitxml=./test-reports/nonregression_mac_pet.xml \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --input_data_directory=$INPUT_DATA_DIR \
-                    --basetemp=$TMP_DIR \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    ./nonregression/pipelines/test_run_pipelines_pet.py
-                '''
-              }
-              post {
-                always {
-                  junit 'test/test-reports/*.xml'
-                }
-                success {
-                  sh 'rm -rf ${WORK_DIR}/*'
-                }
-              }
-            }
+            # stage("PET:nonreg") {
+            #   environment {
+            #     WORK_DIR = "/Volumes/data/working_dir_mac/PET"
+            #     INPUT_DATA_DIR = "/Volumes/data_ci"
+            #     TMP_DIR = "/Volumes/data/tmp"
+            #   }
+            #   steps {
+            #     sh '''
+            #       source "${CONDA_HOME}/etc/profile.d/conda.sh"
+            #       conda activate "${WORKSPACE}/env"
+            #       source /usr/local/opt/modules/init/bash
+            #       mkdir -p $WORK_DIR
+            #       module load clinica.all
+            #       cd test
+            #       poetry run pytest \
+            #         --junitxml=./test-reports/nonregression_mac_pet.xml \
+            #         --verbose \
+            #         --working_directory=$WORK_DIR \
+            #         --input_data_directory=$INPUT_DATA_DIR \
+            #         --basetemp=$TMP_DIR \
+            #         --disable-warnings \
+            #         --timeout=0 \
+            #         -n 4 \
+            #         ./nonregression/pipelines/test_run_pipelines_pet.py
+            #     '''
+            #   }
+            #   post {
+            #     always {
+            #       junit 'test/test-reports/*.xml'
+            #     }
+            #     success {
+            #       sh 'rm -rf ${WORK_DIR}/*'
+            #     }
+            #   }
+            # }
             stage("Stats:nonreg") {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/Stats"
