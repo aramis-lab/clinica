@@ -138,23 +138,23 @@ Clinica uses [Poetry](https://python-poetry.org) to manage its development envir
 these [installation instructions](https://python-poetry.org/docs/#installation) and verify the `poetry` command is
 correctly setup.
 
-First, create a separate development environment:
-
-```shell
-conda create --name clinicaDev python=3.7
-conda activate clinicaDev
-```
-
-Then, clone the development branch of Clinica:
+Clone the development branch of Clinica:
 
 ```shell
 git clone --branch dev https://github.com/aramis-lab/clinica.git
 cd clinica
 ```
 
-Finally, install Clinica with the necessary development dependencies:
+Create an environment for development:
 
 ```shell
+conda env create -f environment.yml
+```
+
+Install Clinica with the necessary development dependencies:
+
+```shell
+conda activate clinica_env
 poetry install
 ```
 
