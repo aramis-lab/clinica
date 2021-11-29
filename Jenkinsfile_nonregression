@@ -3,7 +3,7 @@ pipeline {
       cron('H 21 * * 5')
     }
   options {
-    timeout(time: 15, unit: 'HOURS')
+    timeout(time: 48, unit: 'HOURS')
     disableConcurrentBuilds(abortPrevious: true)
   }
   agent none
