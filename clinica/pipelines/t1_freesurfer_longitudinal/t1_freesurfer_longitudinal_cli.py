@@ -73,15 +73,8 @@ def cli(
         working_directory=working_directory,
         n_procs=n_procs,
         overwrite_outputs=overwrite_outputs,
+        atlas_path=atlas_path,
     )
-
-    if atlas_path is not None:
-        ctx.invoke(
-            t1_freesurfer_atlas_cli.cli,
-            caps_directory=caps_directory,
-            atlas_path=atlas_path,
-            n_procs=n_procs,
-        )
 
 
 if __name__ == "__main__":
