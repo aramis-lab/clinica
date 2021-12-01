@@ -8,6 +8,7 @@ import sys
 
 import click
 
+import clinica
 from clinica.engine.template import cli as generate_cli
 from clinica.iotools.converters.cli import cli as convert_cli
 from clinica.iotools.utils.cli import cli as iotools_cli
@@ -68,7 +69,7 @@ def setup_logging(verbose: bool = False) -> None:
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.version_option()
+@click.version_option(version=clinica.__version__)
 @click.option("-v", "--verbose", is_flag=True, help="Increase logging verbosity.")
 def cli(verbose: bool) -> None:
     setup_logging(verbose=verbose)
