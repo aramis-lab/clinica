@@ -26,7 +26,7 @@ def compute_atlas(
         "*" + to_process_with_atlases[0] + "_6p0.gcs"
     ):
         # if the length of the split to_process_with_atlases[1] is 2, that means the format is sub-X_ses-Y
-        if len(to_process_with_atlases[1].split("_")) == 2:
+        if "long" not in to_process_with_atlases[1]:
             hemisphere = Path(path.stem).stem
             atlas_name = Path(path.stem).suffix[1:].split("_")[0]
             sub, ses = to_process_with_atlases[1].split("_")
@@ -62,7 +62,8 @@ def compute_atlas(
             subjid = to_process_with_atlases[1]
             fake_dir = subject_dir
         # if the length of the split to_process_with_atlases[1] is 3, that means the format is sub-X_ses-Y_long-Z
-        elif len(to_process_with_atlases[1].split("_")) == 3:
+
+        else:
             hemisphere = Path(path.stem).stem
             atlas_name = Path(path.stem).suffix[1:].split("_")[0]
             sub, ses, long = to_process_with_atlases[1].split("_")
