@@ -36,7 +36,6 @@ def cli(
     from clinica.utils.participant import get_subject_session_list
     from clinica.utils.stream import cprint
 
-    from ..t1_freesurfer_atlas import t1_freesurfer_atlas_cli
     from . import t1_freesurfer_longitudinal_correction_cli, t1_freesurfer_template_cli
     from .longitudinal_utils import save_part_sess_long_ids_to_tsv
 
