@@ -157,7 +157,7 @@ def create_merge_file(
                 )
 
                 # remove duplicated columns
-                row_df = row_df.loc[:, ~row_df.columns.duplicated()]
+                row_df = row_df.loc[:, ~row_df.columns.duplicated(keep="last")]
 
                 merged_df = merged_df.append(row_df)
 
