@@ -208,7 +208,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
-                    ./nonregression/pipelines/test_run_pipelines_anat.py
+                    ./nonregression/pipelines/test_run_pipelines_dwi.py
                 '''
               }
               post {
@@ -235,7 +235,7 @@ pipeline {
             CONDA_HOME = "$HOME/miniconda3"
           }
           stages {
-            stage("Build environment") {
+            stage('Build environment') {
               steps {
                 sh 'echo "Agent name is ${NODE_NAME}"'
                 sh '''
@@ -246,7 +246,7 @@ pipeline {
                 '''
               }
             }
-            stage("Install Clinica") {
+            stage('Install Clinica') {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
@@ -292,7 +292,7 @@ pipeline {
             //     }
             //   }
             // }
-            stage("Stats:nonreg") {
+            stage('Stats:nonreg') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/Stats"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -302,7 +302,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${WORKSPACE}/env"
-                  source /usr/local/opt/modules/init/bash
+                  source "${BREW_PREFIX}/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -327,7 +327,7 @@ pipeline {
                 }
               }
             }
-            stage("ML:nonreg") {
+            stage('ML:nonreg') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/ML"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -337,7 +337,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${WORKSPACE}/env"
-                  source /usr/local/opt/modules/init/bash
+                  source "${BREW_PREFIX}/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -362,7 +362,7 @@ pipeline {
                 }
               }
             }
-            stage("Anat:nonreg") {
+            stage('Anat:nonreg') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/Anat"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -372,7 +372,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${WORKSPACE}/env"
-                  source /usr/local/opt/modules/init/bash
+                  source "${BREW_PREFIX}/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -397,7 +397,7 @@ pipeline {
                 }
               }
             }
-            stage("DWI:nonreg") {
+            stage('DWI:nonreg') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/DWI"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -407,7 +407,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${WORKSPACE}/env"
-                  source /usr/local/opt/modules/init/bash
+                  source "${BREW_PREFIX}/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
