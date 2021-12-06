@@ -329,6 +329,20 @@ def clinica_file_reader(
             raise ClinicaBIDSError(error_message)
         else:
             raise ClinicaCAPSError(error_message)
+    if len(error_encountered) > 0 and raise_exception is False:
+        error_message = (
+            f"Clinica encountered {len(error_encountered)} "
+            f"problem(s) while getting {information['description']}:\n"
+        )
+        if "needed_pipeline" in information.keys():
+            if information["needed_pipeline"]:
+                error_message += (
+                    "Please note that the following clinica pipeline(s) must "
+                    f"have run to obtain these files: {information['needed_pipeline']}\n"
+                )
+        for msg in error_encountered:
+            error_message += msg
+        print("Error message: ", error_message)
     return results
 
 
@@ -356,7 +370,7 @@ def clinica_list_of_files_reader(
     Returns:
         List[List[str]]: List of list of found files following order of `list_information`
     """
-    from .exceptions import ClinicaException, ClinicaBIDSError
+    from .exceptions import ClinicaBIDSError, ClinicaException
 
     all_errors = []
     list_found_files = []

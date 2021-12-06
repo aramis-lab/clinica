@@ -137,15 +137,14 @@ class T1FreeSurfer(cpe.Pipeline):
         # T1w file:
         try:
             t1w_files = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII
+                self.subjects, self.sessions, self.bids_directory, T1W_NII, False
             )
         except ClinicaException as e:
             err_msg = (
                 "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
                 + str(e)
             )
-            raise ClinicaBIDSError(err_msg)
-
+            print(ClinicaBIDSError(err_msg))
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_participants_sessions(
