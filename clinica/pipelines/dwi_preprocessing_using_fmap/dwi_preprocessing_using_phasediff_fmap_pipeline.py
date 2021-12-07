@@ -32,7 +32,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
 
         image_ids = []
         if os.path.isdir(caps_directory):
-            preproc_files = clinica_file_reader(
+            preproc_files, _ = clinica_file_reader(
                 subjects, sessions, caps_directory, DWI_PREPROC_NII, False
             )
             image_ids = extract_image_ids(preproc_files)
@@ -426,9 +426,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         # Step 4: Bias correction
         # =======================
         # Use implementation detailed in (Jeurissen et al., 2014)
-        bias = npe.Node(
-            mrtrix3.DWIBiasCorrect(use_ants=True), name="4-RemoveBias"
-        )
+        bias = npe.Node(mrtrix3.DWIBiasCorrect(use_ants=True), name="4-RemoveBias")
 
         # Step 5: Final brainmask
         # =======================

@@ -124,7 +124,7 @@ class PETVolume(cpe.Pipeline):
 
         # PET from BIDS directory
         try:
-            pet_bids = clinica_file_reader(
+            pet_bids, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.bids_directory,
@@ -145,7 +145,7 @@ class PETVolume(cpe.Pipeline):
         tissues_input = []
         for tissue_number in self.parameters["mask_tissues"]:
             try:
-                current_file = clinica_file_reader(
+                current_file, _ = clinica_file_reader(
                     self.subjects,
                     self.sessions,
                     self.caps_directory,
@@ -199,7 +199,7 @@ class PETVolume(cpe.Pipeline):
             pvc_tissues_input = []
             for tissue_number in self.parameters["pvc_mask_tissues"]:
                 try:
-                    current_file = clinica_file_reader(
+                    current_file, _ = clinica_file_reader(
                         self.subjects,
                         self.sessions,
                         self.caps_directory,

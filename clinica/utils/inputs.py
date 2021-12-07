@@ -253,7 +253,11 @@ def clinica_file_reader(
     """
     from os.path import join
 
-    from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
+    from clinica.utils.exceptions import (
+        ClinicaBIDSError,
+        ClinicaCAPSError,
+        ClinicaException,
+    )
 
     assert isinstance(
         information, dict
@@ -288,6 +292,7 @@ def clinica_file_reader(
 
     # results is the list containing the results
     results = []
+    error_message = ""
     # error is the list of the errors that happen during the whole process
     error_encountered = []
     for sub, ses in zip(subjects, sessions):
@@ -342,8 +347,7 @@ def clinica_file_reader(
                 )
         for msg in error_encountered:
             error_message += msg
-        print("Error message: ", error_message)
-    return results
+    return results, error_message
 
 
 def clinica_list_of_files_reader(
@@ -383,7 +387,7 @@ def clinica_list_of_files_reader(
                     bids_or_caps_directory,
                     info_file,
                     True,
-                )
+                )[0]
             )
         except ClinicaException as e:
             list_found_files.append([])

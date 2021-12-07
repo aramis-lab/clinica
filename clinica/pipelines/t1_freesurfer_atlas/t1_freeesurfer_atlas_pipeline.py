@@ -59,10 +59,10 @@ class T1FreeSurferAtlas(cpe.Pipeline):
                         "needed_pipeline": "t1-freesurfer",
                     }
                 )
-                t1_freesurfer_output = clinica_file_reader(
+                t1_freesurfer_output, _ = clinica_file_reader(
                     subjects, sessions, caps_directory, T1_FS_DESTRIEUX, False
                 )
-                t1_freesurfer_files = clinica_file_reader(
+                t1_freesurfer_files, _ = clinica_file_reader(
                     subjects, sessions, caps_directory, atlas_info, False
                 )
 

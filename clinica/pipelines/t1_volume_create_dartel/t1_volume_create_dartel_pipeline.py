@@ -90,7 +90,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         d_input = []
         for tissue_number in self.parameters["dartel_tissues"]:
             try:
-                current_file = clinica_file_reader(
+                current_file, _ = clinica_file_reader(
                     self.subjects,
                     self.sessions,
                     self.caps_directory,
@@ -113,7 +113,9 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
-            cprint("Computational time for DARTEL creation will depend on the number of images.")
+            cprint(
+                "Computational time for DARTEL creation will depend on the number of images."
+            )
             print_begin_image(f"group-{self.parameters['group_label']}")
 
         # fmt: off

@@ -119,7 +119,7 @@ class SpatialSVM(cpe.Pipeline):
             )
 
         try:
-            input_image = clinica_file_reader(
+            input_image, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,

@@ -64,7 +64,7 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         d_input = []
         for tissue_number in self.parameters["tissues"]:
             try:
-                current_file = clinica_file_reader(
+                current_file, _ = clinica_file_reader(
                     self.subjects,
                     self.sessions,
                     self.caps_directory,
