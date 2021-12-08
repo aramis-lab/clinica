@@ -41,9 +41,9 @@ pipeline {
             stage('Test instantiation') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
-                WORK_DIR = "/mnt/data/ci/working_dir_linux"
-                INPUT_DATA_DIR = "/mnt/data_ci"
-                }
+                WORK_DIR = '/mnt/data/ci/working_dir_linux'
+                INPUT_DATA_DIR = '/mnt/data_ci'
+              }
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
@@ -74,9 +74,9 @@ pipeline {
             stage('Test converters') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
-                WORK_DIR = "/mnt/data/ci/working_dir_linux"
-                INPUT_DATA_DIR = "/mnt/data_ci"
-                TMP_BASE = "/mnt/data/ci/tmp"
+                WORK_DIR = '/mnt/data/ci/working_dir_linux'
+                INPUT_DATA_DIR = '/mnt/data_ci'
+                TMP_BASE = '/mnt/data/ci/tmp'
               }
               steps {
                 sh '''
@@ -112,9 +112,9 @@ pipeline {
             stage('Test iotools') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
-                WORK_DIR = "/mnt/data/ci/working_dir_linux"
-                INPUT_DATA_DIR = "/mnt/data_ci"
-                TMP_BASE = "/mnt/data/ci/tmp"
+                WORK_DIR = '/mnt/data/ci/working_dir_linux'
+                INPUT_DATA_DIR = '/mnt/data_ci'
+                TMP_BASE = '/mnt/data/ci/tmp'
               }
               steps {
                 sh '''
@@ -156,13 +156,13 @@ pipeline {
         }
         stage('Test on macOS') {
           agent {
-            label 'macos'
+            label 'macos && arm'
           }
           environment {
             CONDA_HOME = "$HOME/miniconda3"
           }
           stages {
-            stage("Build environment") {
+            stage('Build environment') {
               steps {
                 sh 'echo "Agent name is ${NODE_NAME}"'
                 sh '''
@@ -173,7 +173,7 @@ pipeline {
                 '''
               }
             }
-            stage("Install Clinica") {
+            stage('Install Clinica') {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
@@ -184,17 +184,16 @@ pipeline {
                 '''
               }
             }
-            stage("Test instantiation") {
+            stage('Test instantiation') {
               environment {
-                PATH = "/usr/local/Cellar/modules/4.1.2/bin:$PATH"
-                WORK_DIR = "/Volumes/data/working_dir_mac"
-                INPUT_DATA_DIR = "/Volumes/data_ci"
+                WORK_DIR = '/Volumes/data/working_dir_mac'
+                INPUT_DATA_DIR = '/Volumes/data_ci'
               }
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${WORKSPACE}/env"
-                  source /usr/local/opt/modules/init/bash
+                  source "${BREW_PREFIX}/opt/modules/init/bash"
                   module load clinica.all
                   cd test
                   poetry run pytest \
@@ -215,18 +214,17 @@ pipeline {
                 }
               }
             }
-            stage("Test converters") {
+            stage('Test converters') {
               environment {
-                PATH = "/usr/local/Cellar/modules/4.1.2/bin:$PATH"
-                WORK_DIR = "/Volumes/data/working_dir_mac"
-                INPUT_DATA_DIR = "/Volumes/data_ci"
-                TMP_BASE = "/Volumes/data/tmp"
+                WORK_DIR = '/Volumes/data/working_dir_mac'
+                INPUT_DATA_DIR = '/Volumes/data_ci'
+                TMP_BASE = '/Volumes/data/tmp'
               }
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${WORKSPACE}/env"
-                  source /usr/local/opt/modules/init/bash
+                  source "${BREW_PREFIX}/opt/modules/init/bash"
                   module load clinica.all
                   cd test
                   poetry run pytest \
@@ -251,18 +249,17 @@ pipeline {
                 }
               }
             }
-            stage("Test iotools") {
+            stage('Test iotools') {
               environment {
-                PATH = "/usr/local/Cellar/modules/4.1.2/bin:$PATH"
-                WORK_DIR = "/Volumes/data/working_dir_mac"
-                INPUT_DATA_DIR = "/Volumes/data_ci"
-                TMP_BASE = "/Volumes/data/tmp"
+                WORK_DIR = '/Volumes/data/working_dir_mac'
+                INPUT_DATA_DIR = '/Volumes/data_ci'
+                TMP_BASE = '/Volumes/data/tmp'
               }
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${WORKSPACE}/env"
-                  source /usr/local/opt/modules/init/bash
+                  source "${BREW_PREFIX}/opt/modules/init/bash"
                   module load clinica.all
                   cd test
                   poetry run pytest \
