@@ -7,7 +7,12 @@ from clinica.cmdline import cli
 
 # Test for the first level at the command line
 @pytest.fixture(
-    params=["convert", "generate", "iotools", "run",]
+    params=[
+        "convert",
+        "generate",
+        "iotools",
+        "run",
+    ]
 )
 def generate_cli_first_lv(request):
     task = request.param
@@ -24,7 +29,13 @@ def test_first_lv(generate_cli_first_lv):
 
 # Test for the converters cli (second level)
 @pytest.fixture(
-    params=["adni-to-bids", "aibl-to-bids", "nifd-to-bids", "oasis-to-bids",]
+    params=[
+        "adni-to-bids",
+        "aibl-to-bids",
+        "habs-to-bids",
+        "nifd-to-bids",
+        "oasis-to-bids",
+    ]
 )
 def generate_cli_second_lv_convert(request):
     task = request.param
@@ -69,7 +80,7 @@ def test_second_lv_iotools(generate_cli_second_lv_iotools):
         "t1-volume",
         "t1-freesurfer-longitudinal",
         "t1-linear",
-        "dwi-preprocessing-using-phasediff-fieldmap",
+        "dwi-preprocessing-using-phasediff-fmap",
         "dwi-preprocessing-using-t1",
         "dwi-dti",
         "dwi-connectome",
@@ -77,7 +88,6 @@ def test_second_lv_iotools(generate_cli_second_lv_iotools):
         "pet-volume",
         "pet-surface",
         "pet-surface-longitudinal",
-        "deeplearning-prepare-data",
         "machinelearning-prepare-spatial-svm",
         "machinelearning-classification",
         "statistics-surface",

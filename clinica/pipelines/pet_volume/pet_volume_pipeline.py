@@ -1,5 +1,3 @@
-# coding: utf8
-
 from nipype import config
 
 import clinica.pipelines.engine as cpe
@@ -232,6 +230,7 @@ class PETVolume(cpe.Pipeline):
             pet_bids,
             self.bids_directory,
             self.parameters["acq_label"],
+            skip_question=self.parameters["skip_question"],
         )
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv

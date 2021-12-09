@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module handles Clinica exceptions."""
 
 

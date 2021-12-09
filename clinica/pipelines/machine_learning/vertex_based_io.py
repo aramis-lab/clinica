@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def load_data(mgh_list):
     """
 

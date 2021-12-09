@@ -1,5 +1,3 @@
-# coding: utf8
-
 import clinica.engine as ce
 
 

@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def atlas_decomposition(dartel_input):
     """
 

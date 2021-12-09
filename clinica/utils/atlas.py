@@ -1,5 +1,3 @@
-# coding: utf8
-
 """This module contains utilities to handle atlases in Clinica.
 
 An atlas is currently defined by its name and a set of labels in a template space.
@@ -110,14 +108,24 @@ class JHUDTI811mm(AtlasAbstract):
 
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
+        import nipype.interfaces.fsl as fsl
 
         fsl_dir = check_environment_variable("FSLDIR", "FSL")
         atlas_labels = os.path.join(
             fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-labels-1mm.nii.gz"
         )
-        expected_checksum = (
-            "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69"
-        )
+
+        # Adding checksum for updated file with version 6.0.5 of fsl
+        fsl_atlas_checksums = {
+            "old": "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69",
+            "new": "3c3f5d2f1250a3df60982acff35a75b99fd549a05d5f8124a63f78221aa0ec16",
+        }
+
+        if ["5", "0", "5"] <= fsl.Info.version().split(".") < ["6", "0", "5"]:
+            expected_checksum = fsl_atlas_checksums["old"]
+        else:
+            expected_checksum = fsl_atlas_checksums["new"]
+
         if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
                 f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "

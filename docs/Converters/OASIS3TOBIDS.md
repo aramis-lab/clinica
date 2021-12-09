@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD046 -->
-# `oasis3-2-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS-3) to BIDS
+# `oasis3-to-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS-3) to BIDS
 
 !!! quote "Description reproduced from the [OASIS' webpage](http://oasis-brains.org/)"
     The Open Access Series of Imaging Studies (OASIS) is a project aimed at making MRI data sets of the brain freely available to the scientific community.
@@ -87,7 +87,7 @@ To download the images of the OASIS-3 dataset:
 
     a. For the "Scan Format" select *both* BIDS and NIFTI. Otherwise, you will be missing data.
     
-    b. For the "Scan Types", select only T1w, since it is the only format converted right now.
+    b. For the "Scan Types", select only T1w and pet, since it is the only format converted right now.
     
     c. For the "Additionnal Ressources", select BIDS.
     
@@ -156,8 +156,7 @@ where:
     └── ...
     ```
 
-- `CLINICAL_DATA_DIRECTORY` is the path to the directory containing the clinical CSV files. These files that should be
-  named `oasis3_clinical.csv` and `oasis3_sessions.csv`.
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory containing the clinical CSV files.
 
 - `BIDS_DIRECTORY` is the path to the output directory where the BIDS-converted version of OASIS-3 will be stored.
 

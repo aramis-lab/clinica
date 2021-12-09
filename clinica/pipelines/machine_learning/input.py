@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 import abc
 import os.path as path
 

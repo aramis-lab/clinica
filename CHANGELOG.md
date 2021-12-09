@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 MD026 -->
 # Changelog
 
 Main changes to this code/ project are documented in this file.
@@ -6,70 +7,130 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## Clinica 0.5.3
+
+### Added
+
+- [`t1-freesurfer`] Add option to t1-freesurfer to project the results of `recon-all` onto another atlas
+- [`CI`] Use `poetry` for dependency management
+
+### Changed
+
+- [`CI`] Refactor non-regression tests for easier parallelization
+- [`Atlas`] Update checksum to make pipelines compatible with `fsl 6.0.5`
+
+### Fixed
+
+- [`t1-volume*/pet*`] Add command line argument `yes` for turning interactivity off
+- [`t1-volume-existing-template] Fix chained invocation
+- [`t1-volume*/pet-volume*] Fix default value of `--smooth` parameter for click compatibility
+- [`dwi-connectome`] Set `--n_tracks`'s type for click compatibility 
+- [`dwi-preprocessing*`] Change type of `initrand` and `use_cuda` to bool 
+- [`t1-freesurfer-longitudinal`] Fix broken pipeline due to typo in code
+- [`Documentation`] Update OASIS3_to_bids instructions for conversion
+- [`StatisticsSurface`] Fix type in `covariate` argument
+- [`StatisticsVolume`] Fix bug in `feature` argument 
+
+## Clinica 0.5.2
+
+### Changed
+
+- [`dwi-preprocessing*`] Rewrite of `dwi-preprocessing*` pipelines using FSL's `eddy` tool
+
+### Removed
+
+- [`deeplearning-prepare-data`] Migration of pipeline to ClinicaDL
+
+### Fixed
+
+- [`oasis3-to-bids/nifd-to-bids`] Change code for backward compatibility with pandas 1.1.x
+- [T1-FreeSurfer/DWI] Remove Typing for compatibility with Nipype
+
+## Clinica 0.5.1
+
+### Added
+
+- [`oasis3-to-bids`] Add converter
+- [GitHub] Add citation file
+
+### Changed
+
+- [`adni-to-bids`] Improve fetching of participants
+- [`adni-to-bids`] Image path finder more robust
+- [Doc] Update the OASIS3 documentation
+- [CI] Code refactoring/cleanup
+
+### Fixed
+
+- [Atlas] Fix ROI index for left amygdala in AAL2 atlas
+- [`adni-to-bids`] Prevent crash when files exists
+- [`adni-to-bids`] Revert behavior to encode Dementia as AD
+- [`adni-to-bids`] Remove entries with incoherent session names
+- [`nifd-to-bids`] Several bugfixes and enhancements
+- [I/O tools] Fix bug on empty dataframe
+- [CI] Fix bash instruction to init conda
+- [Doc] Correct DWI-Connectome description paragraph
+
 ## Clinica 0.5.0
 
 ### Added
 
-[Docs] Add missing documentation on check-missing-processing iotool
-
-[deeplearning-prepare-data]: Add option to run pipeline with ROI for tensor_format option to extract region of interest according to a mask.
+- [Doc] Add missing documentation on check-missing-processing iotool
+- [`deeplearning-prepare-data`]: Add option to run pipeline with ROI for tensor_format option to extract region of interest according to a mask.
 
 ### Changed
-[Core] Improve Logging for Clinica
-[Core] Improve CLI through using Click    
-[Core] Nibabel replace get_data() by get_fdata() method for dataobj_images (nibabel)
 
-[Adni converter] Optimization of adni2bids clincal data extraction
-[Adni converter] Replace xlsx by tsv files for  clinical data specification
+- [Core] Improve Logging for Clinica
+- [Core] Improve CLI through using Click
+- [Core] Nibabel replace get_data() by get_fdata() method for dataobj_images (nibabel)
+- [`adni-to-bids`] Optimization of `adni-to-bids` clincal data extraction
+- [`adni-to-bids`] Replace xlsx by tsv files forclinical data specification
 
 ### Fixed
-[Core] fix bug in write_scan_tsv
-[Docs] Add documentation for check-missing-processing
-[Docs] Fix several small typos
-[Docs] Instructions for installing SPM dependency on MacOs Big Sur
-[CI] Fix several small issues with non-regression tests
-[CI] Fix typo in Jenkins script
-[CI] Automatically delete conda environments after PR is merged
-[ML] Fix unresolved reference in SVM pipeline
-[ML] Fix typo in parameters for SVC pipeline
 
+- [Core] Fix bug in `write_scan_tsv` function
+- [Doc] Add documentation for `check-missing-processing` command
+- [Doc] Fix several small typos
+- [Doc] Instructions for installing SPM dependency on MacOs Big Sur
+- [CI] Fix several small issues with non-regression tests
+- [CI] Fix typo in Jenkins script
+- [CI] Automatically delete conda environments after PR is merged
+- [ML] Fix unresolved reference in SVM pipeline
+- [ML] Fix typo in parameters for SVC pipeline
 
 ## Clinica 0.4.1
 
 ### Added
 
-- [deeplearning-prepare-data]: Add option to run pipeline with pet-linear outputs
+- [`deeplearning-prepare-data`]: Add option to run pipeline with pet-linear outputs
 
 ### Changed
 
-- [Oasis-to-bids]: Remove FSL library depency for OASIS-to-bids conversion.
-- [Clinica]: Replace exception by warning when CAPs folder not recognized. 
-- [AIBL-to-bids]: Center output nifti files of AIBL.
-- [AIBL-to-bids]: Extracts DICOM metadata in JSON files.
-- [merge-tsv]: Fetch subcortical volumes generated by t1-freesurfer pipelines and JSON 
-  files (if exists).
+- [`oasis-to-bids`]: Remove FSL library depency for OASIS-to-bids conversion.
+- [Clinica]: Replace exception by warning when CAPs folder not recognized.
+- [`aibl-to-bids`]: Center output nifti files of AIBL.
+- [`aibl-to-bids`]: Extracts DICOM metadata in JSON files.
+- [`merge-tsv`]: Fetch subcortical volumes generated by `t1-freesurfer` pipelines and JSON files (if exists).
 - Fix minor typos in documentation.
 
 ### Fixed
 
-- [pet-surface]: Verify SPM12 installation when running pipeline
+- [`pet-surface`]: Verify SPM12 installation when running pipeline
 
 ## Clinica 0.4.0
 
 ### Added
 
-- pet-linear pipeline: spatial normalization to the MNI space and intensity normalization of PET images
-- pet-surface-longitudinal pipeline: Surface-based longitudinal processing of PET images 
-- check-missing-processing tool allows creating a TSV file containing information about the pipelines executed into a specific CAPS folder
+- `pet-linear` pipeline: spatial normalization to the MNI space and intensity normalization of PET images
+- `pet-surface-longitudinal` pipeline: Surface-based longitudinal processing of PET images
+- `check-missing-processing` tool allows creating a TSV file containing information about the piplines executed into a specific CAPS folder
 - Conversion information is added once the converter is run to facilitate traceability.
-- Add new keywords available in ADNI3 to the adni-2-bids converter
+- Add new keywords available in ADNI3 to the `adni-to-bids` converter
 
 ### Changed
 
 - Harmonize output message display when running a pipeline.
 - Automatically ignore an image to process if it is found in the CAPS folder.
-- 
-
 
 ### Fixed
 
@@ -83,7 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add option to run deeplearning-prepare-data in output of t1-extension pipeline
+- Add option to run `deeplearning-prepare-data` in output of `t1-extension` pipeline
   and custom pipelines (PR #150).
 - Add Build and publish documentation with CI (PR #146).
 - Add CHANGELOG.md file
@@ -97,7 +158,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Add DataDictionary_NIFD_.xlsx file when using NIFD2BIDS.
-
 
 ## Clinica 0.3.7 - FreeSurfer-Longitudinal
 
@@ -116,10 +176,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [New] `t1-freesurfer-longitudinal` pipeline: FreeSurfer-based longitudinal
   processing of T1-weighted MR images [[Reuter et al.,
   2012](http://dx.doi.org/10.1016/j.neuroimage.2012.02.084)]. More info in the
-  wiki: https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_FreeSurfer_Longitudinal/
+  wiki: <https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_FreeSurfer_Longitudinal/>
 - [Change] The `fmri-preprocessing` pipeline is removed from the Clinica
   software as we will not actively maintain it. It is now in a separate
-  repository: https://github.com/aramis-lab/clinica_pipeline_fmri_preprocessing
+  repository: <https://github.com/aramis-lab/clinica_pipeline_fmri_preprocessing/>
 
 #### Converters:
 
@@ -127,8 +187,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Fix] Add diagnosis conversion for ADNI3
 - [Fix] Avoid creation of sessions `ses-V01` in `*_sessions.tsv` files
 
-
-##Clinica 0.3.6 - Pip
+## Clinica 0.3.6 - Pip
 
 ### Changes
 
@@ -145,10 +204,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Converters:
 
-- [Fix] The `aibl-2-bids` converter now handles new version of clinical data.
-- [Update] The `oasis-2-bids` converter now uses NiBabel instead of FreeSurfer
+- [Fix] The `aibl-to-bids` converter now handles new version of clinical data.
+- [Update] The `oasis-to-bids` converter now uses NiBabel instead of FreeSurfer
   to convert OASIS dataset.
-
 
 ## Clinica 0.3.5 - DL-Prepare-Data
 
@@ -164,14 +222,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [New] `deeplearning-prepare-data` pipeline: Prepare input data for deep
   learning with PyTorch. More info on the Wiki:
-  https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DeepLearning_PrepareData/
+  <https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/DeepLearning_PrepareData/>
 - [Change] `t1-linear` pipeline now crops image on default. If
   `--uncropped_image` is added to the command line, the image is not cropped.
 - [Change] Refactor machine learning modules. Main changes involve use of
   CamelCase convention for classes and parameters used dictionaries.
 
-
-##Clinica 0.3.4 - Bugfixes
+## Clinica 0.3.4 - Bugfixes
 
 ### Changes
 
@@ -184,4 +241,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [Enh] Improve how template files are downloaded for `t1-linear` and
   `statistics-volume` pipelines
-

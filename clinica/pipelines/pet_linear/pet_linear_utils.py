@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 # Functions used by nipype interface.
 
 # Initiate the pipeline

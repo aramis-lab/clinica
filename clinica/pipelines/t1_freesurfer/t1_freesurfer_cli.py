@@ -28,7 +28,10 @@ pipeline_name = "t1-freesurfer"
 @cli_param.option.n_procs
 @cli_param.option.overwrite_outputs
 @cli_param.option.yes
+@cli_param.option.atlas_path
+@click.pass_context
 def cli(
+    ctx: click.Context,
     bids_directory: str,
     caps_directory: str,
     recon_all_args: str,
@@ -37,6 +40,7 @@ def cli(
     n_procs: Optional[int] = None,
     overwrite_outputs: bool = False,
     yes: bool = False,
+    atlas_path: Optional[str] = None,
 ) -> None:
     """Cross-sectional pre-processing of T1w images with FreeSurfer.
 
@@ -46,6 +50,7 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
+    from ..t1_freesurfer_atlas import t1_freesurfer_atlas_cli
     from .t1_freesurfer_pipeline import T1FreeSurfer
 
     parameters = {"recon_all_args": recon_all_args, "skip_question": yes}
@@ -69,6 +74,14 @@ def cli(
     if isinstance(exec_pipeline, Graph):
         print_end_pipeline(
             pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
+        )
+
+    if atlas_path is not None:
+        ctx.invoke(
+            t1_freesurfer_atlas_cli.cli,
+            caps_directory=caps_directory,
+            atlas_path=atlas_path,
+            n_procs=n_procs,
         )
 
 

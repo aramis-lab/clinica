@@ -1,5 +1,3 @@
-# coding: utf8
-
 """
 Convert the AIBL dataset (http://www.aibl.csiro.au/) into BIDS.
 """

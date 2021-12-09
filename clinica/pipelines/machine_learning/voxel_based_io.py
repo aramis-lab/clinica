@@ -1,5 +1,3 @@
-# coding: utf8
-
 import nibabel as nib
 import numpy as np
 

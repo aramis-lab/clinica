@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
     """Initialize the pipeline."""
     import os

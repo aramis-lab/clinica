@@ -1,7 +1,9 @@
-# coding: utf8
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
+from pathlib import Path
+from typing import Optional
+
+from networkx.generators import atlas
 from nipype import config
 
 import clinica.pipelines.engine as cpe
@@ -125,6 +127,7 @@ class T1FreeSurfer(cpe.Pipeline):
                     for p_id, s_id in zip(self.subjects, self.sessions)
                 ]
                 to_process_ids = list(set(input_ids) - set(processed_ids))
+
                 self.subjects, self.sessions = extract_subjects_sessions_from_filename(
                     to_process_ids
                 )
@@ -170,6 +173,7 @@ class T1FreeSurfer(cpe.Pipeline):
             self.bids_directory,
             skip_question=self.parameters["skip_question"],
         )
+
         self.connect(
             [
                 (read_node, self.input_node, [("t1w", "t1w")]),

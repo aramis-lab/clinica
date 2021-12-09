@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def zip_nii(in_file: str, same_dir: bool = False):
     import gzip
     import shutil
@@ -183,3 +180,31 @@ def read_participant_tsv(tsv_file):
     return [sub.strip(" ") for sub in participants], [
         ses.strip(" ") for ses in sessions
     ]
+
+
+def extract_metadata_from_json(json_file, list_keys):
+    """Extract fields from JSON file."""
+    import json
+    import datetime
+    from clinica.utils.exceptions import ClinicaException
+
+    list_values = []
+    try:
+        with open(json_file, "r") as file:
+            data = json.load(file)
+            for key in list_keys:
+                list_values.append(data[key])
+    except EnvironmentError:
+        raise EnvironmentError(
+            f"[Error] Clinica could not open the following JSON file: {json_file}"
+        )
+    except KeyError as e:
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+        error_message = (
+            f"[{now}] Error: Clinica could not find the e key in the following JSON file: {json_file}"
+        )
+        raise ClinicaException(error_message)
+    finally:
+        file.close()
+
+    return list_values

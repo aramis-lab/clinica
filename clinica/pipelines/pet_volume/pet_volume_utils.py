@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def init_input_node(pet_nii):
     import nibabel as nib
 

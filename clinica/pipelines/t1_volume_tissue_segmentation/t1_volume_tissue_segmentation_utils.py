@@ -1,5 +1,3 @@
-# coding: utf8
-
 """Utils for the implementation of t1-volume-tissue-segmentation pipeline."""
 
 import os

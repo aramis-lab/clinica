@@ -54,7 +54,7 @@ def cli(
 
     cprint("Part 1/2: Running t1-freesurfer-unbiased-template pipeline.")
     ctx.invoke(
-        t1_freesurfer_longitudinal_correction_cli.cli,
+        t1_freesurfer_template_cli.cli,
         caps_directory=caps_directory,
         subjects_sessions_tsv=subjects_sessions_tsv,
         working_directory=working_directory,

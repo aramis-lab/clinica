@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import clinica.pipelines.engine as cpe
 
 
@@ -191,6 +189,7 @@ class PetSurface(cpe.Pipeline):
             read_parameters_node.inputs.pet,
             self.bids_directory,
             self.parameters["acq_label"],
+            skip_question=self.parameters["skip_question"],
         )
 
         # fmt: off
@@ -322,6 +321,7 @@ class PetSurface(cpe.Pipeline):
             read_parameters_node.inputs.pet,
             self.bids_directory,
             self.parameters["acq_label"],
+            skip_question=self.parameters["skip_question"],
         )
 
         # fmt: off

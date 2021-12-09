@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def get_t1_freesurfer_custom_file():
     import os
 
@@ -141,7 +138,7 @@ def covariates_to_design_matrix(contrast, covariates=None):
     """
     if covariates:
         # Convert string to list while handling case where several spaces are present
-        list_covariates = list(set(covariates.split(" ")))
+        list_covariates = list(covariates)
         try:
             list_covariates.remove("")
         except ValueError:

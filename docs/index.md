@@ -64,18 +64,20 @@ Installation instructions are available [here](./ICMClusterInstallation).
     - `machinelearning-prepare-spatial-svm` - [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
     - `machinelearning-classification` - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
 
-- Deep Learning
-    - `deeplearning-prepare-data` - [Prepare input data for deep learning with PyTorch](Pipelines/DeepLearning_PrepareData)
+!!! note "Clinica & deep learning"
+    Since the release of Clinica v0.5.2, preparation of input data for deep learning with PyTorch (aka `deeplearning-prepare-data` pipeline) has moved to its sibling project:
+    the [ClinicaDL framework](https://clinicadl.readthedocs.io/) for the reproducible processing of neuroimaging data with deep learning methods.
 
 ### Dataset converters (`clinica convert`)
 
 Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to BIDS namely:
 
-- `adni-2-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](Converters/ADNI2BIDS)
-- `aibl-2-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](Converters/AIBL2BIDS)
-- `nifd-2-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](Converters/NIFD2BIDS)
-- `oasis-2-bids` - [OASIS: Open Access Series of Imaging Studies](Converters/OASIS2BIDS)
-- `oasis3-2-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](Converters/OASIS3TOBIDS)
+- `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](Converters/ADNI2BIDS)
+- `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](Converters/AIBL2BIDS)
+- `habs-to-bids` - [HABS: Harvard Aging Brain Study](Converters/HABS2BIDS)
+- `nifd-to-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](Converters/NIFD2BIDS)
+- `oasis-to-bids` - [OASIS: Open Access Series of Imaging Studies](Converters/OASIS2BIDS)
+- `oasis3-to-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](Converters/OASIS3TOBIDS)
 
 !!! note
     We provide converters for the datasets used in the [Aramis Lab](http://www.aramislab.fr/).

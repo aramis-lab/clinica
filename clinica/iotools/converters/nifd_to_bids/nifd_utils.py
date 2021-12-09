@@ -26,7 +26,7 @@ def find_clinical_data(clinical_data_directory: PathLike) -> Optional[DataFrame]
 
 
 def read_clinical_data(clinical_data_directory: PathLike) -> DataFrame:
-    from pandas import NA, CategoricalDtype
+    import pandas as pd
 
     dataframe = find_clinical_data(clinical_data_directory)
 
@@ -47,17 +47,17 @@ def read_clinical_data(clinical_data_directory: PathLike) -> DataFrame:
         .rename(columns={"dx": "diagnosis", "cdr_box_score": "cdr", "mmse_tot": "mmse"})
         .astype(
             dtype={
-                "diagnosis": CategoricalDtype(
+                "diagnosis": pd.CategoricalDtype(
                     ["BV", "CON", "L_SD", "PATIENT (OTHER)", "PNFA", "SV"]
                 ),
-                "site": CategoricalDtype(["UCSF", "MAYO", "MGH"]),
-                "education": "int",
-                "race": "int",
-                "cdr": "float",
-                "mmse": "float",
+                "site": pd.CategoricalDtype(["UCSF", "MAYO", "MGH"]),
+                "education": pd.Int64Dtype(),
+                "race": pd.Int64Dtype(),
+                "cdr": pd.Float64Dtype(),
+                "mmse": pd.Float64Dtype(),
             }
         )
-        .replace({"education": {99: NA}, "race": {50: NA, 99: NA}})
+        .replace({"education": {99: pd.NA}, "race": {50: pd.NA, 99: pd.NA}})
     )
 
     # Keep positive MMSE values only.
@@ -339,13 +339,13 @@ def write_bids(
 
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
-        with fs.open(to / "participants.tsv", "wb") as participant_file:
+        with fs.open(to / "participants.tsv", "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
         for participant_id, sessions_group in sessions.groupby("participant_id"):
             sessions_group = sessions_group.droplevel("participant_id")
             sessions_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
-            with fs.open(sessions_filepath, "wb") as sessions_file:
+            with fs.open(sessions_filepath, "w") as sessions_file:
                 write_to_tsv(sessions_group, sessions_file)
 
     # Perform import of imaging data next.

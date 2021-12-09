@@ -1,5 +1,3 @@
-# coding: utf8
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config
@@ -90,7 +88,11 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             err = f"Clinica faced error(s) while trying to read files in your BIDS directory.\n{str(e)}"
             raise ClinicaBIDSError(err)
 
-        check_volume_location_in_world_coordinate_system(t1w_files, self.bids_directory)
+        check_volume_location_in_world_coordinate_system(
+            t1w_files,
+            self.bids_directory,
+            skip_question=self.parameters["skip_question"],
+        )
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)

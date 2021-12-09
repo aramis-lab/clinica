@@ -14,6 +14,7 @@ pipeline_name = "t1-volume-tissue-segmentation"
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option.yes
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.tissue_classes
 @cli_param.option.dartel_tissues
@@ -31,6 +32,7 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    yes: bool = False,
 ) -> None:
     """Tissue segmentation, bias correction and spatial normalization to MNI space of T1w images with SPM.
 
@@ -48,6 +50,7 @@ def cli(
         "tissue_probability_maps": tissue_probability_maps,
         "save_warped_unmodulated": not dont_save_warped_unmodulated,
         "save_warped_modulated": save_warped_modulated,
+        "skip_question": yes,
     }
 
     pipeline = T1VolumeTissueSegmentation(

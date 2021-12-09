@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 def atlas_statistics(in_image, atlas_list):
     """Generate regional measure from atlas_list in TSV files.
 

@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 import itertools
 import json
 from multiprocessing.pool import ThreadPool

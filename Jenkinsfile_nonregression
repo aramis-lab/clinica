@@ -1,0 +1,452 @@
+pipeline {
+  triggers {
+      cron('H 21 * * 5')
+    }
+  options {
+    timeout(time: 48, unit: 'HOURS')
+    disableConcurrentBuilds(abortPrevious: true)
+  }
+  agent none
+  stages {
+    stage('Checkout') {
+      parallel {
+        stage('Linux') {
+          agent {
+            label 'ubuntu'
+          }
+          environment {
+            CONDA_HOME = "$HOME/miniconda"
+          }
+          stages {
+            stage('Build environment') {
+              steps {
+                sh 'echo "Agent name is ${NODE_NAME}"'
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda env create -f environment.yml -p "${WORKSPACE}/env"
+                  conda activate "${WORKSPACE}/env"
+                  conda info
+                '''
+              }
+            }
+            stage('Install Clinica') {
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  poetry install
+                  clinica --help
+                  conda list
+                '''
+              }
+            }
+            stage('PET:nonreg') {
+              environment {
+                PATH = "/usr/local/Modules/bin:$PATH"
+                WORK_DIR = "/mnt/data/ci/working_dir_linux/PET"
+                INPUT_DATA_DIR = "/mnt/data_ci"
+                TMP_DIR = "/mnt/data/ci/tmp"
+                }
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  source /usr/local/Modules/init/profile.sh
+                  mkdir -p $WORK_DIR
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_linux_pet.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    ./nonregression/pipelines/test_run_pipelines_pet.py
+                '''
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}'
+                }
+              }
+            }
+            stage('Stats:nonreg') {
+              environment {
+                PATH = "/usr/local/Modules/bin:$PATH"
+                WORK_DIR = "/mnt/data/ci/working_dir_linux/Stats"
+                INPUT_DATA_DIR = "/mnt/data_ci"
+                TMP_DIR = "/mnt/data/ci/tmp"
+                }
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  mkdir -p $WORK_DIR
+                  source /usr/local/Modules/init/profile.sh
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_linux_stats.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    ./nonregression/pipelines/test_run_pipelines_stats.py
+                '''
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}'
+                }
+              }
+            }
+            stage('ML:nonreg') {
+              environment {
+                PATH = "/usr/local/Modules/bin:$PATH"
+                WORK_DIR = "/mnt/data/ci/working_dir_linux/ML"
+                INPUT_DATA_DIR = "/mnt/data_ci"
+                TMP_DIR = "/mnt/data/ci/tmp"
+                }
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  mkdir -p $WORK_DIR
+                  source /usr/local/Modules/init/profile.sh
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_linux_ml.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    ./nonregression/pipelines/test_run_pipelines_ml.py
+                '''
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}'
+                }
+              }
+            }
+            stage('Anat:nonreg') {
+              environment {
+                PATH = "/usr/local/Modules/bin:$PATH"
+                WORK_DIR = "/mnt/data/ci/working_dir_linux/Anat"
+                INPUT_DATA_DIR = "/mnt/data_ci"
+                TMP_DIR = "/mnt/data/ci/tmp"
+                }
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  mkdir -p $WORK_DIR
+                  source /usr/local/Modules/init/profile.sh
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_linux_anat.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    ./nonregression/pipelines/test_run_pipelines_anat.py
+                '''
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}'
+                }
+              }
+            }
+            stage('DWI:nonreg') {
+              environment {
+                PATH = "/usr/local/Modules/bin:$PATH"
+                WORK_DIR = "/mnt/data/ci/working_dir_linux/DWI"
+                INPUT_DATA_DIR = "/mnt/data_ci"
+                TMP_DIR = "/mnt/data/ci/tmp"
+                }
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  mkdir -p $WORK_DIR
+                  source /usr/local/Modules/init/profile.sh
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_linux_dwi.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    ./nonregression/pipelines/test_run_pipelines_anat.py
+                '''
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}'
+                }
+              }
+            }
+          }
+          post {
+            always {
+              cleanWs()
+            }
+          }
+        }
+        stage('MacOS') {
+          agent {
+            label 'macos'
+          }
+          environment {
+            CONDA_HOME = "$HOME/miniconda3"
+          }
+          stages {
+            stage("Build environment") {
+              steps {
+                sh 'echo "Agent name is ${NODE_NAME}"'
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda env create -f environment.yml -p "${WORKSPACE}/env"
+                  conda activate "${WORKSPACE}/env"
+                  conda info
+                '''
+              }
+            }
+            stage("Install Clinica") {
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  poetry install
+                  clinica --help
+                  conda list
+                '''
+              }
+            }
+            // stage("PET:nonreg") {
+            //   environment {
+            //     WORK_DIR = "/Volumes/data/working_dir_mac/PET"
+            //     INPUT_DATA_DIR = "/Volumes/data_ci"
+            //    TMP_DIR = "/Volumes/data/tmp"
+            //   }
+            //   steps {
+            //     sh '''
+            //       source "${CONDA_HOME}/etc/profile.d/conda.sh"
+            //       conda activate "${WORKSPACE}/env"
+            //       source /usr/local/opt/modules/init/bash
+            //       mkdir -p $WORK_DIR
+            //       module load clinica.all
+            //       cd test
+            //       poetry run pytest \
+            //         --junitxml=./test-reports/nonregression_mac_pet.xml \
+            //         --verbose \
+            //         --working_directory=$WORK_DIR \
+            //         --input_data_directory=$INPUT_DATA_DIR \
+            //         --basetemp=$TMP_DIR \
+            //         --disable-warnings \
+            //         --timeout=0 \
+            //         -n 4 \
+            //         ./nonregression/pipelines/test_run_pipelines_pet.py
+            //     '''
+            //   }
+            //   post {
+            //     always {
+            //       junit 'test/test-reports/*.xml'
+            //     }
+            //     success {
+            //       sh 'rm -rf ${WORK_DIR}/*'
+            //     }
+            //   }
+            // }
+            stage("Stats:nonreg") {
+              environment {
+                WORK_DIR = "/Volumes/data/working_dir_mac/Stats"
+                INPUT_DATA_DIR = "/Volumes/data_ci"
+                TMP_DIR = "/Volumes/data/tmp"
+              }
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  source /usr/local/opt/modules/init/bash
+                  mkdir -p $WORK_DIR
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_mac_stats.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    ./nonregression/pipelines/test_run_pipelines_stats.py
+                '''
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}/*'
+                }
+              }
+            }
+            stage("ML:nonreg") {
+              environment {
+                WORK_DIR = "/Volumes/data/working_dir_mac/ML"
+                INPUT_DATA_DIR = "/Volumes/data_ci"
+                TMP_DIR = "/Volumes/data/tmp"
+              }
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  source /usr/local/opt/modules/init/bash
+                  mkdir -p $WORK_DIR
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_mac_ml.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    ./nonregression/pipelines/test_run_pipelines_ml.py
+                '''
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}/*'
+                }
+              }
+            }
+            stage("Anat:nonreg") {
+              environment {
+                WORK_DIR = "/Volumes/data/working_dir_mac/Anat"
+                INPUT_DATA_DIR = "/Volumes/data_ci"
+                TMP_DIR = "/Volumes/data/tmp"
+              }
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  source /usr/local/opt/modules/init/bash
+                  mkdir -p $WORK_DIR
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_mac_anat.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    ./nonregression/pipelines/test_run_pipelines_anat.py
+                '''
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}/*'
+                }
+              }
+            }
+            stage("DWI:nonreg") {
+              environment {
+                WORK_DIR = "/Volumes/data/working_dir_mac/DWI"
+                INPUT_DATA_DIR = "/Volumes/data_ci"
+                TMP_DIR = "/Volumes/data/tmp"
+              }
+              steps {
+                sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate "${WORKSPACE}/env"
+                  source /usr/local/opt/modules/init/bash
+                  mkdir -p $WORK_DIR
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_mac_dwi.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    ./nonregression/pipelines/test_run_pipelines_dwi.py
+                '''
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}/*'
+                }
+              }
+            }
+          }
+          post {
+            always {
+              cleanWs()
+            }
+          }
+        }
+      }
+    }
+  }
+  post {
+    failure {
+      mail to: 'clinica-ci@inria.fr',
+        subject: "Scheduled Pipelines: ${currentBuild.fullDisplayName}",
+        body: "Something is wrong with the Scheduled Pipelines ${env.BUILD_URL}"
+    }
+  }
+}

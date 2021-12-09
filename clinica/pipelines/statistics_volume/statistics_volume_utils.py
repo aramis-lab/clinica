@@ -1,6 +1,3 @@
-# coding: utf-8
-
-
 def get_group_1_and_2(tsv, contrast):
     """
         Based on the TSV file given in parameter, compute indexes of each group

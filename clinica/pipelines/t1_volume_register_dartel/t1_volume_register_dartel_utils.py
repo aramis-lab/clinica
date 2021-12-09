@@ -1,5 +1,3 @@
-# coding: utf8
-
 import os
 
 from nipype.interfaces.base import File, TraitedSpec, traits

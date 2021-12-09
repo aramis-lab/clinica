@@ -13,6 +13,7 @@ pipeline_name = "dwi-connectome"
 @cli_param.option_group.option(
     "-nt",
     "--n_tracks",
+    type=int,
     default=1e6,
     show_default=True,
     help="Set the desired number of streamlines to generate the tractography and connectome.",

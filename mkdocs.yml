@@ -97,14 +97,13 @@ nav:
     - Statistics:
       - Surface-based mass-univariate analysis: Pipelines/Stats_Surface.md
       - Volume-based mass-univariate analysis: Pipelines/Stats_Volume.md
-    - Deep Learning:
-      - Prepare input data for deep learning: Pipelines/DeepLearning_PrepareData.md
     - Machine Learning:
       - Prepare input data for spatially regularized SVM: Pipelines/MachineLearning_PrepareSVM.md
       - Classification based on machine learning: Pipelines/MachineLearning_Classification.md
   - Dataset converters:
     - ADNI to BIDS: Converters/ADNI2BIDS.md
     - AIBL to BIDS: Converters/AIBL2BIDS.md
+    - HABS to BIDS: Converters/HABS2BIDS.md
     - NIFD to BIDS: Converters/NIFD2BIDS.md
     - OASIS to BIDS: Converters/OASIS2BIDS.md
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md

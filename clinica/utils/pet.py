@@ -1,6 +1,3 @@
-# coding: utf8
-
-
 """This module contains utilities for PET data handling."""
 
 

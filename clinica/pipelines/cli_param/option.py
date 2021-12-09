@@ -29,6 +29,14 @@ dont_save_warped_unmodulated = option(
     help="Do not save warped unmodulated images for tissues specified in --tissue_classes flag.",
 )
 
+initrand = option(
+    "--initrand",
+    default=False,
+    is_flag=True,
+    show_default=True,
+    help="Initialize the random number generator used when estimating hyperparameters in FSL eddy.",
+)
+
 low_bval = option(
     "--low_bval",
     default=5,
@@ -80,7 +88,7 @@ smooth = option(
     "-s",
     "--smooth",
     multiple=True,
-    default=(8,),
+    default=[8],
     show_default=True,
     help="Specify the different isomorphic FWHM in millimeters to smooth the image.",
 )
@@ -133,6 +141,14 @@ tissue_probability_maps = option(
     help="Tissue probability maps to use for segmentation.",
 )
 
+use_cuda = option(
+    "--use_cuda",
+    default=False,
+    is_flag=True,
+    show_default=True,
+    help="Use the CUDA implementation of FSL eddy. See https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#The_eddy_executables for details.",
+)
+
 use_pvc_data = option(
     "-pvc",
     "--use_pvc_data",
@@ -161,4 +177,11 @@ yes = option(
     "--yes",
     is_flag=True,
     help="Execute the pipeline even if input images are not centered without asking for more user input.",
+)
+
+atlas_path = option(
+    "-ap",
+    "--atlas_path",
+    type=click.Path(exists=True, dir_okay=True, resolve_path=True),
+    help="Compute atlases at the end of the path",
 )

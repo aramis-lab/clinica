@@ -1,8 +1,0 @@
-{
-    "id": "aramislab/deeplearning-prepare-data",
-    "author": "Mauricio Diaz",
-    "version": "0.1.0",
-    "space_caps": "80M",
-    "space_wd": "110M",
-    "dependencies": []
-}
