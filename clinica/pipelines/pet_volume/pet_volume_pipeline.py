@@ -135,7 +135,9 @@ class PETVolume(cpe.Pipeline):
 
         # Native T1w-MRI
         try:
-            t1w_bids, (self.subjects, self.sessions, self.bids_directory, T1W_NII)
+            t1w_bids, _ = clinica_file_reader(
+                self.subjects, self.sessions, self.bids_directory, T1W_NII
+            )
         except ClinicaException as e:
             all_errors.append(e)
 
