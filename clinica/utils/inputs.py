@@ -317,36 +317,23 @@ def clinica_file_reader(
             results.append(current_glob_found[0])
 
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
-    if len(error_encountered) > 0 and raise_exception is True:
-        error_message = (
-            f"Clinica encountered {len(error_encountered)} "
-            f"problem(s) while getting {information['description']}:\n"
-        )
-        if "needed_pipeline" in information.keys():
-            if information["needed_pipeline"]:
-                error_message += (
-                    "Please note that the following clinica pipeline(s) must "
-                    f"have run to obtain these files: {information['needed_pipeline']}\n"
-                )
+    error_message = (
+        f"Clinica encountered {len(error_encountered)} "
+        f"problem(s) while getting {information['description']}:\n"
+    )
+    if "needed_pipeline" in information.keys():
+        if information["needed_pipeline"]:
+            error_message += (
+                "Please note that the following clinica pipeline(s) must "
+                f"have run to obtain these files: {information['needed_pipeline']}\n"
+            )
         for msg in error_encountered:
             error_message += msg
+    if len(error_encountered) > 0 and raise_exception is True:
         if is_bids:
             raise ClinicaBIDSError(error_message)
         else:
             raise ClinicaCAPSError(error_message)
-    if len(error_encountered) > 0 and raise_exception is False:
-        error_message = (
-            f"Clinica encountered {len(error_encountered)} "
-            f"problem(s) while getting {information['description']}:\n"
-        )
-        if "needed_pipeline" in information.keys():
-            if information["needed_pipeline"]:
-                error_message += (
-                    "Please note that the following clinica pipeline(s) must "
-                    f"have run to obtain these files: {information['needed_pipeline']}\n"
-                )
-        for msg in error_encountered:
-            error_message += msg
     return results, error_message
 
 
