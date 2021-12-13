@@ -290,9 +290,11 @@ def get_processed_images(caps_directory, part_ids, sess_ids, long_ids, atlas=Fal
                 f"{participant_id}_{session_id}.long.{participant_id}_{long_id}",
             )
             if atlas:
-                output_file = (output_file_pre, "stat", "rh.", atlas, ".stats")
+                output_file = os.path.join(
+                    output_file_pre, "stat", "rh.", atlas, ".stats"
+                )
             else:
-                output_file = (
+                output_file = os.path.join(
                     output_file_pre,
                     "mri",
                     "aparc+aseg.mgz",
