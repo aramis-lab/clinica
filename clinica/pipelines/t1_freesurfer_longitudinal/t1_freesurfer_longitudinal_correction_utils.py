@@ -277,44 +277,26 @@ def get_processed_images(caps_directory, part_ids, sess_ids, long_ids, atlas=Fal
     import os
 
     image_ids = []
-    if atlas:
-        if os.path.isdir(caps_directory):
-            for (participant_id, session_id, long_id) in zip(
-                part_ids, sess_ids, long_ids
-            ):
-                output_file = os.path.join(
-                    os.path.expanduser(caps_directory),
-                    "subjects",
-                    participant_id,
-                    session_id,
-                    "t1",
-                    long_id,
-                    "freesurfer_longitudinal",
-                    f"{participant_id}_{session_id}.long.{participant_id}_{long_id}",
-                    "stat",
-                    "rh.",
-                    atlas,
-                    ".stats",
-                )
-                if os.path.isfile(output_file):
-                    image_ids.append(f"{participant_id}_{session_id}_{long_id}")
-    else:
-        if os.path.isdir(caps_directory):
-            for (participant_id, session_id, long_id) in zip(
-                part_ids, sess_ids, long_ids
-            ):
-                output_file = os.path.join(
-                    os.path.expanduser(caps_directory),
-                    "subjects",
-                    participant_id,
-                    session_id,
-                    "t1",
-                    long_id,
-                    "freesurfer_longitudinal",
-                    f"{participant_id}_{session_id}.long.{participant_id}_{long_id}",
+    if os.path.isdir(caps_directory):
+        for (participant_id, session_id, long_id) in zip(part_ids, sess_ids, long_ids):
+            output_file_pre = os.path.join(
+                os.path.expanduser(caps_directory),
+                "subjects",
+                participant_id,
+                session_id,
+                "t1",
+                long_id,
+                "freesurfer_longitudinal",
+                f"{participant_id}_{session_id}.long.{participant_id}_{long_id}",
+            )
+            if atlas:
+                output_file = (output_file_pre, "stat", "rh.", atlas, ".stats")
+            else:
+                output_file = (
+                    output_file_pre,
                     "mri",
                     "aparc+aseg.mgz",
                 )
-                if os.path.isfile(output_file):
-                    image_ids.append(f"{participant_id}_{session_id}_{long_id}")
+            if os.path.isfile(output_file):
+                image_ids.append(f"{participant_id}_{session_id}_{long_id}")
     return image_ids

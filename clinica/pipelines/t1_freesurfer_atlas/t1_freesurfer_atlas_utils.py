@@ -25,7 +25,6 @@ def compute_atlas(
     for path in Path(path_to_atlas).rglob(
         "*" + to_process_with_atlases[0] + "_6p0.gcs"
     ):
-        # if the length of the split to_process_with_atlases[1] is 2, that means the format is sub-X_ses-Y
         if "long" not in to_process_with_atlases[1]:
             hemisphere = Path(path.stem).stem
             atlas_name = Path(path.stem).suffix[1:].split("_")[0]
@@ -61,8 +60,6 @@ def compute_atlas(
             )
             subjid = to_process_with_atlases[1]
             fake_dir = subject_dir
-        # if the length of the split to_process_with_atlases[1] is 3, that means the format is sub-X_ses-Y_long-Z
-
         else:
             hemisphere = Path(path.stem).stem
             atlas_name = Path(path.stem).suffix[1:].split("_")[0]
@@ -130,28 +127,20 @@ def write_tsv_files(subject_dir: str, image_id: str, atlas: str) -> str:
     from clinica.utils.freesurfer import generate_regional_measures_alt
     from clinica.utils.stream import cprint
 
-    if len(image_id.split("_")) == 2:
-        if os.path.isfile(os.path.join(subject_dir, image_id, "mri", "aparc+aseg.mgz")):
-            generate_regional_measures_alt(subject_dir, image_id, atlas)
-        else:
-            cprint(
-                msg=(
-                    f"{image_id.replace('_', ' | ')} does not contain "
-                    f"mri/aseg+aparc.mgz file. Creation of regional_measures/ folder will be skipped."
-                ),
-                lvl="warning",
-            )
-    elif len(image_id.split("_")) == 3:
+    if "long" not in image_id:
+        folder = image_id
+    else:
         sub, ses, long = image_id.split("_")
         folder = sub + "_" + ses + ".long." + sub + "_" + long
-        if os.path.isfile(os.path.join(subject_dir, folder, "mri", "aparc+aseg.mgz")):
-            generate_regional_measures_alt(subject_dir, folder, atlas)
-        else:
-            cprint(
-                msg=(
-                    f"{image_id.replace('_', ' | ')} does not contain "
-                    f"mri/aseg+aparc.mgz file. Creation of regional_measures/ folder will be skipped."
-                ),
-                lvl="warning",
-            )
+
+    if os.path.isfile(os.path.join(subject_dir, folder, "mri", "aparc+aseg.mgz")):
+        generate_regional_measures_alt(subject_dir, folder, atlas)
+    else:
+        cprint(
+            msg=(
+                f"{image_id.replace('_', ' | ')} does not contain "
+                f"mri/aseg+aparc.mgz file. Creation of regional_measures/ folder will be skipped."
+            ),
+            lvl="warning",
+        )
     return image_id
