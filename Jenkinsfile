@@ -156,7 +156,7 @@ pipeline {
         }
         stage('Test on macOS') {
           agent {
-            label 'macos && arm'
+            label 'macos'
           }
           environment {
             CONDA_HOME = "$HOME/miniconda3"
@@ -293,7 +293,7 @@ pipeline {
         }
         stage('Build and publish docs') {
           agent {
-            label 'ubuntu && short'
+            label 'ubuntu'
           }
           environment {
             CONDA_HOME = "$HOME/miniconda"
