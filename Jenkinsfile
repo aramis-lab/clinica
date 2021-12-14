@@ -304,8 +304,8 @@ pipeline {
               conda create -p "${WORKSPACE}/env" python=3.8 poetry
               conda activate "${WORKSPACE}/env"
               poetry install --extras docs
-              mkdocs build -d "${CHANGE_ID}"
-              scp -r "${CHANGE_ID}" aramislab:~/clinica/docs/public/
+              mkdocs build -d "${CHANGE_ID:-$BRANCH_NAME}"
+              scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:~/clinica/docs/public/
             '''
           }
           post {
