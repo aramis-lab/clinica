@@ -1179,8 +1179,13 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             zip_image = "y"
 
         if image.Is_Dicom:
-            command = f"dcm2niix -w 0 -b {generate_json} -z {zip_image} -o {output_path} -f {output_filename} {image_path}"
-            run_dcm2niix(command)
+            run_dcm2niix(
+                input_dir=image_path,
+                output_dir=output_path,
+                output_fmt=output_filename,
+                compress=True if zip_image == "y" else False,
+                bids_sidecar=True if generate_json == "y" else False,
+            )
 
             # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
             exception_t = glob(path.join(output_path, output_filename + "_t[0-9]*"))

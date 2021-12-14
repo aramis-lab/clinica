@@ -216,8 +216,13 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
             raise
 
     # if image.Is_Dicom:
-    command = f"dcm2niix -b n -z y -o {output_path} -f {output_filename} {image_path}"
-    run_dcm2niix(command)
+    run_dcm2niix(
+        input_dir=image_path,
+        output_dir=output_path,
+        output_fmt=output_filename,
+        compress=True,
+        bids_sidecar=False,
+    )
 
     nifti_file = os.path.join(output_path, output_filename + ".nii.gz")
 
