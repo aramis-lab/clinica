@@ -86,7 +86,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         tissues_input = []
         for tissue_number in self.parameters["tissues"]:
             try:
-                native_space_tpm = clinica_file_reader(
+                native_space_tpm, _ = clinica_file_reader(
                     self.subjects,
                     self.sessions,
                     self.caps_directory,
@@ -107,7 +107,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         # Flow Fields
         # ===========
         try:
-            read_input_node.inputs.flowfield_files = clinica_file_reader(
+            read_input_node.inputs.flowfield_files, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,

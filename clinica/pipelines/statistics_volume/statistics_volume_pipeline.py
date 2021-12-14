@@ -137,7 +137,7 @@ class StatisticsVolume(cpe.Pipeline):
             )
 
         try:
-            input_files = clinica_file_reader(
+            input_files, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.caps_directory, information_dict
             )
         except ClinicaException as e:
