@@ -144,9 +144,8 @@ class T1FreeSurfer(cpe.Pipeline):
                 "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
                 + str(e)
             )
-        print("t1w_files_pipeline:  ", t1w_files)
         if error_message != "":
-            print(error_message)
+            cprint(error_message, lvl="warning")
         if t1w_files == []:
             raise ClinicaException("Empty Dataset")
 

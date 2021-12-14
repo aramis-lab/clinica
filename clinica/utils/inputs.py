@@ -327,8 +327,8 @@ def clinica_file_reader(
                 "Please note that the following clinica pipeline(s) must "
                 f"have run to obtain these files: {information['needed_pipeline']}\n"
             )
-        for msg in error_encountered:
-            error_message += msg
+    for msg in error_encountered:
+        error_message += msg
     if len(error_encountered) > 0 and raise_exception is True:
         if is_bids:
             raise ClinicaBIDSError(error_message)
