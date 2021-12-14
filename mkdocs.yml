@@ -13,11 +13,6 @@ repo_url: https://github.com/aramis-lab/clinica
 # Copyright
 copyright: Copyright &copy; 2016-2021 Clinica contributors
 
-# Google Analytics
-google_analytics:
-  - UA-106080699-1
-  - auto
-
 # Configuration
 theme:
   name: material
@@ -37,8 +32,13 @@ extra_css:
   - css/clinica.css
 
 extra:
+  analytics:
+    provider: google
+    property: UA-106080699-1
+
   feature:
     tabs: true
+
   social:
     - icon: material/github
       link: https://github.com/aramis-lab/
