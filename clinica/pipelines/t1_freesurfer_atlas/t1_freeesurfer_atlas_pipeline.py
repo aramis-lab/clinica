@@ -86,10 +86,10 @@ class T1FreeSurferAtlas(cpe.Pipeline):
                     set(t1_freesurfer_longitudinal_output)
                     - set(t1_freesurfer_longitudinal_output_atlas)
                 )
-                t1_freesurfer_output = clinica_file_reader(
+                t1_freesurfer_output, _ = clinica_file_reader(
                     subjects, sessions, caps_directory, T1_FS_DESTRIEUX, False
                 )
-                t1_freesurfer_files = clinica_file_reader(
+                t1_freesurfer_files, _ = clinica_file_reader(
                     subjects, sessions, caps_directory, atlas_info, False
                 )
                 image_ids = extract_image_ids(t1_freesurfer_files)
