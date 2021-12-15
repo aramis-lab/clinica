@@ -101,7 +101,6 @@ class T1FreeSurferAtlas(cpe.Pipeline):
         for i in initial_list_to_process:
             if list(itertools.product(i[0], i[1])) != []:
                 list_to_process = list_to_process + list(itertools.product(i[0], i[1]))
-        print("ze list to process: ", list_to_process)
         return list_to_process
 
     def get_input_fields(self):

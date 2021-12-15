@@ -25,21 +25,18 @@ def compute_atlas(
     for path in Path(path_to_atlas).rglob(
         "*" + to_process_with_atlases[0] + "_6p0.gcs"
     ):
+        hemisphere = Path(path.stem).stem
+        atlas_name = Path(path.stem).suffix[1:].split("_")[0]
         if "long" not in to_process_with_atlases[1]:
-            hemisphere = Path(path.stem).stem
-            atlas_name = Path(path.stem).suffix[1:].split("_")[0]
             sub, ses = to_process_with_atlases[1].split("_")
-            subject_dir = (
+            fake_dir = (
                 Path(caps_directory)
                 / "subjects"
                 / sub
                 / ses
                 / ("t1/freesurfer_cross_sectional")
             )
-            # path_to_freesurfer_cross = subject_dir + "/" + to_process_with_atlases[1]
-            path_to_freesurfer_cross = Path(subject_dir) / Path(
-                to_process_with_atlases[1]
-            )
+            path_to_freesurfer_cross = Path(fake_dir) / Path(to_process_with_atlases[1])
             output_path_annot = (
                 path_to_freesurfer_cross
                 / "label"
@@ -48,21 +45,13 @@ def compute_atlas(
             sphere_reg = (
                 path_to_freesurfer_cross / "surf" / (hemisphere + ".sphere.reg")
             )
-            if not os.path.isfile(sphere_reg):
-                cprint(
-                    f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
-                    lvl="warning",
-                )
             output_path_stats = (
                 path_to_freesurfer_cross
                 / "stats"
                 / (hemisphere + "." + atlas_name + ".stats")
             )
             subjid = to_process_with_atlases[1]
-            fake_dir = subject_dir
         else:
-            hemisphere = Path(path.stem).stem
-            atlas_name = Path(path.stem).suffix[1:].split("_")[0]
             sub, ses, long = to_process_with_atlases[1].split("_")
             fake_dir = mkdtemp()
             os.makedirs(fake_dir, exist_ok=True)
@@ -86,20 +75,18 @@ def compute_atlas(
                     raise e
             fake_dir_id = os.path.join(fake_dir, subjid)
 
-            # path_to_freesurfer_cross = subject_dir + "/" + sub + "_" + ses + ".long." +sub +"_"+ long
             output_path_annot = (
                 Path(fake_dir_id) / "label" / (hemisphere + "." + atlas_name + ".annot")
             )
             sphere_reg = Path(fake_dir_id) / "surf" / (hemisphere + ".sphere.reg")
-            if not os.path.isfile(sphere_reg):
-                cprint(
-                    f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
-                    lvl="warning",
-                )
             output_path_stats = (
                 Path(fake_dir_id) / "stats" / (hemisphere + "." + atlas_name + ".stats")
             )
-
+        if not os.path.isfile(sphere_reg):
+            cprint(
+                f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
+                lvl="warning",
+            )
         mris_ca_label_command = f"mris_ca_label -sdir {fake_dir} {subjid} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
         a = subprocess.run(mris_ca_label_command, shell=True, capture_output=True)
         mris_anatomical_stats_command = f"export SUBJECTS_DIR={fake_dir}; mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {subjid} {hemisphere}"
