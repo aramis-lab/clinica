@@ -29,14 +29,16 @@ def compute_atlas(
         atlas_name = Path(path.stem).suffix[1:].split("_")[0]
         if "long" not in to_process_with_atlases[1]:
             sub, ses = to_process_with_atlases[1].split("_")
-            fake_dir = (
+            substitute_dir = (
                 Path(caps_directory)
                 / "subjects"
                 / sub
                 / ses
                 / ("t1/freesurfer_cross_sectional")
             )
-            path_to_freesurfer_cross = Path(fake_dir) / Path(to_process_with_atlases[1])
+            path_to_freesurfer_cross = Path(substitute_dir) / Path(
+                to_process_with_atlases[1]
+            )
             output_path_annot = (
                 path_to_freesurfer_cross
                 / "label"
@@ -53,8 +55,8 @@ def compute_atlas(
             subjid = to_process_with_atlases[1]
         else:
             sub, ses, long = to_process_with_atlases[1].split("_")
-            fake_dir = mkdtemp()
-            os.makedirs(fake_dir, exist_ok=True)
+            substitute_dir = mkdtemp()
+            os.makedirs(substitute_dir, exist_ok=True)
             subjid = sub + "_" + ses + ".long." + sub + "_" + long
             subject_dir = (
                 Path(caps_directory)
@@ -69,27 +71,33 @@ def compute_atlas(
                 sub + "_" + ses + ".long." + sub + "_" + long
             )
             try:
-                os.symlink(path_to_freesurfer_cross, os.path.join(fake_dir, subjid))
+                os.symlink(
+                    path_to_freesurfer_cross, os.path.join(substitute_dir, subjid)
+                )
             except FileExistsError as e:
                 if e.errno != errno.EEXIST:  # EEXIST: folder already exists
                     raise e
-            fake_dir_id = os.path.join(fake_dir, subjid)
+            substitute_dir_id = os.path.join(substitute_dir, subjid)
 
             output_path_annot = (
-                Path(fake_dir_id) / "label" / (hemisphere + "." + atlas_name + ".annot")
+                Path(substitute_dir_id)
+                / "label"
+                / (hemisphere + "." + atlas_name + ".annot")
             )
-            sphere_reg = Path(fake_dir_id) / "surf" / (hemisphere + ".sphere.reg")
+            sphere_reg = Path(substitute_dir_id) / "surf" / (hemisphere + ".sphere.reg")
             output_path_stats = (
-                Path(fake_dir_id) / "stats" / (hemisphere + "." + atlas_name + ".stats")
+                Path(substitute_dir_id)
+                / "stats"
+                / (hemisphere + "." + atlas_name + ".stats")
             )
         if not os.path.isfile(sphere_reg):
             cprint(
                 f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
                 lvl="warning",
             )
-        mris_ca_label_command = f"mris_ca_label -sdir {fake_dir} {subjid} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
+        mris_ca_label_command = f"mris_ca_label -sdir {substitute_dir} {subjid} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
         a = subprocess.run(mris_ca_label_command, shell=True, capture_output=True)
-        mris_anatomical_stats_command = f"export SUBJECTS_DIR={fake_dir}; mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {subjid} {hemisphere}"
+        mris_anatomical_stats_command = f"export SUBJECTS_DIR={substitute_dir}; mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {subjid} {hemisphere}"
         c = subprocess.run(
             mris_anatomical_stats_command, shell=True, capture_output=True
         )
