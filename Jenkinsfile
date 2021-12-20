@@ -156,7 +156,7 @@ pipeline {
         }
         stage('Test on macOS') {
           agent {
-            label 'macos && arm'
+            label 'macos'
           }
           environment {
             CONDA_HOME = "$HOME/miniconda3"
@@ -293,7 +293,7 @@ pipeline {
         }
         stage('Build and publish docs') {
           agent {
-            label 'ubuntu && short'
+            label 'ubuntu'
           }
           environment {
             CONDA_HOME = "$HOME/miniconda"
@@ -304,8 +304,8 @@ pipeline {
               conda create -p "${WORKSPACE}/env" python=3.8 poetry
               conda activate "${WORKSPACE}/env"
               poetry install --extras docs
-              ./.jenkins/scripts/publish.sh "${BRANCH_NAME}"
-              scp -r "${BRANCH_NAME}" aramislab:~/clinica/docs/public/
+              mkdocs build -d "${CHANGE_ID:-$BRANCH_NAME}"
+              scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:~/clinica/docs/public/
             '''
           }
           post {
