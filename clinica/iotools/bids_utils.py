@@ -788,7 +788,7 @@ def run_dcm2niix(
             msg=(
                 "DICOM to BIDS conversion with dcm2niix failed:\n"
                 f"command: {command}\n"
-                f"{output_dcm2niix.stdout.decode('utf-8')}"
+                f"{completed_process.stdout.decode('utf-8')}"
             ),
             lvl="warning",
         )
