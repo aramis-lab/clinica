@@ -14,6 +14,7 @@ pipeline_name = "t1-freesurfer-longitudinal"
 @cli_param.option.working_directory
 @cli_param.option.n_procs
 @cli_param.option.overwrite_outputs
+@cli_param.option.atlas_path
 @click.pass_context
 def cli(
     ctx: click.Context,
@@ -22,6 +23,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
     overwrite_outputs: bool = False,
+    atlas_path: Optional[str] = None,
 ) -> None:
     """Longitudinal pre-processing of T1w images with FreeSurfer.
 
@@ -70,6 +72,7 @@ def cli(
         working_directory=working_directory,
         n_procs=n_procs,
         overwrite_outputs=overwrite_outputs,
+        atlas_path=atlas_path,
     )
 
 

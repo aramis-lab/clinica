@@ -7,6 +7,13 @@ from typing import Optional
 from nipype import config
 
 import clinica.pipelines.engine as cpe
+from clinica.pipelines import t1_freesurfer_longitudinal
+from clinica.pipelines.t1_freesurfer_longitudinal import (
+    t1_freesurfer_longitudinal_correction_utils,
+)
+from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils import (
+    get_processed_images,
+)
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -37,9 +44,19 @@ class T1FreeSurferAtlas(cpe.Pipeline):
         import os
         from pathlib import Path
 
+        from clinica.pipelines.t1_freesurfer_longitudinal.longitudinal_utils import (
+            grab_image_ids_from_caps_directory,
+        )
+        from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils import (
+            get_processed_images,
+        )
         from clinica.utils.filemanip import extract_image_ids
         from clinica.utils.input_files import T1_FS_DESTRIEUX
         from clinica.utils.inputs import clinica_file_reader
+
+        part_ids, sess_ids, list_long_id = grab_image_ids_from_caps_directory(
+            caps_directory
+        )
 
         initial_list_to_process = []
         atlas_list = []
@@ -59,16 +76,25 @@ class T1FreeSurferAtlas(cpe.Pipeline):
                         "needed_pipeline": "t1-freesurfer",
                     }
                 )
+                t1_freesurfer_longitudinal_output = get_processed_images(
+                    caps_directory, part_ids, sess_ids, list_long_id
+                )
+                t1_freesurfer_longitudinal_output_atlas = get_processed_images(
+                    caps_directory, part_ids, sess_ids, list_long_id, atlas
+                )
+                to_process_long = list(
+                    set(t1_freesurfer_longitudinal_output)
+                    - set(t1_freesurfer_longitudinal_output_atlas)
+                )
                 t1_freesurfer_output, _ = clinica_file_reader(
                     subjects, sessions, caps_directory, T1_FS_DESTRIEUX, False
                 )
                 t1_freesurfer_files, _ = clinica_file_reader(
                     subjects, sessions, caps_directory, atlas_info, False
                 )
-
                 image_ids = extract_image_ids(t1_freesurfer_files)
                 image_ids_2 = extract_image_ids(t1_freesurfer_output)
-                to_process = list(set(image_ids_2) - set(image_ids))
+                to_process = list(set(image_ids_2) - set(image_ids)) + to_process_long
                 initial_list_to_process.append(([atlas], to_process))
 
         list_to_process = []

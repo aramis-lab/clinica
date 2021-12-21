@@ -1,6 +1,8 @@
 # coding: utf8
 
 
+from pathlib import Path
+
 from clinica.utils.stream import cprint
 
 
@@ -10,7 +12,9 @@ def compute_atlas(
     import os
     import subprocess
     from pathlib import Path
+    from tempfile import mkdtemp
 
+    from clinica.compat import errno
     from clinica.utils.stream import cprint
 
     subject_dir = ""
@@ -23,43 +27,77 @@ def compute_atlas(
     ):
         hemisphere = Path(path.stem).stem
         atlas_name = Path(path.stem).suffix[1:].split("_")[0]
-        sub, ses = to_process_with_atlases[1].split("_")
-        subject_dir = (
-            caps_directory
-            + "/subjects/"
-            + sub
-            + "/"
-            + ses
-            + "/t1/freesurfer_cross_sectional"
-        )
+        if "long" not in to_process_with_atlases[1]:
+            sub, ses = to_process_with_atlases[1].split("_")
+            substitute_dir = (
+                Path(caps_directory)
+                / "subjects"
+                / sub
+                / ses
+                / ("t1/freesurfer_cross_sectional")
+            )
+            path_to_freesurfer_cross = Path(substitute_dir) / Path(
+                to_process_with_atlases[1]
+            )
+            output_path_annot = (
+                path_to_freesurfer_cross
+                / "label"
+                / (hemisphere + "." + atlas_name + ".annot")
+            )
+            sphere_reg = (
+                path_to_freesurfer_cross / "surf" / (hemisphere + ".sphere.reg")
+            )
+            output_path_stats = (
+                path_to_freesurfer_cross
+                / "stats"
+                / (hemisphere + "." + atlas_name + ".stats")
+            )
+            subjid = to_process_with_atlases[1]
+        else:
+            sub, ses, long = to_process_with_atlases[1].split("_")
+            substitute_dir = mkdtemp()
+            os.makedirs(substitute_dir, exist_ok=True)
+            subjid = sub + "_" + ses + ".long." + sub + "_" + long
+            subject_dir = (
+                Path(caps_directory)
+                / "subjects"
+                / sub
+                / ses
+                / "t1"
+                / long
+                / "freesurfer_longitudinal"
+            )
+            path_to_freesurfer_cross = subject_dir / (
+                sub + "_" + ses + ".long." + sub + "_" + long
+            )
+            try:
+                os.symlink(
+                    path_to_freesurfer_cross, os.path.join(substitute_dir, subjid)
+                )
+            except FileExistsError as e:
+                if e.errno != errno.EEXIST:  # EEXIST: folder already exists
+                    raise e
+            substitute_dir_id = os.path.join(substitute_dir, subjid)
 
-        path_to_freesurfer_cross = subject_dir + "/" + to_process_with_atlases[1]
-        output_path_annot = (
-            path_to_freesurfer_cross
-            + "/label/"
-            + hemisphere
-            + "."
-            + atlas_name
-            + ".annot"
-        )
-        sphere_reg = path_to_freesurfer_cross + "/surf/" + hemisphere + ".sphere.reg"
+            output_path_annot = (
+                Path(substitute_dir_id)
+                / "label"
+                / (hemisphere + "." + atlas_name + ".annot")
+            )
+            sphere_reg = Path(substitute_dir_id) / "surf" / (hemisphere + ".sphere.reg")
+            output_path_stats = (
+                Path(substitute_dir_id)
+                / "stats"
+                / (hemisphere + "." + atlas_name + ".stats")
+            )
         if not os.path.isfile(sphere_reg):
             cprint(
                 f"The {hemisphere}.sphere.reg file appears to be missing. The data for {to_process_with_atlases[1]} will not be processed with {to_process_with_atlases[0]}",
                 lvl="warning",
             )
-        mris_ca_label_command = f"mris_ca_label -sdir {subject_dir} {to_process_with_atlases[1]} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
+        mris_ca_label_command = f"mris_ca_label -sdir {substitute_dir} {subjid} {hemisphere} {path_to_freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
         a = subprocess.run(mris_ca_label_command, shell=True, capture_output=True)
-
-        output_path_stats = (
-            path_to_freesurfer_cross
-            + "/stats/"
-            + hemisphere
-            + "."
-            + atlas_name
-            + ".stats"
-        )
-        mris_anatomical_stats_command = f"export SUBJECTS_DIR={subject_dir}; mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {to_process_with_atlases[1]} {hemisphere}"
+        mris_anatomical_stats_command = f"export SUBJECTS_DIR={substitute_dir}; mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {subjid} {hemisphere}"
         c = subprocess.run(
             mris_anatomical_stats_command, shell=True, capture_output=True
         )
@@ -84,8 +122,14 @@ def write_tsv_files(subject_dir: str, image_id: str, atlas: str) -> str:
     from clinica.utils.freesurfer import generate_regional_measures_alt
     from clinica.utils.stream import cprint
 
-    if os.path.isfile(os.path.join(subject_dir, image_id, "mri", "aparc+aseg.mgz")):
-        generate_regional_measures_alt(subject_dir, image_id, atlas)
+    if "long" not in image_id:
+        folder = image_id
+    else:
+        sub, ses, long = image_id.split("_")
+        folder = sub + "_" + ses + ".long." + sub + "_" + long
+
+    if os.path.isfile(os.path.join(subject_dir, folder, "mri", "aparc+aseg.mgz")):
+        generate_regional_measures_alt(subject_dir, folder, atlas)
     else:
         cprint(
             msg=(
