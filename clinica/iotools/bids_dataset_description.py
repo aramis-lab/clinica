@@ -30,12 +30,17 @@ class BIDSDatasetDescription:
 
 
 def _rename(name: str) -> str:
+    """Rename attributes following the specification for the JSON file.
+
+    Basically pascal case with known acronyms such as BIDS fully capitalized.
+    """
     return "".join(
         word.upper() if word == "bids" else word.capitalize()
         for word in name.split("_")
     )
 
 
+# Register a JSON converter for the BIDS dataset description model.
 converter = make_converter()
 
 converter.register_unstructure_hook(
