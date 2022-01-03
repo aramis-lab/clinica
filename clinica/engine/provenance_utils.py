@@ -27,7 +27,7 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> list:
         ref_dir = (
             self.bids_directory if dict_field == "input_to" else self.caps_directory
         )
-        current_file = clinica_file_reader(
+        current_file, _ = clinica_file_reader(
             self.subjects,
             self.sessions,
             ref_dir,
