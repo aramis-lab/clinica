@@ -59,7 +59,10 @@ def setup_logging(verbose: bool = False) -> None:
     # Setup debug logging to file.
     nipype.config.enable_debug_mode()
     nipype.config.update_config(
-        {"logging": {"log_directory": os.getcwd(), "log_to_file": True}}
+        {
+            "logging": {"log_directory": os.getcwd(), "log_to_file": True},
+            "execution": {"check_version": False},
+        },
     )
     nipype.logging.update_logging(nipype.config)
     # Disable nipype logging to console.
