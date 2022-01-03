@@ -13,3 +13,4 @@ jobs:
           stale-issue-message: 'This issue is stale because it has been inactive for 14 days. Remove the `stale` label or comment or it will be closed in 14 days.'
           days-before-stale: 14
           days-before-close: 14
+          start-date: '2022-01-01T00:00:00Z'
