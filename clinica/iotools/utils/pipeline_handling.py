@@ -102,7 +102,9 @@ def t1_freesurfer_longitudinal_pipeline(
 
         if mod_path.exists():
             # Looking for atlases
-            atlas_paths = (mod_path).glob(f"{participant_id}_{session_id}_*volume.tsv")
+            atlas_paths = sorted(
+                (mod_path).glob(f"{participant_id}_{session_id}_*volume.tsv")
+            )
             for atlas_path in atlas_paths:
                 if "-wm_volume" not in str(atlas_path) and "-ba_volume" not in str(
                     atlas_path
@@ -126,8 +128,10 @@ def t1_freesurfer_longitudinal_pipeline(
 
             # Always retrieve subcortical volumes
             atlas_path = next(
-                (mod_path).glob(
-                    f"{participant_id}_{session_id}_*segmentationVolumes.tsv"
+                sorted(
+                    (mod_path).glob(
+                        f"{participant_id}_{session_id}_*segmentationVolumes.tsv"
+                    )
                 )
             )
 
