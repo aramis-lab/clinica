@@ -47,6 +47,67 @@ def pet_volume_pipeline(
     )
 
 
+def dwi_dti_pipeline(
+    caps_dir: str, df: pd.DataFrame, atlas_selection=None, **kwargs
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+
+    from pathlib import Path
+
+    # Ensures that df is correctly indexed
+    if "participant_id" in df.columns.values:
+        df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+
+    subjects_dir = Path(caps_dir) / "subjects"
+
+    pipeline_df = pd.DataFrame()
+
+    for participant_id, session_id in df.index.values:
+
+        ses_path = subjects_dir / participant_id / session_id
+        mod_path = ses_path / "dwi" / "dti_based_processing" / "atlas_statistics"
+
+        ses_df = pd.DataFrame(
+            [[participant_id, session_id]], columns=["participant_id", "session_id"]
+        )
+        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+
+        if mod_path.exists():
+
+            # Looking for atlases
+            atlas_paths = sorted(
+                (mod_path).glob(f"{participant_id}_{session_id}_*FA_statistics.tsv")
+            )
+            for atlas_path in atlas_paths:
+
+                atlas_name = atlas_path.stem.split("_dwi_space-")[1].split("_")[0]
+                if atlas_path.exists() and (
+                    not (
+                        dti_atlas_selection
+                        or (
+                            dti_atlas_selection
+                            and atlas_name in freesurfer_atlas_selection
+                        )
+                    ):
+                        atlas_df = pd.read_csv(atlas_path, sep="\t")
+                        label_list = [
+                            "dwi-dti_atlas-" + atlas_name + "_" + x
+                            for x in atlas_df.label_name.values
+                        ]
+                        ses_df[label_list] = atlas_df["label_value"].to_numpy()
+
+        pipeline_df = pipeline_df.append(ses_df)
+
+        summary_df = generate_summary(
+            pipeline_df, "dwi-dti", ignore_groups=True
+        )
+
+    final_df = pd.concat([df, pipeline_df], axis=1)
+    final_df.reset_index(inplace=True)
+    return final_df, summary_df
+
+
 def t1_freesurfer_longitudinal_pipeline(
     caps_dir: str, df: pd.DataFrame, freesurfer_atlas_selection=None, **kwargs
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:

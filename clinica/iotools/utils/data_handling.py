@@ -187,6 +187,7 @@ def create_merge_file(
             t1_freesurfer_pipeline,
             t1_freesurfer_longitudinal_pipeline,
             t1_volume_pipeline,
+            dwi_dti_pipeline,
         )
 
         pipeline_options = {
@@ -194,6 +195,7 @@ def create_merge_file(
             "pet-volume": pet_volume_pipeline,
             "t1-freesurfer": t1_freesurfer_pipeline,
             "t1-freesurfer-longitudinal": t1_freesurfer_longitudinal_pipeline,
+            "dwi-dti": dwi_dti_pipeline,
         }
         merged_summary_df = pd.DataFrame()
         if not pipelines:
