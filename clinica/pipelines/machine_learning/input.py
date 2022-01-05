@@ -194,7 +194,7 @@ class CAPSVoxelBasedInput(CAPSInput):
                 use_pvc_data=self._input_params["use_pvc_data"],
                 fwhm=self._input_params["fwhm"],
             )
-            self._images = clinica_file_reader(
+            self._images, _ = clinica_file_reader(
                 self._subjects,
                 self._sessions,
                 self._input_params["caps_directory"],

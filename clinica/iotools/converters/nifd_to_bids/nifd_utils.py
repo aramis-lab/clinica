@@ -296,6 +296,7 @@ def convert_dicom(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
+    from clinica.iotools.bids_utils import run_dcm2niix
 
     output_fmt = str(Path(bids_filename).name).replace(".nii.gz", "")
     output_dir = str(Path(bids_filename).parent)
@@ -307,9 +308,12 @@ def convert_dicom(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     fs.makedirs(output_dir)
 
     # Run conversion with dcm2niix with anonymization and maximum compression.
-    subprocess.run(
-        f"dcm2niix -9 -b y -ba y -f {output_fmt} -o {output_dir} -z i {sourcedata_dir}",
-        shell=True,
+    run_dcm2niix(
+        input_dir=sourcedata_dir,
+        output_dir=output_dir,
+        output_fmt=output_fmt,
+        compress=True,
+        bids_sidecar=True,
     )
 
 
@@ -333,12 +337,16 @@ def write_bids(
     from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
+    from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
 
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
+        with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
+            BIDSDatasetDescription(name="NIFD").write(to=dataset_description_file)
+
         with fs.open(to / "participants.tsv", "w") as participant_file:
             write_to_tsv(participants, participant_file)
 

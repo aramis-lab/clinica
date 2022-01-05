@@ -74,6 +74,8 @@ class OasisToBids(Converter):
         )
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
+        bids.write_modality_agnostic_files(study_name="OASIS-1", bids_dir=bids_dir)
+
     def convert_images(self, source_dir, dest_dir):
         """Convert T1w images to BIDS.
 
@@ -86,9 +88,9 @@ class OasisToBids(Converter):
             Analyze data from OASIS-1. To remove this strong dependency, NiBabel is used instead.
         """
         import os
-        from glob import glob
         from multiprocessing.dummy import Pool
         from os import path
+        from pathlib import Path
 
         def convert_single_subject(subj_folder):
             import os
@@ -111,7 +113,7 @@ class OasisToBids(Converter):
                 os.mkdir(path.join(session_folder, "anat"))
 
             # In order do convert the Analyze format to Nifti the path to the .img file is required
-            img_file_path = glob(path.join(t1_folder, "*.img"))[0]
+            img_file_path = str(next(Path(t1_folder).glob("*.img")))
             output_path = path.join(
                 session_folder, "anat", bids_id + "_ses-M00_T1w.nii.gz"
             )
@@ -166,9 +168,11 @@ class OasisToBids(Converter):
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)
 
-        subjs_folders = glob(path.join(source_dir, "OAS1_*"))
         subjs_folders = [
-            subj_folder for subj_folder in subjs_folders if subj_folder.endswith("_MR1")
+            path
+            for path in Path(source_dir).rglob("OAS1_*")
+            if path.is_dir() and path.name.endswith("_MR1")
         ]
+
         poolrunner = Pool(max(os.cpu_count() - 1, 1))
         poolrunner.map(convert_single_subject, subjs_folders)

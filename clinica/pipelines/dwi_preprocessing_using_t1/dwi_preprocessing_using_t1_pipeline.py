@@ -38,7 +38,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
         image_ids = []
         if os.path.isdir(caps_directory):
-            preproc_files = clinica_file_reader(
+            preproc_files, _ = clinica_file_reader(
                 subjects, sessions, caps_directory, DWI_PREPROC_NII, False
             )
             image_ids = extract_image_ids(preproc_files)
@@ -306,9 +306,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(name="SusceptibilityDistortionCorrection")
         # Remove bias correction from (Jeurissen et al., 2014)
-        bias = npe.Node(
-            mrtrix3.DWIBiasCorrect(use_ants=True), name="RemoveBias"
-        )
+        bias = npe.Node(mrtrix3.DWIBiasCorrect(use_ants=True), name="RemoveBias")
         # Compute b0 mask on corrected avg b0
         compute_avg_b0 = npe.Node(
             nutil.Function(
@@ -321,9 +319,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         compute_avg_b0.inputs.low_bval = self.parameters["low_bval"]
 
         # Compute brain mask from reference b0
-        mask_avg_b0 = npe.Node(
-            fsl.BET(mask=True, robust=True), name="MaskB0"
-        )
+        mask_avg_b0 = npe.Node(fsl.BET(mask=True, robust=True), name="MaskB0")
 
         # Print end message
         print_end_message = npe.Node(

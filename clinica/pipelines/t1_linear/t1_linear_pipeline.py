@@ -31,7 +31,7 @@ class T1Linear(cpe.Pipeline):
 
         image_ids = []
         if os.path.isdir(caps_directory):
-            cropped_files = clinica_file_reader(
+            cropped_files, _ = clinica_file_reader(
                 subjects, sessions, caps_directory, T1W_LINEAR_CROPPED, False
             )
             image_ids = extract_image_ids(cropped_files)
@@ -135,7 +135,7 @@ class T1Linear(cpe.Pipeline):
         # ========================
         # T1w file:
         try:
-            t1w_files = clinica_file_reader(
+            t1w_files, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.bids_directory, T1W_NII
             )
         except ClinicaException as e:

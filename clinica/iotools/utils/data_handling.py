@@ -159,6 +159,10 @@ def create_merge_file(
                 row_df = pd.concat(
                     [row_participant_df, row_session_df, row_scans_df], axis=1
                 )
+
+                # remove duplicated columns
+                row_df = row_df.loc[:, ~row_df.columns.duplicated(keep="last")]
+
                 merged_df = merged_df.append(row_df)
 
     # Put participant_id and session_id first

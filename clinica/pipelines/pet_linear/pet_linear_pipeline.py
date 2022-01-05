@@ -116,7 +116,7 @@ class PETLinear(cpe.Pipeline):
         # pet file:
         PET_NII = bids_pet_nii(self.parameters["acq_label"])
         try:
-            pet_files = clinica_file_reader(
+            pet_files, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.bids_directory, PET_NII
             )
         except ClinicaException as e:
@@ -128,7 +128,7 @@ class PETLinear(cpe.Pipeline):
 
         # T1w file:
         try:
-            t1w_files = clinica_file_reader(
+            t1w_files, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.bids_directory, T1W_NII
             )
         except ClinicaException as e:

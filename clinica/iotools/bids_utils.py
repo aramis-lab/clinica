@@ -435,19 +435,16 @@ def write_modality_agnostic_files(study_name, bids_dir):
     from os import path
 
     import clinica
+    from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
-    dataset_dict = {"Name": study_name, "BIDSVersion": "1.4.1", "DatasetType": "raw"}
-    dataset_json = json.dumps(dataset_dict, skipkeys=True, indent=4)
-    f = open(path.join(bids_dir, "dataset_description.json"), "w")
-    f.write(dataset_json)
-    f.close()
+    with open(path.join(bids_dir, "dataset_description.json"), "w") as f:
+        BIDSDatasetDescription(name=study_name, bids_version="1.4.1").write(to=f)
 
-    file = open(path.join(bids_dir, "README"), "w")
-    file.write(
-        f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
-        f"More information on http://www.clinica.run\n"
-    )
-    file.close()
+    with open(path.join(bids_dir, "README"), "w") as f:
+        f.write(
+            f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
+            f"More information on http://www.clinica.run\n"
+        )
 
     validator_dict = {
         "ignore": [
@@ -472,16 +469,13 @@ def write_modality_agnostic_files(study_name, bids_dir):
         "error": [],
         "ignoredFiles": [],
     }
-    validator_json = json.dumps(validator_dict, skipkeys=True, indent=4)
-    f = open(path.join(bids_dir, ".bids-validator-config.json"), "w")
-    f.write(validator_json)
-    f.close()
 
-    f = open(path.join(bids_dir, ".bidsignore"), "w")
-    f.write(
-        "pet/\nconversion_info/\n"
-    )  # pet/ is necessary until PET is added to BIDS standard
-    f.close()
+    with open(path.join(bids_dir, ".bids-validator-config.json"), "w") as f:
+        json.dump(validator_dict, f, skipkeys=True, indent=4)
+
+    with open(path.join(bids_dir, ".bidsignore"), "w") as f:
+        # pet/ is necessary until PET is added to BIDS standard
+        f.write("\n".join(["pet/", "conversion_info/"]))
 
 
 def write_sessions_tsv(bids_dir, sessions_dict):
@@ -761,7 +755,13 @@ def json_from_dcm(dcm_dir, json_path):
         cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
 
 
-def run_dcm2niix(command):
+def run_dcm2niix(
+    input_dir: str,
+    output_dir: str,
+    output_fmt: str,
+    compress: bool = False,
+    bids_sidecar: bool = True,
+) -> None:
     """Runs the dcm2niix command using a subprocess.
 
     Args: the dcm2niix command with the right arguments.
@@ -770,13 +770,19 @@ def run_dcm2niix(command):
 
     from clinica.utils.stream import cprint
 
-    output_dcm2niix = subprocess.run(command, shell=True, capture_output=True)
-    if output_dcm2niix.returncode != 0:
+    command = ["dcm2niix", "-w", "0", "-f", output_fmt, "-o", output_dir]
+    command += ["-9", "-z", "y"] if compress else ["-z", "n"]
+    command += ["-b", "y", "-ba", "y"] if bids_sidecar else ["-b", "n"]
+    command += [input_dir]
+
+    completed_process = subprocess.run(command, capture_output=True)
+
+    if completed_process.returncode != 0:
         cprint(
             msg=(
                 "DICOM to BIDS conversion with dcm2niix failed:\n"
                 f"command: {command}\n"
-                f"{output_dcm2niix.stdout.decode('utf-8')}"
+                f"{completed_process.stdout.decode('utf-8')}"
             ),
             lvl="warning",
         )

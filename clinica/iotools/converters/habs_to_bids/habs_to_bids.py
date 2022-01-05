@@ -1,11 +1,10 @@
-from enum import Enum
 from io import TextIOBase
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from pandas import DataFrame, Series
-from pydantic import BaseModel
+
 
 PROTOCOL_TO_BIDS = {
     "3DFLAIR": {"datatype": "anat", "modality": "FLAIR"},
@@ -32,46 +31,6 @@ PROTOCOL_TO_BIDS = {
         "trc_label": "11CPIB",
     },
 }
-
-
-class BidsDatasetDescription(BaseModel):
-    """Model representing a BIDS dataset description.
-
-    See https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html
-    """
-
-    class DatasetType(str, Enum):
-        raw = "raw"
-        derivative = "derivative"
-
-    name: str
-    bids_version: str = "1.6.0"
-    hed_version: Optional[str]
-    dataset_type: DatasetType = DatasetType.raw
-    license: Optional[str]
-    authors: Optional[List[str]]
-    acknowledgements: Optional[str]
-    how_to_acknowledge: Optional[str]
-    funding: Optional[List[str]]
-    ethics_approvals: Optional[List[str]]
-    references_and_links: Optional[List[str]]
-    dataset_doi: Optional[str]
-
-    class Config:
-        allow_population_by_field_name = True
-
-        @classmethod
-        def alias_generator(cls, string: str) -> str:
-            """Convert field to PascalCase, leaving known acronyms all capitalized."""
-            acronyms = ["bids", "doi", "hed"]
-
-            return "".join(
-                word.upper() if word in acronyms else word.capitalize()
-                for word in string.split("_")
-            )
-
-    def save(self, to: TextIOBase):
-        return to.write(self.json(by_alias=True, indent=4, exclude_none=True))
 
 
 def source_participant_id_to_bids(dataframe: DataFrame) -> Series:
@@ -233,6 +192,7 @@ def write_bids(
 ):
     import fsspec
     from pandas import notna
+    from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
     participants = (
         clinical_data["Demographics"][
@@ -264,7 +224,7 @@ def write_bids(
     )
 
     with fsspec.open(str(rawdata / "dataset_description.json"), mode="wt") as f:
-        BidsDatasetDescription(name="HABS").save(to=f)
+        BIDSDatasetDescription(name="HABS").write(to=f)
 
     participants_file = rawdata / "participants.tsv"
     with fsspec.open(str(participants_file), mode="wb") as f:
