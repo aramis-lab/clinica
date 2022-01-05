@@ -76,7 +76,6 @@ def run_createmergefile(
         atlas_selection=None,
         pvc_restriction=None,
         group_selection=None,
-        n_procs=1,
     )
     # Assert
     ref_tsv = fspath(ref_dir / "output_file.tsv")
