@@ -48,7 +48,7 @@ def pet_volume_pipeline(
 
 
 def dwi_dti_pipeline(
-    caps_dir: str, df: pd.DataFrame, atlas_selection=None, **kwargs
+    caps_dir: str, df: pd.DataFrame, dti_atlas_selection=None, **kwargs
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     from pathlib import Path
@@ -85,23 +85,19 @@ def dwi_dti_pipeline(
                 if atlas_path.exists() and (
                     not (
                         dti_atlas_selection
-                        or (
-                            dti_atlas_selection
-                            and atlas_name in freesurfer_atlas_selection
-                        )
-                    ):
-                        atlas_df = pd.read_csv(atlas_path, sep="\t")
-                        label_list = [
-                            "dwi-dti_atlas-" + atlas_name + "_" + x
-                            for x in atlas_df.label_name.values
-                        ]
-                        ses_df[label_list] = atlas_df["label_value"].to_numpy()
+                        or (dti_atlas_selection and atlas_name in dti_atlas_selection)
+                    )
+                ):
+                    atlas_df = pd.read_csv(atlas_path, sep="\t")
+                    label_list = [
+                        "dwi-dti_atlas-" + atlas_name + "_" + x
+                        for x in atlas_df.label_name.values
+                    ]
+                    ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
         pipeline_df = pipeline_df.append(ses_df)
 
-        summary_df = generate_summary(
-            pipeline_df, "dwi-dti", ignore_groups=True
-        )
+        summary_df = generate_summary(pipeline_df, "dwi-dti", ignore_groups=True)
 
     final_df = pd.concat([df, pipeline_df], axis=1)
     final_df.reset_index(inplace=True)
