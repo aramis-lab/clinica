@@ -50,14 +50,15 @@ def pet_volume_pipeline(
 def dwi_dti_pipeline(
     caps_dir: str, df: pd.DataFrame, dti_atlas_selection=None, **kwargs
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-
     from pathlib import Path
 
     # Ensures that df is correctly indexed
-    if "participant_id" in df.columns.values:
+    try:
         df.set_index(
             ["participant_id", "session_id"], inplace=True, verify_integrity=True
         )
+    except:
+        raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     subjects_dir = Path(caps_dir) / "subjects"
 
@@ -125,8 +126,12 @@ def t1_freesurfer_longitudinal_pipeline(
     from pathlib import Path
 
     # Ensures that df is correctly indexed
-    if "participant_id" in df.columns.values:
-        df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+    try:
+        df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+    except:
+        raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     subjects_dir = Path(caps_dir) / "subjects"
 
@@ -160,7 +165,7 @@ def t1_freesurfer_longitudinal_pipeline(
             )
             for atlas_path in atlas_paths:
                 if "-wm_volume" not in str(atlas_path) and "-ba_volume" not in str(
-                    atlas_path
+                    atlas_path.stem
                 ):
                     atlas_name = atlas_path.stem.split("_parcellation-")[1].split("_")[
                         0
@@ -183,10 +188,8 @@ def t1_freesurfer_longitudinal_pipeline(
 
             try:
                 atlas_path = next(
-                    sorted(
-                        (mod_path).glob(
-                            f"{participant_id}_{session_id}_*segmentationVolumes.tsv"
-                        )
+                    (mod_path).glob(
+                        f"{participant_id}_{session_id}_*segmentationVolumes.tsv"
                     )
                 )
                 atlas_df = pd.read_csv(atlas_path, sep="\t")
@@ -228,8 +231,12 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     )
 
     # Ensures that df is correctly indexed
-    if "participant_id" in df.columns.values:
-        df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+    try:
+        df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+    except:
+        raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     subjects_dir = path.join(caps_dir, "subjects")
 
@@ -349,8 +356,12 @@ def volume_pipeline(
     )
 
     # Ensures that df is correctly indexed
-    if "participant_id" in df.columns.values:
-        df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+    try:
+        df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+    except:
+        raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     if not group_selection:
         try:
