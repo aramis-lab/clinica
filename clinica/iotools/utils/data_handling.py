@@ -77,10 +77,11 @@ def create_merge_file(
         )
     except ValueError:
         cprint(
-            "Found duplicate subject session pair. Please check subjects_sessions list for any misentry.",
-            lvl="error",
+            "Found duplicate subject/session pair. Keeping first occurence.",
+            lvl="warning",
         )
-        return
+        sub_ses_df = sub_ses_df.drop_duplicates(subset=["participant_id", "session_id"])
+        sub_ses_df.set_index(["participant_id", "session_id"], inplace=True)
 
     out_path = compute_default_filename(out_tsv)
     out_dir = path.dirname(out_path)
