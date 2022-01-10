@@ -138,16 +138,12 @@ def t1_freesurfer_longitudinal_pipeline(
         mod_path = ses_path / "t1"
 
         try:
-            flag_skip = False
             long_id = next(mod_path.glob("long*")).name
         except StopIteration:
             cprint(
                 f"Could not find a longitudinal dataset for participant {participant_id} {session_id}",
                 lvl="warning",
             )
-            flag_skip = True
-
-        if flag_skip:
             continue
 
         mod_path = mod_path / long_id / "freesurfer_longitudinal" / "regional_measures"
