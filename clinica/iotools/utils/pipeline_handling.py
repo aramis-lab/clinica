@@ -57,7 +57,7 @@ def dwi_dti_pipeline(
         df.set_index(
             ["participant_id", "session_id"], inplace=True, verify_integrity=True
         )
-    except:
+    except Exception:
         raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     subjects_dir = Path(caps_dir) / "subjects"
@@ -130,7 +130,7 @@ def t1_freesurfer_longitudinal_pipeline(
         df.set_index(
             ["participant_id", "session_id"], inplace=True, verify_integrity=True
         )
-    except:
+    except Exception:
         raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     subjects_dir = Path(caps_dir) / "subjects"
@@ -235,7 +235,7 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
         df.set_index(
             ["participant_id", "session_id"], inplace=True, verify_integrity=True
         )
-    except:
+    except Exception:
         raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     subjects_dir = path.join(caps_dir, "subjects")
@@ -360,7 +360,7 @@ def volume_pipeline(
         df.set_index(
             ["participant_id", "session_id"], inplace=True, verify_integrity=True
         )
-    except:
+    except Exception:
         raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     if not group_selection:
