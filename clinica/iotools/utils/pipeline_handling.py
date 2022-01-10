@@ -93,7 +93,7 @@ def dwi_dti_pipeline(
                         "dwi-dti_atlas-" + atlas_name + "_" + x
                         for x in atlas_df.label_name.values
                     ]
-                    ses_df[label_list] = atlas_df["label_value"].to_numpy()
+                    ses_df[label_list] = atlas_df["mean_scalar"].to_numpy()
 
         pipeline_df = pipeline_df.append(ses_df)
 
@@ -184,20 +184,25 @@ def t1_freesurfer_longitudinal_pipeline(
                         ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
             # Always retrieve subcortical volumes
-            atlas_path = next(
-                sorted(
-                    (mod_path).glob(
-                        f"{participant_id}_{session_id}_*segmentationVolumes.tsv"
+
+            try:
+                atlas_path = next(
+                    sorted(
+                        (mod_path).glob(
+                            f"{participant_id}_{session_id}_*segmentationVolumes.tsv"
+                        )
                     )
                 )
-            )
+                atlas_df = pd.read_csv(atlas_path, sep="\t")
+                label_list = [
+                    "t1-freesurfer-segmentationVolumes_" + x
+                    for x in atlas_df.label_name.values
+                ]
 
-            atlas_df = pd.read_csv(atlas_path, sep="\t")
-            label_list = [
-                "t1-freesurfer-segmentationVolumes_" + x
-                for x in atlas_df.label_name.values
-            ]
-            ses_df[label_list] = atlas_df["label_value"].to_numpy()
+                ses_df[label_list] = atlas_df["label_value"].to_numpy()
+
+            except StopIteration:
+                cprint("Segmentation volume file not found. Skipping.", lvl="warning")
 
         pipeline_df = pipeline_df.append(ses_df)
 

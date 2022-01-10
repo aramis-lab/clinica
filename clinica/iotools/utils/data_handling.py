@@ -1,7 +1,6 @@
 """Data handling scripts."""
 
 import click
-import pandas
 
 
 def compute_default_filename(out_path):
@@ -58,21 +57,31 @@ def create_merge_file(
         if not path.isdir(caps_dir):
             raise IOError("The path to the CAPS directory is wrong")
 
-    if not os.path.isfile(path.join(bids_dir, "participants.tsv")):
-        participants_df = create_participants_df(bids_dir)
-        # raise IOError("participants.tsv not found in the specified BIDS directory")
-
-    else:
-        participants_df = pd.read_csv(path.join(bids_dir, "participants.tsv"), sep="\t")
-
     sessions, subjects = get_subject_session_list(
         bids_dir, ss_file=tsv_file, use_session_tsv=(not ignore_sessions_files)
     )
+
+    participants_df = pd.DataFrame(list(set(subjects)), columns=["participant_id"])
+
     sub_ses_df = pd.DataFrame(
         [[subject, session] for subject, session in zip(subjects, sessions)],
         columns=["participant_id", "session_id"],
     )
-    sub_ses_df.set_index(["participant_id", "session_id"], inplace=True)
+    sub_ses_df = sub_ses_df.append(
+        {"participant_id": "sub-PREVDEMALS0010002VH", "session_id": "ses-M00"},
+        ignore_index=True,
+    )
+    try:
+        sub_ses_df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+        print("trying incohrent action")
+    except ValueError:
+        cprint(
+            "Found duplicate subject session pair. Please check subjects_sessions list for any misentry.",
+            lvl="error",
+        )
+        return
 
     out_path = compute_default_filename(out_tsv)
     out_dir = path.dirname(out_path)
@@ -241,24 +250,6 @@ def create_merge_file(
         merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
         merged_df.to_csv(out_path, sep="\t")
         cprint("End of CAPS information merge.", lvl="debug")
-
-
-def create_participants_df(bids_dir: str) -> pandas.DataFrame:
-    """
-    Function to create participant.tsv "on the fly" in case it is not found in the BIDS directory
-    """
-    import pandas as pd
-    import os
-
-    subjects_ids = [
-        name
-        for name in os.listdir(bids_dir)
-        if os.path.isdir(os.path.join(bids_dir, name)) and "sub" in name
-    ]
-
-    participants_df = pd.DataFrame(subjects_ids, columns=["participant_id"])
-
-    return participants_df
 
 
 def find_mods_and_sess(bids_dir):
@@ -722,7 +713,7 @@ def create_subs_sess_list(
             session_df = pd.read_csv(
                 path.join(sub_path, subj_id + "_sessions.tsv"), sep="\t"
             )
-            session_list = list(session_df["session_id"].dropna().to_numpy())
+            session_list = list(session_df["session_id"].to_numpy())
             for session in session_list:
                 subjs_sess_tsv.write(subj_id + "\t" + session + "\n")
 
@@ -945,7 +936,6 @@ def check_relative_volume_location_in_world_coordinate_system(
     from os.path import abspath, basename
 
     import numpy as np
-
     from clinica.utils.stream import cprint
 
     center_coordinate_1 = [get_world_coordinate_of_center(file) for file in nifti_list1]
