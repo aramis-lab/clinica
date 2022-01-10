@@ -235,7 +235,7 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
         df.set_index(
             ["participant_id", "session_id"], inplace=True, verify_integrity=True
         )
-    except Exception:
+    except KeyError:
         raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     subjects_dir = path.join(caps_dir, "subjects")
