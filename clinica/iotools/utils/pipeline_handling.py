@@ -360,7 +360,7 @@ def volume_pipeline(
         df.set_index(
             ["participant_id", "session_id"], inplace=True, verify_integrity=True
         )
-    except Exception:
+    except KeyError:
         raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     if not group_selection:
