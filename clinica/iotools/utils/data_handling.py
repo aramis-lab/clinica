@@ -67,15 +67,11 @@ def create_merge_file(
         [[subject, session] for subject, session in zip(subjects, sessions)],
         columns=["participant_id", "session_id"],
     )
-    sub_ses_df = sub_ses_df.append(
-        {"participant_id": "sub-PREVDEMALS0010002VH", "session_id": "ses-M00"},
-        ignore_index=True,
-    )
+
     try:
         sub_ses_df.set_index(
             ["participant_id", "session_id"], inplace=True, verify_integrity=True
         )
-        print("trying incohrent action")
     except ValueError:
         cprint(
             "Found duplicate subject session pair. Please check subjects_sessions list for any misentry.",
