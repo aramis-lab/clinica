@@ -57,18 +57,31 @@ def create_merge_file(
         if not path.isdir(caps_dir):
             raise IOError("The path to the CAPS directory is wrong")
 
-    if not os.path.isfile(path.join(bids_dir, "participants.tsv")):
-        raise IOError("participants.tsv not found in the specified BIDS directory")
-    participants_df = pd.read_csv(path.join(bids_dir, "participants.tsv"), sep="\t")
-
     sessions, subjects = get_subject_session_list(
-        bids_dir, ss_file=tsv_file, use_session_tsv=True
+        bids_dir, ss_file=tsv_file, use_session_tsv=(not ignore_sessions_files)
     )
+
+    if not os.path.isfile(path.join(bids_dir, "participants.tsv")):
+        participants_df = pd.DataFrame(list(set(subjects)), columns=["participant_id"])
+    else:
+        participants_df = pd.read_csv(path.join(bids_dir, "participants.tsv"), sep="\t")
+
     sub_ses_df = pd.DataFrame(
         [[subject, session] for subject, session in zip(subjects, sessions)],
         columns=["participant_id", "session_id"],
     )
-    sub_ses_df.set_index(["participant_id", "session_id"], inplace=True)
+
+    try:
+        sub_ses_df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+    except ValueError:
+        cprint(
+            "Found duplicate subject/session pair. Keeping first occurence.",
+            lvl="warning",
+        )
+        sub_ses_df = sub_ses_df.drop_duplicates(subset=["participant_id", "session_id"])
+        sub_ses_df.set_index(["participant_id", "session_id"], inplace=True)
 
     out_path = compute_default_filename(out_tsv)
     out_dir = path.dirname(out_path)
@@ -181,13 +194,17 @@ def create_merge_file(
         from .pipeline_handling import (
             pet_volume_pipeline,
             t1_freesurfer_pipeline,
+            t1_freesurfer_longitudinal_pipeline,
             t1_volume_pipeline,
+            dwi_dti_pipeline,
         )
 
         pipeline_options = {
             "t1-volume": t1_volume_pipeline,
             "pet-volume": pet_volume_pipeline,
             "t1-freesurfer": t1_freesurfer_pipeline,
+            "t1-freesurfer-longitudinal": t1_freesurfer_longitudinal_pipeline,
+            "dwi-dti": dwi_dti_pipeline,
         }
         merged_summary_df = pd.DataFrame()
         if not pipelines:
@@ -919,7 +936,6 @@ def check_relative_volume_location_in_world_coordinate_system(
     from os.path import abspath, basename
 
     import numpy as np
-
     from clinica.utils.stream import cprint
 
     center_coordinate_1 = [get_world_coordinate_of_center(file) for file in nifti_list1]

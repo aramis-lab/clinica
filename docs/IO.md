@@ -161,6 +161,8 @@ If an input list of subjects and sessions is given, the merged file will only ga
     ...
     ```
 
+A complete list of optional arguments can be obtained with the command line `clinica merge-tsv --help`
+
 ## `center-nifti` - Center NIfTI files of a BIDS directory
 
 Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIfTI files whose origin does not correspond to the center of the image (i.e. the anterior commissure).

@@ -79,8 +79,8 @@ def run_createmergefile(
     )
     # Assert
     ref_tsv = fspath(ref_dir / "output_file.tsv")
-    out_df = pd.read_csv(out_tsv, sep="/")
-    ref_df = pd.read_csv(ref_tsv, sep="/")
+    out_df = pd.read_csv(out_tsv, sep="\t")
+    ref_df = pd.read_csv(ref_tsv, sep="\t")
     assert out_df.equals(ref_df)
     assert cmp(out_tsv, ref_tsv)
 

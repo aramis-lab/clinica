@@ -4,7 +4,7 @@
 import os
 from glob import glob
 from os import path
-
+from typing import Tuple
 import pandas as pd
 
 
@@ -47,8 +47,176 @@ def pet_volume_pipeline(
     )
 
 
+def dwi_dti_pipeline(
+    caps_dir: str, df: pd.DataFrame, dti_atlas_selection=None, **kwargs
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    from pathlib import Path
+
+    # Ensures that df is correctly indexed
+    try:
+        df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+    except KeyError:
+        raise KeyError("Fields `participant_id` and `session_id` are required.")
+
+    subjects_dir = Path(caps_dir) / "subjects"
+
+    pipeline_df = pd.DataFrame()
+
+    for participant_id, session_id in df.index.values:
+
+        ses_path = subjects_dir / participant_id / session_id
+        mod_path = ses_path / "dwi" / "dti_based_processing" / "atlas_statistics"
+
+        ses_df = pd.DataFrame(
+            [[participant_id, session_id]], columns=["participant_id", "session_id"]
+        )
+        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+
+        if mod_path.exists():
+
+            # Looking for atlases
+            atlas_paths = sorted(
+                (mod_path).glob(f"{participant_id}_{session_id}_*FA_statistics.tsv")
+            )
+            for atlas_path in atlas_paths:
+
+                atlas_name = atlas_path.stem.split("_dwi_space-")[1].split("_")[0]
+                if atlas_path.exists() and (
+                    not (
+                        dti_atlas_selection
+                        or (dti_atlas_selection and atlas_name in dti_atlas_selection)
+                    )
+                ):
+                    atlas_df = pd.read_csv(atlas_path, sep="\t")
+                    label_list = [
+                        "dwi-dti_atlas-" + atlas_name + "_" + x
+                        for x in atlas_df.label_name.values
+                    ]
+                    ses_df[label_list] = atlas_df["mean_scalar"].to_numpy()
+
+        pipeline_df = pipeline_df.append(ses_df)
+
+        summary_df = generate_summary(pipeline_df, "dwi-dti", ignore_groups=True)
+
+    final_df = pd.concat([df, pipeline_df], axis=1)
+    final_df.reset_index(inplace=True)
+    return final_df, summary_df
+
+
+def t1_freesurfer_longitudinal_pipeline(
+    caps_dir: str, df: pd.DataFrame, freesurfer_atlas_selection=None, **kwargs
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Merge the data of the T1FreesurferLongitudinal pipeline to the merged file containing the BIDS information.
+
+    Args:
+        caps_dir: the path to the CAPS directory
+        df: the DataFrame containing the BIDS information
+        freesurfer_atlas_selection: allows to choose the atlas to merge (default = 'all')
+
+    Returns:
+         final_df: a DataFrame containing the information of the bids and the pipeline
+    """
+
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        replace_sequence_chars,
+    )
+    from clinica.utils.stream import cprint
+    from pathlib import Path
+
+    # Ensures that df is correctly indexed
+    try:
+        df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+    except KeyError:
+        raise KeyError("Fields `participant_id` and `session_id` are required.")
+
+    subjects_dir = Path(caps_dir) / "subjects"
+
+    pipeline_df = pd.DataFrame()
+
+    for participant_id, session_id in df.index.values:
+
+        ses_path = subjects_dir / participant_id / session_id
+        mod_path = ses_path / "t1"
+
+        try:
+            long_id = next(mod_path.glob("long*")).name
+        except StopIteration:
+            cprint(
+                f"Could not find a longitudinal dataset for participant {participant_id} {session_id}",
+                lvl="warning",
+            )
+            continue
+
+        mod_path = mod_path / long_id / "freesurfer_longitudinal" / "regional_measures"
+
+        ses_df = pd.DataFrame(
+            [[participant_id, session_id]], columns=["participant_id", "session_id"]
+        )
+        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+
+        if mod_path.exists():
+            # Looking for atlases
+            atlas_paths = sorted(
+                (mod_path).glob(f"{participant_id}_{session_id}_*volume.tsv")
+            )
+            for atlas_path in atlas_paths:
+                if "-wm_volume" not in str(atlas_path) and "-ba_volume" not in str(
+                    atlas_path.stem
+                ):
+                    atlas_name = atlas_path.stem.split("_parcellation-")[1].split("_")[
+                        0
+                    ]
+                    if atlas_path.exists() and (
+                        not freesurfer_atlas_selection
+                        or (
+                            freesurfer_atlas_selection
+                            and atlas_name in freesurfer_atlas_selection
+                        )
+                    ):
+                        atlas_df = pd.read_csv(atlas_path, sep="\t")
+                        label_list = [
+                            "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
+                            for x in atlas_df.label_name.values
+                        ]
+                        ses_df[label_list] = atlas_df["label_value"].to_numpy()
+
+            # Always retrieve subcortical volumes
+
+            try:
+                atlas_path = next(
+                    (mod_path).glob(
+                        f"{participant_id}_{session_id}_*segmentationVolumes.tsv"
+                    )
+                )
+                atlas_df = pd.read_csv(atlas_path, sep="\t")
+                label_list = [
+                    "t1-freesurfer-segmentationVolumes_" + x
+                    for x in atlas_df.label_name.values
+                ]
+
+                ses_df[label_list] = atlas_df["label_value"].to_numpy()
+
+            except StopIteration:
+                cprint("Segmentation volume file not found. Skipping.", lvl="warning")
+
+        pipeline_df = pipeline_df.append(ses_df)
+
+    summary_df = generate_summary(
+        pipeline_df, "t1-freesurfer-longitudinal", ignore_groups=True
+    )
+
+    final_df = pd.concat([df, pipeline_df], axis=1)
+    final_df.reset_index(inplace=True)
+
+    return final_df, summary_df
+
+
 def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwargs):
-    """Merge the data of the PET-Volume pipeline to the merged file containing the BIDS information.
+    """Merge the data of the T1Freesurfer pipeline to the merged file containing the BIDS information.
 
     Args:
         caps_dir: the path to the CAPS directory
@@ -61,11 +229,14 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,
     )
-    from clinica.utils.stream import cprint
 
     # Ensures that df is correctly indexed
-    if "participant_id" in df.columns.values:
-        df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+    try:
+        df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+    except KeyError:
+        raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     subjects_dir = path.join(caps_dir, "subjects")
 
@@ -185,8 +356,12 @@ def volume_pipeline(
     )
 
     # Ensures that df is correctly indexed
-    if "participant_id" in df.columns.values:
-        df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+    try:
+        df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
+    except KeyError:
+        raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     if not group_selection:
         try:
