@@ -5,98 +5,129 @@ from os import read
 from pathlib import Path
 from typing import Optional
 
+from clinica.engine.prov_utils import read_prov_jsonld
+
+from .prov_model import *
+
 
 def provenance(func):
-    from .provenance_utils import get_files_list
+    from .prov_utils import get_files_list
 
     @functools.wraps(func)
     def run_wrapper(self, **kwargs):
         ret = []
         pipeline_fullname = self.fullname
-        in_files_paths = get_files_list(self, pipeline_fullname, dict_field="input_to")
+        paths_input_files = get_files_list(
+            self, pipeline_fullname, dict_field="input_to"
+        )
 
-        prov_context = get_context(files_paths=in_files_paths)
-        prov_command = get_command(self, in_files_paths)
+        record_history = get_history(paths_files=paths_input_files)
+        entries_current = get_command(self, paths_input_files)
 
-        if validate_command(prov_context, prov_command):
+        if validate_command(record_history, entries_current):
             # ret = func(self)
             print("The pipeline succesfully executed.")
         else:
             raise Exception(
                 "The pipeline selected is incompatible with the input files provenance"
             )
-        out_files_paths = get_files_list(
+        paths_out_files = get_files_list(
             self, pipeline_fullname, dict_field="output_from"
         )
-        register_prov(prov_command, out_files_paths)
+        register_prov(entries_current, paths_out_files)
 
         return ret
 
     return run_wrapper
 
 
-def register_prov(prov_command: dict, out_files: list) -> bool:
+def register_prov(entries_current: list[ProvEntry], out_files: Path) -> None:
 
     # TODO: iterate over out_files and create a provenance file for each
+
     for file in out_files:
-        write_prov_file(prov_command, file)
+        write_prov_file(entries_current, file)
     print("Provenance registered succesfully")
     return True
 
 
-def get_context(files_paths: str) -> dict:
+def get_history(paths_files: list[Path]) -> ProvRecord:
     """
-    Return a dictionary with the provenance info related to the files in the files_paths
+    return:
+        a ProvRecord for the associated files in path_files
     """
-    from clinica.engine.provenance_utils import read_prov, get_associated_prov
 
-    prov_data = {"Entity": [], "Agent": [], "Activity": []}
-    for path in files_paths:
-        prov_record = read_prov(get_associated_prov(path))
+    from .prov_utils import read_prov_jsonld, get_path_prov
+
+    prov_record = ProvRecord
+
+    for path in paths_files:
+        prov_record_tmp = read_prov_jsonld(get_path_prov(path))
         if prov_record:
-            prov_data = append_prov_dict(prov_data, prov_record)
+            prov_record.entries.extend(prov_record_tmp.entries)
 
-    return prov_data
+    return prov_record
 
 
-def get_command(self, input_files_paths: list) -> dict:
+def get_command(self, paths_inputs: list[Path]) -> ProvEntry:
     """
-    Read the user command and save information in a dict
+    params:
+        paths_inputs: list of input entries paths
+    return:
+        ProvEntry associated with the launched pipeline
     """
     import sys
 
-    new_entities = []
+    entries_command = []
+
     new_agent = get_agent()
-    for path in input_files_paths:
-        new_entities.append(get_entity(path))
+
+    new_entities = []
+
+    for path in paths_inputs:
+        entity_curr = get_entity(path)
+        new_entities.append(entity_curr)
+
     new_activity = get_activity(self, new_agent["@id"], new_entities)
 
-    return {
-        "Agent": [new_agent],
-        "Activity": [new_activity],
-        "Entity": new_entities,
-    }
+    entry_curr = ProvEntry
+    entry_curr.subject = new_agent
+    entry_curr.predicate = ProvAssociation
+    entry_curr.object = new_activity
+
+    # TODO create several entries from this information
+
+    entries_command.append(entry_curr)
+
+    return entries_command
 
 
-def write_prov_file(prov_command, file_path):
+def write_prov_file(
+    list_prov_entries: list, path_entity: Path, overwrite=False
+) -> None:
     """
-    Write the dictionary data to the file_path
-    """
-    from clinica.engine.provenance_utils import read_prov, get_associated_prov
+    Append the current provenance info to the prov file. If it does not exist, create new
 
-    prov_path = get_associated_prov(file_path)
+    params:
+    prov_entries: list of ProvEntry
+    entity_path: path of the prov-associated element
+    """
+
+    from .prov_utils import read_prov_jsonld, get_path_prov
+
+    prov_path = get_path_prov(path_entity)
 
     if prov_path.exists():
         # append the pipeline provenance information to the old provenance file
-        prov_main = read_prov(prov_path)
-        prov_main = append_prov_dict(prov_main, prov_command)
+        prov_record = read_prov_jsonld(prov_path)
+        prov_record.extend(list_prov_entries)
     else:
-        create_prov_file(prov_command, prov_path)
+        create_prov_file(list_prov_entries, prov_path)
         # create new provenance file with pipeline information
-    return ""
+    return
 
 
-def append_prov_dict(prov_main: dict, prov_new: dict) -> dict:
+def extend_prov(prov_main: dict, prov_new: dict) -> dict:
     """
     Append a specific prov data to the global prov dict
     """
@@ -108,64 +139,58 @@ def append_prov_dict(prov_main: dict, prov_new: dict) -> dict:
     return prov_main
 
 
-def get_agent() -> dict:
+def get_agent() -> ProvAgent:
     import clinica
-    from .provenance_utils import get_agent_id
+    from .prov_utils import get_agent_id
 
-    agent_version = clinica.__version__
-    agent_label = clinica.__name__
-    agent_id = get_agent_id(agent_label + agent_version)
+    new_agent = ProvAgent()
 
-    new_agent = {"@id": agent_id, "label": agent_label, "version": agent_version}
+    new_agent.attributes["version"] = clinica.__version__
+    new_agent.attributes["label"] = clinica.__name__
+    new_agent.id = get_agent_id(new_agent)
 
     return new_agent
 
 
-def get_activity(self, agent_id: str, entities: list) -> dict:
+def get_activity(
+    self, agent_id: Identifier, entities: list[ProvEntity]
+) -> ProvActivity:
     """
-    Add the current command to the list of activities
+    return
+        ProvActivity from related entities and associated agent
     """
     import sys
-    from .provenance_utils import get_activity_id
+    from .prov_utils import get_activity_id
 
-    activity_parameters = self.parameters
-    activity_label = self.fullname
-    activity_id = get_activity_id(self.fullname)
-    activity_command = (sys.argv[1:],)
-    activity_agent = agent_id
-    activity_used_files = [e["@id"] for e in entities]
+    new_activity = ProvActivity
 
-    new_activity = {
-        "@id": activity_id,
-        "label": activity_label,
-        "command": activity_command,
-        "parameters": activity_parameters,
-        "wasAssociatedWith": activity_agent,
-        "used": activity_used_files,
-    }
+    new_activity.attributes["parameters"] = self.parameters
+    new_activity.attributes["label"] = self.fullname
+    new_activity.id = get_activity_id(self.fullname)
+    new_activity.attributes["command"] = (sys.argv[1:],)
+
+    # TODO include related agent and entity to the activity
+    # activity_agent = agent_id
+    # activity_used_files = [e["@id"] for e in entities]
 
     return new_activity
 
 
-def get_entity(img_path: str) -> dict:
+def get_entity(path_curr: Path) -> ProvEntity:
     """
-    Add the current file to the list of entities
+    return an Entity object from the file in path_curr
     """
-    from clinica.engine.provenance_utils import get_entity_id
-    from clinica.engine.provenance_utils import get_last_activity
-    from pathlib import Path
 
-    entity_id = get_entity_id(img_path)
-    entity_label = Path(img_path).name
-    entity_path = img_path
-    entity_source = get_last_activity(img_path)
+    from clinica.engine.prov_utils import get_entity_id
 
-    new_entity = {
-        "@id": entity_id,
-        "label": entity_label,
-        "atLocation": entity_path,
-        "wasGeneratedBy": entity_source,
-    }
+    new_entity = ProvEntity()
+
+    new_entity.id = get_entity_id(path_curr)
+    new_entity.attributes["label"] = path_curr.name
+    new_entity.attributes["path"] = path_curr
+
+    # TODO: implement function to return the latest associated activity
+    # new_entity.attributes["wasGeneratedBy"] = get_last_activity(path_curr)
 
     return new_entity
 

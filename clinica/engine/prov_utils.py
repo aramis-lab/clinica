@@ -1,10 +1,17 @@
-from typing import Union, Optional
+from typing import Optional
 from pathlib import Path
 
+from .prov_model import *
 
-def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> list:
+
+def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> list[Path]:
     """
-    Calls clinica_file_reader with the appropriate extentions
+    params:
+        pipeline_fullname: the current running pipeline name
+        dict_field: variable to specify if fetching inputs or outputs to the pipeline
+
+    return:
+        list of 'Path's to the files used in the pipeline
     """
     from clinica.utils.inputs import clinica_file_reader
     import clinica.utils.input_files as cif
@@ -13,7 +20,8 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> list:
     if dict_field not in dict_field_options:
         raise (f"dict_field must be one of {dict_field_options}")
 
-    # retrieve all the data dictionaries from the input_files module
+    # Retrieve all the data dict from the input_files module
+
     files_dicts = {
         k: v
         for k, v in vars(cif).items()
@@ -22,6 +30,7 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> list:
         and pipeline_fullname in v[dict_field]
     }
     # TODO: check if bids or caps as output
+
     ret_files = []
     for elem in files_dicts:
         ref_dir = (
@@ -35,7 +44,7 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> list:
             raise_exception=False,
         )
         if current_file:
-            ret_files.extend(current_file)
+            ret_files.extend(Path(current_file))
 
     return ret_files
 
@@ -64,53 +73,62 @@ def is_activity_tracked(prov_context: dict, activity_id: str) -> bool:
     return flag_exists
 
 
-def get_entity_id(file_path: str) -> str:
-    from pathlib import Path
-
-    entity_id = Path(file_path).with_suffix("").name
-    return entity_id
-
-
-def get_activity_id(pipeline_name: str) -> str:
-    return "clin:" + pipeline_name
+def get_entity_id(path_file: Path) -> str:
+    id = Identifier
+    id.id = path_file.with_suffix("").name
+    return id
 
 
-def get_agent_id(agent_name: str) -> str:
-    return "clin:" + agent_name
+def get_activity_id(pipeline_name: str) -> Identifier:
+    id = Identifier
+    id.id = "clin:" + pipeline_name
+    return id
 
 
-def get_last_activity(file_path: str) -> Optional[list]:
+def get_agent_id(agent_current: ProvAgent) -> Identifier:
+    id = Identifier
+    id.id = "clin:" + agent_current.attributes["label"]
+    return id
+
+
+def get_last_activity(path_entity: Path) -> Optional[ProvActivity]:
 
     """
     Return the last activity executed on the file
     """
 
-    prov_record = read_prov(get_associated_prov(file_path))
-    if prov_record and prov_record["Activity"]:
-        last_activity = prov_record["Activity"][-1]["@id"]
+    prov_record = read_prov_jsonld(get_path_prov(path_entity))
+    if prov_record and prov_record.entries:
+        last_activity = prov_record.entries[-1]["@id"]
         return last_activity
     return None
 
 
-def get_associated_prov(file_path: str) -> Path:
-
-    file_path = Path(file_path)
-    while file_path.suffix != "":
-        file_path = file_path.with_suffix("")
-
-    associated_jsonld = file_path.with_suffix(".jsonld")
-    return associated_jsonld
-
-
-def read_prov(prov_path: Path) -> Optional[dict]:
+def get_path_prov(path_entity: Path) -> Path:
     """
-    Check if the given file is a valid provenance json-ld
+    return: Path of the provenance file associated with an entity
+    """
+
+    while path_entity.suffix != "":
+        path_entity = path_entity.with_suffix("")
+
+    path_prov = path_entity.with_suffix(".jsonld")
+    return path_prov
+
+
+def read_prov_jsonld(path_prov: Path) -> Optional[ProvRecord]:
+    """
+    return: ProvRecord in a specific location stored in jsonld format
     """
     import json
 
+    prov_record = ProvRecord()
+
     # TODO: check that the provenance file associations and uses exists
-    if prov_path.exists():
-        with open(prov_path, "r") as fp:
+    if path_prov.exists():
+        with open(path_prov, "r") as fp:
             json_ld_data = json.load(fp)
-            return json_ld_data
+            prov_record.records = json_ld_data["records"]
+            return prov_record
+
     return None

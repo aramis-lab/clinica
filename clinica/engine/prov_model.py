@@ -42,7 +42,7 @@ class ProvEntity(ProvElement):
     """Provenance Entity element"""
 
     id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
-    attributes: set
+    attributes: dict
 
 
 @define
@@ -50,7 +50,7 @@ class ProvActivity(ProvElement):
     """Provenance Activity element"""
 
     id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
-    attributes: set
+    attributes: dict
 
 
 @define
@@ -58,7 +58,7 @@ class ProvAgent(ProvElement):
     """Provenance Agent element"""
 
     id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
-    attributes: set
+    attributes: dict
 
 
 # Define PROV Relations
@@ -94,3 +94,24 @@ class ProvUsage(ProvRelation):
 @define
 class ProvAssociation(ProvRelation):
     pass
+
+
+@define
+class ProvEntry:
+    """
+    A prov entry in triple form
+    """
+
+    subject: ProvElement
+    predicate: ProvRelation
+    object: ProvElement
+
+
+@define
+class ProvRecord:
+    """
+    A provenance document containting a PROV context and a list of entries
+    """
+
+    context: dict
+    entries: list[ProvEntry]
