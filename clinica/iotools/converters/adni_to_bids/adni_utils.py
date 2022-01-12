@@ -721,7 +721,7 @@ def create_adni_sessions_dict(
     # Nv/None refer to sessions whose session is undefined. "sc" is the screening session with unreliable (incomplete)
     # data.
     df_subj_session = df_subj_session[
-        df_subj_session.session_id.str.contains("ses-M\d*")
+        df_subj_session.session_id.str.contains("ses-M\d+")
     ]
     write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
