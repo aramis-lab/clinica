@@ -329,7 +329,6 @@ class DwiDti(cpe.Pipeline):
         thres_md = thres_map.clone("5-Remove_Negative_MD")
         thres_ad = thres_map.clone("5-Remove_Negative_AD")
         thres_rd = thres_map.clone("5-Remove_Negative_RD")
-        # thres_decfa = thres_map.clone("5-Remove_Negative_DECFA")
 
         print_begin_message = npe.Node(
             interface=nutil.Function(
@@ -413,8 +412,6 @@ class DwiDti(cpe.Pipeline):
                 (get_caps_filenames, thres_rd, [("out_rd", "out_file")]),
                 (dti_to_metrics, thres_rd, [("out_rd", "in_file")]),
 
-                #(get_caps_filenames, thres_decfa, [("out_evec", "out_file")]),
-                #(dti_to_metrics, thres_decfa, [("out_evec", "in_file")]),
                 # Outputnode
                 (dwi_to_dti, self.output_node, [("tensor", "dti")]),
                 (thres_fa, self.output_node, [("out_file", "fa")]),
