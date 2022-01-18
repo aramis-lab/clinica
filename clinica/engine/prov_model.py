@@ -114,4 +114,4 @@ class ProvRecord:
     """
 
     context: dict
-    entries: list[ProvEntry]
+    entries: List[ProvEntry]

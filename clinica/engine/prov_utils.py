@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 
 from .prov_model import *
 
 
-def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> list[Path]:
+def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> List[Path]:
     """
     params:
         pipeline_fullname: the current running pipeline name

@@ -1,9 +1,8 @@
-import json
 import functools
 from os import read
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from clinica.engine.prov_utils import read_prov_jsonld
 
@@ -41,7 +40,7 @@ def provenance(func):
     return run_wrapper
 
 
-def register_prov(entries_current: list[ProvEntry], out_files: Path) -> None:
+def register_prov(entries_current: List[ProvEntry], out_files: Path) -> None:
 
     # TODO: iterate over out_files and create a provenance file for each
 
@@ -51,7 +50,7 @@ def register_prov(entries_current: list[ProvEntry], out_files: Path) -> None:
     return True
 
 
-def get_history(paths_files: list[Path]) -> ProvRecord:
+def get_history(paths_files: List[Path]) -> ProvRecord:
     """
     return:
         a ProvRecord for the associated files in path_files
@@ -69,7 +68,7 @@ def get_history(paths_files: list[Path]) -> ProvRecord:
     return prov_record
 
 
-def get_command(self, paths_inputs: list[Path]) -> ProvEntry:
+def get_command(self, paths_inputs: List[Path]) -> ProvEntry:
     """
     params:
         paths_inputs: list of input entries paths
@@ -153,7 +152,7 @@ def get_agent() -> ProvAgent:
 
 
 def get_activity(
-    self, agent_id: Identifier, entities: list[ProvEntity]
+    self, agent_id: Identifier, entities: List[ProvEntity]
 ) -> ProvActivity:
     """
     return
