@@ -184,7 +184,7 @@ pipeline {
                 }
               }
             }
-            stage('DWI:nonreg') {
+            /* stage('DWI:nonreg') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/DWI"
@@ -219,7 +219,7 @@ pipeline {
                   sh 'rm -rf ${WORK_DIR}'
                 }
               }
-            }
+            } */
           }
           post {
             always {
@@ -397,7 +397,7 @@ pipeline {
                 }
               }
             }
-            stage('DWI:nonreg') {
+        /* stage('DWI:nonreg') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/DWI"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -431,7 +431,7 @@ pipeline {
                   sh 'rm -rf ${WORK_DIR}/*'
                 }
               }
-            }
+            } */
           }
           post {
             always {
