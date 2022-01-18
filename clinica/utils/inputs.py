@@ -288,7 +288,7 @@ def clinica_file_reader(
         sessions
     ), "Subjects and sessions must have the same length"
     if len(subjects) == 0:
-        return []
+        return [], ""
 
     # results is the list containing the results
     results = []
