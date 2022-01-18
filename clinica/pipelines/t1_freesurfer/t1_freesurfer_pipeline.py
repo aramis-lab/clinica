@@ -147,7 +147,7 @@ class T1FreeSurfer(cpe.Pipeline):
         if error_message:
             cprint(error_message, lvl="warning")
         if not t1w_files:
-            raise ClinicaException("Empty Dataset")
+            raise ClinicaException("Empty dataset or already processed")
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
