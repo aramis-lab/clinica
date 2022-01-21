@@ -58,11 +58,11 @@ def get_history(paths_files: List[Path]) -> ProvRecord:
 
     from .prov_utils import read_prov_jsonld, get_path_prov
 
-    prov_record = ProvRecord
+    prov_record = ProvRecord({}, [])
 
     for path in paths_files:
         prov_record_tmp = read_prov_jsonld(get_path_prov(path))
-        if prov_record:
+        if prov_record_tmp:
             prov_record.entries.extend(prov_record_tmp.entries)
 
     return prov_record
@@ -87,11 +87,11 @@ def get_command(self, paths_inputs: List[Path]) -> ProvEntry:
         entity_curr = get_entity(path)
         new_entities.append(entity_curr)
 
-    new_activity = get_activity(self, new_agent["@id"], new_entities)
+    new_activity = get_activity(self, new_agent.id, new_entities)
 
     entry_curr = ProvEntry
     entry_curr.subject = new_agent
-    entry_curr.predicate = ProvAssociation
+    entry_curr.predicate = ProvAssociation()
     entry_curr.object = new_activity
 
     # TODO create several entries from this information
@@ -161,7 +161,7 @@ def get_activity(
     import sys
     from .prov_utils import get_activity_id
 
-    new_activity = ProvActivity
+    new_activity = ProvActivity()
 
     new_activity.attributes["parameters"] = self.parameters
     new_activity.attributes["label"] = self.fullname
@@ -206,11 +206,14 @@ def create_prov_file(prov_command, prov_path):
     return
 
 
-def validate_command(prov_context: dict, prov_command: dict) -> bool:
+def validate_command(
+    prov_context: ProvRecord, prov_command: List[Optional[ProvEntry]]
+) -> bool:
     """
     Check the command is valid on the data being run
     """
     flag = True
+    prov_subject = prov_command[0].subject
     new_activity_id = prov_command["Activity"][0]["@id"]
     new_agent_id = prov_command["Agent"][0]["@id"]
 

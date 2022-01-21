@@ -9,8 +9,18 @@ from abc import ABC, abstractmethod
 
 
 @define
+class ProvContext:
+    label: str
+    link: str
+
+
+@define
 class Identifier:
-    id: int
+    seed: int = field()
+    label: str = field(
+        default=None,
+        validator=attr.validators.optional(attr.validators.instance_of(str)),
+    )
 
 
 class ProvElement(ABC):
@@ -41,24 +51,42 @@ class ProvRelation(ABC):
 class ProvEntity(ProvElement):
     """Provenance Entity element"""
 
-    id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
-    attributes: dict
+    id: Identifier = field(
+        init=False, validator=[attr.validators.instance_of(Identifier)]
+    )
+    attributes: dict = field(default={})
+
+    def __attrs_post_init__(self):
+        self.id = Identifier(seed=0)
 
 
 @define
 class ProvActivity(ProvElement):
     """Provenance Activity element"""
 
-    id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
-    attributes: dict
+    id: Identifier = field(
+        init=False, validator=[attr.validators.instance_of(Identifier)]
+    )
+    attributes: dict = field(default={})
+
+    def __attrs_post_init__(self):
+        self.id = Identifier(seed=0)
 
 
 @define
 class ProvAgent(ProvElement):
     """Provenance Agent element"""
 
-    id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
-    attributes: dict
+    id: Identifier = field(
+        init=False, validator=[attr.validators.instance_of(Identifier)]
+    )
+    attributes: dict = field(
+        default={},
+        validator=attr.validators.optional(attr.validators.instance_of(dict)),
+    )
+
+    def __attrs_post_init__(self):
+        self.id = Identifier(seed=0)
 
 
 # Define PROV Relations
@@ -67,18 +95,23 @@ class ProvAgent(ProvElement):
 @define
 class ProvGeneration(ProvRelation):
     id: Identifier = field(
-        default=None,
+        init=False,
         validator=attr.validators.optional(attr.validators.instance_of(Identifier)),
     )
 
     src: ProvActivity = field(
-        default=None,
+        init=False,
         validator=attr.validators.optional(attr.validators.instance_of(ProvActivity)),
     )
     dest: ProvEntity = field(
-        default=None,
+        init=False,
         validator=attr.validators.optional(attr.validators.instance_of(ProvEntity)),
     )
+
+    def __attrs_post_init__(self):
+        self.id = Identifier(seed=0)
+        self.src = ProvActivity()
+        self.dest = ProvEntity()
 
     # entity: an identifier (e) for a created entity;
     # activity: an OPTIONAL identifier (a) for the activity that creates the entity;
@@ -113,5 +146,5 @@ class ProvRecord:
     A provenance document containting a PROV context and a list of entries
     """
 
-    context: dict
-    entries: List[ProvEntry]
+    context: dict = field(default={})
+    entries: List[ProvEntry] = field(default=[])

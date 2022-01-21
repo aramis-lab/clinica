@@ -10,8 +10,7 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> List[
         pipeline_fullname: the current running pipeline name
         dict_field: variable to specify if fetching inputs or outputs to the pipeline
 
-    return:
-        list of 'Path's to the files used in the pipeline
+    return list of 'Path's to the files used in the pipeline
     """
     from clinica.utils.inputs import clinica_file_reader
     import clinica.utils.input_files as cif
@@ -44,7 +43,7 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> List[
             raise_exception=False,
         )
         if current_file:
-            ret_files.extend(Path(current_file))
+            ret_files.extend([Path(x) for x in current_file])
 
     return ret_files
 
@@ -74,27 +73,27 @@ def is_activity_tracked(prov_context: dict, activity_id: str) -> bool:
 
 
 def get_entity_id(path_file: Path) -> str:
-    id = Identifier
-    id.id = path_file.with_suffix("").name
+    id = Identifier(seed=0)
+    id.label = path_file.with_suffix("").name
     return id
 
 
 def get_activity_id(pipeline_name: str) -> Identifier:
-    id = Identifier
-    id.id = "clin:" + pipeline_name
+    id = Identifier(seed=0)
+    id.label = "clin:" + pipeline_name
     return id
 
 
 def get_agent_id(agent_current: ProvAgent) -> Identifier:
-    id = Identifier
-    id.id = "clin:" + agent_current.attributes["label"]
+    id = Identifier(seed=0)
+    id.label = "clin:" + agent_current.attributes["label"]
     return id
 
 
 def get_last_activity(path_entity: Path) -> Optional[ProvActivity]:
 
     """
-    Return the last activity executed on the file
+    return the last activity executed on the file
     """
 
     prov_record = read_prov_jsonld(get_path_prov(path_entity))
@@ -120,15 +119,21 @@ def read_prov_jsonld(path_prov: Path) -> Optional[ProvRecord]:
     """
     return: ProvRecord in a specific location stored in jsonld format
     """
-    import json
 
-    prov_record = ProvRecord()
-
-    # TODO: check that the provenance file associations and uses exists
     if path_prov.exists():
         with open(path_prov, "r") as fp:
-            json_ld_data = json.load(fp)
-            prov_record.records = json_ld_data["records"]
+
+            prov_record = deserialize_jsonld(fp)
             return prov_record
 
     return None
+
+
+def deserialize_jsonld(fp_jsonld) -> List[ProvEntry]:
+    """
+    params:
+
+    return list of ProvEntry objects from jsonld dictionary data
+    """
+
+    return []
