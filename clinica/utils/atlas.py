@@ -106,9 +106,10 @@ class JHUDTI811mm(AtlasAbstract):
     def get_atlas_labels():
         import os
 
+        import nipype.interfaces.fsl as fsl
+
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
-        import nipype.interfaces.fsl as fsl
 
         fsl_dir = check_environment_variable("FSLDIR", "FSL")
         atlas_labels = os.path.join(

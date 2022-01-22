@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from pandas import DataFrame, Series
 
-
 PROTOCOL_TO_BIDS = {
     "3DFLAIR": {"datatype": "anat", "modality": "FLAIR"},
     "ADNI_1X-MPRAGE": {"datatype": "anat", "modality": "T1w"},
@@ -192,6 +191,7 @@ def write_bids(
 ):
     import fsspec
     from pandas import notna
+
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
     participants = (

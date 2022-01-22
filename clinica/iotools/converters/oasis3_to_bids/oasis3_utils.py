@@ -304,6 +304,7 @@ def write_bids(
     from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
+
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
     to = Path(to)

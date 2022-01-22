@@ -296,6 +296,7 @@ def convert_dicom(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
+
     from clinica.iotools.bids_utils import run_dcm2niix
 
     output_fmt = str(Path(bids_filename).name).replace(".nii.gz", "")
@@ -337,6 +338,7 @@ def write_bids(
     from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
+
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
     to = Path(to)

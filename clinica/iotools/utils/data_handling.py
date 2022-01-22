@@ -192,11 +192,11 @@ def create_merge_file(
     if caps_dir is not None:
         # Call the different pipelines
         from .pipeline_handling import (
-            pet_volume_pipeline,
-            t1_freesurfer_pipeline,
-            t1_freesurfer_longitudinal_pipeline,
-            t1_volume_pipeline,
             dwi_dti_pipeline,
+            pet_volume_pipeline,
+            t1_freesurfer_longitudinal_pipeline,
+            t1_freesurfer_pipeline,
+            t1_volume_pipeline,
         )
 
         pipeline_options = {
@@ -936,6 +936,7 @@ def check_relative_volume_location_in_world_coordinate_system(
     from os.path import abspath, basename
 
     import numpy as np
+
     from clinica.utils.stream import cprint
 
     center_coordinate_1 = [get_world_coordinate_of_center(file) for file in nifti_list1]
