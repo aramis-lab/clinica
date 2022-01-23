@@ -1,8 +1,9 @@
 PACKAGES=clinica test
+POETRY ?= poetry
 
 .PHONY: build
 build:
-	poetry build
+	@$(POETRY) build
 
 .PHONY: clean.doc
 clean.doc:
@@ -10,52 +11,52 @@ clean.doc:
 
 .PHONY: config.testpypi
 config.testpypi:
-	poetry config repositories.testpypi https://test.pypi.org/legacy
+	@$(POETRY) config repositories.testpypi https://test.pypi.org/legacy
 
 .PHONY: doc
 doc: clean.doc env.doc
-	poetry run mkdocs build
+	@$(POETRY) run mkdocs build
 
 .PHONY: env
 env: env.dev env.doc
 
 .PHONY: env.dev
 env.dev:
-	poetry install
+	@$(POETRY) install
 
 .PHONY: env.doc
 env.doc:
-	poetry install --extras docs
+	@$(POETRY) install --extras docs
 
 .PHONY: format
 format: format.black format.isort
 
 .PHONY: format.black
 format.black: env.dev
-	poetry run black --quiet $(PACKAGES)
+	@$(POETRY) run black --quiet $(PACKAGES)
 
 .PHONY: format.isort
 format.isort: env.dev
-	poetry run isort --quiet $(PACKAGES)
+	@$(POETRY) run isort --quiet $(PACKAGES)
 
 .PHONY: lint
 lint: lint.black lint.isort
 
 .PHONY: lint.black
 lint.black: env.dev
-	poetry run black --check --diff $(PACKAGES)
+	@$(POETRY) run black --check --diff $(PACKAGES)
 
 .PHONY: lint.isort
 lint.isort: env.dev
-	poetry run isort --check --diff $(PACKAGES)
+	@$(POETRY) run isort --check --diff $(PACKAGES)
 
 .PHONY: publish
 publish: publish.pypi
 
 .PHONY: publish.pypi
 publish.pypi: build
-	poetry publish
+	@$(POETRY) publish
 
 .PHONY: publish.testpypi
 publish.testpypi: build config.testpypi
-	poetry publish --repository testpypi
+	@$(POETRY) publish --repository testpypi
