@@ -1,4 +1,4 @@
-PACKAGES=clinica test
+PACKAGES := clinica test
 POETRY ?= poetry
 
 .PHONY: build
