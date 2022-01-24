@@ -118,10 +118,6 @@ def t1_freesurfer_longitudinal_pipeline(
     Returns:
          final_df: a DataFrame containing the information of the bids and the pipeline
     """
-
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-    )
     from clinica.utils.stream import cprint
     from pathlib import Path
 
@@ -136,6 +132,8 @@ def t1_freesurfer_longitudinal_pipeline(
     subjects_dir = Path(caps_dir) / "subjects"
 
     pipeline_df = pd.DataFrame()
+
+    metrics = ["volume", "thickness"]
 
     for participant_id, session_id in df.index.values:
 
@@ -159,30 +157,38 @@ def t1_freesurfer_longitudinal_pipeline(
         ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
         if mod_path.exists():
-            # Looking for atlases
-            atlas_paths = sorted(
-                (mod_path).glob(f"{participant_id}_{session_id}_*volume.tsv")
-            )
-            for atlas_path in atlas_paths:
-                if "-wm_volume" not in str(atlas_path) and "-ba_volume" not in str(
-                    atlas_path.stem
-                ):
-                    atlas_name = atlas_path.stem.split("_parcellation-")[1].split("_")[
-                        0
-                    ]
-                    if atlas_path.exists() and (
-                        not freesurfer_atlas_selection
-                        or (
-                            freesurfer_atlas_selection
-                            and atlas_name in freesurfer_atlas_selection
-                        )
+
+            for metric in metrics:
+
+                atlas_paths = sorted(
+                    (mod_path).glob(f"{participant_id}_{session_id}_*{metric}.tsv")
+                )
+
+                for atlas_path in atlas_paths:
+                    if "-wm_" not in str(atlas_path) and "-ba_" not in str(
+                        atlas_path.stem
                     ):
-                        atlas_df = pd.read_csv(atlas_path, sep="\t")
-                        label_list = [
-                            "t1-freesurfer-longitudinal_atlas-" + atlas_name + "_" + x
-                            for x in atlas_df.label_name.values
-                        ]
-                        ses_df[label_list] = atlas_df["label_value"].to_numpy()
+                        atlas_name = atlas_path.stem.split("_parcellation-")[1].split(
+                            "_"
+                        )[0]
+                        if atlas_path.exists() and (
+                            not freesurfer_atlas_selection
+                            or (
+                                freesurfer_atlas_selection
+                                and atlas_name in freesurfer_atlas_selection
+                            )
+                        ):
+                            atlas_df = pd.read_csv(atlas_path, sep="\t")
+                            label_list = [
+                                "t1-fs-long_"
+                                + metric
+                                + "_atlas-"
+                                + atlas_name
+                                + "_"
+                                + x
+                                for x in atlas_df.label_name.values
+                            ]
+                            ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
             # Always retrieve subcortical volumes
 
@@ -194,7 +200,7 @@ def t1_freesurfer_longitudinal_pipeline(
                 )
                 atlas_df = pd.read_csv(atlas_path, sep="\t")
                 label_list = [
-                    "t1-freesurfer-segmentationVolumes_" + x
+                    "t1-fs-long_segmentationVolumes_" + x
                     for x in atlas_df.label_name.values
                 ]
 
