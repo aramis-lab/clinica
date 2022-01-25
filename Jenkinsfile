@@ -32,7 +32,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${WORKSPACE}/env"
-                  poetry install
+                  make env
                   clinica --help
                   conda list
                 '''
@@ -178,7 +178,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${WORKSPACE}/env"
-                  poetry install
+                  make env
                   clinica --help
                   conda list
                 '''
@@ -303,8 +303,8 @@ pipeline {
               source "${CONDA_HOME}/etc/profile.d/conda.sh"
               conda create -p "${WORKSPACE}/env" python=3.8 poetry
               conda activate "${WORKSPACE}/env"
-              poetry install --extras docs
-              mkdocs build -d "${CHANGE_ID:-$BRANCH_NAME}"
+              make doc
+              mv site "${CHANGE_ID:-$BRANCH_NAME}"
               scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:~/clinica/docs/public/
             '''
           }
