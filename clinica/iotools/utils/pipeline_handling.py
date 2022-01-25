@@ -5,6 +5,7 @@ import os
 from glob import glob
 from os import path
 from typing import Tuple
+
 import pandas as pd
 
 
@@ -119,11 +120,12 @@ def t1_freesurfer_longitudinal_pipeline(
          final_df: a DataFrame containing the information of the bids and the pipeline
     """
 
+    from pathlib import Path
+
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,
     )
     from clinica.utils.stream import cprint
-    from pathlib import Path
 
     # Ensures that df is correctly indexed
     try:

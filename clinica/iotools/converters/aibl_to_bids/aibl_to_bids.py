@@ -26,7 +26,9 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
             if not exists(str(file)):
                 error_string = error_string + str(file) + "\n"
     if error_string != "":
-        cprint(msg=f"The following file were not converted: {error_string}", lvl="warning")
+        cprint(
+            msg=f"The following file were not converted: {error_string}", lvl="warning"
+        )
 
 
 def convert_clinical_data(bids_dir, path_to_csv):
