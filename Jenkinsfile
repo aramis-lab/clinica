@@ -13,6 +13,7 @@ pipeline {
             label 'ubuntu'
           }
           environment {
+            CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
           }
           stages {
@@ -21,8 +22,8 @@ pipeline {
                 sh 'echo "Agent name is ${NODE_NAME}"'
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda env create -f environment.yml -p "${WORKSPACE}/env"
-                  conda activate "${WORKSPACE}/env"
+                  make env.conda
+                  conda activate "${CONDA_ENV}"
                   conda info
                 '''
               }
@@ -31,7 +32,7 @@ pipeline {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${WORKSPACE}/env"
+                  conda activate "${CONDA_ENV}"
                   make env
                   clinica --help
                   conda list
@@ -47,7 +48,7 @@ pipeline {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${WORKSPACE}/env"
+                  conda activate "${CONDA_ENV}"
                   source /usr/local/Modules/init/profile.sh
                   module load clinica.all
                   cd test
@@ -81,7 +82,7 @@ pipeline {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${WORKSPACE}/env"
+                  conda activate "${CONDA_ENV}"
                   source /usr/local/Modules/init/profile.sh
                   module load clinica.all
                   cd test
@@ -119,7 +120,7 @@ pipeline {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${WORKSPACE}/env"
+                  conda activate "${CONDA_ENV}"
                   source /usr/local/Modules/init/profile.sh
                   module load clinica.all
                   cd test
@@ -159,6 +160,7 @@ pipeline {
             label 'macos'
           }
           environment {
+            CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
           }
           stages {
@@ -167,8 +169,8 @@ pipeline {
                 sh 'echo "Agent name is ${NODE_NAME}"'
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda env create -f environment.yml -p "${WORKSPACE}/env"
-                  conda activate "${WORKSPACE}/env"
+                  make env.conda
+                  conda activate "${CONDA_ENV}"
                   conda info
                 '''
               }
@@ -177,7 +179,7 @@ pipeline {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${WORKSPACE}/env"
+                  conda activate "${CONDA_ENV}"
                   make env
                   clinica --help
                   conda list
@@ -192,7 +194,7 @@ pipeline {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${WORKSPACE}/env"
+                  conda activate "${CONDA_ENV}"
                   source "${BREW_PREFIX}/opt/modules/init/bash"
                   module load clinica.all
                   cd test
@@ -223,7 +225,7 @@ pipeline {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${WORKSPACE}/env"
+                  conda activate "${CONDA_ENV}"
                   source "${BREW_PREFIX}/opt/modules/init/bash"
                   module load clinica.all
                   cd test
@@ -258,7 +260,7 @@ pipeline {
               steps {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${WORKSPACE}/env"
+                  conda activate "${CONDA_ENV}"
                   source "${BREW_PREFIX}/opt/modules/init/bash"
                   module load clinica.all
                   cd test
@@ -296,13 +298,14 @@ pipeline {
             label 'ubuntu'
           }
           environment {
+            CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
           }
           steps {
             sh '''
               source "${CONDA_HOME}/etc/profile.d/conda.sh"
-              conda create -p "${WORKSPACE}/env" python=3.8 poetry
-              conda activate "${WORKSPACE}/env"
+              make env.conda
+              conda activate "${CONDA_ENV}"
               make doc
               mv site "${CHANGE_ID:-$BRANCH_NAME}"
               scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:~/clinica/docs/public/
@@ -324,6 +327,7 @@ pipeline {
         buildingTag()
       }
       environment {
+        CONDA_ENV = "$WORKSPACE/env"
         CONDA_HOME = "$HOME/miniconda"
       }
       steps {
@@ -338,8 +342,8 @@ pipeline {
         ) {
           sh '''
             source "${CONDA_HOME}/etc/profile.d/conda.sh"
-            conda create -p "${WORKSPACE}/env" python=3.8 poetry
-            conda activate "${WORKSPACE}/env"
+            make env.conda
+            conda activate "${CONDA_ENV}"
             poetry publish --build -u "${USERNAME}" -p "${PASSWORD}"
           '''
         }
