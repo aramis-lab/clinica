@@ -7,7 +7,7 @@ build:
 
 .PHONY: clean.doc
 clean.doc:
-	$(RM) -rf site
+	@$(RM) -rf site
 
 .PHONY: config.testpypi
 config.testpypi:
