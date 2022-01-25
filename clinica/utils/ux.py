@@ -16,7 +16,9 @@ def print_images_to_process(list_participant_id, list_session_id):
         list_participant_id, list_session_id
     )
 
-    cprint(f"The pipeline will be run on the following {len(list_participant_id)} image(s):")
+    cprint(
+        f"The pipeline will be run on the following {len(list_participant_id)} image(s):"
+    )
     for i in range(0, min(len(unique_participants), LINES_TO_DISPLAY)):
         sessions_i_th_participant = ", ".join(
             s_id for s_id in sessions_per_participant[i]
@@ -89,18 +91,24 @@ def print_failed_images(cli_name, image_ids):
     )
 
     cprint(msg=f"The {cli_name} pipeline finished with errors.", lvl="error")
-    cprint(msg=f"CAPS outputs were not found for {len(image_ids)} image(s):", lvl="error")
+    cprint(
+        msg=f"CAPS outputs were not found for {len(image_ids)} image(s):", lvl="error"
+    )
     for i in range(0, min(len(unique_participants), LINES_TO_DISPLAY)):
         sessions_i_th_participant = ", ".join(
             s_id for s_id in sessions_per_participant[i]
         )
-        cprint(msg=f"{unique_participants[i]} | {sessions_i_th_participant}", lvl="error")
+        cprint(
+            msg=f"{unique_participants[i]} | {sessions_i_th_participant}", lvl="error"
+        )
 
     if len(unique_participants) > LINES_TO_DISPLAY:
         sessions_last_participant = ", ".join(
             s_id for s_id in sessions_per_participant[-1]
         )
-        cprint(msg=f"{unique_participants[-1]} | {sessions_last_participant}", lvl="error")
+        cprint(
+            msg=f"{unique_participants[-1]} | {sessions_last_participant}", lvl="error"
+        )
 
 
 def print_crash_files_and_exit(log_file, working_directory):

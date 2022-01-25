@@ -52,7 +52,9 @@ def read_part_sess_long_ids_from_tsv(tsv_file):
 
     def check_key_in_data_frame(file, data_frame, key):
         if key not in list(data_frame.columns.values):
-            raise ClinicaException(f"The TSV file does not contain {key} column (path: {file})")
+            raise ClinicaException(
+                f"The TSV file does not contain {key} column (path: {file})"
+            )
 
     check_key_in_data_frame(tsv_file, df, "participant_id")
     check_key_in_data_frame(tsv_file, df, "session_id")

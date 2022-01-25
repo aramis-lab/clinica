@@ -56,7 +56,9 @@ def extract_bids_identifier_from_caps_filename(caps_dwi_filename: str) -> str:
     m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi", caps_dwi_filename)
 
     if not m:
-        raise ValueError(f"Input filename {caps_dwi_filename} is not in a CAPS compliant format.")
+        raise ValueError(
+            f"Input filename {caps_dwi_filename} is not in a CAPS compliant format."
+        )
     bids_identifier = m.group(0)
 
     return bids_identifier
@@ -71,7 +73,9 @@ def get_caps_filenames(caps_dwi_filename: str):
         caps_dwi_filename,
     )
     if not m:
-        raise ValueError(f"Input filename {caps_dwi_filename} is not in a CAPS compliant format.")
+        raise ValueError(
+            f"Input filename {caps_dwi_filename} is not in a CAPS compliant format."
+        )
 
     caps_prefix = m.group(0)
     bids_source = f"{m.group(1)}_{m.group(2)}_dwi"

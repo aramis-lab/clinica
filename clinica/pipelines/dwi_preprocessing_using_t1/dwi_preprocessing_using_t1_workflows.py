@@ -3,6 +3,7 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     from nipype.interfaces.fsl.epi import Eddy
+
     from clinica.utils.dwi import generate_acq_file, generate_index_file
 
     inputnode = pe.Node(
@@ -105,8 +106,12 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     import nipype.pipeline.engine as pe
 
     from .dwi_preprocessing_using_t1_utils import (
-        ants_combine_transform, change_itk_transform_type,
-        create_jacobian_determinant_image, expend_matrix_list, rotate_bvecs)
+        ants_combine_transform,
+        change_itk_transform_type,
+        create_jacobian_determinant_image,
+        expend_matrix_list,
+        rotate_bvecs,
+    )
 
     inputnode = pe.Node(
         niu.IdentityInterface(fields=["T1", "DWI", "bvec"]), name="inputnode"
@@ -273,8 +278,9 @@ def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
     """
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
-    from clinica.utils.dwi import merge_volumes_tdim
     from nipype.interfaces import fsl
+
+    from clinica.utils.dwi import merge_volumes_tdim
 
     inputnode = pe.Node(niu.IdentityInterface(fields=["in_file"]), name="inputnode")
     fslroi_ref = pe.Node(fsl.ExtractROI(args="0 1"), name="b0_reference")

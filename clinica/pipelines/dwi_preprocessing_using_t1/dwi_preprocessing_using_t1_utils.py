@@ -88,7 +88,6 @@ def change_itk_transform_type(input_affine_file):
             else:
                 new_file_lines.append(line)
 
-
     updated_affine_file = os.path.join(os.getcwd(), "updated_affine.txt")
 
     with open(updated_affine_file, "wt") as f:
