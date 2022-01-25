@@ -18,7 +18,7 @@ doc: clean.doc env.doc
 	@$(POETRY) run mkdocs build
 
 .PHONY: env
-env: env.dev env.doc
+env: env.dev
 
 .PHONY: env.dev
 env.dev:
