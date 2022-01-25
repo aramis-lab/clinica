@@ -1,5 +1,7 @@
 PACKAGES := clinica test
 POETRY ?= poetry
+CONDA ?= conda
+CONDA_ENV ?= "./env"
 
 .PHONY: build
 build:
@@ -19,6 +21,10 @@ doc: clean.doc env.doc
 
 .PHONY: env
 env: env.dev
+
+.PHONY: env.conda
+env.conda:
+	@$(CONDA) env create -p $(CONDA_ENV)
 
 .PHONY: env.dev
 env.dev:
