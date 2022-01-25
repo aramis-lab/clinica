@@ -64,6 +64,8 @@ def dwi_dti_pipeline(
 
     pipeline_df = pd.DataFrame()
 
+    metrics = ["FA", "MD", "RD", "AD"]
+
     for participant_id, session_id in df.index.values:
 
         ses_path = subjects_dir / participant_id / session_id
@@ -76,25 +78,31 @@ def dwi_dti_pipeline(
 
         if mod_path.exists():
 
-            # Looking for atlases
-            atlas_paths = sorted(
-                (mod_path).glob(f"{participant_id}_{session_id}_*FA_statistics.tsv")
-            )
-            for atlas_path in atlas_paths:
+            for metric in metrics:
 
-                atlas_name = atlas_path.stem.split("_dwi_space-")[1].split("_")[0]
-                if atlas_path.exists() and (
-                    not (
-                        dti_atlas_selection
-                        or (dti_atlas_selection and atlas_name in dti_atlas_selection)
+                atlas_paths = sorted(
+                    (mod_path).glob(
+                        f"{participant_id}_{session_id}_*{metric}_statistics.tsv"
                     )
-                ):
-                    atlas_df = pd.read_csv(atlas_path, sep="\t")
-                    label_list = [
-                        "dwi-dti_atlas-" + atlas_name + "_" + x
-                        for x in atlas_df.label_name.values
-                    ]
-                    ses_df[label_list] = atlas_df["mean_scalar"].to_numpy()
+                )
+                for atlas_path in atlas_paths:
+
+                    atlas_name = atlas_path.stem.split("_dwi_space-")[1].split("_")[0]
+                    if atlas_path.exists() and (
+                        not (
+                            dti_atlas_selection
+                            or (
+                                dti_atlas_selection
+                                and atlas_name in dti_atlas_selection
+                            )
+                        )
+                    ):
+                        atlas_df = pd.read_csv(atlas_path, sep="\t")
+                        label_list = [
+                            "dwi-dti_" + metric + "_atlas-" + atlas_name + "_" + x
+                            for x in atlas_df.label_name.values
+                        ]
+                        ses_df[label_list] = atlas_df["mean_scalar"].to_numpy()
 
         pipeline_df = pipeline_df.append(ses_df)
 
