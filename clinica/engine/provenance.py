@@ -20,11 +20,11 @@ def provenance(func):
             self, pipeline_fullname, dict_field="input_to"
         )
 
-        record_history = get_history(paths_files=paths_input_files)
-        entries_current = get_command(self, paths_input_files)
+        prov_record = get_prov_record(paths_files=paths_input_files)
+        prov_entry = get_pipeline_entry(self, paths_input_files)
 
-        if validate_command(record_history, entries_current):
-            # ret = func(self)
+        if validate_command(prov_record, prov_entry):
+            ret = func(self)
             print("The pipeline succesfully executed.")
         else:
             raise Exception(
@@ -33,7 +33,7 @@ def provenance(func):
         paths_out_files = get_files_list(
             self, pipeline_fullname, dict_field="output_from"
         )
-        register_prov(entries_current, paths_out_files)
+        register_prov(prov_entry, paths_out_files)
 
         return ret
 
@@ -50,7 +50,7 @@ def register_prov(entries_current: List[ProvEntry], out_files: Path) -> None:
     return True
 
 
-def get_history(paths_files: List[Path]) -> ProvRecord:
+def get_prov_record(paths_files: List[Path]) -> ProvRecord:
     """
     return:
         a ProvRecord for the associated files in path_files
@@ -68,7 +68,7 @@ def get_history(paths_files: List[Path]) -> ProvRecord:
     return prov_record
 
 
-def get_command(self, paths_inputs: List[Path]) -> ProvEntry:
+def get_pipeline_entry(self, paths_inputs: List[Path]) -> ProvEntry:
     """
     params:
         paths_inputs: list of input entries paths
@@ -93,8 +93,6 @@ def get_command(self, paths_inputs: List[Path]) -> ProvEntry:
     entry_curr.subject = new_agent
     entry_curr.predicate = ProvAssociation()
     entry_curr.object = new_activity
-
-    # TODO create several entries from this information
 
     entries_command.append(entry_curr)
 
