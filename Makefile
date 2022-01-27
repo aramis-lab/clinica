@@ -1,5 +1,7 @@
 PACKAGES := clinica test
 POETRY ?= poetry
+CONDA ?= conda
+CONDA_ENV ?= "./env"
 
 .PHONY: build
 build:
@@ -7,7 +9,7 @@ build:
 
 .PHONY: clean.doc
 clean.doc:
-	$(RM) -rf site
+	@$(RM) -rf site
 
 .PHONY: config.testpypi
 config.testpypi:
@@ -18,7 +20,11 @@ doc: clean.doc env.doc
 	@$(POETRY) run mkdocs build
 
 .PHONY: env
-env: env.dev env.doc
+env: env.dev
+
+.PHONY: env.conda
+env.conda:
+	@$(CONDA) env create -p $(CONDA_ENV)
 
 .PHONY: env.dev
 env.dev:
