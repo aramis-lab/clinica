@@ -91,8 +91,6 @@ Now that you have created the Clinica environment, you can activate it:
 
 ```{.sourceCode .bash}
 conda activate clinicaEnv
-activate-global-python-argcomplete --user # Only the first time you activate the environment
-eval "$(register-python-argcomplete clinica)"
 ```
 
 !!! success
