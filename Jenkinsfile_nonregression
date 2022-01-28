@@ -292,7 +292,7 @@ pipeline {
             //     }
             //   }
             // }
-            stage('Stats:nonreg') {
+            /* stage('Stats:nonreg') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/Stats"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -326,7 +326,7 @@ pipeline {
                   sh 'rm -rf ${WORK_DIR}/*'
                 }
               }
-            }
+            } */
             stage('ML:nonreg') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/ML"
