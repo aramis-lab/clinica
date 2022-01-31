@@ -73,20 +73,17 @@ def is_activity_tracked(prov_context: dict, activity_id: str) -> bool:
 
 
 def get_entity_id(path_file: Path) -> str:
-    id = Identifier(seed=0)
-    id.label = path_file.with_suffix("").name
+    id = Identifier(label=path_file.with_suffix("").name)
     return id
 
 
 def get_activity_id(pipeline_name: str) -> Identifier:
-    id = Identifier(seed=0)
-    id.label = "clin:" + pipeline_name
+    id = Identifier(label="clin:" + pipeline_name)
     return id
 
 
-def get_agent_id(agent_current: ProvAgent) -> Identifier:
-    id = Identifier(seed=0)
-    id.label = "clin:" + agent_current.attributes["label"]
+def get_agent_id() -> Identifier:
+    id = Identifier(label="RRID:Clinica")
     return id
 
 
@@ -121,19 +118,60 @@ def read_prov_jsonld(path_prov: Path) -> Optional[ProvRecord]:
     """
 
     if path_prov.exists():
-        with open(path_prov, "r") as fp:
-
-            prov_record = deserialize_jsonld(fp)
-            return prov_record
+        elements, prov_record = deserialize_jsonld(path_prov)
+        return prov_record
 
     return None
 
 
-def deserialize_jsonld(fp_jsonld) -> List[ProvEntry]:
+def deserialize_jsonld(path_prov) -> ProvRecord:
     """
     params:
 
     return list of ProvEntry objects from jsonld dictionary data
     """
 
-    return []
+    import rdflib
+
+    g = rdflib.Graph(identifier="prov_graph_records")
+    g.parse(path_prov, format="json-ld")
+
+    elements = {}
+    entries = []
+
+    # fetch context:
+    context = ProvContext([])
+    for lbl, link in g.namespace_manager.namespaces():
+        namespace = Namespace(lbl, link.n3())
+        context._namespaces.append(namespace)
+
+    for s, p, o in g:
+
+        if str(p) == "http://www.w3.org/ns/prov#Activity":
+            id = Identifier(label=g.namespace_manager.qname(o))
+            elements[id.label] = ProvActivity(id)
+
+        elif str(p) == "http://www.w3.org/ns/prov#Agent":
+            id = Identifier(label=g.namespace_manager.qname(o))
+            elements[id.label] = ProvAgent(id)
+
+        elif str(p) == "http://www.w3.org/ns/prov#Entity":
+            id = Identifier(label=g.namespace_manager.qname(o))
+            elements[id.label] = ProvEntity(id)
+
+    for s, p, o in g:
+        if type(s) != rdflib.term.BNode:
+            attr = g.namespace_manager.qname(p).split(":")[1]
+
+            subj = elements[g.namespace_manager.qname(s)]
+            subj.attributes[attr] = str(o)
+
+            curr_entry = ProvEntry(
+                subject=g.namespace_manager.qname(s), predicate=attr, object=o
+            )
+
+            entries.append(curr_entry)
+
+    prov_rec = ProvRecord(context=context, entries=entries)
+
+    return elements, prov_rec

@@ -40,7 +40,7 @@ def provenance(func):
     return run_wrapper
 
 
-def register_prov(entries_current: List[ProvEntry], out_files: Path) -> None:
+def register_prov(entries_current: ProvRecord, out_files: Path) -> None:
 
     # TODO: iterate over out_files and create a provenance file for each
 
@@ -87,16 +87,14 @@ def get_pipeline_entry(self, paths_inputs: List[Path]) -> ProvEntry:
         entity_curr = get_entity(path)
         new_entities.append(entity_curr)
 
-    new_activity = get_activity(self, new_agent.id, new_entities)
+    new_activity = get_activity(self, new_agent, new_entities)
 
     entry_curr = ProvEntry
     entry_curr.subject = new_agent
     entry_curr.predicate = ProvAssociation()
     entry_curr.object = new_activity
 
-    entries_command.append(entry_curr)
-
-    return entries_command
+    return entry_curr
 
 
 def write_prov_file(
@@ -140,18 +138,15 @@ def get_agent() -> ProvAgent:
     import clinica
     from .prov_utils import get_agent_id
 
-    new_agent = ProvAgent()
+    new_agent = ProvAgent(id=get_agent_id())
 
     new_agent.attributes["version"] = clinica.__version__
     new_agent.attributes["label"] = clinica.__name__
-    new_agent.id = get_agent_id(new_agent)
 
     return new_agent
 
 
-def get_activity(
-    self, agent_id: Identifier, entities: List[ProvEntity]
-) -> ProvActivity:
+def get_activity(self, agent: Identifier, entities: List[ProvEntity]) -> ProvActivity:
     """
     return
         ProvActivity from related entities and associated agent
@@ -159,16 +154,13 @@ def get_activity(
     import sys
     from .prov_utils import get_activity_id
 
-    new_activity = ProvActivity()
+    new_activity = ProvActivity(id=get_activity_id(self.fullname))
 
     new_activity.attributes["parameters"] = self.parameters
     new_activity.attributes["label"] = self.fullname
-    new_activity.id = get_activity_id(self.fullname)
     new_activity.attributes["command"] = (sys.argv[1:],)
-
-    # TODO include related agent and entity to the activity
-    # activity_agent = agent_id
-    # activity_used_files = [e["@id"] for e in entities]
+    new_activity.attributes["used"] = [x.id for x in entities]
+    new_activity.attributes["wasAssociatedWith"] = agent.id
 
     return new_activity
 
@@ -180,9 +172,7 @@ def get_entity(path_curr: Path) -> ProvEntity:
 
     from clinica.engine.prov_utils import get_entity_id
 
-    new_entity = ProvEntity()
-
-    new_entity.id = get_entity_id(path_curr)
+    new_entity = ProvEntity(id=get_entity_id(path_curr))
     new_entity.attributes["label"] = path_curr.name
     new_entity.attributes["path"] = path_curr
 
@@ -204,29 +194,16 @@ def create_prov_file(prov_command, prov_path):
     return
 
 
-def validate_command(
-    prov_context: ProvRecord, prov_command: List[Optional[ProvEntry]]
-) -> bool:
+def validate_command(prov_record: ProvRecord, prov_entry: ProvEntry) -> bool:
     """
     Check the command is valid on the data being run
     """
     flag = True
-    prov_subject = prov_command[0].subject
-    new_activity_id = prov_command["Activity"][0]["@id"]
-    new_agent_id = prov_command["Agent"][0]["@id"]
 
-    for entity in prov_context["Entity"]:
-        old_activity_id = entity["wasGeneratedBy"]
-        if old_activity_id:
-            ptr_activity = next(
-                item
-                for item in prov_context["Activity"]
-                if item["@id"] == old_activity_id
-            )
-            old_agent_id = ptr_activity["wasAssociatedWith"]
-            flag and is_valid(
-                {(old_agent_id, old_activity_id): (new_agent_id, new_activity_id)}
-            )
+    for entry in prov_record.entries:
+        # TODO: check that the record entries are compatible with the current entry
+        flag = True
+
     return flag
 
 
