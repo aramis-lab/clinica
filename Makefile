@@ -3,6 +3,12 @@ POETRY ?= poetry
 CONDA ?= conda
 CONDA_ENV ?= "./env"
 
+.PHONY: help
+help: Makefile
+	@echo "Commands:"
+	@sed -n 's/^##//p' $<
+
+## build			: Build the package.
 .PHONY: build
 build:
 	@$(POETRY) build
@@ -15,10 +21,12 @@ clean.doc:
 config.testpypi:
 	@$(POETRY) config repositories.testpypi https://test.pypi.org/legacy
 
+## doc			: Build the documentation.
 .PHONY: doc
 doc: clean.doc env.doc
 	@$(POETRY) run mkdocs build
 
+## env			: Bootstap an environment.
 .PHONY: env
 env: env.dev
 
@@ -34,6 +42,7 @@ env.dev:
 env.doc:
 	@$(POETRY) install --extras docs
 
+## format			: Format the codebase.
 .PHONY: format
 format: format.black format.isort
 
@@ -45,6 +54,7 @@ format.black: env.dev
 format.isort: env.dev
 	@$(POETRY) run isort --quiet $(PACKAGES)
 
+## lint			: Lint the codebase.
 .PHONY: lint
 lint: lint.black lint.isort
 
@@ -56,6 +66,7 @@ lint.black: env.dev
 lint.isort: env.dev
 	@$(POETRY) run isort --check --diff $(PACKAGES)
 
+## publish		: Publish the package to pypi.
 .PHONY: publish
 publish: publish.pypi
 
