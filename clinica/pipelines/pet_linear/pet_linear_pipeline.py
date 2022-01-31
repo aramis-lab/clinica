@@ -141,7 +141,7 @@ class PETLinear(cpe.Pipeline):
         # Inputs from t1-linear pipeline
         # Transformation files from T1w files to MNI:
         try:
-            t1w_to_mni_transformation_files = clinica_file_reader(
+            t1w_to_mni_transformation_files, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.caps_directory, T1W_TO_MNI_TRANSFORM
             )
         except ClinicaException as e:
