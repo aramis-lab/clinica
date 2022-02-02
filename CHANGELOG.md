@@ -6,6 +6,12 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.5.5
+
+### Fixed
+   [`pet-linear`] fix bug in `pet-linear`which had the pipeline not terminate 
+
+
 ## Clinica 0.5.4
 
 ### Added
