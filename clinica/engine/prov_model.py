@@ -1,8 +1,11 @@
+from xml.dom.minidom import Element
 from attr import define, field
 import attr
-import typing
+import cattr
 from typing import Union, List
 from abc import ABC, abstractmethod
+
+from matplotlib.style import context
 
 
 #  Define PROV abstract concepts
@@ -38,6 +41,10 @@ class ProvElement(ABC):
     def attributes(cls):
         """attributes are optional"""
         return NotImplementedError
+
+    @classmethod
+    def get_type(cls):
+        return type(cls).__name__
 
 
 class ProvRelation(ABC):
@@ -135,4 +142,22 @@ class ProvRecord:
     """
 
     context: ProvContext = field()
-    entries: List[ProvEntry] = field(default=[])
+    elements: List[ProvElement] = field(default=[])
+
+    def __getitem__(self, idx):
+        for element in self.elements:
+            if element.id == idx:
+                return element
+
+    def to_json(self):
+        json_dict = {}
+        json_dict["prov:Agent"] = [
+            cattr.unstructure(x) for x in self.elements if isinstance(x, ProvAgent)
+        ]
+        json_dict["prov:Activity"] = [
+            cattr.unstructure(x) for x in self.elements if isinstance(x, ProvActivity)
+        ]
+        json_dict["prov:Entity"] = [
+            cattr.unstructure(x) for x in self.elements if isinstance(x, ProvEntity)
+        ]
+        return json_dict

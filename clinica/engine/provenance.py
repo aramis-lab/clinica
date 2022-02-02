@@ -4,6 +4,8 @@ from os import read
 from pathlib import Path
 from typing import Optional, List
 
+from torch import ne
+
 from clinica.engine.prov_utils import read_prov_jsonld
 
 from .prov_model import *
@@ -21,10 +23,10 @@ def provenance(func):
         )
 
         prov_record = get_prov_record(paths_files=paths_input_files)
-        prov_entry = get_pipeline_entry(self, paths_input_files)
+        prov_entry = get_pipeline_record(self, paths_input_files)
 
         if validate_command(prov_record, prov_entry):
-            ret = func(self)
+            # ret = func(self)
             print("The pipeline succesfully executed.")
         else:
             raise Exception(
@@ -63,38 +65,35 @@ def get_prov_record(paths_files: List[Path]) -> ProvRecord:
     for path in paths_files:
         prov_record_tmp = read_prov_jsonld(get_path_prov(path))
         if prov_record_tmp:
-            prov_record.entries.extend(prov_record_tmp.entries)
+            # TODO extend context as well
+            prov_record.elements.extend(prov_record_tmp.elements)
 
     return prov_record
 
 
-def get_pipeline_entry(self, paths_inputs: List[Path]) -> ProvEntry:
+def get_pipeline_record(self, paths_inputs: List[Path]) -> ProvRecord:
     """
     params:
         paths_inputs: list of input entries paths
     return:
-        ProvEntry associated with the launched pipeline
+        ProvRecord associated with the launched pipeline
     """
     import sys
 
-    entries_command = []
-
+    elements = []
     new_agent = get_agent()
-
+    elements.append(new_agent)
     new_entities = []
 
     for path in paths_inputs:
         entity_curr = get_entity(path)
         new_entities.append(entity_curr)
+    elements.extend(new_entities)
 
     new_activity = get_activity(self, new_agent, new_entities)
+    elements.append(new_activity)
 
-    entry_curr = ProvEntry
-    entry_curr.subject = new_agent
-    entry_curr.predicate = ProvAssociation()
-    entry_curr.object = new_activity
-
-    return entry_curr
+    return ProvRecord(context={}, elements=elements)
 
 
 def write_prov_file(
@@ -200,7 +199,7 @@ def validate_command(prov_record: ProvRecord, prov_entry: ProvEntry) -> bool:
     """
     flag = True
 
-    for entry in prov_record.entries:
+    for el in prov_record.elements:
         # TODO: check that the record entries are compatible with the current entry
         flag = True
 

@@ -118,7 +118,7 @@ def read_prov_jsonld(path_prov: Path) -> Optional[ProvRecord]:
     """
 
     if path_prov.exists():
-        elements, prov_record = deserialize_jsonld(path_prov)
+        prov_record = deserialize_jsonld(path_prov)
         return prov_record
 
     return None
@@ -137,7 +137,6 @@ def deserialize_jsonld(path_prov) -> ProvRecord:
     g.parse(path_prov, format="json-ld")
 
     elements = {}
-    entries = []
 
     # fetch context:
     context = ProvContext([])
@@ -166,12 +165,12 @@ def deserialize_jsonld(path_prov) -> ProvRecord:
             subj = elements[g.namespace_manager.qname(s)]
             subj.attributes[attr] = str(o)
 
-            curr_entry = ProvEntry(
-                subject=g.namespace_manager.qname(s), predicate=attr, object=o
-            )
+            # curr_entry = ProvEntry(
+            #    subject=g.namespace_manager.qname(s), predicate=attr, object=o
+            # )
 
-            entries.append(curr_entry)
+            # entries.append(curr_entry)
 
-    prov_rec = ProvRecord(context=context, entries=entries)
+    prov_rec = ProvRecord(context=context, elements=list(elements.values()))
 
-    return elements, prov_rec
+    return prov_rec
