@@ -62,7 +62,7 @@ class ProvEntity(ProvElement):
     """Provenance Entity element"""
 
     id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
-    attributes: dict = field(default={})
+    attributes: dict = field(default=attr.Factory(dict))
 
 
 @define
@@ -70,7 +70,7 @@ class ProvActivity(ProvElement):
     """Provenance Activity element"""
 
     id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
-    attributes: dict = field(default={})
+    attributes: dict = field(default=attr.Factory(dict))
 
 
 @define
@@ -79,7 +79,7 @@ class ProvAgent(ProvElement):
 
     id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
     attributes: dict = field(
-        default={},
+        default=attr.Factory(dict),
         validator=attr.validators.optional(attr.validators.instance_of(dict)),
     )
 
@@ -149,7 +149,7 @@ class ProvRecord:
             if element.id == idx:
                 return element
 
-    def to_json(self):
+    def json(self):
         json_dict = {}
         json_dict["prov:Agent"] = [
             cattr.unstructure(x) for x in self.elements if isinstance(x, ProvAgent)

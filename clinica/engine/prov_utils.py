@@ -48,41 +48,17 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> List[
     return ret_files
 
 
-def is_entity_tracked(prov_context: dict, entity_id: str) -> bool:
-    flag_exists = next(
-        (True for item in prov_context["Entity"] if item["@id"] == entity_id),
-        False,
-    )
-    return flag_exists
-
-
-def is_agent_tracked(prov_context: dict, agent_id: str) -> bool:
-    flag_exists = next(
-        (True for item in prov_context["Agent"] if item["@id"] == agent_id),
-        False,
-    )
-    return flag_exists
-
-
-def is_activity_tracked(prov_context: dict, activity_id: str) -> bool:
-    flag_exists = next(
-        (True for item in prov_context["Activity"] if item["@id"] == activity_id),
-        False,
-    )
-    return flag_exists
-
-
-def get_entity_id(path_file: Path) -> str:
+def generate_entity_id(path_file: Path) -> Identifier:
     id = Identifier(label=path_file.with_suffix("").name)
     return id
 
 
-def get_activity_id(pipeline_name: str) -> Identifier:
+def generate_activity_id(pipeline_name: str) -> Identifier:
     id = Identifier(label="clin:" + pipeline_name)
     return id
 
 
-def get_agent_id() -> Identifier:
+def generate_agent_id() -> Identifier:
     id = Identifier(label="RRID:Clinica")
     return id
 
@@ -94,9 +70,12 @@ def get_last_activity(path_entity: Path) -> Optional[ProvActivity]:
     """
 
     prov_record = read_prov_jsonld(get_path_prov(path_entity))
-    if prov_record and prov_record.entries:
-        last_activity = prov_record.entries[-1]["@id"]
-        return last_activity
+    if prov_record and prov_record.elements:
+        # TODO: filter activities by date
+        last_activity = [
+            x for x in prov_record.elements if isinstance(x, ProvActivity)
+        ][-1]
+        return last_activity.id.label
     return None
 
 
@@ -110,6 +89,17 @@ def get_path_prov(path_entity: Path) -> Path:
 
     path_prov = path_entity.with_suffix(".jsonld")
     return path_prov
+
+
+def create_prov_file(prov_command, prov_path):
+    """
+    Create new provenance file based on command
+    """
+    import json
+
+    with open(prov_path, "w") as fp:
+        json.dump(prov_command.json(), fp, indent=4)
+    return
 
 
 def read_prov_jsonld(path_prov: Path) -> Optional[ProvRecord]:
@@ -128,7 +118,7 @@ def deserialize_jsonld(path_prov) -> ProvRecord:
     """
     params:
 
-    return list of ProvEntry objects from jsonld dictionary data
+    return ProvRecord object from jsonld dictionary data
     """
 
     import rdflib
@@ -164,12 +154,6 @@ def deserialize_jsonld(path_prov) -> ProvRecord:
 
             subj = elements[g.namespace_manager.qname(s)]
             subj.attributes[attr] = str(o)
-
-            # curr_entry = ProvEntry(
-            #    subject=g.namespace_manager.qname(s), predicate=attr, object=o
-            # )
-
-            # entries.append(curr_entry)
 
     prov_rec = ProvRecord(context=context, elements=list(elements.values()))
 

@@ -2,11 +2,9 @@ import functools
 from os import read
 
 from pathlib import Path
-from typing import Optional, List
+from typing import List
 
-from torch import ne
-
-from clinica.engine.prov_utils import read_prov_jsonld
+from clinica.engine.prov_utils import create_prov_file
 
 from .prov_model import *
 
@@ -22,10 +20,10 @@ def provenance(func):
             self, pipeline_fullname, dict_field="input_to"
         )
 
-        prov_record = get_prov_record(paths_files=paths_input_files)
-        prov_entry = get_pipeline_record(self, paths_input_files)
+        prov_history = get_history_record(paths_files=paths_input_files)
+        prov_current = get_pipeline_record(self, paths_input_files)
 
-        if validate_command(prov_record, prov_entry):
+        if validate_command(prov_history, prov_current):
             # ret = func(self)
             print("The pipeline succesfully executed.")
         else:
@@ -35,7 +33,7 @@ def provenance(func):
         paths_out_files = get_files_list(
             self, pipeline_fullname, dict_field="output_from"
         )
-        register_prov(prov_entry, paths_out_files)
+        register_prov(prov_current, paths_out_files)
 
         return ret
 
@@ -52,7 +50,7 @@ def register_prov(entries_current: ProvRecord, out_files: Path) -> None:
     return True
 
 
-def get_prov_record(paths_files: List[Path]) -> ProvRecord:
+def get_history_record(paths_files: List[Path]) -> ProvRecord:
     """
     return:
         a ProvRecord for the associated files in path_files
@@ -97,10 +95,10 @@ def get_pipeline_record(self, paths_inputs: List[Path]) -> ProvRecord:
 
 
 def write_prov_file(
-    list_prov_entries: list, path_entity: Path, overwrite=False
+    list_prov_entries: ProvRecord, path_entity: Path, overwrite=False
 ) -> None:
     """
-    Append the current provenance info to the prov file. If it does not exist, create new
+    Create provenance file with current pipeline information
 
     params:
     prov_entries: list of ProvEntry
@@ -111,13 +109,8 @@ def write_prov_file(
 
     prov_path = get_path_prov(path_entity)
 
-    if prov_path.exists():
-        # append the pipeline provenance information to the old provenance file
-        prov_record = read_prov_jsonld(prov_path)
-        prov_record.extend(list_prov_entries)
-    else:
-        create_prov_file(list_prov_entries, prov_path)
-        # create new provenance file with pipeline information
+    create_prov_file(list_prov_entries, prov_path)
+
     return
 
 
@@ -135,9 +128,9 @@ def extend_prov(prov_main: dict, prov_new: dict) -> dict:
 
 def get_agent() -> ProvAgent:
     import clinica
-    from .prov_utils import get_agent_id
+    from .prov_utils import generate_agent_id
 
-    new_agent = ProvAgent(id=get_agent_id())
+    new_agent = ProvAgent(id=generate_agent_id())
 
     new_agent.attributes["version"] = clinica.__version__
     new_agent.attributes["label"] = clinica.__name__
@@ -151,9 +144,9 @@ def get_activity(self, agent: Identifier, entities: List[ProvEntity]) -> ProvAct
         ProvActivity from related entities and associated agent
     """
     import sys
-    from .prov_utils import get_activity_id
+    from .prov_utils import generate_activity_id
 
-    new_activity = ProvActivity(id=get_activity_id(self.fullname))
+    new_activity = ProvActivity(id=generate_activity_id(self.fullname))
 
     new_activity.attributes["parameters"] = self.parameters
     new_activity.attributes["label"] = self.fullname
@@ -169,40 +162,28 @@ def get_entity(path_curr: Path) -> ProvEntity:
     return an Entity object from the file in path_curr
     """
 
-    from clinica.engine.prov_utils import get_entity_id
+    from clinica.engine.prov_utils import generate_entity_id, get_last_activity
 
-    new_entity = ProvEntity(id=get_entity_id(path_curr))
+    new_entity = ProvEntity(id=generate_entity_id(path_curr))
     new_entity.attributes["label"] = path_curr.name
-    new_entity.attributes["path"] = path_curr
+    new_entity.attributes["path"] = str(path_curr)
 
     # TODO: implement function to return the latest associated activity
-    # new_entity.attributes["wasGeneratedBy"] = get_last_activity(path_curr)
+    new_entity.attributes["wasGeneratedBy"] = get_last_activity(path_curr)
 
     return new_entity
 
 
-def create_prov_file(prov_command, prov_path):
-    """
-    Create new provenance file based on command
-    """
-    import json
-
-    with open(prov_path, "w") as fp:
-        json.dump(prov_command, fp, indent=4)
-
-    return
-
-
-def validate_command(prov_record: ProvRecord, prov_entry: ProvEntry) -> bool:
+def validate_command(prov_history: ProvRecord, prov_current: ProvRecord) -> bool:
     """
     Check the command is valid on the data being run
     """
     flag = True
 
-    for el in prov_record.elements:
-        # TODO: check that the record entries are compatible with the current entry
-        flag = True
-
+    for a in prov_history.elements:
+        for b in prov_current.elements:
+            # TODO: check that the record entries are compatible with the current entry
+            flag = True
     return flag
 
 
