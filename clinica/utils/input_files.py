@@ -437,10 +437,6 @@ def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
             f"*_acq-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz",
         ),
         "description": "",
-<<<<<<< HEAD
-        "needed_pipeline": "pet-linear",
-=======
         "output_from": "pet-linear",
->>>>>>> de9d4d8b (Init traceability feature)
     }
     return information
