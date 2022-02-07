@@ -75,7 +75,7 @@ def get_last_activity(path_entity: Path) -> Optional[ProvActivity]:
         last_activity = [
             x for x in prov_record.elements if isinstance(x, ProvActivity)
         ][-1]
-        return last_activity.id.label
+        return str(last_activity.uid)
     return None
 
 
@@ -99,6 +99,7 @@ def create_prov_file(prov_command, prov_path):
 
     with open(prov_path, "w") as fp:
         json.dump(prov_command.json(), fp, indent=4)
+
     return
 
 

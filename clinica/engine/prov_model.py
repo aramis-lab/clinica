@@ -28,12 +28,15 @@ class Identifier:
         validator=attr.validators.optional(attr.validators.instance_of(str)),
     )
 
+    def __repr__(self):
+        return "%s" % self.label
+
 
 class ProvElement(ABC):
     @property
     @classmethod
     @abstractmethod
-    def id(cls):
+    def uid(cls):
         """id is required for ProvElements"""
         return NotImplementedError
 
@@ -61,67 +64,33 @@ class ProvRelation(ABC):
 class ProvEntity(ProvElement):
     """Provenance Entity element"""
 
-    id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
+    uid: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
     attributes: dict = field(default=attr.Factory(dict))
+
+    def unstrct(self):
+        return {"id": str(self.uid), **self.attributes}
 
 
 @define
 class ProvActivity(ProvElement):
     """Provenance Activity element"""
 
-    id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
+    uid: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
     attributes: dict = field(default=attr.Factory(dict))
+
+    def unstrct(self):
+        return {"id": str(self.uid), **self.attributes}
 
 
 @define
 class ProvAgent(ProvElement):
     """Provenance Agent element"""
 
-    id: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
-    attributes: dict = field(
-        default=attr.Factory(dict),
-        validator=attr.validators.optional(attr.validators.instance_of(dict)),
-    )
+    uid: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
+    attributes: dict = field(default=attr.Factory(dict))
 
-
-# Define PROV Relations
-
-
-@define
-class ProvGeneration(ProvRelation):
-    id: Identifier = field(
-        init=False,
-        validator=attr.validators.optional(attr.validators.instance_of(Identifier)),
-    )
-
-    src: ProvActivity = field(
-        init=False,
-        validator=attr.validators.optional(attr.validators.instance_of(ProvActivity)),
-    )
-    dest: ProvEntity = field(
-        init=False,
-        validator=attr.validators.optional(attr.validators.instance_of(ProvEntity)),
-    )
-
-    def __attrs_post_init__(self):
-        self.id = Identifier(label="")
-        self.src = ProvActivity()
-        self.dest = ProvEntity()
-
-    # entity: an identifier (e) for a created entity;
-    # activity: an OPTIONAL identifier (a) for the activity that creates the entity;
-    # time: an OPTIONAL "generation time" (t), the time at which the entity was completely created;
-    # attributes: an OPTIONALa
-
-
-@define
-class ProvUsage(ProvRelation):
-    pass
-
-
-@define
-class ProvAssociation(ProvRelation):
-    pass
+    def unstrct(self):
+        return {"id": str(self.uid), **self.attributes}
 
 
 @define
@@ -146,18 +115,18 @@ class ProvRecord:
 
     def __getitem__(self, idx):
         for element in self.elements:
-            if element.id == idx:
+            if element.uid == idx:
                 return element
 
     def json(self):
         json_dict = {}
         json_dict["prov:Agent"] = [
-            cattr.unstructure(x) for x in self.elements if isinstance(x, ProvAgent)
+            x.unstrct() for x in self.elements if isinstance(x, ProvAgent)
         ]
         json_dict["prov:Activity"] = [
-            cattr.unstructure(x) for x in self.elements if isinstance(x, ProvActivity)
+            x.unstrct() for x in self.elements if isinstance(x, ProvActivity)
         ]
         json_dict["prov:Entity"] = [
-            cattr.unstructure(x) for x in self.elements if isinstance(x, ProvEntity)
+            x.unstrct() for x in self.elements if isinstance(x, ProvEntity)
         ]
         return json_dict

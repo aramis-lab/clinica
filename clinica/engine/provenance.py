@@ -105,7 +105,7 @@ def write_prov_file(
     entity_path: path of the prov-associated element
     """
 
-    from .prov_utils import read_prov_jsonld, get_path_prov
+    from .prov_utils import get_path_prov
 
     prov_path = get_path_prov(path_entity)
 
@@ -130,7 +130,7 @@ def get_agent() -> ProvAgent:
     import clinica
     from .prov_utils import generate_agent_id
 
-    new_agent = ProvAgent(id=generate_agent_id())
+    new_agent = ProvAgent(uid=generate_agent_id())
 
     new_agent.attributes["version"] = clinica.__version__
     new_agent.attributes["label"] = clinica.__name__
@@ -146,13 +146,13 @@ def get_activity(self, agent: Identifier, entities: List[ProvEntity]) -> ProvAct
     import sys
     from .prov_utils import generate_activity_id
 
-    new_activity = ProvActivity(id=generate_activity_id(self.fullname))
+    new_activity = ProvActivity(uid=generate_activity_id(self.fullname))
 
     new_activity.attributes["parameters"] = self.parameters
     new_activity.attributes["label"] = self.fullname
     new_activity.attributes["command"] = (sys.argv[1:],)
-    new_activity.attributes["used"] = [x.id for x in entities]
-    new_activity.attributes["wasAssociatedWith"] = agent.id
+    new_activity.attributes["used"] = [str(x.uid) for x in entities]
+    new_activity.attributes["wasAssociatedWith"] = str(agent.uid)
 
     return new_activity
 
@@ -164,7 +164,7 @@ def get_entity(path_curr: Path) -> ProvEntity:
 
     from clinica.engine.prov_utils import generate_entity_id, get_last_activity
 
-    new_entity = ProvEntity(id=generate_entity_id(path_curr))
+    new_entity = ProvEntity(uid=generate_entity_id(path_curr))
     new_entity.attributes["label"] = path_curr.name
     new_entity.attributes["path"] = str(path_curr)
 
