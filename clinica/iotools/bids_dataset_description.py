@@ -2,8 +2,8 @@ from enum import Enum
 from typing import IO
 
 import attr
-from cattr.preconf.json import make_converter
 from cattr.gen import make_dict_unstructure_fn, override
+from cattr.preconf.json import make_converter
 
 BIDS_VERSION = "1.6.0"
 

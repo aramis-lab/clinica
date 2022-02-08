@@ -119,6 +119,7 @@ def init_input_node(
     import datetime
 
     import nibabel as nib
+
     from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
     from clinica.utils.filemanip import extract_metadata_from_json, get_subject_id
     from clinica.utils.stream import cprint
@@ -132,9 +133,7 @@ def init_input_node(
         check_dwi_volume(dwi, bvec, bval)
     except ValueError as e:
         now = datetime.datetime.now().strftime("%H:%M:%S")
-        error_msg = (
-            f"[{now}] Error: Number of DWIs, b-vals and b-vecs mismatch for {image_id.replace('_', ' | ')}"
-        )
+        error_msg = f"[{now}] Error: Number of DWIs, b-vals and b-vecs mismatch for {image_id.replace('_', ' | ')}"
         cprint(error_msg, lvl="error")
         raise ValueError(e)
 

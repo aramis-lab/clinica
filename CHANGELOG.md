@@ -6,6 +6,24 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.5.4
+
+### Added
+
+- [`merge-tsv`] Add `t1-freesurfer-longitudinal` and `dwi-dti` results
+
+### Changed
+
+- [`t1-freesurfer`] Enable t1-freesurfer to run with missing files
+- [all converters] Normalize subprocess calls to `dcm2niix`
+
+### Fixed
+
+- [`OASIS3`/`NIFD`/`HABS`]] add data_description file to BIDS
+- [`DWI-DTI`] Remove thresholding for DECFA
+- [`adni-to-bids`]  Tighten check on `session-id` values
+- [`adni-to-bids`] Fix bug related to multiple conversions
+
 
 ## Clinica 0.5.3
 

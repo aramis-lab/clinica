@@ -388,6 +388,21 @@ subjects/
 Explanations on the key/values can be found on the
 [`pet-surface` section](#pet-surface-surface-based-processing-of-pet-images).
 
+### `pet-linear` - Affine registration of PET images to the MNI standard space
+
+```Text
+subjects/
+└─ <participant_id>/
+    └─ <session_id>/
+      └─ pet_linear/
+         ├─ <source_file>_space-T1w_rigid.mat
+         ├─ <source_file>_space-T1w_pet.nii.gz
+         ├─ <source_file>_space-MNI152NLin2009cSym_res-1x1x1_suvr-<suvr_label>_pet.nii.gz
+         └─ <source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-<suvr_label>_pet.nii.gz
+```
+
+The `desc-Crop` indicates images of size 169×208×179 after cropping to remove the background.
+
 ## Statistics
 
 ### `statistics-surface` - Surface-based mass-univariate analysis with SurfStat

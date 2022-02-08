@@ -90,7 +90,10 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                 cprint(f"{image_id.replace('_', ' | ')}", lvl="warning")
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/<long_id>/freesurfer_longitudinal/"
-                cprint(msg=f"Output folders in {output_folder} will be recreated.", lvl="warning")
+                cprint(
+                    msg=f"Output folders in {output_folder} will be recreated.",
+                    lvl="warning",
+                )
             else:
                 cprint("Image(s) will be ignored by Clinica.", lvl="warning")
                 input_ids = [
