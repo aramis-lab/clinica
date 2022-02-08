@@ -108,7 +108,6 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     from .dwi_preprocessing_using_t1_utils import (
         ants_combine_transform,
         change_itk_transform_type,
-        create_jacobian_determinant_image,
         expend_matrix_list,
         rotate_bvecs,
     )
