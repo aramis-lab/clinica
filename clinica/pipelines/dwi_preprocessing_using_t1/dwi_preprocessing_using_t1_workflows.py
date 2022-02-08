@@ -179,15 +179,6 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
         name="warp_filed",
     )
 
-    # jacobian = pe.MapNode(
-    #     interface=niu.Function(
-    #         input_names=["imageDimension", "deformationField", "outputImage"],
-    #         output_names=["outputImage"],
-    #         function=create_jacobian_determinant_image,
-    #     ),
-    #     iterfield=["deformationField"],
-    #     name="jacobian",
-    # )
     jacobian = pe.MapNode(
         interface=ants.CreateJacobianDeterminantImage(),
         iterfield=["deformationField"],
