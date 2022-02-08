@@ -63,7 +63,7 @@ class PETLinear(cpe.Pipeline):
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.input_files import (
             T1W_NII,
-            T1W_TO_MNI_TRANSFROM,
+            T1W_TO_MNI_TRANSFORM,
             bids_pet_nii,
         )
         from clinica.utils.inputs import (
@@ -141,8 +141,8 @@ class PETLinear(cpe.Pipeline):
         # Inputs from t1-linear pipeline
         # Transformation files from T1w files to MNI:
         try:
-            t1w_to_mni_transformation_files = clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, T1W_TO_MNI_TRANSFROM
+            t1w_to_mni_transformation_files, _ = clinica_file_reader(
+                self.subjects, self.sessions, self.caps_directory, T1W_TO_MNI_TRANSFORM
             )
         except ClinicaException as e:
             err = (

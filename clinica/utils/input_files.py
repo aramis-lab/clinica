@@ -147,7 +147,7 @@ T1W_EXTENSIVE = {
     "needed_pipeline": "t1-extensive",
 }
 
-T1W_TO_MNI_TRANSFROM = {
+T1W_TO_MNI_TRANSFORM = {
     "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
     "description": "Transformation matrix from T1W image to MNI space using t1-linear pipeline",
     "needed_pipeline": "t1-linear",
@@ -424,15 +424,15 @@ def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
 
     if uncropped_image:
         description = ""
-    else :
+    else:
         description = "_desc-Crop"
 
     information = {
         "pattern": os.path.join(
             "pet_linear",
-            f"*_acq-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz"
+            f"*_acq-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz",
         ),
         "description": "",
-        "needed_pipeline": "pet-linear"
+        "needed_pipeline": "pet-linear",
     }
     return information

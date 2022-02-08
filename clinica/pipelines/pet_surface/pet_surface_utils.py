@@ -947,7 +947,9 @@ def get_wf(
     # Check that the PET file is a 3D volume
     img = nib.load(pet)
     if len(img.shape) == 4:
-        error_msg = f"Clinica does not handle 4D volumes for {subject_id} | {session_id}"
+        error_msg = (
+            f"Clinica does not handle 4D volumes for {subject_id} | {session_id}"
+        )
         cprint(error_msg, lvl="error")
         raise NotImplementedError(error_msg)
 

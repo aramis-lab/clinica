@@ -184,8 +184,9 @@ def read_participant_tsv(tsv_file):
 
 def extract_metadata_from_json(json_file, list_keys):
     """Extract fields from JSON file."""
-    import json
     import datetime
+    import json
+
     from clinica.utils.exceptions import ClinicaException
 
     list_values = []
@@ -200,9 +201,7 @@ def extract_metadata_from_json(json_file, list_keys):
         )
     except KeyError as e:
         now = datetime.datetime.now().strftime("%H:%M:%S")
-        error_message = (
-            f"[{now}] Error: Clinica could not find the e key in the following JSON file: {json_file}"
-        )
+        error_message = f"[{now}] Error: Clinica could not find the e key in the following JSON file: {json_file}"
         raise ClinicaException(error_message)
     finally:
         file.close()

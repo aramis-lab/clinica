@@ -1,9 +1,0 @@
-Field	BIDS CLINICA	BIDS format	BIDS type	Comments	INSIGHT	CLINAD	CLINAD location	ADNI	AIBL	AIBL location	CAPP	CAPP location	PREVDEMALS	PREVDEMALS location	Modalities related
-	scan_id	<modality_folder_label>/<filename> Ex: anat/example_T1W.nii.gz	string												
-Field Strength of MRI	mri_field	1 or 1.5 or 3 or 7	float			Tesla	RETROMIL AM v16_reduced.xlsx/Données	FLDSTRENG					magnetic_field	Scans_information.xlsx	T1/DWI/fMRI
-Date of MRI acquisition	acq_time	YYYY-MM-DD HH:MM:SS	string					X			Date IRM à M0	2016.07.04_CAPP_Database/M0			T1/DWI/fMRI
-Date of PET acquisition	acq_time	YYYY-MM-DD HH:MM:SS	string					X			DATE TEP à M0	2016.07.04_CAPP_Database/M0			FDG
-	mri_machine_name	Free format	string			IRM	RETROMIL AM v16_reduced.xlsx/Données	X					model_name	Scans_information.xlsx	T1/DWI/fMRI
-	mri_machine_manufacturer	Free format	string					X					manufacturer	Scans_information.xlsx	
-	pet_machine_name	Free format	string												
-	pet_machine_manufacturer	Free format	string												

@@ -91,36 +91,32 @@ Now that you have created the Clinica environment, you can activate it:
 
 ```{.sourceCode .bash}
 conda activate clinicaEnv
-activate-global-python-argcomplete --user # Only the first time you activate the environment
-eval "$(register-python-argcomplete clinica)"
 ```
 
 !!! success
     Congratulations, you have installed Clinica! At this point, you can try the
-    basic `clinica` command and get the help screen:
+    basic `clinica` command and get the following help screen:
+
     ```console
     (clinicaEnv)$ clinica
-    usage: clinica [-v] [-l file.log]  ...
+    Usage: clinica [OPTIONS] COMMAND [ARGS]...
 
-    clinica expects one of the following keywords:
+    Options:
+      --version      Show the version and exit.
+      -v, --verbose  Increase logging verbosity.
+      -h, --help     Show this message and exit.
 
-        run                 To run pipelines on BIDS/CAPS datasets.
-        convert             To convert unorganized datasets into a BIDS hierarchy.
-        iotools             Tools to handle BIDS/CAPS datasets.
-        visualize           To visualize outputs of Clinica pipelines.
-        generate            To generate pre-filled files when creating new
-                            pipelines (for developers).
-
-    Optional arguments:
-      -v, --verbose         Verbose: print all messages to the console
-      -l file.log, --logname file.log
-                            Define the log file name (default: clinica.log)
+    Commands:
+      convert   Convert popular neuroimaging datasets to the BIDS format.
+      generate  Instantiate a new pipeline from available templates.
+      iotools   Tools to handle BIDS/CAPS datasets.
+      run       Run pipelines on BIDS and CAPS datasets.
     ```
 
-    If you have successfully installed the third-party software packages,
-    you are ready to run any of the pipelines proposed by Clinica.
+If you have successfully installed the third-party software packages, you are
+ready to run any of the pipelines proposed by Clinica.
 
-    You can now learn how to [interact with Clinica](../InteractingWithClinica).
+You can now learn how to [interact with Clinica](../InteractingWithClinica).
 
 ### Deactivation of the Clinica environment
 
