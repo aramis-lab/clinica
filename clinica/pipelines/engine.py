@@ -7,6 +7,7 @@ import abc
 
 import click
 from nipype.pipeline.engine import Workflow
+
 import clinica.engine.provenance as prov
 
 

@@ -1,6 +1,5 @@
 import functools
 from os import read
-
 from pathlib import Path
 from typing import List
 
@@ -56,7 +55,7 @@ def get_history_record(paths_files: List[Path]) -> ProvRecord:
         a ProvRecord for the associated files in path_files
     """
 
-    from .prov_utils import read_prov_jsonld, get_path_prov
+    from .prov_utils import get_path_prov, read_prov_jsonld
 
     prov_record = ProvRecord({}, [])
 
@@ -127,13 +126,14 @@ def extend_prov(prov_main: dict, prov_new: dict) -> dict:
 
 
 def get_agent() -> ProvAgent:
-    import clinica
+    from clinica import __name__, __version__
+
     from .prov_utils import generate_agent_id
 
     new_agent = ProvAgent(uid=generate_agent_id())
 
-    new_agent.attributes["version"] = clinica.__version__
-    new_agent.attributes["label"] = clinica.__name__
+    new_agent.attributes["version"] = __version__
+    new_agent.attributes["label"] = __name__
 
     return new_agent
 
@@ -144,13 +144,14 @@ def get_activity(self, agent: Identifier, entities: List[ProvEntity]) -> ProvAct
         ProvActivity from related entities and associated agent
     """
     import sys
+
     from .prov_utils import generate_activity_id
 
     new_activity = ProvActivity(uid=generate_activity_id(self.fullname))
 
     new_activity.attributes["parameters"] = self.parameters
     new_activity.attributes["label"] = self.fullname
-    new_activity.attributes["command"] = (sys.argv[1:],)
+    new_activity.attributes["command"] = sys.argv[1:]
     new_activity.attributes["used"] = [str(x.uid) for x in entities]
     new_activity.attributes["wasAssociatedWith"] = str(agent.uid)
 

@@ -1,5 +1,5 @@
-from typing import Optional, List
 from pathlib import Path
+from typing import List, Optional
 
 from .prov_model import *
 
@@ -12,8 +12,8 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> List[
 
     return list of 'Path's to the files used in the pipeline
     """
-    from clinica.utils.inputs import clinica_file_reader
     import clinica.utils.input_files as cif
+    from clinica.utils.inputs import clinica_file_reader
 
     dict_field_options = ["input_to", "output_from"]
     if dict_field not in dict_field_options:

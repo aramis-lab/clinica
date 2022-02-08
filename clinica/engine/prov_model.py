@@ -1,12 +1,11 @@
+from abc import ABC, abstractmethod
+from typing import List, Union
 from xml.dom.minidom import Element
-from attr import define, field
+
 import attr
 import cattr
-from typing import Union, List
-from abc import ABC, abstractmethod
-
+from attr import define, field
 from matplotlib.style import context
-
 
 #  Define PROV abstract concepts
 
