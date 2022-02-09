@@ -173,8 +173,8 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
             # input_names=["reference_image", "input_image", "transforms"],
             # output_names=["out_warp_field", "out_warped"],
         ),
-        iterfield=["moving_image"],
-        name="warp_filed",
+        iterfield=["input_image"],
+        name="warp_field",
     )
 
     apply_transform_comp_warp_file = apply_transform.clone("comp_warp_file")
