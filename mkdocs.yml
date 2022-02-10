@@ -32,10 +32,6 @@ extra_css:
   - css/clinica.css
 
 extra:
-  analytics:
-    provider: google
-    property: UA-106080699-1
-
   feature:
     tabs: true
 
