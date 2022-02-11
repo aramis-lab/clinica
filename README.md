@@ -35,7 +35,7 @@
   <a href="https://github.com/aramis-lab/clinica/discussions">Forum</a> |
   See also:
   <a href="#related-repositories">AD-ML</a>,
-  <a href="#related-repositories">AD-DL</a>
+  <a href="#related-repositories">AD-DL</a>,
   <a href="#related-repositories">ClinicaDL</a>
 </p>
 
@@ -141,8 +141,9 @@ with Alzheimer's disease and healthy controls from the ADNI database:
 ## Contributing
 
 We encourage you to contribute to Clinica!
-Please check out the [Contributing to Clinica guide](CONTRIBUTING.md) for guidelines about how to proceed.
-Do not hesitate to ask questions if something is not clear for you, report an issue, etc.
+Please check out the [Contributing to Clinica guide](CONTRIBUTING.md) for
+guidelines about how to proceed.  Do not hesitate to ask questions if something
+is not clear for you, report an issue, etc.
 
 ## License
 
@@ -158,7 +159,7 @@ for more information.
 
 ## Related Repositories
 
-- [AD-DL: Classification of Alzheimer's disease status with convolutional neural networks](https://github.com/aramis-lab/AD-DL)
+- [AD-DL: Classification of Alzheimer's disease status with convolutional neural networks](https://github.com/aramis-lab/AD-DL).
 - [AD-ML: Framework for the reproducible classification of Alzheimer's disease using
-machine learning](https://github.com/aramis-lab/AD-ML)
-- [ClinicaDL: Framework for the reproducible processing of neuroimaging data with deep learning methods](https://github.com/aramis-lab/clinicadl)
+machine learning](https://github.com/aramis-lab/AD-ML).
+- [ClinicaDL: Framework for the reproducible processing of neuroimaging data with deep learning methods](https://github.com/aramis-lab/clinicadl).
