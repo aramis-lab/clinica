@@ -17,8 +17,8 @@ warnings.filterwarnings("ignore")
 
 @pytest.fixture(
     params=[
-        # "DWIPreprocessingUsingT1",
-        # "DWIPreprocessingUsingPhaseDiffFieldmap",
+        "DWIPreprocessingUsingT1",
+        "DWIPreprocessingUsingPhaseDiffFieldmap",
         "DWIDTI",
         "DWIConnectome",
     ]
@@ -83,13 +83,15 @@ def run_DWIPreprocessingUsingT1(
     out_file = fspath(
         caps_dir
         / "subjects"
-        / "sub-CAPP01001TMM"
+        / "sub-PREVDEMALS0010025PG"
         / "ses-M00"
         / "dwi"
         / "preprocessing"
-        / "sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz"
+        / "sub-PREVDEMALS0010025PG-M00_dwi_space-T1w_preproc.nii.gz"
     )
-    ref_file = fspath(ref_dir / "sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz")
+    ref_file = fspath(
+        ref_dir / "sub-PREVDEMALS0010025PG-M00_dwi_space-T1w_preproc.nii.gz"
+    )
 
     assert similarity_measure(out_file, ref_file, 0.97)
 
@@ -127,13 +129,15 @@ def run_DWIPreprocessingUsingPhaseDiffFieldmap(
     out_file = fspath(
         caps_dir
         / "subjects"
-        / "sub-CAPP01001TMM"
+        / "sub-PREVDEMALS0010025PG"
         / "ses-M00"
         / "dwi"
         / "preprocessing"
-        / "sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz"
+        / "sub-PREVDEMALS0010025PG-M00_dwi_space-b0_preproc.nii.gz"
     )
-    ref_file = fspath(ref_dir / "sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz")
+    ref_file = fspath(
+        ref_dir / "sub-PREVDEMALS0010025PG-M00_dwi_space-b0_preproc.nii.gz"
+    )
 
     assert similarity_measure(out_file, ref_file, 0.95)
 
@@ -163,7 +167,7 @@ def run_DWIDTI(
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     # Check files
-    subject_id = "sub-CAPP01001TMM"
+    subject_id = "sub-PREVDEMALS0010025PG"
     maps = ["AD", "FA", "MD", "RD"]
     out_files = [
         fspath(
@@ -230,7 +234,7 @@ def run_DWIConnectome(
 
     # Check files
     atlases = ["desikan", "destrieux"]
-    subject_id = "sub-HMTC20110506MEMEPPAT27"
+    subject_id = "sub-PREVDEMALS0010025PG"
     session_id = "ses-M00"
 
     out_fod_file = fspath(
