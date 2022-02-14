@@ -1,3 +1,9 @@
+from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
+    ants_apply_transform_warp_field,
+    ants_apply_transform_warp_image,
+)
+
+
 def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     """Use FSL eddy for head motion correction and eddy current distortion correction."""
     import nipype.interfaces.utility as niu
@@ -106,7 +112,8 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     import nipype.pipeline.engine as pe
 
     from .dwi_preprocessing_using_t1_utils import (
-        ants_combine_transform,
+        ants_apply_transform_warp_field,
+        ants_apply_transform_warp_image,
         change_itk_transform_type,
         expend_matrix_list,
         rotate_bvecs,
@@ -169,11 +176,21 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     merge_transform = pe.Node(niu.Merge(3), name="MergeTransforms")
 
     # the nipype function is not used since the results it gives are not as good as the ones we get by using the command directly.
-    apply_transform = pe.MapNode(
+    apply_transform_image = pe.MapNode(
         interface=niu.Function(
             input_names=["fix_image", "moving_image", "ants_warp_affine"],
-            output_names=["out_warp_field", "out_warped"],
-            function=ants_combine_transform,
+            output_names=["out_warped"],
+            function=ants_apply_transform_warp_image,
+        ),
+        iterfield=["moving_image"],
+        name="warp_image",
+    )
+
+    apply_transform_field = pe.MapNode(
+        interface=niu.Function(
+            input_names=["fix_image", "moving_image", "ants_warp_affine"],
+            output_names=["out_warp_field"],
+            function=ants_apply_transform_warp_field,
         ),
         iterfield=["moving_image"],
         name="warp_field",
@@ -236,11 +253,16 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
             (change_transform, merge_transform, [("updated_affine_file", "in1")]),
             (ants_registration, merge_transform, [("out_matrix", "in2")]),
             (ants_registration, merge_transform, [("forward_warp_field", "in3")]),
-            (inputnode, apply_transform, [("T1", "reference_image")]),
-            (split, apply_transform, [("out_files", "input_image")]),
-            (merge_transform, apply_transform, [("out", "transforms")]),
-            (apply_transform, jacobian, [("output_image", "deformationField")]),
-            (apply_transform, jacmult, [("output_image", "operand_files")]),
+            (inputnode, apply_transform_image, [("T1", "reference_image")]),
+            (split, apply_transform_image, [("out_files", "input_image")]),
+            (merge_transform, apply_transform_image, [("out", "transforms")]),
+
+            (inputnode, apply_transform_field, [("T1", "reference_image")]),
+            (split, apply_transform_field, [("out_files", "input_image")]),
+            (merge_transform, apply_transform_field, [("out", "transforms")]),
+
+            (apply_transform_field, jacobian, [("output_image", "deformationField")]),
+            (apply_transform_image, jacmult, [("output_image", "operand_files")]),
             (jacobian, jacmult, [("jacobian_image", "in_file")]),
             (jacmult, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),

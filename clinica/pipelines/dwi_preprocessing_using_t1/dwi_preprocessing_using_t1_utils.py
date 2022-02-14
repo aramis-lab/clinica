@@ -160,11 +160,24 @@ def rotate_bvecs(in_bvec, in_matrix):
     return out_file
 
 
-def ants_combine_transform(fix_image, moving_image, ants_warp_affine):
+def ants_apply_transform_warp_image(fix_image, moving_image, ants_warp_affine):
+    import os
+
+    out_warped = os.path.abspath("out_warped.nii.gz")
+
+    cmd = (
+        f"antsApplyTransforms -o {out_warped} -i {moving_image} -r {fix_image} "
+        f"-t {ants_warp_affine[0]} -t {ants_warp_affine[1]} -t {ants_warp_affine[2]}"
+    )
+    os.system(cmd)
+
+    return out_warped
+
+
+def ants_apply_transform_warp_field(fix_image, moving_image, ants_warp_affine):
     import os
 
     out_warp_field = os.path.abspath("out_warp_field.nii.gz")
-    out_warped = os.path.abspath("out_warped.nii.gz")
 
     cmd = (
         f"antsApplyTransforms -o [{out_warp_field},1] -i {moving_image} -r {fix_image} "
@@ -172,13 +185,7 @@ def ants_combine_transform(fix_image, moving_image, ants_warp_affine):
     )
     os.system(cmd)
 
-    cmd1 = (
-        f"antsApplyTransforms -o {out_warped} -i {moving_image} -r {fix_image} "
-        f"-t {ants_warp_affine[0]} -t {ants_warp_affine[1]} -t {ants_warp_affine[2]}"
-    )
-    os.system(cmd1)
-
-    return out_warp_field, out_warped
+    return out_warp_field
 
 
 def init_input_node(t1w, dwi, bvec, bval, dwi_json):
