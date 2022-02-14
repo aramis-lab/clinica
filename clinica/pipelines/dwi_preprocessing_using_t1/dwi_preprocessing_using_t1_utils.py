@@ -170,7 +170,7 @@ def ants_apply_transform_warp_image(fix_image, moving_image, ants_warp_affine):
         f"antsApplyTransforms -o {out_warped} -i {moving_image} -r {fix_image} "
         f"-t {ants_warp_affine[0]} -t {ants_warp_affine[1]} -t {ants_warp_affine[2]}"
     )
-    subprocess.run(cmd)
+    subprocess.run(cmd, shell=True)
 
     return out_warped
 
@@ -185,7 +185,7 @@ def ants_apply_transform_warp_field(fix_image, moving_image, ants_warp_affine):
         f"antsApplyTransforms -o [{out_warp_field},1] -i {moving_image} -r {fix_image} "
         f"-t {ants_warp_affine[0]} -t {ants_warp_affine[1]} -t {ants_warp_affine[2]}"
     )
-    subprocess.run(cmd)
+    subprocess.run(cmd, shell=True)
 
     return out_warp_field
 
