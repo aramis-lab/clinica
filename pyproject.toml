@@ -65,6 +65,7 @@ pytest = "*"
 pytest-timeout = "*"
 pytest-xdist = "*"
 pytest-cov = "^3.0.0"
+nipy = "^0.5.0"
 
 [tool.poetry.extras]
 docs = [
