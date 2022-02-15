@@ -1,9 +1,3 @@
-from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
-    ants_apply_transform_warp_field,
-    ants_apply_transform_warp_image,
-)
-
-
 def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     """Use FSL eddy for head motion correction and eddy current distortion correction."""
     import nipype.interfaces.utility as niu
@@ -112,7 +106,7 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     import nipype.pipeline.engine as pe
 
     from .dwi_preprocessing_using_t1_utils import (
-        antsApplyTransform,
+        ants_apply_transform,
         change_itk_transform_type,
         expend_matrix_list,
         rotate_bvecs,
@@ -179,7 +173,7 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
         interface=niu.Function(
             input_names=["fixed_image", "moving_image", "transforms"],
             output_names=["warped_image"],
-            function=antsApplyTransform,
+            function=ants_apply_transform,
         ),
         iterfield=["moving_image"],
         name="warp_image",
@@ -189,7 +183,7 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
         interface=niu.Function(
             input_names=["fixed_image", "moving_image", "transforms"],
             output_names=["warped_image"],
-            function=antsApplyTransform,
+            function=ants_apply_transform,
         ),
         iterfield=["moving_image"],
         name="warp_field",
