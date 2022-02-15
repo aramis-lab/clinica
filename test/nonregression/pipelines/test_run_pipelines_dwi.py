@@ -87,10 +87,10 @@ def run_DWIPreprocessingUsingT1(
         / "ses-M00"
         / "dwi"
         / "preprocessing"
-        / "sub-PREVDEMALS0010025PG-M00_dwi_space-T1w_preproc.nii.gz"
+        / "sub-PREVDEMALS0010025PG-ses_M00_dwi_space-T1w_preproc.nii.gz"
     )
     ref_file = fspath(
-        ref_dir / "sub-PREVDEMALS0010025PG-M00_dwi_space-T1w_preproc.nii.gz"
+        ref_dir / "sub-PREVDEMALS0010025PG-ses_M00_dwi_space-T1w_preproc.nii.gz"
     )
 
     assert similarity_measure(out_file, ref_file, 0.97)
@@ -133,10 +133,10 @@ def run_DWIPreprocessingUsingPhaseDiffFieldmap(
         / "ses-M00"
         / "dwi"
         / "preprocessing"
-        / "sub-PREVDEMALS0010025PG-M00_dwi_space-b0_preproc.nii.gz"
+        / "sub-PREVDEMALS0010025PG-ses_M00_dwi_space-b0_preproc.nii.gz"
     )
     ref_file = fspath(
-        ref_dir / "sub-PREVDEMALS0010025PG-M00_dwi_space-b0_preproc.nii.gz"
+        ref_dir / "sub-PREVDEMALS0010025PG-ses_M00_dwi_space-b0_preproc.nii.gz"
     )
 
     assert similarity_measure(out_file, ref_file, 0.95)
