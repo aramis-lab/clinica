@@ -954,7 +954,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     # PARSE INPUTS/INIT
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
-    beta = sigma ** 2 / 2
+    beta = sigma**2 / 2
 
     # SCALE MAPS
     xxx = []
@@ -974,7 +974,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     g_atlas = utils.create_fisher_tensor(atlas)
     g_atlas = utils.tensor_scalar_product(h * h, g_atlas)
     g_pos = utils.tensor_eye(atlas)
-    g_pos = utils.tensor_scalar_product(1 / float(sigma_loc ** 2), g_pos)
+    g_pos = utils.tensor_scalar_product(1 / float(sigma_loc**2), g_pos)
 
     g = utils.tensor_sum(g_atlas, g_pos)
 
@@ -1026,7 +1026,7 @@ def obtain_time_step_estimation(dartel_input, FWHM, g):
     error_tol = 0.001  # error for the estimation of the largest eigenvalue
     alpha_time = 0.9  # time_step = alpha_time * (time_step_max)
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
-    beta = sigma ** 2 / 2
+    beta = sigma**2 / 2
 
     lam = utils.largest_eigenvalue_heat_3D_tensor2(g, h, error_tol)
     print("lambda: ", lam)
@@ -1073,7 +1073,7 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
             h = head_["pixdim"][i]
 
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
-    beta = sigma ** 2 / 2
+    beta = sigma**2 / 2
 
     input_image_read = nib.load(input_image)
     input_image_data = input_image_read.get_fdata(dtype="float32")
