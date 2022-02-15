@@ -160,34 +160,24 @@ def rotate_bvecs(in_bvec, in_matrix):
     return out_file
 
 
-def ants_apply_transform_warp_image(reference_image, input_image, transforms):
-    import os
+def antsApplyTransform(
+    fixed_image, moving_image, transforms, warped_image, output_warped_image=True
+) -> None:
     import subprocess
 
-    out_warped = os.path.abspath("out_warped.nii.gz")
+    # Whether we want the warped image or transformation field as output.
+    output = f"{warped_image}" if output_warped_image else f"[{warped_image}, 1]"
 
+    # Common template for the command.
     cmd = (
-        f"antsApplyTransforms -o {out_warped} -i {input_image} -r {reference_image} "
+        f"antsApplyTransforms -o {output} -i {moving_image} -r {fixed_image} "
         f"-t {transforms[0]} -t {transforms[1]} -t {transforms[2]}"
     )
+
+    # Perform the actual call.
     subprocess.run(cmd, shell=True)
 
-    return out_warped
-
-
-def ants_apply_transform_warp_field(reference_image, input_image, transforms):
-    import os
-    import subprocess
-
-    out_warp_field = os.path.abspath("out_warp_field.nii.gz")
-
-    cmd = (
-        f"antsApplyTransforms -o [{out_warp_field},1] -i {input_image} -r {reference_image} "
-        f"-t {transforms[0]} -t {transforms[1]} -t {transforms[2]}"
-    )
-    subprocess.run(cmd, shell=True)
-
-    return out_warp_field
+    return warped_image
 
 
 def init_input_node(t1w, dwi, bvec, bval, dwi_json):
