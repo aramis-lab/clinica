@@ -106,7 +106,7 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     import nipype.pipeline.engine as pe
 
     from .dwi_preprocessing_using_t1_utils import (
-        ants_apply_transform,
+        ants_apply_transforms,
         change_itk_transform_type,
         expend_matrix_list,
         rotate_bvecs,
@@ -179,12 +179,13 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
                 "output_warped_image",
             ],
             output_names=["warped_image"],
-            function=ants_apply_transform,
+            function=ants_apply_transforms,
         ),
         iterfield=["moving_image"],
         name="warp_image",
     )
     apply_transform_image.inputs.warped_image = "out_warped.nii.gz"
+    apply_transform_image.inputs.output_warped_image = True
 
     apply_transform_field = pe.MapNode(
         interface=niu.Function(
@@ -196,13 +197,13 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
                 "output_warped_image",
             ],
             output_names=["warped_image"],
-            function=ants_apply_transform,
+            function=ants_apply_transforms,
         ),
         iterfield=["moving_image"],
         name="warp_field",
     )
     apply_transform_field.inputs.warped_image = "out_warped_field.nii.gz"
-    apply_transform_field.inputs.output_warped_image = True
+    apply_transform_field.inputs.output_warped_image = False
 
     jacobian = pe.MapNode(
         interface=ants.CreateJacobianDeterminantImage(),

@@ -160,7 +160,7 @@ def rotate_bvecs(in_bvec, in_matrix):
     return out_file
 
 
-def antsApplyTransform(
+def ants_apply_transform(
     fixed_image, moving_image, transforms, warped_image, output_warped_image=True
 ) -> None:
     import subprocess
