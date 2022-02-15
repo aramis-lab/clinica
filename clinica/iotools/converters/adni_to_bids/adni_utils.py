@@ -1,6 +1,3 @@
-from clinica.iotools.bids_utils import run_dcm2niix
-
-
 def visits_to_timepoints(
     subject,
     mri_list_subj,
@@ -967,7 +964,7 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted agai n.
     """
     from functools import partial
-    from multiprocessing import Pool, Value, cpu_count
+    from multiprocessing import Pool, cpu_count
 
     if modality.lower() not in [
         "t1",
@@ -984,42 +981,21 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
             modality.lower() + " is not supported for conversion in paths_to_bids"
         )
 
-    counter = None
+    images_list = list([data for _, data in images.iterrows()])
 
-    def init(args):
-        """Counter is stored for later use.
+    with Pool(processes=max(cpu_count() - 1, 1)) as pool:
+        create_file_ = partial(
+            create_file,
+            modality=modality,
+            bids_dir=bids_dir,
+            mod_to_update=mod_to_update,
+        )
+        output_file_treated = pool.map(create_file_, images_list)
 
-        Args:
-            args:
-        """
-        global counter
-        counter = args
-
-    counter = Value("i", 0)
-    total = images.shape[0]
-    # Reshape inputs to give it as a list to the workers
-    images_list = []
-    for i in range(total):
-        images_list.append(images.iloc[i])
-
-    # Handle multiargument for create_file functions
-    partial_create_file = partial(
-        create_file,
-        modality=modality,
-        total=total,
-        bids_dir=bids_dir,
-        mod_to_update=mod_to_update,
-    )
-
-    # intializer are used with the counter variable to keep track of how many
-    # files have been processed
-    poolrunner = Pool(max(cpu_count() - 1, 1), initializer=init, initargs=(counter,))
-    output_file_treated = poolrunner.map(partial_create_file, images_list)
-    del counter
     return output_file_treated
 
 
-def create_file(image, modality, total, bids_dir, mod_to_update):
+def create_file(image, modality, bids_dir, mod_to_update):
     """
     Image file is created at the corresponding output folder
     as result of image conversion (DICOM to NIFTI) and centering,
@@ -1038,7 +1014,6 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
     import os
     import re
     import shutil
-    import subprocess
     from glob import glob
     from os import path
 
@@ -1105,36 +1080,32 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         },
     }
 
-    global counter
-
     subject = image.Subject_ID
+    viscode = image.VISCODE
 
     if modality == "av45_fbb":
         modality = image.Tracer.lower()
 
-    with counter.get_lock():
-        counter.value += 1
-        if image.Path == "":
-            cprint(
-                msg=(
-                    f"[{modality.upper()}] No path specified for {image.Subject_ID} "
-                    f"in session {image.VISCODE} {counter.value}/{total}"
-                ),
-                lvl="info",
-            )
-        else:
-            cprint(
-                msg=(
-                    f"[{modality.upper()}] Processing subject {subject} - session {image.VISCODE},"
-                    f" {counter.value}/{total}"
-                ),
-                lvl="info",
-            )
-
-    if image.Path == "":
+    if not image.Path:
+        cprint(
+            msg=(
+                f"[{modality.upper()}] No path specified for {subject} "
+                f"in session {viscode}"
+            ),
+            lvl="info",
+        )
         return nan
+    else:
+        cprint(
+            msg=(
+                f"[{modality.upper()}] Processing subject {subject}"
+                f"in session {viscode}"
+            ),
+            lvl="info",
+        )
 
-    session = viscode_to_session(image.VISCODE)
+    session = viscode_to_session(viscode)
+
     image_path = image.Path
     image_id = image.Image_ID
     # If the original image is a DICOM, check if contains two DICOM
