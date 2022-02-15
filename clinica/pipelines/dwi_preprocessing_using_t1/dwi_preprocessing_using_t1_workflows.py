@@ -171,23 +171,38 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     # the nipype function is not used since the results it gives are not as good as the ones we get by using the command directly.
     apply_transform_image = pe.MapNode(
         interface=niu.Function(
-            input_names=["fixed_image", "moving_image", "transforms"],
+            input_names=[
+                "fixed_image",
+                "moving_image",
+                "transforms",
+                "warped_image",
+                "output_warped_image",
+            ],
             output_names=["warped_image"],
             function=ants_apply_transform,
         ),
         iterfield=["moving_image"],
         name="warp_image",
     )
+    apply_transform_image.inputs.warped_image = "out_warped.nii.gz"
 
     apply_transform_field = pe.MapNode(
         interface=niu.Function(
-            input_names=["fixed_image", "moving_image", "transforms"],
+            input_names=[
+                "fixed_image",
+                "moving_image",
+                "transforms",
+                "warped_image",
+                "output_warped_image",
+            ],
             output_names=["warped_image"],
             function=ants_apply_transform,
         ),
         iterfield=["moving_image"],
         name="warp_field",
     )
+    apply_transform_field.inputs.warped_image = "out_warped_field.nii.gz"
+    apply_transform_field.inputs.output_warped_image = True
 
     jacobian = pe.MapNode(
         interface=ants.CreateJacobianDeterminantImage(),
