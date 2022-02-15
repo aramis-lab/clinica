@@ -136,6 +136,7 @@ T1W_LINEAR = {
     "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz",
     "description": "T1w image registered in MNI152NLin2009cSym space using t1-linear pipeline",
     "output_from": "t1-linear",
+    "input_to": "pet-linear",
 }
 
 T1W_LINEAR_CROPPED = {

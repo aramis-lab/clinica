@@ -1,10 +1,14 @@
 from pathlib import Path
 from typing import List, Optional
 
+from clinica.utils.input_files import pet_linear_nii
+
 from .prov_model import *
 
 
-def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> List[Path]:
+def get_files_list(
+    self, pipeline_fullname: str, dict_field="input_to", pipeline_args={}
+) -> List[Path]:
     """
     params:
         pipeline_fullname: the current running pipeline name
@@ -13,7 +17,10 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> List[
     return list of 'Path's to the files used in the pipeline
     """
     import clinica.utils.input_files as cif
+    from clinica.utils.input_files import pet_linear_nii
     from clinica.utils.inputs import clinica_file_reader
+
+    funcs = {"pet-linear": pet_linear_nii}
 
     dict_field_options = ["input_to", "output_from"]
     if dict_field not in dict_field_options:
@@ -21,13 +28,20 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> List[
 
     # Retrieve all the data dict from the input_files module
 
-    files_dicts = {
-        k: v
-        for k, v in vars(cif).items()
-        if isinstance(v, dict)
-        and dict_field in v.keys()
-        and pipeline_fullname in v[dict_field]
-    }
+    if pipeline_fullname in funcs and dict_field == "output_from":
+        files_dicts = {
+            "PET": funcs[pipeline_fullname](
+                **clean_arguments(pipeline_args, funcs[pipeline_fullname])
+            )
+        }
+    else:
+        files_dicts = {
+            k: v
+            for k, v in vars(cif).items()
+            if isinstance(v, dict)
+            and dict_field in v.keys()
+            and pipeline_fullname in v[dict_field]
+        }
     # TODO: check if bids or caps as output
 
     ret_files = []
@@ -40,7 +54,7 @@ def get_files_list(self, pipeline_fullname: str, dict_field="input_to") -> List[
             self.sessions,
             ref_dir,
             files_dicts[elem],
-            raise_exception=False,
+            raise_exception=True,
         )
         if current_file:
             ret_files.extend([Path(x) for x in current_file])
@@ -136,7 +150,6 @@ def deserialize_jsonld(path_prov) -> ProvRecord:
         context._namespaces.append(namespace)
 
     for s, p, o in g:
-
         if str(p) == "http://www.w3.org/ns/prov#Activity":
             id = Identifier(label=g.namespace_manager.qname(o))
             elements[id.label] = ProvActivity(id)
@@ -159,3 +172,14 @@ def deserialize_jsonld(path_prov) -> ProvRecord:
     prov_rec = ProvRecord(context=context, elements=list(elements.values()))
 
     return prov_rec
+
+
+def clean_arguments(pipeline_args, file_func):
+    import inspect
+
+    argspec = inspect.getargspec(file_func)
+    if not argspec.keywords:
+        for key in pipeline_args.copy().keys():
+            if key not in argspec.args:
+                del pipeline_args[key]
+    return pipeline_args

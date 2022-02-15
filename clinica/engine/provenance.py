@@ -14,23 +14,24 @@ def provenance(func):
     @functools.wraps(func)
     def run_wrapper(self, **kwargs):
         ret = []
+        pipeline_args = self.parameters
         pipeline_fullname = self.fullname
         paths_input_files = get_files_list(
-            self, pipeline_fullname, dict_field="input_to"
+            self, pipeline_fullname, "input_to", pipeline_args
         )
 
         prov_history = get_history_record(paths_files=paths_input_files)
         prov_current = get_pipeline_record(self, paths_input_files)
 
         if validate_command(prov_history, prov_current):
-            # ret = func(self)
+            ret = func(self)
             print("The pipeline succesfully executed.")
         else:
             raise Exception(
                 "The pipeline selected is incompatible with the input files provenance"
             )
         paths_out_files = get_files_list(
-            self, pipeline_fullname, dict_field="output_from"
+            self, pipeline_fullname, "output_from", pipeline_args
         )
         register_prov(prov_current, paths_out_files)
 
