@@ -112,7 +112,8 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     import nipype.pipeline.engine as pe
 
     from .dwi_preprocessing_using_t1_utils import (
-        ants_apply_transform,
+        ants_apply_transform_warp_field,
+        ants_apply_transform_warp_image,
         change_itk_transform_type,
         expend_matrix_list,
         rotate_bvecs,
@@ -175,38 +176,25 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     merge_transform = pe.Node(niu.Merge(3), name="MergeTransforms")
 
     # the nipype function is not used since the results it gives are not as good as the ones we get by using the command directly.
-    # We also need to call the command twice since we want 2 output it gives,but does not give at the same time.
     apply_transform_image = pe.MapNode(
         interface=niu.Function(
-            input_names=[
-                "fix_image",
-                "moving_image",
-                "ants_warp_affine",
-                "image_or_field",
-            ],
+            input_names=["fix_image", "moving_image", "ants_warp_affine"],
             output_names=["out_warped"],
-            function=ants_apply_transform,
+            function=ants_apply_transform_warp_image,
         ),
         iterfield=["moving_image"],
         name="warp_image",
     )
-    apply_transform_image.inputs.image_or_field = False
 
     apply_transform_field = pe.MapNode(
         interface=niu.Function(
-            input_names=[
-                "fix_image",
-                "moving_image",
-                "ants_warp_affine",
-                "image_or_field",
-            ],
+            input_names=["fix_image", "moving_image", "ants_warp_affine"],
             output_names=["out_warp_field"],
-            function=ants_apply_transform,
+            function=ants_apply_transform_warp_field,
         ),
         iterfield=["moving_image"],
         name="warp_field",
     )
-    apply_transform_field.inputs.image_or_field = True
 
     jacobian = pe.MapNode(
         interface=ants.CreateJacobianDeterminantImage(),
@@ -268,11 +256,13 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
             (inputnode, apply_transform_image, [("T1", "fix_image")]),
             (split, apply_transform_image, [("out_files", "moving_image")]),
             (merge_transform, apply_transform_image, [("out", "ants_warp_affine")]),
+
             (inputnode, apply_transform_field, [("T1", "fix_image")]),
             (split, apply_transform_field, [("out_files", "moving_image")]),
             (merge_transform, apply_transform_field, [("out", "ants_warp_affine")]),
-            (apply_transform_field, jacobian, [("out_warp_field", "deformationField")]),
-            (apply_transform_image, jacmult, [("out_warped", "operand_files")]),
+
+            (apply_transform_field, jacobian, [("output_image", "deformationField")]),
+            (apply_transform_image, jacmult, [("output_image", "operand_files")]),
             (jacobian, jacmult, [("jacobian_image", "in_file")]),
             (jacmult, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
