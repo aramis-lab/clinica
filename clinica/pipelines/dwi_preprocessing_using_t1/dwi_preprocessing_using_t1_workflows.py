@@ -178,21 +178,21 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     # the nipype function is not used since the results it gives are not as good as the ones we get by using the command directly.
     apply_transform_image = pe.MapNode(
         interface=niu.Function(
-            input_names=["fix_image", "moving_image", "ants_warp_affine"],
-            output_names=["out_warped"],
+            input_names=["reference_image", "input_image", "transforms"],
+            output_names=["output_image"],
             function=ants_apply_transform_warp_image,
         ),
-        iterfield=["moving_image"],
+        iterfield=["input_image"],
         name="warp_image",
     )
 
     apply_transform_field = pe.MapNode(
         interface=niu.Function(
-            input_names=["fix_image", "moving_image", "ants_warp_affine"],
-            output_names=["out_warp_field"],
+            input_names=["reference_image", "input_image", "transforms"],
+            output_names=["output_image"],
             function=ants_apply_transform_warp_field,
         ),
-        iterfield=["moving_image"],
+        iterfield=["input_image"],
         name="warp_field",
     )
 
@@ -253,13 +253,13 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
             (change_transform, merge_transform, [("updated_affine_file", "in1")]),
             (ants_registration, merge_transform, [("out_matrix", "in2")]),
             (ants_registration, merge_transform, [("forward_warp_field", "in3")]),
-            (inputnode, apply_transform_image, [("T1", "fix_image")]),
-            (split, apply_transform_image, [("out_files", "moving_image")]),
-            (merge_transform, apply_transform_image, [("out", "ants_warp_affine")]),
+            (inputnode, apply_transform_image, [("T1", "reference_image")]),
+            (split, apply_transform_image, [("out_files", "input_image")]),
+            (merge_transform, apply_transform_image, [("out", "transforms")]),
 
-            (inputnode, apply_transform_field, [("T1", "fix_image")]),
-            (split, apply_transform_field, [("out_files", "moving_image")]),
-            (merge_transform, apply_transform_field, [("out", "ants_warp_affine")]),
+            (inputnode, apply_transform_field, [("T1", "reference_image")]),
+            (split, apply_transform_field, [("out_files", "input_image")]),
+            (merge_transform, apply_transform_field, [("out", "transforms")]),
 
             (apply_transform_field, jacobian, [("output_image", "deformationField")]),
             (apply_transform_image, jacmult, [("output_image", "operand_files")]),

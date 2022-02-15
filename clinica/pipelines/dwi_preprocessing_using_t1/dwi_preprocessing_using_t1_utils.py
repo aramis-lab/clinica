@@ -160,30 +160,30 @@ def rotate_bvecs(in_bvec, in_matrix):
     return out_file
 
 
-def ants_apply_transform_warp_image(fix_image, moving_image, ants_warp_affine):
+def ants_apply_transform_warp_image(reference_image, input_image, transforms):
     import os
     import subprocess
 
     out_warped = os.path.abspath("out_warped.nii.gz")
 
     cmd = (
-        f"antsApplyTransforms -o {out_warped} -i {moving_image} -r {fix_image} "
-        f"-t {ants_warp_affine[0]} -t {ants_warp_affine[1]} -t {ants_warp_affine[2]}"
+        f"antsApplyTransforms -o {out_warped} -i {input_image} -r {reference_image} "
+        f"-t {transforms[0]} -t {transforms[1]} -t {transforms[2]}"
     )
     subprocess.run(cmd, shell=True)
 
     return out_warped
 
 
-def ants_apply_transform_warp_field(fix_image, moving_image, ants_warp_affine):
+def ants_apply_transform_warp_field(reference_image, input_image, transforms):
     import os
     import subprocess
 
     out_warp_field = os.path.abspath("out_warp_field.nii.gz")
 
     cmd = (
-        f"antsApplyTransforms -o [{out_warp_field},1] -i {moving_image} -r {fix_image} "
-        f"-t {ants_warp_affine[0]} -t {ants_warp_affine[1]} -t {ants_warp_affine[2]}"
+        f"antsApplyTransforms -o [{out_warp_field},1] -i {input_image} -r {reference_image} "
+        f"-t {transforms[0]} -t {transforms[1]} -t {transforms[2]}"
     )
     subprocess.run(cmd, shell=True)
 
