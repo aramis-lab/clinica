@@ -163,7 +163,11 @@ def rotate_bvecs(in_bvec, in_matrix):
 def ants_apply_transforms(
     fixed_image, moving_image, transforms, warped_image, output_warped_image=True
 ) -> None:
+    import os
     import subprocess
+
+    # Convert to absolute path.
+    warped_image = os.path.abspath(warped_image)
 
     # Whether we want the warped image or transformation field as output.
     output = f"{warped_image}" if output_warped_image else f"[{warped_image}, 1]"
