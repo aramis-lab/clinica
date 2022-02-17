@@ -106,9 +106,8 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     import nipype.pipeline.engine as pe
 
     from .dwi_preprocessing_using_t1_utils import (
-        ants_combine_transform,
+        ants_apply_transforms,
         change_itk_transform_type,
-        create_jacobian_determinant_image,
         expend_matrix_list,
         rotate_bvecs,
     )
@@ -169,22 +168,45 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
 
     merge_transform = pe.Node(niu.Merge(3), name="MergeTransforms")
 
-    apply_transform = pe.MapNode(
+    # the nipype function is not used since the results it gives are not as good as the ones we get by using the command directly.
+    apply_transform_image = pe.MapNode(
         interface=niu.Function(
-            input_names=["fix_image", "moving_image", "ants_warp_affine"],
-            output_names=["out_warp_field", "out_warped"],
-            function=ants_combine_transform,
+            input_names=[
+                "fixed_image",
+                "moving_image",
+                "transforms",
+                "warped_image",
+                "output_warped_image",
+            ],
+            output_names=["warped_image"],
+            function=ants_apply_transforms,
         ),
         iterfield=["moving_image"],
-        name="warp_filed",
+        name="warp_image",
     )
+    apply_transform_image.inputs.warped_image = "out_warped.nii.gz"
+    apply_transform_image.inputs.output_warped_image = True
+
+    apply_transform_field = pe.MapNode(
+        interface=niu.Function(
+            input_names=[
+                "fixed_image",
+                "moving_image",
+                "transforms",
+                "warped_image",
+                "output_warped_image",
+            ],
+            output_names=["warped_image"],
+            function=ants_apply_transforms,
+        ),
+        iterfield=["moving_image"],
+        name="warp_field",
+    )
+    apply_transform_field.inputs.warped_image = "out_warped_field.nii.gz"
+    apply_transform_field.inputs.output_warped_image = False
 
     jacobian = pe.MapNode(
-        interface=niu.Function(
-            input_names=["imageDimension", "deformationField", "outputImage"],
-            output_names=["outputImage"],
-            function=create_jacobian_determinant_image,
-        ),
+        interface=ants.CreateJacobianDeterminantImage(),
         iterfield=["deformationField"],
         name="jacobian",
     )
@@ -237,15 +259,20 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
             (pick_ref, c3d_flirt2ants, [("out", "source_file")]),
             (flirt_b0_2_t1, c3d_flirt2ants, [("out_matrix_file", "transform_file")]),
             (c3d_flirt2ants, change_transform, [("itk_transform", "input_affine_file")]),
-            (ants_registration, merge_transform, [("forward_warp_field", "in1")]),
+            (change_transform, merge_transform, [("updated_affine_file", "in1")]),
             (ants_registration, merge_transform, [("out_matrix", "in2")]),
-            (change_transform, merge_transform, [("updated_affine_file", "in3")]),
-            (inputnode, apply_transform, [("T1", "fix_image")]),
-            (split, apply_transform, [("out_files", "moving_image")]),
-            (merge_transform, apply_transform, [("out", "ants_warp_affine")]),
-            (apply_transform, jacobian, [("out_warp_field", "deformationField")]),
-            (apply_transform, jacmult, [("out_warped", "operand_files")]),
-            (jacobian, jacmult, [("outputImage", "in_file")]),
+            (ants_registration, merge_transform, [("forward_warp_field", "in3")]),
+            (inputnode, apply_transform_image, [("T1", "fixed_image")]),
+            (split, apply_transform_image, [("out_files", "moving_image")]),
+            (merge_transform, apply_transform_image, [("out", "transforms")]),
+
+            (inputnode, apply_transform_field, [("T1", "fixed_image")]),
+            (split, apply_transform_field, [("out_files", "moving_image")]),
+            (merge_transform, apply_transform_field, [("out", "transforms")]),
+
+            (apply_transform_field, jacobian, [("warped_image", "deformationField")]),
+            (apply_transform_image, jacmult, [("warped_image", "operand_files")]),
+            (jacobian, jacmult, [("jacobian_image", "in_file")]),
             (jacmult, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
             (merge, outputnode, [("merged_file", "DWIs_epicorrected")]),
