@@ -1265,17 +1265,17 @@ def vox_to_world_space_method_2(coordinates_vol, header):
         b = h["quatern_b"]
         c = h["quatern_c"]
         d = h["quatern_d"]
-        a = np.sqrt(1 - (b ** 2) - (c ** 2) - (d ** 2))
+        a = np.sqrt(1 - (b**2) - (c**2) - (d**2))
         r = np.zeros((3, 3))
-        r[0, 0] = (a ** 2) + (b ** 2) - (c ** 2) - (d ** 2)
+        r[0, 0] = (a**2) + (b**2) - (c**2) - (d**2)
         r[0, 1] = 2 * ((b * c) - (a * d))
         r[0, 2] = 2 * ((b * d) + (a * c))
         r[1, 0] = 2 * ((b * c) + (a * d))
-        r[1, 1] = (a ** 2) + (c ** 2) - (b ** 2) - (d ** 2)
+        r[1, 1] = (a**2) + (c**2) - (b**2) - (d**2)
         r[1, 2] = 2 * ((c * d) - (a * b))
         r[2, 0] = 2 * ((b * d) - (a * c))
         r[2, 1] = 2 * ((b * d) - (a * c))
-        r[2, 2] = (a ** 2) + (d ** 2) - (b ** 2) - (c ** 2)
+        r[2, 2] = (a**2) + (d**2) - (b**2) - (c**2)
         return r
 
     i = coordinates_vol[0]
