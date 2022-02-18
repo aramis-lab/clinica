@@ -484,6 +484,71 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
 # Covert the AIBL PET images into the BIDS specification.
 # There are three pet modalities: av45, pib, flute. All of them are converted
 # in BIDS
+def create_file(image, modality, bids_dir, overwrite):
+    from os import remove
+    from os.path import exists, join
+
+    from numpy import nan
+
+    from clinica.iotools.bids_utils import json_from_dcm
+    from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.utils.stream import cprint
+
+    subject = image.Subjects_ID
+    session = image.Session_ID
+    name_of_path = {
+        "t1": "Path_to_T1",
+        "av45": "Path_to_pet",
+        "flute": "Path_to_pet",
+        "pib": "Path_to_pet",
+    }
+
+    image_path = image[name_of_path[modality]]
+
+    if image_path == nan:
+        cprint(
+            msg=(
+                f"[{modality.upper()}] No path specified for {subject} "
+                f"in session {session}"
+            ),
+            lvl="info",
+        )
+        return nan
+    else:
+        cprint(
+            msg=(
+                f"[{modality.upper()}] Processing subject {subject}"
+                f"in session {session}"
+            ),
+            lvl="info",
+        )
+
+    session = viscode_to_session(session)
+
+    # creation of the path
+    if modality == "t1":
+        output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
+        output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
+    elif modality in ["flute", "pib", "av45"]:
+        output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
+        output_filename = (
+            f"sub-AIBL{subject}_ses-{session}_task-rest_acq-{modality}_pet"
+        )
+
+    # image is saved following BIDS specifications
+    if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
+        cprint(f"Subject {str(subject)} - session {session} already processed.")
+        output_image = join(output_path, output_filename + ".nii.gz")
+    else:
+        if exists(join(output_path, output_filename + ".nii.gz")):
+            remove(join(output_path, output_filename + ".nii.gz"))
+        output_image = dicom_to_nii(subject, output_path, output_filename, image_path)
+        json_from_dcm(image_path, join(output_path, output_filename + ".json"))
+
+    # Center all images
+    center_nifti_origin(output_image, output_image)
+
+    return output_image
 
 
 def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=False):
@@ -501,82 +566,18 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
         This does not guarantee existence.
     """
     import glob
-    from multiprocessing import Value, cpu_count
-    from multiprocessing.dummy import Pool
-    from os import makedirs, remove
+    from functools import partial
+    from multiprocessing import Pool, cpu_count
+    from os import makedirs
     from os.path import exists, join
 
     import pandas as pds
-    from numpy import nan
-
-    from clinica.iotools.bids_utils import json_from_dcm
-    from clinica.iotools.utils.data_handling import center_nifti_origin
-    from clinica.utils.stream import cprint
 
     if modality.lower() not in ["t1", "av45", "flute", "pib"]:
         # This should never be reached
         raise RuntimeError(f"{modality.lower()} is not supported for conversion")
 
-    counter = None
-
     makedirs(join(bids_dir, "conversion_info"), exist_ok=True)
-
-    def init(args):
-        """Store the counter for later use."""
-        global counter
-        counter = args
-
-    def create_file(image):
-        global counter
-        subject = image.Subjects_ID
-        session = image.Session_ID
-        name_of_path = {
-            "t1": "Path_to_T1",
-            "av45": "Path_to_pet",
-            "flute": "Path_to_pet",
-            "pib": "Path_to_pet",
-        }
-        # depending on the DataFrame, there is different way of accessing
-        # the image object
-        image_path = image[name_of_path[modality]]
-        with counter.get_lock():
-            counter.value += 1
-            if image_path is nan:
-                cprint(f"No path specified for {subject} in session {session}")
-            else:
-                cprint(
-                    f"'[{modality.upper()}] Processing subject {subject} - {session} {session}, {counter.value}/{total}"
-                )
-
-        if image_path is nan:
-            return nan
-        session = viscode_to_session(session)
-        # creation of the path
-        if modality == "t1":
-            output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
-            output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
-        elif modality in ["flute", "pib", "av45"]:
-            output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
-            output_filename = (
-                f"sub-AIBL{subject}_ses-{session}_task-rest_acq-{modality}_pet"
-            )
-        # image is saved following BIDS specifications
-
-        if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
-            cprint(f"Subject {str(subject)} - session {session} already processed.")
-            output_image = join(output_path, output_filename + ".nii.gz")
-        else:
-            if exists(join(output_path, output_filename + ".nii.gz")):
-                remove(join(output_path, output_filename + ".nii.gz"))
-            output_image = dicom_to_nii(
-                subject, output_path, output_filename, image_path
-            )
-            json_from_dcm(image_path, join(output_path, output_filename + ".json"))
-
-        # Center all images
-        center_nifti_origin(output_image, output_image)
-
-        return output_image
 
     # it reads the DataFrame where subject_ID, session_ID and path are saved
     if modality == "t1":
@@ -596,6 +597,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
             path_to_csv_pet_modality, sep=",|;", usecols=list(range(0, 36))
         )
         images = find_path_to_pet_modality(path_to_dataset, df_pet)
+
     images.to_csv(
         join(bids_dir, "conversion_info", modality + "_paths.tsv"),
         index=False,
@@ -603,18 +605,17 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
         encoding="utf-8",
     )
 
-    counter = Value("i", 0)
-    total = images.shape[0]
-    # Reshape inputs to give it as a list to the workers
-    images_list = []
-    for i in range(total):
-        images_list.append(images.iloc[i])
+    images_list = list([data for _, data in images.iterrows()])
 
-    # intializer are used with the counter variable to keep track of how many
-    # files have been processed
-    poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
-    output_file_treated = poolrunner.map(create_file, images_list)
-    del counter
+    with Pool(processes=max(cpu_count() - 1, 1)) as pool:
+        create_file_ = partial(
+            create_file,
+            modality=modality,
+            bids_dir=bids_dir,
+            overwrite=overwrite,
+        )
+        output_file_treated = pool.map(create_file_, images_list)
+
     return output_file_treated
 
 
