@@ -1,66 +1,111 @@
 import functools
+
 from os import read
 from pathlib import Path
 from typing import List
 
-from clinica.engine.prov_utils import create_prov_file
-
-from .prov_model import *
-
 
 def provenance(func):
-    from .prov_utils import get_files_list
-
     @functools.wraps(func)
     def run_wrapper(self, **kwargs):
-        ret = []
+        ret = func(self)
+
         pipeline_args = self.parameters
         pipeline_fullname = self.fullname
-        paths_input_files = get_files_list(
-            self, pipeline_fullname, "input_to", pipeline_args
-        )
 
-        prov_history = get_history_record(paths_files=paths_input_files)
-        prov_current = get_pipeline_record(self, paths_input_files)
+        create_node_read(self)
+        create_node_update(self, pipeline_args, pipeline_fullname)
+        create_node_log(self)
 
-        if validate_command(prov_history, prov_current):
-            ret = func(self)
-            print("The pipeline succesfully executed.")
-        else:
-            raise Exception(
-                "The pipeline selected is incompatible with the input files provenance"
-            )
-        paths_out_files = get_files_list(
-            self, pipeline_fullname, "output_from", pipeline_args
-        )
-        register_prov(prov_current, paths_out_files)
+        connect_nodes(self)
 
         return ret
 
     return run_wrapper
 
 
-def register_prov(entries_current: ProvRecord, out_files: Path) -> None:
+def connect_nodes(self):
+    # fmt: off
 
-    # TODO: iterate over out_files and create a provenance file for each
+    #self.output_node.outputs.get()[self.get_output_fields()[0]]
 
-    for file in out_files:
-        write_prov_file(entries_current, file)
-    print("Provenance registered succesfully")
+    self.connect(
+        [
+            (self.input_node, self.prov_input_node, [("t1w", "input_files")]),
+            (self.input_node, self.prov_update_node, [("t1w", "input_files")]),
+            (self.prov_input_node, self.prov_update_node, [("prov_in_record", "prov_in_record")]),
+            (self.prov_update_node, self.prov_log_node,[("prov_upd_record", "prov_log_record")]),
+            (self.output_node, self.prov_log_node, [(self.get_output_fields()[0], "out_file")]),        
+        ]
+    )
+    return True
+    # fmt: on
+
+
+def create_node_read(self):
+    import nipype.pipeline.engine as npe
+    import nipype.interfaces.utility as nutil
+
+    self.prov_input_node = npe.Node(
+        nutil.Function(
+            input_names=["input_files"],
+            output_names=["prov_in_record"],
+            function=read_prov,
+        ),
+        name="ReadProvRecord",
+    )
+
+
+def create_node_update(self, parameters, fullname):
+    import nipype.pipeline.engine as npe
+    import nipype.interfaces.utility as nutil
+
+    self.prov_update_node = npe.Node(
+        nutil.Function(
+            input_names=["input_files", "prov_in_record", "parameters", "fullname"],
+            output_names=["prov_upd_record"],
+            function=update_prov,
+        ),
+        name="UpdateRecord",
+    )
+
     return True
 
 
-def get_history_record(paths_files: List[Path]) -> ProvRecord:
+def create_node_log(self):
+    import nipype.pipeline.engine as npe
+    import nipype.interfaces.utility as nutil
+
+    self.prov_log_node = npe.Node(
+        nutil.Function(
+            input_names=["prov_log_record", "out_file", "out_dir"],
+            output_names=["output_record"],
+            function=log_prov,
+        ),
+        name="LogProv",
+    )
+
+    self.prov_log_node.inputs.out_dir = self.caps_directory
+    return
+
+
+def read_prov(input_files):
     """
     return:
         a ProvRecord for the associated files in path_files
     """
-
-    from .prov_utils import get_path_prov, read_prov_jsonld
+    from clinica.engine.prov_utils import get_path_prov, read_prov_jsonld
+    from clinica.engine.prov_model import ProvRecord
+    from pathlib import Path
 
     prov_record = ProvRecord({}, [])
+    if isinstance(input_files, list):
+        paths_files = [Path(x) for x in input_files]
+    elif isinstance(input_files, str):
+        paths_files = [Path(input_files)]
 
     for path in paths_files:
+        print("in read_prov, path for input:", path)
         prov_record_tmp = read_prov_jsonld(get_path_prov(path))
         if prov_record_tmp:
             # TODO extend context as well
@@ -69,135 +114,65 @@ def get_history_record(paths_files: List[Path]) -> ProvRecord:
     return prov_record
 
 
-def get_pipeline_record(self, paths_inputs: List[Path]) -> ProvRecord:
+def update_prov(input_files, prov_in_record):
     """
     params:
-        paths_inputs: list of input entries paths
+        input_files: list of input entries
     return:
         ProvRecord associated with the launched pipeline
     """
-    import sys
+    from clinica.engine.prov_utils import (
+        mint_activity,
+        mint_agent,
+        mint_entity,
+        validate_command,
+    )
+    from pathlib import Path
+    from clinica.engine.prov_model import ProvRecord
 
     elements = []
-    new_agent = get_agent()
+    new_agent = mint_agent()
     elements.append(new_agent)
     new_entities = []
 
-    for path in paths_inputs:
-        entity_curr = get_entity(path)
+    if isinstance(input_files, list):
+        paths_files = [Path(x) for x in input_files]
+    elif isinstance(input_files, str):
+        paths_files = [Path(input_files)]
+
+    for path in paths_files:
+        entity_curr = mint_entity(path)
         new_entities.append(entity_curr)
     elements.extend(new_entities)
 
-    new_activity = get_activity(self, new_agent, new_entities)
+    new_activity = mint_activity(new_agent, new_entities)
     elements.append(new_activity)
 
-    return ProvRecord(context={}, elements=elements)
+    prov_current = ProvRecord(context={}, elements=elements)
+
+    if not validate_command(prov_in_record, prov_current):
+        raise ("Invalid commmand")
+    return prov_current
 
 
-def write_prov_file(
-    list_prov_entries: ProvRecord, path_entity: Path, overwrite=False
-) -> None:
-    """
-    Create provenance file with current pipeline information
+def log_prov(prov_log_record, out_file, out_dir):
+    from clinica.engine.prov_utils import write_prov_file
+    from pathlib import Path
 
-    params:
-    prov_entries: list of ProvEntry
-    entity_path: path of the prov-associated element
-    """
+    out_file = out_file + "*"
+    out_files_paths = []
+    if isinstance(out_file, list):
+        for x in out_file:
+            out_files_paths.extend(list(Path(out_dir).rglob(x)))
+    elif isinstance(out_file, str):
+        out_files_paths = list(Path(out_dir).rglob(out_file))
 
-    from .prov_utils import get_path_prov
+    print("the file searched:", out_file)
+    print("the folder searched:", out_dir)
 
-    prov_path = get_path_prov(path_entity)
-
-    create_prov_file(list_prov_entries, prov_path)
-
-    return
-
-
-def extend_prov(prov_main: dict, prov_new: dict) -> dict:
-    """
-    Append a specific prov data to the global prov dict
-    """
-
-    for k in prov_new.keys():
-        for el in prov_new[k]:
-            if k in prov_main.keys() and el not in prov_main[k]:
-                prov_main[k].append(el)
-    return prov_main
-
-
-def get_agent() -> ProvAgent:
-    from clinica import __name__, __version__
-
-    from .prov_utils import generate_agent_id
-
-    new_agent = ProvAgent(uid=generate_agent_id())
-
-    new_agent.attributes["version"] = __version__
-    new_agent.attributes["label"] = __name__
-
-    return new_agent
-
-
-def get_activity(self, agent: Identifier, entities: List[ProvEntity]) -> ProvActivity:
-    """
-    return
-        ProvActivity from related entities and associated agent
-    """
-    import sys
-
-    from .prov_utils import generate_activity_id
-
-    new_activity = ProvActivity(uid=generate_activity_id(self.fullname))
-
-    new_activity.attributes["parameters"] = self.parameters
-    new_activity.attributes["label"] = self.fullname
-    new_activity.attributes["command"] = sys.argv[1:]
-    new_activity.attributes["used"] = [str(x.uid) for x in entities]
-    new_activity.attributes["wasAssociatedWith"] = str(agent.uid)
-
-    return new_activity
-
-
-def get_entity(path_curr: Path) -> ProvEntity:
-    """
-    return an Entity object from the file in path_curr
-    """
-
-    from clinica.engine.prov_utils import generate_entity_id, get_last_activity
-
-    new_entity = ProvEntity(uid=generate_entity_id(path_curr))
-    new_entity.attributes["label"] = path_curr.name
-    new_entity.attributes["path"] = str(path_curr)
-
-    # TODO: implement function to return the latest associated activity
-    new_entity.attributes["wasGeneratedBy"] = get_last_activity(path_curr)
-
-    return new_entity
-
-
-def validate_command(prov_history: ProvRecord, prov_current: ProvRecord) -> bool:
-    """
-    Check the command is valid on the data being run
-    """
-    flag = True
-
-    for a in prov_history.elements:
-        for b in prov_current.elements:
-            # TODO: check that the record entries are compatible with the current entry
-            flag = True
-    return flag
-
-
-def is_valid(command: dict) -> bool:
-    valid_list = [
-        {
-            ("clin:clinica0.5.0", "clin:adni2Bids"): (
-                "clin:clinica0.5.0",
-                "clin:t1-linear",
-            )
-        }
-    ]
-    if command in valid_list:
-        return True
-    return False
+    print("out_files_path:", out_files_paths)
+    print("in log prov, prov_record", prov_log_record)
+    for path_file in out_files_paths:
+        write_prov_file(prov_log_record, path_file)
+    print("Provenance registered succesfully")
+    return True
