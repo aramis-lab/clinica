@@ -109,7 +109,7 @@ def create_merge_file(
                 row_session_df = pd.DataFrame([[session]], columns=["session_id"])
 
                 row_df = pd.concat([row_participant_df, row_session_df], axis=1)
-                merged_df = merged_df.append(row_df)
+                merged_df = pd.concat([merged_df, row_df])
 
         else:
             sessions_df = pd.read_csv(
@@ -172,7 +172,7 @@ def create_merge_file(
                 # remove duplicated columns
                 row_df = row_df.loc[:, ~row_df.columns.duplicated(keep="last")]
 
-                merged_df = merged_df.append(row_df)
+                merged_df = pd.concat([merged_df, row_df])
 
     # Put participant_id and session_id first
     col_list = merged_df.columns.values.tolist()
