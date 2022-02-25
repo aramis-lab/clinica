@@ -1,0 +1,396 @@
+from typing import Tuple
+import pandas as pd
+import xml.etree.ElementTree
+
+def _read_xml_files(subj_ids=[], xml_path="") -> list:
+    """TODO TODO."""
+    from glob import glob
+    from os import path
+    if subj_ids:
+        xml_files = []
+        xml_regex = [path.join(xml_path, ("ADNI_" + e + "*.xml")) for e in subj_ids]
+        for subj_files in xml_regex:
+            xml_files.extend(glob(subj_files))
+    else:
+        xml_files = glob("Clinica_processed_metadata/ADNI_*.xml")
+    if len(xml_files) > 0:
+        return xml_files
+    else:
+        raise IndexError("No ADNI xml files were found for reading the metadata.")
+
+
+def _check_xml_tag(el_tag, exp_tag):
+    """TODO."""
+    assert el_tag == exp_tag, f"Bad tag: expected {exp_tag}, got {el_tag}"
+
+
+def _check_xml_nb_children(xml_el, exp_nb_children):
+    """TODO TODO."""
+    nb_children = len(xml_el)
+    if isinstance(exp_nb_children, int):
+        assert (
+            nb_children == exp_nb_children
+        ), f"Bad number of children for <{xml_el.tag}>: got {nb_children} != {exp_nb_children}"
+    else:
+        # container
+        assert (
+            nb_children in exp_nb_children
+        ), f"Bad number of children for <{xml_el.tag}>: got {nb_children}, not in {exp_nb_children}"
+
+
+def _check_xml(
+    xml_el: xml.etree.ElementTree.Element, exp_tag: str, exp_nb_children=None
+) -> xml.etree.ElementTree.Element:
+    """Check that xml element is as expected (tag name + nb of children)"""
+    _check_xml_tag(xml_el.tag, exp_tag)
+    if exp_nb_children is not None:  # no check otherwise
+        _check_xml_nb_children(xml_el, exp_nb_children)
+    return xml_el
+
+
+def _parse_project(root: xml.etree.ElementTree.Element) -> xml.etree.ElementTree.Element:
+    """check that root has 1 child: <project> having 4 children."""
+    assert len(root) == 1
+    project = _check_xml(root[0], "project", 4)
+    _check_xml_project_identifier(project, "ADNI")
+    return project
+
+
+def _check_xml_and_get_text(
+     xml_el: xml.etree.ElementTree.Element, exp_tag: str, *, cast=None
+ ) -> str:
+    """Check xml element and return its text (leaf)"""
+    _check_xml(xml_el, exp_tag, 0)  # leaf
+    return _get_text(xml_el, cast=cast)
+
+
+def _get_text(xml_el: xml.etree.ElementTree.Element, cast=None):
+    """Get text of xml element (leaf)."""
+    if cast is not None:
+        return cast(xml_el.text)
+    return xml_el.text
+
+
+def _check_derived_image_xml(derived: xml.etree.ElementTree.Element):
+    """Perform sanity checks on derived images."""
+    assert len(derived) >= 9  # multiple <provenanceDetail> nodes possible
+    assert (
+        _check_xml_and_get_text(derived[2], "imageType") == "image volume"
+    ), "imageType"
+    assert _check_xml_and_get_text(derived[3], "tissue") == "All", "tissue"
+    assert _check_xml_and_get_text(derived[4], "hemisphere") == "Both", "hemis"
+    assert (
+        _check_xml_and_get_text(derived[5], "anatomicStructure") == "Brain"
+    ), "anat struct"
+    assert (
+        _check_xml_and_get_text(derived[6], "registration") == "native"
+    ), "registration not native"
+    # skip check relatedImage, original ID consistence + "derived from"...
+    # skip processing steps with names, versions, dates and so on
+    # 2 cases
+    if derived[-1].tag == "creationDate":
+        assert (
+            _check_xml_and_get_text(derived[-1], "creationDate") == "0000-00-00"
+        ), "creaDate"
+    else:
+        assert (
+            _check_xml_and_get_text(derived[-2], "creationDate") == "0000-00-00"
+        ), "creaDate"
+
+
+def _get_derived_image_metadata(derived: xml.etree.ElementTree.Element) -> dict:
+    """Return metadata for derived images after performing some sanity checks."""
+    _check_derived_image_xml(derived)
+    return {
+        "image_proc_id": _check_xml_and_get_text(derived[0], "imageUID", cast=int),
+        "image_proc_desc": _check_xml_and_get_text(
+            derived[1], "processedDataLabel"
+        ).strip(),
+    }
+
+
+def _check_xml_project_identifier(project: xml.etree.ElementTree.Element, expected: str):
+    """Check the project identifier."""
+    if _check_xml_and_get_text(project[0], "projectIdentifier") != expected:
+        raise ValueError(f"Not {expected} cohort")
+
+
+def _get_original_image_metadata(original_image: xml.etree.ElementTree.Element) -> dict:
+    """Get original image metadata."""
+    if not isinstance(original_image, list):
+        return _get_image_metadata(original_image)
+    # only keep common metadata (remaining will be None) and
+    original_images_metadata = [_get_image_metadata(oi) for oi in original_image]
+    original_images_metadata = {oid.pop("image_orig_id"): oid for oid in original_images_d}
+    original_image_metadata = {"image_orig_id": "|".join(map(str, original_images_d.keys()))}
+    for k in next(iter(original_images_metadata.values())).keys():
+        # loop on original images metadata and only add consistent metadata
+        set_v = set(oid[k] for oid in original_images_metadata.values())
+        if len(set_v) == 1:
+            original_image_metadata[k] = set_v.pop()
+        # else:
+        # orig_img_d[k] = '|'.join(map(str, set_v)) # keep all values with '|'
+        # assert {**get_img_metadata(orig_img), 'IMAGE_ORIG_ID': -1} == \
+        #       {**get_img_metadata(orig_img_bis), 'IMAGE_ORIG_ID': -1}, 'Not consistent multiple derived scans'
+    return original_image_metadata
+
+
+def _check_processed_image_rating(processed_image_rating, original_image_d, derived_d):
+    """Check, if possible, that the rating of the processed images are
+    consistent with the rating of the original image.
+    """
+    from clinica.utils.stream import cprint
+    if processed_image_rating is not None:
+        if processed_image_rating != original_image_d.get("image_orig_rating", None):
+            cprint(
+                msg=(f"Image rating for processed image {derived_d.get('image_proc_id')} not "
+                     "consistent with rating of original image"),
+                lvl="info",
+            )
+
+def _get_root_from_xml_path(xml_path: str) -> xml.etree.ElementTree.Element:
+    """Return the root XML element from the XML file path."""
+    import os
+    import xml.etree.ElementTree as ET
+    try:
+        tree = ET.parse(xml_path)
+        root = tree.getroot()
+    except Exception as e:
+        raise ValueError(os.path.basename(xml_path) + ": " + str(e))
+    return root
+
+
+def _parse_series(study: xml.etree.ElementTree.Element) -> xml.etree.ElementTree.Element:
+    """Get series xml element from study xml element."""
+    if len(study) == 7:
+        return _check_xml(study[5], "series", 3)
+    else:
+        return _check_xml(study[5], "series", 4)
+
+
+def _parse_derived_images(series: xml.etree.ElementTree.Element):
+    """Parse the series xml element when derived images are present.
+    Return the original image, the rating of the processed images,
+    and the derived image metadata as a dict.
+    """
+    # we can have 1 or 2 related imgs...
+    series_meta = _check_xml(series[-1], "seriesLevelMeta", {3, 4})
+    related_image = _check_xml(series_meta[2], "relatedImageDetail", 1)
+    original_image = _check_xml(related_image[0], "originalRelatedImage", {3, 4})
+    if len(series_meta) == 4:
+        # 2 original images
+        related_image_bis = _check_xml(series_meta[-1], "relatedImageDetail", 1)
+        original_image_bis = _check_xml(
+            related_image_bis[0], "originalRelatedImage", len(original_image)
+        )
+        original_image = [original_image, original_image_bis]
+    # specific
+    pipe_name = _check_xml_and_get_text(
+        _check_xml(series_meta[0], "annotation", 1)[0], "text"
+    )
+    # assert pipe_name == 'Grinder Pipeline', f'Wrong pipeline name: {pipe_name}'
+    deriv = _check_xml(series_meta[1], "derivedProduct")
+    derived_metadata = {"image_proc_pipe": pipe_name.strip()}
+    derived_metadata.update(_get_derived_image_metadata(deriv))
+    processed_image_rating = _get_image_rating(deriv[-1])
+    return original_image, processed_image_rating, derived_metadata
+
+
+def _get_image_metadata(img: xml.etree.ElementTree.Element) -> dict:
+    """Return information on original image as dict of metadata."""
+    assert img.tag in {
+        "imagingProtocol",  # for original image metadata
+        "originalRelatedImage",  # for processed image
+    }
+    assert len(img) in {3, 4}  # children check
+    protocol = _check_xml(img[2], "protocolTerm")  # do not check children
+    img_rating_val = _get_image_rating(img[3]) if len(img) == 4 else None
+    assert all(p.tag == "protocol" and "term" in p.attrib.keys() for p in protocol)
+    protocol_metadata = {
+        "mri_" + "_".join(p.attrib["term"].split()).lower(): p.text for p in protocol
+    }
+    # replace confusing '|' (reserved for separation btw elements) with space
+    # (only 1 manufacturer with this apparently but...)
+    protocol_metadata = {
+        k: v.replace("|", " ")
+        if isinstance(v, str)
+        else v  # there are some None (not str)
+        for k, v in protocol_metadata.items()
+    }
+    return {
+        "image_orig_id": _check_xml_and_get_text(img[0], "imageUID", cast=int),
+        "image_orig_seq": _check_xml_and_get_text(
+            img[1], "description"
+        ),  # .replace('|', ' '),
+        **protocol_metadata,
+    }
+
+
+def _get_image_rating(image_rating: xml.etree.ElementTree.Element) -> int:
+    """Get the image rating value as an integer from the xml element."""
+    _check_xml(image_rating, "imageRating", 2)
+    image_rating_desc = _check_xml_and_get_text(image_rating[0], "ratingDescription")
+    image_rating_val = _check_xml_and_get_text(image_rating[1], "value", cast=int)
+    assert image_rating_desc == str(image_rating_val)
+    return image_rating_val
+
+
+def _check_modality(study: xml.etree.ElementTree.Element, expected_modality: str):
+    """Check that the modality of the given study is the expected one."""
+    series = _parse_series(study)
+    modality = _check_xml_and_get_text(series[1], "modality")
+    if modality != expected_modality:
+        raise ValueError(f"Unexpected modality {modality}, expected {expected_modality}.")
+
+
+def _parse_subject(project: xml.etree.ElementTree.Element):
+    """From the project xml element, parse the subject and subject id."""
+    subject = _check_xml(project[-1], "subject", {5, 7})  # with APOE or not
+    subject_id = _check_xml_and_get_text(subject[0], "subjectIdentifier")
+    return subject_id, subject
+
+
+def _parse_study(subject: xml.etree.ElementTree.Element):
+    """Parse the study from the subject xml element and check that it is MRI."""
+    study = _check_xml(subject[-1], "study", {6, 7})
+    _check_modality(study, "MRI")
+    return study
+
+
+def _parse_images(study:xml.etree.ElementTree.Element):
+    """Parse the images, original and derived if available."""
+    if len(study) == 7:
+        # Original only
+        original_image = _check_xml(study[6], "imagingProtocol", {3, 4})
+        return original_image, None, dict()
+    else:
+        series = _parse_series(study)
+        return _parse_derived_images(series)
+
+
+def _parse_xml_file(xml_path: str) -> dict:
+    """Parse the given XML file and return the desired metadata as a dict."""
+    root = _get_root_from_xml_path(xml_path)
+    project = _parse_project(root)
+    subject_id, subject = _parse_subject(project)
+    study = _parse_study(subject)
+    series = _parse_series(study)
+    original_image, processed_image_rating, derived_image_metadata = _parse_images(study)
+    original_image_metadata = _get_original_image_metadata(original_image)
+    _check_processed_image_rating(
+        processed_image_rating, original_image_metadata, derived_image_metadata
+    )
+    acquisition_date = pd.Timestamp(
+        _check_xml_and_get_text(series[2], "dateAcquired")
+    )
+    scan_metadata = {
+        "id": subject_id,
+        "acq_time": acquisition_date,
+        **original_image_metadata,
+        **derived_image_metadata,
+    }
+    assert "image_proc_id" in scan_metadata or "image_orig_id" in scan_metadata
+    return scan_metadata
+
+
+class func_with_exception:
+    def __init__(self, f):
+        self.f = f
+
+    def __call__(self, *args, **kwargs):
+        """Return a tuple: (result, exception)"""
+        try:
+            return self.f(*args, **kwargs), None
+        except Exception as e:
+            return None, e
+
+
+def _run_parsers(xml_files: list) -> Tuple[list, dict]:
+    """TODO TODO."""
+    import os
+    # from concurrent.futures import ProcessPoolExecutor, as_completed #ThreadPoolExecutor
+    from math import ceil
+    parser = func_with_exception(_parse_xml_file)
+    imgs_with_excep = dict(
+        zip(
+            xml_files,  # tqdm is buggy when chunksize > 1
+            [parser(xml_file) for xml_file in xml_files],
+        )
+    )
+    imgs = [img for img, e in imgs_with_excep.values() if e is None]
+    exceps = {
+        os.path.basename(xml_p): e
+        for xml_p, (_, e) in imgs_with_excep.items()
+        if e is not None
+    }
+    return imgs, exceps
+
+
+def _create_mri_meta_df(imgs: list) -> pd.DataFrame:
+    mri_meta = pd.DataFrame(imgs).convert_dtypes()
+    # Scan ID as expected by Clinica (derived if so, original otherwise)
+    mri_meta["T1w_scan_id"] = mri_meta["image_proc_id"].combine_first(
+        mri_meta["image_orig_id"]
+    )
+    # Index
+    mri_meta.set_index(
+        [
+            "T1w_scan_id",
+            "id",
+            # "GENDER",
+            # "VISIT_DESC",
+            # "VISIT_AGE",
+            # "SCAN_DATE",
+            # "STUDY_ID",
+            # "SERIES_ID",
+        ],
+        inplace=True,
+    )
+    mri_meta.reset_index(inplace=True)
+    return mri_meta
+
+
+def _get_existing_scan_dataframe(subj_path, session):
+    from pathlib import Path
+    subj_id = Path(subj_path).name
+    scans_tsv_path = Path(subj_path) / session / f"{subj_id}_{session}_scans.tsv"
+    if scans_tsv_path.exists():
+        df_scans = pd.read_csv(scans_tsv_path, sep="\t")
+        df_scans["scan_id"] = df_scans["scan_id"].astype("Int64")
+        return df_scans
+    warnings.warn(f"No scan tsv file for subject {subj_id} and session {session}")
+    return None
+
+
+def _merge_scan_and_metadata(df_scans, df_meta):
+    return pd.merge(
+        df_scans, df_meta, how="left", left_on="scan_id", right_on="T1w_scan_id"
+    )
+
+
+def _add_metadata_to_scans(df_meta, bids_subjs_paths: list) -> None:
+    """Add the metadata to the appropriate scans.tsv file."""
+    from clinica.iotools.bids_utils import get_bids_sess_list
+    temp = []
+    for subj_path in bids_subjs_paths:
+        sess_list = get_bids_sess_list(subj_path)
+        if sess_list:
+            for sess in sess_list:
+                df_scans = _get_existing_scan_dataframe(subj_path, sess)
+                if df_scans is not None:
+                    df_merged = _merge_scan_and_metadata(df_scans, df_meta)
+                    temp.append(df_merged)
+                    #df_merged.to_csv(scans_tsv_path, sep="\t")
+    return temp
+
+
+def create_json_metadata(bids_subjs_paths: str, bids_ids: list, xml_path: str) -> None:
+    """Create json metadata dictionary and add the columns to the appropriate scans.tsv files"""
+    loni_ids = [bids_id_to_loni(bids_id) for bids_id in bids_ids]
+    xml_files = _read_xml_files(loni_ids, xml_path)
+    imgs, exe = _run_parsers(xml_files)
+    df_meta = _create_mri_meta_df(imgs)
+    return _add_metadata_to_scans(df_meta, bids_subjs_paths)
+#return
+
+
