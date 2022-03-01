@@ -2,6 +2,7 @@ from typing import Tuple, Union
 import pandas as pd
 import xml.etree.ElementTree
 
+
 def _read_xml_files(subj_ids: list = [], xml_path: str = "") -> list:
     """Return the XML files in the folder `xml_path` for the provided `subj_ids`.
     This function assumes that file are named "ADNI_{sub_ids}.xml".
@@ -35,14 +36,14 @@ def _check_xml_nb_children(xml_el: xml.etree.ElementTree.Element, exp_nb_childre
     if isinstance(exp_nb_children, int):
         if nb_children != exp_nb_children:
             raise ValueError(
-                    f"Bad number of children for <{xml_el.tag}>: got {nb_children} != {exp_nb_children}"
-                    )
+                f"Bad number of children for <{xml_el.tag}>: got {nb_children} != {exp_nb_children}"
+            )
     else:
         # container
         if nb_children not in exp_nb_children:
             raise ValueError(
-                    f"Bad number of children for <{xml_el.tag}>: got {nb_children}, not in {exp_nb_children}"
-                    )
+                f"Bad number of children for <{xml_el.tag}>: got {nb_children}, not in {exp_nb_children}"
+            )
 
 
 def _check_xml(
@@ -71,9 +72,9 @@ def _parse_project(root: xml.etree.ElementTree.Element) -> xml.etree.ElementTree
 
 
 def _check_xml_and_get_text(
-     xml_el: xml.etree.ElementTree.Element,
-     exp_tag: str, *, cast=None
- ) -> str:
+        xml_el: xml.etree.ElementTree.Element,
+        exp_tag: str, *, cast=None
+) -> str:
     """Check xml element and return its text (leaf)"""
     _check_xml(xml_el, exp_tag, 0)  # leaf
     return _get_text(xml_el, cast=cast)
@@ -402,7 +403,7 @@ def _merge_scan_and_metadata(
         strategy: dict
 ) -> pd.DataFrame:
     """Perform a merge between the two provided dataframe according to the strategy."""
-    return pd.merge(df_scans, df_meta,  **strategy)
+    return pd.merge(df_scans, df_meta, **strategy)
 
 
 def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> None:
@@ -428,5 +429,3 @@ def create_json_metadata(bids_subjs_paths: str, bids_ids: list, xml_path: str) -
     df_meta = _create_mri_meta_df(imgs)
     _add_metadata_to_scans(df_meta, bids_subjs_paths)
     return None
-
-
