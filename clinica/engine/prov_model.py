@@ -66,7 +66,7 @@ class ProvEntity(ProvElement):
     uid: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
     attributes: dict = field(default=attr.Factory(dict))
 
-    def unstrct(self):
+    def unstruct(self):
         return {"id": str(self.uid), **self.attributes}
 
 
@@ -77,7 +77,7 @@ class ProvActivity(ProvElement):
     uid: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
     attributes: dict = field(default=attr.Factory(dict))
 
-    def unstrct(self):
+    def unstruct(self):
         return {"id": str(self.uid), **self.attributes}
 
 
@@ -88,7 +88,7 @@ class ProvAgent(ProvElement):
     uid: Identifier = field(validator=[attr.validators.instance_of(Identifier)])
     attributes: dict = field(default=attr.Factory(dict))
 
-    def unstrct(self):
+    def unstruct(self):
         return {"id": str(self.uid), **self.attributes}
 
 
@@ -118,14 +118,21 @@ class ProvRecord:
                 return element
 
     def json(self):
+
         json_dict = {}
+
+        context_keys = [x.id for x in self.context._namespaces]
+        context_vals = [y.uri for y in self.context._namespaces]
+
+        json_dict["@context"] = dict(zip(context_keys, context_vals))
+
         json_dict["prov:Agent"] = [
-            x.unstrct() for x in self.elements if isinstance(x, ProvAgent)
+            x.unstruct() for x in self.elements if isinstance(x, ProvAgent)
         ]
         json_dict["prov:Activity"] = [
-            x.unstrct() for x in self.elements if isinstance(x, ProvActivity)
+            x.unstruct() for x in self.elements if isinstance(x, ProvActivity)
         ]
         json_dict["prov:Entity"] = [
-            x.unstrct() for x in self.elements if isinstance(x, ProvEntity)
+            x.unstruct() for x in self.elements if isinstance(x, ProvEntity)
         ]
         return json_dict

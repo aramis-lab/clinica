@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import List, Optional
 from clinica.engine.prov_model import *
@@ -134,13 +135,17 @@ def deserialize_jsonld(path_prov) -> ProvRecord:
     import rdflib
 
     g = rdflib.Graph(identifier="prov_graph_records")
+    built_in_namepsaces = list(g.namespace_manager.namespaces())
     g.parse(path_prov, format="json-ld")
+    json_namespaces = list(g.namespace_manager.namespaces())
+    json_namespaces = list(set(json_namespaces) - set(built_in_namepsaces))
 
     elements = {}
 
     # fetch context:
     context = ProvContext([])
-    for lbl, link in g.namespace_manager.namespaces():
+
+    for lbl, link in json_namespaces:
         namespace = Namespace(lbl, link.n3())
         context._namespaces.append(namespace)
 
