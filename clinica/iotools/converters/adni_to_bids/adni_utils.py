@@ -565,6 +565,18 @@ def remove_fields_duplicated(bids_fields):
     return [x for x in bids_fields if not (x in seen or seen_add(x))]
 
 
+def bids_id_to_loni(bids_id):
+     """
+     Convert a subject id of the form sub-ADNI000S0000 back to original format 000_S_0000
+     """
+     import re
+
+     ids = re.findall("\d+", bids_id)
+     if len(ids) == 2:
+         return ids[0] + "_S_" + ids[1]
+     return None
+
+
 def filter_subj_bids(df_files, location, bids_ids):
     import clinica.iotools.bids_utils as bids
 
