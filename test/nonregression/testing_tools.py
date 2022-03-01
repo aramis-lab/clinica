@@ -62,49 +62,6 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     ) & (np.sum(mask_different_voxels_cond2) / metric_flattened.size < threshold2[1])
 
 
-def likeliness_measure2(file1, file2, threshold1):
-    """
-    Function that compares 2 Nifti inputs, with 2 different thresholds.
-
-    Args:
-        (string) file1: path to first nifti input
-        (string) file2: path to second nifti to compare
-        (tuple) threshold1: defines the first criteria to meet: threshold1[0] defines the relative
-                            difference between 2 voxels to be considered different (ex: 1e-4). threshold[1] defines
-                            the maximum proportion of voxels that can different for the test to be negative.
-        (tuple) threshold2: defines the second criteria to meet.
-        (bool) display: If set to True, will display a useful graph to determine optimal threshold for the
-                        comparison
-
-    Returns:
-        (bool) True if file1 and file2 can be considered similar enough (meeting criterion expressed in threshold1
-               and threshold2). False otherwise.
-
-    """
-    import os
-
-    import matplotlib.pyplot as plt
-    import nibabel as nib
-    import numpy as np
-
-    print(" ** comparing " + os.path.basename(file1) + " **")
-    data1 = nib.load(file1).get_fdata(dtype="float32")
-    data1[np.isnan(data1)] = 0
-
-    data2 = nib.load(file2).get_fdata(dtype="float32")
-    data2[np.isnan(data2)] = 0
-
-    # Get mask where data are 0 in data1 and data2
-    mask = (data1 == 0) & (data2 == 0)
-    data1[mask] = 1
-    data2[mask] = 1
-    metric = (2 * np.abs(data1 - data2)) / (np.abs(data1) + np.abs(data2))
-    metric_flattened = np.ndarray.flatten(metric)
-
-    mask_different_voxels_cond1 = metric_flattened > threshold1[0]
-    return np.sum(mask_different_voxels_cond1) / metric_flattened.size < threshold1[1]
-
-
 def similarity_measure(file1, file2, threshold):
     """
     Function that compares 2 Nifti inputs using a correlation metric. Nifti are equals if correlation gives

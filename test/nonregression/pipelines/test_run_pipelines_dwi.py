@@ -135,7 +135,7 @@ def run_DWIPreprocessingUsingPhaseDiffFieldmap(
     )
     ref_file = fspath(ref_dir / "sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz")
 
-    assert likeliness_measure2(out_file, ref_file, (1e-3, 0.25))
+    assert similarity_measure(out_file, ref_file, 0.95)
 
 
 def run_DWIDTI(

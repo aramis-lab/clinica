@@ -1,4 +1,4 @@
-"""Convert the OASIS3 dataset into BIDS."""
+"""Convert the NIFD dataset into BIDS."""
 
 from os import PathLike
 from typing import List
