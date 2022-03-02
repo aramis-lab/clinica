@@ -18,7 +18,6 @@ def provenance(func):
         create_node_read(self)
         create_node_update(self)
         create_node_log(self)
-
         connect_nodes(self)
 
         return ret
@@ -31,8 +30,8 @@ def connect_nodes(self):
 
     try:
         output_field = self.get_output_fields()[0]
-        self.connect([(self.output_node, self.prov_log_node, [(self.get_output_fields()[0], "out_file")])])
-    except Exception:
+        self.connect([(self.output_node, self.prov_log_node, [(output_field, "out_file")])])
+    except IndexError:
          self.connect([(self.output_node, self.prov_log_node, [("", "out_file")])])
 
     self.connect(
@@ -43,8 +42,6 @@ def connect_nodes(self):
             (self.prov_update_node, self.prov_log_node,[("prov_upd_record", "prov_log_record")]),      
         ]
     )
-
-    
     return True
     # fmt: on
 
