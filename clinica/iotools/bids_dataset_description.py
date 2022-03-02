@@ -5,7 +5,7 @@ import attr
 from cattr.gen import make_dict_unstructure_fn, override
 from cattr.preconf.json import make_converter
 
-BIDS_VERSION = "1.6.0"
+BIDS_VERSION = "1.7.0"
 
 
 @attr.define
