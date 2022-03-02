@@ -93,7 +93,7 @@ class SpatialSVM(cpe.Pipeline):
                     "*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz",
                 ),
                 "description": "graymatter tissue segmented in T1w MRI in Ixi549 space",
-                "output_from": "t1-volume-tissue-segmentation",
+                "needed_pipeline": "t1-volume-tissue-segmentation",
             }
         elif self.parameters["orig_input_data"] == "pet-volume":
             if not (

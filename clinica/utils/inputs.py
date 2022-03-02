@@ -186,10 +186,10 @@ def clinica_file_reader(
         sessions: list of sessions (must be same size as subjects, and must correspond )
         input_directory: location of the bids or caps directory
         information: dictionary containing all the relevant information to look for the files. Dict must contains the
-                     following keys : pattern, description. The optional key is: output_from
+                     following keys : pattern, description. The optional key is: needed_pipeline
                              pattern: define the pattern of the final file
                              description: string to describe what the file is
-                             output_from (optional): string describing the pipeline(s) needed to obtain the related
+                             needed_pipeline (optional): string describing the pipeline(s) needed to obtain the related
                                                         file
         raise_exception: if True (normal behavior), an exception is raised if errors happen. If not, we return the file
                         list as it is
@@ -215,7 +215,7 @@ def clinica_file_reader(
                                         caps_directory,
                                         {'pattern': 'freesurfer_cross_sectional/sub-*_ses-*/mri/orig_nu.mgz',
                                          'description': 'freesurfer file orig_nu.mgz',
-                                         'output_from': 't1-freesurfer'})
+                                         'needed_pipeline': 't1-freesurfer'})
                     gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/mri/orig_nu.mgz']
 
             - You have a partial name of the file:
@@ -236,7 +236,7 @@ def clinica_file_reader(
                                         caps,
                                         {'pattern': 'rh.white',
                                          'description': 'right hemisphere of outter cortical surface.',
-                                         'output_from': 't1-freesurfer'})
+                                         'needed_pipeline': 't1-freesurfer'})
                         the following error will arise:
                         * More than 1 file found::
                             /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/fsaverage/surf/rh.white
@@ -266,9 +266,9 @@ def clinica_file_reader(
         elem in information.keys() for elem in ["pattern", "description"]
     ), "'information' must contain the keys 'pattern' and 'description'"
     assert all(
-        elem in ["pattern", "description", "output_from", "input_to"]
+        elem in ["pattern", "description", "needed_pipeline"]
         for elem in information.keys()
-    ), "'information' can only contain the keys 'pattern', 'description', 'output_from' and 'input_to'"
+    ), "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
 
     pattern = information["pattern"]
     is_bids = determine_caps_or_bids(input_directory)
@@ -330,18 +330,6 @@ def clinica_file_reader(
     for msg in error_encountered:
         error_message += msg
     if len(error_encountered) > 0 and raise_exception is True:
-        error_message = (
-            f"Clinica encountered {len(error_encountered)} "
-            f"problem(s) while getting {information['description']}:\n"
-        )
-        if "output_from" in information.keys():
-            if information["output_from"]:
-                error_message += (
-                    "Please note that the following clinica pipeline(s) must "
-                    f"have run to obtain these files: {information['output_from']}\n"
-                )
-        for msg in error_encountered:
-            error_message += msg
         if is_bids:
             raise ClinicaBIDSError(error_message)
         else:
@@ -409,10 +397,10 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
     Args:
         caps_directory: input caps directory
         information: dictionary containing all the relevant information to look for the files. Dict must contains the
-                     following keys : pattern, description, output_from
+                     following keys : pattern, description, needed_pipeline
                              pattern: define the pattern of the final file
                              description: string to describe what the file is
-                             output_from (optional): string describing the pipeline needed to obtain the file beforehand
+                             needed_pipeline (optional): string describing the pipeline needed to obtain the file beforehand
         raise_exception: if True (normal behavior), an exception is raised if errors happen. If not, we return the file
                         list as it is
 
@@ -430,8 +418,9 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
         information, dict
     ), "A dict must be provided for the argument 'dict'"
     assert all(
-        elem in information.keys() for elem in ["pattern", "description", "output_from"]
-    ), "'information' must contain the keys 'pattern', 'description', 'output_from'"
+        elem in information.keys()
+        for elem in ["pattern", "description", "needed_pipeline"]
+    ), "'information' must contain the keys 'pattern', 'description', 'needed_pipeline'"
 
     pattern = information["pattern"]
     # Some check on the formatting on the data
@@ -457,7 +446,7 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
             error_string += (
                 f"\n\tCAPS directory: {caps_directory}\n"
                 "Please note that the following clinica pipeline(s) must have run to obtain these files: "
-                f"{information['output_from']}\n"
+                f"{information['needed_pipeline']}\n"
             )
         raise ClinicaCAPSError(error_string)
     return current_glob_found[0]
