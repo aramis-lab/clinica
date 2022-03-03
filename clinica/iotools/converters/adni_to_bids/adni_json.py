@@ -1,6 +1,16 @@
 from typing import Tuple, Union
 import pandas as pd
 import xml.etree.ElementTree
+from pathlib import Path
+
+
+# Maps names of extracted metadata to their proper BIDS names 
+METADATA_NAME_MAPPING = {
+        "acquisition_type": "MRAcquisitionType",
+        "pulse_sequence": "PulseSequenceType",
+        "manufacturer": "Manufacturer",
+        "field_strength": "MagneticFieldStrength",
+}
 
 
 def _read_xml_files(subj_ids: list = [], xml_path: str = "") -> list:
@@ -226,6 +236,27 @@ def _check_image(img: xml.etree.ElementTree.Element):
     assert len(img) in {3, 4}  # children check
 
 
+def _clean_protocol_metadata(protocol_metadata: dict) -> dict:
+    """Replace confusing '|' (reserved for separation btw elements) with space.
+    Only 1 manufacturer with this apparently but...
+    """
+    return {k: v.replace("|", " ")
+        if isinstance(v, str)
+        else v  # there are some None (not str)
+        for k, v in protocol_metadata.items()
+    }
+
+
+def _filter_metadata(metadata: dict) -> dict:
+    """Filter and clean a given metadata dictionary according to the
+    METADATA_NAME_MAPPING dictionary."""
+    filtered = dict()
+    for k,v in metadata.items():
+        if k in METADATA_NAME_MAPPING:
+            filtered[METADATA_NAME_MAPPING[k]] = v
+    return filtered
+
+
 def _get_image_metadata(img: xml.etree.ElementTree.Element) -> dict:
     """Return information on original image as dict of metadata."""
     _check_image(img)
@@ -233,22 +264,16 @@ def _get_image_metadata(img: xml.etree.ElementTree.Element) -> dict:
     img_rating_val = _get_image_rating(img[3]) if len(img) == 4 else None
     assert all(p.tag == "protocol" and "term" in p.attrib.keys() for p in protocol)
     protocol_metadata = {
-        "mri_" + "_".join(p.attrib["term"].split()).lower(): p.text for p in protocol
+        "_".join(p.attrib["term"].split()).lower(): p.text for p in protocol
     }
-    # replace confusing '|' (reserved for separation btw elements) with space
-    # (only 1 manufacturer with this apparently but...)
-    protocol_metadata = {
-        k: v.replace("|", " ")
-        if isinstance(v, str)
-        else v  # there are some None (not str)
-        for k, v in protocol_metadata.items()
-    }
+    protocol_metadata = _clean_protocol_metadata(protocol_metadata)
+    filtered_protocol_metadata = _filter_metadata(protocol_metadata)
     return {
         "image_orig_id": _check_xml_and_get_text(img[0], "imageUID", cast=int),
         "image_orig_seq": _check_xml_and_get_text(
             img[1], "description"
         ),  # .replace('|', ' '),
-        **protocol_metadata,
+        **filtered_protocol_metadata,
     }
 
 
@@ -381,20 +406,22 @@ def _create_mri_meta_df(imgs: list) -> pd.DataFrame:
     return mri_meta
 
 
-def _get_existing_scan_dataframe(subj_path: str, session: str) -> Union[pd.DataFrame, None]:
+def _get_existing_scan_dataframe(
+        subj_path: str,
+        session: str
+) -> Union[Tuple[pd.DataFrame, Path], Tuple[None, Path]]:
     """Retrieve existing scan dataframe at the given `subj_path`, and the given `session`.
     If no existing scan file is found, a warning is given.
     """
-    from pathlib import Path
     import warnings
     subj_id = Path(subj_path).name
     scans_tsv_path = Path(subj_path) / session / f"{subj_id}_{session}_scans.tsv"
     if scans_tsv_path.exists():
         df_scans = pd.read_csv(scans_tsv_path, sep="\t")
         df_scans["scan_id"] = df_scans["scan_id"].astype("Int64")
-        return df_scans
+        return df_scans, scans_tsv_path
     warnings.warn(f"No scan tsv file for subject {subj_id} and session {session}")
-    return None
+    return None, scan_tsv_path
 
 
 def _merge_scan_and_metadata(
@@ -406,23 +433,65 @@ def _merge_scan_and_metadata(
     return pd.merge(df_scans, df_meta, **strategy)
 
 
+def _get_json_filename_from_scan_filename(scan_filename: Path) -> Path:
+    """Replace the given `scan_filename` extensions with '.json'."""
+    extensions = "".join(scan_filename.suffixes)
+    return Path(str(scan_filename).replace(extensions, ".json"))
+
+
+def _add_json_scan_metadata(
+        json_path: Path,
+        metadata: Union[dict, str],
+        indent: int = 4,
+        keep_none: bool = False
+):
+    """Load existing metadata at the provided `json_path`, merge with new
+    provided `metadata`, and finally write to disk at `json_path`.
+
+    .. warning::
+        This overwrites the existing json file.
+    """
+    import json
+    existing_metadata = dict()
+    if json_path.exists():
+        with open(json_path, "r") as fp:
+            existing_metadata = json.load(fp)
+    filtered_metadata = {
+        k:v for k,v in json.loads(metadata).items()
+        if k in METADATA_NAME_MAPPING.values()
+    }
+    updated_metadata = {**existing_metadata, **filtered_metadata}
+    if not keep_none:
+        updated_metadata = {k:v for k,v in updated_metadata.items() if v is not None}
+    if len(updated_metadata) > 0:
+        with open(json_path, "w") as fp:
+            json.dump(updated_metadata, fp, indent=indent)
+
+
 def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> None:
-    """Add the metadata to the appropriate scans.tsv file."""
+    """Add the metadata to the appropriate tsv and json files."""
     from clinica.iotools.bids_utils import get_bids_sess_list
-    MERGE_STRATEGY = {how: "left", left_on: "scan_id", right_on: "T1w_scan_id"}
+    MERGE_STRATEGY = {"how": "left", "left_on": "scan_id", "right_on": "T1w_scan_id"}
     for subj_path in bids_subjs_paths:
         sess_list = get_bids_sess_list(subj_path)
         if sess_list:
             for sess in sess_list:
-                df_scans = _get_existing_scan_dataframe(subj_path, sess)
+                df_scans, scans_tsv_path = _get_existing_scan_dataframe(subj_path, sess)
                 if df_scans is not None:
+                    columns_to_keep = list(df_scans.columns) + ['acq_time']
                     df_merged = _merge_scan_and_metadata(df_scans, df_meta, MERGE_STRATEGY)
-                    df_merged.to_csv(scans_tsv_path, sep="\t")
+                    for _, scan_row in df_merged.iterrows():
+                        scan_path = Path(subj_path) / sess / scan_row["filename"]
+                        json_path = _get_json_filename_from_scan_filename(scan_path)
+                        _add_json_scan_metadata(json_path, scan_row.to_json())
+                    df_merged[columns_to_keep].to_csv(scans_tsv_path, sep="\t")
     return None
 
 
 def create_json_metadata(bids_subjs_paths: str, bids_ids: list, xml_path: str) -> None:
-    """Create json metadata dictionary and add the columns to the appropriate scans.tsv files"""
+    """Create json metadata dictionary and add the metadata to the
+    appropriate files in the BIDS hierarchy."""
+    from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni
     loni_ids = [bids_id_to_loni(bids_id) for bids_id in bids_ids]
     xml_files = _read_xml_files(loni_ids, xml_path)
     imgs, exe = _run_parsers(xml_files)
