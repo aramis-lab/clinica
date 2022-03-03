@@ -1,19 +1,10 @@
 import functools
 
-from os import read
-from pathlib import Path
-from typing import List
-
-from clinica.engine.prov_model import ProvContext
-
 
 def provenance(func):
     @functools.wraps(func)
     def run_wrapper(self, **kwargs):
         ret = func(self)
-
-        pipeline_args = self.parameters
-        pipeline_fullname = self.fullname
 
         create_node_read(self)
         create_node_update(self)
@@ -47,8 +38,8 @@ def connect_nodes(self):
 
 
 def create_node_read(self):
-    import nipype.pipeline.engine as npe
     import nipype.interfaces.utility as nutil
+    import nipype.pipeline.engine as npe
 
     self.prov_input_node = npe.Node(
         nutil.Function(
@@ -61,8 +52,8 @@ def create_node_read(self):
 
 
 def create_node_update(self):
-    import nipype.pipeline.engine as npe
     import nipype.interfaces.utility as nutil
+    import nipype.pipeline.engine as npe
 
     self.prov_update_node = npe.Node(
         nutil.Function(
@@ -77,8 +68,8 @@ def create_node_update(self):
 
 
 def create_node_log(self):
-    import nipype.pipeline.engine as npe
     import nipype.interfaces.utility as nutil
+    import nipype.pipeline.engine as npe
 
     self.prov_log_node = npe.Node(
         nutil.Function(
@@ -98,9 +89,10 @@ def read_prov(input_files):
     return:
         a ProvRecord for the associated files in path_files
     """
-    from clinica.engine.prov_utils import get_path_prov, read_prov_jsonld
-    from clinica.engine.prov_model import ProvRecord, ProvContext
     from pathlib import Path
+
+    from clinica.engine.prov_model import ProvContext, ProvRecord
+    from clinica.engine.prov_utils import get_path_prov, read_prov_jsonld
 
     prov_record = ProvRecord(ProvContext([]), [])
     if isinstance(input_files, list):
@@ -123,14 +115,15 @@ def update_prov(input_files, prov_in_record):
     return:
         ProvRecord associated with the launched pipeline
     """
+    from pathlib import Path
+
+    from clinica.engine.prov_model import ProvRecord
     from clinica.engine.prov_utils import (
         mint_activity,
         mint_agent,
         mint_entity,
         validate_command,
     )
-    from pathlib import Path
-    from clinica.engine.prov_model import ProvRecord
 
     elements = []
     new_agent = mint_agent()
@@ -158,8 +151,9 @@ def update_prov(input_files, prov_in_record):
 
 
 def log_prov(prov_log_record, out_file, out_dir):
-    from clinica.engine.prov_utils import write_prov_file
     from pathlib import Path
+
+    from clinica.engine.prov_utils import write_prov_file
 
     out_file = out_file + "*"
     out_files_paths = []

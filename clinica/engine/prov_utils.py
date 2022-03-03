@@ -1,7 +1,15 @@
-import json
 from pathlib import Path
 from typing import List, Optional
-from clinica.engine.prov_model import *
+
+from clinica.engine.prov_model import (
+    Identifier,
+    Namespace,
+    ProvActivity,
+    ProvAgent,
+    ProvContext,
+    ProvEntity,
+    ProvRecord,
+)
 
 
 def mint_agent() -> ProvAgent:
