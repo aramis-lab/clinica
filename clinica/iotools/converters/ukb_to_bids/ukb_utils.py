@@ -59,8 +59,10 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         "source_dir"
     )
 
-    subject_id = source_dir_series.apply(lambda x: Path(str(x)).stem).rename(
-        "subject_id"
+    subject_id = (
+        source_dir_series.apply(lambda x: Path(str(x)).stem)
+        .astype("int64")
+        .rename("eid")
     )
 
     df_source = pd.concat(
@@ -89,153 +91,142 @@ def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
 def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, DataFrame]:
     import pandas as pd
 
-    df_adrc = dict_df["adrc"].assign(
-        session_id=lambda df: df.index.map(lambda x: x.split("_")[2])
-    )
-    df_adrc_small = df_adrc[df_adrc.session_id == "d0000"]
-    df_adrc_small = df_adrc_small.merge(
-        df_source["Subject"], how="inner", on="Subject"
-    ).drop_duplicates()
-    df_source = df_source.merge(
-        df_adrc_small[["Subject", "ageAtEntry"]], how="inner", on="Subject"
-    )
-    df_source = df_source.assign(
-        age=lambda df: (df["ageAtEntry"]) + df["Date"].str[1:].astype("float") / 365.25
-    )
+    df_clinical = dict_df["clinical"]
+    df_clinical_ev = df_clinical.merge(df_source["eid"], how="inner", on="eid")
 
-    df_subject_small = (
-        dict_df["subject"]
-        .merge(df_source["Subject"], how="inner", on="Subject")
-        .drop_duplicates()
-    )
-    df_source = df_source.merge(
-        dict_df["mri"]["Scanner"], how="left", left_on="path", right_on="MR ID"
-    )
+    # df_adrc = dict_df["adrc"].assign(
+    #     session_id=lambda df: df.index.map(lambda x: x.split("_")[2])
+    # )
+    # df_adrc_small = df_adrc[df_adrc.session_id == "d0000"]
+    # df_adrc_small = df_adrc_small.merge(
+    #     df_source["Subject"], how="inner", on="Subject"
+    # ).drop_duplicates()
+    # df_source = df_source.merge(
+    #     df_adrc_small[["Subject", "ageAtEntry"]], how="inner", on="Subject"
+    # )
+    # df_source = df_source.assign(
+    #     age=lambda df: (df["ageAtEntry"]) + df["Date"].str[1:].astype("float") / 365.25
+    # )
 
-    df_small = df_subject_small.merge(df_adrc_small, how="inner", on="Subject")
-    df_small = df_small.assign(participant_id=lambda df: "sub-" + df.Subject)
-    df_source = df_source.assign(
-        session=lambda df: (round(df["Date"].str[1:].astype("int") / (365.25 / 2)) * 6)
-    )
+    # df_subject_small = (
+    #     dict_df["subject"]
+    #     .merge(df_source["Subject"], how="inner", on="Subject")
+    #     .drop_duplicates()
+    # )
+    # df_source = df_source.merge(
+    #     dict_df["mri"]["Scanner"], how="left", left_on="path", right_on="MR ID"
+    # )
 
-    df_source = df_source.assign(
-        ses=lambda df: df.session.apply(
-            lambda x: f"ses-M{ (5-(len(str(x)))) * '0' + str(int(x))}"
-        )
-    )
+    # df_small = df_subject_small.merge(df_adrc_small, how="inner", on="Subject")
+    # df_small = df_small.assign(participant_id=lambda df: "sub-" + df.Subject)
+    # df_source = df_source.assign(
+    #     session=lambda df: (round(df["Date"].str[1:].astype("int") / (365.25 / 2)) * 6)
+    # )
 
-    df_source = df_source.join(
-        df_source.modality.map(
-            {
-                "MR": {"datatype": "anat", "suffix": "T1w"},
-                "FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
-                "PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
-                "AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
-            }
-        ).apply(pd.Series)
-    )
-    if "trc_label" in df_source.columns:
-        df_source = df_source.assign(
-            filename=lambda df: df.apply(
-                lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
-                f"{x.participant_id}_{x.ses}"
-                f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
-                f"_{x.suffix}.nii.gz",
-                axis=1,
-            )
-        )
-    else:
-        df_source = df_source.assign(
-            filename=lambda df: df.apply(
-                lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
-                f"{x.participant_id}_{x.ses}"
-                f"_{x.suffix}.nii.gz",
-                axis=1,
-            )
-        )
-    df_adrc = df_adrc.merge(df_source["Subject"], how="inner", on="Subject")
-    df_adrc = df_adrc.assign(
-        session=lambda df: round(df["session_id"].str[1:].astype("int") / (364.25 / 2))
-        * 6
-    )
-    df_adrc = df_adrc.drop_duplicates().set_index(["Subject", "session_id"])
-    df_source = df_source.merge(
-        df_adrc[
-            [
-                "session",
-                "mmse",
-                "cdr",
-                "commun",
-                "dx1",
-                "homehobb",
-                "judgment",
-                "memory",
-                "orient",
-                "perscare",
-                "sumbox",
-                "apoe",
-            ]
-        ],
-        how="left",
-        on="session",
-    )
-    return df_source, df_small
+    # df_source = df_source.assign(
+    #     ses=lambda df: df.session.apply(
+    #         lambda x: f"ses-M{ (5-(len(str(x)))) * '0' + str(int(x))}"
+    #     )
+    # )
+
+    # df_source = df_source.join(
+    #     df_source.modality.map(
+    #         {
+    #             "MR": {"datatype": "anat", "suffix": "T1w"},
+    #             "FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
+    #             "PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
+    #             "AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
+    #         }
+    #     ).apply(pd.Series)
+    # )
+    # if "trc_label" in df_source.columns:
+    #     df_source = df_source.assign(
+    #         filename=lambda df: df.apply(
+    #             lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
+    #             f"{x.participant_id}_{x.ses}"
+    #             f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
+    #             f"_{x.suffix}.nii.gz",
+    #             axis=1,
+    #         )
+    #     )
+    # else:
+    #     df_source = df_source.assign(
+    #         filename=lambda df: df.apply(
+    #             lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
+    #             f"{x.participant_id}_{x.ses}"
+    #             f"_{x.suffix}.nii.gz",
+    #             axis=1,
+    #         )
+    #     )
+    # df_adrc = df_adrc.merge(df_source["Subject"], how="inner", on="Subject")
+    # df_adrc = df_adrc.assign(
+    #     session=lambda df: round(df["session_id"].str[1:].astype("int") / (364.25 / 2))
+    #     * 6
+    # )
+    # df_adrc = df_adrc.drop_duplicates().set_index(["Subject", "session_id"])
+    # df_source = df_source.merge(
+    #     df_adrc[
+    #         [
+    #             "session",
+    #             "mmse",
+    #             "cdr",
+    #             "commun",
+    #             "dx1",
+    #             "homehobb",
+    #             "judgment",
+    #             "memory",
+    #             "orient",
+    #             "perscare",
+    #             "sumbox",
+    #             "apoe",
+    #         ]
+    #     ],
+    #     how="left",
+    #     on="session",
+    # )
+    return df_source, df_clinical_ev
 
 
 def dataset_to_bids(
-    df_source: DataFrame, df_small: DataFrame
+    df_source: DataFrame, df_clinical_ev: DataFrame
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
-    # Build participants dataframe
-    df_participants = (
-        df_small[["participant_id", "ageAtEntry", "M/F", "Hand", "Education"]]
-        .rename(
-            columns={
-                "ageAtEntry": "age",
-                "M/F": "sex",
-                "Hand": "handedness",
-            }
-        )
-        .set_index("participant_id", verify_integrity=True)
+
+    import os
+
+    import pandas as pd
+
+    # open the reference for building the tsvs:
+    path_to_ref_csv = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "data",
+        "ukb_ref.csv",
     )
+    df_ref = pd.read_csv(path_to_ref_csv, sep=";")
+
+    # Build participants dataframe
+    df_participants = df_clinical_ev.filter(items=list(df_ref["participants"]))
+    name_dict = dict(
+        zip(list(df_ref["participants"]), list(df_ref["participants_name"]))
+    )
+    type_dict = dict(
+        zip(list(df_ref["participants_name"]), list(df_ref["participants_type"]))
+    )
+    df_participants = df_participants.rename(columns=name_dict)
+    df_participants = df_participants.astype(type_dict)
 
     # Build sessions dataframe
-    df_session = (
-        df_source[
-            [
-                "participant_id",
-                "ses",
-                "Date",
-                "age",
-                "mmse",
-                "cdr",
-                "commun",
-                "dx1",
-                "homehobb",
-                "judgment",
-                "memory",
-                "orient",
-                "perscare",
-                "sumbox",
-                "apoe",
-            ]
-        ]
-        .rename(
-            columns={
-                "ses": "session_id",
-                "Date": "source_session_id",
-            }
-        )
-        .astype({"age": "int"})
-        .drop_duplicates(subset=["participant_id", "session_id"])
-        .set_index(["participant_id", "session_id"], verify_integrity=True)
-    )
+    df_session = df_clinical_ev.filter(items=list(df_ref["session"]))
+    name_dict = dict(zip(list(df_ref["session"]), list(df_ref["session_name"])))
+    type_dict = dict(zip(list(df_ref["session_name"]), list(df_ref["session_type"])))
+    df_session = df_session.rename(columns=name_dict)
+    df_session = df_session.astype(type_dict)
 
     # Build scans dataframe
-    df_scan = (
-        df_source[["filename", "source_dir"]]
-        .drop_duplicates(subset=["filename"])
-        .set_index("filename", verify_integrity=True)
-    )
+    df_scan = df_clinical_ev.filter(items=list(df_ref["scan"]))
+    name_dict = dict(zip(list(df_ref["scan"]), list(df_ref["scan_name"])))
+    type_dict = dict(zip(list(df_ref["scan_name"]), list(df_ref["scan_type"])))
+    df_scan = df_scan.rename(columns=name_dict)
+    df_scan = df_scan.astype(type_dict)
 
     return df_participants, df_session, df_scan
 
