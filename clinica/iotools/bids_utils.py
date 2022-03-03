@@ -438,7 +438,7 @@ def write_modality_agnostic_files(study_name, bids_dir):
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
     with open(path.join(bids_dir, "dataset_description.json"), "w") as f:
-        BIDSDatasetDescription(name=study_name, bids_version="1.4.1").write(to=f)
+        BIDSDatasetDescription(name=study_name).write(to=f)
 
     with open(path.join(bids_dir, "README"), "w") as f:
         f.write(
