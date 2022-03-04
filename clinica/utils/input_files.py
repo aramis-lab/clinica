@@ -353,12 +353,12 @@ DWI_PREPROC_BVAL = {
 # BIDS
 
 
-def bids_pet_nii(acq_label):
+def bids_pet_nii(tracer: str) -> dict:
     import os
 
     information = {
-        "pattern": os.path.join("pet", f"sub-*_ses-*_acq-{acq_label}_pet.nii*"),
-        "description": f"PET data with {acq_label} tracer",
+        "pattern": os.path.join("pet", f"*_trc-{tracer}_pet.nii*"),
+        "description": f"PET data with {tracer} tracer",
     }
     return information
 
@@ -404,7 +404,7 @@ def pet_volume_normalized_suvr_pet(
             "pet",
             "preprocessing",
             f"group-{group_label}",
-            f"*_acq-{acq_label}_pet"
+            f"*_trc-{acq_label}_pet"
             f"_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
         ),
         "description": (
@@ -430,7 +430,7 @@ def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
     information = {
         "pattern": os.path.join(
             "pet_linear",
-            f"*_acq-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz",
+            f"*_trc-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz",
         ),
         "description": "",
         "needed_pipeline": "pet-linear",
