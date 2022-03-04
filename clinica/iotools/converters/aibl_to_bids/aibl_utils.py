@@ -492,6 +492,7 @@ def create_file(image, modality, bids_dir, overwrite):
 
     from clinica.iotools.bids_utils import json_from_dcm
     from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
 
     subject = image.Subjects_ID
@@ -530,7 +531,7 @@ def create_file(image, modality, bids_dir, overwrite):
         output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
         output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
     elif modality in ["flute", "pib", "av45"]:
-        tracer = {"flute": "18FFMM", "pib": "11CPIB", "av45": "18FAV45"}[modality]
+        tracer = {"flute": Tracer.FMM, "pib": Tracer.PIB, "av45": Tracer.AV45}[modality]
         output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
         output_filename = f"sub-AIBL{subject}_ses-{session}_trc-{tracer}_pet"
 

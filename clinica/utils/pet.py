@@ -1,4 +1,14 @@
 """This module contains utilities for PET data handling."""
+from enum import Enum
+
+
+class Tracer(str, Enum):
+    PIB = "11CPIB"
+    AV1451 = "18FAV1451"
+    AV45 = "18FAV45"
+    FBB = "18FFBB"
+    FDG = "18FFDG"
+    FMM = "18FFMM"
 
 
 def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
