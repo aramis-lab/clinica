@@ -26,7 +26,7 @@ def _read_xml_files(subj_ids: list = [], xml_path: str = "") -> list:
         for subj_files in xml_regex:
             xml_files.extend(glob(subj_files))
     else:
-        xml_files = [glob("Clinica_processed_metadata/ADNI_*.xml")]
+        xml_files = glob("Clinica_processed_metadata/ADNI_*.xml")
     if len(xml_files) == 0:
         raise IndexError("No ADNI xml files were found for reading the metadata.")
     return xml_files
