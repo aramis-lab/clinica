@@ -229,11 +229,16 @@ def _parse_derived_images(
 
 def _check_image(img: xml.etree.ElementTree.Element):
     """Check that the image XML element is valid."""
-    assert img.tag in {
+    if img.tag not in {
         "imagingProtocol",  # for original image metadata
         "originalRelatedImage",  # for processed image
-    }
-    assert len(img) in {3, 4}  # children check
+    }:
+        raise ValueError(f"Bad image tag <{img.tag}>. "
+                          "Should be either 'imagingProtocol' "
+                          "or 'originalRelatedImage'.")
+    if len(img) not in {3, 4}:
+        raise ValueError(f"Image XML element has {len(img)} children. "
+                          "Expected either 3 or 4.")
 
 
 def _clean_protocol_metadata(protocol_metadata: dict) -> dict:
@@ -342,7 +347,8 @@ def _parse_xml_file(xml_path: str) -> dict:
         **original_image_metadata,
         **derived_image_metadata,
     }
-    assert "image_proc_id" in scan_metadata or "image_orig_id" in scan_metadata
+    if "image_proc_id" not in scan_metadata and "image_orig_id" not in scan_metadata:
+        raise ValueError("Scan metadata for subject {subject_id} has no image ID.")
     return scan_metadata
 
 
