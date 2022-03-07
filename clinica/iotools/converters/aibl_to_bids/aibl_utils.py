@@ -719,17 +719,16 @@ def create_participants_df_AIBL(
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
-    # Adding participant_id column with BIDS ids
-    for i in range(0, len(participant_df)):
-        value = participant_df["alternative_id_1"][i]
-        participant_df["participant_id"][i] = "sub-AIBL" + str(value)
-        participant_df["date_of_birth"][i] = re.search(
-            "/([0-9].*)", str(participant_df["date_of_birth"][i])
-        ).group(1)
-        if participant_df["sex"][i] == 1:
-            participant_df["sex"][i] = "M"
-        else:
-            participant_df["sex"][i] = "F"
+    # Compute BIDS-compatible participant ID.
+    participant_df["participant_id"] = "sub-AIBL" + participant_df["alternative_id_1"]
+
+    # Keep year-of-birth only.
+    participant_df["date_of_birth"] = participant_df["date_of_birth"].str.extract(
+        r"/(\d{4}).*"
+    )
+
+    # Normalize sex value.
+    participant_df["sex"] = participant_df["sex"].map({1: "M"}).fillna("F")
 
     participant_df.replace("-4", "n/a")
 
