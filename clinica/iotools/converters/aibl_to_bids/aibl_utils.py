@@ -594,7 +594,10 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
         # has an extra column for some rows. However, each CSV file (regarding PET tracers)
         # contains the same columns. The usecols fixes this issue.
         df_pet = pds.read_csv(
-            path_to_csv_pet_modality, sep=",|;", usecols=list(range(0, 36))
+            path_to_csv_pet_modality,
+            sep=",|;",
+            usecols=list(range(0, 36)),
+            engine="python",
         )
         images = find_path_to_pet_modality(path_to_dataset, df_pet)
 
