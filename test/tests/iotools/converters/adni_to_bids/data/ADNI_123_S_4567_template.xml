@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idaxs xmlns="http://ida.loni.usc.edu" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="/xsds/idaxs_2_0.xsd">
+<project xmlns="">
+ <projectIdentifier>$project</projectIdentifier>
+ <projectDescription>Alzheimer&#039;s Disease Neuroimaging Initiative</projectDescription>
+ <siteKey>site_key</siteKey>
+ <subject>
+  <subjectIdentifier>123_S_4567</subjectIdentifier>
+  <researchGroup>research_group</researchGroup>
+  <subjectSex>F</subjectSex>
+  <visit>
+   <visitIdentifier>ADNI Screening</visitIdentifier>
+  </visit>
+  <study>
+   <studyIdentifier>$study_id</studyIdentifier>
+   <subjectAge>75.05</subjectAge>
+   <ageQualifier>Y</ageQualifier>
+   <weightKg>63.5029</weightKg>
+   <postMortem>F</postMortem>
+   <series>
+    <seriesIdentifier>$series_id</seriesIdentifier>
+    <modality>$modality</modality>
+    <dateAcquired>$acq_time</dateAcquired>
+   </series>
+   <imagingProtocol>
+    <imageUID>$image_id</imageUID>
+    <description>Accelerated Sagittal MPRAGE</description>
+    <protocolTerm>
+     <protocol term="Acquisition Type">3D</protocol>
+     <protocol term="Weighting">T1</protocol>
+     <protocol term="Pulse Sequence">GR/IR</protocol>
+     <protocol term="Slice Thickness">1.0</protocol>
+     <protocol term="TE">2.98</protocol>
+     <protocol term="TR">2300.0</protocol>
+     <protocol term="TI">900.0</protocol>
+     <protocol term="Coil">PA</protocol>
+     <protocol term="Flip Angle">9.0</protocol>
+     <protocol term="Acquisition Plane">SAGITTAL</protocol>
+     <protocol term="Matrix X">240.0</protocol>
+     <protocol term="Matrix Y">256.0</protocol>
+     <protocol term="Matrix Z">208.0</protocol>
+     <protocol term="Pixel Spacing X">1.0</protocol>
+     <protocol term="Pixel Spacing Y">1.0</protocol>
+     <protocol term="Manufacturer">SIEMENS</protocol>
+     <protocol term="Mfg Model">Prisma_fit</protocol>
+     <protocol term="Field Strength">3.0</protocol>
+    </protocolTerm>
+   </imagingProtocol>
+  </study>
+ </subject>
+</project>
+</idaxs>
