@@ -517,7 +517,7 @@ def create_file(image, modality, bids_dir, overwrite):
     else:
         cprint(
             msg=(
-                f"[{modality.upper()}] Processing subject {subject}"
+                f"[{modality.upper()}] Processing subject {subject} "
                 f"in session {session}"
             ),
             lvl="info",
