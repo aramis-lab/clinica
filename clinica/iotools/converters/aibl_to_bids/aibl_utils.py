@@ -731,7 +731,8 @@ def create_participants_df_AIBL(
         else:
             participant_df["sex"][i] = "F"
 
-    participant_df.replace("-4", "n/a")
+    # Normalize known NA values.
+    participant_df.replace(-4, "n/a", inplace=True)
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
