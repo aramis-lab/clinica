@@ -728,7 +728,7 @@ def create_participants_df_AIBL(
     )
 
     # Normalize sex value.
-    participant_df["sex"] = participant_df["sex"].map({1: "M"}).fillna("F")
+    participant_df["sex"] = participant_df["sex"].map({1: "M", 2: "F"}).fillna("n/a")
 
     participant_df.replace("-4", "n/a")
 
