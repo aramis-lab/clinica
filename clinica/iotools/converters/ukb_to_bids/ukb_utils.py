@@ -54,15 +54,18 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     source_path_series = pd.Series(
         find_imaging_data(imaging_data_directory), name="source_path"
     )
+    file_mod_list = ["T1_orig_defaced.nii.gz", "T2_FLAIR_orig_defaced.nii.gz"]
 
-    source_dir_series = source_path_series.apply(lambda x: Path(str(x)).parent).rename(
-        "source_dir"
+    subject_id = source_path_series.apply(lambda x: Path(str(x)).name).rename(
+        "filename"
     )
+    source_path_series = source_path_series[subject_id.isin(file_mod_list)]
+    subject_id = subject_id[subject_id.isin(file_mod_list)]
 
-    subject_id = (
-        source_dir_series.apply(lambda x: Path(str(x)).stem)
-        .astype("int64")
+    source_dir_series = (
+        source_path_series.apply(lambda x: Path(Path(str(x)).parent).name)
         .rename("eid")
+        .astype("int64")
     )
 
     df_source = pd.concat(
@@ -94,96 +97,6 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
     df_clinical = dict_df["clinical"]
     df_clinical_ev = df_clinical.merge(df_source["eid"], how="inner", on="eid")
 
-    # df_adrc = dict_df["adrc"].assign(
-    #     session_id=lambda df: df.index.map(lambda x: x.split("_")[2])
-    # )
-    # df_adrc_small = df_adrc[df_adrc.session_id == "d0000"]
-    # df_adrc_small = df_adrc_small.merge(
-    #     df_source["Subject"], how="inner", on="Subject"
-    # ).drop_duplicates()
-    # df_source = df_source.merge(
-    #     df_adrc_small[["Subject", "ageAtEntry"]], how="inner", on="Subject"
-    # )
-    # df_source = df_source.assign(
-    #     age=lambda df: (df["ageAtEntry"]) + df["Date"].str[1:].astype("float") / 365.25
-    # )
-
-    # df_subject_small = (
-    #     dict_df["subject"]
-    #     .merge(df_source["Subject"], how="inner", on="Subject")
-    #     .drop_duplicates()
-    # )
-    # df_source = df_source.merge(
-    #     dict_df["mri"]["Scanner"], how="left", left_on="path", right_on="MR ID"
-    # )
-
-    # df_small = df_subject_small.merge(df_adrc_small, how="inner", on="Subject")
-    # df_small = df_small.assign(participant_id=lambda df: "sub-" + df.Subject)
-    # df_source = df_source.assign(
-    #     session=lambda df: (round(df["Date"].str[1:].astype("int") / (365.25 / 2)) * 6)
-    # )
-
-    # df_source = df_source.assign(
-    #     ses=lambda df: df.session.apply(
-    #         lambda x: f"ses-M{ (5-(len(str(x)))) * '0' + str(int(x))}"
-    #     )
-    # )
-
-    # df_source = df_source.join(
-    #     df_source.modality.map(
-    #         {
-    #             "MR": {"datatype": "anat", "suffix": "T1w"},
-    #             "FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
-    #             "PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
-    #             "AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
-    #         }
-    #     ).apply(pd.Series)
-    # )
-    # if "trc_label" in df_source.columns:
-    #     df_source = df_source.assign(
-    #         filename=lambda df: df.apply(
-    #             lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
-    #             f"{x.participant_id}_{x.ses}"
-    #             f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
-    #             f"_{x.suffix}.nii.gz",
-    #             axis=1,
-    #         )
-    #     )
-    # else:
-    #     df_source = df_source.assign(
-    #         filename=lambda df: df.apply(
-    #             lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
-    #             f"{x.participant_id}_{x.ses}"
-    #             f"_{x.suffix}.nii.gz",
-    #             axis=1,
-    #         )
-    #     )
-    # df_adrc = df_adrc.merge(df_source["Subject"], how="inner", on="Subject")
-    # df_adrc = df_adrc.assign(
-    #     session=lambda df: round(df["session_id"].str[1:].astype("int") / (364.25 / 2))
-    #     * 6
-    # )
-    # df_adrc = df_adrc.drop_duplicates().set_index(["Subject", "session_id"])
-    # df_source = df_source.merge(
-    #     df_adrc[
-    #         [
-    #             "session",
-    #             "mmse",
-    #             "cdr",
-    #             "commun",
-    #             "dx1",
-    #             "homehobb",
-    #             "judgment",
-    #             "memory",
-    #             "orient",
-    #             "perscare",
-    #             "sumbox",
-    #             "apoe",
-    #         ]
-    #     ],
-    #     how="left",
-    #     on="session",
-    # )
     return df_source, df_clinical_ev
 
 
