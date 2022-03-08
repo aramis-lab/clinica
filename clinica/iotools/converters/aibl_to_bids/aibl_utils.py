@@ -639,7 +639,6 @@ def create_participants_df_AIBL(
     """
     import glob
     import os
-    import re
     from os import path
 
     import numpy as np
