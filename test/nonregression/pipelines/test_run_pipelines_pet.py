@@ -191,8 +191,6 @@ def run_PETSurfaceCrossSectional(
 
 
 def test_run_pet(cmdopt, tmp_path, test_name):
-    import shutil
-
     base_dir = Path(cmdopt["input"])
     input_dir = base_dir / test_name / "in"
     ref_dir = base_dir / test_name / "ref"
