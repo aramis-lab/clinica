@@ -5,6 +5,16 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 
+def _get_xml_templates():
+    suffix = "_template.xml"
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    return [
+        _.rstrip(suffix)
+        for _ in os.listdir(Path(current_dir) / "data")
+        if _.endswith(suffix)
+    ]
+
+
 @pytest.fixture
 def basic_xml_tree():
     """Basic XML tree used for testing."""
@@ -87,17 +97,17 @@ def test_read_xml_files(tmp_path):
 
 
 def _load_xml_from_template(
-        template_id="ADNI_123_S_4567",
+        template_id,
         project="ADNI",
         modality="MRI",
         acq_time=pd.Timestamp(2017, 1, 1, 12),
 ):
-    """TODO."""
     from string import Template
     other_substitutes = {
             "study_id": 100,
             "series_id": 200,
             "image_id": 300,
+            "proc_id": 3615,
     }
     temp = Path(f"./data/{template_id}_template.xml").read_text()
     temp = Template(temp.replace("\n", ""))
@@ -108,37 +118,60 @@ def _load_xml_from_template(
 
 
 def _write_xml_example(base_path, template_id="ADNI_123_S_4567", **kwargs):
-    """TODO."""
-    xml_content = _load_xml_from_template(**kwargs)
-    xml_file_path = base_path / f"{template_id}.xml"
+    suffix = kwargs.pop("suffix", None)
+    xml_content = _load_xml_from_template(template_id, **kwargs)
+    filename = f"{template_id}.xml"
+    if suffix is not None:
+        filename = f"{template_id}_{suffix}.xml"
+    xml_file_path = base_path / filename
     with open(xml_file_path, "w") as fp:
         fp.write(xml_content)
     return xml_file_path
 
 
-def test_get_root_from_xml_path(tmp_path):
+@pytest.mark.parametrize("template_id", _get_xml_templates())
+def test_get_root_from_xml_path(tmp_path, template_id):
     """Test function `_get_root_from_xml_path`."""
     from clinica.iotools.converters.adni_to_bids.adni_json import _get_root_from_xml_path
-    xml_file = _write_xml_example(tmp_path)
+    xml_file = _write_xml_example(tmp_path, template_id=template_id)
     assert isinstance(_get_root_from_xml_path(xml_file), ET.Element)
 
 
-def test_parsing(tmp_path):
+@pytest.fixture
+def expected_image_metadata(template_id):
+    expected = {}
+    if template_id == "ADNI_234_S_5678":
+        expected = {
+                'image_proc_pipe': 'Grinder Pipeline',
+                'image_proc_id': 3615,
+                'image_proc_desc': 'MT1; GradWarp; N3m'
+        }
+    elif template_id == "ADNI_345_S_6789":
+        expected = {
+                'image_proc_pipe': 'UCSD ADNI Pipeline',
+                'image_proc_id': 3615,
+                'image_proc_desc': 'MPR; GradWarp; N3; Scaled'
+        }
+    return expected
+
+
+@pytest.mark.parametrize("template_id", _get_xml_templates())
+def test_parsing(tmp_path, template_id, expected_image_metadata):
     """Test function `_get_root_from_xml_path`."""
     from clinica.iotools.converters.adni_to_bids.adni_json import (
             _get_root_from_xml_path, _parse_project, _parse_subject,
-            _parse_study, _parse_series,
+            _parse_study, _parse_series, _parse_images,
     )
-    template_id = "123_S_4567"
+    expected_subject_id = template_id[5:]
     xml_files = {
             "correct": _write_xml_example(
-                tmp_path, template_id=f"ADNI_{template_id}_correct"),
+                tmp_path, template_id=template_id, suffix="correct"),
             "bad_project": _write_xml_example(
                 tmp_path, project="foo",
-                template_id=f"ADNI_{template_id}_bad_project"),
+                template_id=template_id, suffix="bad_project"),
             "bad_study": _write_xml_example(
                 tmp_path, modality="bar",
-                template_id=f"ADNI_{template_id}_bad_study"),
+                template_id=template_id, suffix="bad_study"),
     }
     roots = {k: _get_root_from_xml_path(v) for k, v in xml_files.items()}
 
@@ -153,7 +186,7 @@ def test_parsing(tmp_path):
 
     # _parse_subject
     subjects = {k: _parse_subject(project) for k, project in projects.items()}
-    assert all([_[0] == template_id for _ in subjects.values()])
+    assert all([_[0] == expected_subject_id for _ in subjects.values()])
     assert all([isinstance(_[1], ET.Element) for _ in subjects.values()])
     bad_project = ET.Element("project")
     bad_subject = ET.SubElement(bad_project, "subject")
@@ -172,3 +205,54 @@ def test_parsing(tmp_path):
     # _parse_series
     series = {k: _parse_series(study) for k, study in studies.items()}
     assert all([isinstance(serie, ET.Element) for serie in series.values()])
+    for length_series, length_study in zip([3, 4], [6, 7]):
+        bad_study = ET.Element("study")
+        bad_series = [ET.SubElement(bad_study, "series") for i in range(length_study)]
+        [ET.SubElement(bad_series[5], f"{i}") for i in range(length_series)]
+        with pytest.raises(ValueError,
+                           match=f"Bad number of children for <series>: got {length_series}"):
+            _parse_series(bad_study)
+
+    # _parse_images
+    images = {k: _parse_images(study) for k, study in studies.items()}
+    assert all([isinstance(_[0], ET.Element) for _ in images.values()])
+    if template_id == "ADNI_345_S_6789":
+        assert all([_[1] == 2 for _ in images.values()])
+    else:
+        assert all([_[1] is None for _ in images.values()])
+    assert all([_[2] == expected_image_metadata for _ in images.values()])
+
+
+@pytest.fixture
+def expected_mprage(template_id):
+    expected = {
+            "ADNI_123_S_4567": "Accelerated Sagittal MPRAGE",
+            "ADNI_234_S_5678": "MPRAGE GRAPPA2",
+            "ADNI_345_S_6789": "MP-RAGE",
+    }
+    return expected[template_id]
+
+
+@pytest.mark.parametrize("template_id", _get_xml_templates())
+def test_parse_xml_file(template_id, tmp_path, expected_mprage):
+    """Test function `_parse_xml_file`."""
+    from clinica.iotools.converters.adni_to_bids.adni_json import _parse_xml_file
+    xml_file = _write_xml_example(tmp_path, template_id=template_id)
+    scan_metadata = _parse_xml_file(xml_file)
+    expected_subject_id = template_id[5:]
+    assert scan_metadata["id"] == expected_subject_id
+    assert scan_metadata["acq_time"] == pd.Timestamp(2017, 1, 1, 12)
+    assert scan_metadata["image_orig_id"] == 300
+    assert scan_metadata["image_orig_seq"] == expected_mprage
+    assert scan_metadata["MRAcquisitionType"] == "3D"
+    expected_pulse = "GR/IR"
+    expected_manufacturer = "SIEMENS"
+    expected_strength = "3.0"
+    if template_id == "ADNI_345_S_6789":
+        expected_pulse = "RM"
+        expected_manufacturer = "GE MEDICAL SYSTEMS"
+        expected_strength = "1.5"
+    assert scan_metadata["PulseSequenceType"] == expected_pulse
+    assert scan_metadata["Manufacturer"] == expected_manufacturer
+    assert scan_metadata["MagneticFieldStrength"] == expected_strength
+
