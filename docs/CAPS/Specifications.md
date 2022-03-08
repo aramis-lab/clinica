@@ -347,12 +347,12 @@ subjects/
       └─ pet/
          └─ surface/
             ├─ atlas_statistics/
-            │  └─ <source_file>_task-<label>_acq-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
+            │  └─ <source_file>_trc-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
             ├─ <source_file>_hemi-{left|right}_midcorticalsurface
-            └─ <source_file>_hemi-{left|right}_task-rest_acq-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
+            └─ <source_file>_hemi-{left|right}_trc-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
 ```
 
-The `_acq-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `fdg` and `av45`).
+The `trc-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
 
 The `[_pvc-iy]` label describes the partial volume correction used in the algorithm for the projection (Iterative Yang).
 
@@ -380,9 +380,9 @@ subjects/
          └─ <long_id>/
             └─ surface_longitudinal/
                ├─ atlas_statistics/
-               │  └─ sub-<label>_ses-<lalbel>_long-<label>_task-<label>_acq-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
+               │  └─ sub-<label>_ses-<lalbel>_long-<label>_trc-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
                ├─ sub-<label>_ses-<lalbel>_long-<label>_hemi-{left|right}_midcorticalsurface
-               └─ sub-<label>_ses-<lalbel>_long-<label>_task-rest_acq-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
+               └─ sub-<label>_ses-<lalbel>_long-<label>_trc-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
 ```
 
 Explanations on the key/values can be found on the
@@ -645,7 +645,7 @@ Possible values for `_map-<map>` key/value are:
 
 - For DWI: `FA` (fractional anisotropy), `MD` (mean diffusivity, also called apparent diffusion coefficient), `AD` (axial diffusivity), `RD` (radial diffusivity), `NDI` (neurite density index), `ODI` (orientation dispersion index) and `FWF` (free water fraction).
 
-- For PET: `fdg` (<sup>18</sup>F-Fluorodeoxyglucose), `av45` (<sup>18</sup>F-Florbetapir).
+- For PET: `18FFDG` (<sup>18</sup>F-Fluorodeoxyglucose), `18FAV45` (<sup>18</sup>F-Florbetapir).
 
 !!! Example
     Content of `sub-CLNC01_ses-M00_T1w_space-Hammers_map-graymatter_statistics.tsv`:
