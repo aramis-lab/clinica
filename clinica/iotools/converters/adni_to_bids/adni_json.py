@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 import pandas as pd
 import xml.etree.ElementTree
 from pathlib import Path
@@ -464,8 +464,10 @@ def _add_json_scan_metadata(
     if json_path.exists():
         with open(json_path, "r") as fp:
             existing_metadata = json.load(fp)
+    if isinstance(metadata, str):
+        metadata = json.loads(metadata)
     filtered_metadata = {
-        k:v for k,v in json.loads(metadata).items()
+        k:v for k,v in metadata.items()
         if k in METADATA_NAME_MAPPING.values()
     }
     updated_metadata = {**existing_metadata, **filtered_metadata}
