@@ -7,7 +7,6 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
-from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -27,8 +26,6 @@ def test_name(request):
 
 
 def test_run_ml(cmdopt, tmp_path, test_name):
-    import shutil
-
     base_dir = Path(cmdopt["input"])
     input_dir = base_dir / test_name / "in"
     ref_dir = base_dir / test_name / "ref"
