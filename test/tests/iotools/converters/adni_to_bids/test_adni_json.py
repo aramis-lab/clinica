@@ -261,3 +261,30 @@ def test_parse_xml_file(template_id, tmp_path, expected_mprage):
     assert scan_metadata["Manufacturer"] == expected_manufacturer
     assert scan_metadata["MagneticFieldStrength"] == expected_strength
 
+
+def test_get_existing_scan_dataframe(tmp_path):
+    """Test function `_get_existing_scan_dataframe`."""
+    from clinica.iotools.converters.adni_to_bids.adni_json import _get_existing_scan_dataframe
+    from pandas.testing import assert_frame_equal
+    subj_path = tmp_path / "sub-01"
+    subj_path.mkdir()
+    with pytest.warns(match="No scan tsv file for subject sub-01 and session foo"):
+        df, scans_path = _get_existing_scan_dataframe(subj_path, "foo")
+    assert df is None
+    assert scans_path == subj_path / "foo" / "sub-01_foo_scans.tsv"
+    session_path = subj_path / "bar"
+    session_path.mkdir()
+    scan_df = pd.DataFrame({"scan_id": [1, 2, 6], "acq_time": ["foo", "bar", "baz"]})
+    scan_df["scan_id"] = scan_df["scan_id"].astype("Int64")
+    scan_df.to_csv(session_path / "sub-01_bar_scans.tsv", index=False, sep="\t")
+    df, scans_path = _get_existing_scan_dataframe(subj_path, "bar")
+    assert_frame_equal(df, scan_df)
+    assert scans_path == session_path / "sub-01_bar_scans.tsv"
+
+
+def test_get_json_filename_from_scan_filename():
+    """Test function _get_json_filename_from_scan_filename`."""
+    from clinica.iotools.converters.adni_to_bids.adni_json import _get_json_filename_from_scan_filename
+    assert _get_json_filename_from_scan_filename(Path("foo.nii.gz")) == Path("foo.json")
+    assert _get_json_filename_from_scan_filename(Path("adni/foo.nii.gz")) == Path("adni/foo.json")
+
