@@ -282,7 +282,7 @@ def _get_image_metadata(img: xml.etree.ElementTree.Element) -> dict:
     }
 
 
-def _get_image_rating(image_rating: xml.etree.ElementTree.Element) -> int:
+def _get_image_rating(image_rating: xml.etree.ElementTree.Element) -> Optional[int]:
     """Get the image rating value as an integer from the xml element."""
     if image_rating.tag != "imageRating":
         return None
