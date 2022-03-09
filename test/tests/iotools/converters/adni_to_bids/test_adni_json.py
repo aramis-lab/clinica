@@ -1,6 +1,7 @@
 import os
 import pytest
 import pandas as pd
+from typing import Optional
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -97,11 +98,11 @@ def test_read_xml_files(tmp_path):
 
 
 def _load_xml_from_template(
-        template_id,
-        project="ADNI",
-        modality="MRI",
-        acq_time=pd.Timestamp(2017, 1, 1, 12),
-):
+        template_id: str,
+        project: str = "ADNI",
+        modality: str = "MRI",
+        acq_time: pd.Timestamp = pd.Timestamp(2017, 1, 1, 12),
+) -> str:
     from string import Template
     other_substitutes = {
             "study_id": 100,
@@ -117,8 +118,12 @@ def _load_xml_from_template(
     )
 
 
-def _write_xml_example(base_path, template_id="ADNI_123_S_4567", **kwargs):
-    suffix = kwargs.pop("suffix", None)
+def _write_xml_example(
+        base_path: Path,
+        template_id: str ="ADNI_123_S_4567",
+        suffix: Optional[str] = None,
+        **kwargs
+) -> Path:
     xml_content = _load_xml_from_template(template_id, **kwargs)
     filename = f"{template_id}.xml"
     if suffix is not None:
