@@ -121,6 +121,7 @@ def run_StatisticsVolume(
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
+    from clinica.utils.pet import Tracer
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "group-UnitTest_covariates.tsv"
@@ -135,7 +136,7 @@ def run_StatisticsVolume(
         "orig_input_data_volume": "pet-volume",
         "contrast": "group",
         # Optional arguments for inputs from pet-volume pipeline
-        "acq_label": "FDG",
+        "acq_label": Tracer.FDG,
         "use_pvc_data": False,
         "suvr_reference_region": "pons",
     }
