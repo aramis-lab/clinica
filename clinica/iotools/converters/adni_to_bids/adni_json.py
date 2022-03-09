@@ -429,7 +429,7 @@ def _get_existing_scan_dataframe(
         df_scans["scan_id"] = df_scans["scan_id"].astype("Int64")
         return df_scans, scans_tsv_path
     warnings.warn(f"No scan tsv file for subject {subj_id} and session {session}")
-    return None, scan_tsv_path
+    return None, scans_tsv_path
 
 
 def _merge_scan_and_metadata(
