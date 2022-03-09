@@ -286,5 +286,46 @@ def test_get_json_filename_from_scan_filename():
     """Test function _get_json_filename_from_scan_filename`."""
     from clinica.iotools.converters.adni_to_bids.adni_json import _get_json_filename_from_scan_filename
     assert _get_json_filename_from_scan_filename(Path("foo.nii.gz")) == Path("foo.json")
+    assert _get_json_filename_from_scan_filename(Path("foo_bar-baz.nii.gz")) == Path("foo_bar-baz.json")
+    assert _get_json_filename_from_scan_filename(Path("foo.nii")) == Path("foo.json")
     assert _get_json_filename_from_scan_filename(Path("adni/foo.nii.gz")) == Path("adni/foo.json")
+    assert _get_json_filename_from_scan_filename(Path("adni/foo.nii")) == Path("adni/foo.json")
 
+
+@pytest.mark.parametrize("keep_none", [True, False])
+def test_add_json_scan_metadata(tmp_path, keep_none):
+    """Test function `_add_json_scan_metadata`."""
+    import json
+    from clinica.iotools.converters.adni_to_bids.adni_json import _add_json_scan_metadata
+    existing_metadata = {
+        "MRAcquisitionType": "MRI",
+        "meta_2": {  # This will be kept as it is existing metadata
+            "meta_2_1": 2,
+            "meta_2_2": "3",
+        },
+        "MagneticFieldStrength": 3.0,
+    }
+    json_path = tmp_path / "metadata.json"
+    with open(json_path, "w") as fp:
+        json.dump(existing_metadata, fp)
+    new_metadata = {
+            "PulseSequenceType": None,  # Kept or not depending on keep_none
+            "Manufacturer": "SIEMENS",
+            "meta_6": "meta6",  # Will be filtered out
+            "meta_2": "foo",    # also filtered out
+    }
+    _add_json_scan_metadata(json_path, new_metadata, keep_none=keep_none)
+    with open(json_path, "r") as fp:
+        merged = json.load(fp)
+    expected_keys = set(
+            ["MRAcquisitionType", "meta_2", "MagneticFieldStrength",
+             "PulseSequenceType", "Manufacturer"]
+    )
+    if not keep_none:
+        expected_keys.remove("PulseSequenceType")
+    assert set(merged.keys()) == expected_keys
+    for k, v in merged.items():
+        if k in existing_metadata:
+            assert existing_metadata[k] == v
+        else:
+            assert new_metadata[k] == v
