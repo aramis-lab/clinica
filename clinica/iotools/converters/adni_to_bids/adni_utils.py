@@ -1,3 +1,6 @@
+from typing import Union
+
+
 def visits_to_timepoints(
     subject,
     mri_list_subj,
@@ -565,7 +568,7 @@ def remove_fields_duplicated(bids_fields):
     return [x for x in bids_fields if not (x in seen or seen_add(x))]
 
 
-def bids_id_to_loni(bids_id):
+def bids_id_to_loni(bids_id: str) -> Union[str, None]:
      """
      Convert a subject id of the form sub-ADNI000S0000 back to original format 000_S_0000
      """
