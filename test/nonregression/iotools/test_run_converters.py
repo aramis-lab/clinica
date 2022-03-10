@@ -97,6 +97,7 @@ def run_adni2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) 
 
     # Arrange
     clinical_data_directory = input_dir / "clinical_data"
+    xml_directory = input_dir / "xml_metadata"
     dataset_directory = input_dir / "unorganized_data"
     subjects_list = input_dir / "subjects.txt"
     modalities = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
@@ -110,7 +111,11 @@ def run_adni2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) 
         subjects_list,
         modalities,
     )
-    adni_to_bids.convert_clinical_data(clinical_data_directory, output_dir / "bids")
+    adni_to_bids.convert_clinical_data(
+        clinical_data_directory,
+        output_dir / "bids",
+        xml_path=xml_directory,
+    )
     # Assert
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
 
