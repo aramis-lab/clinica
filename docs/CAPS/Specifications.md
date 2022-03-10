@@ -615,17 +615,17 @@ At the subject level, it contains SVM regularization of gray matter/white matter
 At the group level, it contains the Gram matrix with respect to gray matter/white matter/CSF maps needed for the SVM regularization and the information regarding the regularization.
 An example of JSON file is:
 
-```javascript
+```json
 {
     "MaxDeltaT": "0.0025",
-    "Alpha": "0.0025", // Alpha such that: delta_t = MaxDeltaT * Alpha
+    "Alpha": "0.0025",
     "Epsilon": "10E-6",
     "BoundaryConditions": "TimeInvariant",
     "SigmaLoc": "10",
     "TimeStepMax": "0.07760115580830161",
     "SpatialPrior": "Tissues (GM,WM,CSF)",
     "RegularizationType": "Fisher",
-    "FWHM": "4",
+    "FWHM": "4"
 }
 ```
 
