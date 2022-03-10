@@ -645,7 +645,7 @@ Possible values for `_map-<map>` key/value are:
 
 - For DWI: `FA` (fractional anisotropy), `MD` (mean diffusivity, also called apparent diffusion coefficient), `AD` (axial diffusivity), `RD` (radial diffusivity), `NDI` (neurite density index), `ODI` (orientation dispersion index) and `FWF` (free water fraction).
 
-- For PET: `18FFDG` (<sup>18</sup>F-Fluorodeoxyglucose), `18FAV45` (<sup>18</sup>F-Florbetapir).
+- For PET: `18FFDG` (<sup>18</sup>F-Fluorodeoxyglucose), `18FAV45` (<sup>18</sup>F-Florbetapir), `18FAV1451` (<sup>18</sup>F-Flortaucipir), `11CPIB` (<sup>11</sup>C-Pittsburgh Compound-B), `18FFBB` (<sup>18</sup>F-Florbetaben) and `18FFMM` (<sup>18</sup>F-Flutemetamol).
 
 !!! Example
     Content of `sub-CLNC01_ses-M00_T1w_space-Hammers_map-graymatter_statistics.tsv`:
