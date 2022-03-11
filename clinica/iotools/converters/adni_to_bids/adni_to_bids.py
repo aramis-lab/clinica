@@ -137,12 +137,14 @@ class AdniToBids(Converter):
 
         if xml_path is not None:
             if os.path.exists(xml_path):
-                 create_json_metadata(bids_subjs_paths, bids_ids, xml_path)
-             else:
-                 cprint(
-                     msg=f"Clinica was unable to find {xml_path}, skipping xml metadata extraction.",
-                     lvl="warning",
-                 )
+                create_json_metadata(bids_subjs_paths, bids_ids, xml_path)
+            else:
+                cprint(
+                    msg=(
+                        f"Clinica was unable to find {xml_path}, "
+                        "skipping xml metadata extraction."
+                    ), lvl="warning",
+                )
 
     def convert_images(
         self,

@@ -569,15 +569,14 @@ def remove_fields_duplicated(bids_fields):
 
 
 def bids_id_to_loni(bids_id: str) -> Union[str, None]:
-     """
-     Convert a subject id of the form sub-ADNI000S0000 back to original format 000_S_0000
-     """
-     import re
-
-     ids = re.findall("\d+", bids_id)
-     if len(ids) == 2:
-         return ids[0] + "_S_" + ids[1]
-     return None
+    """Convert a subject id of the form sub-ADNI000S0000
+    back to original format 000_S_0000
+    """
+    import re
+    ids = re.findall("\d+", bids_id)  # noqa
+    if len(ids) == 2:
+        return ids[0] + "_S_" + ids[1]
+    return None
 
 
 def filter_subj_bids(df_files, location, bids_ids):

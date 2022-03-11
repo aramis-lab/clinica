@@ -33,8 +33,8 @@ ALL_MODALITIES = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fM
     help="Convert only the selected modality. By default, all available modalities are converted.",
 )
 @click.option(
-     "-xml", "--xml_path", help="Path to the root directory containing the xml metadata."
- )
+    "-xml", "--xml_path", help="Path to the root directory containing the xml metadata."
+)
 def cli(
     dataset_directory: str,
     clinical_data_directory: str,

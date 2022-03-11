@@ -68,10 +68,10 @@ def test_check_xml_and_get_text(basic_xml_tree):
     from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml_and_get_text
     xml_leaf = ET.Element("leaf")
     xml_leaf.text = "12"
-    assert _check_xml_and_get_text(xml_leaf,  "leaf") == "12"
-    assert _check_xml_and_get_text(xml_leaf,  "leaf", cast=int) == 12
+    assert _check_xml_and_get_text(xml_leaf, "leaf") == "12"
+    assert _check_xml_and_get_text(xml_leaf, "leaf", cast=int) == 12
     with pytest.raises(ValueError, match="Bad number of children for <root>"):
-        _check_xml_and_get_text(basic_xml_tree,  "root") 
+        _check_xml_and_get_text(basic_xml_tree, "root")
 
 
 def test_read_xml_files(tmp_path):
@@ -105,22 +105,22 @@ def _load_xml_from_template(
 ) -> str:
     from string import Template
     other_substitutes = {
-            "study_id": 100,
-            "series_id": 200,
-            "image_id": 300,
-            "proc_id": 3615,
+        "study_id": 100,
+        "series_id": 200,
+        "image_id": 300,
+        "proc_id": 3615,
     }
     temp = Path(f"./data/{template_id}_template.xml").read_text()
     temp = Template(temp.replace("\n", ""))
     return temp.safe_substitute(
-            project=project, modality=modality,
-            acq_time=acq_time, **other_substitutes
+        project=project, modality=modality,
+        acq_time=acq_time, **other_substitutes
     )
 
 
 def _write_xml_example(
         base_path: Path,
-        template_id: str ="ADNI_123_S_4567",
+        template_id: str = "ADNI_123_S_4567",
         suffix: Optional[str] = None,
         **kwargs
 ) -> Path:
@@ -147,15 +147,15 @@ def expected_image_metadata(template_id):
     expected = {}
     if template_id == "ADNI_234_S_5678":
         expected = {
-                'image_proc_pipe': 'Grinder Pipeline',
-                'image_proc_id': 3615,
-                'image_proc_desc': 'MT1; GradWarp; N3m'
+            'image_proc_pipe': 'Grinder Pipeline',
+            'image_proc_id': 3615,
+            'image_proc_desc': 'MT1; GradWarp; N3m'
         }
     elif template_id == "ADNI_345_S_6789":
         expected = {
-                'image_proc_pipe': 'UCSD ADNI Pipeline',
-                'image_proc_id': 3615,
-                'image_proc_desc': 'MPR; GradWarp; N3; Scaled'
+            'image_proc_pipe': 'UCSD ADNI Pipeline',
+            'image_proc_id': 3615,
+            'image_proc_desc': 'MPR; GradWarp; N3; Scaled'
         }
     return expected
 
@@ -164,19 +164,24 @@ def expected_image_metadata(template_id):
 def test_parsing(tmp_path, template_id, expected_image_metadata):
     """Test function `_get_root_from_xml_path`."""
     from clinica.iotools.converters.adni_to_bids.adni_json import (
-            _get_root_from_xml_path, _parse_project, _parse_subject,
-            _parse_study, _parse_series, _parse_images,
+        _get_root_from_xml_path, _parse_project, _parse_subject,
+        _parse_study, _parse_series, _parse_images,
     )
     expected_subject_id = template_id[5:]
     xml_files = {
-            "correct": _write_xml_example(
-                tmp_path, template_id=template_id, suffix="correct"),
-            "bad_project": _write_xml_example(
-                tmp_path, project="foo",
-                template_id=template_id, suffix="bad_project"),
-            "bad_study": _write_xml_example(
-                tmp_path, modality="bar",
-                template_id=template_id, suffix="bad_study"),
+        "correct": _write_xml_example(
+            tmp_path, template_id=template_id, suffix="correct"
+        ),
+        "bad_project": _write_xml_example(
+            tmp_path, project="foo",
+            template_id=template_id,
+            suffix="bad_project"
+        ),
+        "bad_study": _write_xml_example(
+            tmp_path, modality="bar",
+            template_id=template_id,
+            suffix="bad_study"
+        ),
     }
     roots = {k: _get_root_from_xml_path(v) for k, v in xml_files.items()}
 
@@ -231,9 +236,9 @@ def test_parsing(tmp_path, template_id, expected_image_metadata):
 @pytest.fixture
 def expected_mprage(template_id):
     expected = {
-            "ADNI_123_S_4567": "Accelerated Sagittal MPRAGE",
-            "ADNI_234_S_5678": "MPRAGE GRAPPA2",
-            "ADNI_345_S_6789": "MP-RAGE",
+        "ADNI_123_S_4567": "Accelerated Sagittal MPRAGE",
+        "ADNI_234_S_5678": "MPRAGE GRAPPA2",
+        "ADNI_345_S_6789": "MP-RAGE",
     }
     return expected[template_id]
 
@@ -309,18 +314,18 @@ def test_add_json_scan_metadata(tmp_path, keep_none):
     with open(json_path, "w") as fp:
         json.dump(existing_metadata, fp)
     new_metadata = {
-            "PulseSequenceType": None,  # Kept or not depending on keep_none
-            "Manufacturer": "SIEMENS",
-            "meta_6": "meta6",  # Will be filtered out
-            "meta_2": "foo",    # also filtered out
+        "PulseSequenceType": None,  # Kept or not depending on keep_none
+        "Manufacturer": "SIEMENS",
+        "meta_6": "meta6",  # Will be filtered out
+        "meta_2": "foo",    # also filtered out
     }
     _add_json_scan_metadata(json_path, new_metadata, keep_none=keep_none)
     with open(json_path, "r") as fp:
         merged = json.load(fp)
-    expected_keys = set(
-            ["MRAcquisitionType", "meta_2", "MagneticFieldStrength",
-             "PulseSequenceType", "Manufacturer"]
-    )
+    expected_keys = set([
+        "MRAcquisitionType", "meta_2", "MagneticFieldStrength",
+        "PulseSequenceType", "Manufacturer"
+    ])
     if not keep_none:
         expected_keys.remove("PulseSequenceType")
     assert set(merged.keys()) == expected_keys
