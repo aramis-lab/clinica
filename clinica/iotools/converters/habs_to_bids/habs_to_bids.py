@@ -279,5 +279,5 @@ def write_bids(
 
         dataframe = dataframe.drop(columns=["source_zipfile", "source_filename"])
 
-        with fsspec.open(bids_basedir / "scans.tsv", mode="wb") as f:
+        with fsspec.open(bids_basedir / f"{bids_prefix}_scans.tsv", mode="wb") as f:
             write_to_tsv(dataframe, f)
