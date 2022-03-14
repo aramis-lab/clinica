@@ -71,7 +71,6 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     df_data = df_data.rename(
         {0: "Subject", 1: "modality_alt", 2: "session_number"}, axis="columns"
     ).drop_duplicates()
-    # print("ze df:", df_data)
     df_data = df_data.astype({"Subject": "int64"})
 
     df_source = pd.concat(
@@ -82,12 +81,6 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         ],
         axis=1,
     )
-
-    # df_source = df_source.rename(
-    #     {0: "Subject", 1: "modality", 2: "Date"}, axis="columns"
-    # ).drop_duplicates()
-
-    # df_source = df_source.assign(participant_id=lambda df: "sub-" + df.Subject)
     return df_source
 
 
@@ -108,21 +101,11 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
     df_clinical_ev = df_clinical.merge(
         df_source, how="inner", right_on="Subject", left_on="eid"
     )
-    print("\nMERGED DATAFRAME:\n", df_clinical_ev, "\n")
     df_clinical_alt = df_clinical_ev.assign(
         participant_id=lambda df: ("sub-" + df.Subject.astype("str"))
     )
     df_clinical_alt = df_clinical_alt.assign(
         session=lambda df: "ses-" + df.session_number.astype("str")
-    )
-    df_clinical_alt = df_clinical_alt.assign(
-        bids_filename=lambda df: (
-            "sub-"
-            + df.Subject.astype("str")
-            + "_ses-"
-            + df.session_number.astype("str")
-            + "_FLAIR.nii.gz"
-        )
     )
     df_clinical_alt = df_clinical_alt.join(
         df_clinical_alt.modality_alt.map(
@@ -131,6 +114,24 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
                 "20252": {"datatype": "anat", "suffix": "T1w"},
             }
         ).apply(pd.Series)
+    )
+    df_clinical_alt = df_clinical_alt.assign(
+        bids_filename=lambda df: (
+            "sub-UKB"
+            + df.Subject.astype("str")
+            + "_ses-"
+            + df.session_number.astype("str")
+            + "_"
+            + df.suffix
+            + ".nii.gz"
+        )
+    )
+    df_clinical_alt = df_clinical_alt.assign(
+        year_of_birth=lambda df: df.year_of_birth_f34_0_0
+    )
+    # df_clinical_alt = df_clinical_alt.assign(sex = lambda df: df.sex_f31_0_0)
+    df_clinical_alt = df_clinical_alt.assign(
+        age=lambda df: df.age_at_recruitment_f21022_0_0
     )
     df_clinical_alt = df_clinical_alt.assign(
         age_at_session=lambda df: df[
@@ -142,11 +143,20 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
         ]
     )
     df_clinical_alt = df_clinical_alt.assign(
-        session_month=lambda df: (df.age_at_session - df.age_at_recruitment_f21022_0_0)
-        * 12
+        session_month=lambda df: (df.age_at_session - df.age) * 12
     )
     df_clinical_alt = df_clinical_alt.assign(
         session=lambda df: f"ses-M{ (1-len(df.session_month))* '0' + str(int(df.session_month))}"
+    )
+    df_clinical_alt = df_clinical_alt.join(
+        df_clinical_alt.sex_f31_0_0.astype("str")
+        .map(
+            {
+                "0": {"sex": "F"},
+                "1": {"sex": "M"},
+            }
+        )
+        .apply(pd.Series)
     )
     print("\nMERGED DATAFRAME:\n", df_clinical_alt, "\n")
     return df_source, df_clinical_alt
@@ -293,7 +303,7 @@ def write_bids(
                 + "/"
                 + row.datatype
                 + "/"
-                + row.filename,
+                + row.bids_filename,
             )
 
     # Perform import of imaging data next.
