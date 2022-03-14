@@ -107,8 +107,8 @@ def test_modality_agnostic_file_writers(tmp_path, name, writer, expected_content
     """Test helper functions of the function `write_modality_agnostic_files`."""
     writer(tmp_path)
     _validate_file_and_content(
-            tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES[name],
-            expected_content
+        tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES[name],
+        expected_content
     )
 
 
@@ -122,4 +122,3 @@ def test_write_modality_agnostic_files(tmp_path):
     assert len(files) == 4
     for _, v in EXPECTED_MODALITY_AGNOSTIC_FILES.items():
         assert v in files
-
