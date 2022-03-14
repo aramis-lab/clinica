@@ -155,13 +155,14 @@ def log_prov(prov_log_record, out_file, out_dir):
 
     from clinica.engine.prov_utils import write_prov_file
 
-    out_file = out_file + "*"
     out_files_paths = []
+
     if isinstance(out_file, list):
         for x in out_file:
             out_files_paths.extend(list(Path(out_dir).rglob(x)))
     elif isinstance(out_file, str):
-        out_files_paths = list(Path(out_dir).rglob(out_file))
+
+        out_files_paths = list(Path(out_dir).rglob(Path(out_file).name))
 
     for path_file in out_files_paths:
         write_prov_file(prov_log_record, path_file)
