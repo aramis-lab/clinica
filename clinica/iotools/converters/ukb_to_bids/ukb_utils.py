@@ -158,6 +158,15 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
         )
         .apply(pd.Series)
     )
+    df_clinical_alt = df_clinical_alt.assign(
+        bids_full_path=lambda df: df.participant_id
+        + "/"
+        + df.session
+        + "/"
+        + df.datatype
+        + "/"
+        + df.bids_filename
+    )
     print("\nMERGED DATAFRAME:\n", df_clinical_alt, "\n")
     return df_source, df_clinical_alt
 
@@ -184,30 +193,22 @@ def dataset_to_bids(
 
     # Build participants dataframe
     df_participants = df_clinical_ev.filter(items=list(df_ref["participants"]))
-    name_dict = dict(
-        zip(list(df_ref["participants"]), list(df_ref["participants_name"]))
-    )
-    type_dict = dict(
-        zip(list(df_ref["participants_name"]), list(df_ref["participants_type"]))
-    )
-    df_participants = df_participants.rename(columns=name_dict)
+    # name_dict = dict(
+    #     zip(list(df_ref["participants"]), list(df_ref["participants_name"]))
+    # )
+    # type_dict = dict(
+    #     zip(list(df_ref["participants_name"]), list(df_ref["participants_type"]))
+    # )
+    # df_participants = df_participants.rename(columns=name_dict)
     # df_participants = df_participants.astype(type_dict)
     print("df_participants:\n", df_participants)
 
     # Build sessions dataframe
     df_session = df_clinical_ev.filter(items=list(df_ref["session"]))
-    name_dict = dict(zip(list(df_ref["session"]), list(df_ref["session_name"])))
-    type_dict = dict(zip(list(df_ref["session_name"]), list(df_ref["session_type"])))
-    df_session = df_session.rename(columns=name_dict)
-    # df_session = df_session.astype(type_dict)
     print("df_session:", df_session)
 
     # Build scans dataframe
-    df_scan = df_clinical_ev  # .filter(items=list(df_ref["scan"]))
-    # name_dict = dict(zip(list(df_ref["scan"]), list(df_ref["scan_name"])))
-    # type_dict = dict(zip(list(df_ref["scan_name"]), list(df_ref["scan_type"])))
-    # df_scan = df_scan.rename(columns=name_dict)
-    # df_scan = df_scan.astype(type_dict)
+    df_scan = df_clinical_ev.filter(items=list(df_ref["scan"]))
     print("df_scan:", df_scan)
     return df_participants, df_session, df_scan
 
@@ -270,53 +271,27 @@ def write_bids(
         with fs.open(to / "participants.tsv", "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
-        # for participant_id, sessions_group in sessions.groupby("participant_id"):
-        #     sessions_group = sessions_group.droplevel("participant_id")
-        #     sessions_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
-        #     with fs.open(sessions_filepath, "w") as sessions_file:
-        #         write_to_tsv(sessions_group, sessions_file)
-
-    for participant_id, data_frame in scans.groupby(["participant_id"]):
+    for participant_id, data_frame in sessions.groupby(["participant_id"]):
         session = data_frame.droplevel("participant_id")
         session_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
         with fs.open(session_filepath, "w") as sessions_file:
             write_to_tsv(session, sessions_file)
-        for session, row in session.iterrows():
-            print(
-                "ZE ZUPER PATH: ",
-                str(to)
-                + "/"
-                + participant_id
-                + "/"
-                + str(session)
-                + "/"
-                + row.source_filename,
-            )
-            install_nifti(
-                zipfile=str(dataset_directory) + "/" + row["source_zipfile"],
-                filename=row["source_filename"],
-                bids_path=str(to)
-                + "/"
-                + participant_id
-                + "/"
-                + str(session)
-                + "/"
-                + row.datatype
-                + "/"
-                + row.bids_filename,
-            )
 
-    # Perform import of imaging data next.
-    # for filename, metadata in scans.iterrows():
-    #     path = Path(dataset_directory) / metadata.source_dir
-    #     install_bids(sourcedata_dir=path, bids_filename=to / filename)
-    return  # scans.index.to_list()
+    scans = scans.set_index(["bids_full_path"], verify_integrity=True)
+    for bids_full_path, metadata in scans.iterrows():
+        install_nifti(
+            zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
+            filename=metadata["source_filename"],
+            bids_path=to / bids_full_path,
+        )
+    return
 
 
 def install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
     """Install a NIfTI file from a source archive to the target BIDS path."""
     import fsspec
 
+    print("ze bids-path is: ", bids_path)
     fo = fsspec.open(zipfile)
     fs = fsspec.filesystem("zip", fo=fo)
     with fsspec.open(bids_path, mode="wb") as f:
