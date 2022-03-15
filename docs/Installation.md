@@ -40,7 +40,7 @@ The latest release of Clinica can be installed by using the conventional
 [PyPI package manager](https://pypi.org/project/clinica/) as follows:
 
 ```shell
-conda create --name clinicaEnv python=3.7
+conda create --name clinicaEnv python=3.8
 conda activate clinicaEnv
 pip install clinica
 ```

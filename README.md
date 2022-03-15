@@ -98,7 +98,7 @@ environment and activate it before installing clinica (you can also use
 `virtualenv`):
 
 ```sh
-conda create --name clinicaEnv python=3.7
+conda create --name clinicaEnv python=3.8
 conda activate clinicaEnv
 ```
 
