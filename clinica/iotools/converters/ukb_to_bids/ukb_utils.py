@@ -167,7 +167,6 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
         + "/"
         + df.bids_filename
     )
-    print("\nMERGED DATAFRAME:\n", df_clinical_alt, "\n")
     return df_source, df_clinical_alt
 
 
@@ -193,23 +192,12 @@ def dataset_to_bids(
 
     # Build participants dataframe
     df_participants = df_clinical_ev.filter(items=list(df_ref["participants"]))
-    # name_dict = dict(
-    #     zip(list(df_ref["participants"]), list(df_ref["participants_name"]))
-    # )
-    # type_dict = dict(
-    #     zip(list(df_ref["participants_name"]), list(df_ref["participants_type"]))
-    # )
-    # df_participants = df_participants.rename(columns=name_dict)
-    # df_participants = df_participants.astype(type_dict)
-    print("df_participants:\n", df_participants)
 
     # Build sessions dataframe
     df_session = df_clinical_ev.filter(items=list(df_ref["session"]))
-    print("df_session:", df_session)
 
     # Build scans dataframe
     df_scan = df_clinical_ev.filter(items=list(df_ref["scan"]))
-    print("df_scan:", df_scan)
     return df_participants, df_session, df_scan
 
 
