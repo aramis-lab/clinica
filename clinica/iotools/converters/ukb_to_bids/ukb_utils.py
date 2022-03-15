@@ -110,8 +110,12 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
     df_clinical_alt = df_clinical_alt.join(
         df_clinical_alt.modality_alt.map(
             {
-                "20253": {"datatype": "anat", "suffix": "FLAIR"},
-                "20252": {"datatype": "anat", "suffix": "T1w"},
+                "20253": {
+                    "datatype": "anat",
+                    "suffix": "FLAIR",
+                    "sidecar": "T2_FLAIR/T2_FLAIR.json",
+                },
+                "20252": {"datatype": "anat", "suffix": "T1w", "sidecar": "T1/T1.json"},
             }
         ).apply(pd.Series)
     )
@@ -124,6 +128,17 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
             + "_"
             + df.suffix
             + ".nii.gz"
+        )
+    )
+    df_clinical_alt = df_clinical_alt.assign(
+        sidecar_filename=lambda df: (
+            "sub-UKB"
+            + df.Subject.astype("str")
+            + "_ses-"
+            + df.session_number.astype("str")
+            + "_"
+            + df.suffix
+            + ".json"
         )
     )
     df_clinical_alt = df_clinical_alt.assign(
@@ -166,6 +181,15 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
         + df.datatype
         + "/"
         + df.bids_filename
+    )
+    df_clinical_alt = df_clinical_alt.assign(
+        bids_sidecar_path=lambda df: df.participant_id
+        + "/"
+        + df.session
+        + "/"
+        + df.datatype
+        + "/"
+        + df.sidecar_filename
     )
     return df_source, df_clinical_alt
 
@@ -272,6 +296,11 @@ def write_bids(
             filename=metadata["source_filename"],
             bids_path=to / bids_full_path,
         )
+        install_json(
+            zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
+            filename=metadata["sidecar"],
+            bids_path=to / metadata["bids_sidecar_path"],
+        )
     return
 
 
@@ -279,8 +308,18 @@ def install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
     """Install a NIfTI file from a source archive to the target BIDS path."""
     import fsspec
 
-    print("ze bids-path is: ", bids_path)
     fo = fsspec.open(zipfile)
     fs = fsspec.filesystem("zip", fo=fo)
     with fsspec.open(bids_path, mode="wb") as f:
         f.write(fs.cat(filename))
+
+
+def install_json(zipfile: str, filename: str, bids_path: str) -> None:
+    """Install a NIfTI file from a source archive to the target BIDS path."""
+    import fsspec
+
+    fo = fsspec.open(zipfile)
+    fs = fsspec.filesystem("zip", fo=fo)
+    if fs.exists(filename):
+        with fsspec.open(bids_path, mode="wb") as f:
+            f.write(fs.cat(filename))
