@@ -36,6 +36,11 @@ BIDS_Dataset/
 │   │   │   │   ├── sub-CLNC01_ses-M00_task­-rest_bold.json
 │   │   │   │   ├── sub-CLNC01_ses-M00_task­-rest_bold.nii.gz
 │   │   │   │   └── ...
+│   │   │   ├── pet/
+│   │   │   │   ├── sub-CLNC01_ses-M00_trc-11CPIB_pet.json
+│   │   │   │   ├── sub-CLNC01_ses-M00_trc-11CPIB_pet.nii.gz
+│   │   │   │   ├── sub-CLNC01_ses-M00_trc-18FFDG_pet.json
+│   │   │   │   ├── sub-CLNC01_ses-M00_trc-18FFDG_pet.nii.gz
 │   │   │   └── sub-CLNC01_ses-M00_scans.tsv
 │   │   ├── ses-M18/
 │   │   │   └── ...
