@@ -19,10 +19,10 @@ See [here](../DatabasesToBIDS) for more details.
     BIDS
     └── sub-CLNC0001
         ├── anat
-        │   └── sub-CLNC0001_T1w.nii.gz
+        │   └── sub-CLNC0001_T1w.nii.gz
         └── pet
-            ├── sub-CLNC0001_task-rest_acq-fdg_pet.json
-            └── sub-CLNC0001_task-rest_acq-fdg_pet.nii.gz
+            ├── sub-CLNC0001_trc-18FFDG_pet.json
+            └── sub-CLNC0001_trc-18FFDG_pet.nii.gz
     ```
     Clinica will propose you to create a new BIDS dataset with a fake timepoint.
     This will result to a new dataset ressembling to:
@@ -31,10 +31,10 @@ See [here](../DatabasesToBIDS) for more details.
     └── sub-CLNC0001
         └── ses-M00
             ├── anat
-            │   └── sub-CLNC0001_ses-M00_T1w.nii.gz
+            │   └── sub-CLNC0001_ses-M00_T1w.nii.gz
             └── pet
-                ├── sub-CLNC0001_ses-M00_task-rest_acq-fdg_pet.json
-                └── sub-CLNC0001_ses-M00_task-rest_acq-fdg_pet.nii.gz
+                ├── sub-CLNC0001_ses-M00_trc-18FFDG_pet.json
+                └── sub-CLNC0001_ses-M00_trc-18FFDG_pet.nii.gz
     ```
 
 !!! tip
