@@ -51,6 +51,13 @@ BIDS_Dataset/
 └── participants.tsv
 ```
 
+!!! note "PET modality"
+    Clinica historically used the BIDS acquisition entity `acq` to distinguish PET acquisitions with different tracers.
+
+    Since version 0.6, Clinica is now compliant with the official specifications for PET introduced in BIDS version 1.6.0.
+    Acquisitions with different tracers now use the new tracer entity `trc`, and label names follow the proposed convention
+    in BIDS (pib -> 11CPIB, av45 -> 18FAV45, fbb -> 18FFBB, fdg -> 18FFDG, flute -> 18FFMM, tau -> 18FAV1451).
+
 ## Validation of BIDS datasets
 
 [bids-validator](https://github.com/bids-standard/bids-validator) can be run to ensure that a dataset is BIDS-compliant.
