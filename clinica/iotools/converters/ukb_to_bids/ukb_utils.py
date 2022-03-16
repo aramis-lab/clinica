@@ -209,7 +209,7 @@ def dataset_to_bids(
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
 
     df_clinical_ev = df_clinical_ev.set_index(
-        ["participant_id", "session"], verify_integrity=True
+        ["participant_id", "session", "suffix"], verify_integrity=True
     )
 
     # Build participants dataframe
