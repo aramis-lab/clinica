@@ -42,7 +42,7 @@ pipeline_name = "statistics-volume"
     "--custom_file",
     help=(
         "Custom file string. Specify filename using * when the subject or session name "
-        "appears e.g. '*_task-rest_acq-fdg_pet_space-Ixi549Space_pet.nii.gz' will grab "
+        "appears e.g. '*_trc-18FFDG_pet_space-Ixi549Space_pet.nii.gz' will grab "
         "the corresponding file in all the subjects/sessions. "
         "This flag must be specified with the --measure_label flag). "
         "See Wiki for an example."
