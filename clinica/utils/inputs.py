@@ -547,7 +547,7 @@ def get_file_from_server(remote_file, cache_path=None):
             local_file = fetch_file(remote_file, cache_clinica)
         except IOError as err:
             cprint(
-                msg="Unable to download {remote_file.filename} from {remote_file.url}: {err}",
+                msg=f"Unable to download {remote_file.filename} from {remote_file.url}: {err}",
                 lvl="error",
             )
 
