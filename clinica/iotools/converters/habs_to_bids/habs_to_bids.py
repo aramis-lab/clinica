@@ -197,7 +197,6 @@ def write_bids(
     participants = (
         clinical_data["Demographics"][
             [
-                "NP_Age",
                 "BiologicalSex",
                 "YrsOfEd",
                 "Race",
@@ -209,7 +208,6 @@ def write_bids(
         ]
         .rename(
             columns={
-                "NP_Age": "age",
                 "BiologicalSex": "sex",
                 "YrsOfEd": "education",
                 "Race": "race",
