@@ -200,7 +200,7 @@ def write_bids(
         .rename(
             columns={
                 "BiologicalSex": "sex",
-                "YrsOfEd": "education",
+                "YrsOfEd": "years_of_education",
             }
         )
         .xs("ses-M00", level="session_id")
