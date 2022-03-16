@@ -119,12 +119,30 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
             }
         ).apply(pd.Series)
     )
+
+    df_clinical_alt = df_clinical_alt.assign(
+        year_of_birth=lambda df: df.year_of_birth_f34_0_0
+    )
+
+    df_clinical_alt = df_clinical_alt.assign(
+        age=lambda df: df.age_at_recruitment_f21022_0_0
+    )
+    df_clinical_alt["age_at_session"] = df_clinical_alt.apply(
+        lambda df: select_session(df), axis=1
+    )
+    df_clinical_alt = df_clinical_alt.assign(
+        session_month=lambda df: (df.age_at_session - df.age) * 12
+    )
+
+    df_clinical_alt = df_clinical_alt.assign(
+        session=lambda df: df.session_month.map(lambda x: f"ses-M{x}")
+    )
     df_clinical_alt = df_clinical_alt.assign(
         bids_filename=lambda df: (
             "sub-UKB"
             + df.Subject.astype("str")
-            + "_ses-"
-            + df.session_number.astype("str")
+            + "_"
+            + df.session.astype("str")
             + "_"
             + df.suffix
             + ".nii.gz"
@@ -134,35 +152,15 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
         sidecar_filename=lambda df: (
             "sub-UKB"
             + df.Subject.astype("str")
-            + "_ses-"
-            + df.session_number.astype("str")
+            + "_"
+            + df.session.astype("str")
             + "_"
             + df.suffix
             + ".json"
         )
     )
-    df_clinical_alt = df_clinical_alt.assign(
-        year_of_birth=lambda df: df.year_of_birth_f34_0_0
-    )
-    # df_clinical_alt = df_clinical_alt.assign(sex = lambda df: df.sex_f31_0_0)
-    df_clinical_alt = df_clinical_alt.assign(
-        age=lambda df: df.age_at_recruitment_f21022_0_0
-    )
-    df_clinical_alt = df_clinical_alt.assign(
-        age_at_session=lambda df: df[
-            (
-                "age_when_attended_assessment_centre_f21003_"
-                + df.session_number.astype("str")
-                + "_0"
-            )
-        ]
-    )
-    df_clinical_alt = df_clinical_alt.assign(
-        session_month=lambda df: (df.age_at_session - df.age) * 12
-    )
-    df_clinical_alt = df_clinical_alt.assign(
-        session=lambda df: f"ses-M{ (1-len(df.session_month))* '0' + str(int(df.session_month))}"
-    )
+
+    print("df_clinical alt sessions: ", df_clinical_alt.session, "\n")
     df_clinical_alt = df_clinical_alt.join(
         df_clinical_alt.sex_f31_0_0.astype("str")
         .map(
@@ -290,6 +288,7 @@ def write_bids(
             write_to_tsv(session, sessions_file)
 
     scans = scans.set_index(["bids_full_path"], verify_integrity=True)
+    print("\n\nscans:", scans, "\n\n")
     for bids_full_path, metadata in scans.iterrows():
         install_nifti(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
@@ -323,3 +322,10 @@ def install_json(zipfile: str, filename: str, bids_path: str) -> None:
     if fs.exists(filename):
         with fsspec.open(bids_path, mode="wb") as f:
             f.write(fs.cat(filename))
+
+
+def select_session(x):
+    if x["session_number"] == "2":
+        return x.age_when_attended_assessment_centre_f21003_2_0
+    elif x["session_number"] == "3":
+        return x.age_when_attended_assessment_centre_f21003_3_0
