@@ -195,31 +195,17 @@ def write_bids(
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
     participants = (
-        clinical_data["Demographics"][
-            [
-                "BiologicalSex",
-                "YrsOfEd",
-                "Race",
-                "Ethnicity",
-                "Holingshead",
-                "APOE_haplotype",
-                "E4_Status",
-            ]
-        ]
+        clinical_data["Demographics"]
+        .drop(columns="NP_Age")
         .rename(
             columns={
                 "BiologicalSex": "sex",
                 "YrsOfEd": "education",
-                "Race": "race",
-                "Ethnicity": "ethnicity",
-                "Holingshead": "holingshead",
-                "APOE_haplotype": "apoe_haplotype",
-                "E4_Status": "e4_status",
             }
         )
         .xs("ses-M00", level="session_id")
         .reset_index(level="date", drop=True)
-    )
+    ).rename(columns=str.lower)
 
     with fsspec.open(str(rawdata / "dataset_description.json"), mode="wt") as f:
         BIDSDatasetDescription(name="HABS").write(to=f)
@@ -237,7 +223,7 @@ def write_bids(
             .rename(columns={"HABS_DX": "diagnostic"})
             .reset_index(level="date", drop=True)
         )
-    )
+    ).rename(columns=str.lower)
 
     for participant_id, dataframe in sessions.groupby(["participant_id"]):
         sessions_file = rawdata / participant_id / f"{participant_id}_sessions.tsv"
