@@ -24,13 +24,13 @@ def convert_images(
     )
 
     # read the clinical data files
-    dict_df = read_clinical_data(path_to_clinical)
+    df_clinical = read_clinical_data(path_to_clinical)
 
     # makes a df of the imaging data
     imaging_data = read_imaging_data(path_to_dataset)
 
     # intersect the data
-    imaging_data, df_small = intersect_data(imaging_data, dict_df)
+    imaging_data, df_small = intersect_data(imaging_data, df_clinical)
 
     # build the tsv
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)

@@ -7,7 +7,7 @@ from pandas import DataFrame, notna
 
 def find_clinical_data(
     clinical_data_directory: PathLike,
-) -> Tuple[DataFrame, DataFrame, DataFrame, DataFrame, DataFrame]:
+) -> DataFrame:
     from pathlib import Path
 
     import pandas as pd
@@ -39,12 +39,9 @@ def find_clinical_data(
 
 def read_clinical_data(
     clinical_data_directory: PathLike,
-) -> Tuple[DataFrame, DataFrame, DataFrame, DataFrame, DataFrame]:
+) -> DataFrame:
     df_clinical = find_clinical_data(clinical_data_directory)
-    dictionnary = {
-        "clinical": df_clinical,
-    }
-    return dictionnary
+    return df_clinical
 
 
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
@@ -99,14 +96,19 @@ def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
                 yield [str(z.relative_to(path_to_source_data)), f]
 
 
-def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, DataFrame]:
+def intersect_data(
+    df_source: DataFrame, dict_df: DataFrame
+) -> Tuple[DataFrame, DataFrame]:
+    """
+    This function merges the two dataframe given as inputs based on the subject id, and uses the existing data
+    to create the columns needed for the bids hierarchy (subject_id, ses, age_at _session, ect.)
+    """
     import pandas as pd
 
-    df_clinical = dict_df["clinical"]
-    df_clinical_ev = df_clinical.merge(
+    df_clinical = dict_df.merge(
         df_source, how="inner", right_on="Subject", left_on="eid"
     )
-    df_clinical_alt = df_clinical_ev.assign(
+    df_clinical_alt = df_clinical.assign(
         participant_id=lambda df: ("sub-" + df.Subject.astype("str"))
     )
     df_clinical_alt = df_clinical_alt.assign(
