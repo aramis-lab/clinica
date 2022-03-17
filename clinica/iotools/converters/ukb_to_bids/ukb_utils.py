@@ -18,7 +18,7 @@ def find_clinical_data(
     try:
         image_data_file = list(Path(clinical_data_directory).glob("*.tsv"))
     except StopIteration:
-        raise FileNotFoundError("Imaging collection file not found.")
+        raise FileNotFoundError("Clinical data file not found.")
 
     # Assign the dfs
     df_list = []
