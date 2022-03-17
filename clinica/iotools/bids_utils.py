@@ -314,6 +314,7 @@ def create_scans_dict(
 
     import pandas as pd
 
+    from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
 
     scans_dict = {}
@@ -331,10 +332,10 @@ def create_scans_dict(
         for session_id in {"ses-" + key for key in ses_dict[bids_id].keys()}:
             scans_dict[bids_id][session_id] = {
                 "T1/DWI/fMRI/FMAP": {},
-                "PIB": {},
-                "AV45": {},
-                "FLUTE": {},
-                "FDG": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+                Tracer.FDG: {},
             }
 
     scans_specs = pd.read_csv(clinic_specs_path + "_scans.tsv", sep="\t")
@@ -438,7 +439,7 @@ def write_modality_agnostic_files(study_name, bids_dir):
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
     with open(path.join(bids_dir, "dataset_description.json"), "w") as f:
-        BIDSDatasetDescription(name=study_name, bids_version="1.4.1").write(to=f)
+        BIDSDatasetDescription(name=study_name).write(to=f)
 
     with open(path.join(bids_dir, "README"), "w") as f:
         f.write(

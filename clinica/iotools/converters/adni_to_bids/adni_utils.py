@@ -871,6 +871,7 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
 
 
 def find_conversion_mod(file_name):
+    from clinica.utils.pet import Tracer
 
     suffix = file_name.split("_")[-1].split(".")[0]
     if suffix == "T1w":
@@ -882,8 +883,8 @@ def find_conversion_mod(file_name):
     elif suffix == "bold":
         return "fmri"
     elif suffix == "pet":
-        tracer = file_name.split("acq-")[1].split("_")[0]
-        if tracer == "av45" or tracer == "fbb":
+        tracer = file_name.split("trc-")[1].split("_")[0]
+        if tracer in (Tracer.AV45, Tracer.FBB):
             return "amyloid_pet"
         else:
             return f"{tracer}_pet"
@@ -1021,6 +1022,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
 
     from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
 
     modality_specific = {
@@ -1050,31 +1052,31 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
         "fdg": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-fdg_pet",
+            "output_filename": f"_trc-{Tracer.FDG}_pet",
             "to_center": True,
             "json": "n",
         },
         "pib": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-pib_pet",
+            "output_filename": f"_trc-{Tracer.PIB}_pet",
             "to_center": True,
             "json": "n",
         },
         "av45": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-av45_pet",
+            "output_filename": f"_trc-{Tracer.AV45}_pet",
             "to_center": True,
             "json": "n",
         },
         "fbb": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-fbb_pet",
+            "output_filename": f"_trc-{Tracer.FBB}_pet",
             "to_center": True,
             "json": "n",
         },
         "tau": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-tau_pet",
+            "output_filename": f"_trc-{Tracer.AV1451}_pet",
             "to_center": True,
             "json": "n",
         },

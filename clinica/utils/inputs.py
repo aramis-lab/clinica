@@ -219,14 +219,14 @@ def clinica_file_reader(
                     gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/mri/orig_nu.mgz']
 
             - You have a partial name of the file:
-                File sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet.nii.gz in BIDS directory. Here, filename depends on
+                File sub-ADNI011S4105_ses-M00_trc-18FFDG_pet.nii.gz in BIDS directory. Here, filename depends on
                 subject and session name :
                      clinica_file_reader(['sub-ADNI011S4105'],
                                          ['ses-M00'],
                                          bids_directory,
-                                         {'pattern': '*fdg_pet.nii*',
+                                         {'pattern': '*18FFDG_pet.nii*',
                                           'description': 'FDG PET data'})
-                     gives: ['/bids/sub-ADNI011S4105/ses-M00/pet/sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet.nii.gz']
+                     gives: ['/bids/sub-ADNI011S4105/ses-M00/pet/sub-ADNI011S4105_ses-M00_trc-18FFDG_pet.nii.gz']
 
             - Tricky example:
                 Get the file rh.white from FreeSurfer:
