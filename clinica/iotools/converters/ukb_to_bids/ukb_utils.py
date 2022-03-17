@@ -69,17 +69,17 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     )
     dataframe = dataframe[filename.isin(file_mod_list)]
     filename = filename[filename.isin(file_mod_list)]
-    df_data = dataframe["source_zipfile"].str.split("_", expand=True)
-    df_data = df_data.rename(
+    split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
+    split_zipfile = split_zipfile.rename(
         {0: "Subject", 1: "modality_alt", 2: "session_number"}, axis="columns"
     ).drop_duplicates()
-    df_data = df_data.astype({"Subject": "int64"})
+    split_zipfile = split_zipfile.astype({"Subject": "int64"})
 
     df_source = pd.concat(
         [
             dataframe,
             filename,
-            df_data,
+            split_zipfile,
         ],
         axis=1,
     )
@@ -97,7 +97,7 @@ def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
 
 
 def intersect_data(
-    df_source: DataFrame, dict_df: DataFrame
+    df_source: DataFrame, df_clinical_data: DataFrame
 ) -> Tuple[DataFrame, DataFrame]:
     """
     This function merges the two dataframe given as inputs based on the subject id, and uses the existing data
@@ -105,17 +105,17 @@ def intersect_data(
     """
     import pandas as pd
 
-    df_clinical = dict_df.merge(
+    df_clinical = df_clinical_data.merge(
         df_source, how="inner", right_on="Subject", left_on="eid"
     )
-    df_clinical_alt = df_clinical.assign(
+    df_clinical = df_clinical.assign(
         participant_id=lambda df: ("sub-" + df.Subject.astype("str"))
     )
-    df_clinical_alt = df_clinical_alt.assign(
+    df_clinical = df_clinical.assign(
         session=lambda df: "ses-" + df.session_number.astype("str")
     )
-    df_clinical_alt = df_clinical_alt.join(
-        df_clinical_alt.modality_alt.map(
+    df_clinical = df_clinical.join(
+        df_clinical.modality_alt.map(
             {
                 "20253": {
                     "datatype": "anat",
@@ -139,24 +139,20 @@ def intersect_data(
         ).apply(pd.Series)
     )
 
-    df_clinical_alt = df_clinical_alt.assign(
-        year_of_birth=lambda df: df.year_of_birth_f34_0_0
-    )
+    df_clinical = df_clinical.assign(year_of_birth=lambda df: df.year_of_birth_f34_0_0)
 
-    df_clinical_alt = df_clinical_alt.assign(
-        age=lambda df: df.age_at_recruitment_f21022_0_0
-    )
-    df_clinical_alt["age_at_session"] = df_clinical_alt.apply(
+    df_clinical = df_clinical.assign(age=lambda df: df.age_at_recruitment_f21022_0_0)
+    df_clinical["age_at_session"] = df_clinical.apply(
         lambda df: select_session(df), axis=1
     )
-    df_clinical_alt = df_clinical_alt.assign(
+    df_clinical = df_clinical.assign(
         session_month=lambda df: (df.age_at_session - df.age) * 12
     )
 
-    df_clinical_alt = df_clinical_alt.assign(
+    df_clinical = df_clinical.assign(
         session=lambda df: df.session_month.map(lambda x: f"ses-M{x}")
     )
-    df_clinical_alt = df_clinical_alt.assign(
+    df_clinical = df_clinical.assign(
         bids_filename=lambda df: (
             "sub-UKB"
             + df.Subject.astype("str")
@@ -167,7 +163,7 @@ def intersect_data(
             + ".nii.gz"
         )
     )
-    df_clinical_alt = df_clinical_alt.assign(
+    df_clinical = df_clinical.assign(
         sidecar_filename=lambda df: (
             "sub-UKB"
             + df.Subject.astype("str")
@@ -177,10 +173,8 @@ def intersect_data(
             + df.suffix
         )
     )
-
-    print("df_clinical alt sessions: ", df_clinical_alt.session, "\n")
-    df_clinical_alt = df_clinical_alt.join(
-        df_clinical_alt.sex_f31_0_0.astype("str")
+    df_clinical = df_clinical.join(
+        df_clinical.sex_f31_0_0.astype("str")
         .map(
             {
                 "0": {"sex": "F"},
@@ -189,7 +183,7 @@ def intersect_data(
         )
         .apply(pd.Series)
     )
-    df_clinical_alt = df_clinical_alt.assign(
+    df_clinical = df_clinical.assign(
         bids_full_path=lambda df: df.participant_id
         + "/"
         + df.session
@@ -198,7 +192,7 @@ def intersect_data(
         + "/"
         + df.bids_filename
     )
-    df_clinical_alt = df_clinical_alt.assign(
+    df_clinical = df_clinical.assign(
         bids_sidecar_path=lambda df: df.participant_id
         + "/"
         + df.session
@@ -207,11 +201,11 @@ def intersect_data(
         + "/"
         + df.sidecar_filename
     )
-    return df_source, df_clinical_alt
+    return df_source, df_clinical
 
 
 def dataset_to_bids(
-    df_source: DataFrame, df_clinical_ev: DataFrame
+    df_source: DataFrame, df_clinical: DataFrame
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
 
     import os
@@ -226,18 +220,18 @@ def dataset_to_bids(
     )
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
 
-    df_clinical_ev = df_clinical_ev.set_index(
+    df_clinical = df_clinical.set_index(
         ["participant_id", "session", "suffix"], verify_integrity=True
     )
 
     # Build participants dataframe
-    df_participants = df_clinical_ev.filter(items=list(df_ref["participants"]))
+    df_participants = df_clinical.filter(items=list(df_ref["participants"]))
 
     # Build sessions dataframe
-    df_session = df_clinical_ev.filter(items=list(df_ref["session"]))
+    df_session = df_clinical.filter(items=list(df_ref["session"]))
 
     # Build scans dataframe
-    df_scan = df_clinical_ev.filter(items=list(df_ref["scan"]))
+    df_scan = df_clinical.filter(items=list(df_ref["scan"]))
     return df_participants, df_session, df_scan
 
 
