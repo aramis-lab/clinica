@@ -304,21 +304,17 @@ def write_bids(
             write_to_tsv(session, sessions_file)
 
     scans = scans.set_index(["bids_full_path"], verify_integrity=True)
-    print("\n\nscans:", scans, "\n\n")
     for bids_full_path, metadata in scans.iterrows():
         install_nifti(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
             filename=metadata["source_filename"],
             bids_path=to / bids_full_path,
         )
-        print("json filename:", metadata["json"])
         install_json(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
             filename=metadata["json"],
             bids_path=to / metadata["bids_sidecar_path"],
         )
-        print("sidecars ?:", metadata["sidecars"])
-
         install_sidecars(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
             filename=metadata["sidecars"],
@@ -344,7 +340,6 @@ def install_json(zipfile: str, filename: str, bids_path: str) -> None:
     fo = fsspec.open(zipfile)
     fs = fsspec.filesystem("zip", fo=fo)
     bids_path_json = str(bids_path) + ".json"
-    print("bids_path-jso,n: ", bids_path_json)
     if fs.exists(filename):
         with fsspec.open(bids_path_json, mode="wb") as f:
             f.write(fs.cat(filename))
