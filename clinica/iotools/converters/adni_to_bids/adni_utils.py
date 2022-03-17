@@ -1034,7 +1034,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
         "dwi": {
             "output_path": "dwi",
-            "output_filename": "_acq-axial_dwi",
+            "output_filename": "_dwi",
             "to_center": False,
             "json": "y",
         },
