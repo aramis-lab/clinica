@@ -21,27 +21,21 @@ def find_clinical_data(
         raise FileNotFoundError("Clinical data file not found.")
 
     # Assign the dfs
-    df_list = []
-    for i in range(0, len(image_data_file)):
-        df_list.append(pd.read_csv(str(image_data_file[i]), sep="\t"))
-        df_list[i] = df_list[i].set_index(df_list[i].axes[1][0])
-        if df_list[i].index.name == "eid":
-            df_clinical = df_list[i]
-
-    # Warn if a dataframe is missing
-    if "df_clinical" in locals():
+    if len(image_data_file) == 1:
+        df_clinical = pd.read_csv(str(image_data_file[0]), sep="\t")
         cprint(msg="All clinical data have been found", lvl="info")
-    else:
+    elif len(image_data_file) == 0:
         raise FileNotFoundError("Clinical data not found or incomplete")
-
+    elif len(image_data_file) > 1:
+        raise FileNotFoundError("Too many data files found")
     return df_clinical
 
 
-def read_clinical_data(
-    clinical_data_directory: PathLike,
-) -> DataFrame:
-    df_clinical = find_clinical_data(clinical_data_directory)
-    return df_clinical
+# def read_clinical_data(
+#     clinical_data_directory: PathLike,
+# ) -> DataFrame:
+#     df_clinical = find_clinical_data(clinical_data_directory)
+#     return df_clinical
 
 
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
@@ -240,33 +234,33 @@ def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> Non
     dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
 
 
-def install_bids(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
-    from pathlib import Path
+# def install_bids(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
+#     from pathlib import Path
 
-    from fsspec.implementations.local import LocalFileSystem
+#     from fsspec.implementations.local import LocalFileSystem
 
-    fs = LocalFileSystem(auto_mkdir=True)
+#     fs = LocalFileSystem(auto_mkdir=True)
 
-    source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
-    target_file = fs.open(bids_filename, mode="wb")
+#     source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
+#     target_file = fs.open(bids_filename, mode="wb")
 
-    with source_file as sf, target_file as tf:
-        tf.write(sf.read())
+#     with source_file as sf, target_file as tf:
+#         tf.write(sf.read())
 
-    source_basename = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
-    target_basename = Path(bids_filename.stem).stem
+#     source_basename = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
+#     target_basename = Path(bids_filename.stem).stem
 
-    # The following part adds the sidecar files related to the nifti with the same name: it can be tsv or json files.
-    # It may or may not be used, since there might not be any sidecars.
-    sidecar_dir = sourcedata_dir.parent
-    for source_sidecar in sidecar_dir.rglob(f"{source_basename}*"):
-        target_sidecar = Path.joinpath(bids_filename.parent, target_basename).with_name(
-            f"{target_basename}{source_sidecar.suffix}"
-        )
-        source_file = fs.open(source_sidecar, mode="rb")
-        target_file = fs.open(target_sidecar, mode="wb")
-        with source_file as sf, target_file as tf:
-            tf.write(sf.read())
+#     # The following part adds the sidecar files related to the nifti with the same name: it can be tsv or json files.
+#     # It may or may not be used, since there might not be any sidecars.
+#     sidecar_dir = sourcedata_dir.parent
+#     for source_sidecar in sidecar_dir.rglob(f"{source_basename}*"):
+#         target_sidecar = Path.joinpath(bids_filename.parent, target_basename).with_name(
+#             f"{target_basename}{source_sidecar.suffix}"
+#         )
+#         source_file = fs.open(source_sidecar, mode="rb")
+#         target_file = fs.open(target_sidecar, mode="wb")
+#         with source_file as sf, target_file as tf:
+#             tf.write(sf.read())
 
 
 def write_bids(
@@ -348,10 +342,8 @@ def install_sidecars(zipfile: str, filename: str, bids_path: str) -> None:
     fo = fsspec.open(zipfile)
     fs = fsspec.filesystem("zip", fo=fo)
     for i in range(0, len(filename)):
-        print("metadata !:", filename[i])
         if fs.exists(filename[i]):
             bids_path_extension = str(bids_path) + "." + (filename[i].split(".")[1])
-            print("bids_path_extension: ", bids_path_extension)
             with fsspec.open(bids_path_extension, mode="wb") as f:
                 f.write(fs.cat(filename[i]))
 

@@ -17,14 +17,14 @@ def convert_images(
     """
     from .ukb_utils import (
         dataset_to_bids,
+        find_clinical_data,
         intersect_data,
-        read_clinical_data,
         read_imaging_data,
         write_bids,
     )
 
     # read the clinical data files
-    df_clinical = read_clinical_data(path_to_clinical)
+    df_clinical = find_clinical_data(path_to_clinical)
 
     # makes a df of the imaging data
     imaging_data = read_imaging_data(path_to_dataset)
