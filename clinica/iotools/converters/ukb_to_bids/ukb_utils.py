@@ -52,7 +52,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     source_path_series = pd.Series(
         find_imaging_data(imaging_data_directory), name="source_path"
     )
-    # list of the files we want to build the bids for each mopdalkty
+    # list of the files we want to build the bids for each modality
     file_mod_list = [
         "T1_orig_defaced.nii.gz",
         "T2_FLAIR_orig_defaced.nii.gz",
@@ -100,7 +100,7 @@ def intersect_data(
     df_source: DataFrame, df_clinical_data: DataFrame
 ) -> Tuple[DataFrame, DataFrame]:
     """
-    This function merges the two dataframe given as inputs based on the subject id, and uses the existing data
+    This function merges the two dataframes given as inputs based on the subject id, and uses the existing data
     to create the columns needed for the bids hierarchy (subject_id, ses, age_at _session, ect.)
     """
     import pandas as pd
