@@ -1,7 +1,8 @@
+from cmath import nan
 from os import PathLike
 from typing import BinaryIO, Iterable, List, Tuple, Union
 
-from pandas import DataFrame
+from pandas import DataFrame, notna
 
 
 def find_clinical_data(
@@ -55,7 +56,11 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         find_imaging_data(imaging_data_directory), name="source_path"
     )
     # list of the files we want to build the bids for each mopdalkty
-    file_mod_list = ["T1_orig_defaced.nii.gz", "T2_FLAIR_orig_defaced.nii.gz"]
+    file_mod_list = [
+        "T1_orig_defaced.nii.gz",
+        "T2_FLAIR_orig_defaced.nii.gz",
+        "AP.nii.gz",
+    ]
 
     dataframe = pd.DataFrame.from_records(
         source_path_series, columns=["source_zipfile", "source_filename"]
@@ -113,9 +118,21 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
                 "20253": {
                     "datatype": "anat",
                     "suffix": "FLAIR",
-                    "sidecar": "T2_FLAIR/T2_FLAIR.json",
+                    "json": "T2_FLAIR/T2_FLAIR.json",
+                    "sidecars": [],
                 },
-                "20252": {"datatype": "anat", "suffix": "T1w", "sidecar": "T1/T1.json"},
+                "20252": {
+                    "datatype": "anat",
+                    "suffix": "T1w",
+                    "json": "T1/T1.json",
+                    "sidecars": [],
+                },
+                "20250": {
+                    "datatype": "dwi",
+                    "suffix": "dwi",
+                    "json": "dMRI/raw/AP.json",
+                    "sidecars": ["dMRI/raw/AP.bval", "dMRI/raw/AP.bvec"],
+                },
             }
         ).apply(pd.Series)
     )
@@ -156,7 +173,6 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
             + df.session.astype("str")
             + "_"
             + df.suffix
-            + ".json"
         )
     )
 
@@ -295,9 +311,17 @@ def write_bids(
             filename=metadata["source_filename"],
             bids_path=to / bids_full_path,
         )
+        print("json filename:", metadata["json"])
         install_json(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
-            filename=metadata["sidecar"],
+            filename=metadata["json"],
+            bids_path=to / metadata["bids_sidecar_path"],
+        )
+        print("sidecars ?:", metadata["sidecars"])
+
+        install_sidecars(
+            zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
+            filename=metadata["sidecars"],
             bids_path=to / metadata["bids_sidecar_path"],
         )
     return
@@ -319,9 +343,26 @@ def install_json(zipfile: str, filename: str, bids_path: str) -> None:
 
     fo = fsspec.open(zipfile)
     fs = fsspec.filesystem("zip", fo=fo)
+    bids_path_json = str(bids_path) + ".json"
+    print("bids_path-jso,n: ", bids_path_json)
     if fs.exists(filename):
-        with fsspec.open(bids_path, mode="wb") as f:
+        with fsspec.open(bids_path_json, mode="wb") as f:
             f.write(fs.cat(filename))
+
+
+def install_sidecars(zipfile: str, filename: str, bids_path: str) -> None:
+    """Install a NIfTI file from a source archive to the target BIDS path."""
+    import fsspec
+
+    fo = fsspec.open(zipfile)
+    fs = fsspec.filesystem("zip", fo=fo)
+    for i in range(0, len(filename)):
+        print("metadata !:", filename[i])
+        if fs.exists(filename[i]):
+            bids_path_extension = str(bids_path) + "." + (filename[i].split(".")[1])
+            print("bids_path_extension: ", bids_path_extension)
+            with fsspec.open(bids_path_extension, mode="wb") as f:
+                f.write(fs.cat(filename[i]))
 
 
 def select_session(x):
