@@ -1158,6 +1158,7 @@ def get_world_coordinate_of_center(nii_volume):
 
     import nibabel as nib
     import numpy as np
+    from nibabel.filebasedimages import ImageFileError
 
     from clinica.utils.stream import cprint
 
@@ -1166,7 +1167,7 @@ def get_world_coordinate_of_center(nii_volume):
 
     try:
         orig_nifti = nib.load(nii_volume)
-    except nib.filebasedimages.ImageFileError:
+    except ImageFileError:
         cprint(
             msg=f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI file ?",
             lvl="warning",
