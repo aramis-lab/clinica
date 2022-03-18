@@ -325,7 +325,8 @@ def find_mods_and_sess(bids_dir):
                 for pet_path in list_pet_paths:
                     pet_name = pet_path.split(os.sep)[-1].split(".")[0]
                     pet_name_tokens = pet_name.split("_")
-                    pet_acq = pet_name_tokens[3]
+                    # FIXME: Use an appropriate parser for entity extraction.
+                    pet_acq = pet_name_tokens[2]
                     if "pet" in mods_dict:
                         if "pet_" + pet_acq not in mods_dict["pet"]:
                             mods_dict["pet"].append("pet_" + pet_acq)
