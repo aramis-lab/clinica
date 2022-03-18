@@ -808,7 +808,7 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     from glob import glob
     from os import listdir
     from os.path import basename, isdir, isfile, join
-    from shutil import copy, copy2, copytree
+    from shutil import copy, copytree
 
     from clinica.utils.exceptions import ClinicaBIDSError
     from clinica.utils.inputs import check_bids_folder
