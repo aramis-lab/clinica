@@ -31,13 +31,6 @@ def find_clinical_data(
     return df_clinical
 
 
-# def read_clinical_data(
-#     clinical_data_directory: PathLike,
-# ) -> DataFrame:
-#     df_clinical = find_clinical_data(clinical_data_directory)
-#     return df_clinical
-
-
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     from pathlib import Path
 
@@ -65,7 +58,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     filename = filename[filename.isin(file_mod_list)]
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
-        {0: "Subject", 1: "modality_alt", 2: "session_number"}, axis="columns"
+        {0: "Subject", 1: "modality_num", 2: "session_number"}, axis="columns"
     ).drop_duplicates()
     split_zipfile = split_zipfile.astype({"Subject": "int64"})
 
@@ -109,7 +102,7 @@ def intersect_data(
         session=lambda df: "ses-" + df.session_number.astype("str")
     )
     df_clinical = df_clinical.join(
-        df_clinical.modality_alt.map(
+        df_clinical.modality_num.map(
             {
                 "20253": {
                     "datatype": "anat",
@@ -232,35 +225,6 @@ def dataset_to_bids(
 def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
     # Save dataframe as a BIDS-compliant TSV file.
     dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
-
-
-# def install_bids(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
-#     from pathlib import Path
-
-#     from fsspec.implementations.local import LocalFileSystem
-
-#     fs = LocalFileSystem(auto_mkdir=True)
-
-#     source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
-#     target_file = fs.open(bids_filename, mode="wb")
-
-#     with source_file as sf, target_file as tf:
-#         tf.write(sf.read())
-
-#     source_basename = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
-#     target_basename = Path(bids_filename.stem).stem
-
-#     # The following part adds the sidecar files related to the nifti with the same name: it can be tsv or json files.
-#     # It may or may not be used, since there might not be any sidecars.
-#     sidecar_dir = sourcedata_dir.parent
-#     for source_sidecar in sidecar_dir.rglob(f"{source_basename}*"):
-#         target_sidecar = Path.joinpath(bids_filename.parent, target_basename).with_name(
-#             f"{target_basename}{source_sidecar.suffix}"
-#         )
-#         source_file = fs.open(source_sidecar, mode="rb")
-#         target_file = fs.open(target_sidecar, mode="wb")
-#         with source_file as sf, target_file as tf:
-#             tf.write(sf.read())
 
 
 def write_bids(
