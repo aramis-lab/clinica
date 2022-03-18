@@ -557,7 +557,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
     subjects_paths_lists.sort()
 
     if len(subjects_paths_lists) == 0:
-        raise IOError("No subjects found or dataset not BIDS complaint.")
+        raise IOError("No subjects found or dataset not BIDS compliant.")
     # Check the modalities available for each session
     for ses in sessions_found:
         for sub_path in subjects_paths_lists:
