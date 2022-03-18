@@ -10,7 +10,6 @@ import warnings
 from os import PathLike, fspath
 from pathlib import Path
 from test.nonregression.testing_tools import (
-    clean_folder,
     create_list_hashes,
     identical_subject_list,
     same_missing_modality_tsv,
