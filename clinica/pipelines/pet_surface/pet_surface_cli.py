@@ -39,6 +39,8 @@ def cli(
 
        PVC_PSF_TSV is the TSV file containing the psf_x, psf_y and psf_z of the PSF for each PET image.
 
+    Prerequisite: You need to have performed the t1-freesurfer pipeline on your T1-weighted MR images.
+
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface/
     """
     from networkx import Graph
