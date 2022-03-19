@@ -31,14 +31,15 @@ def cli(
 ) -> None:
     """Longitudinal surface-based processing of PET images.
 
-       ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the tracer used. Frequently used values are 'fdg'
-     or 'av45'.
+       ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the tracer used.
+    Frequently used values are 'FDG' or '18FAV45'.
 
-       The reference region must be precised to perform intensity normalization. Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
+       The reference region must be precised to perform intensity normalization.
+    Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
 
        PVC_PSF_TSV is the TSV file containing the psf_x, psf_y and psf_z of the PSF for each PET image.
 
-    https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface_Longitudinal/
+    See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface_Longitudinal/
     """
     from networkx import Graph
 
