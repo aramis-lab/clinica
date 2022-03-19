@@ -359,7 +359,7 @@ def suvr_normalization(pet_path, mask):
 
     Args:
         (string) pet_path     : path to the Nifti volume containing PET scan, realigned on upsampled T1
-        (string) mask         : mask of the pons (fdg) or pons+cerebellum (av45) already eroded
+        (string) mask         : mask of the pons (18FFDG) or pons+cerebellum (18FAV45) already eroded
 
     Returns:
         (string) Path to the suvr normalized volume in the current directory
