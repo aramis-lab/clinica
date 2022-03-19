@@ -330,7 +330,7 @@ subjects/
                └─ <source_file>_space-<space>[_pvc-rbv]_suvr-<suvr>_statistics.tsv
 ```
 
-The `_acq-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
+The `_trc-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
 
 The `[_pvc-rbv]` label is optional, depending on whether your image has undergone partial volume correction (region-based voxel-wise (RBV) method) or not.
 

@@ -42,7 +42,7 @@ where:
 - `CAPS_DIRECTORY` is the output folder containing the results in a
 [CAPS](../../CAPS/Introduction) hierarchy;
 - `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer
-used (`acq-<acq_label>`). It can be for instance '18FFDG' for
+used (`trc-<acq_label>`). It can be for instance '18FFDG' for
 <sup>18</sup>F-fluorodeoxyglucose or '18FAV45' for <sup>18</sup>F-florbetapir;
 - The reference region is used to perform intensity normalization (i.e.
   dividing each voxel of the image by the average uptake in this region)
