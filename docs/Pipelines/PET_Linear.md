@@ -15,6 +15,10 @@ from the [ANTs](http://stnava.github.io/ANTs/) software package
 resulting in a standardized uptake value ratio (SUVR) map;
 - cropping of the registered images to remove the background.
 
+!!! note "Clinica & BIDS specifications for PET modality"
+    Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
+    See [BIDS](../../BIDS) page for more information.
+
 ## Prerequisites
 
 You need to have performed the [`t1-linear`](../T1_Linear) pipeline on your

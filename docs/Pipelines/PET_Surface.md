@@ -13,6 +13,10 @@ This pipeline performs several processing steps for the analysis of PET data on 
 
 This pipeline relies mainly on tools from **[FreeSurfer](https://surfer.nmr.mgh.harvard.edu/)** and **[PETPVC](https://github.com/UCL/PETPVC)** [[Thomas et al., 2016](https://doi.org/10.1088/0031-9155/61/22/7975)].
 
+!!! note "Clinica & BIDS specifications for PET modality"
+    Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
+    See [BIDS](../../BIDS) page for more information.
+
 ## Prerequisite
 
 You need to have performed the [`t1-freesurfer`](../T1_FreeSurfer) pipeline on your T1-weighted MR images.

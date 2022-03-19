@@ -17,6 +17,10 @@ This pipeline relies mainly on tools from **[FreeSurfer](https://surfer.nmr.mgh.
 The only difference with the [`pet-surface`](../PET_Surface) pipeline is that the subject’s cortical surface is obtained with the [`t1-freesurfer-longitudinal`](../T1_FreeSurfer_Longitudinal) pipeline and
 not the [`t1-freesurfer`](../T1_FreeSurfer) pipeline.
 
+!!! note "Clinica & BIDS specifications for PET modality"
+    Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
+    See [BIDS](../../BIDS) page for more information.
+
 ## Prerequisite
 
 You need to have performed the [`t1-freesurfer-longitudinal`](../T1_FreeSurfer_Longitudinal) pipeline on your T1-weighted MR images.

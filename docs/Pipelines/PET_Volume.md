@@ -10,6 +10,10 @@ This pipeline performs several processing steps on PET data in voxel space, whic
 - parcellation into anatomical regions based on an atlas and computation of average values within each region.
 The list of available atlases can be found [here](../../Atlases).
 
+!!! note "Clinica & BIDS specifications for PET modality"
+    Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
+    See [BIDS](../../BIDS) page for more information.
+
 ## Prerequisite
 
 You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-weighted MR images.

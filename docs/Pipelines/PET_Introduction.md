@@ -1,6 +1,10 @@
 <!-- markdownlint-disable MD007 -->
 # Introduction
 
+!!! note "Clinica & BIDS specifications for PET modality"
+    Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
+    See [BIDS](../../BIDS) page for more information.
+
 ## Partial volume correction (PVC)
 
 To correct for [partial volume effects](http://www.turkupetcentre.net/petanalysis/image_pve.html), several PVC algorithms exist and are implemented in the [PETPVC toolbox](https://github.com/UCL/PETPVC).
