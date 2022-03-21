@@ -16,7 +16,7 @@ def convert_images(
     converts the image with the highest quality for each category.
     """
     from .ukb_utils import (
-        complete_clical,
+        complete_clinical,
         dataset_to_bids,
         find_clinical_data,
         intersect_data,
@@ -34,7 +34,7 @@ def convert_images(
     df_clinical = intersect_data(imaging_data, df_clinical)
 
     # complete clinical data
-    df_clinical = complete_clical(df_clinical)
+    df_clinical = complete_clinical(df_clinical)
 
     # build the tsv
     participants, sessions, scans = dataset_to_bids(df_clinical)

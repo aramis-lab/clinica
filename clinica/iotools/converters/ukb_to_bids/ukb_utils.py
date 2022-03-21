@@ -95,7 +95,7 @@ def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFra
     return df_clinical
 
 
-def complete_clical(df_clinical: DataFrame) -> DataFrame:
+def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     """This funbction uses the existing data to create the columns needed for the bids hierarchy (subject_id, ses, age_at _session, ect.)"""
     import pandas as pd
 
