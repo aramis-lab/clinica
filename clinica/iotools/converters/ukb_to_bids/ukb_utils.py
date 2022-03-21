@@ -83,18 +83,22 @@ def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
                 yield [str(z.relative_to(path_to_source_data)), f]
 
 
-def intersect_data(
-    df_source: DataFrame, df_clinical_data: DataFrame
-) -> Tuple[DataFrame, DataFrame]:
+def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFrame:
     """
-    This function merges the two dataframes given as inputs based on the subject id, and uses the existing data
-    to create the columns needed for the bids hierarchy (subject_id, ses, age_at _session, ect.)
+    This function merges the two dataframes given as inputs based on the subject id
     """
     import pandas as pd
 
     df_clinical = df_clinical_data.merge(
         df_source, how="inner", right_on="Subject", left_on="eid"
     )
+    return df_clinical
+
+
+def complete_clical(df_clinical: DataFrame) -> DataFrame:
+    """This funbction uses the existing data to create the columns needed for the bids hierarchy (subject_id, ses, age_at _session, ect.)"""
+    import pandas as pd
+
     df_clinical = df_clinical.assign(
         participant_id=lambda df: ("sub-" + df.Subject.astype("str"))
     )
@@ -188,12 +192,10 @@ def intersect_data(
         + "/"
         + df.sidecar_filename
     )
-    return df_source, df_clinical
+    return df_clinical
 
 
-def dataset_to_bids(
-    df_source: DataFrame, df_clinical: DataFrame
-) -> Tuple[DataFrame, DataFrame, DataFrame]:
+def dataset_to_bids(df_clinical: DataFrame) -> Tuple[DataFrame, DataFrame, DataFrame]:
 
     import os
 
@@ -277,7 +279,7 @@ def write_bids(
     return
 
 
-def copy_file_to_bids(zipfile: str, filenames: str, bids_path: str) -> None:
+def copy_file_to_bids(zipfile: str, filenames: List[str], bids_path: str) -> None:
     """Install the requested files in the BIDS  dataset."""
     import fsspec
 
