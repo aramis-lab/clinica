@@ -133,15 +133,18 @@ def complete_clical(df_clinical: DataFrame) -> DataFrame:
     df_clinical = df_clinical.assign(year_of_birth=lambda df: df.year_of_birth_f34_0_0)
 
     df_clinical = df_clinical.assign(age=lambda df: df.age_at_recruitment_f21022_0_0)
+    df_clinical = df_clinical.assign(
+        age_at_first_session=lambda df: df.age_when_attended_assessment_centre_f21003_2_0
+    )
     df_clinical["age_at_session"] = df_clinical.apply(
         lambda df: select_session(df), axis=1
     )
     df_clinical = df_clinical.assign(
-        session_month=lambda df: (df.age_at_session - df.age) * 12
+        session_month=lambda df: (df.age_at_session - df.age_at_first_session) * 12
     )
 
     df_clinical = df_clinical.assign(
-        session=lambda df: df.session_month.map(lambda x: f"ses-M{x}")
+        session=lambda df: df.session_month.map(lambda x: f"ses-M{x:03d}")
     )
     df_clinical = df_clinical.assign(
         bids_filename=lambda df: (
@@ -245,6 +248,8 @@ def write_bids(
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
 
+    participants = participants.droplevel(["session", "suffix"]).drop_duplicates()
+
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
         with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
@@ -254,7 +259,8 @@ def write_bids(
             write_to_tsv(participants, participant_file)
 
     for participant_id, data_frame in sessions.groupby(["participant_id"]):
-        session = data_frame.droplevel("participant_id")
+        session = data_frame.droplevel(["participant_id", "suffix"]).drop_duplicates()
+        print("df_session: ", session)
         session_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
         with fs.open(session_filepath, "w") as sessions_file:
             write_to_tsv(session, sessions_file)
