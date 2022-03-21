@@ -107,19 +107,19 @@ def intersect_data(
                 "20253": {
                     "datatype": "anat",
                     "suffix": "FLAIR",
-                    "json": "T2_FLAIR/T2_FLAIR.json",
+                    "json": ["T2_FLAIR/T2_FLAIR.json"],
                     "sidecars": [],
                 },
                 "20252": {
                     "datatype": "anat",
                     "suffix": "T1w",
-                    "json": "T1/T1.json",
+                    "json": ["T1/T1.json"],
                     "sidecars": [],
                 },
                 "20250": {
                     "datatype": "dwi",
                     "suffix": "dwi",
-                    "json": "dMRI/raw/AP.json",
+                    "json": ["dMRI/raw/AP.json"],
                     "sidecars": ["dMRI/raw/AP.bval", "dMRI/raw/AP.bvec"],
                 },
             }
@@ -259,17 +259,17 @@ def write_bids(
 
     scans = scans.set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
-        install_nifti(
+        copy_file_to_bids(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
-            filename=metadata["source_filename"],
+            filename=[metadata["source_filename"]],
             bids_path=to / bids_full_path,
         )
-        install_json(
+        copy_file_to_bids(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
             filename=metadata["json"],
             bids_path=to / metadata["bids_sidecar_path"],
         )
-        install_sidecars(
+        copy_file_to_bids(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
             filename=metadata["sidecars"],
             bids_path=to / metadata["bids_sidecar_path"],
@@ -277,37 +277,17 @@ def write_bids(
     return
 
 
-def install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
-    """Install a NIfTI file from a source archive to the target BIDS path."""
-    import fsspec
-
-    fo = fsspec.open(zipfile)
-    fs = fsspec.filesystem("zip", fo=fo)
-    with fsspec.open(bids_path, mode="wb") as f:
-        f.write(fs.cat(filename))
-
-
-def install_json(zipfile: str, filename: str, bids_path: str) -> None:
-    """Install a NIfTI file from a source archive to the target BIDS path."""
-    import fsspec
-
-    fo = fsspec.open(zipfile)
-    fs = fsspec.filesystem("zip", fo=fo)
-    bids_path_json = str(bids_path) + ".json"
-    if fs.exists(filename):
-        with fsspec.open(bids_path_json, mode="wb") as f:
-            f.write(fs.cat(filename))
-
-
-def install_sidecars(zipfile: str, filename: str, bids_path: str) -> None:
-    """Install a NIfTI file from a source archive to the target BIDS path."""
+def copy_file_to_bids(zipfile: str, filename: str, bids_path: str) -> None:
+    """Install the requested files in the BIDS  dataset."""
     import fsspec
 
     fo = fsspec.open(zipfile)
     fs = fsspec.filesystem("zip", fo=fo)
     for i in range(0, len(filename)):
+        print("filename: ", filename[i])
+        print("filename extension: ", filename[i].split(".", 1)[1])
         if fs.exists(filename[i]):
-            bids_path_extension = str(bids_path) + "." + (filename[i].split(".")[1])
+            bids_path_extension = str(bids_path) + "." + (filename[i].split(".", 1)[1])
             with fsspec.open(bids_path_extension, mode="wb") as f:
                 f.write(fs.cat(filename[i]))
 
