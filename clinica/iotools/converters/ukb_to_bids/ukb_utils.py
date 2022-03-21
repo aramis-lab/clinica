@@ -111,20 +111,21 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
                 "20253": {
                     "datatype": "anat",
                     "suffix": "FLAIR",
-                    "json": ["T2_FLAIR/T2_FLAIR.json"],
-                    "sidecars": [],
+                    "sidecars": ["T2_FLAIR/T2_FLAIR.json"],
                 },
                 "20252": {
                     "datatype": "anat",
                     "suffix": "T1w",
-                    "json": ["T1/T1.json"],
-                    "sidecars": [],
+                    "sidecars": ["T1/T1.json"],
                 },
                 "20250": {
                     "datatype": "dwi",
                     "suffix": "dwi",
-                    "json": ["dMRI/raw/AP.json"],
-                    "sidecars": ["dMRI/raw/AP.bval", "dMRI/raw/AP.bvec"],
+                    "sidecars": [
+                        "dMRI/raw/AP.json",
+                        "dMRI/raw/AP.bval",
+                        "dMRI/raw/AP.bvec",
+                    ],
                 },
             }
         ).apply(pd.Series)
@@ -154,7 +155,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
             + df.session.astype("str")
             + "_"
             + df.suffix
-            + ".nii.gz"
+            # + ".nii.gz"
         )
     )
     df_clinical = df_clinical.assign(
@@ -269,18 +270,8 @@ def write_bids(
     for bids_full_path, metadata in scans.iterrows():
         copy_file_to_bids(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
-            filenames=[metadata["source_filename"]],
+            filenames=[metadata["source_filename"]] + metadata["sidecars"],
             bids_path=to / bids_full_path,
-        )
-        copy_file_to_bids(
-            zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
-            filenames=metadata["json"],
-            bids_path=to / metadata["bids_sidecar_path"],
-        )
-        copy_file_to_bids(
-            zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
-            filenames=metadata["sidecars"],
-            bids_path=to / metadata["bids_sidecar_path"],
         )
     return
 
