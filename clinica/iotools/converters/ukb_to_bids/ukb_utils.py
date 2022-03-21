@@ -261,35 +261,33 @@ def write_bids(
     for bids_full_path, metadata in scans.iterrows():
         copy_file_to_bids(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
-            filename=[metadata["source_filename"]],
+            filenames=[metadata["source_filename"]],
             bids_path=to / bids_full_path,
         )
         copy_file_to_bids(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
-            filename=metadata["json"],
+            filenames=metadata["json"],
             bids_path=to / metadata["bids_sidecar_path"],
         )
         copy_file_to_bids(
             zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
-            filename=metadata["sidecars"],
+            filenames=metadata["sidecars"],
             bids_path=to / metadata["bids_sidecar_path"],
         )
     return
 
 
-def copy_file_to_bids(zipfile: str, filename: str, bids_path: str) -> None:
+def copy_file_to_bids(zipfile: str, filenames: str, bids_path: str) -> None:
     """Install the requested files in the BIDS  dataset."""
     import fsspec
 
     fo = fsspec.open(zipfile)
     fs = fsspec.filesystem("zip", fo=fo)
-    for i in range(0, len(filename)):
-        print("filename: ", filename[i])
-        print("filename extension: ", filename[i].split(".", 1)[1])
-        if fs.exists(filename[i]):
-            bids_path_extension = str(bids_path) + "." + (filename[i].split(".", 1)[1])
+    for filename in filenames:
+        if fs.exists(filename):
+            bids_path_extension = str(bids_path) + "." + (filename.split(".", 1)[1])
             with fsspec.open(bids_path_extension, mode="wb") as f:
-                f.write(fs.cat(filename[i]))
+                f.write(fs.cat(filename))
 
 
 def select_session(x):
