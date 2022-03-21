@@ -260,7 +260,7 @@ def write_bids(
 
     for participant_id, data_frame in sessions.groupby(["participant_id"]):
         session = data_frame.droplevel(["participant_id", "suffix"]).drop_duplicates()
-        print("df_session: ", session)
+
         session_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
         with fs.open(session_filepath, "w") as sessions_file:
             write_to_tsv(session, sessions_file)
