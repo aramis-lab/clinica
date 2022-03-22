@@ -102,7 +102,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     import pandas as pd
 
     df_clinical = df_clinical.assign(
-        participant_id=lambda df: ("sub-" + df.source_id.astype("str"))
+        participant_id=lambda df: ("sub-UKB" + df.source_id.astype("str"))
     )
     df_clinical = df_clinical.assign(
         session=lambda df: "ses-" + df.source_session_number.astype("str")
@@ -270,6 +270,7 @@ def write_bids(
         session = data_frame.droplevel(["participant_id", "suffix"]).drop_duplicates()
 
         session_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
+        print("session_filepath", session_filepath)
         with fs.open(session_filepath, "w") as sessions_file:
             write_to_tsv(session, sessions_file)
 
