@@ -44,6 +44,8 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         "T1_orig_defaced.nii.gz",
         "T2_FLAIR_orig_defaced.nii.gz",
         "AP.nii.gz",
+        # "rfMRI.nii.gz",
+        # "tfMRI.nii.gz",
     ]
 
     dataframe = pd.DataFrame.from_records(
@@ -58,9 +60,9 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     filename = filename[filename.isin(file_mod_list)]
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
-        {0: "Subject", 1: "modality_num", 2: "session_number"}, axis="columns"
+        {0: "source_id", 1: "modality_num", 2: "source_session_number"}, axis="columns"
     ).drop_duplicates()
-    split_zipfile = split_zipfile.astype({"Subject": "int64"})
+    split_zipfile = split_zipfile.astype({"source_id": "int64"})
 
     df_source = pd.concat(
         [
@@ -90,7 +92,7 @@ def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFra
     import pandas as pd
 
     df_clinical = df_clinical_data.merge(
-        df_source, how="inner", right_on="Subject", left_on="eid"
+        df_source, how="inner", right_on="source_id", left_on="eid"
     )
     return df_clinical
 
@@ -100,10 +102,10 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     import pandas as pd
 
     df_clinical = df_clinical.assign(
-        participant_id=lambda df: ("sub-" + df.Subject.astype("str"))
+        participant_id=lambda df: ("sub-" + df.source_id.astype("str"))
     )
     df_clinical = df_clinical.assign(
-        session=lambda df: "ses-" + df.session_number.astype("str")
+        session=lambda df: "ses-" + df.source_session_number.astype("str")
     )
     df_clinical = df_clinical.join(
         df_clinical.modality_num.map(
@@ -127,6 +129,9 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
                         "dMRI/raw/AP.bvec",
                     ],
                 },
+                # "20227": {"datatype":"rfMRI", "suffix": "rfMRI","sidecars": []},
+                # "20249": {"datatype": "tfMRI","suffix":"tfMRI", "sidecars": []},
+                # "20252": {"datatype":"swi", "suffix": "swi", "sidecars":[]}
             }
         ).apply(pd.Series)
     )
@@ -150,7 +155,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     df_clinical = df_clinical.assign(
         bids_filename=lambda df: (
             "sub-UKB"
-            + df.Subject.astype("str")
+            + df.source_id.astype("str")
             + "_"
             + df.session.astype("str")
             + "_"
@@ -161,7 +166,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     df_clinical = df_clinical.assign(
         sidecar_filename=lambda df: (
             "sub-UKB"
-            + df.Subject.astype("str")
+            + df.source_id.astype("str")
             + "_"
             + df.session.astype("str")
             + "_"
@@ -196,6 +201,8 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
         + "/"
         + df.sidecar_filename
     )
+    print("clinical df id: ", df_clinical.source_id)
+    print("clinical df session: ", df_clinical.source_session_number)
     return df_clinical
 
 
@@ -290,7 +297,7 @@ def copy_file_to_bids(zipfile: str, filenames: List[str], bids_path: str) -> Non
 
 
 def select_session(x):
-    if x["session_number"] == "2":
+    if x["source_session_number"] == "2":
         return x.age_when_attended_assessment_centre_f21003_2_0
-    elif x["session_number"] == "3":
+    elif x["source_session_number"] == "3":
         return x.age_when_attended_assessment_centre_f21003_3_0
