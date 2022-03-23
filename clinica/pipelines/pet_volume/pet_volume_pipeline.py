@@ -296,12 +296,14 @@ class PETVolume(cpe.Pipeline):
         # =====================================
         container_path = npe.Node(
             nutil.Function(
-                input_names=["bids_or_caps_filename"],
+                input_names=["bids_or_caps_filename", "output_root_dir_name"],
                 output_names=["container"],
                 function=container_from_filename,
             ),
             name="container_path",
         )
+
+        container_path.inputs.output_root_dir_name = self.name
         container_path.inputs.threshold = self.parameters["mask_threshold"]
 
         # Writing all images into CAPS

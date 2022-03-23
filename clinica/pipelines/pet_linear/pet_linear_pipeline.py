@@ -218,12 +218,15 @@ class PETLinear(cpe.Pipeline):
         )
         container_path = npe.Node(
             interface=nutil.Function(
-                input_names=["bids_or_caps_filename"],
+                input_names=["bids_or_caps_filename", "output_root_dir_name"],
                 output_names=["container"],
                 function=container_from_filename,
             ),
             name="containerPath",
         )
+
+        container_path.inputs.output_root_dir_name = self.name
+
         # fmt: off
         self.connect(
             [

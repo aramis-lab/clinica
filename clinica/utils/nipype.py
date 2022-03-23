@@ -2,9 +2,14 @@
 
 In particular, this module currently contains functions used for Nipype DataSink.
 """
+from nipype import config
+
+config.enable_debug_mode()
 
 
-def container_from_filename(bids_or_caps_filename: str) -> str:
+def container_from_filename(
+    bids_or_caps_filename: str, output_root_dir_name: str
+) -> str:
     """Extract container from BIDS or CAPS file.
 
     Args:
@@ -31,7 +36,7 @@ def container_from_filename(bids_or_caps_filename: str) -> str:
         )
     subject = m.group(1)
     session = m.group(2)
-    return os.path.join("subjects", subject, session)
+    return os.path.join(output_root_dir_name, subject, session)
 
 
 def fix_join(path, *paths):

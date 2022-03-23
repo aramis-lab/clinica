@@ -132,12 +132,14 @@ class DwiDti(cpe.Pipeline):
         # Find container path from filename
         container_path = npe.Node(
             nutil.Function(
-                input_names=["bids_or_caps_filename"],
+                input_names=["bids_or_caps_filename", "output_root_dir_name"],
                 output_names=["container"],
                 function=container_from_filename,
             ),
             name="container_path",
         )
+
+        container_path.inputs.output_root_dir_name = self.name
 
         rename_into_caps = npe.Node(
             nutil.Function(
