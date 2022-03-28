@@ -73,6 +73,7 @@ class AdniToBids(Converter):
         import clinica.iotools.bids_utils as bids
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
         from clinica.utils.stream import cprint
+
         from .adni_json import create_json_metadata
 
         clinic_specs_path = path.join(
@@ -143,7 +144,8 @@ class AdniToBids(Converter):
                     msg=(
                         f"Clinica was unable to find {xml_path}, "
                         "skipping xml metadata extraction."
-                    ), lvl="warning",
+                    ),
+                    lvl="warning",
                 )
 
     def convert_images(

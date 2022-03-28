@@ -573,6 +573,7 @@ def bids_id_to_loni(bids_id: str) -> Union[str, None]:
     back to original format 000_S_0000
     """
     import re
+
     ids = re.findall("\d+", bids_id)  # noqa
     if len(ids) == 2:
         return ids[0] + "_S_" + ids[1]
