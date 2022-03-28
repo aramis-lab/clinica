@@ -440,10 +440,6 @@ def _run_parsers(xml_files: list) -> Tuple[list, dict]:
     """Run the parser `_parse_xml_file` on the list of files `xml_files`.
     Returns a tuple consisting if parsed images
     metadata and captured exceptions.
-
-    .. note::
-        Use multiprocessing / multithreading for parsing the files?
-        Not sure we will get a huge performance boost by doing that tbh.
     """
     import os
     parser = func_with_exception(_parse_xml_file)
