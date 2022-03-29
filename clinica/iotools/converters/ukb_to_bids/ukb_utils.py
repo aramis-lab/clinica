@@ -44,8 +44,10 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         "T1_orig_defaced.nii.gz",
         "T2_FLAIR_orig_defaced.nii.gz",
         "AP.nii.gz",
-        # "rfMRI.nii.gz",
-        # "tfMRI.nii.gz",
+        "PA.nii.gz",
+        "rfMRI.nii.gz",
+        "tfMRI.nii.gz",
+        "SWI.nii.gz",
     ]
 
     dataframe = pd.DataFrame.from_records(
@@ -61,7 +63,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
         {0: "source_id", 1: "modality_num", 2: "source_session_number"}, axis="columns"
-    ).drop_duplicates()
+    )  # .drop_duplicates()
     split_zipfile = split_zipfile.astype({"source_id": "int64"})
 
     df_source = pd.concat(
@@ -108,34 +110,75 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
         session=lambda df: "ses-" + df.source_session_number.astype("str")
     )
     df_clinical = df_clinical.join(
-        df_clinical.modality_num.map(
+        df_clinical.filename.map(
             {
-                "20253": {
+                "T2_FLAIR_orig_defaced.nii.gz": {
                     "datatype": "anat",
+                    "modality": "FLAIR",
                     "suffix": "FLAIR",
                     "sidecars": ["T2_FLAIR/T2_FLAIR.json"],
+                    "task": "",
+                    "dir": "",
                 },
-                "20252": {
+                "T1_orig_defaced.nii.gz": {
                     "datatype": "anat",
+                    "modality": "T1W",
                     "suffix": "T1w",
                     "sidecars": ["T1/T1.json"],
+                    "task": "",
+                    "dir": "",
                 },
-                "20250": {
+                "AP.nii.gz": {
                     "datatype": "dwi",
+                    "modality": "dwi",
                     "suffix": "dwi",
                     "sidecars": [
                         "dMRI/raw/AP.json",
                         "dMRI/raw/AP.bval",
                         "dMRI/raw/AP.bvec",
                     ],
+                    "task": "",
+                    "dir": "_dir-AP",
                 },
-                # "20227": {"datatype":"rfMRI", "suffix": "rfMRI","sidecars": []},
-                # "20249": {"datatype": "tfMRI","suffix":"tfMRI", "sidecars": []},
-                # "20252": {"datatype":"swi", "suffix": "swi", "sidecars":[]}
+                "PA.nii.gz": {
+                    "datatype": "dwi",
+                    "modality": "dwi",
+                    "suffix": "dwi",
+                    "sidecars": [
+                        "dMRI/raw/PA.json",
+                        "dMRI/raw/PA.bval",
+                        "dMRI/raw/PA.bvec",
+                    ],
+                    "task": "",
+                    "dir": "_dir-PA",
+                },
+                "rfMRI.nii.gz": {
+                    "datatype": "func",
+                    "modality": "rsfmri",
+                    "suffix": "bold",
+                    "sidecars": [],
+                    "task": "_task-rest",
+                    "dir": "",
+                },
+                "tfMRI.nii.gz": {
+                    "datatype": "func",
+                    "modality": "tfmri",
+                    "suffix": "bold",
+                    "sidecars": [],
+                    "task": "_task-facesshapesemotion",
+                    "dir": "",
+                },
+                "SWI.nii.gz": {
+                    "datatype": "swi",
+                    "modality": "swi",
+                    "suffix": "swi",
+                    "sidecars": [],
+                    "task": "",
+                    "dir": "",
+                },
             }
         ).apply(pd.Series)
     )
-
     df_clinical = df_clinical.assign(year_of_birth=lambda df: df.year_of_birth_f34_0_0)
 
     df_clinical = df_clinical.assign(age=lambda df: df.age_at_recruitment_f21022_0_0)
@@ -158,17 +201,8 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
             + df.source_id.astype("str")
             + "_"
             + df.session.astype("str")
-            + "_"
-            + df.suffix
-            # + ".nii.gz"
-        )
-    )
-    df_clinical = df_clinical.assign(
-        sidecar_filename=lambda df: (
-            "sub-UKB"
-            + df.source_id.astype("str")
-            + "_"
-            + df.session.astype("str")
+            + df.dir.astype("str")
+            + df.task.astype("str")
             + "_"
             + df.suffix
         )
@@ -192,17 +226,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
         + "/"
         + df.bids_filename
     )
-    df_clinical = df_clinical.assign(
-        bids_sidecar_path=lambda df: df.participant_id
-        + "/"
-        + df.session
-        + "/"
-        + df.datatype
-        + "/"
-        + df.sidecar_filename
-    )
-    print("clinical df id: ", df_clinical.source_id)
-    print("clinical df session: ", df_clinical.source_session_number)
+
     return df_clinical
 
 
@@ -221,7 +245,8 @@ def dataset_to_bids(df_clinical: DataFrame) -> Tuple[DataFrame, DataFrame, DataF
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
 
     df_clinical = df_clinical.set_index(
-        ["participant_id", "session", "suffix"], verify_integrity=True
+        ["participant_id", "session", "modality", "bids_filename"],
+        verify_integrity=True,
     )
 
     # Build participants dataframe
@@ -256,7 +281,9 @@ def write_bids(
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
 
-    participants = participants.droplevel(["session", "suffix"]).drop_duplicates()
+    participants = participants.droplevel(
+        ["session", "modality", "bids_filename"]
+    ).drop_duplicates()
 
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
@@ -267,13 +294,13 @@ def write_bids(
             write_to_tsv(participants, participant_file)
 
     for participant_id, data_frame in sessions.groupby(["participant_id"]):
-        session = data_frame.droplevel(["participant_id", "suffix"]).drop_duplicates()
+        session = data_frame.droplevel(
+            ["participant_id", "modality", "bids_filename"]
+        ).drop_duplicates()
 
         session_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
-        print("session_filepath", session_filepath)
         with fs.open(session_filepath, "w") as sessions_file:
             write_to_tsv(session, sessions_file)
-
     scans = scans.set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
         copy_file_to_bids(
