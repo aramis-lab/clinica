@@ -236,6 +236,8 @@ def tree(dir: Path, file_out: Path):
     print(type(dir))
     file_content = ""
     for path in sorted(dir.rglob("*")):
+        if path.is_dir() and not any(path.iterdir()):
+            continue
         depth = len(path.relative_to(dir).parts)
         spacer = "    " * depth
         file_content = file_content + f"{spacer}+ {path.name}\n"
