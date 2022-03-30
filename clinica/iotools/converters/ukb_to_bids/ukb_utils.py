@@ -28,6 +28,18 @@ def find_clinical_data(
         raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
     elif len(image_data_file) > 1:
         raise FileNotFoundError("Too many data files found, expected one. Aborting.")
+
+    columns_to_have = [
+        "age_when_attended_assessment_centre_f21003_2_0",
+        "age_when_attended_assessment_centre_f21003_3_0",
+        "year_of_birth_f34_0_0",
+        "age_at_recruitment_f21022_0_0",
+        "age_when_attended_assessment_centre_f21003_2_0",
+        "sex_f31_0_0",
+    ]
+    for column_name in columns_to_have:
+        if column_name not in df_clinical:
+            raise FileNotFoundError(f"column {column_name} not found. Aborting")
     return df_clinical
 
 
