@@ -471,7 +471,7 @@ def _write_readme(bids_dir: Union[str, Path]) -> None:
     with open(Path(bids_dir) / "README", "w") as f:
         f.write(
             f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
-            f"More information on http://www.clinica.run\n"
+            f"More information on https://www.clinica.run\n"
         )
 
 
