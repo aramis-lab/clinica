@@ -1,8 +1,7 @@
 """Methods used by BIDS converters."""
 
-from typing import List, Optional, Union
 from pathlib import Path
-
+from typing import List, Optional, Union
 
 BIDS_VALIDATOR_CONFIG = {
     "ignore": [
@@ -450,12 +449,13 @@ def create_scans_dict(
 
 
 def _write_bids_dataset_description(
-        study_name: str,
-        bids_dir: Union[str, Path],
-        bids_version: Optional[str] = None,
+    study_name: str,
+    bids_dir: Union[str, Path],
+    bids_version: Optional[str] = None,
 ) -> None:
     """Write `dataset_description.json` at the root of the BIDS directory."""
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
+
     if bids_version:
         bids_desc = BIDSDatasetDescription(name=study_name, bids_version=bids_version)
     else:
@@ -467,6 +467,7 @@ def _write_bids_dataset_description(
 def _write_readme(bids_dir: Union[str, Path]) -> None:
     """Write `README`file at the root of the BIDS directory."""
     import clinica
+
     with open(Path(bids_dir) / "README", "w") as f:
         f.write(
             f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
@@ -477,6 +478,7 @@ def _write_readme(bids_dir: Union[str, Path]) -> None:
 def _write_bids_validator_config(bids_dir: Union[str, Path]) -> None:
     """Write `.bids-validator-config.json` at the root of the BIDS directory."""
     import json
+
     with open(Path(bids_dir) / ".bids-validator-config.json", "w") as f:
         json.dump(BIDS_VALIDATOR_CONFIG, f, skipkeys=True, indent=4)
 
@@ -489,9 +491,9 @@ def _write_bidsignore(bids_dir: Union[str, Path]) -> None:
 
 
 def write_modality_agnostic_files(
-        study_name: str,
-        bids_dir: Union[str, Path],
-        bids_version: Optional[str] = None,
+    study_name: str,
+    bids_dir: Union[str, Path],
+    bids_version: Optional[str] = None,
 ) -> None:
     """
     Write the files README, dataset_description.json, .bidsignore and .bids-validator-config.json
