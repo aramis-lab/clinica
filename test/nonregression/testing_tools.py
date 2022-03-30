@@ -233,6 +233,8 @@ def tree(dir: Path, file_out: Path):
 
     # Create a file (file_out) with a visual tree representing the file
     # hierarchy at a given directory
+    # Note: does not display empty directories
+
     print(type(dir))
     file_content = ""
     for path in sorted(dir.rglob("*")):
