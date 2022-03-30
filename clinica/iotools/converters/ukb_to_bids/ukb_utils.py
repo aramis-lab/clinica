@@ -25,9 +25,9 @@ def find_clinical_data(
         df_clinical = pd.read_csv(str(image_data_file[0]), sep="\t")
         cprint(msg="All clinical data have been found", lvl="info")
     elif len(image_data_file) == 0:
-        raise FileNotFoundError("Clinical data not found or incomplete")
+        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
     elif len(image_data_file) > 1:
-        raise FileNotFoundError("Too many data files found")
+        raise FileNotFoundError("Too many data files found, expected one. Aborting.")
     return df_clinical
 
 
@@ -39,6 +39,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     source_path_series = pd.Series(
         find_imaging_data(imaging_data_directory), name="source_path"
     )
+    # justifications regarding the chosen files can be found in clinica's documentation: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS   .md
     # list of the files we want to build the bids for each modality
     file_mod_list = [
         "T1.nii.gz",

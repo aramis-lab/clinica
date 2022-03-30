@@ -14,8 +14,7 @@ The UK Biobank to BIDS converter requires the user to have applied to the data a
 
 Once you have access to it, the imaging data can be downloaded and extracted using this tutorial: https://biobank.ctsu.ox.ac.uk/~bbdatan/Accessing_UKB_data_v2.3.pdf, and the clinical data can be extracted using the information from this repository https://github.com/kenhanscombe/ukbtools.
 
-Be careful about the clinical data you apply for : the converter will not work if you do not have among the clinical data the year of birth, the age at recruitment and at sessions and the sex of the subject.
-Also, the converter only takes in the nifti provided by UK Biobank, not the dicoms.
+Be careful, the converter only takes in the nifti provided by UK Biobank, not the dicoms.
 
 ## Supported modalities
 
