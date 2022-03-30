@@ -2,7 +2,7 @@
 # `ukb-to-bids` – Conversion of the UK Biobank (UKB) to BIDS
 
 !!! quote "Description reproduced from the [UK Biobank webpage](https://www.ukbiobank.ac.uk/)"
-    UK Biobank is a large-scale biomedical database and research resource, containing in-depth genetic and health information from half a million UK participants. The database is regularly augmented with additional data and is globally accessible to approved researchers undertaking vital research into the most common and life-threatening diseases. It is a major contributor to the advancement of modern medicine and treatment and has enabled several scientific discoveries that improve human health
+    UK Biobank is a large-scale biomedical database and research resource, containing in-depth genetic and health information from half a million UK participants. The database is regularly augmented with additional data and is globally accessible to approved researchers undertaking vital research into the most common and life-threatening diseases. It is a major contributor to the advancement of modern medicine and treatment and has enabled several scientific discoveries that improve human health.
 
 ## Dependencies
 
@@ -10,14 +10,12 @@ If you installed the core of Clinica, this converter needs no further dependenci
 
 ## Downloading UK Biobank
 
-The UK Biobank to BIDS converter requires the user to have downloaded the UK Biobank imaging and clinical data.
+The UK Biobank to BIDS converter requires the user to have applied to the data and to have downloaded the UK Biobank imaging and clinical data.
 
 Once you have access to it, the imaging data can be downloaded and extracted using this tutorial: https://biobank.ctsu.ox.ac.uk/~bbdatan/Accessing_UKB_data_v2.3.pdf, and the clinical data can be extracted using the information from this repository https://github.com/kenhanscombe/ukbtools.
 
-
-Be careful about two things: 
-    - the converter only takes in the nifti provided by UK Biobank, not the dicoms.
-    - the converter will not work if you do not have among the clinical data the year of birth, the age at recruitment and at sessions and the sex of the subject.
+Be careful about the clinical data you apply for : the converter will not work if you do not have among the clinical data the year of birth, the age at recruitment and at sessions and the sex of the subject.
+Also, the converter only takes in the nifti provided by UK Biobank, not the dicoms.
 
 ## Supported modalities
 
@@ -30,15 +28,16 @@ Please note that this converter processes the following modalities :
 - rsfMRI
 
 !!! Chosen files
-    Whenever possible, we use the rawest files in order not to impose opinions onto the user. When available we get the associated json.
-    - T1W -> T1.nii.gz: cropped so there is no neck and defaced. The rawest image would be the simply defaced one, but since we have no interest in the neck we don't use it. We do not want any other corrections.
-    - T2 Flair -> T2_FLAIR: cropped so there is no neck and defaced. The reasons for choosing this image are the same as for T1.
-    - DWI -> AP.nii.gz/PA.nii.gz + bvals and bvecs. It is the rawest images we can get.
-    - rsfMRI -> rfMRI.nii.gz
-    - tfMRI -> tfMRI.nii.gz or dicom equivalent to get the json associated
-    - SWI -> SWI.nii.gz which is the combined coil version. We would get a rawer version, but dcm2niix seems to have trouble handling this format, so it is simpler to go with this version. Plus, swi is not fully integrated to bids so changes may be coming, hence a simple version for now.
+    Whenever possible, we use the rawest files so as to leave it to the user to choose the processing needed. When available we get the associated json.
+    | Modality   | Chosen image(s) | Justification |
+    | :----------------------:|:------:|:-------:|
+    | T1W | T1.nii.gz | Defaced and cropped so there is no neck. The rawest image would be the simply defaced one, but since we have no interest in the neck we don't use it. We do not want any other corrections. |
+    | T2 Flair | T2_FLAIR.nii.gz | Defaced and cropped so there is no neck. The reasons for choosing this image are the same as for T1. |
+    | DWI | AP.nii.gz & PA.nii.gz + bvals and bvecs | It is the rawest images we can get |
+    | rsfMRI | rsfMRI.nii.gz |  |
+    | tfMRI | tfMRI.nii.gz |  |
+    | SWI | SWI.nii.gz | Combined coil version. We would get a rawer version, but dcm2niix has trouble handling the slices direction, so it is simpler to go with this version. Plus, swi is not fully integrated to bids so changes may be coming, hence a simple version for now. | 
     
-
 
 ## Using the converter
 
@@ -50,7 +49,7 @@ clinica convert ukb-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY 
 
 where:
 
-- `DATASET_DIRECTORY` is the path to the original UK BIobank imaging directory, which content should look like:
+- `DATASET_DIRECTORY` is the path to the original UK BIobank imaging directory, whose content should look like:
 
     ```text
     DATASET_DIRECTORY
