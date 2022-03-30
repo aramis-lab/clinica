@@ -29,14 +29,14 @@ Please note that this converter processes the following modalities :
 
 !!! Chosen files
     Whenever possible, we use the rawest files so as to leave it to the user to choose the processing needed. When available we get the associated json.
-    | Modality   | Chosen image(s) | Justification |
-    | :----------------------:|:------:|:-------:|
-    | T1W | T1.nii.gz | Defaced and cropped so there is no neck. The rawest image would be the simply defaced one, but since we have no interest in the neck we don't use it. We do not want any other corrections. |
-    | T2 Flair | T2_FLAIR.nii.gz | Defaced and cropped so there is no neck. The reasons for choosing this image are the same as for T1. |
-    | DWI | AP.nii.gz & PA.nii.gz + bvals and bvecs | It is the rawest images we can get |
-    | rsfMRI | rsfMRI.nii.gz |  |
-    | tfMRI | tfMRI.nii.gz |  |
-    | SWI | SWI.nii.gz | Combined coil version. We would get a rawer version, but dcm2niix has trouble handling the slices direction, so it is simpler to go with this version. Plus, swi is not fully integrated to bids so changes may be coming, hence a simple version for now. | 
+| Modality    | Chosen image(s) | Justification |
+| :----------:|:---------------:|:-------:|
+| T1W                     | T1.nii.gz       | Defaced and cropped so there is no neck. The rawest image would be the simply defaced one, but since we have no interest in the neck we don't use it. We do not want any other corrections. |
+| T2 Flair    | T2_FLAIR.nii.gz | Defaced and cropped so there is no neck. The reasons for choosing this image are the same as for T1. |
+| DWI         | AP/PAnii.gz     | It is the rawest images we can get. bvals and bvec are also available. |
+| rsfMRI      | rsfMRI.nii.gz   |  |
+| tfMRI       | tfMRI.nii.gz    |  |
+| SWI         | SWI.nii.gz      | Combined coil version. We would get a rawer version, but dcm2niix has trouble handling the slices direction, so it is simpler to go with this version. Plus, swi is not fully integrated to bids so changes may be coming, hence a simple version for now. | 
     
 
 ## Using the converter
