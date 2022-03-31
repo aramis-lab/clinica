@@ -707,9 +707,14 @@ def create_adni_sessions_dict(
             df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
 
             if not df_filtered.empty:
+                # Get session ID from visit code.
                 df_filtered["session_id"] = df_filtered.apply(
                     lambda x: get_visit_id(x, location), axis=1
                 )
+
+                # Filter rows with invalid session IDs.
+                df_filtered.dropna(subset="session_id", inplace=True)
+
                 if location == "ADNIMERGE.csv":
                     df_filtered["AGE"] = df_filtered.apply(
                         lambda x: update_age(x), axis=1
