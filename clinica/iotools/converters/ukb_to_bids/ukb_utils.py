@@ -51,7 +51,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     source_path_series = pd.Series(
         find_imaging_data(imaging_data_directory), name="source_path"
     )
-    # justifications regarding the chosen files can be found in clinica's documentation: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS   .md
+    # justifications regarding the chosen files can be found in clinica's documentation: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md
     # list of the files we want to build the bids for each modality
     file_mod_list = [
         "T1.nii.gz",
@@ -284,7 +284,7 @@ def write_bids(
     sessions: DataFrame,
     scans: DataFrame,
     dataset_directory: PathLike,
-) -> List[PathLike]:
+) -> None:
     from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
@@ -337,7 +337,7 @@ def copy_file_to_bids(zipfile: str, filenames: List[str], bids_path: str) -> Non
                 f.write(fs.cat(filename))
 
 
-def select_session(x):
+def select_session(x: int) -> int:
     if x["source_session_number"] == "2":
         return x.age_when_attended_assessment_centre_f21003_2_0
     elif x["source_session_number"] == "3":
