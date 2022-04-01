@@ -1,6 +1,9 @@
 """Methods used by BIDS converters."""
 
-from typing import List
+from os import PathLike
+from typing import BinaryIO, Iterable, List, Tuple, Union
+
+from pandas import DataFrame
 
 
 # -- Methods for the clinical data --
@@ -786,3 +789,8 @@ def run_dcm2niix(
             ),
             lvl="warning",
         )
+
+
+def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
+    # Save dataframe as a BIDS-compliant TSV file.
+    dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
