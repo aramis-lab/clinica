@@ -2,14 +2,6 @@ def get_substitutions_datasink(bids_file):
 
     substitutions_ls = [  # registration
         (
-            f"{bids_file}_T1w_corrected.nii.gz",
-            f"{bids_file}_desc-BiasCorrected_T1w.nii.gz",
-        ),
-        (
-            f"{bids_file}Warped_cropped_intensity_norm.nii.gz",
-            f"{bids_file}_space-MNI152NLin2009cSym_res-1x1x1_intensity_norm_T1w.nii.gz",
-        ),
-        (
             f"{bids_file}Warped_cropped.nii.gz",
             f"{bids_file}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz",
         ),
