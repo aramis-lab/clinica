@@ -5,3 +5,4 @@ age;session;source_zipfile
 sex;source_session_number;sidecars
 year_of_birth;;bids_sidecar_path
 ;;json
+;;modality_num

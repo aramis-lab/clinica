@@ -48,8 +48,11 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
 
     import pandas as pd
 
-    source_path_series = pd.Series(
+    source_path_series_nifti = pd.Series(
         find_imaging_data(imaging_data_directory), name="source_path"
+    )
+    source_path_series_dicom = pd.Series(
+        find_dicom_data(imaging_data_directory), name="source_path"
     )
     # justifications regarding the chosen files can be found in clinica's documentation: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md
     # list of the files we want to build the bids for each modality
@@ -63,9 +66,13 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         "SWI.nii.gz",
     ]
 
-    dataframe = pd.DataFrame.from_records(
-        source_path_series, columns=["source_zipfile", "source_filename"]
+    dataframe_nifti = pd.DataFrame.from_records(
+        source_path_series_nifti, columns=["source_zipfile", "source_filename"]
     )
+    dataframe_dicom = pd.DataFrame.from_records(
+        source_path_series_dicom, columns=["source_zipfile", "source_filename"]
+    )
+    dataframe = pd.concat([dataframe_nifti, dataframe_dicom], 0)
     filename = (
         dataframe["source_filename"]
         .apply(lambda x: Path(str(x)).name)
@@ -87,7 +94,19 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         ],
         axis=1,
     )
+    print("df_source: ", df_source)
     return df_source
+
+
+def find_dicom_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
+    from pathlib import Path
+    from zipfile import ZipFile
+
+    for z in Path(path_to_source_data).rglob("*.zip"):
+        if str(z).split("_")[1] == "20217":
+            yield [str(z.relative_to(path_to_source_data)), "fMRI/tfMRI.nii.gz"]
+        elif str(z).split("_")[1] == "20225":
+            yield [str(z.relative_to(path_to_source_data)), "fMRI/rfMRI.nii.gz"]
 
 
 def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
@@ -106,9 +125,11 @@ def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFra
     """
     import pandas as pd
 
+    print("df_source: ", df_source)
     df_clinical = df_clinical_data.merge(
         df_source, how="inner", right_on="source_id", left_on="eid"
     )
+    print("df_clinical: ", df_clinical)
     return df_clinical
 
 
@@ -239,7 +260,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
         + "/"
         + df.bids_filename
     )
-
+    print("df_clinical: ", df_clinical)
     return df_clinical
 
 
@@ -312,11 +333,18 @@ def write_bids(
             write_to_tsv(session, sessions_file)
     scans = scans.set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
-        copy_file_to_bids(
-            zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
-            filenames=[metadata["source_filename"]] + metadata["sidecars"],
-            bids_path=to / bids_full_path,
-        )
+        if metadata["modality_num"] != "20217" and metadata["modality_num"] != "20225":
+            copy_file_to_bids(
+                zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
+                filenames=[metadata["source_filename"]] + metadata["sidecars"],
+                bids_path=to / bids_full_path,
+            )
+        else:
+            convert_dicom_to_nifti(
+                zipfiled=str(dataset_directory) + "/" + metadata["source_zipfile"],
+                filenames=[metadata["source_filename"]] + metadata["sidecars"],
+                bids_path=to / bids_full_path,
+            )
     return
 
 
@@ -331,6 +359,51 @@ def copy_file_to_bids(zipfile: str, filenames: List[str], bids_path: str) -> Non
             bids_path_extension = str(bids_path) + "." + (filename.split(".", 1)[1])
             with fsspec.open(bids_path_extension, mode="wb") as f:
                 f.write(fs.cat(filename))
+
+
+def find_dicoms(source):
+    from pathlib import Path
+
+    a_list = []
+    for z in Path(source).rglob("*.zip"):
+        print(z)
+        if str(z).split("_")[1] == "20217" or str(z).split("_")[1] == "20225":
+            a_list.append(z)
+    return a_list
+
+
+def convert_dicom_to_nifti(zipfiled: str, filenames: List[str], bids_path: str) -> None:
+    """Install the requested files in the BIDS  dataset."""
+    import os
+    import subprocess
+    import tempfile
+    import zipfile
+
+    print("HELLOOOOOOOOOOOOOOOO")
+    print("zipfile: ", zipfiled)
+    print("filenames: ", filenames)
+    print("bids_path: ", bids_path)
+    # fo = fsspec.open(zipfile)
+    # fs = fsspec.filesystem("zip", fo=fo)
+    # for filename in filenames:
+    #     if fs.exists(filename):
+    #         bids_path_extension = str(bids_path) + "." + (filename.split(".", 1)[1])
+    #         with fsspec.open(bids_path_extension, mode="wb") as f:
+    #             f.write(fs.cat(filename))
+    zf = zipfile.ZipFile(zipfiled)
+    try:
+        os.makedirs(bids_path.parent)
+    except OSError:
+        # Folder already created with previous instance
+        pass
+    # print("directory:", str(paths.parent) +"/" +paths.stem)
+    with tempfile.TemporaryDirectory() as tempdir:
+        zf.extractall(tempdir)
+        command = ["dcm2niix", "-w", "0", "-f", bids_path.name, "-o", bids_path.parent]
+        command += ["-9", "-z", "y"]
+        command += ["-b", "y", "-ba", "y"]
+        command += [tempdir]
+        subprocess.run(command)
 
 
 def select_session(x: int) -> int:
