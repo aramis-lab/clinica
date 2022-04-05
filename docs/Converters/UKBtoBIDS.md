@@ -6,7 +6,7 @@
 
 ## Dependencies
 
-If you installed the core of Clinica, this converter needs no further dependencies.
+If you installed the core of Clinica, this converter needs dcm2niix.
 
 ## Downloading UK Biobank
 
@@ -20,12 +20,12 @@ Also, the clinical_data.tsv needs to contain these informations about the subjec
 ## Supported modalities
 
 Please note that this converter processes the following modalities : 
-- T1W
-- T2 Flair
-- DWI
-- SWI
-- tfMRI
-- rsfMRI
+- T1W (nifti)
+- T2 Flair (nifti)
+- DWI (nifti)
+- SWI (nifti)
+- tfMRI (dicom)
+- rsfMRI (dicom)
 
 !!! Chosen files
     Whenever possible, we use the rawest files so as to leave it to the user to choose the processing needed. When available we get the associated json.
@@ -34,8 +34,8 @@ Please note that this converter processes the following modalities :
 | T1W                     | T1.nii.gz       | Defaced and cropped so there is no neck. The rawest image would be the simply defaced one, but since we have no interest in the neck we don't use it. We do not want any other corrections. |
 | T2 Flair    | T2_FLAIR.nii.gz | Defaced and cropped so there is no neck. The reasons for choosing this image are the same as for T1. |
 | DWI         | AP/PAnii.gz     | It is the rawest images we can get. bvals and bvec are also available. |
-| rsfMRI      | rsfMRI.nii.gz   |  |
-| tfMRI       | tfMRI.nii.gz    |  |
+| rsfMRI      | rsfMRI.dcm | Since the nii.gz version doesn't always include a json and in consideration for it's usage, we convert the dicom. |
+| tfMRI       | tfMRI.dcm   | Same as rsfMRI.|
 | SWI         | SWI.nii.gz      | Combined coil version. We would get a rawer version, but dcm2niix has trouble handling the slices direction, so it is simpler to go with this version. Plus, swi is not fully integrated to bids so changes may be coming, hence a simple version for now. | 
     
 
