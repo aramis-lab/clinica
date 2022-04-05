@@ -32,7 +32,7 @@ def cli(
     """Longitudinal surface-based processing of PET images.
 
        ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the tracer used.
-    Frequently used values are 'FDG' or '18FAV45'.
+    Frequently used values are '18FFDG' or '18FAV45'.
 
        The reference region must be precised to perform intensity normalization.
     Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
