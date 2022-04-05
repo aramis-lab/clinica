@@ -338,7 +338,6 @@ def write_bids(
         else:
             convert_dicom_to_nifti(
                 zipfiles=str(dataset_directory) + "/" + metadata["source_zipfile"],
-                filenames=[metadata["source_filename"]] + metadata["sidecars"],
                 bids_path=to / bids_full_path,
             )
     return
@@ -357,17 +356,7 @@ def copy_file_to_bids(zipfile: str, filenames: List[str], bids_path: str) -> Non
                 f.write(fs.cat(filename))
 
 
-def find_dicoms(source):
-    from pathlib import Path
-
-    a_list = []
-    for z in Path(source).rglob("*.zip"):
-        if str(z).split("_")[1] == "20217" or str(z).split("_")[1] == "20225":
-            a_list.append(z)
-    return a_list
-
-
-def convert_dicom_to_nifti(zipfiles: str, filenames: List[str], bids_path: str) -> None:
+def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
     """Install the requested files in the BIDS  dataset."""
     import os
     import subprocess
@@ -387,6 +376,7 @@ def convert_dicom_to_nifti(zipfiles: str, filenames: List[str], bids_path: str) 
         command += ["-b", "y", "-ba", "y"]
         command += [tempdir]
         subprocess.run(command)
+    return
 
 
 def select_session(x: int) -> int:
