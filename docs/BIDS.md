@@ -52,11 +52,17 @@ BIDS_Dataset/
 ```
 
 !!! note "PET modality"
-    Clinica historically used the BIDS acquisition entity `acq` to distinguish PET acquisitions with different tracers.
+    Clinica early adopted [BIDS Extension Proposal (BEP) 9](https://docs.google.com/document/d/1mqMLnxVdLwZjDd4ZiWFqjEAmOmfcModA_R535v3eQs0/edit) regarding PET modality before its official adoption in BIDS version 1.6.0.
 
-    Since version 0.6, Clinica is now compliant with the official specifications for PET introduced in BIDS version 1.6.0.
-    Acquisitions with different tracers now use the new tracer entity `trc`, and label names follow the proposed convention
-    in BIDS (pib -> 11CPIB, av45 -> 18FAV45, fbb -> 18FFBB, fdg -> 18FFDG, flute -> 18FFMM, tau -> 18FAV1451).
+    Since version 0.6, Clinica is now compliant with the official specifications for PET modality.
+    This involves three main changes:
+
+    - `task-rest` key/entity is now optional and ignored by Clinica
+    - PET acquisitions with different tracers now use the new tracer entity `trc` instead of
+    BIDS acquisition entity `acq`.
+    - PET files must use tracer entity `trc` (optional in BIDS but necessary for Clinica pipelines) and
+    label names follow the proposed convention in BIDS
+    (pib -> 11CPIB, av45 -> 18FAV45, fbb -> 18FFBB, fdg -> 18FFDG, flute -> 18FFMM, tau -> 18FAV1451).
 
 ## Validation of BIDS datasets
 

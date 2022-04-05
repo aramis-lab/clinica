@@ -129,7 +129,7 @@ The full list of output files from the `statistics-volume-[correction]` pipeline
 If you run the help command line `clinica run statistics-volume -h`, you will find the following options:
 
 - `--custom_files CUSTOM_FILES`: allows you to specify which file should be taken in the `CAPS/subjects` directory.
-For example, if you want to use the file `<participant_id>_<session_id>_trc-18FAV45_pet_space-Ixi549Space_pet.nii.gz` that is contained in `CAPS/subjects/<participant_id>/ses-<session_id>/pet/preprocessing/<group_id>`, you can use the argument `*sub-*_ses-*_task-rest_acq-av45_pet_space-Ixi549Space_pet.nii.gz`.
+For example, if you want to use the file `<participant_id>_<session_id>_trc-18FAV45_pet_space-Ixi549Space_pet.nii.gz` that is contained in `CAPS/subjects/<participant_id>/ses-<session_id>/pet/preprocessing/<group_id>`, you can use the argument `*sub-*_ses-*_trc-18FAV45_pet_space-Ixi549Space_pet.nii.gz`.
 If you want to specify the group, you can use `<group_id>/sub-*_ses-*_trc-18FAV45_pet_space-Ixi549Space_pet.nii.gz`.
 - `--measure_label MEASURE_LABEL`: specifies the name of the feature type.
 It will appear in the `_measure-<MEASURE_LABEL>` of the output files once the pipeline has run.

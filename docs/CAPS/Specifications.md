@@ -330,7 +330,7 @@ subjects/
                └─ <source_file>_space-<space>[_pvc-rbv]_suvr-<suvr>_statistics.tsv
 ```
 
-The `_acq-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
+The `_trc-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
 
 The `[_pvc-rbv]` label is optional, depending on whether your image has undergone partial volume correction (region-based voxel-wise (RBV) method) or not.
 
@@ -542,7 +542,7 @@ groups/
 └─ <group_id>/
    ├─ <group_id>_participants.tsv
    └─ statistics_volume/
-      └─ group_comparison_measure-{graymatter|fdg|av45|<custom_user>}/
+      └─ group_comparison_measure-{graymatter|18FFDG|18FAV45|<custom_user>}/
          ├─ <group_id>_{RPV|mask}.nii
          ├─ <group_id>_covariate-<covariate>_measure-<label>_fwhm-<n>_regressionCoefficient.nii
          ├─ <group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_{TStatistics|contrast}.nii
@@ -565,7 +565,7 @@ Suffixes are described in the table below:
 
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measurement of `<group_1>` is lower than (`lt`) that of `<group_2>`".
 
-The value for `measure` can be `graymatter` (output of `t1-volume`), `fdg` or `av45` (output of `pet-volume`), or user-defined maps.
+The value for `measure` can be `graymatter` (output of `t1-volume`), `18FFDG` or `18FAV45` (output of `pet-volume`), or user-defined maps.
 The value for `fwhm` corresponds to the size of the volume-based smoothing in mm.
 
 Corrected results are stored under the following hierarchy:
