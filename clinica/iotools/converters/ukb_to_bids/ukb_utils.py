@@ -61,8 +61,8 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         "T2_FLAIR.nii.gz",
         "AP.nii.gz",
         "PA.nii.gz",
-        "rfMRI.nii.gz",
-        "tfMRI.nii.gz",
+        "rfMRI.dcm",
+        "tfMRI.dcm",
         "SWI.nii.gz",
     ]
 
@@ -94,19 +94,18 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         ],
         axis=1,
     )
-    print("df_source: ", df_source)
+
     return df_source
 
 
 def find_dicom_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
     from pathlib import Path
-    from zipfile import ZipFile
 
     for z in Path(path_to_source_data).rglob("*.zip"):
         if str(z).split("_")[1] == "20217":
-            yield [str(z.relative_to(path_to_source_data)), "fMRI/tfMRI.nii.gz"]
+            yield [str(z.relative_to(path_to_source_data)), "fMRI/tfMRI.dcm"]
         elif str(z).split("_")[1] == "20225":
-            yield [str(z.relative_to(path_to_source_data)), "fMRI/rfMRI.nii.gz"]
+            yield [str(z.relative_to(path_to_source_data)), "fMRI/rfMRI.dcm"]
 
 
 def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
@@ -125,11 +124,9 @@ def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFra
     """
     import pandas as pd
 
-    print("df_source: ", df_source)
     df_clinical = df_clinical_data.merge(
         df_source, how="inner", right_on="source_id", left_on="eid"
     )
-    print("df_clinical: ", df_clinical)
     return df_clinical
 
 
@@ -186,7 +183,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
                     "task": "",
                     "dir": "_dir-PA",
                 },
-                "rfMRI.nii.gz": {
+                "rfMRI.dcm": {
                     "datatype": "func",
                     "modality": "rsfmri",
                     "suffix": "bold",
@@ -194,7 +191,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
                     "task": "_task-rest",
                     "dir": "",
                 },
-                "tfMRI.nii.gz": {
+                "tfMRI.dcm": {
                     "datatype": "func",
                     "modality": "tfmri",
                     "suffix": "bold",
@@ -260,7 +257,6 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
         + "/"
         + df.bids_filename
     )
-    print("df_clinical: ", df_clinical)
     return df_clinical
 
 
@@ -341,7 +337,7 @@ def write_bids(
             )
         else:
             convert_dicom_to_nifti(
-                zipfiled=str(dataset_directory) + "/" + metadata["source_zipfile"],
+                zipfiles=str(dataset_directory) + "/" + metadata["source_zipfile"],
                 filenames=[metadata["source_filename"]] + metadata["sidecars"],
                 bids_path=to / bids_full_path,
             )
@@ -366,37 +362,24 @@ def find_dicoms(source):
 
     a_list = []
     for z in Path(source).rglob("*.zip"):
-        print(z)
         if str(z).split("_")[1] == "20217" or str(z).split("_")[1] == "20225":
             a_list.append(z)
     return a_list
 
 
-def convert_dicom_to_nifti(zipfiled: str, filenames: List[str], bids_path: str) -> None:
+def convert_dicom_to_nifti(zipfiles: str, filenames: List[str], bids_path: str) -> None:
     """Install the requested files in the BIDS  dataset."""
     import os
     import subprocess
     import tempfile
     import zipfile
 
-    print("HELLOOOOOOOOOOOOOOOO")
-    print("zipfile: ", zipfiled)
-    print("filenames: ", filenames)
-    print("bids_path: ", bids_path)
-    # fo = fsspec.open(zipfile)
-    # fs = fsspec.filesystem("zip", fo=fo)
-    # for filename in filenames:
-    #     if fs.exists(filename):
-    #         bids_path_extension = str(bids_path) + "." + (filename.split(".", 1)[1])
-    #         with fsspec.open(bids_path_extension, mode="wb") as f:
-    #             f.write(fs.cat(filename))
-    zf = zipfile.ZipFile(zipfiled)
+    zf = zipfile.ZipFile(zipfiles)
     try:
         os.makedirs(bids_path.parent)
     except OSError:
         # Folder already created with previous instance
         pass
-    # print("directory:", str(paths.parent) +"/" +paths.stem)
     with tempfile.TemporaryDirectory() as tempdir:
         zf.extractall(tempdir)
         command = ["dcm2niix", "-w", "0", "-f", bids_path.name, "-o", bids_path.parent]
