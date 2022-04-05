@@ -75,7 +75,7 @@ def cli(
     For this pipeline, it is associated to the DARTEL template that you had created when running the t1-volume pipeline.
 
        ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the tracer used.
-    Frequently used values are '18FDG' or '18FAV45'.
+    Frequently used values are '18FFDG' or '18FAV45'.
 
        The reference region must be precised to perform intensity normalization.
     Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
