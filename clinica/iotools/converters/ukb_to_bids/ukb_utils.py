@@ -1,8 +1,7 @@
-from cmath import nan
 from os import PathLike
-from typing import BinaryIO, Iterable, List, Tuple, Union
+from typing import Iterable, List, Tuple
 
-from pandas import DataFrame, notna
+from pandas import DataFrame
 
 
 def find_clinical_data(
@@ -122,7 +121,6 @@ def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFra
     """
     This function merges the two dataframes given as inputs based on the subject id
     """
-    import pandas as pd
 
     df_clinical = df_clinical_data.merge(
         df_source, how="inner", right_on="source_id", left_on="eid"
@@ -131,7 +129,7 @@ def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFra
 
 
 def complete_clinical(df_clinical: DataFrame) -> DataFrame:
-    """This funbction uses the existing data to create the columns needed for the bids hierarchy (subject_id, ses, age_at _session, ect.)"""
+    """This function uses the existing data to create the columns needed for the bids hierarchy (subject_id, ses, age_at _session, ect.)"""
     import pandas as pd
 
     df_clinical = df_clinical.assign(
@@ -279,15 +277,10 @@ def dataset_to_bids(df_clinical: DataFrame) -> Tuple[DataFrame, DataFrame, DataF
         verify_integrity=True,
     )
 
-    # Build participants dataframe
-    df_participants = df_clinical.filter(items=list(df_ref["participants"]))
-
-    # Build sessions dataframe
-    df_session = df_clinical.filter(items=list(df_ref["session"]))
-
-    # Build scans dataframe
-    df_scan = df_clinical.filter(items=list(df_ref["scan"]))
-    return df_participants, df_session, df_scan
+    return (
+        df_clinical.filter(items=list(df_ref[_]))
+        for _ in ["participants", "session", "scan"]
+    )
 
 
 def write_bids(
@@ -357,21 +350,32 @@ def copy_file_to_bids(zipfile: str, filenames: List[str], bids_path: str) -> Non
 
 
 def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
-    """Install the requested files in the BIDS  dataset."""
+    """Install the requested files in the BIDS  dataset.
+    First, the dicom is extracted in a temporary directory
+    Second, the dicom extracted is converted in the right place using dcm2niix"""
     import os
     import subprocess
     import tempfile
     import zipfile
+    from pathlib import Path
 
     zf = zipfile.ZipFile(zipfiles)
     try:
-        os.makedirs(bids_path.parent)
+        os.makedirs(Path(bids_path).parent)
     except OSError:
         # Folder already created with previous instance
         pass
     with tempfile.TemporaryDirectory() as tempdir:
         zf.extractall(tempdir)
-        command = ["dcm2niix", "-w", "0", "-f", bids_path.name, "-o", bids_path.parent]
+        command = [
+            "dcm2niix",
+            "-w",
+            "0",
+            "-f",
+            Path(bids_path).name,
+            "-o",
+            Path(bids_path).parent,
+        ]
         command += ["-9", "-z", "y"]
         command += ["-b", "y", "-ba", "y"]
         command += [tempdir]
