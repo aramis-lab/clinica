@@ -1,7 +1,7 @@
 from os import PathLike
-from typing import Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
 
 def find_clinical_data(
@@ -81,7 +81,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     filename = filename[filename.isin(file_mod_list)]
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
-        {0: "source_id", 1: "modality_num", 2: "source_session_number"}, axis="columns"
+        {0: "source_id", 1: "modality_num", 2: "source_sessions_number"}, axis="columns"
     )  # .drop_duplicates()
     split_zipfile = split_zipfile.astype({"source_id": "int64"})
 
@@ -130,14 +130,14 @@ def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFra
 
 def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     """This function uses the existing data to create the columns needed for
-    the bids hierarchy (subject_id, ses, age_at _session, ect.)"""
+    the bids hierarchy (subject_id, ses, age_at _sessions, ect.)"""
     import pandas as pd
 
     df_clinical = df_clinical.assign(
         participant_id=lambda df: ("sub-UKB" + df.source_id.astype("str"))
     )
     df_clinical = df_clinical.assign(
-        session=lambda df: "ses-" + df.source_session_number.astype("str")
+        sessions=lambda df: "ses-" + df.source_sessions_number.astype("str")
     )
     df_clinical = df_clinical.join(
         df_clinical.filename.map(
@@ -215,22 +215,22 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     df_clinical = df_clinical.assign(
         age_at_first_session=lambda df: df.age_when_attended_assessment_centre_f21003_2_0
     )
-    df_clinical["age_at_session"] = df_clinical.apply(
-        lambda df: select_session(df), axis=1
+    df_clinical["age_at_sessions"] = df_clinical.apply(
+        lambda df: select_sessions(df), axis=1
     )
     df_clinical = df_clinical.assign(
-        session_month=lambda df: (df.age_at_session - df.age_at_first_session) * 12
+        sessions_month=lambda df: (df.age_at_sessions - df.age_at_first_session) * 12
     )
 
     df_clinical = df_clinical.assign(
-        session=lambda df: df.session_month.map(lambda x: f"ses-M{x:03d}")
+        sessions=lambda df: df.sessions_month.map(lambda x: f"ses-M{x:03d}")
     )
     df_clinical = df_clinical.assign(
         bids_filename=lambda df: (
             "sub-UKB"
             + df.source_id.astype("str")
             + "_"
-            + df.session.astype("str")
+            + df.sessions.astype("str")
             + df.dir.astype("str")
             + df.task.astype("str")
             + "_"
@@ -250,7 +250,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     df_clinical = df_clinical.assign(
         bids_full_path=lambda df: df.participant_id
         + "/"
-        + df.session
+        + df.sessions
         + "/"
         + df.datatype
         + "/"
@@ -259,7 +259,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     return df_clinical
 
 
-def dataset_to_bids(df_clinical: DataFrame) -> Tuple[DataFrame, DataFrame, DataFrame]:
+def dataset_to_bids(df_clinical: DataFrame) -> Dict[str, DataFrame]:
 
     import os
 
@@ -274,14 +274,14 @@ def dataset_to_bids(df_clinical: DataFrame) -> Tuple[DataFrame, DataFrame, DataF
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
 
     df_clinical = df_clinical.set_index(
-        ["participant_id", "session", "modality", "bids_filename"],
+        ["participant_id", "sessions", "modality", "bids_filename"],
         verify_integrity=True,
     )
 
-    return (
-        df_clinical.filter(items=list(df_ref[_]))
-        for _ in ["participants", "session", "scan"]
-    )
+    return {
+        col: df_clinical.filter(items=list(df_ref[col]))
+        for col in ["participants", "sessions", "scans"]
+    }
 
 
 def write_bids(
@@ -302,7 +302,7 @@ def write_bids(
     fs = LocalFileSystem(auto_mkdir=True)
 
     participants = participants.droplevel(
-        ["session", "modality", "bids_filename"]
+        ["sessions", "modality", "bids_filename"]
     ).drop_duplicates()
 
     # Ensure BIDS hierarchy is written first.
@@ -316,13 +316,13 @@ def write_bids(
             write_to_tsv(participants, participant_file)
 
     for participant_id, data_frame in sessions.groupby(["participant_id"]):
-        session = data_frame.droplevel(
+        sessions = data_frame.droplevel(
             ["participant_id", "modality", "bids_filename"]
         ).drop_duplicates()
 
-        session_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
-        with fs.open(str(session_filepath), "w") as sessions_file:
-            write_to_tsv(session, sessions_file)
+        sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
+        with fs.open(str(sessions_filepath), "w") as sessions_file:
+            write_to_tsv(sessions, sessions_file)
     scans = scans.set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
         if metadata["modality_num"] != "20217" and metadata["modality_num"] != "20225":
@@ -386,8 +386,8 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
     return
 
 
-def select_session(x: int) -> int:
-    if x["source_session_number"] == "2":
+def select_sessions(x: DataFrame) -> Series:
+    if x["source_sessions_number"] == "2":
         return x.age_when_attended_assessment_centre_f21003_2_0
-    elif x["source_session_number"] == "3":
+    elif x["source_sessions_number"] == "3":
         return x.age_when_attended_assessment_centre_f21003_3_0

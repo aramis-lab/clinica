@@ -37,13 +37,13 @@ def convert_images(
     df_clinical = complete_clinical(df_clinical)
 
     # build the tsv
-    participants, sessions, scans = dataset_to_bids(df_clinical)
+    result = dataset_to_bids(df_clinical)
 
     written = write_bids(
         to=bids_dir,
-        participants=participants,
-        sessions=sessions,
-        scans=scans,
+        participants=result["participants"],
+        sessions=result["sessions"],
+        scans=result["scans"],
         dataset_directory=path_to_dataset,
     )
 
