@@ -1,5 +1,30 @@
+from clinica.utils.exceptions import ClinicaParserError
 
-def rename_to_bids(t1w, )
+
+def extract_source_entities(ref_file):
+    import pathlib
+
+    # TODO: smarter entities extraction
+    source_entities = ("_").join(pathlib.Path(ref_file).stem.split("_")[:-1])
+    ext = "".join(pathlib.Path(ref_file).suffixes)
+
+    return source_entities, ext
+
+
+def construct_derivative_entities(pipeline_entities, pipeline_parameters):
+
+    derivative_entities = ""
+
+    for name, val in pipeline_parameters.items():
+        derivative_entities += pipeline_entities[name][val]
+
+    return derivative_entities
+
+
+def build_bids_compliant_name(source_entities, derivative_entities, ext):
+
+    compliant_output_file = source_entities + "_" + derivative_entities + "_" + ext
+    return compliant_output_file
 
 
 def get_substitutions_datasink(bids_file):

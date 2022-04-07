@@ -2,8 +2,7 @@
 
 from pathlib import Path
 from typing import List, Optional, Union
-import attr
-from attr import define, field
+
 
 BIDS_VALIDATOR_CONFIG = {
     "ignore": [
@@ -820,13 +819,3 @@ def run_dcm2niix(
             ),
             lvl="warning",
         )
-
-
-# Abstract BIDS classes
-
-
-@define
-class Entity:
-    name: str
-    map_param_value: dict = field(default=attr.Factory(dict))
-    description: str = ""

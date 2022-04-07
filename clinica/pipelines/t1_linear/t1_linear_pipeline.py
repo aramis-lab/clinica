@@ -3,6 +3,7 @@
 from nipype import config
 
 import clinica.pipelines.engine as cpe
+from clinica.utils import input_files
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -171,24 +172,16 @@ class T1Linear(cpe.Pipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .t1_linear_utils import get_substitutions_datasink, rename_to_bids, extract_source_entities, construct_derivative_entities
-
-        # Writing node
-        write_node = npe.Node(name="WriteCaps", interface=DataSink())
-        write_node.inputs.base_directory = self.caps_directory
-        write_node.inputs.parameterization = False
+        from .t1_linear_utils import (
+            get_substitutions_datasink,
+            build_bids_compliant_name,
+            extract_source_entities,
+            construct_derivative_entities,
+        )
 
         # Other nodes
         # =====================================
-        # Get substitutions to rename files
-        get_ids = npe.Node(
-            interface=nutil.Function(
-                input_names=["bids_file"],
-                output_names=["image_id_out", "subst_ls"],
-                function=get_substitutions_datasink,
-            ),
-            name="GetIDs",
-        )
+
         # Find container path from t1w filename
         container_path = npe.Node(
             nutil.Function(
@@ -201,31 +194,35 @@ class T1Linear(cpe.Pipeline):
         extract_source_entities = npe.Node(
             nutil.Function(
                 input_name=["ref_file"],
-                output_name=["source_entities", "ext"]
+                output_name=["source_entities", "ext"],
                 function=extract_source_entities,
             ),
-            name="ExtractSourceEntities"
+            name="ExtractSourceEntities",
         )
 
-        extract_derivative_entities = npe.Node( 
+        extract_derivative_entities = npe.Node(
             nutil.Function(
                 input_name=["pipeline_parameters", "pipeline_entities"],
                 output_name=["derivative_entities"],
-                function=construct_dervative_entities,
-            )
+                function=construct_derivative_entities,
+            ),
+            name="ConstructDerivativeEntities",
         )
 
-        extract_derivative_entities.inputs.pipeline_parametesrs = self.parameters
-        extract_derivative_entities.inputs.pipeline_entities= self.entities
-        
+        extract_derivative_entities.inputs.pipeline_parameters = self.parameters
+        extract_derivative_entities.inputs.pipeline_entities = self.entities
 
-        rename_output = npe.Node(
+        build_bids_compliant_name = npe.Node(
             nutil.Function(
                 input_name=["source_entities", "derivative_entities", "ext"],
-                output_name=["bids_compliant_output"]
-                function=rename_to_bids,
+                output_name=["bids_compliant_output"],
+                function=build_bids_compliant_name,
             ),
-            name="RenameToBIDS",
+            name="BuildBIDSCompliantName",
+        )
+
+        rename_node = npe.Node(
+            interface=nutil.Rename(format_string="%(bids_file)"), name="RenameNode"
         )
 
         # fmt: off
@@ -233,23 +230,22 @@ class T1Linear(cpe.Pipeline):
         self.connect(
             [
                 (self.input_node, container_path, [("t1w", "bids_or_caps_filename")]),
-                (container_path, write_node, [(("container", fix_join, "t1_linear"), "container")]),
-                (self.output_node, get_ids, [("image_id", "bids_file")]),
-                (get_ids, write_node, [("subst_ls", "substitutions")]),
-                (get_ids, write_node, [("image_id_out", "@image_id")]),
-                (self.output_node, write_node, [("outfile_reg", "@outfile_reg")]),
-                (self.output_node, write_node, [("affine_mat", "@affine_mat")]),
                 (self.input_node, extract_source_entities, [("t1w", "ref_file")]),
-                (extract_source_entities, rename_output, [("source_entities", "source_entities")]),
-                (extract_source_entities, rename_output, [("ext", "ext")]),
-                (extract_derivative_entities, rename_output, [("derivative_entities", "derivative_entities")]),
+                (extract_source_entities, build_bids_compliant_name, [("source_entities", "source_entities")]),
+                (extract_source_entities, build_bids_compliant_name, [("ext", "ext")]),
+                (extract_derivative_entities, build_bids_compliant_name, [("derivative_entities", "derivative_entities")]),
+                (build_bids_compliant_name, rename_node, [("bids_compliant_output", "bids_file")]),
+                (container_path, self.write_node, [(("container", fix_join, "t1_linear"), "container")]),
+                (self.output_node, self.write_node, [("outfile_reg", "@outfile_reg")]),
+                (self.output_node, self.write_node, [("affine_mat", "@affine_mat")]),
+                (build_bids_compliant_name, self.write_node, [("bids_compliant_output", "@image_id")]),
             ]
         )
 
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
-                    (self.output_node, write_node, [("outfile_crop", "@outfile_crop")]),
+                    (self.output_node, self.write_node, [("outfile_crop", "@outfile_crop")]),
                 ]
             )
         # fmt: on

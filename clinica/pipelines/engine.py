@@ -7,6 +7,7 @@ import abc
 
 import click
 from nipype.pipeline.engine import Workflow
+from nipype.interfaces.io import DataSink
 
 
 def postset(attribute, value):
@@ -75,6 +76,7 @@ class Pipeline(Workflow):
         overwrite_caps=False,
         base_dir=None,
         parameters={},
+        entities={},
         name=None,
     ):
         """Init a Pipeline object.
@@ -86,6 +88,7 @@ class Pipeline(Workflow):
             overwrite_caps (bool, optional): Overwrite or not output directory.. Defaults to False.
             base_dir (str, optional): Working directory (attribute of Nipype::Workflow class). Defaults to None.
             parameters (dict, optional): Pipeline parameters. Defaults to {}.
+            entities (dict, optional): Pipeline specific entities. Defaults to [].
             name (str, optional): Pipeline name. Defaults to None.
 
         Raises:
@@ -119,6 +122,7 @@ class Pipeline(Workflow):
 
         self._name = name or self.__class__.__name__
         self._parameters = parameters
+        self._entities = entities
 
         if not self._bids_directory:
             if not self._caps_directory:
@@ -181,6 +185,11 @@ class Pipeline(Workflow):
             )
         else:
             self._output_node = None
+
+        # Writing node
+        self.write_node = npe.Node(name="WriteCaps", interface=DataSink())
+        self.write_node.inputs.base_directory = self.caps_directory
+        self.write_node.inputs.parameterization = False
 
         Workflow.__init__(self, self._name, self.base_dir)
         if self.input_node:
@@ -817,9 +826,20 @@ class Pipeline(Workflow):
     def parameters(self):
         return self._parameters
 
+    @property
+    def entities(self):
+        return self._entities
+
     @parameters.setter
     def parameters(self, value):
         self._parameters = value
+        # Need to rebuild input, output and core nodes
+        self.is_built = False
+        self.init_nodes()
+
+    @entities.setter
+    def entities(self, value):
+        self._entities = value
         # Need to rebuild input, output and core nodes
         self.is_built = False
         self.init_nodes()
