@@ -171,7 +171,7 @@ class T1Linear(cpe.Pipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .t1_linear_utils import get_substitutions_datasink
+        from .t1_linear_utils import get_substitutions_datasink, rename_to_bids, extract_source_entities, construct_derivative_entities
 
         # Writing node
         write_node = npe.Node(name="WriteCaps", interface=DataSink())
@@ -198,7 +198,38 @@ class T1Linear(cpe.Pipeline):
             ),
             name="ContainerPath",
         )
+        extract_source_entities = npe.Node(
+            nutil.Function(
+                input_name=["ref_file"],
+                output_name=["source_entities"]
+                function=extract_source_entities,
+            ),
+            name="ExtractSourceEntities"
+        )
+        
+        extract_derivative_entities = npe.Node( 
+            nutil.Function(
+                input_name=["pipeline_parameters", "pipeline_entities"],
+                output_name=["derivative_entities"],
+                function=construct_dervative_entities,
+            )
+        )
+
+        extract_derivative_entities.inputs.pipeline_parametesrs = self.parameters
+        extract_derivative_entities.inputs.pipeline_entities= self.entities
+        
+
+        rename_output = npe.Node(
+            nutil.Function(
+                input_name=["source_entities", "derivative_entities"],
+                output_name=["bids_compliant_output"]
+                function=rename_to_bids,
+            ),
+            name="RenameToBIDS",
+        )
+
         # fmt: off
+
         self.connect(
             [
                 (self.input_node, container_path, [("t1w", "bids_or_caps_filename")]),

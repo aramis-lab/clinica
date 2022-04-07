@@ -3,6 +3,7 @@ from typing import Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.iotools.bids_utils import Entity
 
 pipeline_name = "t1-linear"
 
@@ -40,6 +41,7 @@ def cli(
     from .t1_linear_pipeline import T1Linear
 
     parameters = {"uncropped_image": uncropped_image}
+    entities = [Entity("uncropped_image", {True: "desc_Warped", False: "desc_Cropped"})]
 
     # Most of the time, you will want to instantiate your pipeline with a
     # BIDS and CAPS directory as inputs:

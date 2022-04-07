@@ -1,3 +1,7 @@
+
+def rename_to_bids(t1w, )
+
+
 def get_substitutions_datasink(bids_file):
 
     substitutions_ls = [  # registration
