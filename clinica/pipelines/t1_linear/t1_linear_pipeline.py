@@ -201,12 +201,12 @@ class T1Linear(cpe.Pipeline):
         extract_source_entities = npe.Node(
             nutil.Function(
                 input_name=["ref_file"],
-                output_name=["source_entities"]
+                output_name=["source_entities", "ext"]
                 function=extract_source_entities,
             ),
             name="ExtractSourceEntities"
         )
-        
+
         extract_derivative_entities = npe.Node( 
             nutil.Function(
                 input_name=["pipeline_parameters", "pipeline_entities"],
@@ -221,7 +221,7 @@ class T1Linear(cpe.Pipeline):
 
         rename_output = npe.Node(
             nutil.Function(
-                input_name=["source_entities", "derivative_entities"],
+                input_name=["source_entities", "derivative_entities", "ext"],
                 output_name=["bids_compliant_output"]
                 function=rename_to_bids,
             ),
@@ -239,6 +239,10 @@ class T1Linear(cpe.Pipeline):
                 (get_ids, write_node, [("image_id_out", "@image_id")]),
                 (self.output_node, write_node, [("outfile_reg", "@outfile_reg")]),
                 (self.output_node, write_node, [("affine_mat", "@affine_mat")]),
+                (self.input_node, extract_source_entities, [("t1w", "ref_file")]),
+                (extract_source_entities, rename_output, [("source_entities", "source_entities")]),
+                (extract_source_entities, rename_output, [("ext", "ext")]),
+                (extract_derivative_entities, rename_output, [("derivative_entities", "derivative_entities")]),
             ]
         )
 
