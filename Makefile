@@ -40,7 +40,7 @@ env.dev:
 
 .PHONY: env.doc
 env.doc:
-	@$(CONDA) env create -f environment_docs.yml -p $(CONDA_ENV)
+	@$(CONDA) env create -f docs/environment.yml -p $(CONDA_ENV)
 
 ## format			: Format the codebase.
 .PHONY: format
