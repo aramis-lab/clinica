@@ -14,9 +14,9 @@ def cli(
     clinical_data_directory: PathLike,
     bids_directory: PathLike,
 ) -> None:
-    """UKB to BIDS converter.
+    """UK Biobank to BIDS converter.
 
-    Convert the imaging and clinical data of UKB, located in DATASET_DIRECTORY and
+    Convert the imaging and clinical data of UK Biobank, located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
     from clinica.iotools.converters.ukb_to_bids.ukb_to_bids import convert_images

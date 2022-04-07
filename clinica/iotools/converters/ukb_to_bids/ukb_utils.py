@@ -20,15 +20,14 @@ def find_clinical_data(
         raise FileNotFoundError("Clinical data file not found.")
 
     # Assign the dfs
-    if len(image_data_file) == 1:
-        df_clinical = pd.read_csv(str(image_data_file[0]), sep="\t")
-        cprint(msg="All clinical data have been found", lvl="info")
-    elif len(image_data_file) == 0:
+    if len(image_data_file) == 0:
         raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
-    elif len(image_data_file) > 1:
-        raise FileNotFoundError("Too many data files found, expected one. Aborting.")
+    if len(image_data_file) > 1:
+        raise ValueError("Too many data files found, expected one. Aborting.")
+    df_clinical = pd.read_csv(str(image_data_file[0]), sep="\t")
+    cprint(msg="All clinical data have been found", lvl="info")
 
-    columns_to_have = [
+    required_columns = [
         "age_when_attended_assessment_centre_f21003_2_0",
         "age_when_attended_assessment_centre_f21003_3_0",
         "year_of_birth_f34_0_0",
@@ -36,9 +35,9 @@ def find_clinical_data(
         "age_when_attended_assessment_centre_f21003_2_0",
         "sex_f31_0_0",
     ]
-    for column_name in columns_to_have:
-        if column_name not in df_clinical:
-            raise FileNotFoundError(f"column {column_name} not found. Aborting")
+    missing_columns = set(required_columns).difference(set(df_clinical.columns))
+    if missing_columns:
+        raise ValueError(f"Required columns {missing_columns} not found")
     return df_clinical
 
 
@@ -53,7 +52,8 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     source_path_series_dicom = pd.Series(
         find_dicom_data(imaging_data_directory), name="source_path"
     )
-    # justifications regarding the chosen files can be found in clinica's documentation: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md
+    # Rotionales for this choice of files can be found in the documentation:
+    # https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md
     # list of the files we want to build the bids for each modality
     file_mod_list = [
         "T1.nii.gz",
@@ -129,7 +129,8 @@ def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFra
 
 
 def complete_clinical(df_clinical: DataFrame) -> DataFrame:
-    """This function uses the existing data to create the columns needed for the bids hierarchy (subject_id, ses, age_at _session, ect.)"""
+    """This function uses the existing data to create the columns needed for
+    the bids hierarchy (subject_id, ses, age_at _session, ect.)"""
     import pandas as pd
 
     df_clinical = df_clinical.assign(
@@ -306,10 +307,12 @@ def write_bids(
 
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
-        with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
+        with fs.open(
+            str(to / "dataset_description.json"), "w"
+        ) as dataset_description_file:
             BIDSDatasetDescription(name="UKB").write(to=dataset_description_file)
 
-        with fs.open(to / "participants.tsv", "w") as participant_file:
+        with fs.open(str(to / "participants.tsv"), "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
     for participant_id, data_frame in sessions.groupby(["participant_id"]):
@@ -317,8 +320,8 @@ def write_bids(
             ["participant_id", "modality", "bids_filename"]
         ).drop_duplicates()
 
-        session_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
-        with fs.open(session_filepath, "w") as sessions_file:
+        session_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
+        with fs.open(str(session_filepath), "w") as sessions_file:
             write_to_tsv(session, sessions_file)
     scans = scans.set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
