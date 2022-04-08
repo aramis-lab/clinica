@@ -304,7 +304,7 @@ pipeline {
           steps {
             sh '''
               source "${CONDA_HOME}/etc/profile.d/conda.sh"
-              make env.conda
+              make env.doc
               conda activate "${CONDA_ENV}"
               make doc
               mv site "${CHANGE_ID:-$BRANCH_NAME}"
