@@ -124,7 +124,9 @@ def _load_xml_from_template(
         "image_id": 300,
         "proc_id": 3615,
     }
-    template_path = Path(__file__).resolve().parent / Path(f"data/{template_id}_template.xml")
+    template_path = Path(__file__).resolve().parent / Path(
+        f"data/{template_id}_template.xml"
+    )
     temp = template_path.read_text()
     temp = Template(temp.replace("\n", ""))
     return temp.safe_substitute(
