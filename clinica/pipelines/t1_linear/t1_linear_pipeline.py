@@ -193,8 +193,8 @@ class T1Linear(cpe.Pipeline):
         )
         extract_source_entities = npe.Node(
             nutil.Function(
-                input_name=["ref_file"],
-                output_name=["source_entities", "ext"],
+                input_names=["ref_file"],
+                output_names=["source_entities", "ext"],
                 function=extract_source_entities,
             ),
             name="ExtractSourceEntities",
@@ -202,8 +202,8 @@ class T1Linear(cpe.Pipeline):
 
         extract_derivative_entities = npe.Node(
             nutil.Function(
-                input_name=["pipeline_parameters", "pipeline_entities"],
-                output_name=["derivative_entities"],
+                input_names=["pipeline_parameters", "pipeline_entities"],
+                output_names=["derivative_entities"],
                 function=construct_derivative_entities,
             ),
             name="ConstructDerivativeEntities",
@@ -214,15 +214,15 @@ class T1Linear(cpe.Pipeline):
 
         build_bids_compliant_name = npe.Node(
             nutil.Function(
-                input_name=["source_entities", "derivative_entities", "ext"],
-                output_name=["bids_compliant_output"],
+                input_names=["source_entities", "derivative_entities", "ext"],
+                output_names=["bids_compliant_output"],
                 function=build_bids_compliant_name,
             ),
             name="BuildBIDSCompliantName",
         )
 
         rename_node = npe.Node(
-            interface=nutil.Rename(format_string="%(bids_file)"), name="RenameNode"
+            interface=nutil.Rename(format_string="%(bids_file)s"), name="RenameNode"
         )
 
         # fmt: off
@@ -235,6 +235,7 @@ class T1Linear(cpe.Pipeline):
                 (extract_source_entities, build_bids_compliant_name, [("ext", "ext")]),
                 (extract_derivative_entities, build_bids_compliant_name, [("derivative_entities", "derivative_entities")]),
                 (build_bids_compliant_name, rename_node, [("bids_compliant_output", "bids_file")]),
+                (self.output_node, rename_node, [("outfile_reg", "in_file")]),
                 (container_path, self.write_node, [(("container", fix_join, "t1_linear"), "container")]),
                 (self.output_node, self.write_node, [("outfile_reg", "@outfile_reg")]),
                 (self.output_node, self.write_node, [("affine_mat", "@affine_mat")]),
