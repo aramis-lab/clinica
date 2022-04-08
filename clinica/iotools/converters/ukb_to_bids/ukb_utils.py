@@ -98,6 +98,8 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
 
 
 def find_dicom_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
+    """
+    This function finds the paths to the dicoms, only for fMRI, since we use the niftis for the other modalities."""
     from pathlib import Path
 
     for z in Path(path_to_source_data).rglob("*.zip"):
