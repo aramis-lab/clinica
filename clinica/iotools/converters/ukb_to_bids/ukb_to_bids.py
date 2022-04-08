@@ -9,7 +9,7 @@ def convert_images(
     bids_dir: PathLike,
     path_to_clinical: PathLike,
 ) -> List[PathLike]:
-    """Convert the entire dataset in BIDS.
+    """Convert the entire dataset to BIDS.
 
     Scans available files in the path_to_dataset,
     identifies the patients that have images described by the JSON file,

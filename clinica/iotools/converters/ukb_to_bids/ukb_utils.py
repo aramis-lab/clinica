@@ -52,7 +52,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     source_path_series_dicom = pd.Series(
         find_dicom_data(imaging_data_directory), name="source_path"
     )
-    # Rotionales for this choice of files can be found in the documentation:
+    # Rationales for this choice of files can be found in the documentation:
     # https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md
     # list of the files we want to build the bids for each modality
     file_mod_list = [
@@ -99,7 +99,8 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
 
 def find_dicom_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
     """
-    This function finds the paths to the dicoms, only for fMRI, since we use the niftis for the other modalities."""
+    This function finds the paths to the dicoms, only for fMRI, since we use the niftis for the other modalities.
+    More information here: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md"""
     from pathlib import Path
 
     for z in Path(path_to_source_data).rglob("*.zip"):
