@@ -339,6 +339,8 @@ def write_bids(
                 zipfiles=str(dataset_directory) + "/" + metadata["source_zipfile"],
                 bids_path=to / bids_full_path,
             )
+            if metadata["modality_num"] == "20217":
+                import_event_tsv(bids_path=to / bids_full_path)
     return
 
 
@@ -394,3 +396,21 @@ def select_sessions(x: DataFrame) -> Series:
         return x.age_when_attended_assessment_centre_f21003_2_0
     elif x["source_sessions_number"] == "3":
         return x.age_when_attended_assessment_centre_f21003_3_0
+
+
+def import_event_tsv(bids_path: str) -> None:
+    """import the csv containing the events information."""
+    import os
+
+    from fsspec.implementations.local import LocalFileSystem
+
+    fs = LocalFileSystem(auto_mkdir=True)
+    path_to_event_tsv = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        "resources",
+        "fmri",
+        "ukb_event.tsv",
+    )
+    bids_path_extension = str(bids_path) + "_event.tsv"
+    fs.copy(path_to_event_tsv, bids_path_extension)
+    return
