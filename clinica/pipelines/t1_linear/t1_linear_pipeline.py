@@ -66,7 +66,7 @@ class T1Linear(cpe.Pipeline):
 
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
-        from clinica.utils.input_files import T1W_NII
+        from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
         from clinica.utils.inputs import (
             RemoteFileStructure,
             clinica_file_reader,
@@ -77,20 +77,27 @@ class T1Linear(cpe.Pipeline):
 
         root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
         path_to_mask = join(root, "resources", "masks")
-        url_aramis = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/"
-        FILE1 = RemoteFileStructure(
-            filename="ref_cropped_template.nii.gz",
-            url=url_aramis,
-            checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
-        )
-        FILE2 = RemoteFileStructure(
-            filename="mni_icbm152_t1_tal_nlin_sym_09c.nii",
-            url=url_aramis,
-            checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
-        )
+        if self.name == "t1-linear":
+            url_aramis = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/"
+        else:
+            url_aramis = "https://aramislab.paris.inria.fr/files/data/img_flair_linear/"
 
-        self.ref_template = join(path_to_mask, FILE2.filename)
-        self.ref_crop = join(path_to_mask, FILE1.filename)
+        # FILE1 = RemoteFileStructure(
+        #     filename="ref_cropped_template.nii.gz",
+        #     url=url_aramis,
+        #     checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
+        # )
+        # FILE2 = RemoteFileStructure(
+        #     filename="mni_icbm152_t1_tal_nlin_sym_09c.nii",
+        #     url=url_aramis,
+        #     checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
+        # )
+
+        FILE1 = "/Users/matthieu.joulot/Documents/FLAIR_Linear/data_ext/ref_cropped_template.nii.gz"
+        FILE2 = "/Users/matthieu.joulot/Documents/FLAIR_Linear/data_ext/GG-853-FLAIR-1.0mm.nii.gz"
+
+        self.ref_template = FILE2  # join(path_to_mask, FILE2.filename)
+        self.ref_crop = FILE1  # join(path_to_mask, FILE1.filename)
 
         if not (exists(self.ref_template)):
             try:
@@ -135,9 +142,14 @@ class T1Linear(cpe.Pipeline):
         # ========================
         # T1w file:
         try:
-            t1w_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII
-            )
+            if self.name == "t1-linear":
+                t1w_files, _ = clinica_file_reader(
+                    self.subjects, self.sessions, self.bids_directory, T1W_NII
+                )
+            else:
+                t1w_files, _ = clinica_file_reader(
+                    self.subjects, self.sessions, self.bids_directory, Flair_T2W_NII
+                )
         except ClinicaException as e:
             err = (
                 "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
@@ -183,12 +195,13 @@ class T1Linear(cpe.Pipeline):
         # Get substitutions to rename files
         get_ids = npe.Node(
             interface=nutil.Function(
-                input_names=["bids_file"],
+                input_names=["bids_file", "pipeline_name"],
                 output_names=["image_id_out", "subst_ls"],
                 function=get_substitutions_datasink,
             ),
             name="GetIDs",
         )
+        get_ids.inputs.pipeline_name = self.name
         # Find container path from t1w filename
         container_path = npe.Node(
             nutil.Function(
@@ -202,7 +215,6 @@ class T1Linear(cpe.Pipeline):
         self.connect(
             [
                 (self.input_node, container_path, [("t1w", "bids_or_caps_filename")]),
-                (container_path, write_node, [(("container", fix_join, "t1_linear"), "container")]),
                 (self.output_node, get_ids, [("image_id", "bids_file")]),
                 (get_ids, write_node, [("subst_ls", "substitutions")]),
                 (get_ids, write_node, [("image_id_out", "@image_id")]),
@@ -210,7 +222,18 @@ class T1Linear(cpe.Pipeline):
                 (self.output_node, write_node, [("affine_mat", "@affine_mat")]),
             ]
         )
-
+        if self.name == "t1-linear":
+            self.connect(
+                [
+                    (container_path, write_node, [(("container", fix_join, "t1_linear"), "container")]),
+                ]
+            )
+        else:
+            self.connect(
+                [
+                    (container_path, write_node, [(("container", fix_join, "flair_linear"), "container")]),
+                ]
+            )
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [

@@ -8,6 +8,8 @@ These dictionaries describe files to grab.
 # BIDS
 
 T1W_NII = {"pattern": "sub-*_ses-*_t1w.nii*", "description": "T1w MRI"}
+T2W_NII = {"pattern": "sub-*_ses-*_t2w.nii*", "description": "T2w MRI"}
+Flair_T2W_NII = {"pattern": "sub-*_ses-*_flair.nii*", "description": "FLAIR T2w MRI"}
 
 # T1-FreeSurfer
 
@@ -134,11 +136,37 @@ T1W_LINEAR = {
     "needed_pipeline": "t1-linear",
 }
 
+T2W_LINEAR = {
+    "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_T2w.nii.gz",
+    "description": "T2w image registered in MNI152NLin2009cSym space using t2-linear pipeline",
+    "needed_pipeline": "t2-linear",
+}
+
+FLAIR_T2W_LINEAR = {
+    "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_flair.nii.gz",
+    "description": "T2w image registered in MNI152NLin2009cSym space using t2-linear pipeline",
+    "needed_pipeline": "flair-linear",
+}
+
 T1W_LINEAR_CROPPED = {
     "pattern": "*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz",
     "description": "T1W Image registered using t1-linear and cropped "
     "(matrix size 169×208×179, 1 mm isotropic voxels)",
     "needed_pipeline": "t1-linear",
+}
+
+T2W_LINEAR_CROPPED = {
+    "pattern": "*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T2w.nii.gz",
+    "description": "T2W Image registered using t2-linear and cropped "
+    "(matrix size 169×208×179, 1 mm isotropic voxels)",
+    "needed_pipeline": "t2-linear",
+}
+
+FLAIR_T2W_LINEAR_CROPPED = {
+    "pattern": "*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_flair.nii.gz",
+    "description": "T2W Image registered using t2-linear and cropped "
+    "(matrix size 169×208×179, 1 mm isotropic voxels)",
+    "needed_pipeline": "flair-linear",
 }
 
 T1W_EXTENSIVE = {
@@ -153,6 +181,17 @@ T1W_TO_MNI_TRANSFORM = {
     "needed_pipeline": "t1-linear",
 }
 
+T2W_TO_MNI_TRANSFROM = {
+    "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+    "description": "Transformation matrix from T2W image to MNI space using t2-linear pipeline",
+    "needed_pipeline": "t2-linear",
+}
+
+FLAIR_T2W_TO_MNI_TRANSFROM = {
+    "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+    "description": "Transformation matrix from T2W image to MNI space using t2-linear pipeline",
+    "needed_pipeline": "flair-linear",
+}
 # T1-Volume
 
 

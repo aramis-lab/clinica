@@ -25,6 +25,7 @@ warnings.filterwarnings("ignore")
         "T1VolumeRegisterDartel",
         "T1VolumeParcellation",
         "T1Linear",
+        "FlairLinear",
         "T1FreeSurferTemplate",
         "T1FreeSurferLongitudinalCorrection",
     ]
@@ -68,6 +69,9 @@ def test_run_anat(cmdopt, tmp_path, test_name):
 
     elif test_name == "T1Linear":
         run_T1Linear(input_dir, tmp_out_dir, ref_dir, working_dir)
+
+    elif test_name == "FlairLinear":
+        run_FlairLinear(input_dir, tmp_out_dir, ref_dir, working_dir)
 
     elif test_name == "T1FreeSurferTemplate":
         run_T1FreeSurferTemplate(input_dir, tmp_out_dir, ref_dir, working_dir)
@@ -476,6 +480,27 @@ def run_T1Linear(
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters=parameters,
+    )
+    pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
+
+    compare_folders(output_dir / "caps", ref_dir / "caps", output_dir)
+
+
+def run_FlairLinear(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
+    from os.path import abspath, dirname, join
+
+    from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
+
+    parameters = {"uncropped_image": False}
+    # Instantiate pipeline
+    pipeline = T1Linear(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        base_dir=fspath(working_dir),
+        parameters=parameters,
+        name="flair-linear",
     )
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
