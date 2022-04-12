@@ -340,7 +340,7 @@ def write_bids(
                 bids_path=to / bids_full_path,
             )
             if metadata["modality_num"] == "20217":
-                import_event_tsv(bids_path=to / bids_full_path)
+                import_event_tsv(bids_path=to)
     return
 
 
@@ -410,13 +410,11 @@ def import_event_tsv(bids_path: str) -> None:
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
         "resources",
         "fmri",
-        "ukb_event.tsv",
+        "task-facesshapesemotion_bold_events.tsv",
     )
+
     bids_path_extension = (
-        str(Path(Path(Path(bids_path.parent).parent).parent).parent)
-        + "/"
-        + str(bids_path.name)
-        + "_events.tsv"
+        str(bids_path) + "/" + "task-facesshapesemotion_bold_events.tsv"
     )
     fs.copy(path_to_event_tsv, bids_path_extension)
     return
