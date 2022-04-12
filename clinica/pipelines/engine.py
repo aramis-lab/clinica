@@ -241,6 +241,7 @@ class Pipeline(Workflow):
             self.build_core_nodes()
             if not self.has_output_connections():
                 self.build_output_node()
+            self.connect_nodes()
         return self
 
     def run(self, plugin=None, plugin_args=None, update_hash=False, bypass_check=False):
@@ -918,6 +919,15 @@ class Pipeline(Workflow):
 
         Warnings:
             This method does not modify the `Pipeline.output_node` (see the
+            notes about the global architecture in the class documentation).
+        """
+
+    @abc.abstractmethod
+    def connect_nodes(self):
+        """Builds the Pipeline's input data stream node.
+
+        Warnings:
+            This method does not modify the `Pipeline.input_node` (see the
             notes about the global architecture in the class documentation).
         """
 

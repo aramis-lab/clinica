@@ -1,9 +1,10 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config
+import nipype.interfaces.utility as nutil
+import nipype.pipeline.engine as npe
 
 import clinica.pipelines.engine as cpe
-from clinica.utils import input_files
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -55,15 +56,12 @@ class T1Linear(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-        return ["image_id"]
+        return ["output_img", "affine_mat"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from os import pardir
         from os.path import abspath, dirname, exists, join
-
-        import nipype.interfaces.utility as nutil
-        import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
@@ -150,7 +148,7 @@ class T1Linear(cpe.Pipeline):
             print_images_to_process(self.subjects, self.sessions)
             cprint("The pipeline will last approximately 6 minutes per image.")
 
-        read_node = npe.Node(
+        self.read_node = npe.Node(
             name="ReadingFiles",
             iterables=[
                 ("t1w", t1w_files),
@@ -160,30 +158,23 @@ class T1Linear(cpe.Pipeline):
         )
         self.connect(
             [
-                (read_node, self.input_node, [("t1w", "t1w")]),
+                (self.read_node, self.input_node, [("t1w", "t1w")]),
             ]
         )
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        import nipype.interfaces.utility as nutil
-        import nipype.pipeline.engine as npe
-        from nipype.interfaces.io import DataSink
 
-        from clinica.utils.nipype import container_from_filename, fix_join
+        from clinica.utils.nipype import container_from_filename
 
         from .t1_linear_utils import (
-            get_substitutions_datasink,
             build_bids_compliant_name,
             extract_source_entities,
             construct_derivative_entities,
         )
 
-        # Other nodes
-        # =====================================
-
         # Find container path from t1w filename
-        container_path = npe.Node(
+        self.container_path = npe.Node(
             nutil.Function(
                 input_names=["bids_or_caps_filename"],
                 output_names=["container"],
@@ -191,7 +182,7 @@ class T1Linear(cpe.Pipeline):
             ),
             name="ContainerPath",
         )
-        extract_source_entities = npe.Node(
+        self.extract_source_entities = npe.Node(
             nutil.Function(
                 input_names=["ref_file"],
                 output_names=["source_entities", "ext"],
@@ -200,7 +191,7 @@ class T1Linear(cpe.Pipeline):
             name="ExtractSourceEntities",
         )
 
-        extract_derivative_entities = npe.Node(
+        self.extract_derivative_entities = npe.Node(
             nutil.Function(
                 input_names=["pipeline_parameters", "pipeline_entities"],
                 output_names=["derivative_entities"],
@@ -209,10 +200,10 @@ class T1Linear(cpe.Pipeline):
             name="ConstructDerivativeEntities",
         )
 
-        extract_derivative_entities.inputs.pipeline_parameters = self.parameters
-        extract_derivative_entities.inputs.pipeline_entities = self.entities
+        self.extract_derivative_entities.inputs.pipeline_parameters = self.parameters
+        self.extract_derivative_entities.inputs.pipeline_entities = self.entities
 
-        build_bids_compliant_name = npe.Node(
+        self.build_bids_compliant_name = npe.Node(
             nutil.Function(
                 input_names=["source_entities", "derivative_entities", "ext"],
                 output_names=["bids_compliant_output"],
@@ -221,47 +212,32 @@ class T1Linear(cpe.Pipeline):
             name="BuildBIDSCompliantName",
         )
 
-        rename_node = npe.Node(
-            interface=nutil.Rename(format_string="%(bids_file)s"), name="RenameNode"
+        self.rename_node = npe.MapNode(
+            nutil.Rename(format_string="%(bids_name)s", keep_ext=True),
+            iterfield=self.get_output_fields(),
+            name="RenameNode",
         )
 
-        # fmt: off
-
-        self.connect(
-            [
-                (self.input_node, container_path, [("t1w", "bids_or_caps_filename")]),
-                (self.input_node, extract_source_entities, [("t1w", "ref_file")]),
-                (extract_source_entities, build_bids_compliant_name, [("source_entities", "source_entities")]),
-                (extract_source_entities, build_bids_compliant_name, [("ext", "ext")]),
-                (extract_derivative_entities, build_bids_compliant_name, [("derivative_entities", "derivative_entities")]),
-                (build_bids_compliant_name, rename_node, [("bids_compliant_output", "bids_file")]),
-                (self.output_node, rename_node, [("outfile_reg", "in_file")]),
-                (container_path, self.write_node, [(("container", fix_join, "t1_linear"), "container")]),
-                (self.output_node, self.write_node, [("outfile_reg", "@outfile_reg")]),
-                (self.output_node, self.write_node, [("affine_mat", "@affine_mat")]),
-                (build_bids_compliant_name, self.write_node, [("bids_compliant_output", "@image_id")]),
-            ]
+        self.pre_rename_node = npe.Node(
+            name="PreRenameIdentity",
+            interface=nutil.IdentityInterface(fields=[""]),
         )
 
-        if not (self.parameters.get("uncropped_image")):
-            self.connect(
-                [
-                    (self.output_node, self.write_node, [("outfile_crop", "@outfile_crop")]),
-                ]
-            )
-        # fmt: on
+        self.post_rename_node = npe.Node(
+            name="PostRenameIdentity",
+            interface=nutil.IdentityInterface(fields=[""]),
+        )
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        import nipype.interfaces.utility as nutil
-        import nipype.pipeline.engine as npe
+
         from nipype.interfaces import ants
 
         from clinica.utils.filemanip import get_filename_no_ext
 
         from .t1_linear_utils import crop_nifti, print_end_pipeline
 
-        image_id_node = npe.Node(
+        self.image_id_node = npe.Node(
             interface=nutil.Function(
                 input_names=["filename"],
                 output_names=["image_id"],
@@ -274,7 +250,7 @@ class T1Linear(cpe.Pipeline):
         # =====================================
 
         # 1. N4biascorrection by ANTS. It uses nipype interface.
-        n4biascorrection = npe.Node(
+        self.n4biascorrection = npe.Node(
             name="n4biascorrection",
             interface=ants.N4BiasFieldCorrection(
                 dimension=3, save_bias=True, bspline_fitting_distance=600
@@ -282,16 +258,16 @@ class T1Linear(cpe.Pipeline):
         )
 
         # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
-        ants_registration_node = npe.Node(
+        self.ants_registration_node = npe.Node(
             name="antsRegistrationSynQuick", interface=ants.RegistrationSynQuick()
         )
-        ants_registration_node.inputs.fixed_image = self.ref_template
-        ants_registration_node.inputs.transform_type = "a"
-        ants_registration_node.inputs.dimension = 3
+        self.ants_registration_node.inputs.fixed_image = self.ref_template
+        self.ants_registration_node.inputs.transform_type = "a"
+        self.ants_registration_node.inputs.dimension = 3
 
         # 3. Crop image (using nifti). It uses custom interface, from utils file
 
-        cropnifti = npe.Node(
+        self.cropnifti = npe.Node(
             name="cropnifti",
             interface=nutil.Function(
                 function=crop_nifti,
@@ -299,45 +275,63 @@ class T1Linear(cpe.Pipeline):
                 output_names=["output_img", "crop_template"],
             ),
         )
-        cropnifti.inputs.ref_crop = self.ref_crop
+        self.cropnifti.inputs.ref_crop = self.ref_crop
 
         # 4. Print end message
-        print_end_message = npe.Node(
+        self.print_end_message = npe.Node(
             interface=nutil.Function(
                 input_names=["t1w", "final_file"], function=print_end_pipeline
             ),
             name="WriteEndMessage",
         )
 
+    def connect_nodes(self):
+
         # Connection
         # ==========
         # fmt: off
+        from clinica.utils.nipype import fix_join
+
         self.connect(
             [
-                (self.input_node, image_id_node, [("t1w", "filename")]),
-                (self.input_node, n4biascorrection, [("t1w", "input_image")]),
-                (n4biascorrection, ants_registration_node, [("output_image", "moving_image")]),
-                (image_id_node, ants_registration_node, [("image_id", "output_prefix")]),
+                (self.input_node, self.container_path, [("t1w", "bids_or_caps_filename")]),
+                (self.input_node, self.extract_source_entities, [("t1w", "ref_file")]),
+                (self.extract_source_entities, self.build_bids_compliant_name, [("source_entities", "source_entities")]),
+                (self.extract_source_entities, self.build_bids_compliant_name, [("ext", "ext")]),
+                (self.extract_derivative_entities, self.build_bids_compliant_name, [("derivative_entities", "derivative_entities")]),
+                (self.build_bids_compliant_name, self.rename_node, [("bids_compliant_output", "bids_name")]),
+                (self.pre_rename_node, self.rename_node, [("outfile_reg", "out_file")]),
+                (self.pre_rename_node, self.rename_node, [("affine_mat", "affine_mat")]),
+                (self.container_path, self.write_node, [(("container", fix_join, "t1_linear"), "container")]),
+                (self.post_rename_node, self.write_node, [("affine_mat", "affine_mat")]),
+                (self.post_rename_node, self.write_node, [("output_img", "output_img")]),
+                (self.input_node, self.image_id_node, [("t1w", "filename")]),
+                (self.input_node, self.n4biascorrection, [("t1w", "input_image")]),
+                (self.n4biascorrection, self.ants_registration_node, [("output_image", "moving_image")]),
+                (self.image_id_node, self.ants_registration_node, [("image_id", "output_prefix")]),
                 # Connect to DataSink
-                (image_id_node, self.output_node, [("image_id", "image_id")]),
-                (ants_registration_node, self.output_node, [("out_matrix", "affine_mat")]),
-                (n4biascorrection, self.output_node, [("output_image", "outfile_corr")]),
-                (ants_registration_node, self.output_node, [("warped_image", "outfile_reg")]),
-                (self.input_node, print_end_message, [("t1w", "t1w")]),
+                (self.image_id_node, self.pre_rename_node, [("image_id", "image_id")]),
+                (self.ants_registration_node, self.pre_rename_node, [("warped_image", "outfile_reg")]),
+                (self.ants_registration_node, self.pre_rename_node, [("out_matrix", "affine_mat")]),
+                (self.n4biascorrection, self.pre_rename_node, [("output_image", "outfile_corr")]),
+                (self.rename_node, self.post_rename_node, [("affine_mat", "affine_mat")]),
+                (self.input_node, self.print_end_message, [("t1w", "t1w")]),
             ]
         )
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
-                    (ants_registration_node, cropnifti, [("warped_image", "input_img")]),
-                    (cropnifti, self.output_node, [("output_img", "outfile_crop")]),
-                    (cropnifti, print_end_message, [("output_img", "final_file")]),
+                    (self.ants_registration_node, self.cropnifti, [("warped_image", "input_img")]),
+                    (self.rename_node, self.post_rename_node, [("output_img", "output_img")]),
+                    (self.cropnifti, self.print_end_message, [("output_img", "final_file")]),
                 ]
             )
         else:
             self.connect(
                 [
-                    (ants_registration_node, print_end_message, [("warped_image", "final_file")]),
+                    (self.rename_node, self.post_rename_node, [("output_img", "output_img")]),
+                    (self.ants_registration_node, self.print_end_message, [("warped_image", "final_file")]),
                 ]
             )
         # fmt: on
+        return

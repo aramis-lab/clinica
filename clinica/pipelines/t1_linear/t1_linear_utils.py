@@ -23,6 +23,7 @@ def construct_derivative_entities(pipeline_entities, pipeline_parameters):
 
 def build_bids_compliant_name(source_entities, derivative_entities, ext):
 
+    print("extension:", ext)
     compliant_output_file = source_entities + "_" + derivative_entities + "_" + ext
     return compliant_output_file
 
