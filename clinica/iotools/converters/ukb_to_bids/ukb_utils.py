@@ -401,6 +401,7 @@ def select_sessions(x: DataFrame) -> Series:
 def import_event_tsv(bids_path: str) -> None:
     """import the csv containing the events information."""
     import os
+    from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
 
@@ -411,6 +412,11 @@ def import_event_tsv(bids_path: str) -> None:
         "fmri",
         "ukb_event.tsv",
     )
-    bids_path_extension = str(bids_path) + "_event.tsv"
+    bids_path_extension = (
+        str(Path(Path(Path(bids_path.parent).parent).parent).parent)
+        + "/"
+        + str(bids_path.name)
+        + "_events.tsv"
+    )
     fs.copy(path_to_event_tsv, bids_path_extension)
     return
