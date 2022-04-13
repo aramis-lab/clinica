@@ -79,25 +79,27 @@ class T1Linear(cpe.Pipeline):
         path_to_mask = join(root, "resources", "masks")
         if self.name == "t1-linear":
             url_aramis = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/"
+            FILE2 = RemoteFileStructure(
+                filename="mni_icbm152_t1_tal_nlin_sym_09c.nii",
+                url=url_aramis,
+                checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
+            )
         else:
             url_aramis = "https://aramislab.paris.inria.fr/files/data/img_flair_linear/"
+            FILE2 = RemoteFileStructure(
+                filename="GG-853-FLAIR-1.0mm.nii.gz",
+                url=url_aramis,
+                checksum="b1d2d359a4c3671685227bb14014ce50ac232012b628335a4c049e2911c64ce1",
+            )
 
-        # FILE1 = RemoteFileStructure(
-        #     filename="ref_cropped_template.nii.gz",
-        #     url=url_aramis,
-        #     checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
-        # )
-        # FILE2 = RemoteFileStructure(
-        #     filename="mni_icbm152_t1_tal_nlin_sym_09c.nii",
-        #     url=url_aramis,
-        #     checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
-        # )
+        FILE1 = RemoteFileStructure(
+            filename="ref_cropped_template.nii.gz",
+            url=url_aramis,
+            checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
+        )
 
-        FILE1 = "/Users/matthieu.joulot/Documents/FLAIR_Linear/data_ext/ref_cropped_template.nii.gz"
-        FILE2 = "/Users/matthieu.joulot/Documents/FLAIR_Linear/data_ext/GG-853-FLAIR-1.0mm.nii.gz"
-
-        self.ref_template = FILE2  # join(path_to_mask, FILE2.filename)
-        self.ref_crop = FILE1  # join(path_to_mask, FILE1.filename)
+        self.ref_template = join(path_to_mask, FILE2.filename)
+        self.ref_crop = join(path_to_mask, FILE1.filename)
 
         if not (exists(self.ref_template)):
             try:
