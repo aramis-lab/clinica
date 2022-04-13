@@ -93,7 +93,6 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         ],
         axis=1,
     )
-
     return df_source
 
 
@@ -104,9 +103,9 @@ def find_dicom_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
     from pathlib import Path
 
     for z in Path(path_to_source_data).rglob("*.zip"):
-        if str(z).split("_")[1] == "20217":
+        if str(z.name).split("_")[1] == "20217":
             yield [str(z.relative_to(path_to_source_data)), "fMRI/tfMRI.dcm"]
-        elif str(z).split("_")[1] == "20225":
+        elif str(z.name).split("_")[1] == "20225":
             yield [str(z.relative_to(path_to_source_data)), "fMRI/rfMRI.dcm"]
 
 
