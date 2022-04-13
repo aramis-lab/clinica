@@ -410,11 +410,9 @@ def import_event_tsv(bids_path: str) -> None:
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
         "resources",
         "fmri",
-        "task-facesshapesemotion_bold_events.tsv",
+        "task-facesshapesemotion_events.tsv",
     )
 
-    bids_path_extension = (
-        str(bids_path) + "/" + "task-facesshapesemotion_bold_events.tsv"
-    )
+    bids_path_extension = str(bids_path) + "/" + "task-facesshapesemotion_events.tsv"
     fs.copy(path_to_event_tsv, bids_path_extension)
     return
