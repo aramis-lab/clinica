@@ -366,6 +366,10 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
     import zipfile
     from pathlib import Path
 
+    from fsspec.implementations.local import LocalFileSystem
+
+    fs = LocalFileSystem(auto_mkdir=True)
+
     zf = zipfile.ZipFile(zipfiles)
     try:
         os.makedirs(Path(bids_path).parent)
@@ -378,15 +382,20 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
             "dcm2niix",
             "-w",
             "0",
-            "-f",
-            Path(bids_path).name,
-            "-o",
-            Path(bids_path).parent,
         ]
         command += ["-9", "-z", "y"]
         command += ["-b", "y", "-ba", "y"]
         command += [tempdir]
         subprocess.run(command)
+        fmri_image_path = find_largest_imaging_data(tempdir)
+        fs.copy(str(fmri_image_path), str(bids_path) + ".nii.gz")
+        fs.copy(
+            str(fmri_image_path.parent)
+            + "/"
+            + Path(Path(fmri_image_path.name).stem).stem
+            + ".json",
+            str(bids_path) + ".json",
+        )
     return
 
 
@@ -415,3 +424,16 @@ def import_event_tsv(bids_path: str) -> None:
     bids_path_extension = str(bids_path) + "/" + "task-facesshapesemotion_events.tsv"
     fs.copy(path_to_event_tsv, bids_path_extension)
     return
+
+
+def find_largest_imaging_data(path_to_source_data: PathLike) -> PathLike:
+    import os
+    from pathlib import Path
+
+    weight = 0
+    file_to_return = ""
+    for z in Path(path_to_source_data).rglob("*.nii.gz"):
+        if os.path.getsize(z) > weight:
+            weight = os.path.getsize(z)
+            file_to_return = z
+    return Path(file_to_return)
