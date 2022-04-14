@@ -176,6 +176,8 @@ For example, we can provide a `subjects.txt` file with the following content:
 006_S_4485
 ```
 
+If the (Optional) parameter `--xml_path` is given, `adni-to-bids` will try to extract meta data information from the xml files found in the `xml_path` provided. These meta data will be properly combined with other sources of data, and written to their respective files following the BIDS specifications (usually tsv scan files and json sidecar files).
+
 For more information about the optional parameters, you can type:
 
 ```Text

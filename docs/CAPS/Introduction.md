@@ -62,29 +62,29 @@ subjects/
       └─ dwi/
          ├─ dti_based_processing/
          │  ├─ atlas_statistics/
-         │  │  ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-JHUTracts0_res-1x1x1_map-FA_statistics.tsv
-         │  │  ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-JHUTracts0_res-1x1x1_map-MD_statistics.tsv
-         │  │  ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-JHUTracts0_res-1x1x1_map-AD_statistics.tsv
-         │  │  └─ sub-CNLC01_ses-M00_acq-axial_dwi_space-JHUTracts0_res-1x1x1_map-RD_statistics.tsv
+         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-FA_statistics.tsv
+         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-MD_statistics.tsv
+         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-AD_statistics.tsv
+         │  │  └─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-RD_statistics.tsv
          │  ├─ native_space/
-         │  │  ├─ sub-CNLC01_ses-M00_acq-axial_dwi_model-DTI_diffmodel.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-b0_FA.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-b0_MD.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-b0_AD.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-b0_RD.nii.gz
-         │  │  └─ sub-CNLC01_ses-M00_acq-axial_dwi_space-b0_DECFA.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M00_dwi_model-DTI_diffmodel.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_FA.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_MD.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_AD.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_RD.nii.gz
+         │  │  └─ sub-CNLC01_ses-M00_dwi_space-b0_DECFA.nii.gz
          │  └─ normalized_space/
-         │     ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-MNI152Lin_res-1x1x1_AD.nii.gz
-         │     ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-MNI152Lin_res-1x1x1_affine.mat
-         │     ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-MNI152Lin_res-1x1x1_deformation.nii.gz
-         │     ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-MNI152Lin_res-1x1x1_FA.nii.gz
-         │     ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-MNI152Lin_res-1x1x1_MD.nii.gz
-         │     └─ sub-CNLC01_ses-M00_acq-axial_dwi_space-MNI152Lin_res-1x1x1_RD.nii.gz
+         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_AD.nii.gz
+         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_affine.mat
+         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_deformation.nii.gz
+         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_FA.nii.gz
+         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_MD.nii.gz
+         │     └─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_RD.nii.gz
          └─ preprocessing/
-            ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-b0_brainmask.nii.gz
-            ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-b0_preproc.bval
-            ├─ sub-CNLC01_ses-M00_acq-axial_dwi_space-b0_preproc.bvec
-            └─ sub-CNLC01_ses-M00_acq-axial_dwi_space-b0_preproc.nii.gz
+            ├─ sub-CNLC01_ses-M00_dwi_space-b0_brainmask.nii.gz
+            ├─ sub-CNLC01_ses-M00_dwi_space-b0_preproc.bval
+            ├─ sub-CNLC01_ses-M00_dwi_space-b0_preproc.bvec
+            └─ sub-CNLC01_ses-M00_dwi_space-b0_preproc.nii.gz
 ```
 
 ### Group level example

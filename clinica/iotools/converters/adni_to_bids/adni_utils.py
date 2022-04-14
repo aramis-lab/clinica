@@ -1,3 +1,6 @@
+from typing import Union
+
+
 def visits_to_timepoints(
     subject,
     mri_list_subj,
@@ -565,6 +568,18 @@ def remove_fields_duplicated(bids_fields):
     return [x for x in bids_fields if not (x in seen or seen_add(x))]
 
 
+def bids_id_to_loni(bids_id: str) -> Union[str, None]:
+    """Convert a subject id of the form sub-ADNI000S0000
+    back to original format 000_S_0000
+    """
+    import re
+
+    ids = re.findall("\d+", bids_id)  # noqa
+    if len(ids) == 2:
+        return ids[0] + "_S_" + ids[1]
+    return None
+
+
 def filter_subj_bids(df_files, location, bids_ids):
     import clinica.iotools.bids_utils as bids
 
@@ -692,9 +707,14 @@ def create_adni_sessions_dict(
             df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
 
             if not df_filtered.empty:
+                # Get session ID from visit code.
                 df_filtered["session_id"] = df_filtered.apply(
                     lambda x: get_visit_id(x, location), axis=1
                 )
+
+                # Filter rows with invalid session IDs.
+                df_filtered.dropna(subset="session_id", inplace=True)
+
                 if location == "ADNIMERGE.csv":
                     df_filtered["AGE"] = df_filtered.apply(
                         lambda x: update_age(x), axis=1
@@ -871,6 +891,7 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
 
 
 def find_conversion_mod(file_name):
+    from clinica.utils.pet import Tracer
 
     suffix = file_name.split("_")[-1].split(".")[0]
     if suffix == "T1w":
@@ -882,8 +903,8 @@ def find_conversion_mod(file_name):
     elif suffix == "bold":
         return "fmri"
     elif suffix == "pet":
-        tracer = file_name.split("acq-")[1].split("_")[0]
-        if tracer == "av45" or tracer == "fbb":
+        tracer = file_name.split("trc-")[1].split("_")[0]
+        if tracer in (Tracer.AV45, Tracer.FBB):
             return "amyloid_pet"
         else:
             return f"{tracer}_pet"
@@ -1021,6 +1042,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
 
     from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
 
     modality_specific = {
@@ -1032,7 +1054,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
         "dwi": {
             "output_path": "dwi",
-            "output_filename": "_acq-axial_dwi",
+            "output_filename": "_dwi",
             "to_center": False,
             "json": "y",
         },
@@ -1050,31 +1072,31 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
         "fdg": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-fdg_pet",
+            "output_filename": f"_trc-{Tracer.FDG}_pet",
             "to_center": True,
             "json": "n",
         },
         "pib": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-pib_pet",
+            "output_filename": f"_trc-{Tracer.PIB}_pet",
             "to_center": True,
             "json": "n",
         },
         "av45": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-av45_pet",
+            "output_filename": f"_trc-{Tracer.AV45}_pet",
             "to_center": True,
             "json": "n",
         },
         "fbb": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-fbb_pet",
+            "output_filename": f"_trc-{Tracer.FBB}_pet",
             "to_center": True,
             "json": "n",
         },
         "tau": {
             "output_path": "pet",
-            "output_filename": "_task-rest_acq-tau_pet",
+            "output_filename": f"_trc-{Tracer.AV1451}_pet",
             "to_center": True,
             "json": "n",
         },

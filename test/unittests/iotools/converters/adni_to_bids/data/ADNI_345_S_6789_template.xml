@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idaxs xmlns="http://ida.loni.usc.edu" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="/xsds/idaxs_2_0.xsd">
+<project xmlns="">
+ <projectIdentifier>$project</projectIdentifier>
+ <projectDescription>Alzheimer&#039;s Disease Neuroimaging Initiative</projectDescription>
+ <siteKey>site_key</siteKey>
+ <subject>
+  <subjectIdentifier>345_S_6789</subjectIdentifier>
+  <researchGroup>research_group</researchGroup>
+  <subjectSex>M</subjectSex>
+  <subjectInfo item="APOE A1">3</subjectInfo>
+  <subjectInfo item="APOE A2">3</subjectInfo>
+  <visit>
+   <visitIdentifier>ADNI1/GO Month 12</visitIdentifier>
+   <assessment name="MMSE">
+    <component name="MMSE Total Score">
+     <assessmentScore attribute="MMSCORE">mmse_score</assessmentScore>
+    </component>
+   </assessment>
+   <assessment name="GDSCALE">
+    <component name="GDS Total Score">
+     <assessmentScore attribute="GDTOTAL">gdtotal</assessmentScore>
+    </component>
+   </assessment>
+   <assessment name="CDR">
+    <component name="CDR Total Score">
+     <assessmentScore attribute="CDGLOBAL">cd_global</assessmentScore>
+    </component>
+   </assessment>
+   <assessment name="Neuropsychiatric Inventory-Questionnaire (NPI-Q)">
+    <component name="Neuropsychiatric Inventory Q - Total Score">
+     <assessmentScore attribute="NPISCORE">faq_total</assessmentScore>
+    </component>
+   </assessment>
+   <assessment name="Functional Assessment Questionnaire">
+    <component name="FAQ Total score">
+     <assessmentScore attribute="FAQTOTAL">faq_total</assessmentScore>
+    </component>
+   </assessment>
+  </visit>
+  <study>
+   <studyIdentifier>$study_id</studyIdentifier>
+   <subjectAge>77.9726</subjectAge>
+   <ageQualifier>Y</ageQualifier>
+   <weightKg>70.31</weightKg>
+   <postMortem>F</postMortem>
+   <series>
+    <seriesIdentifier>$series_id</seriesIdentifier>
+    <modality>$modality</modality>
+    <dateAcquired>$acq_time</dateAcquired>
+    <seriesLevelMeta>
+     <annotation>
+      <text>UCSD ADNI Pipeline</text>
+     </annotation>
+     <derivedProduct>
+      <imageUID>$proc_id</imageUID>
+      <processedDataLabel>MPR; GradWarp; N3; Scaled</processedDataLabel>
+      <imageType>image volume</imageType>
+      <tissue>All</tissue>
+      <hemisphere>Both</hemisphere>
+      <anatomicStructure>Brain</anatomicStructure>
+      <registration>native</registration>
+      <relatedImage>
+       <imageUID>$image_id</imageUID>
+       <relation>derived from</relation>
+      </relatedImage>
+      <provenanceDetail>
+       <step>1</step>
+       <process>GradWarp</process>
+       <package>UCSD ADNI Pipeline</package>
+       <program>proc_ADNI_script</program>
+       <programVersion>0.2</programVersion>
+       <timestamp>2007-12-06T09:15:02</timestamp>
+       <platform>Linux</platform>
+       <operatingSystem>2.6.9-34.0.1.EL</operatingSystem>
+      </provenanceDetail>
+      <provenanceDetail>
+       <step>2</step>
+       <process>ADNI Pipeline</process>
+       <package>N3</package>
+       <program>nu_correct</program>
+       <programVersion>1.3</programVersion>
+       <timestamp>2007-12-19T23:05:51</timestamp>
+       <platform>Linux</platform>
+       <operatingSystem>2.4.21-32.0.1.EL</operatingSystem>
+      </provenanceDetail>
+      <provenanceDetail>
+       <step>3</step>
+       <process>Scaled</process>
+       <program>scale_nii</program>
+       <programVersion>1.1</programVersion>
+       <programParams>scale=0.999859,0.997669,1.000752</programParams>
+       <timestamp>2007-12-21T15:32:55</timestamp>
+       <platform>Linux</platform>
+       <operatingSystem>2.4.21-32.0.1.EL</operatingSystem>
+      </provenanceDetail>
+      <creationDate>0000-00-00</creationDate>
+      <imageRating>
+       <ratingDescription>2</ratingDescription>
+       <value>2</value>
+      </imageRating>
+     </derivedProduct>
+     <relatedImageDetail>
+      <originalRelatedImage>
+       <imageUID>$image_id</imageUID>
+       <description>MP-RAGE</description>
+       <protocolTerm>
+        <protocol term="Acquisition Type">3D</protocol>
+        <protocol term="Weighting">T1</protocol>
+        <protocol term="Pulse Sequence">RM</protocol>
+        <protocol term="Slice Thickness">1.2</protocol>
+        <protocol term="TE">3.8</protocol>
+        <protocol term="TR">8.592</protocol>
+        <protocol term="TI">1000.0</protocol>
+        <protocol term="Coil">HEAD</protocol>
+        <protocol term="Flip Angle">8.0</protocol>
+        <protocol term="Acquisition Plane">SAGITTAL</protocol>
+        <protocol term="Matrix X">256.0</protocol>
+        <protocol term="Matrix Y">256.0</protocol>
+        <protocol term="Matrix Z">180.0</protocol>
+        <protocol term="Pixel Spacing X">0.9375</protocol>
+        <protocol term="Pixel Spacing Y">0.9375</protocol>
+        <protocol term="Manufacturer">GE MEDICAL SYSTEMS</protocol>
+        <protocol term="Mfg Model">SIGNA HDx</protocol>
+        <protocol term="Field Strength">1.5</protocol>
+       </protocolTerm>
+       <imageRating>
+        <ratingDescription>2</ratingDescription>
+        <value>2</value>
+       </imageRating>
+      </originalRelatedImage>
+     </relatedImageDetail>
+    </seriesLevelMeta>
+   </series>
+  </study>
+ </subject>
+</project>
+</idaxs>

@@ -165,14 +165,14 @@ def same_missing_modality_tsv(file1, file2):
 
     # Extract data and form lists for both files
     subjects1 = list(df1.participant_id)
-    pet_AV45_1 = list(df1["pet_acq-AV45"])
-    pet_FDG_1 = list(df1["pet_acq-FDG"])
+    pet_AV45_1 = list(df1["pet_trc-18FAV45"])
+    pet_FDG_1 = list(df1["pet_trc-18FFDG"])
     t1w1 = list(df1.t1w)
     func_task_rest1 = list(df1["func_task-rest"])
 
     subjects2 = list(df2.participant_id)
-    pet_AV45_2 = list(df2["pet_acq-AV45"])
-    pet_FDG_2 = list(df2["pet_acq-FDG"])
+    pet_AV45_2 = list(df2["pet_trc-18FAV45"])
+    pet_FDG_2 = list(df2["pet_trc-18FFDG"])
     t1w2 = list(df2.t1w)
     func_task_rest2 = list(df2["func_task-rest"])
 
@@ -233,9 +233,13 @@ def tree(dir: Path, file_out: Path):
 
     # Create a file (file_out) with a visual tree representing the file
     # hierarchy at a given directory
+    # Note: does not display empty directories
+
     print(type(dir))
     file_content = ""
     for path in sorted(dir.rglob("*")):
+        if path.is_dir() and not any(path.iterdir()):
+            continue
         depth = len(path.relative_to(dir).parts)
         spacer = "    " * depth
         file_content = file_content + f"{spacer}+ {path.name}\n"

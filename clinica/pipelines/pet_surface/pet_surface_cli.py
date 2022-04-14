@@ -31,12 +31,15 @@ def cli(
 ) -> None:
     """Surface-based processing of PET images.
 
-       ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the tracer used. Frequently used values are 'fdg'
-     or 'av45'.
+       ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the tracer used.
+    Frequently used values are '18FFDG' or '18FAV45'.
 
-       The reference region must be precised to perform intensity normalization. Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
+       The reference region must be specified to perform intensity normalization.
+    Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
 
        PVC_PSF_TSV is the TSV file containing the psf_x, psf_y and psf_z of the PSF for each PET image.
+
+    Prerequisite: You need to have performed the t1-freesurfer pipeline on your T1-weighted MR images.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface/
     """

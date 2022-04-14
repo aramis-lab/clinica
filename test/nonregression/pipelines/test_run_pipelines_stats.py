@@ -7,7 +7,6 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
-from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -28,8 +27,6 @@ def test_name(request):
 
 
 def test_run_stats(cmdopt, tmp_path, test_name):
-    import shutil
-
     base_dir = Path(cmdopt["input"])
     input_dir = base_dir / test_name / "in"
     ref_dir = base_dir / test_name / "ref"
@@ -121,6 +118,7 @@ def run_StatisticsVolume(
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
+    from clinica.utils.pet import Tracer
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "group-UnitTest_covariates.tsv"
@@ -135,7 +133,7 @@ def run_StatisticsVolume(
         "orig_input_data_volume": "pet-volume",
         "contrast": "group",
         # Optional arguments for inputs from pet-volume pipeline
-        "acq_label": "FDG",
+        "acq_label": Tracer.FDG,
         "use_pvc_data": False,
         "suvr_reference_region": "pons",
     }

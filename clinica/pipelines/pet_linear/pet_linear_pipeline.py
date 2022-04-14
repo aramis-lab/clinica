@@ -43,7 +43,8 @@ class PETLinear(cpe.Pipeline):
             A list of (string) output fields name.
         """
         return [
-            "registered_pet, transform_mat",
+            "registered_pet",
+            "transform_mat",
             "registered_pet_in_t1w",
         ]  # Fill here the list
 

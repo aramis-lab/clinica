@@ -13,6 +13,10 @@ This pipeline performs several processing steps for the analysis of PET data on 
 
 This pipeline relies mainly on tools from **[FreeSurfer](https://surfer.nmr.mgh.harvard.edu/)** and **[PETPVC](https://github.com/UCL/PETPVC)** [[Thomas et al., 2016](https://doi.org/10.1088/0031-9155/61/22/7975)].
 
+!!! note "Clinica & BIDS specifications for PET modality"
+    Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
+    See [BIDS](../../BIDS) page for more information.
+
 ## Prerequisite
 
 You need to have performed the [`t1-freesurfer`](../T1_FreeSurfer) pipeline on your T1-weighted MR images.
@@ -37,7 +41,7 @@ where:
 
 - `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
 - `CAPS_DIRECTORY` acts both as an input folder (where the results of the `t1-freesurfer` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-- `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
+- `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
 - The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
 It can be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) or `pons` or `pons2` (used for FDG).
 - `PVC_PSF_TSV` is the TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image.
@@ -95,13 +99,13 @@ Results are stored in the following folder of the
 
 The main output files are (where `*` stands for `<participant_id>_<session_id>`):
 
-- `*_task-rest_acq-<label>_pet_space-<label>_suvr-<label>_pvc-iy_hemi-<label>_fwhm-<value>_projection.mgh`:
+- `*_trc-<label>_pet_space-<label>_suvr-<label>_pvc-iy_hemi-<label>_fwhm-<value>_projection.mgh`:
 PET data that can be mapped onto meshes.
 If the `space` is `fsaverage`, it can be mapped either onto the white or pial surface of FsAverage.
 If the `space` is `native`, it can be mapped onto the white or pial surface of the subject’s surface (i.e. `{l|r}h.white`, `{l|r}h.pial` files from the `t1-freesurfer` pipeline).
 - `*_hemi-{left|right}_midcorticalsurface`:
 surface at equal distance between the white matter/gray matter interface and the pial surface (one per hemisphere).
-- `atlas_statistics/*_task-<label>_acq-<label>_pet_space-<label>_pvc-iy_suvr-<label>_statistics.tsv`:
+- `atlas_statistics/*_trc-<label>_pet_space-<label>_pvc-iy_suvr-<label>_statistics.tsv`:
 TSV files summarizing the regional statistics on the labelled atlases (Desikan and Destrieux).
 
 !!! note
