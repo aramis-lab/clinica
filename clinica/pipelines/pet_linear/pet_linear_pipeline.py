@@ -53,20 +53,13 @@ class PETLinear(cpe.Pipeline):
         from os import pardir
         from os.path import abspath, dirname, exists, join
 
+        import nipype
+        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.exceptions import (
-            ClinicaBIDSError,
-            ClinicaCAPSError,
-            ClinicaException,
-        )
-        from clinica.utils.filemanip import extract_subjects_sessions_from_filename
-        from clinica.utils.input_files import (
-            T1W_NII,
-            T1W_TO_MNI_TRANSFORM,
-            bids_pet_nii,
-        )
+        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.input_files import T1W_TO_MNI_TRANSFORM
         from clinica.utils.inputs import (
             RemoteFileStructure,
             clinica_file_reader,
@@ -114,30 +107,27 @@ class PETLinear(cpe.Pipeline):
                 )
 
         # Inputs from BIDS directory
-        # pet file:
-        PET_NII = bids_pet_nii(self.parameters["acq_label"])
-        try:
-            pet_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, PET_NII
-            )
-        except ClinicaException as e:
-            err = (
-                "Clinica faced error(s) while trying to read pet files in your BIDS directory.\n"
-                + str(e)
-            )
-            raise ClinicaBIDSError(err)
+        output_query = {
+            "t1w": {
+                "datatype": "anat",
+                "suffix": "T1w",
+                "extension": [".nii", ".nii.gz"],
+            },
+            "pet": {
+                "datatype": "pet",
+                "suffix": "pet",
+                "extension": [".nii", ".nii.gz"],
+                "tracer": self.parameters["acq_label"],
+            },
+        }
 
-        # T1w file:
-        try:
-            t1w_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII
-            )
-        except ClinicaException as e:
-            err = (
-                "Clinica faced error(s) while trying to read t1w files in your BIDS directory.\n"
-                + str(e)
-            )
-            raise ClinicaBIDSError(err)
+        bids_data_grabber = nipype.Node(
+            name="bids_data_grabber",
+            interface=nio.BIDSDataGrabber(
+                base_dir=self.bids_directory,
+                output_query=output_query,
+            ),
+        ).run()
 
         # Inputs from t1-linear pipeline
         # Transformation files from T1w files to MNI:
@@ -159,8 +149,8 @@ class PETLinear(cpe.Pipeline):
         read_input_node = npe.Node(
             name="LoadingCLIArguments",
             iterables=[
-                ("t1w", t1w_files),
-                ("pet", pet_files),
+                ("t1w", bids_data_grabber.outputs.t1w),
+                ("pet", bids_data_grabber.outputs.pet),
                 ("t1w_to_mni", t1w_to_mni_transformation_files),
             ],
             synchronize=True,

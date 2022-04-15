@@ -61,17 +61,13 @@ class AnatLinear(cpe.Pipeline):
         from os import pardir
         from os.path import abspath, dirname, exists, join
 
+        import nipype
+        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
-        from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
-        from clinica.utils.inputs import (
-            RemoteFileStructure,
-            clinica_file_reader,
-            fetch_file,
-        )
+        from clinica.utils.inputs import RemoteFileStructure, fetch_file
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -142,18 +138,21 @@ class AnatLinear(cpe.Pipeline):
 
         # Inputs from anat/ folder
         # ========================
-        # anat image file:
-        try:
-            file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
-            anat_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, file
-            )
-        except ClinicaException as e:
-            err = (
-                "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
-                + str(e)
-            )
-            raise ClinicaBIDSError(err)
+        output_query = {
+            "anat": {
+                "datatype": "anat",
+                "suffix": "T1w" if self.name == "t1-linear" else "FLAIR",
+                "extension": [".nii", ".nii.gz"],
+            }
+        }
+
+        bids_data_grabber = nipype.Node(
+            name="bids_data_grabber",
+            interface=nio.BIDSDataGrabber(
+                base_dir=self.bids_directory,
+                output_query=output_query,
+            ),
+        ).run()
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
@@ -161,9 +160,7 @@ class AnatLinear(cpe.Pipeline):
 
         read_node = npe.Node(
             name="ReadingFiles",
-            iterables=[
-                ("anat", anat_files),
-            ],
+            iterables=[("anat", bids_data_grabber.outputs.anat)],
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )

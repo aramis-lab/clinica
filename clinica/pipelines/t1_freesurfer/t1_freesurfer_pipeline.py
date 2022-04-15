@@ -1,9 +1,6 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
-from pathlib import Path
-from typing import Optional
 
-from networkx.generators import atlas
 from nipype import config
 
 import clinica.pipelines.engine as cpe
@@ -83,19 +80,17 @@ class T1FreeSurfer(cpe.Pipeline):
         """
         import os
 
+        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         from clinica.iotools.utils.data_handling import (
             check_volume_location_in_world_coordinate_system,
         )
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.filemanip import (
             extract_subjects_sessions_from_filename,
             save_participants_sessions,
         )
-        from clinica.utils.input_files import T1W_NII
-        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -134,20 +129,19 @@ class T1FreeSurfer(cpe.Pipeline):
 
         # Inputs from anat/ folder
         # ========================
-        # T1w file:
-        try:
-            t1w_files, error_message = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII, False
-            )
-        except ClinicaException as e:
-            err_msg = (
-                "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
-                + str(e)
-            )
-        if error_message:
-            cprint(error_message, lvl="warning")
-        if not t1w_files:
-            raise ClinicaException("Empty dataset or already processed")
+        output_query = {
+            "datatype": "anat",
+            "suffix": "T1w",
+            "extension": [".nii", ".nii.gz"],
+        }
+
+        bids_data_grabber = npe.Node(
+            name="bids_data_grabber",
+            interface=nio.BIDSDataGrabber(
+                base_dir=self.bids_directory,
+                output_query=output_query,
+            ),
+        ).run()
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
@@ -165,14 +159,12 @@ class T1FreeSurfer(cpe.Pipeline):
 
         read_node = npe.Node(
             name="ReadingFiles",
-            iterables=[
-                ("t1w", t1w_files),
-            ],
+            iterables=[("t1w", bids_data_grabber.outputs.t1w)],
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
         check_volume_location_in_world_coordinate_system(
-            t1w_files,
+            bids_data_grabber.outputs.t1w,
             self.bids_directory,
             skip_question=self.parameters["skip_question"],
         )
