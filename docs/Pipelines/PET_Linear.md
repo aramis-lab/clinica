@@ -15,6 +15,10 @@ from the [ANTs](http://stnava.github.io/ANTs/) software package
 resulting in a standardized uptake value ratio (SUVR) map;
 - cropping of the registered images to remove the background.
 
+!!! note "Clinica & BIDS specifications for PET modality"
+    Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
+    See [BIDS](../../BIDS) page for more information.
+
 ## Prerequisites
 
 You need to have performed the [`t1-linear`](../T1_Linear) pipeline on your
@@ -42,8 +46,8 @@ where:
 - `CAPS_DIRECTORY` is the output folder containing the results in a
 [CAPS](../../CAPS/Introduction) hierarchy;
 - `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer
-used (`acq-<acq_label>`). It can be for instance 'fdg' for
-<sup>18</sup>F-fluorodeoxyglucose or 'av45' for <sup>18</sup>F-florbetapir;
+used (`trc-<acq_label>`). It can be for instance '18FFDG' for
+<sup>18</sup>F-fluorodeoxyglucose or '18FAV45' for <sup>18</sup>F-florbetapir;
 - The reference region is used to perform intensity normalization (i.e.
   dividing each voxel of the image by the average uptake in this region)
   resulting in a standardized uptake value ratio (SUVR) map. It can be

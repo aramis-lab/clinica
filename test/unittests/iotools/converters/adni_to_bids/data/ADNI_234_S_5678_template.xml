@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idaxs xmlns="http://ida.loni.usc.edu" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="/xsds/idaxs_2_0.xsd">
+<project xmlns="">
+ <projectIdentifier>$project</projectIdentifier>
+ <projectDescription>Alzheimer&#039;s Disease Neuroimaging Initiative</projectDescription>
+ <siteKey>site_key</siteKey>
+ <subject>
+  <subjectIdentifier>234_S_5678</subjectIdentifier>
+  <researchGroup>research_group</researchGroup>
+  <subjectSex>F</subjectSex>
+  <subjectInfo item="APOE A1">3</subjectInfo>
+  <subjectInfo item="APOE A2">3</subjectInfo>
+  <visit>
+   <visitIdentifier>ADNI2 Year 2 Visit</visitIdentifier>
+   <assessment name="MMSE">
+    <component name="MMSE Total Score">
+     <assessmentScore attribute="MMSCORE">mmse_score</assessmentScore>
+    </component>
+   </assessment>
+   <assessment name="GDSCALE">
+    <component name="GDS Total Score">
+     <assessmentScore attribute="GDTOTAL">gdtotal</assessmentScore>
+    </component>
+   </assessment>
+   <assessment name="CDR">
+    <component name="CDR Total Score">
+     <assessmentScore attribute="CDGLOBAL">cd_global</assessmentScore>
+    </component>
+   </assessment>
+   <assessment name="Functional Assessment Questionnaire">
+    <component name="FAQ Total score">
+     <assessmentScore attribute="FAQTOTAL">faq_total</assessmentScore>
+    </component>
+   </assessment>
+  </visit>
+  <study>
+   <studyIdentifier>$study_id</studyIdentifier>
+   <subjectAge>74.4274</subjectAge>
+   <ageQualifier>Y</ageQualifier>
+   <weightKg>92.0793</weightKg>
+   <postMortem>F</postMortem>
+   <series>
+    <seriesIdentifier>$series_id</seriesIdentifier>
+    <modality>$modality</modality>
+    <dateAcquired>$acq_time</dateAcquired>
+    <seriesLevelMeta>
+     <annotation>
+      <text>Grinder Pipeline</text>
+     </annotation>
+     <derivedProduct>
+      <imageUID>$proc_id</imageUID>
+      <processedDataLabel>MT1; GradWarp; N3m</processedDataLabel>
+      <imageType>image volume</imageType>
+      <tissue>All</tissue>
+      <hemisphere>Both</hemisphere>
+      <anatomicStructure>Brain</anatomicStructure>
+      <registration>native</registration>
+      <relatedImage>
+       <imageUID>$image_id</imageUID>
+       <relation>derived from</relation>
+      </relatedImage>
+      <provenanceDetail>
+       <step>1</step>
+       <process>Gradient Unwarping</process>
+       <package>Grinder Pipeline</package>
+       <program>nifti_unwarp_resample</program>
+       <programVersion>1.0</programVersion>
+       <timestamp>2016-04-07T18:27:50</timestamp>
+       <platform>Linux</platform>
+       <operatingSystem>2.6.32-573.18.1.</operatingSystem>
+      </provenanceDetail>
+      <provenanceDetail>
+       <step>2</step>
+       <process>N3m</process>
+       <package>Grinder Pipeline</package>
+       <program>brain_extraction2</program>
+       <programVersion>2.04</programVersion>
+       <timestamp>2016-04-07T18:50:36</timestamp>
+       <platform>Linux</platform>
+       <operatingSystem>2.6.32-573.18.1.</operatingSystem>
+      </provenanceDetail>
+      <creationDate>0000-00-00</creationDate>
+     </derivedProduct>
+     <relatedImageDetail>
+      <originalRelatedImage>
+       <imageUID>$image_id</imageUID>
+       <description>MPRAGE GRAPPA2</description>
+       <protocolTerm>
+        <protocol term="Acquisition Type">3D</protocol>
+        <protocol term="Weighting">T1</protocol>
+        <protocol term="Pulse Sequence">GR/IR</protocol>
+        <protocol term="Slice Thickness">1.2</protocol>
+        <protocol term="TE">2.95</protocol>
+        <protocol term="TR">2300.0</protocol>
+        <protocol term="TI">900.0</protocol>
+        <protocol term="Coil">PA</protocol>
+        <protocol term="Flip Angle">9.0</protocol>
+        <protocol term="Acquisition Plane">SAGITTAL</protocol>
+        <protocol term="Matrix X">240.0</protocol>
+        <protocol term="Matrix Y">256.0</protocol>
+        <protocol term="Matrix Z">176.0</protocol>
+        <protocol term="Pixel Spacing X">1.05469</protocol>
+        <protocol term="Pixel Spacing Y">1.05469</protocol>
+        <protocol term="Manufacturer">SIEMENS</protocol>
+        <protocol term="Mfg Model">TrioTim</protocol>
+        <protocol term="Field Strength">3.0</protocol>
+       </protocolTerm>
+      </originalRelatedImage>
+     </relatedImageDetail>
+    </seriesLevelMeta>
+   </series>
+  </study>
+ </subject>
+</project>
+</idaxs>

@@ -359,7 +359,7 @@ def suvr_normalization(pet_path, mask):
 
     Args:
         (string) pet_path     : path to the Nifti volume containing PET scan, realigned on upsampled T1
-        (string) mask         : mask of the pons (fdg) or pons+cerebellum (av45) already eroded
+        (string) mask         : mask of the pons (18FFDG) or pons+cerebellum (18FAV45) already eroded
 
     Returns:
         (string) Path to the suvr normalized volume in the current directory
@@ -1291,7 +1291,7 @@ def get_wf(
         # Projection in native space
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*",
-            r"\1/\2_\3_task-rest_acq-"
+            r"\1/\2_\3_trc-"
             + acq_label
             + r"_pet_space-native_suvr-"
             + suvr_reference_region
@@ -1300,7 +1300,7 @@ def get_wf(
         # Projection in fsaverage
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
-            r"\1/\2_\3_task-rest_acq-"
+            r"\1/\2_\3_trc-"
             + acq_label
             + r"_pet_space-fsaverage_suvr-"
             + suvr_reference_region
@@ -1309,7 +1309,7 @@ def get_wf(
         # TSV file for Destrieux atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/destrieux_tsv\/destrieux.tsv",
-            r"\1/atlas_statistics/\2_\3_task-rest_acq-"
+            r"\1/atlas_statistics/\2_\3_trc-"
             + acq_label
             + "_pet_space-destrieux_pvc-iy_suvr-"
             + suvr_reference_region
@@ -1318,7 +1318,7 @@ def get_wf(
         # TSV file for Desikan atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/desikan_tsv\/desikan.tsv",
-            r"\1/atlas_statistics/\2_\3_task-rest_acq-"
+            r"\1/atlas_statistics/\2_\3_trc-"
             + acq_label
             + "_pet_space-desikan_pvc-iy_suvr-"
             + suvr_reference_region
@@ -1334,7 +1334,7 @@ def get_wf(
         # Projection in native space
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*",
-            r"\1/\2_\3_\4_task-rest_acq-"
+            r"\1/\2_\3_\4_trc-"
             + acq_label
             + r"_pet_space-native_suvr-"
             + suvr_reference_region
@@ -1343,7 +1343,7 @@ def get_wf(
         # Projection in fsaverage
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
-            r"\1/\2_\3_\4_task-rest_acq-"
+            r"\1/\2_\3_\4_trc-"
             + acq_label
             + r"_pet_space-fsaverage_suvr-"
             + suvr_reference_region
@@ -1352,7 +1352,7 @@ def get_wf(
         # TSV file for Destrieux atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/destrieux_tsv\/destrieux.tsv",
-            r"\1/atlas_statistics/\2_\3_\4_task-rest_acq-"
+            r"\1/atlas_statistics/\2_\3_\4_trc-"
             + acq_label
             + "_pet_space-destrieux_pvc-iy_suvr-"
             + suvr_reference_region
@@ -1361,7 +1361,7 @@ def get_wf(
         # TSV file for Desikan atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/desikan_tsv\/desikan.tsv",
-            r"\1/atlas_statistics/\2_\3_\4_task-rest_acq-"
+            r"\1/atlas_statistics/\2_\3_\4_trc-"
             + acq_label
             + "_pet_space-desikan_pvc-iy_suvr-"
             + suvr_reference_region

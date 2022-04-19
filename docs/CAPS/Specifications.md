@@ -330,7 +330,7 @@ subjects/
                └─ <source_file>_space-<space>[_pvc-rbv]_suvr-<suvr>_statistics.tsv
 ```
 
-The `_acq-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `fdg` and `av45`).
+The `_trc-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
 
 The `[_pvc-rbv]` label is optional, depending on whether your image has undergone partial volume correction (region-based voxel-wise (RBV) method) or not.
 
@@ -347,12 +347,12 @@ subjects/
       └─ pet/
          └─ surface/
             ├─ atlas_statistics/
-            │  └─ <source_file>_task-<label>_acq-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
+            │  └─ <source_file>_trc-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
             ├─ <source_file>_hemi-{left|right}_midcorticalsurface
-            └─ <source_file>_hemi-{left|right}_task-rest_acq-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
+            └─ <source_file>_hemi-{left|right}_trc-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
 ```
 
-The `_acq-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `fdg` and `av45`).
+The `trc-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
 
 The `[_pvc-iy]` label describes the partial volume correction used in the algorithm for the projection (Iterative Yang).
 
@@ -380,9 +380,9 @@ subjects/
          └─ <long_id>/
             └─ surface_longitudinal/
                ├─ atlas_statistics/
-               │  └─ sub-<label>_ses-<lalbel>_long-<label>_task-<label>_acq-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
+               │  └─ sub-<label>_ses-<lalbel>_long-<label>_trc-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
                ├─ sub-<label>_ses-<lalbel>_long-<label>_hemi-{left|right}_midcorticalsurface
-               └─ sub-<label>_ses-<lalbel>_long-<label>_task-rest_acq-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
+               └─ sub-<label>_ses-<lalbel>_long-<label>_trc-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
 ```
 
 Explanations on the key/values can be found on the
@@ -542,7 +542,7 @@ groups/
 └─ <group_id>/
    ├─ <group_id>_participants.tsv
    └─ statistics_volume/
-      └─ group_comparison_measure-{graymatter|fdg|av45|<custom_user>}/
+      └─ group_comparison_measure-{graymatter|18FFDG|18FAV45|<custom_user>}/
          ├─ <group_id>_{RPV|mask}.nii
          ├─ <group_id>_covariate-<covariate>_measure-<label>_fwhm-<n>_regressionCoefficient.nii
          ├─ <group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_{TStatistics|contrast}.nii
@@ -565,7 +565,7 @@ Suffixes are described in the table below:
 
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measurement of `<group_1>` is lower than (`lt`) that of `<group_2>`".
 
-The value for `measure` can be `graymatter` (output of `t1-volume`), `fdg` or `av45` (output of `pet-volume`), or user-defined maps.
+The value for `measure` can be `graymatter` (output of `t1-volume`), `18FFDG` or `18FAV45` (output of `pet-volume`), or user-defined maps.
 The value for `fwhm` corresponds to the size of the volume-based smoothing in mm.
 
 Corrected results are stored under the following hierarchy:
@@ -615,17 +615,17 @@ At the subject level, it contains SVM regularization of gray matter/white matter
 At the group level, it contains the Gram matrix with respect to gray matter/white matter/CSF maps needed for the SVM regularization and the information regarding the regularization.
 An example of JSON file is:
 
-```javascript
+```json
 {
     "MaxDeltaT": "0.0025",
-    "Alpha": "0.0025", // Alpha such that: delta_t = MaxDeltaT * Alpha
+    "Alpha": "0.0025",
     "Epsilon": "10E-6",
     "BoundaryConditions": "TimeInvariant",
     "SigmaLoc": "10",
     "TimeStepMax": "0.07760115580830161",
     "SpatialPrior": "Tissues (GM,WM,CSF)",
     "RegularizationType": "Fisher",
-    "FWHM": "4",
+    "FWHM": "4"
 }
 ```
 
@@ -645,7 +645,7 @@ Possible values for `_map-<map>` key/value are:
 
 - For DWI: `FA` (fractional anisotropy), `MD` (mean diffusivity, also called apparent diffusion coefficient), `AD` (axial diffusivity), `RD` (radial diffusivity), `NDI` (neurite density index), `ODI` (orientation dispersion index) and `FWF` (free water fraction).
 
-- For PET: `fdg` (<sup>18</sup>F-Fluorodeoxyglucose), `av45` (<sup>18</sup>F-Florbetapir).
+- For PET: `18FFDG` (<sup>18</sup>F-Fluorodeoxyglucose), `18FAV45` (<sup>18</sup>F-Florbetapir), `18FAV1451` (<sup>18</sup>F-Flortaucipir), `11CPIB` (<sup>11</sup>C-Pittsburgh Compound-B), `18FFBB` (<sup>18</sup>F-Florbetaben) and `18FFMM` (<sup>18</sup>F-Flutemetamol).
 
 !!! Example
     Content of `sub-CLNC01_ses-M00_T1w_space-Hammers_map-graymatter_statistics.tsv`:

@@ -60,6 +60,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
         find_image_path,
         get_images_pet,
     )
+    from clinica.utils.pet import Tracer
 
     pet_fdg_col = [
         "Phase",
@@ -140,6 +141,8 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
         pet_fdg_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
-    images.to_csv(path.join(conversion_dir, "fdg_pet_paths.tsv"), sep="\t", index=False)
+    images.to_csv(
+        path.join(conversion_dir, f"{Tracer.FDG}_pet_paths.tsv"), sep="\t", index=False
+    )
 
     return images

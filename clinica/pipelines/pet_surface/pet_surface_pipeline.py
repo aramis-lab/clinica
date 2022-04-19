@@ -406,7 +406,9 @@ class PetSurface(cpe.Pipeline):
         full_pipe.inputs.session_id = self.sessions
         full_pipe.inputs.caps_dir = self.caps_directory
         full_pipe.inputs.pvc_psf_tsv = self.parameters["pvc_psf_tsv"]
-        full_pipe.inputs.working_directory_subjects = self.base_dir
+        full_pipe.inputs.working_directory_subjects = os.path.join(
+            self.base_dir, self.name
+        )
         full_pipe.inputs.acq_label = self.parameters["acq_label"]
         full_pipe.inputs.suvr_reference_region = self.parameters[
             "suvr_reference_region"

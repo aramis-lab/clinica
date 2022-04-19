@@ -492,6 +492,7 @@ def create_file(image, modality, bids_dir, overwrite):
 
     from clinica.iotools.bids_utils import json_from_dcm
     from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
 
     subject = image.Subjects_ID
@@ -517,7 +518,7 @@ def create_file(image, modality, bids_dir, overwrite):
     else:
         cprint(
             msg=(
-                f"[{modality.upper()}] Processing subject {subject}"
+                f"[{modality.upper()}] Processing subject {subject} "
                 f"in session {session}"
             ),
             lvl="info",
@@ -530,10 +531,9 @@ def create_file(image, modality, bids_dir, overwrite):
         output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
         output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
     elif modality in ["flute", "pib", "av45"]:
+        tracer = {"flute": Tracer.FMM, "pib": Tracer.PIB, "av45": Tracer.AV45}[modality]
         output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
-        output_filename = (
-            f"sub-AIBL{subject}_ses-{session}_task-rest_acq-{modality}_pet"
-        )
+        output_filename = f"sub-AIBL{subject}_ses-{session}_trc-{tracer}_pet"
 
     # image is saved following BIDS specifications
     if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
@@ -594,7 +594,10 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
         # has an extra column for some rows. However, each CSV file (regarding PET tracers)
         # contains the same columns. The usecols fixes this issue.
         df_pet = pds.read_csv(
-            path_to_csv_pet_modality, sep=",|;", usecols=list(range(0, 36))
+            path_to_csv_pet_modality,
+            sep=",|;",
+            usecols=list(range(0, 36)),
+            engine="python",
         )
         images = find_path_to_pet_modality(path_to_dataset, df_pet)
 
@@ -639,7 +642,6 @@ def create_participants_df_AIBL(
     """
     import glob
     import os
-    import re
     from os import path
 
     import numpy as np
@@ -719,19 +721,19 @@ def create_participants_df_AIBL(
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
-    # Adding participant_id column with BIDS ids
-    for i in range(0, len(participant_df)):
-        value = participant_df["alternative_id_1"][i]
-        participant_df["participant_id"][i] = "sub-AIBL" + str(value)
-        participant_df["date_of_birth"][i] = re.search(
-            "/([0-9].*)", str(participant_df["date_of_birth"][i])
-        ).group(1)
-        if participant_df["sex"][i] == 1:
-            participant_df["sex"][i] = "M"
-        else:
-            participant_df["sex"][i] = "F"
+    # Compute BIDS-compatible participant ID.
+    participant_df["participant_id"] = "sub-AIBL" + participant_df["alternative_id_1"]
 
-    participant_df.replace("-4", "n/a")
+    # Keep year-of-birth only.
+    participant_df["date_of_birth"] = participant_df["date_of_birth"].str.extract(
+        r"/(\d{4}).*"
+    )
+
+    # Normalize sex value.
+    participant_df["sex"] = participant_df["sex"].map({1: "M", 2: "F"}).fillna("n/a")
+
+    # Normalize known NA values.
+    participant_df.replace(-4, "n/a", inplace=True)
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:

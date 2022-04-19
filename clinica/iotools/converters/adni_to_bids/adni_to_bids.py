@@ -58,12 +58,14 @@ class AdniToBids(Converter):
         out_path: str,
         clinical_data_only: bool = False,
         subjects_list_path: Optional[str] = None,
+        xml_path: Optional[str] = None,
     ):
         """Convert the clinical data of ADNI specified into the file clinical_specifications_adni.xlsx.
 
         Args:
             clinical_data_dir:  path to the clinical data directory
             out_path: path to the BIDS directory
+            xml_path: path to the XML metadata files
         """
         import os
         from os import path
@@ -71,6 +73,8 @@ class AdniToBids(Converter):
         import clinica.iotools.bids_utils as bids
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
         from clinica.utils.stream import cprint
+
+        from .adni_json import create_json_metadata
 
         clinic_specs_path = path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
@@ -131,6 +135,18 @@ class AdniToBids(Converter):
         if os.path.exists(conversion_path):
             cprint("Creating scans files...")
             adni_utils.create_adni_scans_files(conversion_path, bids_subjs_paths)
+
+        if xml_path is not None:
+            if os.path.exists(xml_path):
+                create_json_metadata(bids_subjs_paths, bids_ids, xml_path)
+            else:
+                cprint(
+                    msg=(
+                        f"Clinica was unable to find {xml_path}, "
+                        "skipping xml metadata extraction."
+                    ),
+                    lvl="warning",
+                )
 
     def convert_images(
         self,

@@ -289,7 +289,6 @@ class T1Linear(cpe.Pipeline):
                 # Connect to DataSink
                 (image_id_node, self.output_node, [("image_id", "image_id")]),
                 (ants_registration_node, self.output_node, [("out_matrix", "affine_mat")]),
-                (n4biascorrection, self.output_node, [("output_image", "outfile_corr")]),
                 (ants_registration_node, self.output_node, [("warped_image", "outfile_reg")]),
                 (self.input_node, print_end_message, [("t1w", "t1w")]),
             ]

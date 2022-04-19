@@ -7,7 +7,6 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
-from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -27,8 +26,6 @@ def test_name(request):
 
 
 def test_run_ml(cmdopt, tmp_path, test_name):
-    import shutil
-
     base_dir = Path(cmdopt["input"])
     input_dir = base_dir / test_name / "in"
     ref_dir = base_dir / test_name / "ref"
@@ -58,6 +55,7 @@ def run_WorkflowsML(
         VertexBasedRepHoldOutDualSVM,
         VoxelBasedKFoldDualSVM,
     )
+    from clinica.utils.pet import Tracer
 
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     warnings.filterwarnings("ignore", category=UserWarning)
@@ -70,6 +68,8 @@ def run_WorkflowsML(
 
     output_dir1 = output_dir / "VertexBasedRepHoldOutDualSVM"
 
+    tracer = Tracer.FDG
+
     wf1 = VertexBasedRepHoldOutDualSVM(
         caps_directory=fspath(caps_dir),
         subjects_visits_tsv=fspath(tsv),
@@ -77,7 +77,7 @@ def run_WorkflowsML(
         group_label=group_label,
         output_dir=fspath(output_dir1),
         image_type="PET",
-        acq_label="fdg",
+        acq_label=tracer,
         suvr_reference_region="pons",
         fwhm=20,
         n_threads=2,
@@ -97,7 +97,7 @@ def run_WorkflowsML(
         image_type="PET",
         atlas="AICHA",
         output_dir=fspath(output_dir2),
-        acq_label="fdg",
+        acq_label=tracer,
         suvr_reference_region="pons",
         use_pvc_data=False,
         n_threads=2,
@@ -133,7 +133,7 @@ def run_WorkflowsML(
         group_label=group_label,
         image_type="PET",
         output_dir=fspath(output_dir4),
-        acq_label="fdg",
+        acq_label=tracer,
         suvr_reference_region="pons",
         fwhm=8,
         n_threads=2,

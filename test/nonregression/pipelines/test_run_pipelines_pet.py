@@ -7,10 +7,11 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
-from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
+
+from clinica.utils.pet import Tracer
 
 warnings.filterwarnings("ignore")
 
@@ -36,9 +37,11 @@ def run_PETVolume(
     # Arrange
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
+    tracer = Tracer.FDG
+
     parameters = {
         "group_label": "UnitTest",
-        "acq_label": "fdg",
+        "acq_label": tracer,
         "suvr_reference_region": "pons",
         "skip_question": False,
     }
@@ -69,7 +72,7 @@ def run_PETVolume(
             / "ses-M00/pet/preprocessing/group-UnitTest"
             / (
                 sub
-                + "_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+                + f"_ses-M00_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
             )
         )
         for sub in subjects
@@ -79,7 +82,7 @@ def run_PETVolume(
             ref_dir
             / (
                 sub
-                + "_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+                + f"_ses-M00_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
             )
         )
         for sub in subjects
@@ -101,7 +104,7 @@ def run_PETLinear(
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
-    parameters = {"acq_label": "fdg", "suvr_reference_region": "pons"}
+    parameters = {"acq_label": Tracer.FDG, "suvr_reference_region": "pons"}
 
     # Instantiate pipeline
     pipeline = PETLinear(
@@ -128,8 +131,10 @@ def run_PETSurfaceCrossSectional(
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
+    tracer = Tracer.FDG
+
     parameters = {
-        "acq_label": "FDG",
+        "acq_label": tracer,
         "suvr_reference_region": "pons",
         "pvc_psf_tsv": fspath(input_dir / "subjects.tsv"),
         "longitudinal": False,
@@ -151,7 +156,7 @@ def run_PETSurfaceCrossSectional(
             output_dir
             / "caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface"
             / (
-                "sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
+                f"sub-ADNI011S4105_ses-M00_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
                 + h
                 + "_fwhm-"
                 + str(f)
@@ -165,7 +170,7 @@ def run_PETSurfaceCrossSectional(
         (
             ref_dir
             / (
-                "sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
+                f"sub-ADNI011S4105_ses-M00_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
                 + h
                 + "_fwhm-"
                 + str(f)
@@ -186,8 +191,6 @@ def run_PETSurfaceCrossSectional(
 
 
 def test_run_pet(cmdopt, tmp_path, test_name):
-    import shutil
-
     base_dir = Path(cmdopt["input"])
     input_dir = base_dir / test_name / "in"
     ref_dir = base_dir / test_name / "ref"
@@ -228,8 +231,10 @@ def test_run_pet(cmdopt, tmp_path, test_name):
 #     clean_folder(join(working_dir, 'PETSurfaceLongitudinal'))
 #     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 #
+#     tracer = Tracer.FDG
+#
 #     parameters = {
-#         'acq_label': 'FDG',
+#         'acq_label': Tracer.FDG,
 #         'suvr_reference_region': 'pons',
 #         'pvc_psf_tsv': join(root, 'in', 'subjects.tsv'),
 #         'longitudinal': True
@@ -250,12 +255,12 @@ def test_run_pet(cmdopt, tmp_path, test_name):
 #     long_id = 'long-M00M06M12M18M24'
 #     image_id = part_id + '_' + sess_id + '_' + long_id
 #     out_files = [join(root, 'out', 'caps', 'subjects', part_id, sess_id, 'pet', long_id, 'surface_longitudinal',
-#                       image_id + '_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+#                       image_id + f'_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
 #                       + h + '_fwhm-' + str(f) + '_projection.mgh')
 #                  for h in ['lh', 'rh']
 #                  for f in [0, 5, 10, 15, 20, 25]]
 #     ref_files = [join(root, 'ref',
-#                       image_id + '_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+#                       image_id + '_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
 #                       + h + '_fwhm-' + str(f) + '_projection.mgh')
 #                  for h in ['lh', 'rh']
 #                  for f in [0, 5, 10, 15, 20, 25]]

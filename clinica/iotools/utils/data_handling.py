@@ -325,7 +325,8 @@ def find_mods_and_sess(bids_dir):
                 for pet_path in list_pet_paths:
                     pet_name = pet_path.split(os.sep)[-1].split(".")[0]
                     pet_name_tokens = pet_name.split("_")
-                    pet_acq = pet_name_tokens[3]
+                    # FIXME: Use an appropriate parser for entity extraction.
+                    pet_acq = pet_name_tokens[2]
                     if "pet" in mods_dict:
                         if "pet_" + pet_acq not in mods_dict["pet"]:
                             mods_dict["pet"].append("pet_" + pet_acq)
@@ -556,7 +557,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
     subjects_paths_lists.sort()
 
     if len(subjects_paths_lists) == 0:
-        raise IOError("No subjects found or dataset not BIDS complaint.")
+        raise IOError("No subjects found or dataset not BIDS compliant.")
     # Check the modalities available for each session
     for ses in sessions_found:
         for sub_path in subjects_paths_lists:
@@ -807,7 +808,7 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     from glob import glob
     from os import listdir
     from os.path import basename, isdir, isfile, join
-    from shutil import copy, copy2, copytree
+    from shutil import copy, copytree
 
     from clinica.utils.exceptions import ClinicaBIDSError
     from clinica.utils.inputs import check_bids_folder
@@ -1157,6 +1158,7 @@ def get_world_coordinate_of_center(nii_volume):
 
     import nibabel as nib
     import numpy as np
+    from nibabel.filebasedimages import ImageFileError
 
     from clinica.utils.stream import cprint
 
@@ -1165,7 +1167,7 @@ def get_world_coordinate_of_center(nii_volume):
 
     try:
         orig_nifti = nib.load(nii_volume)
-    except nib.filebasedimages.ImageFileError:
+    except ImageFileError:
         cprint(
             msg=f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI file ?",
             lvl="warning",

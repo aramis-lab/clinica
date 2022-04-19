@@ -29,7 +29,7 @@ where:
 
 Pipeline options if you use inputs from the `pet-volume` pipeline:
 
-- `--acq_label`: name of the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
+- `--acq_label`: name of the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
 - `--suvr_reference_region`: reference region used to perform intensity normalization
 (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a SUVR map.
 It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
