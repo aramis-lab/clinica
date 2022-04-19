@@ -225,14 +225,9 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     df_clinical = df_clinical.assign(
         sessions_month=lambda df: (df.age_at_session - df.age_at_first_session) * 12
     )
-    try:
-        df_clinical = df_clinical.assign(
-            sessions=lambda df: df.sessions_month.map(lambda x: f"ses-M{int(x):03d}")
-        )
-    except:
-        raise ValueError(
-            "One of the session is missing the age at the session.Please update your clinical data tsv."
-        )
+    df_clinical = df_clinical.assign(
+        sessions=lambda df: df.sessions_month.map(lambda x: f"ses-M{int(x):03d}")
+    )
     df_clinical = df_clinical.assign(
         bids_filename=lambda df: (
             "sub-UKB"
