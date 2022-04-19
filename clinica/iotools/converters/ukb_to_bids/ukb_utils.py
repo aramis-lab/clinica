@@ -1,3 +1,4 @@
+from cmath import nan
 from os import PathLike
 from typing import Dict, Iterable, List, Tuple
 
@@ -217,16 +218,21 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     df_clinical = df_clinical.assign(
         age_at_first_session=lambda df: df.age_when_attended_assessment_centre_f21003_2_0
     )
-    df_clinical["age_at_sessions"] = df_clinical.apply(
+    df_clinical["age_at_session"] = df_clinical.apply(
         lambda df: select_sessions(df), axis=1
     )
+    df_clinical = df_clinical[df_clinical["age_at_session"].notna()]
     df_clinical = df_clinical.assign(
-        sessions_month=lambda df: (df.age_at_sessions - df.age_at_first_session) * 12
+        sessions_month=lambda df: (df.age_at_session - df.age_at_first_session) * 12
     )
-
-    df_clinical = df_clinical.assign(
-        sessions=lambda df: df.sessions_month.map(lambda x: f"ses-M{x:03d}")
-    )
+    try:
+        df_clinical = df_clinical.assign(
+            sessions=lambda df: df.sessions_month.map(lambda x: f"ses-M{int(x):03d}")
+        )
+    except:
+        raise ValueError(
+            "One of the session is missing the age at the session.Please update your clinical data tsv."
+        )
     df_clinical = df_clinical.assign(
         bids_filename=lambda df: (
             "sub-UKB"
@@ -400,10 +406,38 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
 
 
 def select_sessions(x: DataFrame) -> Series:
-    if x["source_sessions_number"] == "2":
+    from clinica.utils.stream import cprint
+
+    if (
+        x["source_sessions_number"] == "2"
+        and type(x.age_when_attended_assessment_centre_f21003_2_0) != float
+    ):
         return x.age_when_attended_assessment_centre_f21003_2_0
-    elif x["source_sessions_number"] == "3":
+    elif (
+        x["source_sessions_number"] == "2"
+        and type(x.age_when_attended_assessment_centre_f21003_2_0) == float
+    ):
+        cprint(
+            msg=f"The subject {x.eid} doesn't have the age for the imaging session number one (age_when_attended_assessment_centre_f21003_2_0)."
+            f"It will not be converted. To have it converted, please update your clinical data.",
+            lvl="warning",
+        )
+        return nan
+    elif (
+        x["source_sessions_number"] == "3"
+        and type(x.age_when_attended_assessment_centre_f21003_3_0) != float
+    ):
         return x.age_when_attended_assessment_centre_f21003_3_0
+    elif (
+        x["source_sessions_number"] == "3"
+        and type(x.age_when_attended_assessment_centre_f21003_3_0) == float
+    ):
+        cprint(
+            msg=f"The subject {x.eid} doesn't have the age for the imaging session number two (age_when_attended_assessment_centre_f21003_3_0)."
+            f"It will not be converted. To have it converted, please update your clinical data.",
+            lvl="warning",
+        )
+        return nan
 
 
 def import_event_tsv(bids_path: str) -> None:
