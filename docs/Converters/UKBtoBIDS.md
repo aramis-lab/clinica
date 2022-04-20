@@ -27,7 +27,7 @@ Please note that this converter processes the following modalities :
 - rsfMRI (dicom)
 
 !!! Chosen files    
-    Whenever is possible, the converter uses the rawest files found. This decision allows the user to choose the processing needed. When available the ocnverter get the associated json.
+    Whenever is possible, the converter uses the rawest files found. This decision allows the user to choose the processing needed. When available the converter get the associated json.
 | Modality    | Chosen image(s) | Justification |
 | :----------:|:---------------:|:-------:|
 | T1W                     | T1.nii.gz       | Defaced and cropped so there is no neck. The rawest image would be the simply defaced one, but brain studies usually are not interested in the region of the neck. No other corrections are included. |
