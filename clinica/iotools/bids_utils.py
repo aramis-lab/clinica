@@ -1,7 +1,10 @@
 """Methods used by BIDS converters."""
 
+from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import BinaryIO, List, Optional, Union
+
+from pandas import DataFrame
 
 BIDS_VALIDATOR_CONFIG = {
     "ignore": [
