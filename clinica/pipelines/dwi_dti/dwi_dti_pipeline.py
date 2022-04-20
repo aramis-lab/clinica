@@ -213,9 +213,9 @@ class DwiDti(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.ants import ApplyTransforms, RegistrationSynQuick
+        from nipype.interfaces.mrtrix3 import TensorMetrics
         from nipype.interfaces.mrtrix.preprocess import DWI2Tensor
 
-        from clinica.lib.nipype.interfaces.mrtrix3.utils import TensorMetrics
         from clinica.utils.check_dependency import check_environment_variable
 
         from .dwi_dti_utils import (
