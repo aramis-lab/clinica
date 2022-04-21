@@ -14,7 +14,7 @@ The UK Biobank to BIDS converter assumes that the user has already applied to ge
 
 The imaging data can be downloaded and extracted using [this tutorial](https://biobank.ctsu.ox.ac.uk/~bbdatan/Accessing_UKB_data_v2.3.pdf). The clinical data can be extracted using the information from [this repository](https://github.com/kenhanscombe/ukbtools).
 
-Be careful, the file `clinical_data.tsv` needs to contain the following informations about the subject: sex, year of birth, age at recruitment, age at sessions.
+Be careful, the file `clinical_data.csv` needs to contain the following informations about the subject: sex, year of birth, age at recruitment, age at sessions (there are two columns as there are two imaging sessions). The names of the columns should be kept as they are when downloaded using `ukbconv` using options `csv`.
 
 ## Supported modalities
 

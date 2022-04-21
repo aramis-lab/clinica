@@ -16,7 +16,7 @@ def find_clinical_data(
 
     # Read the xls
     try:
-        image_data_file = list(Path(clinical_data_directory).glob("*.tsv"))
+        image_data_file = list(Path(clinical_data_directory).glob("*.csv"))
     except StopIteration:
         raise FileNotFoundError("Clinical data file not found.")
 
@@ -25,20 +25,31 @@ def find_clinical_data(
         raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
     if len(image_data_file) > 1:
         raise ValueError("Too many data files found, expected one. Aborting.")
-    df_clinical = pd.read_csv(str(image_data_file[0]), sep="\t")
+    df_clinical = pd.read_csv(
+        str(image_data_file[0]),
+        usecols=["eid", "31-0.0", "34-0.0", "21022-0.0", "21003-2.0", "21003-3.0"],
+    )
     cprint(msg="All clinical data have been found", lvl="info")
-
     required_columns = [
-        "age_when_attended_assessment_centre_f21003_2_0",
-        "age_when_attended_assessment_centre_f21003_3_0",
-        "year_of_birth_f34_0_0",
-        "age_at_recruitment_f21022_0_0",
-        "age_when_attended_assessment_centre_f21003_2_0",
-        "sex_f31_0_0",
+        "eid",
+        "31-0.0",
+        "34-0.0",
+        "21022-0.0",
+        "21003-2.0",
+        "21003-3.0",
     ]
     missing_columns = set(required_columns).difference(set(df_clinical.columns))
     if missing_columns:
         raise ValueError(f"Required columns {missing_columns} not found")
+    df_clinical = df_clinical.rename(
+        columns={
+            "31-0.0": "sex_f31_0_0",
+            "34-0.0": "year_of_birth_f34_0_0",
+            "21022-0.0": "age_at_recruitment_f21022_0_0",
+            "21003-2.0": "age_when_attended_assessment_centre_f21003_2_0",
+            "21003-3.0": "age_when_attended_assessment_centre_f21003_3_0",
+        }
+    )
     return df_clinical
 
 
@@ -405,12 +416,12 @@ def select_sessions(x: DataFrame) -> Series:
 
     if (
         x["source_sessions_number"] == "2"
-        and type(x.age_when_attended_assessment_centre_f21003_2_0) != float
+        and type(x.age_when_attended_assessment_centre_f21003_2_0) != nan
     ):
         return x.age_when_attended_assessment_centre_f21003_2_0
     elif (
         x["source_sessions_number"] == "2"
-        and type(x.age_when_attended_assessment_centre_f21003_2_0) == float
+        and type(x.age_when_attended_assessment_centre_f21003_2_0) == nan
     ):
         cprint(
             msg=f"The subject {x.eid} doesn't have the age for the imaging session number one (age_when_attended_assessment_centre_f21003_2_0)."
@@ -420,12 +431,12 @@ def select_sessions(x: DataFrame) -> Series:
         return nan
     elif (
         x["source_sessions_number"] == "3"
-        and type(x.age_when_attended_assessment_centre_f21003_3_0) != float
+        and type(x.age_when_attended_assessment_centre_f21003_3_0) != nan
     ):
         return x.age_when_attended_assessment_centre_f21003_3_0
     elif (
         x["source_sessions_number"] == "3"
-        and type(x.age_when_attended_assessment_centre_f21003_3_0) == float
+        and type(x.age_when_attended_assessment_centre_f21003_3_0) == nan
     ):
         cprint(
             msg=f"The subject {x.eid} doesn't have the age for the imaging session number two (age_when_attended_assessment_centre_f21003_3_0)."
