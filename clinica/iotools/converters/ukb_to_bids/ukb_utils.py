@@ -418,10 +418,6 @@ def select_sessions(x: DataFrame) -> Series:
         x["source_sessions_number"] == "2"
         and x.age_when_attended_assessment_centre_f21003_2_0 != nan
     ):
-        print("problem: ", x.age_when_attended_assessment_centre_f21003_2_0)
-        print("problem: ", type(x.age_when_attended_assessment_centre_f21003_2_0))
-        print("problem: ", x.age_when_attended_assessment_centre_f21003_3_0)
-        print("problem: ", type(x.age_when_attended_assessment_centre_f21003_3_0))
         return x.age_when_attended_assessment_centre_f21003_2_0
     elif (
         x["source_sessions_number"] == "2"
