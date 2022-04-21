@@ -416,12 +416,16 @@ def select_sessions(x: DataFrame) -> Series:
 
     if (
         x["source_sessions_number"] == "2"
-        and type(x.age_when_attended_assessment_centre_f21003_2_0) != nan
+        and x.age_when_attended_assessment_centre_f21003_2_0 != nan
     ):
+        print("problem: ", x.age_when_attended_assessment_centre_f21003_2_0)
+        print("problem: ", type(x.age_when_attended_assessment_centre_f21003_2_0))
+        print("problem: ", x.age_when_attended_assessment_centre_f21003_3_0)
+        print("problem: ", type(x.age_when_attended_assessment_centre_f21003_3_0))
         return x.age_when_attended_assessment_centre_f21003_2_0
     elif (
         x["source_sessions_number"] == "2"
-        and type(x.age_when_attended_assessment_centre_f21003_2_0) == nan
+        and x.age_when_attended_assessment_centre_f21003_2_0 == nan
     ):
         cprint(
             msg=f"The subject {x.eid} doesn't have the age for the imaging session number one (age_when_attended_assessment_centre_f21003_2_0)."
@@ -431,12 +435,12 @@ def select_sessions(x: DataFrame) -> Series:
         return nan
     elif (
         x["source_sessions_number"] == "3"
-        and type(x.age_when_attended_assessment_centre_f21003_3_0) != nan
+        and x.age_when_attended_assessment_centre_f21003_3_0 != nan
     ):
         return x.age_when_attended_assessment_centre_f21003_3_0
     elif (
         x["source_sessions_number"] == "3"
-        and type(x.age_when_attended_assessment_centre_f21003_3_0) == nan
+        and x.age_when_attended_assessment_centre_f21003_3_0 == nan
     ):
         cprint(
             msg=f"The subject {x.eid} doesn't have the age for the imaging session number two (age_when_attended_assessment_centre_f21003_3_0)."
