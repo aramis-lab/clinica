@@ -73,9 +73,9 @@ def crop_nifti(input_img, ref_crop):
     return output_img, crop_template
 
 
-def print_end_pipeline(t1w, final_file):
+def print_end_pipeline(anat, final_file):
     """Display end message for <subject_id> when <final_file> is connected."""
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_end_image
 
-    print_end_image(get_subject_id(t1w))
+    print_end_image(get_subject_id(anat))

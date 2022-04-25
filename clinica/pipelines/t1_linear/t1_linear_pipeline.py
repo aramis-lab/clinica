@@ -8,8 +8,8 @@ cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class T1Linear(cpe.Pipeline):
-    """T1 Linear - Affine registration of T1w images to standard space.
+class AnatLinear(cpe.Pipeline):
+    """Anat Linear - Affine registration of anat (t1w or flair) images to standard space.
 
     This preprocessing pipeline includes globally three steps:
     1) Bias correction with N4 algorithm from ANTs.
@@ -18,7 +18,7 @@ class T1Linear(cpe.Pipeline):
     3) Crop the background (in order to save computational power).
 
     Returns:
-        A clinica pipeline object containing the T1 Linear pipeline.
+        A clinica pipeline object containing the  AnatLinear pipeline.
     """
 
     @staticmethod
@@ -46,7 +46,7 @@ class T1Linear(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-        return ["t1w"]
+        return ["anat"]
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -142,14 +142,14 @@ class T1Linear(cpe.Pipeline):
 
         # Inputs from anat/ folder
         # ========================
-        # T1w file:
+        # anat image file:
         try:
             if self.name == "t1-linear":
-                t1w_files, _ = clinica_file_reader(
+                anat_files, _ = clinica_file_reader(
                     self.subjects, self.sessions, self.bids_directory, T1W_NII
                 )
             else:
-                t1w_files, _ = clinica_file_reader(
+                anat_files, _ = clinica_file_reader(
                     self.subjects, self.sessions, self.bids_directory, Flair_T2W_NII
                 )
         except ClinicaException as e:
@@ -166,14 +166,14 @@ class T1Linear(cpe.Pipeline):
         read_node = npe.Node(
             name="ReadingFiles",
             iterables=[
-                ("t1w", t1w_files),
+                ("anat", anat_files),
             ],
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
         self.connect(
             [
-                (read_node, self.input_node, [("t1w", "t1w")]),
+                (read_node, self.input_node, [("anat", "anat")]),
             ]
         )
 
@@ -216,7 +216,7 @@ class T1Linear(cpe.Pipeline):
         # fmt: off
         self.connect(
             [
-                (self.input_node, container_path, [("t1w", "bids_or_caps_filename")]),
+                (self.input_node, container_path, [("anat", "bids_or_caps_filename")]),
                 (self.output_node, get_ids, [("image_id", "bids_file")]),
                 (get_ids, write_node, [("subst_ls", "substitutions")]),
                 (get_ids, write_node, [("image_id_out", "@image_id")]),
@@ -297,7 +297,7 @@ class T1Linear(cpe.Pipeline):
         # 4. Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
-                input_names=["t1w", "final_file"], function=print_end_pipeline
+                input_names=["anat", "final_file"], function=print_end_pipeline
             ),
             name="WriteEndMessage",
         )
@@ -307,15 +307,15 @@ class T1Linear(cpe.Pipeline):
         # fmt: off
         self.connect(
             [
-                (self.input_node, image_id_node, [("t1w", "filename")]),
-                (self.input_node, n4biascorrection, [("t1w", "input_image")]),
+                (self.input_node, image_id_node, [("anat", "filename")]),
+                (self.input_node, n4biascorrection, [("anat", "input_image")]),
                 (n4biascorrection, ants_registration_node, [("output_image", "moving_image")]),
                 (image_id_node, ants_registration_node, [("image_id", "output_prefix")]),
                 # Connect to DataSink
                 (image_id_node, self.output_node, [("image_id", "image_id")]),
                 (ants_registration_node, self.output_node, [("out_matrix", "affine_mat")]),
                 (ants_registration_node, self.output_node, [("warped_image", "outfile_reg")]),
-                (self.input_node, print_end_message, [("t1w", "t1w")]),
+                (self.input_node, print_end_message, [("anat", "anat")]),
             ]
         )
         if not (self.parameters.get("uncropped_image")):
