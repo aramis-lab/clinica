@@ -23,7 +23,7 @@ config.testpypi:
 
 ## doc			: Build the documentation.
 .PHONY: doc
-doc: clean.doc env.doc
+doc: clean.doc 
 	@$(POETRY) run mkdocs build
 
 ## env			: Bootstap an environment.
@@ -40,7 +40,7 @@ env.dev:
 
 .PHONY: env.doc
 env.doc:
-	@$(POETRY) install --extras docs
+	@$(CONDA) env create -f docs/environment.yml -p $(CONDA_ENV)
 
 ## format			: Format the codebase.
 .PHONY: format
