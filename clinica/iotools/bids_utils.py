@@ -490,6 +490,7 @@ def _write_bidsignore(bids_dir: Union[str, Path]) -> None:
     """Write `.bidsignore` file at the root of the BIDS directory."""
     with open(Path(bids_dir) / ".bidsignore", "w") as f:
         # pet/ is necessary until PET is added to BIDS standard
+        f.write("\n".join(["swi/\n"]))
         f.write("\n".join(["conversion_info/"]))
 
 
