@@ -372,6 +372,7 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
     """Install the requested files in the BIDS  dataset.
     First, the dicom is extracted in a temporary directory
     Second, the dicom extracted is converted in the right place using dcm2niix"""
+    import json
     import os
     import subprocess
     import tempfile
@@ -408,6 +409,12 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
             + ".json",
             str(bids_path) + ".json",
         )
+    # Add the taskname to the json
+    with open(str(bids_path) + ".json", "r+") as f:
+        json_file = json.load(f)
+        json_file["TaskName"] = "facesshapesemotion"
+        f.seek(0)
+        json.dump(json_file, f, indent=4)
     return
 
 
