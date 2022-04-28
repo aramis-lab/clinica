@@ -470,11 +470,11 @@ def run_T1Linear(
 ) -> None:
     from os.path import abspath, dirname, join
 
-    from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
+    from clinica.pipelines.t1_linear.t1_linear_pipeline import AnatLinear
 
     parameters = {"uncropped_image": False}
     # Instantiate pipeline
-    pipeline = T1Linear(
+    pipeline = AnatLinear(
         bids_directory=fspath(input_dir / "bids"),
         caps_directory=fspath(output_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
@@ -491,11 +491,11 @@ def run_FlairLinear(
 ) -> None:
     from os.path import abspath, dirname, join
 
-    from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
+    from clinica.pipelines.t1_linear.t1_linear_pipeline import AnatLinear
 
     parameters = {"uncropped_image": False}
     # Instantiate pipeline
-    pipeline = T1Linear(
+    pipeline = AnatLinear(
         bids_directory=fspath(input_dir / "bids"),
         caps_directory=fspath(output_dir / "caps"),
         base_dir=fspath(working_dir),
