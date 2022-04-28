@@ -1,8 +1,9 @@
 def get_substitutions_datasink(bids_file, pipeline_name):
-    substitutions_ls_t1 = [  # registration
+    suffix = "T1w" if pipeline_name == "t1-linear" else "flair"
+    substitutions = [
         (
             f"{bids_file}Warped_cropped.nii.gz",
-            f"{bids_file}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz",
+            f"{bids_file}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_{suffix}.nii.gz",
         ),
         (
             f"{bids_file}0GenericAffine.mat",
@@ -10,27 +11,10 @@ def get_substitutions_datasink(bids_file, pipeline_name):
         ),
         (
             f"{bids_file}Warped.nii.gz",
-            f"{bids_file}_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz",
+            f"{bids_file}_space-MNI152NLin2009cSym_res-1x1x1_{suffix}.nii.gz",
         ),
     ]
-    substitutions_ls_flair = [  # registration
-        (
-            f"{bids_file}Warped_cropped.nii.gz",
-            f"{bids_file}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_flair.nii.gz",
-        ),
-        (
-            f"{bids_file}0GenericAffine.mat",
-            f"{bids_file}_space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
-        ),
-        (
-            f"{bids_file}Warped.nii.gz",
-            f"{bids_file}_space-MNI152NLin2009cSym_res-1x1x1_flair.nii.gz",
-        ),
-    ]
-    if pipeline_name == "t1-linear":
-        return bids_file, substitutions_ls_t1
-    else:
-        return bids_file, substitutions_ls_flair
+    return bids_file, substitutions
 
 
 # Function used by the nipype interface.

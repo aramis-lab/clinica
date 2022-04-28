@@ -144,14 +144,18 @@ class AnatLinear(cpe.Pipeline):
         # ========================
         # anat image file:
         try:
-            if self.name == "t1-linear":
-                anat_files, _ = clinica_file_reader(
-                    self.subjects, self.sessions, self.bids_directory, T1W_NII
-                )
-            else:
-                anat_files, _ = clinica_file_reader(
-                    self.subjects, self.sessions, self.bids_directory, Flair_T2W_NII
-                )
+            # if self.name == "t1-linear":
+            #     anat_files, _ = clinica_file_reader(
+            #         self.subjects, self.sessions, self.bids_directory, T1W_NII
+            #     )
+            # else:
+            #     anat_files, _ = clinica_file_reader(
+            #         self.subjects, self.sessions, self.bids_directory, Flair_T2W_NII
+            #     )
+            file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
+            anat_files, _ = clinica_file_reader(
+                self.subjects, self.sessions, self.bids_directory, file
+            )
         except ClinicaException as e:
             err = (
                 "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
@@ -218,24 +222,17 @@ class AnatLinear(cpe.Pipeline):
             [
                 (self.input_node, container_path, [("anat", "bids_or_caps_filename")]),
                 (self.output_node, get_ids, [("image_id", "bids_file")]),
+                (container_path, write_node, [(("container", fix_join, self.name.replace("-", "_")), "container")]),
                 (get_ids, write_node, [("subst_ls", "substitutions")]),
                 (get_ids, write_node, [("image_id_out", "@image_id")]),
                 (self.output_node, write_node, [("outfile_reg", "@outfile_reg")]),
                 (self.output_node, write_node, [("affine_mat", "@affine_mat")]),
             ]
         )
-        if self.name == "t1-linear":
-            self.connect(
-                [
-                    (container_path, write_node, [(("container", fix_join, "t1_linear"), "container")]),
-                ]
-            )
-        else:
-            self.connect(
-                [
-                    (container_path, write_node, [(("container", fix_join, "flair_linear"), "container")]),
-                ]
-            )
+    
+                    
+            
+        
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
