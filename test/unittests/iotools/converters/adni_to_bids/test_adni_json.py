@@ -378,3 +378,4 @@ def test_add_json_scan_metadata(tmp_path, keep_none):
             assert existing_metadata[k] == v
         else:
             assert new_metadata[k] == v
+    os.remove(json_path)
