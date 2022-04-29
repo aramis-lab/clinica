@@ -50,7 +50,7 @@ where:
 
 Pipeline options:
 
-- `--covariates`: Covariates of the form `--covariates 'covariate_1 covariate_n'`.
+- `-c`, or `--covariates`: Covariates must be provided one at the time: `-c covariate_1 -c covariate_2`, or equivalentely `--covariates covariate_1  --covariates covariate_2`.
 Each covariate must match the name of the TSV file.
 By default, no covariate is considered.
 - `--full_width_at_half_maximum`: FWHM for the surface smoothing.
@@ -143,7 +143,7 @@ For this group comparison, we will use `age` and `sex` as covariates.
 As a result, the command line will be:
 
 ```Text
-clinica run statistics-surface caps_directory ADvsHC t1-freesurfer group_comparison ADvsHC_participants.tsv group --covariates 'age sex'
+clinica run statistics-surface caps_directory ADvsHC t1-freesurfer group_comparison ADvsHC_participants.tsv group -c age -c sex
 ```
 
 The parameters of the command line are stored in the `group-ADvsHC_glm.json` file:
@@ -171,7 +171,7 @@ The contrast will become `age` and we will choose `correlation` instead of `grou
 The command line is simply:
 
 ```Text
-clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation ADvsHC_participants.tsv age --covariates 'group sex'
+clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation ADvsHC_participants.tsv age -c group -c sex
 ```
 
 ## Describing this pipeline in your paper
