@@ -104,7 +104,7 @@ def expected_content(name: str) -> str:
         return expected_readme_content()
     elif name == "bids-validator":
         return expected_validator_content()
-    return "\n".join(["conversion_info/"])
+    return "\n".join(["swi/", "conversion_info/"])
 
 
 @pytest.mark.parametrize("name,writer", MODALITY_AGNOSTIC_FILE_WRITERS.items())
