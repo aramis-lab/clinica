@@ -86,7 +86,7 @@ def expected_readme_content() -> str:
     import clinica
 
     return EXPECTED_README_CONTENT.safe_substitute(
-        version=clinica.__version__, website="http://www.clinica.run"
+        version=clinica.__version__, website="https://www.clinica.run"
     )
 
 
@@ -104,7 +104,7 @@ def expected_content(name: str) -> str:
         return expected_readme_content()
     elif name == "bids-validator":
         return expected_validator_content()
-    return "\n".join(["pet/", "conversion_info/"])
+    return "\n".join(["swi/", "conversion_info/"])
 
 
 @pytest.mark.parametrize("name,writer", MODALITY_AGNOSTIC_FILE_WRITERS.items())

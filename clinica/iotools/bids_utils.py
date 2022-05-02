@@ -1,7 +1,10 @@
 """Methods used by BIDS converters."""
 
+from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import BinaryIO, List, Optional, Union
+
+from pandas import DataFrame
 
 BIDS_VALIDATOR_CONFIG = {
     "ignore": [
@@ -487,6 +490,7 @@ def _write_bidsignore(bids_dir: Union[str, Path]) -> None:
     """Write `.bidsignore` file at the root of the BIDS directory."""
     with open(Path(bids_dir) / ".bidsignore", "w") as f:
         # pet/ is necessary until PET is added to BIDS standard
+        f.write("\n".join(["swi/\n"]))
         f.write("\n".join(["conversion_info/"]))
 
 
@@ -818,3 +822,8 @@ def run_dcm2niix(
             ),
             lvl="warning",
         )
+
+
+def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
+    # Save dataframe as a BIDS-compliant TSV file.
+    dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")

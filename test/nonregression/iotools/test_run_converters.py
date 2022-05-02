@@ -33,6 +33,7 @@ warnings.filterwarnings("ignore")
         "Adni2Bids",
         "Aibl2Bids",
         "HabsToBids",
+        "UkbToBids",
     ]
 )
 def test_name(request):
@@ -152,6 +153,21 @@ def run_habs_to_bids(input_dir: Path, output_dir: Path, ref_dir: Path):
     compare_folders(output_dir, ref_dir, output_dir)
 
 
+def run_ukbtobids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) -> None:
+    from clinica.iotools.converters.ukb_to_bids.ukb_to_bids import convert_images
+    from clinica.utils.check_dependency import check_dcm2niix
+
+    # Arrange
+    clinical_data_directory = input_dir / "clinical_data"
+    # Act
+    check_dcm2niix()
+    convert_images(
+        input_dir / "unorganized", output_dir / "bids", clinical_data_directory
+    )
+    # Assert
+    compare_folders(output_dir / "bids", ref_dir / "bids", output_dir / "bids")
+
+
 def test_run_convertors(cmdopt, tmp_path, test_name):
     import shutil
 
@@ -178,6 +194,8 @@ def test_run_convertors(cmdopt, tmp_path, test_name):
 
     elif test_name == "HabsToBids":
         run_habs_to_bids(input_dir, tmp_out_dir, ref_dir)
+    elif test_name == "UkbToBids":
+        run_ukbtobids(input_dir, tmp_out_dir, ref_dir)
 
     else:
         print(f"Test {test_name} not available.")

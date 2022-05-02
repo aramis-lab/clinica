@@ -1,0 +1,8 @@
+﻿participants;sessions;scans
+participant_id;age_at_sessions;bids_full_path
+source_id;participant_id;source_filename
+age;sessions;source_zipfile
+sex;source_sessions_number;sidecars
+year_of_birth;;bids_sidecar_path
+;;json
+;;modality_num

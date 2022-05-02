@@ -124,7 +124,10 @@ def _load_xml_from_template(
         "image_id": 300,
         "proc_id": 3615,
     }
-    temp = Path(f"./data/{template_id}_template.xml").read_text()
+    template_path = Path(__file__).resolve().parent / Path(
+        f"data/{template_id}_template.xml"
+    )
+    temp = template_path.read_text()
     temp = Template(temp.replace("\n", ""))
     return temp.safe_substitute(
         project=project, modality=modality, acq_time=acq_time, **other_substitutes
@@ -375,3 +378,4 @@ def test_add_json_scan_metadata(tmp_path, keep_none):
             assert existing_metadata[k] == v
         else:
             assert new_metadata[k] == v
+    os.remove(json_path)
