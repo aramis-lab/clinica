@@ -468,6 +468,7 @@ def test_instantiate_T1Linear(cmdopt):
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
+        name="t1-linear",
     )
     pipeline.build()
 
