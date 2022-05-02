@@ -457,17 +457,18 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection(cmdopt):
 
 def test_instantiate_T1Linear(cmdopt):
 
-    from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "T1Linear"
 
     parameters = {"uncropped_image": False}
 
-    pipeline = T1Linear(
+    pipeline = AnatLinear(
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
+        name="t1-linear",
     )
     pipeline.build()
 

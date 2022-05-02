@@ -4,7 +4,7 @@ import click
 
 from clinica.pipelines import cli_param
 
-pipeline_name = "t1-linear"
+pipeline_name = "flair-linear"
 
 
 @click.command(name=pipeline_name)
@@ -29,7 +29,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Affine registration of T1w images to the MNI standard space.
+    """Affine registration of Flair images to the MNI standard space.
 
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Linear/
     """

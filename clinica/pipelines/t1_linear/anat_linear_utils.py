@@ -1,9 +1,9 @@
-def get_substitutions_datasink(bids_file):
-
-    substitutions_ls = [  # registration
+def get_substitutions_datasink(bids_file, pipeline_name):
+    suffix = "T1w" if pipeline_name == "t1-linear" else "flair"
+    substitutions = [
         (
             f"{bids_file}Warped_cropped.nii.gz",
-            f"{bids_file}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz",
+            f"{bids_file}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_{suffix}.nii.gz",
         ),
         (
             f"{bids_file}0GenericAffine.mat",
@@ -11,10 +11,10 @@ def get_substitutions_datasink(bids_file):
         ),
         (
             f"{bids_file}Warped.nii.gz",
-            f"{bids_file}_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz",
+            f"{bids_file}_space-MNI152NLin2009cSym_res-1x1x1_{suffix}.nii.gz",
         ),
     ]
-    return bids_file, substitutions_ls
+    return bids_file, substitutions
 
 
 # Function used by the nipype interface.
@@ -57,9 +57,9 @@ def crop_nifti(input_img, ref_crop):
     return output_img, crop_template
 
 
-def print_end_pipeline(t1w, final_file):
+def print_end_pipeline(anat, final_file):
     """Display end message for <subject_id> when <final_file> is connected."""
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_end_image
 
-    print_end_image(get_subject_id(t1w))
+    print_end_image(get_subject_id(anat))
