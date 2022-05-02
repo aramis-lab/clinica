@@ -457,7 +457,7 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection(cmdopt):
 
 def test_instantiate_T1Linear(cmdopt):
 
-    from clinica.pipelines.t1_linear.t1_linear_pipeline import AnatLinear
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "T1Linear"

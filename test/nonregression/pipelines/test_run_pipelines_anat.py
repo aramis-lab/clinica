@@ -470,7 +470,7 @@ def run_T1Linear(
 ) -> None:
     from os.path import abspath, dirname, join
 
-    from clinica.pipelines.t1_linear.t1_linear_pipeline import AnatLinear
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
     parameters = {"uncropped_image": False}
     # Instantiate pipeline
@@ -491,7 +491,7 @@ def run_FlairLinear(
 ) -> None:
     from os.path import abspath, dirname, join
 
-    from clinica.pipelines.t1_linear.t1_linear_pipeline import AnatLinear
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
     parameters = {"uncropped_image": False}
     # Instantiate pipeline

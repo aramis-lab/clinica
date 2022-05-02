@@ -37,7 +37,7 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
-    from .t1_linear_pipeline import AnatLinear
+    from .anat_linear_pipeline import AnatLinear
 
     parameters = {"uncropped_image": uncropped_image}
 

@@ -189,7 +189,7 @@ class AnatLinear(cpe.Pipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .t1_linear_utils import get_substitutions_datasink
+        from .anat_linear_utils import get_substitutions_datasink
 
         # Writing node
         write_node = npe.Node(name="WriteCaps", interface=DataSink())
@@ -249,7 +249,7 @@ class AnatLinear(cpe.Pipeline):
 
         from clinica.utils.filemanip import get_filename_no_ext
 
-        from .t1_linear_utils import crop_nifti, print_end_pipeline
+        from .anat_linear_utils import crop_nifti, print_end_pipeline
 
         image_id_node = npe.Node(
             interface=nutil.Function(
