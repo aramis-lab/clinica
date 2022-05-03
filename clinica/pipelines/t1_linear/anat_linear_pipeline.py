@@ -144,14 +144,6 @@ class AnatLinear(cpe.Pipeline):
         # ========================
         # anat image file:
         try:
-            # if self.name == "t1-linear":
-            #     anat_files, _ = clinica_file_reader(
-            #         self.subjects, self.sessions, self.bids_directory, T1W_NII
-            #     )
-            # else:
-            #     anat_files, _ = clinica_file_reader(
-            #         self.subjects, self.sessions, self.bids_directory, Flair_T2W_NII
-            #     )
             file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
             anat_files, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.bids_directory, file
@@ -272,9 +264,9 @@ class AnatLinear(cpe.Pipeline):
         )
 
         if self.name == 't1-linear':
-            n4biascorrection.input.bspline_fitting_distance = 600
+            n4biascorrection.inputs.bspline_fitting_distance = 600
         else:
-            n4biascorrection.input.bspline_fitting_distance = 100
+            n4biascorrection.inputs.bspline_fitting_distance = 100
 
         # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
