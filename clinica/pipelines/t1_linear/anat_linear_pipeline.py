@@ -65,13 +65,11 @@ class AnatLinear(cpe.Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.filemanip import extract_subjects_sessions_from_filename
+        from clinica.utils.filemanip import \
+            extract_subjects_sessions_from_filename
         from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
-        from clinica.utils.inputs import (
-            RemoteFileStructure,
-            clinica_file_reader,
-            fetch_file,
-        )
+        from clinica.utils.inputs import (RemoteFileStructure,
+                                          clinica_file_reader, fetch_file)
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -258,12 +256,10 @@ class AnatLinear(cpe.Pipeline):
         # 1. N4biascorrection by ANTS. It uses nipype interface.
         n4biascorrection = npe.Node(
             name="n4biascorrection",
-            interface=ants.N4BiasFieldCorrection(
-                dimension=3, save_bias=True
-            ),
+            interface=ants.N4BiasFieldCorrection(dimension=3, save_bias=True),
         )
 
-        if self.name == 't1-linear':
+        if self.name == "t1-linear":
             n4biascorrection.inputs.bspline_fitting_distance = 600
         else:
             n4biascorrection.inputs.bspline_fitting_distance = 100
