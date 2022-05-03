@@ -271,7 +271,10 @@ class AnatLinear(cpe.Pipeline):
             ),
         )
 
-        n4biascorrection.input.bspline_fitting_distance = 600 if self.name == 't1-linear' else n4biascorrection.input.bspline_fitting_distance = 100
+        if self.name == 't1-linear':
+            n4biascorrection.input.bspline_fitting_distance = 600
+        else:
+            n4biascorrection.input.bspline_fitting_distance = 100
 
         # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
