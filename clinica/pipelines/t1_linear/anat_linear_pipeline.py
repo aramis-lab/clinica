@@ -144,14 +144,6 @@ class AnatLinear(cpe.Pipeline):
         # ========================
         # anat image file:
         try:
-            # if self.name == "t1-linear":
-            #     anat_files, _ = clinica_file_reader(
-            #         self.subjects, self.sessions, self.bids_directory, T1W_NII
-            #     )
-            # else:
-            #     anat_files, _ = clinica_file_reader(
-            #         self.subjects, self.sessions, self.bids_directory, Flair_T2W_NII
-            #     )
             file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
             anat_files, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.bids_directory, file
@@ -266,10 +258,13 @@ class AnatLinear(cpe.Pipeline):
         # 1. N4biascorrection by ANTS. It uses nipype interface.
         n4biascorrection = npe.Node(
             name="n4biascorrection",
-            interface=ants.N4BiasFieldCorrection(
-                dimension=3, save_bias=True, bspline_fitting_distance=600
-            ),
+            interface=ants.N4BiasFieldCorrection(dimension=3, save_bias=True),
         )
+
+        if self.name == "t1-linear":
+            n4biascorrection.inputs.bspline_fitting_distance = 600
+        else:
+            n4biascorrection.inputs.bspline_fitting_distance = 100
 
         # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
