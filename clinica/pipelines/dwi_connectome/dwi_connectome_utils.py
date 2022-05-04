@@ -15,7 +15,7 @@ def get_luts():
     return [default, a2009s]
 
 
-def get_conversion_luts():
+def get_conversion_luts_old():
     import os
 
     from clinica.utils.exceptions import ClinicaException
@@ -43,6 +43,31 @@ def get_conversion_luts():
         raise ClinicaException("Could not find MRTRIX_HOME environment variable.")
     return [default, a2009s]
 
+
+def get_conversion_luts():
+    from clinica.utils.inputs import RemoteFileStructure, fetch_file
+    from pathlib import Path
+    from clinica.utils.stream import cprint
+
+    url_mrtrix = "https://raw.githubusercontent.com/MRtrix3/mrtrix3/master/share/mrtrix3/labelconvert/"
+
+    FILE1 = RemoteFileStructure(
+        filename="fs_default.txt",
+        url=url_mrtrix,
+        checksum="6ee07088915fdbcf52b05147ddae86e5fcaf3efc63db5b0ba8f361637dfa11ef",
+    )
+    path_to_share = Path("/test/path")
+    ref_fs_default = path_to_share / Path(FILE1.filename)
+
+    if not (ref_fs_default.isfile()):
+        try:
+            ref_path = fetch_file(FILE1, path_to_share)
+        except IOError as err:
+            cprint(
+                msg=f"Unable to download required MRTRIX mapping (fs_default.txt) for processing: {err}",
+                lvl="error",
+            )
+    return ref_path
 
 def get_containers(subjects, sessions):
     import os
