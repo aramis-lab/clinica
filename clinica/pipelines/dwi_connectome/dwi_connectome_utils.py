@@ -51,7 +51,7 @@ def get_conversion_luts():
 
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
 
-    path_to_mappings = root / "resources" / "mappings"
+    path_to_mappings = Path(root) / "resources" / "mappings"
 
     url_mrtrix = "https://raw.githubusercontent.com/MRtrix3/mrtrix3/master/share/mrtrix3/labelconvert/"
 
