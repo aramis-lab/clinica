@@ -17,6 +17,8 @@ def get_luts():
 
 def get_conversion_luts_offline():
 
+    # TODO: use this function if no internet connect found in client (need to upload files to clinica repository)
+
     from pathlib import Path
 
     from clinica.utils.stream import cprint
@@ -42,9 +44,9 @@ def get_conversion_luts_offline():
 
 
 def get_conversion_luts():
-    from pathlib import Path
     from os import pardir
-    from os.path import abspath, join, dirname
+    from os.path import abspath, dirname, join
+    from pathlib import Path
 
     from clinica.utils.inputs import RemoteFileStructure, fetch_file
     from clinica.utils.stream import cprint
