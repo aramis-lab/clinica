@@ -43,11 +43,14 @@ def get_conversion_luts_offline():
 
 def get_conversion_luts():
     from pathlib import Path
+    from os import pardir
+    from os.path import abspath, join, dirname
 
     from clinica.utils.inputs import RemoteFileStructure, fetch_file
     from clinica.utils.stream import cprint
 
-    root = Path.cwd()
+    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
+
     path_to_mappings = root / "resources" / "mappings"
 
     url_mrtrix = "https://raw.githubusercontent.com/MRtrix3/mrtrix3/master/share/mrtrix3/labelconvert/"
