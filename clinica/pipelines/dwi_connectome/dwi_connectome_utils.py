@@ -18,6 +18,7 @@ def get_luts():
 def get_conversion_luts_offline():
 
     from pathlib import Path
+
     from clinica.utils.stream import cprint
 
     root = Path.cwd()
@@ -41,8 +42,9 @@ def get_conversion_luts_offline():
 
 
 def get_conversion_luts():
-    from clinica.utils.inputs import RemoteFileStructure, fetch_file
     from pathlib import Path
+
+    from clinica.utils.inputs import RemoteFileStructure, fetch_file
     from clinica.utils.stream import cprint
 
     root = Path.cwd().parents[1]
