@@ -15,39 +15,38 @@ def get_luts():
     return [default, a2009s]
 
 
-def get_conversion_luts_old():
-    import os
+def get_conversion_luts_offline():
 
-    from clinica.utils.exceptions import ClinicaException
+    from pathlib import Path
+    from clinica.utils.stream import cprint
 
-    try:
-        # For aparc+aseg.mgz file:
-        default = os.path.join(
-            os.environ["MRTRIX_HOME"],
-            "share",
-            "mrtrix3",
-            "labelconvert",
-            "fs_default.txt",
+    root = Path.cwd()
+
+    path_to_mappings = root / "clinica" / "resources" / "mappings"
+    ref_fs_default = path_to_mappings / "fs_default.txt"
+    ref_fs_a2009 = path_to_mappings / "fs_a2009.txt"
+
+    if not (ref_fs_default.is_file()):
+        cprint(
+            msg=f"Unable to locate (fs_default.txt) for processing",
+            lvl="error",
         )
-        # For aparc.a2009s+aseg.mgz file:
-        a2009s = os.path.join(
-            os.environ["MRTRIX_HOME"],
-            "share",
-            "mrtrix3",
-            "labelconvert",
-            "fs_a2009s.txt",
+    if not (ref_fs_a2009.is_file()):
+        cprint(
+            msg=f"Unable to locate (fs_a2009.txt) for processing",
+            lvl="error",
         )
 
-        # TODO: Add custom Lausanne2008 conversion LUTs here.
-    except KeyError:
-        raise ClinicaException("Could not find MRTRIX_HOME environment variable.")
-    return [default, a2009s]
+    return [ref_fs_default, ref_fs_a2009]
 
 
 def get_conversion_luts():
     from clinica.utils.inputs import RemoteFileStructure, fetch_file
     from pathlib import Path
     from clinica.utils.stream import cprint
+
+    root = Path.cwd()
+    path_to_mappings = root / "clinica" / "resources" / "mappings"
 
     url_mrtrix = "https://raw.githubusercontent.com/MRtrix3/mrtrix3/master/share/mrtrix3/labelconvert/"
 
@@ -63,18 +62,27 @@ def get_conversion_luts():
         checksum="b472f09cfe92ac0b6694fb6b00a87baf15dd269566e4a92b8a151ff1080bf170",
     )
 
-    path_to_share = Path("/test/path")
-    ref_fs_default = path_to_share / Path(FILE1.filename)
+    ref_fs_default = path_to_mappings / Path(FILE1.filename)
+    ref_fs_a2009 = path_to_mappings / Path(FILE2.filename)
 
     if not (ref_fs_default.is_file()):
         try:
-            ref_path = fetch_file(FILE1, path_to_share)
+            ref_fs_default = fetch_file(FILE1, path_to_mappings)
         except IOError as err:
             cprint(
                 msg=f"Unable to download required MRTRIX mapping (fs_default.txt) for processing: {err}",
                 lvl="error",
             )
-    return ref_path
+    if not (ref_fs_a2009.is_file()):
+        try:
+            ref_fs_a2009 = fetch_file(FILE2, path_to_mappings)
+        except IOError as err:
+            cprint(
+                msg=f"Unable to download required MRTRIX mapping (fs_a2009.txt) for processing: {err}",
+                lvl="error",
+            )
+
+    return [ref_fs_default, ref_fs_a2009]
 
 
 def get_containers(subjects, sessions):
