@@ -56,10 +56,17 @@ def get_conversion_luts():
         url=url_mrtrix,
         checksum="6ee07088915fdbcf52b05147ddae86e5fcaf3efc63db5b0ba8f361637dfa11ef",
     )
+
+    FILE2 = RemoteFileStructure(
+        filename="fs_a2009s.txt",
+        url=url_mrtrix,
+        checksum="b472f09cfe92ac0b6694fb6b00a87baf15dd269566e4a92b8a151ff1080bf170",
+    )
+
     path_to_share = Path("/test/path")
     ref_fs_default = path_to_share / Path(FILE1.filename)
 
-    if not (ref_fs_default.isfile()):
+    if not (ref_fs_default.is_file()):
         try:
             ref_path = fetch_file(FILE1, path_to_share)
         except IOError as err:
@@ -68,6 +75,7 @@ def get_conversion_luts():
                 lvl="error",
             )
     return ref_path
+
 
 def get_containers(subjects, sessions):
     import os
