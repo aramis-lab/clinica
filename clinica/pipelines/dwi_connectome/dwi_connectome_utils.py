@@ -47,7 +47,7 @@ def get_conversion_luts():
     from clinica.utils.inputs import RemoteFileStructure, fetch_file
     from clinica.utils.stream import cprint
 
-    root = Path.cwd().parents[1]
+    root = Path.cwd()
     path_to_mappings = root / "resources" / "mappings"
 
     url_mrtrix = "https://raw.githubusercontent.com/MRtrix3/mrtrix3/master/share/mrtrix3/labelconvert/"
