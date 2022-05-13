@@ -278,19 +278,12 @@ class StatisticsVolume(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from nipype.algorithms.misc import Gunzip
 
         import clinica.pipelines.statistics_volume.statistics_volume_utils as utils
-        from clinica.utils.filemanip import unzip_nii
 
         # SPM cannot handle zipped files
-        unzip_node = npe.Node(
-            nutil.Function(
-                input_names=["in_file"],
-                output_names=["output_files"],
-                function=unzip_nii,
-            ),
-            name="unzip_node",
-        )
+        unzip_node = npe.Node(interface=Gunzip(), name="unzip_node")
 
         # Get indexes of the 2 groups, based on the contrast column of the tsv file
         get_groups = npe.Node(
@@ -440,7 +433,7 @@ class StatisticsVolume(cpe.Pipeline):
         self.connect(
             [
                 (self.input_node, unzip_node, [("input_files", "in_file")]),
-                (unzip_node, model_creation, [("output_files", "file_list")]),
+                (unzip_node, model_creation, [("out_file", "file_list")]),
                 (get_groups, model_creation, [("idx_group1", "idx_group1")]),
                 (get_groups, model_creation, [("idx_group2", "idx_group2")]),
                 (model_creation, run_spm_model_creation, [("script_file", "m_file")]),
