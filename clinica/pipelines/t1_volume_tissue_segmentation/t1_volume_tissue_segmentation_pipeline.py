@@ -121,8 +121,9 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         import nipype.interfaces.spm as spm
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from nipype.algorithms.misc import Gunzip
 
-        from clinica.utils.filemanip import unzip_nii, zip_nii
+        from clinica.utils.filemanip import zip_nii
         from clinica.utils.nipype import container_from_filename, fix_join
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
@@ -151,12 +152,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
         # Unzipping
         # =========
-        unzip_node = npe.Node(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
-            name="1-UnzipT1w",
-        )
+        unzip_node = npe.Node(interface=Gunzip(), name="1-UnzipT1w")
 
         # Unified Segmentation
         # ====================
