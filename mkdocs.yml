@@ -103,6 +103,7 @@ nav:
     - NIFD to BIDS: Converters/NIFD2BIDS.md
     - OASIS to BIDS: Converters/OASIS2BIDS.md
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md
+    - Uk Biobank to BIDS: Converters/UKBtoBIDS.md
   - I/O tools:
     - create-subjects-visits: IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset
     - check-missing-modalities: IO#check-missing-modalities-check-missing-modalities-for-each-subject

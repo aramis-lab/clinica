@@ -77,6 +77,7 @@ Clinica provides tools to curate several publicly available neuroimaging dataset
 - `nifd-to-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](Converters/NIFD2BIDS)
 - `oasis-to-bids` - [OASIS: Open Access Series of Imaging Studies](Converters/OASIS2BIDS)
 - `oasis3-to-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](Converters/OASIS3TOBIDS)
+- `ukb-to-bids` - [UK Biobank](Converter/UKBtoBIDS)
 
 !!! note
     We provide converters for the datasets used in the [Aramis Lab](http://www.aramislab.fr/).
