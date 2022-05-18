@@ -48,10 +48,12 @@ format: format.black format.isort
 
 .PHONY: format.black
 format.black: env.dev
+	$(info Formatting code with black)
 	@$(POETRY) run black --quiet $(PACKAGES)
 
 .PHONY: format.isort
 format.isort: env.dev
+	$(info Formatting code with isort)
 	@$(POETRY) run isort --quiet $(PACKAGES)
 
 ## lint			: Lint the codebase.
@@ -60,10 +62,12 @@ lint: lint.black lint.isort
 
 .PHONY: lint.black
 lint.black: env.dev
+	$(info Linting code with black)
 	@$(POETRY) run black --check --diff $(PACKAGES)
 
 .PHONY: lint.isort
 lint.isort: env.dev
+	$(info Linting code with isort)
 	@$(POETRY) run isort --check --diff $(PACKAGES)
 
 ## publish		: Publish the package to pypi.
