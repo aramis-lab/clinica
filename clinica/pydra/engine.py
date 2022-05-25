@@ -4,6 +4,8 @@ from os import PathLike
 
 from pydra import Workflow
 
+from pydra import Workflow
+
 import clinica.pydra.engine_utils as pu
 from clinica.pydra.interfaces import bids_reader, bids_writer
 
