@@ -105,28 +105,47 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         """Build and connect an input node to the pipeline."""
         import os
 
+        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import save_participants_sessions
-        from clinica.utils.input_files import (
-            DWI_BVAL,
-            DWI_BVEC,
-            DWI_JSON,
-            DWI_NII,
-            T1W_NII,
-        )
-        from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        list_bids_files = clinica_list_of_files_reader(
-            self.subjects,
-            self.sessions,
-            self.bids_directory,
-            [T1W_NII, DWI_JSON, DWI_NII, DWI_BVEC, DWI_BVAL],
-            raise_exception=True,
-        )
+        bids_data_grabber = npe.Node(
+            name="bids_data_grabber",
+            interface=nio.BIDSDataGrabber(
+                base_dir=self.bids_directory,
+                output_query={
+                    "t1w_nii": {
+                        "datatype": "anat",
+                        "suffix": "T1w",
+                        "extension": [".nii", ".nii.gz"],
+                    },
+                    "dwi_nii": {
+                        "datatype": "dwi",
+                        "suffix": "dwi",
+                        "extension": [".nii", ".nii.gz"],
+                    },
+                    "dwi_json": {
+                        "datatype": "dwi",
+                        "suffix": "dwi",
+                        "extension": ".json",
+                    },
+                    "dwi_bvec": {
+                        "datatype": "dwi",
+                        "suffix": "dwi",
+                        "extension": ".bvec",
+                    },
+                    "dwi_bval": {
+                        "datatype": "dwi",
+                        "suffix": "dwi",
+                        "extension": ".bval",
+                    },
+                },
+            ),
+        ).run()
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
@@ -146,11 +165,11 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         read_node = npe.Node(
             name="ReadingFiles",
             iterables=[
-                ("t1w", list_bids_files[0]),
-                ("dwi_json", list_bids_files[1]),
-                ("dwi", list_bids_files[2]),
-                ("bvec", list_bids_files[3]),
-                ("bval", list_bids_files[4]),
+                ("t1w", bids_data_grabber.outputs.t1w_nii),
+                ("dwi_json", bids_data_grabber.outputs.dwi_json),
+                ("dwi", bids_data_grabber.outputs.dwi_nii),
+                ("bvec", bids_data_grabber.outputs.dwi_bvec),
+                ("bval", bids_data_grabber.outputs.dwi_bval),
             ],
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
