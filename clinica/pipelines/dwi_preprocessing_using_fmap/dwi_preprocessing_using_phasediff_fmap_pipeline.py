@@ -121,38 +121,57 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         """Build and connect an input node to the pipeline."""
         import os
 
+        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import save_participants_sessions
-        from clinica.utils.input_files import (
-            DWI_BVAL,
-            DWI_BVEC,
-            DWI_JSON,
-            DWI_NII,
-            FMAP_MAGNITUDE1_NII,
-            FMAP_PHASEDIFF_JSON,
-            FMAP_PHASEDIFF_NII,
-        )
-        from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        list_bids_files = clinica_list_of_files_reader(
-            self.subjects,
-            self.sessions,
-            self.bids_directory,
-            [
-                DWI_NII,
-                DWI_BVEC,
-                DWI_BVAL,
-                DWI_JSON,
-                FMAP_MAGNITUDE1_NII,
-                FMAP_PHASEDIFF_NII,
-                FMAP_PHASEDIFF_JSON,
-            ],
-            raise_exception=True,
-        )
+        bids_data_grabber = npe.Node(
+            name="bids_data_grabber",
+            interface=nio.BIDSDataGrabber(
+                base_dir=self.bids_directory,
+                output_query={
+                    "dwi_nii": {
+                        "datatype": "dwi",
+                        "suffix": "dwi",
+                        "extension": [".nii", ".nii.gz"],
+                    },
+                    "dwi_json": {
+                        "datatype": "dwi",
+                        "suffix": "dwi",
+                        "extension": ".json",
+                    },
+                    "dwi_bvec": {
+                        "datatype": "dwi",
+                        "suffix": "dwi",
+                        "extension": ".bvec",
+                    },
+                    "dwi_bval": {
+                        "datatype": "dwi",
+                        "suffix": "dwi",
+                        "extension": ".bval",
+                    },
+                    "fmap_magnitude_nii": {
+                        "datatype": "fmap",
+                        "suffix": "magnitude1",
+                        "extension": [".nii", ".nii.gz"],
+                    },
+                    "fmap_phasediff_nii": {
+                        "datatype": "fmap",
+                        "suffix": "phasediff",
+                        "extension": [".nii", ".nii.gz"],
+                    },
+                    "fmap_phasediff_json": {
+                        "datatype": "fmap",
+                        "suffix": "phasediff",
+                        "extension": ".json",
+                    },
+                },
+            ),
+        ).run()
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
@@ -172,13 +191,13 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         read_node = npe.Node(
             name="ReadingFiles",
             iterables=[
-                ("dwi", list_bids_files[0]),
-                ("bvec", list_bids_files[1]),
-                ("bval", list_bids_files[2]),
-                ("dwi_json", list_bids_files[3]),
-                ("fmap_magnitude", list_bids_files[4]),
-                ("fmap_phasediff", list_bids_files[5]),
-                ("fmap_phasediff_json", list_bids_files[6]),
+                ("dwi", bids_data_grabber.outputs.dwi_nii),
+                ("bvec", bids_data_grabber.outputs.dwi_bvec),
+                ("bval", bids_data_grabber.outputs.dwi_bval),
+                ("dwi_json", bids_data_grabber.outputs.dwi_json),
+                ("fmap_magnitude", bids_data_grabber.outputs.fmap_magnitude_nii),
+                ("fmap_phasediff", bids_data_grabber.outputs.fmap_phasediff_nii),
+                ("fmap_phasediff_json", bids_data_grabber.outputs.fmap_phasediff_json),
             ],
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
