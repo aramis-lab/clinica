@@ -598,7 +598,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
                     if "func" in mods_avail_dict:
                         for m in mods_avail_dict["func"]:
                             row_to_append_df[m] = pd.Series("0")
-                        mmt.add_missing_mod(ses, m)
+                            mmt.add_missing_mod(ses, m)
 
                 if "dwi" in mods_avail_bids:
                     row_to_append_df["dwi"] = pd.Series("1")
@@ -649,7 +649,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
                     if "pet" in mods_avail_dict:
                         for m in mods_avail_dict["pet"]:
                             row_to_append_df[m] = pd.Series("0")
-                        mmt.add_missing_mod(ses, m)
+                            mmt.add_missing_mod(ses, m)
 
             missing_mods_df = missing_mods_df.append(row_to_append_df)
             row_to_append_df = pd.DataFrame(columns=cols_dataframe)
