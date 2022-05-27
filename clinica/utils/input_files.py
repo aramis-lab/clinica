@@ -8,7 +8,6 @@ These dictionaries describe files to grab.
 # BIDS
 
 T1W_NII = {"pattern": "sub-*_ses-*_t1w.nii*", "description": "T1w MRI"}
-T2W_NII = {"pattern": "sub-*_ses-*_t2w.nii*", "description": "T2w MRI"}
 Flair_T2W_NII = {"pattern": "sub-*_ses-*_flair.nii*", "description": "FLAIR T2w MRI"}
 
 # T1-FreeSurfer
