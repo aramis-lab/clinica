@@ -863,30 +863,6 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     return nifti_files_filtered
 
 
-def are_far_appart(file1, file2, threshold=80):
-    """Tell if 2 files have a center located at more than a threshold distance.
-
-    Args:
-        file1: (str) path to the first nifti file
-        file2: (str) path to the second nifti file
-        threshold: threshold to consider whether 2 files are too far apart
-
-    Returns:
-        True if distance between `file1` and `file2` is greater than `threshold`, False otherwise.
-    """
-    from os.path import isfile
-
-    import numpy as np
-
-    assert isfile(file1)
-    assert isfile(file2)
-
-    center1 = get_world_coordinate_of_center(file1)
-    center2 = get_world_coordinate_of_center(file2)
-
-    return np.linalg.norm(center2 - center1, ord=2) > threshold
-
-
 def write_list_of_files(file_list, output_file):
     """Save `file_list` list of files into `output_file` text file.
 
