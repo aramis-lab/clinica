@@ -198,7 +198,10 @@ def clinica_file_reader(
                                                         file
         raise_exception: if True (normal behavior), an exception is raised if errors happen. If not, we return the file
                         list as it is
-        n_procs: number of cores used to run in parallel.
+        n_procs: int, optional
+            Number of cores used to run in parallel with Joblib.
+            If set to 0, subjects and sessions will be processed sequentially.
+            Default=0.
 
     Returns:
          list of files respecting the subject/session order provided in input,
