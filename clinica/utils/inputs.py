@@ -517,7 +517,7 @@ def fetch_file(remote, dirname=None):
     return file_path
 
 
-def get_file_from_server(remote_file, cache_path=None):
+def get_file_from_server(remote_file: RemoteFileStructure, cache_path=None):
     """Download file from server.
 
     Args:
