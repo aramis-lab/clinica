@@ -176,13 +176,13 @@ def check_caps_folder(caps_directory):
 
 
 def find_sub_ses_pattern_path(
-        input_directory: str,
-        subject: str,
-        session: str,
-        error_encountered: list,
-        results: list,
-        is_bids: bool,
-        pattern: str,
+    input_directory: str,
+    subject: str,
+    session: str,
+    error_encountered: list,
+    results: list,
+    is_bids: bool,
+    pattern: str,
 ):
     """Appends the output path corresponding to subject, session and pattern in results.
 
@@ -308,10 +308,7 @@ def clinica_file_reader(
 
     from joblib import Parallel, delayed
 
-    from clinica.utils.exceptions import (
-        ClinicaBIDSError,
-        ClinicaCAPSError,
-    )
+    from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 
     assert isinstance(
         information, dict
@@ -350,7 +347,13 @@ def clinica_file_reader(
         shared_error_encountered = manager.list()
         Parallel(n_jobs=n_procs)(
             delayed(find_sub_ses_pattern_path)(
-                input_directory, sub, ses, shared_error_encountered, shared_results, is_bids, pattern
+                input_directory,
+                sub,
+                ses,
+                shared_error_encountered,
+                shared_results,
+                is_bids,
+                pattern,
             )
             for sub, ses in zip(subjects, sessions)
         )
@@ -360,7 +363,9 @@ def clinica_file_reader(
         error_encountered = list()
         results = list()
         for sub, ses in zip(subjects, sessions):
-            find_sub_ses_pattern_path(input_directory, sub, ses, error_encountered, results, is_bids, pattern)
+            find_sub_ses_pattern_path(
+                input_directory, sub, ses, error_encountered, results, is_bids, pattern
+            )
 
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
     error_message = (
