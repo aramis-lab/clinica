@@ -176,7 +176,12 @@ def check_caps_folder(caps_directory):
 
 
 def clinica_file_reader(
-    subjects, sessions, input_directory, information, raise_exception=True
+    subjects,
+    sessions,
+    input_directory,
+    information,
+    raise_exception=True,
+    n_procs=0,
 ):
     """Read files in BIDS or CAPS directory based on participant ID(s).
 
@@ -193,6 +198,7 @@ def clinica_file_reader(
                                                         file
         raise_exception: if True (normal behavior), an exception is raised if errors happen. If not, we return the file
                         list as it is
+        n_procs: number of cores used to run in parallel.
 
     Returns:
          list of files respecting the subject/session order provided in input,
@@ -251,13 +257,39 @@ def clinica_file_reader(
             that do not exists in the existing file path.
 
     """
+    from multiprocessing import Manager
     from os.path import join
+
+    from joblib import Parallel, delayed
 
     from clinica.utils.exceptions import (
         ClinicaBIDSError,
         ClinicaCAPSError,
         ClinicaException,
     )
+
+    manager = Manager()
+
+    def find_sub_ses_pattern(input_directory, sub, ses, error_encountered, results):
+        if is_bids:
+            origin_pattern = join(input_directory, sub, ses)
+        else:
+            origin_pattern = join(input_directory, "subjects", sub, ses)
+
+        current_pattern = join(origin_pattern, "**/", pattern)
+        current_glob_found = insensitive_glob(current_pattern, recursive=True)
+
+        # Error handling if more than 1 file are found, or when no file is found
+        if len(current_glob_found) > 1:
+            error_str = f"\t*  ({sub} | {ses}): More than 1 file found:\n"
+            for found_file in current_glob_found:
+                error_str += f"\t\t{found_file}\n"
+            error_encountered.append(error_str)
+        elif len(current_glob_found) == 0:
+            error_encountered.append(f"\t* ({sub} | {ses}): No file found\n")
+        # Otherwise the file found is added to the result
+        else:
+            results.append(current_glob_found[0])
 
     assert isinstance(
         information, dict
@@ -290,31 +322,24 @@ def clinica_file_reader(
     if len(subjects) == 0:
         return [], ""
 
-    # results is the list containing the results
-    results = []
-    error_message = ""
-    # error is the list of the errors that happen during the whole process
-    error_encountered = []
-    for sub, ses in zip(subjects, sessions):
-        if is_bids:
-            origin_pattern = join(input_directory, sub, ses)
-        else:
-            origin_pattern = join(input_directory, "subjects", sub, ses)
-
-        current_pattern = join(origin_pattern, "**/", pattern)
-        current_glob_found = insensitive_glob(current_pattern, recursive=True)
-
-        # Error handling if more than 1 file are found, or when no file is found
-        if len(current_glob_found) > 1:
-            error_str = f"\t*  ({sub} | {ses}): More than 1 file found:\n"
-            for found_file in current_glob_found:
-                error_str += f"\t\t{found_file}\n"
-            error_encountered.append(error_str)
-        elif len(current_glob_found) == 0:
-            error_encountered.append(f"\t* ({sub} | {ses}): No file found\n")
-        # Otherwise the file found is added to the result
-        else:
-            results.append(current_glob_found[0])
+    if n_procs > 0:
+        # results is the list containing the results
+        shared_results = manager.list()
+        # error is the list of the errors that happen during the whole process
+        shared_error_encountered = manager.list()
+        Parallel(n_jobs=n_procs)(
+            delayed(find_sub_ses_pattern)(
+                input_directory, sub, ses, shared_error_encountered, shared_results
+            )
+            for sub, ses in zip(subjects, sessions)
+        )
+        results = list(shared_results)
+        error_encountered = list(shared_error_encountered)
+    else:
+        error_encountered = list()
+        results = list()
+        for sub, ses in zip(subjects, sessions):
+            find_sub_ses_pattern(input_directory, sub, ses, error_encountered, results)
 
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
     error_message = (
