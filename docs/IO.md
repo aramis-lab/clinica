@@ -161,6 +161,10 @@ If an input list of subjects and sessions is given, the merged file will only ga
     ...
     ```
 
+
+!!! Note for t1-volume and pet-volume pipelines
+    The suffix "_intensity" is added systematically to the atlas statistics of t1-volume and pet-volume pipelines.
+
 A complete list of optional arguments can be obtained with the command line `clinica merge-tsv --help`
 
 ## `center-nifti` - Center NIfTI files of a BIDS directory
