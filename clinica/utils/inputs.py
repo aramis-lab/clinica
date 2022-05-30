@@ -181,7 +181,7 @@ def clinica_file_reader(
     input_directory,
     information,
     raise_exception=True,
-    n_procs=0,
+    n_procs: int = 1,
 ):
     """Read files in BIDS or CAPS directory based on participant ID(s).
 
@@ -199,9 +199,8 @@ def clinica_file_reader(
         raise_exception: if True (normal behavior), an exception is raised if errors happen. If not, we return the file
                         list as it is
         n_procs: int, optional
-            Number of cores used to run in parallel with Joblib.
-            If set to 0, subjects and sessions will be processed sequentially.
-            Default=0.
+            Number of cores used to fetch files in parallel (defaults to 1).
+            If set to 1, subjects and sessions will be processed sequentially.
 
     Returns:
          list of files respecting the subject/session order provided in input,
@@ -325,7 +324,7 @@ def clinica_file_reader(
     if len(subjects) == 0:
         return [], ""
 
-    if n_procs > 0:
+    if n_procs > 1:
         # results is the list containing the results
         shared_results = manager.list()
         # error is the list of the errors that happen during the whole process
