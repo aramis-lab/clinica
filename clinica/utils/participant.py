@@ -136,8 +136,8 @@ def have_same_subjects(tsv_file_1, tsv_file_2):
     """Return True if `tsv_file_1` and `tsv_file_2` have the same subjects, False otherwise."""
     import pandas as pd
 
-    tsv_df_1 = pd.io.parsers.read_csv(tsv_file_1, sep="\t")
-    tsv_df_2 = pd.io.parsers.read_csv(tsv_file_2, sep="\t")
+    tsv_df_1 = pd.read_csv(tsv_file_1, sep="\t")
+    tsv_df_2 = pd.read_csv(tsv_file_2, sep="\t")
     image_ids_1 = [
         f"{p_id}_{s_id}"
         for (p_id, s_id) in zip(
