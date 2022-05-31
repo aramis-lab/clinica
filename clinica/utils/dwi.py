@@ -205,8 +205,6 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
 
     import numpy as np
 
-    from clinica.utils.dwi import merge_volumes_tdim
-
     assert os.path.isfile(in_b0)
     assert os.path.isfile(in_dwi)
     assert os.path.isfile(in_bval)
