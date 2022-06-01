@@ -47,8 +47,9 @@ class AtlasAbstract:
 
     __metaclass__ = abc.ABCMeta
 
+    @staticmethod
     @abc.abstractmethod
-    def get_name_atlas(self):
+    def get_name_atlas():
         """Return the name of the atlas (as defined in BIDS/CAPS specifications)."""
 
     def get_spatial_resolution(self):
@@ -73,12 +74,14 @@ class AtlasAbstract:
 
         return f"{s_x}x{s_y}x{s_z}"
 
+    @staticmethod
     @abc.abstractmethod
-    def get_atlas_labels(self):
+    def get_atlas_labels():
         """Return the image with the different labels/ROIs."""
 
+    @staticmethod
     @abc.abstractmethod
-    def get_tsv_roi(self):
+    def get_tsv_roi():
         """Return the TSV file containing the ROI (regions of interest) of the atlas."""
 
     def get_index(self):
@@ -330,12 +333,12 @@ class Hammers(AtlasAbstract):
     def get_atlas_labels():
         from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
 
-        HAMMERS_PARC = RemoteFileStructure(
+        hammers_parc = RemoteFileStructure(
             filename="atlas-Hammers_dseg.nii.gz",
             url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
             checksum="c034a7bce2dcab390a0b72f4e7d04769eb3fe5b990d0e18d89b0ce73339a5376",
         )
-        return get_file_from_server(HAMMERS_PARC)
+        return get_file_from_server(hammers_parc)
 
     @staticmethod
     def get_tsv_roi():
@@ -362,12 +365,12 @@ class LPBA40(AtlasAbstract):
     def get_atlas_labels():
         from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
 
-        LPBA40_PARC = RemoteFileStructure(
+        lpba40_parc = RemoteFileStructure(
             filename="atlas-LPBA40_dseg.nii.gz",
             url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
             checksum="20826b572bbbdbcdbf28bbd3801dc0c2fed28d1e54bc4fd5027e64ccc6d50374",
         )
-        return get_file_from_server(LPBA40_PARC)
+        return get_file_from_server(lpba40_parc)
 
     @staticmethod
     def get_tsv_roi():
@@ -427,12 +430,12 @@ class Neuromorphometrics(AtlasAbstract):
     def get_atlas_labels():
         from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
 
-        NEUROMORPHOMETRICS_PARC = RemoteFileStructure(
+        neuromorphometrics_parc = RemoteFileStructure(
             filename="atlas-Neuromorphometrics_dseg.nii.gz",
             url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
             checksum="19a50136cd2f8a14357a19ad8a1dc4a2ecb6beb3fc16cb5441f4f2ebaf64a9a5",
         )
-        return get_file_from_server(NEUROMORPHOMETRICS_PARC)
+        return get_file_from_server(neuromorphometrics_parc)
 
     @staticmethod
     def get_tsv_roi():
@@ -445,18 +448,3 @@ class Neuromorphometrics(AtlasAbstract):
             "atlases",
             "atlas-Neuromorphometrics_dseg.tsv",
         )
-
-
-class AtlasLoader:
-    def __init__(self, atlases=None):
-        self.atlas = {}
-        if atlases:
-            for atlas in atlases:
-                self.add_atlas(atlas)
-
-    def add_atlas(self, atlas):
-        if not isinstance(atlas, AtlasAbstract):
-            raise Exception("Atlas element must be an AtlasAbstract type")
-
-    def get_atlases(self):
-        return self.atlas
