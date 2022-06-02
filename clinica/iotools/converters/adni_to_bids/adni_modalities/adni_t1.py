@@ -454,17 +454,18 @@ def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
     """
     import numpy as np
 
-    multiple_mag_strength = False
+    multiple_mag_strength = len(scans_meta.MagStrength.unique()) > 1
 
     # Select preferred_field_strength images
-    if len(scans_meta.MagStrength.unique()) > 1:
-        multiple_mag_strength = True
+    if multiple_mag_strength:
         # Save for later the scans with the non preferred magnetic field strength
         not_preferred_scan = scans_meta[
             scans_meta.MagStrength != preferred_field_strength
         ]
         # Filtering to keep only the scans with the preferred magnetic field strength
         scans_meta = scans_meta[scans_meta.MagStrength == preferred_field_strength]
+    else:
+        not_preferred_scan = None
 
     if scans_meta.MagStrength.unique()[0] == 3.0:
 
