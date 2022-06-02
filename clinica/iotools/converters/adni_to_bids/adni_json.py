@@ -196,10 +196,10 @@ def _check_processed_image_rating(
 def _get_root_from_xml_path(xml_path: str) -> xml.etree.ElementTree.Element:
     """Return the root XML element from the XML file path."""
     import os
-    import xml.etree.ElementTree as ET
+    from xml.etree import ElementTree
 
     try:
-        tree = ET.parse(xml_path)
+        tree = ElementTree.parse(xml_path)
         root = tree.getroot()
     except Exception as e:
         raise ValueError(os.path.basename(xml_path) + ": " + str(e))
