@@ -67,6 +67,8 @@ class AdniToBids(Converter):
         Args:
             clinical_data_dir:  path to the clinical data directory
             out_path: path to the BIDS directory
+            clinical_data_only: process clinical data only
+            subjects_list_path: restrict processing to this manifest of subjects
             xml_path: path to the XML metadata files
         """
         import os
