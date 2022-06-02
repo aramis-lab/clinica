@@ -156,7 +156,7 @@ class AdniToBids(Converter):
         clinical_dir,
         dest_dir,
         subjs_list_path=None,
-        modalities=["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"],
+        modalities=None,
         force_new_extraction=False,
     ):
         """Convert the images of ADNI.
@@ -184,6 +184,8 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
         from clinica.utils.stream import cprint
+
+        modalities = modalities or self.get_modalities_supported()
 
         adni_merge_path = path.join(clinical_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path)
