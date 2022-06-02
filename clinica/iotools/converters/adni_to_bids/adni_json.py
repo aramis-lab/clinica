@@ -301,7 +301,7 @@ def _get_image_metadata(img: xml.etree.ElementTree.Element) -> dict:
     }
 
 
-def _get_image_rating(image_rating: xml.etree.ElementTree.Element) -> Optional[int]:
+def _get_image_rating(image_rating: xml.etree.ElementTree.Element) -> Optional[str]:
     """Get the image rating value as an integer from the xml element."""
     if image_rating.tag != "imageRating":
         return None
@@ -529,7 +529,7 @@ def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> Non
     return None
 
 
-def create_json_metadata(bids_subjs_paths: str, bids_ids: list, xml_path: str) -> None:
+def create_json_metadata(bids_subjs_paths: list, bids_ids: list, xml_path: str) -> None:
     """Create json metadata dictionary and add the metadata to the
     appropriate files in the BIDS hierarchy."""
     from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni
