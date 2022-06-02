@@ -381,7 +381,7 @@ def _parse_xml_file(xml_path: str) -> dict:
     return scan_metadata
 
 
-class func_with_exception:
+class FuncWithException:
     def __init__(self, f):
         self.f = f
 
@@ -400,7 +400,7 @@ def _run_parsers(xml_files: list) -> Tuple[list, dict]:
     """
     import os
 
-    parser = func_with_exception(_parse_xml_file)
+    parser = FuncWithException(_parse_xml_file)
     imgs_with_excep = dict(
         zip(
             xml_files,  # tqdm is buggy when chunksize > 1
