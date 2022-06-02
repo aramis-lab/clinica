@@ -31,21 +31,18 @@ def convert_adni_fdg_pet(
     cprint(
         f"Calculating paths of FDG PET images. Output will be stored in {conversion_dir}."
     )
-    images = compute_fdg_pet_paths(
-        source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
-    )
+    images = compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir)
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "fdg", mod_to_update=mod_to_update)
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
-def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
+def compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     """Compute the paths to the FDG PET images and store them in a TSV file.
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
         conversion_dir: path to the TSV files including the paths to original images
 
