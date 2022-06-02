@@ -4,7 +4,7 @@ from typing import Optional, Tuple, Union
 
 import pandas as pd
 
-# Maps names of extracted metadata to their proper BIDS names
+# Map from names of extracted metadata to their proper BIDS names.
 METADATA_NAME_MAPPING = {
     "acquisition_type": "MRAcquisitionType",
     "pulse_sequence": "PulseSequenceType",
