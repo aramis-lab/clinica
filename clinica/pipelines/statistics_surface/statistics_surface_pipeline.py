@@ -21,7 +21,7 @@ class StatisticsSurface(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.group import check_group_label
 
-        from .statistics_surface_utils import get_t1_freesurfer_custom_file
+        from ._inputs import _get_t1_freesurfer_custom_file_template
 
         # Clinica compulsory parameters
         self.parameters.setdefault("group_label", None)
@@ -51,7 +51,7 @@ class StatisticsSurface(cpe.Pipeline):
         self.parameters.setdefault("suvr_reference_region", None)
 
         # Optional parameters for custom pipeline
-        self.parameters.setdefault("custom_file", get_t1_freesurfer_custom_file())
+        self.parameters.setdefault("custom_file", _get_t1_freesurfer_custom_file_template(self.base_dir))
         self.parameters.setdefault("measure_label", "ct")
 
         # Advanced parameters
