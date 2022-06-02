@@ -43,6 +43,7 @@ def compute_t1_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
+        subjs_list: subjects list
         conversion_dir: path to the TSV files including the paths to original images
 
     Returns:
