@@ -510,7 +510,8 @@ def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> Non
     """Add the metadata to the appropriate tsv and json files."""
     from clinica.iotools.bids_utils import get_bids_sess_list
 
-    MERGE_STRATEGY = {"how": "left", "left_on": "scan_id", "right_on": "T1w_scan_id"}
+    merge_strategy = {"how": "left", "left_on": "scan_id", "right_on": "T1w_scan_id"}
+
     for subj_path in bids_subjs_paths:
         sess_list = get_bids_sess_list(subj_path)
         if sess_list:
@@ -519,7 +520,7 @@ def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> Non
                 if df_scans is not None:
                     columns_to_keep = list(df_scans.columns) + ["acq_time"]
                     df_merged = _merge_scan_and_metadata(
-                        df_scans, df_meta, MERGE_STRATEGY
+                        df_scans, df_meta, merge_strategy
                     )
                     for _, scan_row in df_merged.iterrows():
                         scan_path = Path(subj_path) / sess / scan_row["filename"]
