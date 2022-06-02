@@ -77,9 +77,6 @@ def generate_regional_measures_alt(
             "CurvInd",
         ]
         hemi_dict = {"left": "lh", "right": "rh"}
-        atlas_dict = {
-            atlas: atlas,
-        }
         info_dict = {
             "volume": "GrayVol",
             "thickness": "ThickAvg",
@@ -93,7 +90,7 @@ def generate_regional_measures_alt(
             for hemi in ("left", "right"):
                 stats_filename_dict[hemi] = os.path.join(
                     stats_folder,
-                    "{0}.{1}.stats".format(hemi_dict[hemi], atlas_dict[atlas]),
+                    "{0}.{1}.stats".format(hemi_dict[hemi], atlas),
                 )
                 df_dict[hemi] = pandas.read_csv(
                     stats_filename_dict[hemi],
