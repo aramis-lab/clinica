@@ -77,9 +77,6 @@ def generate_regional_measures_alt(
             "CurvInd",
         ]
         hemi_dict = {"left": "lh", "right": "rh"}
-        # atlas_dict = {
-        # atlas: atlas,
-        # }
         info_dict = {
             "volume": "GrayVol",
             "thickness": "ThickAvg",
