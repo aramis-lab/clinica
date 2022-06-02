@@ -476,20 +476,20 @@ def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
 
         if not images_qc.empty:
             selected_image = None
-            # We check if there is a single selected series image
+            # Check if there is only one selected series image.
             if np.sum(images_qc.series_selected) == 1:
                 selected_image = (
                     images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
                 )
-            # Otherwise we select the one with the best QC if available
+            # Otherwise, select the one with the best QC if available.
             else:
                 images_not_rejected = images_qc[images_qc.series_quality < 4]
 
                 if images_not_rejected.empty:
 
-                    # There are no images that passed the qc
-                    # so we'll try to see if there are other images without qc,
-                    # otherwise return None
+                    # There are no images that passed the qc,
+                    # so we'll try to see if there are other images without qc.
+                    # Otherwise, return None.
                     qc_ids = set(
                         [int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()]
                     )
@@ -566,7 +566,7 @@ def check_qc(scan, subject_id, visit_str, mri_quality_subj):
         mri_quality_subj: DatFrame of MR image quality of images corresponding to the subject
 
     Returns:
-        boolean, True if image passed QC or if there is not available QC, False elsewhere
+        boolean, True if image passed QC or if there is no available QC, False otherwise.
     """
     from clinica.utils.stream import cprint
 
