@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from clinica.iotools.abstract_converter import Converter
 
@@ -38,7 +38,8 @@ def get_bids_subjs_info(
 
 
 class AdniToBids(Converter):
-    def get_modalities_supported(self):
+    @classmethod
+    def get_modalities_supported(cls) -> List[str]:
         """Return a list of modalities supported.
 
         Returns: a list containing the modalities supported by the converter
@@ -46,7 +47,8 @@ class AdniToBids(Converter):
         """
         return ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
 
-    def check_adni_dependencies(self):
+    @classmethod
+    def check_adni_dependencies(cls) -> None:
         """Check the dependencies of ADNI converter."""
         from clinica.utils.check_dependency import check_dcm2niix
 
