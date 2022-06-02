@@ -13,7 +13,7 @@ METADATA_NAME_MAPPING = {
 }
 
 
-def _read_xml_files(subj_ids: list = [], xml_path: str = "") -> list:
+def _read_xml_files(subj_ids: Optional[list] = None, xml_path: str = "") -> list:
     """Return the XML files in the folder `xml_path` for the provided `subj_ids`.
     This function assumes that file are named "ADNI_{sub_ids}.xml".
     If no files were found, an `IndexError` is raised.
