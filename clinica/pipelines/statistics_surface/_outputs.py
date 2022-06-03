@@ -3,16 +3,13 @@ StatisticsSurface Pipeline to disk.
 """
 
 import warnings
-import numpy as np
 from os import PathLike
 from typing import Dict, List, Union
 
+import numpy as np
 
-def _save_results_to_json(
-        results: Dict,
-        filename_root: PathLike,
-        verbose: bool = True
-):
+
+def _save_results_to_json(results: Dict, filename_root: PathLike, verbose: bool = True):
     """Write the provided results to JSON format.
 
     Parameters
@@ -22,6 +19,7 @@ def _save_results_to_json(
     verbose : Verbose mode.
     """
     import json
+
     out_json_file = str(filename_root) + "_results.json"
     if verbose:
         print(f"--> Writing results to JSON in {out_json_file}...")
@@ -43,9 +41,9 @@ def _save_results_to_json(
 
 
 def _save_results_to_mat(
-        results: Dict,
-        filename_root: PathLike,
-        verbose: bool = True,
+    results: Dict,
+    filename_root: PathLike,
+    verbose: bool = True,
 ):
     """Write the provided results to mat format.
 
@@ -84,11 +82,7 @@ def _save_results_to_mat(
         )
 
 
-def _save_results_to_bids(
-        results: Dict,
-        filename_root: PathLike,
-        verbose: bool = True
-):
+def _save_results_to_bids(results: Dict, filename_root: PathLike, verbose: bool = True):
     """Write provided results to BIDS format.
 
     .. warning::
@@ -106,10 +100,10 @@ WRITERS = {
 
 
 def _save_results(
-        results: Dict,
-        filename_root: PathLike,
-        out_formats: Union[str, List] = "all",
-        verbose: bool = True
+    results: Dict,
+    filename_root: PathLike,
+    out_formats: Union[str, List] = "all",
+    verbose: bool = True,
 ):
     """Write the provided results to all requested output formats.
 
@@ -141,19 +135,19 @@ def _print_clusters(model, threshold: float):
     """
     print("#" * 40)
     print("After correction (Clusterwise Correction for Multiple Comparisons): ")
-    df = model.P['clus'][1]
+    df = model.P["clus"][1]
     print(df)
     print(f"Clusters found: {len(df)}")
     print(f"Significative clusters (after correction): {len(df[df['P'] <= threshold])}")
 
 
 def _plot_stat_map(
-        mesh: np.ndarray,
-        texture: np.ndarray,
-        filename: str,
-        threshold: float = None,
-        title: str = None,
-        verbose: bool = True
+    mesh: np.ndarray,
+    texture: np.ndarray,
+    filename: str,
+    threshold: float = None,
+    title: str = None,
+    verbose: bool = True,
 ):
     """Plot a given texture over the provided mesh using Nilearn's
     plot_surf_stat_map function.
@@ -176,15 +170,16 @@ def _plot_stat_map(
     if verbose:
         print(f"--> Saving plot to {plot_filename}")
     plot_surf_stat_map(
-        mesh, texture, threshold=threshold, output_file=plot_filename, title=title,
+        mesh,
+        texture,
+        threshold=threshold,
+        output_file=plot_filename,
+        title=title,
     )
 
 
 def _plot_results(
-        results: Dict,
-        filename_root: PathLike,
-        mesh: np.ndarray,
-        verbose: bool = True
+    results: Dict, filename_root: PathLike, mesh: np.ndarray, verbose: bool = True
 ):
     """This function will plot all possible surfaces in the
     provided results dictionary.
@@ -200,12 +195,16 @@ def _plot_results(
     for name, result in results.items():
         if name not in RESULTS_NO_PLOT:
             if isinstance(result, dict):
-                texture = result['P']
+                texture = result["P"]
             else:
                 texture = result
             _plot_stat_map(
-                mesh, texture, str(filename_root) + name,
-                threshold=None, title=name, verbose=verbose,
+                mesh,
+                texture,
+                str(filename_root) + name,
+                threshold=None,
+                title=name,
+                verbose=verbose,
             )
 
 
@@ -220,8 +219,8 @@ def _save_to_mat(struct: Dict, filename: str, key: str, verbose: bool = True):
     verbose : Verbose mode.
     """
     from scipy.io import savemat
+
     mat_filename = filename + ".mat"
     if verbose:
         print(f"--> Saving matrix to {mat_filename}")
     savemat(mat_filename, {key: struct})
-
