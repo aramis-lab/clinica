@@ -831,7 +831,9 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
         for folder in os.listdir(conversion_path)
         if folder[0] == "v" and path.isdir(path.join(conversion_path, folder))
     ]
-    conversion_version = sorted(conversion_versions, key=lambda x: int(x.split("v")[1]))
+    conversion_versions = sorted(
+        conversion_versions, key=lambda x: int(x.split("v")[1])
+    )
     older_version = conversion_versions[-1]
     converted_dict = dict()
     for tsv_path in os.listdir(path.join(conversion_path, older_version)):
