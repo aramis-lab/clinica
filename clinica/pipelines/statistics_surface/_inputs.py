@@ -120,10 +120,12 @@ def _build_thickness_array(
         session = row[TSV_SECOND_COLUMN]
         parts = (
             load(
-                Path(input_dir)
-                / Path(
-                    surface_file.safe_substitute(
-                        subject=subject, session=session, fwhm=fwhm, hemi=hemi
+                str(
+                    Path(input_dir)
+                    / Path(
+                        surface_file.safe_substitute(
+                            subject=subject, session=session, fwhm=fwhm, hemi=hemi
+                        )
                     )
                 )
             ).get_fdata()
