@@ -22,7 +22,7 @@ def _get_contrasts_and_filenames(
 
     Parameters
     ----------
-    glm_type : Type of GLM to run (either 'group_comparision' or 'correlation')
+    glm_type : Type of GLM to run (either 'group_comparison' or 'correlation')
     contrast : Desired contrast.
     df : Subject DataFrame.
 
