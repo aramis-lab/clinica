@@ -66,7 +66,7 @@ def _save_results_to_mat(
     # These labels are used for compatibility with the previous
     # MATLAB implementation of the Statistics Surface Pipeline
     # of Clinica.
-    STRUCT_LABELS = {
+    struct_labels = {
         "coefficients": "coef",
         "TStatistics": "tvaluewithmask",
         "uncorrectedPValue": "uncorrectedpvaluesstruct",
@@ -77,7 +77,7 @@ def _save_results_to_mat(
         _save_to_mat(
             result,
             str(filename_root) + "_" + name,
-            STRUCT_LABELS[name],
+            struct_labels[name],
             verbose=verbose,
         )
 
