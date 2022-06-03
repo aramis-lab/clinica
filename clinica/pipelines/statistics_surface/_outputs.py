@@ -191,7 +191,7 @@ def _plot_results(
     mesh : The mesh to be used for plotting.
     verbose : Verbose mode.
     """
-    RESULTS_NO_PLOT = set(["coefficients"])
+    RESULTS_NO_PLOT = {"coefficients"}
     for name, result in results.items():
         if name not in RESULTS_NO_PLOT:
             if isinstance(result, dict):
