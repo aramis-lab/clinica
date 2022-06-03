@@ -3,7 +3,7 @@ from functools import reduce
 import pandas as pd
 from brainstat.stats.terms import FixedEffect
 
-from ._utils import MISSING_TERM_ERROR_MSG, _is_categorical
+from ._utils import MISSING_TERM_ERROR_MSG
 
 
 def _build_model(design_matrix: str, df: pd.DataFrame):
