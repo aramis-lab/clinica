@@ -17,6 +17,8 @@ def visits_to_timepoints(
         mri_list_subj: Dataframe containing list of MRI scans for the subject
         adnimerge_subj: Dataframe containing visits data for the subject
         modality: Imaging modality
+        visit_field: field name corresponding to the visit
+        scandate_field: field name corresponding to the scan date
 
     Returns:
         [Returns]
