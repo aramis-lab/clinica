@@ -473,7 +473,7 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     import os
     from os import path
 
-    def compute_amyloid_status(row, tau_status=False):
+    def compute_amyloid_status(row):
         stat = ""
         if (
             pd.isnull(row["adni_av45"])
