@@ -51,7 +51,9 @@ class StatisticsSurface(cpe.Pipeline):
         self.parameters.setdefault("suvr_reference_region", None)
 
         # Optional parameters for custom pipeline
-        self.parameters.setdefault("custom_file", _get_t1_freesurfer_custom_file_template(self.base_dir))
+        self.parameters.setdefault(
+            "custom_file", _get_t1_freesurfer_custom_file_template(self.base_dir)
+        )
         self.parameters.setdefault("measure_label", "ct")
 
         # Advanced parameters

@@ -1,9 +1,9 @@
+from functools import reduce
 
 import pandas as pd
-from functools import reduce
 from brainstat.stats.terms import FixedEffect
 
-from ._utils import _is_categorical, MISSING_TERM_ERROR_MSG
+from ._utils import MISSING_TERM_ERROR_MSG, _is_categorical
 
 
 def _build_model(design_matrix: str, df: pd.DataFrame):
@@ -45,8 +45,7 @@ def _build_model(design_matrix: str, df: pd.DataFrame):
         if "*" in term:
             sub_terms = [_.strip() for _ in term.split("*")]
             model_term = reduce(
-                lambda x, y: x * y,
-                [_build_model_term(_, df) for _ in sub_terms]
+                lambda x, y: x * y, [_build_model_term(_, df) for _ in sub_terms]
             )
         else:
             model_term = _build_model_term(term, df)
@@ -72,5 +71,3 @@ def _build_model_term(term: str, df: pd.DataFrame) -> FixedEffect:
     if term not in df.columns:
         raise ValueError(MISSING_TERM_ERROR_MSG.safe_substitute(term=term))
     return FixedEffect(df[term])
-
-

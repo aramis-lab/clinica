@@ -3,19 +3,20 @@ different types of GLMs.
 """
 
 
-import numpy as np
-import pandas as pd
 from string import Template
 from typing import Dict, Tuple
+
+import numpy as np
+import pandas as pd
 
 from ._inputs import _check_contrast
 from ._utils import _is_categorical
 
 
 def _get_contrasts_and_filenames(
-        glm_type: str,
-        contrast: str,
-        df: pd.DataFrame,
+    glm_type: str,
+    contrast: str,
+    df: pd.DataFrame,
 ):
     """Transforms the contrast in string format into matrix format.
 
@@ -30,9 +31,9 @@ def _get_contrasts_and_filenames(
     contrasts : Dictionary <contrast_name>:<contrast_vector>
     filenames : Dictionary <contrast_name>:<root_filename>
     """
-    (
-        abs_contrast, contrast_sign, with_interaction
-    ) = _check_contrast(contrast, df, glm_type)
+    (abs_contrast, contrast_sign, with_interaction) = _check_contrast(
+        contrast, df, glm_type
+    )
     if glm_type == "group_comparison":
         if not with_interaction:
             return _get_group_contrast_without_interaction(abs_contrast, df)
@@ -48,8 +49,8 @@ def _get_contrasts_and_filenames(
 
 
 def _get_group_contrast_with_interaction(
-        contrast: str,
-        df: pd.DataFrame,
+    contrast: str,
+    df: pd.DataFrame,
 ) -> Tuple[Dict, Dict]:
     """Build contrasts and filename roots for group GLMs with interaction.
 
@@ -83,15 +84,15 @@ def _get_group_contrast_with_interaction(
         (df[categorical_contrast] == group_values[1]).astype(int)
     )
     contrasts[contrast] = built_contrast
-    filenames[contrast] = (
-        Template("interaction-${contrast_name}_measure-${feature_label}_fwhm-${fwhm}")
+    filenames[contrast] = Template(
+        "interaction-${contrast_name}_measure-${feature_label}_fwhm-${fwhm}"
     )
     return contrasts, filenames
 
 
 def _get_group_contrast_without_interaction(
-        contrast: str,
-        df: pd.DataFrame,
+    contrast: str,
+    df: pd.DataFrame,
 ):
     """Build contrasts and filename roots for group GLMs without interaction.
 
@@ -115,20 +116,19 @@ def _get_group_contrast_without_interaction(
     group_values = np.unique(df[contrast])
     for contrast_type, (i, j) in zip(["positive", "negative"], [(0, 1), (1, 0)]):
         contrast_name = f"{group_values[i]}-lt-{group_values[j]}"
-        contrasts[contrast_name] = (
-            (df[contrast] == group_values[i]).astype(int) -
-            (df[contrast] == group_values[j]).astype(int)
-        )
-        filenames[contrast_name] = (
-            Template("group-${group_label}_${contrast_name}_measure-${feature_label}_fwhm-${fwhm}")
+        contrasts[contrast_name] = (df[contrast] == group_values[i]).astype(int) - (
+            df[contrast] == group_values[j]
+        ).astype(int)
+        filenames[contrast_name] = Template(
+            "group-${group_label}_${contrast_name}_measure-${feature_label}_fwhm-${fwhm}"
         )
     return contrasts, filenames
 
 
 def _get_correlation_contrast(
-        contrast: str,
-        df: pd.DataFrame,
-        contrast_sign: str,
+    contrast: str,
+    df: pd.DataFrame,
+    contrast_sign: str,
 ):
     """Build contrasts and filename roots for correlation GLMs.
 
@@ -155,4 +155,3 @@ def _get_correlation_contrast(
         "measure-${feature_label}_fwhm-${fwhm}"
     )
     return contrasts, filenames
-

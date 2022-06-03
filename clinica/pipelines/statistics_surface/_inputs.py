@@ -3,13 +3,13 @@ and performing some checks on them.
 """
 
 import warnings
-import numpy as np
-import pandas as pd
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Tuple
 from string import Template
+from typing import Dict, Tuple
 
+import numpy as np
+import pandas as pd
 
 DEFAULT_FWHM = 20
 DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE = 0.001
@@ -47,7 +47,12 @@ def _extract_parameters(parameters: Dict) -> Tuple[float, float, float, float]:
     cluster_threshold = DEFAULT_CLUSTER_THRESHOLD
     if "clusterthreshold" in parameters:
         cluster_threshold = parameters["clusterthreshold"]
-    return fwhm, threshold_uncorrected_pvalue, threshold_corrected_pvalue, cluster_threshold
+    return (
+        fwhm,
+        threshold_uncorrected_pvalue,
+        threshold_corrected_pvalue,
+        cluster_threshold,
+    )
 
 
 def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
@@ -65,9 +70,7 @@ def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
         raise FileNotFoundError(f"File {tsv_file} does not exist.")
     tsv_data = pd.read_csv(tsv_file, sep="\t")
     if len(tsv_data.columns) < 2:
-        raise ValueError(
-            f"The TSV data in {tsv_file} should have at least 2 columns."
-        )
+        raise ValueError(f"The TSV data in {tsv_file} should have at least 2 columns.")
     if tsv_data.columns[0] != TSV_FIRST_COLUMN:
         raise ValueError(
             f"The first column in {tsv_file} should always be {TSV_FIRST_COLUMN}."
@@ -82,18 +85,19 @@ def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
 def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> Template:
     """Returns a Template for the path to the desired surface file."""
     return Template(
-        str(base_dir) + (
-        "/${subject}/${session}/t1/freesurfer_cross_sectional/${subject}_${session}"
-        "/surf/${hemi}.thickness.fwhm${fwhm}.fsaverage.mgh"
+        str(base_dir)
+        + (
+            "/${subject}/${session}/t1/freesurfer_cross_sectional/${subject}_${session}"
+            "/surf/${hemi}.thickness.fwhm${fwhm}.fsaverage.mgh"
         )
     )
 
 
 def _build_thickness_array(
-        input_dir: PathLike,
-        surface_file: Template,
-        df: pd.DataFrame,
-        fwhm: float,
+    input_dir: PathLike,
+    surface_file: Template,
+    df: pd.DataFrame,
+    fwhm: float,
 ) -> np.ndarray:
     """This function builds the cortical thickness array.
 
@@ -109,16 +113,21 @@ def _build_thickness_array(
     thickness : Cortical thickness. Hemispheres and subjects are stacked.
     """
     from nibabel.freesurfer.mghformat import load
+
     thickness = []
     for idx, row in df.iterrows():
         subject = row[TSV_FIRST_COLUMN]
         session = row[TSV_SECOND_COLUMN]
         parts = (
             load(
-                Path(input_dir) / Path(surface_file.safe_substitute(
-                    subject=subject, session=session, fwhm=fwhm, hemi=hemi
-                ))
-            ).get_fdata() for hemi in ['lh', 'rh']
+                Path(input_dir)
+                / Path(
+                    surface_file.safe_substitute(
+                        subject=subject, session=session, fwhm=fwhm, hemi=hemi
+                    )
+                )
+            ).get_fdata()
+            for hemi in ["lh", "rh"]
         )
         combined = np.vstack(parts)
         thickness.append(combined.flatten())
@@ -160,15 +169,15 @@ def _get_average_surface(fsaverage_path: PathLike) -> dict:
     average_mesh : Average mesh as a Nilearn Mesh object.
     """
     from nilearn.surface import Mesh, load_surf_mesh
+
     meshes = [
         load_surf_mesh(str(fsaverage_path / Path(f"{hemi}.pial")))
-        for hemi in ['lh', 'rh']
+        for hemi in ["lh", "rh"]
     ]
     coordinates = np.vstack([mesh.coordinates for mesh in meshes])
-    faces = np.vstack([
-        meshes[0].faces,
-        meshes[1].faces + meshes[0].coordinates.shape[0]
-    ])
+    faces = np.vstack(
+        [meshes[0].faces, meshes[1].faces + meshes[0].coordinates.shape[0]]
+    )
     average_mesh = Mesh(
         coordinates=coordinates,
         faces=faces,
@@ -190,9 +199,9 @@ def _get_average_surface(fsaverage_path: PathLike) -> dict:
 
 
 def _check_contrast(
-        contrast: str,
-        df: pd.DataFrame,
-        glm_type: str,
+    contrast: str,
+    df: pd.DataFrame,
+    glm_type: str,
 ) -> Tuple[str, str, bool]:
     """This function performs some basic checks on the provided contrast.
 
@@ -232,4 +241,3 @@ def _check_contrast(
                     "For group comparison, there should be just 2 different groups!"
                 )
     return absolute_contrast, contrast_sign, with_interaction
-

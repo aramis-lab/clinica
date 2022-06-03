@@ -1,7 +1,6 @@
-
-import pandas as pd
 from string import Template
 
+import pandas as pd
 
 MISSING_TERM_ERROR_MSG = Template(
     "Term ${term} from the design matrix is not in the columns of the "

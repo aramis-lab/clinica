@@ -172,6 +172,7 @@ def run_matlab(caps_dir, output_dir, subjects_visits_tsv, pipeline_parameters):
         pipeline_parameters (dict): parameters of StatisticsSurface pipeline
     """
     import os
+
     import clinica.pipelines as clinica_pipelines
     from clinica.pipelines.statistics_surface.clinica_surfstat import clinica_surfstat
     from clinica.pipelines.statistics_surface.statistics_surface_utils import (
