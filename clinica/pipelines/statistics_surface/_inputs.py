@@ -185,7 +185,7 @@ def _get_average_surface(fsaverage_path: PathLike) -> Tuple[dict, Mesh]:
         faces=faces,
     )
     ##################
-    ## UGLY HACK !!! Need investigation
+    # UGLY HACK !!! Need investigation
     ##################
     # Uncomment the following line if getting an error
     # with negative values in bincount in Brainstat.
