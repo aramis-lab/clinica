@@ -191,9 +191,9 @@ def _plot_results(
     mesh : The mesh to be used for plotting.
     verbose : Verbose mode.
     """
-    RESULTS_NO_PLOT = {"coefficients"}
+    results_no_plot = {"coefficients"}
     for name, result in results.items():
-        if name not in RESULTS_NO_PLOT:
+        if name not in results_no_plot:
             if isinstance(result, dict):
                 texture = result["P"]
             else:
