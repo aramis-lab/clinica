@@ -240,9 +240,9 @@ def select_image_qc(id_list, mri_qc_subj):
 
         if images_not_rejected.empty:
 
-            # There are no images that passed the qc
-            # so we'll try to see if there are other images without qc,
-            # otherwise return None
+            # There are no images that passed the qc,
+            # so we'll try to see if there are other images without qc.
+            # Otherwise, return None.
             qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
             no_qc_ids = list(set(int_ids) - qc_ids)
 
@@ -582,9 +582,8 @@ def bids_id_to_loni(bids_id: str) -> Union[str, None]:
 def filter_subj_bids(df_files, location, bids_ids):
     import clinica.iotools.bids_utils as bids
 
-    # Depending of the file that needs to be open, identify and
-    # do needed preprocessing on the column that contains the
-    # subjects ids
+    # Depending on the file that needs to be open, identify and
+    # preprocess the column that contains the subjects ids.
     bids_ids = [x[8:] for x in bids_ids if "sub-ADNI" in x]
     if location == "ADNIMERGE.csv":
         df_files["RID"] = df_files["PTID"].apply(
@@ -722,10 +721,10 @@ def create_adni_sessions_dict(
                     df_subj_session, df_filtered, df_sessions, location
                 )
             else:
-                dict_column_correspondance = dict(
+                dict_column_correspondence = dict(
                     zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
                 )
-                df_filtered.rename(columns=dict_column_correspondance, inplace=True)
+                df_filtered.rename(columns=dict_column_correspondence, inplace=True)
                 df_filtered = df_filtered.loc[
                     :, (~df_filtered.columns.isin(df_subj_session.columns))
                 ]
@@ -1305,7 +1304,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     image_list = glob(path.join(dicom_path, f"*{image_uid}.dcm"))
     if len(dicom_list) != len(image_list):
 
-        # Remove the precedent tmp_dcm_folder if is existing
+        # Remove the precedent tmp_dcm_folder if present.
         if os.path.exists(dest_path):
             shutil.rmtree(dest_path)
         os.mkdir(dest_path)
