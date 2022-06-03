@@ -36,7 +36,7 @@ jinja2 = "^3"
 xvfbwrapper = "*"
 numpy = "^1.17"
 scikit-learn = "^1.0"
-nilearn = "^0.7.0"
+nilearn = {version = "^0.7.0", extras = ["plotting"]}
 colorlog = "^5"
 xgboost = "*"
 scipy = "^1.7"
