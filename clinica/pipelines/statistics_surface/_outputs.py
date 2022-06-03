@@ -213,7 +213,7 @@ def _save_to_mat(struct: Dict, filename: str, key: str, verbose: bool = True):
 
     Parameters
     ----------
-    struct : Dictinary to write.
+    struct : Dictionary to write.
     filename : File name for writing (without the '.mat' extension).
     key : Key to be used to refer to the provided struct.
     verbose : Verbose mode.
