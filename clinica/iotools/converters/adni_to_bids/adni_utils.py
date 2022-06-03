@@ -224,7 +224,6 @@ def select_image_qc(id_list, mri_qc_subj):
     if len(id_list) == 0:
         return None
 
-    selected_image = None
     image_ids = ["I" + str(imageuid) for imageuid in id_list]
     int_ids = [int(imageuid) for imageuid in id_list]
     images_qc = mri_qc_subj[mri_qc_subj.loni_image.isin(image_ids)]
