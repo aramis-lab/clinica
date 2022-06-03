@@ -473,33 +473,31 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     import os
     from os import path
 
-    def compute_amyloid_status(row):
-        stat = ""
+    def compute_amyloid_status(row: pd.DataFrame) -> str:
         if (
             pd.isnull(row["adni_av45"])
             and pd.isnull(row["adni_pib"])
             and isinstance(row["adni_abeta"], float)
         ):
-            stat = "Au"
+            return "Au"
         elif row["adni_av45"] > 1.1 or row["adni_pib"] > 1.5 or row["adni_abeta"] < 192:
-            stat = "A+"
+            return "A+"
         elif (
             (pd.isnull(row["adni_av45"]) or row["adni_av45"] < 1.1)
             and (pd.isnull(row["adni_pib"]) or row["adni_pib"] < 1.5)
             and (isinstance(row["adni_abeta"], float) or row["adni_abeta"] > 192)
         ):
-            stat = "A-"
-        return stat
-
-    def compute_ptau_status(row):
-        stat = ""
-        if pd.isnull(row["adni_ptau"]):
-            stat = "Tu"
-        elif row["adni_ptau"] > 23:
-            stat = "T+"
+            return "A-"
         else:
-            stat = "T-"
-        return stat
+            return ""
+
+    def compute_ptau_status(row: pd.DataFrame) -> str:
+        if pd.isnull(row["adni_ptau"]):
+            return "Tu"
+        elif row["adni_ptau"] > 23:
+            return "T+"
+        else:
+            return "T-"
 
     df_subj_sessions["adas_memory"] = (
         df_subj_sessions["adas_Q1"]
