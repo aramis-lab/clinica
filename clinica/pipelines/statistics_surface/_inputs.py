@@ -137,7 +137,7 @@ def _build_thickness_array(
     if thickness.shape[0] != len(df):
         raise ValueError(
             f"Unexpected shape for thickness array : {thickness.shape}. "
-            f"Expected {len(df_subjects)} rows."
+            f"Expected {len(df)} rows."
         )
     return thickness
 
