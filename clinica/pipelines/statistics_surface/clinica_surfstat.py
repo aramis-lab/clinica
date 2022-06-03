@@ -98,7 +98,7 @@ def clinica_surfstat(
               For example "AD - ND".
             - "correlation": Performs correlation analysis.
 
-    group_label : Label for thr group.
+    group_label : Label for the group.
     freesurfer_home : Path to the home folder of Freesurfer.
         This is required to get the fsaverage templates.
     surface_file : Path to the surface file.
