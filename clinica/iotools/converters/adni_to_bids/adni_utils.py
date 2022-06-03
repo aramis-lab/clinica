@@ -1025,7 +1025,6 @@ def create_file(image, modality, bids_dir, mod_to_update):
     Args:
         image: Image metadata
         modality: Imaging modality
-        total: Total number of images to convert
         bids_dir: Path to the output BIDS directory
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
