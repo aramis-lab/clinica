@@ -1,7 +1,6 @@
 """This file contains functions for loading data from disk
 and performing some checks on them.
 """
-
 import warnings
 from os import PathLike
 from pathlib import Path
@@ -10,6 +9,7 @@ from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
+from nilearn.surface import Mesh
 
 DEFAULT_FWHM = 20
 DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE = 0.001
@@ -142,7 +142,7 @@ def _build_thickness_array(
     return thickness
 
 
-def _get_average_surface(fsaverage_path: PathLike) -> dict:
+def _get_average_surface(fsaverage_path: PathLike) -> Tuple[dict, Mesh]:
     """This function extracts the average surface and the average mesh
     from the path to the fsaverage templates.
 
