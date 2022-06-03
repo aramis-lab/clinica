@@ -151,7 +151,7 @@ def clinica_surfstat(
         _save_results(results, filename_root, out_formats="all", verbose=verbose)
         try:
             _plot_results(results, filename_root, average_mesh, verbose=verbose)
-        except:
+        except:  # noqa
             print("Plotting failed...")
             pass
         _print_clusters(slm_model, threshold_corrected_pvalue)
