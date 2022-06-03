@@ -161,15 +161,13 @@ def _plot_stat_map(
     title : Title to display on the plot.
     verbose : Verbose mode.
     """
-    try:
-        from nilearn.plotting import plot_surf_stat_map
-    except ImportError:
-        raise ImportError(
-            "Nilearn is required to plot the surfaces obtained with this pipeline."
-        )
+    from nilearn.plotting import plot_surf_stat_map
+
     plot_filename = filename + ".png"
+
     if verbose:
         print(f"--> Saving plot to {plot_filename}")
+
     plot_surf_stat_map(
         mesh,
         texture,
