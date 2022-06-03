@@ -182,7 +182,7 @@ def _plot_results(
     results: Dict, filename_root: PathLike, mesh: np.ndarray, verbose: bool = True
 ):
     """This function will plot all possible surfaces in the
-    provided results dictionary.
+    provided results' dictionary.
 
     Parameters
     ----------
