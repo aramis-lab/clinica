@@ -7,6 +7,7 @@ from os import PathLike
 from typing import Dict, List, Union
 
 import numpy as np
+from nilearn.surface import Mesh
 
 
 def _save_results_to_json(results: Dict, filename_root: PathLike, verbose: bool = True):
@@ -142,7 +143,7 @@ def _print_clusters(model, threshold: float):
 
 
 def _plot_stat_map(
-    mesh: np.ndarray,
+    mesh: Mesh,
     texture: np.ndarray,
     filename: str,
     threshold: float = None,
@@ -179,7 +180,7 @@ def _plot_stat_map(
 
 
 def _plot_results(
-    results: Dict, filename_root: PathLike, mesh: np.ndarray, verbose: bool = True
+    results: Dict, filename_root: PathLike, mesh: Mesh, verbose: bool = True
 ):
     """This function will plot all possible surfaces in the
     provided results' dictionary.
