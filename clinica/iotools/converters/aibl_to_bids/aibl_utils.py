@@ -680,7 +680,6 @@ def create_participants_df_AIBL(
     # Init the dataframe that will be saved in the file participant.tsv
     participant_df = pd.DataFrame(columns=fields_bids)
 
-    csv_files = []
     for i in range(0, len(participant_fields_db)):
         # If a field not empty is found
         if not pd.isnull(participant_fields_db[i]):
