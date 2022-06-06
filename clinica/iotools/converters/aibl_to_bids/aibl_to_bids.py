@@ -1,5 +1,5 @@
 """
-Convert the AIBL dataset (http://www.aibl.csiro.au/) into BIDS.
+Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 """
 
 
