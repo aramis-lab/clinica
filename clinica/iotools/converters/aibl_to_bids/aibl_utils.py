@@ -106,7 +106,7 @@ def find_correspondence_date(index, csv_file):
     return csv_file.EXAMDATE[index]
 
 
-def match_data(exame_date, i, csv_file):
+def match_data(exam_date, i, csv_file):
     """
 
     This method returns the session_ID. It controls if the dates
@@ -115,7 +115,7 @@ def match_data(exame_date, i, csv_file):
     analysed. The session_ID is the corresponding session for that patient
     in that date.  It returns -4 if there are no information.
 
-    :param exame_date: date where the image has been taken, it is saved
+    :param exam_date: date where the image has been taken, it is saved
     from the name of the corresponding subdirector
     :param i: subject_ID
     :param csv_file: csv file where all the information are listed
@@ -131,7 +131,7 @@ def match_data(exame_date, i, csv_file):
         if str(csv_date[xx]) != "-4":
             # check is the date is not '-4'
             m = re.search(
-                "([0-9].*)-(.*)-(.*)_(.*)_(.*)_(.*)", str(exame_date)
+                "([0-9].*)-(.*)-(.*)_(.*)_(.*)_(.*)", str(exam_date)
             )  # string from image directory
             p = re.search(
                 "(.*)/(.*)/(.*)", str(csv_date[xx])
