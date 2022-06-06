@@ -200,14 +200,14 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
 
 
 def dicom_to_nii(subject, output_path, output_filename, image_path):
-    """Convert the dicom images in a nifti files using dicom2nii or mri_convert.
+    """Convert the DICOM images to NIfTI files using dcm2niix.
 
     :param subject:
-    :param output_path: where nifti image is stored
-    :param output_filename: name of the nifti image
-    :param image_path: where dicom files are stored
+    :param output_path: where NIfTI image is stored
+    :param output_filename: name of the NIfTI image
+    :param image_path: where DICOM files are stored
 
-    :return: Image in a nifti format
+    :return: Image in NIfTI format
     """
     import os
     from os.path import exists
