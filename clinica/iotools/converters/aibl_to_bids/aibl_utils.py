@@ -412,7 +412,8 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
         # subdirectories = os.listdir(path_to_T1_1)
         subdirectories = listdir_nohidden(path_to_T1_1)
         for j in range(len(subdirectories)):
-            # we convert only the images which are in this list and we take only one of them for subject
+            # we convert only the images which are in this list,
+            # and we take only one of them for subject
             if subdirectories[j] in [
                 "MPRAGESAGISOp2ND",
                 "MPRAGE_SAG_ISO_p2_ND",
