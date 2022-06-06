@@ -392,7 +392,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
     their name
 
     :param path_to_dataset: path to AIBL dataset
-    :param subjects_ID: subjects_id in the dataset dowloaded
+    :param subjects_ID: subjects_id in the dataset downloaded
     :param sub_ID: the previous list (from T1_ADNI) where new subjects ID
     will be appended
     :param ses_ID: the previous list (from T1_ADNI) where new session ID
@@ -401,7 +401,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
     appended
 
     :return: it completes the list of all the T1 paths including all the
-    images where we didn't find the exame-data but we can fix it with a
+    images where we didn't find the exam data, but we can fix it with
     further analysis
     """
     import os
@@ -424,7 +424,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
         else:
             path_to_T1_2 = os.path.join(path_to_T1_1, subdirectory_for_subject[0])
 
-            exame_date = listdir_nohidden(path_to_T1_2)
+            exam_date = listdir_nohidden(path_to_T1_2)
             if i in [342, 557]:
                 session_ID = "M54"
             else:
@@ -433,7 +433,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
                 i not in sub_ID
             ):
                 # if for a subject in the same session we have both this image and the "ADNI" compliant we are converting the second one since the exame-date is more precise
-                path_to_T1_3 = os.path.join(path_to_T1_2, str(exame_date[0]))
+                path_to_T1_3 = os.path.join(path_to_T1_2, str(exam_date[0]))
                 image_ID = listdir_nohidden(path_to_T1_3)
                 path_to_T1 = os.path.join(path_to_T1_3, image_ID[0])
                 # we append the result to the list
