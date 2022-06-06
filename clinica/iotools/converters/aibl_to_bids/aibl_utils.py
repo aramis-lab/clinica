@@ -782,14 +782,11 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
     sessions_fields_bids = sessions["BIDS CLINICA"]
     fields_dataset = []
     fields_bids = []
-    sessions_dict = {}
 
     for i in range(0, len(sessions_fields)):
         if not pd.isnull(sessions_fields[i]):
             fields_bids.append(sessions_fields_bids[i])
             fields_dataset.append(sessions_fields[i])
-
-    sessions_df = pd.DataFrame(columns=fields_bids)
 
     files_to_read = []
     sessions_fields_to_read = []
@@ -798,7 +795,6 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         if not pd.isnull(sessions_fields[i]):
             # Load the file
             tmp = field_location[i]
-            location = tmp[0]
             file_to_read_path = path.join(clinical_data_dir, tmp)
             files_to_read.append(glob.glob(file_to_read_path)[0])
             sessions_fields_to_read.append(sessions_fields[i])
@@ -806,7 +802,6 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
     rid = pd.read_csv(files_to_read[0], dtype={"text": str}, low_memory=False).RID
     rid = list(set(rid))
     for r in rid:
-        dict = []
         for i in files_to_read:
             file_to_read = pd.read_csv(i, dtype={"text": str})
             if len(file_to_read.columns) == 1:
