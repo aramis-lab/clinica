@@ -432,7 +432,9 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
             if (i in sub_ID and session_ID != ses_ID[sub_ID.index(i)]) or (
                 i not in sub_ID
             ):
-                # if for a subject in the same session we have both this image and the "ADNI" compliant we are converting the second one since the exame-date is more precise
+                # if for a subject in the same session we have both this image
+                # and the "ADNI" compliant we are converting the second one
+                # since the exam date is more precise.
                 path_to_T1_3 = os.path.join(path_to_T1_2, str(exam_date[0]))
                 image_ID = listdir_nohidden(path_to_T1_3)
                 path_to_T1 = os.path.join(path_to_T1_3, image_ID[0])
