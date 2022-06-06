@@ -81,7 +81,7 @@ def find_T1_folder_nodata(subdirectory, path_to_T1_1):
         return "NaN"  # there are no more folders which could contain T1 images
 
 
-def find_correspondance_index(i, csv_file):
+def find_correspondence_index(i, csv_file):
     """Give as output the index of the CSV file analysed which correspond to the 'i' subject.
 
     :param i: subject_ID
@@ -96,7 +96,7 @@ def find_correspondance_index(i, csv_file):
             return index
 
 
-def find_correspondance_date(index, csv_file):
+def find_correspondence_date(index, csv_file):
     """Return the dates reported in the csv_file for the i-subject.
 
     :param index: index corresponding to the subject analysed
@@ -125,8 +125,8 @@ def match_data(exame_date, i, csv_file):
     import re
 
     session_ID = []
-    index = find_correspondance_index(i, csv_file)
-    csv_date = find_correspondance_date(index, csv_file)
+    index = find_correspondence_index(i, csv_file)
+    csv_date = find_correspondence_date(index, csv_file)
     for xx in index:
         if str(csv_date[xx]) != "-4":
             # check is the date is not '-4'
