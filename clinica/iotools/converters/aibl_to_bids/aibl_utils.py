@@ -182,13 +182,12 @@ def list_of_paths():
 
 def check_subdirectories_pet(subdirectories, sub, no_pet):
     """
-
     It returns the correct subdirectories for the PET images, they should
     belong to the list where there all the possible names of the PET images.
 
     :param subdirectories:
     :param sub: all the possible subdirectories which need to be checked
-    :param no pet: list of names of folders which not contain PET images
+    :param no_pet: list of names of folders which not contain PET images
 
     :return subdirectory which is containing a PET image which needs to be
     converted
