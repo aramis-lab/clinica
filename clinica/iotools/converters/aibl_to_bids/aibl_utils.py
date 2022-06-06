@@ -211,8 +211,6 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
     :return: Image in a nifti format
     """
     import os
-    import shutil
-    import subprocess
     from os.path import exists
 
     from clinica.iotools.bids_utils import run_dcm2niix
