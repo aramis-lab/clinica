@@ -51,16 +51,15 @@ def find_T1_folder(subdirectory, path_to_T1_1):
 
 def find_T1_folder_nodata(subdirectory, path_to_T1_1):
     """
-
     This method checks if the subdirectory contains a T1 image, and it
     returns the path. This method differs from the find_T1_folder since for
-    these folders the exame_date is not present in the clinical excel file
-    and we will not check if the exame_date corresponds to the date stored
-    in the path to the image, but they will be converted anyway
+    these folders the exam_date is not present in the clinical Excel file,
+    and it will not check if the exam_date corresponds to the date stored
+    in the path to the image, but they will be converted anyway.
 
-     :param subdirectory: name of the folder
+    :param subdirectory: name of the folder
 
-     :return: previous path to arrive to the T1 image
+    :return: previous path to arrive to the T1 image
     """
     import os
 
