@@ -541,6 +541,8 @@ def create_file(image, modality, bids_dir, overwrite):
         tracer = {"flute": Tracer.FMM, "pib": Tracer.PIB, "av45": Tracer.AV45}[modality]
         output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
         output_filename = f"sub-AIBL{subject}_ses-{session}_trc-{tracer}_pet"
+    else:
+        return None
 
     # image is saved following BIDS specifications
     if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
