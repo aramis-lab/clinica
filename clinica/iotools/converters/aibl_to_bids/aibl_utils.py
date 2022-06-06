@@ -64,14 +64,21 @@ def find_T1_folder_nodata(subdirectory, path_to_T1_1):
     """
     import os
 
-    path_to_convert = {"MPRAGESAGISOp2ND", "MPRAGE_SAG_ISO_p2_ND", "MPRAGE_SAG_ISO_p2"}
+    path_to_convert = {
+        "MPRAGESAGISOp2ND",
+        "MPRAGE_SAG_ISO_p2_ND",
+        "MPRAGE_SAG_ISO_p2",
+    }
+
+    path = None
+
     for j in path_to_convert:
-        path = []
         # if conditions which checks if the subfolder contain a T1 image
         if j == subdirectory:
             path = os.path.join(path_to_T1_1, subdirectory)
             return path
-    if path == []:
+
+    if not path:
         return "NaN"  # there are no more folders which could contain T1 images
 
 
