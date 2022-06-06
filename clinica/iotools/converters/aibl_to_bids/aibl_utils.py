@@ -16,7 +16,7 @@ def listdir_nohidden(path):
 
 
 def find_T1_folder(subdirectory, path_to_T1_1):
-    """Check if the subdirectory contains a T1 image, and it return the h.
+    """Find the directory containing T1 images.
 
     Args:
         subdirectory (str): subdirectory: name of the folder
