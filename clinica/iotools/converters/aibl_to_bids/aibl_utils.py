@@ -456,7 +456,7 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
     :param path_to_dataset:  path to AIBL dataset
     :param path_to_csv: path to the csv files downloaded
     :return: pandas dataframe which contains all the paths for the T1
-    images, and the correisponding subject_ID and session_ID
+    images, and the corresponding subject_ID and session_ID
     """
     import glob
     import os
