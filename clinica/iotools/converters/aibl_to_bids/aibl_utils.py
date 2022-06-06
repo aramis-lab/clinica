@@ -298,13 +298,13 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
         # selection only of the folders which contain PET image
         for j in range(len(subdirectories)):
             path_to_pet_2 = os.path.join(path_to_pet_1, subdirectories[j])
-            exame_date = listdir_nohidden(path_to_pet_2)
-            # exame date of the image which is going to be converted
-            for x in range(len(exame_date)):
+            exam_date = listdir_nohidden(path_to_pet_2)
+            # exam date of the image which is going to be converted
+            for x in range(len(exam_date)):
                 # selection of the session_ID matching the data in the csv_file with the one of the image
-                session_ID = match_data(exame_date[x], i, csv_file)
+                session_ID = match_data(exam_date[x], i, csv_file)
                 if session_ID != "-4":
-                    path_to_pet_3 = os.path.join(path_to_pet_2, str(exame_date[x]))
+                    path_to_pet_3 = os.path.join(path_to_pet_2, str(exam_date[x]))
                     # For the RID 1607 there are two PET images of the flute modality, and we select the first
                     if i == "1607":
                         if subdirectories[j] == "Flute_256_1.6_Zoom_plain_4_x_4_Iter":
