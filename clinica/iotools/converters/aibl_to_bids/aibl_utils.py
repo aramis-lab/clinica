@@ -334,12 +334,12 @@ def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
 
     This method creates a Dataframe which contains all the paths to the T1
     images which are ADNI compliant (as explained in the AIBL website).
-    This images differ from the others T1 of the dataset since in the
-    cvs_file is reported the exame date.
+    These images differ from the others T1 of the dataset since in the
+    cvs_file is reported the exam date.
 
     :param file_mri: in the clinical data there are two files which
     describe the  parameters of the T1 images (MRI 1.5 T and MRI 3T)
-    :param subjects_ID: subjects_id in the dataset dowloaded
+    :param subjects_ID: subjects_id in the dataset downloaded
     :param path_to_dataset: path to AIBL dataset
 
     :return: A dataframe which contains the path for T1 images and
