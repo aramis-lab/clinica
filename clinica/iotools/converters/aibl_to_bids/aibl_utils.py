@@ -89,11 +89,9 @@ def find_correspondence_index(i, csv_file):
 
     :return: index
     """
-    index = []
     for x in csv_file.RID:
         if i == str(x):
-            index = csv_file.RID[csv_file.RID == x].index.tolist()
-            return index
+            return csv_file.RID[csv_file.RID == x].index.tolist()
 
 
 def find_correspondence_date(index, csv_file):
