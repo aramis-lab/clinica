@@ -122,7 +122,7 @@ def match_data(exam_date, i, csv_file):
     """
     import re
 
-    session_ID = []
+    session_ID = None
     index = find_correspondence_index(i, csv_file)
     csv_date = find_correspondence_date(index, csv_file)
     for xx in index:
@@ -140,8 +140,7 @@ def match_data(exam_date, i, csv_file):
                 & (p.group(3) == m.group(1))
             ):
                 session_ID = csv_file.VISCODE[xx]
-    if session_ID == []:
-        session_ID = "-4"
+    session_ID = session_ID or "-4"
     return session_ID
 
 
