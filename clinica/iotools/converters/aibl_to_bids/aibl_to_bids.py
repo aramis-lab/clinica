@@ -33,7 +33,7 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
 
 def convert_clinical_data(bids_dir, path_to_csv):
     # clinical specifications in BIDS
-    from os.path import exists, join, realpath, split
+    from os.path import join, realpath, split
 
     import clinica.iotools.bids_utils as bids
     from clinica.iotools.converters.aibl_to_bids.aibl_utils import (
