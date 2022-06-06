@@ -36,13 +36,16 @@ def find_T1_folder(subdirectory, path_to_T1_1):
         "MPRAGE_ADNI_confirmed_REPEAT",
         "MPRAGE_ADNI_conf_REPEAT",
     }
+
+    path = None
+
     for j in path_to_convert:
-        path = []
         # if conditions which checks if the subfolder contain a T1 image
         if j == subdirectory:
             path = os.path.join(path_to_T1_1, subdirectory)
             return path
-    if path == []:
+
+    if not path:
         return "NaN"  # there are no more folders which could contain T1 images
 
 
