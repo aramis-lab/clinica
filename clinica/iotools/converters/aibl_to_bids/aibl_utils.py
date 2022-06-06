@@ -835,7 +835,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         viscode[viscode == "bl"] = "M00"
         viscode = viscode.str.upper()
 
-        dict = pd.DataFrame(
+        sessions = pd.DataFrame(
             {
                 "session_id": "ses-" + viscode,
                 "age": age,
@@ -846,12 +846,12 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
             }
         )
 
-        cols = dict.columns.tolist()
-        dict = dict[cols[-1:] + cols[:-1]]
+        cols = sessions.columns.tolist()
+        sessions = sessions[cols[-1:] + cols[:-1]]
 
         bids_paths = path.join(input_path, "sub-AIBL" + str(r))
         if path.exists(bids_paths):
-            dict.to_csv(
+            sessions.to_csv(
                 path.join(
                     input_path,
                     "sub-AIBL" + str(r),
