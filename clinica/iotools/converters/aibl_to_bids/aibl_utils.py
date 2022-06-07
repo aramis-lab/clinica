@@ -85,13 +85,13 @@ def find_T1_folder_nodata(subdirectory: str, path_to_T1_1: str) -> str:
         return "NaN"  # there are no more folders which could contain T1 images
 
 
-def find_correspondence_index(subject_id: str, csv_file: str) -> list:
+def find_correspondence_index(subject_id: str, csv_file: pd.DataFrame) -> list:
     """Returns the index of the CSV file analysed for a given subject.
 
     :param subject_id: Subject's identifier
     :type subject_id: str
     :param csv_file: CSV file where all the information are listed
-    :type csv_file: str
+    :type csv_file: pd.DataFrame
     :return: List of indexes for the subject
     :rtype: list
     """
@@ -100,20 +100,20 @@ def find_correspondence_index(subject_id: str, csv_file: str) -> list:
             return csv_file.RID[csv_file.RID == rid].index.tolist()
 
 
-def find_correspondence_date(index: list, csv_file: str) -> pd.Series:
+def find_correspondence_date(index: list, csv_file: pd.DataFrame) -> pd.Series:
     """Return the dates reported in the csv_file for a given index.
 
     :param index: List of index
     :type index: list
     :param csv_file: CSV file where all the information are listed
-    :type csv_file: str
+    :type csv_file: pd.DataFrame
     :return: Exam dates at index
     :rtype: pd.Series
     """
     return csv_file.EXAMDATE[index]
 
 
-def match_data(exam_date: str, subject_id: str, csv_file: str) -> str:
+def match_data(exam_date: str, subject_id: str, csv_file: pd.DataFrame) -> str:
     """
 
     This method returns the session_ID. It controls if the dates
@@ -128,7 +128,7 @@ def match_data(exam_date: str, subject_id: str, csv_file: str) -> str:
     :param subject_id: Subject's identifier
     :type subject_id: str
     :param csv_file: csv file where all the information are listed
-    :type csv_file: str
+    :type csv_file: pd.DataFrame
     :return session_id of the patient
     :rtype: str
     """
