@@ -18,12 +18,12 @@ def listdir_nohidden(path):
 def find_T1_folder(subdirectory, path_to_T1_1):
     """Find the directory containing T1 images.
 
-    Args:
-        subdirectory (str): subdirectory: name of the folder
-        path_to_T1_1 (str): [description]
-
-    Returns:
-        str: previous path to arrive to the T1 image
+    :param subdirectory: name of the folder
+    :type subdirectory: str
+    :param path_to_T1_1: path to T1 images
+    :type path_to_T1_1: str
+    :return: previous path to arrive to the T1 image
+    :rtype: str
     """
     import os
 
@@ -49,7 +49,7 @@ def find_T1_folder(subdirectory, path_to_T1_1):
         return "NaN"  # there are no more folders which could contain T1 images
 
 
-def find_T1_folder_nodata(subdirectory, path_to_T1_1):
+def find_T1_folder_nodata(subdirectory: str, path_to_T1_1: str) -> str:
     """
     This method checks if the subdirectory contains a T1 image, and it
     returns the path. This method differs from the find_T1_folder since for
@@ -58,8 +58,11 @@ def find_T1_folder_nodata(subdirectory, path_to_T1_1):
     in the path to the image, but they will be converted anyway.
 
     :param subdirectory: name of the folder
-
+    :type subdirectory: str
+    :param path_to_T1_1: path to T1 images
+    :type path_to_T1_1: str
     :return: previous path to arrive to the T1 image
+    :rtype: str
     """
     import os
 
