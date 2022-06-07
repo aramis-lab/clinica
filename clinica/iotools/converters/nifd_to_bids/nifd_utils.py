@@ -292,14 +292,14 @@ def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> Non
 
 
 def convert_dicom(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
-    from pathlib import Path
+    from pathlib import PurePath
 
     from fsspec.implementations.local import LocalFileSystem
 
     from clinica.iotools.bids_utils import run_dcm2niix
 
-    output_fmt = str(Path(bids_filename).name).replace(".nii.gz", "")
-    output_dir = str(Path(bids_filename).parent)
+    output_fmt = str(PurePath(bids_filename).name).replace(".nii.gz", "")
+    output_dir = str(PurePath(bids_filename).parent)
 
     # Ensure output directory is empty.
     fs = LocalFileSystem()
@@ -309,8 +309,8 @@ def convert_dicom(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
 
     # Run conversion with dcm2niix with anonymization and maximum compression.
     run_dcm2niix(
-        input_dir=sourcedata_dir,
-        output_dir=output_dir,
+        input_dir=str(sourcedata_dir),
+        output_dir=str(output_dir),
         output_fmt=output_fmt,
         compress=True,
         bids_sidecar=True,
@@ -321,8 +321,8 @@ def install_nifti(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     from fsspec.implementations.local import LocalFileSystem
 
     fs = LocalFileSystem(auto_mkdir=True)
-    source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
-    target_file = fs.open(bids_filename, mode="wb", compression="gzip")
+    source_file = fs.open(fs.ls(str(sourcedata_dir))[0], mode="rb")
+    target_file = fs.open(str(bids_filename), mode="wb", compression="gzip")
 
     with source_file as sf, target_file as tf:
         tf.write(sf.read())
@@ -334,31 +334,35 @@ def write_bids(
     sessions: DataFrame,
     scans: DataFrame,
 ) -> List[PathLike]:
-    from pathlib import Path
+    from pathlib import PurePath
 
     from fsspec.implementations.local import LocalFileSystem
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
 
-    to = Path(to)
+    to = PurePath(to)
     fs = LocalFileSystem(auto_mkdir=True)
 
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
-        with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
+        with fs.open(
+            str(to / "dataset_description.json"), "w"
+        ) as dataset_description_file:
             BIDSDatasetDescription(name="NIFD").write(to=dataset_description_file)
 
-        with fs.open(to / "participants.tsv", "w") as participant_file:
+        with fs.open(str(to / "participants.tsv"), "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
         for participant_id, sessions_group in sessions.groupby("participant_id"):
+            participant_id = str(participant_id)
             sessions_group = sessions_group.droplevel("participant_id")
             sessions_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
-            with fs.open(sessions_filepath, "w") as sessions_file:
+            with fs.open(str(sessions_filepath), "w") as sessions_file:
                 write_to_tsv(sessions_group, sessions_file)
 
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
+        filename = str(filename)
         if metadata.format == "DCM":
             convert_dicom(
                 sourcedata_dir=metadata.source_dir, bids_filename=to / filename
