@@ -1,4 +1,7 @@
 """Utils to convert AIBL dataset in BIDS."""
+from functools import partial
+from typing import Sequence
+
 import pandas as pd
 
 
@@ -16,19 +19,39 @@ def listdir_nohidden(path):
     return [result for result in listdir(path) if not result.startswith(".")]
 
 
-def find_T1_folder(subdirectory, path_to_T1_1):
+def find_t1_in_paths(
+    subdirectory: str,
+    path_to_T1_1: str,
+    paths_to_convert: Sequence[str],
+) -> str:
     """Find the directory containing T1 images.
 
     :param subdirectory: name of the folder
     :type subdirectory: str
     :param path_to_T1_1: path to T1 images
     :type path_to_T1_1: str
+    :param paths_to_convert: paths to convert
+    :type paths_to_convert: Sequence[str]
     :return: previous path to arrive to the T1 image
     :rtype: str
     """
     import os
 
-    path_to_convert = {
+    path = None
+
+    for j in paths_to_convert:
+        # if conditions which checks if the subfolder contain a T1 image
+        if j == subdirectory:
+            path = os.path.join(path_to_T1_1, subdirectory)
+            return path
+
+    if not path:
+        return "NaN"  # there are no more folders which could contain T1 images
+
+
+find_T1_folder = partial(
+    find_t1_in_paths,
+    paths_to_convert=[
         "MPRAGE_ADNI_confirmed",
         "MPRAGE",
         "MPRAGE_ADNI_confirmed_RPT",
@@ -36,53 +59,18 @@ def find_T1_folder(subdirectory, path_to_T1_1):
         "MPRAGE_ADNI_confirmed_repeat",
         "MPRAGE_ADNI_confirmed_REPEAT",
         "MPRAGE_ADNI_conf_REPEAT",
-    }
-
-    path = None
-
-    for j in path_to_convert:
-        # if conditions which checks if the subfolder contain a T1 image
-        if j == subdirectory:
-            path = os.path.join(path_to_T1_1, subdirectory)
-            return path
-
-    if not path:
-        return "NaN"  # there are no more folders which could contain T1 images
+    ],
+)
 
 
-def find_T1_folder_nodata(subdirectory: str, path_to_T1_1: str) -> str:
-    """
-    This method checks if the subdirectory contains a T1 image, and it
-    returns the path. This method differs from the find_T1_folder since for
-    these folders the exam_date is not present in the clinical Excel file,
-    and it will not check if the exam_date corresponds to the date stored
-    in the path to the image, but they will be converted anyway.
-
-    :param subdirectory: name of the folder
-    :type subdirectory: str
-    :param path_to_T1_1: path to T1 images
-    :type path_to_T1_1: str
-    :return: previous path to arrive to the T1 image
-    :rtype: str
-    """
-    import os
-
-    path_to_convert = {
+find_T1_folder_nodata = partial(
+    find_t1_in_paths,
+    paths_to_convert=[
         "MPRAGESAGISOp2ND",
         "MPRAGE_SAG_ISO_p2_ND",
         "MPRAGE_SAG_ISO_p2",
-    }
-
-    path = None
-
-    for j in path_to_convert:
-        # if conditions which checks if the subfolder contain a T1 image
-        if j == subdirectory:
-            path = os.path.join(path_to_T1_1, subdirectory)
-            return path
-
-    if not path:
-        return "NaN"  # there are no more folders which could contain T1 images
+    ],
+)
 
 
 def find_correspondence_index(subject_id: str, csv_file: pd.DataFrame) -> list:
