@@ -1,6 +1,6 @@
 from cmath import nan
 from os import PathLike
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List
 
 from pandas import DataFrame, Series
 
@@ -456,7 +456,6 @@ def select_sessions(x: DataFrame) -> Series:
 def import_event_tsv(bids_path: str) -> None:
     """import the csv containing the events information."""
     import os
-    from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
 
