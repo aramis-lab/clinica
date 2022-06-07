@@ -454,7 +454,7 @@ def select_sessions(x: DataFrame) -> Optional[Series]:
 
 
 def import_event_tsv(bids_path: str) -> None:
-    """import the csv containing the events information."""
+    """Import the csv containing the events' information."""
     import os
 
     from fsspec.implementations.local import LocalFileSystem
