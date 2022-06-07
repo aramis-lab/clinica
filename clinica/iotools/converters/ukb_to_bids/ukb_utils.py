@@ -1,7 +1,8 @@
 from cmath import nan
 from os import PathLike
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Optional
 
+import pandas as pd
 from pandas import DataFrame, Series
 
 
@@ -418,7 +419,7 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
     return
 
 
-def select_sessions(x: DataFrame) -> Series:
+def select_sessions(x: DataFrame) -> Optional[Series]:
     from clinica.utils.stream import cprint
 
     if (
@@ -435,7 +436,7 @@ def select_sessions(x: DataFrame) -> Series:
             f"It will not be converted. To have it converted, please update your clinical data.",
             lvl="warning",
         )
-        return nan
+        return None
     elif (
         x["source_sessions_number"] == "3"
         and x.age_when_attended_assessment_centre_f21003_3_0 != nan
@@ -450,7 +451,7 @@ def select_sessions(x: DataFrame) -> Series:
             f"It will not be converted. To have it converted, please update your clinical data.",
             lvl="warning",
         )
-        return nan
+        return None
 
 
 def import_event_tsv(bids_path: str) -> None:
