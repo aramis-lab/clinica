@@ -2,7 +2,6 @@ from cmath import nan
 from os import PathLike
 from typing import Dict, Iterable, List, Optional
 
-import pandas as pd
 from pandas import DataFrame, Series
 
 
