@@ -351,7 +351,7 @@ def write_bids(
                 bids_path=to / bids_full_path,
             )
             if metadata["modality_num"] == "20217":
-                import_event_tsv(bids_path=to)
+                import_event_tsv(bids_path=str(to))
     return
 
 
@@ -377,7 +377,7 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
     import subprocess
     import tempfile
     import zipfile
-    from pathlib import Path
+    from pathlib import PurePath
 
     from fsspec.implementations.local import LocalFileSystem
 
@@ -385,7 +385,7 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
 
     zf = zipfile.ZipFile(zipfiles)
     try:
-        os.makedirs(Path(bids_path).parent)
+        os.makedirs(PurePath(bids_path).parent)
     except OSError:
         # Folder already created with previous instance
         pass
@@ -400,12 +400,12 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
         command += ["-b", "y", "-ba", "y"]
         command += [tempdir]
         subprocess.run(command)
-        fmri_image_path = find_largest_imaging_data(tempdir)
+        fmri_image_path = PurePath(find_largest_imaging_data(tempdir))
         fs.copy(str(fmri_image_path), str(bids_path) + ".nii.gz")
         fs.copy(
             str(fmri_image_path.parent)
             + "/"
-            + Path(Path(fmri_image_path.name).stem).stem
+            + PurePath(PurePath(fmri_image_path.name).stem).stem
             + ".json",
             str(bids_path) + ".json",
         )
