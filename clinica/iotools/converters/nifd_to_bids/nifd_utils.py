@@ -13,7 +13,7 @@ def find_clinical_data(clinical_data_directory: PathLike) -> Optional[DataFrame]
     for path in Path(clinical_data_directory).rglob("*.xlsx"):
         try:
             dataframe = (
-                read_excel(path, index_col=[0, 4])
+                read_excel(path, index_col=[0, 4])  # noqa
                 .rename(columns=lambda x: x.lower().replace(" ", "_"))
                 .rename_axis(index=lambda x: x.lower().replace(" ", "_"))
                 .convert_dtypes()
