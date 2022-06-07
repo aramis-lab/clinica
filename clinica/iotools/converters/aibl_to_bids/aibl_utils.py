@@ -336,7 +336,7 @@ def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
 
     :param file_mri: in the clinical data there are two files which
     describe the  parameters of the T1 images (MRI 1.5 T and MRI 3T)
-    :param subjects_ID: subjects_id in the dataset downloaded
+    :param subjects_ID: subjects_id in the downloaded dataset
     :param path_to_dataset: path to AIBL dataset
 
     :return: A dataframe which contains the path for T1 images and
@@ -389,7 +389,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
     their name
 
     :param path_to_dataset: path to AIBL dataset
-    :param subjects_ID: subjects_id in the dataset downloaded
+    :param subjects_ID: subjects_id in the downloaded dataset
     :param sub_ID: the previous list (from T1_ADNI) where new subjects ID
     will be appended
     :param ses_ID: the previous list (from T1_ADNI) where new session ID
