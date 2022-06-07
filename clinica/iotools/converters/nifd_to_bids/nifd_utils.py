@@ -292,7 +292,6 @@ def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> Non
 
 
 def convert_dicom(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
-    import subprocess
     from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
