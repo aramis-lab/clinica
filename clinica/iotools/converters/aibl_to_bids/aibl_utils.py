@@ -113,7 +113,7 @@ def find_correspondence_date(index: list, csv_file: str) -> pd.Series:
     return csv_file.EXAMDATE[index]
 
 
-def match_data(exam_date, i, csv_file):
+def match_data(exam_date: str, subject_id: str, csv_file: str) -> str:
     """
 
     This method returns the session_ID. It controls if the dates
@@ -124,21 +124,24 @@ def match_data(exam_date, i, csv_file):
 
     :param exam_date: date where the image has been taken, it is saved
     from the name of the corresponding subdirector
-    :param i: subject_ID
+    :type exam_date: str
+    :param subject_id: Subject's identifier
+    :type subject_id: str
     :param csv_file: csv file where all the information are listed
-
+    :type csv_file: str
     :return session_id of the patient
+    :rtype: str
     """
     import re
 
-    session_ID = None
-    index = find_correspondence_index(i, csv_file)
+    session_id = None
+    index = find_correspondence_index(subject_id, csv_file)
     csv_date = find_correspondence_date(index, csv_file)
     for xx in index:
         if str(csv_date[xx]) != "-4":
             # check is the date is not '-4'
             m = re.search(
-                "([0-9].*)-(.*)-(.*)_(.*)_(.*)_(.*)", str(exam_date)
+                "([0-9].*)-(.*)-(.*)_(.*)_(.*)_(.*)", exam_date
             )  # string from image directory
             p = re.search(
                 "(.*)/(.*)/(.*)", str(csv_date[xx])
@@ -148,9 +151,9 @@ def match_data(exam_date, i, csv_file):
                 & (p.group(2) == m.group(3))
                 & (p.group(3) == m.group(1))
             ):
-                session_ID = csv_file.VISCODE[xx]
-    session_ID = session_ID or "-4"
-    return session_ID
+                session_id = csv_file.VISCODE[xx]
+    session_id = session_id or "-4"
+    return session_id
 
 
 def list_of_paths():
@@ -308,7 +311,7 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
             # exam date of the image which is going to be converted
             for x in range(len(exam_date)):
                 # selection of the session_ID matching the data in the csv_file with the one of the image
-                session_ID = match_data(exam_date[x], i, csv_file)
+                session_ID = match_data(str(exam_date[x]), i, csv_file)
                 if session_ID != "-4":
                     path_to_pet_3 = os.path.join(path_to_pet_2, str(exam_date[x]))
                     # For the RID 1607 there are two PET images of the flute modality, and we select the first
