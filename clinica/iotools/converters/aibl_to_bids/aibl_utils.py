@@ -1,4 +1,5 @@
 """Utils to convert AIBL dataset in BIDS."""
+import pandas as pd
 
 
 def listdir_nohidden(path):
@@ -84,25 +85,30 @@ def find_T1_folder_nodata(subdirectory: str, path_to_T1_1: str) -> str:
         return "NaN"  # there are no more folders which could contain T1 images
 
 
-def find_correspondence_index(i, csv_file):
-    """Give as output the index of the CSV file analysed which correspond to the 'i' subject.
+def find_correspondence_index(subject_id: str, csv_file: str) -> list:
+    """Returns the index of the CSV file analysed for a given subject.
 
-    :param i: subject_ID
+    :param subject_id: Subject's identifier
+    :type subject_id: str
     :param csv_file: CSV file where all the information are listed
-
-    :return: index
+    :type csv_file: str
+    :return: List of indexes for the subject
+    :rtype: list
     """
-    for x in csv_file.RID:
-        if i == str(x):
-            return csv_file.RID[csv_file.RID == x].index.tolist()
+    for rid in csv_file.RID:
+        if subject_id == str(rid):
+            return csv_file.RID[csv_file.RID == rid].index.tolist()
 
 
-def find_correspondence_date(index, csv_file):
-    """Return the dates reported in the csv_file for the i-subject.
+def find_correspondence_date(index: list, csv_file: str) -> pd.Series:
+    """Return the dates reported in the csv_file for a given index.
 
-    :param index: index corresponding to the subject analysed
-    :param csv_file: csv file where all the information are listed
-    :return date
+    :param index: List of index
+    :type index: list
+    :param csv_file: CSV file where all the information are listed
+    :type csv_file: str
+    :return: Exam dates at index
+    :rtype: pd.Series
     """
     return csv_file.EXAMDATE[index]
 
