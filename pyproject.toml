@@ -27,7 +27,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8,<3.11"
 nibabel = "^2.3.3"
 nipype = "^1.7.1"
 argcomplete = "^1.9.4"
