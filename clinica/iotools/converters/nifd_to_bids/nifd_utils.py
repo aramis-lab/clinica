@@ -310,7 +310,7 @@ def convert_dicom(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     # Run conversion with dcm2niix with anonymization and maximum compression.
     run_dcm2niix(
         input_dir=str(sourcedata_dir),
-        output_dir=str(output_dir),
+        output_dir=output_dir,
         output_fmt=output_fmt,
         compress=True,
         bids_sidecar=True,
