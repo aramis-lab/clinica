@@ -4,12 +4,13 @@ from clinica.pipelines.interfaces import bids_reader_task, bids_writer_task
 
 
 class Pipeline:
-    def __init__(self, pipeline_in_dir, pipeline_out_dir):
+    def __init__(self, name, pipeline_in_dir, pipeline_out_dir):
         """
         :pipeline_in_dir: a BIDS compliant input directory
         """
         self.pipeline_in_dir = pipeline_in_dir
         self.pipeline_out_dir = pipeline_out_dir
+        self.name = name
 
     def build_workflow(self, wf_core, query_bids):
         """
@@ -19,7 +20,7 @@ class Pipeline:
         """
 
         self.workflow = Workflow(
-            name="t1_linear",
+            name=self.name,
             input_spec=["input_dir"],
             input_dir=self.pipeline_in_dir,
         )
