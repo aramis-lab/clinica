@@ -74,10 +74,50 @@ def clinica_surfstat(
     This implementation is written in pure Python and rely on the
     package brainstat for GLM modeling.
 
+    Results, both plots and matrices, will be written in the location
+    specified through `output_dir`.
+
+    The names of the output files within `output_dir` follow the
+    conventions:
+
+        <ROOT>_<SUFFIX>.<EXTENSION>
+
+    EXTENSION can be:
+
+        - "mat": for storing matrices (this is mainly for backward
+          compatibility with the previous MATLAB implementation of
+          this function).
+        - "json": for storing matrices in a more Pythonic way.
+        - "png" for surface figures.
+
+    SUFFIX can be:
+
+        - "coefficients": relative to the model's beta coefficients.
+        - "TStatistics": relative to the T-statistics.
+        - "uncorrectedPValue": relative to the uncorrected P-values.
+        - "correctedPValues": relative to the corrected P-values.
+        - "FDR": Relative to the False Discovery Rate.
+
+    ROOT can be:
+
+        - For group comparison GLM with an interaction term:
+
+            interaction-<contrast_name>_measure-<feature_label>_fwhm-<fwhm>
+
+        - For group comparison GLM without an interaction term:
+
+            group-<group_label>_<contrast_name>_measure-<feature_label>_fwhm-<fwhm>
+
+        - For correlation GLM:
+
+            group-<group_label>_correlation-<contrast_name>-<contrast_sign>_measure-<feature_label>_fwhm-<fwhm>
+
     Parameters
     ----------
     input_dir : Input folder.
+
     output_dir : Output folder for storing results.
+
     tsv_file : Path to the TSV file `subjects.tsv` which contains the
         necessary metadata to run the statistical analysis.
 
@@ -86,7 +126,9 @@ def clinica_surfstat(
             are used to defined contrast and model terms.
             Please double check for typos.
 
-    design_matrix : Design matrix in string format. For example "1+Label"
+    design_matrix : Design matrix in string format.
+        For example "1+Label"
+
     contrast : The contrast to be used in the GLM.
 
         .. warning::
@@ -99,9 +141,28 @@ def clinica_surfstat(
             - "correlation": Performs correlation analysis.
 
     group_label : Label for the group.
+        This is used in the output file names (see main description
+        of the function).
+
     freesurfer_home : Path to the home folder of Freesurfer.
         This is required to get the fsaverage templates.
-    surface_file : Path to the surface file.
+
+    surface_file : Path to the surface file to analyze.
+        Typically the cortical thickness.
+
+    feature_label : Label used for the measure.
+        This is used in the output file names (see main description
+        of the function).
+
+    parameters : Dictionary of additional parameters
+        - "sizeoffwhm": Smoothing. This is used in the output file names.
+          Default=20.
+        - "thresholduncorrectedpvalue": Threshold to be used with uncorrected
+          P-values. Default=0.001.
+        - "thresholdcorrectedpvalue": Threshold to be used with corrected
+          P-values. Default=0.05.
+        - "clusterthreshold": Threshold to be used to declare clusters as
+          significant. Default=0.001.
     """
     (
         fwhm,
