@@ -8,22 +8,24 @@ from typing import Dict, List, Union
 
 import numpy as np
 from nilearn.surface import Mesh
+from clinica.utils.stream import cprint
 
 
-def _save_results_to_json(results: Dict, filename_root: PathLike, verbose: bool = True):
+def _save_results_to_json(results: Dict, filename_root: PathLike):
     """Write the provided results to JSON format.
 
     Parameters
     ----------
     results : Results to write to disk.
     filename_root : Filename root common to all output files.
-    verbose : Verbose mode.
     """
     import json
 
     out_json_file = str(filename_root) + "_results.json"
-    if verbose:
-        print(f"--> Writing results to JSON in {out_json_file}...")
+    cprint(
+        msg=f"Writing results to JSON in {out_json_file}...",
+        lvl="info",
+    )
     jsonable = dict()
     for name, struct in results.items():
         if isinstance(struct, np.ndarray):
@@ -44,7 +46,6 @@ def _save_results_to_json(results: Dict, filename_root: PathLike, verbose: bool 
 def _save_results_to_mat(
     results: Dict,
     filename_root: PathLike,
-    verbose: bool = True,
 ):
     """Write the provided results to mat format.
 
@@ -60,10 +61,11 @@ def _save_results_to_mat(
     ----------
     results : Results to write to disk.
     filename_root : Filename root common to all output files.
-    verbose : Verbose mode.
     """
-    if verbose:
-        print("--> Writing results to mat files...")
+    cprint(
+        msg="Writing results to mat files...",
+        lvl="info",
+    )
     # These labels are used for compatibility with the previous
     # MATLAB implementation of the Statistics Surface Pipeline
     # of Clinica.
@@ -79,11 +81,10 @@ def _save_results_to_mat(
             result,
             str(filename_root) + "_" + name,
             struct_labels[name],
-            verbose=verbose,
         )
 
 
-def _save_results_to_bids(results: Dict, filename_root: PathLike, verbose: bool = True):
+def _save_results_to_bids(results: Dict, filename_root: PathLike):
     """Write provided results to BIDS format.
 
     .. warning::
@@ -104,7 +105,6 @@ def _save_results(
     results: Dict,
     filename_root: PathLike,
     out_formats: Union[str, List] = "all",
-    verbose: bool = True,
 ):
     """Write the provided results to all requested output formats.
 
@@ -113,7 +113,6 @@ def _save_results(
     results : Results to write to disk.
     filename_root : Filename root common to all output files.
     out_formats : Either a list of output formats (among "mat", "json", and "bids"), or "all".
-    verbose : Verbose mode.
     """
     if out_formats == "all":
         out_formats = list(WRITERS.keys())
@@ -122,7 +121,7 @@ def _save_results(
             warnings.warn(
                 f"Could not write to {output_format} because writer doesn't exist."
             )
-        WRITERS[output_format](results, filename_root, verbose=verbose)
+        WRITERS[output_format](results, filename_root)
 
 
 def _print_clusters(model, threshold: float):
@@ -134,12 +133,12 @@ def _print_clusters(model, threshold: float):
     model : Fitted SLM model.
     threshold : Cluster defining threshold.
     """
-    print("#" * 40)
-    print("After correction (Clusterwise Correction for Multiple Comparisons): ")
+    cprint("#" * 40)
+    cprint("After correction (Clusterwise Correction for Multiple Comparisons): ")
     df = model.P["clus"][1]
-    print(df)
-    print(f"Clusters found: {len(df)}")
-    print(f"Significative clusters (after correction): {len(df[df['P'] <= threshold])}")
+    cprint(df)
+    cprint(f"Clusters found: {len(df)}")
+    cprint(f"Significative clusters (after correction): {len(df[df['P'] <= threshold])}")
 
 
 def _plot_stat_map(
@@ -148,7 +147,6 @@ def _plot_stat_map(
     filename: str,
     threshold: float = None,
     title: str = None,
-    verbose: bool = True,
 ):
     """Plot a given texture over the provided mesh using Nilearn's
     plot_surf_stat_map function.
@@ -159,14 +157,15 @@ def _plot_stat_map(
     texture : Texture of the surface to plot.
     threshold : Threshold to be used for plotting.
     title : Title to display on the plot.
-    verbose : Verbose mode.
     """
     from nilearn.plotting import plot_surf_stat_map
 
     plot_filename = filename + ".png"
 
-    if verbose:
-        print(f"--> Saving plot to {plot_filename}")
+    cprint(
+        msg=f"Saving plot to {plot_filename}",
+        lvl="info",
+    )
 
     plot_surf_stat_map(
         mesh,
@@ -178,7 +177,7 @@ def _plot_stat_map(
 
 
 def _plot_results(
-    results: Dict, filename_root: PathLike, mesh: Mesh, verbose: bool = True
+    results: Dict, filename_root: PathLike, mesh: Mesh
 ):
     """This function will plot all possible surfaces in the
     provided results' dictionary.
@@ -188,7 +187,6 @@ def _plot_results(
     results : Dictionary of results.
     filename_root : The common root for the output filenames.
     mesh : The mesh to be used for plotting.
-    verbose : Verbose mode.
     """
     results_no_plot = {"coefficients"}
     for name, result in results.items():
@@ -203,11 +201,10 @@ def _plot_results(
                 str(filename_root) + name,
                 threshold=None,
                 title=name,
-                verbose=verbose,
             )
 
 
-def _save_to_mat(struct: Dict, filename: str, key: str, verbose: bool = True):
+def _save_to_mat(struct: Dict, filename: str, key: str):
     """Write a given struct to a mat file.
 
     Parameters
@@ -220,6 +217,8 @@ def _save_to_mat(struct: Dict, filename: str, key: str, verbose: bool = True):
     from scipy.io import savemat
 
     mat_filename = filename + ".mat"
-    if verbose:
-        print(f"--> Saving matrix to {mat_filename}")
+    cprint(
+        msg=f"Saving matrix to {mat_filename}",
+        lvl="info",
+    )
     savemat(mat_filename, {key: struct})
