@@ -4,6 +4,7 @@ from typing import Dict
 
 import numpy as np
 from brainstat.stats.SLM import SLM
+from clinica.utils.stream import cprint
 
 from ._contrasts import _get_contrasts_and_filenames
 from ._inputs import (
@@ -66,7 +67,6 @@ def clinica_surfstat(
     surface_file: PathLike,
     feature_label: str,
     parameters: Dict,
-    verbose: bool = True,
 ):
     """This function mimics the previous function `clinica_surfstat`
     written in MATLAB and relying on the MATLAB package SurfStat.
@@ -110,16 +110,19 @@ def clinica_surfstat(
         cluster_threshold,
     ) = _extract_parameters(parameters)
     fsaverage_path = freesurfer_home / Path("subjects/fsaverage/surf")
-    if verbose:
-        print(f"--> fsaverage path : {fsaverage_path}")
+    cprint(
+        msg=f"fsaverage path : {fsaverage_path}",
+        lvl="info",
+    )
     df_subjects = _read_and_check_tsv_file(tsv_file)
     surface_file = _get_t1_freesurfer_custom_file_template(input_dir)
     thickness = _build_thickness_array(input_dir, surface_file, df_subjects, fwhm)
     mask = thickness[0, :] > 0
     average_surface, average_mesh = _get_average_surface(fsaverage_path)
-    if verbose:
-        print(f"--> The GLM linear model is: {design_matrix}")
-        print(f"--> The GLM type is: {glm_type}")
+    cprint(
+        msg=f"The GLM model is: {design_matrix} and the GLM type is: {glm_type}",
+        lvl="info",
+    )
     contrasts, filenames = _get_contrasts_and_filenames(glm_type, contrast, df_subjects)
     naming_parameters = {
         "fwhm": fwhm,
@@ -142,16 +145,21 @@ def clinica_surfstat(
             correction=["fdr", "rft"],
             cluster_threshold=cluster_threshold,
         )
-        if verbose:
-            print(f"--> Fitting the SLM model with contrast {contrast_name}...")
+        cprint(
+            msg=f"Fitting the SLM model with contrast {contrast_name}...",
+            lvl="info",
+        )
         slm_model.fit(thickness)
         results = _compute_results(
             slm_model, mask, threshold_uncorrected_pvalue, threshold_corrected_pvalue
         )
-        _save_results(results, filename_root, out_formats="all", verbose=verbose)
+        _save_results(results, filename_root, out_formats="all")
         try:
-            _plot_results(results, filename_root, average_mesh, verbose=verbose)
+            _plot_results(results, filename_root, average_mesh)
         except:  # noqa
-            print("Plotting failed...")
+            cprint(
+                msg="Plotting failed...",
+                lvl="error",
+            )
             pass
         _print_clusters(slm_model, threshold_corrected_pvalue)
