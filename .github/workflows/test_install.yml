@@ -1,0 +1,37 @@
+name: 'test install'
+
+on:
+  push:
+    branches:
+      - "dev"
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  test_install:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.8", "3.9", "3.10"]
+    name: ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+        name: 'Setup python'
+      - shell: bash {0}
+        name: 'Display Python version'
+        run: python -c "import sys; print(sys.version)"
+      - shell: bash {0}
+        run: |
+          python -m pip install poetry
+        name: 'Install poetry'
+      - shell: bash {0}
+        run: |
+          poetry install
+        name: 'Install Clinica'
+
