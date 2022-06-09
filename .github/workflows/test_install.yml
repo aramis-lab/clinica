@@ -20,7 +20,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.8", "3.9", "3.10"]
-    name: ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    name: Install on ${{ matrix.os }} with Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
