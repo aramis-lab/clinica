@@ -658,6 +658,7 @@ def create_participants_df_AIBL(
     fields_bids = ["participant_id"]
     fields_dataset = []
     prev_location = ""
+    prev_sheet = ""
     index_to_drop = []
 
     location_name = "AIBL location"
