@@ -1,4 +1,4 @@
-name: 'test install'
+name: 'Test'
 
 on:
   push:
@@ -13,14 +13,14 @@ defaults:
     shell: bash
 
 jobs:
-  test_install:
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.8", "3.9", "3.10"]
-    name: Install on ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    name: Test on ${{ matrix.os }} with Python ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -35,3 +35,6 @@ jobs:
       - name: 'Install Clinica'
         run: |
           make install
+      - name: 'Run unit tests'
+        run: |
+          make test
