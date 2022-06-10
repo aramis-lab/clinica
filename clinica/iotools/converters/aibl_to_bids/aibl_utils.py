@@ -658,7 +658,6 @@ def create_participants_df_AIBL(
     fields_bids = ["participant_id"]
     fields_dataset = []
     prev_location = ""
-    prev_sheet = ""
     index_to_drop = []
 
     location_name = "AIBL location"
@@ -693,7 +692,7 @@ def create_participants_df_AIBL(
                 sheet = ""
             # Check if the file to open for a certain field it's the same of the previous field
             if location == prev_location and sheet == prev_sheet:
-                file_to_read = []
+                pass
             else:
                 file_ext = os.path.splitext(location)[1]
                 file_to_read_path = path.join(clinical_data_dir, location)
@@ -704,8 +703,6 @@ def create_participants_df_AIBL(
                     )
                 elif file_ext == ".csv":
                     file_to_read = pd.read_csv(glob.glob(file_to_read_path)[0])
-                else:
-                    file_to_read = []
                 prev_location = location
                 prev_sheet = sheet
 
