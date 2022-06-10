@@ -31,22 +31,19 @@ def convert_adni_fmri(
     cprint(
         f"Calculating paths of fMRI images. Output will be stored in {conversion_dir}."
     )
-    images = compute_fmri_path(
-        source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
-    )
+    images = compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir)
     cprint("Paths of fMRI images found. Exporting images into BIDS ...")
     # fmri_paths_to_bids(dest_dir, images)
     paths_to_bids(images, dest_dir, "fmri", mod_to_update=mod_to_update)
     cprint(msg="fMRI conversion done.", lvl="debug")
 
 
-def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
+def compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir):
     """Compute the paths to fMR images.
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
         conversion_dir: path to the TSV files including the paths to original images
 

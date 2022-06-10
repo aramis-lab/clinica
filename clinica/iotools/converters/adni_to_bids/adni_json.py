@@ -4,7 +4,7 @@ from typing import Optional, Tuple, Union
 
 import pandas as pd
 
-# Maps names of extracted metadata to their proper BIDS names
+# Map from names of extracted metadata to their proper BIDS names.
 METADATA_NAME_MAPPING = {
     "acquisition_type": "MRAcquisitionType",
     "pulse_sequence": "PulseSequenceType",
@@ -13,7 +13,7 @@ METADATA_NAME_MAPPING = {
 }
 
 
-def _read_xml_files(subj_ids: list = [], xml_path: str = "") -> list:
+def _read_xml_files(subj_ids: Optional[list] = None, xml_path: str = "") -> list:
     """Return the XML files in the folder `xml_path` for the provided `subj_ids`.
     This function assumes that file are named "ADNI_{sub_ids}.xml".
     If no files were found, an `IndexError` is raised.
@@ -196,10 +196,10 @@ def _check_processed_image_rating(
 def _get_root_from_xml_path(xml_path: str) -> xml.etree.ElementTree.Element:
     """Return the root XML element from the XML file path."""
     import os
-    import xml.etree.ElementTree as ET
+    from xml.etree import ElementTree
 
     try:
-        tree = ET.parse(xml_path)
+        tree = ElementTree.parse(xml_path)
         root = tree.getroot()
     except Exception as e:
         raise ValueError(os.path.basename(xml_path) + ": " + str(e))
@@ -301,7 +301,7 @@ def _get_image_metadata(img: xml.etree.ElementTree.Element) -> dict:
     }
 
 
-def _get_image_rating(image_rating: xml.etree.ElementTree.Element) -> Optional[int]:
+def _get_image_rating(image_rating: xml.etree.ElementTree.Element) -> Optional[str]:
     """Get the image rating value as an integer from the xml element."""
     if image_rating.tag != "imageRating":
         return None
@@ -381,7 +381,7 @@ def _parse_xml_file(xml_path: str) -> dict:
     return scan_metadata
 
 
-class func_with_exception:
+class FuncWithException:
     def __init__(self, f):
         self.f = f
 
@@ -400,7 +400,7 @@ def _run_parsers(xml_files: list) -> Tuple[list, dict]:
     """
     import os
 
-    parser = func_with_exception(_parse_xml_file)
+    parser = FuncWithException(_parse_xml_file)
     imgs_with_excep = dict(
         zip(
             xml_files,  # tqdm is buggy when chunksize > 1
@@ -510,7 +510,8 @@ def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> Non
     """Add the metadata to the appropriate tsv and json files."""
     from clinica.iotools.bids_utils import get_bids_sess_list
 
-    MERGE_STRATEGY = {"how": "left", "left_on": "scan_id", "right_on": "T1w_scan_id"}
+    merge_strategy = {"how": "left", "left_on": "scan_id", "right_on": "T1w_scan_id"}
+
     for subj_path in bids_subjs_paths:
         sess_list = get_bids_sess_list(subj_path)
         if sess_list:
@@ -519,7 +520,7 @@ def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> Non
                 if df_scans is not None:
                     columns_to_keep = list(df_scans.columns) + ["acq_time"]
                     df_merged = _merge_scan_and_metadata(
-                        df_scans, df_meta, MERGE_STRATEGY
+                        df_scans, df_meta, merge_strategy
                     )
                     for _, scan_row in df_merged.iterrows():
                         scan_path = Path(subj_path) / sess / scan_row["filename"]
@@ -529,7 +530,7 @@ def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> Non
     return None
 
 
-def create_json_metadata(bids_subjs_paths: str, bids_ids: list, xml_path: str) -> None:
+def create_json_metadata(bids_subjs_paths: list, bids_ids: list, xml_path: str) -> None:
     """Create json metadata dictionary and add the metadata to the
     appropriate files in the BIDS hierarchy."""
     from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni

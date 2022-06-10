@@ -4,7 +4,7 @@ import click
 
 from clinica.iotools.converters import cli_param
 
-ALL_MODALITIES = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
+ALL_MODALITIES = ("T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI")
 
 
 @click.command(name="adni-to-bids")
@@ -47,7 +47,7 @@ def cli(
 ) -> None:
     """ADNI to BIDS converter.
 
-    Convert the imaging and clinical data of ADNI (http://adni.loni.usc.edu/), located in DATASET_DIRECTORY and
+    Convert the imaging and clinical data of ADNI (https://adni.loni.usc.edu/), located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
     from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
