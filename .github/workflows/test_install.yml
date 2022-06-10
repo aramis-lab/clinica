@@ -34,5 +34,4 @@ jobs:
           python -m pip install poetry
       - name: 'Install Clinica'
         run: |
-          poetry install
-
+          make install
