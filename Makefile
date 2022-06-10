@@ -85,3 +85,7 @@ publish.pypi: build
 .PHONY: publish.testpypi
 publish.testpypi: build config.testpypi
 	@$(POETRY) publish --repository testpypi
+
+.PHONY: test
+test:
+	@$(POETRY) run python -m pytest -v test/unittests
