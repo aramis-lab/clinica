@@ -573,7 +573,7 @@ def bids_id_to_loni(bids_id: str) -> Union[str, None]:
     """
     import re
 
-    ids = re.findall("\d+", bids_id)  # noqa
+    ids = re.findall(r"\d+", bids_id)
     if len(ids) == 2:
         return ids[0] + "_S_" + ids[1]
     return None
@@ -736,7 +736,7 @@ def create_adni_sessions_dict(
     # Nv/None refer to sessions whose session is undefined. "sc" is the screening session with unreliable (incomplete)
     # data.
     df_subj_session = df_subj_session[
-        df_subj_session.session_id.str.contains("ses-M\d+")
+        df_subj_session.session_id.str.contains(r"ses-M\d+")
     ]
     write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
@@ -1181,7 +1181,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
             # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
             exception_t = glob(path.join(output_path, output_filename + "_t[0-9]*"))
             for trigger_time in exception_t:
-                res = re.search("_t\d+\.", trigger_time)
+                res = re.search(r"_t\d+\.", trigger_time)
                 no_trigger_time = trigger_time.replace(
                     trigger_time[res.start() : res.end()], "."
                 )
