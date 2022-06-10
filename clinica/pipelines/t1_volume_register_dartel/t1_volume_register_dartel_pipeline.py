@@ -118,8 +118,6 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         import nipype.interfaces.io as nio
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.filemanip import zip_nii
-
         # Writing flowfields into CAPS
         # ============================
         write_flowfields_node = npe.MapNode(
@@ -160,7 +158,7 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         # fmt: off
         self.connect(
             [
-                (self.output_node, write_flowfields_node, [(("dartel_flow_fields", zip_nii, True), "flow_fields")])
+                (self.output_node, write_flowfields_node, [("dartel_flow_fields", "flow_fields")])
             ]
         )
         # fmt: on
@@ -168,20 +166,24 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.pipeline.engine as npe
-        from nipype.algorithms.misc import Gunzip
+        from nipype.algorithms.misc import Gzip
 
         import clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_utils as utils
 
         # Unzipping
         # =========
         unzip_dartel_input_node = npe.MapNode(
-            interface=Gunzip(),
-            name="unzip_dartel_input_node",
+            interface=Gzip(mode="decompress"),
+            name="unzip_dartel_input",
             iterfield=["in_file"],
         )
         unzip_templates_node = npe.Node(
-            interface=Gunzip(),
-            name="unzip_templates_node",
+            interface=Gzip(mode="decompress"),
+            name="unzip_templates",
+        )
+        zip_dartel_flow_fields_node = npe.Node(
+            interface=Gzip(mode="compress"),
+            name="zip_dartel_flow_fields",
         )
         # DARTEL with existing template
         # =============================
@@ -200,7 +202,8 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
                 (self.input_node, unzip_templates_node, [("dartel_iteration_templates", "in_file")]),
                 (unzip_dartel_input_node, dartel_existing_template, [(("out_file", utils.prepare_dartel_input_images), "image_files")]),
                 (unzip_templates_node, dartel_existing_template, [(("out_file", utils.create_iteration_parameters, None), "iteration_parameters")]),
-                (dartel_existing_template, self.output_node, [("dartel_flow_fields", "dartel_flow_fields")]),
+                (dartel_existing_template, zip_dartel_flow_fields_node, [("dartel_flow_fields", "in_file")]),
+                (zip_dartel_flow_fields_node, self.output_node, [("out_file", "dartel_flow_fields")]),
             ]
         )
         # fmt: on
