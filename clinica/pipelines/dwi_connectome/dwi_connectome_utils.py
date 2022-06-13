@@ -35,24 +35,24 @@ def get_conversion_luts():
 
     url_mrtrix = "https://raw.githubusercontent.com/MRtrix3/mrtrix3/master/share/mrtrix3/labelconvert/"
 
-    FILE1 = RemoteFileStructure(
+    fs_default = RemoteFileStructure(
         filename="fs_default.txt",
         url=url_mrtrix,
         checksum="6ee07088915fdbcf52b05147ddae86e5fcaf3efc63db5b0ba8f361637dfa11ef",
     )
 
-    FILE2 = RemoteFileStructure(
+    fs_a2009s = RemoteFileStructure(
         filename="fs_a2009s.txt",
         url=url_mrtrix,
         checksum="b472f09cfe92ac0b6694fb6b00a87baf15dd269566e4a92b8a151ff1080bf170",
     )
 
-    ref_fs_default = path_to_mappings / Path(FILE1.filename)
-    ref_fs_a2009 = path_to_mappings / Path(FILE2.filename)
+    ref_fs_default = path_to_mappings / Path(fs_default.filename)
+    ref_fs_a2009 = path_to_mappings / Path(fs_a2009s.filename)
 
     if not (ref_fs_default.is_file()):
         try:
-            ref_fs_default = fetch_file(FILE1, path_to_mappings)
+            ref_fs_default = fetch_file(fs_default, path_to_mappings)
         except IOError as err:
             cprint(
                 msg=f"Unable to download required MRTRIX mapping (fs_default.txt) for processing: {err}",
@@ -60,7 +60,7 @@ def get_conversion_luts():
             )
     if not (ref_fs_a2009.is_file()):
         try:
-            ref_fs_a2009 = fetch_file(FILE2, path_to_mappings)
+            ref_fs_a2009 = fetch_file(fs_a2009s, path_to_mappings)
         except IOError as err:
             cprint(
                 msg=f"Unable to download required MRTRIX mapping (fs_a2009s.txt) for processing: {err}",
