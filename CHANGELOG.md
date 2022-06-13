@@ -6,6 +6,12 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.7.0
+
+### Added
+- [flair-linear] new pipeline to affinely align FLAIR images to the MNI space
+- [Ukbiobank] new converter to modify T1W/T2/DWI/SWI/tfmri/rsfMRI UKBiobank data into BIDS standard
+
 ## Clinica 0.6.0
 
 ### Changed

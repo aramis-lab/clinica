@@ -35,8 +35,7 @@ env.conda:
 	@$(CONDA) env create -p $(CONDA_ENV)
 
 .PHONY: env.dev
-env.dev:
-	@$(POETRY) install
+env.dev: install
 
 .PHONY: env.doc
 env.doc:
@@ -48,11 +47,18 @@ format: format.black format.isort
 
 .PHONY: format.black
 format.black: env.dev
+	$(info Formatting code with black)
 	@$(POETRY) run black --quiet $(PACKAGES)
 
 .PHONY: format.isort
 format.isort: env.dev
+	$(info Formatting code with isort)
 	@$(POETRY) run isort --quiet $(PACKAGES)
+
+## install		: Install the project.
+.PHONY: install
+install:
+	@$(POETRY) install
 
 ## lint			: Lint the codebase.
 .PHONY: lint
@@ -60,10 +66,12 @@ lint: lint.black lint.isort
 
 .PHONY: lint.black
 lint.black: env.dev
+	$(info Linting code with black)
 	@$(POETRY) run black --check --diff $(PACKAGES)
 
 .PHONY: lint.isort
 lint.isort: env.dev
+	$(info Linting code with isort)
 	@$(POETRY) run isort --check --diff $(PACKAGES)
 
 ## publish		: Publish the package to pypi.
@@ -77,3 +85,7 @@ publish.pypi: build
 .PHONY: publish.testpypi
 publish.testpypi: build config.testpypi
 	@$(POETRY) publish --repository testpypi
+
+.PHONY: test
+test:
+	@$(POETRY) run python -m pytest -v test/unittests

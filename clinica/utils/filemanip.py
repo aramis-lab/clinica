@@ -28,28 +28,6 @@ def zip_nii(in_file: str, same_dir: bool = False):
     return out_file
 
 
-def unzip_nii(in_file: str):
-    from nipype.algorithms.misc import Gunzip
-    from nipype.utils.filemanip import split_filename
-    from traits.trait_base import _Undefined
-
-    if (in_file is None) or isinstance(in_file, _Undefined):
-        return None
-
-    if not isinstance(in_file, str):  # type(in_file) is list:
-        return [unzip_nii(f) for f in in_file]
-
-    _, base, ext = split_filename(in_file)
-
-    # Not compressed
-    if ext[-3:].lower() != ".gz":
-        return in_file
-    # Compressed
-    gunzip = Gunzip(in_file=in_file)
-    gunzip.run()
-    return gunzip.aggregate_outputs().out_file
-
-
 def save_participants_sessions(participant_ids, session_ids, out_folder, out_file=None):
     """Save <participant_ids> <session_ids> in <out_folder>/<out_file> TSV file."""
     import os
@@ -164,7 +142,7 @@ def read_participant_tsv(tsv_file):
             f"\t- Clinica expected the following path to be a file: {tsv_file}\n"
             "\t- If you gave relative path, did you run Clinica on the good folder?"
         )
-    ss_df = pd.io.parsers.read_csv(tsv_file, sep="\t")
+    ss_df = pd.read_csv(tsv_file, sep="\t")
     if "participant_id" not in list(ss_df.columns.values):
         raise ClinicaException(
             f"The TSV file does not contain participant_id column (path: {tsv_file})"

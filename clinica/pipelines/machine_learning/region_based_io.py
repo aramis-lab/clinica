@@ -16,14 +16,12 @@ def load_data(image_list, subjects):
 
     subj_average = []
     all_vector = np.array([])
-    read_file = pd.io.parsers.read_csv(image_list[0], sep="\t", usecols=[2], header=0)
+    read_file = pd.read_csv(image_list[0], sep="\t", usecols=[2], header=0)
     read_file = read_file.mean_scalar
     data = np.zeros((len(subjects), len(read_file)))
 
     for i in range(len(image_list)):
-        tsv_file = pd.io.parsers.read_csv(
-            image_list[i], sep="\t", usecols=[2], header=0
-        )
+        tsv_file = pd.read_csv(image_list[i], sep="\t", usecols=[2], header=0)
         subj_average = tsv_file.mean_scalar
         all_vector = np.append(all_vector, subj_average)
     data_temp = np.split(all_vector, len(image_list))
@@ -59,11 +57,11 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
 
     sv_images = [image_list[i] for i in sv_indices]
 
-    shape = pd.io.parsers.read_csv(sv_images[0], sep="\t", usecols=[2], header=0)
+    shape = pd.read_csv(sv_images[0], sep="\t", usecols=[2], header=0)
     weights = np.zeros(len(shape))
 
     for i in range(len(sv_images)):
-        subj = pd.io.parsers.read_csv(sv_images[i], sep="\t", usecols=[2], header=0)
+        subj = pd.read_csv(sv_images[i], sep="\t", usecols=[2], header=0)
         subj_data = subj.mean_scalar
         weights += dual_coefficients[i] * subj_data
 

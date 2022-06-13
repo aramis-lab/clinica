@@ -76,7 +76,8 @@ nav:
     - Atlases: Atlases.md
   - Pipelines:
     - Anatomical MRI:
-      - Linear processing: Pipelines/T1_Linear.md
+      - T1 Linear processing: Pipelines/T1_Linear.md
+      - FLAIR Linear processing : Pipelines/FLAIR_Linear.md
       - Volume processing: Pipelines/T1_Volume.md
       - FreeSurfer processing: Pipelines/T1_FreeSurfer.md
       - FreeSurfer longitudinal processing: Pipelines/T1_FreeSurfer_Longitudinal.md
@@ -103,6 +104,7 @@ nav:
     - NIFD to BIDS: Converters/NIFD2BIDS.md
     - OASIS to BIDS: Converters/OASIS2BIDS.md
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md
+    - UK Biobank to BIDS: Converters/UKBtoBIDS.md
   - I/O tools:
     - create-subjects-visits: IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset
     - check-missing-modalities: IO#check-missing-modalities-check-missing-modalities-for-each-subject

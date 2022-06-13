@@ -616,7 +616,7 @@ class TsvInput(base.MLInput):
 
         import pandas as pd
 
-        self._dataframe = pd.io.parsers.read_csv(input_params["data_tsv"], sep="\t")
+        self._dataframe = pd.read_csv(input_params["data_tsv"], sep="\t")
 
         if not input_params["columns"]:
             raise Exception("List of columns to use as input can not be empty.")

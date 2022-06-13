@@ -159,7 +159,7 @@ def has_one_index(index_list):
 class MissingModsTracker:
     """Class used for tracking the number of missing modalities in a database."""
 
-    def __init__(self, ses, mod_list=False):
+    def __init__(self, ses, mod_list=None):
         self.missing = {}
         self.ses = ses
         if mod_list:

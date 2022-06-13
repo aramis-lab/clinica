@@ -17,6 +17,8 @@ def visits_to_timepoints(
         mri_list_subj: Dataframe containing list of MRI scans for the subject
         adnimerge_subj: Dataframe containing visits data for the subject
         modality: Imaging modality
+        visit_field: field name corresponding to the visit
+        scandate_field: field name corresponding to the scan date
 
     Returns:
         [Returns]
@@ -222,7 +224,6 @@ def select_image_qc(id_list, mri_qc_subj):
     if len(id_list) == 0:
         return None
 
-    selected_image = None
     image_ids = ["I" + str(imageuid) for imageuid in id_list]
     int_ids = [int(imageuid) for imageuid in id_list]
     images_qc = mri_qc_subj[mri_qc_subj.loni_image.isin(image_ids)]
@@ -239,9 +240,9 @@ def select_image_qc(id_list, mri_qc_subj):
 
         if images_not_rejected.empty:
 
-            # There are no images that passed the qc
-            # so we'll try to see if there are other images without qc,
-            # otherwise return None
+            # There are no images that passed the qc,
+            # so we'll try to see if there are other images without qc.
+            # Otherwise, return None.
             qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
             no_qc_ids = list(set(int_ids) - qc_ids)
 
@@ -472,33 +473,31 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     import os
     from os import path
 
-    def compute_amyloid_status(row, tau_status=False):
-        stat = ""
+    def compute_amyloid_status(row: pd.DataFrame) -> str:
         if (
             pd.isnull(row["adni_av45"])
             and pd.isnull(row["adni_pib"])
             and isinstance(row["adni_abeta"], float)
         ):
-            stat = "Au"
+            return "Au"
         elif row["adni_av45"] > 1.1 or row["adni_pib"] > 1.5 or row["adni_abeta"] < 192:
-            stat = "A+"
+            return "A+"
         elif (
             (pd.isnull(row["adni_av45"]) or row["adni_av45"] < 1.1)
             and (pd.isnull(row["adni_pib"]) or row["adni_pib"] < 1.5)
             and (isinstance(row["adni_abeta"], float) or row["adni_abeta"] > 192)
         ):
-            stat = "A-"
-        return stat
-
-    def compute_ptau_status(row):
-        stat = ""
-        if pd.isnull(row["adni_ptau"]):
-            stat = "Tu"
-        elif row["adni_ptau"] > 23:
-            stat = "T+"
+            return "A-"
         else:
-            stat = "T-"
-        return stat
+            return ""
+
+    def compute_ptau_status(row: pd.DataFrame) -> str:
+        if pd.isnull(row["adni_ptau"]):
+            return "Tu"
+        elif row["adni_ptau"] > 23:
+            return "T+"
+        else:
+            return "T-"
 
     df_subj_sessions["adas_memory"] = (
         df_subj_sessions["adas_Q1"]
@@ -574,7 +573,7 @@ def bids_id_to_loni(bids_id: str) -> Union[str, None]:
     """
     import re
 
-    ids = re.findall("\d+", bids_id)  # noqa
+    ids = re.findall(r"\d+", bids_id)
     if len(ids) == 2:
         return ids[0] + "_S_" + ids[1]
     return None
@@ -583,9 +582,8 @@ def bids_id_to_loni(bids_id: str) -> Union[str, None]:
 def filter_subj_bids(df_files, location, bids_ids):
     import clinica.iotools.bids_utils as bids
 
-    # Depending of the file that needs to be open, identify and
-    # do needed preprocessing on the column that contains the
-    # subjects ids
+    # Depending on the file that needs to be open, identify and
+    # preprocess the column that contains the subjects ids.
     bids_ids = [x[8:] for x in bids_ids if "sub-ADNI" in x]
     if location == "ADNIMERGE.csv":
         df_files["RID"] = df_files["PTID"].apply(
@@ -723,10 +721,10 @@ def create_adni_sessions_dict(
                     df_subj_session, df_filtered, df_sessions, location
                 )
             else:
-                dict_column_correspondance = dict(
+                dict_column_correspondence = dict(
                     zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
                 )
-                df_filtered.rename(columns=dict_column_correspondance, inplace=True)
+                df_filtered.rename(columns=dict_column_correspondence, inplace=True)
                 df_filtered = df_filtered.loc[
                     :, (~df_filtered.columns.isin(df_subj_session.columns))
                 ]
@@ -738,7 +736,7 @@ def create_adni_sessions_dict(
     # Nv/None refer to sessions whose session is undefined. "sc" is the screening session with unreliable (incomplete)
     # data.
     df_subj_session = df_subj_session[
-        df_subj_session.session_id.str.contains("ses-M\d+")
+        df_subj_session.session_id.str.contains(r"ses-M\d+")
     ]
     write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
@@ -831,7 +829,9 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
         for folder in os.listdir(conversion_path)
         if folder[0] == "v" and path.isdir(path.join(conversion_path, folder))
     ]
-    conversion_version = sorted(conversion_versions, key=lambda x: int(x.split("v")[1]))
+    conversion_versions = sorted(
+        conversion_versions, key=lambda x: int(x.split("v")[1])
+    )
     older_version = conversion_versions[-1]
     converted_dict = dict()
     for tsv_path in os.listdir(path.join(conversion_path, older_version)):
@@ -1025,7 +1025,6 @@ def create_file(image, modality, bids_dir, mod_to_update):
     Args:
         image: Image metadata
         modality: Imaging modality
-        total: Total number of images to convert
         bids_dir: Path to the output BIDS directory
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
 
@@ -1182,7 +1181,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
             # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
             exception_t = glob(path.join(output_path, output_filename + "_t[0-9]*"))
             for trigger_time in exception_t:
-                res = re.search("_t\d+\.", trigger_time)
+                res = re.search(r"_t\d+\.", trigger_time)
                 no_trigger_time = trigger_time.replace(
                     trigger_time[res.start() : res.end()], "."
                 )
@@ -1307,7 +1306,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     image_list = glob(path.join(dicom_path, f"*{image_uid}.dcm"))
     if len(dicom_list) != len(image_list):
 
-        # Remove the precedent tmp_dcm_folder if is existing
+        # Remove the precedent tmp_dcm_folder if present.
         if os.path.exists(dest_path):
             shutil.rmtree(dest_path)
         os.mkdir(dest_path)
