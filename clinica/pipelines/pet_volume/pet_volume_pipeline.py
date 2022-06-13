@@ -131,6 +131,7 @@ class PETVolume(cpe.Pipeline):
                 bids_pet_nii(self.parameters["acq_label"]),
             )
         except ClinicaException as e:
+            pet_bids = []
             all_errors.append(e)
 
         # Native T1w-MRI
@@ -139,6 +140,7 @@ class PETVolume(cpe.Pipeline):
                 self.subjects, self.sessions, self.bids_directory, T1W_NII
             )
         except ClinicaException as e:
+            t1w_bids = []
             all_errors.append(e)
 
         # mask_tissues
@@ -171,6 +173,7 @@ class PETVolume(cpe.Pipeline):
                 t1_volume_deformation_to_template(self.parameters["group_label"]),
             )
         except ClinicaException as e:
+            flowfields_caps = []
             all_errors.append(e)
 
         # Dartel Template
@@ -180,6 +183,7 @@ class PETVolume(cpe.Pipeline):
                 t1_volume_final_group_template(self.parameters["group_label"]),
             )
         except ClinicaException as e:
+            final_template = []
             all_errors.append(e)
 
         if self.parameters["pvc_psf_tsv"] is not None:
