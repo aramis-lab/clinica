@@ -63,7 +63,7 @@ def get_conversion_luts():
             ref_fs_a2009 = fetch_file(FILE2, path_to_mappings)
         except IOError as err:
             cprint(
-                msg=f"Unable to download required MRTRIX mapping (fs_a2009.txt) for processing: {err}",
+                msg=f"Unable to download required MRTRIX mapping (fs_a2009s.txt) for processing: {err}",
                 lvl="error",
             )
 
