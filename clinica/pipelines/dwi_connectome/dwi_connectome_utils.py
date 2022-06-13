@@ -18,29 +18,7 @@ def get_luts():
 def get_conversion_luts_offline():
 
     # TODO: use this function if no internet connect found in client (need to upload files to clinica repository)
-
-    from pathlib import Path
-
-    from clinica.utils.stream import cprint
-
-    root = Path.cwd()
-
-    path_to_mappings = root / "clinica" / "resources" / "mappings"
-    ref_fs_default = path_to_mappings / "fs_default.txt"
-    ref_fs_a2009 = path_to_mappings / "fs_a2009.txt"
-
-    if not (ref_fs_default.is_file()):
-        cprint(
-            msg=f"Unable to locate (fs_default.txt) for processing",
-            lvl="error",
-        )
-    if not (ref_fs_a2009.is_file()):
-        cprint(
-            msg=f"Unable to locate (fs_a2009.txt) for processing",
-            lvl="error",
-        )
-
-    return [ref_fs_default, ref_fs_a2009]
+    return
 
 
 def get_conversion_luts():
