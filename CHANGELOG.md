@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [DWIConnectome] Fetch meta data directly from MRtrix github repository
 
 ### Changed
-- [Core] Enable parallelelization when grabbing files
+- [Core] Enable parallelization when grabbing files
 
 ### Fixed
 - [Converters] Fix several warnings
