@@ -1,58 +1,17 @@
+import numpy as np
 from os import PathLike
 from pathlib import Path
 from typing import Dict
 
-import numpy as np
-from brainstat.stats.SLM import SLM
-from clinica.utils.stream import cprint
-
-from ._contrasts import _get_contrasts_and_filenames
 from ._inputs import (
-    _build_thickness_array,
-    _extract_parameters,
-    _get_average_surface,
-    _get_t1_freesurfer_custom_file_template,
     _read_and_check_tsv_file,
+    _get_t1_freesurfer_custom_file_template,
+    _build_thickness_array,
+    _get_average_surface,
 )
-from ._model import _build_model
-from ._outputs import _plot_results, _print_clusters, _save_results
+from ._model import GLMFactory
 
-
-def _compute_results(
-    model: SLM,
-    mask: np.ndarray,
-    threshold_uncorrected_pvalue: float,
-    threshold_corrected_pvalue: float,
-) -> Dict:
-    """Take a fitted SLM model and store the results in a dictionary.
-
-    Parameters
-    ----------
-    model : Fitted SLM model.
-    mask : Mask used in the analysis.
-    threshold_uncorrected_pvalue : Threshold used with non corrected P-values.
-    threshold_corrected_pvalue : Threshold used with corrected P-values.
-
-    Returns
-    -------
-    results : Dictionary with the results.
-    """
-    from scipy.stats import t
-
-    results = dict()
-    results["coefficients"] = np.nan_to_num(model.coef)
-    results["TStatistics"] = np.nan_to_num(model.t)
-    results["uncorrectedPValue"] = dict()
-    results["uncorrectedPValue"]["P"] = 1 - t.cdf(results["TStatistics"], model.df)
-    results["uncorrectedPValue"]["mask"] = mask
-    results["uncorrectedPValue"]["thresh"] = threshold_uncorrected_pvalue
-    results["FDR"] = model._fdr()
-    results["correctedPValue"] = dict()
-    results["correctedPValue"]["P"] = model.P["pval"]["P"]
-    results["correctedPValue"]["C"] = model.P["pval"]["C"]
-    results["correctedPValue"]["mask"] = mask
-    results["correctedPValue"]["thresh"] = threshold_corrected_pvalue
-    return results
+DEFAULT_FWHM = 20
 
 
 def clinica_surfstat(
@@ -164,63 +123,30 @@ def clinica_surfstat(
         - "clusterthreshold": Threshold to be used to declare clusters as
           significant. Default=0.001.
     """
-    (
-        fwhm,
-        threshold_uncorrected_pvalue,
-        threshold_corrected_pvalue,
-        cluster_threshold,
-    ) = _extract_parameters(parameters)
-    fsaverage_path = freesurfer_home / Path("subjects/fsaverage/surf")
-    cprint(
-        msg=f"fsaverage path : {fsaverage_path}",
-        lvl="info",
-    )
+    # Load subjects data
     df_subjects = _read_and_check_tsv_file(tsv_file)
+    if "sizeoffwhm" in parameters:
+        fwhm = parameters["sizeoffwhm"]
+    else:
+        fwhm = DEFAULT_FWHM
+        parameters["sizeoffwhm"] = fwhm
     surface_file = _get_t1_freesurfer_custom_file_template(input_dir)
     thickness = _build_thickness_array(input_dir, surface_file, df_subjects, fwhm)
-    mask = thickness[0, :] > 0
+
+    # Load average surface template
+    fsaverage_path = freesurfer_home / Path("subjects/fsaverage/surf")
     average_surface, average_mesh = _get_average_surface(fsaverage_path)
-    cprint(
-        msg=f"The GLM model is: {design_matrix} and the GLM type is: {glm_type}",
-        lvl="info",
+
+    # Build and run GLM model
+    glm_factory = GLMFactory(feature_label)
+    glm_model = glm_factory.create_model(
+        glm_type,
+        design_matrix,
+        df_subjects,
+        contrast,
+        group_label=group_label,
+        **parameters,
     )
-    contrasts, filenames = _get_contrasts_and_filenames(glm_type, contrast, df_subjects)
-    naming_parameters = {
-        "fwhm": fwhm,
-        "group_label": group_label,
-        "feature_label": feature_label,
-    }
-    model = _build_model(design_matrix, df_subjects)
-    for contrast_name, model_contrast in contrasts.items():
-        filename_root = Path(output_dir) / Path(
-            filenames[contrast_name].safe_substitute(
-                contrast_name=contrast_name, **naming_parameters
-            )
-        )
-        slm_model = SLM(
-            model,
-            contrast=model_contrast,
-            surf=average_surface,
-            mask=mask,
-            two_tailed=True,
-            correction=["fdr", "rft"],
-            cluster_threshold=cluster_threshold,
-        )
-        cprint(
-            msg=f"Fitting the SLM model with contrast {contrast_name}...",
-            lvl="info",
-        )
-        slm_model.fit(thickness)
-        results = _compute_results(
-            slm_model, mask, threshold_uncorrected_pvalue, threshold_corrected_pvalue
-        )
-        _save_results(results, filename_root, out_formats="all")
-        try:
-            _plot_results(results, filename_root, average_mesh)
-        except:  # noqa
-            cprint(
-                msg="Plotting failed...",
-                lvl="error",
-            )
-            pass
-        _print_clusters(slm_model, threshold_corrected_pvalue)
+    glm_model.fit(thickness, average_surface)
+    glm_model.save_results(output_dir, ["json", "mat"])
+    glm_model.plot_results(output_dir, ["nilearn_plot_surf_stat_map"], average_mesh)
