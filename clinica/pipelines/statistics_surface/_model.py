@@ -2,6 +2,7 @@ import abc
 import warnings
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from os import PathLike
 from string import Template
 from functools import reduce
@@ -242,7 +243,7 @@ class GLM:
             method = [method]
         for contrast, result in self.results_.items():
             result_serializer = StatisticsResultsSerializer(
-                output_dir / self.filename_root(contrast)
+                Path(output_dir) / Path(self.filename_root(contrast))
             )
             for meth in method:
                 result_serializer.save(result, meth)
@@ -260,7 +261,7 @@ class GLM:
             method = [method]
         for contrast, result in self.results_.items():
             plotter = StatisticsResultsPlotter(
-                output_dir / self.filename_root(contrast), mesh
+                Path(output_dir) / Path(self.filename_root(contrast)), mesh
             )
             for meth in method:
                 plotter.plot(result, meth)
