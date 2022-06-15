@@ -1,58 +1,16 @@
 """This file contains functions for loading data from disk
 and performing some checks on them.
 """
-import warnings
+import numpy as np
+import pandas as pd
 from os import PathLike
 from pathlib import Path
 from string import Template
 from typing import Dict, Tuple
-
-import numpy as np
-import pandas as pd
 from nilearn.surface import Mesh
 
-DEFAULT_FWHM = 20
-DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE = 0.001
-DEFAULT_THRESHOLD_CORRECTED_P_VALUE = 0.05
-DEFAULT_CLUSTER_THRESHOLD = 0.001
 TSV_FIRST_COLUMN = "participant_id"
 TSV_SECOND_COLUMN = "session_id"
-
-
-def _extract_parameters(parameters: Dict) -> Tuple[float, float, float, float]:
-    """This function extracts the parameters from the dictionary passed
-    to the main function. If required parameters are not provided, the
-    default values will be used.
-
-    Parameters
-    ----------
-    parameters : Dictionary of parameters passed to the main function.
-
-    Returns
-    -------
-    fwhm : Smoothing
-    threshold_uncorrected_pvalue : Threshold to be used with uncorrected P-values.
-    threshold_corrected_pvalue : Threshold to be used with corrected P-values.
-    cluster_threshold : Threshold to be used to declare clusters as significant.
-    """
-    fwhm = DEFAULT_FWHM
-    if "sizeoffwhm" in parameters:
-        fwhm = parameters["sizeoffwhm"]
-    threshold_uncorrected_pvalue = DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE
-    if "thresholduncorrectedpvalue" in parameters:
-        threshold_uncorrected_pvalue = parameters["thresholduncorrectedpvalue"]
-    threshold_corrected_pvalue = DEFAULT_THRESHOLD_CORRECTED_P_VALUE
-    if "thresholdcorrectedpvalue" in parameters:
-        threshold_corrected_pvalue = parameters["thresholdcorrectedpvalue"]
-    cluster_threshold = DEFAULT_CLUSTER_THRESHOLD
-    if "clusterthreshold" in parameters:
-        cluster_threshold = parameters["clusterthreshold"]
-    return (
-        fwhm,
-        threshold_uncorrected_pvalue,
-        threshold_corrected_pvalue,
-        cluster_threshold,
-    )
 
 
 def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
@@ -142,7 +100,7 @@ def _build_thickness_array(
     return thickness
 
 
-def _get_average_surface(fsaverage_path: PathLike) -> Tuple[dict, Mesh]:
+def _get_average_surface(fsaverage_path: PathLike) -> Tuple[Dict, Mesh]:
     """This function extracts the average surface and the average mesh
     from the path to the fsaverage templates.
 
@@ -170,6 +128,7 @@ def _get_average_surface(fsaverage_path: PathLike) -> Tuple[dict, Mesh]:
     average_surface : Average surface as a dictionary for BrainStat compatibility.
     average_mesh : Average mesh as a Nilearn Mesh object.
     """
+    import copy
     from nilearn.surface import Mesh, load_surf_mesh
 
     meshes = [
@@ -182,7 +141,7 @@ def _get_average_surface(fsaverage_path: PathLike) -> Tuple[dict, Mesh]:
     )
     average_mesh = Mesh(
         coordinates=coordinates,
-        faces=faces,
+        faces=copy.deepcopy(faces),
     )
     ##################
     # UGLY HACK !!! Need investigation
@@ -198,48 +157,3 @@ def _get_average_surface(fsaverage_path: PathLike) -> Tuple[dict, Mesh]:
         "tri": faces,
     }
     return average_surface, average_mesh
-
-
-def _check_contrast(
-    contrast: str,
-    df: pd.DataFrame,
-    glm_type: str,
-) -> Tuple[str, str, bool]:
-    """This function performs some basic checks on the provided contrast.
-
-    Parameters
-    ----------
-    contrast : Contrast in string format.
-    df : Subject DataFrame. It must contain the contrast elements as columns.
-    glm_type : The type of GLM run. Can be 'group_comparison' or 'correlation'.
-
-    Returns
-    -------
-    absolute_contrast : Contrast without the negative sign if any.
-    contrat_sign : Either 'positive' or 'negative' depending on the provided contrast.
-    with_interaction : Boolean indicating whether the contrast has interaction terms or not.
-    """
-    absolute_contrast = contrast
-    with_interaction = False
-    contrast_sign = "positive"
-    if contrast.startswith("-"):
-        absolute_contrast = contrast[1:].lstrip()
-        contrast_sign = "negative"
-    if "*" in contrast:
-        with_interaction = True
-        warnings.warn(
-            "You included interaction as covariate in your model, "
-            "please carefully check the format of your tsv files."
-        )
-    else:
-        if absolute_contrast not in df.columns:
-            raise ValueError(
-                f"Column {absolute_contrast} does not exist in provided TSV file."
-            )
-        if glm_type == "group_comparison":
-            unique_labels = np.unique(df[absolute_contrast])
-            if len(unique_labels) != 2:
-                raise ValueError(
-                    "For group comparison, there should be just 2 different groups!"
-                )
-    return absolute_contrast, contrast_sign, with_interaction
