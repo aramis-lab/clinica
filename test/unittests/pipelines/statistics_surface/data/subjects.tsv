@@ -1,0 +1,8 @@
+participant_id	session_id	group	age	sex
+sub-ADNI002S4213	ses-M00	CN	78.0	Female
+sub-ADNI011S4075	ses-M00	CN	73.4	Male
+sub-ADNI011S4105	ses-M00	CN	70.8	Female
+sub-ADNI011S4222	ses-M00	CN	82.3	Female
+sub-ADNI130S4997	ses-M00	AD	60.6	Female
+sub-ADNI130S5059	ses-M00	AD	72.1	Male
+sub-ADNI130S5231	ses-M00	AD	74.2	Female
