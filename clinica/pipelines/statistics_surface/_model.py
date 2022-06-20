@@ -299,8 +299,8 @@ class CorrelationGLM(GLM):
         if contrast not in self.contrasts:
             raise ValueError(f"Unknown contrast {contrast}.")
         return (
-            f"group-{self.group_label}_correlation-{contrast}-{self.contrast_sign}_"
-            f"measure-{self.feature_label}_fwhm-{self.fwhm}"
+            f"group-{self.group_label}_correlation-{self.absolute_contrast_name}"
+            f"-{self.contrast_sign}_measure-{self.feature_label}_fwhm-{self.fwhm}"
         )
 
 

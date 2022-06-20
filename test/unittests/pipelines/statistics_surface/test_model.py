@@ -155,3 +155,101 @@ def test_glm_instantiation(df, parameters):
     assert model.contrast_names == list()
     assert isinstance(model.model, FixedEffect)
 
+
+@pytest.mark.parametrize("contrast", ["age", "-age"])
+def test_correlation_glm_instantiation(df, contrast):
+    from clinica.pipelines.statistics_surface._model import CorrelationGLM
+    design = "1 + age"
+    parameters = {
+        "sizeoffwhm": 2.0,
+        "group_label": "group_label",
+    }
+    model = CorrelationGLM(design, df, "feature_label", contrast, **parameters)
+    assert not model.with_interaction
+    assert model.group_label == "group_label"
+    assert model.feature_label == "feature_label"
+    assert model.fwhm == 2.0
+    sign = "positive" if contrast == "age" else "negative"
+    assert model.contrast_sign == sign
+    assert model.absolute_contrast_name == "age"
+    assert isinstance(model.contrasts, dict)
+    assert len(model.contrasts) == 1
+    mult = 1 if sign == "positive" else -1
+    assert_array_equal(
+        model.contrasts[contrast].values,
+        mult * np.array([78., 73.4, 70.8, 82.3, 60.6, 72.1, 74.2])
+    )
+    with pytest.raises(
+        ValueError,
+        match="Unknown contrast foo"
+    ):
+        model.filename_root("foo")
+    expected = f"group-group_label_correlation-age-{sign}_measure-feature_label_fwhm-2.0"
+    assert model.filename_root(contrast) == expected
+
+
+def test_group_glm_instantiation(df):
+    from clinica.pipelines.statistics_surface._model import GroupGLM
+    design = "1 + age"
+    parameters = {
+        "sizeoffwhm": 2.0,
+        "group_label": "group_label",
+    }
+    with pytest.raises(
+        ValueError,
+        match="Contrast should refer to a categorical variable for group comparison."
+    ):
+        GroupGLM(design, df, "feature_label", "age", **parameters)
+    model = GroupGLM(design, df, "feature_label", "sex", **parameters)
+    assert not model.with_interaction
+    assert model.group_label == "group_label"
+    assert model.fwhm == 2.0
+    assert isinstance(model.contrasts, dict)
+    contrast_names = ['Female-lt-Male', 'Male-lt-Female']
+    assert set(model.contrasts.keys()) == set(contrast_names)
+    for contrast_name, sign in zip(contrast_names, [1, -1]):
+        assert_array_equal(
+            model.contrasts[contrast_name].values,
+            sign * np.array([1, -1, 1, 1, 1, -1, 1])
+        )
+    with pytest.raises(
+            ValueError,
+            match="Unknown contrast foo"
+    ):
+        model.filename_root("foo")
+    for contrast_name in contrast_names:
+        expected = f'group-group_label_{contrast_name}_measure-feature_label_fwhm-2.0'
+        assert model.filename_root(contrast_name) == expected
+
+
+def test_group_glm_with_interaction_instantiation(df):
+    from clinica.pipelines.statistics_surface._model import GroupGLMWithInteraction
+    design = "1 + age"
+    parameters = {
+        "sizeoffwhm": 2.0,
+        "group_label": "group_label",
+    }
+    with pytest.raises(
+            ValueError,
+            match=(
+                "The contrast must be an interaction between one continuous "
+                "variable and one categorical variable."
+            )
+    ):
+        GroupGLMWithInteraction(design, df, "feature_label", "age", **parameters)
+    model = GroupGLMWithInteraction(design, df, "feature_label", "age * sex", **parameters)
+    assert model.with_interaction
+    assert model.group_label == "group_label"
+    assert model.fwhm == 2.0
+    assert isinstance(model.contrasts, dict)
+    assert len(model.contrasts) == 1
+    assert_array_equal(
+        model.contrasts["age * sex"].values,
+        np.array([78., -73.4, 70.8, 82.3, 60.6, -72.1, 74.2])
+    )
+    with pytest.raises(
+            ValueError,
+            match="Unknown contrast foo"
+    ):
+        model.filename_root("foo")
+    assert model.filename_root("age * sex") == "interaction-age * sex_measure-feature_label_fwhm-2.0"
