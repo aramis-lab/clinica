@@ -308,7 +308,7 @@ pipeline {
               conda activate "${CONDA_ENV}"
               make doc
               mv site "${CHANGE_ID:-$BRANCH_NAME}"
-              scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:~/clinica/docs/public/
+              scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:/srv/local/clinica/docs/public/
             '''
           }
           post {
