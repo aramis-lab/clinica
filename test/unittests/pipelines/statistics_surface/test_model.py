@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 from brainstat.stats.terms import FixedEffect
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -253,3 +253,76 @@ def test_group_glm_with_interaction_instantiation(df):
     ):
         model.filename_root("foo")
     assert model.filename_root("age * sex") == "interaction-age * sex_measure-feature_label_fwhm-2.0"
+
+
+def test_glm_factory(df):
+    from clinica.pipelines.statistics_surface._model import (
+        GLMFactory, GroupGLM, GroupGLMWithInteraction, CorrelationGLM
+    )
+    factory = GLMFactory("feature_label")
+    assert factory.feature_label == "feature_label"
+    parameters = {
+        "group_label": "group_label",
+        "sizeoffwhm": 2.0,
+    }
+    model = factory.create_model("correlation", "age", df, "age", **parameters)
+    assert isinstance(model, CorrelationGLM)
+    model = factory.create_model("group_comparison", "age", df, "sex", **parameters)
+    assert isinstance(model, GroupGLM)
+    model = factory.create_model("group_comparison", "age * sex", df, "age * sex", **parameters)
+    assert isinstance(model, GroupGLMWithInteraction)
+
+
+def test_p_value_results():
+    from clinica.pipelines.statistics_surface._model import PValueResults
+    pvalues = np.random.random((5, 10))
+    threshold = .3
+    mask = pvalues >= threshold
+    results = PValueResults(pvalues, mask, threshold)
+    d = results.to_dict(jsonable=False)
+    assert_array_equal(d["P"], pvalues)
+    assert_array_equal(d["mask"], mask)
+    assert d["thresh"] == threshold
+    d = results.to_dict(jsonable=True)
+    assert d["P"] == pvalues.tolist()
+    assert d["mask"] == mask.tolist()
+    assert d["thresh"] == threshold
+
+
+def test_statistics_results_serializer(tmp_path):
+    import json
+    from scipy.io import loadmat
+    from clinica.pipelines.statistics_surface._model import (
+        StatisticsResults, StatisticsResultsSerializer,
+        PValueResults, CorrectedPValueResults
+    )
+    dummy_input = np.empty([3, 6])
+    uncorrected = PValueResults(*[dummy_input]*2, 0.1)
+    corrected = CorrectedPValueResults(*[dummy_input]*3, 0.2)
+    results = StatisticsResults(*[dummy_input]*2, uncorrected, dummy_input, corrected)
+    serializer = StatisticsResultsSerializer(str(tmp_path / Path("out/dummy")))
+    assert serializer.output_file == str(tmp_path / Path("out/dummy"))
+    assert serializer.json_extension == "_results.json"
+    assert serializer.json_indent == 4
+    assert serializer.mat_extension == ".mat"
+    with pytest.raises(
+        NotImplementedError,
+        match="Serializing method foo is not implemented."
+    ):
+        serializer.save(results, "foo")
+    serializer.save(results, "json")
+    assert os.path.exists(tmp_path / Path("out/dummy_results.json"))
+    with open(tmp_path / Path("out/dummy_results.json"), "r") as fp:
+        serialized = json.load(fp)
+    # assert results.to_dict(jsonable=True) == serialized
+    serializer.save(results, "mat")
+    names = ["coefficients", "TStatistics", "uncorrectedPValues", "correctedPValues", "FDR"]
+    keys = ["coef", "tvaluewithmask", "uncorrectedpvaluesstruct", "correctedpvaluesstruct", "FDR"]
+    for name, key in zip(names, keys):
+        assert os.path.exists(tmp_path / Path(f"out/dummy_{name}.mat"))
+        mat = loadmat(tmp_path / Path(f"out/dummy_{name}.mat"))
+        if key in ["uncorrectedpvaluesstruct", "correctedpvaluesstruct"]:
+            assert_array_almost_equal(mat[key]['P'][0, 0], dummy_input)
+            assert_array_almost_equal(mat[key]['mask'][0, 0], dummy_input)
+        else:
+            assert_array_almost_equal(mat[key], dummy_input)

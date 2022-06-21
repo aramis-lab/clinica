@@ -670,9 +670,12 @@ class StatisticsResultsSerializer:
         ----------
         results : Results to write to disk in JSON format.
         """
+        import os
         import json
 
-        out_json_file = str(self.output_file) + self.json_extension
+        out_json_file = Path(str(self.output_file) + self.json_extension)
+        if not os.path.exists(out_json_file.parents[0]):
+            os.makedirs(out_json_file.parents[0])
         cprint(
             msg=f"Writing results to JSON in {out_json_file}...",
             lvl="info",
