@@ -1,12 +1,13 @@
 """This file contains functions for loading data from disk
 and performing some checks on them.
 """
-import numpy as np
-import pandas as pd
 from os import PathLike
 from pathlib import Path
 from string import Template
 from typing import Dict, Tuple
+
+import numpy as np
+import pandas as pd
 from nilearn.surface import Mesh
 
 TSV_FIRST_COLUMN = "participant_id"
@@ -129,6 +130,7 @@ def _get_average_surface(fsaverage_path: PathLike) -> Tuple[Dict, Mesh]:
     average_mesh : Average mesh as a Nilearn Mesh object.
     """
     import copy
+
     from nilearn.surface import Mesh, load_surf_mesh
 
     meshes = [
