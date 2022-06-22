@@ -1,13 +1,14 @@
-import numpy as np
 from os import PathLike
 from pathlib import Path
 from typing import Dict
 
+import numpy as np
+
 from ._inputs import (
-    _read_and_check_tsv_file,
-    _get_t1_freesurfer_custom_file_template,
     _build_thickness_array,
     _get_average_surface,
+    _get_t1_freesurfer_custom_file_template,
+    _read_and_check_tsv_file,
 )
 from ._model import GLMFactory
 

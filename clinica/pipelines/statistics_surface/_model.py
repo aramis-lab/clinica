@@ -1,17 +1,18 @@
 import abc
 import warnings
+from functools import reduce
+from os import PathLike
+from pathlib import Path
+from string import Template
+from typing import Dict, List, Optional, Union
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from os import PathLike
-from string import Template
-from functools import reduce
-from typing import List, Dict, Optional, Union
+from brainstat.stats.SLM import SLM
+from brainstat.stats.terms import FixedEffect
+from nilearn.surface import Mesh
 
 from clinica.utils.stream import cprint
-from brainstat.stats.terms import FixedEffect
-from brainstat.stats.SLM import SLM
-from nilearn.surface import Mesh
 
 DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE = 0.001
 DEFAULT_THRESHOLD_CORRECTED_P_VALUE = 0.05
@@ -36,7 +37,9 @@ def _print_clusters(model: SLM, threshold: float) -> None:
     df = model.P["clus"][1]
     cprint(df)
     cprint(f"Clusters found: {len(df)}")
-    cprint(f"Significative clusters (after correction): {len(df[df['P'] <= threshold])}")
+    cprint(
+        f"Significative clusters (after correction): {len(df[df['P'] <= threshold])}"
+    )
 
 
 def _is_categorical(df: pd.DataFrame, column: str) -> bool:
@@ -60,10 +63,7 @@ def _is_categorical(df: pd.DataFrame, column: str) -> bool:
     return not df[column].dtype.name.startswith("float")
 
 
-def _build_model(
-        design_matrix: str,
-        df: pd.DataFrame
-) -> FixedEffect:
+def _build_model(design_matrix: str, df: pd.DataFrame) -> FixedEffect:
     """Build a brainstat model from the design matrix in
     string format.
 
@@ -134,13 +134,14 @@ class GLM:
     """This class implements the functionalities common to all GLM models
     used in the Clinica SurfaceStatistics pipeline.
     """
+
     def __init__(
-            self,
-            design: str,
-            df: pd.DataFrame,
-            feature_label: str,
-            contrast: str,
-            **kwargs,
+        self,
+        design: str,
+        df: pd.DataFrame,
+        feature_label: str,
+        contrast: str,
+        **kwargs,
     ):
         self._two_tailed = True  # Could be exposed to users?
         self._correction = ["fdr", "rft"]  # Could be exposed to users?
@@ -238,7 +239,9 @@ class GLM:
     def save_results(self, output_dir: PathLike, method: Union[str, List[str]]):
         """Save results to the provided output directory."""
         if not self._is_fitted():
-            raise ValueError("GLM model needs to be fitted before accessing the results.")
+            raise ValueError(
+                "GLM model needs to be fitted before accessing the results."
+            )
         if isinstance(method, str):
             method = [method]
         for contrast, result in self.results_.items():
@@ -249,14 +252,16 @@ class GLM:
                 result_serializer.save(result, meth)
 
     def plot_results(
-            self,
-            output_dir: PathLike,
-            method: Union[str, List[str]],
-            mesh: Mesh,
+        self,
+        output_dir: PathLike,
+        method: Union[str, List[str]],
+        mesh: Mesh,
     ):
         """Plot results to the provided directory."""
         if not self._is_fitted():
-            raise ValueError("GLM model needs to be fitted before accessing the results.")
+            raise ValueError(
+                "GLM model needs to be fitted before accessing the results."
+            )
         if isinstance(method, str):
             method = [method]
         for contrast, result in self.results_.items():
@@ -269,12 +274,12 @@ class GLM:
 
 class CorrelationGLM(GLM):
     def __init__(
-            self,
-            design: str,
-            df: pd.DataFrame,
-            feature_label: str,
-            contrast: str,
-            **kwargs,
+        self,
+        design: str,
+        df: pd.DataFrame,
+        feature_label: str,
+        contrast: str,
+        **kwargs,
     ):
         self.with_interaction = False
         self.absolute_contrast_name = None
@@ -306,12 +311,12 @@ class CorrelationGLM(GLM):
 
 class GroupGLM(GLM):
     def __init__(
-            self,
-            design: str,
-            df: pd.DataFrame,
-            feature_label: str,
-            contrast: str,
-            **kwargs,
+        self,
+        design: str,
+        df: pd.DataFrame,
+        feature_label: str,
+        contrast: str,
+        **kwargs,
     ):
         self.with_interaction = False
         self.group_label = kwargs.pop("group_label", "group")
@@ -326,9 +331,9 @@ class GroupGLM(GLM):
         group_values = np.unique(self.df[contrast])
         for contrast_type, (i, j) in zip(["positive", "negative"], [(0, 1), (1, 0)]):
             contrast_name = f"{group_values[i]}-lt-{group_values[j]}"
-            self.contrasts[contrast_name] = (self.df[contrast] == group_values[i]).astype(int) - (
-                    self.df[contrast] == group_values[j]
-            ).astype(int)
+            self.contrasts[contrast_name] = (
+                self.df[contrast] == group_values[i]
+            ).astype(int) - (self.df[contrast] == group_values[j]).astype(int)
 
     def filename_root(self, contrast: str):
         if contrast not in self.contrasts:
@@ -344,13 +349,9 @@ class GroupGLMWithInteraction(GroupGLM):
     ----------
     See attributes of parent class `GroupGLM`.
     """
+
     def __init__(
-            self,
-            design: str,
-            df: pd.DataFrame,
-            feature_label: str,
-            contrast: str,
-            **kwargs
+        self, design: str, df: pd.DataFrame, feature_label: str, contrast: str, **kwargs
     ):
         super().__init__(design, df, feature_label, contrast, **kwargs)
         self.with_interaction = True
@@ -388,16 +389,17 @@ class GLMFactory:
     ----------
     feature_label: Label used for building output filenames.
     """
+
     def __init__(self, feature_label: str) -> None:
         self.feature_label = feature_label
 
     def create_model(
-            self,
-            glm_type: str,
-            design: str,
-            df: pd.DataFrame,
-            contrast: str,
-            **kwargs,
+        self,
+        glm_type: str,
+        design: str,
+        df: pd.DataFrame,
+        contrast: str,
+        **kwargs,
     ) -> GLM:
         """Factory method for building a GLM model instance corresponding to the
         provided type and design matrix.
@@ -410,7 +412,10 @@ class GLMFactory:
         df: Subjects DataFrame.
         contrast: Contrast in string format.
         """
-        cprint(msg=f"The GLM model is: {design} and the GLM type is: {glm_type}", lvl="info")
+        cprint(
+            msg=f"The GLM model is: {design} and the GLM type is: {glm_type}",
+            lvl="info",
+        )
         if glm_type == "correlation":
             return CorrelationGLM(design, df, self.feature_label, contrast, **kwargs)
         elif glm_type == "group_comparison":
@@ -439,11 +444,12 @@ class PValueResults:
     mask: Binary mask.
     thresh: Threshold.
     """
+
     def __init__(
-            self,
-            pvalues: np.ndarray,
-            mask: np.ndarray,
-            threshold: float,
+        self,
+        pvalues: np.ndarray,
+        mask: np.ndarray,
+        threshold: float,
     ) -> None:
         self.P = pvalues
         self.mask = mask
@@ -451,11 +457,11 @@ class PValueResults:
 
     @classmethod
     def from_t_statistics(
-            cls,
-            tstats: np.ndarray,
-            df: pd.DataFrame,
-            mask: np.ndarray,
-            threshold: float,
+        cls,
+        tstats: np.ndarray,
+        df: pd.DataFrame,
+        mask: np.ndarray,
+        threshold: float,
     ):
         """Instantiate the class from an array of T-statistics.
 
@@ -467,11 +473,8 @@ class PValueResults:
         threshold: Threshold.
         """
         from scipy.stats import t
-        return cls(
-            1 - t.cdf(tstats, df),
-            mask,
-            threshold
-        )
+
+        return cls(1 - t.cdf(tstats, df), mask, threshold)
 
     def to_dict(self, jsonable: bool = True):
         """Returns the `PValueResults` instance in dict format.
@@ -482,10 +485,11 @@ class PValueResults:
             Otherwise, it might contain non-serializable objects.
         """
         import inspect
+
         json_dict = dict()
         for attribute in inspect.getmembers(self):
             name, value = attribute
-            if not name.startswith('_'):
+            if not name.startswith("_"):
                 if not inspect.ismethod(value):
                     if isinstance(value, np.ndarray) and jsonable:
                         json_dict[name] = value.tolist()
@@ -502,12 +506,13 @@ class CorrectedPValueResults(PValueResults):
     ----------
 
     """
+
     def __init__(
-            self,
-            pvalues: np.ndarray,
-            cluster_pvalues: np.ndarray,
-            mask: np.ndarray,
-            threshold: float,
+        self,
+        pvalues: np.ndarray,
+        cluster_pvalues: np.ndarray,
+        mask: np.ndarray,
+        threshold: float,
     ) -> None:
         super().__init__(pvalues, mask, threshold)
         self.C = cluster_pvalues
@@ -528,13 +533,14 @@ class StatisticsResults:
     corrected_p_value: The corresponding corrected p values,
         stored in a `CorrectedPValueResults` instance.
     """
+
     def __init__(
-            self,
-            coefficients: np.ndarray,
-            tstats: np.ndarray,
-            uncorrected_p_values: PValueResults,
-            fdr: np.ndarray,
-            corrected_p_values: CorrectedPValueResults,
+        self,
+        coefficients: np.ndarray,
+        tstats: np.ndarray,
+        uncorrected_p_values: PValueResults,
+        fdr: np.ndarray,
+        corrected_p_values: CorrectedPValueResults,
     ) -> None:
         self.coefficients = coefficients
         self.TStatistics = tstats
@@ -544,15 +550,18 @@ class StatisticsResults:
 
     @classmethod
     def from_slm_model(
-            cls,
-            model: SLM,
-            mask: np.ndarray,
-            threshold_uncorrected_p_value: float,
-            threshold_corrected_p_value: float,
+        cls,
+        model: SLM,
+        mask: np.ndarray,
+        threshold_uncorrected_p_value: float,
+        threshold_corrected_p_value: float,
     ):
         tstats = np.nan_to_num(model.t)
         uncorrected_p_values = PValueResults.from_t_statistics(
-            tstats, model.df, mask, threshold_uncorrected_p_value,
+            tstats,
+            model.df,
+            mask,
+            threshold_uncorrected_p_value,
         )
         corrected_p_values = CorrectedPValueResults(
             model.P["pval"]["P"],
@@ -561,11 +570,11 @@ class StatisticsResults:
             threshold_corrected_p_value,
         )
         return cls(
-                np.nan_to_num(model.coef),
-                tstats,
-                uncorrected_p_values,
-                model._fdr(),
-                corrected_p_values,
+            np.nan_to_num(model.coef),
+            tstats,
+            uncorrected_p_values,
+            model._fdr(),
+            corrected_p_values,
         )
 
     def to_dict(self, jsonable: bool = True):
@@ -577,10 +586,11 @@ class StatisticsResults:
             Otherwise, it might contain non-serializable objects.
         """
         import inspect
+
         json_dict = dict()
         for attribute in inspect.getmembers(self):
             name, value = attribute
-            if not name.startswith('_'):
+            if not name.startswith("_"):
                 if not inspect.ismethod(value):
                     if hasattr(value, "to_dict"):
                         json_dict[name] = value.to_dict(jsonable=jsonable)
@@ -606,9 +616,7 @@ class StatisticsResultsPlotter:
         if method == "nilearn_plot_surf_stat_map":
             return self._plot_stat_maps
         else:
-            raise NotImplementedError(
-                f"Plotting method {method} is not implemented."
-            )
+            raise NotImplementedError(f"Plotting method {method} is not implemented.")
 
     def _plot_stat_maps(self, result: StatisticsResults):
         from nilearn.plotting import plot_surf_stat_map
@@ -617,14 +625,19 @@ class StatisticsResultsPlotter:
             if name not in self.no_plot:
                 texture = res
                 threshold = None
-                plot_filename = str(self.output_file) + "_" + name + self.plotting_extension
+                plot_filename = (
+                    str(self.output_file) + "_" + name + self.plotting_extension
+                )
                 if isinstance(res, dict):
                     texture = res["P"]
                     threshold = res["thresh"]
                 cprint(msg=f"Saving plot to {plot_filename}", lvl="info")
                 plot_surf_stat_map(
-                    self.mesh, texture, threshold=threshold,
-                    output_file=plot_filename, title=name,
+                    self.mesh,
+                    texture,
+                    threshold=threshold,
+                    output_file=plot_filename,
+                    title=name,
                 )
 
 
@@ -636,6 +649,7 @@ class StatisticsResultsSerializer:
     ----------
     output_file: Path and filename root to be used.
     """
+
     def __init__(self, output_file: PathLike):
         self.output_file = output_file
         self.json_extension = "_results.json"
@@ -670,8 +684,8 @@ class StatisticsResultsSerializer:
         ----------
         results : Results to write to disk in JSON format.
         """
-        import os
         import json
+        import os
 
         out_json_file = Path(str(self.output_file) + self.json_extension)
         if not os.path.exists(out_json_file.parents[0]):
@@ -681,9 +695,7 @@ class StatisticsResultsSerializer:
             lvl="info",
         )
         with open(out_json_file, "w") as fp:
-            json.dump(
-                result.to_dict(jsonable=True), fp, indent=self.json_indent
-            )
+            json.dump(result.to_dict(jsonable=True), fp, indent=self.json_indent)
 
     def _write_to_mat(self, result: StatisticsResults):
         """Write the provided `StatisticsResults` to MAT format.
