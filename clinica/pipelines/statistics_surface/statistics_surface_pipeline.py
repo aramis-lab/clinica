@@ -128,34 +128,25 @@ class StatisticsSurface(cpe.Pipeline):
         # =====================================================
         all_errors = []
         # clinica_files_reader expects regexp to start at subjects/ so sub-*/ses-*/ is removed here
-        pattern_hemisphere = (
-            self.parameters["custom_file"]
-            .replace("@subject", "sub-*")
-            .replace("@session", "ses-*")
-            .replace("@fwhm", str(self.parameters["full_width_at_half_maximum"]))
-            .replace("sub-*/ses-*/", "")
-        )
-        # Files on left hemisphere
-        lh_surface_based_info = {
-            "pattern": pattern_hemisphere.replace("@hemi", "lh"),
-            "description": f"surface-based features on left hemisphere at FWHM = {self.parameters['full_width_at_half_maximum']}",
-        }
-        try:
-            clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, lh_surface_based_info
+        fwhm = str(self.parameters["full_width_at_half_maximum"])
+        for direction, hemi in zip(["left", "right"], ["lh", "rh"]):
+            cut_pattern = "sub-*/ses-*/"
+            pattern_hemisphere = self.parameters["custom_file"].safe_substitute(
+                subject="sub-*",
+                session="ses-*",
+                hemi=hemi,
+                fwhm=fwhm,
             )
-        except ClinicaException as e:
-            all_errors.append(e)
-        rh_surface_based_info = {
-            "pattern": pattern_hemisphere.replace("@hemi", "rh"),
-            "description": f"surface-based features on right hemisphere at FWHM = {self.parameters['full_width_at_half_maximum']}",
-        }
-        try:
-            clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, rh_surface_based_info
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
+            surface_based_info = {
+                "pattern": pattern_hemisphere[pattern_hemisphere.find(cut_pattern) + len(cut_pattern):],
+                "description": f"surface-based features on {direction} hemisphere at FWHM = {fwhm}",
+            }
+            try:
+                clinica_file_reader(
+                    self.subjects, self.sessions, self.caps_directory, surface_based_info
+                )
+            except ClinicaException as e:
+                all_errors.append(e)
         # Raise all errors if something happened
         if len(all_errors) > 0:
             error_message = "Clinica faced errors while trying to read files in your CAPS directory.\n"
