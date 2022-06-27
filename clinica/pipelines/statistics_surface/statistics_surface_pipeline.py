@@ -138,12 +138,17 @@ class StatisticsSurface(cpe.Pipeline):
                 fwhm=fwhm,
             )
             surface_based_info = {
-                "pattern": pattern_hemisphere[pattern_hemisphere.find(cut_pattern) + len(cut_pattern):],
+                "pattern": pattern_hemisphere[
+                    pattern_hemisphere.find(cut_pattern) + len(cut_pattern) :
+                ],
                 "description": f"surface-based features on {direction} hemisphere at FWHM = {fwhm}",
             }
             try:
                 clinica_file_reader(
-                    self.subjects, self.sessions, self.caps_directory, surface_based_info
+                    self.subjects,
+                    self.sessions,
+                    self.caps_directory,
+                    surface_based_info,
                 )
             except ClinicaException as e:
                 all_errors.append(e)
