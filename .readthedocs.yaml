@@ -7,12 +7,16 @@ version: 2
 
 # Set the version of Python and other tools you might need
 build:
-  os: ubuntu-20.04
+  os: ubuntu-22.04
   tools:
-    python: "miniconda3-4.7"
+    python: '3'
 
 mkdocs:
   configuration: mkdocs.yml
 
-conda:
-  environment: docs/environment.yml
+python:
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
