@@ -1,9 +1,9 @@
-from pydra import Submitter, Workflow
-import pydra
 import nipype.interfaces.io as nio
+import pydra
+from pydra import Submitter, Workflow
 
-from clinica.pipelines.interfaces import bids_reader_task, bids_writer_task
 import clinica.pipelines.engine_pydra_utils as pu
+from clinica.pipelines.interfaces import bids_reader_task, bids_writer_task
 
 
 class Pipeline:
