@@ -48,6 +48,9 @@ class Pipeline:
         self.workflow.add(core_workflow.split(field))
 
         # add a bids_writer task for each core output
+
+        output_attrs = []
+
         for i, field in enumerate(pu.list_out_fields(core_workflow)):
 
             self.workflow.add(bids_writer(name="bids_writer_task_" + str(i)))
@@ -56,11 +59,9 @@ class Pipeline:
             inputs_writer_task = getattr(writer_task, "inputs")
 
             setattr(inputs_writer_task, "output_file", output_data)
+            output_attrs.append((field, output_data))
 
-        # @TODO: update with fields from output_workflow output_spec
-        self.workflow.set_output(
-            [("core_vars", getattr(core_workflow.lzout, "t1w_cropped_file"))]
-        )
+        self.workflow.set_output(output_attrs)
 
         return self.workflow
 
