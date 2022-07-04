@@ -77,7 +77,7 @@ def create_merge_file(
         )
     except ValueError:
         cprint(
-            "Found duplicate subject/session pair. Keeping first occurence.",
+            "Found duplicate subject/session pair. Keeping first occurrence.",
             lvl="warning",
         )
         sub_ses_df = sub_ses_df.drop_duplicates(subset=["participant_id", "session_id"])
@@ -598,7 +598,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
                     if "func" in mods_avail_dict:
                         for m in mods_avail_dict["func"]:
                             row_to_append_df[m] = pd.Series("0")
-                        mmt.add_missing_mod(ses, m)
+                            mmt.add_missing_mod(ses, m)
 
                 if "dwi" in mods_avail_bids:
                     row_to_append_df["dwi"] = pd.Series("1")
@@ -649,7 +649,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
                     if "pet" in mods_avail_dict:
                         for m in mods_avail_dict["pet"]:
                             row_to_append_df[m] = pd.Series("0")
-                        mmt.add_missing_mod(ses, m)
+                            mmt.add_missing_mod(ses, m)
 
             missing_mods_df = missing_mods_df.append(row_to_append_df)
             row_to_append_df = pd.DataFrame(columns=cols_dataframe)
@@ -793,8 +793,8 @@ def center_nifti_origin(input_image, output_image):
 def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     """Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
 
-    All the files from bids_dir are copied into output_dir, then all the NIfTI images we can found are replaced by their
-    centered version if their center if off the origin by more than 50 mm.
+    All the files from bids_dir are copied into output_dir, then all the NIfTI images found are replaced by their
+    centered version if their center is off the origin by more than 50 mm.
 
     Args:
         bids_dir: (str) path to bids directory
@@ -853,7 +853,7 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
             all_errors.append(current_error)
     if len(all_errors) > 0:
         final_error_msg = (
-            "Clinica encoutered "
+            "Clinica encountered "
             + str(len(all_errors))
             + " error(s) while trying to center all NIfTI images.\n"
         )
@@ -861,30 +861,6 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
             final_error_msg += "\n" + error
         raise RuntimeError(final_error_msg)
     return nifti_files_filtered
-
-
-def are_far_appart(file1, file2, threshold=80):
-    """Tell if 2 files have a center located at more than a threshold distance.
-
-    Args:
-        file1: (str) path to the first nifti file
-        file2: (str) path to the second nifti file
-        threshold: threshold to consider whether 2 files are too far appart
-
-    Returns:
-        True if distance between `file1` and `file2` is greter than `threshold`, False otherwise.
-    """
-    from os.path import isfile
-
-    import numpy as np
-
-    assert isfile(file1)
-    assert isfile(file2)
-
-    center1 = get_world_coordinate_of_center(file1)
-    center2 = get_world_coordinate_of_center(file2)
-
-    return np.linalg.norm(center2 - center1, ord=2) > threshold
 
 
 def write_list_of_files(file_list, output_file):
@@ -921,7 +897,7 @@ def check_relative_volume_location_in_world_coordinate_system(
     skip_question=False,
 ):
     """
-    Check if the NIfTI file list nifti_list1 and nifti_list2 provided in argument are not too far apart (otherwise coreg
+    Check if the NIfTI file list nifti_list1 and nifti_list2 provided in argument are not too far apart, otherwise coreg
     in SPM may fail. Norm between center of volumes of 2 files must be less than 80 mm.
 
     Args:
@@ -930,8 +906,10 @@ def check_relative_volume_location_in_world_coordinate_system(
         label_2: label of the second nifti_list
         nifti_list2: second set of files, must be same length as nifti_list1
         bids_dir: bids directory (used in potential warning message)
-        modality: string that must be used in argument of: clinica iotools bids --modality MODALITY (used in potential
+        modality: string that must be used in argument of: clinica iotools bids --modality <MODALITY> (used in potential
                 warning message)
+        skip_question: bool, optional
+            disable prompts for user input (default is False)
     """
     import sys
     from os.path import abspath, basename
@@ -953,7 +931,7 @@ def check_relative_volume_location_in_world_coordinate_system(
         warning_message = (
             f"It appears that {str(len(pairs_with_problems))} "
             "pairs of files have an important relative offset. "
-            "SPM coregistration has a high probability to fail on these files:\n\n"
+            "SPM co-registration has a high probability to fail on these files:\n\n"
         )
 
         # File column width : 3 spaces more than the longest string to display
@@ -1026,8 +1004,8 @@ def check_volume_location_in_world_coordinate_system(
     nifti_list, bids_dir, modality="t1w", skip_question=False
 ):
     """
-    Check if the NIfTI file list nifti_list provided in argument are aproximately centered around the origin of the
-    world coordinates. (Problem may arise with SPM segmentation
+    Check if the NIfTI file list nifti_list provided in argument are approximately centered around the origin of the
+    world coordinates. Otherwise, issues may arise with further processing such as SPM segmentation.
 
     If yes, we warn the user of this problem, and propose him to exit clinica in order for him to run:
         clinica iotools center-nifti ...
@@ -1064,7 +1042,7 @@ def check_volume_location_in_world_coordinate_system(
         warning_message = (
             f"It appears that {str(len(list_non_centered_files))} files "
             "have a center way out of the origin of the world coordinate system. SPM has a high "
-            "probability to fail on these files (for coregistration or segmentation):\n\n"
+            "probability to fail on these files (for co-registration or segmentation):\n\n"
         )
         warning_message += (
             "%-" + str(file_width) + "s%-" + str(center_width) + "s%-s"
@@ -1121,8 +1099,8 @@ def is_centered(nii_volume, threshold_l2=50):
         nii_volume: path to NIfTI volume
         threshold_l2: maximum distance between origin of the world coordinate system and the center of the volume to
                     be considered centered. The threshold were SPM segmentation stops working is around 100 mm
-                    (it was determined empirically after several trials on a genrated dataset), so default value is 50
-                    mm in order to have a security margin, even when dealing with coregistred files afterward)
+                    (it was determined empirically after several trials on a generated dataset), so default value is 50
+                    mm in order to have a security margin, even when dealing with co-registered files afterward.
 
     Returns:
         True or False
@@ -1241,7 +1219,7 @@ def vox_to_world_space_method_1(coordinates_vol, header):
 def vox_to_world_space_method_2(coordinates_vol, header):
     """
     The Method 2 is used when short qform_code is larger than zero. To get the coordinates, we multiply a rotation
-    matrix (r_mat) by coordinates_vol, then perform hadamart with pixel dimension pixdim (like in method 1). Then we add
+    matrix (r_mat) by coordinates_vol, then perform Hadamard with pixel dimension pixdim (like in method 1). Then we add
     an offset (qoffset_x, qoffset_y, qoffset_z)
 
     Args:
@@ -1301,8 +1279,8 @@ def vox_to_world_space_method_3(coordinates_vol, header):
     """
     This method is used when sform_code is larger than zero. It relies on a full affine matrix, stored in the header in
     the fields srow_[x,y,y], to map voxel to world coordinates.
-    When a nifti file is created with raw data and affine=..., this is this method that is used to decypher the
-    voxel-to-world correspondance.
+    When a nifti file is created with raw data and affine=..., this is this method that is used to decipher the
+    voxel-to-world correspondence.
 
     Args:
         coordinates_vol: coordinate in the volume (raw data)
@@ -1364,8 +1342,8 @@ def vox_to_world_space_method_3_bis(coordinates_vol, header):
     """
     import numpy as np
 
-    affine_trensformation_matrix = header.get_affine()
+    affine_transformation_matrix = header.get_affine()
     homogeneous_coord = np.concatenate(
         (np.array(coordinates_vol), np.array([1])), axis=0
     )
-    return np.dot(affine_trensformation_matrix, homogeneous_coord)[0:3]
+    return np.dot(affine_transformation_matrix, homogeneous_coord)[0:3]

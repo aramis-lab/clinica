@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from clinica.iotools.abstract_converter import Converter
 
@@ -38,7 +38,8 @@ def get_bids_subjs_info(
 
 
 class AdniToBids(Converter):
-    def get_modalities_supported(self):
+    @classmethod
+    def get_modalities_supported(cls) -> List[str]:
         """Return a list of modalities supported.
 
         Returns: a list containing the modalities supported by the converter
@@ -46,7 +47,8 @@ class AdniToBids(Converter):
         """
         return ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
 
-    def check_adni_dependencies(self):
+    @classmethod
+    def check_adni_dependencies(cls) -> None:
         """Check the dependencies of ADNI converter."""
         from clinica.utils.check_dependency import check_dcm2niix
 
@@ -65,6 +67,8 @@ class AdniToBids(Converter):
         Args:
             clinical_data_dir:  path to the clinical data directory
             out_path: path to the BIDS directory
+            clinical_data_only: process clinical data only
+            subjects_list_path: restrict processing to this manifest of subjects
             xml_path: path to the XML metadata files
         """
         import os
@@ -154,7 +158,7 @@ class AdniToBids(Converter):
         clinical_dir,
         dest_dir,
         subjs_list_path=None,
-        modalities=["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"],
+        modalities=None,
         force_new_extraction=False,
     ):
         """Convert the images of ADNI.
@@ -182,6 +186,8 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
         from clinica.utils.stream import cprint
+
+        modalities = modalities or self.get_modalities_supported()
 
         adni_merge_path = path.join(clinical_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path)

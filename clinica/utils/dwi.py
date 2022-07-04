@@ -76,7 +76,7 @@ def b0_average(in_file, out_file=None):
     return out_file
 
 
-def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
+def b0_dwi_split(in_dwi: str, in_bval: str, in_bvec: str, low_bval: float = 5.0):
     """Split DWI dataset.
 
     Split the DWI volumes into two datasets :
@@ -87,7 +87,7 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
         in_dwi (str): DWI dataset.
         in_bval (str): File describing the b-values of the DWI dataset.
         in_bvec (str): File describing the directions of the DWI dataset.
-        low_bval (int, optional): Define the b0 volumes as all volume bval <= lowbval. Defaults to 5.0.
+        low_bval (float, optional): Define the b0 volumes as all volume bval <= lowbval. Defaults to 5.0.
 
     Returns:
         out_b0 (str): The set of b<=low_bval volumes.
@@ -154,7 +154,7 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
     return out_b0, out_dwi, out_bvals, out_bvecs
 
 
-def compute_average_b0(in_dwi, in_bval, low_bval=5.0):
+def compute_average_b0(in_dwi: str, in_bval: str, low_bval: float = 5.0):
     """Compute average b0 volume from DWI dataset."""
     import os
 
@@ -204,8 +204,6 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
     import os
 
     import numpy as np
-
-    from clinica.utils.dwi import merge_volumes_tdim
 
     assert os.path.isfile(in_b0)
     assert os.path.isfile(in_dwi)

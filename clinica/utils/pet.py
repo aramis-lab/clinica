@@ -43,7 +43,7 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     """
     import os
 
-    from pandas.io.parsers import read_csv
+    from pandas import read_csv
 
     if not os.path.isfile(pvc_psf_tsv):
         raise FileNotFoundError(f"Could not find the psf_tsv file {pvc_psf_tsv}")

@@ -31,19 +31,18 @@ def convert_adni_t1(
     cprint(
         f"Calculating paths of T1 images. Output will be stored in {conversion_dir}."
     )
-    images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir)
+    images = compute_t1_paths(source_dir, csv_dir, subjs_list, conversion_dir)
     cprint("Paths of T1 images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "t1", mod_to_update=mod_to_update)
     cprint(msg="T1 conversion done.", lvl="debug")
 
 
-def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
+def compute_t1_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     """Compute the paths to T1 MR images and store them in a TSV file.
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
         conversion_dir: path to the TSV files including the paths to original images
 
@@ -455,17 +454,18 @@ def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
     """
     import numpy as np
 
-    multiple_mag_strength = False
+    multiple_mag_strength = len(scans_meta.MagStrength.unique()) > 1
 
     # Select preferred_field_strength images
-    if len(scans_meta.MagStrength.unique()) > 1:
-        multiple_mag_strength = True
+    if multiple_mag_strength:
         # Save for later the scans with the non preferred magnetic field strength
         not_preferred_scan = scans_meta[
             scans_meta.MagStrength != preferred_field_strength
         ]
         # Filtering to keep only the scans with the preferred magnetic field strength
         scans_meta = scans_meta[scans_meta.MagStrength == preferred_field_strength]
+    else:
+        not_preferred_scan = None
 
     if scans_meta.MagStrength.unique()[0] == 3.0:
 
@@ -476,20 +476,20 @@ def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
 
         if not images_qc.empty:
             selected_image = None
-            # We check if there is a single selected series image
+            # Check if there is only one selected series image.
             if np.sum(images_qc.series_selected) == 1:
                 selected_image = (
                     images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
                 )
-            # Otherwise we select the one with the best QC if available
+            # Otherwise, select the one with the best QC if available.
             else:
                 images_not_rejected = images_qc[images_qc.series_quality < 4]
 
                 if images_not_rejected.empty:
 
-                    # There are no images that passed the qc
-                    # so we'll try to see if there are other images without qc,
-                    # otherwise return None
+                    # There are no images that passed the qc,
+                    # so we'll try to see if there are other images without qc.
+                    # Otherwise, return None.
                     qc_ids = set(
                         [int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()]
                     )
@@ -566,7 +566,7 @@ def check_qc(scan, subject_id, visit_str, mri_quality_subj):
         mri_quality_subj: DatFrame of MR image quality of images corresponding to the subject
 
     Returns:
-        boolean, True if image passed QC or if there is not available QC, False elsewhere
+        boolean, True if image passed QC or if there is no available QC, False otherwise.
     """
     from clinica.utils.stream import cprint
 

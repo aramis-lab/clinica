@@ -1,6 +1,6 @@
 from cmath import nan
 from os import PathLike
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional
 
 from pandas import DataFrame, Series
 
@@ -351,7 +351,7 @@ def write_bids(
                 bids_path=to / bids_full_path,
             )
             if metadata["modality_num"] == "20217":
-                import_event_tsv(bids_path=to)
+                import_event_tsv(bids_path=str(to))
     return
 
 
@@ -377,7 +377,7 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
     import subprocess
     import tempfile
     import zipfile
-    from pathlib import Path
+    from pathlib import PurePath
 
     from fsspec.implementations.local import LocalFileSystem
 
@@ -385,7 +385,7 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
 
     zf = zipfile.ZipFile(zipfiles)
     try:
-        os.makedirs(Path(bids_path).parent)
+        os.makedirs(PurePath(bids_path).parent)
     except OSError:
         # Folder already created with previous instance
         pass
@@ -400,12 +400,12 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
         command += ["-b", "y", "-ba", "y"]
         command += [tempdir]
         subprocess.run(command)
-        fmri_image_path = find_largest_imaging_data(tempdir)
+        fmri_image_path = PurePath(find_largest_imaging_data(tempdir))
         fs.copy(str(fmri_image_path), str(bids_path) + ".nii.gz")
         fs.copy(
             str(fmri_image_path.parent)
             + "/"
-            + Path(Path(fmri_image_path.name).stem).stem
+            + PurePath(PurePath(fmri_image_path.name).stem).stem
             + ".json",
             str(bids_path) + ".json",
         )
@@ -418,7 +418,7 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
     return
 
 
-def select_sessions(x: DataFrame) -> Series:
+def select_sessions(x: DataFrame) -> Optional[Series]:
     from clinica.utils.stream import cprint
 
     if (
@@ -435,7 +435,7 @@ def select_sessions(x: DataFrame) -> Series:
             f"It will not be converted. To have it converted, please update your clinical data.",
             lvl="warning",
         )
-        return nan
+        return None
     elif (
         x["source_sessions_number"] == "3"
         and x.age_when_attended_assessment_centre_f21003_3_0 != nan
@@ -450,13 +450,12 @@ def select_sessions(x: DataFrame) -> Series:
             f"It will not be converted. To have it converted, please update your clinical data.",
             lvl="warning",
         )
-        return nan
+        return None
 
 
 def import_event_tsv(bids_path: str) -> None:
-    """import the csv containing the events information."""
+    """Import the csv containing the events' information."""
     import os
-    from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
 
