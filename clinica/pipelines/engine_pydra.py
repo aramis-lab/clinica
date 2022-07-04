@@ -1,10 +1,9 @@
 from pathlib import PurePath
 import nipype.interfaces.io as nio
-import pydra
 from pydra import Submitter, Workflow
 
 import clinica.pipelines.engine_pydra_utils as pu
-from clinica.pipelines.interfaces import bids_writer
+from clinica.pipelines.interfaces import bids_writer, bids_reader
 
 
 class Pipeline:
@@ -33,8 +32,10 @@ class Pipeline:
 
         # setup the input workflow
         list_core_inputs = pu.list_in_fields(core_workflow)
+
         self.input_workflow = pu.bids_query(list_core_inputs)
         self.input_workflow.inputs.input_dir = self.workflow.lzin.input_dir
+
         self.workflow.add(self.input_workflow)
 
         # connect input workflow to core workflow
@@ -46,6 +47,7 @@ class Pipeline:
 
         self.workflow.add(core_workflow.split(field))
 
+        # add a bids_writer task for each core output
         for i, field in enumerate(pu.list_out_fields(core_workflow)):
 
             self.workflow.add(bids_writer(name="bids_writer_task_" + str(i)))
@@ -70,23 +72,14 @@ class Pipeline:
     def input_workflow(self, query_bids: dict, name: str = "input"):
 
         """Generic Input workflow
-        :query_bids: input to BIDSDataGrabber
-        c.f https://nipype.readthedocs.io/en/latest/api/generated/nipype.interfaces.io.html#bidsdatagrabber
         :name: The name of the workflow.
         :return: The input workflow.
         """
-
-        from pydra.tasks.nipype1.utils import Nipype1Task
-
         self._input_workflow = Workflow(name=name, input_spec=["input_dir"])
 
-        bids_data_grabber = nio.BIDSDataGrabber(output_query=query_bids)
-
         self._input_workflow.add(
-            Nipype1Task(
-                name="bids_data_grabber",
-                interface=bids_data_grabber,
-                base_dir=self._input_workflow.lzin.input_dir,
+            bids_reader(
+                query_bids=query_bids, input_dir=self._input_workflow.lzin.input_dir
             )
         )
 
@@ -94,7 +87,7 @@ class Pipeline:
 
         self._input_workflow.set_output(
             [
-                (field, getattr(self._input_workflow.bids_data_grabber.lzout, field))
+                (field, getattr(self._input_workflow.bids_reader_task.lzout, field))
                 for field in data_keys
             ]
         )
