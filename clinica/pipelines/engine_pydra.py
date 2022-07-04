@@ -1,9 +1,10 @@
 from pathlib import PurePath
+
 import nipype.interfaces.io as nio
 from pydra import Submitter, Workflow
 
 import clinica.pipelines.engine_pydra_utils as pu
-from clinica.pipelines.interfaces import bids_writer, bids_reader
+from clinica.pipelines.interfaces import bids_reader, bids_writer
 
 
 class Pipeline:

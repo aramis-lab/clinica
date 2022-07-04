@@ -1,7 +1,8 @@
+from pathlib import PurePath
+
 import nipype.interfaces.io as nio
 import pydra
 from pydra.tasks.nipype1.utils import Nipype1Task
-from pathlib import PurePath
 
 
 @pydra.mark.task
