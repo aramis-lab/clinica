@@ -50,7 +50,6 @@ click-option-group = "^0.5"
 xlrd = "*"
 openpyxl = "*"
 fsspec = "*"
-nest-asyncio = "^1.5.5"
 pydra = "^0.18"
 pydra-nipype1 = "^0.1.0"
 # docs
