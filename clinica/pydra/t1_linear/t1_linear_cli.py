@@ -1,10 +1,8 @@
-from tkinter import HIDDEN
 import click
-from sqlalchemy import true
 
-import clinica.pipelines.pydra_t1_linear.t1_linear as pt1
+import clinica.pydra.t1_linear.t1_linear as pt1
 from clinica.pipelines import cli_param
-from clinica.pipelines.engine_pydra import Pipeline
+from clinica.pydra.engine import Pipeline
 
 pipeline_name = "pydra-t1-linear"
 

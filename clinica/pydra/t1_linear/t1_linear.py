@@ -6,8 +6,6 @@ from nipype.interfaces.ants import N4BiasFieldCorrection, RegistrationSynQuick
 from pydra import Workflow
 from pydra.mark import annotate, task
 
-from clinica.pipelines.engine_pydra import Pipeline
-
 n4_bias_field_correction = N4BiasFieldCorrection(bspline_fitting_distance=300)
 registration_syn_quick = RegistrationSynQuick(transform_type="a")
 
