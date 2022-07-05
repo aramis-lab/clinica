@@ -29,6 +29,7 @@ from .t1_volume_existing_template import t1_volume_existing_template_cli
 from .t1_volume_parcellation import t1_volume_parcellation_cli
 from .t1_volume_register_dartel import t1_volume_register_dartel_cli
 from .t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_cli
+from .pydra_t1_linear import t1_linear_cli
 
 
 class RegistrationOrderGroup(click.Group):
@@ -73,6 +74,7 @@ cli.add_command(t1_freesurfer_template_cli.cli)
 cli.add_command(t1_freesurfer_longitudinal_correction_cli.cli)
 cli.add_command(deeplearning_prepare_data_cli.cli)
 
+cli.add_command(t1_linear_cli.cli)  # pydra option
 
 if __name__ == "__main__":
     cli()

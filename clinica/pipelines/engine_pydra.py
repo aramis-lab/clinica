@@ -22,7 +22,6 @@ class Pipeline:
         """
         Construct Clinica compliant pipeline
         :core_workflow: a pydra workflow with the core interfaces
-        :query_bids: dict with keys which are a string and with a dict value containing (datatype/suffix/extension)
         """
 
         self.workflow = Workflow(
