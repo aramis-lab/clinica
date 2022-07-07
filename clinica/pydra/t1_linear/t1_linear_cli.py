@@ -1,7 +1,7 @@
 import click
 
-import clinica.pydra.engine_utils as pu
-import clinica.pydra.t1_linear.t1_linear as pt1
+import clinica.pydra.engine_utils as pydra_utils
+import clinica.pydra.t1_linear.t1_linear as pydra_t1_linear
 from clinica.pipelines import cli_param
 
 pipeline_name = "pydra-t1-linear"
@@ -16,10 +16,12 @@ def cli(
 ) -> None:
     """Affine registration of Flair images to the MNI standard space (Pydra engine)."""
 
-    pipeline = pt1.build_core_workflow(
-        "t1-linear-pydra", bids_directory, caps_directory
+    t1_linear_pipeline = pydra_t1_linear.build_core_workflow(
+        name="t1-linear-pydra",
+        input_dir=bids_directory,
+        output_dir=caps_directory,
     )
-    pu.run(pipeline)
+    pydra_utils.run(t1_linear_pipeline)
 
 
 if __name__ == "__main__":
