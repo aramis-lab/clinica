@@ -6,6 +6,8 @@ import clinica.pydra.engine_utils as pu
 from pydra import Workflow
 from clinica.pydra.interfaces import bids_reader, bids_writer
 
+import typing as ty
+
 
 def clinica_io(func):
     """
@@ -37,13 +39,13 @@ def clinica_io(func):
     return run_wrapper
 
 
-def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> Workflow:
+def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> ty.Tuple:
     """
     Setup for an input workflow to read BIDS data
 
     :pipeline: the high level workflow containing (input -> core -> output)
     :core_workflow: the functional workflow
-    :return: The input workflow.
+    :return: the field to split on.
     """
 
     list_core_inputs = pu.list_in_fields(core_workflow)
@@ -91,13 +93,12 @@ def add_input_task(input_workflow: Workflow, query_dict) -> Workflow:
 
 def build_output_workflow(
     pipeline: Workflow, core_workflow: Workflow, output_dir: PurePath
-) -> Workflow:
+) -> None:
     """Example of an output workflow.
 
     :param name: The name of the workflow.
     :return: The output workflow.
     """
-    import pydra
 
     output_attrs = []
 
