@@ -1,4 +1,4 @@
-from pydra import Workflow
+from pydra import Submitter, Workflow
 
 
 def list_keys(query_bids: dict) -> list:
@@ -34,3 +34,12 @@ def bids_query(keys: list) -> dict:
     }
 
     return {key: bids_keys_available[key] for key in keys}
+
+
+def run(wf):
+    with Submitter(plugin="cf") as submitter:
+        submitter(wf)
+
+    results = wf.result(return_inputs=True)
+    # @TODO: decide where to store results
+    print(results)

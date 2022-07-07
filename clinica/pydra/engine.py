@@ -1,101 +1,120 @@
+import functools
+from os import PathLike
 from pathlib import PurePath
 
-from pydra import Submitter, Workflow
-
 import clinica.pydra.engine_utils as pu
+from pydra import Workflow
 from clinica.pydra.interfaces import bids_reader, bids_writer
 
 
-class Pipeline:
-    def __init__(
-        self, name: str, pipeline_in_dir: PurePath, pipeline_out_dir: PurePath
-    ):
-        """
-        :pipeline_in_dir: a BIDS compliant input directory
-        """
-        self.pipeline_in_dir = pipeline_in_dir
-        self.pipeline_out_dir = pipeline_out_dir
-        self.name = name
+def clinica_io(func):
+    """
+    Prepend an input workflow (BIDS reader)
+    and append and output_workflow (BIDS writer)
+    to any pydra (core) workflow
+    """
 
-    def build_workflow(self, core_workflow: Workflow):
-        """
-        Construct Clinica compliant pipeline
-        :core_workflow: a pydra workflow with the core interfaces
-        """
+    @functools.wraps(func)
+    def run_wrapper(name: str, input_dir: PathLike, output_dir: PathLike, **kwargs):
 
-        self.workflow = Workflow(
-            name=self.name,
+        core_workflow = func()
+
+        pipeline = Workflow(
+            name=name,
             input_spec=["input_dir"],
-            input_dir=self.pipeline_in_dir,
+            input_dir=input_dir,
         )
 
-        # setup the input workflow
-        list_core_inputs = pu.list_in_fields(core_workflow)
+        split_key = build_input_workflow(pipeline, core_workflow)
 
-        self.input_workflow = pu.bids_query(list_core_inputs)
-        self.input_workflow.inputs.input_dir = self.workflow.lzin.input_dir
+        # TODO: define condition on split if multiple fields
+        pipeline.add(core_workflow.split(split_key))
 
-        self.workflow.add(self.input_workflow)
+        build_output_workflow(pipeline, core_workflow, output_dir)
 
-        # connect input workflow to core workflow
-        for field in list_core_inputs:
-            bids_data = getattr(self.input_workflow.lzout, field)
-            setattr(core_workflow.inputs, field, bids_data)
+        return pipeline
 
-        # @TODO: define condition on split if multiple fields
+    return run_wrapper
 
-        self.workflow.add(core_workflow.split(field))
 
-        # add a bids_writer task for each core output
+def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> Workflow:
+    """
+    Setup for an input workflow to read BIDS data
 
-        output_attrs = []
+    :pipeline: the high level workflow containing (input -> core -> output)
+    :core_workflow: the functional workflow
+    :return: The input workflow.
+    """
 
-        for i, field in enumerate(pu.list_out_fields(core_workflow)):
+    list_core_inputs = pu.list_in_fields(core_workflow)
+    query_dict = pu.bids_query(list_core_inputs)
 
-            self.workflow.add(bids_writer(name="bids_writer_task_" + str(i)))
-            output_data = getattr(core_workflow.lzout, field)
-            writer_task = getattr(self.workflow, "bids_writer_task_" + str(i))
-            inputs_writer_task = getattr(writer_task, "inputs")
+    input_workflow = Workflow(name="input_workflow", input_spec=["input_dir"])
 
-            setattr(inputs_writer_task, "output_file", output_data)
-            output_attrs.append((field, output_data))
+    input_workflow.inputs.input_dir = pipeline.lzin.input_dir
 
-        self.workflow.set_output(output_attrs)
+    input_workflow = add_input_task(input_workflow, query_dict)
 
-        return self.workflow
+    pipeline.add(input_workflow)
 
-    @property
-    def input_workflow(self) -> Workflow:
-        return self._input_workflow
+    # connect input workflow to core workflow
 
-    @input_workflow.setter
-    def input_workflow(self, query_bids: dict, name: str = "input"):
+    for field in list_core_inputs:
+        read_data = getattr(input_workflow.lzout, field)
+        setattr(core_workflow.inputs, field, read_data)
 
-        """Generic Input workflow
-        :name: The name of the workflow.
-        :return: The input workflow.
-        """
-        self._input_workflow = Workflow(name=name, input_spec=["input_dir"])
+    return field
 
-        self._input_workflow.add(
-            bids_reader(
-                query_bids=query_bids, input_dir=self._input_workflow.lzin.input_dir
-            )
-        )
 
-        data_keys = pu.list_keys(query_bids)
+def add_input_task(input_workflow: Workflow, query_dict) -> Workflow:
+    """
+    Construct and parameterize the input workflow
 
-        self._input_workflow.set_output(
-            [
-                (field, getattr(self._input_workflow.bids_reader_task.lzout, field))
-                for field in data_keys
-            ]
-        )
+    :param pipeline: the high level workflow containing (input -> core -> output)
+    :return: an BIDS reader based workflow
+    """
 
-    def run(self):
-        with Submitter(plugin="cf") as submitter:
-            submitter(self.workflow)
+    input_workflow.add(
+        bids_reader(query_bids=query_dict, input_dir=input_workflow.lzin.input_dir)
+    )
 
-        results = self.workflow.result(return_inputs=True)
-        # @TODO: decide where to store results
-        print(results)
+    data_keys = pu.list_keys(query_dict)
+
+    input_workflow.set_output(
+        [
+            (field, getattr(input_workflow.bids_reader_task.lzout, field))
+            for field in data_keys
+        ]
+    )
+    return input_workflow
+
+
+def build_output_workflow(
+    pipeline: Workflow, core_workflow: Workflow, output_dir: PurePath
+) -> Workflow:
+    """Example of an output workflow.
+
+    :param name: The name of the workflow.
+    :return: The output workflow.
+    """
+    import pydra
+
+    output_attrs = []
+
+    for i, field in enumerate(pu.list_out_fields(core_workflow)):
+
+        pipeline.add(bids_writer(name="bids_writer_task_" + str(i)))
+
+        writer_task = getattr(pipeline, "bids_writer_task_" + str(i))
+        writer_task_inputs = getattr(writer_task, "inputs")
+
+        output_data = getattr(core_workflow.lzout, field)
+
+        setattr(writer_task_inputs, "output_file", output_data)
+        setattr(writer_task_inputs, "output_dir", output_dir)
+
+        output_attrs.append((field, output_data))
+
+    pipeline.set_output(output_attrs)
+
+    return pipeline
