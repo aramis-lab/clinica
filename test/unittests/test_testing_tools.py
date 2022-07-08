@@ -3,6 +3,12 @@ import pytest
 import numpy as np
 import nibabel as nib
 
+from test.nonregression.testing_tools import (
+    compare_folders_structures,
+    compare_folders_with_hashes,
+    create_list_hashes,
+)
+
 
 def test_likeliness_measure():
     pass
@@ -78,12 +84,14 @@ def test_create_list_hashes(tmp_path):
         assert hashes[key] == hashes2[key]
 
 
-def test_compare_folders_structures(tmp_path):
+@pytest.mark.parametrize(
+    "compare_func",
+    [compare_folders_structures, compare_folders_with_hashes]
+)
+def test_compare_folders_structures(tmp_path, compare_func):
     import pickle
     import shutil
-    from test.nonregression.testing_tools import (
-            compare_folders_structures, create_list_hashes
-    )
+    # Setup the test data
     for subject in ["sub-01", "sub-02"]:
         os.makedirs(tmp_path / subject)
         _create_files(
@@ -93,10 +101,28 @@ def test_compare_folders_structures(tmp_path):
     hashes = create_list_hashes(tmp_path)
     with open(tmp_path / "hashes.pl", "wb") as fp:
         pickle.dump(hashes, fp)
-    compare_folders_structures(tmp_path, tmp_path / "hashes.pl")
+
+    # Basic check that structures and files match the ref 
+    compare_func(tmp_path, tmp_path / "hashes.pl")
+
+    # Change the content of a file should not change the structure
+    # but only the hashes
+    with open(tmp_path / "sub-02/baz.json", "w") as fp:
+        fp.write("data")
+    if compare_func.__name__ == "compare_folders_structures":
+        compare_func(tmp_path, tmp_path / "hashes.pl")
+    else:
+        with pytest.raises(
+            ValueError,
+            match="/sub-02/baz.json does not match the reference file !"
+        ):
+            compare_func(tmp_path, tmp_path / "hashes.pl")
+
+    # Delete all files and folders for subject 2
+    # This should change the structure compared to the reference
     shutil.rmtree(tmp_path / "sub-02")
     with pytest.raises(
         ValueError,
         match="/sub-02/bar.tsv not found !"
     ):
-        compare_folders_structures(tmp_path, tmp_path / "hashes.pl")
+        compare_func(tmp_path, tmp_path / "hashes.pl")

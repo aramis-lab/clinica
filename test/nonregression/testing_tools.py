@@ -338,6 +338,38 @@ def create_list_hashes(
         for fname in list_files_with_extensions(path_folder, extensions_to_keep)
     }
 
+def compare_folders_with_hashes(
+        path_folder: PathLike,
+        list_hashes: PathLike,
+):
+    """Compares the files of a folder against a reference.
+
+    Parameters
+    ----------
+    path_folder: Starting point for the tree listing.
+    list_hashes: Path to the pickled hash dictionary.
+        The dictionary is assumed to be of the form
+        {/path/to/file.extension: hash(file.extension)}
+
+    See Also
+    --------
+    compare_folders_structures
+    """
+    import pickle
+
+    hashes_check = pickle.load(open(list_hashes, "rb"))
+    hashes_new = create_list_hashes(path_folder)
+
+    if hashes_check != hashes_new:
+        error_message1 = ""
+        error_message2 = ""
+        for key in hashes_check:
+            if key not in hashes_new:
+                error_message1 += f"{key} not found !\n"
+            elif hashes_check[key] != hashes_new[key]:
+                error_message2 += f"{key} does not match the reference file !\n"
+        raise ValueError(error_message1 + error_message2)
+
 
 def compare_folders_structures(
         path_folder: PathLike,
@@ -351,13 +383,17 @@ def compare_folders_structures(
     list_hashes: Path to the pickled hash dictionary.
         The dictionary is assumed to be of the form
         {/path/to/file.extension: hash(file.extension)}
+
+    See Also
+    --------
+    compare_folders_with_hashes
     """
     import pickle
 
     hashes_check = pickle.load(open(list_hashes, "rb"))
     hashes_new = create_list_hashes(path_folder)
 
-    if hashes_check != hashes_new:
+    if set(hashes_check.keys()) != set(hashes_new.keys()):
         error_message1 = ""
         error_message2 = ""
         for key in hashes_check:
