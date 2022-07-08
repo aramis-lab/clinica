@@ -1,32 +1,41 @@
 # coding: utf8
+
+import os
 from os import PathLike
+import numpy as np
+import pandas as pd
 from pathlib import Path
+from typing import Tuple, Dict, List
 
 
-def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
+def likeliness_measure(
+        file1: PathLike,
+        file2: PathLike,
+        threshold1: Tuple,
+        threshold2: Tuple,
+        display: bool = False,
+ ) -> bool:
+    """Compares 2 Nifti inputs, with 2 different thresholds.
+
+    Parameters
+    ----------
+    file1: Path to first nifti input
+    file2: Path to second nifti to compare
+    threshold1: Defines the first criteria to meet: threshold1[0] defines the relative
+        difference between 2 voxels to be considered different (ex: 1e-4). threshold[1] defines
+        the maximum proportion of voxels that can different for the test to be negative.
+    threshold2: Defines the second criteria to meet.
+    display: If set to True, will display a useful graph to determine optimal threshold for the
+        comparison.
+
+    Returns
+    -------
+    bool
+        True if file1 and file2 can be considered similar enough (meeting criterion expressed in threshold1
+        and threshold2). False otherwise.
     """
-    Function that compares 2 Nifti inputs, with 2 different thresholds.
-
-    Args:
-        (string) file1: path to first nifti input
-        (string) file2: path to second nifti to compare
-        (tuple) threshold1: defines the first criteria to meet: threshold1[0] defines the relative
-                            difference between 2 voxels to be considered different (ex: 1e-4). threshold[1] defines
-                            the maximum proportion of voxels that can different for the test to be negative.
-        (tuple) threshold2: defines the second criteria to meet.
-        (bool) display: If set to True, will display a useful graph to determine optimal threshold for the
-                        comparison
-
-    Returns:
-        (bool) True if file1 and file2 can be considered similar enough (meeting criterion expressed in threshold1
-               and threshold2). False otherwise.
-
-    """
-    import os
-
     import matplotlib.pyplot as plt
     import nibabel as nib
-    import numpy as np
 
     print(" ** comparing " + os.path.basename(file1) + " **")
     data1 = nib.load(file1).get_fdata(dtype="float32")
@@ -46,7 +55,7 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     if display:
         thresholds = np.logspace(-8, 0, 20)
         percents = np.array(
-            [np.sum((metric_flattened > T)) / metric_flattened.size for T in thresholds]
+            [np.sum((metric_flattened > _)) / metric_flattened.size for _ in thresholds]
         )
         fig, ax = plt.subplots()
         ax.semilogx(thresholds, percents)
@@ -62,21 +71,28 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     ) & (np.sum(mask_different_voxels_cond2) / metric_flattened.size < threshold2[1])
 
 
-def similarity_measure(file1, file2, threshold):
-    """
-    Function that compares 2 Nifti inputs using a correlation metric. Nifti are equals if correlation gives
+def similarity_measure(
+        file1: PathLike,
+        file2: PathLike,
+        threshold: float,
+) -> bool:
+    """Compares 2 Nifti inputs using a correlation metric.
 
-    Args:
-        (string) file1: path to first nifti input
-        (string) file2: path to second nifti to compare
-        (float) threshold
+    Nifti are equals if the correlation is higher than the specified threshold.
 
-    Returns:
-        (bool) True if file1 and file2 can be considered similar enough. (superior than threshold)
+    Parameters
+    ----------
+    file1: Path to first nifti input
+    file2: Path to second nifti to compare
+    threshold: Threshold value to be used in the comparison
 
+    Returns
+    -------
+    bool
+        True if file1 and file2 can be considered similar enough, i.e. the
+        correlation is higher than the threshold.
     """
     import nipype.pipeline.engine as npe
-    import numpy as np
     from nipype.algorithms.metrics import Similarity
 
     # Node similarity (nipy required)
@@ -89,25 +105,26 @@ def similarity_measure(file1, file2, threshold):
     return np.mean(res.outputs.similarity) > threshold
 
 
-def identical_subject_list(sub_ses_list1, sub_ses_list2):
+def identical_subject_list(
+        sub_ses_list1: PathLike,
+        sub_ses_list2: PathLike,
+) -> bool:
+    """Ensures that both subject_session files are describing the same list.
+
+    Parameters
+    ----------
+    sub_ses_list1: Path to first nifti input
+    sub_ses_list2: Path to second nifti to compare
+
+    Returns
+    -------
+    bool
+        True if sub_ses_list1 and sub_ses_list2 contains the same sessions.
     """
-    Function that ensures that both subject_session files are describing the same list
 
-    Args:
-        (string) sub_ses_list1: path to first nifti input
-        (string) sub_ses_list2: path to second nifti to compare
-
-    Returns:
-        (bool) True if sub_ses_list1 and sub_ses_list2 contains the same sessions
-
-    """
-
-    def is_included(list1, list2):
-        from pandas import read_csv
-
-        # Read csv files
-        readlist1 = read_csv(list1, sep="\t")
-        readlist2 = read_csv(list2, sep="\t")
+    def is_included(list1: PathLike, list2: PathLike) -> bool:
+        readlist1 = pd.read_csv(list1, sep="\t")
+        readlist2 = pd.read_csv(list2, sep="\t")
 
         # If columns are different, files are different
         if list(readlist1.columns) != list(readlist2.columns):
@@ -143,25 +160,23 @@ def identical_subject_list(sub_ses_list1, sub_ses_list2):
     )
 
 
-def same_missing_modality_tsv(file1, file2):
-    """
-    Function that is used to compare 2 TSV files generated by the iotool ComputeMissingModalities.
+def same_missing_modality_tsv(file1: PathLike, file2: PathLike) -> bool:
+    """Compare 2 TSV files generated by the iotool ComputeMissingModalities.
 
     Only fields participant_id, pet, t1w, func_task - rest are compared. Line order does not matter.
 
+    Parameters
+    ----------
+    file1: Path to first tsv
+    file2: Path to second tsv
 
-    Args:
-        (string) file1: path to first tsv
-        (string) file2: path to second tsv
-
-    Returns:
-        (bool) True if file1 and file2 contains the same information
+    Returns
+    -------
+    bool
+        True if file1 and file2 contains the same information
     """
-    import pandas as pds
-
-    # Read dataframe with pandas
-    df1 = pds.read_csv(file1, sep="\t")
-    df2 = pds.read_csv(file2, sep="\t")
+    df1 = pd.read_csv(file1, sep="\t")
+    df2 = pd.read_csv(file2, sep="\t")
 
     # Extract data and form lists for both files
     subjects1 = list(df1.participant_id)
@@ -208,7 +223,7 @@ def same_missing_modality_tsv(file1, file2):
     )
 
 
-def compare_folders(outdir: Path, refdir: Path, tmp_path) -> bool:
+def compare_folders(outdir: Path, refdir: Path, tmp_path: Path) -> bool:
     from filecmp import cmp
 
     file_out = tmp_path / "file_out.txt"
@@ -225,16 +240,17 @@ def compare_folders(outdir: Path, refdir: Path, tmp_path) -> bool:
             "Comparison of out and ref directories shows mismatch :\n "
             "OUT :\n" + out_message + "\n REF :\n" + ref_message
         )
-
     return True
 
 
 def tree(dir: Path, file_out: Path):
+    """Creates a file (file_out) with a visual tree representing the file
+    hierarchy at a given directory
 
-    # Create a file (file_out) with a visual tree representing the file
-    # hierarchy at a given directory
-    # Note: does not display empty directories
+    .. note::
+        Does not display empty directories.
 
+    """
     print(type(dir))
     file_content = ""
     for path in sorted(dir.rglob("*")):
@@ -247,51 +263,15 @@ def tree(dir: Path, file_out: Path):
     file_out.write_text(file_content)
 
 
-def list_files(startpath, filename=None):
+def clean_folder(path: PathLike, recreate: bool = True):
+    """Clean folders under provided path.
+
+    Parameters
+    ----------
+    path: Path of folder to clean.
+    recreate: Whether or not to restore folder
+        structure after cleaning.
     """
-
-    Args:
-        startpath: starting point for the tree listing. Does not list hidden
-        files (to avoid problems with .DS_store for example
-        filename: if None, display to stdout, otherwise write in the file
-
-    Returns:
-        void
-    """
-    from os import remove, sep, walk
-    from os.path import abspath, basename, exists, expanduser, expandvars
-
-    if exists(filename):
-        remove(filename)
-
-    expanded_path = abspath(expanduser(expandvars(startpath)))
-    for root, dirs, files in walk(expanded_path):
-        level = root.replace(startpath, "").count(sep)
-        indent = " " * 4 * (level)
-        rootstring = "{}{}/".format(indent, basename(root))
-        # Do not deal with hidden files
-        if not basename(root).startswith("."):
-            if filename is not None:
-                # 'a' stands for 'append' rather than 'w' for 'write'. We must
-                # manually jump line with \n otherwise everything is
-                # concatenated
-                with open(filename, "a") as fin:
-                    fin.write(rootstring + "\n")
-            else:
-                print(rootstring)
-            subindent = " " * 4 * (level + 1)
-            for f in files:
-                filestring = "{}{}".format(subindent, f)
-                if not basename(f).startswith("."):
-                    if filename is not None:
-                        with open(filename, "a") as fin:
-                            fin.write(filestring + "\n")
-                    else:
-                        print(filestring)
-
-
-def clean_folder(path, recreate=True):
-    from os import makedirs
     from os.path import abspath, exists
     from shutil import rmtree
 
@@ -299,73 +279,78 @@ def clean_folder(path, recreate=True):
     if exists(abs_path):
         rmtree(abs_path)
     if recreate:
-        makedirs(abs_path)
+        os.makedirs(abs_path)
 
 
-def clean_PETLinear(caps_path):
-    from os import listdir, makedirs, path
-    from os.path import abspath, exists
-    from shutil import rmtree
+def list_files_with_extensions(
+        path_folder: PathLike,
+        extensions_to_keep: Tuple[str],
+) -> List[str]:
+    """List all the files with the provided extensions
+    in the path_folder.
 
-    # Handle subjects subdirectory
-    abs_path_subjs = path.join(caps_path, "subjects")
+    Parameters
+    ----------
+    path_folder: Starting point for the tree listing.
+    extensions_to_keep: Files with these extensions will have their
+        hashes computed and tracked.
 
-    # Iterate over the subject directories
-    for subj in listdir(abs_path_subjs):
-        subj_dir = path.join(abs_path_subjs, subj)
-        if path.isdir(subj_dir):
-            # Iterate over session directories
-            for sess in listdir(subj_dir):
-                sess_dir = path.join(subj_dir, sess)
-                if path.isdir(sess_dir):
-
-                    path_pet_linear = path.join(sess_dir, "pet_linear")
-                    clean_folder(path_pet_linear, recreate=False)
-
-    # TODO: handle groups subdirectory
-
-
-def create_list_hashes(path_folder, extensions_to_keep=(".nii.gz", ".tsv", ".json")):
+    Returns
+    -------
+    all_files: List of files with the correct extensions.
     """
-    Computes a dictionary of files with their corresponding hashes
-
-        Args:
-            (string) path_folder: starting point for the tree listing.
-            (tuple) extensions_to_keep: files with these extensions will have their hashes computed and tracked
-
-        Returns:
-            (dictionary) all_files: a dictionary of the form {/path/to/file.extension: hash(file.extension)}
-    """
-    import hashlib
-    import os
-
-    def file_as_bytes(file):
-        with file:
-            return file.read()
-
     all_files = []
     for subdir, dirs, files in os.walk(path_folder):
         files.sort()
         for file in files:
             if file.lower().endswith(extensions_to_keep):
                 all_files.append(os.path.join(subdir, file))
+    return all_files
 
-    dict_hashes = {
-        fname[len(path_folder) :]: str(
+
+def create_list_hashes(
+        path_folder: PathLike,
+        extensions_to_keep: Tuple[str] = (".nii.gz", ".tsv", ".json"),
+) -> Dict:
+    """Computes a dictionary of files with their corresponding hashes.
+
+    Parameters
+    ----------
+    path_folder: Starting point for the tree listing.
+    extensions_to_keep: Files with these extensions will have their
+        hashes computed and tracked.
+
+    Returns
+    -------
+    dict
+        Dictionary of the form {/path/to/file.extension: hash(file.extension)}
+    """
+    import hashlib
+
+    def file_as_bytes(file):
+        with file:
+            return file.read()
+
+    return {
+        fname[len(str(path_folder)) :]: str(
             hashlib.md5(file_as_bytes(open(fname, "rb"))).digest()
         )
-        for fname in all_files
+        for fname in list_files_with_extensions(path_folder, extensions_to_keep)
     }
-    return dict_hashes
 
 
-def compare_folders_with_hashes(path_folder, list_hashes):
-    """
-    Compares the files of a folder against a reference
+def compare_folders_structures(
+        path_folder: PathLike,
+        list_hashes: PathLike,
+):
+    """Compares the structure of a folder against a reference.
 
-        Args:
-            (string) path_folder: starting point for the tree listing.
-            (dictionary) list_hashes: a dictionary of the form {/path/to/file.extension: hash(file.extension)}
+    Parameters
+    ----------
+    path_folder: Starting point for the tree listing.
+    list_hashes: Path to the pickled hash dictionary.
+        The dictionary is assumed to be of the form
+        {/path/to/file.extension: hash(file.extension)}
     """
     import pickle
 
@@ -377,35 +362,8 @@ def compare_folders_with_hashes(path_folder, list_hashes):
         error_message2 = ""
         for key in hashes_check:
             if key not in hashes_new:
-                error_message1 += "{0} not found !\n".format(key)
-            elif hashes_check[key] != hashes_new[key]:
-                error_message2 += "{0} does not match the reference file !\n".format(
-                    key
-                )
-        raise ValueError(error_message1 + error_message2)
-
-
-def compare_folders_structures(path_folder, list_hashes):
-    """
-    Compares the structure of a folder against a reference
-
-        Args:
-            (string) path_folder: starting point for the tree listing.
-            (dictionary) list_hashes: a dictionary of the form {/path/to/file.extension: hash(file.extension)}
-    """
-    import pickle
-
-    hashes_check = pickle.load(open(list_hashes, "rb"))
-    hashes_new = create_list_hashes(path_folder)
-
-    if list(hashes_check).sort() != list(hashes_new).sort():
-        error_message1 = ""
-        error_message2 = ""
-        for key in hashes_check:
-            if key not in hashes_new:
-                error_message1 += "{0} not found !\n".format(key)
+                error_message1 += f"{key} not found !\n"
         for key in hashes_new:
             if key not in hashes_check:
-                error_message2 += "{0}'s creation was not expected !\n".format(key)
-
+                error_message2 += f"{key}'s creation was not expected !\n"
         raise ValueError(error_message1 + error_message2)
