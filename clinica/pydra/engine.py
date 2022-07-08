@@ -11,9 +11,9 @@ import typing as ty
 
 def clinica_io(func):
     """
-    Prepend an input workflow (BIDS reader)
-    and append and output_workflow (BIDS writer)
-    to any pydra (core) workflow
+    Prepend an input workflow (BIDS reader) and
+    append an output_workflow (BIDS writer)
+    to any Pydra workflow
     """
 
     @functools.wraps(func)
