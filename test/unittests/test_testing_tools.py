@@ -65,9 +65,9 @@ def test_list_files_with_extensions(tmp_path) -> None:
     _create_files(tmp_path, ["foo.txt", "bar.png"])
     assert len(list_files_with_extensions(tmp_path, (".nii.gz", ".tsv"))) == 0
     assert list_files_with_extensions(tmp_path, (".txt")) == [str(tmp_path / "foo.txt")]
-    assert set(list_files_with_extensions(tmp_path, (".txt", ".png"))) == set(
+    assert set(list_files_with_extensions(tmp_path, (".txt", ".png"))) == {
         [str(tmp_path / "foo.txt"), str(tmp_path / "bar.png")]
-    )
+    }
 
 
 def test_create_list_hashes(tmp_path):
@@ -75,7 +75,7 @@ def test_create_list_hashes(tmp_path):
 
     _create_files(tmp_path, ["foo.nii.gz", "bar.tsv", "baz.json", "foo.txt", "bar.png"])
     hashes = create_list_hashes(tmp_path)
-    assert set(hashes.keys()) == set(["/foo.nii.gz", "/bar.tsv", "/baz.json"])
+    assert set(hashes.keys()) == {"/foo.nii.gz", "/bar.tsv", "/baz.json"}
     # change content of "baz.json" and check that hash is different
     with open(tmp_path / "baz.json", "w") as fp:
         fp.write("data")
