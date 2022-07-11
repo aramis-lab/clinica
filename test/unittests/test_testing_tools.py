@@ -1,9 +1,12 @@
 import os
+from os import PathLike
+from pathlib import PurePath
 from test.nonregression.testing_tools import (
     compare_folders_structures,
     compare_folders_with_hashes,
     create_list_hashes,
 )
+from typing import Callable
 
 import nibabel as nib
 import numpy as np
@@ -14,7 +17,7 @@ def test_likeliness_measure():
     pass
 
 
-def test_similarity_measure(tmp_path):
+def test_similarity_measure(tmp_path: PurePath):
     from test.nonregression.testing_tools import similarity_measure
 
     rng = np.random.RandomState(42)
@@ -59,27 +62,29 @@ def _create_files(folder, list_of_filenames):
             pass
 
 
-def test_list_files_with_extensions(tmp_path) -> None:
+def test_list_files_with_extensions(tmp_path: PurePath) -> None:
     from test.nonregression.testing_tools import list_files_with_extensions
 
     _create_files(tmp_path, ["foo.txt", "bar.png"])
-    assert len(list_files_with_extensions(tmp_path, (".nii.gz", ".tsv"))) == 0
-    assert list_files_with_extensions(tmp_path, (".txt",)) == [str(tmp_path / "foo.txt")]
-    assert set(list_files_with_extensions(tmp_path, (".txt", ".png"))) == {
+    assert len(list_files_with_extensions(str(tmp_path), (".nii.gz", ".tsv"))) == 0
+    assert list_files_with_extensions(str(tmp_path), (".txt",)) == [
+        str(tmp_path / "foo.txt")
+    ]
+    assert set(list_files_with_extensions(str(tmp_path), (".txt", ".png"))) == {
         [str(tmp_path / "foo.txt"), str(tmp_path / "bar.png")]
     }
 
 
-def test_create_list_hashes(tmp_path):
+def test_create_list_hashes(tmp_path: PurePath):
     from test.nonregression.testing_tools import create_list_hashes
 
     _create_files(tmp_path, ["foo.nii.gz", "bar.tsv", "baz.json", "foo.txt", "bar.png"])
-    hashes = create_list_hashes(tmp_path)
+    hashes = create_list_hashes(str(tmp_path))
     assert set(hashes.keys()) == {"/foo.nii.gz", "/bar.tsv", "/baz.json"}
     # change content of "baz.json" and check that hash is different
     with open(tmp_path / "baz.json", "w") as fp:
         fp.write("data")
-    hashes2 = create_list_hashes(tmp_path)
+    hashes2 = create_list_hashes(str(tmp_path))
     assert hashes["/baz.json"] != hashes2["/baz.json"]
     for key in ["/foo.nii.gz", "/bar.tsv"]:
         assert hashes[key] == hashes2[key]
@@ -88,7 +93,9 @@ def test_create_list_hashes(tmp_path):
 @pytest.mark.parametrize(
     "compare_func", [compare_folders_structures, compare_folders_with_hashes]
 )
-def test_compare_folders_structures(tmp_path, compare_func):
+def test_compare_folders_structures(
+    tmp_path: PurePath, compare_func: Callable[[PathLike, PathLike], None]
+):
     import pickle
     import shutil
 
@@ -99,27 +106,27 @@ def test_compare_folders_structures(tmp_path, compare_func):
             tmp_path / subject,
             ["foo.nii.gz", "bar.tsv", "baz.json", "foo.txt", "bar.png"],
         )
-    hashes = create_list_hashes(tmp_path)
+    hashes = create_list_hashes(str(tmp_path))
     with open(tmp_path / "hashes.pl", "wb") as fp:
         pickle.dump(hashes, fp)
 
     # Basic check that structures and files match the ref
-    compare_func(tmp_path, tmp_path / "hashes.pl")
+    compare_func(str(tmp_path), str(tmp_path / "hashes.pl"))
 
     # Change the content of a file should not change the structure
     # but only the hashes
-    with open(tmp_path / "sub-02/baz.json", "w") as fp:
+    with open(str(tmp_path / "sub-02/baz.json"), "w") as fp:
         fp.write("data")
     if compare_func.__name__ == "compare_folders_structures":
-        compare_func(tmp_path, tmp_path / "hashes.pl")
+        compare_func(str(tmp_path), str(tmp_path / "hashes.pl"))
     else:
         with pytest.raises(
             ValueError, match="/sub-02/baz.json does not match the reference file !"
         ):
-            compare_func(tmp_path, tmp_path / "hashes.pl")
+            compare_func(str(tmp_path), str(tmp_path / "hashes.pl"))
 
     # Delete all files and folders for subject 2
     # This should change the structure compared to the reference
     shutil.rmtree(tmp_path / "sub-02")
     with pytest.raises(ValueError, match="/sub-02/bar.tsv not found !"):
-        compare_func(tmp_path, tmp_path / "hashes.pl")
+        compare_func(str(tmp_path), str(tmp_path / "hashes.pl"))
