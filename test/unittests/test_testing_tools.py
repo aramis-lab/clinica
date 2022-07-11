@@ -55,7 +55,7 @@ def test_tree(tmp_path):
 
 def _create_files(folder, list_of_filenames):
     for f in list_of_filenames:
-        with open(folder / f, "w") as fp:
+        with open(folder / f, "w") as _:
             pass
 
 
