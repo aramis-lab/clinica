@@ -544,9 +544,9 @@ class StatisticsResults:
     ) -> None:
         self.coefficients = coefficients
         self.TStatistics = tstats
-        self.uncorrectedPValues = uncorrected_p_values
+        self.uncorrectedPValue = uncorrected_p_values
         self.FDR = fdr
-        self.correctedPValues = corrected_p_values
+        self.correctedPValue = corrected_p_values
 
     @classmethod
     def from_slm_model(
@@ -712,8 +712,8 @@ class StatisticsResultsSerializer:
         struct_labels = {
             "coefficients": "coef",
             "TStatistics": "tvaluewithmask",
-            "uncorrectedPValues": "uncorrectedpvaluesstruct",
-            "correctedPValues": "correctedpvaluesstruct",
+            "uncorrectedPValue": "uncorrectedpvaluesstruct",
+            "correctedPValue": "correctedpvaluesstruct",
             "FDR": "FDR",
         }
         for name, res in result.to_dict(jsonable=False).items():
