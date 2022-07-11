@@ -107,7 +107,7 @@ def test_glm_instantiation(df, parameters):
 
     design = "1 + age"
     model = GLM(design, df, "feature_label", "age", **parameters)
-    assert model._two_tailed
+    assert not model._two_tailed
     assert model._correction == ["fdr", "rft"]
     assert model.feature_label == "feature_label"
     assert model.fwhm == parameters["sizeoffwhm"]
@@ -302,8 +302,8 @@ def test_statistics_results_serializer(tmp_path):
     names = [
         "coefficients",
         "TStatistics",
-        "uncorrectedPValues",
-        "correctedPValues",
+        "uncorrectedPValue",
+        "correctedPValue",
         "FDR",
     ]
     keys = [
