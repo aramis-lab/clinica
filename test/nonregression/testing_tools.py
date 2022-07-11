@@ -244,7 +244,7 @@ def compare_folders(outdir: Path, refdir: Path, tmp_path: Path) -> bool:
     return True
 
 
-def tree(dir: Path, file_out: Path):
+def tree(dir_: Path, file_out: Path):
     """Creates a file (file_out) with a visual tree representing the file
     hierarchy at a given directory
 
@@ -252,12 +252,12 @@ def tree(dir: Path, file_out: Path):
         Does not display empty directories.
 
     """
-    print(type(dir))
+    print(type(dir_))
     file_content = ""
-    for path in sorted(dir.rglob("*")):
+    for path in sorted(dir_.rglob("*")):
         if path.is_dir() and not any(path.iterdir()):
             continue
-        depth = len(path.relative_to(dir).parts)
+        depth = len(path.relative_to(dir_).parts)
         spacer = "    " * depth
         file_content = file_content + f"{spacer}+ {path.name}\n"
     print(file_content)
