@@ -34,7 +34,7 @@ def _print_clusters(model: SLM, threshold: float) -> None:
     """
     cprint("#" * 40)
     cprint("After correction (Cluster-wise Correction for Multiple Comparisons): ")
-    df = model.P["clus"][1]
+    df = model.P["clus"][0]
     cprint(df)
     cprint(f"Clusters found: {len(df)}")
     cprint(
@@ -143,7 +143,7 @@ class GLM:
         contrast: str,
         **kwargs,
     ):
-        self._two_tailed = True  # Could be exposed to users?
+        self._two_tailed = False  # Could be exposed to users?
         self._correction = ["fdr", "rft"]  # Could be exposed to users?
         self.df = df
         self.feature_label = feature_label
@@ -573,7 +573,7 @@ class StatisticsResults:
             np.nan_to_num(model.coef),
             tstats,
             uncorrected_p_values,
-            model._fdr(),
+            model.Q,
             corrected_p_values,
         )
 
