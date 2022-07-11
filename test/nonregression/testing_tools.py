@@ -338,6 +338,7 @@ def create_list_hashes(
         for fname in list_files_with_extensions(path_folder, extensions_to_keep)
     }
 
+
 def compare_folders_with_hashes(
         path_folder: PathLike,
         list_hashes: PathLike,
