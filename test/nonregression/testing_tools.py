@@ -270,8 +270,7 @@ def clean_folder(path: PathLike, recreate: bool = True):
     Parameters
     ----------
     path: Path of folder to clean.
-    recreate: Whether or not to restore folder
-        structure after cleaning.
+    recreate: Whether to restore folder structure after cleaning.
     """
     from os.path import abspath, exists
     from shutil import rmtree
