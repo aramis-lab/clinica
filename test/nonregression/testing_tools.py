@@ -2,19 +2,20 @@
 
 import os
 from os import PathLike
+from pathlib import Path
+from typing import Dict, List, Tuple
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import Tuple, Dict, List
 
 
 def likeliness_measure(
-        file1: PathLike,
-        file2: PathLike,
-        threshold1: Tuple,
-        threshold2: Tuple,
-        display: bool = False,
- ) -> bool:
+    file1: PathLike,
+    file2: PathLike,
+    threshold1: Tuple,
+    threshold2: Tuple,
+    display: bool = False,
+) -> bool:
     """Compares 2 Nifti inputs, with 2 different thresholds.
 
     Parameters
@@ -72,9 +73,9 @@ def likeliness_measure(
 
 
 def similarity_measure(
-        file1: PathLike,
-        file2: PathLike,
-        threshold: float,
+    file1: PathLike,
+    file2: PathLike,
+    threshold: float,
 ) -> bool:
     """Compares 2 Nifti inputs using a correlation metric.
 
@@ -106,8 +107,8 @@ def similarity_measure(
 
 
 def identical_subject_list(
-        sub_ses_list1: PathLike,
-        sub_ses_list2: PathLike,
+    sub_ses_list1: PathLike,
+    sub_ses_list2: PathLike,
 ) -> bool:
     """Ensures that both subject_session files are describing the same list.
 
@@ -283,8 +284,8 @@ def clean_folder(path: PathLike, recreate: bool = True):
 
 
 def list_files_with_extensions(
-        path_folder: PathLike,
-        extensions_to_keep: Tuple[str],
+    path_folder: PathLike,
+    extensions_to_keep: Tuple[str],
 ) -> List[str]:
     """List all the files with the provided extensions
     in the path_folder.
@@ -309,8 +310,8 @@ def list_files_with_extensions(
 
 
 def create_list_hashes(
-        path_folder: PathLike,
-        extensions_to_keep: Tuple[str] = (".nii.gz", ".tsv", ".json"),
+    path_folder: PathLike,
+    extensions_to_keep: Tuple[str] = (".nii.gz", ".tsv", ".json"),
 ) -> Dict:
     """Computes a dictionary of files with their corresponding hashes.
 
@@ -340,8 +341,8 @@ def create_list_hashes(
 
 
 def compare_folders_with_hashes(
-        path_folder: PathLike,
-        list_hashes: PathLike,
+    path_folder: PathLike,
+    list_hashes: PathLike,
 ):
     """Compares the files of a folder against a reference.
 
@@ -373,8 +374,8 @@ def compare_folders_with_hashes(
 
 
 def compare_folders_structures(
-        path_folder: PathLike,
-        list_hashes: PathLike,
+    path_folder: PathLike,
+    list_hashes: PathLike,
 ):
     """Compares the structure of a folder against a reference.
 
