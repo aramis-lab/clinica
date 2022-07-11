@@ -38,10 +38,10 @@ def likeliness_measure(
     import nibabel as nib
 
     print(" ** comparing " + os.path.basename(file1) + " **")
-    data1 = nib.load(file1).get_fdata(dtype="float32")
+    data1 = nib.load(str(file1)).get_fdata(dtype="float32")
     data1[np.isnan(data1)] = 0
 
-    data2 = nib.load(file2).get_fdata(dtype="float32")
+    data2 = nib.load(str(file2)).get_fdata(dtype="float32")
     data2[np.isnan(data2)] = 0
 
     # Get mask where data are 0 in data1 and data2
