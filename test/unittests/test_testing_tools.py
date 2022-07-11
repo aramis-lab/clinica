@@ -71,7 +71,8 @@ def test_list_files_with_extensions(tmp_path: PurePath) -> None:
         str(tmp_path / "foo.txt")
     ]
     assert set(list_files_with_extensions(str(tmp_path), (".txt", ".png"))) == {
-        [str(tmp_path / "foo.txt"), str(tmp_path / "bar.png")]
+        str(tmp_path / "foo.txt"),
+        str(tmp_path / "bar.png"),
     }
 
 
