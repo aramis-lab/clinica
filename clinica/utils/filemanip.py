@@ -142,7 +142,7 @@ def read_participant_tsv(tsv_file):
             f"\t- Clinica expected the following path to be a file: {tsv_file}\n"
             "\t- If you gave relative path, did you run Clinica on the good folder?"
         )
-    ss_df = pd.io.parsers.read_csv(tsv_file, sep="\t")
+    ss_df = pd.read_csv(tsv_file, sep="\t")
     if "participant_id" not in list(ss_df.columns.values):
         raise ClinicaException(
             f"The TSV file does not contain participant_id column (path: {tsv_file})"

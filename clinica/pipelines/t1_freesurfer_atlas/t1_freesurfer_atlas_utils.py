@@ -36,6 +36,7 @@ def compute_atlas(
                 / ses
                 / ("t1/freesurfer_cross_sectional")
             )
+            subject_dir = substitute_dir
             path_to_freesurfer_cross = Path(substitute_dir) / Path(
                 to_process_with_atlases[1]
             )
@@ -127,7 +128,6 @@ def write_tsv_files(subject_dir: str, image_id: str, atlas: str) -> str:
     else:
         sub, ses, long = image_id.split("_")
         folder = sub + "_" + ses + ".long." + sub + "_" + long
-
     if os.path.isfile(os.path.join(subject_dir, folder, "mri", "aparc+aseg.mgz")):
         generate_regional_measures_alt(subject_dir, folder, atlas)
     else:

@@ -1,14 +1,14 @@
 from enum import Enum
 from typing import IO
 
-import attr
+from attrs import define, fields
 from cattr.gen import make_dict_unstructure_fn, override
 from cattr.preconf.json import make_converter
 
 BIDS_VERSION = "1.7.0"
 
 
-@attr.define
+@define
 class BIDSDatasetDescription:
     """Model representing a BIDS dataset description.
 
@@ -50,7 +50,7 @@ converter.register_unstructure_hook(
         converter,
         **{
             a.name: override(rename=_rename(a.name))
-            for a in attr.fields(BIDSDatasetDescription)
+            for a in fields(BIDSDatasetDescription)
         },
     ),
 )

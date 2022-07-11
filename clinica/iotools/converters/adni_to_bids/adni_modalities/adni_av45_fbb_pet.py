@@ -31,9 +31,7 @@ def convert_adni_av45_fbb_pet(
     cprint(
         f"Calculating paths of AV45 and Florbetaben PET images. Output will be stored in {conversion_dir}."
     )
-    images = compute_av45_fbb_pet_paths(
-        source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
-    )
+    images = compute_av45_fbb_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir)
     cprint(
         "Paths of AV45 and Florbetaben PET images found. Exporting images into BIDS ..."
     )
@@ -41,15 +39,12 @@ def convert_adni_av45_fbb_pet(
     cprint(msg="AV45 and Florbetaben PET conversion done.", lvl="debug")
 
 
-def compute_av45_fbb_pet_paths(
-    source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
-):
+def compute_av45_fbb_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     """Compute the paths to the AV45 and Florbetaben PET images and store them in a TSV file.
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
         conversion_dir: path to the TSV files including the paths to original images
 

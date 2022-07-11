@@ -18,6 +18,9 @@
   <a href="https://badge.fury.io/py/clinica">
     <img src="https://badge.fury.io/py/clinica.svg" alt="PyPI version">
   </a>
+  <a href="https://pypi.org/project/clinica">
+    <img src="https://img.shields.io/pypi/pyversions/clinica" alt="Supported Python versions">
+  </a>
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
   </a>
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">

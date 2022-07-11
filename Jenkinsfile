@@ -33,7 +33,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
-                  make env
+                  make install
                   clinica --help
                   conda list
                 '''
@@ -61,37 +61,6 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     ./instantiation/
-                '''
-              }
-              post {
-                always {
-                  junit 'test/test-reports/*.xml'
-                }
-                success {
-                  sh 'rm -rf ${WORK_DIR}/*'
-                }
-              }
-            }
-            stage('Unit Tests') {
-              environment {
-                PATH = "/usr/local/Modules/bin:$PATH"
-                WORK_DIR = '/mnt/data/ci/working_dir_linux'
-              }
-              steps {
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${CONDA_ENV}"
-                  source /usr/local/Modules/init/profile.sh
-                  module load clinica.all
-                  cd test
-                  taskset -c 0-21 poetry run pytest \
-                    --junitxml=./test-reports/unittests_linux.xml \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    ./unittests/
                 '''
               }
               post {
@@ -211,7 +180,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
-                  make env
+                  make install
                   clinica --help
                   conda list
                 '''
@@ -236,34 +205,6 @@ pipeline {
                     --junitxml=./test-reports/instantation_mac.xml \
                     --disable-warnings \
                     ./instantiation/
-                '''
-              }
-              post {
-                always {
-                  junit 'test/test-reports/*.xml'
-                }
-                success {
-                  sh 'rm -rf ${WORK_DIR}/*'
-                }
-              }
-            }
-            stage('Unit Tests') {
-              environment {
-                WORK_DIR = '/Volumes/data/working_dir_mac'
-              }
-              steps {
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${CONDA_ENV}"
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
-                  module load clinica.all
-                  cd test
-                  poetry run pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --junitxml=./test-reports/unittests_mac.xml \
-                    --disable-warnings \
-                    ./unittests/
                 '''
               }
               post {
@@ -367,7 +308,7 @@ pipeline {
               conda activate "${CONDA_ENV}"
               make doc
               mv site "${CHANGE_ID:-$BRANCH_NAME}"
-              scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:~/clinica/docs/public/
+              scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:/srv/local/clinica/docs/public/
             '''
           }
           post {
