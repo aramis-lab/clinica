@@ -3,7 +3,6 @@ and performing some checks on them.
 """
 from os import PathLike
 from pathlib import Path
-from string import Template
 from typing import Dict, Tuple
 
 import numpy as np
@@ -41,20 +40,17 @@ def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
     return tsv_data
 
 
-def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> Template:
+def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> str:
     """Returns a Template for the path to the desired surface file."""
-    return Template(
-        str(base_dir)
-        + (
-            "/${subject}/${session}/t1/freesurfer_cross_sectional/${subject}_${session}"
-            "/surf/${hemi}.thickness.fwhm${fwhm}.fsaverage.mgh"
-        )
+    return str(base_dir) + (
+        "/%(subject)s/%(session)s/t1/freesurfer_cross_sectional/%(subject)s_%(session)s"
+        "/surf/%(hemi)s.thickness.fwhm%(fwhm)s.fsaverage.mgh"
     )
 
 
 def _build_thickness_array(
     input_dir: PathLike,
-    surface_file: Template,
+    surface_file: str,
     df: pd.DataFrame,
     fwhm: float,
 ) -> np.ndarray:
@@ -77,19 +73,12 @@ def _build_thickness_array(
     for idx, row in df.iterrows():
         subject = row[TSV_FIRST_COLUMN]
         session = row[TSV_SECOND_COLUMN]
-        parts = (
-            load(
-                str(
-                    Path(input_dir)
-                    / Path(
-                        surface_file.safe_substitute(
-                            subject=subject, session=session, fwhm=fwhm, hemi=hemi
-                        )
-                    )
-                )
-            ).get_fdata()
-            for hemi in ["lh", "rh"]
-        )
+        parts = []
+        for hemi in ["lh", "rh"]:
+            query = {"subject": subject, "session": session, "fwhm": fwhm, "hemi": hemi}
+            parts.append(
+                load(str(Path(input_dir) / Path(surface_file % query))).get_fdata()
+            )
         combined = np.vstack(parts)
         thickness.append(combined.flatten())
     thickness = np.vstack(thickness)
