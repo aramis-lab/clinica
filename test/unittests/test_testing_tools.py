@@ -59,7 +59,7 @@ def _create_files(folder, list_of_filenames):
             pass
 
 
-def test_list_files_with_extensions(tmp_path):
+def test_list_files_with_extensions(tmp_path) -> None:
     from test.nonregression.testing_tools import list_files_with_extensions
 
     _create_files(tmp_path, ["foo.txt", "bar.png"])

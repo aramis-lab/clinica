@@ -224,13 +224,14 @@ def same_missing_modality_tsv(file1: PathLike, file2: PathLike) -> bool:
     )
 
 
-def compare_folders(outdir: Path, refdir: Path, tmp_path: Path) -> bool:
+def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path: PathLike) -> bool:
     from filecmp import cmp
+    from pathlib import PurePath
 
-    file_out = tmp_path / "file_out.txt"
-    file_ref = tmp_path / "file_ref.txt"
-    tree(outdir, file_out)
-    tree(refdir, file_ref)
+    file_out = PurePath(tmp_path) / "file_out.txt"
+    file_ref = PurePath(tmp_path) / "file_ref.txt"
+    tree(PurePath(outdir), file_out)
+    tree(PurePath(refdir), file_ref)
 
     if not cmp(file_out, file_ref):
         with open(file_out, "r") as fin:
@@ -284,7 +285,7 @@ def clean_folder(path: PathLike, recreate: bool = True):
 
 def list_files_with_extensions(
     path_folder: PathLike,
-    extensions_to_keep: Tuple[str],
+    extensions_to_keep: Tuple[str, ...],
 ) -> List[str]:
     """List all the files with the provided extensions
     in the path_folder.
