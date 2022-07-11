@@ -64,7 +64,7 @@ def test_list_files_with_extensions(tmp_path) -> None:
 
     _create_files(tmp_path, ["foo.txt", "bar.png"])
     assert len(list_files_with_extensions(tmp_path, (".nii.gz", ".tsv"))) == 0
-    assert list_files_with_extensions(tmp_path, (".txt")) == [str(tmp_path / "foo.txt")]
+    assert list_files_with_extensions(tmp_path, (".txt",)) == [str(tmp_path / "foo.txt")]
     assert set(list_files_with_extensions(tmp_path, (".txt", ".png"))) == {
         [str(tmp_path / "foo.txt"), str(tmp_path / "bar.png")]
     }
