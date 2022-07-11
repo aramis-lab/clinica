@@ -131,12 +131,8 @@ class StatisticsSurface(cpe.Pipeline):
         fwhm = str(self.parameters["full_width_at_half_maximum"])
         for direction, hemi in zip(["left", "right"], ["lh", "rh"]):
             cut_pattern = "sub-*/ses-*/"
-            pattern_hemisphere = self.parameters["custom_file"].safe_substitute(
-                subject="sub-*",
-                session="ses-*",
-                hemi=hemi,
-                fwhm=fwhm,
-            )
+            query = {"subject": "sub-*", "session": "ses-*", "hemi": hemi, "fwhm": fwhm}
+            pattern_hemisphere = self.parameters["custom_file"] % query
             surface_based_info = {
                 "pattern": pattern_hemisphere[
                     pattern_hemisphere.find(cut_pattern) + len(cut_pattern) :
