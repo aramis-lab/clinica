@@ -482,8 +482,8 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     import os
     from os import path
 
-    def compute_amyloid_status(row, tau_status=False):
-        stat = ""
+    def compute_amyloid_status(row):
+        stat = "n/a"
         if (
             pd.isnull(row["adni_av45"])
             and pd.isnull(row["adni_pib"])
@@ -501,7 +501,6 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
         return stat
 
     def compute_ptau_status(row):
-        stat = ""
         if pd.isnull(row["adni_ptau"]):
             stat = "Tu"
         elif row["adni_ptau"] > 23:
