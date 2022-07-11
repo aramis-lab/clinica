@@ -2,7 +2,6 @@
 
 import os
 from os import PathLike
-from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -230,8 +229,8 @@ def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path: PathLike) -> b
 
     file_out = PurePath(tmp_path) / "file_out.txt"
     file_ref = PurePath(tmp_path) / "file_ref.txt"
-    tree(PurePath(outdir), file_out)
-    tree(PurePath(refdir), file_ref)
+    tree(outdir, file_out)
+    tree(refdir, file_ref)
 
     if not cmp(file_out, file_ref):
         with open(file_out, "r") as fin:
@@ -245,7 +244,7 @@ def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path: PathLike) -> b
     return True
 
 
-def tree(dir_: Path, file_out: Path):
+def tree(dir_: PathLike, file_out: PathLike):
     """Creates a file (file_out) with a visual tree representing the file
     hierarchy at a given directory
 
@@ -253,16 +252,20 @@ def tree(dir_: Path, file_out: Path):
         Does not display empty directories.
 
     """
-    print(type(dir_))
+    from pathlib import Path
+
     file_content = ""
-    for path in sorted(dir_.rglob("*")):
+
+    for path in sorted(Path(dir_).rglob("*")):
         if path.is_dir() and not any(path.iterdir()):
             continue
         depth = len(path.relative_to(dir_).parts)
         spacer = "    " * depth
         file_content = file_content + f"{spacer}+ {path.name}\n"
+
     print(file_content)
-    file_out.write_text(file_content)
+
+    Path(file_out).write_text(file_content)
 
 
 def clean_folder(path: PathLike, recreate: bool = True):

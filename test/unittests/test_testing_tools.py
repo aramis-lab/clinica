@@ -39,16 +39,16 @@ def test_same_missing_modality_tsv():
     pass
 
 
-def test_tree(tmp_path):
+def test_tree(tmp_path: PurePath):
     from test.nonregression.testing_tools import tree
 
-    tree(tmp_path, tmp_path / "file_out.txt")
+    tree(str(tmp_path), str(tmp_path / "file_out.txt"))
     assert os.path.exists(tmp_path / "file_out.txt")
     with open(tmp_path / "file_out.txt", "r") as fp:
         content = fp.readlines()
     assert len(content) == 0
     os.makedirs(tmp_path / "subjects/sub-01/ses-M00/")
-    tree(tmp_path, tmp_path / "file_out.txt")
+    tree(str(tmp_path), str(tmp_path / "file_out.txt"))
     with open(tmp_path / "file_out.txt", "r") as fp:
         content = fp.readlines()
     assert "".join(content) == (
