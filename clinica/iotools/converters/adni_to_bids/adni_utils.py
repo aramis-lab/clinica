@@ -428,8 +428,9 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
         Corrected participants_df.
     """
     from os import path
-
     import pandas as pd
+
+    from clinica.utils.stream import cprint
 
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
     dxsum_df = pd.read_csv(
@@ -438,10 +439,19 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
-        diagnosis_sc = diagnosis_dict[
-            dxsum_df.loc[(alternative_id, "sc"), "DIAGNOSIS"].values[0]
-        ]
-        participants_df.loc[alternative_id, "diagnosis_sc"] = diagnosis_sc
+        try:
+            diagnosis_sc = diagnosis_dict[
+                dxsum_df.loc[(alternative_id, "sc"), "DIAGNOSIS"].values[0]
+            ]
+            participants_df.loc[alternative_id, "diagnosis_sc"] = diagnosis_sc
+        except KeyError:
+            cprint(
+                msg=(
+                    f"Unknown screening diagnosis for subject {alternative_id}."
+                ),
+                lvl="warning",
+            )
+            participants_df.loc[alternative_id, "diagnosis_sc"] = "n/a"
 
     participants_df.reset_index(inplace=True, drop=False)
     return participants_df
