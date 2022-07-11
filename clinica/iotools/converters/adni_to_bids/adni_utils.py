@@ -429,6 +429,7 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
         Corrected participants_df.
     """
     from os import path
+
     import pandas as pd
 
     from clinica.utils.stream import cprint
@@ -447,9 +448,7 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
             participants_df.loc[alternative_id, "diagnosis_sc"] = diagnosis_sc
         except KeyError:
             cprint(
-                msg=(
-                    f"Unknown screening diagnosis for subject {alternative_id}."
-                ),
+                msg=(f"Unknown screening diagnosis for subject {alternative_id}."),
                 lvl="warning",
             )
             participants_df.loc[alternative_id, "diagnosis_sc"] = "n/a"
