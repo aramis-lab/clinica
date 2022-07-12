@@ -13,8 +13,15 @@ import numpy as np
 import pytest
 
 
-def test_likeliness_measure():
-    pass
+def test_likeliness_measure(tmp_path: PurePath):
+    from test.nonregression.testing_tools import likeliness_measure
+    rng = np.random.RandomState(42)
+    img1 = nib.Nifti1Image(rng.random((2, 2, 2, 2)), affine=np.eye(4))
+    img2 = nib.Nifti1Image(rng.random((2, 2, 2, 2)), affine=np.eye(4))
+    img1.to_filename(str(tmp_path / "img1.nii"))
+    img2.to_filename(str(tmp_path / "img2.nii"))
+    assert not likeliness_measure(tmp_path / "img1.nii", tmp_path / "img2.nii", (1e-4, 1e-4), (1e-4, 1e-4))
+    assert likeliness_measure(tmp_path / "img1.nii", tmp_path / "img1.nii", (1e-4, 1e-4), (1e-4, 1e-4))
 
 
 def test_similarity_measure(tmp_path: PurePath):
@@ -31,8 +38,42 @@ def test_similarity_measure(tmp_path: PurePath):
     assert similarity_measure(tmp_path / "img1.nii", tmp_path / "img2.nii", 0.2)
 
 
-def test_identical_subject_list():
-    pass
+def test_identical_subject_list(tmp_path: PurePath):
+    import pandas as pd
+    from test.nonregression.testing_tools import identical_subject_list
+    df1 = pd.DataFrame(
+        {
+            "participant_id": ["sub-01", "sub-01", "sub-02"],
+            "session_id": ["ses-M00", "ses-M06", "ses-M00"],
+        }
+    )
+    df1.to_csv(tmp_path / "df1.tsv", sep="\t")
+    df2 = pd.DataFrame(
+        {
+            "participant_id": ["sub-01", "sub-02"],
+            "session_id": ["ses-M00", "ses-M00"],
+        }
+    )
+    df2.to_csv(tmp_path / "df2.tsv", sep="\t")
+    df3 = pd.DataFrame(
+        {
+            "participant_id": ["sub-01", "sub-03"],
+            "session_id": ["ses-M00", "ses-M00"],
+        }
+    )
+    df3.to_csv(tmp_path / "df3.tsv", sep="\t")
+    df4 = pd.DataFrame(
+        {
+            "participant_id": ["sub-01", "sub-01", "sub-02"],
+            "session_id": ["ses-M00", "ses-M12", "ses-M00"],
+        }
+    )
+    df4.to_csv(tmp_path / "df4.tsv", sep="\t")
+    assert identical_subject_list(tmp_path / "df1.tsv", tmp_path / "df1.tsv")
+    assert not identical_subject_list(tmp_path / "df1.tsv", tmp_path / "df2.tsv")
+    assert not identical_subject_list(tmp_path / "df2.tsv", tmp_path / "df3.tsv")
+    assert not identical_subject_list(tmp_path / "df1.tsv", tmp_path / "df4.tsv")
+
 
 
 def test_same_missing_modality_tsv():
