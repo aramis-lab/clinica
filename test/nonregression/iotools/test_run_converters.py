@@ -32,6 +32,7 @@ def test_name(request):
     return request.param
 
 
+@pytest.mark.skip(reason="Reference dataset not up to date")
 def run_nifd2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) -> None:
     import shutil
     from pathlib import PurePath
