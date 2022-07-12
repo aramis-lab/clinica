@@ -179,7 +179,7 @@ def test_group_glm_instantiation(df):
     assert isinstance(model.contrasts, dict)
     contrast_names = ["Female-lt-Male", "Male-lt-Female"]
     assert set(model.contrasts.keys()) == set(contrast_names)
-    for contrast_name, sign in zip(contrast_names, [1, -1]):
+    for contrast_name, sign in zip(contrast_names, [-1, 1]):
         assert_array_equal(
             model.contrasts[contrast_name].values,
             sign * np.array([1, -1, 1, 1, 1, -1, 1]),
