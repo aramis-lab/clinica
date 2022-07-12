@@ -1744,7 +1744,7 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 
 [[package]]
 name = "vtk"
-version = "9.1.0"
+version = "9.2.0rc1"
 description = "VTK is an open-source toolkit for 3D computer graphics, image processing, and visualization"
 category = "main"
 optional = false
@@ -1857,7 +1857,7 @@ docs = ["mkdocs", "mkdocs-material", "pymdown-extensions"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "a67ab445a76f1598cf76b4ad4e5746b1858abe8f4c0d1cc6ce1c6390537f77ba"
+content-hash = "a2dd46ac1e212ededa8f24229d2d8431aff9d1290f32ebfb7e397c56d842f08a"
 
 [metadata.files]
 abagen = [
@@ -3229,21 +3229,7 @@ virtualenv = [
     {file = "virtualenv-20.14.1-py2.py3-none-any.whl", hash = "sha256:e617f16e25b42eb4f6e74096b9c9e37713cf10bf30168fb4a739f3fa8f898a3a"},
     {file = "virtualenv-20.14.1.tar.gz", hash = "sha256:ef589a79795589aada0c1c5b319486797c03b67ac3984c48c669c0e4f50df3a5"},
 ]
-vtk = [
-    {file = "vtk-9.1.0-cp36-cp36m-macosx_10_10_x86_64.whl", hash = "sha256:1807795686eb19953772f944062f1c0f028d11ba2c213eff2da85c4ba457baed"},
-    {file = "vtk-9.1.0-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:11cfcd1d1af89d44d171983a8d63f029e93c122027cf1b52ca1941643a2d2fda"},
-    {file = "vtk-9.1.0-cp36-cp36m-win_amd64.whl", hash = "sha256:f43347e851087d18984308d6d3d80c6752c7b349505c312d0e6244322d7ee519"},
-    {file = "vtk-9.1.0-cp37-cp37m-macosx_10_10_x86_64.whl", hash = "sha256:fcb725dea939972207ff8398c082321889738732d3efdaaf8b0fb83fdb0a2d6a"},
-    {file = "vtk-9.1.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e69ea9ed3a1cb027b8cab0e5031472cec9c294a589708d39b35147abf4754690"},
-    {file = "vtk-9.1.0-cp37-cp37m-win_amd64.whl", hash = "sha256:6e0b49330bbeb721ae37422499942a1557a5deba271f5019dfc9c6e8562df7ac"},
-    {file = "vtk-9.1.0-cp38-cp38-macosx_10_10_x86_64.whl", hash = "sha256:9bb7a90796c88349baa6a6ce31458897c4f2ba8e10793b0fd20525502ba2b6a6"},
-    {file = "vtk-9.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3b3a064e643162e8599017d9871387e136ca489764d1c34ee10a6d74a80eb384"},
-    {file = "vtk-9.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:459a5d5c664410701e462a828db0a7cac8758f9f5bb8318a7d1224321a75b6dd"},
-    {file = "vtk-9.1.0-cp39-cp39-macosx_10_10_x86_64.whl", hash = "sha256:7e64f937242740f2441047b1d94d8ab9e73cd57a87ad16da81b13fda4503e881"},
-    {file = "vtk-9.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:8542f03ca42451bbf5b8fa7adcecdd8306ee347d0fe90b8c7face8bb6fcbef28"},
-    {file = "vtk-9.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2e3013ebda96d6b41dbcbc0c8852b89901725356f013d984e04b9d4458e46d55"},
-    {file = "vtk-9.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:539311152514bb3e52c30d0c8dd755c4ed46fc8dd59ac5d41e44b901feeff43a"},
-]
+vtk = []
 watchdog = [
     {file = "watchdog-2.1.9-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:a735a990a1095f75ca4f36ea2ef2752c99e6ee997c46b0de507ba40a09bf7330"},
     {file = "watchdog-2.1.9-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:6b17d302850c8d412784d9246cfe8d7e3af6bcd45f958abb2d08a6f8bedf695d"},
