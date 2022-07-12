@@ -330,7 +330,7 @@ class GroupGLM(GLM):
             )
         group_values = np.unique(self.df[contrast])
         for contrast_type, (i, j) in zip(["positive", "negative"], [(0, 1), (1, 0)]):
-            contrast_name = f"{group_values[i]}-lt-{group_values[j]}"
+            contrast_name = f"{group_values[j]}-lt-{group_values[i]}"
             self.contrasts[contrast_name] = (
                 self.df[contrast] == group_values[i]
             ).astype(int) - (self.df[contrast] == group_values[j]).astype(int)
@@ -556,6 +556,9 @@ class StatisticsResults:
         threshold_uncorrected_p_value: float,
         threshold_corrected_p_value: float,
     ):
+        idx = np.argwhere(np.isnan(model.t))
+        corrected_pvals = model.P["pval"]["P"]
+        corrected_pvals[idx] = 1.
         tstats = np.nan_to_num(model.t)
         uncorrected_p_values = PValueResults.from_t_statistics(
             tstats,
@@ -564,7 +567,7 @@ class StatisticsResults:
             threshold_uncorrected_p_value,
         )
         corrected_p_values = CorrectedPValueResults(
-            model.P["pval"]["P"],
+            corrected_pvals,
             model.P["pval"]["C"],
             mask,
             threshold_corrected_p_value,
