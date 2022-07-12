@@ -15,13 +15,18 @@ import pytest
 
 def test_likeliness_measure(tmp_path: PurePath):
     from test.nonregression.testing_tools import likeliness_measure
+
     rng = np.random.RandomState(42)
     img1 = nib.Nifti1Image(rng.random((2, 2, 2, 2)), affine=np.eye(4))
     img2 = nib.Nifti1Image(rng.random((2, 2, 2, 2)), affine=np.eye(4))
     img1.to_filename(str(tmp_path / "img1.nii"))
     img2.to_filename(str(tmp_path / "img2.nii"))
-    assert not likeliness_measure(tmp_path / "img1.nii", tmp_path / "img2.nii", (1e-4, 1e-4), (1e-4, 1e-4))
-    assert likeliness_measure(tmp_path / "img1.nii", tmp_path / "img1.nii", (1e-4, 1e-4), (1e-4, 1e-4))
+    assert not likeliness_measure(
+        tmp_path / "img1.nii", tmp_path / "img2.nii", (1e-4, 1e-4), (1e-4, 1e-4)
+    )
+    assert likeliness_measure(
+        tmp_path / "img1.nii", tmp_path / "img1.nii", (1e-4, 1e-4), (1e-4, 1e-4)
+    )
 
 
 def test_similarity_measure(tmp_path: PurePath):
@@ -39,8 +44,10 @@ def test_similarity_measure(tmp_path: PurePath):
 
 
 def test_identical_subject_list(tmp_path: PurePath):
-    import pandas as pd
     from test.nonregression.testing_tools import identical_subject_list
+
+    import pandas as pd
+
     df1 = pd.DataFrame(
         {
             "participant_id": ["sub-01", "sub-01", "sub-02"],
@@ -73,7 +80,6 @@ def test_identical_subject_list(tmp_path: PurePath):
     assert not identical_subject_list(tmp_path / "df1.tsv", tmp_path / "df2.tsv")
     assert not identical_subject_list(tmp_path / "df2.tsv", tmp_path / "df3.tsv")
     assert not identical_subject_list(tmp_path / "df1.tsv", tmp_path / "df4.tsv")
-
 
 
 def test_same_missing_modality_tsv():
