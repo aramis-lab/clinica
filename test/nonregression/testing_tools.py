@@ -55,7 +55,7 @@ def likeliness_measure(
     if display:
         thresholds = np.logspace(-8, 0, 20)
         percents = np.array(
-            [np.sum((metric_flattened > _)) / metric_flattened.size for _ in thresholds]
+            [np.sum((metric_flattened > t)) / metric_flattened.size for t in thresholds]
         )
         fig, ax = plt.subplots()
         ax.semilogx(thresholds, percents)
