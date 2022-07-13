@@ -40,9 +40,6 @@ def init_input_node(parameters, base_dir, subjects_visits_tsv):
     import os
     import shutil
 
-    from clinica.pipelines.statistics_surface.statistics_surface_utils import (
-        create_glm_info_dictionary,
-    )
     from clinica.utils.ux import print_begin_image
 
     group_id = "group-" + parameters["group_label"]
@@ -174,9 +171,6 @@ def run_matlab(caps_dir, output_dir, subjects_visits_tsv, pipeline_parameters):
     import os
 
     from clinica.pipelines.statistics_surface.clinica_surfstat import clinica_surfstat
-    from clinica.pipelines.statistics_surface.statistics_surface_utils import (
-        covariates_to_design_matrix,
-    )
     from clinica.utils.check_dependency import check_environment_variable
 
     freesurfer_home = check_environment_variable("FREESURFER_HOME", "FreeSurfer")
