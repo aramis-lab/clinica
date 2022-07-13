@@ -4,7 +4,7 @@ from functools import reduce
 from os import PathLike
 from pathlib import Path
 from string import Template
-from typing import Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -670,7 +670,7 @@ class StatisticsResultsSerializer:
         writer = self._get_writer(method)
         return writer(result)
 
-    def _get_writer(self, method: str):
+    def _get_writer(self, method: str) -> Callable[[StatisticsResults], None]:
         if method.lower() == "json":
             return self._write_to_json
         elif method.lower() == "mat":
