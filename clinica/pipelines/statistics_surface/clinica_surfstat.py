@@ -2,8 +2,6 @@ from os import PathLike
 from pathlib import Path
 from typing import Dict
 
-import numpy as np
-
 from ._inputs import (
     _build_thickness_array,
     _get_average_surface,
