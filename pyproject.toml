@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "clinica"
-version = "0.5.1"
+version = "0.7.1"
 description = "Software platform for clinical neuroimaging studies"
 license = "MIT"
 authors = ["ARAMIS Lab"]
@@ -27,33 +27,35 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7.1"
+python = ">=3.8,<3.11"
 nibabel = "^2.3.3"
-nipype = "^1.4"
+nipype = "^1.7.1"
 argcomplete = "^1.9.4"
 pandas = "^1.2"
-jinja2 = "^2.10.1"
+jinja2 = "^3"
 xvfbwrapper = "*"
 numpy = "^1.17"
-scikit-learn = "^0.23"
-nilearn = "^0.6"
+scikit-learn = "^1.0"
+nilearn = "^0.7.0"
 colorlog = "^5"
 xgboost = "*"
-scipy = "^1.2.3"
+scipy = "^1.7"
 matplotlib = "*"
 niflow-nipype1-workflows = "*"
-scikit-image = "^0.16.2"
+scikit-image = "^0.19"
 pydicom = "*"
 networkx = "*"
-click = "^7"
+click = "^8"
 click-option-group = "^0.5"
 xlrd = "*"
 openpyxl = "*"
 fsspec = "*"
 # docs
 mkdocs = {version = "^1.1", optional = true}
-mkdocs-material = {version = "*", optional = true}
+mkdocs-material = {version = ">=7.1.8", optional= true}
 pymdown-extensions = {version = "*", optional = true}
+attrs = ">=20.1.0"
+cattrs = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 black = "*"
@@ -62,6 +64,8 @@ pre-commit = "*"
 pytest = "*"
 pytest-timeout = "*"
 pytest-xdist = "*"
+pytest-cov = "^3.0.0"
+nipy = "^0.5.0"
 
 [tool.poetry.extras]
 docs = [
@@ -95,10 +99,6 @@ force-exclude = '''
   | build
   | dist
   | docs
-  | clinica/pipelines/dwi_connectome
-  | clinica/pipelines/dwi_dti
-  | clinica/pipelines/dwi_preprocessing_using_phasediff_fieldmap
-  | clinica/pipelines/dwi_preprocessing_using_t1
   | clinica/lib
 )/
 '''

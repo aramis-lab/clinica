@@ -90,7 +90,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         d_input = []
         for tissue_number in self.parameters["dartel_tissues"]:
             try:
-                current_file = clinica_file_reader(
+                current_file, _ = clinica_file_reader(
                     self.subjects,
                     self.sessions,
                     self.caps_directory,
@@ -113,7 +113,9 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
-            cprint("Computational time for DARTEL creation will depend on the number of images.")
+            cprint(
+                "Computational time for DARTEL creation will depend on the number of images."
+            )
             print_begin_image(f"group-{self.parameters['group_label']}")
 
         # fmt: off
@@ -208,10 +210,9 @@ class T1VolumeCreateDartel(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.spm as spm
-        import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from nipype.algorithms.misc import Gunzip
 
-        from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         if spm_standalone_is_available():
@@ -220,9 +221,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         # Unzipping
         # =========
         unzip_node = npe.MapNode(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
+            interface=Gunzip(),
             name="unzip_node",
             iterfield=["in_file"],
         )

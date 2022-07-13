@@ -41,9 +41,11 @@ def cli(
 ) -> None:
     """Affine registration of PET images to the MNI standard space.
 
-       ACQ_LABEL corresponds the label given to the PET acquisition, specifying the tracer used. Frequently used values are 'fdg' or 'av45'.
+       ACQ_LABEL corresponds the label given to the PET acquisition, specifying the tracer used.
+    Frequently used values are '18FFDG' or '18FAV45'.
 
-       The reference region must be precised to perform intensity normalization. Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
+       The reference region must be specified to perform intensity normalization.
+    Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
 
     Prerequisite: You need to have performed the t1-linear pipeline on your T1-weighted MR images.
 

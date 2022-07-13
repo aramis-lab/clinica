@@ -32,6 +32,8 @@ warnings.filterwarnings("ignore")
         "Oasis3ToBids",
         "Adni2Bids",
         "Aibl2Bids",
+        "HabsToBids",
+        "UkbToBids",
     ]
 )
 def test_name(request):
@@ -96,6 +98,7 @@ def run_adni2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) 
 
     # Arrange
     clinical_data_directory = input_dir / "clinical_data"
+    xml_directory = input_dir / "xml_metadata"
     dataset_directory = input_dir / "unorganized_data"
     subjects_list = input_dir / "subjects.txt"
     modalities = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
@@ -109,7 +112,11 @@ def run_adni2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) 
         subjects_list,
         modalities,
     )
-    adni_to_bids.convert_clinical_data(clinical_data_directory, output_dir / "bids")
+    adni_to_bids.convert_clinical_data(
+        clinical_data_directory,
+        output_dir / "bids",
+        xml_path=xml_directory,
+    )
     # Assert
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
 
@@ -132,6 +139,33 @@ def run_aibl2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) 
     convert_clinical_data(output_dir / "bids", clinical_data_directory)
     # Assert
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
+
+
+def run_habs_to_bids(input_dir: Path, output_dir: Path, ref_dir: Path):
+    from click.testing import CliRunner
+
+    from clinica.iotools.converters.habs_to_bids.habs_to_bids_cli import cli
+
+    runner = CliRunner()
+    result = runner.invoke(cli, [str(input_dir), str(output_dir)])
+
+    assert result.exit_code == 0
+    compare_folders(output_dir, ref_dir, output_dir)
+
+
+def run_ukbtobids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) -> None:
+    from clinica.iotools.converters.ukb_to_bids.ukb_to_bids import convert_images
+    from clinica.utils.check_dependency import check_dcm2niix
+
+    # Arrange
+    clinical_data_directory = input_dir / "clinical_data"
+    # Act
+    check_dcm2niix()
+    convert_images(
+        input_dir / "unorganized", output_dir / "bids", clinical_data_directory
+    )
+    # Assert
+    compare_folders(output_dir / "bids", ref_dir / "bids", output_dir / "bids")
 
 
 def test_run_convertors(cmdopt, tmp_path, test_name):
@@ -157,6 +191,11 @@ def test_run_convertors(cmdopt, tmp_path, test_name):
 
     elif test_name == "Aibl2Bids":
         run_aibl2bids(input_dir, tmp_out_dir, ref_dir)
+
+    elif test_name == "HabsToBids":
+        run_habs_to_bids(input_dir, tmp_out_dir, ref_dir)
+    elif test_name == "UkbToBids":
+        run_ukbtobids(input_dir, tmp_out_dir, ref_dir)
 
     else:
         print(f"Test {test_name} not available.")

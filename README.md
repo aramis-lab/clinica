@@ -18,6 +18,9 @@
   <a href="https://badge.fury.io/py/clinica">
     <img src="https://badge.fury.io/py/clinica.svg" alt="PyPI version">
   </a>
+  <a href="https://pypi.org/project/clinica">
+    <img src="https://img.shields.io/pypi/pyversions/clinica" alt="Supported Python versions">
+  </a>
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
   </a>
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/Installation/">
@@ -35,7 +38,7 @@
   <a href="https://github.com/aramis-lab/clinica/discussions">Forum</a> |
   See also:
   <a href="#related-repositories">AD-ML</a>,
-  <a href="#related-repositories">AD-DL</a>
+  <a href="#related-repositories">AD-DL</a>,
   <a href="#related-repositories">ClinicaDL</a>
 </p>
 
@@ -63,6 +66,7 @@ BIDS, namely:
 
 - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/ADNI2BIDS/)
 - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/AIBL2BIDS/)
+- [HABS: Harvard Aging Brain Study](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/HABS2BIDS/)
 - [NIFD: Neuroimaging in Frontotemporal Dementia](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/NIFD2BIDS/)
 - [OASIS: Open Access Series of Imaging Studies](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/OASIS2BIDS/)
 - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Converters/OASIS3TOBIDS/)
@@ -98,7 +102,7 @@ environment and activate it before installing clinica (you can also use
 `virtualenv`):
 
 ```sh
-conda create --name clinicaEnv python=3.7
+conda create --name clinicaEnv python=3.8
 conda activate clinicaEnv
 ```
 
@@ -141,8 +145,9 @@ with Alzheimer's disease and healthy controls from the ADNI database:
 ## Contributing
 
 We encourage you to contribute to Clinica!
-Please check out the [Contributing to Clinica guide](CONTRIBUTING.md) for guidelines about how to proceed.
-Do not hesitate to ask questions if something is not clear for you, report an issue, etc.
+Please check out the [Contributing to Clinica guide](CONTRIBUTING.md) for
+guidelines about how to proceed.  Do not hesitate to ask questions if something
+is not clear for you, report an issue, etc.
 
 ## License
 
@@ -158,7 +163,7 @@ for more information.
 
 ## Related Repositories
 
-- [AD-DL: Classification of Alzheimer's disease status with convolutional neural networks](https://github.com/aramis-lab/AD-DL)
+- [AD-DL: Classification of Alzheimer's disease status with convolutional neural networks](https://github.com/aramis-lab/AD-DL).
 - [AD-ML: Framework for the reproducible classification of Alzheimer's disease using
-machine learning](https://github.com/aramis-lab/AD-ML)
-- [ClinicaDL: Framework for the reproducible processing of neuroimaging data with deep learning methods](https://github.com/aramis-lab/clinicadl)
+machine learning](https://github.com/aramis-lab/AD-ML).
+- [ClinicaDL: Framework for the reproducible processing of neuroimaging data with deep learning methods](https://github.com/aramis-lab/clinicadl).

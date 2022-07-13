@@ -43,7 +43,8 @@ class PETLinear(cpe.Pipeline):
             A list of (string) output fields name.
         """
         return [
-            "registered_pet, transform_mat",
+            "registered_pet",
+            "transform_mat",
             "registered_pet_in_t1w",
         ]  # Fill here the list
 
@@ -63,7 +64,7 @@ class PETLinear(cpe.Pipeline):
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.input_files import (
             T1W_NII,
-            T1W_TO_MNI_TRANSFROM,
+            T1W_TO_MNI_TRANSFORM,
             bids_pet_nii,
         )
         from clinica.utils.inputs import (
@@ -116,7 +117,7 @@ class PETLinear(cpe.Pipeline):
         # pet file:
         PET_NII = bids_pet_nii(self.parameters["acq_label"])
         try:
-            pet_files = clinica_file_reader(
+            pet_files, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.bids_directory, PET_NII
             )
         except ClinicaException as e:
@@ -128,7 +129,7 @@ class PETLinear(cpe.Pipeline):
 
         # T1w file:
         try:
-            t1w_files = clinica_file_reader(
+            t1w_files, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.bids_directory, T1W_NII
             )
         except ClinicaException as e:
@@ -141,8 +142,8 @@ class PETLinear(cpe.Pipeline):
         # Inputs from t1-linear pipeline
         # Transformation files from T1w files to MNI:
         try:
-            t1w_to_mni_transformation_files = clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, T1W_TO_MNI_TRANSFROM
+            t1w_to_mni_transformation_files, _ = clinica_file_reader(
+                self.subjects, self.sessions, self.caps_directory, T1W_TO_MNI_TRANSFORM
             )
         except ClinicaException as e:
             err = (

@@ -194,7 +194,7 @@ class CAPSVoxelBasedInput(CAPSInput):
                 use_pvc_data=self._input_params["use_pvc_data"],
                 fwhm=self._input_params["fwhm"],
             )
-            self._images = clinica_file_reader(
+            self._images, _ = clinica_file_reader(
                 self._subjects,
                 self._sessions,
                 self._input_params["caps_directory"],
@@ -306,7 +306,7 @@ class CAPSRegionBasedInput(CAPSInput):
                     "preprocessing",
                     f"group-{self._input_params['group_label']}",
                     "atlas_statistics",
-                    f"{self._subjects[i]}_{self._sessions[i]}_task-rest_acq-{self._input_params['acq_label']}_pet"
+                    f"{self._subjects[i]}_{self._sessions[i]}_trc-{self._input_params['acq_label']}_pet"
                     f"_space-{self._input_params['atlas']}{pvc_key_value}"
                     f"_suvr-{self._input_params['suvr_reference_region']}_statistics.tsv",
                 )
@@ -394,7 +394,7 @@ class CAPSVertexBasedInput(CAPSInput):
                             self._sessions[i],
                             "pet",
                             "surface",
-                            f"{self._subjects[i]}_{self._sessions[i]}_task-rest_acq-{self._input_params['acq_label']}_pet"
+                            f"{self._subjects[i]}_{self._sessions[i]}_trc-{self._input_params['acq_label']}_pet"
                             f"_space-fsaverage_suvr-{self._input_params['suvr_reference_region']}"
                             f"_pvc-iy_hemi-{h}_fwhm-{self._input_params['fwhm']}_projection.mgh",
                         )
@@ -591,7 +591,7 @@ class CAPSVoxelBasedInputREGSVM(CAPSVoxelBasedInput):
                     "pet",
                     "preprocessing",
                     f"group-{self._input_params['group_label']}",
-                    f"{self._subjects[i]}_{self._sessions[i]}_task-rest_acq-{self._input_params['acq_label']}_pet"
+                    f"{self._subjects[i]}_{self._sessions[i]}_trc-{self._input_params['acq_label']}_pet"
                     f"_space-Ixi549Space{pvc_key_value}_suvr-{self._input_params['suvr_reference_region']}"
                     f"_mask-brain{fwhm_key_value}_pet.nii.gz",
                 )
@@ -616,7 +616,7 @@ class TsvInput(base.MLInput):
 
         import pandas as pd
 
-        self._dataframe = pd.io.parsers.read_csv(input_params["data_tsv"], sep="\t")
+        self._dataframe = pd.read_csv(input_params["data_tsv"], sep="\t")
 
         if not input_params["columns"]:
             raise Exception("List of columns to use as input can not be empty.")

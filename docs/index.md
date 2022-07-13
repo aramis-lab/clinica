@@ -39,8 +39,9 @@ Installation instructions are available [here](./ICMClusterInstallation).
 
 ### Pipelines (`clinica run`)
 
-- Anatomical MRI (T1-weighted)
-    - `t1-linear` - [Linear processing of T1w MR images](Pipelines/T1_Linear): affine registration to the MNI standard space
+- Anatomical MRI
+    - `t1-linear` - [Linear processing of T1w MR images](Pipelines/T1_Linear): affine registration to the MNI standard space of T1 images
+    - `flair-linear` - [Linear processing of FLAIR images](Pipelines/FLAIR_Linear): affine registration to the MNI standard space of FLAIR images
     - `t1-volume` - [Processing of T1w MR images using SPM](Pipelines/T1_Volume): tissue segmentation and spatial normalization
     - `t1-freesurfer` - [Processing of T1w MR images using FreeSurfer](Pipelines/T1_FreeSurfer): cortical surface, subcortical structures and volumetrics
     - `t1-freesurfer-longitudinal` - [Longitudinal processing of T1w MR images using FreeSurfer](Pipelines/T1_FreeSurfer_Longitudinal): cortical surface, subcortical structures and volumetrics
@@ -64,15 +65,20 @@ Installation instructions are available [here](./ICMClusterInstallation).
     - `machinelearning-prepare-spatial-svm` - [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
     - `machinelearning-classification` - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
 
+- Deep learning
+    - You can use the [ClinicaDL framework](https://clinicadl.readthedocs.io/) for the reproducible processing of neuroimaging data with deep learning methods.
+
 ### Dataset converters (`clinica convert`)
 
 Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to BIDS namely:
 
 - `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](Converters/ADNI2BIDS)
 - `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](Converters/AIBL2BIDS)
+- `habs-to-bids` - [HABS: Harvard Aging Brain Study](Converters/HABS2BIDS)
 - `nifd-to-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](Converters/NIFD2BIDS)
 - `oasis-to-bids` - [OASIS: Open Access Series of Imaging Studies](Converters/OASIS2BIDS)
 - `oasis3-to-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](Converters/OASIS3TOBIDS)
+- `ukb-to-bids` - [UK Biobank: Large-scale biomedical database and research resource in the United Kingdom](Converter/UKBtoBIDS)
 
 !!! note
     We provide converters for the datasets used in the [Aramis Lab](http://www.aramislab.fr/).

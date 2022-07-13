@@ -1,7 +1,6 @@
 """Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS."""
 
 from clinica.iotools.abstract_converter import Converter
-from clinica.utils.stream import cprint
 
 
 class OasisToBids(Converter):
@@ -74,6 +73,82 @@ class OasisToBids(Converter):
         )
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
+        bids.write_modality_agnostic_files(study_name="OASIS-1", bids_dir=bids_dir)
+
+    @staticmethod
+    def convert_single_subject(subj_folder, dest_dir):
+        import os
+        from os import path
+        from pathlib import Path
+
+        import nibabel as nb
+        import numpy as np
+
+        t1_folder = path.join(subj_folder, "PROCESSED", "MPRAGE", "SUBJ_111")
+        subj_id = path.basename(subj_folder)
+        print("Converting ", subj_id)
+        numerical_id = (subj_id.split("_"))[1]
+        bids_id = "sub-OASIS1" + str(numerical_id)
+        bids_subj_folder = path.join(dest_dir, bids_id)
+        if not path.isdir(bids_subj_folder):
+            os.mkdir(bids_subj_folder)
+
+        session_folder = path.join(bids_subj_folder, "ses-M00")
+        if not os.path.isdir(session_folder):
+            os.mkdir(path.join(session_folder))
+            os.mkdir(path.join(session_folder, "anat"))
+
+        # In order do convert the Analyze format to Nifti the path to the .img file is required
+        img_file_path = str(next(Path(t1_folder).glob("*.img")))
+        output_path = path.join(session_folder, "anat", bids_id + "_ses-M00_T1w.nii.gz")
+
+        # First, convert to Nifti so that we can extract the s_form with NiBabel
+        # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
+        img_with_wrong_orientation_analyze = nb.load(img_file_path)
+
+        # OASIS-1 images have the same header but sform is incorrect
+        # To solve this issue, we use header from images converted with FreeSurfer
+        # to generate a 'clean hard-coded' header
+        # affine:
+        # [[   0.    0.   -1.   80.]
+        #  [   1.    0.    0. -128.]
+        #  [   0.    1.    0. -128.]
+        #  [   0.    0.    0.    1.]]
+        # fmt: off
+        affine = np.array(
+            [
+                0, 0, -1, 80,
+                1, 0, 0, -128,
+                0, 1, 0, -128,
+                0, 0, 0, 1
+            ]
+        ).reshape(4, 4)
+        # fmt: on
+        s_form = affine.astype(np.int16)
+
+        hdr = nb.Nifti1Header()
+        hdr.set_data_shape((256, 256, 160))
+        hdr.set_data_dtype(np.int16)
+        hdr["bitpix"] = 16
+        hdr.set_sform(s_form, code="scanner")
+        hdr.set_qform(s_form, code="scanner")
+        hdr["extents"] = 16384
+        hdr["xyzt_units"] = 10
+
+        img_with_good_orientation_nifti = nb.Nifti1Image(
+            np.round(
+                img_with_wrong_orientation_analyze.get_fdata(dtype="float32")
+            ).astype(np.int16),
+            s_form,
+            header=hdr,
+        )
+        # Header correction to obtain dim0 = 3
+        img_with_good_dimension = nb.funcs.four_to_three(
+            img_with_good_orientation_nifti
+        )[0]
+
+        nb.save(img_with_good_dimension, output_path)
+
     def convert_images(self, source_dir, dest_dir):
         """Convert T1w images to BIDS.
 
@@ -86,89 +161,19 @@ class OasisToBids(Converter):
             Analyze data from OASIS-1. To remove this strong dependency, NiBabel is used instead.
         """
         import os
-        from glob import glob
-        from multiprocessing.dummy import Pool
-        from os import path
-
-        def convert_single_subject(subj_folder):
-            import os
-
-            import nibabel as nb
-            import numpy as np
-
-            t1_folder = path.join(subj_folder, "PROCESSED", "MPRAGE", "SUBJ_111")
-            subj_id = os.path.basename(subj_folder)
-            print("Converting ", subj_id)
-            numerical_id = (subj_id.split("_"))[1]
-            bids_id = "sub-OASIS1" + str(numerical_id)
-            bids_subj_folder = path.join(dest_dir, bids_id)
-            if not os.path.isdir(bids_subj_folder):
-                os.mkdir(bids_subj_folder)
-
-            session_folder = path.join(bids_subj_folder, "ses-M00")
-            if not os.path.isdir(session_folder):
-                os.mkdir(path.join(session_folder))
-                os.mkdir(path.join(session_folder, "anat"))
-
-            # In order do convert the Analyze format to Nifti the path to the .img file is required
-            img_file_path = glob(path.join(t1_folder, "*.img"))[0]
-            output_path = path.join(
-                session_folder, "anat", bids_id + "_ses-M00_T1w.nii.gz"
-            )
-
-            # First, convert to Nifti so that we can extract the s_form with NiBabel
-            # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
-            img_with_wrong_orientation_analyze = nb.load(img_file_path)
-
-            # OASIS-1 images have the same header but sform is incorrect
-            # To solve this issue, we use header from images converted with FreeSurfer
-            # to generate a 'clean hard-coded' header
-            # affine:
-            # [[   0.    0.   -1.   80.]
-            #  [   1.    0.    0. -128.]
-            #  [   0.    1.    0. -128.]
-            #  [   0.    0.    0.    1.]]
-            # fmt: off
-            affine = np.array(
-                [
-                    0, 0, -1, 80,
-                    1, 0, 0, -128,
-                    0, 1, 0, -128,
-                    0, 0, 0, 1
-                ]
-            ).reshape(4, 4)
-            # fmt: on
-            s_form = affine.astype(np.int16)
-
-            hdr = nb.Nifti1Header()
-            hdr.set_data_shape((256, 256, 160))
-            hdr.set_data_dtype(np.int16)
-            hdr["bitpix"] = 16
-            hdr.set_sform(s_form, code="scanner")
-            hdr.set_qform(s_form, code="scanner")
-            hdr["extents"] = 16384
-            hdr["xyzt_units"] = 10
-
-            img_with_good_orientation_nifti = nb.Nifti1Image(
-                np.round(
-                    img_with_wrong_orientation_analyze.get_fdata(dtype="float32")
-                ).astype(np.int16),
-                s_form,
-                header=hdr,
-            )
-            # Header correction to obtain dim0 = 3
-            img_with_good_dimension = nb.funcs.four_to_three(
-                img_with_good_orientation_nifti
-            )[0]
-
-            nb.save(img_with_good_dimension, output_path)
+        from functools import partial
+        from multiprocessing import Pool, cpu_count
+        from pathlib import Path
 
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)
 
-        subjs_folders = glob(path.join(source_dir, "OAS1_*"))
         subjs_folders = [
-            subj_folder for subj_folder in subjs_folders if subj_folder.endswith("_MR1")
+            path
+            for path in Path(source_dir).rglob("OAS1_*")
+            if path.is_dir() and path.name.endswith("_MR1")
         ]
-        poolrunner = Pool(max(os.cpu_count() - 1, 1))
-        poolrunner.map(convert_single_subject, subjs_folders)
+
+        with Pool(processes=max(cpu_count() - 1, 1)) as pool:
+            func = partial(self.convert_single_subject, dest_dir=dest_dir)
+            pool.map(func, subjs_folders)

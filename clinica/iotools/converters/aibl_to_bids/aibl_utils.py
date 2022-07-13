@@ -1,4 +1,8 @@
 """Utils to convert AIBL dataset in BIDS."""
+from functools import partial
+from typing import Sequence
+
+import pandas as pd
 
 
 def listdir_nohidden(path):
@@ -15,19 +19,39 @@ def listdir_nohidden(path):
     return [result for result in listdir(path) if not result.startswith(".")]
 
 
-def find_T1_folder(subdirectory, path_to_T1_1):
-    """Check if the subdirectory contains a T1 image, and it return the h.
+def find_t1_in_paths(
+    subdirectory: str,
+    path_to_T1_1: str,
+    paths_to_convert: Sequence[str],
+) -> str:
+    """Find the directory containing T1 images.
 
-    Args:
-        subdirectory (str): subdirectory: name of the folder
-        path_to_T1_1 (str): [description]
-
-    Returns:
-        str: previous path to arrive to the T1 image
+    :param subdirectory: name of the folder
+    :type subdirectory: str
+    :param path_to_T1_1: path to T1 images
+    :type path_to_T1_1: str
+    :param paths_to_convert: paths to convert
+    :type paths_to_convert: Sequence[str]
+    :return: previous path to arrive to the T1 image
+    :rtype: str
     """
     import os
 
-    path_to_convert = {
+    path = None
+
+    for j in paths_to_convert:
+        # if conditions which checks if the subfolder contain a T1 image
+        if j == subdirectory:
+            path = os.path.join(path_to_T1_1, subdirectory)
+            return path
+
+    if not path:
+        return "NaN"  # there are no more folders which could contain T1 images
+
+
+find_T1_folder = partial(
+    find_t1_in_paths,
+    paths_to_convert=[
         "MPRAGE_ADNI_confirmed",
         "MPRAGE",
         "MPRAGE_ADNI_confirmed_RPT",
@@ -35,69 +59,49 @@ def find_T1_folder(subdirectory, path_to_T1_1):
         "MPRAGE_ADNI_confirmed_repeat",
         "MPRAGE_ADNI_confirmed_REPEAT",
         "MPRAGE_ADNI_conf_REPEAT",
-    }
-    for j in path_to_convert:
-        path = []
-        # if conditions which checks if the subfolder contain a T1 image
-        if j == subdirectory:
-            path = os.path.join(path_to_T1_1, subdirectory)
-            return path
-    if path == []:
-        return "NaN"  # there are no more folders which could contain T1 images
+    ],
+)
 
 
-def find_T1_folder_nodata(subdirectory, path_to_T1_1):
-    """
-
-    This method checks if the subdirectory contains a T1 image, and it
-    returns the path. This method differs from the find_T1_folder since for
-    these folders the exame_date is not present in the clinical excel file
-    and we will not check if the exame_date corresponds to the date stored
-    in the path to the image, but they will be converted anyway
-
-     :param subdirectory: name of the folder
-
-     :return: previous path to arrive to the T1 image
-    """
-    import os
-
-    path_to_convert = {"MPRAGESAGISOp2ND", "MPRAGE_SAG_ISO_p2_ND", "MPRAGE_SAG_ISO_p2"}
-    for j in path_to_convert:
-        path = []
-        # if conditions which checks if the subfolder contain a T1 image
-        if j == subdirectory:
-            path = os.path.join(path_to_T1_1, subdirectory)
-            return path
-    if path == []:
-        return "NaN"  # there are no more folders which could contain T1 images
+find_T1_folder_nodata = partial(
+    find_t1_in_paths,
+    paths_to_convert=[
+        "MPRAGESAGISOp2ND",
+        "MPRAGE_SAG_ISO_p2_ND",
+        "MPRAGE_SAG_ISO_p2",
+    ],
+)
 
 
-def find_correspondance_index(i, csv_file):
-    """Give as output the index of the CSV file analysed which correspond to the 'i' subject.
+def find_correspondence_index(subject_id: str, csv_file: pd.DataFrame) -> list:
+    """Returns the index of the CSV file analysed for a given subject.
 
-    :param i: subject_ID
+    :param subject_id: Subject's identifier
+    :type subject_id: str
     :param csv_file: CSV file where all the information are listed
-
-    :return: index
+    :type csv_file: pd.DataFrame
+    :return: List of indexes for the subject
+    :rtype: list
     """
-    index = []
-    for x in csv_file.RID:
-        if i == str(x):
-            index = csv_file.RID[csv_file.RID == x].index.tolist()
-            return index
+    for rid in csv_file.RID:
+        if subject_id == str(rid):
+            return csv_file.RID[csv_file.RID == rid].index.tolist()
 
 
-def find_correspondance_date(index, csv_file):
-    """Return the dates reported in the csv_file for the i-subject.
+def find_correspondence_date(index: list, csv_file: pd.DataFrame) -> pd.Series:
+    """Return the dates reported in the csv_file for a given index.
 
-    :param index: index corresponding to the subject analysed
-    :param csv_file: csv file where all the information are listed
-    :return date
+    :param index: List of index
+    :type index: list
+    :param csv_file: CSV file where all the information are listed
+    :type csv_file: pd.DataFrame
+    :return: Exam dates at index
+    :rtype: pd.Series
     """
     return csv_file.EXAMDATE[index]
 
 
-def match_data(exame_date, i, csv_file):
+def match_data(exam_date: str, subject_id: str, csv_file: pd.DataFrame) -> str:
     """
 
     This method returns the session_ID. It controls if the dates
@@ -106,23 +110,26 @@ def match_data(exame_date, i, csv_file):
     analysed. The session_ID is the corresponding session for that patient
     in that date.  It returns -4 if there are no information.
 
-    :param exame_date: date where the image has been taken, it is saved
+    :param exam_date: date where the image has been taken, it is saved
     from the name of the corresponding subdirector
-    :param i: subject_ID
+    :type exam_date: str
+    :param subject_id: Subject's identifier
+    :type subject_id: str
     :param csv_file: csv file where all the information are listed
-
+    :type csv_file: pd.DataFrame
     :return session_id of the patient
+    :rtype: str
     """
     import re
 
-    session_ID = []
-    index = find_correspondance_index(i, csv_file)
-    csv_date = find_correspondance_date(index, csv_file)
+    session_id = None
+    index = find_correspondence_index(subject_id, csv_file)
+    csv_date = find_correspondence_date(index, csv_file)
     for xx in index:
         if str(csv_date[xx]) != "-4":
             # check is the date is not '-4'
             m = re.search(
-                "([0-9].*)-(.*)-(.*)_(.*)_(.*)_(.*)", str(exame_date)
+                "([0-9].*)-(.*)-(.*)_(.*)_(.*)_(.*)", exam_date
             )  # string from image directory
             p = re.search(
                 "(.*)/(.*)/(.*)", str(csv_date[xx])
@@ -132,10 +139,9 @@ def match_data(exame_date, i, csv_file):
                 & (p.group(2) == m.group(3))
                 & (p.group(3) == m.group(1))
             ):
-                session_ID = csv_file.VISCODE[xx]
-    if session_ID == []:
-        session_ID = "-4"
-    return session_ID
+                session_id = csv_file.VISCODE[xx]
+    session_id = session_id or "-4"
+    return session_id
 
 
 def list_of_paths():
@@ -172,13 +178,12 @@ def list_of_paths():
 
 def check_subdirectories_pet(subdirectories, sub, no_pet):
     """
-
     It returns the correct subdirectories for the PET images, they should
     belong to the list where there all the possible names of the PET images.
 
     :param subdirectories:
     :param sub: all the possible subdirectories which need to be checked
-    :param no pet: list of names of folders which not contain PET images
+    :param no_pet: list of names of folders which not contain PET images
 
     :return subdirectory which is containing a PET image which needs to be
     converted
@@ -192,18 +197,16 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
 
 
 def dicom_to_nii(subject, output_path, output_filename, image_path):
-    """Convert the dicom images in a nifti files using dicom2nii or mri_convert.
+    """Convert the DICOM images to NIfTI files using dcm2niix.
 
     :param subject:
-    :param output_path: where nifti image is stored
-    :param output_filename: name of the nifti image
-    :param image_path: where dicom files are stored
+    :param output_path: where NIfTI image is stored
+    :param output_filename: name of the NIfTI image
+    :param image_path: where DICOM files are stored
 
-    :return: Image in a nifti format
+    :return: Image in NIfTI format
     """
     import os
-    import shutil
-    import subprocess
     from os.path import exists
 
     from clinica.iotools.bids_utils import run_dcm2niix
@@ -216,8 +219,13 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
             raise
 
     # if image.Is_Dicom:
-    command = f"dcm2niix -b n -z y -o {output_path} -f {output_filename} {image_path}"
-    run_dcm2niix(command)
+    run_dcm2niix(
+        input_dir=image_path,
+        output_dir=output_path,
+        output_fmt=output_filename,
+        compress=True,
+        bids_sidecar=False,
+    )
 
     nifti_file = os.path.join(output_path, output_filename + ".nii.gz")
 
@@ -287,13 +295,13 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
         # selection only of the folders which contain PET image
         for j in range(len(subdirectories)):
             path_to_pet_2 = os.path.join(path_to_pet_1, subdirectories[j])
-            exame_date = listdir_nohidden(path_to_pet_2)
-            # exame date of the image which is going to be converted
-            for x in range(len(exame_date)):
+            exam_date = listdir_nohidden(path_to_pet_2)
+            # exam date of the image which is going to be converted
+            for x in range(len(exam_date)):
                 # selection of the session_ID matching the data in the csv_file with the one of the image
-                session_ID = match_data(exame_date[x], i, csv_file)
+                session_ID = match_data(str(exam_date[x]), i, csv_file)
                 if session_ID != "-4":
-                    path_to_pet_3 = os.path.join(path_to_pet_2, str(exame_date[x]))
+                    path_to_pet_3 = os.path.join(path_to_pet_2, str(exam_date[x]))
                     # For the RID 1607 there are two PET images of the flute modality, and we select the first
                     if i == "1607":
                         if subdirectories[j] == "Flute_256_1.6_Zoom_plain_4_x_4_Iter":
@@ -323,12 +331,12 @@ def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
 
     This method creates a Dataframe which contains all the paths to the T1
     images which are ADNI compliant (as explained in the AIBL website).
-    This images differ from the others T1 of the dataset since in the
-    cvs_file is reported the exame date.
+    These images differ from the others T1 of the dataset since the exam
+    date is reported in the CSV file.
 
     :param file_mri: in the clinical data there are two files which
     describe the  parameters of the T1 images (MRI 1.5 T and MRI 3T)
-    :param subjects_ID: subjects_id in the dataset dowloaded
+    :param subjects_ID: subjects_id in the downloaded dataset
     :param path_to_dataset: path to AIBL dataset
 
     :return: A dataframe which contains the path for T1 images and
@@ -381,7 +389,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
     their name
 
     :param path_to_dataset: path to AIBL dataset
-    :param subjects_ID: subjects_id in the dataset dowloaded
+    :param subjects_ID: subjects_id in the downloaded dataset
     :param sub_ID: the previous list (from T1_ADNI) where new subjects ID
     will be appended
     :param ses_ID: the previous list (from T1_ADNI) where new session ID
@@ -390,7 +398,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
     appended
 
     :return: it completes the list of all the T1 paths including all the
-    images where we didn't find the exame-data but we can fix it with a
+    images where we didn't find the exam data, but we can fix it with
     further analysis
     """
     import os
@@ -401,7 +409,8 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
         # subdirectories = os.listdir(path_to_T1_1)
         subdirectories = listdir_nohidden(path_to_T1_1)
         for j in range(len(subdirectories)):
-            # we convert only the images which are in this list and we take only one of them for subject
+            # we convert only the images which are in this list,
+            # and we take only one of them for subject
             if subdirectories[j] in [
                 "MPRAGESAGISOp2ND",
                 "MPRAGE_SAG_ISO_p2_ND",
@@ -413,7 +422,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
         else:
             path_to_T1_2 = os.path.join(path_to_T1_1, subdirectory_for_subject[0])
 
-            exame_date = listdir_nohidden(path_to_T1_2)
+            exam_date = listdir_nohidden(path_to_T1_2)
             if i in [342, 557]:
                 session_ID = "M54"
             else:
@@ -421,8 +430,10 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
             if (i in sub_ID and session_ID != ses_ID[sub_ID.index(i)]) or (
                 i not in sub_ID
             ):
-                # if for a subject in the same session we have both this image and the "ADNI" compliant we are converting the second one since the exame-date is more precise
-                path_to_T1_3 = os.path.join(path_to_T1_2, str(exame_date[0]))
+                # if for a subject in the same session we have both this image
+                # and the "ADNI" compliant we are converting the second one
+                # since the exam date is more precise.
+                path_to_T1_3 = os.path.join(path_to_T1_2, str(exam_date[0]))
                 image_ID = listdir_nohidden(path_to_T1_3)
                 path_to_T1 = os.path.join(path_to_T1_3, image_ID[0])
                 # we append the result to the list
@@ -442,7 +453,7 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
     :param path_to_dataset:  path to AIBL dataset
     :param path_to_csv: path to the csv files downloaded
     :return: pandas dataframe which contains all the paths for the T1
-    images, and the correisponding subject_ID and session_ID
+    images, and the corresponding subject_ID and session_ID
     """
     import glob
     import os
@@ -479,6 +490,73 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
 # Covert the AIBL PET images into the BIDS specification.
 # There are three pet modalities: av45, pib, flute. All of them are converted
 # in BIDS
+def create_file(image, modality, bids_dir, overwrite):
+    from os import remove
+    from os.path import exists, join
+
+    from numpy import nan
+
+    from clinica.iotools.bids_utils import json_from_dcm
+    from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.utils.pet import Tracer
+    from clinica.utils.stream import cprint
+
+    subject = image.Subjects_ID
+    session = image.Session_ID
+    name_of_path = {
+        "t1": "Path_to_T1",
+        "av45": "Path_to_pet",
+        "flute": "Path_to_pet",
+        "pib": "Path_to_pet",
+    }
+
+    image_path = image[name_of_path[modality]]
+
+    if image_path == nan:
+        cprint(
+            msg=(
+                f"[{modality.upper()}] No path specified for {subject} "
+                f"in session {session}"
+            ),
+            lvl="info",
+        )
+        return nan
+    else:
+        cprint(
+            msg=(
+                f"[{modality.upper()}] Processing subject {subject} "
+                f"in session {session}"
+            ),
+            lvl="info",
+        )
+
+    session = viscode_to_session(session)
+
+    # creation of the path
+    if modality == "t1":
+        output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
+        output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
+    elif modality in ["flute", "pib", "av45"]:
+        tracer = {"flute": Tracer.FMM, "pib": Tracer.PIB, "av45": Tracer.AV45}[modality]
+        output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
+        output_filename = f"sub-AIBL{subject}_ses-{session}_trc-{tracer}_pet"
+    else:
+        return None
+
+    # image is saved following BIDS specifications
+    if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
+        cprint(f"Subject {str(subject)} - session {session} already processed.")
+        output_image = join(output_path, output_filename + ".nii.gz")
+    else:
+        if exists(join(output_path, output_filename + ".nii.gz")):
+            remove(join(output_path, output_filename + ".nii.gz"))
+        output_image = dicom_to_nii(subject, output_path, output_filename, image_path)
+        json_from_dcm(image_path, join(output_path, output_filename + ".json"))
+
+    # Center all images
+    center_nifti_origin(output_image, output_image)
+
+    return output_image
 
 
 def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=False):
@@ -496,82 +574,18 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
         This does not guarantee existence.
     """
     import glob
-    from multiprocessing import Value, cpu_count
-    from multiprocessing.dummy import Pool
-    from os import makedirs, remove
+    from functools import partial
+    from multiprocessing import Pool, cpu_count
+    from os import makedirs
     from os.path import exists, join
 
     import pandas as pds
-    from numpy import nan
-
-    from clinica.iotools.bids_utils import json_from_dcm
-    from clinica.iotools.utils.data_handling import center_nifti_origin
-    from clinica.utils.stream import cprint
 
     if modality.lower() not in ["t1", "av45", "flute", "pib"]:
         # This should never be reached
         raise RuntimeError(f"{modality.lower()} is not supported for conversion")
 
-    counter = None
-
     makedirs(join(bids_dir, "conversion_info"), exist_ok=True)
-
-    def init(args):
-        """Store the counter for later use."""
-        global counter
-        counter = args
-
-    def create_file(image):
-        global counter
-        subject = image.Subjects_ID
-        session = image.Session_ID
-        name_of_path = {
-            "t1": "Path_to_T1",
-            "av45": "Path_to_pet",
-            "flute": "Path_to_pet",
-            "pib": "Path_to_pet",
-        }
-        # depending on the DataFrame, there is different way of accessing
-        # the image object
-        image_path = image[name_of_path[modality]]
-        with counter.get_lock():
-            counter.value += 1
-            if image_path is nan:
-                cprint(f"No path specified for {subject} in session {session}")
-            else:
-                cprint(
-                    f"'[{modality.upper()}] Processing subject {subject} - {session} {session}, {counter.value}/{total}"
-                )
-
-        if image_path is nan:
-            return nan
-        session = viscode_to_session(session)
-        # creation of the path
-        if modality == "t1":
-            output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
-            output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
-        elif modality in ["flute", "pib", "av45"]:
-            output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
-            output_filename = (
-                f"sub-AIBL{subject}_ses-{session}_task-rest_acq-{modality}_pet"
-            )
-        # image is saved following BIDS specifications
-
-        if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
-            cprint(f"Subject {str(subject)} - session {session} already processed.")
-            output_image = join(output_path, output_filename + ".nii.gz")
-        else:
-            if exists(join(output_path, output_filename + ".nii.gz")):
-                remove(join(output_path, output_filename + ".nii.gz"))
-            output_image = dicom_to_nii(
-                subject, output_path, output_filename, image_path
-            )
-            json_from_dcm(image_path, join(output_path, output_filename + ".json"))
-
-        # Center all images
-        center_nifti_origin(output_image, output_image)
-
-        return output_image
 
     # it reads the DataFrame where subject_ID, session_ID and path are saved
     if modality == "t1":
@@ -588,9 +602,13 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
         # has an extra column for some rows. However, each CSV file (regarding PET tracers)
         # contains the same columns. The usecols fixes this issue.
         df_pet = pds.read_csv(
-            path_to_csv_pet_modality, sep=",|;", usecols=list(range(0, 36))
+            path_to_csv_pet_modality,
+            sep=",|;",
+            usecols=list(range(0, 36)),
+            engine="python",
         )
         images = find_path_to_pet_modality(path_to_dataset, df_pet)
+
     images.to_csv(
         join(bids_dir, "conversion_info", modality + "_paths.tsv"),
         index=False,
@@ -598,18 +616,17 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
         encoding="utf-8",
     )
 
-    counter = Value("i", 0)
-    total = images.shape[0]
-    # Reshape inputs to give it as a list to the workers
-    images_list = []
-    for i in range(total):
-        images_list.append(images.iloc[i])
+    images_list = list([data for _, data in images.iterrows()])
 
-    # intializer are used with the counter variable to keep track of how many
-    # files have been processed
-    poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
-    output_file_treated = poolrunner.map(create_file, images_list)
-    del counter
+    with Pool(processes=max(cpu_count() - 1, 1)) as pool:
+        create_file_ = partial(
+            create_file,
+            modality=modality,
+            bids_dir=bids_dir,
+            overwrite=overwrite,
+        )
+        output_file_treated = pool.map(create_file_, images_list)
+
     return output_file_treated
 
 
@@ -633,7 +650,6 @@ def create_participants_df_AIBL(
     """
     import glob
     import os
-    import re
     from os import path
 
     import numpy as np
@@ -642,6 +658,7 @@ def create_participants_df_AIBL(
     fields_bids = ["participant_id"]
     fields_dataset = []
     prev_location = ""
+    prev_sheet = ""
     index_to_drop = []
 
     location_name = "AIBL location"
@@ -663,7 +680,6 @@ def create_participants_df_AIBL(
     # Init the dataframe that will be saved in the file participant.tsv
     participant_df = pd.DataFrame(columns=fields_bids)
 
-    csv_files = []
     for i in range(0, len(participant_fields_db)):
         # If a field not empty is found
         if not pd.isnull(participant_fields_db[i]):
@@ -713,19 +729,19 @@ def create_participants_df_AIBL(
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
-    # Adding participant_id column with BIDS ids
-    for i in range(0, len(participant_df)):
-        value = participant_df["alternative_id_1"][i]
-        participant_df["participant_id"][i] = "sub-AIBL" + str(value)
-        participant_df["date_of_birth"][i] = re.search(
-            "/([0-9].*)", str(participant_df["date_of_birth"][i])
-        ).group(1)
-        if participant_df["sex"][i] == 1:
-            participant_df["sex"][i] = "M"
-        else:
-            participant_df["sex"][i] = "F"
+    # Compute BIDS-compatible participant ID.
+    participant_df["participant_id"] = "sub-AIBL" + participant_df["alternative_id_1"]
 
-    participant_df.replace("-4", "n/a")
+    # Keep year-of-birth only.
+    participant_df["date_of_birth"] = participant_df["date_of_birth"].str.extract(
+        r"/(\d{4}).*"
+    )
+
+    # Normalize sex value.
+    participant_df["sex"] = participant_df["sex"].map({1: "M", 2: "F"}).fillna("n/a")
+
+    # Normalize known NA values.
+    participant_df.replace(-4, "n/a", inplace=True)
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
@@ -762,14 +778,11 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
     sessions_fields_bids = sessions["BIDS CLINICA"]
     fields_dataset = []
     fields_bids = []
-    sessions_dict = {}
 
     for i in range(0, len(sessions_fields)):
         if not pd.isnull(sessions_fields[i]):
             fields_bids.append(sessions_fields_bids[i])
             fields_dataset.append(sessions_fields[i])
-
-    sessions_df = pd.DataFrame(columns=fields_bids)
 
     files_to_read = []
     sessions_fields_to_read = []
@@ -778,7 +791,6 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         if not pd.isnull(sessions_fields[i]):
             # Load the file
             tmp = field_location[i]
-            location = tmp[0]
             file_to_read_path = path.join(clinical_data_dir, tmp)
             files_to_read.append(glob.glob(file_to_read_path)[0])
             sessions_fields_to_read.append(sessions_fields[i])
@@ -786,7 +798,6 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
     rid = pd.read_csv(files_to_read[0], dtype={"text": str}, low_memory=False).RID
     rid = list(set(rid))
     for r in rid:
-        dict = []
         for i in files_to_read:
             file_to_read = pd.read_csv(i, dtype={"text": str})
             if len(file_to_read.columns) == 1:
@@ -820,7 +831,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         viscode[viscode == "bl"] = "M00"
         viscode = viscode.str.upper()
 
-        dict = pd.DataFrame(
+        sessions = pd.DataFrame(
             {
                 "session_id": "ses-" + viscode,
                 "age": age,
@@ -831,12 +842,12 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
             }
         )
 
-        cols = dict.columns.tolist()
-        dict = dict[cols[-1:] + cols[:-1]]
+        cols = sessions.columns.tolist()
+        sessions = sessions[cols[-1:] + cols[:-1]]
 
         bids_paths = path.join(input_path, "sub-AIBL" + str(r))
         if path.exists(bids_paths):
-            dict.to_csv(
+            sessions.to_csv(
                 path.join(
                     input_path,
                     "sub-AIBL" + str(r),

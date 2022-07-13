@@ -91,7 +91,7 @@ class PetSurface(cpe.Pipeline):
 
         all_errors = []
         try:
-            read_parameters_node.inputs.pet = clinica_file_reader(
+            read_parameters_node.inputs.pet, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.bids_directory,
@@ -101,7 +101,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.orig_nu = clinica_file_reader(
+            read_parameters_node.inputs.orig_nu, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -112,7 +112,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.white_surface_right = clinica_file_reader(
+            read_parameters_node.inputs.white_surface_right, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -122,7 +122,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.white_surface_left = clinica_file_reader(
+            read_parameters_node.inputs.white_surface_left, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -133,7 +133,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.destrieux_left = clinica_file_reader(
+            read_parameters_node.inputs.destrieux_left, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -144,7 +144,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.destrieux_right = clinica_file_reader(
+            read_parameters_node.inputs.destrieux_right, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -155,7 +155,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.desikan_left = clinica_file_reader(
+            read_parameters_node.inputs.desikan_left, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -166,7 +166,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.desikan_right = clinica_file_reader(
+            read_parameters_node.inputs.desikan_right, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -229,7 +229,7 @@ class PetSurface(cpe.Pipeline):
         all_errors = []
         try:
 
-            read_parameters_node.inputs.pet = clinica_file_reader(
+            read_parameters_node.inputs.pet, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.bids_directory,
@@ -239,7 +239,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.orig_nu = clinica_file_reader(
+            read_parameters_node.inputs.orig_nu, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -249,7 +249,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.white_surface_right = clinica_file_reader(
+            read_parameters_node.inputs.white_surface_right, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -259,7 +259,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.white_surface_left = clinica_file_reader(
+            read_parameters_node.inputs.white_surface_left, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -269,7 +269,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.destrieux_left = clinica_file_reader(
+            read_parameters_node.inputs.destrieux_left, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -279,7 +279,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.destrieux_right = clinica_file_reader(
+            read_parameters_node.inputs.destrieux_right, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -289,7 +289,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.desikan_left = clinica_file_reader(
+            read_parameters_node.inputs.desikan_left, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -299,7 +299,7 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.desikan_right = clinica_file_reader(
+            read_parameters_node.inputs.desikan_right, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -406,7 +406,9 @@ class PetSurface(cpe.Pipeline):
         full_pipe.inputs.session_id = self.sessions
         full_pipe.inputs.caps_dir = self.caps_directory
         full_pipe.inputs.pvc_psf_tsv = self.parameters["pvc_psf_tsv"]
-        full_pipe.inputs.working_directory_subjects = self.base_dir
+        full_pipe.inputs.working_directory_subjects = os.path.join(
+            self.base_dir, self.name
+        )
         full_pipe.inputs.acq_label = self.parameters["acq_label"]
         full_pipe.inputs.suvr_reference_region = self.parameters[
             "suvr_reference_region"

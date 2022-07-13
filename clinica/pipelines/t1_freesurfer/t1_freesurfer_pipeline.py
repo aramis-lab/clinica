@@ -29,7 +29,7 @@ class T1FreeSurfer(cpe.Pipeline):
 
         image_ids = []
         if os.path.isdir(caps_directory):
-            t1_freesurfer_files = clinica_file_reader(
+            t1_freesurfer_files, _ = clinica_file_reader(
                 subjects, sessions, caps_directory, T1_FS_DESTRIEUX, False
             )
             image_ids = extract_image_ids(t1_freesurfer_files)
@@ -136,15 +136,18 @@ class T1FreeSurfer(cpe.Pipeline):
         # ========================
         # T1w file:
         try:
-            t1w_files = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII
+            t1w_files, error_message = clinica_file_reader(
+                self.subjects, self.sessions, self.bids_directory, T1W_NII, False
             )
         except ClinicaException as e:
             err_msg = (
                 "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
                 + str(e)
             )
-            raise ClinicaBIDSError(err_msg)
+        if error_message:
+            cprint(error_message, lvl="warning")
+        if not t1w_files:
+            raise ClinicaException("Empty dataset or already processed")
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)

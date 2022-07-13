@@ -17,7 +17,7 @@ def test_instantiate_T1FreeSurferCrossSectional(cmdopt):
     from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
 
     input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1Freesurfer"
+    root = input_dir / "T1FreeSurfer"
 
     parameters = {
         "recon_all_args": "-qcache",
@@ -96,7 +96,7 @@ def test_instantiate_T1VolumeRegisterDartel(cmdopt):
     )
 
     input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1VolumeExistingDartel"
+    root = input_dir / "T1VolumeRegisterDartel"
 
     parameters = {"group_label": "UnitTest"}
     pipeline = T1VolumeRegisterDartel(
@@ -205,13 +205,14 @@ def test_instantiate_DWIConnectome(cmdopt):
 def test_instantiate_PETVolume(cmdopt):
 
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
+    from clinica.utils.pet import Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETVolume"
 
     parameters = {
         "group_label": "UnitTest",
-        "acq_label": "fdg",
+        "acq_label": Tracer.FDG,
         "suvr_reference_region": "pons",
         "skip_question": True,
     }
@@ -227,12 +228,13 @@ def test_instantiate_PETVolume(cmdopt):
 def test_instantiate_PETLinear(cmdopt):
 
     from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
+    from clinica.utils.pet import Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETLinear"
 
     parameters = {
-        "acq_label": "fdg",
+        "acq_label": Tracer.FDG,
         "suvr_reference_region": "cerebellumPons2",
         "skip_question": True,
     }
@@ -273,15 +275,15 @@ def test_instantiate_StatisticsSurface(cmdopt):
 
 
 def test_instantiate_PETSurfaceCrossSectional(cmdopt):
-    from os.path import abspath, dirname, join
 
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+    from clinica.utils.pet import Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETSurface"
 
     parameters = {
-        "acq_label": "FDG",
+        "acq_label": Tracer.FDG,
         "suvr_reference_region": "pons",
         "pvc_psf_tsv": fspath(root / "in" / "subjects.tsv"),
         "longitudinal": False,
@@ -299,11 +301,12 @@ def test_instantiate_PETSurfaceCrossSectional(cmdopt):
 # def test_instantiate_PETSurfaceLongitudinal():
 #     from os.path import dirname, join, abspath
 #     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+#     from clinica.utils.pet import Tracer
 #
 #     root = dirname(abspath(join(abspath(__file__), pardir)))
 #     root = join(root, 'data', 'PETSurfaceLongitudinal')
 #     parameters = {
-#         'acq_label': 'FDG',
+#         'acq_label': Tracer.FDG,
 #         'suvr_reference_region': 'pons',
 #         'pvc_psf_tsv': join(root, 'in', 'subjects.tsv'),
 #         'longitudinal': True
@@ -325,6 +328,7 @@ def test_instantiate_WorlflowsML(cmdopt):
         CAPSVertexBasedInput,
         CAPSVoxelBasedInput,
     )
+    from clinica.utils.pet import Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "WorkflowsML"
@@ -336,6 +340,7 @@ def test_instantiate_WorlflowsML(cmdopt):
     image_type = ["T1w", "PET"]
     atlases = ["AAL2", "Neuromorphometrics", "AICHA", "LPBA40", "Hammers"]
     possible_fwhm = [0, 5, 10, 15, 20, 25]
+    tracer = Tracer.FDG
 
     voxel_input = [
         CAPSVoxelBasedInput(
@@ -346,7 +351,7 @@ def test_instantiate_WorlflowsML(cmdopt):
                 "group_label": group_label,
                 "image_type": im,
                 "fwhm": 8,
-                "acq_label": "fdg",
+                "acq_label": tracer,
                 "suvr_reference_region": "pons",
                 "use_pvc_data": False,
             }
@@ -363,7 +368,7 @@ def test_instantiate_WorlflowsML(cmdopt):
                 "group_label": group_label,
                 "image_type": im,
                 "atlas": at,
-                "acq_label": "fdg",
+                "acq_label": tracer,
                 "suvr_reference_region": "pons",
                 "use_pvc_data": False,
             }
@@ -381,7 +386,7 @@ def test_instantiate_WorlflowsML(cmdopt):
                 "group_label": group_label,
                 "image_type": "PET",
                 "fwhm": fwhm,
-                "acq_label": "fdg",
+                "acq_label": tracer,
                 "suvr_reference_region": "pons",
             }
         )
@@ -452,17 +457,18 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection(cmdopt):
 
 def test_instantiate_T1Linear(cmdopt):
 
-    from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "T1Linear"
 
     parameters = {"uncropped_image": False}
 
-    pipeline = T1Linear(
+    pipeline = AnatLinear(
         bids_directory=fspath(root / "in" / "bids"),
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
+        name="t1-linear",
     )
     pipeline.build()
 
@@ -472,6 +478,7 @@ def test_instantiate_StatisticsVolume(cmdopt):
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
+    from clinica.utils.pet import Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "StatisticsVolume"
@@ -480,10 +487,10 @@ def test_instantiate_StatisticsVolume(cmdopt):
     parameters = {
         # Clinica compulsory parameters
         "group_label": "UnitTest",
-        "orig_input_data": "pet-volume",
+        "orig_input_data_volume": "pet-volume",
         "contrast": "group",
         # Optional arguments for inputs from pet-volume pipeline
-        "acq_label": "FDG",
+        "acq_label": Tracer.FDG,
         "use_pvc_data": False,
         "suvr_reference_region": "pons",
     }

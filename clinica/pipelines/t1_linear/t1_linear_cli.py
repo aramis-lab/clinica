@@ -37,13 +37,13 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
-    from .t1_linear_pipeline import T1Linear
+    from .anat_linear_pipeline import AnatLinear
 
     parameters = {"uncropped_image": uncropped_image}
 
     # Most of the time, you will want to instantiate your pipeline with a
     # BIDS and CAPS directory as inputs:
-    pipeline = T1Linear(
+    pipeline = AnatLinear(
         bids_directory=bids_directory,
         caps_directory=caps_directory,
         tsv_file=subjects_sessions_tsv,

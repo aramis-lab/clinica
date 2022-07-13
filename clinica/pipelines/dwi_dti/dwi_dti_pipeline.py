@@ -213,9 +213,9 @@ class DwiDti(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.ants import ApplyTransforms, RegistrationSynQuick
+        from nipype.interfaces.mrtrix3 import TensorMetrics
+        from nipype.interfaces.mrtrix.preprocess import DWI2Tensor
 
-        from clinica.lib.nipype.interfaces.mrtrix3.utils import TensorMetrics
-        from clinica.lib.nipype.interfaces.mrtrix.preprocess import DWI2Tensor
         from clinica.utils.check_dependency import check_environment_variable
 
         from .dwi_dti_utils import (
@@ -265,7 +265,9 @@ class DwiDti(cpe.Pipeline):
 
         register_fa = npe.Node(interface=RegistrationSynQuick(), name="3a-Register_FA")
         fsl_dir = check_environment_variable("FSLDIR", "FSL")
-        fa_map = os.path.join(fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-FA-1mm.nii.gz")
+        fa_map = os.path.join(
+            fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-FA-1mm.nii.gz"
+        )
         register_fa.inputs.fixed_image = fa_map
 
         ants_transforms = npe.Node(
@@ -327,7 +329,6 @@ class DwiDti(cpe.Pipeline):
         thres_md = thres_map.clone("5-Remove_Negative_MD")
         thres_ad = thres_map.clone("5-Remove_Negative_AD")
         thres_rd = thres_map.clone("5-Remove_Negative_RD")
-        thres_decfa = thres_map.clone("5-Remove_Negative_DECFA")
 
         print_begin_message = npe.Node(
             interface=nutil.Function(
@@ -358,7 +359,7 @@ class DwiDti(cpe.Pipeline):
                 (self.input_node, convert_gradients, [("preproc_bval", "bval_file"),
                                                       ("preproc_bvec", "bvec_file")]),
                 # Computation of the DTI model
-                (self.input_node, dwi_to_dti, [("b0_mask", "in_mask"),
+                (self.input_node, dwi_to_dti, [("b0_mask", "mask"),
                                                ("preproc_dwi", "in_file")]),
                 (convert_gradients, dwi_to_dti, [("encoding_file", "encoding_file")]),
                 (get_caps_filenames, dwi_to_dti, [("out_dti", "out_filename")]),
@@ -411,15 +412,13 @@ class DwiDti(cpe.Pipeline):
                 (get_caps_filenames, thres_rd, [("out_rd", "out_file")]),
                 (dti_to_metrics, thres_rd, [("out_rd", "in_file")]),
 
-                (get_caps_filenames, thres_decfa, [("out_evec", "out_file")]),
-                (dti_to_metrics, thres_decfa, [("out_evec", "in_file")]),
                 # Outputnode
                 (dwi_to_dti, self.output_node, [("tensor", "dti")]),
                 (thres_fa, self.output_node, [("out_file", "fa")]),
                 (thres_md, self.output_node, [("out_file", "md")]),
                 (thres_ad, self.output_node, [("out_file", "ad")]),
                 (thres_rd, self.output_node, [("out_file", "rd")]),
-                (thres_decfa, self.output_node, [("out_file", "decfa")]),
+                (dti_to_metrics, self.output_node, [("out_evec", "decfa")]),
 
                 (register_fa, self.output_node, [("out_matrix", "affine_matrix")]),
                 (register_fa, self.output_node, [("forward_warp_field", "b_spline_transform")]),

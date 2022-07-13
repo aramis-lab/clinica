@@ -167,7 +167,15 @@ def create_subjects_visits(bids_directory: str, output_tsv: str) -> None:
     "--pipeline",
     "pipelines",
     multiple=True,
-    type=click.Choice(["t1-freesurfer", "t1-volume", "pet-volume"]),
+    type=click.Choice(
+        [
+            "t1-freesurfer",
+            "t1-volume",
+            "pet-volume",
+            "t1-freesurfer-longitudinal",
+            "dwi-dti",
+        ]
+    ),
     help="Pipeline to merge to the ouput TSV file. All pipelines are merged by default.",
 )
 @click.option(

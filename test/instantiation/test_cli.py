@@ -32,6 +32,7 @@ def test_first_lv(generate_cli_first_lv):
     params=[
         "adni-to-bids",
         "aibl-to-bids",
+        "habs-to-bids",
         "nifd-to-bids",
         "oasis-to-bids",
     ]

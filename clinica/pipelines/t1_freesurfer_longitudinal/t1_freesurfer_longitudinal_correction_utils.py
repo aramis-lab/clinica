@@ -269,7 +269,7 @@ def save_to_caps(source_dir, subject_id, caps_dir, overwrite_caps=False):
     return str_image_id
 
 
-def get_processed_images(caps_directory, part_ids, sess_ids, long_ids):
+def get_processed_images(caps_directory, part_ids, sess_ids, long_ids, atlas=False):
     """
     Extract image IDs (e.g. ["sub-CLNC01_ses-M00_long-M00M18", "sub-CLNC01_ses-M18_long-M00M18"]) of outputs
     already processed by T1FreeSurferLongitudinalCorrection pipeline.
@@ -279,7 +279,7 @@ def get_processed_images(caps_directory, part_ids, sess_ids, long_ids):
     image_ids = []
     if os.path.isdir(caps_directory):
         for (participant_id, session_id, long_id) in zip(part_ids, sess_ids, long_ids):
-            output_file = os.path.join(
+            output_file_pre = os.path.join(
                 os.path.expanduser(caps_directory),
                 "subjects",
                 participant_id,
@@ -288,9 +288,17 @@ def get_processed_images(caps_directory, part_ids, sess_ids, long_ids):
                 long_id,
                 "freesurfer_longitudinal",
                 f"{participant_id}_{session_id}.long.{participant_id}_{long_id}",
-                "mri",
-                "aparc+aseg.mgz",
             )
+            if atlas:
+                output_file = os.path.join(
+                    output_file_pre, "stat", "rh.", atlas, ".stats"
+                )
+            else:
+                output_file = os.path.join(
+                    output_file_pre,
+                    "mri",
+                    "aparc+aseg.mgz",
+                )
             if os.path.isfile(output_file):
                 image_ids.append(f"{participant_id}_{session_id}_{long_id}")
     return image_ids

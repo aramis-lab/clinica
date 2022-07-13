@@ -124,7 +124,7 @@ class PETVolume(cpe.Pipeline):
 
         # PET from BIDS directory
         try:
-            pet_bids = clinica_file_reader(
+            pet_bids, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.bids_directory,
@@ -135,7 +135,7 @@ class PETVolume(cpe.Pipeline):
 
         # Native T1w-MRI
         try:
-            t1w_bids = clinica_file_reader(
+            t1w_bids, _ = clinica_file_reader(
                 self.subjects, self.sessions, self.bids_directory, T1W_NII
             )
         except ClinicaException as e:
@@ -145,7 +145,7 @@ class PETVolume(cpe.Pipeline):
         tissues_input = []
         for tissue_number in self.parameters["mask_tissues"]:
             try:
-                current_file = clinica_file_reader(
+                current_file, _ = clinica_file_reader(
                     self.subjects,
                     self.sessions,
                     self.caps_directory,
@@ -164,7 +164,7 @@ class PETVolume(cpe.Pipeline):
 
         # Flowfields
         try:
-            flowfields_caps = clinica_file_reader(
+            flowfields_caps, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -199,7 +199,7 @@ class PETVolume(cpe.Pipeline):
             pvc_tissues_input = []
             for tissue_number in self.parameters["pvc_mask_tissues"]:
                 try:
-                    current_file = clinica_file_reader(
+                    current_file, _ = clinica_file_reader(
                         self.subjects,
                         self.sessions,
                         self.caps_directory,
@@ -416,9 +416,9 @@ class PETVolume(cpe.Pipeline):
         import nipype.interfaces.spm.utils as spmutils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from nipype.algorithms.misc import Gunzip
         from nipype.interfaces.petpvc import PETPVC
 
-        from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         from .pet_volume_utils import (
@@ -448,45 +448,22 @@ class PETVolume(cpe.Pipeline):
 
         # Unzipping
         # =========
-        unzip_pet_image = npe.Node(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
-            name="unzip_pet_image",
-        )
+        unzip_pet_image = npe.Node(interface=Gunzip(), name="unzip_pet_image")
 
         unzip_t1_image_native = npe.Node(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
-            name="unzip_t1_image_native",
+            interface=Gunzip(), name="unzip_t1_image_native"
         )
 
-        unzip_flow_fields = npe.Node(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
-            name="unzip_flow_fields",
-        )
+        unzip_flow_fields = npe.Node(interface=Gunzip(), name="unzip_flow_fields")
 
         unzip_dartel_template = npe.Node(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
-            name="unzip_dartel_template",
+            interface=Gunzip(), name="unzip_dartel_template"
         )
 
-        unzip_reference_mask = npe.Node(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
-            name="unzip_reference_mask",
-        )
+        unzip_reference_mask = npe.Node(interface=Gunzip(), name="unzip_reference_mask")
 
         unzip_mask_tissues = npe.MapNode(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
+            interface=Gunzip(),
             name="unzip_mask_tissues",
             iterfield=["in_file"],
         )
@@ -614,11 +591,7 @@ class PETVolume(cpe.Pipeline):
             # Unzipping
             # =========
             unzip_pvc_mask_tissues = npe.MapNode(
-                nutil.Function(
-                    input_names=["in_file"],
-                    output_names=["out_file"],
-                    function=unzip_nii,
-                ),
+                interface=Gunzip(),
                 name="unzip_pvc_mask_tissues",
                 iterfield=["in_file"],
             )

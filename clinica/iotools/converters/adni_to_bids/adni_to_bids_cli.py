@@ -4,7 +4,7 @@ import click
 
 from clinica.iotools.converters import cli_param
 
-ALL_MODALITIES = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
+ALL_MODALITIES = ("T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI")
 
 
 @click.command(name="adni-to-bids")
@@ -32,10 +32,14 @@ ALL_MODALITIES = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fM
     default=ALL_MODALITIES,
     help="Convert only the selected modality. By default, all available modalities are converted.",
 )
+@click.option(
+    "-xml", "--xml_path", help="Path to the root directory containing the xml metadata."
+)
 def cli(
     dataset_directory: str,
     clinical_data_directory: str,
     bids_directory: str,
+    xml_path: Optional[str] = None,
     subjects_list: Optional[str] = None,
     clinical_data_only: bool = False,
     force_new_extraction: bool = False,
@@ -43,7 +47,7 @@ def cli(
 ) -> None:
     """ADNI to BIDS converter.
 
-    Convert the imaging and clinical data of ADNI (http://adni.loni.usc.edu/), located in DATASET_DIRECTORY and
+    Convert the imaging and clinical data of ADNI (https://adni.loni.usc.edu/), located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
     from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
@@ -72,6 +76,7 @@ def cli(
         out_path=bids_directory,
         clinical_data_only=clinical_data_only,
         subjects_list_path=subjects_list,
+        xml_path=xml_path,
     )
 
 

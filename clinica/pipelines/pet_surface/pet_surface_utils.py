@@ -359,7 +359,7 @@ def suvr_normalization(pet_path, mask):
 
     Args:
         (string) pet_path     : path to the Nifti volume containing PET scan, realigned on upsampled T1
-        (string) mask         : mask of the pons (fdg) or pons+cerebellum (av45) already eroded
+        (string) mask         : mask of the pons (18FFDG) or pons+cerebellum (18FAV45) already eroded
 
     Returns:
         (string) Path to the suvr normalized volume in the current directory
@@ -932,13 +932,13 @@ def get_wf(
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
+    from nipype.algorithms.misc import Gunzip
     from nipype.interfaces.freesurfer import ApplyVolTransform, MRIConvert, Tkregister2
     from nipype.interfaces.fsl import Merge
     from nipype.interfaces.petpvc import PETPVC
     from nipype.interfaces.spm import Coregister, Normalize12
 
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
-    from clinica.utils.filemanip import unzip_nii
     from clinica.utils.pet import get_suvr_mask, read_psf_information
     from clinica.utils.spm import get_tpm
     from clinica.utils.stream import cprint
@@ -947,21 +947,16 @@ def get_wf(
     # Check that the PET file is a 3D volume
     img = nib.load(pet)
     if len(img.shape) == 4:
-        error_msg = f"Clinica does not handle 4D volumes for {subject_id} | {session_id}"
+        error_msg = (
+            f"Clinica does not handle 4D volumes for {subject_id} | {session_id}"
+        )
         cprint(error_msg, lvl="error")
         raise NotImplementedError(error_msg)
 
     print_begin_image(subject_id + "_" + session_id)
 
     # Creation of workflow
-    # 1 Creation of node
-    unzip_pet = pe.Node(
-        niu.Function(
-            input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-        ),
-        name="unzip_pet",
-    )
-
+    unzip_pet = pe.Node(interface=Gunzip(), name="unzip_pet")
     unzip_orig_nu = unzip_pet.clone(name="unzip_orig_nu")
 
     unzip_mask = unzip_pet.clone(name="unzip_mask")
@@ -1289,7 +1284,7 @@ def get_wf(
         # Projection in native space
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*",
-            r"\1/\2_\3_task-rest_acq-"
+            r"\1/\2_\3_trc-"
             + acq_label
             + r"_pet_space-native_suvr-"
             + suvr_reference_region
@@ -1298,7 +1293,7 @@ def get_wf(
         # Projection in fsaverage
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
-            r"\1/\2_\3_task-rest_acq-"
+            r"\1/\2_\3_trc-"
             + acq_label
             + r"_pet_space-fsaverage_suvr-"
             + suvr_reference_region
@@ -1307,7 +1302,7 @@ def get_wf(
         # TSV file for Destrieux atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/destrieux_tsv\/destrieux.tsv",
-            r"\1/atlas_statistics/\2_\3_task-rest_acq-"
+            r"\1/atlas_statistics/\2_\3_trc-"
             + acq_label
             + "_pet_space-destrieux_pvc-iy_suvr-"
             + suvr_reference_region
@@ -1316,7 +1311,7 @@ def get_wf(
         # TSV file for Desikan atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/desikan_tsv\/desikan.tsv",
-            r"\1/atlas_statistics/\2_\3_task-rest_acq-"
+            r"\1/atlas_statistics/\2_\3_trc-"
             + acq_label
             + "_pet_space-desikan_pvc-iy_suvr-"
             + suvr_reference_region
@@ -1332,7 +1327,7 @@ def get_wf(
         # Projection in native space
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*",
-            r"\1/\2_\3_\4_task-rest_acq-"
+            r"\1/\2_\3_\4_trc-"
             + acq_label
             + r"_pet_space-native_suvr-"
             + suvr_reference_region
@@ -1341,7 +1336,7 @@ def get_wf(
         # Projection in fsaverage
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
-            r"\1/\2_\3_\4_task-rest_acq-"
+            r"\1/\2_\3_\4_trc-"
             + acq_label
             + r"_pet_space-fsaverage_suvr-"
             + suvr_reference_region
@@ -1350,7 +1345,7 @@ def get_wf(
         # TSV file for Destrieux atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/destrieux_tsv\/destrieux.tsv",
-            r"\1/atlas_statistics/\2_\3_\4_task-rest_acq-"
+            r"\1/atlas_statistics/\2_\3_\4_trc-"
             + acq_label
             + "_pet_space-destrieux_pvc-iy_suvr-"
             + suvr_reference_region
@@ -1359,7 +1354,7 @@ def get_wf(
         # TSV file for Desikan atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/desikan_tsv\/desikan.tsv",
-            r"\1/atlas_statistics/\2_\3_\4_task-rest_acq-"
+            r"\1/atlas_statistics/\2_\3_\4_trc-"
             + acq_label
             + "_pet_space-desikan_pvc-iy_suvr-"
             + suvr_reference_region

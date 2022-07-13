@@ -1,6 +1,34 @@
 """Methods used by BIDS converters."""
 
-from typing import List
+from os import PathLike
+from pathlib import Path
+from typing import BinaryIO, List, Optional, Union
+
+from pandas import DataFrame
+
+BIDS_VALIDATOR_CONFIG = {
+    "ignore": [
+        # Possibly dcm2nii(x) errors
+        "NIFTI_UNIT",
+        "INCONSISTENT_PARAMETERS",
+        # fMRI-specific errors
+        "SLICE_TIMING_NOT_DEFINED",
+        "NIFTI_PIXDIM4",
+        "BOLD_NOT_4D",
+        "REPETITION_TIME_MUST_DEFINE",
+        "TASK_NAME_MUST_DEFINE",
+        # Won't fix errors
+        "MISSING_SESSION",  # Allows subjects to have different sessions
+        "INCONSISTENT_SUBJECTS",  # Allows subjects to have different modalities
+        "SCANS_FILENAME_NOT_MATCH_DATASET",  # Necessary until PET is added to BIDS standard
+        "CUSTOM_COLUMN_WITHOUT_DESCRIPTION",  # We won't create these JSON files as clinical description
+        # is already done in TSV files of clinica.
+        "NO_AUTHORS",  # Optional field in dataset_description.json
+    ],
+    "warn": [],
+    "error": [],
+    "ignoredFiles": [],
+}
 
 
 # -- Methods for the clinical data --
@@ -314,6 +342,7 @@ def create_scans_dict(
 
     import pandas as pd
 
+    from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
 
     scans_dict = {}
@@ -331,10 +360,10 @@ def create_scans_dict(
         for session_id in {"ses-" + key for key in ses_dict[bids_id].keys()}:
             scans_dict[bids_id][session_id] = {
                 "T1/DWI/fMRI/FMAP": {},
-                "PIB": {},
-                "AV45": {},
-                "FLUTE": {},
-                "FDG": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+                Tracer.FDG: {},
             }
 
     scans_specs = pd.read_csv(clinic_specs_path + "_scans.tsv", sep="\t")
@@ -422,7 +451,54 @@ def create_scans_dict(
     return scans_dict
 
 
-def write_modality_agnostic_files(study_name, bids_dir):
+def _write_bids_dataset_description(
+    study_name: str,
+    bids_dir: Union[str, Path],
+    bids_version: Optional[str] = None,
+) -> None:
+    """Write `dataset_description.json` at the root of the BIDS directory."""
+    from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
+
+    if bids_version:
+        bids_desc = BIDSDatasetDescription(name=study_name, bids_version=bids_version)
+    else:
+        bids_desc = BIDSDatasetDescription(name=study_name)
+    with open(Path(bids_dir) / "dataset_description.json", "w") as f:
+        bids_desc.write(to=f)
+
+
+def _write_readme(bids_dir: Union[str, Path]) -> None:
+    """Write `README`file at the root of the BIDS directory."""
+    import clinica
+
+    with open(Path(bids_dir) / "README", "w") as f:
+        f.write(
+            f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
+            f"More information on https://www.clinica.run\n"
+        )
+
+
+def _write_bids_validator_config(bids_dir: Union[str, Path]) -> None:
+    """Write `.bids-validator-config.json` at the root of the BIDS directory."""
+    import json
+
+    with open(Path(bids_dir) / ".bids-validator-config.json", "w") as f:
+        json.dump(BIDS_VALIDATOR_CONFIG, f, skipkeys=True, indent=4)
+
+
+def _write_bidsignore(bids_dir: Union[str, Path]) -> None:
+    """Write `.bidsignore` file at the root of the BIDS directory."""
+    with open(Path(bids_dir) / ".bidsignore", "w") as f:
+        # pet/ is necessary until PET is added to BIDS standard
+        f.write("\n".join(["swi/\n"]))
+        f.write("\n".join(["conversion_info/"]))
+
+
+def write_modality_agnostic_files(
+    study_name: str,
+    bids_dir: Union[str, Path],
+    bids_version: Optional[str] = None,
+) -> None:
     """
     Write the files README, dataset_description.json, .bidsignore and .bids-validator-config.json
     at the root of the BIDS directory.
@@ -430,58 +506,12 @@ def write_modality_agnostic_files(study_name, bids_dir):
     Args:
         study_name: name of the study (Ex ADNI)
         bids_dir: path to the bids directory
+        bids_version: BIDS version if different from the version supported by Clinica.
     """
-    import json
-    from os import path
-
-    import clinica
-
-    dataset_dict = {"Name": study_name, "BIDSVersion": "1.4.1", "DatasetType": "raw"}
-    dataset_json = json.dumps(dataset_dict, skipkeys=True, indent=4)
-    f = open(path.join(bids_dir, "dataset_description.json"), "w")
-    f.write(dataset_json)
-    f.close()
-
-    file = open(path.join(bids_dir, "README"), "w")
-    file.write(
-        f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
-        f"More information on http://www.clinica.run\n"
-    )
-    file.close()
-
-    validator_dict = {
-        "ignore": [
-            # Possibly dcm2nii(x) errors
-            "NIFTI_UNIT",
-            "INCONSISTENT_PARAMETERS",
-            # fMRI-specific errors
-            "SLICE_TIMING_NOT_DEFINED",
-            "NIFTI_PIXDIM4",
-            "BOLD_NOT_4D",
-            "REPETITION_TIME_MUST_DEFINE",
-            "TASK_NAME_MUST_DEFINE",
-            # Won't fix errors
-            "MISSING_SESSION",  # Allows subjects to have different sessions
-            "INCONSISTENT_SUBJECTS",  # Allows subjects to have different modalities
-            "SCANS_FILENAME_NOT_MATCH_DATASET",  # Necessary until PET is added to BIDS standard
-            "CUSTOM_COLUMN_WITHOUT_DESCRIPTION",  # We won't create these JSON files as clinical description
-            # is already done in TSV files of clinica.
-            "NO_AUTHORS",  # Optional field in dataset_description.json
-        ],
-        "warn": [],
-        "error": [],
-        "ignoredFiles": [],
-    }
-    validator_json = json.dumps(validator_dict, skipkeys=True, indent=4)
-    f = open(path.join(bids_dir, ".bids-validator-config.json"), "w")
-    f.write(validator_json)
-    f.close()
-
-    f = open(path.join(bids_dir, ".bidsignore"), "w")
-    f.write(
-        "pet/\nconversion_info/\n"
-    )  # pet/ is necessary until PET is added to BIDS standard
-    f.close()
+    _write_bids_dataset_description(study_name, bids_dir, bids_version)
+    _write_readme(bids_dir)
+    _write_bids_validator_config(bids_dir)
+    _write_bidsignore(bids_dir)
 
 
 def write_sessions_tsv(bids_dir, sessions_dict):
@@ -581,7 +611,7 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                     )
                     # Insert the column filename as first value
                     row_to_append.insert(0, "filename", path.join(mod_name, file_name))
-                    scans_df = scans_df.append(row_to_append)
+                    scans_df = pd.concat([scans_df, row_to_append])
 
             scans_df = scans_df.set_index("filename").fillna("n/a")
             scans_df.to_csv(
@@ -761,7 +791,13 @@ def json_from_dcm(dcm_dir, json_path):
         cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
 
 
-def run_dcm2niix(command):
+def run_dcm2niix(
+    input_dir: str,
+    output_dir: str,
+    output_fmt: str,
+    compress: bool = False,
+    bids_sidecar: bool = True,
+) -> None:
     """Runs the dcm2niix command using a subprocess.
 
     Args: the dcm2niix command with the right arguments.
@@ -770,13 +806,24 @@ def run_dcm2niix(command):
 
     from clinica.utils.stream import cprint
 
-    output_dcm2niix = subprocess.run(command, shell=True, capture_output=True)
-    if output_dcm2niix.returncode != 0:
+    command = ["dcm2niix", "-w", "0", "-f", output_fmt, "-o", output_dir]
+    command += ["-9", "-z", "y"] if compress else ["-z", "n"]
+    command += ["-b", "y", "-ba", "y"] if bids_sidecar else ["-b", "n"]
+    command += [input_dir]
+
+    completed_process = subprocess.run(command, capture_output=True)
+
+    if completed_process.returncode != 0:
         cprint(
             msg=(
                 "DICOM to BIDS conversion with dcm2niix failed:\n"
                 f"command: {command}\n"
-                f"{output_dcm2niix.stdout.decode('utf-8')}"
+                f"{completed_process.stdout.decode('utf-8')}"
             ),
             lvl="warning",
         )
+
+
+def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
+    # Save dataframe as a BIDS-compliant TSV file.
+    dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")

@@ -88,7 +88,7 @@ smooth = option(
     "-s",
     "--smooth",
     multiple=True,
-    default=(8,),
+    default=[8],
     show_default=True,
     help="Specify the different isomorphic FWHM in millimeters to smooth the image.",
 )

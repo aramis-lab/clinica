@@ -330,7 +330,7 @@ subjects/
                └─ <source_file>_space-<space>[_pvc-rbv]_suvr-<suvr>_statistics.tsv
 ```
 
-The `_acq-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `fdg` and `av45`).
+The `_trc-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
 
 The `[_pvc-rbv]` label is optional, depending on whether your image has undergone partial volume correction (region-based voxel-wise (RBV) method) or not.
 
@@ -347,12 +347,12 @@ subjects/
       └─ pet/
          └─ surface/
             ├─ atlas_statistics/
-            │  └─ <source_file>_task-<label>_acq-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
+            │  └─ <source_file>_trc-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
             ├─ <source_file>_hemi-{left|right}_midcorticalsurface
-            └─ <source_file>_hemi-{left|right}_task-rest_acq-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
+            └─ <source_file>_hemi-{left|right}_trc-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
 ```
 
-The `_acq-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `fdg` and `av45`).
+The `trc-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
 
 The `[_pvc-iy]` label describes the partial volume correction used in the algorithm for the projection (Iterative Yang).
 
@@ -380,13 +380,28 @@ subjects/
          └─ <long_id>/
             └─ surface_longitudinal/
                ├─ atlas_statistics/
-               │  └─ sub-<label>_ses-<lalbel>_long-<label>_task-<label>_acq-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
+               │  └─ sub-<label>_ses-<lalbel>_long-<label>_trc-<label>_pet_space-<space>_pvc-iy_suvr-<suvr>_statistics.tsv
                ├─ sub-<label>_ses-<lalbel>_long-<label>_hemi-{left|right}_midcorticalsurface
-               └─ sub-<label>_ses-<lalbel>_long-<label>_task-rest_acq-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
+               └─ sub-<label>_ses-<lalbel>_long-<label>_trc-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
 ```
 
 Explanations on the key/values can be found on the
 [`pet-surface` section](#pet-surface-surface-based-processing-of-pet-images).
+
+### `pet-linear` - Affine registration of PET images to the MNI standard space
+
+```Text
+subjects/
+└─ <participant_id>/
+    └─ <session_id>/
+      └─ pet_linear/
+         ├─ <source_file>_space-T1w_rigid.mat
+         ├─ <source_file>_space-T1w_pet.nii.gz
+         ├─ <source_file>_space-MNI152NLin2009cSym_res-1x1x1_suvr-<suvr_label>_pet.nii.gz
+         └─ <source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-<suvr_label>_pet.nii.gz
+```
+
+The `desc-Crop` indicates images of size 169×208×179 after cropping to remove the background.
 
 ## Statistics
 
@@ -527,7 +542,7 @@ groups/
 └─ <group_id>/
    ├─ <group_id>_participants.tsv
    └─ statistics_volume/
-      └─ group_comparison_measure-{graymatter|fdg|av45|<custom_user>}/
+      └─ group_comparison_measure-{graymatter|18FFDG|18FAV45|<custom_user>}/
          ├─ <group_id>_{RPV|mask}.nii
          ├─ <group_id>_covariate-<covariate>_measure-<label>_fwhm-<n>_regressionCoefficient.nii
          ├─ <group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_{TStatistics|contrast}.nii
@@ -550,7 +565,7 @@ Suffixes are described in the table below:
 
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measurement of `<group_1>` is lower than (`lt`) that of `<group_2>`".
 
-The value for `measure` can be `graymatter` (output of `t1-volume`), `fdg` or `av45` (output of `pet-volume`), or user-defined maps.
+The value for `measure` can be `graymatter` (output of `t1-volume`), `18FFDG` or `18FAV45` (output of `pet-volume`), or user-defined maps.
 The value for `fwhm` corresponds to the size of the volume-based smoothing in mm.
 
 Corrected results are stored under the following hierarchy:
@@ -570,100 +585,6 @@ groups/
 `FWEc` (resp. `FDRc`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction.
 A statistical threshold of P < 0.001 was first applied (height threshold).
 An extent threshold of P < 0.05 corrected for multiple comparisons was then applied at the cluster level.
-
-### `deeplearning-prepare-data` - Prepare input data for deep learning with PyTorch
-
-In the following subsections, files with the `.pt` extension denote tensors in PyTorch format.
-
-#### Image-based outputs
-
-```Text
-subjects/
-└─ <participant_id>/
-   └─ <session_id>/
-      └─ deeplearning_prepare_data/
-         └─ image_based/
-            └─ <pipeline_name>/
-               └─ <source_file>_key1-<value_1>...keyN-<value_N>_suffix.pt
-```
-
-Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D image follows the same naming convention as the generated file except the extension that is replaced by `.pt`.
-
-!!! Example "Example for the `t1-linear` pipeline"
-
-    ```Text
-    subjects/
-    └─ <participant_id>/
-       └─ <session_id>/
-          └─ deeplearning_prepare_data/
-             └─ image_based/
-                └─ t1_linear/
-                   └─ <source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_T1w.pt
-    ```
-
-#### Patch-based outputs
-
-```Text
-subjects/
-└─ <participant_id>/
-   └─ <session_id>/
-      └─ deeplearning_prepare_data/
-         └─ patch_based/
-            └─ <pipeline_name>/
-               └─ <source_file>_key1-<value_1>...keyN-<value_N>_patchsize-<N>_stride-<M>_patch-<index>_suffix.pt
-```
-
-| Entity          | Description            |
-|-----------------|------------------------|
-| `patchsize-<N>` | Isotropic patch size   |
-| `stride-<M>`    | Patch stride           |
-| `patch-<index>` | Patch index            |
-
-Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D patches follows the same naming convention except that `_patchsize-<N>_stride-<M>_patch-<index>` is inserted between `keyN-<value>` and `_suffix` and  the extension is replaced by `.pt`.
-
-!!! Example "Example for the `t1-linear` pipeline using a patch size and patch stride of `50`"
-
-    ```Text
-    subjects/
-    └─ <participant_id>/
-       └─ <session_id>/
-          └─ deeplearning_prepare_data/
-             └─ patch_based/
-                └─ t1_linear/
-                   └─ <source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_patchsize-50_stride-50_patch-<index>_T1w.pt
-    ```
-
-#### Slice-based outputs
-
-```Text
-subjects/
-└─ <participant_id>/
-   └─ <session_id>/
-      └─ deeplearning_prepare_data/
-         └─ slice_based/
-            └─ <pipeline_name>/
-               └─ <source_file>_key1-<value_1>...keyN-<value_N>_axis-{sag|cor|axi}_channel-{single|rgb}_slice-<index>_suffix.pt
-```
-
-| Entity                 | Description   |
-|------------------------|---------------|
-| `axis-{sag|cor|axi}`   | Slice direction. It can be `sag`ittal, `cor`onal or `axi`al plane. |
-| `channel-{single|rgb}` | Slice mode. It can be three identical channels (`rgb`) or one channel (`single`). |
-| `slice-<index>`        | Slice index  |
-
-Given a file generated by a Clinica pipeline, the PyTorch tensor of the 2D slices follows the same naming convention except that `_axis-{sag|cor|axi}_channel-{single|rgb}_slice-<index>` is inserted between `keyN-<value>` and `_suffix` and the extension is replaced by `.pt`.
-
-!!! Example "Example for the `t1-linear` pipeline using slices in `sag`ittal plane and `rgb` channel"
-
-    ```Text
-    subjects/
-    └─ <participant_id>/
-       └─ <session_id>/
-          └─ deeplearning_prepare_data/
-             └─ slice_based/
-                └─ t1_linear/
-                   └─ <source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_axis-sag_channel-rgb_slice-<index>_T1w.pt
-    ```
 
 ## Machine Learning
 
@@ -694,17 +615,17 @@ At the subject level, it contains SVM regularization of gray matter/white matter
 At the group level, it contains the Gram matrix with respect to gray matter/white matter/CSF maps needed for the SVM regularization and the information regarding the regularization.
 An example of JSON file is:
 
-```javascript
+```json
 {
     "MaxDeltaT": "0.0025",
-    "Alpha": "0.0025", // Alpha such that: delta_t = MaxDeltaT * Alpha
+    "Alpha": "0.0025",
     "Epsilon": "10E-6",
     "BoundaryConditions": "TimeInvariant",
     "SigmaLoc": "10",
     "TimeStepMax": "0.07760115580830161",
     "SpatialPrior": "Tissues (GM,WM,CSF)",
     "RegularizationType": "Fisher",
-    "FWHM": "4",
+    "FWHM": "4"
 }
 ```
 
@@ -724,7 +645,7 @@ Possible values for `_map-<map>` key/value are:
 
 - For DWI: `FA` (fractional anisotropy), `MD` (mean diffusivity, also called apparent diffusion coefficient), `AD` (axial diffusivity), `RD` (radial diffusivity), `NDI` (neurite density index), `ODI` (orientation dispersion index) and `FWF` (free water fraction).
 
-- For PET: `fdg` (<sup>18</sup>F-Fluorodeoxyglucose), `av45` (<sup>18</sup>F-Florbetapir).
+- For PET: `18FFDG` (<sup>18</sup>F-Fluorodeoxyglucose), `18FAV45` (<sup>18</sup>F-Florbetapir), `18FAV1451` (<sup>18</sup>F-Flortaucipir), `11CPIB` (<sup>11</sup>C-Pittsburgh Compound-B), `18FFBB` (<sup>18</sup>F-Florbetaben) and `18FFMM` (<sup>18</sup>F-Flutemetamol).
 
 !!! Example
     Content of `sub-CLNC01_ses-M00_T1w_space-Hammers_map-graymatter_statistics.tsv`:

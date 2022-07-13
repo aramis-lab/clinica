@@ -66,7 +66,7 @@ class T1VolumeParcellation(cpe.Pipeline):
             )
 
         try:
-            gm_mni = clinica_file_reader(
+            gm_mni, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,

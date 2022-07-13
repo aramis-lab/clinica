@@ -1,4 +1,21 @@
 """This module contains utilities for PET data handling."""
+from enum import Enum
+
+
+class Tracer(str, Enum):
+    """BIDS label for PET tracers.
+
+    Follows the convention proposed in the PET section of the BIDS specification.
+
+    See: https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/09-positron-emission-tomography.html
+    """
+
+    PIB = "11CPIB"
+    AV1451 = "18FAV1451"
+    AV45 = "18FAV45"
+    FBB = "18FFBB"
+    FDG = "18FFDG"
+    FMM = "18FFMM"
 
 
 def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
@@ -26,7 +43,7 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     """
     import os
 
-    from pandas.io.parsers import read_csv
+    from pandas import read_csv
 
     if not os.path.isfile(pvc_psf_tsv):
         raise FileNotFoundError(f"Could not find the psf_tsv file {pvc_psf_tsv}")

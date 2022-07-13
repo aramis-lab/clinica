@@ -106,7 +106,7 @@ where:
 The content of `output_file` will look like:
 
 ```Text
-participant_id   session_id     t1-linear   ...     pet-volume_acq-<tracer>_group-<group_label>_pvc-{True|False}
+participant_id   session_id     t1-linear   ...     pet-volume_trc-<tracer>_group-<group_label>_pvc-{True|False}
 sub-01           ses-M00        1                   1
 sub-01           ses-M12        1                   0
 sub-02           ses-M00        0                   0
@@ -161,6 +161,12 @@ If an input list of subjects and sessions is given, the merged file will only ga
     ...
     ```
 
+
+!!! Note for t1-volume and pet-volume pipelines
+    The suffix "_intensity" is added systematically to the atlas statistics of t1-volume and pet-volume pipelines.
+
+A complete list of optional arguments can be obtained with the command line `clinica merge-tsv --help`
+
 ## `center-nifti` - Center NIfTI files of a BIDS directory
 
 Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIfTI files whose origin does not correspond to the center of the image (i.e. the anterior commissure).
@@ -188,23 +194,23 @@ Optional arguments:
 !!! note
     The images contained in the input `bids_directory` folder that do not need to be centered will also be copied to the output folder `new_bids_directory`.
 
-    If you want to convert FDG PET images (e.g. with `_acq-fdg` key/value in PET filename), use:
+    If you want to convert FDG PET images (e.g. with `_trc-18FFDG` key/value in PET filename), use:
 
     ```shell
-    clinica iotools center-nifti bids_directory new_bids_directory --modality "fdg_pet"
+    clinica iotools center-nifti bids_directory new_bids_directory --modality "18ffdg_pet"
     ```
 
     If you want to convert AV45 PET images and T1w:
 
     ```shell
-    clinica iotools center-nifti bids_directory new_bids_directory --modality "av45_pet t1w"
+    clinica iotools center-nifti bids_directory new_bids_directory --modality "18fav45_pet t1w"
     ```
 
     To know if a NIfTI image must be centered, the algorithm checks the filenames of the NIfTI images.
     For example, regarding the file `bids/sub-01/ses-M0/anat/sub-01_ses-M0_T1w.nii`:
 
      - The filename is `sub-01_ses-M0_T1w.nii`.
-     - The algorithm tests (in a case insensitive way) if the string `fdg_pet` is in the filename: False.
+     - The algorithm tests (in a case insensitive way) if the string `18ffdg_pet` is in the filename: False.
      - The algorithm tests (in a case insensitive way) if the string `t1w` is in the filename: True!
      - The algorithm tests if the volume has its center at more than 50 mm (Euclidian distance) from the origin: True.
      - This file will be centered by the algorithm.

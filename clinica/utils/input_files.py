@@ -8,6 +8,7 @@ These dictionaries describe files to grab.
 # BIDS
 
 T1W_NII = {"pattern": "sub-*_ses-*_t1w.nii*", "description": "T1w MRI"}
+Flair_T2W_NII = {"pattern": "sub-*_ses-*_flair.nii*", "description": "FLAIR T2w MRI"}
 
 # T1-FreeSurfer
 
@@ -134,11 +135,37 @@ T1W_LINEAR = {
     "needed_pipeline": "t1-linear",
 }
 
+T2W_LINEAR = {
+    "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_T2w.nii.gz",
+    "description": "T2w image registered in MNI152NLin2009cSym space using t2-linear pipeline",
+    "needed_pipeline": "t2-linear",
+}
+
+FLAIR_T2W_LINEAR = {
+    "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_flair.nii.gz",
+    "description": "T2w image registered in MNI152NLin2009cSym space using t2-linear pipeline",
+    "needed_pipeline": "flair-linear",
+}
+
 T1W_LINEAR_CROPPED = {
     "pattern": "*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz",
     "description": "T1W Image registered using t1-linear and cropped "
     "(matrix size 169×208×179, 1 mm isotropic voxels)",
     "needed_pipeline": "t1-linear",
+}
+
+T2W_LINEAR_CROPPED = {
+    "pattern": "*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T2w.nii.gz",
+    "description": "T2W Image registered using t2-linear and cropped "
+    "(matrix size 169×208×179, 1 mm isotropic voxels)",
+    "needed_pipeline": "t2-linear",
+}
+
+FLAIR_T2W_LINEAR_CROPPED = {
+    "pattern": "*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_flair.nii.gz",
+    "description": "T2W Image registered using t2-linear and cropped "
+    "(matrix size 169×208×179, 1 mm isotropic voxels)",
+    "needed_pipeline": "flair-linear",
 }
 
 T1W_EXTENSIVE = {
@@ -147,12 +174,23 @@ T1W_EXTENSIVE = {
     "needed_pipeline": "t1-extensive",
 }
 
-T1W_TO_MNI_TRANSFROM = {
+T1W_TO_MNI_TRANSFORM = {
     "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
     "description": "Transformation matrix from T1W image to MNI space using t1-linear pipeline",
     "needed_pipeline": "t1-linear",
 }
 
+T2W_TO_MNI_TRANSFROM = {
+    "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+    "description": "Transformation matrix from T2W image to MNI space using t2-linear pipeline",
+    "needed_pipeline": "t2-linear",
+}
+
+FLAIR_T2W_TO_MNI_TRANSFROM = {
+    "pattern": "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+    "description": "Transformation matrix from T2W image to MNI space using t2-linear pipeline",
+    "needed_pipeline": "flair-linear",
+}
 # T1-Volume
 
 
@@ -353,12 +391,12 @@ DWI_PREPROC_BVAL = {
 # BIDS
 
 
-def bids_pet_nii(acq_label):
+def bids_pet_nii(tracer: str) -> dict:
     import os
 
     information = {
-        "pattern": os.path.join("pet", f"sub-*_ses-*_acq-{acq_label}_pet.nii*"),
-        "description": f"PET data with {acq_label} tracer",
+        "pattern": os.path.join("pet", f"*_trc-{tracer}_pet.nii*"),
+        "description": f"PET data with {tracer} tracer",
     }
     return information
 
@@ -404,7 +442,7 @@ def pet_volume_normalized_suvr_pet(
             "pet",
             "preprocessing",
             f"group-{group_label}",
-            f"*_acq-{acq_label}_pet"
+            f"*_trc-{acq_label}_pet"
             f"_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
         ),
         "description": (
@@ -424,15 +462,15 @@ def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
 
     if uncropped_image:
         description = ""
-    else :
+    else:
         description = "_desc-Crop"
 
     information = {
         "pattern": os.path.join(
             "pet_linear",
-            f"*_acq-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz"
+            f"*_trc-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz",
         ),
         "description": "",
-        "needed_pipeline": "pet-linear"
+        "needed_pipeline": "pet-linear",
     }
     return information

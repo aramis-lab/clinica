@@ -7,7 +7,6 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
-from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -28,8 +27,6 @@ def test_name(request):
 
 
 def test_run_stats(cmdopt, tmp_path, test_name):
-    import shutil
-
     base_dir = Path(cmdopt["input"])
     input_dir = base_dir / test_name / "in"
     ref_dir = base_dir / test_name / "ref"
@@ -44,7 +41,7 @@ def test_run_stats(cmdopt, tmp_path, test_name):
         run_StatisticsVolume(input_dir, tmp_out_dir, ref_dir, working_dir)
 
     elif test_name == "StatisticsVolumeCorrection":
-        run_StatisticsVolume(input_dir, tmp_out_dir, ref_dir, working_dir)
+        run_StatisticsVolumeCorrection(input_dir, tmp_out_dir, ref_dir, working_dir)
 
     else:
         print(f"Test {test_name} not available.")
@@ -76,7 +73,7 @@ def run_StatisticsSurface(
         "glm_type": "group_comparison",
         "contrast": "group",
         # Optional parameters
-        "covariates": "age sex",
+        "covariates": ["age", "sex"],
     }
     pipeline = StatisticsSurface(
         caps_directory=fspath(caps_dir),
@@ -121,6 +118,7 @@ def run_StatisticsVolume(
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
+    from clinica.utils.pet import Tracer
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "group-UnitTest_covariates.tsv"
@@ -132,10 +130,10 @@ def run_StatisticsVolume(
     parameters = {
         # Clinica compulsory parameters
         "group_label": "UnitTest",
-        "orig_input_data": "pet-volume",
+        "orig_input_data_volume": "pet-volume",
         "contrast": "group",
         # Optional arguments for inputs from pet-volume pipeline
-        "acq_label": "FDG",
+        "acq_label": Tracer.FDG,
         "use_pvc_data": False,
         "suvr_reference_region": "pons",
     }
@@ -206,4 +204,4 @@ def run_StatisticsVolumeCorrection(
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
-    compare_folders(output_dir / "caps", ref_dir / "caps", output_dir)
+    compare_folders(output_dir / "caps/groups", ref_dir / "caps/groups", output_dir)

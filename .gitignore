@@ -11,6 +11,8 @@ Clinica.egg-info
 *.so
 .DS_Store
 
+# Documentation
+site/
 
 # Editor's files
 .idea

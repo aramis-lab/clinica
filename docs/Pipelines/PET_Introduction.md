@@ -1,6 +1,10 @@
 <!-- markdownlint-disable MD007 -->
 # Introduction
 
+!!! note "Clinica & BIDS specifications for PET modality"
+    Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
+    See [BIDS](../../BIDS) page for more information.
+
 ## Partial volume correction (PVC)
 
 To correct for [partial volume effects](http://www.turkupetcentre.net/petanalysis/image_pve.html), several PVC algorithms exist and are implemented in the [PETPVC toolbox](https://github.com/UCL/PETPVC).
@@ -11,23 +15,23 @@ For instance, if the FWHM of the PSF associated with your first image is 5 mm al
 
 ```Text
 participant_id    session_id     acq_label     psf_x    psf_y    psf_z
-sub-CLNC0001      ses-M00        fdg           5        5        6
-sub-CLNC0001      ses-M00        av45          4.5      4.5      5
-sub-CLNC0002      ses-M00        fdg           5        5        6
-sub-CLNC0003      ses-M00        fdg           7        7        7
+sub-CLNC0001      ses-M00        18FFDG        5        5        6
+sub-CLNC0001      ses-M00        18FAV45       4.5      4.5      5
+sub-CLNC0002      ses-M00        18FFDG        5        5        6
+sub-CLNC0003      ses-M00        18FFDG        7        7        7
 ```
 
 Since the PSF depends on the PET tracer and scanner, the `participant_id`, `session_id`, `acq_label`, `psf_x`, `psf_y` and `psf_z` columns are compulsory.
 
-The values in the column `acq_label` should match the value associated to the `acq` key in the BIDS dataset.
-For example in the following BIDS layout the values associated would be `fdg` and `av45`:
+The values in the column `acq_label` should match the value associated to the `trc` key in the BIDS dataset.
+For example in the following BIDS layout the values associated would be `18FFDG` and `18FAV45`:
 
 ```text
 bids
 └─ sub-CLNC0001
-    └─ <ses-M00
-        ├─ sub-001_ses-M00_task-rest_acq-av45_pet.nii.gz
-        └─ sub-001_ses-M00_task-rest_acq-fdg_pet.nii.gz
+   └─ ses-M00
+      ├─ sub-CLNC001_ses-M00_trc-18FAV45_pet.nii.gz
+      └─ sub-CLNC001_ses-M00_trc-18FFDG_pet.nii.gz
 ```
 
 ## Reference regions used for intensity normalization

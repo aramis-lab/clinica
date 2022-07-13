@@ -86,7 +86,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         tissues_input = []
         for tissue_number in self.parameters["tissues"]:
             try:
-                native_space_tpm = clinica_file_reader(
+                native_space_tpm, _ = clinica_file_reader(
                     self.subjects,
                     self.sessions,
                     self.caps_directory,
@@ -107,7 +107,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         # Flow Fields
         # ===========
         try:
-            read_input_node.inputs.flowfield_files = clinica_file_reader(
+            read_input_node.inputs.flowfield_files, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
@@ -214,8 +214,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         import nipype.interfaces.spm as spm
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from nipype.algorithms.misc import Gunzip
 
-        from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         from ..t1_volume_dartel2mni import (
@@ -228,23 +228,17 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         # Unzipping
         # =========
         unzip_tissues_node = npe.MapNode(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
+            interface=Gunzip(),
             name="unzip_tissues_node",
             iterfield=["in_file"],
         )
         unzip_flowfields_node = npe.MapNode(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
+            interface=Gunzip(),
             name="unzip_flowfields_node",
             iterfield=["in_file"],
         )
         unzip_template_node = npe.Node(
-            nutil.Function(
-                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
-            ),
+            interface=Gunzip(),
             name="unzip_template_node",
         )
 

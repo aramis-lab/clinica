@@ -13,11 +13,6 @@ repo_url: https://github.com/aramis-lab/clinica
 # Copyright
 copyright: Copyright &copy; 2016-2021 Clinica contributors
 
-# Google Analytics
-google_analytics:
-  - UA-106080699-1
-  - auto
-
 # Configuration
 theme:
   name: material
@@ -39,6 +34,7 @@ extra_css:
 extra:
   feature:
     tabs: true
+
   social:
     - icon: material/github
       link: https://github.com/aramis-lab/
@@ -80,7 +76,8 @@ nav:
     - Atlases: Atlases.md
   - Pipelines:
     - Anatomical MRI:
-      - Linear processing: Pipelines/T1_Linear.md
+      - T1 Linear processing: Pipelines/T1_Linear.md
+      - FLAIR Linear processing : Pipelines/FLAIR_Linear.md
       - Volume processing: Pipelines/T1_Volume.md
       - FreeSurfer processing: Pipelines/T1_FreeSurfer.md
       - FreeSurfer longitudinal processing: Pipelines/T1_FreeSurfer_Longitudinal.md
@@ -97,17 +94,17 @@ nav:
     - Statistics:
       - Surface-based mass-univariate analysis: Pipelines/Stats_Surface.md
       - Volume-based mass-univariate analysis: Pipelines/Stats_Volume.md
-    - Deep Learning:
-      - Prepare input data for deep learning: Pipelines/DeepLearning_PrepareData.md
     - Machine Learning:
       - Prepare input data for spatially regularized SVM: Pipelines/MachineLearning_PrepareSVM.md
       - Classification based on machine learning: Pipelines/MachineLearning_Classification.md
   - Dataset converters:
     - ADNI to BIDS: Converters/ADNI2BIDS.md
     - AIBL to BIDS: Converters/AIBL2BIDS.md
+    - HABS to BIDS: Converters/HABS2BIDS.md
     - NIFD to BIDS: Converters/NIFD2BIDS.md
     - OASIS to BIDS: Converters/OASIS2BIDS.md
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md
+    - UK Biobank to BIDS: Converters/UKBtoBIDS.md
   - I/O tools:
     - create-subjects-visits: IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset
     - check-missing-modalities: IO#check-missing-modalities-check-missing-modalities-for-each-subject
@@ -117,5 +114,6 @@ nav:
   - Presentations & demos:
     - NOW 2019: ClinicaConferences#neuro-openscience-workshop-2019
     - OHBM 2018: ClinicaConferences#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018
+  - What's new: CHANGELOG.md
   # - Collaborate:
     # - Coding for Clinica: CodingForClinica

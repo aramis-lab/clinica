@@ -50,7 +50,7 @@ where:
 
 Pipeline options:
 
-- `--covariates`: Covariates of the form `--covariates 'covariate_1 covariate_n'`.
+- `-c`, or `--covariates`: Covariates must be provided one at the time: `-c covariate_1 -c covariate_2`, or equivalentely `--covariates covariate_1  --covariates covariate_2`.
 Each covariate must match the name of the TSV file.
 By default, no covariate is considered.
 - `--full_width_at_half_maximum`: FWHM for the surface smoothing.
@@ -58,7 +58,7 @@ Default value is `20`.
 
 Pipeline options if you use inputs from the `pet-surface` pipeline:
 
-- `--acq_label`: Name of the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
+- `--acq_label`: Name of the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
 - `--suvr_reference_region`: Reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
 It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
 
@@ -143,7 +143,7 @@ For this group comparison, we will use `age` and `sex` as covariates.
 As a result, the command line will be:
 
 ```Text
-clinica run statistics-surface caps_directory ADvsHC t1-freesurfer group_comparison ADvsHC_participants.tsv group --covariates 'age sex'
+clinica run statistics-surface caps_directory ADvsHC t1-freesurfer group_comparison ADvsHC_participants.tsv group -c age -c sex
 ```
 
 The parameters of the command line are stored in the `group-ADvsHC_glm.json` file:
@@ -171,7 +171,7 @@ The contrast will become `age` and we will choose `correlation` instead of `grou
 The command line is simply:
 
 ```Text
-clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation ADvsHC_participants.tsv age --covariates 'group sex'
+clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation ADvsHC_participants.tsv age -c group -c sex
 ```
 
 ## Describing this pipeline in your paper

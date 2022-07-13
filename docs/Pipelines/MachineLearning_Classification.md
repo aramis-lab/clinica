@@ -68,7 +68,7 @@ It can be `AAL2`, `AICHA`, `Hammers`, `LPBA40` or `Neuromorphometrics` described
 
 Pipeline options if you specified `PET` inputs:
 
-- `--acq_label`: Name of the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
+- `--acq_label`: Name of the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
 - `--suvr_reference_region`: Reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
 It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
 

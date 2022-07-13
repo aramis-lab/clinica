@@ -88,7 +88,6 @@ def change_itk_transform_type(input_affine_file):
             else:
                 new_file_lines.append(line)
 
-
     updated_affine_file = os.path.join(os.getcwd(), "updated_affine.txt")
 
     with open(updated_affine_file, "wt") as f:
@@ -161,36 +160,28 @@ def rotate_bvecs(in_bvec, in_matrix):
     return out_file
 
 
-def ants_combine_transform(fix_image, moving_image, ants_warp_affine):
+def ants_apply_transforms(
+    fixed_image, moving_image, transforms, warped_image, output_warped_image=True
+) -> None:
     import os
+    import subprocess
 
-    out_warp_field = os.path.abspath("out_warp_field.nii.gz")
-    out_warped = os.path.abspath("out_warped.nii.gz")
+    # Convert to absolute path.
+    warped_image = os.path.abspath(warped_image)
 
+    # Whether we want the warped image or transformation field as output.
+    output = f"{warped_image}" if output_warped_image else f"[{warped_image}, 1]"
+
+    # Common template for the command.
     cmd = (
-        f"antsApplyTransforms -o [out_warp_field.nii.gz,1] -i {moving_image} -r {fix_image} "
-        f"-t {ants_warp_affine[0]} {ants_warp_affine[1]} {ants_warp_affine[2]}"
+        f"antsApplyTransforms -o {output} -i {moving_image} -r {fixed_image} "
+        f"-t {transforms[0]} -t {transforms[1]} -t {transforms[2]}"
     )
-    os.system(cmd)
 
-    cmd1 = (
-        f"antsApplyTransforms -o out_warped.nii.gz -i {moving_image} -r {fix_image} "
-        f"-t {ants_warp_affine[0]} {ants_warp_affine[1]} {ants_warp_affine[2]}"
-    )
-    os.system(cmd1)
+    # Perform the actual call.
+    subprocess.run(cmd, shell=True)
 
-    return out_warp_field, out_warped
-
-
-def create_jacobian_determinant_image(imageDimension, deformationField, outputImage):
-    import os
-
-    outputImage = os.path.abspath(outputImage)
-
-    cmd = f"CreateJacobianDeterminantImage {str(imageDimension)} {deformationField} {outputImage}"
-    os.system(cmd)
-
-    return outputImage
+    return warped_image
 
 
 def init_input_node(t1w, dwi, bvec, bval, dwi_json):

@@ -10,7 +10,6 @@ import warnings
 from os import PathLike, fspath
 from pathlib import Path
 from test.nonregression.testing_tools import (
-    clean_folder,
     create_list_hashes,
     identical_subject_list,
     same_missing_modality_tsv,
@@ -25,7 +24,7 @@ warnings.filterwarnings("ignore")
 @pytest.fixture(
     params=[
         "CreateSubjectSessionList",
-        # "CreateMergeFile",
+        "CreateMergeFile",
         "ComputeMissingModalities",
         "CenterNifti",
     ]
@@ -54,8 +53,6 @@ def run_createmergefile(
 ) -> None:
     import shutil
     from filecmp import cmp
-    from os import remove
-    from os.path import abspath, dirname, join
 
     import pandas as pd
 
@@ -79,8 +76,8 @@ def run_createmergefile(
     )
     # Assert
     ref_tsv = fspath(ref_dir / "output_file.tsv")
-    out_df = pd.read_csv(out_tsv, sep="/")
-    ref_df = pd.read_csv(ref_tsv, sep="/")
+    out_df = pd.read_csv(out_tsv, sep="\t")
+    ref_df = pd.read_csv(ref_tsv, sep="\t")
     assert out_df.equals(ref_df)
     assert cmp(out_tsv, ref_tsv)
 

@@ -31,21 +31,18 @@ def convert_adni_fdg_pet(
     cprint(
         f"Calculating paths of FDG PET images. Output will be stored in {conversion_dir}."
     )
-    images = compute_fdg_pet_paths(
-        source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
-    )
+    images = compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir)
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "fdg", mod_to_update=mod_to_update)
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
-def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
+def compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     """Compute the paths to the FDG PET images and store them in a TSV file.
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
         conversion_dir: path to the TSV files including the paths to original images
 
@@ -60,6 +57,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
         find_image_path,
         get_images_pet,
     )
+    from clinica.utils.pet import Tracer
 
     pet_fdg_col = [
         "Phase",
@@ -140,6 +138,8 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
         pet_fdg_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
-    images.to_csv(path.join(conversion_dir, "fdg_pet_paths.tsv"), sep="\t", index=False)
+    images.to_csv(
+        path.join(conversion_dir, f"{Tracer.FDG}_pet_paths.tsv"), sep="\t", index=False
+    )
 
     return images

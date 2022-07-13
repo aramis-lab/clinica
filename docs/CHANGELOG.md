@@ -6,6 +6,99 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.7.1
+
+
+### Added
+- [Doc] add ukbiobank documentation
+- [DWIConnectome] Fetch meta data directly from MRtrix github repository
+
+### Changed
+- [Core] Enable parallelization when grabbing files
+
+### Fixed
+- [Converters] Fix several warnings
+
+
+## Clinica 0.7.0
+
+### Added
+- [flair-linear] new pipeline to affinely align FLAIR images to the MNI space
+- [Ukbiobank] new converter to modify T1W/T2/DWI/SWI/tfmri/rsfMRI UKBiobank data into BIDS standard
+
+## Clinica 0.6.0
+
+### Changed
+- [PET*]   Use `trc`instead of `acq` for BIDS compliance
+- [Converters] Remove supperfluous use of `acq` entity in filenames for BIDS compliance
+
+### Added
+- [adni-to-bids] allow extraction of metadata from xml
+- [CI] Initiate use of unit tests
+
+### Fixed
+- [adni-to-bids] fix edge case for supporting `nan` session-ids
+
+## Clinica 0.5.6
+
+### Fixed
+- [DWIPreprocessUsingT1] Updated call to antsApplyTransform
+- [Utils] Replace deprecated call to pandas `append` by `concat`
+
+### Changed
+
+- Upgrade minimum Python version to 3.8 and upgrade dependencies
+- Set BIDS version to 1.7.0 by default (overwritten for some converters)
+
+## Clinica 0.5.5
+
+### Fixed
+- [`pet-linear`] fix bug in `pet-linear`which had the pipeline not terminate 
+
+
+## Clinica 0.5.4
+
+### Added
+
+- [`merge-tsv`] Add `t1-freesurfer-longitudinal` and `dwi-dti` results
+
+### Changed
+
+- [`t1-freesurfer`] Enable t1-freesurfer to run with missing files
+- [all converters] Normalize subprocess calls to `dcm2niix`
+
+### Fixed
+
+- [`OASIS3`/`NIFD`/`HABS`]] add data_description file to BIDS
+- [`DWI-DTI`] Remove thresholding for DECFA
+- [`adni-to-bids`]  Tighten check on `session-id` values
+- [`adni-to-bids`] Fix bug related to multiple conversions
+
+
+## Clinica 0.5.3
+
+### Added
+
+- [`t1-freesurfer`] Add option to t1-freesurfer to project the results of `recon-all` onto another atlas
+- [`CI`] Use `poetry` for dependency management
+
+### Changed
+
+- [`CI`] Refactor non-regression tests for easier parallelization
+- [`Atlas`] Update checksum to make pipelines compatible with `fsl 6.0.5`
+
+### Fixed
+
+- [`t1-volume*/pet*`] Add command line argument `yes` for turning interactivity off
+- [`t1-volume-existing-template] Fix chained invocation
+- [`t1-volume*/pet-volume*] Fix default value of `--smooth` parameter for click compatibility
+- [`dwi-connectome`] Set `--n_tracks`'s type for click compatibility 
+- [`dwi-preprocessing*`] Change type of `initrand` and `use_cuda` to bool 
+- [`t1-freesurfer-longitudinal`] Fix broken pipeline due to typo in code
+- [`Documentation`] Update OASIS3_to_bids instructions for conversion
+- [`StatisticsSurface`] Fix type in `covariate` argument
+- [`StatisticsVolume`] Fix bug in `feature` argument 
+
 ## Clinica 0.5.2
 
 ### Changed

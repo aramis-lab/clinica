@@ -27,7 +27,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
 
         image_ids = []
         if os.path.isdir(caps_directory):
-            t1_freesurfer_files = clinica_file_reader(
+            t1_freesurfer_files, _ = clinica_file_reader(
                 list_participant_id,
                 list_long_id,
                 caps_directory,
@@ -120,7 +120,10 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                 cprint(f"{p_id} | {l_id}", lvl="warning")
             if self.overwrite_caps:
                 output_folder = "<CAPS>/subjects/<participant_id>/<long_id>/freesurfer_unbiased_template/"
-                cprint(f"Output folders in {output_folder} will be recreated.", lvl="warning")
+                cprint(
+                    f"Output folders in {output_folder} will be recreated.",
+                    lvl="warning",
+                )
             else:
                 cprint("Participant(s) will be ignored by Clinica.", lvl="warning")
                 input_ids = [

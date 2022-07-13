@@ -21,7 +21,7 @@ def get_pet_surface_custom_file(acq_label, suvr_reference_region):
         "@session",
         "pet",
         "surface",
-        f"@subject_@session_task-rest_acq-{acq_label}_pet"
+        f"@subject_@session_trc-{acq_label}_pet"
         f"_space-fsaverage_suvr-{suvr_reference_region}_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh",
     )
     return custom_file
@@ -138,7 +138,7 @@ def covariates_to_design_matrix(contrast, covariates=None):
     """
     if covariates:
         # Convert string to list while handling case where several spaces are present
-        list_covariates = list(set(covariates.split(" ")))
+        list_covariates = list(covariates)
         try:
             list_covariates.remove("")
         except ValueError:

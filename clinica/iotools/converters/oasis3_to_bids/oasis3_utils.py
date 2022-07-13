@@ -305,11 +305,16 @@ def write_bids(
 
     from fsspec.implementations.local import LocalFileSystem
 
+    from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
+
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
 
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
+        with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
+            BIDSDatasetDescription(name="OASIS-3").write(to=dataset_description_file)
+
         with fs.open(to / "participants.tsv", "w") as participant_file:
             write_to_tsv(participants, participant_file)
 

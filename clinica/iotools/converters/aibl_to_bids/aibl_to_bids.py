@@ -1,5 +1,5 @@
 """
-Convert the AIBL dataset (http://www.aibl.csiro.au/) into BIDS.
+Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 """
 
 
@@ -26,12 +26,14 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
             if not exists(str(file)):
                 error_string = error_string + str(file) + "\n"
     if error_string != "":
-        cprint(msg=f"The following file were not converted: {error_string}", lvl="warning")
+        cprint(
+            msg=f"The following file were not converted: {error_string}", lvl="warning"
+        )
 
 
 def convert_clinical_data(bids_dir, path_to_csv):
     # clinical specifications in BIDS
-    from os.path import exists, join, realpath, split
+    from os.path import join, realpath, split
 
     import clinica.iotools.bids_utils as bids
     from clinica.iotools.converters.aibl_to_bids.aibl_utils import (

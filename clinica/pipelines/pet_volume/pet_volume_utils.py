@@ -11,7 +11,9 @@ def init_input_node(pet_nii):
     # Check that the PET file is a 3D volume
     img = nib.load(pet_nii)
     if len(img.shape) == 4:
-        error_msg = f"Clinica does not handle 4D volumes for {image_id.replace('_', ' | ')}"
+        error_msg = (
+            f"Clinica does not handle 4D volumes for {image_id.replace('_', ' | ')}"
+        )
         cprint(error_msg, lvl="error")
         raise NotImplementedError(error_msg)
 

@@ -31,21 +31,18 @@ def convert_adni_tau_pet(
     cprint(
         f"Calculating paths of TAU PET images. Output will be stored in {conversion_dir}."
     )
-    images = compute_tau_pet_paths(
-        source_dir, csv_dir, dest_dir, subjs_list, conversion_dir
-    )
+    images = compute_tau_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir)
     cprint("Paths of TAU PET images found. Exporting images into BIDS ...")
     paths_to_bids(images, dest_dir, "tau", mod_to_update=mod_to_update)
     cprint(msg="TAU PET conversion done.", lvl="debug")
 
 
-def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_dir):
+def compute_tau_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     """Compute the paths to Tau PET images.
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
         conversion_dir: path to the TSV files including the paths to original images
 
@@ -59,6 +56,7 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
         find_image_path,
         get_images_pet,
     )
+    from clinica.utils.pet import Tracer
 
     pet_tau_col = [
         "Phase",
@@ -132,6 +130,10 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list, conversion_
 
     # Checking for images paths in filesystem
     images = find_image_path(pet_tau_df, source_dir, "TAU", "I", "Image_ID")
-    images.to_csv(path.join(conversion_dir, "tau_pet_paths.tsv"), sep="\t", index=False)
+    images.to_csv(
+        path.join(conversion_dir, f"{Tracer.AV1451}_pet_paths.tsv"),
+        sep="\t",
+        index=False,
+    )
 
     return images
