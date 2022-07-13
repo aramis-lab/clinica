@@ -173,11 +173,9 @@ def run_matlab(caps_dir, output_dir, subjects_visits_tsv, pipeline_parameters):
     """
     import os
 
-    import clinica.pipelines as clinica_pipelines
     from clinica.pipelines.statistics_surface.clinica_surfstat import clinica_surfstat
     from clinica.pipelines.statistics_surface.statistics_surface_utils import (
         covariates_to_design_matrix,
-        get_string_format_from_tsv,
     )
     from clinica.utils.check_dependency import check_environment_variable
 
