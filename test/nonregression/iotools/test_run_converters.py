@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 @pytest.fixture(
     params=[
         # TODO: Update NIFD reference dataset.
-        # "Nifd2Bids",
+        "Nifd2Bids",
         "Oasis2Bids",
         "Oasis3ToBids",
         "Adni2Bids",
