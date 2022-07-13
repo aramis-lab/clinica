@@ -31,7 +31,12 @@ pipeline {
             sh 'echo "Agent name: ${NODE_NAME}"'
             sh 'echo "My branch name is ${BRANCH_NAME}"'
             unstash(name: 'doc_html')
-            sh "mv site ${CHANGE_ID:-$BRANCH_NAME}"
+            FOLDER_NAME = sh (
+              script: 'echo ${CHANGE_ID:-$BRANCH_NAME}'
+              returnStdout: true
+            ).trim()
+            echo "Moving to ${FOLDER_NAME}"
+            sh "mv site ${FOLDER_NAME}"
             sshPublisher(
               publishers: [
                 sshPublisherDesc(
@@ -49,7 +54,7 @@ pipeline {
                       remoteDirectory: 'clinica/docs/public/',
                       remoteDirectorySDF: false,
                       removePrefix: '',
-                      sourceFiles: "${env.CHANGE_ID:-$env.BRANCH_NAME}/**")
+                      sourceFiles: "${FOLDER_NAME}/**")
                       ],
                     usePromotionTimestamp: false,
                     useWorkspaceInPromotion: false,
