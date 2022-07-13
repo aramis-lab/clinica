@@ -31,12 +31,7 @@ pipeline {
             sh 'echo "Agent name: ${NODE_NAME}"'
             sh 'echo "My branch name is ${BRANCH_NAME}"'
             unstash(name: 'doc_html')
-            FOLDER_NAME = sh (
-              script: 'echo ${CHANGE_ID:-$BRANCH_NAME}'
-              returnStdout: true
-            ).trim()
-            echo "Moving to ${FOLDER_NAME}"
-            sh "mv site ${FOLDER_NAME}"
+            sh "mv site ${BRANCH_NAME}"
             sshPublisher(
               publishers: [
                 sshPublisherDesc(
@@ -54,7 +49,7 @@ pipeline {
                       remoteDirectory: 'clinica/docs/public/',
                       remoteDirectorySDF: false,
                       removePrefix: '',
-                      sourceFiles: "${FOLDER_NAME}/**")
+                      sourceFiles: "${BRANCH_NAME}/**")
                       ],
                     usePromotionTimestamp: false,
                     useWorkspaceInPromotion: false,
@@ -63,7 +58,6 @@ pipeline {
             )
             echo 'Finish uploading artifacts'
           }
-        }
       }
     }
     post {
