@@ -295,31 +295,6 @@ pipeline {
             }
           }
         }
-        stage('Build and publish docs') {
-          agent {
-            label 'ubuntu'
-          }
-          environment {
-            CONDA_ENV = "$WORKSPACE/env"
-            CONDA_HOME = "$HOME/miniconda"
-            PATH = "$HOME/.local/bin:$PATH"
-          }
-          steps {
-            sh '''
-              source "${CONDA_HOME}/etc/profile.d/conda.sh"
-              conda create -y -p "${CONDA_ENV}" python=3.9
-              conda activate "${CONDA_ENV}"
-              make doc
-              mv site "${CHANGE_ID:-$BRANCH_NAME}"
-              scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:/srv/local/clinica/docs/public/
-            '''
-          }
-          post {
-            always {
-              cleanWs()
-            }
-          }
-        }
       }
     }
     stage('Deploy') {

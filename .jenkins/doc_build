@@ -1,0 +1,76 @@
+#!/usr/bin/env groovy
+
+// Continuous Integration script to build mkdocs in Docker
+// Author: mauricio.diaz@inria.fr
+
+pipeline {
+  agent none
+    stages {
+      stage('Build the docs') {
+        agent {
+        dockerfile {
+              filename 'Dockerfile'
+              reuseNode true
+        }
+        }
+        //when { changeset "requirements.txt" }
+        steps {
+          echo 'My branch name is ${BRANCH_NAME}'
+          sh 'echo "My branch name is ${BRANCH_NAME}"'
+          sh 'echo "Agent name: ${NODE_NAME}"'
+          sh '''
+             mkdocs build
+             mkauthdocs admin passwordMDP site
+             '''
+          stash(name: 'doc_html', includes: 'site/**')
+        }
+      }
+      stage('Deploy') {
+        parallel {
+          stage('Deploy site') {
+            agent { label 'ubuntu' }
+            when {
+                branch 'main'
+            }
+            steps {
+              echo 'Deploying in webserver...'
+              sh 'echo "Agent name: ${NODE_NAME}"'
+              unstash(name: 'doc_html')
+              sshPublisher(
+                publishers: [
+                  sshPublisherDesc(
+                    configName: 'web',
+                    transfers: [
+                      sshTransfer(
+                        cleanRemote: false,
+                        excludes: '',
+                        execCommand: '',
+                        execTimeout: 120000,
+                        flatten: false,
+                        makeEmptyDirs: false,
+                        noDefaultExcludes: false,
+                        patternSeparator: '[, ]+',
+                        remoteDirectory: 'clinica_dev_guide',
+                        remoteDirectorySDF: false,
+                        removePrefix: '',
+                        sourceFiles: 'site/**')
+                        ],
+                      usePromotionTimestamp: false,
+                      useWorkspaceInPromotion: false,
+                      verbose: false)
+                ]
+              )
+              echo 'Finish uploading artifacts'
+            }
+          }
+        }
+      }
+    }
+    post {
+      failure {
+        mail to: 'clinica-ci@inria.fr',
+          subject: "This build of the Clinica's dev guide has failed: ${currentBuild.fullDisplayName}",
+          body: "Something is wrong with the build of the welcome guide ${env.BUILD_URL}"
+      }
+    }
+}
