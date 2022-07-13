@@ -7,9 +7,9 @@ different functions available in Clinica
 
 
 import warnings
-from os import PathLike, fspath
+from os import PathLike
 from pathlib import Path
-from test.nonregression.testing_tools import compare_folders, compare_folders_structures
+from test.nonregression.testing_tools import compare_folders
 
 import pytest
 
@@ -34,8 +34,8 @@ def test_name(request):
 
 
 def run_nifd2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) -> None:
-    import shutil
     from pathlib import PurePath
+    from tempfile import TemporaryDirectory
 
     from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import convert_images
 
@@ -44,25 +44,16 @@ def run_nifd2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) 
     output_dir = PurePath(output_dir)
     ref_dir = PurePath(ref_dir)
 
-    # Arrange
-    shutil.copytree(
-        input_dir / "clinical_data",
-        output_dir / "clinical_data",
-        copy_function=shutil.copy,
-    )
-
-    # Arrange - Data location
-    clinical_data_directory = output_dir / "clinical_data"
-
-    # Act - Conversion
+    # Act
     _ = convert_images(
-        input_dir / "unorganized", output_dir / "bids", clinical_data_directory
+        path_to_clinical=input_dir/"clinical_data",
+        path_to_dataset=input_dir/"unorganized",
+        bids_dir=output_dir
     )
 
     # Assert
-    compare_folders_structures(
-        fspath(output_dir / "bids"), fspath(ref_dir / "hashes_nifd.p")
-    )
+    with TemporaryDirectory() as td:
+        compare_folders(output_dir, ref_dir, td)
 
 
 def run_oasis2bids(
