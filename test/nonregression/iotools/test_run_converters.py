@@ -46,9 +46,9 @@ def run_nifd2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) 
 
     # Act
     _ = convert_images(
-        path_to_clinical=input_dir/"clinical_data",
-        path_to_dataset=input_dir/"unorganized",
-        bids_dir=output_dir
+        path_to_clinical=input_dir / "clinical_data",
+        path_to_dataset=input_dir / "unorganized",
+        bids_dir=output_dir,
     )
 
     # Assert
