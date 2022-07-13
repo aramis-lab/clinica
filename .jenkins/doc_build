@@ -28,7 +28,7 @@ pipeline {
       stage('Deploy') {
         parallel {
           stage('Deploy site') {
-            agent label 'ubuntu'
+            agent { label 'ubuntu' }
             steps {
               echo 'Deploying in webserver...'
               sh 'echo "Agent name: ${NODE_NAME}"'
