@@ -57,6 +57,8 @@ pymdown-extensions = {version = "*", optional = true}
 attrs = ">=20.1.0"
 cattrs = "^1.9.0"
 brainstat = "^0.3.6"
+vtk = {version = "^9.2.0rc1", allow-prereleases = true, python = "3.10"}
+brainspace = {git = "https://github.com/MICA-MNI/BrainSpace.git", rev = "b3f3be4"}
 
 [tool.poetry.dev-dependencies]
 black = "*"

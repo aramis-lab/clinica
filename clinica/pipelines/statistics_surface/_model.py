@@ -558,7 +558,7 @@ class StatisticsResults:
     ):
         idx = np.argwhere(np.isnan(model.t))
         corrected_pvals = model.P["pval"]["P"]
-        corrected_pvals[idx] = 1.
+        corrected_pvals[idx] = 1.0
         tstats = np.nan_to_num(model.t)
         uncorrected_p_values = PValueResults.from_t_statistics(
             tstats,
