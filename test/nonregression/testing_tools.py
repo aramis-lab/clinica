@@ -184,7 +184,7 @@ def _extract_modality_from_tsv(file: PathLike) -> Dict:
         "func_task_rest": list(df["func_task-rest"]),
     }
     subjects_sorted = sorted(subjects)
-    sorted_fields = {k: _sort_subject_field(subjects, v) for k,v in fields.items()}
+    sorted_fields = {k: _sort_subject_field(subjects, v) for k, v in fields.items()}
     sorted_fields["subjects_sorted"] = subjects_sorted
     return sorted_fields
 

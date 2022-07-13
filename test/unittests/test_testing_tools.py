@@ -83,8 +83,10 @@ def test_identical_subject_list(tmp_path: PurePath):
 
 
 def test_same_missing_modality_tsv(tmp_path: PurePath):
-    import pandas as pd
     from test.nonregression.testing_tools import same_missing_modality_tsv
+
+    import pandas as pd
+
     df1 = pd.DataFrame(
         {
             "participant_id": ["sub-02", "sub-01", "sub-03", "sub-02"],
