@@ -85,26 +85,36 @@ def run_StatisticsSurface(
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 1}, bypass_check=True)
 
     # Check files
-    filename = "group-UnitTest_AD-lt-CN_measure-ct_fwhm-20_correctedPValue.mat"
-    out_file = (
-        caps_dir
-        / "groups"
-        / "group-UnitTest"
-        / "statistics"
-        / "surfstat_group_comparison"
-        / filename
-    )
-    ref_file = ref_dir / filename
-
-    out_file_mat = loadmat(fspath(out_file))["correctedpvaluesstruct"]
-    ref_file_mat = loadmat(fspath(ref_file))["correctedpvaluesstruct"]
-    for i in range(4):
-        assert np.allclose(
-            out_file_mat[0][0][i],
-            ref_file_mat[0][0][i],
-            rtol=1e-8,
-            equal_nan=True,
-        )
+    for contrast in ["AD-lt-CN", "CN-lt-AD"]:
+        for suffix, struct in zip(
+            ["coefficients", "uncorrectedPValue", "FDR", "correctedPValue"],
+            ["coef", "uncorrectedpvaluesstruct", "FDR", "correctedpvaluesstruct"],
+        ):
+            filename = f"group-UnitTest_{contrast}_measure-ct_fwhm-20_{suffix}.mat"
+            out_file = (
+                caps_dir
+                / "groups"
+                / "group-UnitTest"
+                / "statistics"
+                / "surfstat_group_comparison"
+                / filename
+            )
+            ref_file = ref_dir / filename
+            out_file_mat = loadmat(fspath(out_file))[struct]
+            ref_file_mat = loadmat(fspath(ref_file))[struct]
+            if suffix in ["coefficients", "FDR"]:
+                assert np.allclose(
+                    out_file_mat, ref_file_mat, rtol=1e-8, equal_nan=True
+                )
+            else:
+                length = 4 if suffix == "correctedPValue" else 3
+                for i in range(length):
+                    assert np.allclose(
+                        out_file_mat[0][0][i],
+                        ref_file_mat[0][0][i],
+                        rtol=1e-8,
+                        equal_nan=True,
+                    )
 
 
 def run_StatisticsVolume(
