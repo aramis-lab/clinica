@@ -615,7 +615,7 @@ class StatisticsResultsPlotter:
         plotter = self._get_plotter(method)
         return plotter(result)
 
-    def _get_plotter(self, method: str):
+    def _get_plotter(self, method: str) -> Callable[[StatisticsResults], None]:
         if method == "nilearn_plot_surf_stat_map":
             return self._plot_stat_maps
         else:
