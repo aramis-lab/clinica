@@ -680,7 +680,7 @@ class StatisticsResultsSerializer:
                 f"Serializing method {method} is not implemented."
             )
 
-    def _write_to_json(self, result: StatisticsResults):
+    def _write_to_json(self, results: StatisticsResults):
         """Write the provided `StatisticsResults` to JSON format.
 
         Parameters
@@ -698,9 +698,9 @@ class StatisticsResultsSerializer:
             lvl="info",
         )
         with open(out_json_file, "w") as fp:
-            json.dump(result.to_dict(jsonable=True), fp, indent=self.json_indent)
+            json.dump(results.to_dict(jsonable=True), fp, indent=self.json_indent)
 
-    def _write_to_mat(self, result: StatisticsResults):
+    def _write_to_mat(self, results: StatisticsResults):
         """Write the provided `StatisticsResults` to MAT format.
 
         Parameters
@@ -719,7 +719,7 @@ class StatisticsResultsSerializer:
             "correctedPValue": "correctedpvaluesstruct",
             "FDR": "FDR",
         }
-        for name, res in result.to_dict(jsonable=False).items():
+        for name, res in results.to_dict(jsonable=False).items():
             mat_filename = str(self.output_file) + "_" + name + self.mat_extension
             cprint(
                 msg=f"Writing {name} results to MAT in  {mat_filename}",
