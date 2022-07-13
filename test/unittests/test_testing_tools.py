@@ -82,8 +82,42 @@ def test_identical_subject_list(tmp_path: PurePath):
     assert not identical_subject_list(tmp_path / "df1.tsv", tmp_path / "df4.tsv")
 
 
-def test_same_missing_modality_tsv():
-    pass
+def test_same_missing_modality_tsv(tmp_path: PurePath):
+    import pandas as pd
+    from test.nonregression.testing_tools import same_missing_modality_tsv
+    df1 = pd.DataFrame(
+        {
+            "participant_id": ["sub-02", "sub-01", "sub-03", "sub-02"],
+            "pet_trc-18FAV45": ["b", "b", "a", "a"],
+            "pet_trc-18FFDG": ["x", "x", "x", "x"],
+            "t1w": ["a", "b", "a", "b"],
+            "func_task-rest": ["a", "b", "b", "a"],
+        }
+    )
+    df1.to_csv(tmp_path / "df1.tsv", sep="\t")
+    df2 = pd.DataFrame(
+        {
+            "participant_id": ["sub-01", "sub-02", "sub-03", "sub-02"],
+            "pet_trc-18FAV45": ["b", "b", "a", "a"],
+            "pet_trc-18FFDG": ["x", "x", "x", "x"],
+            "t1w": ["b", "a", "a", "b"],
+            "func_task-rest": ["b", "a", "b", "a"],
+        }
+    )
+    df2.to_csv(tmp_path / "df2.tsv", sep="\t")
+    df3 = pd.DataFrame(
+        {
+            "participant_id": ["sub-03", "sub-02", "sub-01", "sub-02"],
+            "pet_trc-18FAV45": ["b", "b", "a", "a"],
+            "pet_trc-18FFDG": ["x", "x", "x", "x"],
+            "t1w": ["b", "a", "a", "b"],
+            "func_task-rest": ["b", "a", "b", "a"],
+        }
+    )
+    df3.to_csv(tmp_path / "df3.tsv", sep="\t")
+    assert same_missing_modality_tsv(tmp_path / "df1.tsv", tmp_path / "df1.tsv")
+    assert same_missing_modality_tsv(tmp_path / "df1.tsv", tmp_path / "df2.tsv")
+    assert not same_missing_modality_tsv(tmp_path / "df1.tsv", tmp_path / "df3.tsv")
 
 
 def test_tree(tmp_path: PurePath):
