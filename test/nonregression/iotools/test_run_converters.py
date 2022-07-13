@@ -19,7 +19,8 @@ warnings.filterwarnings("ignore")
 
 @pytest.fixture(
     params=[
-        "Nifd2Bids",
+        # TODO: Update NIFD reference dataset.
+        # "Nifd2Bids",
         "Oasis2Bids",
         "Oasis3ToBids",
         "Adni2Bids",
@@ -32,7 +33,6 @@ def test_name(request):
     return request.param
 
 
-@pytest.mark.skip(reason="Reference dataset not up to date")
 def run_nifd2bids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) -> None:
     import shutil
     from pathlib import PurePath
