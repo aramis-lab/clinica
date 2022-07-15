@@ -85,7 +85,8 @@ class AdniToBids(Converter):
             "data",
             "clinical_specifications_adni",
         )
-        print(clinic_specs_path)
+        cprint('TEST')
+        cprint(clinic_specs_path)
         break
         try:
             os.path.exists(out_path)
