@@ -1002,6 +1002,7 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
         "flair",
         "fmri",
         "fdg",
+        "fdg_uniform",
         "pib",
         "av45_fbb",
         "tau",
@@ -1081,6 +1082,12 @@ def create_file(image, modality, bids_dir, mod_to_update):
         "fdg": {
             "output_path": "pet",
             "output_filename": f"_trc-{Tracer.FDG}_pet",
+            "to_center": True,
+            "json": "n",
+        },
+        "fdg_uniform": {
+            "output_path": "pet",
+            "output_filename": f"_trc-{Tracer.FDG}_rec-uniform_pet",
             "to_center": True,
             "json": "n",
         },

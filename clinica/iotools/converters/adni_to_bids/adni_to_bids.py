@@ -223,7 +223,10 @@ class AdniToBids(Converter):
 
         converters = {
             "T1": [adni_t1.convert_adni_t1],
-            "PET_FDG": [adni_fdg.convert_adni_fdg_pet],
+            "PET_FDG": [
+                adni_fdg.convert_adni_fdg_pet,
+                adni_fdg.convert_adni_fdg_pet_uniform
+            ],
             "PET_AMYLOID": [
                 adni_pib.convert_adni_pib_pet,
                 adni_av45_fbb.convert_adni_av45_fbb_pet,

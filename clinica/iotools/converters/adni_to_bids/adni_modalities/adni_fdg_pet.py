@@ -2,9 +2,33 @@
 
 """Module for converting FDG PET of ADNI."""
 
+PREPROCESSING_STEP_DICT = {
+    "0": ["ADNI Brain PET: Raw FDG"],
+    "1": ["Co-registered Dynamic"],
+    "2": ["Co-registered, Averaged"],
+    "3": ["Coreg, Avg, Standardized Image and Voxel Size"],
+    "4": ["Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"],
+    "5": ["Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"],
+}
 
 def convert_adni_fdg_pet(
     source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+):
+    return convert_adni_fdg_pet_generic(
+        source_dir, csv_dir, dest_dir, conversion_dir, preprocessing_step="2", subjs_list=subjs_list, mod_to_update=mod_to_update
+    )
+
+
+def convert_adni_fdg_pet_uniform(
+    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+):
+    return convert_adni_fdg_pet_generic(
+        source_dir, csv_dir, dest_dir, conversion_dir, preprocessing_step="4", subjs_list=subjs_list, mod_to_update=mod_to_update
+    )
+
+
+def convert_adni_fdg_pet_generic(
+    source_dir, csv_dir, dest_dir, conversion_dir, preprocessing_step, subjs_list=None, mod_to_update=False
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -22,7 +46,7 @@ def convert_adni_fdg_pet(
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
-
+    print(PREPROCESSING_STEP_DICT[preprocessing_step])
     if not subjs_list:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
@@ -31,13 +55,17 @@ def convert_adni_fdg_pet(
     cprint(
         f"Calculating paths of FDG PET images. Output will be stored in {conversion_dir}."
     )
-    images = compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir)
+    images = compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir, preprocessing_step)
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
-    paths_to_bids(images, dest_dir, "fdg", mod_to_update=mod_to_update)
+    if preprocessing_step == "2":
+        modality = "fdg"
+    elif preprocessing_step == "4":
+        modality = "fdg_uniform"
+    paths_to_bids(images, dest_dir, modality, mod_to_update=mod_to_update)
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
-def compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
+def compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir, preprocessing_step):
     """Compute the paths to the FDG PET images and store them in a TSV file.
 
     Args:
@@ -101,7 +129,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
             [pet_qc_1go2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False
         )
 
-        sequences_preprocessing_step = ["Co-registered, Averaged"]
+        sequences_preprocessing_step = PREPROCESSING_STEP_DICT[preprocessing_step]
         subj_dfs_list = get_images_pet(
             subj,
             pet_qc_subj,
