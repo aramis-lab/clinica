@@ -33,6 +33,4 @@ def test_read_and_check_tsv_file(tmpdir):
         _read_and_check_tsv_file(tmpdir / "foo.tsv")
     df = _read_and_check_tsv_file(Path(CURRENT_DIR) / "data/subjects.tsv")
     assert len(df) == 7
-    assert set(df.columns) == set(
-        ["participant_id", "session_id", "group", "age", "sex"]
-    )
+    assert set(df.columns) == {"participant_id", "session_id", "group", "age", "sex"}
