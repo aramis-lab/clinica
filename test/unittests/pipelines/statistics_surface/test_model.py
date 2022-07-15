@@ -103,7 +103,6 @@ def test_glm_instantiation(df, parameters):
         DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE,
         GLM,
     )
-    from clinica.pipelines.statistics_surface.clinica_surfstat import DEFAULT_FWHM
 
     design = "1 + age"
     model = GLM(design, df, "feature_label", "age", **parameters)
