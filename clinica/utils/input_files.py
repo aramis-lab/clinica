@@ -391,12 +391,19 @@ DWI_PREPROC_BVAL = {
 # BIDS
 
 
-def bids_pet_nii(tracer: str) -> dict:
+def bids_pet_nii(tracer: str, use_uniform: bool) -> dict:
     import os
 
+    if use_uniform:
+        rec = "_rec-uniform"
+        description = f"Uniform PET data with {tracer} tracer"
+    else:
+        rec = ""
+        description = f"PET data with {tracer} tracer"
+
     information = {
-        "pattern": os.path.join("pet", f"*_trc-{tracer}_pet.nii*"),
-        "description": f"PET data with {tracer} tracer",
+        "pattern": os.path.join("pet", f"*_trc-{tracer}{rec}_pet.nii*"),
+        "description": description,
     }
     return information
 
