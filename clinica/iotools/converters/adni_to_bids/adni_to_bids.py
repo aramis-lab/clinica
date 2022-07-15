@@ -85,9 +85,6 @@ class AdniToBids(Converter):
             "data",
             "clinical_specifications_adni",
         )
-        cprint('TEST')
-        cprint(clinic_specs_path)
-        break
         try:
             os.path.exists(out_path)
         except IOError:
