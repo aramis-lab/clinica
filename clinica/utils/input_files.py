@@ -459,25 +459,3 @@ def pet_volume_normalized_suvr_pet(
         "needed_pipeline": "pet-volume",
     }
     return information
-
-
-# pet-linear
-
-
-def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
-    import os
-
-    if uncropped_image:
-        description = ""
-    else:
-        description = "_desc-Crop"
-
-    information = {
-        "pattern": os.path.join(
-            "pet_linear",
-            f"*_trc-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz",
-        ),
-        "description": "",
-        "needed_pipeline": "pet-linear",
-    }
-    return information
