@@ -507,6 +507,17 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
 
             output_df = pd.concat([output_df, row_df])
 
+            # Check pet-linear outputs
+            for trc in trc_avail:
+                pet_pattern = path.join(session_path, "pet_linear", f"*{trc}*")
+                if len(glob(pet_pattern)) > 0:
+                    row_df.loc[0, f"pet-linear_{trc}"] = "1"
+                else:
+                    row_df.loc[0, f"pet-linear_{trc}"] = "0"
+
+            output_df = pd.concat([output_df, row_df])
+
+
     output_df.sort_values(["participant_id", "session_id"], inplace=True)
     output_df.to_csv(out_file, sep="\t", index=False)
 
