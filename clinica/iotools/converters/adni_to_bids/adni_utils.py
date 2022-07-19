@@ -1265,7 +1265,7 @@ def viscode_to_session(viscode):
     Returns:
         M00 if is the baseline session or the original session name capitalized
     """
-    if viscode == "bl":
+    if viscode == "bl" or viscode == "m0":
         return "ses-M00"
     else:
         return "ses-" + viscode.capitalize()
