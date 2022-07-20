@@ -3,34 +3,19 @@
 """Module for converting FDG PET of ADNI."""
 
 PREPROCESSING_STEP_DICT = {
-    "0": ["ADNI Brain PET: Raw FDG"],
-    "1": ["Co-registered Dynamic"],
-    "2": ["Co-registered, Averaged"],
-    "3": ["Coreg, Avg, Standardized Image and Voxel Size"],
-    "4": ["Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"],
-    "5": ["Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"],
+    0: ["ADNI Brain PET: Raw FDG"],
+    1: ["Co-registered Dynamic"],
+    2: ["Co-registered, Averaged"],
+    3: ["Coreg, Avg, Standardized Image and Voxel Size"],
+    4: ["Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"],
+    5: ["Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"],
 }
+
 
 def convert_adni_fdg_pet(
     source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
 ):
-    return convert_adni_fdg_pet_generic(
-        source_dir, csv_dir, dest_dir, conversion_dir, preprocessing_step="2", subjs_list=subjs_list, mod_to_update=mod_to_update
-    )
-
-
-def convert_adni_fdg_pet_uniform(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
-):
-    return convert_adni_fdg_pet_generic(
-        source_dir, csv_dir, dest_dir, conversion_dir, preprocessing_step="4", subjs_list=subjs_list, mod_to_update=mod_to_update
-    )
-
-
-def convert_adni_fdg_pet_generic(
-    source_dir, csv_dir, dest_dir, conversion_dir, preprocessing_step, subjs_list=None, mod_to_update=False
-):
-    """Convert FDG PET images of ADNI into BIDS format.
+    """Convert "Co-registered, Averaged" FDG PET images of ADNI into BIDS format.
 
     Args:
         source_dir: path to the ADNI directory
@@ -40,12 +25,68 @@ def convert_adni_fdg_pet_generic(
         subjs_list: subjects list
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
     """
+    return convert_adni_fdg_pet_generic(
+        source_dir,
+        csv_dir,
+        dest_dir,
+        conversion_dir,
+        preprocessing_step=2,
+        subjs_list=subjs_list,
+        mod_to_update=mod_to_update,
+    )
+
+
+def convert_adni_fdg_pet_uniform(
+    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+):
+    """Convert "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution" FDG PET images of ADNI into BIDS format.
+
+    Args:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
+        conversion_dir: path to the TSV files including the paths to original images
+        subjs_list: subjects list
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
+    """
+    return convert_adni_fdg_pet_generic(
+        source_dir,
+        csv_dir,
+        dest_dir,
+        conversion_dir,
+        preprocessing_step=4,
+        subjs_list=subjs_list,
+        mod_to_update=mod_to_update,
+    )
+
+
+def convert_adni_fdg_pet_generic(
+    source_dir,
+    csv_dir,
+    dest_dir,
+    conversion_dir,
+    preprocessing_step,
+    subjs_list=None,
+    mod_to_update=False,
+):
+    """Convert FDG PET images of ADNI into BIDS format.
+
+    Args:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
+        conversion_dir: path to the TSV files including the paths to original images
+        preprocessing_step: ADNI processing step, is an int between 0 and 5.
+        subjs_list: subjects list
+        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
+    """
     from os import path
 
     import pandas as pd
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
+
     print(PREPROCESSING_STEP_DICT[preprocessing_step])
     if not subjs_list:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
@@ -55,7 +96,9 @@ def convert_adni_fdg_pet_generic(
     cprint(
         f"Calculating paths of FDG PET images. Output will be stored in {conversion_dir}."
     )
-    images = compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir, preprocessing_step)
+    images = compute_fdg_pet_paths(
+        source_dir, csv_dir, subjs_list, conversion_dir, preprocessing_step
+    )
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
     if preprocessing_step == "2":
         modality = "fdg"
@@ -65,7 +108,9 @@ def convert_adni_fdg_pet_generic(
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
-def compute_fdg_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir, preprocessing_step):
+def compute_fdg_pet_paths(
+    source_dir, csv_dir, subjs_list, conversion_dir, preprocessing_step
+):
     """Compute the paths to the FDG PET images and store them in a TSV file.
 
     Args:
