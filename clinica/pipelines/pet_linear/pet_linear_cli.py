@@ -16,7 +16,7 @@ pipeline_name = "pet-linear"
 @cli_param.option_group.option(
     "--use_uniform",
     is_flag=True,
-    help="Will uniform PET from the bids.",
+    help="Use uniform resolution PET from ADNI",
 )
 @cli_param.option_group.option(
     "-ui",
