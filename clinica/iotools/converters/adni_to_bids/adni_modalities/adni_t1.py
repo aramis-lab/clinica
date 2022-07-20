@@ -156,6 +156,7 @@ def compute_t1_paths(source_dir, csv_dir, subjs_list, conversion_dir):
         ("031_S_0867", "m48"),
         ("100_S_0892", "m18"),
         ("003_S_6264", "m12"),
+        ("011_S_4105", "m72"),
         # Empty folders
         # ('029_S_0845', 'm24'),
         # ('094_S_1267', 'm24'),
