@@ -432,6 +432,8 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
 
     import pandas as pd
 
+    from clinica.utils.stream import cprint
+
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
     dxsum_df = pd.read_csv(
         path.join(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL.csv")
@@ -439,10 +441,17 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
-        diagnosis_sc = diagnosis_dict[
-            dxsum_df.loc[(alternative_id, "sc"), "DIAGNOSIS"].values[0]
-        ]
-        participants_df.loc[alternative_id, "diagnosis_sc"] = diagnosis_sc
+        try:
+            diagnosis_sc = diagnosis_dict[
+                dxsum_df.loc[(alternative_id, "sc"), "DIAGNOSIS"].values[0]
+            ]
+            participants_df.loc[alternative_id, "diagnosis_sc"] = diagnosis_sc
+        except KeyError:
+            cprint(
+                msg=(f"Unknown screening diagnosis for subject {alternative_id}."),
+                lvl="warning",
+            )
+            participants_df.loc[alternative_id, "diagnosis_sc"] = "n/a"
 
     participants_df.reset_index(inplace=True, drop=False)
     return participants_df
@@ -489,7 +498,7 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
         ):
             return "A-"
         else:
-            return ""
+            return "n/a"
 
     def compute_ptau_status(row: pd.DataFrame) -> str:
         if pd.isnull(row["adni_ptau"]):
@@ -1256,7 +1265,7 @@ def viscode_to_session(viscode):
     Returns:
         M00 if is the baseline session or the original session name capitalized
     """
-    if viscode == "bl":
+    if viscode == "bl" or viscode == "m0":
         return "ses-M00"
     else:
         return "ses-" + viscode.capitalize()
