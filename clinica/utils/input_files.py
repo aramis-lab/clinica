@@ -457,7 +457,7 @@ def pet_volume_normalized_suvr_pet(
 # pet-linear
 
 
-def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image, use_uniform):
+def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image, use_uniform: bool = False):
     import os
 
     if uncropped_image:
