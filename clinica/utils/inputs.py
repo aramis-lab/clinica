@@ -31,10 +31,7 @@ def determine_caps_or_bids(input_dir):
         input_dir: input folder
 
     Returns:
-        True if input_dir is a bids, False if input_dir is a CAPS
-
-    Raise:
-        RuntimeError if function could not determine if BIDS or CAPS or whatever else
+        True if input_dir is a bids, False if input_dir is a CAPS or could not determine
     """
     from os import listdir
     from os.path import isdir, join
