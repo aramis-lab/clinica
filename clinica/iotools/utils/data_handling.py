@@ -505,8 +505,6 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
                 else:
                     row_df.loc[0, f"pet-surface_{trc}"] = "0"
 
-            output_df = pd.concat([output_df, row_df])
-
             # Check pet-linear outputs
             for trc in trc_avail:
                 pet_pattern = path.join(session_path, "pet_linear", f"*{trc}*")
