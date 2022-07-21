@@ -246,7 +246,8 @@ class DwiConnectome(cpe.Pipeline):
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
         from nipype.interfaces.mrtrix3 import (
-            ConstrainedSphericalDeconvolution, Tractography
+            ConstrainedSphericalDeconvolution,
+            Tractography,
         )
         from nipype.interfaces.mrtrix.preprocess import MRTransform
 
