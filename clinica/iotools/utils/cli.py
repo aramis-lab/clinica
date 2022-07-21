@@ -153,7 +153,9 @@ def create_subjects_visits(current_directory: str, output_tsv: str) -> None:
     is_bids = determine_caps_or_bids(current_directory)
     output_directory = dirname(output_tsv)
     makedirs(output_directory, exist_ok=True)
-    create_subs_sess_list(current_directory, output_directory, basename(output_tsv), is_bids_dir=is_bids)
+    create_subs_sess_list(
+        current_directory, output_directory, basename(output_tsv), is_bids_dir=is_bids
+    )
     cprint(f"The TSV file was saved to {output_tsv}.")
 
 
