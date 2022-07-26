@@ -70,33 +70,27 @@ from pydra.tasks.nipype1.utils import Nipype1Task
 
 
 def build_core_worfflow():
-    """Core Workflow  for the DWI preprocessing using T1."""
+    """Core Workflow  for the DWI preprocessing using T1.
+
+    :param name: The name of the workflow.
+    :return: The core workflow.
+    """
 
     workflow = Workflow(
         name="dwi_preprocessing_using_t1",
         # cache_dir = working_dir,
-        input_spec=["input_dir", "output_dir"],
-        input_dir=str(pipeline_in_dir / "bids"),
-    )
-
-    # bids_data_grabber
-    workflow.add(
-        Nipype1Task(
-            name="bids_data_grabber",
-            interface=bids_data_grabber,
-            base_dir=workflow.lzin.input_dir,
-        )
+        input_spec=["t1w", "dwi", "dwi_json", "bvec", "bval"],
     )
     # init_input_node
     workflow.add(
         dt.init_input_node(
             name="init_input_node",
             # interface=dt.init_input_node,
-            t1w=workflow.bids_data_grabber.lzout.t1w,
-            dwi=workflow.bids_data_grabber.lzout.dwi,
-            dwi_json=workflow.bids_data_grabber.lzout.dwi_json,
-            bvec=workflow.bids_data_grabber.lzout.bvec,
-            bval=workflow.bids_data_grabber.lzout.bval,
+            t1w=workflow.lzin.t1w,
+            dwi=workflow.lzin.dwi,
+            dwi_json=workflow.lzin.dwi_json,
+            bvec=workflow.lzin.bvec,
+            bval=workflow.lzin.bval,
         )
     )
     workflow.init_input_node.split(("t1w", "dwi", "dwi_json", "bvec", "bval"))
@@ -151,7 +145,7 @@ def build_core_worfflow():
             in_index=workflow.generate_index_file.lzout.out_index,
         )
     )
-    # eddy pipeline end
+    # eddy pipeline end -  epi pipeline start
     workflow.add(
         Nipype1Task(
             name="split_epi",
@@ -160,7 +154,7 @@ def build_core_worfflow():
             in_file=workflow.eddy.lzout.out_corrected,
         )
     )
-    # workflow2.split("split_epi.lzout.out_files")
+
     workflow.add(
         Nipype1Task(
             name="select_epi",
@@ -273,7 +267,6 @@ def build_core_worfflow():
         )
     )
     workflow.thres_epi.combine(["jacmult.operand_files", "jacmult.in_file"])
-
     workflow.add(
         Nipype1Task(
             name="merge_epi",
@@ -316,18 +309,3 @@ def build_core_worfflow():
         ]
     )
     return workflow
-
-
-def run_wf(workflow):
-    with Submitter(plugin="cf") as submitter:
-        submitter(workflow)
-    results = workflow.result(return_inputs=True)
-    print(results)
-    return results
-
-
-def build_run():
-    workflow = build_wf()
-    results = run_wf(workflow)
-
-    return results
