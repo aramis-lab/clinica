@@ -431,7 +431,7 @@ def volume_pipeline(
                             )
 
                     # Filter pvc_restriction
-                    if pvc_restriction:
+                    if pvc_restriction is not None:
                         if pvc_restriction == 1:
                             atlas_paths = [
                                 atlas_path
@@ -459,9 +459,9 @@ def volume_pipeline(
                         if path.exists(atlas_path):
                             atlas_df = pd.read_csv(atlas_path, sep="\t")
                             additional_desc = ""
-                            if "acq" in atlas_path:
-                                tracer = atlas_path.split("_acq-")[1].split("_")[0]
-                                additional_desc += f"_acq-{tracer}"
+                            if "trc" in atlas_path:
+                                tracer = atlas_path.split("_trc-")[1].split("_")[0]
+                                additional_desc += f"_trc-{tracer}"
                             if "pvc-rbv" in atlas_path:
                                 additional_desc += f"_pvc-rbv"
 
@@ -505,9 +505,9 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
     )
     tracers = list(
         {
-            column.split("_acq-")[1].split("_")[0]
+            column.split("_trc-")[1].split("_")[0]
             for column in pipeline_df.columns.values
-            if "acq" in column
+            if "trc" in column
         }
     )
     if len(tracers) == 0:
