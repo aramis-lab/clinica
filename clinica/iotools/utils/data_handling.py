@@ -714,6 +714,7 @@ def create_subs_sess_list(
             session_df = pd.read_csv(
                 path.join(sub_path, subj_id + "_sessions.tsv"), sep="\t"
             )
+            session_df.dropna(how="all", inplace=True)
             session_list = list(session_df["session_id"].to_numpy())
             for session in session_list:
                 subjs_sess_tsv.write(subj_id + "\t" + session + "\n")
