@@ -186,7 +186,7 @@ def run_PETSurfaceCrossSectional(
         assert np.allclose(
             np.squeeze(nib.load(fspath(out_files[i])).get_fdata(dtype="float32")),
             np.squeeze(nib.load(fspath(ref_files[i])).get_fdata(dtype="float32")),
-            rtol=3e-2,
+            rtol=1e-1,
             equal_nan=True,
         )
 
