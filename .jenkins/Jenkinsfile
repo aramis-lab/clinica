@@ -224,9 +224,10 @@ pipeline {
                 INPUT_DATA_DIR = '/Volumes/data_ci'
                 TMP_BASE = '/Volumes/data/tmp'
               }
-              catchError(stageResult:'UNSTABLE', buildResult: 'FAILURE')
-              {
-                steps {
+              
+              steps {
+                catchError(stageResult:'UNSTABLE', buildResult: 'FAILURE')
+                { 
                   sh '''
                     source "${CONDA_HOME}/etc/profile.d/conda.sh"
                     conda activate "${CONDA_ENV}"
