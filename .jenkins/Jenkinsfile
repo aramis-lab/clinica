@@ -80,6 +80,7 @@ pipeline {
                 TMP_BASE = '/mnt/data/ci/tmp'
               }
               steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE'){
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
@@ -97,6 +98,7 @@ pipeline {
                     -n 2 \
                     ./nonregression/iotools/test_run_converters.py
                   '''
+                }
               }
               post {
                 always {
