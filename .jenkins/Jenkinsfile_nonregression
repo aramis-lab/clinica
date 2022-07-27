@@ -49,6 +49,7 @@ pipeline {
                 TMP_DIR = "/mnt/data/ci/tmp"
                 }
               steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
@@ -67,6 +68,7 @@ pipeline {
                     -n 4 \
                     ./nonregression/pipelines/test_run_pipelines_pet.py
                 '''
+                }
               }
               post {
                 always {
@@ -85,6 +87,7 @@ pipeline {
                 TMP_DIR = "/mnt/data/ci/tmp"
                 }
               steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
@@ -103,6 +106,7 @@ pipeline {
                     -n 4 \
                     ./nonregression/pipelines/test_run_pipelines_stats.py
                 '''
+                }
               }
               post {
                 always {
@@ -121,6 +125,7 @@ pipeline {
                 TMP_DIR = "/mnt/data/ci/tmp"
                 }
               steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
@@ -139,6 +144,7 @@ pipeline {
                     -n 4 \
                     ./nonregression/pipelines/test_run_pipelines_ml.py
                 '''
+                }
               }
               post {
                 always {
@@ -157,6 +163,7 @@ pipeline {
                 TMP_DIR = "/mnt/data/ci/tmp"
                 }
               steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
@@ -175,6 +182,7 @@ pipeline {
                     -n 4 \
                     ./nonregression/pipelines/test_run_pipelines_anat.py
                 '''
+                }
               }
               post {
                 always {
@@ -193,6 +201,7 @@ pipeline {
                 TMP_DIR = "/mnt/data/ci/tmp"
                 }
               steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
@@ -211,6 +220,7 @@ pipeline {
                     -n 4 \
                     ./nonregression/pipelines/test_run_pipelines_dwi.py
                 '''
+                }
               }
               post {
                 always {
