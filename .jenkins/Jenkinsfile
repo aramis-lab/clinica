@@ -80,7 +80,7 @@ pipeline {
                 TMP_BASE = '/mnt/data/ci/tmp'
               }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE'){
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
@@ -224,22 +224,25 @@ pipeline {
                 INPUT_DATA_DIR = '/Volumes/data_ci'
                 TMP_BASE = '/Volumes/data/tmp'
               }
-              steps {
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${CONDA_ENV}"
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
-                  module load clinica.all
-                  cd test
-                  poetry run pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --input_data_directory=$INPUT_DATA_DIR \
-                    --basetemp=$TMP_BASE \
-                    --junitxml=./test-reports/run_converters_mac.xml \
-                    --disable-warnings \
-                    ./nonregression/iotools/test_run_converters.py
-                '''
+              catchError(stageResult:'UNSTABLE', buildResult: 'FAILURE')
+              {
+                steps {
+                  sh '''
+                    source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                    conda activate "${CONDA_ENV}"
+                    source "${BREW_PREFIX}/opt/modules/init/bash"
+                    module load clinica.all
+                    cd test
+                    poetry run pytest \
+                      --verbose \
+                      --working_directory=$WORK_DIR \
+                      --input_data_directory=$INPUT_DATA_DIR \
+                      --basetemp=$TMP_BASE \
+                      --junitxml=./test-reports/run_converters_mac.xml \
+                      --disable-warnings \
+                      ./nonregression/iotools/test_run_converters.py
+                  '''
+                }
               }
               post {
                 always {
