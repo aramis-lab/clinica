@@ -1,11 +1,9 @@
+from os import PathLike, path
+from pathlib import Path, PurePath
+
 import pytest
 from pydra import Workflow
-from pathlib import Path, PurePath
-from os import PathLike, path
-
-from pydra import Workflow
 from pydra.mark import annotate, task
-
 
 CURRENT_DIR = path.dirname(path.realpath(__file__))
 

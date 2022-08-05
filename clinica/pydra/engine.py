@@ -1,11 +1,11 @@
 import functools
+import typing as ty
 from os import PathLike
 
-import clinica.pydra.engine_utils as pu
 from pydra import Workflow
-from clinica.pydra.interfaces import bids_reader, bids_writer
 
-import typing as ty
+import clinica.pydra.engine_utils as pu
+from clinica.pydra.interfaces import bids_reader, bids_writer
 
 
 def clinica_io(func):
