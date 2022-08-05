@@ -7,6 +7,7 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
+from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest

@@ -195,6 +195,7 @@ clinica convert adni-to-bids -h
             - Subject sub-ADNI031S0867 for session ses-M48
             - Subject sub-ADNI100S0892 for session ses-M18
             - Subject sub-ADNI003S6264 for session ses-M12
+            - Subject sub-ADNI011S4105 for session ses-M72
         - _Image conversion does not generate an output file:_
             - Subject sub-ADNI029S0845 for session ses-M24
             - Subject sub-ADNI094S1267 for session ses-M24

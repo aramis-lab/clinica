@@ -480,6 +480,7 @@ def run_T1Linear(
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters=parameters,
+        name="t1-linear",
     )
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
