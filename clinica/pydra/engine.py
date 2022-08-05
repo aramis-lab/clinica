@@ -1,6 +1,5 @@
 import functools
 from os import PathLike
-from pathlib import PurePath
 
 import clinica.pydra.engine_utils as pu
 from pydra import Workflow
@@ -10,14 +9,10 @@ import typing as ty
 
 
 def clinica_io(func):
-    """
-    Prepend an input workflow (BIDS reader) and
-    append an output_workflow (BIDS writer)
-    to any Pydra workflow
-    """
+    """Decortator to add BIDS reader/writer to any Pydra workflow"""
 
     @functools.wraps(func)
-    def run_wrapper(name: str, input_dir: PathLike, output_dir: PathLike, **kwargs):
+    def run_wrapper(name: str, input_dir: PathLike, output_dir: PathLike):
 
         core_workflow = func()
 
@@ -43,10 +38,19 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> ty.Tupl
     """
     Setup for an input workflow to read BIDS data
 
-    :pipeline: the high level workflow containing (input -> core -> output)
-    :core_workflow: the functional workflow
-    :return: the field to split on.
+    Parameters
+    ----------
+        pipeline :  Workflow
+             the high level workflow containing (input -> core -> output)
+        core_workflow : Workflow
+             the functional workflow
+    Returns
+    ------
+        str
+            the field to split on.
     """
+
+    field = ""
 
     list_core_inputs = pu.list_in_fields(core_workflow)
     query_dict = pu.bids_query(list_core_inputs)
@@ -68,19 +72,26 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> ty.Tupl
     return field
 
 
-def add_input_task(input_workflow: Workflow, query_dict) -> Workflow:
+def add_input_task(input_workflow: Workflow, query_bids: dict) -> Workflow:
     """
     Construct and parameterize the input workflow
 
-    :param pipeline: the high level workflow containing (input -> core -> output)
-    :return: an BIDS reader based workflow
+    Parameters
+    ----------
+        input_workflow : Workflow
+            The high level workflow containing (input -> core -> output)
+        query : dict
+            The dictionary containing the information needed to query the BIDS folder
+    Returns
+    -------
+        An BIDS reader based workflow
     """
 
     input_workflow.add(
-        bids_reader(query_bids=query_dict, input_dir=input_workflow.lzin.input_dir)
+        bids_reader(query_bids=query_bids, input_dir=input_workflow.lzin.input_dir)
     )
 
-    data_keys = pu.list_keys(query_dict)
+    data_keys = list(query_bids.keys())
 
     input_workflow.set_output(
         [
@@ -92,21 +103,31 @@ def add_input_task(input_workflow: Workflow, query_dict) -> Workflow:
 
 
 def build_output_workflow(
-    pipeline: Workflow, core_workflow: Workflow, output_dir: PurePath
-) -> None:
+    pipeline: Workflow, core_workflow: Workflow, output_dir: PathLike
+) -> Workflow:
     """Example of an output workflow.
 
-    :param name: The name of the workflow.
-    :return: The output workflow.
+    Parameters
+    ----------
+        pipelines : Workflow
+            the resulting workflow consisting of (input/core/output)
+        core_workflow : Workflow
+            contains the core interfaces
+        output_dir : PathLike
+            Path of the directory to be written to
+    Returns
+    -------
+        Workflow
+            The output workflow.
     """
 
     output_attrs = []
 
     for i, field in enumerate(pu.list_out_fields(core_workflow)):
 
-        pipeline.add(bids_writer(name="bids_writer_task_" + str(i)))
+        pipeline.add(bids_writer(name="bids_writer_task_" + str(field)))
 
-        writer_task = getattr(pipeline, "bids_writer_task_" + str(i))
+        writer_task = getattr(pipeline, "bids_writer_task_" + str(field))
         writer_task_inputs = getattr(writer_task, "inputs")
 
         output_data = getattr(core_workflow.lzout, field)

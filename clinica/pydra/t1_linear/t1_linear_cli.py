@@ -14,7 +14,7 @@ def cli(
     bids_directory: str,
     caps_directory: str,
 ) -> None:
-    """Affine registration of Flair images to the MNI standard space (Pydra engine)."""
+    """Affine registration of T1w images to the MNI standard space (Pydra engine)."""
 
     t1_linear_pipeline = pydra_t1_linear.build_core_workflow(
         name="t1-linear-pydra",

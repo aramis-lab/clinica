@@ -1,5 +1,3 @@
-from distutils import core
-import pip
 import pytest
 from pydra import Workflow
 from pathlib import Path, PurePath
@@ -79,14 +77,14 @@ def test_add_input_task(bids_query: dict):
 
 
 def test_build_output_workflow(pipeline: Workflow, core_workflow: Workflow):
-    from clinica.pydra.engine import build_input_workflow
     from clinica.pydra.engine import build_output_workflow
 
     pipeline.add(core_workflow)
-    
-    # decorated_pipeline = build_input_workflow(pipeline, core_workflow)
+
     decorated_pipeline = build_output_workflow(
         pipeline, core_workflow, Path(CURRENT_DIR) / "data"
     )
-    assert "bids_writer_task_0" in [x.name for x in decorated_pipeline.nodes]
+    assert "bids_writer_task_smoothed_image" in [
+        x.name for x in decorated_pipeline.nodes
+    ]
     return
