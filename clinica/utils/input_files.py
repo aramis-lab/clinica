@@ -391,7 +391,7 @@ DWI_PREPROC_BVAL = {
 # BIDS
 
 
-def bids_pet_nii(tracer: str, use_uniform: bool) -> dict:
+def bids_pet_nii(tracer: str, use_uniform: bool = False) -> dict:
     import os
 
     if use_uniform:
