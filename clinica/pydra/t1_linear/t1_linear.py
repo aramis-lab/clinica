@@ -67,8 +67,15 @@ def download_ref_template() -> PurePath:
 def build_core_workflow(name: str = "core") -> Workflow:
     """Core workflow for the T1 linear pipeline.
 
-    :param name: The name of the workflow.
-    :return: The core workflow.
+    Parameters
+    ----------
+    name : str
+        The name of the workflow.
+
+    Returns
+    -------
+    Workflow
+        The core workflow.
     """
     from pydra.tasks.nipype1.utils import Nipype1Task
 
