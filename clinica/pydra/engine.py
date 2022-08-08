@@ -5,7 +5,7 @@ from os import PathLike
 from pydra import Workflow
 
 import clinica.pydra.engine_utils as pu
-from clinica.pydra.interfaces import bids_reader, bids_writer
+from clinica.pydra.interfaces import bids_writer
 
 
 def clinica_io(func):
@@ -87,19 +87,20 @@ def add_input_task(input_workflow: Workflow, query_bids: dict) -> Workflow:
     Workflow
         An BIDS reader based workflow
     """
+    from clinica.pydra.tasks.bids import read_bids
 
-    input_workflow.add(
-        bids_reader(query_bids=query_bids, input_dir=input_workflow.lzin.input_dir)
-    )
+    bids_reader_task = read_bids(output_query=query_bids, name="bids_reader_task")
+    bids_reader_task.inputs.base_dir = input_workflow.lzin.input_dir
 
-    data_keys = list(query_bids.keys())
+    input_workflow.add(bids_reader_task)
 
     input_workflow.set_output(
         [
-            (field, getattr(input_workflow.bids_reader_task.lzout, field))
-            for field in data_keys
+            (output_name, getattr(input_workflow.bids_reader_task.lzout, output_name))
+            for output_name in bids_reader_task.output_names
         ]
     )
+
     return input_workflow
 
 
