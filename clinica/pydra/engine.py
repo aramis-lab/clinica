@@ -9,7 +9,7 @@ from clinica.pydra.interfaces import bids_reader, bids_writer
 
 
 def clinica_io(func):
-    """Decortator to add BIDS reader/writer to any Pydra workflow"""
+    """Decorator to add BIDS reader/writer to any Pydra workflow"""
 
     @functools.wraps(func)
     def run_wrapper(name: str, input_dir: PathLike, output_dir: PathLike):
