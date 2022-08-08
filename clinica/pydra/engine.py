@@ -80,7 +80,7 @@ def add_input_task(input_workflow: Workflow, query_bids: dict) -> Workflow:
     ----------
         input_workflow : Workflow
             The high level workflow containing (input -> core -> output)
-        query : dict
+        query_bids : dict
             The dictionary containing the information needed to query the BIDS folder
     Returns
     -------
@@ -109,7 +109,7 @@ def build_output_workflow(
 
     Parameters
     ----------
-        pipelines : Workflow
+        pipeline : Workflow
             the resulting workflow consisting of (input/core/output)
         core_workflow : Workflow
             contains the core interfaces
