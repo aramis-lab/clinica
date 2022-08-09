@@ -9,7 +9,7 @@ from clinica.pydra.interfaces import bids_reader, bids_writer
 
 
 def clinica_io(func):
-    """Decortator to add BIDS reader/writer to any Pydra workflow"""
+    """Decorator to add BIDS reader/writer to any Pydra workflow."""
 
     @functools.wraps(func)
     def run_wrapper(name: str, input_dir: PathLike, output_dir: PathLike):
@@ -35,19 +35,19 @@ def clinica_io(func):
 
 
 def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> ty.Tuple:
-    """
-    Setup for an input workflow to read BIDS data
+    """Setup for an input workflow to read BIDS data.
 
     Parameters
     ----------
-        pipeline :  Workflow
-             the high level workflow containing (input -> core -> output)
-        core_workflow : Workflow
-             the functional workflow
+    pipeline :  Workflow
+         the high level workflow containing (input -> core -> output)
+    core_workflow : Workflow
+         the functional workflow
+
     Returns
     ------
-        str
-            the field to split on.
+    str
+        the field to split on.
     """
 
     field = ""
@@ -73,17 +73,18 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> ty.Tupl
 
 
 def add_input_task(input_workflow: Workflow, query_bids: dict) -> Workflow:
-    """
-    Construct and parameterize the input workflow
+    """Construct and parameterize the input workflow.
 
     Parameters
     ----------
-        input_workflow : Workflow
-            The high level workflow containing (input -> core -> output)
-        query : dict
-            The dictionary containing the information needed to query the BIDS folder
+    input_workflow : Workflow
+        The high level workflow containing (input -> core -> output)
+    query_bids : dict
+        The dictionary containing the information needed to query the BIDS folder
+
     Returns
     -------
+    Workflow
         An BIDS reader based workflow
     """
 
@@ -109,16 +110,17 @@ def build_output_workflow(
 
     Parameters
     ----------
-        pipelines : Workflow
-            the resulting workflow consisting of (input/core/output)
-        core_workflow : Workflow
-            contains the core interfaces
-        output_dir : PathLike
-            Path of the directory to be written to
+    pipeline : Workflow
+        the resulting workflow consisting of (input/core/output)
+    core_workflow : Workflow
+        contains the core interfaces
+    output_dir : PathLike
+        Path of the directory to be written to
+
     Returns
     -------
-        Workflow
-            The output workflow.
+    Workflow
+        The output workflow.
     """
 
     output_attrs = []
