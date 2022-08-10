@@ -1,38 +1,57 @@
+from multiprocessing.dummy import Array
 from os import PathLike
-
+from typing import Union
 from pydra.mark import annotate, task
+from numpy import ndarray
 
 
 @task
 @annotate({"return": {"out_file": PathLike}})
-def zip_nii(in_file: str, same_dir: bool = False):
-    """Zips a file or a list of files"""
+def zip_nii(in_var: Union[PathLike, list], same_dir: bool = False) -> PathLike:
+    """Zips a file or a list of files
+
+    Parameters
+    ---------
+    in_var : Union[PathLike, list]
+        file or list of files to zip
+
+    same_dir : bool
+        True if we want to zip in the origin directory, False if in cwd
+
+    Returns
+    ------
+    PathLike
+        path of the output
+
+    """
 
     import gzip
     import shutil
-    from os import getcwd
-    from os.path import abspath, join
+    import os
 
     from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
 
-    if (in_file is None) or isinstance(in_file, _Undefined):
+    if (in_var is None) or isinstance(in_var, _Undefined):
         return None
 
-    if not isinstance(in_file, str):  # type(in_file) is list:
-        return [zip_nii(f, same_dir) for f in in_file]
+    if not isinstance(in_var, str):  # type(in_file) is list:
+        return [zip_nii(f, same_dir) for f in in_var]
 
-    orig_dir, base, ext = split_filename(str(in_file))
+    orig_dir, base, ext = split_filename(str(in_var))
 
     # Already compressed
 
     if os.path.splitext("ext") == ".gz":
-        return in_file
+        return in_var
+
     # Not compressed
 
-    out_file = abspath(join(orig_dir if same_dir else getcwd(), base + ext + ".gz"))
+    out_file = os.abspath(
+        os.join(orig_dir if same_dir else os.getcwd(), base + ext + ".gz")
+    )
 
-    with open(in_file, "rb") as f_in, gzip.open(out_file, "wb") as f_out:
+    with open(in_var, "rb") as f_in, gzip.open(out_file, "wb") as f_out:
         shutil.copyfileobj(f_in, f_out)
 
     return out_file
@@ -41,27 +60,41 @@ def zip_nii(in_file: str, same_dir: bool = False):
 @task
 @annotate({"return": {"out_status": None}})
 def check_volume_location_in_world_coordinate_system(
-    nifti_list, bids_dir, modality="t1w", skip_question=False
-):
-    """
-    Check if the NIfTI file list provided in argument are approximately centered around the origin of the
+    nifti_list: list,
+    bids_dir: PathLike,
+    modality: str = "t1w",
+    skip_question: bool = False,
+) -> None:
+    """Check if images are centered around the origin of the world coordinate
+
+    Parameters
+    ----
+    nifti_list: list
+        list of path to nifti files
+
+    bids_dir: str
+        path to bids directory associated with this check
+
+    modality: str
+        the modality of the image
+
+    skip_question: bool
+        if True, assume answer is yes
+
+    Returns
+    -------
+    None
+
+    Warns
+    ------
+    If volume is not centered on origin of the world coordinate system
+
+    Notes
+    -----
+    the NIfTI file list provided in argument are approximately centered around the origin of the
     world coordinates. Otherwise, issues may arise with further processing such as SPM segmentation. When not centered,
     we warn the user of the problem propose to exit clinica to run clinica iotools center-nifti or to continue with the execution
     of the pipeline
-
-    Args
-    ----
-        nifti_list: list
-            list of path to nifti files
-
-        bids_dir: str
-            path to bids directory associated with this check
-
-        modality: str
-            the modality of the image
-
-        skip_question: bool
-            if True, assume answer is yes
 
     """
 
@@ -80,6 +113,7 @@ def check_volume_location_in_world_coordinate_system(
 
         # File column width : 3 spaces more than the longest string to display
         file_width = 3 + max(len(basename(file)) for file in list_non_centered_files)
+
         # Center column width (with a fixed minimum size) : 3 spaces more than the longest string to display
         center_width = max(
             len("Coordinate of center") + 3,
@@ -97,12 +131,6 @@ def check_volume_location_in_world_coordinate_system(
         # 18 is the length of the string 'Distance to origin'
         warning_message += "\n" + "-" * (file_width + center_width + 18) + "\n"
         for file, center, l2 in zip(list_non_centered_files, centers, l2_norm):
-            # Nice formatting as array
-            # % escape character
-            # - aligned to the left, with the size of the column
-            # s = string, f = float
-            # . for precision with float
-            # https://docs.python.org/2/library/stdtypes.html#string-formatting for more information
             warning_message += (
                 "%-" + str(file_width) + "s%-" + str(center_width) + "s%-25.2f\n"
             ) % (basename(file), str(center), l2)
@@ -131,10 +159,21 @@ def check_volume_location_in_world_coordinate_system(
     return
 
 
-def is_centered(nii_volume: PathLike, threshold_l2: int = 50):
+def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
     """Checks if a NIfTI volume is centered on the origin of the world coordinate system.
 
-    Description
+    Parameters
+    ---------
+    nii_volume : PathLike
+        path to NIfTI volume threshold_l2: maximum distance between origin of the world coordinate system and the center of the volume to
+        be considered centered. The threshold were SPM segmentation stops working is around 100 mm (it was determined empirically after several
+        trials on a generated dataset), so default value is 50mm in order to have a security margin, even when dealing with co-registered files afterward.
+
+    Returns
+    -------
+        bool
+
+    Notes
     -----------
 
     SPM has troubles to segment files if the center of the volume is not close from the origin of the world coordinate
@@ -145,17 +184,6 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50):
     It has been determined that volumes were still segmented with SPM when the L2 distance between origin and center of
     the volume did not exceed 100 mm. Above this distance, either the volume is either not segmented (SPM error), or the
     produced segmentation is wrong (not the shape of a brain anymore)
-
-    Arguments
-    ---------
-        nii_volume: PathLike
-            path to NIfTI volume threshold_l2: maximum distance between origin of the world coordinate system and the center of the volume to
-                    be considered centered. The threshold were SPM segmentation stops working is around 100 mm
-                    (it was determined empirically after several trials on a generated dataset), so default value is 50
-                    mm in order to have a security margin, even when dealing with co-registered files afterward.
-    Returns
-    -------
-        bool
     """
 
     import numpy as np
@@ -174,18 +202,20 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50):
 def get_world_coordinate_of_center(nii_volume: PathLike):
     """Extract the world coordinates of the center of the image.
 
-    Description
-    ------------
-
-    Based on methods described here: https://brainder.org/2012/09/23/the-nifti-file-format/
-
-    Arguments
+    Parameters
     ---------
-        nii_volume: path to nii volume
+    nii_volume : PathLike
+        path to nii volume
 
     Returns
     -------
+    tuple
         coordinates in the world space
+
+    References
+    ------
+    https://brainder.org/2012/09/23/the-nifti-file-format/
+
     """
 
     from os.path import isfile
@@ -233,13 +263,15 @@ def get_world_coordinate_of_center(nii_volume: PathLike):
     return center_coordinates_world
 
 
-def get_center_volume(header):
+def get_center_volume(header: dict) -> ndarray:
     """Get the voxel coordinates of the center of the data, using header information.
 
-    Args:
+    Parameters
+    ----------
         header: a nifti header
 
-    Returns:
+    Returns
+    -------
         Voxel coordinates of the center of the volume
     """
     import numpy as np
@@ -289,10 +321,12 @@ def vox_to_world_space_method_2(coordinates_vol, header):
 
         More information here: https://brainder.org/2012/09/23/the-nifti-file-format/
 
-        Args:
+        Parameters
+        ----------
             h: header
 
-        Returns:
+        Returns
+        -------
             Rotation matrix
         """
         b = h["quatern_b"]

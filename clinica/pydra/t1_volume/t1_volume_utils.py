@@ -12,6 +12,31 @@ from nipype.interfaces.spm.base import SPMCommand, SPMCommandInputSpec
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
 
+def initialize_parameters(tissue_probability_map=None):
+
+    import clinica.pydra.t1_volume.spm_utils as spm_utils
+
+    parameters = {}
+    parameters.setdefault("tissue_classes", [1, 2, 3])
+    parameters.setdefault("dartel_tissues", [1, 2, 3])
+    parameters.setdefault("save_warped_unmodulated", True)
+    parameters.setdefault("save_warped_modulated", False)
+
+    if tissue_probability_map:
+        parameters.setdefault("tissue_probability_maps", tissue_probability_map)
+    else:
+        parameters.setdefault("tissue_probability_maps", spm_utils.get_tpm())
+
+    tissue_tuples = get_tissue_tuples(
+        parameters["tissue_probability_maps"],
+        parameters["tissue_classes"],
+        parameters["dartel_tissues"],
+        parameters["save_warped_unmodulated"],
+        parameters["save_warped_modulated"],
+    )
+    return tissue_tuples
+
+
 def init_input_node(t1w):
     """Extract "sub-<participant_id>_ses-<session_label>" from <t1w> and print begin message."""
     from clinica.utils.filemanip import get_subject_id
