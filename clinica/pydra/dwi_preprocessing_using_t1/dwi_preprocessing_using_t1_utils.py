@@ -613,7 +613,7 @@ def build_epi_wf(t1w, out_updated_bvec, out_corrected):
     working_dir = "/localdrive10TB/users/matthieu.joulot/werk"
     workflow = Workflow(
         name="epi",
-        input_spec=["t1w", "out_updated_bvec"],
+        input_spec=["t1w", "out_updated_bvec", "out_corrected"],
         t1w=t1w,
         out_updated_bvec=out_updated_bvec,
         out_corrected=out_corrected,
