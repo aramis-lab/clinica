@@ -23,7 +23,10 @@ parameters.setdefault("tissue_classes", [1, 2, 3])
 parameters.setdefault("dartel_tissues", [1, 2, 3])
 parameters.setdefault("save_warped_unmodulated", True)
 parameters.setdefault("save_warped_modulated", False)
-parameters.setdefault("tissue_probability_maps", spm_utils.get_tpm())
+
+if not parameters["tissue_probability_maps"]:
+    parameters.setdefault("tissue_probability_maps", spm_utils.get_tpm())
+
 tissue_tuples = get_tissue_tuples(
     parameters["tissue_probability_maps"],
     parameters["tissue_classes"],
@@ -38,7 +41,7 @@ def t1volume_tissue_segmentation(name: str = "t1volume") -> Workflow:
 
     """Workflow for tissue segmentation, bias correction and spatial normalization"""
 
-    from clinica.pydra.t1_volume.t1_volule_tasks import (
+    from clinica.pydra.t1_volume.t1_volume_tasks import (
         check_volume_location_in_world_coordinate_system,
     )
 
