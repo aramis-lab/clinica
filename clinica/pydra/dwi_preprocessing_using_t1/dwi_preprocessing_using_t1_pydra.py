@@ -89,7 +89,7 @@ def build_core_worfflow():
             in_bval=workflow.init_input_node.lzout.bval,
             in_bvec=workflow.init_input_node.lzout.bvec,
             low_bval=5,
-            working_directory=working_dir,
+            working_directory=None,  # Can be set to something, can be none
         )
     )
     workflow.add(
