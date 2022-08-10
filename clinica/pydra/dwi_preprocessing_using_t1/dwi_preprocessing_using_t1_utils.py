@@ -1,6 +1,3 @@
-from pydra.engine.core import Workflow
-
-
 def merge_volumes_tdim(in_file1, in_file2):
     """Merge 'in_file1' and 'in_file2' in the t dimension.
 
@@ -19,6 +16,7 @@ def merge_volumes_tdim(in_file1, in_file2):
     return out_file
 
 
+####################################################
 def bids_dir_to_fsl_dir(bids_dir):
     """Converts BIDS PhaseEncodingDirection parameters (i,j,k,i-,j-,k-) to FSL direction (x,y,z,x-,y-,z-)."""
     fsl_dir = bids_dir.lower()
@@ -55,6 +53,7 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
         )
 
 
+####################################################
 def extract_metadata_from_json(json_file, list_keys):
     """Extract fields from JSON file."""
     import datetime
@@ -80,6 +79,7 @@ def extract_metadata_from_json(json_file, list_keys):
     return list_values
 
 
+####################################################
 def get_subject_id(bids_or_caps_file: str) -> str:
     """Extract "sub-<participant_id>_ses-<session_label>" from BIDS or CAPS file."""
     import re
@@ -230,6 +230,7 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
     return out_b0, out_dwi, out_bvals, out_bvecs
 
 
+####################################################
 def count_b0s(in_bval, low_bval=5.0):
     """Count the number of volumes where b<=low_bval.
 
@@ -573,3 +574,267 @@ def build_n_run_flirt(nb_b0s, extracted_b0, working_dir):
     flirt_results = run_flirt_wf(b0_flirt_workflow)
 
     return flirt_results
+
+
+def build_epi_wf(t1w, out_updated_bvec, out_corrected):
+    import dwi_preprocessing_using_t1_tasks as dt
+    import nipype.interfaces.utility as niu
+    from nipype.interfaces.ants import CreateJacobianDeterminantImage
+    from nipype.interfaces.ants.registration import RegistrationSynQuick
+    from nipype.interfaces.c3 import C3dAffineTool
+    from nipype.interfaces.fsl import MultiImageMaths
+    from nipype.interfaces.fsl.epi import Eddy
+    from nipype.interfaces.fsl.maths import Threshold
+    from nipype.interfaces.fsl.preprocess import BET, FLIRT
+    from nipype.interfaces.fsl.utils import Merge, Split
+    from nipype.interfaces.io import BIDSDataGrabber
+    from nipype.interfaces.mrtrix3 import DWIBiasCorrect
+    from nipype.interfaces.mrtrix3.preprocess import DWIBiasCorrect
+    from pydra import Workflow
+    from pydra.tasks.nipype1.utils import Nipype1Task
+
+    bet_2 = BET(frac=0.3, robust=True)
+    use_cuda = False
+    initrand = False
+    eddy = Eddy(repol=True, use_cuda=use_cuda, initrand=initrand)
+    split_epi = Split(dimension="t")
+    select_epi = niu.Select()
+    flirt_b0_2_t1 = FLIRT(dof=6, interp="spline", cost="normmi", cost_func="normmi")
+    ants_reg = RegistrationSynQuick(transform_type="br", dimension=3)
+    c3d_affine_tool = C3dAffineTool(itk_transform=True, fsl2ras=True)
+    merge_transform = niu.Merge(3)
+    jacobian = CreateJacobianDeterminantImage(
+        imageDimension=3, outputImage="Jacobian_image.nii.gz"
+    )
+    jacmult = MultiImageMaths(op_string="-mul %s")
+    thres_epi = Threshold(thresh=0.0)
+    merge_epi = Merge(dimension="t")
+
+    working_dir = "/localdrive10TB/users/matthieu.joulot/werk"
+    workflow = Workflow(
+        name="epi",
+        input_spec=["t1w", "out_updated_bvec"],
+        t1w=t1w,
+        out_updated_bvec=out_updated_bvec,
+        out_corrected=out_corrected,
+    )
+    workflow.add(
+        Nipype1Task(
+            name="split_epi",
+            interface=split_epi,
+            # in_file=eddy_out_corrected,
+            # in_file=workflow.lzin.out_corrected,
+            in_file=workflow.lzin.t1w,
+        )
+    )
+    # workflow2.split("split_epi.lzout.out_files")
+    workflow.add(
+        Nipype1Task(
+            name="select_epi",
+            interface=select_epi,
+            inlist=workflow.split_epi.lzout.out_files,
+            index=[0],
+        )
+    )
+    workflow.add(
+        Nipype1Task(
+            name="flirt_b0_2_t1",
+            interface=flirt_b0_2_t1,
+            # in_file=workflow.init_input_node.lzout.t1w,
+            in_file=workflow.select_epi.lzout.out,
+            reference=workflow.lzin.t1w,
+        )
+    )
+
+    workflow.add(
+        dt.expend_matrix_list(
+            name="expend_matrix_list",
+            # interface=expend_matrix_list,
+            in_matrix=workflow.flirt_b0_2_t1.lzout.out_matrix_file,
+            # in_bvec=workflow.lzin.out_rotated_bvecs,
+            in_bvec=workflow.lzin.out_updated_bvec,
+        )
+    )
+    workflow.add(
+        dt.rotate_bvecs(
+            name="rotate_bvecs",
+            # interface=rotate_bvecs,
+            # in_bvec=workflow.lzin.out_rotated_bvecs,
+            in_bvec=workflow.lzin.out_updated_bvec,
+            in_matrix=workflow.expend_matrix_list.lzout.out_matrix_list,
+        )
+    )
+    workflow.add(
+        Nipype1Task(
+            name="ants_reg",
+            interface=ants_reg,
+            moving_image=workflow.flirt_b0_2_t1.lzout.out_file,
+            # moving_image = workflow.lzin.out_corrected,
+            # fixed_image=workflow.init_input_node.lzout.t1w,
+            fixed_image=workflow.lzin.t1w,
+            # fixed_image=workflow.printer.lzout.var_out,
+        )
+    )
+    workflow.add(
+        Nipype1Task(
+            name="c3d_affine_tool",
+            interface=c3d_affine_tool,
+            source_file=workflow.select_epi.lzout.out,
+            reference_file=workflow.lzin.t1w,
+            transform_file=workflow.flirt_b0_2_t1.lzout.out_matrix_file,
+        )
+    )
+    workflow.add(
+        dt.change_itk_transform_type(
+            name="change_itk_transform_type",
+            input_affine_file=workflow.c3d_affine_tool.lzout.itk_transform,
+        )
+    )
+    workflow.add(
+        Nipype1Task(
+            name="merge_transform",
+            interface=merge_transform,
+            in1=workflow.change_itk_transform_type.lzout.updated_affine_file,
+            in2=workflow.ants_reg.lzout.out_matrix,
+            in3=workflow.ants_reg.lzout.forward_warp_field,
+        )
+    )
+
+    workflow.add(
+        dt.ants_apply_transforms(
+            name="apply_transform_image",
+            fixed_image=workflow.lzin.t1w,
+            moving_image=workflow.split_epi.lzout.out_files,
+            transforms=workflow.merge_transform.lzout.out,
+            warped_image="out_warped_field.nii.gz",
+            output_warped_image=True,
+        ).split("moving_image")
+    )
+    workflow.add(
+        dt.ants_apply_transforms(
+            name="apply_transform_field",
+            # interface=ants_apply_transforms,
+            fixed_image=workflow.lzin.t1w,
+            moving_image=workflow.split_epi.lzout.out_files,
+            transforms=workflow.merge_transform.lzout.out,
+            warped_image="out_warped.nii.gz",
+            output_warped_image=False,
+        ).split(splitter=("moving_image"))
+    )
+    workflow.add(
+        Nipype1Task(
+            name="jacobian",
+            interface=jacobian,
+            deformationField=workflow.apply_transform_field.lzout.warped_image,
+        )
+    )
+    workflow.jacobian.combine(["apply_transform_field.moving_image"])
+    workflow.apply_transform_image.combine(["moving_image"])
+    workflow.add(
+        Nipype1Task(
+            name="jacmult",
+            interface=jacmult,
+            operand_files=workflow.apply_transform_image.lzout.warped_image,
+            in_file=workflow.jacobian.lzout.jacobian_image,
+        ).split(("operand_files", "in_file"))
+    )
+    workflow.add(
+        Nipype1Task(
+            name="thres_epi",
+            interface=thres_epi,
+            in_file=workflow.jacmult.lzout.out_file,
+        )
+    )
+    workflow.thres_epi.combine(["jacmult.operand_files", "jacmult.in_file"])
+
+    workflow.add(
+        Nipype1Task(
+            name="merge_epi",
+            interface=merge_epi,
+            in_files=workflow.thres_epi.lzout.out_file,
+        )
+    )
+    # ## epi pipeline end
+    workflow.set_output(
+        [
+            ("trans", workflow.apply_transform_image.lzout.warped_image),
+            ("merge_epi", workflow.merge_epi.lzout.merged_file),
+            ("rotated_bvecs", workflow.rotate_bvecs.lzout.out_file),
+        ]
+    )
+    return workflow
+
+
+def build_eddy_wf(
+    out_b0_dwi_merge,
+    phase_encoding_direction,
+    total_readout_time,
+    out_updated_bval,
+    mask_file,
+    out_updated_bvec,
+):
+    import dwi_preprocessing_using_t1_tasks as dt
+    from nipype.interfaces.fsl.epi import Eddy
+    from pydra import Workflow
+    from pydra.tasks.nipype1.utils import Nipype1Task
+
+    use_cuda = False
+    initrand = False
+    eddy = Eddy(repol=True, use_cuda=use_cuda, initrand=initrand)
+    eddy_wf = Workflow(
+        name="eddyy",
+        input_spec=[
+            "out_b0_dwi_merge",
+            "phase_encoding_direction",
+            "total_readout_time",
+            "out_updated_bval",
+            "mask_file",
+            "out_updated_bvec",
+        ],
+        out_b0_dwi_merge=out_b0_dwi_merge,
+        phase_encoding_direction=phase_encoding_direction,
+        total_readout_time=total_readout_time,
+        out_updated_bval=out_updated_bval,
+        mask_file=mask_file,
+        out_updated_bvec=out_updated_bvec,
+    )
+    ## Eddy pipeline parts: generate_acq, generate_index, eddy
+    eddy_wf.add(
+        dt.generate_acq_file(
+            name="generate_acq_file",
+            # interface=generate_acq_file,
+            in_dwi=eddy_wf.lzin.out_b0_dwi_merge,
+            fsl_phase_encoding_direction=eddy_wf.lzin.phase_encoding_direction,
+            total_readout_time=eddy_wf.lzin.total_readout_time,
+            image_id=None,
+        )
+    )
+    eddy_wf.add(
+        dt.generate_index_file(
+            name="generate_index_file",
+            # interface=generate_index_file,
+            in_bval=eddy_wf.lzin.out_updated_bval,
+            low_bval=5.0,
+            image_id=None,
+        )
+    )
+    # eddy_wf.add(
+    #     Nipype1Task(
+    #         name="eddy",
+    #         interface=eddy,
+    #         in_file=eddy_wf.lzin.out_b0_dwi_merge,
+    #         in_mask=eddy_wf.lzin.mask_file,
+    #         in_bval=eddy_wf.lzin.out_updated_bval,
+    #         in_bvec=eddy_wf.lzin.out_updated_bvec,
+    #         in_acqp=eddy_wf.generate_acq_file.lzout.out_acq,
+    #         in_index=eddy_wf.generate_index_file.lzout.out_index,
+    #     )
+    # )
+    eddy_wf.set_output(
+        [
+            ("out_acq", eddy_wf.generate_acq_file.lzout.out_acq),
+            # ("out_rotated", eddy_wf.eddy.lzout.out_rotated_bvecs),
+            # ("out_corrected", ),
+        ]
+    )
+    return eddy_wf

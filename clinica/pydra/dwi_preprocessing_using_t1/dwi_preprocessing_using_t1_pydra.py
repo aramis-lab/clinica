@@ -74,7 +74,6 @@ def build_core_worfflow():
     workflow.add(
         dt.init_input_node(
             name="init_input_node",
-            # interface=dt.init_input_node,
             t1w=workflow.lzin.t1w,
             dwi=workflow.lzin.dwi,
             dwi_json=workflow.lzin.dwi_json,
@@ -86,7 +85,6 @@ def build_core_worfflow():
     workflow.add(
         dt.prepare_reference_b0_1(
             name="prepare_reference_b0_1",
-            # interface=dt.prepare_reference_b0_1,
             in_dwi=workflow.init_input_node.lzout.dwi,
             in_bval=workflow.init_input_node.lzout.bval,
             in_bvec=workflow.init_input_node.lzout.bvec,
@@ -102,175 +100,31 @@ def build_core_worfflow():
             mask=True,
         )
     )
-    ## Eddy pipeline parts: generate_acq, generate_index, eddy
-    workflow.add(
-        dt.generate_acq_file(
-            name="generate_acq_file",
-            # interface=generate_acq_file,
-            in_dwi=workflow.prepare_reference_b0_1.lzout.out_b0_dwi_merge,
-            fsl_phase_encoding_direction=workflow.init_input_node.lzout.phase_encoding_direction,
-            total_readout_time=workflow.init_input_node.lzout.total_readout_time,
-            image_id=None,
-        )
-    )
-    workflow.add(
-        dt.generate_index_file(
-            name="generate_index_file",
-            # interface=generate_index_file,
-            in_bval=workflow.prepare_reference_b0_1.lzout.out_updated_bval,
-            low_bval=5.0,
-            image_id=None,
-        )
-    )
-    workflow.add(
-        Nipype1Task(
-            name="eddy",
-            interface=eddy,
-            in_file=workflow.prepare_reference_b0_1.lzout.out_b0_dwi_merge,
-            in_mask=workflow.bet_2.lzout.mask_file,
-            in_bval=workflow.prepare_reference_b0_1.lzout.out_updated_bval,
-            in_bvec=workflow.prepare_reference_b0_1.lzout.out_updated_bvec,
-            in_acqp=workflow.generate_acq_file.lzout.out_acq,
-            in_index=workflow.generate_index_file.lzout.out_index,
-        )
-    )
-    # eddy pipeline end -  epi pipeline start
-    workflow.add(
-        Nipype1Task(
-            name="split_epi",
-            interface=split_epi,
-            # in_file=workflow2.lzin.eddy_out_corrected,
-            in_file=workflow.eddy.lzout.out_corrected,
-        )
+    eddyy = build_eddy_wf(
+        workflow.prepare_reference_b0_1.lzout.out_b0_dwi_merge,
+        workflow.init_input_node.lzout.phase_encoding_direction,
+        workflow.init_input_node.lzout.total_readout_time,
+        workflow.prepare_reference_b0_1.lzout.out_updated_bval,
+        workflow.bet_2.lzout.mask_file,
+        workflow.prepare_reference_b0_1.lzout.out_updated_bvec,
     )
 
-    workflow.add(
-        Nipype1Task(
-            name="select_epi",
-            interface=select_epi,
-            inlist=workflow.split_epi.lzout.out_files,
-            index=[0],
-        )
+    workflow.add(eddyy)
+
+    epii = build_epi_wf(
+        workflow.init_input_node.lzout.t1w,
+        workflow.prepare_reference_b0_1.lzout.out_updated_bvec,
+        workflow.init_input_node.lzout.t1w,
     )
-    workflow.add(
-        Nipype1Task(
-            name="flirt_b0_2_t1",
-            interface=flirt_b0_2_t1,
-            in_file=workflow.select_epi.lzout.out,
-            reference=workflow.init_input_node.lzout.t1w,
-        )
-    )
-    workflow.add(
-        dt.expend_matrix_list(
-            name="expend_matrix_list",
-            # interface=expend_matrix_list,
-            in_matrix=workflow.flirt_b0_2_t1.lzout.out_matrix_file,
-            in_bvec=workflow.eddy.lzout.out_rotated_bvecsc,
-        )
-    )
-    workflow.add(
-        dt.rotate_bvecs(
-            name="rotate_bvecs",
-            # interface=rotate_bvecs,
-            in_bvec=workflow.eddy.lzout.out_rotated_bvecs,
-            in_matrix=workflow.expend_matrix_list.lzout.out_matrix_list,
-        )
-    )
-    workflow.add(
-        Nipype1Task(
-            name="ants_reg",
-            interface=ants_reg,
-            moving_image=workflow.flirt_b0_2_t1.lzout.out_file,
-            fixed_image=workflow.init_input_node.lzout.t1w,
-        )
-    )
-    workflow.add(
-        Nipype1Task(
-            name="c3d_affine_tool",
-            interface=c3d_affine_tool,
-            source_file=workflow.select_epi.lzout.out,
-            reference_file=workflow.init_input_node.lzout.t1w,
-            transform_file=workflow.flirt_b0_2_t1.lzout.out_matrix_file,
-        )
-    )
-    workflow.add(
-        dt.change_itk_transform_type(
-            name="change_itk_transform_type",
-            # interface=change_itk_transform_type,
-            input_affine_file=workflow.c3d_affine_tool.lzout.itk_transform,
-        )
-    )
-    workflow.add(
-        Nipype1Task(
-            name="merge_transform",
-            interface=merge_transform,
-            in1=workflow.change_itk_transform_type.lzout.updated_affine_file,
-            in2=workflow.ants_reg.lzout.out_matrix,
-            in3=workflow.ants_reg.lzout.forward_warp_field,
-        )
-    )
-    workflow.add(
-        dt.ants_apply_transforms(
-            name="apply_transform_image",
-            # interface=ants_apply_transforms,
-            fixed_image=workflow.init_input_node.lzout.t1w,
-            moving_image=workflow.split_epi.lzout.out_files,
-            transforms=workflow.merge_transform.lzout.out,
-            warped_image="out_warped_field.nii.gz",
-            output_warped_image=True,
-        ).split("moving_image")
-    )
-    workflow.add(
-        dt.ants_apply_transforms(
-            name="apply_transform_field",
-            # interface=ants_apply_transforms,
-            fixed_image=workflow.init_input_node.lzout.t1w,
-            moving_image=workflow.split_epi.lzout.out_files,
-            transforms=workflow.merge_transform.lzout.out,
-            warped_image="out_warped.nii.gz",
-            output_warped_image=False,
-        ).split("moving_image")
-    )
-    workflow.add(
-        Nipype1Task(
-            name="jacobian",
-            interface=jacobian,
-            deformationField=workflow.apply_transform_field.lzout.warped_image,
-        )
-    )
-    workflow.jacobian.combine(["apply_transform_field.moving_image"])
-    workflow.apply_transform_image.combine(["moving_image"])
-    workflow.add(
-        Nipype1Task(
-            name="jacmult",
-            interface=jacmult,
-            operand_files=workflow.apply_transform_image.lzout.warped_image,
-            in_file=workflow.jacobian.lzout.jacobian_image,
-        ).split(("operand_files", "in_file"))
-    )
-    workflow.add(
-        Nipype1Task(
-            name="thres_epi",
-            interface=thres_epi,
-            in_file=workflow.jacmult.lzout.out_file,
-        )
-    )
-    workflow.thres_epi.combine(["jacmult.operand_files", "jacmult.in_file"])
-    workflow.add(
-        Nipype1Task(
-            name="merge_epi",
-            interface=merge_epi,
-            in_files=workflow.thres_epi.lzout.out_file,
-        )
-    )
-    ## epi pipeline end
+
+    workflow.add(epii)
     workflow.add(
         Nipype1Task(
             name="bias",
             interface=bias,
             in_bval=workflow.prepare_reference_b0_1.lzout.out_updated_bval,
-            in_file=workflow.merge_epi.lzout.merged_file,
-            in_bvec=workflow.rotate_bvecs.lzout.out_file,
+            in_file=workflow.epi.lzout.merge_epi,
+            in_bvec=workflow.epi.lzout.rotated_bvecs,
         )
     )
     workflow.add(
