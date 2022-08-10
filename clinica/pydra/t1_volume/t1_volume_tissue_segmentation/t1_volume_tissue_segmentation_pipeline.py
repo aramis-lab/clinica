@@ -1,20 +1,19 @@
+from pathlib import Path
+
 import nipype.interfaces.io as nio
 import nipype.interfaces.spm as spm
 import nipype.interfaces.utility as nutil
 import nipype.pipeline.engine as npe
 from nipype.algorithms.misc import Gunzip
 from pydra import Submitter, Workflow
+from pydra.tasks.nipype1.utils import Nipype1Task
+
+import clinica.pydra.t1_volume.spm_utils as spm_utils
+from clinica.pydra.engine import clinica_io
 from clinica.pydra.t1_volume.t1_volume_utils import (
     ApplySegmentationDeformation,
     get_tissue_tuples,
 )
-
-from pydra.tasks.nipype1.utils import Nipype1Task
-from clinica.pydra.engine import clinica_io
-
-from pathlib import Path
-
-import clinica.pydra.t1_volume.spm_utils as spm_utils
 
 in_dir = Path("/Users/omar.elrifai/workspace/experimentations/pydra/IN/")
 nifti_list = [in_dir / "t1w.nii.gz"]
