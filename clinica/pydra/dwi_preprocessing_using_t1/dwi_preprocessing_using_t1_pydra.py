@@ -6,7 +6,7 @@ from os import getenv
 from pathlib import Path
 
 import dwi_preprocessing_using_t1_tasks as dt
-import dwi_preprocessing_using_t1_utils
+import dwi_preprocessing_using_t1_utils as du
 import nipype.interfaces.utility as niu
 from nipype.interfaces.ants import CreateJacobianDeterminantImage
 from nipype.interfaces.ants.registration import RegistrationSynQuick
@@ -100,7 +100,7 @@ def build_core_worfflow():
             mask=True,
         )
     )
-    eddyy = build_eddy_wf(
+    eddyy = du.build_eddy_wf(
         workflow.prepare_reference_b0_1.lzout.out_b0_dwi_merge,
         workflow.init_input_node.lzout.phase_encoding_direction,
         workflow.init_input_node.lzout.total_readout_time,
@@ -111,7 +111,7 @@ def build_core_worfflow():
 
     workflow.add(eddyy)
 
-    epii = build_epi_wf(
+    epii = du.build_epi_wf(
         workflow.init_input_node.lzout.t1w,
         workflow.prepare_reference_b0_1.lzout.out_updated_bvec,
         workflow.init_input_node.lzout.t1w,
