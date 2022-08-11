@@ -46,12 +46,12 @@ def read_bids(output_query: Optional[dict] = None, **kwargs) -> FunctionTask:
 
         layout = BIDSLayout(ds_dir=base_dir)
 
-        results = {
-            key: layout.get(return_type="files", **query)
+        results = [
+            layout.get(return_type="files", **query)
             for key, query in list(output_query.items())
-        }
+        ]
 
-        return tuple(results.values())
+        return tuple(results) if len(results) > 1 else results[0]
 
     input_spec = SpecInfo(
         name="Input",
