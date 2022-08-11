@@ -16,6 +16,11 @@ from nipype.interfaces.spm.base import SPMCommand, SPMCommandInputSpec
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 from pydra.mark import annotate, task
 
+from clinica.pydra.t1_volume.t1_volume_utils import (
+    get_world_coordinate_of_center,
+    is_centered,
+)
+
 
 @task
 @annotate({"return": {"out_file": PathLike}})

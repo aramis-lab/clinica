@@ -1,18 +1,13 @@
 from pathlib import Path
 
-import nipype.interfaces.io as nio
 import nipype.interfaces.spm as spm
-import nipype.interfaces.utility as nutil
-import nipype.pipeline.engine as npe
 from nipype.algorithms.misc import Gunzip
-from pydra import Submitter, Workflow
+from pydra import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
 
 from clinica.pydra.engine import clinica_io
-from clinica.pydra.t1_volume.t1_volume_utils import (
-    ApplySegmentationDeformation,
-    initialize_tissues_spm_segment,
-)
+from clinica.pydra.t1_volume.t1_volume_tasks import ApplySegmentationDeformation
+from clinica.pydra.t1_volume.t1_volume_utils import initialize_tissues_spm_segment
 
 in_dir = Path("/Users/omar.elrifai/workspace/experimentations/pydra/IN/")
 nifti_list = [in_dir / "t1w.nii.gz"]
@@ -21,7 +16,17 @@ test_nii = in_dir / "t1w.nii"
 
 @clinica_io
 def t1volume_tissue_segmentation(name: str = "t1volume") -> Workflow:
-    """Workflow for tissue segmentation, bias correction and spatial normalization"""
+    """Workflow for tissue segmentation, bias correction and spatial normalization
+
+    Parameters
+    ----------
+    name : str
+        name of pipeline
+    Returns
+    -------
+    Workflow
+        pydra workflow for core functionalities
+    """
 
     from clinica.pydra.t1_volume.t1_volume_tasks import (
         check_volume_location_in_world_coordinate_system,

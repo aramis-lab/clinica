@@ -6,7 +6,7 @@ from numpy import ndarray
 
 
 def initialize_tissues_spm_segment(
-    tissue_probability_map: Union(PathLike, None) = None
+    tissue_probability_map: Union[PathLike, None] = None
 ) -> tuple:
 
     """Prepare data structure for SPM segment interface
@@ -495,8 +495,8 @@ def vox_to_world_space_method_3_bis(coordinates_vol, header):
     return np.dot(affine_transformation_matrix, homogeneous_coord)[0:3]
 
 
-def get_tpm():
-    """Extracts Tissue Probability Map (TPM) from SPM.
+def get_tpm() -> PathLike:
+    """Get Tissue Probability Map (TPM) from SPM.
 
     Returns
     -------
@@ -510,7 +510,6 @@ def get_tpm():
     spm_home = os.getenv("SPM_HOME")
 
     if not spm_home:
-        # Try MCR to get a hint on SPM location
         spm_home = os.getenv("SPMSTANDALONE_HOME")
 
     if not spm_home:
@@ -520,11 +519,16 @@ def get_tpm():
         )
 
     tpm_file_glob = glob(join(spm_home, "**/TPM.nii"), recursive=True)
+
     if len(tpm_file_glob) == 0:
         raise RuntimeError(f"No file found for TPM.nii in your $SPM_HOME in {spm_home}")
+
     if len(tpm_file_glob) > 1:
         error_str = f"Multiple files found for TPM.nii in your SPM_HOME {spm_home}:"
+
         for file in tpm_file_glob:
             error_str += "\n\t" + file
+
         raise RuntimeError(error_str)
+
     return tpm_file_glob[0]
