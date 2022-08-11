@@ -248,7 +248,7 @@ def create_merge_file(
         tmp = merged_df.select_dtypes(include=[np.number])
         # Round numeric values in dataframe to 12 floating point values
         merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
-        merged_df.to_csv(out_path, sep="\t")
+        merged_df.to_csv(out_path, sep="\t", index=False)
         cprint("End of CAPS information merge.", lvl="debug")
 
 
