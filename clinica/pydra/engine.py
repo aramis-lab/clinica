@@ -12,7 +12,7 @@ def clinica_io(func):
     """Decorator to add BIDS reader/writer to any Pydra workflow."""
 
     @functools.wraps(func)
-    def run_wrapper(name: str, input_dir: PathLike, output_dir: PathLike):
+    def run_wrapper(name: str, input_dir: PathLike, output_dir: PathLike) -> Workflow:
 
         core_workflow = func()
 
