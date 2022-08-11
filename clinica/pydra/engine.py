@@ -1,5 +1,4 @@
 import functools
-import typing as ty
 from os import PathLike
 
 from pydra import Workflow
