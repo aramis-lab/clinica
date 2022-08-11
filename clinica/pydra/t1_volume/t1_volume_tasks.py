@@ -81,7 +81,7 @@ def check_volume_location_in_world_coordinate_system(
     bids_dir: PathLike,
     modality: str = "t1w",
     skip_question: bool = False,
-) -> None:
+) -> bool:
     """Check if images are centered around the origin of the world coordinate
 
     Parameters
@@ -100,7 +100,8 @@ def check_volume_location_in_world_coordinate_system(
 
     Returns
     -------
-    None
+    bool
+        True if they are centered, False otherwise
 
     Warns
     ------
@@ -121,7 +122,9 @@ def check_volume_location_in_world_coordinate_system(
     import click
     import numpy as np
 
-    nifti_list = []
+    flag_centered = True
+    list_non_centered_files = []
+
     if isinstance(nifti_list, PosixPath):
         if not is_centered(nifti_list):
             list_non_centered_files.append(nifti_list)
@@ -175,11 +178,14 @@ def check_volume_location_in_world_coordinate_system(
 
         click.echo(warning_message)
 
+        flag_centered = False
+
         if not skip_question:
             if not click.confirm("Do you still want to launch the pipeline?"):
                 click.echo("Clinica will now exit...")
                 sys.exit(0)
-    return
+
+    return flag_centered
 
 
 class ApplySegmentationDeformationInput(SPMCommandInputSpec):
@@ -219,17 +225,7 @@ class ApplySegmentationDeformationOutput(TraitedSpec):
 
 
 class ApplySegmentationDeformation(SPMCommand):
-    """Uses SPM to apply a deformation field obtained from Segmentation routine to a given file
-
-    Examples
-    --------
-
-    >>> import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
-    >>> inv = seg_utils.ApplySegmentationDeformation()
-    >>> inv.inputs.in_files = 'T1w.nii'
-    >>> inv.inputs.deformation = 'y_T1w.nii'
-    >>> inv.run() # doctest: +SKIP
-    """
+    """Uses SPM to apply a deformation field obtained from Segmentation routine to a given file"""
 
     input_spec = ApplySegmentationDeformationInput
     output_spec = ApplySegmentationDeformationOutput
