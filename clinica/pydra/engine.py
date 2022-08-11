@@ -34,7 +34,7 @@ def clinica_io(func):
     return run_wrapper
 
 
-def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> ty.Tuple:
+def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
     """Setup for an input workflow to read BIDS data.
 
     Parameters
