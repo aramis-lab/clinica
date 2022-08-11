@@ -399,7 +399,6 @@ def volume_pipeline(
         ses_df = pd.DataFrame(
             [[participant_id, session_id]], columns=["participant_id", "session_id"]
         )
-        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
         if os.path.exists(mod_path):
             # Looking for groups
@@ -480,6 +479,7 @@ def volume_pipeline(
 
         pipeline_df = pd.concat([pipeline_df, ses_df])
 
+    pipeline_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
     summary_df = generate_summary(pipeline_df, pipeline_name)
     final_df = pd.concat([df, pipeline_df], axis=1)
     final_df.reset_index(inplace=True)
