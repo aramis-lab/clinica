@@ -1,8 +1,10 @@
 from multiprocessing.dummy import Array
 from os import PathLike
+from pathlib import PosixPath
 from typing import Union
 from pydra.mark import annotate, task
 from numpy import ndarray
+from nibabel.nifti1 import Nifti1Header
 
 
 @task
@@ -104,7 +106,13 @@ def check_volume_location_in_world_coordinate_system(
     import click
     import numpy as np
 
-    list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
+    nifti_list = []
+    if isinstance(nifti_list, PosixPath):
+        if not is_centered(nifti_list):
+            list_non_centered_files.append(nifti_list)
+    elif isinstance(nifti_list, list):
+        list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
+
     if len(list_non_centered_files) > 0:
         centers = [
             get_world_coordinate_of_center(file) for file in list_non_centered_files
@@ -199,7 +207,7 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
         return False
 
 
-def get_world_coordinate_of_center(nii_volume: PathLike):
+def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     """Extract the world coordinates of the center of the image.
 
     Parameters
@@ -268,10 +276,12 @@ def get_center_volume(header: dict) -> ndarray:
 
     Parameters
     ----------
-        header: a nifti header
+        header: Nifti1Header
+            Contains image metadata
 
     Returns
     -------
+    ndarray
         Voxel coordinates of the center of the volume
     """
     import numpy as np
@@ -282,17 +292,32 @@ def get_center_volume(header: dict) -> ndarray:
     return np.array([center_x, center_y, center_z])
 
 
-def vox_to_world_space_method_1(coordinates_vol, header):
-    """
-    The Method 1 is for compatibility with analyze and is not supposed to be used as the main orientation method. But it
-    is used if sform_code = 0. The world coordinates are determined simply by scaling by the voxel size by their
-    dimension stored in pixdim. More information here: https://brainder.org/2012/09/23/the-nifti-file-format/
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: header object
+def vox_to_world_space_method_1(
+    coordinates_vol: ndarray, header: Nifti1Header
+) -> ndarray:
+    """Convert coordinates to world space
 
-    Returns:
+    Parameters
+    ----------
+    coordinates_vol: ndarray
+        Coordinate in the volume (raw data)
+    header: Nifti1Header
+        Contains image metadata
+
+    Returns
+    -------
+    ndarray
         Coordinates in the world space
+
+    Notes
+    -----
+    This method is for compatibility with analyze and is not supposed to be used as the main orientation method. But it
+    is used if sform_code = 0. The world coordinates are determined simply by scaling by the voxel size by their
+    dimension stored in pixdim.
+
+    References
+    ----------
+    https://brainder.org/2012/09/23/the-nifti-file-format/
     """
     import numpy as np
 
@@ -301,18 +326,29 @@ def vox_to_world_space_method_1(coordinates_vol, header):
     )
 
 
-def vox_to_world_space_method_2(coordinates_vol, header):
-    """
-    The Method 2 is used when short qform_code is larger than zero. To get the coordinates, we multiply a rotation
+def vox_to_world_space_method_2(
+    coordinates_vol: ndarray, header: Nifti1Header
+) -> ndarray:
+    """Convert coordinates to world space (method 2)
+
+
+    Parameters
+    ----------
+    coordinates_vol : ndarray
+        Coordinate in the volume (raw data)
+    header : Nifti1Header
+        Image header containing metadata
+
+    Returns
+    -------
+    ndarray
+        Coordinates in the world space
+
+    Notes
+    -----
+    This method is used when short qform_code is larger than zero. To get the coordinates, we multiply a rotation
     matrix (r_mat) by coordinates_vol, then perform Hadamard with pixel dimension pixdim (like in method 1). Then we add
     an offset (qoffset_x, qoffset_y, qoffset_z)
-
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: header object
-
-    Returns:
-        Coordinates in the world space
     """
     import numpy as np
 
@@ -362,32 +398,48 @@ def vox_to_world_space_method_2(coordinates_vol, header):
     ) + np.array([header["qoffset_x"], header["qoffset_y"], header["qoffset_z"]])
 
 
-def vox_to_world_space_method_3(coordinates_vol, header):
-    """
+def vox_to_world_space_method_3(coordinates_vol: ndarray, header: Nifti1Header):
+    """Convert coordinates to world space (method 3)
+
+
+    Parameters
+    ----------
+    coordinates_vol : ndarray
+        Coordinate in the volume (raw data)
+    header : Nifti1Header
+        Image header containing metadata
+
+    Returns
+    -------
+    ndarray
+        Coordinates in the world space
+
+    Notes
+    -----
     This method is used when sform_code is larger than zero. It relies on a full affine matrix, stored in the header in
     the fields srow_[x,y,y], to map voxel to world coordinates.
     When a nifti file is created with raw data and affine=..., this is this method that is used to decipher the
     voxel-to-world correspondence.
 
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: header object
-
-    Returns:
-        Coordinates in the world space
     """
     import numpy as np
 
-    def get_aff_matrix(h):
+    def get_aff_matrix(h: Nifti1Header) -> ndarray:
         """Get affine transformation matrix.
 
-        See details here: https://brainder.org/2012/09/23/the-nifti-file-format/
+        Parameters
+        ----------
+            h : Nifti1Header
 
-        Args:
-            h: header
+        Returns
+        -------
+        ndarray
+            Affine transformation matrix
 
-        Returns:
-            affine transformation matrix
+        References
+        ----------
+        https://brainder.org/2012/09/23/the-nifti-file-format/
+
         """
         mat = np.zeros((4, 4))
         mat[0, 0] = h["srow_x"][0]
@@ -437,10 +489,12 @@ def vox_to_world_space_method_3_bis(coordinates_vol, header):
 
 
 def get_tpm():
-    """Get Tissue Probability Map (TPM) from SPM.
+    """Extracts Tissue Probability Map (TPM) from SPM.
 
-    Returns:
-        str: TPM.nii from SPM
+    Returns
+    -------
+    str
+        TPM.nii path from SPM
     """
     import os
     from glob import glob
