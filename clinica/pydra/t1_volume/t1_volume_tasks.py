@@ -2,9 +2,10 @@ from multiprocessing.dummy import Array
 from os import PathLike
 from pathlib import PosixPath
 from typing import Union
-from pydra.mark import annotate, task
-from numpy import ndarray
+
 from nibabel.nifti1 import Nifti1Header
+from numpy import ndarray
+from pydra.mark import annotate, task
 
 
 @task
@@ -28,8 +29,8 @@ def zip_nii(in_var: Union[PathLike, list], same_dir: bool = False) -> PathLike:
     """
 
     import gzip
-    import shutil
     import os
+    import shutil
 
     from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined

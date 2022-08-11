@@ -34,7 +34,7 @@ def bids_reader(query_bids: dict, input_dir: PathLike):
     Parameters
     ----------
     query_bids : dict
-        Input to BIDSDataGrabber 
+        Input to BIDSDataGrabber
 
     input_dir :  PathLike
         the BIDS input directory

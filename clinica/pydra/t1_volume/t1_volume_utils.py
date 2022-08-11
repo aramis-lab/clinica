@@ -1,4 +1,6 @@
 import os
+from os import PathLike
+from typing import Union
 
 import numpy as np
 from nipype.interfaces.base import (
@@ -12,7 +14,22 @@ from nipype.interfaces.spm.base import SPMCommand, SPMCommandInputSpec
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
 
-def initialize_parameters(tissue_probability_map=None):
+def initialize_tissues_spm_segment(
+    tissue_probability_map: Union(PathLike, None) = None
+) -> tuple:
+
+    """Prepare data structure for SPM segment interface
+
+    Parameters
+    ----------
+    tissue_probability_map: Union(PathLike, None)
+        Path to the niftii tissue probability map
+
+    Returns
+    -------
+    tuple
+        "tissues" data structure for SPMSegment
+    """
 
     import clinica.pydra.t1_volume.spm_utils as spm_utils
 
@@ -37,25 +54,57 @@ def initialize_parameters(tissue_probability_map=None):
     return tissue_tuples
 
 
-def init_input_node(t1w):
-    """Extract "sub-<participant_id>_ses-<session_label>" from <t1w> and print begin message."""
+def init_input_node(bids_name: str) -> None:
+    """Extract "sub-<participant_id>_ses-<session_label>" from <bids_name> and print begin message.
+
+    Parameters
+    ----------
+    bids_name : str
+        The BIDS name of the t1w image
+
+    Warns
+    -----
+    Outputs ID of subjet/session being processed
+    """
+
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
 
-    subject_id = get_subject_id(t1w)
+    subject_id = get_subject_id(bids_name)
     print_begin_image(subject_id)
 
-    return subject_id, t1w
+    return subject_id, bids_name
 
 
-def print_end_pipeline(subject_id, final_file):
-    """Display end message for <subject_id> when <final_file> is connected."""
+def print_end_pipeline(bids_name: str) -> None:
+    """Prints end message.
+
+    Parameters
+    ----------
+    bids_name : str
+        The BIDS name of the t1w image
+
+    Warns
+    -----
+    Prints out message for image <bids_name>
+    """
     from clinica.utils.ux import print_end_image
 
-    print_end_image(subject_id)
+    print_end_image(bids_name)
 
 
-def zip_list_files(class_images, zip_files=False):
+def zip_list_files(class_images: list, zip_files: bool = False) -> list:
+    """Create list of (Optionally) zipped nifti images
+    Parameters
+    ----------
+    class_images : list
+    zip_files: bool
+
+    Returns
+    -------
+    list
+        list of (optionally) zipped nifti files
+    """
     from clinica.utils.filemanip import zip_nii
 
     if zip_files:
@@ -65,29 +114,39 @@ def zip_list_files(class_images, zip_files=False):
 
 
 def get_tissue_tuples(
-    tissue_map,
-    tissue_classes,
-    dartel_tissues,
-    save_warped_unmodulated,
-    save_warped_modulated,
-):
-    """Get tissue tuples.
+    tissue_map: PathLike,
+    tissue_classes: list,
+    dartel_tissues: list,
+    save_warped_unmodulated: bool,
+    save_warped_modulated: bool,
+) -> list:
+    """Extract list of tuples, one for each tissue clas.
 
-    Method to obtain the list of tuples, one for each tissue class, with the following fields:
-     - tissue probability map (4D), 1-based index to frame
+    Parameters
+    ---------
+    tissue_map : PathLike
+        Path to tissue maps
+    tissue_classes: list
+        Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
+    dartel_tissues: list
+        Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
+    save_warped_unmodulated : bool
+        Save warped unmodulated images for tissues specified in --tissue_classes
+    save_warped_modulated: bool
+        Save warped modulated images for tissues specified in --tissue_classes
+
+    Returns
+    -------
+    list
+        List of tuples according to NewSegment input por tissues
+
+    Notes
+    -----
+     The returned list contains tissue probability map (4D), 1-based index to frame
      - number of gaussians
      - which maps to save [Native, DARTEL] - a tuple of two boolean values
      - which maps to save [Unmodulated, Modulated] - a tuple of two boolean values
 
-    Args:
-        tissue_map: Path to tissue maps
-        tissue_classes: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
-        dartel_tissues: Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
-        save_warped_unmodulated: Save warped unmodulated images for tissues specified in --tissue_classes
-        save_warped_modulated: Save warped modulated images for tissues specified in --tissue_classes
-
-    Returns:
-        List of tuples according to NewSegment input por tissues
     """
     tissues = []
 
