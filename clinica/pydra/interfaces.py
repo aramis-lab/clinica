@@ -34,8 +34,7 @@ def bids_reader(query_bids: dict, input_dir: PathLike):
     Parameters
     ----------
     query_bids : dict
-        Input to BIDSDataGrabber
-
+        Input to BIDSDataGrabber (c.f https://nipype.readthedocs.io/en/latest/api/generated/nipype.interfaces.io.html#bidsdatagrabber)
     input_dir :  PathLike
         the BIDS input directory
 
@@ -43,10 +42,6 @@ def bids_reader(query_bids: dict, input_dir: PathLike):
     -------
         Nipype1Task
             The task used for reading files from BIDS
-
-    References
-    -----
-    https://nipype.readthedocs.io/en/latest/api/generated/nipype.interfaces.io.html#bidsdatagrabber
     """
     bids_data_grabber = nio.BIDSDataGrabber(output_query=query_bids)
     bids_reader_task = Nipype1Task(
