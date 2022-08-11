@@ -22,7 +22,7 @@ def initialize_tissues_spm_segment(
         "tissues" data structure for SPMSegment
     """
 
-    import clinica.pydra.t1_volume.spm_utils as spm_utils
+    import clinica.pydra.t1_volume.t1_volume_utils as spm_utils
 
     parameters = {}
     parameters.setdefault("tissue_classes", [1, 2, 3])
