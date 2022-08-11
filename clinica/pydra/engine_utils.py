@@ -41,9 +41,7 @@ def bids_query(keys: list) -> dict:
         dict
             Query dictionary compatible with BIDSDataGrabber()
     """
-    bids_keys_available = {
-        "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}
-    }
+    bids_keys_available = {"T1w": {"suffix": "T1w", "extension": [".nii.gz"]}}
 
     return {key: bids_keys_available[key] for key in keys}
 
