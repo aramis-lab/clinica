@@ -180,7 +180,9 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
     Parameters
     ---------
     nii_volume : PathLike
-        path to NIfTI volume threshold_l2: maximum distance between origin of the world coordinate system and the center of the volume to
+        path to NIfTI volume
+    threshold_l2: int
+        Maximum distance between origin of the world coordinate system and the center of the volume to
         be considered centered. The threshold were SPM segmentation stops working is around 100 mm (it was determined empirically after several
         trials on a generated dataset), so default value is 50mm in order to have a security margin, even when dealing with co-registered files afterward.
 
@@ -189,7 +191,7 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
         bool
 
     Notes
-    -----------
+    ------
 
     SPM has troubles to segment files if the center of the volume is not close from the origin of the world coordinate
     system. A series of experiment have been conducted: we take a volume whose center is on the origin of the world

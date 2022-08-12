@@ -1,7 +1,6 @@
 import os
 from multiprocessing.dummy import Array
 from os import PathLike
-from pathlib import PosixPath
 from typing import Union
 
 import numpy as np
@@ -77,7 +76,7 @@ def zip_nii(in_var: Union[PathLike, list], same_dir: bool = False) -> PathLike:
 @task
 @annotate({"return": {"out_status": None}})
 def check_volume_location_in_world_coordinate_system(
-    nifti_list: list,
+    nifti_input: Union[PathLike, list],
     bids_dir: PathLike,
     modality: str = "t1w",
     skip_question: bool = False,
@@ -86,8 +85,8 @@ def check_volume_location_in_world_coordinate_system(
 
     Parameters
     ----
-    nifti_list: list
-        list of path to nifti files
+    nifti_input: Union[list, PathLike]
+        list of path to nifti files or path
 
     bids_dir: str
         path to bids directory associated with this check
@@ -125,11 +124,13 @@ def check_volume_location_in_world_coordinate_system(
     flag_centered = True
     list_non_centered_files = []
 
-    if isinstance(nifti_list, PosixPath):
-        if not is_centered(nifti_list):
-            list_non_centered_files.append(nifti_list)
-    elif isinstance(nifti_list, list):
-        list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
+    if isinstance(nifti_input, list):
+        list_non_centered_files = [
+            file for file in nifti_input if not is_centered(file)
+        ]
+    elif os.path.exists(nifti_input):
+        if not is_centered(nifti_input):
+            list_non_centered_files.append(nifti_input)
 
     if len(list_non_centered_files) > 0:
         centers = [
