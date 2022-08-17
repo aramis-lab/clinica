@@ -1,9 +1,7 @@
 import os
-from multiprocessing.dummy import Array
 from os import PathLike
 from typing import Union
 
-import numpy as np
 from nipype.interfaces.base import (
     File,
     InputMultiPath,
@@ -15,62 +13,7 @@ from nipype.interfaces.spm.base import SPMCommand, SPMCommandInputSpec
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 from pydra.mark import annotate, task
 
-from clinica.pydra.t1_volume.t1_volume_utils import (
-    get_world_coordinate_of_center,
-    is_centered,
-)
-
-
-@task
-@annotate({"return": {"out_file": PathLike}})
-def zip_nii(in_var: Union[PathLike, list], same_dir: bool = False) -> PathLike:
-    """Zips a file or a list of files
-
-    Parameters
-    ---------
-    in_var : Union[PathLike, list]
-        file or list of files to zip
-
-    same_dir : bool
-        True if we want to zip in the origin directory, False if in cwd
-
-    Returns
-    ------
-    PathLike
-        path of the output
-
-    """
-
-    import gzip
-    import os
-    import shutil
-
-    from nipype.utils.filemanip import split_filename
-    from traits.trait_base import _Undefined
-
-    if (in_var is None) or isinstance(in_var, _Undefined):
-        return None
-
-    if not isinstance(in_var, str):  # type(in_file) is list:
-        return [zip_nii(f, same_dir) for f in in_var]
-
-    orig_dir, base, ext = split_filename(str(in_var))
-
-    # Already compressed
-
-    if os.path.splitext("ext") == ".gz":
-        return in_var
-
-    # Not compressed
-
-    out_file = os.abspath(
-        os.join(orig_dir if same_dir else os.getcwd(), base + ext + ".gz")
-    )
-
-    with open(in_var, "rb") as f_in, gzip.open(out_file, "wb") as f_out:
-        shutil.copyfileobj(f_in, f_out)
-
-    return out_file
+from clinica.pydra.t1_volume.utils import get_world_coordinate_of_center, is_centered
 
 
 @task
@@ -236,6 +179,9 @@ class ApplySegmentationDeformation(SPMCommand):
 
     def _format_arg(self, opt, spec, val):
         """Convert input to appropriate format for spm"""
+
+        import numpy as np
+
         if opt == "deformation_field":
             return np.array([list_to_filename(val)], dtype=object)
         if opt == "in_files":

@@ -1,6 +1,7 @@
 import click
 
 from clinica.pydra.t1_linear import t1_linear_cli as pydra_t1_linear_cli
+from clinica.pydra.t1_volume.create_dartel import cli as pydra_tissue_segmentation_cli
 from clinica.pydra.t1_volume.t1_volume_tissue_segmentation import (
     t1_volume_tissue_segmentation_cli as pydra_t1vol_ts_cli,
 )
@@ -82,6 +83,7 @@ cli.add_command(deeplearning_prepare_data_cli.cli)
 
 cli.add_command(pydra_t1_linear_cli.cli)
 cli.add_command(pydra_t1vol_ts_cli.cli)
+cli.add_command(pydra_tissue_segmentation_cli.cli)
 
 if __name__ == "__main__":
     cli()

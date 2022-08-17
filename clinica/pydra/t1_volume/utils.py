@@ -1,5 +1,5 @@
 from os import PathLike
-from typing import Union
+from typing import Tuple, Union
 
 from nibabel.nifti1 import Nifti1Header
 from numpy import ndarray
@@ -22,7 +22,7 @@ def initialize_tissues_spm_segment(
         "tissues" data structure for SPMSegment
     """
 
-    import clinica.pydra.t1_volume.t1_volume_utils as spm_utils
+    import clinica.pydra.t1_volume.utils as spm_utils
 
     parameters = {}
     parameters.setdefault("tissue_classes", [1, 2, 3])
@@ -45,13 +45,18 @@ def initialize_tissues_spm_segment(
     return tissue_tuples
 
 
-def init_input_node(bids_name: str) -> None:
+def init_input_node(bids_name: str) -> Tuple[str, str]:
     """Extract "sub-<participant_id>_ses-<session_label>" from <bids_name> and print begin message.
 
     Parameters
     ----------
     bids_name : str
         The BIDS name of the t1w image
+
+    Returns
+    -------
+    Tuple[str, str]
+        the subject identifier and the bids filename
 
     Warns
     -----
@@ -65,23 +70,6 @@ def init_input_node(bids_name: str) -> None:
     print_begin_image(subject_id)
 
     return subject_id, bids_name
-
-
-def print_end_pipeline(bids_name: str) -> None:
-    """Prints end message.
-
-    Parameters
-    ----------
-    bids_name : str
-        The BIDS name of the t1w image
-
-    Warns
-    -----
-    Prints out message for image <bids_name>
-    """
-    from clinica.utils.ux import print_end_image
-
-    print_end_image(bids_name)
 
 
 def zip_list_files(class_images: list, zip_files: bool = False) -> list:
@@ -183,8 +171,7 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
         path to NIfTI volume
     threshold_l2: int
         Maximum distance between origin of the world coordinate system and the center of the volume to
-        be considered centered. The threshold were SPM segmentation stops working is around 100 mm (it was determined empirically after several
-        trials on a generated dataset), so default value is 50mm in order to have a security margin, even when dealing with co-registered files afterward.
+        be considered centered. The threshold were SPM segmentation stops working is around 100 mm (it was determined empirically after several trials on a generated dataset), so default value is 50mm in order to have a security margin, even when dealing with co-registered files afterward.
 
     Returns
     -------
