@@ -9,11 +9,6 @@ from clinica.pydra.engine import clinica_io
 from clinica.pydra.t1_volume.t1_volume_tasks import ApplySegmentationDeformation
 from clinica.pydra.t1_volume.t1_volume_utils import initialize_tissues_spm_segment
 
-in_dir = Path("/Users/omar.elrifai/workspace/experimentations/pydra/IN/")
-nifti_list = [in_dir / "t1w.nii.gz"]
-test_nii = in_dir / "t1w.nii"
-
-
 @clinica_io
 def t1volume_tissue_segmentation(name: str = "t1volume") -> Workflow:
     """Workflow for tissue segmentation, bias correction and spatial normalization
