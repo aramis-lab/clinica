@@ -16,6 +16,7 @@ def t1volume_tissue_segmentation(name: str = "t1volume") -> Workflow:
     ----------
     name : str
         name of pipeline
+
     Returns
     -------
     Workflow
