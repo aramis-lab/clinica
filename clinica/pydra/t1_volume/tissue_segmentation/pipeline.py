@@ -4,8 +4,8 @@ from pydra import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
 
 from clinica.pydra.engine import clinica_io
-from clinica.pydra.t1_volume.t1_volume_tasks import ApplySegmentationDeformation
-from clinica.pydra.t1_volume.t1_volume_utils import initialize_tissues_spm_segment
+from clinica.pydra.t1_volume.tasks import ApplySegmentationDeformation
+from clinica.pydra.t1_volume.utils import initialize_tissues_spm_segment
 
 
 @clinica_io
@@ -23,7 +23,7 @@ def t1volume_tissue_segmentation(name: str = "t1volume") -> Workflow:
         pydra workflow for core functionalities
     """
 
-    from clinica.pydra.t1_volume.t1_volume_tasks import (
+    from clinica.pydra.t1_volume.tasks import (
         check_volume_location_in_world_coordinate_system,
     )
 
