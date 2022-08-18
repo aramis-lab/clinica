@@ -1,7 +1,7 @@
 import click
 
 import clinica.pydra.engine_utils as pydra_utils
-import clinica.pydra.t1_volume.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline as pydra_t1vol
+import clinica.pydra.t1_volume.tissue_segmentation.pipeline as pydra_t1vol
 from clinica.pipelines import cli_param
 
 pipeline_name = "pydra-t1vol-ts"
