@@ -529,7 +529,7 @@ class StatisticsResults:
     tstats: The corresponding T-statistics.
     uncorrected_p_value: The corresponding uncorrected p values,
         stored in a `PValueResults` instance.
-    FDR: The corresponding False Discovery Rate.
+    fdr: The corresponding False Discovery Rate.
     corrected_p_value: The corresponding corrected p values,
         stored in a `CorrectedPValueResults` instance.
     """
@@ -543,10 +543,30 @@ class StatisticsResults:
         corrected_p_values: CorrectedPValueResults,
     ) -> None:
         self.coefficients = coefficients
-        self.TStatistics = tstats
-        self.uncorrectedPValue = uncorrected_p_values
-        self.FDR = fdr
-        self.correctedPValue = corrected_p_values
+        self.tstats = tstats
+        self.uncorrected_p_value = uncorrected_p_values
+        self.fdr = fdr
+        self.corrected_p_value = corrected_p_values
+
+    @property
+    def TStatistics(self):
+        """Needed for compatibility with previous implementation in Matlab."""
+        return self.tstats
+
+    @property
+    def uncorrectedPValue(self):
+        """Needed for compatibility with previous implementation in Matlab."""
+        return self.uncorrected_p_value
+
+    @property
+    def correctedPValue(self):
+        """Needed for compatibility with previous implementation in Matlab."""
+        return self.corrected_p_value
+
+    @property
+    def FDR(self):
+        """Needed for compatibility with previous implementation in Matlab."""
+        return self.fdr
 
     @classmethod
     def from_slm_model(
