@@ -1,5 +1,6 @@
 import abc
 import warnings
+from dataclasses import dataclass
 from functools import reduce
 from os import PathLike
 from pathlib import Path
@@ -369,13 +370,10 @@ class GroupGLMWithInteraction(GroupGLM):
         categorical_contrast = contrast_elements[idx]
         continue_contrast = contrast_elements[(idx + 1) % 2]
         group_values = np.unique(self.df[categorical_contrast])
-        built_contrast = (
-            self.df[continue_contrast].where(
-                self.df[categorical_contrast] == group_values[0], 0
-            ) -
-            self.df[continue_contrast].where(
-                self.df[categorical_contrast] == group_values[1], 0
-            )
+        built_contrast = self.df[continue_contrast].where(
+            self.df[categorical_contrast] == group_values[0], 0
+        ) - self.df[continue_contrast].where(
+            self.df[categorical_contrast] == group_values[1], 0
         )
         self.contrasts[contrast] = built_contrast
 
@@ -437,6 +435,7 @@ class GLMFactory:
         )
 
 
+@dataclass
 class PValueResults:
     """This class implements a container for raw (uncorrected)
     P-value results obtained with a GLM model.
@@ -448,15 +447,14 @@ class PValueResults:
     thresh: Threshold.
     """
 
-    def __init__(
-        self,
-        pvalues: np.ndarray,
-        mask: np.ndarray,
-        threshold: float,
-    ) -> None:
-        self.P = pvalues
-        self.mask = mask
-        self.thresh = threshold
+    pvalues: np.ndarray
+    mask: np.ndarray
+    threshold: float
+
+    @property
+    def P(self):
+        """For compatibility with previous Matlab implementation."""
+        return self.pvalues
 
     @classmethod
     def from_t_statistics(
@@ -501,26 +499,21 @@ class PValueResults:
         return json_dict
 
 
+@dataclass
 class CorrectedPValueResults(PValueResults):
     """This class implements a container for corrected P-value
     results obtained with a GLM model.
-
-    Attributes
-    ----------
-
     """
 
-    def __init__(
-        self,
-        pvalues: np.ndarray,
-        cluster_pvalues: np.ndarray,
-        mask: np.ndarray,
-        threshold: float,
-    ) -> None:
-        super().__init__(pvalues, mask, threshold)
-        self.C = cluster_pvalues
+    cluster_pvalues: np.ndarray
+
+    @property
+    def C(self):
+        """For compatibility with previous Matlab implementation."""
+        return self.cluster_pvalues
 
 
+@dataclass
 class StatisticsResults:
     """This class implements a container for results obtained with
     the GLM model classes. It holds information relative to a GLM
@@ -537,19 +530,11 @@ class StatisticsResults:
         stored in a `CorrectedPValueResults` instance.
     """
 
-    def __init__(
-        self,
-        coefficients: np.ndarray,
-        tstats: np.ndarray,
-        uncorrected_p_values: PValueResults,
-        fdr: np.ndarray,
-        corrected_p_values: CorrectedPValueResults,
-    ) -> None:
-        self.coefficients = coefficients
-        self.tstats = tstats
-        self.uncorrected_p_value = uncorrected_p_values
-        self.fdr = fdr
-        self.corrected_p_value = corrected_p_values
+    coefficients: np.ndarray
+    tstats: np.ndarray
+    uncorrected_p_values: PValueResults
+    fdr: np.ndarray
+    corrected_p_values: CorrectedPValueResults
 
     @property
     def TStatistics(self):
