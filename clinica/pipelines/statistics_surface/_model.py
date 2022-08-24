@@ -693,7 +693,7 @@ class StatisticsResultsSerializer:
         method: Saving method to use.
         """
         writer = self._get_writer(method)
-        return writer(result)
+        writer(result)
 
     def _get_writer(self, method: str) -> Callable[[StatisticsResults], None]:
         if method.lower() == "json":
