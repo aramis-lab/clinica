@@ -296,7 +296,6 @@ def test_statistics_results_serializer(tmp_path):
     assert os.path.exists(tmp_path / Path("out/dummy_results.json"))
     with open(tmp_path / Path("out/dummy_results.json"), "r") as fp:
         serialized = json.load(fp)
-    # assert results.to_dict(jsonable=True) == serialized
     serializer.save(results, "mat")
     names = [
         "coefficients",
