@@ -636,9 +636,9 @@ class StatisticsResultsPlotter:
         self.plotting_extension = ".png"
         self.no_plot = {"coefficients"}  # Elements which should not be plotted
 
-    def plot(self, result: StatisticsResults, method: str):
+    def plot(self, result: StatisticsResults, method: str) -> None:
         plotter = self._get_plotter(method)
-        return plotter(result)
+        plotter(result)
 
     def _get_plotter(self, method: str) -> Callable[[StatisticsResults], None]:
         if method == "nilearn_plot_surf_stat_map":
