@@ -523,6 +523,11 @@ class PValueResults(Results):
     threshold: float
 
     @property
+    def thresh(self):
+        """For compatibility with previous Matlab implementation."""
+        return self.threshold
+
+    @property
     def P(self):
         """For compatibility with previous Matlab implementation."""
         return self.pvalues
@@ -594,12 +599,12 @@ class StatisticsResults(Results):
     @property
     def uncorrectedPValue(self):
         """Needed for compatibility with previous implementation in Matlab."""
-        return self.uncorrected_p_value
+        return self.uncorrected_p_values
 
     @property
     def correctedPValue(self):
         """Needed for compatibility with previous implementation in Matlab."""
-        return self.corrected_p_value
+        return self.corrected_p_values
 
     @property
     def FDR(self):
@@ -754,10 +759,11 @@ class StatisticsResultsSerializer:
             "correctedPValue": "correctedpvaluesstruct",
             "FDR": "FDR",
         }
-        for name, res in results.to_dict(jsonable=False).items():
-            mat_filename = str(self.output_file) + "_" + name + self.mat_extension
-            cprint(
-                msg=f"Writing {name} results to MAT in  {mat_filename}",
-                lvl="info",
-            )
-            savemat(mat_filename, {struct_labels[name]: res})
+        for name, res in results.to_dict().items():
+            if name in struct_labels:
+                mat_filename = str(self.output_file) + "_" + name + self.mat_extension
+                cprint(
+                    msg=f"Writing {name} results to MAT in  {mat_filename}",
+                    lvl="info",
+                )
+                savemat(mat_filename, {struct_labels[name]: res})

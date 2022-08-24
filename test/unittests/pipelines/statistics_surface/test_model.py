@@ -262,14 +262,14 @@ def test_p_value_results():
     threshold = 0.3
     mask = pvalues >= threshold
     results = PValueResults(pvalues, mask, threshold)
-    d = results.to_dict(jsonable=False)
+    d = results.to_dict()
     assert_array_equal(d["P"], pvalues)
     assert_array_equal(d["mask"], mask)
     assert d["thresh"] == threshold
-    d = results.to_dict(jsonable=True)
-    assert d["P"] == pvalues.tolist()
-    assert d["mask"] == mask.tolist()
-    assert d["thresh"] == threshold
+    d = results.to_json(indent=2)
+    assert isinstance(d, str)
+    for sub in ["P", "mask", "thresh"]:
+        assert sub in d
 
 
 def test_statistics_results_serializer(tmp_path):
