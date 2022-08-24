@@ -435,8 +435,71 @@ class GLMFactory:
         )
 
 
+def _convert_arrays_to_lists(data: dict) -> dict:
+    """If the input dictionary contains numpy arrays, this function will
+    cast them to lists and return the same dictionary with the lists instead
+    of the numpy arrays.
+
+    Parameters
+    ----------
+    data : Dictionary to clean.
+
+    Returns
+    -------
+    new_data : Dictionary with arrays casted to lists.
+    """
+    new_data = dict()
+    for k, v in data.items():
+        if isinstance(v, dict):
+            new_data[k] = _convert_arrays_to_lists(v)
+        elif isinstance(v, np.ndarray):
+            new_data[k] = v.tolist()
+        else:
+            new_data[k] = v
+    return new_data
+
+
+class Results:
+    """Common class for GLM results."""
+
+    def to_dict(self) -> dict:
+        """Returns the `Results` instance in dict format.
+
+        Private attributes and all methods are not returned.
+
+        This function does not perform any casting.
+
+        Returns
+        -------
+        data: Resulting dictionary.
+        """
+        import inspect
+
+        data = dict()
+        for attribute in inspect.getmembers(self):
+            name, value = attribute
+            if not name.startswith("_"):
+                if not inspect.ismethod(value):
+                    if hasattr(value, "to_dict"):
+                        data[name] = value.to_dict()
+                    else:
+                        data[name] = value
+        return data
+
+    def to_json(self, indent: Optional[int] = 4) -> str:
+        """Returns the json of the `Results` instance.
+
+        Parameters
+        ----------
+        indent: Indent to use.
+        """
+        import json
+
+        return json.dumps(_convert_arrays_to_lists(self.to_dict()), indent=indent)
+
+
 @dataclass
-class PValueResults:
+class PValueResults(Results):
     """This class implements a container for raw (uncorrected)
     P-value results obtained with a GLM model.
 
@@ -477,27 +540,6 @@ class PValueResults:
 
         return cls(1 - t.cdf(tstats, df), mask, threshold)
 
-    def to_dict(self, jsonable: bool = True):
-        """Returns the `PValueResults` instance in dict format.
-
-        Parameters
-        ----------
-        jsonable: If `True`, the output can be directly written in JSON.
-            Otherwise, it might contain non-serializable objects.
-        """
-        import inspect
-
-        json_dict = dict()
-        for attribute in inspect.getmembers(self):
-            name, value = attribute
-            if not name.startswith("_"):
-                if not inspect.ismethod(value):
-                    if isinstance(value, np.ndarray) and jsonable:
-                        json_dict[name] = value.tolist()
-                    else:
-                        json_dict[name] = value
-        return json_dict
-
 
 @dataclass
 class CorrectedPValueResults(PValueResults):
@@ -514,7 +556,7 @@ class CorrectedPValueResults(PValueResults):
 
 
 @dataclass
-class StatisticsResults:
+class StatisticsResults(Results):
     """This class implements a container for results obtained with
     the GLM model classes. It holds information relative to a GLM
     run with one specific contrast.
@@ -587,29 +629,6 @@ class StatisticsResults:
             model.Q,
             corrected_p_values,
         )
-
-    def to_dict(self, jsonable: bool = True):
-        """Returns the results in dict format.
-
-        Parameters
-        ----------
-        jsonable: If `True`, the output can be directly written in JSON.
-            Otherwise, it might contain non-serializable objects.
-        """
-        import inspect
-
-        json_dict = dict()
-        for attribute in inspect.getmembers(self):
-            name, value = attribute
-            if not name.startswith("_"):
-                if not inspect.ismethod(value):
-                    if hasattr(value, "to_dict"):
-                        json_dict[name] = value.to_dict(jsonable=jsonable)
-                    elif isinstance(value, np.ndarray) and jsonable:
-                        json_dict[name] = value.tolist()
-                    else:
-                        json_dict[name] = value
-        return json_dict
 
 
 class StatisticsResultsPlotter:
@@ -706,7 +725,7 @@ class StatisticsResultsSerializer:
             lvl="info",
         )
         with open(out_json_file, "w") as fp:
-            json.dump(results.to_dict(jsonable=True), fp, indent=self.json_indent)
+            json.dump(results.to_json(indent=self.json_indent), fp)
 
     def _write_to_mat(self, results: StatisticsResults):
         """Write the provided `StatisticsResults` to MAT format.
