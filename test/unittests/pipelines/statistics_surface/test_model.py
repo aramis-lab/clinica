@@ -15,8 +15,8 @@ def df():
     return pd.read_csv(Path(CURRENT_DIR) / "data/subjects.tsv", sep="\t")
 
 
-def test_is_categorical(df):
-    from clinica.pipelines.statistics_surface._model import _is_categorical
+def test_missing_column_error(df):
+    from clinica.pipelines.statistics_surface._model import _check_column_in_df
 
     with pytest.raises(
         ValueError,
@@ -25,9 +25,14 @@ def test_is_categorical(df):
             "provided TSV file. Please make sure that there is no typo"
         ),
     ):
-        _is_categorical(df, "foo")
-    assert _is_categorical(df, "sex")
-    assert not _is_categorical(df, "age")
+        _check_column_in_df(df, "foo")
+
+
+def test_is_categorical(df):
+    from clinica.pipelines.statistics_surface._model import _categorical_column
+
+    assert _categorical_column(df, "sex")
+    assert not _categorical_column(df, "age")
 
 
 def test_build_model_term_error(df):

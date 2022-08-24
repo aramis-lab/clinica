@@ -43,12 +43,21 @@ def _print_clusters(model: SLM, threshold: float) -> None:
     )
 
 
-def _is_categorical(df: pd.DataFrame, column: str) -> bool:
-    """This function returns whether the provided DataFrame's column
-    is categorical or not.
+def _check_column_in_df(df: pd.DataFrame, column: str) -> None:
+    """Checks if the provided column name is in the provided DataFrame.
+    Raises a ValueError if not.
 
-    .. note::
-        There might be more clever ways to do that.
+    Parameters
+    ----------
+    df : DataFrame to analyze.
+    column : Name of the column to check.
+    """
+    if column not in df.columns:
+        raise ValueError(MISSING_TERM_ERROR_MSG.safe_substitute(term=column))
+
+
+def _categorical_column(df: pd.DataFrame, column: str) -> bool:
+    """Returns True if the column is categorical and False otherwise.
 
     Parameters
     ----------
@@ -59,8 +68,6 @@ def _is_categorical(df: pd.DataFrame, column: str) -> bool:
     -------
     True if the column contains categorical values, False otherwise.
     """
-    if column not in df.columns:
-        raise ValueError(MISSING_TERM_ERROR_MSG.safe_substitute(term=column))
     return not df[column].dtype.name.startswith("float")
 
 
@@ -322,7 +329,8 @@ class GroupGLM(GLM):
         super().__init__(design, df, feature_label, contrast, **kwargs)
 
     def build_contrasts(self, contrast: str):
-        if not _is_categorical(self.df, contrast):
+        _check_column_in_df(self.df, contrast)
+        if not _categorical_column(self.df, contrast):
             raise ValueError(
                 "Contrast should refer to a categorical variable for group comparison. "
                 "Please select 'correlation' for 'glm_type' otherwise."
@@ -357,7 +365,9 @@ class GroupGLMWithInteraction(GroupGLM):
 
     def build_contrasts(self, contrast: str):
         contrast_elements = [_.strip() for _ in contrast.split("*")]
-        categorical = [_is_categorical(self.df, _) for _ in contrast_elements]
+        for contrast_element in contrast_elements:
+            _check_column_in_df(self.df, contrast_element)
+        categorical = [_categorical_column(self.df, _) for _ in contrast_elements]
         if len(contrast_elements) != 2 or sum(categorical) != 1:
             raise ValueError(
                 "The contrast must be an interaction between one continuous "
