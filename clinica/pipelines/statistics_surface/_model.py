@@ -369,10 +369,13 @@ class GroupGLMWithInteraction(GroupGLM):
         categorical_contrast = contrast_elements[idx]
         continue_contrast = contrast_elements[(idx + 1) % 2]
         group_values = np.unique(self.df[categorical_contrast])
-        built_contrast = self.df[continue_contrast] * (
-            (self.df[categorical_contrast] == group_values[0]).astype(int)
-        ) - self.df[continue_contrast] * (
-            (self.df[categorical_contrast] == group_values[1]).astype(int)
+        built_contrast = (
+            self.df[continue_contrast].where(
+                self.df[categorical_contrast] == group_values[0], 0
+            ) -
+            self.df[continue_contrast].where(
+                self.df[categorical_contrast] == group_values[1], 0
+            )
         )
         self.contrasts[contrast] = built_contrast
 
