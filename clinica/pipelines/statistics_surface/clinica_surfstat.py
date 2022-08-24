@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from ._inputs import (
     _build_thickness_array,
@@ -22,7 +22,7 @@ def clinica_surfstat(
     glm_type: str,
     group_label: str,
     freesurfer_home: PathLike,
-    surface_file: PathLike,
+    surface_file: Optional[PathLike],
     feature_label: str,
     parameters: Dict,
 ):
@@ -107,6 +107,7 @@ def clinica_surfstat(
 
     surface_file : Path to the surface file to analyze.
         Typically the cortical thickness.
+        If None, the surface file will be the t1 freesurfer template.
 
     feature_label : Label used for the measure.
         This is used in the output file names (see main description
@@ -129,7 +130,8 @@ def clinica_surfstat(
     else:
         fwhm = DEFAULT_FWHM
         parameters["sizeoffwhm"] = fwhm
-    surface_file = _get_t1_freesurfer_custom_file_template(input_dir)
+    if surface_file is None:
+        surface_file = _get_t1_freesurfer_custom_file_template(input_dir)
     thickness = _build_thickness_array(input_dir, surface_file, df_subjects, fwhm)
 
     # Load average surface template
