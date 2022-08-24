@@ -108,9 +108,7 @@ def _build_model(design_matrix: str, df: pd.DataFrame) -> FixedEffect:
         else:
             model_term = _build_model_term(term, df)
         model.append(model_term)
-    if len(model) == 1:
-        return model[0]
-    return reduce(lambda x, y: x + y, model)
+    return sum(model)
 
 
 def _build_model_term(term: str, df: pd.DataFrame) -> FixedEffect:
