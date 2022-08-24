@@ -125,11 +125,7 @@ def clinica_surfstat(
     """
     # Load subjects data
     df_subjects = _read_and_check_tsv_file(tsv_file)
-    if "sizeoffwhm" in parameters:
-        fwhm = parameters["sizeoffwhm"]
-    else:
-        fwhm = DEFAULT_FWHM
-        parameters["sizeoffwhm"] = fwhm
+    fwhm = parameters.setdefault("sizeoffwhm", DEFAULT_FWHM)
     if surface_file is None:
         surface_file = _get_t1_freesurfer_custom_file_template(input_dir)
     thickness = _build_thickness_array(input_dir, surface_file, df_subjects, fwhm)
