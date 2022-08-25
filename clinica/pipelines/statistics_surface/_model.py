@@ -15,9 +15,6 @@ from nilearn.surface import Mesh
 
 from clinica.utils.stream import cprint
 
-DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE = 0.001
-DEFAULT_THRESHOLD_CORRECTED_P_VALUE = 0.05
-DEFAULT_CLUSTER_THRESHOLD = 0.001
 MISSING_TERM_ERROR_MSG = Template(
     "Term ${term} from the design matrix is not in the columns of the "
     "provided TSV file. Please make sure that there is no typo."
@@ -126,19 +123,30 @@ def _build_model_term(term: str, df: pd.DataFrame) -> FixedEffect:
     ----------
     term : Name of the column of the DataFrame to be used.
     df : Subjects DataFrame.
+    add_intercept: If True, adds an intercept term.
 
     Returns
     -------
     BrainStats FixedEffect.
     """
-    if term not in df.columns:
-        raise ValueError(MISSING_TERM_ERROR_MSG.safe_substitute(term=term))
-    return FixedEffect(df[term])
+    return FixedEffect(df[term], add_intercept=add_intercept)
 
 
 class GLM:
     """This class implements the functionalities common to all GLM models
     used in the Clinica SurfaceStatistics pipeline.
+
+    Attributes
+    ----------
+    design: Design matrix in string format. If this contains a "*", it will be
+        interpreted as an interaction effect.
+    df: Subjects DataFrame.
+    feature_label: Label used for building output filenames.
+    contrast: Contrast in string format.
+    fwhm : Smoothing FWHM. This is used in the output file names.
+    threshold_uncorrected_pvalue : Threshold to be used with uncorrected P-values.
+    threshold_corrected_pvalue : Threshold to be used with corrected P-values.
+    cluster_threshold : Threshold to be used to declare clusters as significant.
     """
 
     def __init__(
@@ -147,25 +155,19 @@ class GLM:
         df: pd.DataFrame,
         feature_label: str,
         contrast: str,
-        **kwargs,
+        fwhm: Optional[int] = 20,
+        threshold_uncorrected_pvalue: Optional[float] = 0.001,
+        threshold_corrected_pvalue: Optional[float] = 0.05,
+        cluster_threshold: Optional[float] = 0.001,
     ):
-        self._two_tailed = False  # Could be exposed to users?
-        self._correction = ["fdr", "rft"]  # Could be exposed to users?
+        self._two_tailed = False
+        self._correction = ["fdr", "rft"]
         self.df = df
         self.feature_label = feature_label
-        self.fwhm = kwargs.pop("sizeoffwhm")
-        self.threshold_uncorrected_pvalue = kwargs.pop(
-            "thresholduncorrectedpvalue",
-            DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE,
-        )
-        self.threshold_corrected_pvalue = kwargs.pop(
-            "thresholdcorrectedpvalue",
-            DEFAULT_THRESHOLD_CORRECTED_P_VALUE,
-        )
-        self.cluster_threshold = kwargs.pop(
-            "clusterthreshold",
-            DEFAULT_CLUSTER_THRESHOLD,
-        )
+        self.fwhm = fwhm
+        self.threshold_uncorrected_pvalue = threshold_uncorrected_pvalue
+        self.threshold_corrected_pvalue = threshold_corrected_pvalue
+        self.cluster_threshold = cluster_threshold
         self.results_ = None
         self.slm_models_ = None
         self.contrasts = dict()
@@ -279,19 +281,41 @@ class GLM:
 
 
 class CorrelationGLM(GLM):
+    """Class implementing the correlation type GLM model.
+
+    Attributes
+    ----------
+    See documentation for `GLM` class.
+
+    group_label: Label to use for group GLM models.
+    """
+
     def __init__(
         self,
         design: str,
         df: pd.DataFrame,
         feature_label: str,
         contrast: str,
-        **kwargs,
+        group_label: Optional[str],
+        fwhm: Optional[int] = 20,
+        threshold_uncorrected_pvalue: Optional[float] = 0.001,
+        threshold_corrected_pvalue: Optional[float] = 0.05,
+        cluster_threshold: Optional[float] = 0.001,
     ):
         self.with_interaction = False
         self.absolute_contrast_name = None
         self.contrast_sign = None
-        self.group_label = kwargs.pop("group_label")
-        super().__init__(design, df, feature_label, contrast, **kwargs)
+        self.group_label = group_label
+        super().__init__(
+            design,
+            df,
+            feature_label,
+            contrast,
+            fwhm,
+            threshold_uncorrected_pvalue,
+            threshold_corrected_pvalue,
+            cluster_threshold,
+        )
 
     def build_contrasts(self, contrast: str):
         absolute_contrast_name = contrast
@@ -316,17 +340,39 @@ class CorrelationGLM(GLM):
 
 
 class GroupGLM(GLM):
+    """Class implementing group GLM models.
+
+    Attributes
+    ----------
+    See documentation for `GLM` class.
+
+    group_label: Label to use for group GLM models.
+    """
+
     def __init__(
         self,
         design: str,
         df: pd.DataFrame,
         feature_label: str,
         contrast: str,
-        **kwargs,
+        group_label: Optional[str] = "group",
+        fwhm: Optional[int] = 20,
+        threshold_uncorrected_pvalue: Optional[float] = 0.001,
+        threshold_corrected_pvalue: Optional[float] = 0.05,
+        cluster_threshold: Optional[float] = 0.001,
     ):
         self.with_interaction = False
-        self.group_label = kwargs.pop("group_label", "group")
-        super().__init__(design, df, feature_label, contrast, **kwargs)
+        self.group_label = group_label
+        super().__init__(
+            design,
+            df,
+            feature_label,
+            contrast,
+            fwhm,
+            threshold_uncorrected_pvalue,
+            threshold_corrected_pvalue,
+            cluster_threshold,
+        )
 
     def build_contrasts(self, contrast: str):
         _check_column_in_df(self.df, contrast)
@@ -358,9 +404,28 @@ class GroupGLMWithInteraction(GroupGLM):
     """
 
     def __init__(
-        self, design: str, df: pd.DataFrame, feature_label: str, contrast: str, **kwargs
+        self,
+        design: str,
+        df: pd.DataFrame,
+        feature_label: str,
+        contrast: str,
+        group_label: Optional[str] = "group",
+        fwhm: Optional[int] = 20,
+        threshold_uncorrected_pvalue: Optional[float] = 0.001,
+        threshold_corrected_pvalue: Optional[float] = 0.05,
+        cluster_threshold: Optional[float] = 0.001,
     ):
-        super().__init__(design, df, feature_label, contrast, **kwargs)
+        super().__init__(
+            design,
+            df,
+            feature_label,
+            contrast,
+            group_label,
+            fwhm,
+            threshold_uncorrected_pvalue,
+            threshold_corrected_pvalue,
+            cluster_threshold,
+        )
         self.with_interaction = True
         warnings.warn(
             "You included interaction as covariate in your model, "
@@ -401,7 +466,11 @@ def create_glm_model(
     df: pd.DataFrame,
     contrast: str,
     feature_label: str,
-    **kwargs,
+    group_label: Optional[str] = "group",
+    fwhm: Optional[int] = 20,
+    threshold_uncorrected_pvalue: Optional[float] = 0.001,
+    threshold_corrected_pvalue: Optional[float] = 0.05,
+    cluster_threshold: Optional[float] = 0.001,
 ) -> GLM:
     """Factory method for building a GLM model instance corresponding to the
     provided type and design matrix.
@@ -414,6 +483,11 @@ def create_glm_model(
     df: Subjects DataFrame.
     contrast: Contrast in string format.
     feature_label: Label used for building output filenames.
+    fwhm : Smoothing FWHM. This is used in the output file names.
+    threshold_uncorrected_pvalue : Threshold to be used with uncorrected P-values.
+    threshold_corrected_pvalue : Threshold to be used with corrected P-values.
+    cluster_threshold : Threshold to be used to declare clusters as significant.
+    group_label: Label to use for group GLM models.
 
     Returns
     -------
@@ -423,14 +497,20 @@ def create_glm_model(
         msg=f"The GLM model is: {design} and the GLM type is: {glm_type}",
         lvl="info",
     )
+    params = {
+        "fwhm": fwhm,
+        "threshold_uncorrected_pvalue": threshold_uncorrected_pvalue,
+        "threshold_corrected_pvalue": threshold_corrected_pvalue,
+        "cluster_threshold:": cluster_threshold,
+    }
     if glm_type == "correlation":
-        return CorrelationGLM(design, df, self.feature_label, contrast, **kwargs)
+        return CorrelationGLM(design, df, feature_label, contrast, **params)
     elif glm_type == "group_comparison":
         if "*" in design:
             return GroupGLMWithInteraction(
-                design, df, feature_label, contrast, **kwargs
+                design, df, feature_label, contrast, group_label, **params
             )
-        return GroupGLM(design, df, feature_label, contrast, **kwargs)
+        return GroupGLM(design, df, feature_label, contrast, group_label, **params)
     raise ValueError(
         f"create_glm_model received an unknown GLM type: {glm_type}."
         f"Only 'correlation' and 'group_comparison' are supported."

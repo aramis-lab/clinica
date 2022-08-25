@@ -10,8 +10,6 @@ from ._inputs import (
 )
 from ._model import create_glm_model
 
-DEFAULT_FWHM = 20
-
 
 def clinica_surfstat(
     input_dir: PathLike,
@@ -24,7 +22,10 @@ def clinica_surfstat(
     freesurfer_home: PathLike,
     surface_file: Optional[PathLike],
     feature_label: str,
-    parameters: Dict,
+    fwhm: Optional[int] = 20,
+    threshold_uncorrected_pvalue: Optional[float] = 0.001,
+    threshold_corrected_pvalue: Optional[float] = 0.05,
+    cluster_threshold: Optional[float] = 0.001,
 ):
     """This function mimics the previous function `clinica_surfstat`
     written in MATLAB and relying on the MATLAB package SurfStat.
@@ -113,19 +114,16 @@ def clinica_surfstat(
         This is used in the output file names (see main description
         of the function).
 
-    parameters : Dictionary of additional parameters
-        - "sizeoffwhm": Smoothing. This is used in the output file names.
-          Default=20.
-        - "thresholduncorrectedpvalue": Threshold to be used with uncorrected
-          P-values. Default=0.001.
-        - "thresholdcorrectedpvalue": Threshold to be used with corrected
-          P-values. Default=0.05.
-        - "clusterthreshold": Threshold to be used to declare clusters as
-          significant. Default=0.001.
+    fwhm : Smoothing FWHM. This is used in the output file names.
+
+    threshold_uncorrected_pvalue : Threshold to be used with uncorrected P-values.
+
+    threshold_corrected_pvalue: Threshold to be used with corrected P-values.
+
+    cluster_threshold: Threshold to be used to declare clusters as significant.
     """
     # Load subjects data
     df_subjects = _read_and_check_tsv_file(tsv_file)
-    fwhm = parameters.setdefault("sizeoffwhm", DEFAULT_FWHM)
     if surface_file is None:
         surface_file = _get_t1_freesurfer_custom_file_template(input_dir)
     thickness = _build_thickness_array(input_dir, surface_file, df_subjects, fwhm)
@@ -142,7 +140,10 @@ def clinica_surfstat(
         contrast,
         feature_label,
         group_label=group_label,
-        **parameters,
+        fwhm=fwhm,
+        threshold_uncorrected_pvalue=threshold_uncorrected_pvalue,
+        threshold_corrected_pvalue=threshold_corrected_pvalue,
+        cluster_threshold=cluster_threshold,
     )
     glm_model.fit(thickness, average_surface)
     glm_model.save_results(output_dir, ["json", "mat"])
