@@ -8,7 +8,7 @@ from ._inputs import (
     _get_t1_freesurfer_custom_file_template,
     _read_and_check_tsv_file,
 )
-from ._model import GLMFactory
+from ._model import create_glm_model
 
 DEFAULT_FWHM = 20
 
@@ -135,12 +135,12 @@ def clinica_surfstat(
     average_surface, average_mesh = _get_average_surface(fsaverage_path)
 
     # Build and run GLM model
-    glm_factory = GLMFactory(feature_label)
-    glm_model = glm_factory.create_model(
+    glm_model = create_glm_model(
         glm_type,
         design_matrix,
         df_subjects,
         contrast,
+        feature_label,
         group_label=group_label,
         **parameters,
     )

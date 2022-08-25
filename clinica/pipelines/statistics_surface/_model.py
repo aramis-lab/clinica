@@ -362,6 +362,10 @@ class GroupGLMWithInteraction(GroupGLM):
     ):
         super().__init__(design, df, feature_label, contrast, **kwargs)
         self.with_interaction = True
+        warnings.warn(
+            "You included interaction as covariate in your model, "
+            "please carefully check the format of your tsv files."
+        )
 
     def build_contrasts(self, contrast: str):
         contrast_elements = [_.strip() for _ in contrast.split("*")]
@@ -391,56 +395,46 @@ class GroupGLMWithInteraction(GroupGLM):
         return f"interaction-{contrast}_measure-{self.feature_label}_fwhm-{self.fwhm}"
 
 
-class GLMFactory:
-    """Factory class for building GLM models.
+def create_glm_model(
+    glm_type: str,
+    design: str,
+    df: pd.DataFrame,
+    contrast: str,
+    feature_label: str,
+    **kwargs,
+) -> GLM:
+    """Factory method for building a GLM model instance corresponding to the
+    provided type and design matrix.
 
-    Attributes
+    Parameters
     ----------
+    glm_type: Type of GLM to be created. Either "correlation" or "group_comparison".
+    design: Design matrix in string format. If this contains a "*", it will be
+        interpreted as an interaction effect.
+    df: Subjects DataFrame.
+    contrast: Contrast in string format.
     feature_label: Label used for building output filenames.
+
+    Returns
+    -------
+    GLM : An instance of the `GLM` class.
     """
-
-    def __init__(self, feature_label: str) -> None:
-        self.feature_label = feature_label
-
-    def create_model(
-        self,
-        glm_type: str,
-        design: str,
-        df: pd.DataFrame,
-        contrast: str,
-        **kwargs,
-    ) -> GLM:
-        """Factory method for building a GLM model instance corresponding to the
-        provided type and design matrix.
-
-        Parameters
-        ----------
-        glm_type: Type of GLM to be created. Either "correlation" or "group_comparison".
-        design: Design matrix in string format. If this contains a "*", it will be
-            interpreted as an interaction effect.
-        df: Subjects DataFrame.
-        contrast: Contrast in string format.
-        """
-        cprint(
-            msg=f"The GLM model is: {design} and the GLM type is: {glm_type}",
-            lvl="info",
-        )
-        if glm_type == "correlation":
-            return CorrelationGLM(design, df, self.feature_label, contrast, **kwargs)
-        elif glm_type == "group_comparison":
-            if "*" in design:
-                warnings.warn(
-                    "You included interaction as covariate in your model, "
-                    "please carefully check the format of your tsv files."
-                )
-                return GroupGLMWithInteraction(
-                    design, df, self.feature_label, contrast, **kwargs
-                )
-            return GroupGLM(design, df, self.feature_label, contrast, **kwargs)
-        raise ValueError(
-            f"GLM factory received an unknown GLM type: {glm_type}."
-            f"Only 'correlation' and 'group_comparison' are supported."
-        )
+    cprint(
+        msg=f"The GLM model is: {design} and the GLM type is: {glm_type}",
+        lvl="info",
+    )
+    if glm_type == "correlation":
+        return CorrelationGLM(design, df, self.feature_label, contrast, **kwargs)
+    elif glm_type == "group_comparison":
+        if "*" in design:
+            return GroupGLMWithInteraction(
+                design, df, feature_label, contrast, **kwargs
+            )
+        return GroupGLM(design, df, feature_label, contrast, **kwargs)
+    raise ValueError(
+        f"create_glm_model received an unknown GLM type: {glm_type}."
+        f"Only 'correlation' and 'group_comparison' are supported."
+    )
 
 
 def _convert_arrays_to_lists(data: dict) -> dict:
