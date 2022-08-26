@@ -33,6 +33,29 @@ def list_in_fields(wf: Workflow) -> list:
     return [x[0] for x in wf.input_spec.fields if not x[0].startswith("_")]
 
 
+def list_dict_in_fields(wf: Workflow) -> dict:
+    """Extract the input default dictionary values from a Workflow.
+
+    This is used as a way to pass data from the core Workflow
+    to the input_workflow in order to properly query input folders.
+
+    Better ways to do that ???
+
+    Parameters
+    ----------
+    wf: Workflow
+
+    Returns
+    -------
+    dict : Dictionary of wf default values from input_spec.
+    """
+    return {
+        x[0]: x[2]
+        for x in wf.input_spec.fields
+        if not x[0].startswith("_") and x[1] == dict
+    }
+
+
 def bids_query(keys: list) -> dict:
     """Form dictionary of BIDS query based on modality or key
 
@@ -49,7 +72,41 @@ def bids_query(keys: list) -> dict:
         "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}
     }
 
-    return {key: bids_keys_available[key] for key in keys}
+    return {key: bids_keys_available[key] for key in keys if key in bids_keys_available}
+
+
+def caps_query(query: dict) -> dict:
+    """Form dictionary of CAPS query based on a raw query.
+
+    Parameters
+    ----------
+    query : Raw query dictionary
+        The CAPS items to query as keys and the associated
+        parameters as values.
+
+    Returns
+    -------
+    dict
+        Query dictionary compatible with CAPSDataGrabber()
+    """
+    from clinica.utils.input_files import (
+        t1_volume_deformation_to_template,
+        t1_volume_final_group_template,
+        t1_volume_native_tpm,
+        t1_volume_native_tpm_in_mni,
+    )
+
+    caps_keys_available = {
+        "mask_tissues": t1_volume_native_tpm_in_mni,
+        "flow_fields": t1_volume_deformation_to_template,
+        "dartel_template": t1_volume_final_group_template,
+        "pvc_mask_tissues": t1_volume_native_tpm,
+    }
+    return {
+        k: caps_keys_available[k](**v)
+        for k, v in query.items()
+        if k in caps_keys_available
+    }
 
 
 def run(wf: Workflow) -> str:

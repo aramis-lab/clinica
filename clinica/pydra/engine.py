@@ -1,10 +1,11 @@
 import functools
 from os import PathLike
+from typing import Callable
 
 from pydra import Workflow
 
 import clinica.pydra.engine_utils as pu
-from clinica.pydra.interfaces import bids_reader, bids_writer
+from clinica.pydra.interfaces import bids_reader, bids_writer, caps_reader
 
 
 def clinica_io(func):
@@ -54,15 +55,20 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
     field = ""
 
     list_core_inputs = pu.list_in_fields(core_workflow)
-    query_dict = pu.bids_query(list_core_inputs)
+    bids_query_dict = pu.bids_query(list_core_inputs)
+
+    caps_dict_inputs = pu.list_dict_in_fields(core_workflow)
+    caps_query_dict = pu.caps_query(caps_dict_inputs)
 
     input_workflow = Workflow(name="input_workflow", input_spec=["input_dir"])
 
     input_workflow.inputs.input_dir = pipeline.lzin.input_dir
 
-    input_workflow = add_input_task(input_workflow, query_dict)
-
-    pipeline.add(input_workflow)
+    for reader, query in zip(
+        [bids_reader, caps_reader], [bids_query_dict, caps_query_dict]
+    ):
+        input_workflow = add_input_task(input_workflow, reader, query)
+        pipeline.add(input_workflow)
 
     # connect input workflow to core workflow
 
@@ -73,31 +79,39 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
     return pipeline
 
 
-def add_input_task(input_workflow: Workflow, query_bids: dict) -> Workflow:
-    """Construct and parameterize the input workflow.
+def add_input_task(
+    input_workflow: Workflow,
+    reader: Callable,
+    query: dict,
+) -> Workflow:
+    """Construct and parameterize the input workflow with a BIDS/CAPS query.
 
     Parameters
     ----------
     input_workflow : Workflow
-        The high level workflow containing (input -> core -> output)
-    query_bids : dict
-        The dictionary containing the information needed to query the BIDS folder
+        The high level workflow containing (input -> core -> output).
+    reader : The reader to use (bids_reader or caps_reader)
+    query : dict
+        The dictionary containing the information needed to query the BIDS/CAPS folder.
 
     Returns
     -------
     Workflow
-        An BIDS reader based workflow
+        An BIDS/CAPS reader based workflow.
     """
 
-    input_workflow.add(
-        bids_reader(query_bids=query_bids, input_dir=input_workflow.lzin.input_dir)
-    )
+    input_workflow.add(reader(query=query, input_dir=input_workflow.lzin.input_dir))
 
-    data_keys = list(query_bids.keys())
+    data_keys = list(query.keys())
 
     input_workflow.set_output(
         [
-            (field, getattr(input_workflow.bids_reader_task.lzout, field))
+            (
+                field,
+                getattr(
+                    getattr(input_workflow, f"{reader.__name__}_task").lzout, field
+                ),
+            )
             for field in data_keys
         ]
     )
