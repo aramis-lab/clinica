@@ -245,7 +245,10 @@ class DwiConnectome(cpe.Pipeline):
         import nipype.interfaces.mrtrix3 as mrtrix3
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
-        from nipype.interfaces.mrtrix3 import EstimateFOD, Tractography
+        from nipype.interfaces.mrtrix3 import (
+            ConstrainedSphericalDeconvolution,
+            Tractography,
+        )
         from nipype.interfaces.mrtrix.preprocess import MRTransform
 
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
@@ -341,7 +344,10 @@ class DwiConnectome(cpe.Pipeline):
 
         # FOD Estimation
         # --------------
-        fod_estim_node = npe.Node(name="1b-FODEstimation", interface=EstimateFOD())
+        fod_estim_node = npe.Node(
+            name="1b-FODEstimation",
+            interface=ConstrainedSphericalDeconvolution(),
+        )
         fod_estim_node.inputs.algorithm = "csd"
 
         # Tracts Generation

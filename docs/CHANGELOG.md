@@ -6,6 +6,18 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.7.2
+
+### Fixed
+
+- [Pipelines] Fix bug introduced in previous version with the use of the gunzip interface
+- [DWIConnectome] Use ConstrainedSphericalDeconvolution instead of buggy EstimateFOD 
+
+### Enhanced 
+
+- [Adni2Bids] Add compatibility for edge cases introduced in Adni3
+
+
 ## Clinica 0.7.1
 
 
