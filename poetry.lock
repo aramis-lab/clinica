@@ -154,12 +154,11 @@ uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
 name = "brainspace"
-version = "0.1.3"
+version = "0.1.4"
 description = "Cortical gradients and beyond"
 category = "main"
 optional = false
 python-versions = ">=3.5"
-develop = false
 
 [package.dependencies]
 matplotlib = ">=2.0.0"
@@ -172,13 +171,7 @@ scipy = ">=0.17.0"
 vtk = ">=8.1.0"
 
 [package.extras]
-test = ["pytest", "coverage", "pytest-cov", "coveralls", "numpy (>=1.11.0)", "scipy (>=0.17.0)", "scikit-learn (>=0.20.0)", "matplotlib (>=2.0.0)", "vtk (>=8.1.0)", "nibabel", "pillow", "pandas"]
-
-[package.source]
-type = "git"
-url = "https://github.com/MICA-MNI/BrainSpace.git"
-reference = "b3f3be4"
-resolved_reference = "b3f3be4c63f36f959837d73bea14445d4f2f8427"
+test = ["pandas", "pillow", "nibabel", "vtk (>=8.1.0)", "matplotlib (>=2.0.0)", "scikit-learn (>=0.20.0)", "scipy (>=0.17.0)", "numpy (>=1.11.0)", "coveralls", "pytest-cov", "coverage", "pytest"]
 
 [[package]]
 name = "brainstat"
@@ -1920,7 +1913,7 @@ docs = ["mkdocs", "mkdocs-material", "pymdown-extensions"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "d45ee00a4dcb1b0d30d90149fa3ac0427f1f0a03d509ff100fe469309cd54331"
+content-hash = "4c8b61137dc608bdac8bb90043fcf8b3a6c3766a42824fba9d8485a0ef4dc630"
 
 [metadata.files]
 abagen = [
@@ -2087,7 +2080,10 @@ black = [
     {file = "black-22.6.0-py3-none-any.whl", hash = "sha256:ac609cf8ef5e7115ddd07d85d988d074ed00e10fbc3445aee393e70164a2219c"},
     {file = "black-22.6.0.tar.gz", hash = "sha256:6c6d39e28aed379aec40da1c65434c77d75e65bb59a1e1c283de545fb4e7c6c9"},
 ]
-brainspace = []
+brainspace = [
+    {file = "brainspace-0.1.4-py3-none-any.whl", hash = "sha256:44212075b8039f42c5fe0166c06c9aa7da331f5e52810965b05b2bb3a7bf473d"},
+    {file = "brainspace-0.1.4.tar.gz", hash = "sha256:ce1673d74804d603a87528e417201dadeb1248b00f12dd12dd05c07406a20933"},
+]
 brainstat = [
     {file = "brainstat-0.3.6-py3-none-any.whl", hash = "sha256:47e266120c88a1d305221bacf703462575eea49749943bd96340a5be8b340701"},
     {file = "brainstat-0.3.6.tar.gz", hash = "sha256:de39767f3c21a8312434e8df66f3f7b98c82fb455e8ae0c90fb7b968c13e7a7e"},
