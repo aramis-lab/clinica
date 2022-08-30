@@ -38,14 +38,7 @@ def test_is_categorical(df):
 def test_build_model_term_error(df):
     from clinica.pipelines.statistics_surface._model import _build_model_term
 
-    with pytest.raises(
-        ValueError,
-        match=(
-            "Term foo from the design matrix is not in the columns of the "
-            "provided TSV file. Please make sure that there is no typo"
-        ),
-    ):
-        _build_model_term("foo", df)
+    assert isinstance(_build_model_term("sex", df), FixedEffect)
 
 
 @pytest.mark.parametrize("design", ["1 + age", "1+age", "age +1", "age"])
@@ -102,29 +95,16 @@ def test_build_model(df):
     ],
 )
 def test_glm_instantiation(df, parameters):
-    from clinica.pipelines.statistics_surface._model import (
-        DEFAULT_CLUSTER_THRESHOLD,
-        DEFAULT_THRESHOLD_CORRECTED_P_VALUE,
-        DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE,
-        GLM,
-    )
+    from clinica.pipelines.statistics_surface._model import GLM
 
-    design = "1 + age"
-    model = GLM(design, df, "feature_label", "age", **parameters)
+    model = GLM("1 + age", df, "feature_label", "age")
     assert not model._two_tailed
     assert model._correction == ["fdr", "rft"]
     assert model.feature_label == "feature_label"
-    assert model.fwhm == parameters["sizeoffwhm"]
-    threshold_uncorrected_pvalue = parameters.pop(
-        "thresholduncorrectedpvalue", DEFAULT_THRESHOLD_UNCORRECTED_P_VALUE
-    )
-    assert model.threshold_uncorrected_pvalue == threshold_uncorrected_pvalue
-    threshold_corrected_pvalue = parameters.pop(
-        "thresholdcorrectedpvalue", DEFAULT_THRESHOLD_CORRECTED_P_VALUE
-    )
-    assert model.threshold_corrected_pvalue == threshold_corrected_pvalue
-    cluster_threshold = parameters.pop("clusterthreshold", DEFAULT_CLUSTER_THRESHOLD)
-    assert model.cluster_threshold == cluster_threshold
+    assert model.fwhm == 20
+    assert model.threshold_uncorrected_pvalue == 0.001
+    assert model.threshold_corrected_pvalue == 0.05
+    assert model.cluster_threshold == 0.001
     assert model.contrasts == dict()
     assert model.filenames == dict()
     assert model.contrast_names == list()
@@ -135,16 +115,11 @@ def test_glm_instantiation(df, parameters):
 def test_correlation_glm_instantiation(df, contrast):
     from clinica.pipelines.statistics_surface._model import CorrelationGLM
 
-    design = "1 + age"
-    parameters = {
-        "sizeoffwhm": 2.0,
-        "group_label": "group_label",
-    }
-    model = CorrelationGLM(design, df, "feature_label", contrast, **parameters)
+    model = CorrelationGLM("1 + age", df, "feature_label", contrast, "group_label")
     assert not model.with_interaction
     assert model.group_label == "group_label"
     assert model.feature_label == "feature_label"
-    assert model.fwhm == 2.0
+    assert model.fwhm == 20
     sign = "positive" if contrast == "age" else "negative"
     assert model.contrast_sign == sign
     assert model.absolute_contrast_name == "age"
@@ -157,29 +132,22 @@ def test_correlation_glm_instantiation(df, contrast):
     )
     with pytest.raises(ValueError, match="Unknown contrast foo"):
         model.filename_root("foo")
-    expected = (
-        f"group-group_label_correlation-age-{sign}_measure-feature_label_fwhm-2.0"
-    )
+    expected = f"group-group_label_correlation-age-{sign}_measure-feature_label_fwhm-20"
     assert model.filename_root(contrast) == expected
 
 
 def test_group_glm_instantiation(df):
     from clinica.pipelines.statistics_surface._model import GroupGLM
 
-    design = "1 + age"
-    parameters = {
-        "sizeoffwhm": 2.0,
-        "group_label": "group_label",
-    }
     with pytest.raises(
         ValueError,
         match="Contrast should refer to a categorical variable for group comparison.",
     ):
-        GroupGLM(design, df, "feature_label", "age", **parameters)
-    model = GroupGLM(design, df, "feature_label", "sex", **parameters)
+        GroupGLM("1 + age", df, "feature_label", "age", "group_label")
+    model = GroupGLM("1 + age", df, "feature_label", "sex", "group_label")
     assert not model.with_interaction
     assert model.group_label == "group_label"
-    assert model.fwhm == 2.0
+    assert model.fwhm == 20
     assert isinstance(model.contrasts, dict)
     contrast_names = ["Female-lt-Male", "Male-lt-Female"]
     assert set(model.contrasts.keys()) == set(contrast_names)
@@ -191,18 +159,13 @@ def test_group_glm_instantiation(df):
     with pytest.raises(ValueError, match="Unknown contrast foo"):
         model.filename_root("foo")
     for contrast_name in contrast_names:
-        expected = f"group-group_label_{contrast_name}_measure-feature_label_fwhm-2.0"
+        expected = f"group-group_label_{contrast_name}_measure-feature_label_fwhm-20"
         assert model.filename_root(contrast_name) == expected
 
 
 def test_group_glm_with_interaction_instantiation(df):
     from clinica.pipelines.statistics_surface._model import GroupGLMWithInteraction
 
-    design = "1 + age"
-    parameters = {
-        "sizeoffwhm": 2.0,
-        "group_label": "group_label",
-    }
     with pytest.raises(
         ValueError,
         match=(
@@ -210,13 +173,13 @@ def test_group_glm_with_interaction_instantiation(df):
             "variable and one categorical variable."
         ),
     ):
-        GroupGLMWithInteraction(design, df, "feature_label", "age", **parameters)
+        GroupGLMWithInteraction("1 + age", df, "feature_label", "age", "group_label")
     model = GroupGLMWithInteraction(
-        design, df, "feature_label", "age * sex", **parameters
+        "1 + age", df, "feature_label", "age * sex", "group_label"
     )
     assert model.with_interaction
     assert model.group_label == "group_label"
-    assert model.fwhm == 2.0
+    assert model.fwhm == 20
     assert isinstance(model.contrasts, dict)
     assert len(model.contrasts) == 1
     assert_array_equal(
@@ -227,30 +190,38 @@ def test_group_glm_with_interaction_instantiation(df):
         model.filename_root("foo")
     assert (
         model.filename_root("age * sex")
-        == "interaction-age * sex_measure-feature_label_fwhm-2.0"
+        == "interaction-age * sex_measure-feature_label_fwhm-20"
     )
 
 
-def test_glm_factory(df):
+def test_create_glm_model(df):
     from clinica.pipelines.statistics_surface._model import (
         CorrelationGLM,
-        GLMFactory,
         GroupGLM,
         GroupGLMWithInteraction,
+        create_glm_model,
     )
 
-    factory = GLMFactory("feature_label")
-    assert factory.feature_label == "feature_label"
-    parameters = {
-        "group_label": "group_label",
-        "sizeoffwhm": 2.0,
-    }
-    model = factory.create_model("correlation", "age", df, "age", **parameters)
+    model = create_glm_model(
+        "correlation", "age", df, "age", feature_label="feature_label"
+    )
     assert isinstance(model, CorrelationGLM)
-    model = factory.create_model("group_comparison", "age", df, "sex", **parameters)
+    model = create_glm_model(
+        "group_comparison",
+        "age",
+        df,
+        "sex",
+        feature_label="feature_label",
+        group_label="group_label",
+    )
     assert isinstance(model, GroupGLM)
-    model = factory.create_model(
-        "group_comparison", "age * sex", df, "age * sex", **parameters
+    model = create_glm_model(
+        "group_comparison",
+        "age * sex",
+        df,
+        "age * sex",
+        feature_label="feature_label",
+        group_label="group_label",
     )
     assert isinstance(model, GroupGLMWithInteraction)
 

@@ -112,10 +112,14 @@ def _build_model(design_matrix: str, df: pd.DataFrame) -> FixedEffect:
         else:
             model_term = _build_model_term(term, df)
         model.append(model_term)
-    return sum(model)
+    return reduce(lambda x, y: x + y, model)
 
 
-def _build_model_term(term: str, df: pd.DataFrame) -> FixedEffect:
+def _build_model_term(
+    term: str,
+    df: pd.DataFrame,
+    add_intercept: Optional[bool] = True,
+) -> FixedEffect:
     """Builds a BrainStats model term from the subjects
     DataFrame and a column name.
 
@@ -498,19 +502,20 @@ def create_glm_model(
         lvl="info",
     )
     params = {
+        "group_label": group_label,
         "fwhm": fwhm,
         "threshold_uncorrected_pvalue": threshold_uncorrected_pvalue,
         "threshold_corrected_pvalue": threshold_corrected_pvalue,
-        "cluster_threshold:": cluster_threshold,
+        "cluster_threshold": cluster_threshold,
     }
     if glm_type == "correlation":
         return CorrelationGLM(design, df, feature_label, contrast, **params)
     elif glm_type == "group_comparison":
         if "*" in design:
             return GroupGLMWithInteraction(
-                design, df, feature_label, contrast, group_label, **params
+                design, df, feature_label, contrast, **params
             )
-        return GroupGLM(design, df, feature_label, contrast, group_label, **params)
+        return GroupGLM(design, df, feature_label, contrast, **params)
     raise ValueError(
         f"create_glm_model received an unknown GLM type: {glm_type}."
         f"Only 'correlation' and 'group_comparison' are supported."
