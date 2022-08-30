@@ -27,8 +27,11 @@ def _print_clusters(model: SLM, threshold: float) -> None:
 
     Parameters
     ----------
-    model : Fitted SLM model.
-    threshold : Cluster defining threshold.
+    model : brainstat.stats.SLM
+        Fitted SLM model.
+
+    threshold : float
+        Cluster defining threshold.
     """
     cprint("#" * 40)
     cprint("After correction (Cluster-wise Correction for Multiple Comparisons): ")
@@ -46,24 +49,31 @@ def _check_column_in_df(df: pd.DataFrame, column: str) -> None:
 
     Parameters
     ----------
-    df : DataFrame to analyze.
-    column : Name of the column to check.
+    df : pd.DataFrame
+        DataFrame to analyze.
+
+    column : str
+        Name of the column to check.
     """
     if column not in df.columns:
         raise ValueError(MISSING_TERM_ERROR_MSG.safe_substitute(term=column))
 
 
 def _categorical_column(df: pd.DataFrame, column: str) -> bool:
-    """Returns True if the column is categorical and False otherwise.
+    """Returns `True` if the column is categorical and `False` otherwise.
 
     Parameters
     ----------
-    df : DataFrame to analyze.
-    column : Name of the column to check.
+    df : pd.DataFrame
+        The DataFrame to analyze.
+
+    column : str
+        The name of the column to check.
 
     Returns
     -------
-    True if the column contains categorical values, False otherwise.
+    bool :
+        `True` if the column contains categorical values, `False` otherwise.
     """
     return not df[column].dtype.name.startswith("float")
 
@@ -85,12 +95,16 @@ def _build_model(design_matrix: str, df: pd.DataFrame) -> FixedEffect:
 
     Parameters
     ----------
-    design_matrix : Design matrix specified as a string.
-    df : Subjects DataFrame.
+    design_matrix : str
+        Design matrix specified as a string.
+
+    df : pd.DataFrame
+        Subjects DataFrame.
 
     Returns
     -------
-    model : BrainStats model.
+    model : FixedEffect
+        BrainStats model.
     """
     if len(design_matrix) == 0:
         raise ValueError("Design matrix cannot be empty.")
@@ -125,13 +139,19 @@ def _build_model_term(
 
     Parameters
     ----------
-    term : Name of the column of the DataFrame to be used.
-    df : Subjects DataFrame.
-    add_intercept: If True, adds an intercept term.
+    term : str
+        The name of the column of the DataFrame to be used.
+
+    df : pd.DataFrame
+        The subjects DataFrame.
+
+    add_intercept : bool
+        If `True`, adds an intercept term.
 
     Returns
     -------
-    BrainStats FixedEffect.
+    FixedEffect :
+        BrainStats model term.
     """
     return FixedEffect(df[term], add_intercept=add_intercept)
 
@@ -142,15 +162,31 @@ class GLM:
 
     Attributes
     ----------
-    design: Design matrix in string format. If this contains a "*", it will be
-        interpreted as an interaction effect.
-    df: Subjects DataFrame.
-    feature_label: Label used for building output filenames.
-    contrast: Contrast in string format.
-    fwhm : Smoothing FWHM. This is used in the output file names.
-    threshold_uncorrected_pvalue : Threshold to be used with uncorrected P-values.
-    threshold_corrected_pvalue : Threshold to be used with corrected P-values.
-    cluster_threshold : Threshold to be used to declare clusters as significant.
+    design : str
+        The design matrix specified in string format.
+        If this contains a "*", it will be interpreted as an interaction effect.
+
+    df : pd.DataFrame
+        The subjects DataFrame.
+
+    feature_label : str
+        The label used for building output filenames.
+
+    contrast : str
+        The contrast specified in string format.
+
+    fwhm : int, optional
+        The smoothing FWHM. This is used in the output file names.
+        Default=20.
+
+    threshold_uncorrected_pvalue : float, optional
+        The threshold to be used with uncorrected P-values. Default=0.001.
+
+    threshold_corrected_pvalue : float, optional
+        The threshold to be used with corrected P-values. Default=0.05.
+
+    cluster_threshold : float, optional
+        The threshold to be used to declare clusters as significant. Default=0.001.
     """
 
     def __init__(
@@ -199,7 +235,8 @@ class GLM:
 
         Parameters
         ----------
-        contrast: Contrast in string format.
+        contrast : str
+            Contrast in string format.
         """
         pass
 
@@ -212,14 +249,30 @@ class GLM:
 
         Parameters
         ----------
-        contrast: Contrast for which to get the output filename.
+        contrast : str
+            Contrast for which to get the output filename.
         """
         pass
 
-    def _is_fitted(self):
+    def _is_fitted(self) -> bool:
         return self.results_ is not None
 
-    def fit(self, data: np.ndarray, surface: Dict, mask: Optional[np.ndarray] = None):
+    def fit(
+        self, data: np.ndarray, surface: Dict, mask: Optional[np.ndarray] = None
+    ) -> None:
+        """Fit the GLM model instance.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            The data on which to fit the GLM model.
+
+        surface : dict
+            The Brainstat surface on which to fit the GLM model.
+
+        mask : np.ndarray, optional
+            The mask to be used to mask the data. Default=None.
+        """
         if mask is None:
             mask = data[0, :] > 0
         self.results_ = dict()
@@ -248,8 +301,17 @@ class GLM:
             )
             self.slm_models_[contrast_name] = slm_model
 
-    def save_results(self, output_dir: PathLike, method: Union[str, List[str]]):
-        """Save results to the provided output directory."""
+    def save_results(self, output_dir: PathLike, method: Union[str, List[str]]) -> None:
+        """Save results to the provided output directory.
+
+        Parameters
+        ----------
+        output_dir : PathLike
+            The output directory in which to write the results.
+
+        method : str or List[str]
+            The method(s) to write the results.
+        """
         if not self._is_fitted():
             raise ValueError(
                 "GLM model needs to be fitted before accessing the results."
@@ -268,8 +330,20 @@ class GLM:
         output_dir: PathLike,
         method: Union[str, List[str]],
         mesh: Mesh,
-    ):
-        """Plot results to the provided directory."""
+    ) -> None:
+        """Plot results to the provided directory.
+
+        Parameters
+        ----------
+        output_dir : PathLike
+            The output directory in which to write the plot files.
+
+        method : str or List[str]
+            The method(s) to make the plots.
+
+        mesh : nilearn.surface.Mesh
+            The mesh on which to plot the result data.
+        """
         if not self._is_fitted():
             raise ValueError(
                 "GLM model needs to be fitted before accessing the results."
@@ -291,7 +365,8 @@ class CorrelationGLM(GLM):
     ----------
     See documentation for `GLM` class.
 
-    group_label: Label to use for group GLM models.
+    group_label : str, optinal
+        The label to use for group GLM models. Default=None.
     """
 
     def __init__(
@@ -322,6 +397,13 @@ class CorrelationGLM(GLM):
         )
 
     def build_contrasts(self, contrast: str):
+        """Build the contrast from the string specification.
+
+        Parameters
+        ----------
+        contrast : str
+            The contrast to build.
+        """
         absolute_contrast_name = contrast
         contrast_sign = "positive"
         if contrast.startswith("-"):
@@ -335,6 +417,13 @@ class CorrelationGLM(GLM):
         self.contrast_sign = contrast_sign
 
     def filename_root(self, contrast: str):
+        """Build the filename root part from class attributes and provided contrast.
+
+        Parameters
+        ----------
+        contrast : str
+            The contrast to use for building the filename.
+        """
         if contrast not in self.contrasts:
             raise ValueError(f"Unknown contrast {contrast}.")
         return (
@@ -350,7 +439,8 @@ class GroupGLM(GLM):
     ----------
     See documentation for `GLM` class.
 
-    group_label: Label to use for group GLM models.
+    group_label : str, optional
+        The Label to use for group GLM models. Default="group".
     """
 
     def __init__(
@@ -379,6 +469,13 @@ class GroupGLM(GLM):
         )
 
     def build_contrasts(self, contrast: str):
+        """Build the contrast from the string specification.
+
+        Parameters
+        ----------
+        contrast : str
+            The contrast to build.
+        """
         _check_column_in_df(self.df, contrast)
         if not _categorical_column(self.df, contrast):
             raise ValueError(
@@ -393,6 +490,13 @@ class GroupGLM(GLM):
             ).astype(int) - (self.df[contrast] == group_values[j]).astype(int)
 
     def filename_root(self, contrast: str):
+        """Build the filename root part from class attributes and provided contrast.
+
+        Parameters
+        ----------
+        contrast : str
+            The contrast to use for building the filename.
+        """
         if contrast not in self.contrasts:
             raise ValueError(f"Unknown contrast {contrast}.")
         return f"group-{self.group_label}_{contrast}_measure-{self.feature_label}_fwhm-{self.fwhm}"
@@ -437,6 +541,13 @@ class GroupGLMWithInteraction(GroupGLM):
         )
 
     def build_contrasts(self, contrast: str):
+        """Build the contrast from the string specification.
+
+        Parameters
+        ----------
+        contrast : str
+            The contrast to build.
+        """
         contrast_elements = [_.strip() for _ in contrast.split("*")]
         for contrast_element in contrast_elements:
             _check_column_in_df(self.df, contrast_element)
@@ -459,6 +570,13 @@ class GroupGLMWithInteraction(GroupGLM):
         self.contrasts[contrast] = built_contrast
 
     def filename_root(self, contrast: str):
+        """Build the filename root part from class attributes and provided contrast.
+
+        Parameters
+        ----------
+        contrast : str
+            The contrast to use for building the filename.
+        """
         if contrast not in self.contrasts:
             raise ValueError(f"Unknown contrast {contrast}.")
         return f"interaction-{contrast}_measure-{self.feature_label}_fwhm-{self.fwhm}"
@@ -481,21 +599,47 @@ def create_glm_model(
 
     Parameters
     ----------
-    glm_type: Type of GLM to be created. Either "correlation" or "group_comparison".
-    design: Design matrix in string format. If this contains a "*", it will be
-        interpreted as an interaction effect.
-    df: Subjects DataFrame.
-    contrast: Contrast in string format.
-    feature_label: Label used for building output filenames.
-    fwhm : Smoothing FWHM. This is used in the output file names.
-    threshold_uncorrected_pvalue : Threshold to be used with uncorrected P-values.
-    threshold_corrected_pvalue : Threshold to be used with corrected P-values.
-    cluster_threshold : Threshold to be used to declare clusters as significant.
-    group_label: Label to use for group GLM models.
+    glm_type : str
+        The type of GLM to be created. Either "correlation" or "group_comparison".
+
+    design : str
+        The design matrix specified in string format.
+        If this contains a "*", it will be interpreted as an interaction effect.
+
+    df : pd.DataFrame
+        The subjects DataFrame.
+
+    contrast : str
+        The contrast specified in string format.
+
+    feature_label : str
+        The label used for building output filenames.
+
+    group_label : str, optional
+        The label to use for group GLM models. Default="group".
+
+    fwhm : int, optional
+        The smoothing FWHM. This is used in the output file names.
+        Default=20.
+
+    threshold_uncorrected_pvalue : float, optional
+        The threshold to be used with uncorrected P-values. Default=0.001.
+
+    threshold_corrected_pvalue : float, optional
+        The threshold to be used with corrected P-values. Default=0.05.
+
+    cluster_threshold : float, optional
+        The threshold to be used to declare clusters as significant. Default=0.001.
 
     Returns
     -------
-    GLM : An instance of the `GLM` class.
+    model : GLM
+        An instance of the `GLM` class.
+
+    Raises
+    ------
+    ValueError
+        If the glm_type is not supported.
     """
     cprint(
         msg=f"The GLM model is: {design} and the GLM type is: {glm_type}",
@@ -529,11 +673,13 @@ def _convert_arrays_to_lists(data: dict) -> dict:
 
     Parameters
     ----------
-    data : Dictionary to clean.
+    data : dict
+        The dictionary to clean.
 
     Returns
     -------
-    new_data : Dictionary with arrays casted to lists.
+    new_data : dict
+        The dictionary with arrays casted to lists.
     """
     new_data = dict()
     for k, v in data.items():
@@ -558,7 +704,8 @@ class Results:
 
         Returns
         -------
-        data: Resulting dictionary.
+        data : dict
+            Resulting dictionary.
         """
         import inspect
 
@@ -578,7 +725,13 @@ class Results:
 
         Parameters
         ----------
-        indent: Indent to use.
+        indent : int, optional
+            Indent to use. Default=4.
+
+        Returns
+        -------
+        str :
+            The JSON dumps of the results.
         """
         import json
 
@@ -592,9 +745,14 @@ class PValueResults(Results):
 
     Attributes
     ----------
-    pvalues: Array of uncorrected P-values.
-    mask: Binary mask.
-    thresh: Threshold.
+    pvalues : np.ndarray
+        Array of uncorrected P-values.
+
+    mask : np.ndarray
+        The binary mask.
+
+    threshold : float
+        The threshold used.
     """
 
     pvalues: np.ndarray
@@ -623,10 +781,17 @@ class PValueResults(Results):
 
         Parameters
         ----------
-        tstats: Array of T-statistics.
-        df: Subjects DataFrame.
-        mask: Binary mask.
-        threshold: Threshold.
+        tstats : np.ndarray
+            Array of T-statistics.
+
+        df : pd.DataFrame
+            The subjects DataFrame.
+
+        mask : np.ndarray
+            The binary mask.
+
+        threshold : float
+            The threshold to be used.
         """
         from scipy.stats import t
 
@@ -637,6 +802,11 @@ class PValueResults(Results):
 class CorrectedPValueResults(PValueResults):
     """This class implements a container for corrected P-value
     results obtained with a GLM model.
+
+    Attributes
+    ----------
+    cluster_pvalues : np.ndarray
+        The cluster P-values.
     """
 
     cluster_pvalues: np.ndarray
@@ -655,13 +825,20 @@ class StatisticsResults(Results):
 
     Attributes
     ----------
-    coefficients: The beta coefficients of the fitted GLM model.
-    tstats: The corresponding T-statistics.
-    uncorrected_p_value: The corresponding uncorrected p values,
-        stored in a `PValueResults` instance.
-    fdr: The corresponding False Discovery Rate.
-    corrected_p_value: The corresponding corrected p values,
-        stored in a `CorrectedPValueResults` instance.
+    coefficients : np.ndarray
+        The beta coefficients of the fitted GLM model.
+
+    tstats : np.ndarray
+        The corresponding T-statistics.
+
+    uncorrected_p_value : PValueResults
+        The corresponding uncorrected p values, stored in a `PValueResults` instance.
+
+    fdr : np.ndarray
+        The corresponding False Discovery Rate.
+
+    corrected_p_value : CorrectedPValueResults
+        The corresponding corrected p values, stored in a `CorrectedPValueResults` instance.
     """
 
     coefficients: np.ndarray
@@ -698,6 +875,22 @@ class StatisticsResults(Results):
         threshold_uncorrected_p_value: float,
         threshold_corrected_p_value: float,
     ):
+        """Instanciate from a SLM model.
+
+        Parameters
+        ----------
+        model : brainstat.stats.SLM
+            SLM model instance to use.
+
+        mask : np.ndarray
+            The binary mask to use.
+
+        threshold_uncorrected_p_value : float
+            The threshold to use with uncorrected P-values.
+
+        threshold_corrected_p_value : float
+            The threshold to use with corrected P-values.
+        """
         idx = np.argwhere(np.isnan(model.t))
         corrected_pvals = model.P["pval"]["P"]
         corrected_pvals[idx] = 1.0
@@ -724,6 +917,17 @@ class StatisticsResults(Results):
 
 
 class StatisticsResultsPlotter:
+    """Class responsible to plotting results of GLM fit.
+
+    Attributes
+    ----------
+    output_file : PathLike
+        Path to the output file.
+
+    mesh : nilearn.surface.Mesh
+        The mesh to be used for plotting results.
+    """
+
     def __init__(self, output_file: PathLike, mesh: Mesh):
         self.output_file = output_file
         self.mesh = mesh
@@ -731,16 +935,45 @@ class StatisticsResultsPlotter:
         self.no_plot = {"coefficients"}  # Elements which should not be plotted
 
     def plot(self, result: StatisticsResults, method: str) -> None:
+        """Plot the results.
+
+        Parameters
+        ----------
+        result : StatisticsResults
+            The results to be plotted.
+
+        method : str
+            The plotting method to use.
+        """
         plotter = self._get_plotter(method)
         plotter(result)
 
     def _get_plotter(self, method: str) -> Callable[[StatisticsResults], None]:
+        """Returns the plotting method from its name.
+
+        Parameters
+        ----------
+        method : str
+            Name of the plotting method to use.
+
+        Returns
+        -------
+        Callable :
+            Plotting method.
+        """
         if method == "nilearn_plot_surf_stat_map":
             return self._plot_stat_maps
         else:
             raise NotImplementedError(f"Plotting method {method} is not implemented.")
 
-    def _plot_stat_maps(self, result: StatisticsResults):
+    def _plot_stat_maps(self, result: StatisticsResults) -> None:
+        """Wrapper around the `nilearn.plotting.plot_surf_stat_map` method.
+
+        Parameters
+        ----------
+        result : StatisticsResults
+            The results to plot.
+        """
         from nilearn.plotting import plot_surf_stat_map
 
         for name, res in result.to_dict(jsonable=False).items():
@@ -769,7 +1002,8 @@ class StatisticsResultsSerializer:
 
     Attributes
     ----------
-    output_file: Path and filename root to be used.
+    output_file : PathLike
+        Path and filename root to be used.
     """
 
     def __init__(self, output_file: PathLike):
@@ -783,13 +1017,28 @@ class StatisticsResultsSerializer:
 
         Parameters
         ----------
-        result: StatisticsResults to be saved.
-        method: Saving method to use.
+        result : StatisticsResults
+            Results to be saved.
+
+        method : str
+            Name of the saving method to use.
         """
         writer = self._get_writer(method)
         writer(result)
 
     def _get_writer(self, method: str) -> Callable[[StatisticsResults], None]:
+        """Returns a writter method from its name.
+
+        Parameters
+        ----------
+        method : str
+            The name of the writting method to use.
+
+        Returns
+        -------
+        Callable :
+            The writting method.
+        """
         if method.lower() == "json":
             return self._write_to_json
         elif method.lower() == "mat":
@@ -799,12 +1048,13 @@ class StatisticsResultsSerializer:
                 f"Serializing method {method} is not implemented."
             )
 
-    def _write_to_json(self, results: StatisticsResults):
+    def _write_to_json(self, results: StatisticsResults) -> None:
         """Write the provided `StatisticsResults` to JSON format.
 
         Parameters
         ----------
-        results : Results to write to disk in JSON format.
+        results : StatisticsResults
+            The results to write to disk in JSON format.
         """
         import json
         import os
@@ -819,12 +1069,13 @@ class StatisticsResultsSerializer:
         with open(out_json_file, "w") as fp:
             json.dump(results.to_json(indent=self.json_indent), fp)
 
-    def _write_to_mat(self, results: StatisticsResults):
+    def _write_to_mat(self, results: StatisticsResults) -> None:
         """Write the provided `StatisticsResults` to MAT format.
 
         Parameters
         ----------
-        results: Results to write to disk in MAT format.
+        results : StatisticsResults
+            The results to write to disk in MAT format.
         """
         from scipy.io import savemat
 

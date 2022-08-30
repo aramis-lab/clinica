@@ -26,7 +26,7 @@ def clinica_surfstat(
     threshold_uncorrected_pvalue: Optional[float] = 0.001,
     threshold_corrected_pvalue: Optional[float] = 0.05,
     cluster_threshold: Optional[float] = 0.001,
-):
+) -> None:
     """This function mimics the previous function `clinica_surfstat`
     written in MATLAB and relying on the MATLAB package SurfStat.
 
@@ -73,11 +73,14 @@ def clinica_surfstat(
 
     Parameters
     ----------
-    input_dir : Input folder.
+    input_dir : PathLike
+        Path to the input folder.
 
-    output_dir : Output folder for storing results.
+    output_dir : PathLike
+        Path to the output folder for storing results.
 
-    tsv_file : Path to the TSV file `subjects.tsv` which contains the
+    tsv_file : PathLike
+        Path to the TSV file `subjects.tsv` which contains the
         necessary metadata to run the statistical analysis.
 
         .. warning::
@@ -85,10 +88,12 @@ def clinica_surfstat(
             are used to defined contrast and model terms.
             Please double check for typos.
 
-    design_matrix : Design matrix in string format.
-        For example "1+Label"
+    design_matrix : str
+        The design matrix specified in string format.
+        For example "1 + Label"
 
-    contrast : The contrast to be used in the GLM.
+    contrast : str
+        The contrast to be used in the GLM, specified in string format.
 
         .. warning::
             The contrast needs to be in the design matrix.
@@ -99,28 +104,35 @@ def clinica_surfstat(
               For example "AD - ND".
             - "correlation": Performs correlation analysis.
 
-    group_label : Label for the group.
-        This is used in the output file names (see main description
-        of the function).
+    group_label : str
+        The label for the group. This is used in the output file names
+        (see main description of the function).
 
-    freesurfer_home : Path to the home folder of Freesurfer.
+    freesurfer_home : PathLike
+        The path to the home folder of Freesurfer.
         This is required to get the fsaverage templates.
 
-    surface_file : Path to the surface file to analyze.
+    surface_file : PathLike, optional
+        The path to the surface file to analyze.
         Typically the cortical thickness.
-        If None, the surface file will be the t1 freesurfer template.
+        If `None`, the surface file will be the t1 freesurfer template.
 
-    feature_label : Label used for the measure.
-        This is used in the output file names (see main description
-        of the function).
+    feature_label : str
+        The label used for the measure. This is used in the output file
+        names (see main description of the function).
 
-    fwhm : Smoothing FWHM. This is used in the output file names.
+    fwhm : int, optional
+        The smoothing FWHM. This is used in the output file names.
+        Default=20.
 
-    threshold_uncorrected_pvalue : Threshold to be used with uncorrected P-values.
+    threshold_uncorrected_pvalue : float, optional
+        The threshold to be used with uncorrected P-values. Default=0.001.
 
-    threshold_corrected_pvalue: Threshold to be used with corrected P-values.
+    threshold_corrected_pvalue : float, optional
+        The threshold to be used with corrected P-values. Default=0.05.
 
-    cluster_threshold: Threshold to be used to declare clusters as significant.
+    cluster_threshold : float, optional
+        The threshold to be used to declare clusters as significant. Default=0.05.
     """
     # Load subjects data
     df_subjects = _read_and_check_tsv_file(tsv_file)

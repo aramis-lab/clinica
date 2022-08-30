@@ -18,11 +18,13 @@ def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
 
     Parameters
     ----------
-    tsv_file : TSV file to open.
+    tsv_file : PathLike
+        Path to the TSV file to open.
 
     Returns
     -------
-    tsv_data : DataFrame obtained from the file.
+    tsv_data : pd.DataFrame
+        DataFrame obtained from the file.
     """
     if not Path(tsv_file).exists():
         raise FileNotFoundError(f"File {tsv_file} does not exist.")
@@ -41,7 +43,18 @@ def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
 
 
 def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> str:
-    """Returns a Template for the path to the desired surface file."""
+    """Returns a Template for the path to the desired surface file.
+
+    Parameters
+    ----------
+    base_dir : PathLike
+        Base directory to seach for the template.
+
+    Returns
+    -------
+    template_path : str
+        Path to the t1 freesurfer template.
+    """
     return str(base_dir) + (
         "/%(subject)s/%(session)s/t1/freesurfer_cross_sectional/%(subject)s_%(session)s"
         "/surf/%(hemi)s.thickness.fwhm%(fwhm)s.fsaverage.mgh"
@@ -58,14 +71,22 @@ def _build_thickness_array(
 
     Parameters
     ----------
-    input_dir : Input directory.
-    surface_file : Template for the path to the surface file of interest.
-    df : Subjects DataFrame
-    fwhm : Smoothing parameter only used to retrieve the right surface file.
+    input_dir : PathLike
+        Input directory.
+
+    surface_file : str
+        Template for the path to the surface file of interest.
+
+    df : pd.DataFrame
+        Subjects DataFrame.
+
+    fwhm : float
+        Smoothing parameter only used to retrieve the right surface file.
 
     Returns
     -------
-    thickness : Cortical thickness. Hemispheres and subjects are stacked.
+    thickness : np.ndarray
+        Cortical thickness. Hemispheres and subjects are stacked.
     """
     from nibabel.freesurfer.mghformat import load
 
@@ -111,12 +132,16 @@ def _get_average_surface(fsaverage_path: PathLike) -> Tuple[Dict, Mesh]:
 
     Parameters
     ----------
-    fsaverage_path : Path to the fsaverage templates.
+    fsaverage_path : PathLike
+        Path to the fsaverage templates.
 
     Returns
     -------
-    average_surface : Average surface as a dictionary for BrainStat compatibility.
-    average_mesh : Average mesh as a Nilearn Mesh object.
+    average_surface : dict
+        Average surface as a dictionary for BrainStat compatibility.
+
+    average_mesh : nilearn.surface.Mesh
+        Average mesh as a Nilearn Mesh object.
     """
     import copy
 
