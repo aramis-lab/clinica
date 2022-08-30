@@ -72,26 +72,6 @@ def init_input_node(bids_name: str) -> Tuple[str, str]:
     return subject_id, bids_name
 
 
-def zip_list_files(class_images: list, zip_files: bool = False) -> list:
-    """Create list of (Optionally) zipped nifti images
-    Parameters
-    ----------
-    class_images : list
-    zip_files: bool
-
-    Returns
-    -------
-    list
-        list of (optionally) zipped nifti files
-    """
-    from clinica.utils.filemanip import zip_nii
-
-    if zip_files:
-        return [zip_nii(tissue, True) for tissue in class_images]
-
-    return [tissue for tissue in class_images]
-
-
 def get_tissue_tuples(
     tissue_map: PathLike,
     tissue_classes: list,
