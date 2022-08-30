@@ -1,5 +1,4 @@
 import functools
-import typing as ty
 from os import PathLike
 
 from pydra import Workflow
@@ -12,7 +11,7 @@ def clinica_io(func):
     """Decorator to add BIDS reader/writer to any Pydra workflow."""
 
     @functools.wraps(func)
-    def run_wrapper(name: str, input_dir: PathLike, output_dir: PathLike):
+    def run_wrapper(name: str, input_dir: PathLike, output_dir: PathLike) -> Workflow:
 
         core_workflow = func()
 
@@ -34,7 +33,7 @@ def clinica_io(func):
     return run_wrapper
 
 
-def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> ty.Tuple:
+def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
     """Setup for an input workflow to read BIDS data.
 
     Parameters
