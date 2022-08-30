@@ -79,7 +79,7 @@ def get_tissue_tuples(
     save_warped_unmodulated: bool,
     save_warped_modulated: bool,
 ) -> list:
-    """Extract list of tuples, one for each tissue clas.
+    """Extract list of tuples, one for each tissue class.
 
     Parameters
     ---------
@@ -115,20 +115,10 @@ def get_tissue_tuples(
         if i == 4 or i == 5:
             n_gaussians = i - 1
 
-        native_space = False
-        dartel_input = False
-        warped_unmodulated = False
-        warped_modulated = False
-
-        if i in tissue_classes:
-            native_space = True
-            if save_warped_unmodulated:
-                warped_unmodulated = True
-            if save_warped_modulated:
-                warped_modulated = True
-
-        if i in dartel_tissues:
-            dartel_input = True
+        native_space = i in tissue_classes
+        dartel_input = i in dartel_tissues
+        warped_unmodulated = (i in tissue_classes) and save_warped_unmodulated
+        warped_modulated = (i in tissue_classes) and save_warped_modulated
 
         tissues.append(
             (
@@ -176,11 +166,7 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
 
     distance_from_origin = np.linalg.norm(center, ord=2)
 
-    if distance_from_origin < threshold_l2:
-        return True
-    else:
-        # If center is a np.nan,
-        return False
+    return distance_from_origin < threshold_l2
 
 
 def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
@@ -216,7 +202,7 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     try:
         orig_nifti = nib.load(str(nii_volume))
     except ImageFileError:
-        print(f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI")
+        print(f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI?")
         return np.nan
 
     head = orig_nifti.header
@@ -262,10 +248,7 @@ def get_center_volume(header: dict) -> ndarray:
     """
     import numpy as np
 
-    center_x = header["dim"][1] / 2
-    center_y = header["dim"][2] / 2
-    center_z = header["dim"][3] / 2
-    return np.array([center_x, center_y, center_z])
+    return np.array([_ / 2 for _ in header["dim"][1:4]])
 
 
 def vox_to_world_space_method_1(
@@ -306,7 +289,6 @@ def vox_to_world_space_method_2(
     coordinates_vol: ndarray, header: Nifti1Header
 ) -> ndarray:
     """Convert coordinates to world space (method 2)
-
 
     Parameters
     ----------
@@ -357,9 +339,7 @@ def vox_to_world_space_method_2(
         r[2, 2] = (a**2) + (d**2) - (b**2) - (c**2)
         return r
 
-    i = coordinates_vol[0]
-    j = coordinates_vol[1]
-    k = coordinates_vol[2]
+    i, j, k = coordinates_vol
     if header["qform_code"] > 0:
         r_mat = get_r_matrix(header)
     else:
@@ -376,7 +356,6 @@ def vox_to_world_space_method_2(
 
 def vox_to_world_space_method_3(coordinates_vol: ndarray, header: Nifti1Header):
     """Convert coordinates to world space (method 3)
-
 
     Parameters
     ----------
@@ -445,15 +424,24 @@ def vox_to_world_space_method_3(coordinates_vol: ndarray, header: Nifti1Header):
     return np.dot(aff, homogeneous_coord)[0:3]
 
 
-def vox_to_world_space_method_3_bis(coordinates_vol, header):
+def vox_to_world_space_method_3_bis(coordinates_vol: ndarray, header: Nifti1Header):
     """
-    This method relies on the same technique as method 3, but for images created by FreeSurfer (MGHImage, MGHHeader).
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: nib.freesurfer.mghformat.MGHHeader object
 
-    Returns:
+    Parameters
+    ----------
+    coordinates_vol : ndarray
+        Coordinate in the volume (raw data)
+    header : Nifti1Header
+        Image header containing metadata
+
+    Returns
+    -------
+    ndarray
         Coordinates in the world space
+
+    Notes
+    -----
+    This method relies on the same technique as method 3, but for images created by FreeSurfer (MGHImage, MGHHeader).
     """
     import numpy as np
 
