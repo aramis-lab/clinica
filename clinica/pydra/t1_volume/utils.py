@@ -22,8 +22,6 @@ def initialize_tissues_spm_segment(
         "tissues" data structure for SPMSegment
     """
 
-    import clinica.pydra.t1_volume.utils as spm_utils
-
     parameters = {}
     parameters.setdefault("tissue_classes", [1, 2, 3])
     parameters.setdefault("dartel_tissues", [1, 2, 3])
@@ -33,7 +31,7 @@ def initialize_tissues_spm_segment(
     if tissue_probability_map:
         parameters.setdefault("tissue_probability_maps", tissue_probability_map)
     else:
-        parameters.setdefault("tissue_probability_maps", spm_utils.get_tpm())
+        parameters.setdefault("tissue_probability_maps", get_tpm())
 
     tissue_tuples = get_tissue_tuples(
         parameters["tissue_probability_maps"],
