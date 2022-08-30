@@ -194,10 +194,15 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     import numpy as np
     from nibabel.filebasedimages import ImageFileError
 
+    from clinica.utils.exceptions import ClinicaException
+
     # from clinica.utils.stream import cprint
     # assert isinstance(nii_volume, str), "input argument nii_volume must be a str"
 
-    assert isfile(nii_volume), "input argument must be a path to a file"
+    if not isfile(nii_volume):
+        raise ClinicaException(
+            f"The input {nii_volume} does not appear to be a path to a file."
+        )
 
     try:
         orig_nifti = nib.load(str(nii_volume))
