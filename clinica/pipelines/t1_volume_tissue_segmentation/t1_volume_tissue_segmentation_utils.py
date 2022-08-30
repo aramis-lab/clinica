@@ -1,8 +1,10 @@
 """Utils for the implementation of t1-volume-tissue-segmentation pipeline."""
 
 import os
+from os import PathLike
 
 import numpy as np
+
 from nipype.interfaces.base import (
     File,
     InputMultiPath,
@@ -42,29 +44,35 @@ def zip_list_files(class_images, zip_files=False):
 
 
 def get_tissue_tuples(
-    tissue_map,
-    tissue_classes,
-    dartel_tissues,
-    save_warped_unmodulated,
-    save_warped_modulated,
-):
-    """Get tissue tuples.
-
-    Method to obtain the list of tuples, one for each tissue class, with the following fields:
-     - tissue probability map (4D), 1-based index to frame
+    tissue_map: PathLike,
+    tissue_classes: list,
+    dartel_tissues: list,
+    save_warped_unmodulated: bool,
+    save_warped_modulated: bool,
+) -> list:
+    """Extract list of tuples, one for each tissue class.
+    Parameters
+    ---------
+    tissue_map : PathLike
+        Path to tissue maps
+    tissue_classes: list
+        Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
+    dartel_tissues: list
+        Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
+    save_warped_unmodulated : bool
+        Save warped unmodulated images for tissues specified in --tissue_classes
+    save_warped_modulated: bool
+        Save warped modulated images for tissues specified in --tissue_classes
+    Returns
+    -------
+    list
+        List of tuples according to NewSegment input por tissues
+    Notes
+    -----
+     The returned list contains tissue probability map (4D), 1-based index to frame
      - number of gaussians
      - which maps to save [Native, DARTEL] - a tuple of two boolean values
      - which maps to save [Unmodulated, Modulated] - a tuple of two boolean values
-
-    Args:
-        tissue_map: Path to tissue maps
-        tissue_classes: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
-        dartel_tissues: Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
-        save_warped_unmodulated: Save warped unmodulated images for tissues specified in --tissue_classes
-        save_warped_modulated: Save warped modulated images for tissues specified in --tissue_classes
-
-    Returns:
-        List of tuples according to NewSegment input por tissues
     """
     tissues = []
 
@@ -74,20 +82,10 @@ def get_tissue_tuples(
         if i == 4 or i == 5:
             n_gaussians = i - 1
 
-        native_space = False
-        dartel_input = False
-        warped_unmodulated = False
-        warped_modulated = False
-
-        if i in tissue_classes:
-            native_space = True
-            if save_warped_unmodulated:
-                warped_unmodulated = True
-            if save_warped_modulated:
-                warped_modulated = True
-
-        if i in dartel_tissues:
-            dartel_input = True
+        native_space = i in tissue_classes
+        dartel_input = i in dartel_tissues
+        warped_unmodulated = (i in tissue_classes) and save_warped_unmodulated
+        warped_modulated = (i in tissue_classes) and save_warped_modulated
 
         tissues.append(
             (
@@ -97,6 +95,7 @@ def get_tissue_tuples(
                 (warped_unmodulated, warped_modulated),
             )
         )
+
     return tissues
 
 
