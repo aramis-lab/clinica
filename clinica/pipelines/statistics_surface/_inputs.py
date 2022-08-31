@@ -26,20 +26,16 @@ def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
     tsv_data : pd.DataFrame
         DataFrame obtained from the file.
     """
-    if not Path(tsv_file).exists():
+    try:
+        return pd.read_csv(tsv_file, sep="\t").set_index(
+            [TSV_FIRST_COLUMN, TSV_SECOND_COLUMN]
+        )
+    except FileNotFoundError:
         raise FileNotFoundError(f"File {tsv_file} does not exist.")
-    tsv_data = pd.read_csv(tsv_file, sep="\t")
-    if len(tsv_data.columns) < 2:
-        raise ValueError(f"The TSV data in {tsv_file} should have at least 2 columns.")
-    if tsv_data.columns[0] != TSV_FIRST_COLUMN:
+    except KeyError:
         raise ValueError(
-            f"The first column in {tsv_file} should always be {TSV_FIRST_COLUMN}."
+            f"The TSV data should have at least two columns: {TSV_FIRST_COLUMN} and {TSV_SECOND_COLUMN}"
         )
-    if tsv_data.columns[1] != TSV_SECOND_COLUMN:
-        raise ValueError(
-            f"The second column in {tsv_file} should always be {TSV_SECOND_COLUMN}."
-        )
-    return tsv_data
 
 
 def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> str:
