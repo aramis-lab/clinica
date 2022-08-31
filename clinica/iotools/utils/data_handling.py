@@ -1164,6 +1164,7 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     import numpy as np
     from nibabel.filebasedimages import ImageFileError
 
+    from clinica.utils.stream import cprint
     from clinica.utils.exceptions import ClinicaException
 
     # from clinica.utils.stream import cprint
@@ -1175,9 +1176,12 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
         )
 
     try:
-        orig_nifti = nib.load(str(nii_volume))
+        orig_nifti = nib.load(nii_volume)
     except ImageFileError:
-        print(f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI?")
+        cprint(
+            msg=f"File {nii_volume} could not be read by nibabel. Is it a valid NIfTI file ?",
+            lvl="warning",
+        )
         return np.nan
 
     head = orig_nifti.header
