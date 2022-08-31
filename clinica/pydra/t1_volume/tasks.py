@@ -13,7 +13,10 @@ from nipype.interfaces.spm.base import SPMCommand, SPMCommandInputSpec
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 from pydra.mark import annotate, task
 
-from clinica.pydra.t1_volume.utils import get_world_coordinate_of_center, is_centered
+from clinica.iotools.utils.data_handling import (
+    get_world_coordinate_of_center,
+    is_centered,
+)
 
 
 @task
