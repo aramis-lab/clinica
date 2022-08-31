@@ -1164,8 +1164,8 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     import numpy as np
     from nibabel.filebasedimages import ImageFileError
 
-    from clinica.utils.stream import cprint
     from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.stream import cprint
 
     # from clinica.utils.stream import cprint
     # assert isinstance(nii_volume, str), "input argument nii_volume must be a str"

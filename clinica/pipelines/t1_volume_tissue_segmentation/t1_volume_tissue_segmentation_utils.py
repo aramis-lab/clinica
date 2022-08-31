@@ -4,7 +4,6 @@ import os
 from os import PathLike
 
 import numpy as np
-
 from nipype.interfaces.base import (
     File,
     InputMultiPath,
