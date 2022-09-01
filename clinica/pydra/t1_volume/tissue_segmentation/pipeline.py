@@ -3,8 +3,10 @@ from nipype.algorithms.misc import Gunzip
 from pydra import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
 
+from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils import (
+    ApplySegmentationDeformation,
+)
 from clinica.pydra.engine import clinica_io
-from clinica.pydra.t1_volume.tasks import ApplySegmentationDeformation
 from clinica.pydra.t1_volume.utils import initialize_tissues_spm_segment
 
 
@@ -24,7 +26,7 @@ def t1volume_tissue_segmentation(name: str = "t1volume") -> Workflow:
     """
 
     from clinica.pydra.t1_volume.tasks import (
-        check_volume_location_in_world_coordinate_system,
+        task_volume_location_in_world_coordinate_system,
     )
 
     workflow = Workflow(
@@ -33,9 +35,9 @@ def t1volume_tissue_segmentation(name: str = "t1volume") -> Workflow:
     )
 
     workflow.add(
-        check_volume_location_in_world_coordinate_system(
+        task_volume_location_in_world_coordinate_system(
             name="check_location_world",
-            nifti_list=workflow.lzin.T1w,
+            nifti_input=workflow.lzin.T1w,
         )
     )
 

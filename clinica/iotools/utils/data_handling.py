@@ -1,5 +1,7 @@
 """Data handling scripts."""
 
+from os import PathLike
+
 import click
 
 
@@ -1010,29 +1012,44 @@ def check_relative_volume_location_in_world_coordinate_system(
 
 
 def check_volume_location_in_world_coordinate_system(
-    nifti_list, bids_dir, modality="t1w", skip_question=False
-):
+    nifti_list: list,
+    bids_dir: PathLike,
+    modality: str = "t1w",
+    skip_question: bool = False,
+) -> bool:
+    """Check if images are centered around the origin of the world coordinate
+    Parameters
+    ----
+    nifti_list: list
+        list of path to nifti files or path
+    bids_dir: str
+        path to bids directory associated with this check
+    modality: str
+        the modality of the image
+    skip_question: bool
+        if True, assume answer is yes
+    Returns
+    -------
+    bool
+        True if they are centered, False otherwise
+    Warns
+    ------
+    If volume is not centered on origin of the world coordinate system
+    Notes
+    -----
+    the NIfTI file list provided in argument are approximately centered around the origin of the
+    world coordinates. Otherwise, issues may arise with further processing such as SPM segmentation. When not centered,
+    we warn the user of the problem propose to exit clinica to run clinica iotools center-nifti or to continue with the execution
+    of the pipeline
     """
-    Check if the NIfTI file list nifti_list provided in argument are approximately centered around the origin of the
-    world coordinates. Otherwise, issues may arise with further processing such as SPM segmentation.
 
-    If yes, we warn the user of this problem, and propose him to exit clinica in order for him to run:
-        clinica iotools center-nifti ...
-    or to continue with the execution of the pipeline
-
-    Args:
-        nifti_list: (list of str) list of path to nifti files
-        bids_dir: (str) path to bids directory associated with this check (in order to propose directly the good
-            command line for center-nifti tool)
-        modality: (str) to propose directly the good command line option
-        skip_question: (bool) if True user input is not asked for and the answer is automatically yes
-    """
     import sys
     from os.path import abspath, basename
 
     import click
     import numpy as np
 
+    flag_centered = True
     list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
     if len(list_non_centered_files) > 0:
         centers = [
@@ -1042,6 +1059,7 @@ def check_volume_location_in_world_coordinate_system(
 
         # File column width : 3 spaces more than the longest string to display
         file_width = 3 + max(len(basename(file)) for file in list_non_centered_files)
+
         # Center column width (with a fixed minimum size) : 3 spaces more than the longest string to display
         center_width = max(
             len("Coordinate of center") + 3,
@@ -1059,12 +1077,6 @@ def check_volume_location_in_world_coordinate_system(
         # 18 is the length of the string 'Distance to origin'
         warning_message += "\n" + "-" * (file_width + center_width + 18) + "\n"
         for file, center, l2 in zip(list_non_centered_files, centers, l2_norm):
-            # Nice formatting as array
-            # % escape character
-            # - aligned to the left, with the size of the column
-            # s = string, f = float
-            # . for precision with float
-            # https://docs.python.org/2/library/stdtypes.html#string-formatting for more information
             warning_message += (
                 "%-" + str(file_width) + "s%-" + str(center_width) + "s%-25.2f\n"
             ) % (basename(file), str(center), l2)
@@ -1086,10 +1098,14 @@ def check_volume_location_in_world_coordinate_system(
 
         click.echo(warning_message)
 
+        flag_centered = False
+
         if not skip_question:
             if not click.confirm("Do you still want to launch the pipeline?"):
                 click.echo("Clinica will now exit...")
                 sys.exit(0)
+
+    return flag_centered
 
 
 def is_centered(nii_volume, threshold_l2=50):
