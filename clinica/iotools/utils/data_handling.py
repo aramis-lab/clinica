@@ -1151,6 +1151,7 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
 
 def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     """Extract the world coordinates of the center of the image.
+    
     Parameters
     ---------
     nii_volume : PathLike
