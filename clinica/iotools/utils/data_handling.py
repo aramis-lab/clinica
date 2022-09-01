@@ -1027,7 +1027,7 @@ def check_volume_location_in_world_coordinate_system(
     modality: str, optional
         the modality of the image
     skip_question: bool
-        if True, assume answer is yes
+        if True, assume answer is yes. Default=False.
     Returns
     -------
     bool
