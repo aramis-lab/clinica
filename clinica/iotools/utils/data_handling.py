@@ -1218,7 +1218,7 @@ def get_center_volume(header: Nifti1Header) -> ndarray:
     """Get the voxel coordinates of the center of the data, using header information.
     Parameters
     ----------
-        header: Nifti1Header
+    header: Nifti1Header
             Contains image metadata
     Returns
     -------
