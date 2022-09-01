@@ -11,7 +11,7 @@ def initialize_tissues_spm_segment(
     Parameters
     ----------
     tissue_probability_map: PathLike, optional
-        Path to the nifti tissue probability map
+        Path to the nifti tissue probability map. Default=None.
 
     Returns
     -------
