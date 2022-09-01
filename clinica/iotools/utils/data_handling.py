@@ -1159,7 +1159,7 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
         
     Returns
     -------
-    tuple
+    np.ndarray :
         coordinates in the world space
     References
     ------
