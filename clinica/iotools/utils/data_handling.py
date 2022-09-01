@@ -1027,7 +1027,7 @@ def check_volume_location_in_world_coordinate_system(
         list of path to nifti files or path
     bids_dir: str
         path to bids directory associated with this check
-    modality: str
+    modality: str, optional
         the modality of the image
     skip_question: bool
         if True, assume answer is yes
