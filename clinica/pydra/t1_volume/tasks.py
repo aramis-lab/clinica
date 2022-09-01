@@ -21,7 +21,7 @@ def task_volume_location_in_world_coordinate_system(
     bids_dir: PathLike
         path to bids directory associated with this check
 
-    modality: str
+    modality: str, optional
         the modality of the image
 
     skip_question: bool, optional
