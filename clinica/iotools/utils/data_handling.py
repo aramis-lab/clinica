@@ -1387,6 +1387,8 @@ def vox_to_world_space_method_3(coordinates_vol: ndarray, header: Nifti1Header):
 
 def vox_to_world_space_method_3_bis(coordinates_vol: ndarray, header: Nifti1Header):
     """
+    Convert coordinates to world space (method 3 bis).
+    
     Parameters
     ----------
     coordinates_vol : ndarray
