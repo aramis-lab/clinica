@@ -1126,7 +1126,9 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
         be considered centered. The threshold were SPM segmentation stops working is around 100 mm (it was determined empirically after several trials on a generated dataset), so default value is 50mm in order to have a security margin, even when dealing with co-registered files afterward.
     Returns
     -------
-        bool
+    bool :
+        True if the volume is centered, False otherwise.
+    
     Notes
     ------
     SPM has troubles to segment files if the center of the volume is not close from the origin of the world coordinate
