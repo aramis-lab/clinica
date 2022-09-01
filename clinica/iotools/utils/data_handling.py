@@ -1036,6 +1036,7 @@ def check_volume_location_in_world_coordinate_system(
     -------
     bool
         True if they are centered, False otherwise
+        
     Warns
     ------
     If volume is not centered on origin of the world coordinate system
