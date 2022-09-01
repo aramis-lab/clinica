@@ -11,13 +11,15 @@ from clinica.pydra.t1_volume.utils import initialize_tissues_spm_segment
 
 
 @clinica_io
-def t1volume_tissue_segmentation(name: str = "t1volume") -> Workflow:
+def t1volume_tissue_segmentation(
+    name: str = "t1-volume-tissue-segmentation",
+) -> Workflow:
     """Workflow for tissue segmentation, bias correction and spatial normalization
 
     Parameters
     ----------
     name : str
-        name of pipeline
+        name of pipeline. Default="t1-volume-tissue-segmentation".
 
     Returns
     -------
