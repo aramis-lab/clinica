@@ -18,7 +18,7 @@ def task_volume_location_in_world_coordinate_system(
     nifti_input: PathLike
         Path to nifti file
 
-    bids_dir: str
+    bids_dir: PathLike
         path to bids directory associated with this check
 
     modality: str
