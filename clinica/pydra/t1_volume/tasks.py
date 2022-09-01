@@ -18,14 +18,14 @@ def task_volume_location_in_world_coordinate_system(
     nifti_input: PathLike
         Path to nifti file
 
-    bids_dir: str
+    bids_dir: PathLike
         path to bids directory associated with this check
 
-    modality: str
-        the modality of the image
+    modality: str, optional
+        the modality of the image. Default="t1w".
 
-    skip_question: bool
-        if True, assume answer is yes
+    skip_question: bool, optional
+        if True, assume answer is yes. Default=False.
 
     Returns
     -------

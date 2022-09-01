@@ -1022,12 +1022,12 @@ def check_volume_location_in_world_coordinate_system(
     ----
     nifti_list: list
         list of path to nifti files or path
-    bids_dir: str
+    bids_dir: PathLike
         path to bids directory associated with this check
-    modality: str
-        the modality of the image
-    skip_question: bool
-        if True, assume answer is yes
+    modality: str, optional
+        the modality of the image. Default='t1w'.
+    skip_question: bool, optional
+        if True, assume answer is yes. Default=False.
     Returns
     -------
     bool
