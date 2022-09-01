@@ -25,7 +25,7 @@ def task_volume_location_in_world_coordinate_system(
         the modality of the image
 
     skip_question: bool, optional
-        if True, assume answer is yes
+        if True, assume answer is yes. Default=False.
 
     Returns
     -------
