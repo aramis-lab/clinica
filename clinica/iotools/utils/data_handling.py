@@ -1156,6 +1156,7 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     ---------
     nii_volume : PathLike
         path to nii volume
+        
     Returns
     -------
     tuple
