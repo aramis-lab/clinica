@@ -1116,6 +1116,7 @@ def check_volume_location_in_world_coordinate_system(
 
 def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
     """Checks if a NIfTI volume is centered on the origin of the world coordinate system.
+    
     Parameters
     ---------
     nii_volume : PathLike
