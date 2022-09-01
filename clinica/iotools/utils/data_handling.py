@@ -1039,7 +1039,8 @@ def check_volume_location_in_world_coordinate_system(
         
     Warns
     ------
-    If volume is not centered on origin of the world coordinate system
+    If volume is not centered on origin of the world coordinate system.
+    
     Notes
     -----
     the NIfTI file list provided in argument are approximately centered around the origin of the
