@@ -1214,7 +1214,7 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     return center_coordinates_world
 
 
-def get_center_volume(header: dict) -> ndarray:
+def get_center_volume(header: Nifti1Header) -> ndarray:
     """Get the voxel coordinates of the center of the data, using header information.
     Parameters
     ----------
