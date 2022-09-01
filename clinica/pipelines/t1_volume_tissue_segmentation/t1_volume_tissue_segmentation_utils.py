@@ -65,7 +65,7 @@ def get_tissue_tuples(
     Returns
     -------
     list
-        List of tuples according to NewSegment input por tissues
+        List of tuples according to NewSegment input for tissues
     Notes
     -----
      The returned list contains tissue probability map (4D), 1-based index to frame
