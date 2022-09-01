@@ -1,7 +1,9 @@
 from nipype.interfaces.petpvc import PETPVC
 from nipype.interfaces.spm import Coregister, DARTELNorm2MNI, Smooth
 from nipype.interfaces.spm.utils import Reslice
-from pydra import Workflow
+from nipype.algorithms.misc import Gunzip
+import pydra
+from pydra.engine import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
 
 from clinica.pydra.engine import clinica_io
@@ -15,7 +17,7 @@ from clinica.pydra.pet_volume.tasks import (
 
 
 @clinica_io
-def build_core_workflow(name: str = "core") -> Workflow:
+def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     """Core workflow for the PET Volume pipeline.
 
     Parameters
@@ -31,7 +33,29 @@ def build_core_workflow(name: str = "core") -> Workflow:
     if spm_standalone_is_available():
         use_spm_standalone()
 
-    wf = Workflow(name, input_spec=["T1w", "pet"])
+    input_spec = pydra.specs.SpecInfo(
+        name="Input",
+        fields=[
+            ("T1W", str, {"mandatory": True}),
+            ("pet", str, {"mandatory": True}),
+            (
+                "mask_tissues",
+                dict,
+                {"tissue_number": 1, "modulation": False},
+                {"mandatory": True},
+            ),
+            ("flow_fields", dict, {"group_label": "group"}, {"mandatory": True}),
+            ("dartel_template", dict, {"group_label": "group"}, {"mandatory": True}),
+            ("pvc_mask_tissues", dict, {"tissue_number": 1}, {"mandatory": False}),
+        ],
+        bases=(pydra.specs.BaseSpec,),
+    )
+
+    wf = Workflow(
+        name,
+        input_spec=input_spec,
+    )
+
     compressed_inputs = [
         "pet_image",
         "t1_image_native",
@@ -40,14 +64,13 @@ def build_core_workflow(name: str = "core") -> Workflow:
         "dartel_template",
         "reference_mask",
     ]
-
     # Unzipping
-    for input_name, query in zip(["unzip_{_}" for _ in compressed_inputs], queries):
+    for input_name in [f"unzip_{_}" for _ in compressed_inputs]:
         wf.add(
             Nipype1Task(
                 name=input_name,
                 interface=Gunzip(),
-                in_file=wf.lzin.T1w,  # TODO: change this
+                in_file=wf.lzin.T1W,  # TODO: change this
             )
         )
 

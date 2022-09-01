@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 import click
 
 import clinica.pydra.engine_utils as pydra_utils
-import clinica.pydra.pet_volume.pet_volume as pydra_pet_volume
+import clinica.pydra.pet_volume.pipeline as pydra_pet_volume
 from clinica.pipelines import cli_param
 
 pipeline_name = "pydra-pet-volume"
@@ -104,10 +104,9 @@ def cli(
         name="pet-volume-pydra",
         input_dir=bids_directory,
         output_dir=caps_directory,
-        tsv_file=subjects_sessions_tsv,
-        base_dir=working_directory,
+        #tsv_file=subjects_sessions_tsv,
+        #base_dir=working_directory,
         parameters=parameters,
-        name=pipeline_name,
     )
     pydra_utils.run(pipeline)
 
