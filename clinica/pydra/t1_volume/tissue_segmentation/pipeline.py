@@ -55,7 +55,7 @@ def t1volume_tissue_segmentation(
     spm_segment.inputs.write_deformation_fields = [True, True]
 
     tissue_tuples = initialize_tissues_spm_segment()
-    spm_segment.inputs.tissues = tissue_tuples
+    spm_segment.inputs.tissues = initialize_tissues_spm_segment()
 
     spm_segment.inputs.channel_files = workflow.unzipT1w.lzout.out_file
 
