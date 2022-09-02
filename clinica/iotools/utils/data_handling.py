@@ -250,7 +250,7 @@ def create_merge_file(
         tmp = merged_df.select_dtypes(include=[np.number])
         # Round numeric values in dataframe to 12 floating point values
         merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
-        merged_df.to_csv(out_path, sep="\t")
+        merged_df.to_csv(out_path, sep="\t", index=False)
         cprint("End of CAPS information merge.", lvl="debug")
 
 
@@ -661,7 +661,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
                             row_to_append_df[m] = pd.Series("0")
                             mmt.add_missing_mod(ses, m)
 
-            missing_mods_df = missing_mods_df.append(row_to_append_df)
+            missing_mods_df = pd.concat([missing_mods_df, row_to_append_df])
             row_to_append_df = pd.DataFrame(columns=cols_dataframe)
 
         missing_mods_df = missing_mods_df[cols_dataframe]
