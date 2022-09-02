@@ -1031,16 +1031,16 @@ def check_volume_location_in_world_coordinate_system(
         the modality of the image. Default="t1w".
     skip_question: bool, optional
         if True, assume answer is yes. Default=False.
-        
+
     Returns
     -------
     bool
         True if they are centered, False otherwise
-        
+
     Warns
     ------
     If volume is not centered on origin of the world coordinate system.
-    
+
     Notes
     -----
     the NIfTI file list provided in argument are approximately centered around the origin of the
@@ -1116,7 +1116,7 @@ def check_volume_location_in_world_coordinate_system(
 
 def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
     """Checks if a NIfTI volume is centered on the origin of the world coordinate system.
-    
+
     Parameters
     ---------
     nii_volume : PathLike
@@ -1128,7 +1128,7 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
     -------
     bool :
         True if the volume is centered, False otherwise.
-    
+
     Notes
     ------
     SPM has troubles to segment files if the center of the volume is not close from the origin of the world coordinate
@@ -1151,12 +1151,12 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
 
 def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     """Extract the world coordinates of the center of the image.
-    
+
     Parameters
     ---------
     nii_volume : PathLike
         path to nii volume
-        
+
     Returns
     -------
     np.ndarray :
@@ -1174,9 +1174,6 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
 
     from clinica.utils.exceptions import ClinicaException
     from clinica.utils.stream import cprint
-
-    # from clinica.utils.stream import cprint
-    # assert isinstance(nii_volume, str), "input argument nii_volume must be a str"
 
     if not isfile(nii_volume):
         raise ClinicaException(
@@ -1394,7 +1391,7 @@ def vox_to_world_space_method_3(coordinates_vol: ndarray, header: Nifti1Header):
 def vox_to_world_space_method_3_bis(coordinates_vol: ndarray, header: Nifti1Header):
     """
     Convert coordinates to world space (method 3 bis).
-    
+
     Parameters
     ----------
     coordinates_vol : ndarray
