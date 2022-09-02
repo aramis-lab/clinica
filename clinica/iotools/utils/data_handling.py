@@ -3,6 +3,8 @@
 from os import PathLike
 
 import click
+from nibabel.nifti1 import Nifti1Header
+from numpy import ndarray
 
 
 def compute_default_filename(out_path):
@@ -1022,19 +1024,22 @@ def check_volume_location_in_world_coordinate_system(
     ----
     nifti_list: list
         list of path to nifti files or path
-    bids_dir: PathLike
+    bids_dir: str
         path to bids directory associated with this check
     modality: str, optional
-        the modality of the image. Default='t1w'.
+        the modality of the image. Default="t1w".
     skip_question: bool, optional
         if True, assume answer is yes. Default=False.
+
     Returns
     -------
     bool
         True if they are centered, False otherwise
+
     Warns
     ------
-    If volume is not centered on origin of the world coordinate system
+    If volume is not centered on origin of the world coordinate system.
+
     Notes
     -----
     the NIfTI file list provided in argument are approximately centered around the origin of the
@@ -1108,65 +1113,71 @@ def check_volume_location_in_world_coordinate_system(
     return flag_centered
 
 
-def is_centered(nii_volume, threshold_l2=50):
-    """Tell if a NIfTI volume is centered on the origin of the world coordinate system.
+def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
+    """Checks if a NIfTI volume is centered on the origin of the world coordinate system.
 
+    Parameters
+    ---------
+    nii_volume : PathLike
+        path to NIfTI volume
+    threshold_l2: int, optional
+        Maximum distance between origin of the world coordinate system and the center of the volume to
+        be considered centered. The threshold were SPM segmentation stops working is around 100 mm (it was determined empirically after several trials on a generated dataset), so default value is 50mm in order to have a security margin, even when dealing with co-registered files afterward.
+    Returns
+    -------
+    bool :
+        True if the volume is centered, False otherwise.
+
+    Notes
+    ------
     SPM has troubles to segment files if the center of the volume is not close from the origin of the world coordinate
     system. A series of experiment have been conducted: we take a volume whose center is on the origin of the world
     coordinate system. We add an offset using coordinates of affine matrix [0, 3], [1, 3], [2, 3] (or by modifying the
     header['srow_x'][3], header['srow_y'][3], header['srow_z'][3], this is strictly equivalent).
-
     It has been determined that volumes were still segmented with SPM when the L2 distance between origin and center of
     the volume did not exceed 100 mm. Above this distance, either the volume is either not segmented (SPM error), or the
     produced segmentation is wrong (not the shape of a brain anymore)
-
-    Args:
-        nii_volume: path to NIfTI volume
-        threshold_l2: maximum distance between origin of the world coordinate system and the center of the volume to
-                    be considered centered. The threshold were SPM segmentation stops working is around 100 mm
-                    (it was determined empirically after several trials on a generated dataset), so default value is 50
-                    mm in order to have a security margin, even when dealing with co-registered files afterward.
-
-    Returns:
-        True or False
     """
+
     import numpy as np
 
     center = get_world_coordinate_of_center(nii_volume)
 
-    # Compare to the threshold and retun boolean
-    # if center is a np.nan, comparison will be False, and False will be returned
     distance_from_origin = np.linalg.norm(center, ord=2)
-    # if not np.isnan(distance_from_origin):
-    #     print('\t' + basename(nii_volume) + ' has its center at {0:.2f} mm of the origin.'.format(distance_from_origin))
-    if distance_from_origin < threshold_l2:
-        return True
-    else:
-        # If center is a np.nan,
-        return False
+
+    return distance_from_origin < threshold_l2
 
 
-def get_world_coordinate_of_center(nii_volume):
+def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     """Extract the world coordinates of the center of the image.
 
-    Based on methods described here: https://brainder.org/2012/09/23/the-nifti-file-format/
+    Parameters
+    ---------
+    nii_volume : PathLike
+        path to nii volume
 
-    Args:
-        nii_volume: path to nii volume
-
-    Returns:
-        [Returns]
+    Returns
+    -------
+    np.ndarray :
+        coordinates in the world space
+    References
+    ------
+    https://brainder.org/2012/09/23/the-nifti-file-format/
     """
+
     from os.path import isfile
 
     import nibabel as nib
     import numpy as np
     from nibabel.filebasedimages import ImageFileError
 
+    from clinica.utils.exceptions import ClinicaException
     from clinica.utils.stream import cprint
 
-    assert isinstance(nii_volume, str), "input argument nii_volume must be a str"
-    assert isfile(nii_volume), "input argument must be a path to a file"
+    if not isfile(nii_volume):
+        raise ClinicaException(
+            f"The input {nii_volume} does not appear to be a path to a file."
+        )
 
     try:
         orig_nifti = nib.load(nii_volume)
@@ -1205,34 +1216,44 @@ def get_world_coordinate_of_center(nii_volume):
     return center_coordinates_world
 
 
-def get_center_volume(header):
+def get_center_volume(header: Nifti1Header) -> ndarray:
     """Get the voxel coordinates of the center of the data, using header information.
-
-    Args:
-        header: a nifti header
-
-    Returns:
+    Parameters
+    ----------
+    header: Nifti1Header
+            Contains image metadata
+    Returns
+    -------
+    ndarray
         Voxel coordinates of the center of the volume
     """
     import numpy as np
 
-    center_x = header["dim"][1] / 2
-    center_y = header["dim"][2] / 2
-    center_z = header["dim"][3] / 2
-    return np.array([center_x, center_y, center_z])
+    return np.array([x / 2 for x in header["dim"][1:4]])
 
 
-def vox_to_world_space_method_1(coordinates_vol, header):
-    """
-    The Method 1 is for compatibility with analyze and is not supposed to be used as the main orientation method. But it
-    is used if sform_code = 0. The world coordinates are determined simply by scaling by the voxel size by their
-    dimension stored in pixdim. More information here: https://brainder.org/2012/09/23/the-nifti-file-format/
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: header object
-
-    Returns:
+def vox_to_world_space_method_1(
+    coordinates_vol: ndarray, header: Nifti1Header
+) -> ndarray:
+    """Convert coordinates to world space
+    Parameters
+    ----------
+    coordinates_vol: ndarray
+        Coordinate in the volume (raw data)
+    header: Nifti1Header
+        Contains image metadata
+    Returns
+    -------
+    ndarray
         Coordinates in the world space
+    Notes
+    -----
+    This method is for compatibility with analyze and is not supposed to be used as the main orientation method. But it
+    is used if sform_code = 0. The world coordinates are determined simply by scaling by the voxel size by their
+    dimension stored in pixdim.
+    References
+    ----------
+    https://brainder.org/2012/09/23/the-nifti-file-format/
     """
     import numpy as np
 
@@ -1241,30 +1262,36 @@ def vox_to_world_space_method_1(coordinates_vol, header):
     )
 
 
-def vox_to_world_space_method_2(coordinates_vol, header):
-    """
-    The Method 2 is used when short qform_code is larger than zero. To get the coordinates, we multiply a rotation
+def vox_to_world_space_method_2(
+    coordinates_vol: ndarray, header: Nifti1Header
+) -> ndarray:
+    """Convert coordinates to world space (method 2)
+    Parameters
+    ----------
+    coordinates_vol : ndarray
+        Coordinate in the volume (raw data)
+    header : Nifti1Header
+        Image header containing metadata
+    Returns
+    -------
+    ndarray
+        Coordinates in the world space
+    Notes
+    -----
+    This method is used when short qform_code is larger than zero. To get the coordinates, we multiply a rotation
     matrix (r_mat) by coordinates_vol, then perform Hadamard with pixel dimension pixdim (like in method 1). Then we add
     an offset (qoffset_x, qoffset_y, qoffset_z)
-
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: header object
-
-    Returns:
-        Coordinates in the world space
     """
     import numpy as np
 
     def get_r_matrix(h):
         """Get rotation matrix.
-
         More information here: https://brainder.org/2012/09/23/the-nifti-file-format/
-
-        Args:
+        Parameters
+        ----------
             h: header
-
-        Returns:
+        Returns
+        -------
             Rotation matrix
         """
         b = h["quatern_b"]
@@ -1283,9 +1310,7 @@ def vox_to_world_space_method_2(coordinates_vol, header):
         r[2, 2] = (a**2) + (d**2) - (b**2) - (c**2)
         return r
 
-    i = coordinates_vol[0]
-    j = coordinates_vol[1]
-    k = coordinates_vol[2]
+    i, j, k = coordinates_vol
     if header["qform_code"] > 0:
         r_mat = get_r_matrix(header)
     else:
@@ -1300,32 +1325,39 @@ def vox_to_world_space_method_2(coordinates_vol, header):
     ) + np.array([header["qoffset_x"], header["qoffset_y"], header["qoffset_z"]])
 
 
-def vox_to_world_space_method_3(coordinates_vol, header):
-    """
+def vox_to_world_space_method_3(coordinates_vol: ndarray, header: Nifti1Header):
+    """Convert coordinates to world space (method 3)
+    Parameters
+    ----------
+    coordinates_vol : ndarray
+        Coordinate in the volume (raw data)
+    header : Nifti1Header
+        Image header containing metadata
+    Returns
+    -------
+    ndarray
+        Coordinates in the world space
+    Notes
+    -----
     This method is used when sform_code is larger than zero. It relies on a full affine matrix, stored in the header in
     the fields srow_[x,y,y], to map voxel to world coordinates.
     When a nifti file is created with raw data and affine=..., this is this method that is used to decipher the
     voxel-to-world correspondence.
-
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: header object
-
-    Returns:
-        Coordinates in the world space
     """
     import numpy as np
 
-    def get_aff_matrix(h):
+    def get_aff_matrix(h: Nifti1Header) -> ndarray:
         """Get affine transformation matrix.
-
-        See details here: https://brainder.org/2012/09/23/the-nifti-file-format/
-
-        Args:
-            h: header
-
-        Returns:
-            affine transformation matrix
+        Parameters
+        ----------
+            h : Nifti1Header
+        Returns
+        -------
+        ndarray
+            Affine transformation matrix
+        References
+        ----------
+        https://brainder.org/2012/09/23/the-nifti-file-format/
         """
         mat = np.zeros((4, 4))
         mat[0, 0] = h["srow_x"][0]
@@ -1355,15 +1387,23 @@ def vox_to_world_space_method_3(coordinates_vol, header):
     return np.dot(aff, homogeneous_coord)[0:3]
 
 
-def vox_to_world_space_method_3_bis(coordinates_vol, header):
+def vox_to_world_space_method_3_bis(coordinates_vol: ndarray, header: Nifti1Header):
     """
-    This method relies on the same technique as method 3, but for images created by FreeSurfer (MGHImage, MGHHeader).
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: nib.freesurfer.mghformat.MGHHeader object
+    Convert coordinates to world space (method 3 bis).
 
-    Returns:
+    Parameters
+    ----------
+    coordinates_vol : ndarray
+        Coordinate in the volume (raw data)
+    header : Nifti1Header
+        Image header containing metadata
+    Returns
+    -------
+    ndarray
         Coordinates in the world space
+    Notes
+    -----
+    This method relies on the same technique as method 3, but for images created by FreeSurfer (MGHImage, MGHHeader).
     """
     import numpy as np
 
