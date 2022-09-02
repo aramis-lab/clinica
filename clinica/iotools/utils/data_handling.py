@@ -1027,17 +1027,20 @@ def check_volume_location_in_world_coordinate_system(
         list of path to nifti files or path
     bids_dir: str
         path to bids directory associated with this check
-    modality: str
-        the modality of the image
-    skip_question: bool
-        if True, assume answer is yes
+    modality: str, optional
+        the modality of the image. Default="t1w".
+    skip_question: bool, optional
+        if True, assume answer is yes. Default=False.
+        
     Returns
     -------
     bool
         True if they are centered, False otherwise
+        
     Warns
     ------
-    If volume is not centered on origin of the world coordinate system
+    If volume is not centered on origin of the world coordinate system.
+    
     Notes
     -----
     the NIfTI file list provided in argument are approximately centered around the origin of the
@@ -1113,16 +1116,19 @@ def check_volume_location_in_world_coordinate_system(
 
 def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
     """Checks if a NIfTI volume is centered on the origin of the world coordinate system.
+    
     Parameters
     ---------
     nii_volume : PathLike
         path to NIfTI volume
-    threshold_l2: int
+    threshold_l2: int, optional
         Maximum distance between origin of the world coordinate system and the center of the volume to
         be considered centered. The threshold were SPM segmentation stops working is around 100 mm (it was determined empirically after several trials on a generated dataset), so default value is 50mm in order to have a security margin, even when dealing with co-registered files afterward.
     Returns
     -------
-        bool
+    bool :
+        True if the volume is centered, False otherwise.
+    
     Notes
     ------
     SPM has troubles to segment files if the center of the volume is not close from the origin of the world coordinate
@@ -1145,13 +1151,15 @@ def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
 
 def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     """Extract the world coordinates of the center of the image.
+    
     Parameters
     ---------
     nii_volume : PathLike
         path to nii volume
+        
     Returns
     -------
-    tuple
+    np.ndarray :
         coordinates in the world space
     References
     ------
@@ -1212,11 +1220,11 @@ def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     return center_coordinates_world
 
 
-def get_center_volume(header: dict) -> ndarray:
+def get_center_volume(header: Nifti1Header) -> ndarray:
     """Get the voxel coordinates of the center of the data, using header information.
     Parameters
     ----------
-        header: Nifti1Header
+    header: Nifti1Header
             Contains image metadata
     Returns
     -------
@@ -1385,6 +1393,8 @@ def vox_to_world_space_method_3(coordinates_vol: ndarray, header: Nifti1Header):
 
 def vox_to_world_space_method_3_bis(coordinates_vol: ndarray, header: Nifti1Header):
     """
+    Convert coordinates to world space (method 3 bis).
+    
     Parameters
     ----------
     coordinates_vol : ndarray

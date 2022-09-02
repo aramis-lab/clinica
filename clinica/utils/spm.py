@@ -43,7 +43,7 @@ def get_tpm() -> PathLike:
     """Get Tissue Probability Map (TPM) from SPM.
     Returns
     -------
-    str
+    PathLike :
         TPM.nii path from SPM
     """
     import os
