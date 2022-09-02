@@ -109,7 +109,7 @@ def apply_binary_mask(image: str, binary_mask: str) -> PurePath:
 
 
 @task
-@annotate({"return": {"atlas_statistics_list": ty.List}})
+@annotate({"return": {"atlas_statistics": ty.List}})
 def atlas_statistics(in_image: str, in_atlas_list: ty.List) -> ty.List:
     """Generate regional measure from atlas_list in TSV files.
 
@@ -118,12 +118,16 @@ def atlas_statistics(in_image: str, in_atlas_list: ty.List) -> ty.List:
 
     Parameters
     ----------
-    in_image : A Nifti image
-    in_atlas_list : List of names of atlas to be applied
+    in_image : str
+        Path to the Nifti image.
+
+    in_atlas_list : List
+        List of names of atlas to be applied.
 
     Returns
     -------
-    atlas_statistics_list : List of paths to TSV files
+    atlas_statistics : List
+        List of paths to TSV files.
     """
     from os.path import abspath, join
 
@@ -134,7 +138,7 @@ def atlas_statistics(in_image: str, in_atlas_list: ty.List) -> ty.List:
 
     orig_dir, base, ext = split_filename(in_image)
     atlas_classes = AtlasAbstract.__subclasses__()
-    atlas_statistics_list = []
+    atlas_statistics = []
     for atlas in in_atlas_list:
         for atlas_class in atlas_classes:
             if atlas_class.get_name_atlas() == atlas:
@@ -142,9 +146,9 @@ def atlas_statistics(in_image: str, in_atlas_list: ty.List) -> ty.List:
                     join(getcwd(), base + "_space-" + atlas + "_statistics.tsv")
                 )
                 statistics_on_atlas(in_image, atlas_class(), out_atlas_statistics)
-                atlas_statistics_list.append(out_atlas_statistics)
+                atlas_statistics.append(out_atlas_statistics)
                 break
-    return atlas_statistics_list
+    return atlas_statistics
 
 
 @task

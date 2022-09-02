@@ -16,6 +16,36 @@ from clinica.pydra.pet_volume.tasks import (
 )
 
 
+def _check_pipeline_parameters(parameters: dict) -> dict:
+    """Check the parameters passed to the pipeline.
+
+    Parameters
+    ----------
+    parameters : dict
+        Dictionary of parameters to analyze.
+
+    Returns
+    -------
+    dict :
+        Cleaned dictionary of parameters.
+    """
+    from clinica.utils.atlas import PET_VOLUME_ATLASES
+    from clinica.utils.group import check_group_label
+
+    parameters.setdefault("group_label", None)
+    check_group_label(parameters["group_label"])
+    if "acq_label" not in parameters.keys():
+        raise KeyError("Missing compulsory acq_label key in pipeline parameter.")
+    parameters.setdefault("pvc_psf_tsv", None)
+    parameters["apply_pvc"] = parameters["pvc_psf_tsv"] is not None
+    parameters.setdefault("mask_tissues", [1, 2, 3])
+    parameters.setdefault("mask_threshold", 0.3)
+    parameters.setdefault("pvc_mask_tissues", [1, 2, 3])
+    parameters.setdefault("smooth", [8])
+    parameters.setdefault("atlases", PET_VOLUME_ATLASES)
+    return parameters
+
+
 @clinica_io
 def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     """Core workflow for the PET Volume pipeline.
@@ -33,10 +63,12 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     if spm_standalone_is_available():
         use_spm_standalone()
 
+    parameters = _check_pipeline_parameters(parameters)
+
     input_spec = pydra.specs.SpecInfo(
         name="Input",
         fields=[
-            ("T1W", str, {"mandatory": True}),
+            ("T1w", str, {"mandatory": True}),
             ("pet", str, {"mandatory": True}),
             (
                 "mask_tissues",
@@ -70,7 +102,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
             Nipype1Task(
                 name=input_name,
                 interface=Gunzip(),
-                in_file=wf.lzin.T1W,  # TODO: change this
+                in_file=wf.lzin.T1w,  # TODO: change this
             )
         )
 
@@ -79,7 +111,8 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         name="coreg_pet_t1",
         interface=Coregister(),
     )
-    coreg_pet_t1.inputs.in_files = wf.unzip_pet_image.lzout.out_file
+    coreg_pet_t1.inputs.source = wf.unzip_pet_image.lzout.out_file
+    coreg_pet_t1.inputs.target = wf.unzip_t1_image_native.lzout.out_file
     wf.add(coreg_pet_t1)
 
     # Spatially normalize PET into MNI
@@ -89,7 +122,8 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     )
     dartel_mni_reg.inputs.modulate = False
     dartel_mni_reg.inputs.fwhm = 0
-    dartel_mni_reg.inputs.in_files = wf.unzip_flow_fields.lzout.out_file
+    dartel_mni_reg.inputs.flowfield_files = wf.unzip_flow_fields.lzout.out_file
+    dartel_mni_reg.inputs.template_file = wf.unzip_dartel_template.lzout.out_file
     wf.add(dartel_mni_reg)
 
     # Reslice reference region mask into PET
@@ -97,7 +131,8 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         name="reslice",
         interface=Reslice(),
     )
-    reslice.inputs.in_files = wf.unzip_reference_mask.lzout.out_file
+    reslice.inputs.in_file = wf.unzip_reference_mask.lzout.out_file
+    reslice.inputs.space_defining = wf.dartel_mni_reg.lzout.normalized_files
     wf.add(reslice)
 
     # Normalize PET values according to reference region
@@ -105,11 +140,10 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         normalize_to_reference(
             name="norm_to_ref",
             interface=normalize_to_reference,
-            pet_image=wf.dartel_mni_reg.lzout.out_file,
+            pet_image=wf.dartel_mni_reg.lzout.normalized_files,
             region_mask=wf.reslice.lzout.out_file,
         )
     )
-
     # Create binary mask from segmented tissues
     wf.add(
         create_binary_mask(
@@ -140,7 +174,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         smoothing_node.inputs.out_prefix = [
             f"fwhm-{x}mm_" for x in parameters["smooth"]
         ]
-        smoothing_node.inputs.in_file = wf.apply_mask.lzout.masked_image_path
+        smoothing_node.inputs.in_files = wf.apply_mask.lzout.masked_image_path
         wf.add(smoothing_node)
 
     # Atlas Statistics
@@ -248,16 +282,17 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 in_atlas_list=parameters["atlases"],
             )
         )
-
-    wf.set_output(
-        [
-            ("pet_suvr_masked_smoothed", wf.smoothing_node.lzout.smoothed_files),
-            ("pet_t1_native", wf.coreg_pet_t1.lzout.coregistered_source),
-            ("pet_mni", wf.dartel_mni_reg.lzout.normalized_files),
-            ("pet_suvr", wf.norm_to_ref.lzout.suvr_pet_path),
-            ("binary_mask", wf.binary_mask.lzout.out_mask),
-            ("pet_suvr_masked", wf.apply_mask.lzout.masked_image_path),
-            ("atlas_statistics", wf.atlas_stats_node.lzout.atlas_statistics),
+    output_connections = [
+        ("pet_suvr_masked_smoothed", wf.smoothing_node.lzout.smoothed_files),
+        ("pet_t1_native", wf.coreg_pet_t1.lzout.coregistered_source),
+        ("pet_mni", wf.dartel_mni_reg.lzout.normalized_files),
+        ("pet_suvr", wf.norm_to_ref.lzout.suvr_pet_path),
+        ("binary_mask", wf.binary_mask.lzout.out_mask),
+        ("pet_suvr_masked", wf.apply_mask.lzout.masked_image_path),
+        ("atlas_statistics", wf.atlas_stats_node.lzout.atlas_statistics),
+    ]
+    if parameters["apply_pvc"]:
+        output_connections += [
             ("pet_pvc_suvr_masked_smoothed", wf.smoothing_pvc.lzout.smoothed_files),
             ("pet_pvc", wf.petpvc.lzout.out_file),
             ("pet_pvc_mni", wf.dartel_mni_reg_pvc.lzout.normalized_files),
@@ -265,6 +300,6 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
             ("pet_pvc_suvr_masked", wf.apply_mask_pvc.lzout.masked_image_path),
             ("pvc_atlas_statistics", wf.atlas_stats_pvc.lzout.atlas_statistics),
         ]
-    )
+    wf.set_output(output_connections)
 
     return wf
