@@ -47,20 +47,28 @@ def bids_query(keys: list) -> dict:
 
     return {key: bids_keys_available[key] for key in keys}
 
-
 def run(wf: Workflow) -> None:
+    import re
 
-    """Execute a Pydra workflow
+    try:
+        with Submitter(plugin="cf") as submitter:
+            submitter(wf)
+    except Exception as e:
+        path = re.search("\/.*\.pklz", str(e))
+        if path:
+            path = path.group(0)
+            read_error(path)
+        else:
+            print("Exception:", e)
+        return str(e)
 
-    Parameters
-    ----------
-        wf : Workflow
-            The workflow to execute
-    """
+    results = wf.result(return_inputs=False)
+    return results
 
-    with Submitter(plugin="cf") as submitter:
-        submitter(wf)
 
-    results = wf.result(return_inputs=True)
-    # @TODO: decide where to store results
-    print(results)
+def read_error(path):
+    import cloudpickle as cp
+
+    with open(path, "rb") as fp:
+        err = cp.load(fp)
+        print(err["error message"])
