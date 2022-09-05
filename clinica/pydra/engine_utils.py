@@ -47,6 +47,7 @@ def bids_query(keys: list) -> dict:
 
     return {key: bids_keys_available[key] for key in keys}
 
+
 def run(wf: Workflow) -> None:
     import re
 
