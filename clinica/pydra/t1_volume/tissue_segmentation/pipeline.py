@@ -12,9 +12,9 @@ from clinica.pydra.t1_volume.utils import initialize_tissues_spm_segment
 
 @clinica_io
 def t1volume_tissue_segmentation(
-    name: str = "t1-volume-tissue-segmentation",
+    name: str = "t1-volume-tissue-segmentation", parameters: dict = {}
 ) -> Workflow:
-    """Workflow for tissue segmentation, bias correction and spatial normalization
+    """Core workflow for tissue segmentation, bias correction and spatial normalization
 
     Parameters
     ----------
@@ -40,6 +40,7 @@ def t1volume_tissue_segmentation(
         task_volume_location_in_world_coordinate_system(
             name="check_location_world",
             nifti_input=workflow.lzin.T1w,
+            skip_question=parameters["skip_question"],
         )
     )
 
@@ -54,7 +55,7 @@ def t1volume_tissue_segmentation(
 
     spm_segment.inputs.write_deformation_fields = [True, True]
 
-    tissue_tuples = initialize_tissues_spm_segment()
+    tissue_tuples = initialize_tissues_spm_segment(parameters)
     spm_segment.inputs.tissues = tissue_tuples
 
     spm_segment.inputs.channel_files = workflow.unzipT1w.lzout.out_file

@@ -3,7 +3,7 @@ from typing import Tuple, Union
 
 
 def initialize_tissues_spm_segment(
-    tissue_probability_map: Union[PathLike, None] = None
+    parameters: dict, tissue_probability_map: Union[PathLike, None] = None
 ) -> tuple:
 
     """Prepare data structure for SPM segment interface
@@ -24,16 +24,7 @@ def initialize_tissues_spm_segment(
     )
     from clinica.utils.spm import get_tpm
 
-    parameters = {}
-    parameters.setdefault("tissue_classes", [1, 2, 3])
-    parameters.setdefault("dartel_tissues", [1, 2, 3])
-    parameters.setdefault("save_warped_unmodulated", True)
-    parameters.setdefault("save_warped_modulated", False)
-
-    if tissue_probability_map:
-        parameters.setdefault("tissue_probability_maps", tissue_probability_map)
-    else:
-        parameters.setdefault("tissue_probability_maps", get_tpm())
+    parameters["tissue_probability_maps"] = tissue_probability_map or get_tpm()
 
     tissue_tuples = get_tissue_tuples(
         parameters["tissue_probability_maps"],
