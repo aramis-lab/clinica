@@ -5,7 +5,7 @@ from nipype.algorithms.misc import Gunzip
 import pydra
 from pydra.engine import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
-
+from typing import Any
 from clinica.pydra.engine import clinica_io
 from clinica.pydra.pet_volume.tasks import (
     apply_binary_mask,
@@ -68,6 +68,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     input_spec = pydra.specs.SpecInfo(
         name="Input",
         fields=[
+            ("_graph_checksums", Any),
             ("T1w", str, {"mandatory": True}),
             ("pet", str, {"mandatory": True}),
             (
