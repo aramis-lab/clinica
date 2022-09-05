@@ -42,7 +42,6 @@ def task_volume_location_in_world_coordinate_system(
 
     nifti_list = [str(nifti_input)]
 
-    flag_centered = check_volume_location_in_world_coordinate_system(
+    return check_volume_location_in_world_coordinate_system(
         nifti_list, bids_dir, modality, skip_question
     )
-    return flag_centered
