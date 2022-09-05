@@ -1,3 +1,5 @@
+from os import PathLike
+
 from pydra import Submitter, Workflow
 
 
@@ -6,11 +8,12 @@ def list_out_fields(wf: Workflow) -> list:
 
     Parameters
     ----------
-        wf : Workflow
+    wf : Workflow
+
     Returns
     -------
-        list
-            list of wf workflow's fields from output_spec
+    list
+        list of wf workflow's fields from output_spec
     """
     return [x[0] for x in wf.output_spec.fields if not x[0].startswith("_")]
 
@@ -20,11 +23,12 @@ def list_in_fields(wf: Workflow) -> list:
 
     Parameters
     ----------
-        wf : Workflow
+    wf : Workflow
+
     Returns
     -------
-        list
-            list of wf workflow's fields from input_spec
+    list
+        list of wf workflow's fields from input_spec
     """
     return [x[0] for x in wf.input_spec.fields if not x[0].startswith("_")]
 
@@ -34,11 +38,11 @@ def bids_query(keys: list) -> dict:
 
     Parameters
     ----------
-        keys : list
+    keys : list
             The BIDS items to query
     Returns
     -------
-        dict
+    dict
             Query dictionary compatible with BIDSDataGrabber()
     """
     bids_keys_available = {
@@ -48,7 +52,19 @@ def bids_query(keys: list) -> dict:
     return {key: bids_keys_available[key] for key in keys}
 
 
-def run(wf: Workflow) -> None:
+def run(wf: Workflow) -> str:
+    """Execute a Pydra workflow
+
+    Parameters
+    ----------
+        wf : Workflow
+
+    Returns
+    -------
+    Union[str, pydra.engine.specs.Result]
+        The result of running the Workflow
+
+    """
     import re
 
     try:
@@ -58,18 +74,31 @@ def run(wf: Workflow) -> None:
         path = re.search("\/.*\.pklz", str(e))
         if path:
             path = path.group(0)
-            read_error(path)
+            print(read_error(path))
         else:
             print("Exception:", e)
         return str(e)
 
     results = wf.result(return_inputs=False)
-    return results
+    return str(results)
 
 
-def read_error(path):
+def read_error(path: PathLike) -> str:
+    """Read pklz file with error message
+
+    Parameters
+    ----------
+    path : PathLike
+        The path of the file containing the error message
+
+    Returns
+    -------
+    str
+        The error message
+    """
+
     import cloudpickle as cp
 
     with open(path, "rb") as fp:
         err = cp.load(fp)
-        print(err["error message"])
+        return err["error message"]
