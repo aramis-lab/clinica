@@ -31,6 +31,7 @@ class CAPSDataGrabber(IOBase):
 
         if not isdefined(self.inputs.output_query):
             self.inputs.output_query = {}
+
         # used for mandatory inputs check
         undefined_traits = {}
         self.inputs.trait_set(trait_change_notify=False, **undefined_traits)
