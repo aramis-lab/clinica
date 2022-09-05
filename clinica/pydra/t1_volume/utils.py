@@ -5,7 +5,6 @@ from typing import Tuple, Union
 def initialize_tissues_spm_segment(
     parameters: dict, tissue_probability_map: Union[PathLike, None] = None
 ) -> tuple:
-
     """Prepare data structure for SPM segment interface
 
     Parameters
