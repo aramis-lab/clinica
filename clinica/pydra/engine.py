@@ -20,8 +20,9 @@ def clinica_io(func):
 
         pipeline = Workflow(
             name=name,
-            input_spec=["input_dir"],
-            input_dir=input_dir,
+            input_spec=["bids_dir", "caps_dir"],
+            bids_dir=input_dir,
+            caps_dir=output_dir,
         )
 
         build_input_workflow(pipeline, core_workflow)
@@ -69,7 +70,10 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
             name=f"input_workflow_{name}",
             input_spec=["input_dir"],
         )
-        input_workflow.inputs.input_dir = pipeline.lzin.input_dir
+        if "bids" in name:
+            input_workflow.inputs.input_dir = pipeline.lzin.bids_dir
+        else:
+            input_workflow.inputs.input_dir = pipeline.lzin.caps_dir
         input_workflow = add_input_task(input_workflow, reader, query)
         pipeline.add(input_workflow)
         input_workflows[name] = input_workflow
