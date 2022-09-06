@@ -4,6 +4,8 @@ def sort_session_list(session_list):
     session_id_list = []
     for session in session_idx:
         if session < 10:
+            session_id_list.append(f"ses-M00{session}")
+        elif session < 100 and session >= 10:
             session_id_list.append(f"ses-M0{session}")
         else:
             session_id_list.append(f"ses-M{session}")
