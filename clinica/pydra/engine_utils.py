@@ -96,17 +96,23 @@ def caps_query(query: dict) -> dict:
         t1_volume_native_tpm_in_mni,
     )
 
-    caps_keys_available = {
+    caps_keys_available_file_reader = {
         "mask_tissues": t1_volume_native_tpm_in_mni,
         "flow_fields": t1_volume_deformation_to_template,
-        "dartel_template": t1_volume_final_group_template,
         "pvc_mask_tissues": t1_volume_native_tpm,
     }
-    return {
-        k: caps_keys_available[k](**v)
-        for k, v in query.items()
-        if k in caps_keys_available
+    caps_keys_available_group_reader = {
+        "dartel_template": t1_volume_final_group_template,
     }
+    query_dict = {}
+    for k, v in query.items():
+        if k in caps_keys_available_file_reader:
+            query_dict[k] = caps_keys_available_file_reader[k](**v)
+            query_dict[k]["reader"] = "file"
+        elif k in caps_keys_available_group_reader:
+            query_dict[k] = caps_keys_available_group_reader[k](**v)
+            query_dict[k]["reader"] = "group"
+    return query_dict
 
 
 def run(wf: Workflow) -> str:

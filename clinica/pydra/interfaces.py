@@ -29,28 +29,33 @@ class CAPSDataGrabber(IOBase):
 
         if not isdefined(self.inputs.output_query):
             self.inputs.output_query = {}
-
         # used for mandatory inputs check
         undefined_traits = {}
         self.inputs.trait_set(trait_change_notify=False, **undefined_traits)
 
     def _list_outputs(self):
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.participant import get_subject_session_list
 
         sessions, subjects = get_subject_session_list(
             self.inputs.base_dir,
             is_bids_dir=False,
         )
-        return {
-            k: clinica_file_reader(
-                subjects,
-                sessions,
-                self.inputs.base_dir,
-                q,
-            )
-            for k, q in self.inputs.output_query.items()
-        }
+        query = {}
+        for k, q in self.inputs.output_query.items():
+            reader = q.pop("reader")
+            if reader == "file":
+                query[k] = clinica_file_reader(
+                    subjects,
+                    sessions,
+                    self.inputs.base_dir,
+                    q,
+                )
+            elif reader == "group":
+                query[k] = clinica_group_reader(self.inputs.base_dir, q)
+            else:
+                raise ValueError(f"Unknown reader {reader}.")
+        return query
 
     def _add_output_traits(self, base):
         return add_traits(base, list(self.inputs.output_query.keys()))
