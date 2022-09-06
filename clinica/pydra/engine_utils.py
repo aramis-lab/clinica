@@ -66,7 +66,6 @@ def run(wf: Workflow) -> str:
 
     """
     import re
-    from clinica.utils.exceptions import ClinicaException
 
     try:
         with Submitter(plugin="cf") as submitter:
@@ -74,9 +73,8 @@ def run(wf: Workflow) -> str:
     except Exception as e:
         path = re.search("\/.*\.pklz", str(e))
         if path:
-            path = path.group(0)
-            print(read_error(path))
-        raise e
+            return read_error(path.group(0))
+        return str(e)
 
     results = wf.result(return_inputs=False)
     return str(results)
@@ -100,4 +98,4 @@ def read_error(path: PathLike) -> str:
 
     with open(path, "rb") as fp:
         err = cp.load(fp)
-    return err["error message"]
+    return err["error message"][:-1]
