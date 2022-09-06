@@ -21,6 +21,9 @@ def t1volume_tissue_segmentation(
     name : str
         name of pipeline. Default="t1-volume-tissue-segmentation".
 
+    parameters : dict
+        dictionary of pipeline parameters
+
     Returns
     -------
     Workflow
