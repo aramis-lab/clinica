@@ -66,6 +66,7 @@ def run(wf: Workflow) -> str:
 
     """
     import re
+    from clinica.utils.exceptions import ClinicaException
 
     try:
         with Submitter(plugin="cf") as submitter:
@@ -75,9 +76,7 @@ def run(wf: Workflow) -> str:
         if path:
             path = path.group(0)
             print(read_error(path))
-        else:
-            print("Exception:", e)
-        return str(e)
+        raise e
 
     results = wf.result(return_inputs=False)
     return str(results)
@@ -101,4 +100,4 @@ def read_error(path: PathLike) -> str:
 
     with open(path, "rb") as fp:
         err = cp.load(fp)
-        return err["error message"]
+    return err["error message"]
