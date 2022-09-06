@@ -43,7 +43,7 @@ def bids_query(keys: list) -> dict:
     Returns
     -------
     dict
-            Query dictionary compatible with BIDSDataGrabber()
+        Query dictionary compatible with BIDSDataGrabber()
     """
     bids_keys_available = {
         "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}
@@ -61,7 +61,7 @@ def run(wf: Workflow) -> str:
 
     Returns
     -------
-    Union[str, pydra.engine.specs.Result]
+    str
         The result of running the Workflow
 
     """
