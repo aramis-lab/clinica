@@ -54,26 +54,42 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
     """
 
     field = ""
+    readers = []
+    queries = []
 
     list_core_inputs = pu.list_in_fields(core_workflow)
     bids_query_dict = pu.bids_query(list_core_inputs)
+    if len(bids_query_dict) > 0:
+        readers.append(bids_reader)
+        queries.append(bids_query_dict)
 
     caps_dict_inputs = pu.list_dict_in_fields(core_workflow)
     caps_query_dict = pu.caps_query(caps_dict_inputs)
+    if len(caps_query_dict) > 0:
+        readers.append(caps_reader)
+        queries.append(caps_query_dict)
 
     input_workflows = dict()
-    for reader, query in zip(
-        [bids_reader, caps_reader], [bids_query_dict, caps_query_dict]
-    ):
+    for reader, query in zip(readers, queries):
         name = reader.__name__
         input_workflow = Workflow(
             name=f"input_workflow_{name}",
             input_spec=["input_dir"],
         )
         if "bids" in name:
-            input_workflow.inputs.input_dir = pipeline.lzin.bids_dir
+            try:
+                input_workflow.inputs.input_dir = pipeline.lzin.bids_dir
+            except AttributeError:
+                raise AttributeError(
+                    "Workflow has no 'bids_dir' input. Please verify your input specifications."
+                )
         else:
-            input_workflow.inputs.input_dir = pipeline.lzin.caps_dir
+            try:
+                input_workflow.inputs.input_dir = pipeline.lzin.caps_dir
+            except AttributeError:
+                raise AttributeError(
+                    "Workflow has no 'caps_dir' input. Please verify your input specifications."
+                )
         input_workflow = add_input_task(input_workflow, reader, query)
         pipeline.add(input_workflow)
         input_workflows[name] = input_workflow
