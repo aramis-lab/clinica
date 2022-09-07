@@ -15,6 +15,8 @@ def convert_images(
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
+    import clinica.iotools.bids_utils as bids
+
     from .nifd_utils import (
         dataset_to_bids,
         read_clinical_data,
@@ -35,5 +37,5 @@ def convert_images(
         sessions=sessions,
         scans=scans,
     )
-
+    bids.write_modality_agnostic_files(study_name="NIFD", bids_dir=bids_dir)
     return written
