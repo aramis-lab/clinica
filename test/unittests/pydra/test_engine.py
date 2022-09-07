@@ -28,8 +28,8 @@ def bids_query():
 def pipeline():
     return Workflow(
         name="pipeline_workflow",
-        input_spec=["input_dir"],
-        input_dir=Path(CURRENT_DIR) / "data",
+        input_spec=["bids_dir"],
+        bids_dir=Path(CURRENT_DIR) / "data",
     )
 
 
@@ -63,12 +63,13 @@ def test_build_input_workflow(pipeline: Workflow, core_workflow: Workflow):
 
 def test_add_input_task(bids_query: dict):
     from clinica.pydra.engine import add_input_task
+    from clinica.pydra.interfaces import bids_reader
 
     input_workflow = Workflow(name="input_workflow", input_spec=["input_dir"])
 
     input_workflow.inputs.input_dir = Path(CURRENT_DIR) / "data"
 
-    add_input_task(input_workflow, bids_query)
+    add_input_task(input_workflow, bids_reader, bids_query)
 
     assert "bids_reader_task" in [x.name for x in input_workflow.nodes]
     return
