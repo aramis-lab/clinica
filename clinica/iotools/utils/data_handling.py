@@ -1,7 +1,6 @@
 """Data handling scripts."""
 
 from os import PathLike
-from typing import Union
 
 import click
 from nibabel.nifti1 import Nifti1Header
