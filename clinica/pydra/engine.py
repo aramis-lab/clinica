@@ -60,20 +60,27 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
     caps_dict_inputs = pu.list_dict_in_fields(core_workflow)
     caps_query_dict = pu.caps_query(caps_dict_inputs)
 
-    input_workflow = Workflow(name="input_workflow", input_spec=["input_dir"])
-
-    input_workflow.inputs.input_dir = pipeline.lzin.input_dir
-
+    input_workflows = dict()
     for reader, query in zip(
         [bids_reader, caps_reader], [bids_query_dict, caps_query_dict]
     ):
+        name = reader.__name__
+        input_workflow = Workflow(
+            name=f"input_workflow_{name}",
+            input_spec=["input_dir"],
+        )
+        input_workflow.inputs.input_dir = pipeline.lzin.input_dir
         input_workflow = add_input_task(input_workflow, reader, query)
         pipeline.add(input_workflow)
+        input_workflows[name] = input_workflow
 
     # connect input workflow to core workflow
+    for field, _ in bids_query_dict.items():
+        read_data = getattr(input_workflows["bids_reader"].lzout, field)
+        setattr(core_workflow.inputs, field, read_data)
 
-    for field in list_core_inputs:
-        read_data = getattr(input_workflow.lzout, field)
+    for field, _ in caps_query_dict.items():
+        read_data = getattr(input_workflows["caps_reader"].lzout, field)
         setattr(core_workflow.inputs, field, read_data)
 
     return pipeline

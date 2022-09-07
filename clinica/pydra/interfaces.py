@@ -49,7 +49,7 @@ class CAPSDataGrabber(IOBase):
                 self.inputs.base_dir,
                 q,
             )
-            for k, q in query.items()
+            for k, q in self.inputs.output_query.items()
         }
 
     def _add_output_traits(self, base):
