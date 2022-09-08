@@ -44,9 +44,9 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
          the functional workflow
 
     Returns
-    ------
-    str
-        the field to split on.
+    -------
+    Workflow
+        The pipeline with the input workflow.
     """
 
     field = ""
@@ -68,7 +68,7 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
         read_data = getattr(input_workflow.lzout, field)
         setattr(core_workflow.inputs, field, read_data)
 
-    return field
+    return pipeline
 
 
 def add_input_task(input_workflow: Workflow, query_bids: dict) -> Workflow:
@@ -119,7 +119,7 @@ def build_output_workflow(
     Returns
     -------
     Workflow
-        The output workflow.
+        The pipeline with the output workflow.
     """
 
     output_attrs = []
