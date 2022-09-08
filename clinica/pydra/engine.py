@@ -23,10 +23,10 @@ def clinica_io(func):
             input_dir=input_dir,
         )
 
-        split_key = build_input_workflow(pipeline, core_workflow)
+        build_input_workflow(pipeline, core_workflow)
 
         # TODO: define condition on split if multiple fields
-        pipeline.add(core_workflow.split(split_key))
+        pipeline.add(core_workflow)
 
         build_output_workflow(pipeline, core_workflow, output_dir)
 
