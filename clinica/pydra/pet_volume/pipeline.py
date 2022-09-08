@@ -91,7 +91,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         name,
         input_spec=input_spec,
     )
-    wf.split_key = ["pet", "T1w", "flow_fields", "pvc_mask_tissues", "tissues"]
+    wf.split_key = ["pet", "T1w", "flow_fields", "pvc_mask_tissues", "mask_tissues"]
     compressed_inputs = [
         "pet",
         "T1w",
