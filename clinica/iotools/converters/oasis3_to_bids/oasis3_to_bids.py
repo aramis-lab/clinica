@@ -44,6 +44,5 @@ def convert_images(
         scans=scans,
         dataset_directory=path_to_dataset,
     )
-    bids.write_modality_agnostic_files(study_name="OASIS-3", bids_dir=bids_dir)
 
     return written
