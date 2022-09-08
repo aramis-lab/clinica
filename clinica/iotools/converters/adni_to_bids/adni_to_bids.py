@@ -105,7 +105,11 @@ class AdniToBids(Converter):
 
         # -- Creation of modality agnostic files --
         cprint("Creating modality agnostic files...")
-        bids.write_modality_agnostic_files("ADNI", out_path)
+        readme_dict = {
+            "link": "http://adni.loni.usc.edu",
+            "desc": "ADNI is a global research effort that actively supports the investigation and development of treatments that slow or stop the progression of Alzheimer's disease (AD).This multisite, longitudinal study assesses clinical, imaging, genetic and biospecimen biomarkers through the process of normal aging to mild cognitive impairment (MCI) and AD dementia.With established, standardized methods for imaging and biomarker collection and analysis, ADNI facilitates a way for scientists to conduct cohesive research and share compatible data with other researchers around the world.",
+        }
+        bids.write_modality_agnostic_files("ADNI", readme_dict, out_path)
 
         # -- Creation of participant.tsv --
         cprint("Creating participants.tsv...")

@@ -467,31 +467,32 @@ def _write_bids_dataset_description(
         bids_desc.write(to=f)
 
 
-# def _write_readme(
-#     study_name: str,
-#     bids_dir: Union[str, Path],
-#     bids_version: Optional[str] = None,
-# ) -> None:
-#     """Write `dataset_description.json` at the root of the BIDS directory."""
-#     from clinica.iotools.bids_readme import BIDSReadme
+def _write_readme(
+    study_name: str,
+    data_dict: dict,
+    bids_dir: Union[str, Path],
+    bids_version: Optional[str] = None,
+) -> None:
+    """Write `dataset_description.json` at the root of the BIDS directory."""
+    from clinica.iotools.bids_readme import BIDSReadme
 
-#     if bids_version:
-#         bids_desc = BIDSReadme(name=study_name, bids_version=bids_version)
-#     else:
-#         bids_desc = BIDSReadme(name=study_name)
-#     with open(Path(bids_dir) / "README", "w") as f:
-#         bids_desc.write(to=f)
-
-
-def _write_readme(bids_dir: Union[str, Path]) -> None:
-    """Write `README`file at the root of the BIDS directory."""
-    import clinica
-
+    if bids_version:
+        bids_desc = BIDSReadme(name=study_name, bids_version=bids_version)
+    else:
+        bids_desc = BIDSReadme(name=study_name)
     with open(Path(bids_dir) / "README", "w") as f:
-        f.write(
-            f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
-            f"More information on https://www.clinica.run\n"
-        )
+        bids_desc.write(to=f, readme_dict=data_dict)
+
+
+# def _write_readme(bids_dir: Union[str, Path]) -> None:
+#     """Write `README`file at the root of the BIDS directory."""
+#     import clinica
+
+#     with open(Path(bids_dir) / "README", "w") as f:
+#         f.write(
+#             f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
+#             f"More information on https://www.clinica.run\n"
+#         )
 
 
 def _write_bids_validator_config(bids_dir: Union[str, Path]) -> None:
@@ -512,6 +513,7 @@ def _write_bidsignore(bids_dir: Union[str, Path]) -> None:
 
 def write_modality_agnostic_files(
     study_name: str,
+    data_dict: dict,
     bids_dir: Union[str, Path],
     bids_version: Optional[str] = None,
 ) -> None:
@@ -525,7 +527,8 @@ def write_modality_agnostic_files(
         bids_version: BIDS version if different from the version supported by Clinica.
     """
     _write_bids_dataset_description(study_name, bids_dir, bids_version)
-    _write_readme(bids_dir)
+    # _write_readme(bids_dir)
+    _write_readme(study_name, data_dict, bids_dir, bids_version)
     _write_bids_validator_config(bids_dir)
     _write_bidsignore(bids_dir)
 

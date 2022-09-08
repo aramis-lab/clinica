@@ -16,6 +16,8 @@ def convert_images(
     converts the image with the highest quality for each category.
     """
 
+    import clinica.iotools.bids_utils as bids
+
     from .nifd_utils import (
         dataset_to_bids,
         read_clinical_data,
@@ -36,5 +38,11 @@ def convert_images(
         sessions=sessions,
         scans=scans,
     )
-
+    readme_dict = {
+        "link": "https://ida.loni.usc.edu/home/projectPage.jsp?project=NIFD&page=HOME&subPage=OVERVIEW_PR#",
+        "desc": "NIFD is the nickname for the frontotemporal lobar degeneration neuroimaging initiative (FTLDNI, AG032306), which was funded by the NIA and NINDS to characterize longitudinal clinical and imaging changes in FTLD.The imaging and clinical methods are the same for NIFD and for the 4-Repeat Tauopathy Neuroimaging Initiative (4RTNI), which is also available for download from LONI. Controls for NIFD are the same controls as those collected for 4RTNI.",
+    }
+    bids.write_modality_agnostic_files(
+        study_name="NIFD", data_dict=readme_dict, bids_dir=bids_dir
+    )
     return written

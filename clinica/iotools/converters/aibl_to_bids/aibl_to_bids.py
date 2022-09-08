@@ -52,7 +52,11 @@ def convert_clinical_data(bids_dir, path_to_csv):
     #    )
 
     cprint("Creating modality agnostic files...")
-    bids.write_modality_agnostic_files("AIBL", bids_dir)
+    readme_dict = {
+        "link": "http://adni.loni.usc.edu/study-design/collaborative-studies/aibl/",
+        "desc": "The Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing (AIBL) seeks to discover which biomarkers, cognitive characteristics, and health and lifestyle factors determine the development of AD.Although AIBL and ADNI have many of the same goals, there are differences between the two projects.",
+    }
+    bids.write_modality_agnostic_files("AIBL", readme_dict, bids_dir)
 
     cprint("Creating participants.tsv...")
     create_participants_df_AIBL(
