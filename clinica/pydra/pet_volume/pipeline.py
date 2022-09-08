@@ -14,6 +14,7 @@ from clinica.pydra.pet_volume.tasks import (
     create_pvc_mask,
     normalize_to_reference,
 )
+from os import PathLike
 
 
 def _check_pipeline_parameters(parameters: dict) -> dict:
@@ -58,7 +59,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     -------
     workflow : The core workflow.
     """
+    from clinica.pipelines.pet_volume.pet_volume_utils import pet_pvc_name
     from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+    from clinica.utils.pet import get_suvr_mask, read_psf_information
 
     if spm_standalone_is_available():
         use_spm_standalone()
@@ -88,32 +91,39 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         name,
         input_spec=input_spec,
     )
-
+    wf.split_key = ["pet", "T1w", "flow_fields", "pvc_mask_tissues", "tissues"]
     compressed_inputs = [
-        "pet_image",
-        "t1_image_native",
+        "pet",
+        "T1w",
         "mask_tissues",
         "flow_fields",
         "dartel_template",
-        "reference_mask",
     ]
+
     # Unzipping
-    for input_name in [f"unzip_{_}" for _ in compressed_inputs]:
+    for input_name in compressed_inputs:
         wf.add(
             Nipype1Task(
-                name=input_name,
+                name=f"unzip_{input_name}",
                 interface=Gunzip(),
-                in_file=wf.lzin.T1w,  # TODO: change this
+                in_file=getattr(wf.lzin, input_name),
             )
         )
+    wf.add(
+        Nipype1Task(
+            name="unzip_reference_mask",
+            interface=Gunzip(),
+            in_file=get_suvr_mask(parameters["suvr_reference_region"]),
+        )
+    )
 
     # Coregister PET into T1 native space
     coreg_pet_t1 = Nipype1Task(
         name="coreg_pet_t1",
         interface=Coregister(),
     )
-    coreg_pet_t1.inputs.source = wf.unzip_pet_image.lzout.out_file
-    coreg_pet_t1.inputs.target = wf.unzip_t1_image_native.lzout.out_file
+    coreg_pet_t1.inputs.source = wf.unzip_pet.lzout.out_file
+    coreg_pet_t1.inputs.target = wf.unzip_T1w.lzout.out_file
     wf.add(coreg_pet_t1)
 
     # Spatially normalize PET into MNI
