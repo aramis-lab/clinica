@@ -11,7 +11,7 @@ from clinica.iotools.bids_utils import (
 )
 
 MODALITY_AGNOSTIC_FILE_WRITERS = {
-    "readme": _write_readme,
+    #    "readme": _write_readme,
     "bids-validator": _write_bids_validator_config,
     "bidsignore": _write_bidsignore,
 }
@@ -64,7 +64,6 @@ def expected_description_content(
 
 
 @pytest.mark.parametrize("study_name", ["ADNI", "foo"])
-# @pytest.mark.parametrize("data_dict", )
 @pytest.mark.parametrize("bids_version", [None, "1.6.0", "1.7.0"])
 def test_write_bids_dataset_description(
     tmp_path,
@@ -81,16 +80,14 @@ def test_write_bids_dataset_description(
     """
     from clinica.iotools.bids_utils import _write_bids_dataset_description
 
-    data_dict = {"link": "", "desc": ""}
-    _write_bids_dataset_description(
-        study_name, data_dict, tmp_path, bids_version=bids_version
-    )
+    _write_bids_dataset_description(study_name, tmp_path, bids_version=bids_version)
     _validate_file_and_content(
         tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES["description"],
         expected_description_content,
     )
 
 
+@pytest.fixture
 def expected_readme_content() -> str:
     import clinica
 
@@ -131,9 +128,35 @@ def test_write_modality_agnostic_files(tmp_path):
 
     from clinica.iotools.bids_utils import write_modality_agnostic_files
 
+    data_dict = {"link": "", "desc": ""}
     assert len(os.listdir(tmp_path)) == 0
-    write_modality_agnostic_files("ADNI", tmp_path)
+    write_modality_agnostic_files("ADNI", data_dict, tmp_path)
     files = os.listdir(tmp_path)
     assert len(files) == 4
     for _, v in EXPECTED_MODALITY_AGNOSTIC_FILES.items():
         assert v in files
+
+
+@pytest.mark.parametrize("study_name", [""])
+@pytest.mark.parametrize("bids_version", ["1.7.0"])
+def test_write_bids_readme(
+    tmp_path,
+    study_name,
+    bids_version,
+    expected_readme_content,
+):
+    """Test function `_write_bids_readme`.
+
+    .. note::
+        Tested independantly for convenience since it takes
+        a different set of input parameters.
+
+    """
+    from clinica.iotools.bids_utils import _write_readme
+
+    data_dict = {"link": "", "desc": ""}
+    _write_readme(study_name, data_dict, tmp_path, bids_version=bids_version)
+    _validate_file_and_content(
+        tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES["readme"],
+        expected_readme_content,
+    )
