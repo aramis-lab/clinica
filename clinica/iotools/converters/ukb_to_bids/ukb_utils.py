@@ -310,8 +310,6 @@ def write_bids(
     from fsspec.implementations.local import LocalFileSystem
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
-
-    # from clinica.iotools.bids_readme import BIDSReadme
     from clinica.iotools.bids_utils import write_to_tsv
 
     to = Path(to)
@@ -326,9 +324,7 @@ def write_bids(
         with fs.open(
             str(to / "dataset_description.json"), "w"
         ) as dataset_description_file:
-            BIDSDatasetDescription(name="OASIS-1").write(to=dataset_description_file)
-        # with fs.open(to / "README", "w") as dataset_description_file:
-        #     BIDSReadme(name="UKB").write(to=dataset_description_file, readme_dict= readme_dict)
+            BIDSDatasetDescription(name="UKB").write(to=dataset_description_file)
         with fs.open(str(to / "participants.tsv"), "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
