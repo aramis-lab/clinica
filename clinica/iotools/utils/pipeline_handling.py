@@ -105,7 +105,7 @@ def dwi_dti_pipeline(
                         ]
                         ses_df[label_list] = atlas_df["mean_scalar"].to_numpy()
 
-        pipeline_df = pipeline_df.append(ses_df)
+        pipeline_df = pd.concat([pipeline_df, ses_df])
 
         summary_df = generate_summary(pipeline_df, "dwi-dti", ignore_groups=True)
 
@@ -220,7 +220,7 @@ def t1_freesurfer_longitudinal_pipeline(
             except StopIteration:
                 cprint("Segmentation volume file not found. Skipping.", lvl="warning")
 
-        pipeline_df = pipeline_df.append(ses_df)
+        pipeline_df = pd.concat([pipeline_df, ses_df])
 
     summary_df = generate_summary(
         pipeline_df, "t1-freesurfer-longitudinal", ignore_groups=True
@@ -304,7 +304,7 @@ def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwar
             ]
             ses_df[label_list] = atlas_df["label_value"].to_numpy()
 
-        pipeline_df = pipeline_df.append(ses_df)
+        pipeline_df = pd.concat([pipeline_df, ses_df])
 
     summary_df = generate_summary(pipeline_df, "t1-freesurfer", ignore_groups=True)
     final_df = pd.concat([df, pipeline_df], axis=1)
@@ -399,7 +399,6 @@ def volume_pipeline(
         ses_df = pd.DataFrame(
             [[participant_id, session_id]], columns=["participant_id", "session_id"]
         )
-        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
 
         if os.path.exists(mod_path):
             # Looking for groups
@@ -454,6 +453,7 @@ def volume_pipeline(
                             if tracer in atlas_path
                         ]
 
+                    atlas_df_list = list()
                     for atlas_path in atlas_paths:
                         atlas_name = atlas_path.split("_space-")[-1].split("_")[0]
                         if path.exists(atlas_path):
@@ -469,10 +469,17 @@ def volume_pipeline(
                                 f"{pipeline_name}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
                                 for roi_name in atlas_df.label_name.values
                             ]
-                            ses_df[label_list] = atlas_df["mean_scalar"].to_numpy()
+                            atlas_df_list.append(
+                                pd.DataFrame(
+                                    atlas_df["mean_scalar"].to_numpy().reshape(1, -1),
+                                    columns=label_list,
+                                )
+                            )
+                    ses_df = pd.concat([ses_df, *atlas_df_list], axis=1)
 
-        pipeline_df = pipeline_df.append(ses_df)
+        pipeline_df = pd.concat([pipeline_df, ses_df])
 
+    pipeline_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
     summary_df = generate_summary(pipeline_df, pipeline_name)
     final_df = pd.concat([df, pipeline_df], axis=1)
     final_df.reset_index(inplace=True)
@@ -557,7 +564,7 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
                             ],
                             columns=columns,
                         )
-                        summary_df = summary_df.append(row_df, ignore_index=True)
+                        summary_df = pd.concat([summary_df, row_df])
 
     summary_df = summary_df.replace("_", "n/a")
     return summary_df
