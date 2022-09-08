@@ -29,6 +29,11 @@ EXPECTED_README_CONTENT = Template(
     (
         "This BIDS directory was generated with Clinica v$version.\n"
         "More information on $website\n"
+        "\n"
+        "Study: \n"
+        "\n"
+        "\n\n"
+        "Find more about it and about the data user agreement: "
     )
 )
 
@@ -59,6 +64,7 @@ def expected_description_content(
 
 
 @pytest.mark.parametrize("study_name", ["ADNI", "foo"])
+# @pytest.mark.parametrize("data_dict", )
 @pytest.mark.parametrize("bids_version", [None, "1.6.0", "1.7.0"])
 def test_write_bids_dataset_description(
     tmp_path,
@@ -75,7 +81,10 @@ def test_write_bids_dataset_description(
     """
     from clinica.iotools.bids_utils import _write_bids_dataset_description
 
-    _write_bids_dataset_description(study_name, tmp_path, bids_version=bids_version)
+    data_dict = {"link": "", "desc": ""}
+    _write_bids_dataset_description(
+        study_name, data_dict, tmp_path, bids_version=bids_version
+    )
     _validate_file_and_content(
         tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES["description"],
         expected_description_content,
