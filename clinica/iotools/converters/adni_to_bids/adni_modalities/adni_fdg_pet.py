@@ -2,14 +2,23 @@
 
 """Module for converting FDG PET of ADNI."""
 
-PREPROCESSING_STEP_DICT = {
-    0: ["ADNI Brain PET: Raw FDG"],
-    1: ["Co-registered Dynamic"],
-    2: ["Co-registered, Averaged"],
-    3: ["Coreg, Avg, Standardized Image and Voxel Size"],
-    4: ["Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"],
-    5: ["Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"],
-}
+from enum import Enum
+
+
+class PreprocessingStep(str, Enum):
+    """BIDS label for PET tracers.
+
+    Follows the convention proposed in the PET section of the BIDS specification.
+
+    See: https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/09-positron-emission-tomography.html
+    """
+
+    step_0 = "ADNI Brain PET: Raw FDG"
+    step_1 = "Co-registered Dynamic"
+    step_2 = "Co-registered, Averaged"
+    step_3 = "Coreg, Avg, Standardized Image and Voxel Size"
+    step_4 = "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"
+    step_5 = "Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"
 
 
 def convert_adni_fdg_pet(
@@ -30,7 +39,7 @@ def convert_adni_fdg_pet(
         csv_dir,
         dest_dir,
         conversion_dir,
-        preprocessing_step=2,
+        preprocessing_step="2",
         subjs_list=subjs_list,
         mod_to_update=mod_to_update,
     )
@@ -54,7 +63,7 @@ def convert_adni_fdg_pet_uniform(
         csv_dir,
         dest_dir,
         conversion_dir,
-        preprocessing_step=4,
+        preprocessing_step="4",
         subjs_list=subjs_list,
         mod_to_update=mod_to_update,
     )
@@ -87,7 +96,6 @@ def convert_adni_fdg_pet_generic(
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
-    print(PREPROCESSING_STEP_DICT[preprocessing_step])
     if not subjs_list:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
@@ -174,7 +182,9 @@ def compute_fdg_pet_paths(
             [pet_qc_1go2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False
         )
 
-        sequences_preprocessing_step = PREPROCESSING_STEP_DICT[preprocessing_step]
+        sequences_preprocessing_step = PreprocessingStep[
+            "step_" + preprocessing_step
+        ].value
         subj_dfs_list = get_images_pet(
             subj,
             pet_qc_subj,
