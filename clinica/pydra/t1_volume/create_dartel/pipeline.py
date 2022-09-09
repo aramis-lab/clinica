@@ -22,6 +22,8 @@ def t1volume_create_dartel(
         pydra workflow for core functionalities
     """
 
+    from clinica.pydra.t1_volume.tasks import wrap_list
+
     workflow = Workflow(
         name,
         input_spec=["T1w"],
@@ -33,12 +35,22 @@ def t1volume_create_dartel(
         .combine("in_file")
     )
 
+    # TODO: remove this task once list arguments are properly handled in Nipype1Task (cf https://github.com/nipype/pydra-nipype1/issues/23)
+
+    workflow.add(
+        wrap_list(
+            name="task_wrap_list",
+            interface=wrap_list,
+            in_list=workflow.task_unzip.lzout.out_file,
+        )
+    )
+
     dartel_template_task = Nipype1Task(
         name="dartel_template",
         interface=spm.DARTEL(),
     )
 
-    dartel_template_task.inputs.image_files = workflow.task_unzip.lzout.out_file
+    dartel_template_task.inputs.image_files = workflow.task_wrap_list.lzout.out_list
 
     workflow.add(dartel_template_task)
 
