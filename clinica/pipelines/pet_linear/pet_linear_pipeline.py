@@ -116,7 +116,7 @@ class PETLinear(cpe.Pipeline):
         # Inputs from BIDS directory
         # pet file:
         PET_NII = bids_pet_nii(
-            self.parameters["acq_label"], self.parameters["use_uniform"]
+            self.parameters["acq_label"], self.parameters["with_reconstruction"]
         )
         try:
             pet_files, _ = clinica_file_reader(
