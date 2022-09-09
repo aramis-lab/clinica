@@ -39,6 +39,8 @@ def t1volume_tissue_segmentation(
         input_spec=["T1w"],
     )
 
+    workflow.split("T1w")
+
     workflow.add(
         task_volume_location_in_world_coordinate_system(
             name="check_location_world",

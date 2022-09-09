@@ -64,7 +64,7 @@ def download_ref_template() -> PurePath:
 
 
 @clinica_io
-def build_core_workflow(name: str = "core") -> Workflow:
+def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     """Core workflow for the T1 linear pipeline.
 
     Parameters
@@ -90,7 +90,7 @@ def build_core_workflow(name: str = "core") -> Workflow:
             name="n4_bias_field_correction",
             interface=n4_bias_field_correction,
             input_image=wf.lzin.T1w,
-        )
+        ).split("input_image")
     )
 
     wf.add(

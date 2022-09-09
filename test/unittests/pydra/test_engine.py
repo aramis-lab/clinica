@@ -52,11 +52,11 @@ def test_build_input_workflow(pipeline: Workflow, core_workflow: Workflow):
 
     assert len(pipeline.nodes) == 0
 
-    _ = build_input_workflow(pipeline, core_workflow)
+    decorated_pipeline = build_input_workflow(pipeline, core_workflow)
 
-    assert len(pipeline.nodes) == 1
+    assert len(decorated_pipeline.nodes) == 1
 
-    assert "input_workflow" in [x.name for x in pipeline.nodes]
+    assert "input_workflow" in [x.name for x in decorated_pipeline.nodes]
 
     return
 
