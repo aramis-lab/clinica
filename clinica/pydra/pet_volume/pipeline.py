@@ -95,7 +95,6 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     compressed_inputs = [
         "pet",
         "T1w",
-        "mask_tissues",
         "flow_fields",
         "dartel_template",
     ]
@@ -109,6 +108,13 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 in_file=getattr(wf.lzin, input_name),
             )
         )
+    wf.add(
+        Nipype1Task(
+            name="unzip_mask_tissues",
+            interface=Gunzip(),
+            in_file=wf.lzin.mask_tissues,
+        ).split("in_file").combine("in_file")
+    )
     wf.add(
         Nipype1Task(
             name="unzip_reference_mask",
@@ -135,6 +141,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     dartel_mni_reg.inputs.fwhm = 0
     dartel_mni_reg.inputs.flowfield_files = wf.unzip_flow_fields.lzout.out_file
     dartel_mni_reg.inputs.template_file = wf.unzip_dartel_template.lzout.out_file
+    dartel_mni_reg.inputs.apply_to_files = wf.coreg_pet_t1.lzout.coregistered_source
     wf.add(dartel_mni_reg)
 
     # Reslice reference region mask into PET
