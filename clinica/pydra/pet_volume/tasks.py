@@ -46,14 +46,14 @@ def _check_non_empty_tissue_list(tissues: ty.List):
         )
 
 
-def _load_tissues(tissues: ty.List) -> np.ndarray:
+def _load_tissues(tissues: ty.List) -> ty.Tuple[np.ndarray, np.ndarray, np.ndarray]:
     _check_non_empty_tissue_list(tissues)
     img_0 = nib.load(tissues[0])
     shape = list(img_0.get_fdata(dtype="float32").shape)
     data = np.zeros(shape=shape)
     for image in tissues:
         data += nib.load(image).get_fdata(dtype="float32")
-    return data
+    return data, img_0.affine, img_0.header
 
 
 @task
@@ -73,10 +73,10 @@ def create_binary_mask(tissues: ty.List, threshold: float = 0.3) -> PurePath:
     -------
     out_mask : Path to the binary mask Nifti1Image.
     """
-    data = _load_tissues(tissues)
+    data, affine, header = _load_tissues(tissues)
     data = (data > threshold) * 1.0
     out_mask = join(getcwd(), basename(tissues[0]) + "_brainmask.nii")
-    mask = nib.Nifti1Image(data, img_0.affine, header=img_0.header)
+    mask = nib.Nifti1Image(data, affine, header=header)
     nib.save(mask, out_mask)
     return out_mask
 
