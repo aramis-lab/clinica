@@ -45,3 +45,11 @@ def task_volume_location_in_world_coordinate_system(
     return check_volume_location_in_world_coordinate_system(
         nifti_list, bids_dir, modality, skip_question
     )
+
+
+@task
+@annotate({"return": {"out_list": list}})
+def wrap_list(in_list: list):
+    out_list = []
+    out_list.append(in_list)
+    return out_list
