@@ -56,7 +56,7 @@ def test_build_input_workflow(pipeline: Workflow, core_workflow: Workflow):
 
     assert len(decorated_pipeline.nodes) == 1
 
-    assert "input_workflow" in [x.name for x in decorated_pipeline.nodes]
+    assert "input_workflow_bids_reader" in [x.name for x in decorated_pipeline.nodes]
 
     return
 
