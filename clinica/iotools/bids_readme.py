@@ -16,9 +16,11 @@ class BIDSReadme:
     """
 
     name: str
-    bids_version: str = BIDS_VERSION
+    # bids_version: str = BIDS_VERSION
+    link: str
+    desciption: str
 
-    def write(self, to: IO[str], readme_dict):
+    def write(self, to: IO[str]):
         import clinica
 
         # datadict_link = {
@@ -34,8 +36,10 @@ class BIDSReadme:
             f"\n"
             f"Study: {self.name}\n"
             f"\n"
-            f"{readme_dict['desc']}\n\n"
-            f"Find more about it and about the data user agreement: {readme_dict['link']}"
+            # f"{readme_dict['desc']}\n\n"
+            # f"Find more about it and about the data user agreement: {readme_dict['link']}"
+            f"{self.desciption}\n\n"
+            f"Find more about it and about the data user agreement: {self.link}"
         )
 
 

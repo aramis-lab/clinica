@@ -477,22 +477,15 @@ def _write_readme(
     from clinica.iotools.bids_readme import BIDSReadme
 
     if bids_version:
-        bids_desc = BIDSReadme(name=study_name, bids_version=bids_version)
+        bids_desc = BIDSReadme(
+            name=study_name, link=data_dict["link"], desciption=data_dict["desc"]
+        )
     else:
-        bids_desc = BIDSReadme(name=study_name)
+        bids_desc = BIDSReadme(
+            name=study_name, link=data_dict["link"], desciption=data_dict["desc"]
+        )
     with open(Path(bids_dir) / "README", "w") as f:
-        bids_desc.write(to=f, readme_dict=data_dict)
-
-
-# def _write_readme(bids_dir: Union[str, Path]) -> None:
-#     """Write `README`file at the root of the BIDS directory."""
-#     import clinica
-
-#     with open(Path(bids_dir) / "README", "w") as f:
-#         f.write(
-#             f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
-#             f"More information on https://www.clinica.run\n"
-#         )
+        bids_desc.write(to=f)
 
 
 def _write_bids_validator_config(bids_dir: Union[str, Path]) -> None:
