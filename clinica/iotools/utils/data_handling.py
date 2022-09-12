@@ -3,7 +3,7 @@
 from os import PathLike
 
 import click
-from nibabel.nifti1 import Nifti1Header
+from nibabel.nifti1 import Nifti1Header, Nifti1Image
 from numpy import ndarray
 
 
