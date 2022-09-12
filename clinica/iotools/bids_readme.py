@@ -16,19 +16,11 @@ class BIDSReadme:
     """
 
     name: str
-    # bids_version: str = BIDS_VERSION
     link: str
     desciption: str
 
     def write(self, to: IO[str]):
         import clinica
-
-        # datadict_link = {
-        #     "HABS": "https://habs.mgh.harvard.edu",
-        # }
-        # datadict_description = {
-        #     "HABS": "The overall goal of the Harvard Aging Brain Study (HABS) is to elucidate the earliest changes in molecular, functional and structural imaging markers that signal the transition from normal cognition to progressive cognitive decline along the trajectory of preclinical Alzheimer’s Disease.",
-        # }
 
         to.write(
             f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
@@ -36,8 +28,6 @@ class BIDSReadme:
             f"\n"
             f"Study: {self.name}\n"
             f"\n"
-            # f"{readme_dict['desc']}\n\n"
-            # f"Find more about it and about the data user agreement: {readme_dict['link']}"
             f"{self.desciption}\n\n"
             f"Find more about it and about the data user agreement: {self.link}"
         )
