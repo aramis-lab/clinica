@@ -1,9 +1,61 @@
+import functools
+import numpy as np
+from collections.abc import Iterable
+
 """This module contains dictionaries used in inputs.py::clinica_{file|group}_reader().
 
 These dictionaries describe files to grab.
 """
 
 """ T1w """
+
+
+def aggregator(func):
+    """If the decorated function receives iterable arguments,
+    this decorator will call the decorated function for each
+    value in the iterable and aggregate the results in a list.
+    This works only if the iterables provided have the same length.
+    Arguments lefts as non-iterable will be repeated.
+    """
+
+    @functools.wraps(func)
+    def wrapper_aggregator(*args, **kwargs):
+        arg_sizes = [
+            len(arg)
+            for arg in args
+            if isinstance(arg, Iterable) and not isinstance(arg, str)
+        ]
+        arg_sizes += [
+            len(arg)
+            for k, arg in kwargs.items()
+            if isinstance(arg, Iterable) and not isinstance(arg, str)
+        ]
+        if len(np.unique(arg_sizes)) > 1:
+            raise ValueError(f"Arguments must have the same length.")
+        if len(arg_sizes) == 0:
+            return func(*args, **kwargs)
+        arg_size = arg_sizes[0]
+        new_args = []
+        for arg in args:
+            if not isinstance(arg, Iterable) or isinstance(arg, str):
+                new_args.append((arg,) * arg_size)
+            else:
+                new_args.append(arg)
+        new_kwargs = [{} for _ in range(arg_size)]
+        for k, arg in kwargs.items():
+            for i in range(len(new_kwargs)):
+                if not isinstance(arg, Iterable) or isinstance(arg, str):
+                    new_kwargs[i][k] = arg
+                else:
+                    new_kwargs[i][k] = arg[i]
+        if len(new_args) == 0:
+            return [func(**x) for x in new_kwargs]
+        elif len(new_kwargs) == 0:
+            return [func(*x) for x in zip(*new_args)]
+        return [func(*x, **y) for x, y in zip(zip(*new_args), new_kwargs)]
+
+    return wrapper_aggregator
+
 
 # BIDS
 
@@ -213,6 +265,7 @@ def t1_volume_native_tpm(tissue_number):
     return information
 
 
+@aggregator
 def t1_volume_dartel_input_tissue(tissue_number):
     import os
 
@@ -305,6 +358,7 @@ def t1_volume_deformation_to_template(group_label):
     return information
 
 
+@aggregator
 def t1_volume_i_th_iteration_group_template(group_label, i):
     import os
 
