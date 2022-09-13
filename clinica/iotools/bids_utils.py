@@ -476,14 +476,9 @@ def _write_readme(
     """Write `dataset_description.json` at the root of the BIDS directory."""
     from clinica.iotools.bids_readme import BIDSReadme
 
-    if bids_version:
-        bids_desc = BIDSReadme(
-            name=study_name, link=data_dict["link"], desciption=data_dict["desc"]
-        )
-    else:
-        bids_desc = BIDSReadme(
-            name=study_name, link=data_dict["link"], desciption=data_dict["desc"]
-        )
+    bids_desc = BIDSReadme(
+        name=study_name, link=data_dict["link"], desciption=data_dict["desc"]
+    )
     with open(Path(bids_dir) / "README", "w") as f:
         bids_desc.write(to=f)
 
