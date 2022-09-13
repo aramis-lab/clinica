@@ -12,9 +12,9 @@ def test_vox_to_world_space():
 
     vol = np.ndarray(shape=(5, 5, 2, 100))
     img = Nifti1Image(vol, np.eye(4))
-    nii_header = img.get_header()
     coords = np.array([0.0, 0.0, 0.0])
 
     assert np.array_equal(
-        vox_to_world_space_method_1(coordinates_vol=coords, header=nii_header), coords
+        vox_to_world_space_method_1(coordinates_vol=coords, header=img.get_header()),
+        coords,
     )
