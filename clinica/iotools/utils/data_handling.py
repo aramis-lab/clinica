@@ -1258,7 +1258,7 @@ def vox_to_world_space_method_1(
     import numpy as np
 
     return np.array(coordinates_vol) * np.array(
-        header["pixdim"][1], header["pixdim"][2], header["pixdim"][3]
+        [header["pixdim"][1], header["pixdim"][2], header["pixdim"][3]]
     )
 
 
