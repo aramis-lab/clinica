@@ -33,8 +33,9 @@ def test_similarity_measure(tmp_path: PurePath):
     from test.nonregression.testing_tools import similarity_measure
 
     rng = np.random.RandomState(42)
-    img1 = nib.Nifti1Image(rng.random((2, 2, 2, 2)), affine=np.eye(4))
-    img2 = nib.Nifti1Image(rng.random((2, 2, 2, 2)), affine=np.eye(4))
+    shape = (7, 7, 7, 7)
+    img1 = nib.Nifti1Image(rng.random(shape), affine=np.eye(4))
+    img2 = nib.Nifti1Image(rng.random(shape), affine=np.eye(4))
     img1.to_filename(str(tmp_path / "img1.nii"))
     img2.to_filename(str(tmp_path / "img2.nii"))
     assert not similarity_measure(tmp_path / "img1.nii", tmp_path / "img2.nii", 0.8)
