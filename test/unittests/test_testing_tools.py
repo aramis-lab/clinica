@@ -34,14 +34,18 @@ def test_similarity_measure(tmp_path: PurePath):
 
     rng = np.random.RandomState(42)
     shape = (7, 7, 7, 7)
+
     img1 = nib.Nifti1Image(rng.random(shape), affine=np.eye(4))
+    file1 = tmp_path / "img1.nii"
+    img1.to_filename(str(file1))
+
     img2 = nib.Nifti1Image(rng.random(shape), affine=np.eye(4))
-    img1.to_filename(str(tmp_path / "img1.nii"))
-    img2.to_filename(str(tmp_path / "img2.nii"))
-    assert not similarity_measure(tmp_path / "img1.nii", tmp_path / "img2.nii", 0.8)
-    assert similarity_measure(tmp_path / "img1.nii", tmp_path / "img1.nii", 0.8)
-    assert similarity_measure(tmp_path / "img2.nii", tmp_path / "img2.nii", 0.8)
-    assert similarity_measure(tmp_path / "img1.nii", tmp_path / "img2.nii", 0.2)
+    file2 = tmp_path / "img2.nii"
+    img2.to_filename(str(file2))
+
+    assert similarity_measure(file1, file1, 0.8)
+    assert similarity_measure(file2, file2, 0.8)
+    assert not similarity_measure(file1, file2, 0.2)
 
 
 def test_identical_subject_list(tmp_path: PurePath):
