@@ -7,7 +7,6 @@ def test_vox_to_world_space_method_1():
     from clinica.iotools.utils.data_handling import vox_to_world_space_method_1
 
     head = Nifti1Header()
-    print(head)
     assert not head["qform_code"] > 0
     assert head["sform_code"] == 0
     assert np.all(head["pixdim"] == 1)
