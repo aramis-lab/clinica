@@ -1,3 +1,25 @@
+# def test_vox_to_world_space():
+#     """Test function `vox_to_world_space_method_1`.
+
+#     .. note::
+#         We want to verify, that the function does run with it's normal parameters
+#         and that it returns what we expect it to return."""
+
+#     import numpy as np
+#     from nibabel.nifti1 import Nifti1Image
+
+#     from clinica.iotools.utils.data_handling import vox_to_world_space_method_1
+
+#     vol = np.ndarray(shape=(5, 5, 2, 100))
+#     img = Nifti1Image(vol, np.eye(4))
+#     coords = np.array([0.0, 0.0, 0.0])
+
+#     assert np.array_equal(
+#         vox_to_world_space_method_1(coordinates_vol=coords, header=img.get_header()),
+#         coords,
+#     )
+
+
 def test_vox_to_world_space():
     """Test function `vox_to_world_space_method_1`.
 
@@ -6,15 +28,22 @@ def test_vox_to_world_space():
         and that it returns what we expect it to return."""
 
     import numpy as np
-    from nibabel.nifti1 import Nifti1Image
+    from nibabel.nifti1 import Nifti1Header, Nifti1Image
 
     from clinica.iotools.utils.data_handling import vox_to_world_space_method_1
 
-    vol = np.ndarray(shape=(5, 5, 2, 100))
-    img = Nifti1Image(vol, np.eye(4))
-    coords = np.array([0.0, 0.0, 0.0])
-
-    assert np.array_equal(
-        vox_to_world_space_method_1(coordinates_vol=coords, header=img.get_header()),
-        coords,
+    head = Nifti1Header()
+    print(head)
+    assert not head["qform_code"] > 0
+    assert head["sform_code"] == 0
+    assert np.all(head["pixdim"] == 1)
+    center_coordinates = np.array([0.5] * 3)
+    np.testing.assert_array_equal(
+        vox_to_world_space_method_1(coordinates_vol=center_coordinates, header=head),
+        center_coordinates,
+    )
+    head["pixdim"][1] = 2
+    np.testing.assert_array_equal(
+        vox_to_world_space_method_1(coordinates_vol=center_coordinates, header=head),
+        np.array([1.0, 0.5, 0.5]),
     )
