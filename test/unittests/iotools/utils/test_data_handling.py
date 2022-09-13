@@ -1,10 +1,3 @@
-from pathlib import Path
-from string import Template
-from typing import Union
-
-import pytest
-
-
 def test_vox_to_world_space():
     """Test function `vox_to_world_space_method_1`.
 
