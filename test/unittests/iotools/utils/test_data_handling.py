@@ -10,7 +10,7 @@ def test_vox_to_world_space():
 
     from clinica.iotools.utils.data_handling import vox_to_world_space_method_1
 
-    vol = 100 + 10 * np.random.randn(5, 5, 2, 100)
+    vol = np.ndarray(shape=(5, 5, 2, 100))
     img = Nifti1Image(vol, np.eye(4))
     nii_header = img.get_header()
     coords = np.array([0.0, 0.0, 0.0])
