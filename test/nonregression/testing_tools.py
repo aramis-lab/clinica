@@ -76,9 +76,10 @@ def similarity_measure(
     file2: PathLike,
     threshold: float,
 ) -> bool:
-    """Compares 2 Nifti inputs using a correlation metric.
+    """Compare two NIfTI inputs using a similarity metric.
 
-    Nifti are equals if the correlation is higher than the specified threshold.
+    Both NIfTI inputs are considered equal if the computed similarity metric
+    is higher than the specified threshold.
 
     Parameters
     ----------
@@ -90,19 +91,16 @@ def similarity_measure(
     -------
     bool
         True if file1 and file2 can be considered similar enough, i.e. the
-        correlation is higher than the threshold.
+        similarity metric is higher than the threshold.
     """
-    import nipype.pipeline.engine as npe
-    from nipype.algorithms.metrics import Similarity
+    import nibabel
+    from skimage.metrics import structural_similarity
 
-    # Node similarity (nipy required)
-    img_similarity = npe.Node(name="img_similarity", interface=Similarity())
-    img_similarity.inputs.metric = "cc"  # stands for correlation coefficient
-    img_similarity.inputs.volume1 = file1
-    img_similarity.inputs.volume2 = file2
-    res = img_similarity.run()
+    im1 = nibabel.load(str(file1)).get_fdata()
+    im2 = nibabel.load(str(file2)).get_fdata()
+    sim = structural_similarity(im1, im2)
 
-    return np.mean(res.outputs.similarity) > threshold
+    return sim > threshold
 
 
 def identical_subject_list(
