@@ -98,7 +98,9 @@ def similarity_measure(
 
     im1 = nibabel.load(str(file1)).get_fdata()
     im2 = nibabel.load(str(file2)).get_fdata()
-    sim = structural_similarity(im1, im2)
+    sim = structural_similarity(
+        im1, im2, gaussian_weights=True, sigma=1.5, use_sample_covariance=False
+    )
 
     return sim > threshold
 

@@ -33,7 +33,7 @@ def test_similarity_measure(tmp_path: PurePath):
     from test.nonregression.testing_tools import similarity_measure
 
     rng = np.random.RandomState(42)
-    shape = (7, 7, 7, 7)
+    shape = (16, 16, 16, 16)
 
     img1 = nib.Nifti1Image(rng.random(shape), affine=np.eye(4))
     file1 = tmp_path / "img1.nii"
