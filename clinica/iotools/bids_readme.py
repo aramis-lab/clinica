@@ -20,10 +20,10 @@ class BIDSReadme:
     desciption: str
 
     def write(self, to: IO[str]):
-        import clinica
+        from importlib.metadata import version
 
         to.write(
-            f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
+            f"This BIDS directory was generated with Clinica v{version('clinica')}.\n"
             f"More information on https://www.clinica.run\n"
             f"\n"
             f"Study: {self.name}\n"

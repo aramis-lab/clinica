@@ -473,7 +473,7 @@ def _write_readme(
     bids_dir: Union[str, Path],
     bids_version: Optional[str] = None,
 ) -> None:
-    """Write `dataset_description.json` at the root of the BIDS directory."""
+    """Write `README` at the root of the BIDS directory."""
     from clinica.iotools.bids_readme import BIDSReadme
 
     bids_desc = BIDSReadme(
@@ -515,7 +515,6 @@ def write_modality_agnostic_files(
         bids_version: BIDS version if different from the version supported by Clinica.
     """
     _write_bids_dataset_description(study_name, bids_dir, bids_version)
-    # _write_readme(bids_dir)
     _write_readme(study_name, data_dict, bids_dir, bids_version)
     _write_bids_validator_config(bids_dir)
     _write_bidsignore(bids_dir)
