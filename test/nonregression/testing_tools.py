@@ -93,11 +93,13 @@ def similarity_measure(
         True if file1 and file2 can be considered similar enough, i.e. the
         similarity metric is higher than the threshold.
     """
+    from os import fspath
+
     import nibabel
     from skimage.metrics import structural_similarity
 
-    im1 = nibabel.load(str(file1)).get_fdata()
-    im2 = nibabel.load(str(file2)).get_fdata()
+    im1 = nibabel.load(fspath(file1)).get_fdata()
+    im2 = nibabel.load(fspath(file2)).get_fdata()
     sim = structural_similarity(
         im1, im2, gaussian_weights=True, sigma=1.5, use_sample_covariance=False
     )

@@ -37,11 +37,11 @@ def test_similarity_measure(tmp_path: PurePath):
 
     img1 = nib.Nifti1Image(rng.random(shape), affine=np.eye(4))
     file1 = tmp_path / "img1.nii"
-    img1.to_filename(str(file1))
+    img1.to_filename(os.fspath(file1))
 
     img2 = nib.Nifti1Image(rng.random(shape), affine=np.eye(4))
     file2 = tmp_path / "img2.nii"
-    img2.to_filename(str(file2))
+    img2.to_filename(os.fspath(file2))
 
     assert similarity_measure(file1, file1, 0.8)
     assert similarity_measure(file2, file2, 0.8)
