@@ -3,7 +3,7 @@ import pytest
 
 
 @pytest.fixture
-def psf_df():
+def psf_df() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "participant_id": ["sub-CLNC01"] * 3 + ["sub-CLNC02", "sub-CLNC03"],

@@ -25,7 +25,7 @@ class Tracer(str, Enum):
 def read_psf_information(
     pvc_psf_tsv: os.PathLike,
     subject_ids: ty.List[str],
-    session_ids: ty.List,
+    session_ids: ty.List[str],
     pet_tracer: str,
 ) -> ty.List[ty.List[int]]:
     """Read PSF information from TSV file.
