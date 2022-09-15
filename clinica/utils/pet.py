@@ -113,45 +113,34 @@ def read_psf_information(
 LIST_SUVR_REFERENCE_REGIONS = ["pons", "cerebellumPons", "pons2", "cerebellumPons2"]
 
 
-def get_suvr_mask(suvr_reference_region):
-    """Get path of the SUVR mask from SUVR reference region label.
+def get_suvr_mask(suvr_reference_region: str) -> os.PathLike:
+    """Returns the path to the SUVR mask from SUVR reference region label.
 
-    Args:
-        suvr_reference_region: Label of the SUVR reference region
+    Parameters
+    ----------
+    suvr_reference_region : str
+        The label of the SUVR reference region.
+        Supported labels are: 'pons', 'cerebellumPons', 'pons2', and 'cerebellumPons2'
 
-    Returns:
-        Path of the SUVR mask
+    Returns
+    -------
+    PathLike :
+        The path to the SUVR mask.
     """
-    import os
+    from pathlib import Path
 
-    suvr_reference_region_to_suvr = {
-        "pons": os.path.join(
-            os.path.split(os.path.realpath(__file__))[0],
-            "..",
-            "resources",
-            "masks",
-            "region-pons_eroded-6mm_mask.nii.gz",
-        ),
-        "cerebellumPons": os.path.join(
-            os.path.split(os.path.realpath(__file__))[0],
-            "..",
-            "resources",
-            "masks",
-            "region-cerebellumPons_eroded-6mm_mask.nii.gz",
-        ),
-        "pons2": os.path.join(
-            os.path.split(os.path.realpath(__file__))[0],
-            "..",
-            "resources",
-            "masks",
-            "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz",
-        ),
-        "cerebellumPons2": os.path.join(
-            os.path.split(os.path.realpath(__file__))[0],
-            "..",
-            "resources",
-            "masks",
-            "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz",
-        ),
+    CURRENT_DIR = Path(os.path.realpath(__file__))
+    MASKS_DIR = CURRENT_DIR.parent.parent / "resources/masks"
+
+    suvr_reference_region_labels_to_filenames = {
+        "pons": "region-pons_eroded-6mm_mask.nii.gz",
+        "cerebellumPons": "region-cerebellumPons_eroded-6mm_mask.nii.gz",
+        "pons2": "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz",
+        "cerebellumPons2": "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz",
     }
-    return suvr_reference_region_to_suvr[suvr_reference_region]
+    if suvr_reference_region not in suvr_reference_region_labels_to_filenames:
+        raise ValueError(
+            f"SUVR reference region label {suvr_reference_region} is not supported. "
+            f"Supported values are : {list(suvr_reference_region_labels_to_filenames.keys())}."
+        )
+    return MASKS_DIR / suvr_reference_region_labels_to_filenames[suvr_reference_region]
