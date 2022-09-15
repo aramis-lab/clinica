@@ -121,14 +121,14 @@ def test_read_psf_information(tmp_path: os.PathLike, psf_df: pd.DataFrame):
 @pytest.mark.parametrize(
     "label", ["pons", "cerebellumPons", "pons2", "cerebellumPons2"]
 )
-def test_get_suvr_mask(label):
+def test_get_suvr_mask(label: str):
     from clinica.utils.pet import get_suvr_mask
 
     assert get_suvr_mask(label).exists()
 
 
 @pytest.mark.parametrize("label", ["foo", "bar", "pons3", "cerebelumPons2"])
-def test_get_suvr_mask_error(label):
+def test_get_suvr_mask_error(label: str):
     from clinica.utils.pet import get_suvr_mask
 
     with pytest.raises(
