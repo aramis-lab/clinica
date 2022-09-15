@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
@@ -16,7 +19,7 @@ def psf_df() -> pd.DataFrame:
     )
 
 
-def test_read_psf_information_errors(tmp_path, psf_df):
+def test_read_psf_information_errors(tmp_path: os.PathLike, psf_df: pd.DataFrame):
     from clinica.utils.pet import read_psf_information
 
     with pytest.raises(
@@ -24,7 +27,7 @@ def test_read_psf_information_errors(tmp_path, psf_df):
         match="No such file or directory: 'foo.tsv'",
     ):
         read_psf_information(
-            "foo.tsv", ["sub-CLNC01", "sub-CLNC01"], ["ses-M00", "ses-M18"], "FDG"
+            Path("foo.tsv"), ["sub-CLNC01", "sub-CLNC01"], ["ses-M00", "ses-M18"], "FDG"
         )
     psf_df.to_csv(tmp_path / "psf.tsv", sep="\t", index=False)
     with pytest.raises(
@@ -94,7 +97,7 @@ def test_read_psf_information_errors(tmp_path, psf_df):
         )
 
 
-def test_read_psf_information(tmp_path, psf_df):
+def test_read_psf_information(tmp_path: os.PathLike, psf_df: pd.DataFrame):
     from clinica.utils.pet import read_psf_information
 
     psf_df.to_csv(tmp_path / "psf.tsv", sep="\t", index=False)
