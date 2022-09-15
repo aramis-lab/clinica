@@ -98,13 +98,13 @@ def similarity_measure(
     import nibabel
     from skimage.metrics import structural_similarity
 
-    im1 = nibabel.load(fspath(file1)).get_fdata()
-    im2 = nibabel.load(fspath(file2)).get_fdata()
-    sim = structural_similarity(
-        im1, im2, gaussian_weights=True, sigma=1.5, use_sample_covariance=False
+    image1 = nibabel.load(fspath(file1)).get_fdata()
+    image2 = nibabel.load(fspath(file2)).get_fdata()
+    similarity = structural_similarity(
+        image1, image2, gaussian_weights=True, sigma=1.5, use_sample_covariance=False
     )
 
-    return sim > threshold
+    return similarity > threshold
 
 
 def identical_subject_list(
