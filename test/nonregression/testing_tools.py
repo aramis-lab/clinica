@@ -100,6 +100,8 @@ def similarity_measure(
 
     image1 = nibabel.load(fspath(file1)).get_fdata()
     image2 = nibabel.load(fspath(file2)).get_fdata()
+
+    # See https://scikit-image.org/docs/stable/api/skimage.metrics.html#skimage.metrics.structural_similarity
     similarity = structural_similarity(
         image1, image2, gaussian_weights=True, sigma=1.5, use_sample_covariance=False
     )
