@@ -164,7 +164,7 @@ def identical_subject_list(
     )
 
 
-def _sort_subject_field(subjects: List, fields: List) -> Tuple:
+def _sort_subject_field(subjects: List, fields: List) -> List:
     """Helper function for `same_missing_modality_tsv`.
     Returns a sorted list of fields. The list is sorted by corresponding
     subject_id and by field_id if the subject_ids are equal.
