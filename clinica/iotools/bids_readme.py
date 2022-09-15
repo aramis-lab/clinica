@@ -17,7 +17,7 @@ class BIDSReadme:
 
     name: str
     link: str
-    desciption: str
+    description: str
 
     def write(self, to: IO[str]):
         from importlib.metadata import version
@@ -28,7 +28,7 @@ class BIDSReadme:
             f"\n"
             f"Study: {self.name}\n"
             f"\n"
-            f"{self.desciption}\n\n"
+            f"{self.description}\n\n"
             f"Find more about it and about the data user agreement: {self.link}"
         )
 
