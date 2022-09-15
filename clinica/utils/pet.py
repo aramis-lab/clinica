@@ -71,7 +71,7 @@ def read_psf_information(
     sub-CLNC02        ses-M00        FDG           8        9        10
     sub-CLNC03        ses-M00        FDG           8        9        10
     """
-    VALID_COLUMNS = {
+    valid_columns = {
         "participant_id",
         "session_id",
         "acq_label",
@@ -80,7 +80,7 @@ def read_psf_information(
         "psf_z",
     }
     psf_df = pd.read_csv(pvc_psf_tsv, sep="\t")
-    diff = VALID_COLUMNS.symmetric_difference(set(psf_df.columns))
+    diff = valid_columns.symmetric_difference(set(psf_df.columns))
     if len(diff) > 0:
         raise IOError(
             f"The file {pvc_psf_tsv} must contain the following columns (separated by tabulations):\n"
