@@ -13,8 +13,11 @@ from clinica.pydra.pet_volume.tasks import (
     create_binary_mask,
     create_pvc_mask,
     normalize_to_reference,
+    pet_pvc_name,
+    get_psf_task,
 )
 from os import PathLike
+import typing as ty
 
 
 def _check_pipeline_parameters(parameters: dict) -> dict:
@@ -42,26 +45,114 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
     parameters.setdefault("mask_tissues", [1, 2, 3])
     parameters.setdefault("mask_threshold", 0.3)
     parameters.setdefault("pvc_mask_tissues", [1, 2, 3])
-    parameters.setdefault("smooth", [8])
+    parameters.setdefault("smooth", 8.)
     parameters.setdefault("atlases", PET_VOLUME_ATLASES)
     return parameters
 
 
-@clinica_io
-def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
-    """Core workflow for the PET Volume pipeline.
+def _sanitize_fwhm(fwhm: Union[int, List[int], List[List[int]]) -> List[List[int]]:
+    """Make sure the FWHM is in the right format for the Smooth SPM interface.
 
     Parameters
     ----------
-    name : The name of the workflow.
+    fwhm : Union[int, List[int], List[List[int]]
+        Smoothing kernel(s) that should get passed to the SPM Smooth() interface.
+        There are three ways to specify fwhm:
+            - An integer
+            - A list of integers
+            - A list of lists of integers
 
     Returns
     -------
-    workflow : The core workflow.
+    fwhm : List[List[int]]
+        The FWHM kernels as a list of lists of integers. All inner lists are of
+        length 3 as they encode each physical dimension.
     """
-    from clinica.pipelines.pet_volume.pet_volume_utils import pet_pvc_name
+    if isinstance(fwhm, (int, float)):
+        fwhm = [[fwhm] * 3]
+    if isinstance(fwhm, list):
+        if len(fwhm) == 0:
+            raise ValueError("Empty FWHM list provided.")
+        if isinstance(fwhm[0], list):
+            if not all([isinstance(f, list) for f in fwhm]):
+                raise ValueError("Expecting a list of lists of ints or a list of ints for FWHM.")
+            if not all([len(f) == 3 for f in fwhm]):
+                raise ValueError(
+                    "When providing a list of lists of ints for FWHM, all inner lists must have length 3"
+                )
+            for f in fwhm:
+                if not all([isinstance(ff, (int, float)) for ff in f]):
+                    raise ValueError("Expecting a list of lists of ints or a list of ints for FWHM.")
+        else:
+            if all([isinstance(f, (int, float)) for f in fwhm]):
+                return [[f] * 3 for f in fwhm]
+            else:
+                raise ValueError("Expecting a list of lists of ints or a list of ints for FWHM.")
+    return fwhm
+
+
+def build_smoothing_workflow(
+    name: str,
+    fwhm: ty.List[ty.List[int]],
+) -> Workflow:
+    """Build and parametrize a smoothing workflow.
+
+    Parameters
+    ----------
+    name : str
+        The name of the Workflow.
+
+    fwhm : List[List[int]]
+        The smoothing kernel(s) to use for smoothing.
+        If multiple kernels are provided, the workflow
+        will outut files for each specified kernel.
+        Each file name has the kernel size added.
+
+    Returns
+    -------
+    wf : Workflow
+        The resulting smoothing workflow.
+    """
+    wf = Workflow(
+        name,
+        input_spec=["input_file"],
+    )
+    for fwhm_value in fwhm:
+        task = Nipype1Task(
+            name=f"smoothing_node_{fwhm_value[0]}mm",
+            interface=Smooth(),
+        )
+        task.inputs.fwhm = fwhm_value
+        task.inputs.out_prefix = f"fwhm-{fwhm_value[0]}mm_"
+        task.inputs.in_files = wf.lzin.input_file
+        wf.add(task)
+    wf.set_output(
+        [('smoothed_files', getattr(wf, f"smoothing_node_{fwhm_value[0]}mm").lzout.smoothed_files) for fwhm_value in fwhm]
+    )
+    return wf
+
+
+@clinica_io
+def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
+    """Build the core workflow for the PET Volume pipeline.
+
+    Parameters
+    ----------
+    name : str, optional
+        The name of the workflow. Default="core".
+
+    parameters : dict, optional
+        Optional dictionary of parameters to be used
+        within the workflow.
+        Default={}.
+
+    Returns
+    -------
+    wf : Workflow
+        The core workflow.
+    """
     from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
-    from clinica.utils.pet import get_suvr_mask, read_psf_information
+    from clinica.utils.pet import get_suvr_mask
 
     if spm_standalone_is_available():
         use_spm_standalone()
@@ -98,7 +189,6 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         "flow_fields",
         "dartel_template",
     ]
-
     # Unzipping
     for input_name in compressed_inputs:
         wf.add(
@@ -162,6 +252,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
             region_mask=wf.reslice.lzout.out_file,
         )
     )
+    
     # Create binary mask from segmented tissues
     wf.add(
         create_binary_mask(
@@ -183,17 +274,13 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     )
 
     # Smoothing
-    if parameters["smooth"] is not None and len(parameters["smooth"]) > 0:
-        smoothing_node = Nipype1Task(
-            name="smoothing_node",
-            interface=Smooth(),
+    if parameters["smooth"] is not None:
+        smoothing_fwhm = _sanitize_fwhm(parameters["smooth"])
+        smoothing_wf = build_smoothing_workflow(
+            "smoothing_workflow", smoothing_fwhm,
         )
-        smoothing_node.inputs.fwhm = [[x] * 3 for x in parameters["smooth"]]
-        smoothing_node.inputs.out_prefix = [
-            f"fwhm-{x}mm_" for x in parameters["smooth"]
-        ]
-        smoothing_node.inputs.in_files = wf.apply_mask.lzout.masked_image_path
-        wf.add(smoothing_node)
+        smoothing_wf.inputs.input_file = wf.apply_mask.lzout.masked_image_path
+        wf.add(smoothing_wf)
 
     # Atlas Statistics
     wf.add(
@@ -214,7 +301,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 name="unzip_pvc_mask_tissues",
                 interface=Gunzip(),
                 in_file=wf.lzin.pvc_mask_tissues,
-            )
+            ).split("in_file").combine("in_file")
         )
 
         # Creating Mask to use in PVC
@@ -226,15 +313,39 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
             )
         )
 
+        # Build PET PVC name for PET PVC task
+        wf.add(
+            pet_pvc_name(
+                name="pet_pvc_name",
+                interface=pet_pvc_name,
+                pet_image=wf.coreg_pet_t1.lzout.coregistered_source,
+                pvc_method="RBV",
+            )
+        )
+        
+        # Retrieve PSF for PET PVC task
+        wf.add(
+            get_psf_task(
+                name="get_psf_task",
+                interface=get_psf_task,
+                pvc_psf_tsv=parameters["pvc_psf_tsv"],
+                filename=wf.lzin.pet,
+                pet_tracer=parameters["acq_label"],
+            )
+        )
+        
         # PET PVC
         petpvc = Nipype1Task(
             name="pvc",
             interface=PETPVC(),
         )
         petpvc.inputs.pvc = "RBV"
-        petpvc.inputs.out_file = "pvc.nii"
+        petpvc.inputs.out_file = wf.pet_pvc_name.lzout.pet_pvc_path
         petpvc.inputs.in_file = wf.coreg_pet_t1.lzout.coregistered_source
         petpvc.inputs.mask_file = wf.pvc_mask.lzout.out_mask
+        petpvc.inputs.fwhm_x = wf.get_psf_task.lzout.psf_x
+        petpvc.inputs.fwhm_y = wf.get_psf_task.lzout.psf_y
+        petpvc.inputs.fwhm_z = wf.get_psf_task.lzout.psf_z
         wf.add(petpvc)
 
         # Spatially normalize PET into MNI
@@ -248,14 +359,16 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         dartel_mni_reg_pvc.inputs.template_file = (
             wf.unzip_dartel_template.lzout.out_file
         )
+        dartel_mni_reg_pvc.inputs.apply_to_files = wf.pvc.lzout.out_file
         wf.add(dartel_mni_reg_pvc)
 
         # Reslice reference region mask into PET
         reslice_pvc = Nipype1Task(
             name="reslice_pvc",
-            interfaces=Reslice(),
+            interface=Reslice(),
         )
-        reslice_pvc.inputs.in_files = wf.unzip_reference_mask.lzout.out_file
+        reslice_pvc.inputs.space_defining = wf.dartel_mni_reg_pvc.lzout.normalized_files
+        reslice_pvc.inputs.in_file = wf.unzip_reference_mask.lzout.out_file
         wf.add(reslice_pvc)
 
         # Normalize PET values according to reference region
@@ -279,17 +392,13 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         )
 
         # Smoothing
-        if parameters["smooth"] is not None and len(parameters["smooth"]) > 0:
-            smoothing_pvc = Nipype1Task(
-                name="smoothing_pvc",
-                interface=Smooth(),
+        if parameters["smooth"] is not None:
+            smoothing_fwhm = _sanitize_fwhm(parameters["smooth"])
+            pvc_smoothing_wf = build_smoothing_workflow(
+                "pvc_smoothing_workflow", smoothing_fwhm,
             )
-            smoothing_pvc.inputs.fwhm = [[x] * 3 for x in parameters["smooth"]]
-            smoothing_pvc.inputs.out_prefix = [
-                f"fwhm-{x}mm_" for x in parameters["smooth"]
-            ]
-            smoothing_pvc.inputs.in_file = wf.apply_mask_pvc.lzout.masked_image_path
-            wf.add(smoothing_pvc)
+            pvc_smoothing_wf.inputs.input_file = wf.apply_mask_pvc.lzout.masked_image_path
+            wf.add(pvc_smoothing_wf)
 
         # Atlas Statistics
         wf.add(
@@ -300,8 +409,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 in_atlas_list=parameters["atlases"],
             )
         )
+
     output_connections = [
-        ("pet_suvr_masked_smoothed", wf.smoothing_node.lzout.smoothed_files),
+        ("pet_suvr_masked_smoothed", wf.smoothing_workflow.lzout.smoothed_files),
         ("pet_t1_native", wf.coreg_pet_t1.lzout.coregistered_source),
         ("pet_mni", wf.dartel_mni_reg.lzout.normalized_files),
         ("pet_suvr", wf.norm_to_ref.lzout.suvr_pet_path),
@@ -309,15 +419,17 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         ("pet_suvr_masked", wf.apply_mask.lzout.masked_image_path),
         ("atlas_statistics", wf.atlas_stats_node.lzout.atlas_statistics),
     ]
+    
     if parameters["apply_pvc"]:
         output_connections += [
-            ("pet_pvc_suvr_masked_smoothed", wf.smoothing_pvc.lzout.smoothed_files),
-            ("pet_pvc", wf.petpvc.lzout.out_file),
+            ("pet_pvc_suvr_masked_smoothed", wf.pvc_smoothing_workflow.lzout.smoothed_files),
+            ("pet_pvc", wf.pvc.lzout.out_file),
             ("pet_pvc_mni", wf.dartel_mni_reg_pvc.lzout.normalized_files),
             ("pet_pvc_suvr", wf.norm_to_ref_pvc.lzout.suvr_pet_path),
             ("pet_pvc_suvr_masked", wf.apply_mask_pvc.lzout.masked_image_path),
             ("pvc_atlas_statistics", wf.atlas_stats_pvc.lzout.atlas_statistics),
         ]
+    
     wf.set_output(output_connections)
 
     return wf
