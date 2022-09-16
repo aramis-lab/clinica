@@ -130,7 +130,7 @@ def get_suvr_mask(suvr_reference_region: str) -> os.PathLike:
     from pathlib import Path
 
     CURRENT_DIR = Path(os.path.realpath(__file__))
-    MASKS_DIR = CURRENT_DIR.parent.parent / "resources/masks"
+    MASKS_DIR = CURRENT_DIR.parent.parent / "resources" / "masks"
 
     suvr_reference_region_labels_to_filenames = {
         "pons": "region-pons_eroded-6mm_mask.nii.gz",
