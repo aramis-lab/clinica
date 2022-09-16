@@ -103,24 +103,11 @@ class StatisticsSurface(cpe.Pipeline):
                 self.caps_directory, "groups", f"group-{self.parameters['group_label']}"
             )
         ):
-            error_message = (
+            raise ClinicaException(
                 f"Group label {self.parameters['group_label']} already exists, "
                 f"please choose another one or delete the existing folder and "
                 f"also the working directory and rerun the pipeline"
             )
-            raise ClinicaException(error_message)
-            # statistics_dir_tsv = os.path.join(input_directory, 'groups', group_id, 'statistics', 'participant.tsv')
-            # # Copy the subjects_visits_tsv to the result folder
-            # # First, check if the subjects_visits_tsv has the same info with the participant.tsv in the folder of statistics.
-            # # If the participant TSV does not exit, copy subjects_visits_tsv in the folder of statistics too,
-            # # if it is here, compare them.
-            # if not os.path.isfile(statistics_dir_tsv):
-            #     copy(subjects_visits_tsv, statistics_dir_tsv)
-            # else:
-            #     # Compare the two TSV files
-            #     if not have_same_subjects(statistics_dir_tsv, subjects_visits_tsv):
-            #         raise ValueError("It seems that this round of analysis does not contain the same subjects"
-            #                          "where you want to put the results, please check it!")
 
         # Check input files before calling SurfStat with Matlab
         # =====================================================

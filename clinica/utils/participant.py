@@ -130,29 +130,3 @@ def get_subject_session_list(
 
     participant_ids, session_ids = read_participant_tsv(ss_file)
     return session_ids, participant_ids
-
-
-def have_same_subjects(tsv_file_1, tsv_file_2):
-    """Return True if `tsv_file_1` and `tsv_file_2` have the same subjects, False otherwise."""
-    import pandas as pd
-
-    tsv_df_1 = pd.read_csv(tsv_file_1, sep="\t")
-    tsv_df_2 = pd.read_csv(tsv_file_2, sep="\t")
-    image_ids_1 = [
-        f"{p_id}_{s_id}"
-        for (p_id, s_id) in zip(
-            list(tsv_df_1.participant_id), list(tsv_df_1.session_id)
-        )
-    ]
-    image_ids_2 = [
-        f"{p_id}_{s_id}"
-        for (p_id, s_id) in zip(
-            list(tsv_df_2.participant_id), list(tsv_df_2.session_id)
-        )
-    ]
-    diff_image_ids = list(set(image_ids_1) - set(image_ids_2))
-
-    if len(diff_image_ids) == 0:
-        return True
-    else:
-        return False
