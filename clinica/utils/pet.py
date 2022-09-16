@@ -129,8 +129,8 @@ def get_suvr_mask(suvr_reference_region: str) -> os.PathLike:
     """
     from pathlib import Path
 
-    CURRENT_DIR = Path(os.path.realpath(__file__))
-    MASKS_DIR = CURRENT_DIR.parent.parent / "resources" / "masks"
+    current_dir = Path(os.path.realpath(__file__))
+    masks_dir = current_dir.parent.parent / "resources" / "masks"
 
     suvr_reference_region_labels_to_filenames = {
         "pons": "region-pons_eroded-6mm_mask.nii.gz",
@@ -143,4 +143,4 @@ def get_suvr_mask(suvr_reference_region: str) -> os.PathLike:
             f"SUVR reference region label {suvr_reference_region} is not supported. "
             f"Supported values are : {list(suvr_reference_region_labels_to_filenames.keys())}."
         )
-    return MASKS_DIR / suvr_reference_region_labels_to_filenames[suvr_reference_region]
+    return masks_dir / suvr_reference_region_labels_to_filenames[suvr_reference_region]
