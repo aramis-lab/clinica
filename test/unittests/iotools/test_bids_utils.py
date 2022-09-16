@@ -32,8 +32,8 @@ EXPECTED_README_CONTENT = Template(
         "\n"
         "Study: \n"
         "\n"
-        "\n\n"
-        "Find more about it and about the data user agreement: "
+        "description\n\n"
+        "Find more about it and about the data user agreement: link"
     )
 )
 
@@ -152,9 +152,8 @@ def test_write_bids_readme(
         a different set of input parameters.
 
     """
-    from clinica.iotools.bids_utils import _write_readme
 
-    data_dict = {"link": "", "desc": ""}
+    data_dict = {"link": "link", "desc": "description"}
     _write_readme(study_name, data_dict, tmp_path, bids_version=bids_version)
     _validate_file_and_content(
         tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES["readme"],
