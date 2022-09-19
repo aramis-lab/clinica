@@ -543,7 +543,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
         else:
             print(f"No session data available for {sp}")
             session_df = pd.DataFrame(columns=["session_id"])
-            session_df["session_id"] = pd.Series("M00")
+            session_df["session_id"] = pd.Series("M000")
 
         session_df = session_df.set_index("session_id").fillna("n/a")
         session_df.to_csv(

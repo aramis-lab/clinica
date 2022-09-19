@@ -38,7 +38,7 @@ def read_clinical_data(clinical_data_directory: PathLike) -> DataFrame:
         index={"loni_id": "participant_id", "visit_number": "session_id"}
     )
     dataframe.index = dataframe.index.map(
-        lambda x: (f"sub-NIFD{x[0].replace('_', '')}", f"ses-M{(6 * (x[1] - 1)):02d}")
+        lambda x: (f"sub-NIFD{x[0].replace('_', '')}", f"ses-M{(6 * (x[1] - 1)):03d}")
     )
 
     # Keep relevant columns and rename them.
@@ -244,7 +244,7 @@ def dataset_to_bids(
         participant_id=lambda df: df.subject.apply(
             lambda x: f"sub-NIFD{x.replace('_', '')}"
         ),
-        session_id=lambda df: df.visit.apply(lambda x: f"ses-M{(6 * (x - 1)):02d}"),
+        session_id=lambda df: df.visit.apply(lambda x: f"ses-M{(6 * (x - 1)):03d}"),
         filename=lambda df: df.apply(
             lambda x: f"{x.participant_id}/{x.session_id}/{x.datatype}/"
             f"{x.participant_id}_{x.session_id}"
@@ -264,7 +264,7 @@ def dataset_to_bids(
         .set_index(["participant_id"], verify_integrity=True)
         .sort_index()
     ).join(
-        clinical_data.xs("ses-M00", level="session_id")[
+        clinical_data.xs("ses-M000", level="session_id")[
             ["diagnosis", "site", "education", "race"]
         ]
     )
