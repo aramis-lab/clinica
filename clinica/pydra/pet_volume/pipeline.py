@@ -53,8 +53,8 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
 
 
 def _sanitize_fwhm(
-    fwhm: Union[int, List[int], List[List[int]]],
-) -> List[List[int]]:
+    fwhm: ty.Union[int, ty.List[int], ty.List[ty.List[int]]],
+) -> ty.List[ty.List[int]]:
     """Make sure the FWHM is in the right format for the Smooth SPM interface.
 
     Parameters
@@ -365,7 +365,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 name="get_psf_task",
                 interface=get_psf_task,
                 pvc_psf_tsv=parameters["pvc_psf_tsv"],
-                filename=wf.lzin.pet,
+                pet_filename=wf.lzin.pet,
                 pet_tracer=parameters["acq_label"],
             )
         )

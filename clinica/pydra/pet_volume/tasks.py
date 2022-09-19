@@ -283,10 +283,10 @@ def get_psf_task(
 
     from clinica.utils.pet import read_psf_information
 
-    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)", str(filename.name))
+    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)", str(pet_filename.name))
     if not m:
         raise ValueError(
-            f"Could not extract subject and session IDs from filename {filename}"
+            f"Could not extract subject and session IDs from filename {pet_filename}"
         )
     sub = m.group(1)
     ses = m.group(2)
