@@ -235,17 +235,17 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
 
 
 def viscode_to_session(viscode):
-    """Replace the session label 'bl' with 'M00' or capitalize the session name passed as input.
+    """Replace the session label 'bl' with 'M000' or capitalize the session name passed as input.
 
     :param viscode: session name
 
-    :return: M00 if is the baseline session or the original session name
+    :return: M000 if is the baseline session or the original session name
     capitalized
     """
     if viscode == "bl":
-        return "M00"
+        return "M000"
     else:
-        return viscode.capitalize()
+        return f"M{(int(viscode[1:])):03d}"
 
 
 def find_path_to_pet_modality(path_to_dataset, csv_file):
@@ -828,7 +828,9 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         )
         age = get_ages(PTDOB.values[0], examdates)
 
-        viscode[viscode == "bl"] = "M00"
+        # viscode[viscode != "bl"] = f"M{(int(viscode[1:])):03d}"
+        viscode[viscode == "bl"] = "M000"
+        # print("viscode :", viscode)
         viscode = viscode.str.upper()
 
         sessions = pd.DataFrame(
@@ -841,7 +843,11 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
                 "examination_date": examdates,
             }
         )
-
+        sessions = sessions.assign(
+            session_id=lambda df: df.session_id.apply(
+                lambda x: f"ses-M{ (3 - len(str(int(x[5:])))) * '0' + str(int(x[5:]))}"
+            )
+        )
         cols = sessions.columns.tolist()
         sessions = sessions[cols[-1:] + cols[:-1]]
 

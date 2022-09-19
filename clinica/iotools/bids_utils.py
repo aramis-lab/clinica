@@ -182,7 +182,7 @@ def get_sessions_map_AIBL(bids_ids, bids_dir):
     """
 
     ses_dict = {}
-    ses_map = {"M00": "bl", "M18": "m18", "M36": "m36", "M54": "m54"}
+    ses_map = {"M000": "bl", "M018": "m18", "M036": "m36", "M054": "m54"}
 
     for id in bids_ids:
         ses_dict[id] = ses_map
@@ -605,7 +605,6 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                         pass
                     else:
                         continue
-
                     row_to_append = pd.DataFrame(
                         scans_dict[bids_id][session_name][f_type], index=[0]
                     )
