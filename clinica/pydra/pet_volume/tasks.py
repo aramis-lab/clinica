@@ -5,8 +5,8 @@ from pathlib import PurePath
 
 import nibabel as nib
 import numpy as np
-from pydra.mark import annotate, task
 from nibabel.nifti1 import Nifti1Header
+from pydra.mark import annotate, task
 
 
 @task
@@ -19,7 +19,7 @@ def normalize_to_reference(pet_image: PurePath, region_mask: PurePath) -> PurePa
     ----------
     pet_image : PurePath
         Path to the Nifti1Image which should be normalized.
-    
+
     region_mask : PurePath
         Path to the mask to be used to define the region.
 
@@ -53,7 +53,7 @@ def _check_non_empty_tissue_list(tissues: ty.List[PurePath]) -> None:
 
 
 def _load_tissues(
-        tissues: ty.List[PurePath],
+    tissues: ty.List[PurePath],
 ) -> ty.Tuple[np.ndarray, np.ndarray, Nifti1Header]:
     """Aggregates the image data contained in the tissue images provided.
 
@@ -87,8 +87,8 @@ def _load_tissues(
 @task
 @annotate({"return": {"out_mask": PurePath}})
 def create_binary_mask(
-        tissues: ty.List[PurePath],
-        threshold: float = 0.3,
+    tissues: ty.List[PurePath],
+    threshold: float = 0.3,
 ) -> PurePath:
     """Create a binary mask Nifti1Image from the list of tissues.
 
@@ -222,7 +222,7 @@ def create_pvc_mask(tissues: ty.List) -> PurePath:
 
 
 @task
-@annotate({'return': {'pet_pvc_path': str}})
+@annotate({"return": {"pet_pvc_path": str}})
 def pet_pvc_name(pet_image: PurePath, pvc_method: str) -> str:
     """Build the name for the PET PVC interface.
 
@@ -246,11 +246,11 @@ def pet_pvc_name(pet_image: PurePath, pvc_method: str) -> str:
 
 
 @task
-@annotate({'return': {'psf_x': int, 'psf_y': int, 'psf_z': int}})
+@annotate({"return": {"psf_x": int, "psf_y": int, "psf_z": int}})
 def get_psf_task(
-        pvc_psf_tsv: PurePath,
-        pet_filename: PurePath,
-        pet_tracer: str,
+    pvc_psf_tsv: PurePath,
+    pet_filename: PurePath,
+    pet_tracer: str,
 ) -> ty.Tuple[int]:
     """Returns the tuple (psf_x, psf_y, psf_z) for the subject at the
     session currently treated by the workflow.
@@ -280,8 +280,9 @@ def get_psf_task(
         The length 3 tuple for the subject session.
     """
     import re
+
     from clinica.utils.pet import read_psf_information
-    
+
     m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)", str(filename.name))
     if not m:
         raise ValueError(
