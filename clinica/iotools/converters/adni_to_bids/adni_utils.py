@@ -618,7 +618,6 @@ def update_age(row):
         )
     else:
         updated_age = row["AGE"]
-    print("UPDATED AGE: ", updated_age)
     return updated_age
 
 
@@ -880,14 +879,14 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                     scans_df["filename"] = path.join(mod_name, file_name)
                     converted_mod = find_conversion_mod(file_name)
                     conversion_df = converted_dict[converted_mod]
-                    print("scan_df: ", scans_df)
+                    # print("scan_df: ", scans_df)
                     try:
                         # viscode=viscode_to_session(viscode)
                         scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
-                        print("\n\nconversion_df: ", conversion_df)
-                        print("\nscan_df: ", scans_df)
+                        # print("\n\nconversion_df: ", conversion_df)
+                        # print("\nscan_df: ", scans_df)
                         scans_df["scan_id"] = scan_id
-                        print("\nscans_df2: ", scans_df)
+                        # print("\nscans_df2: ", scans_df)
                         if "Field_Strength" in conversion_df.columns.values:
                             field_strength = conversion_df.loc[
                                 (subject_id, viscode), "Field_Strength"
@@ -1286,10 +1285,10 @@ def session_to_viscode(session_name):
     Returns:
         M00 if is the baseline session or the original session name capitalized
     """
-    if session_name == "M00":
+    if session_name == "M000":
         return "bl"
     else:
-        return session_name.lower()
+        return f"m{(int(session_name[1:])):02d}"
 
 
 def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
