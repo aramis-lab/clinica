@@ -8,6 +8,8 @@ from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentati
 )
 from clinica.pydra.engine import clinica_io
 from clinica.pydra.t1_volume.utils import initialize_tissues_spm_segment
+import pydra
+import typing as ty
 
 
 @clinica_io
@@ -34,9 +36,18 @@ def t1volume_tissue_segmentation(
         task_volume_location_in_world_coordinate_system,
     )
 
+    input_spec = pydra.specs.SpecInfo(
+         name="Input",
+         fields=[
+             ("_graph_checksums", ty.Any),
+             ("T1w", str, {"mandatory": True}),
+        ],
+         bases=(pydra.specs.BaseSpec,),
+    )
+
     workflow = Workflow(
         name,
-        input_spec=["T1w"],
+        input_spec=input_spec,
     )
 
     workflow.split("T1w")
