@@ -99,7 +99,7 @@ To mitigate this issue, you can do the following:
     This is under investigation (see [Issue #119](https://github.com/aramis-lab/clinica/issues/119) for details) and will be solved as soon as possible.
 
 !!! warning "Case where several longitudinal IDs are present"
-    If a subject has more than two longitudinal IDs (e.g. `long-M00M18` and `long-M00M18M36`),
+    If a subject has more than two longitudinal IDs (e.g. `long-M000M018` and `long-M000M018M036`),
     Clinica is not currently able to deal with this particular case.
     This will be fixed in the future.
 

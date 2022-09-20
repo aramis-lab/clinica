@@ -2,7 +2,7 @@ def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
     """Extract SUBJECT_DIR.
 
     Extract path to FreeSurfer segmentation in CAPS folder and FreeSurfer ID
-    (e.g. sub-CLNC01_ses-M000.long.sub-CLNC01_long-M00M18 or sub-CLNC01_ses-M000).
+    (e.g. sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018 or sub-CLNC01_ses-M000).
     """
     import os
 
