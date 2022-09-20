@@ -477,14 +477,14 @@ The `*.mat` files can be read later by tools like PySurfer and Surfstat.
     The content of `group-ADvsHC_participants.tsv` is:
     ```Text
     participant_id   session_id   sex      group   age
-    sub-CLNC0001     ses-M00      Female   CN      71.1
-    sub-CLNC0002     ses-M00      Male     CN      81.3
-    sub-CLNC0003     ses-M00      Male     CN      75.4
-    sub-CLNC0004     ses-M00      Female   CN      73.9
-    sub-CLNC0005     ses-M00      Female   AD      64.1
-    sub-CLNC0006     ses-M00      Male     AD      80.1
-    sub-CLNC0007     ses-M00      Male     AD      78.3
-    sub-CLNC0008     ses-M00      Female   AD      73.2
+    sub-CLNC0001     ses-M000      Female   CN      71.1
+    sub-CLNC0002     ses-M000      Male     CN      81.3
+    sub-CLNC0003     ses-M000      Male     CN      75.4
+    sub-CLNC0004     ses-M000      Female   CN      73.9
+    sub-CLNC0005     ses-M000      Female   AD      64.1
+    sub-CLNC0006     ses-M000      Male     AD      80.1
+    sub-CLNC0007     ses-M000      Male     AD      78.3
+    sub-CLNC0008     ses-M000      Female   AD      73.2
     ```
 
     (Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file.)
@@ -648,7 +648,7 @@ Possible values for `_map-<map>` key/value are:
 - For PET: `18FFDG` (<sup>18</sup>F-Fluorodeoxyglucose), `18FAV45` (<sup>18</sup>F-Florbetapir), `18FAV1451` (<sup>18</sup>F-Flortaucipir), `11CPIB` (<sup>11</sup>C-Pittsburgh Compound-B), `18FFBB` (<sup>18</sup>F-Florbetaben) and `18FFMM` (<sup>18</sup>F-Flutemetamol).
 
 !!! Example
-    Content of `sub-CLNC01_ses-M00_T1w_space-Hammers_map-graymatter_statistics.tsv`:
+    Content of `sub-CLNC01_ses-M000_T1w_space-Hammers_map-graymatter_statistics.tsv`:
 
     ```Text
     index   label_name          mean_scalar

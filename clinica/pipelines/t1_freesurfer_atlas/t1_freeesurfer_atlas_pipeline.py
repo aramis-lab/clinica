@@ -120,7 +120,7 @@ class T1FreeSurferAtlas(cpe.Pipeline):
 
         Note:
             The list of outputs of the T1FreeSurfer pipeline is:
-                * image_id (str): Image ID (e.g. sub-CLNC01_ses-M00)
+                * image_id (str): Image ID (e.g. sub-CLNC01_ses-M000)
 
         Returns:
             A list of (string) output fields name.

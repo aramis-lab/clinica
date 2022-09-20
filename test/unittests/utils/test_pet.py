@@ -27,7 +27,10 @@ def test_read_psf_information_errors(tmp_path: os.PathLike, psf_df: pd.DataFrame
         match="No such file or directory: 'foo.tsv'",
     ):
         read_psf_information(
-            Path("foo.tsv"), ["sub-CLNC01", "sub-CLNC01"], ["ses-M00", "ses-M18"], "FDG"
+            Path("foo.tsv"),
+            ["sub-CLNC01", "sub-CLNC01"],
+            ["ses-M000", "ses-M018"],
+            "FDG",
         )
     psf_df.to_csv(tmp_path / "psf.tsv", sep="\t", index=False)
     with pytest.raises(
@@ -41,13 +44,13 @@ def test_read_psf_information_errors(tmp_path: os.PathLike, psf_df: pd.DataFrame
         read_psf_information(
             tmp_path / "psf.tsv",
             ["sub-CLNC01", "sub-CLNC06"],
-            ["ses-M00", "ses-M18"],
+            ["ses-M000", "ses-M018"],
             "FDG",
         )
     psf_df_2 = pd.DataFrame(
         {
             "participant_id": ["sub-CLNC01"],
-            "session_id": ["ses-M00"],
+            "session_id": ["ses-M000"],
             "acq_label": ["FDG"],
             "psf_x": [10],
             "psf_y": [11],
@@ -59,7 +62,7 @@ def test_read_psf_information_errors(tmp_path: os.PathLike, psf_df: pd.DataFrame
     with pytest.raises(
         RuntimeError,
         match=(
-            "Subject sub-CLNC01 with session ses-M00 and tracer FDG "
+            "Subject sub-CLNC01 with session ses-M000 and tracer FDG "
             "that you want to proceed was found multiple times "
             "in the TSV file containing PSF specifications"
         ),
@@ -67,7 +70,7 @@ def test_read_psf_information_errors(tmp_path: os.PathLike, psf_df: pd.DataFrame
         read_psf_information(
             tmp_path / "duplicate_psf.tsv",
             ["sub-CLNC01", "sub-CLNC01"],
-            ["ses-M00", "ses-M18"],
+            ["ses-M000", "ses-M018"],
             "FDG",
         )
     psf_df["foo"] = ["bar"] * 5
@@ -79,7 +82,7 @@ def test_read_psf_information_errors(tmp_path: os.PathLike, psf_df: pd.DataFrame
         read_psf_information(
             tmp_path / "wrong_psf.tsv",
             ["sub-CLNC01", "sub-CLNC01"],
-            ["ses-M00", "ses-M18"],
+            ["ses-M000", "ses-M018"],
             "FDG",
         )
     psf_df.drop(["foo", "session_id"], axis=1).to_csv(
@@ -92,7 +95,7 @@ def test_read_psf_information_errors(tmp_path: os.PathLike, psf_df: pd.DataFrame
         read_psf_information(
             tmp_path / "wrong_psf_2.tsv",
             ["sub-CLNC01", "sub-CLNC01"],
-            ["ses-M00", "ses-M18"],
+            ["ses-M000", "ses-M018"],
             "FDG",
         )
 
@@ -104,7 +107,7 @@ def test_read_psf_information(tmp_path: os.PathLike, psf_df: pd.DataFrame):
     assert read_psf_information(
         tmp_path / "psf.tsv",
         ["sub-CLNC01", "sub-CLNC01"],
-        ["ses-M00", "ses-M18"],
+        ["ses-M000", "ses-M018"],
         "FDG",
     ) == [[8, 9, 10], [8, 9, 10]]
     # Shuffle rows in dataframe and make sure results do not depend on row order
@@ -113,7 +116,7 @@ def test_read_psf_information(tmp_path: os.PathLike, psf_df: pd.DataFrame):
     assert read_psf_information(
         tmp_path / "psf.tsv",
         ["sub-CLNC01", "sub-CLNC01"],
-        ["ses-M00", "ses-M18"],
+        ["ses-M000", "ses-M018"],
         "FDG",
     ) == [[8, 9, 10], [8, 9, 10]]
 

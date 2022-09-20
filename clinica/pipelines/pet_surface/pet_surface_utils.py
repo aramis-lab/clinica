@@ -2,7 +2,7 @@ def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
     """Extract SUBJECT_DIR.
 
     Extract path to FreeSurfer segmentation in CAPS folder and FreeSurfer ID
-    (e.g. sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18 or sub-CLNC01_ses-M00).
+    (e.g. sub-CLNC01_ses-M000.long.sub-CLNC01_long-M00M18 or sub-CLNC01_ses-M000).
     """
     import os
 
@@ -48,7 +48,7 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     Args:
         (string) caps_dir : CAPS directory.
         (string) subject_id: The subject_id (something like sub-ADNI002S4213)
-        (string) session_id: The session id ( something like : ses-M12)
+        (string) session_id: The session id ( something like : ses-M012)
         (bool)   is_longitudinal: If longitudinal processing, subjects_dir must be put elsewhere
 
     Returns:
@@ -477,7 +477,7 @@ def surf2surf(
             details)
         (string) gtmsegfile : Path to the gtm segmentation file
         (string) subject_id : The subject_id (something like sub-ADNI002S4213)
-        (string) session_id : The session id ( something like : ses-M12)
+        (string) session_id : The session id ( something like : ses-M012)
         (string) caps_dir   : Path to the CAPS directory
         (bool)   is_longitudinal: longitudinal files
 
@@ -557,7 +557,7 @@ def vol2surf(
         (string) surface    : Path to surface file
         (string) gtmsegfile :l Path to the gtm segmentation file (provides information on space, labels are not used
         (string) subject_id : The subject_id (something like sub-ADNI002S4213)
-        (string) session_id : The session id ( something like : ses-M12)
+        (string) session_id : The session id ( something like : ses-M012)
         (string) caps_dir   : Path to the CAPS directory
 
     Returns:
@@ -704,7 +704,7 @@ def fsaverage_projection(
     Args:
         (string) projection : Path to the projected data onto native subject surface
         (string) subject_id : The subject id (something like sub-ADNI002S4213)
-        (string) session_id : The session id ( something like : ses-M12)
+        (string) session_id : The session id ( something like : ses-M012)
         (string) caps_dir   : Path to the CAPS directory
         (float) fwhm        : FWHM of the Gaussian filter used for smoothing on fsaverage surface (not volume !)
         (bool) is_longitudinal : longitudinal pipeline or not

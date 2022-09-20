@@ -56,28 +56,28 @@ def test_identical_subject_list(tmp_path: PurePath):
     df1 = pd.DataFrame(
         {
             "participant_id": ["sub-01", "sub-01", "sub-02"],
-            "session_id": ["ses-M00", "ses-M06", "ses-M00"],
+            "session_id": ["ses-M00", "ses-M006", "ses-M000"],
         }
     )
     df1.to_csv(tmp_path / "df1.tsv", sep="\t")
     df2 = pd.DataFrame(
         {
             "participant_id": ["sub-01", "sub-02"],
-            "session_id": ["ses-M00", "ses-M00"],
+            "session_id": ["ses-M000", "ses-M000"],
         }
     )
     df2.to_csv(tmp_path / "df2.tsv", sep="\t")
     df3 = pd.DataFrame(
         {
             "participant_id": ["sub-01", "sub-03"],
-            "session_id": ["ses-M00", "ses-M00"],
+            "session_id": ["ses-M000", "ses-M000"],
         }
     )
     df3.to_csv(tmp_path / "df3.tsv", sep="\t")
     df4 = pd.DataFrame(
         {
             "participant_id": ["sub-01", "sub-01", "sub-02"],
-            "session_id": ["ses-M00", "ses-M12", "ses-M00"],
+            "session_id": ["ses-M000", "ses-M012", "ses-M000"],
         }
     )
     df4.to_csv(tmp_path / "df4.tsv", sep="\t")
@@ -135,7 +135,7 @@ def test_tree(tmp_path: PurePath):
     with open(tmp_path / "file_out.txt", "r") as fp:
         content = fp.readlines()
     assert len(content) == 0
-    os.makedirs(tmp_path / "subjects/sub-01/ses-M00/")
+    os.makedirs(tmp_path / "subjects/sub-01/ses-M000/")
     tree(str(tmp_path), str(tmp_path / "file_out.txt"))
     with open(tmp_path / "file_out.txt", "r") as fp:
         content = fp.readlines()

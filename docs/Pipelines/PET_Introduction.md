@@ -15,10 +15,10 @@ For instance, if the FWHM of the PSF associated with your first image is 5 mm al
 
 ```Text
 participant_id    session_id     acq_label     psf_x    psf_y    psf_z
-sub-CLNC0001      ses-M00        18FFDG        5        5        6
-sub-CLNC0001      ses-M00        18FAV45       4.5      4.5      5
-sub-CLNC0002      ses-M00        18FFDG        5        5        6
-sub-CLNC0003      ses-M00        18FFDG        7        7        7
+sub-CLNC0001      ses-M000        18FFDG        5        5        6
+sub-CLNC0001      ses-M000        18FAV45       4.5      4.5      5
+sub-CLNC0002      ses-M000        18FFDG        5        5        6
+sub-CLNC0003      ses-M000        18FFDG        7        7        7
 ```
 
 Since the PSF depends on the PET tracer and scanner, the `participant_id`, `session_id`, `acq_label`, `psf_x`, `psf_y` and `psf_z` columns are compulsory.
@@ -29,9 +29,9 @@ For example in the following BIDS layout the values associated would be `18FFDG`
 ```text
 bids
 └─ sub-CLNC0001
-   └─ ses-M00
-      ├─ sub-CLNC001_ses-M00_trc-18FAV45_pet.nii.gz
-      └─ sub-CLNC001_ses-M00_trc-18FFDG_pet.nii.gz
+   └─ ses-M000
+      ├─ sub-CLNC001_ses-M000_trc-18FAV45_pet.nii.gz
+      └─ sub-CLNC001_ses-M000_trc-18FFDG_pet.nii.gz
 ```
 
 ## Reference regions used for intensity normalization

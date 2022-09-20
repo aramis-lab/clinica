@@ -21,8 +21,8 @@ def get_unique_subjects(in_subject_list, in_session_list):
 
     Example:
         >>> from clinica.utils.participant import get_unique_subjects
-        >>> get_unique_subjects(['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'], ['ses-M00', 'ses-M18', 'ses-M00'])
-        (['sub-CLNC01', 'sub-CLNC02'], [['ses-M00', 'ses-M18'], ['ses-M00']])
+        >>> get_unique_subjects(['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'], ['ses-M000', 'ses-M018', 'ses-M000'])
+        (['sub-CLNC01', 'sub-CLNC02'], [['ses-M000', 'ses-M018'], ['ses-M000']])
     """
     import numpy as np
 
@@ -59,8 +59,8 @@ def unique_subjects_sessions_to_subjects_sessions(
 
     Example:
         >>> from clinica.utils.participant import unique_subjects_sessions_to_subjects_sessions
-        >>> unique_subjects_sessions_to_subjects_sessions(['sub-01', 'sub-02'], [['ses-M00', 'ses-M18'], ['ses-M00']])
-        (['sub-CLNC01', 'sub-01', 'sub-02'], ['ses-M00', 'ses-M18', 'ses-M00'])
+        >>> unique_subjects_sessions_to_subjects_sessions(['sub-01', 'sub-02'], [['ses-M000', 'ses-M018'], ['ses-M000']])
+        (['sub-CLNC01', 'sub-01', 'sub-02'], ['ses-M000', 'ses-M018', 'ses-M000'])
 
     """
     list_participants = []
@@ -96,11 +96,11 @@ def get_subject_session_list(
 
     Notes:
         This is a generic method based on folder names. If your <BIDS> dataset contains e.g.:
-        - sub-CLNC01/ses-M00/anat/sub-CLNC01_ses-M00_T1w.nii
-        - sub-CLNC02/ses-M00/dwi/sub-CLNC02_ses-M00_dwi.{bval|bvec|json|nii}
-        - sub-CLNC02/ses-M00/anat/sub-CLNC02_ses-M00_T1w.nii
+        - sub-CLNC01/ses-M000/anat/sub-CLNC01_ses-M000_T1w.nii
+        - sub-CLNC02/ses-M000/dwi/sub-CLNC02_ses-M000_dwi.{bval|bvec|json|nii}
+        - sub-CLNC02/ses-M000/anat/sub-CLNC02_ses-M000_T1w.nii
         get_subject_session_list(<BIDS>, None, True) will return
-        ['ses-M00', 'ses-M00'], ['sub-CLNC01', 'sub-CLNC02'].
+        ['ses-M000', 'ses-M000'], ['sub-CLNC01', 'sub-CLNC02'].
 
         However, if your pipeline needs both T1w and DWI files, you will need to check
         with e.g. clinica_file_reader_function.
