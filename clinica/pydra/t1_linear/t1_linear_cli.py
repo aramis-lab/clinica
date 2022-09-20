@@ -20,6 +20,7 @@ def cli(
         name="t1-linear-pydra",
         input_dir=bids_directory,
         output_dir=caps_directory,
+        parameters={},
     )
     pydra_utils.run(t1_linear_pipeline)
 
