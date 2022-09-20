@@ -267,7 +267,7 @@ def find_mods_and_sess(bids_dir):
         mods_dict: a dictionary that stores the sessions and modalities found and has the following structure.
     Example:
     {
-        'sessions': ['ses-M00', 'ses-M18'],
+        'sessions': ['ses-M000', 'ses-M018'],
         'fmap': ['fmap'],
         'anat': ['flair', 't1w'],
         'func': ['func_task-rest'],
