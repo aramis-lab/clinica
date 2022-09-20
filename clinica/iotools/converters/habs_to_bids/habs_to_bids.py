@@ -46,14 +46,14 @@ def source_session_id_to_bids(dataframe: DataFrame) -> Series:
     def replace_years_dot_months_session(match: re.Match) -> str:
         years = int(match.group(1)) - 1
         months = int(match.group(2))
-        return f"ses-M{12 * years + months:02d}"
+        return f"ses-M{12 * years + months:03d}"
 
     # HABS undocumented format as `{months}m`
     months_only_pattern = r".*_(\d+)m.*"
 
     def replace_months_only_pattern(match: re.Match) -> str:
         months = int(match.group(1))
-        return f"ses-M{months:02d}"
+        return f"ses-M{months:03d}"
 
     return dataframe.source_session_id.str.replace(
         years_dot_months_pattern, replace_years_dot_months_session, regex=True
@@ -203,7 +203,7 @@ def write_bids(
                 "YrsOfEd": "years_of_education",
             }
         )
-        .xs("ses-M00", level="session_id")
+        .xs("ses-M000", level="session_id")
         .reset_index(level="date", drop=True)
     ).rename(columns=str.lower)
 
