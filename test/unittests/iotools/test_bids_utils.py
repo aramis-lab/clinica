@@ -154,8 +154,8 @@ def test_write_bids_readme(
     """
 
     data_dict = {"link": "link", "desc": "description"}
-    _write_readme(study_name, data_dict, tmp_path, bids_version=bids_version)
+    _write_readme(study_name=study_name, data_dict=data_dict, bids_dir=tmp_path)
     _validate_file_and_content(
-        tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES["readme"],
-        expected_readme_content,
+        file=tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES["readme"],
+        expected_content=expected_readme_content,
     )
