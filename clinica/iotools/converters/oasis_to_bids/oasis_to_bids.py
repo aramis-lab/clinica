@@ -71,12 +71,12 @@ class OasisToBids(Converter):
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
         # -- Creation of modality agnostic files --
-        readme_dict = {
+        readme_data = {
             "link": "https://www.oasis-brains.org/#access",
             "desc": "This set consists of a cross-sectional collection of 416 subjects aged 18 to 96. For each subject, 3 or 4 individual T1-weighted MRI scans obtained in single scan sessions are included. The subjects are all right-handed and include both men and women. 100 of the included subjects over the age of 60 have been clinically diagnosed with very mild to moderate Alzheimer’s disease (AD). Additionally, a reliability data set is included containing 20 nondemented subjects imaged on a subsequent visit within 90 days of their initial session.",
         }
         bids.write_modality_agnostic_files(
-            study_name="OASIS-1", data_dict=readme_dict, bids_dir=bids_dir
+            study_name="OASIS-1", readme_data=readme_data, bids_dir=bids_dir
         )
 
     @staticmethod

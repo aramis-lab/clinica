@@ -38,11 +38,11 @@ def convert_images(
         sessions=sessions,
         scans=scans,
     )
-    readme_dict = {
+    readme_data = {
         "link": "https://ida.loni.usc.edu/home/projectPage.jsp?project=NIFD&page=HOME&subPage=OVERVIEW_PR#",
         "desc": "NIFD is the nickname for the frontotemporal lobar degeneration neuroimaging initiative (FTLDNI, AG032306), which was funded by the NIA and NINDS to characterize longitudinal clinical and imaging changes in FTLD.The imaging and clinical methods are the same for NIFD and for the 4-Repeat Tauopathy Neuroimaging Initiative (4RTNI), which is also available for download from LONI. Controls for NIFD are the same controls as those collected for 4RTNI.",
     }
     bids.write_modality_agnostic_files(
-        study_name="NIFD", data_dict=readme_dict, bids_dir=bids_dir
+        study_name="NIFD", readme_data=readme_data, bids_dir=bids_dir
     )
     return written
