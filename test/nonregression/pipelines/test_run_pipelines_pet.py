@@ -253,7 +253,7 @@ def test_run_pet(cmdopt, tmp_path, test_name):
 #     # Check files
 #     part_id = 'sub-ADNI041S1260'
 #     sess_id = 'ses-M024'
-#     long_id = 'long-M00M06M12M18M24'
+#     long_id = 'long-M000M006M012M018M024'
 #     image_id = part_id + '_' + sess_id + '_' + long_id
 #     out_files = [join(root, 'out', 'caps', 'subjects', part_id, sess_id, 'pet', long_id, 'surface_longitudinal',
 #                       image_id + f'_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
