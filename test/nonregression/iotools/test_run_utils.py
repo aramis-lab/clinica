@@ -93,12 +93,12 @@ def run_computemissingmodalities(
     dt.compute_missing_mods(bids_dir, output_dir, output_name)
 
     filenames = [
-        "missing_modalities_ses-M00.tsv",
-        "missing_modalities_ses-M03.tsv",
-        "missing_modalities_ses-M06.tsv",
-        "missing_modalities_ses-M12.tsv",
-        "missing_modalities_ses-M24.tsv",
-        "missing_modalities_ses-M48.tsv",
+        "missing_modalities_ses-M000.tsv",
+        "missing_modalities_ses-M003.tsv",
+        "missing_modalities_ses-M006.tsv",
+        "missing_modalities_ses-M012.tsv",
+        "missing_modalities_ses-M024.tsv",
+        "missing_modalities_ses-M048.tsv",
     ]
     for i in range(len(filenames)):
         outname = output_dir / filenames[i]

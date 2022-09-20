@@ -31,10 +31,10 @@ See [here](../DatabasesToBIDS) for more details.
     └── sub-CLNC0001
         └── ses-M00
             ├── anat
-            │   └── sub-CLNC0001_ses-M00_T1w.nii.gz
+            │   └── sub-CLNC0001_ses-M000_T1w.nii.gz
             └── pet
-                ├── sub-CLNC0001_ses-M00_trc-18FFDG_pet.json
-                └── sub-CLNC0001_ses-M00_trc-18FFDG_pet.nii.gz
+                ├── sub-CLNC0001_ses-M000_trc-18FFDG_pet.json
+                └── sub-CLNC0001_ses-M000_trc-18FFDG_pet.nii.gz
     ```
 
 !!! tip
@@ -130,13 +130,13 @@ where your TSV file looks as follows:
 
 ```text
 participant_id  session_id
-sub-CLNC0001    ses-M00
-sub-CLNC0001    ses-M18
-sub-CLNC0001    ses-M36
-sub-CLNC0002    ses-M00
-sub-CLNC0002    ses-M18
-sub-CLNC0002    ses-M36
-sub-CLNC0003    ses-M00
+sub-CLNC0001    ses-M000
+sub-CLNC0001    ses-M018
+sub-CLNC0001    ses-M036
+sub-CLNC0002    ses-M000
+sub-CLNC0002    ses-M018
+sub-CLNC0002    ses-M036
+sub-CLNC0003    ses-M000
 ```
 <!-- Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file. -->
 

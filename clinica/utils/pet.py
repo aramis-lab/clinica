@@ -46,7 +46,7 @@ def read_psf_information(
 
     session_ids : List[str]
         List of session IDs.
-        ex: ['ses-M00', 'ses-M18']
+        ex: ['ses-M000', 'ses-M018']
 
         .. warning::
             Must have the same length as `subject_ids`.
@@ -65,11 +65,11 @@ def read_psf_information(
     Example of pvc_psf_tsv:
 
     participant_id    session_id     acq_label     psf_x    psf_y    psf_z
-    sub-CLNC01        ses-M00        FDG           8        9        10
-    sub-CLNC01        ses-M18        FDG           8        9        10
-    sub-CLNC01        ses-M00        AV45          7        6        5
-    sub-CLNC02        ses-M00        FDG           8        9        10
-    sub-CLNC03        ses-M00        FDG           8        9        10
+    sub-CLNC01        ses-M000        FDG           8        9        10
+    sub-CLNC01        ses-M018        FDG           8        9        10
+    sub-CLNC01        ses-M000        AV45          7        6        5
+    sub-CLNC02        ses-M000        FDG           8        9        10
+    sub-CLNC03        ses-M000        FDG           8        9        10
     """
     valid_columns = {
         "participant_id",

@@ -53,7 +53,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             The list of inputs of the T1FreeSurferTemplate pipeline is:
                 * participant_id (str): Participant ID (e.g. "sub-CLNC01")
                 * list_session_ids (List[str]: List of session IDs associated to `participant_id`
-                    (e.g. ["ses-M00"] or ["ses-M00", "ses-M18", "ses-M36"])
+                    (e.g. ["ses-M000"] or ["ses-M000", "ses-M018", "ses-M036"])
 
         Returns:
             A list of (string) input fields name.
@@ -65,7 +65,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
 
         Note:
             The list of inputs of the T1FreeSurferTemplate pipeline is:
-                * image_id (str): Image ID (e.g. "sub-CLNC01_long-M00M18")
+                * image_id (str): Image ID (e.g. "sub-CLNC01_long-M000M018")
 
         Returns:
             A list of (string) output fields name.

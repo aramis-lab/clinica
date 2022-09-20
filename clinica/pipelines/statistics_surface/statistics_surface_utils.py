@@ -83,9 +83,9 @@ def get_string_format_from_tsv(tsv_file):
     If the TSV file is like:
 
     participant_id  session_id  sex     group   age
-    sub-CLNC0001    ses-M00     Female  CN      71.1
-    sub-CLNC0002    ses-M00     Male    CN      81.3
-    sub-CLNC0003    ses-M00     Male    CN      75.4
+    sub-CLNC0001    ses-M000     Female  CN      71.1
+    sub-CLNC0002    ses-M000     Male    CN      81.3
+    sub-CLNC0003    ses-M000     Male    CN      75.4
 
     The columns of the TSV file contains consecutively strings, strings,
     strings, strings and float. The string_format is therefore "%s %s %s %s %f".

@@ -70,7 +70,7 @@ We advise you to use the following commands to visualize the tractography result
 ```shell
 caps_directory= # Example: "MY_DATASET_CAPS"
 participant_id= # Example: "sub-CLNC01"
-session_id= # Example: "ses-M00"
+session_id= # Example: "ses-M000"
 atlas_label= # Example: "desikan"
 
 mrview -mode 2 \

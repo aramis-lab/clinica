@@ -66,14 +66,14 @@ If you want to run the pipeline on a subset of your dataset, you can use the `-t
     CAPS_DIRECTORY
     └── subjects
      ├── sub-CLNC01
-     │   ├── ses-M00
+     │   ├── ses-M000
      │   │   └── t1
      │   │       └── freesurfer_cross_sectional
-     │   └── ses-M18
+     │   └── ses-M018
      │       └── t1
      │           └── freesurfer_cross_sectional
      └── sub-CLNC02
-         └── ses-M00
+         └── ses-M000
              └── t1
                  └── freesurfer_cross_sectional
     ```
@@ -83,8 +83,8 @@ If you want to run the pipeline on a subset of your dataset, you can use the `-t
     ```console
     $ clinica run t1-freesurfer-template CAPS -np 2 -wd <path_to_wd>
     The pipeline will be run on the following 2 participant(s):
-        sub-CLNC01 | ses-M18, ses-M00 | long-M00M18
-        sub-CLNC02 | ses-M00 | long-M00
+        sub-CLNC01 | ses-M018, ses-M000 | long-M000M018
+        sub-CLNC02 | ses-M000 | long-M000
     List available in <path_to_wd>/t1-freesurfer-template/participants.tsv
     The pipeline will last approximately 10 hours per participant.
     [13:33:43] sub-CLNC02 | long-M00 has only one time point. Needs to create a $SUBJECTS_DIR folder in /tmp/tmpe7ztq9hq

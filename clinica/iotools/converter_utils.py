@@ -4,7 +4,6 @@ def sort_session_list(session_list):
     session_id_list = []
     for session in session_idx:
         session_id_list.append(f"ses-M{session:03d}")
-
     return session_id_list
 
 

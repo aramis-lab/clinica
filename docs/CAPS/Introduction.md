@@ -58,33 +58,33 @@ This CAPS folder contains the outputs of the [`dwi-preprocessing-*` pipeline](..
 ```Text
 subjects/
 └─ sub-CLNC01/
-   └─ ses-M00/
+   └─ ses-M000/
       └─ dwi/
          ├─ dti_based_processing/
          │  ├─ atlas_statistics/
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-FA_statistics.tsv
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-MD_statistics.tsv
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-AD_statistics.tsv
-         │  │  └─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-RD_statistics.tsv
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-JHUTracts0_res-1x1x1_map-FA_statistics.tsv
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-JHUTracts0_res-1x1x1_map-MD_statistics.tsv
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-JHUTracts0_res-1x1x1_map-AD_statistics.tsv
+         │  │  └─ sub-CNLC01_ses-M000_dwi_space-JHUTracts0_res-1x1x1_map-RD_statistics.tsv
          │  ├─ native_space/
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_model-DTI_diffmodel.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_FA.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_MD.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_AD.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_RD.nii.gz
-         │  │  └─ sub-CNLC01_ses-M00_dwi_space-b0_DECFA.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_model-DTI_diffmodel.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-b0_FA.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-b0_MD.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-b0_AD.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-b0_RD.nii.gz
+         │  │  └─ sub-CNLC01_ses-M000_dwi_space-b0_DECFA.nii.gz
          │  └─ normalized_space/
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_AD.nii.gz
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_affine.mat
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_deformation.nii.gz
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_FA.nii.gz
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_MD.nii.gz
-         │     └─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_RD.nii.gz
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_AD.nii.gz
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_affine.mat
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_deformation.nii.gz
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_FA.nii.gz
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_MD.nii.gz
+         │     └─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_RD.nii.gz
          └─ preprocessing/
-            ├─ sub-CNLC01_ses-M00_dwi_space-b0_brainmask.nii.gz
-            ├─ sub-CNLC01_ses-M00_dwi_space-b0_preproc.bval
-            ├─ sub-CNLC01_ses-M00_dwi_space-b0_preproc.bvec
-            └─ sub-CNLC01_ses-M00_dwi_space-b0_preproc.nii.gz
+            ├─ sub-CNLC01_ses-M000_dwi_space-b0_brainmask.nii.gz
+            ├─ sub-CNLC01_ses-M000_dwi_space-b0_preproc.bval
+            ├─ sub-CNLC01_ses-M000_dwi_space-b0_preproc.bvec
+            └─ sub-CNLC01_ses-M000_dwi_space-b0_preproc.nii.gz
 ```
 
 ### Group level example
@@ -138,11 +138,11 @@ subjects/
 │   │           ├── mri/
 │   │           ├── stats/
 │   │           └── surf/
-│   ├── ses-M00/
+│   ├── ses-M000/
 │   │   └── t1/
 │   │       ├── freesurfer_cross_sectional/
 │   │       │   ├── regional_measures/
-│   │       │   └── sub-CLNC01_ses-M00/
+│   │       │   └── sub-CLNC01_ses-M000/
 │   │       │       ├── label/
 │   │       │       ├── mri/
 │   │       │       ├── stats/
@@ -150,16 +150,16 @@ subjects/
 │   │       └── long-M00M18/
 │   │           └── freesurfer_longitudinal/
 │   │               ├── regional_measures/
-│   │               └── sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18/
+│   │               └── sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018/
 │   │                   ├── label/
 │   │                   ├── mri/
 │   │                   ├── stats/
 │   │                   └── surf/
-│   └── ses-M18/
+│   └── ses-M018/
 │       └── t1/
 │           ├── freesurfer_cross_sectional/
 │           │   ├── regional_measures/
-│           │   └── sub-CLNC01_ses-M18/
+│           │   └── sub-CLNC01_ses-M018/
 │           │       ├── label/
 │           │       ├── mri/
 │           │       ├── stats/
@@ -167,7 +167,7 @@ subjects/
 │           └── long-M00M18
 │               └── freesurfer_longitudinal
 │                   ├── regional_measures
-│                   └── sub-CLNC01_ses-M18.long.sub-CLNC01_long-M00M18/
+│                   └── sub-CLNC01_ses-M018.long.sub-CLNC01_long-M000M018/
 │                       ├── label/
 │                       ├── mri/
 │                       ├── stats/

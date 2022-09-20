@@ -107,7 +107,7 @@ def get_filename_no_ext(filename):
 
 
 def extract_image_ids(bids_or_caps_files):
-    """Extract image IDs (e.g. ['sub-CLNC01_ses-M00', 'sub-CLNC01_ses-M18']  from `bids_or_caps_files`."""
+    """Extract image IDs (e.g. ['sub-CLNC01_ses-M000', 'sub-CLNC01_ses-M018']  from `bids_or_caps_files`."""
     import re
 
     id_bids_or_caps_files = [
@@ -118,7 +118,7 @@ def extract_image_ids(bids_or_caps_files):
 
 
 def extract_subjects_sessions_from_filename(bids_or_caps_files):
-    """Extract subjects/sessions (e.g. ['sub-CLNC01', 'sub-CLNC01']/['ses-M00', 'ses-M18'] from `bids_or_caps_files`."""
+    """Extract subjects/sessions (e.g. ['sub-CLNC01', 'sub-CLNC01']/['ses-M000', 'ses-M018'] from `bids_or_caps_files`."""
     id_bids_or_caps_files = extract_image_ids(bids_or_caps_files)
     split = [image_id.split("_") for image_id in id_bids_or_caps_files]
     subject_ids = [p_id[0] for p_id in split]

@@ -188,7 +188,7 @@ def find_sub_ses_pattern_path(
     Args:
         input_directory: path to the root of the input directory (BIDS or CAPS).
         subject: name given to the folder of a participant (ex: sub-ADNI002S0295).
-        session: name given to the folder of a session (ex: ses-M00).
+        session: name given to the folder of a session (ex: ses-M000).
         error_encountered: list in which errors encountered in this function are added.
         results: list in which the output path corresponding to subject, session and pattern is added.
         is_bids: True if input_dir is a bids, False if input_dir is a CAPS.
@@ -258,43 +258,43 @@ def clinica_file_reader(
 
         Examples: (path are shortened for readability)
             - You have the full name of a file:
-                File orig_nu.mgz from FreeSurfer of subject sub-ADNI011S4105 session ses-M00 located in mri folder of
+                File orig_nu.mgz from FreeSurfer of subject sub-ADNI011S4105 session ses-M000 located in mri folder of
                 FreeSurfer output :
                     clinica_file_reader(['sub-ADNI011S4105'],
-                                        ['ses-M00'],
+                                        ['ses-M000'],
                                         caps_directory,
                                         {'pattern': 'freesurfer_cross_sectional/sub-*_ses-*/mri/orig_nu.mgz',
                                          'description': 'freesurfer file orig_nu.mgz',
                                          'needed_pipeline': 't1-freesurfer'})
-                    gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/mri/orig_nu.mgz']
+                    gives: ['/caps/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M000/mri/orig_nu.mgz']
 
             - You have a partial name of the file:
-                File sub-ADNI011S4105_ses-M00_trc-18FFDG_pet.nii.gz in BIDS directory. Here, filename depends on
+                File sub-ADNI011S4105_ses-M000_trc-18FFDG_pet.nii.gz in BIDS directory. Here, filename depends on
                 subject and session name :
                      clinica_file_reader(['sub-ADNI011S4105'],
-                                         ['ses-M00'],
+                                         ['ses-M000'],
                                          bids_directory,
                                          {'pattern': '*18FFDG_pet.nii*',
                                           'description': 'FDG PET data'})
-                     gives: ['/bids/sub-ADNI011S4105/ses-M00/pet/sub-ADNI011S4105_ses-M00_trc-18FFDG_pet.nii.gz']
+                     gives: ['/bids/sub-ADNI011S4105/ses-M000/pet/sub-ADNI011S4105_ses-M000_trc-18FFDG_pet.nii.gz']
 
             - Tricky example:
                 Get the file rh.white from FreeSurfer:
                 If you try:
                     clinica_file_reader(['sub-ADNI011S4105'],
-                                        ['ses-M00'],
+                                        ['ses-M000'],
                                         caps,
                                         {'pattern': 'rh.white',
                                          'description': 'right hemisphere of outter cortical surface.',
                                          'needed_pipeline': 't1-freesurfer'})
                         the following error will arise:
                         * More than 1 file found::
-                            /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/fsaverage/surf/rh.white
-                            /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/rh.EC_average/surf/rh.white
-                            /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white
+                            /caps/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/fsaverage/surf/rh.white
+                            /caps/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/rh.EC_average/surf/rh.white
+                            /caps/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M000/surf/rh.white
                 Correct usage (e.g. in pet-surface): pattern string must be 'sub-*_ses-*/surf/rh.white' or even more precise:
                         't1/freesurfer_cross_sectional/sub-*_ses-*/surf/rh.white'
-                    It then gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white']
+                    It then gives: ['/caps/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M000/surf/rh.white']
 
         Note:
             This function is case insensitive, meaning that the pattern argument can, for example, contain maj letter
@@ -401,7 +401,7 @@ def clinica_list_of_files_reader(
         participant_ids (List[str]): List of participant IDs
             (e.g. ['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'])
         session_ids (List[str]): List of sessions ID associated to `participant_ids`
-            (e.g. ['ses-M00', 'ses-M18', 'ses-M00'])
+            (e.g. ['ses-M000', 'ses-M018', 'ses-M000'])
         bids_or_caps_directory (str): BIDS of CAPS directory
         list_information (List[Dict]): List of dictionaries described in clinica_file_reader
         raise_exception (bool, optional): Raise Exception or not. Defaults to True.
