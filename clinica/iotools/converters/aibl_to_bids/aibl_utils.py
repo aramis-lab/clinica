@@ -828,14 +828,12 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         )
         age = get_ages(PTDOB.values[0], examdates)
 
-        # viscode[viscode != "bl"] = f"M{(int(viscode[1:])):03d}"
         viscode[viscode == "bl"] = "M000"
-        # print("viscode :", viscode)
         viscode = viscode.str.upper()
 
         sessions = pd.DataFrame(
             {
-                "session_id": "ses-" + viscode,
+                "months": viscode.str[1:],
                 "age": age,
                 "MMS": MMSCORE,
                 "cdr_global": CDGLOBAL,
@@ -843,10 +841,9 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
                 "examination_date": examdates,
             }
         )
+        # print("el datafram:" , sessions)
         sessions = sessions.assign(
-            session_id=lambda df: df.session_id.apply(
-                lambda x: f"ses-M{ (3 - len(str(int(x[5:])))) * '0' + str(int(x[5:]))}"
-            )
+            session_id=lambda df: df.months.apply(lambda x: f"ses-M{int(x):03d}")
         )
         cols = sessions.columns.tolist()
         sessions = sessions[cols[-1:] + cols[:-1]]
