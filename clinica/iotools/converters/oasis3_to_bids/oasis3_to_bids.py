@@ -46,7 +46,17 @@ def convert_images(
     )
     readme_data = {
         "link": "https://www.oasis-brains.org/#access",
-        "desc": "OASIS-3 is a retrospective compilation of data for 1378 participants that were collected across several ongoing projects through the WUSTL Knight ADRC over the course of 30years. Participants include 755 cognitively normal adults and 622 individuals at various stages of cognitive decline ranging in age from 42-95yrs. All participants were assigned a new random identifier and all dates were removed and normalized to reflect days from entry into study. The dataset contains 2842 MR sessions which include T1w, T2w, FLAIR, ASL, SWI, time of flight, resting-state BOLD, and DTI sequences. Many of the MR sessions are accompanied by volumetric segmentation files produced through FreeSurfer processing. PET imaging from different tracers, PIB, AV45, and FDG, totaling over 2157 raw imaging scans and the accompanying post-processed files from the Pet Unified Pipeline (PUP) are also available in OASIS-3.",
+        "desc": (
+            "OASIS-3 is a retrospective compilation of data for 1378 participants that were collected across several "
+            "ongoing projects through the WUSTL Knight ADRC over the course of 30years. Participants include 755 "
+            "cognitively normal adults and 622 individuals at various stages of cognitive decline ranging in age from "
+            "42-95yrs. All participants were assigned a new random identifier and all dates were removed and "
+            "normalized to reflect days from entry into study. The dataset contains 2842 MR sessions which include "
+            "T1w, T2w, FLAIR, ASL, SWI, time of flight, resting-state BOLD, and DTI sequences. Many of the MR sessions "
+            "are accompanied by volumetric segmentation files produced through FreeSurfer processing. PET imaging from "
+            "different tracers, PIB, AV45, and FDG, totaling over 2157 raw imaging scans and the accompanying "
+            "post-processed files from the Pet Unified Pipeline (PUP) are also available in OASIS-3."
+        ),
     }
     bids.write_modality_agnostic_files(
         study_name="OASIS-3", readme_data=readme_data, bids_dir=bids_dir
