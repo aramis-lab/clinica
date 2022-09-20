@@ -2,9 +2,10 @@ from os import PathLike
 from pathlib import PurePath
 
 from nipype.interfaces.ants import N4BiasFieldCorrection, RegistrationSynQuick
+import pydra
 from pydra import Workflow
 from pydra.mark import annotate, task
-
+import typing as ty
 from clinica.pydra.engine import clinica_io
 
 n4_bias_field_correction = N4BiasFieldCorrection(bspline_fitting_distance=300)
@@ -79,12 +80,21 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     """
     from pydra.tasks.nipype1.utils import Nipype1Task
 
-    wf = Workflow(name, input_spec=["T1w"])
-
+    input_spec = pydra.specs.SpecInfo(
+         name="Input",
+         fields=[
+             ("_graph_checksums", ty.Any),
+             ("T1w", str, {"mandatory": True}),
+        ],
+        bases=(pydra.specs.BaseSpec,),
+    )
+    
+    wf = Workflow(name, input_spec=input_spec)
+    
     wf.add(download_mni_template(name="download_mni_template"))
 
     wf.add(download_ref_template(name="download_ref_template"))
-
+    
     wf.add(
         Nipype1Task(
             name="n4_bias_field_correction",
@@ -92,7 +102,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             input_image=wf.lzin.T1w,
         ).split("input_image")
     )
-
+    
     wf.add(
         Nipype1Task(
             name="registration_syn_quick",
