@@ -41,13 +41,6 @@ def cli(sourcedata: str, rawdata: str) -> None:
         imaging_data=imaging_data,
         clinical_data=clinical_data,
     )
-    readme_dict = {
-        "link": "https://habs.mgh.harvard.edu",
-        "desc": "The overall goal of the Harvard Aging Brain Study (HABS) is to elucidate the earliest changes in molecular, functional and structural imaging markers that signal the transition from normal cognition to progressive cognitive decline along the trajectory of preclinical Alzheimer’s Disease.",
-    }
-    bids.write_modality_agnostic_files(
-        study_name="HABS", data_dict=readme_dict, bids_dir=rawdata
-    )
 
 
 if __name__ == "__main__":
