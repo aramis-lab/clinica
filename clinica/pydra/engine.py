@@ -39,7 +39,7 @@ def clinica_io(func):
 
 def add_input_reading_task(
     pipeline: Workflow,
-    core_inputs: dict,
+    core_workflow: Workflow,
     query_maker: Callable,
     reader: Callable,
 ) -> Workflow:
@@ -67,7 +67,9 @@ def add_input_reading_task(
     pipeline : Workflow
         The main Workflow with readers added to it.
     """
-    query = query_maker(core_inputs)
+    query = query_maker(
+        pu.list_workflow_inputs(core_workflow)
+    )
     if len(query) == 0:
         return pipeline
     name = reader.__name__
@@ -123,9 +125,8 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> Workflo
     pipeline : Workflow
         The pipeline with the input workflow.
     """
-    core_inputs = pu.list_workflow_inputs(core_workflow)
-    pipeline = add_input_reading_task_bids(pipeline, core_inputs)
-    pipeline = add_input_reading_task_caps(pipeline, core_inputs)
+    pipeline = add_input_reading_task_bids(pipeline, core_workflow)
+    pipeline = add_input_reading_task_caps(pipeline, core_workflow)
     return pipeline
 
 
@@ -149,11 +150,7 @@ def add_input_task(
     Workflow
         An BIDS/CAPS reader based workflow.
     """
-
     input_workflow.add(reader(query=query, input_dir=input_workflow.lzin.input_dir))
-
-    data_keys = list(query.keys())
-
     input_workflow.set_output(
         [
             (
@@ -162,7 +159,7 @@ def add_input_task(
                     getattr(input_workflow, f"{reader.__name__}_task").lzout, field
                 ),
             )
-            for field in data_keys
+            for field in list(query.keys())
         ]
     )
     return input_workflow
