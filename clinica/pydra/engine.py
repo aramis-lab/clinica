@@ -37,72 +37,95 @@ def clinica_io(func):
     return run_wrapper
 
 
-def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> str:
-    """Setup for an input workflow to read BIDS data.
+def add_input_reading_task(
+    pipeline: Workflow,
+    core_inputs: dict,
+    query_maker: Callable,
+    reader: Callable,
+) -> Workflow:
+    """Configure and add the reading tasks of input workflow.
+
+    Parameters
+    ----------
+    pipeline : Workflow
+        The main Workflow to which the readers should be added.
+
+    core_inputs : dict
+        The inputs specified by the core workflow. This defines
+        what the reader workflow should read and how it should
+        connect to the core Workflow.
+
+    query_maker : Callable
+        Function responsible for parsing the core_inputs into a
+        proper query.
+
+    reader : Callable
+        Function responsible for reading data.
+
+    Returns
+    -------
+    pipeline : Workflow
+        The main Workflow with readers added to it.
+    """
+    query = query_maker(core_inputs)
+    if len(query) == 0:
+        return pipeline
+    name = reader.__name__
+    input_dir = "bids_dir" if "bids" in name else "caps_dir"
+    input_workflow = Workflow(
+        name=f"input_workflow_{name}",
+        input_spec=["input_dir"],
+    )
+    try:
+        input_workflow.inputs.input_dir = getattr(pipeline.lzin, input_dir)
+    except AttributeError:
+        raise AttributeError(
+            f"Workflow has no {input_dir} input. Please verify your input specifications."
+        )
+    input_workflow = add_input_task(input_workflow, reader, query)
+    pipeline.add(input_workflow)
+
+    # connect input workflow to core workflow
+    for field, _ in query.items():
+        read_data = getattr(input_workflow.lzout, field)
+        setattr(core_workflow.inputs, field, read_data)
+
+    return pipeline
+
+
+add_input_reading_task_bids = functools.partial(
+    add_input_reading_task,
+    query_maker=pu.bids_query,
+    reader=bids_reader,
+)
+
+
+add_input_reading_task_caps = functools.partial(
+    add_input_reading_task,
+    query_maker=pu.caps_query,
+    reader=caps_reader,
+)
+
+
+def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> Workflow:
+    """Setup for an input workflow to read BIDS and CAPS data.
 
     Parameters
     ----------
     pipeline :  Workflow
-         the high level workflow containing (input -> core -> output)
+         The high level workflow containing (input -> core -> output).
+
     core_workflow : Workflow
-         the functional workflow
+         The functional workflow.
 
     Returns
     -------
-    Workflow
+    pipeline : Workflow
         The pipeline with the input workflow.
     """
-
-    field = ""
-    readers = []
-    queries = []
-
-    list_core_inputs = pu.list_in_fields(core_workflow)
-    bids_query_dict = pu.bids_query(list_core_inputs)
-    if len(bids_query_dict) > 0:
-        readers.append(bids_reader)
-        queries.append(bids_query_dict)
-
-    caps_dict_inputs = pu.list_dict_in_fields(core_workflow)
-    caps_query_dict = pu.caps_query(caps_dict_inputs)
-    if len(caps_query_dict) > 0:
-        readers.append(caps_reader)
-        queries.append(caps_query_dict)
-
-    input_workflows = dict()
-    for reader, query in zip(readers, queries):
-        name = reader.__name__
-        input_workflow = Workflow(
-            name=f"input_workflow_{name}",
-            input_spec=["input_dir"],
-        )
-        if "bids" in name:
-            try:
-                input_workflow.inputs.input_dir = pipeline.lzin.bids_dir
-            except AttributeError:
-                raise AttributeError(
-                    "Workflow has no 'bids_dir' input. Please verify your input specifications."
-                )
-        else:
-            try:
-                input_workflow.inputs.input_dir = pipeline.lzin.caps_dir
-            except AttributeError:
-                raise AttributeError(
-                    "Workflow has no 'caps_dir' input. Please verify your input specifications."
-                )
-        input_workflow = add_input_task(input_workflow, reader, query)
-        pipeline.add(input_workflow)
-        input_workflows[name] = input_workflow
-
-    # connect input workflow to core workflow
-    for field, _ in bids_query_dict.items():
-        read_data = getattr(input_workflows["bids_reader"].lzout, field)
-        setattr(core_workflow.inputs, field, read_data)
-
-    for field, _ in caps_query_dict.items():
-        read_data = getattr(input_workflows["caps_reader"].lzout, field)
-        setattr(core_workflow.inputs, field, read_data)
-
+    core_inputs = pu.list_workflow_inputs(core_workflow)
+    pipeline = add_input_reading_task_bids(pipeline, core_inputs)
+    pipeline = add_input_reading_task_caps(pipeline, core_inputs)
     return pipeline
 
 
