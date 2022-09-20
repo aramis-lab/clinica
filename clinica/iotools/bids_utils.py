@@ -476,8 +476,11 @@ def _write_readme(
     from clinica.iotools.bids_readme import BIDSReadme
 
     bids_readme = BIDSReadme(
-        name=study_name, link=data_dict["link"], desciption=data_dict["desc"]
+        name=study_name,
+        link=data_dict["link"],
+        description=data_dict["desc"],
     )
+
     with open(Path(bids_dir) / "README", "w") as f:
         bids_readme.write(to=f)
 
