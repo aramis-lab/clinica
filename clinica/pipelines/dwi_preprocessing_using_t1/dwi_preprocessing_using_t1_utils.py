@@ -17,7 +17,7 @@ def rename_into_caps(in_bids_dwi, fname_dwi, fname_bval, fname_bvec, fname_brain
     from nipype.interfaces.utility import Rename
     from nipype.utils.filemanip import split_filename
 
-    # Extract <source_file> in format sub-CLNC01_ses-M00[_acq-label]_dwi
+    # Extract <source_file> in format sub-CLNC01_ses-M000[_acq-label]_dwi
     _, source_file_dwi, _ = split_filename(in_bids_dwi)
 
     # Extract base path from fname:
