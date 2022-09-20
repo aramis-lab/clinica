@@ -607,7 +607,7 @@ def update_age(row):
     """Update age with time passed since bl to current visit"""
     from datetime import datetime
 
-    if row["session_id"] != "ses-M00":
+    if row["session_id"] != "ses-M000":
         examdate = datetime.strptime(row["EXAMDATE"], "%Y-%m-%d")
         examdate_bl = datetime.strptime(row["EXAMDATE_bl"], "%Y-%m-%d")
         delta = examdate - examdate_bl
