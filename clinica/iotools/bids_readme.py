@@ -5,10 +5,7 @@ from attrs import define
 
 @define
 class BIDSReadme:
-    """Model representing a BIDS ReadMe.
-
-    See
-    """
+    """Model representing the content for a BIDS Readme."""
 
     name: str
     link: str
