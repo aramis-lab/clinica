@@ -1,6 +1,8 @@
+import typing as ty
 from os import PathLike, path
 from pathlib import Path, PurePath
 
+import pydra
 import pytest
 from pydra import Workflow
 from pydra.mark import annotate, task
@@ -35,7 +37,15 @@ def pipeline():
 
 @pytest.fixture
 def core_workflow():
-    wf = Workflow("smoothing_t1w", input_spec=["T1w"])
+    input_spec = pydra.specs.SpecInfo(
+        name="Input",
+        fields=[
+            ("_graph_checksums", ty.Any),
+            ("T1w", str, {"mandatory": True}),
+        ],
+        bases=(pydra.specs.BaseSpec,),
+    )
+    wf = Workflow("smoothing_t1w", input_spec=input_spec)
     wf.add(
         smooth_image(
             name="smooth_image",
