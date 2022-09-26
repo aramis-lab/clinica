@@ -62,8 +62,6 @@ def t1volume_register_dartel(
         name="Input",
         fields=[
             ("_graph_checksums", Any),
-            ("T1w", str, {"mandatory": True}),
-            ("pet", str, {"mandatory": True}),
             (
                 "dartel_input_tissue",
                 dict,
@@ -88,12 +86,16 @@ def t1volume_register_dartel(
         input_spec=input_spec,
     )
 
-    workflow
+    workflow.split("dartel_input_tissue")
 
     workflow.add(
         Nipype1Task(
-            name="unzip_T1w", interface=Gunzip(), in_file=workflow.lzin.T1w
-        ).split("in_file")
+            name="unzip_dartel_input_tissue",
+            interface=Gunzip(),
+            in_file=workflow.lzin.dartel_input_tissue,
+        )
+        .split("in_file")
+        .combine("in_file")
     )
 
     workflow.add(
@@ -109,7 +111,7 @@ def t1volume_register_dartel(
     workflow.add(
         task_prepare_dartel_input_images(
             name="task_prepare_dartel_input_images",
-            nifti_input=workflow.unzip_T1w.lzout.out_file,
+            nifti_input=workflow.unzip_dartel_input_tissue.lzout.out_file,
         )
     )
 
@@ -132,9 +134,7 @@ def t1volume_register_dartel(
         workflow.task_create_iteration_parameters.lzout.iteration_parameters
     )
 
-    workflow.add(
-        task_dartel_existing_template.split("(image_files, iteration_parameters)")
-    )
+    workflow.add(task_dartel_existing_template)
 
     workflow.set_output(
         [
