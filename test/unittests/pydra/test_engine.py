@@ -39,10 +39,7 @@ def pipeline():
 def core_workflow():
     input_spec = pydra.specs.SpecInfo(
         name="Input",
-        fields=[
-            ("_graph_checksums", ty.Any),
-            ("T1w", str, {"mandatory": True}),
-        ],
+        fields=[("T1w", str, {"mandatory": True})],
         bases=(pydra.specs.BaseSpec,),
     )
     wf = Workflow("smoothing_t1w", input_spec=input_spec)

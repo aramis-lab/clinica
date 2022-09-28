@@ -1,4 +1,7 @@
+import typing as ty
+
 import nipype.interfaces.spm as spm
+import pydra
 from nipype.algorithms.misc import Gunzip
 from pydra import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
@@ -8,8 +11,6 @@ from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentati
 )
 from clinica.pydra.engine import clinica_io
 from clinica.pydra.t1_volume.utils import initialize_tissues_spm_segment
-import pydra
-import typing as ty
 
 
 @clinica_io
@@ -37,12 +38,9 @@ def t1volume_tissue_segmentation(
     )
 
     input_spec = pydra.specs.SpecInfo(
-         name="Input",
-         fields=[
-             ("_graph_checksums", ty.Any),
-             ("T1w", str, {"mandatory": True}),
-        ],
-         bases=(pydra.specs.BaseSpec,),
+        name="Input",
+        fields=[("T1w", str, {"mandatory": True})],
+        bases=(pydra.specs.BaseSpec,),
     )
 
     workflow = Workflow(
