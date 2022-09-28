@@ -24,9 +24,6 @@ def cli(
     caps_directory: str,
     group_label: str,
     dartel_tissues: List[int] = (1, 2, 3),
-    subjects_sessions_tsv: Optional[str] = None,
-    working_directory: Optional[str] = None,
-    n_procs: Optional[int] = None,
 ) -> None:
     """Pydra Inter-subject registration using Dartel (creating a new Dartel template).
 
