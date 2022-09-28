@@ -14,7 +14,7 @@ def t1volume_create_dartel(
 
     Parameters
     ----------
-    name : str
+    name : str, optional
         name of pipeline
     Returns
     -------
