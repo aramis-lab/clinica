@@ -14,8 +14,12 @@ def t1volume_create_dartel(
 
     Parameters
     ----------
-    name : str
-        name of pipeline
+    name : str, optional
+        Name of pipeline. Default="t1volume-create-dartel".
+        
+    parameters : dict, optional
+        Dictionary of parameters to be used in the pipeline.
+        Default={}.
     Returns
     -------
     Workflow
