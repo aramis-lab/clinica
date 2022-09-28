@@ -3,6 +3,7 @@ from os import PathLike
 from typing import Callable
 
 from pydra import Workflow
+from pydra.engine.core import TaskBase
 
 import clinica.pydra.engine_utils as pu
 from clinica.pydra.interfaces import bids_reader, bids_writer, caps_reader
@@ -41,7 +42,7 @@ def add_input_reading_task(
     pipeline: Workflow,
     core_workflow: Workflow,
     query_maker: Callable,
-    reader: Callable,
+    reader: TaskBase,
 ) -> Workflow:
     """Configure and add the reading tasks of input workflow.
 
@@ -59,23 +60,20 @@ def add_input_reading_task(
         Function responsible for parsing the core_inputs into a
         proper query.
 
-    reader : Callable
-        Function responsible for reading data.
+    reader : TaskBase
+        Task responsible for reading data.
 
     Returns
     -------
     pipeline : Workflow
         The main Workflow with readers added to it.
     """
-    query = query_maker(
-        pu.list_workflow_inputs(core_workflow)
-    )
+    query = query_maker(pu.list_workflow_inputs(core_workflow))
     if len(query) == 0:
         return pipeline
-    name = reader.__name__
-    input_dir = "bids_dir" if "bids" in name else "caps_dir"
+    input_dir = "bids_dir" if "bids" in reader.name else "caps_dir"
     input_workflow = Workflow(
-        name=f"input_workflow_{name}",
+        name=f"input_workflow_{reader.name}",
         input_spec=["input_dir"],
     )
     try:
@@ -84,7 +82,10 @@ def add_input_reading_task(
         raise AttributeError(
             f"Workflow has no {input_dir} input. Please verify your input specifications."
         )
-    input_workflow = add_input_task(input_workflow, reader, query)
+    input_workflow = add_input_task(
+        input_workflow,
+        reader(query=query, input_dir=input_workflow.lzin.input_dir),
+    )
     pipeline.add(input_workflow)
 
     # connect input workflow to core workflow
@@ -110,7 +111,12 @@ add_input_reading_task_caps = functools.partial(
 
 
 def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> Workflow:
-    """Setup for an input workflow to read BIDS and CAPS data.
+    """Setup for an input workflow.
+
+    For now, the input workflow is responsible for:
+
+        - reading BIDS data
+        - reading CAPS data
 
     Parameters
     ----------
@@ -130,36 +136,30 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> Workflo
     return pipeline
 
 
-def add_input_task(
-    input_workflow: Workflow,
-    reader: Callable,
-    query: dict,
-) -> Workflow:
-    """Construct and parameterize the input workflow with a BIDS/CAPS query.
+def add_input_task(input_workflow: Workflow, task: TaskBase) -> Workflow:
+    """Add a task to the input workflow and define the workflow outputs.
 
     Parameters
     ----------
     input_workflow : Workflow
         The high level workflow containing (input -> core -> output).
-    reader : The reader to use (bids_reader or caps_reader)
-    query : dict
-        The dictionary containing the information needed to query the BIDS/CAPS folder.
+
+    task : TaskBase
+        The task to be added to the input_workflow.
 
     Returns
     -------
-    Workflow
-        An BIDS/CAPS reader based workflow.
+    input_workflow : Workflow
+         The input workflow with the task added to it.
     """
-    input_workflow.add(reader(query=query, input_dir=input_workflow.lzin.input_dir))
+    input_workflow.add(task)
     input_workflow.set_output(
         [
             (
                 field,
-                getattr(
-                    getattr(input_workflow, f"{reader.__name__}_task").lzout, field
-                ),
+                getattr(getattr(input_workflow, f"{task.name}_task").lzout, field),
             )
-            for field in list(query.keys())
+            for field in task.input_names
         ]
     )
     return input_workflow
