@@ -1,8 +1,17 @@
 import pydra
+import typing as ty
+from pydra.tasks.nipype1.utils import Nipype1Task
+from pydra.engine import Workflow
 from nipype.interfaces.ants import ApplyTransforms, Registration, RegistrationSynQuick
 
+from clinica.pydra.engine import clinica_io
 from clinica.pydra.tasks import download_mni_template, download_ref_template
 from clinica.utils.pet import get_suvr_mask
+from clinica.pydra.pet_linear.tasks import (
+        concatenate_transforms,
+        suvr_normalization,
+        crop_nifti,
+)
 
 IMAGE_DIMENSION = 3
 
@@ -28,7 +37,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     input_spec = pydra.specs.SpecInfo(
         name="Input",
         fields=[
-            ("_graph_checksums", Any),
+            ("_graph_checksums", ty.Any),
             ("T1w", str, {"mandatory": True}),
             ("pet", str, {"mandatory": True}),
             ("t1w_to_mni", dict, {}, {"mandatory": True}),
@@ -63,7 +72,8 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         concatenate_transforms(
             name="concatenate_transforms",
             interface=concatenate_transforms,
-            input_names=[wf.ants_registration.lzout.out_matrix, wf.lzin.T1w_to_MNI],
+            pet_to_t1w_tranform=wf.ants_registration.lzout.out_matrix,
+            t1w_to_mni_tranform=wf.lzin.t1w_to_mni,
         )
     )
 
@@ -78,6 +88,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     apply_transform_pet_to_mni.inputs.transforms = (
         wf.concatenate_transforms.lzout.transforms_list
     )
+    wf.add(apply_transform_pet_to_mni)
 
     # Normalize the image
     ants_registration_t1w_to_mni = Nipype1Task(
@@ -89,7 +100,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     ants_registration_t1w_to_mni.inputs.transforms = ["SyN"]
     ants_registration_t1w_to_mni.inputs.transform_parameters = [(0.1, 3, 0)]
     ants_registration_t1w_to_mni.inputs.dimension = IMAGE_DIMENSION
-    ants_registration_t1w_to_mni.inputs.shrink_factor = [[8, 4, 2]]
+    ants_registration_t1w_to_mni.inputs.shrink_factors = [[8, 4, 2]]
     ants_registration_t1w_to_mni.inputs.smoothing_sigmas = [[3, 2, 1]]
     ants_registration_t1w_to_mni.inputs.sigma_units = ["vox"]
     ants_registration_t1w_to_mni.inputs.number_of_iterations = [[200, 50, 10]]
@@ -115,7 +126,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         wf.ants_registration_t1w_to_mni.lzout.reverse_forward_transforms
     )
     apply_transform_non_linear.inputs.input_image = (
-        wf.apply_transforms_pet_to_mni.lzout.output_image
+        wf.apply_transform_pet_to_mni.lzout.output_image
     )
     wf.add(apply_transform_non_linear)
 

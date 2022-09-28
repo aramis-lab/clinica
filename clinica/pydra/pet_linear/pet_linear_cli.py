@@ -88,7 +88,7 @@ def cli(
     pipeline = pydra_pet_linear.build_core_workflow(
         name="pet-linear-pydra",
         input_dir=bids_directory,
-        outut_dir=caps_directory,
+        output_dir=caps_directory,
         # tsv_file=subjects_sessions_tsv,
         # base_dir=working_directory,
         parameters=parameters,
