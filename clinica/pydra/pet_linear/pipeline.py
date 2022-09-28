@@ -1,6 +1,9 @@
 import pydra
 from nipype.interfaces.ants import ApplyTransforms, Registration, RegistrationSynQuick
 
+from clinica.pydra.tasks import download_mni_template, download_ref_template
+from clinica.utils.pet import get_suvr_mask
+
 IMAGE_DIMENSION = 3
 
 
@@ -28,14 +31,21 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
             ("_graph_checksums", Any),
             ("T1w", str, {"mandatory": True}),
             ("pet", str, {"mandatory": True}),
+            ("t1w_to_mni", dict, {}, {"mandatory": True}),
         ],
         bases=(pydra.specs.BaseSpec,),
     )
+
+    ref_mask = get_suvr_mask(parameters["suvr_reference_region"])
 
     wf = Workflow(
         name,
         input_spec=input_spec,
     )
+
+    wf.add(download_mni_template(name="download_mni_template"))
+
+    wf.add(download_ref_template(name="download_ref_template"))
 
     # RegistrationSynQuick by ANTS.
     ants_registration = Nipype1Task(
@@ -63,7 +73,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         interface=ApplyTransforms(),
     )
     apply_transform_pet_to_mni.inputs.dimension = IMAGE_DIMENSION
-    apply_transform_pet_to_mni.inputs.reference_image = "TODO"
+    apply_transform_pet_to_mni.inputs.reference_image = ref_mask
     apply_transform_pet_to_mni.inputs.input_image = wf.lzin.pet
     apply_transform_pet_to_mni.inputs.transforms = (
         wf.concatenate_transforms.lzout.transforms_list
@@ -91,7 +101,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     ants_registration_t1w_to_mni.inputs.collapse_output_transforms = True
     ants_registration_t1w_to_mni.inputs.use_histogram_matching = False
     ants_registration_t1w_to_mni.inputs.verbose = True
-    ants_registration_t1w_to_mni.inputs.fixed_image = "TODO"
+    ants_registration_t1w_to_mni.inputs.fixed_image = ref_mask
     ants_registration_t1w_to_mni.inputs.moving_image = wf.lzin.T1w
     wf.add(ants_registration_t1w_to_mni)
 
@@ -100,7 +110,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         interface=ApplyTransforms(),
     )
     apply_transform_non_linear.inputs.dimension = IMAGE_DIMENSION
-    apply_transform_non_linear.inputs.reference_image = "TODO"
+    apply_transform_non_linear.inputs.reference_image = ref_mask
     apply_transform_non_linear.inputs.transforms = (
         wf.ants_registration_t1w_to_mni.lzout.reverse_forward_transforms
     )
@@ -115,7 +125,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
             interface=suvr_normalization,
             input_img=wf.apply_transform_pet_to_mni.lzout.output_image,
             norm_img=wf.apply_transform_non_linear.lzout.output_image,
-            ref_mask="TODO",
+            ref_mask=ref_mask,
         )
     )
 
@@ -131,7 +141,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 name="crop_nifti",
                 interface=crop_nifti,
                 input_img=wf.suvr_normalization.lzout.output_img,
-                ref_crop="TODO",
+                ref_crop=ref_mask,
             )
         )
 
