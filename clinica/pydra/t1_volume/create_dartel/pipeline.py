@@ -16,7 +16,7 @@ def t1volume_create_dartel(
     ----------
     name : str, optional
         Name of pipeline. Default="t1volume-create-dartel".
-        
+
     parameters : dict, optional
         Dictionary of parameters to be used in the pipeline.
         Default={}.
