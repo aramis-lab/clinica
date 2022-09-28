@@ -71,9 +71,9 @@ def add_input_reading_task(
     query = query_maker(pu.list_workflow_inputs(core_workflow))
     if len(query) == 0:
         return pipeline
-    input_dir = "bids_dir" if "bids" in reader.name else "caps_dir"
+    input_dir = "bids_dir" if "bids" in reader.__name__ else "caps_dir"
     input_workflow = Workflow(
-        name=f"input_workflow_{reader.name}",
+        name=f"input_workflow_{reader.__name__}",
         input_spec=["input_dir"],
     )
     try:
@@ -157,9 +157,9 @@ def add_input_task(input_workflow: Workflow, task: TaskBase) -> Workflow:
         [
             (
                 field,
-                getattr(getattr(input_workflow, f"{task.name}_task").lzout, field),
+                getattr(getattr(input_workflow, f"{task.name}").lzout, field),
             )
-            for field in task.input_names
+            for field in task.output_names
         ]
     )
     return input_workflow
