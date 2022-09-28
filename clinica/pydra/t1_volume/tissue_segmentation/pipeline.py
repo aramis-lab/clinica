@@ -24,9 +24,6 @@ def t1volume_tissue_segmentation(
     parameters : dict
         dictionary of pipeline parameters
 
-    parameters : dict
-        dictionary of pipeline parameters
-
     Returns
     -------
     Workflow
