@@ -1,7 +1,10 @@
 import typing as ty
 import nibabel as nib
+from nibabel.nifti1 import Nifti1Image
 import numpy as np
 from pydra.mark import annotate, task
+import os
+from pathlib import Path
 
 
 @task
@@ -26,8 +29,12 @@ def concatenate_transforms(pet_to_t1w_tranform: str, t1w_to_mni_tranform: str) -
 
 
 @task
-@annotate({"return": {"output_img": nib.nifti1.Nifti1Image}})
-def suvr_normalization(input_img: str, norm_img: str, ref_mask: str) -> nib.nifti1.Nifti1Image:
+@annotate({"return": {"output_img": Nifti1Image}})
+def suvr_normalization(
+        input_img: os.PathLike,
+        norm_img: os.PathLike,
+        ref_mask: os.PathLike,
+) -> Nifti1Image:
     """Normalize the input image according to the reference region.
             
     It uses nilearn `resample_to_img` and scipy `trim_mean` functions.
@@ -36,13 +43,13 @@ def suvr_normalization(input_img: str, norm_img: str, ref_mask: str) -> nib.nift
 
     Parameters
     ----------
-    input_img : str
+    input_img : PathLike
         Path to the image to be processed.
 
-    norm_img : str
+    norm_img : PathLike
         Path to the image used to compute the mean of the reference region.
 
-    ref_mask : str
+    ref_mask : PathLike
         Path to the mask of the reference region.
 
     Returns
@@ -50,13 +57,12 @@ def suvr_normalization(input_img: str, norm_img: str, ref_mask: str) -> nib.nift
     output_img : Nifti1Image
         Normalized nifty image
     """
-    import os
     from nilearn.image import resample_to_img
     from scipy.stats import trim_mean
 
-    pet = nib.load(input_img)
-    norm = nib.load(norm_img)
-    mask = nib.load(ref_mask)
+    pet = nib.load(str(input_img))
+    norm = nib.load(str(norm_img))
+    mask = nib.load(str(ref_mask))
     
     # Downsample the pet image used for normalization so we can multiply it with the mask
     ds_img = resample_to_img(norm, mask, interpolation="nearest")
@@ -77,24 +83,24 @@ def suvr_normalization(input_img: str, norm_img: str, ref_mask: str) -> nib.nift
             os.getcwd(),
             os.path.basename(input_img).split(".nii")[0] + "_suvr_normalized.nii.gz",
     )
-    normalized_img = nib.Nifti1Image(data, pet.affine, header=pet.header)
+    normalized_img = Nifti1Image(data, pet.affine, header=pet.header)
     normalized_img.to_filename(output_img)
     return output_img
 
 
 @task
-@annotate({"return": {"output_img": nib.nifti1.Nifti1Image}})
-def crop_nifti(input_img: str, ref_crop: str):
+@annotate({"return": {"output_img": Nifti1Image}})
+def crop_nifti(input_img: os.PathLike, ref_crop: os.PathLike) -> Nifti1Image:
     """Crop input image based on the reference.
 
     It uses nilearn `resample_to_img` function.
                 
     Parameters
     ----------
-    input_img : str
+    input_img : PathLike
         Image to be processed.
 
-    ref_img : str
+    ref_img : PathLike
         Template used to crop the image.
 
     Returns
@@ -102,14 +108,12 @@ def crop_nifti(input_img: str, ref_crop: str):
     output_img : Nifti1Image
         Cropped image on disk.
     """
-    import os
     from nilearn.image import resample_to_img
     
-    basedir = os.getcwd()
+    basedir = Path(os.getcwd())
     # resample the individual MRI into the cropped template image
-    crop_img = resample_to_img(input_img, ref_crop, force_resample=True)
-    output_img = os.path.join(
-            basedir, os.path.basename(input_img).split(".nii")[0] + "_cropped.nii.gz"
-    )
-    crop_img.to_filename(output_img)
+    crop_img = resample_to_img(str(input_img), str(ref_crop), force_resample=True)
+    crop_filename = Path(str(input_img).split(".nii")[0] + "_cropped.nii.gz")
+    output_img = basedir / crop_filename
+    crop_img.to_filename(str(output_img))
     return output_img

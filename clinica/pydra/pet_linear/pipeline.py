@@ -52,6 +52,8 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         input_spec=input_spec,
     )
 
+    wf.split(("pet", "T1w", "t1w_to_mni"))
+
     wf.add(download_mni_template(name="download_mni_template"))
 
     wf.add(download_ref_template(name="download_ref_template"))
@@ -83,7 +85,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         interface=ApplyTransforms(),
     )
     apply_transform_pet_to_mni.inputs.dimension = IMAGE_DIMENSION
-    apply_transform_pet_to_mni.inputs.reference_image = ref_mask
+    apply_transform_pet_to_mni.inputs.reference_image = wf.download_mni_template.lzout.mni_template_file
     apply_transform_pet_to_mni.inputs.input_image = wf.lzin.pet
     apply_transform_pet_to_mni.inputs.transforms = (
         wf.concatenate_transforms.lzout.transforms_list
@@ -112,7 +114,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     ants_registration_t1w_to_mni.inputs.collapse_output_transforms = True
     ants_registration_t1w_to_mni.inputs.use_histogram_matching = False
     ants_registration_t1w_to_mni.inputs.verbose = True
-    ants_registration_t1w_to_mni.inputs.fixed_image = ref_mask
+    ants_registration_t1w_to_mni.inputs.fixed_image = wf.download_mni_template.lzout.mni_template_file
     ants_registration_t1w_to_mni.inputs.moving_image = wf.lzin.T1w
     wf.add(ants_registration_t1w_to_mni)
 
@@ -121,7 +123,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         interface=ApplyTransforms(),
     )
     apply_transform_non_linear.inputs.dimension = IMAGE_DIMENSION
-    apply_transform_non_linear.inputs.reference_image = ref_mask
+    apply_transform_non_linear.inputs.reference_image = wf.download_mni_template.lzout.mni_template_file
     apply_transform_non_linear.inputs.transforms = (
         wf.ants_registration_t1w_to_mni.lzout.reverse_forward_transforms
     )
@@ -152,7 +154,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 name="crop_nifti",
                 interface=crop_nifti,
                 input_img=wf.suvr_normalization.lzout.output_img,
-                ref_crop=ref_mask,
+                ref_crop=wf.download_ref_template.lzout.ref_template_file,
             )
         )
 
@@ -168,11 +170,17 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         )
         apply_transform_pet_to_t1w.inputs.dimension = IMAGE_DIMENSION
         apply_transform_pet_to_t1w.inputs.input_image = wf.lzin.pet
-        apply_transform_pet_to_t1w.inputs.reference_image = wf.lzin.t1w
+        apply_transform_pet_to_t1w.inputs.reference_image = wf.lzin.T1w
         apply_transform_pet_to_t1w.inputs.transforms = (
             wf.ants_registration.lzout.out_matrix
         )
 
+        wf.add(apply_transform_pet_to_t1w)
+        
         output_connections += [
             ("PETinT1w", wf.apply_transform_pet_to_t1w.lzout.output_image),
         ]
+    
+    wf.set_output(output_connections)
+    
+    return wf
