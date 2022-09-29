@@ -94,6 +94,7 @@ def caps_query(query: dict) -> dict:
         t1_volume_final_group_template,
         t1_volume_native_tpm,
         t1_volume_native_tpm_in_mni,
+        t1_volume_dartel_input_tissue,
     )
 
     caps_keys_available_file_reader = {
@@ -102,6 +103,7 @@ def caps_query(query: dict) -> dict:
         "pvc_mask_tissues": t1_volume_native_tpm,
     }
     caps_keys_available_group_reader = {
+        "dater_input_tissues": t1_volume_dartel_input_tissue,
         "dartel_template": t1_volume_final_group_template,
     }
     query_dict = {}

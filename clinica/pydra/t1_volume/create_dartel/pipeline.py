@@ -1,3 +1,5 @@
+from typing import Any
+
 import nipype.interfaces.spm as spm
 from nipype.algorithms.misc import Gunzip
 from pydra import Workflow
@@ -26,15 +28,40 @@ def t1volume_create_dartel(
         pydra workflow for core functionalities
     """
 
+    from pydra import specs
+
     from clinica.pydra.t1_volume.tasks import wrap_list
+
+    input_spec = specs.SpecInfo(
+        name="Input",
+        fields=[
+            ("_graph_checksums", Any),
+            (
+                "dartel_input_tissue",
+                dict,
+                {"tissue_number": parameters["dartel_tissues"]},
+                {"mandatory": True},
+            ),
+        ],
+        bases=(specs.BaseSpec,),
+    )
 
     workflow = Workflow(
         name,
-        input_spec=["T1w"],
+        input_spec=input_spec,
+    )
+
+    workflow = Workflow(
+        name,
+        input_spec=input_spec,
     )
 
     workflow.add(
-        Nipype1Task(name="task_unzip", interface=Gunzip(), in_file=workflow.lzin.T1w)
+        Nipype1Task(
+            name="task_unzip",
+            interface=Gunzip(),
+            in_file=workflow.lzin.dartel_input_tissue,
+        )
         .split("in_file")
         .combine("in_file")
     )
