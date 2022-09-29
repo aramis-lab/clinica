@@ -1024,22 +1024,19 @@ def check_volume_location_in_world_coordinate_system(
     ----
     nifti_list: list
         list of path to nifti files or path
-    bids_dir: str
+    bids_dir: PathLike
         path to bids directory associated with this check
     modality: str, optional
-        the modality of the image. Default="t1w".
+        the modality of the image. Default='t1w'.
     skip_question: bool, optional
         if True, assume answer is yes. Default=False.
-
     Returns
     -------
     bool
         True if they are centered, False otherwise
-
     Warns
     ------
-    If volume is not centered on origin of the world coordinate system.
-
+    If volume is not centered on origin of the world coordinate system
     Notes
     -----
     the NIfTI file list provided in argument are approximately centered around the origin of the
