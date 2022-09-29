@@ -1913,7 +1913,7 @@ docs = ["mkdocs", "mkdocs-material", "pymdown-extensions"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "f224cae376fdd5d7b8aedfb22191c8eab9040ddd3b3d9f92ba2e50b7a4dae1dd"
+content-hash = "39c900a47ef18196559bde08390be07b15f4adc243511c550fed802d8aa1722e"
 
 [metadata.files]
 abagen = [
