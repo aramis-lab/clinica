@@ -1,43 +1,61 @@
 """This module contains utilities to grab or download files for Clinica."""
 
 import hashlib
+import os
 from collections import namedtuple
+from typing import Optional
 
 RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "checksum"])
 
 
-def insensitive_glob(pattern_glob, recursive=False):
+def insensitive_glob(pattern_glob: str, recursive: Optional[bool] = False) -> str:
     """This function is the glob.glob() function that is insensitive to the case.
 
-    Args:
-        pattern_glob: sensitive-to-the-case pattern
-        recursive: recursive parameter for glob.glob()
+    Parameters
+    ----------
+    pattern_glob : str
+        Sensitive-to-the-case pattern.
 
-    Returns:
-         insensitive-to-the-case pattern
+    recursive : bool, optional
+        Recursive parameter for `glob.glob()`.
+        Default=False.
+
+    Returns
+    -------
+    str :
+        Insensitive-to-the-case pattern.
     """
     from glob import glob
 
-    def either(c):
+    def either(c: str) -> str:
         return "[%s%s]" % (c.lower(), c.upper()) if c.isalpha() else c
 
     return glob("".join(map(either, pattern_glob)), recursive=recursive)
 
 
-def determine_caps_or_bids(input_dir):
-    """Determine if the input is a CAPS or a BIDS folder.
+def determine_caps_or_bids(input_dir: os.PathLike) -> bool:
+    """Determine if the `input_dir` is a CAPS or a BIDS folder.
 
-    Args
-        input_dir: input folder
+    Parameters
+    ----------
+    input_dir : os.PathLike
+        The input folder.
 
-    Returns:
-        True if input_dir is a bids, False if input_dir is a CAPS or could not determine
+    Returns
+    -------
+    bool :
+        True if `input_dir` is a BIDS folder, False if `input_dir`
+        is a CAPS folder or could not be determined.
     """
     from os import listdir
     from os.path import isdir, join
 
     from clinica.utils.stream import cprint
 
+    warning_msg = (
+        f"Could not determine if {input_dir} is a CAPS or BIDS directory. "
+        "Clinica will assume this is a CAPS directory."
+    )
     if isdir(join(input_dir, "subjects")):
         if len(
             [
@@ -48,15 +66,8 @@ def determine_caps_or_bids(input_dir):
         ) > 0 or isdir(join(input_dir, "groups")):
             return False
         else:
-            cprint(
-                msg=(
-                    f"Could not determine if {input_dir} is a CAPS or BIDS directory. "
-                    "Clinica will assume this is a CAPS directory."
-                ),
-                lvl="warning",
-            )
+            cprint(msg=warning_msg, lvl="warning")
             return False
-
     else:
         if (
             len(
@@ -70,93 +81,114 @@ def determine_caps_or_bids(input_dir):
         ):
             return True
         else:
-            if isdir(join(input_dir, "groups")):
-                return False
-            else:
-                cprint(
-                    msg=(
-                        f"Could not determine if {input_dir} is a CAPS or BIDS directory. "
-                        "Clinica will assume this is a CAPS directory."
-                    ),
-                    lvl="warning",
-                )
-                return False
+            if not isdir(join(input_dir, "groups")):
+                cprint(msg=warning_msg, lvl="warning")
+            return False
 
 
-def check_bids_folder(bids_directory):
-    """Check BIDS folder.
+def _common_checks(directory: str, folder_type: str) -> None:
+    """Utility function which performs checks common to BIDS and CAPS folder structures.
 
-    This function checks the following items:
-        - bids_directory is a string
-        - the provided path exists and is a directory
-        - provided path is not a CAPS folder (BIDS and CAPS could be swapped by user). We simply check that there is
-          not a folder called 'subjects' in the provided path (that exists in CAPS hierarchy)
-        - provided folder is not empty
-        - provided folder must contains at least one directory whose name starts with 'sub-'
+    Parameters
+    ----------
+    directory : str
+        Directory to check.
+
+    folder_type : {"BIDS", "CAPS"}
+        The type of directory.
     """
-    from os import listdir
-    from os.path import isdir, join
+    if not isinstance(directory, str):
+        raise ValueError(
+            f"Argument you provided to check_{folder_type.lower()}_folder() is not a string."
+        )
 
-    from clinica.utils.exceptions import ClinicaBIDSError
-
-    assert isinstance(
-        bids_directory, str
-    ), "Argument you provided to check_bids_folder() is not a string."
-
-    if not isdir(bids_directory):
+    if not os.path.isdir(directory):
         raise ClinicaBIDSError(
-            "The BIDS directory you gave is not a folder.\n"
+            f"The {folder_type} directory you gave is not a folder.\n"
             "Error explanations:\n"
             f"\t- Clinica expected the following path to be a folder: {bids_directory}\n"
             "\t- If you gave relative path, did you run Clinica on the good folder?"
         )
 
-    if isdir(join(bids_directory, "subjects")):
+
+def check_bids_folder(bids_directory: str) -> None:
+    """Check if provided `bids_directory` is a BIDS folder.
+
+    Parameters
+    ----------
+    bids_directory : str
+        The input folder to check.
+
+    Raises
+    ------
+    ValueError :
+        If `bids_directory` is not a string.
+
+    ClinicaBIDSError :
+        If the provided path does not exist, or is not a directory.
+        If the provided path is a CAPS folder (BIDS and CAPS could
+        be swapped by user). We simply check that there is not a folder
+        called 'subjects' in the provided path (that exists in CAPS hierarchy).
+        If the provided folder is empty.
+        If the provided folder does not contain at least one directory whose
+        name starts with 'sub-'.
+    """
+    from clinica.utils.exceptions import ClinicaBIDSError
+
+    _common_checks(bids_directory, "BIDS")
+
+    if os.path.isdir(join(bids_directory, "subjects")):
         raise ClinicaBIDSError(
             f"The BIDS directory ({bids_directory}) you provided seems to "
             "be a CAPS directory due to the presence of a 'subjects' folder."
         )
 
-    if len(listdir(bids_directory)) == 0:
+    if len(os.listdir(bids_directory)) == 0:
         raise ClinicaBIDSError(
             f"The BIDS directory you provided is empty. ({bids_directory})."
         )
 
-    if len([item for item in listdir(bids_directory) if item.startswith("sub-")]) == 0:
+    if (
+        len([item for item in os.listdir(bids_directory) if item.startswith("sub-")])
+        == 0
+    ):
         raise ClinicaBIDSError(
             "Your BIDS directory does not contains a single folder whose name "
             "starts with 'sub-'. Check that your folder follow BIDS standard."
         )
 
 
-def check_caps_folder(caps_directory):
-    """Check CAPS folder.
+def check_caps_folder(caps_directory: str) -> None:
+    """Check if provided `caps_directory`is a CAPS folder.
 
-    This function checks the following items:
-        - caps_directory is a string
-        - the provided path exists and is a directory
-        - provided path is not a BIDS folder (BIDS and CAPS could be swapped by user). We simply check that there is
-          not a folder whose name starts with 'sub-' in the provided path (that exists in BIDS hierarchy)
+    Parameters
+    ----------
+    caps_directory : str
+        The input folder to check.
+
+    Raises
+    ------
+    ValueError :
+        If `caps_directory` is not a string.
+
+    ClinicaCAPSError :
+        If the provided path does not exist, or is not a directory.
+        If the provided path is a BIDS folder (BIDS and CAPS could be
+        swapped by user). We simply check that there is not a folder
+        whose name starts with 'sub-' in the provided path (that exists
+        in BIDS hierarchy).
+
+    Notes
+    -----
     Keep in mind that CAPS folder can be empty.
     """
-    import os
-    from os import listdir
-
     from clinica.utils.exceptions import ClinicaCAPSError
 
-    assert isinstance(
-        caps_directory, str
-    ), "Argument you provided to check_caps_folder() is not a string."
+    _common_checks(caps_directory, "CAPS")
 
-    if not os.path.isdir(caps_directory):
-        raise ClinicaCAPSError(
-            "The CAPS directory you gave is not a folder.\n"
-            "Error explanations:\n"
-            f"\t- Clinica expected the following path to be a folder: {caps_directory}\n"
-            "\t- If you gave relative path, did you run Clinica on the good folder?"
-        )
-
-    sub_folders = [item for item in listdir(caps_directory) if item.startswith("sub-")]
+    sub_folders = [
+        item for item in os.listdir(caps_directory) if item.startswith("sub-")
+    ]
     if len(sub_folders) > 0:
         error_string = (
             "Your CAPS directory contains at least one folder whose name "
@@ -180,19 +212,35 @@ def find_sub_ses_pattern_path(
     results: list,
     is_bids: bool,
     pattern: str,
-):
+) -> None:
     """Appends the output path corresponding to subject, session and pattern in results.
 
     If an error is encountered, its corresponding message is added to the list error_encountered.
 
-    Args:
-        input_directory: path to the root of the input directory (BIDS or CAPS).
-        subject: name given to the folder of a participant (ex: sub-ADNI002S0295).
-        session: name given to the folder of a session (ex: ses-M00).
-        error_encountered: list in which errors encountered in this function are added.
-        results: list in which the output path corresponding to subject, session and pattern is added.
-        is_bids: True if input_dir is a bids, False if input_dir is a CAPS.
-        pattern: define the pattern of the final file.
+    Parameters
+    ----------
+    input_directory : str
+        Path to the root of the input directory (BIDS or CAPS).
+
+    subject : str
+        Name given to the folder of a participant (ex: sub-ADNI002S0295).
+
+    session : str
+        Name given to the folder of a session (ex: ses-M00).
+
+    error_encountered : List
+        List to which errors encountered in this function are added.
+
+    results : List
+        List to which the output path corresponding to subject, session
+        and pattern is added.
+
+    is_bids : bool
+        True if `input_dir` is a BIDS folder, False if `input_dir` is a
+        CAPS folder.
+
+    pattern : str
+        Define the pattern of the final file.
     """
     from os.path import join
 
@@ -218,21 +266,29 @@ def find_sub_ses_pattern_path(
 
 
 def clinica_file_reader(
-    subjects,
-    sessions,
-    input_directory,
-    information,
-    raise_exception=True,
-    n_procs: int = 1,
+    subjects: List[str],
+    sessions: List[str],
+    input_directory: str,
+    information: Dict,
+    raise_exception: Optional[bool] = True,
+    n_procs: Optioaint = 1,
 ):
     """Read files in BIDS or CAPS directory based on participant ID(s).
 
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
-    Args:
-        subjects: list of subjects
-        sessions: list of sessions (must be same size as subjects, and must correspond )
-        input_directory: location of the bids or caps directory
-        information: dictionary containing all the relevant information to look for the files. Dict must contains the
+
+    Parameters
+    ----------
+    subjects : List[str]
+        List of subjects.
+
+    sessions : List[str]
+        List of sessions (must be same size as subjects, and must correspond).
+
+    input_directory : str
+        Path to the BIDS or CAPS directory to read from.
+
+    information: dictionary containing all the relevant information to look for the files. Dict must contains the
                      following keys : pattern, description. The optional key is: needed_pipeline
                              pattern: define the pattern of the final file
                              description: string to describe what the file is
