@@ -29,7 +29,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
 nibabel = "^2.3.3"
-nipype = "^1.7.1"
+nipype = ">=1.7.1,<1.8.3"
 argcomplete = "^1.9.4"
 pandas = "^1.4"
 jinja2 = "^3"
@@ -53,6 +53,7 @@ fsspec = "*"
 pydra = "^0.18"
 pydra-nipype1 = "^0.1.0"
 pybids = "^0.15.1"
+joblib = "^1.2.0"
 # docs
 mkdocs = {version = "^1.1", optional = true}
 mkdocs-material = {version = ">=7.1.8", optional= true}
