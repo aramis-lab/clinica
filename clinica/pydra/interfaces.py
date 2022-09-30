@@ -41,21 +41,46 @@ class CAPSDataGrabber(IOBase):
             self.inputs.base_dir,
             is_bids_dir=False,
         )
-        query = {}
+        output_query = {}
         for k, q in self.inputs.output_query.items():
-            reader = q.pop("reader")
+            reader = q["reader"]
+            query = q["query"]
             if reader == "file":
-                query[k] = clinica_file_reader(
-                    subjects,
-                    sessions,
-                    self.inputs.base_dir,
-                    q,
-                )
+                if isinstance(query, list):
+                    temp = [
+                        clinica_file_reader(
+                            subjects,
+                            sessions,
+                            self.inputs.base_dir,
+                            sub_query,
+                        )[0]
+                        for sub_query in query
+                    ]
+                    if len(temp) != len(subjects) and len(temp[0]) == len(subjects):
+                        transpose = []
+                        for x in zip(*temp):
+                            transpose.append(x)
+                        assert len(transpose) == len(subjects)
+                        temp = transpose
+                    output_query[k] = temp
+                else:
+                    output_query[k] = clinica_file_reader(
+                        subjects,
+                        sessions,
+                        self.inputs.base_dir,
+                        query,
+                    )[0]
             elif reader == "group":
-                query[k] = clinica_group_reader(self.inputs.base_dir, q)
+                if isinstance(query, list):
+                    output_query[k] = [
+                        clinica_group_reader(self.inputs.base_dir, sub_query)
+                        for sub_query in query
+                    ]
+                else:
+                    output_query[k] = clinica_group_reader(self.inputs.base_dir, query)
             else:
                 raise ValueError(f"Unknown reader {reader}.")
-        return query
+        return output_query
 
     def _add_output_traits(self, base):
         return add_traits(base, list(self.inputs.output_query.keys()))

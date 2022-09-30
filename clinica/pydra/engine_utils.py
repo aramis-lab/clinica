@@ -106,14 +106,16 @@ def caps_query(raw_query: dict) -> dict:
     caps_keys_available_group_reader = {
         "dartel_template": t1_volume_final_group_template,
     }
+    query_dict = {}
     for k, v in raw_query.items():
+        query_dict[k] = {}
         if k in caps_keys_available_file_reader:
-            query[k] = caps_keys_available_file_reader[k](**v)
-            query[k]["reader"] = "file"
+            query_dict[k]["query"] = caps_keys_available_file_reader[k](**v)
+            query_dict[k]["reader"] = "file"
         elif k in caps_keys_available_group_reader:
-            query[k] = caps_keys_available_group_reader[k](**v)
-            query[k]["reader"] = "group"
-    return query
+            query_dict[k]["query"] = caps_keys_available_group_reader[k](**v)
+            query_dict[k]["reader"] = "group"
+    return query_dict
 
 
 def run(wf: Workflow) -> str:
