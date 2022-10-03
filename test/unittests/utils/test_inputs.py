@@ -60,3 +60,49 @@ def test_determine_caps_or_bids(tmp_path):
     (tmp_path / "sub-01").mkdir()
     (tmp_path / "sub-01" / "foo.txt").mkdir()
     assert determine_caps_or_bids(tmp_path)
+
+
+@pytest.mark.parametrize("folder_type", ["BIDS", "CAPS"])
+def test_common_checks(folder_type):
+    from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
+    from clinica.utils.inputs import _common_checks
+
+    with pytest.raises(
+        ValueError,
+        match="Argument you provided to ",
+    ):
+        _common_checks(1, folder_type)
+
+    error = ClinicaBIDSError if folder_type == "BIDS" else ClinicaCAPSError
+
+    with pytest.raises(
+        error,
+        match=f"The {folder_type} directory you gave is not a folder.",
+    ):
+        _common_checks("fooooo", folder_type)
+
+
+def test_check_bids_folder(tmp_path):
+    from clinica.utils.exceptions import ClinicaBIDSError
+    from clinica.utils.inputs import check_bids_folder
+
+    (tmp_path / "subjects").mkdir()
+    (tmp_path / "subjects" / "foo.txt").mkdir()
+    with pytest.raises(
+        ClinicaBIDSError,
+        match="The BIDS directory",
+    ):
+        check_bids_folder(tmp_path)
+    rmtree(tmp_path / "subjects")
+    (tmp_path / "data").mkdir()
+    with pytest.raises(
+        ClinicaBIDSError,
+        match="The BIDS directory you provided is empty.",
+    ):
+        check_bids_folder(tmp_path / "data")
+    (tmp_path / "data" / "foo").mkdir()
+    with pytest.raises(
+        ClinicaBIDSError,
+        match="Your BIDS directory does not contains a single folder whose name",
+    ):
+        check_bids_folder(tmp_path / "data")

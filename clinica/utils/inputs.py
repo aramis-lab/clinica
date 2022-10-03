@@ -79,37 +79,41 @@ def _list_subjects_sub_folders(
     return subjects_sub_folders
 
 
-def _common_checks(directory: str, folder_type: str) -> None:
+def _common_checks(directory: os.PathLike, folder_type: str) -> None:
     """Utility function which performs checks common to BIDS and CAPS folder structures.
 
     Parameters
     ----------
-    directory : str
+    directory : PathLike
         Directory to check.
 
     folder_type : {"BIDS", "CAPS"}
         The type of directory.
     """
-    if not isinstance(directory, str):
+    from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
+
+    if not isinstance(directory, (os.PathLike, str)):
         raise ValueError(
             f"Argument you provided to check_{folder_type.lower()}_folder() is not a string."
         )
 
+    error = ClinicaBIDSError if folder_type == "BIDS" else ClinicaCAPSError
+
     if not os.path.isdir(directory):
-        raise ClinicaBIDSError(
+        raise error(
             f"The {folder_type} directory you gave is not a folder.\n"
             "Error explanations:\n"
-            f"\t- Clinica expected the following path to be a folder: {bids_directory}\n"
+            f"\t- Clinica expected the following path to be a folder: {directory}\n"
             "\t- If you gave relative path, did you run Clinica on the good folder?"
         )
 
 
-def check_bids_folder(bids_directory: str) -> None:
+def check_bids_folder(bids_directory: os.PathLike) -> None:
     """Check if provided `bids_directory` is a BIDS folder.
 
     Parameters
     ----------
-    bids_directory : str
+    bids_directory : PathLike
         The input folder to check.
 
     Raises
@@ -128,23 +132,22 @@ def check_bids_folder(bids_directory: str) -> None:
     """
     from clinica.utils.exceptions import ClinicaBIDSError
 
+    bids_directory = Path(bids_directory)
     _common_checks(bids_directory, "BIDS")
 
-    if os.path.isdir(join(bids_directory, "subjects")):
+    if (bids_directory / "subjects").is_dir():
         raise ClinicaBIDSError(
             f"The BIDS directory ({bids_directory}) you provided seems to "
             "be a CAPS directory due to the presence of a 'subjects' folder."
         )
 
-    if len(os.listdir(bids_directory)) == 0:
+    if len([f for f in bids_directory.iterdir()]) == 0:
         raise ClinicaBIDSError(
             f"The BIDS directory you provided is empty. ({bids_directory})."
         )
 
-    if (
-        len([item for item in os.listdir(bids_directory) if item.startswith("sub-")])
-        == 0
-    ):
+    subj = [f for f in bids_directory.iterdir() if f.name.startswith("sub-")]
+    if len(subj) == 0:
         raise ClinicaBIDSError(
             "Your BIDS directory does not contains a single folder whose name "
             "starts with 'sub-'. Check that your folder follow BIDS standard."
