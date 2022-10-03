@@ -3,7 +3,8 @@
 import hashlib
 import os
 from collections import namedtuple
-from typing import Optional
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "checksum"])
 
@@ -47,43 +48,35 @@ def determine_caps_or_bids(input_dir: os.PathLike) -> bool:
         True if `input_dir` is a BIDS folder, False if `input_dir`
         is a CAPS folder or could not be determined.
     """
-    from os import listdir
-    from os.path import isdir, join
+    input_dir = Path(input_dir)
+    subjects_dir = input_dir / "subjects"
+    groups_dir = input_dir / "groups"
 
+    dir_to_look = subjects_dir if subjects_dir.is_dir() else input_dir
+    subjects_sub_folders = _list_subjects_sub_folders(dir_to_look, groups_dir)
+    if subjects_dir.is_dir():
+        return False
+    return len(subjects_sub_folders) > 0
+
+
+def _list_subjects_sub_folders(
+    root_dir: os.PathLike, groups_dir: os.PathLike
+) -> List[os.PathLike]:
     from clinica.utils.stream import cprint
 
     warning_msg = (
-        f"Could not determine if {input_dir} is a CAPS or BIDS directory. "
+        f"Could not determine if {groups_dir.parent} is a CAPS or BIDS directory. "
         "Clinica will assume this is a CAPS directory."
     )
-    if isdir(join(input_dir, "subjects")):
-        if len(
-            [
-                sub
-                for sub in listdir(join(input_dir, "subjects"))
-                if (sub.startswith("sub-") and isdir(join(input_dir, "subjects", sub)))
-            ]
-        ) > 0 or isdir(join(input_dir, "groups")):
-            return False
-        else:
-            cprint(msg=warning_msg, lvl="warning")
-            return False
-    else:
-        if (
-            len(
-                [
-                    sub
-                    for sub in listdir(input_dir)
-                    if (sub.startswith("sub-") and isdir(join(input_dir, sub)))
-                ]
-            )
-            > 0
-        ):
-            return True
-        else:
-            if not isdir(join(input_dir, "groups")):
-                cprint(msg=warning_msg, lvl="warning")
-            return False
+    folder_content = [f for f in root_dir.iterdir()]
+    subjects_sub_folders = [
+        sub
+        for sub in folder_content
+        if (sub.name.startswith("sub-") and (root_dir / sub).is_dir())
+    ]
+    if len(subjects_sub_folders) == 0 and not groups_dir.is_dir():
+        cprint(msg=warning_msg, lvl="warning")
+    return subjects_sub_folders
 
 
 def _common_checks(directory: str, folder_type: str) -> None:
@@ -596,67 +589,82 @@ def clinica_list_of_files_reader(
     return list_found_files
 
 
-def clinica_group_reader(caps_directory, information, raise_exception=True):
-    """Read files CAPS directory based on group ID(s).
+def clinica_group_reader(
+    caps_directory: str,
+    information: Dict,
+    raise_exception: Optional[bool] = True,
+) -> str:
+    """Read files from CAPS directory based on group ID(s).
 
-    This function grabs files relative to a group, according to a glob pattern (using *). Only one file can be returned,
-    as order is arbitrary in glob.glob().
-    Args:
-        caps_directory: input caps directory
-        information: dictionary containing all the relevant information to look for the files. Dict must contains the
-                     following keys : pattern, description, needed_pipeline
-                             pattern: define the pattern of the final file
-                             description: string to describe what the file is
-                             needed_pipeline (optional): string describing the pipeline needed to obtain the file beforehand
-        raise_exception: if True (normal behavior), an exception is raised if errors happen. If not, we return the file
-                        list as it is
+    This function grabs files relative to a group, according to a glob pattern (using *).
+    Only one file can be returned, as order is arbitrary in `glob.glob()`.
 
-    Returns:
-          string of the found file
+    Parameters
+    ----------
+    caps_directory : str
+        Path to the input CAPS directory.
 
-    Raises:
-        ClinicaCAPSError if no file is found, or more than 1 files are found
+    information : Dict
+        Dictionary containing all the relevant information to look for the files.
+        The possible keys are:
+
+            - `pattern`: Required. Define the pattern of the final file.
+            - `description`: Required. String to describe what the file is.
+            - `needed_pipeline` : Optional. String describing the pipeline(s)
+              needed to obtain the related file.
+
+    raise_exception : bool, optional
+        If True, an exception is raised if errors happen.
+        If not, we return the file list as it is.
+        Default=True.
+
+    Returns
+    -------
+    str :
+        Path to the found file.
+
+    Raises
+    ------
+    ClinicaCAPSError :
+        If no file is found, or more than 1 files are found.
     """
     from os.path import join
 
-    from clinica.utils.exceptions import ClinicaCAPSError
-
-    assert isinstance(
-        information, dict
-    ), "A dict must be provided for the argument 'dict'"
-    assert all(
-        elem in information.keys()
-        for elem in ["pattern", "description", "needed_pipeline"]
-    ), "'information' must contain the keys 'pattern', 'description', 'needed_pipeline'"
-
+    _check_information(information)
     pattern = information["pattern"]
-    # Some check on the formatting on the data
-    assert pattern[0] != "/", (
-        "pattern argument cannot start with char: / (does not work in os.path.join function). "
-        "If you want to indicate the exact name of the file, use the format"
-        " directory_name/filename.extension or filename.extension in the pattern argument."
-    )
-
     check_caps_folder(caps_directory)
 
     current_pattern = join(caps_directory, "**/", pattern)
-    current_glob_found = insensitive_glob(current_pattern, recursive=True)
+    found_files = insensitive_glob(current_pattern, recursive=True)
 
-    if len(current_glob_found) != 1 and raise_exception is True:
-        error_string = f"Clinica encountered a problem while getting {information['description']}. "
-        if len(current_glob_found) == 0:
-            error_string += "No file was found"
-        else:
-            error_string += f"{len(current_glob_found)} files were found:"
-            for found_files in current_glob_found:
-                error_string += f"\n\t{found_files}"
-            error_string += (
-                f"\n\tCAPS directory: {caps_directory}\n"
-                "Please note that the following clinica pipeline(s) must have run to obtain these files: "
-                f"{information['needed_pipeline']}\n"
-            )
-        raise ClinicaCAPSError(error_string)
-    return current_glob_found[0]
+    if len(found_files) != 1 and raise_exception is True:
+        _format_and_raise_group_reader_errors(caps_directory, found_files, information)
+
+    return found_files[0]
+
+
+def _format_and_raise_group_reader_errors(
+    caps_directory: str,
+    found_files: List,
+    information: Dict,
+) -> None:
+    from clinica.utils.exceptions import ClinicaCAPSError
+
+    error_string = (
+        f"Clinica encountered a problem while getting {information['description']}. "
+    )
+    if len(found_files) == 0:
+        error_string += "No file was found"
+    else:
+        error_string += f"{len(found_files)} files were found:"
+        for found_file in found_files:
+            error_string += f"\n\t{found_file}"
+        error_string += (
+            f"\n\tCAPS directory: {caps_directory}\n"
+            "Please note that the following clinica pipeline(s) must have run to obtain these files: "
+            f"{information['needed_pipeline']}\n"
+        )
+    raise ClinicaCAPSError(error_string)
 
 
 def _sha256(path):
@@ -672,15 +680,21 @@ def _sha256(path):
     return sha256hash.hexdigest()
 
 
-def fetch_file(remote, dirname=None):
+def fetch_file(remote: RemoteFileStructure, dirname: Optional[str]) -> str:
     """Download a specific file and save it into the resources folder of the package.
 
-    Args:
-        remote: structure containing url, filename and checksum
-        dirname: absolute path where the file will be downloaded
+    Parameters
+    ----------
+    remote : RemoteFileStructure
+        Structure containing url, filename and checksum.
 
-    Returns:
-        file_path: absolute file path
+    dirname : str
+        Absolute path where the file will be downloaded.
+
+    Returns
+    -------
+    file_path : str
+        Absolute file path.
     """
     import os.path
     import shutil
@@ -724,15 +738,25 @@ def fetch_file(remote, dirname=None):
     return file_path
 
 
-def get_file_from_server(remote_file: RemoteFileStructure, cache_path=None):
+def get_file_from_server(
+    remote_file: RemoteFileStructure,
+    cache_path: Optional[str],
+) -> str:
     """Download file from server.
 
-    Args:
-        remote_file (str): RemoteFileStructure defined in clinica.utils.inputs
-        cache_path (str): (default: ~/.cache/clinica/data)
+    Parameters
+    ----------
+    remote_file : RemoteFileStructure
+        Remote file structure defined in `clinica.utils.inputs` specifying
+        the file to retrieve.
 
-    Returns:
-        Path to downloaded file.
+    cache_path : str, optional
+        Path to cache. Defaul="~/.cache/clinica/data".
+
+    Returns
+    -------
+    local_file : str
+        Path to the downloaded file.
     """
     import os
     from pathlib import Path
