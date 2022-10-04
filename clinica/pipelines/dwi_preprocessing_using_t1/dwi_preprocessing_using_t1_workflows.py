@@ -236,7 +236,7 @@ def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
     )
     delete_warp_field_tmp.inputs.base_dir = self.base_dir
     delete_warp_field_tmp.inputs.dir_to_del = apply_transform_field.name
-    delete_warp_field_tmp.inputs.light = self.parameters["light"]
+    delete_warp_field_tmp.inputs.light = self.parameters["light_version"]
 
     outputnode = pe.Node(
         niu.IdentityInterface(
