@@ -534,7 +534,7 @@ def _read_files_sequential(
 def clinica_list_of_files_reader(
     participant_ids: List[str],
     session_ids: List[str],
-    bids_or_caps_directory: str,
+    bids_or_caps_directory: os.PathLike,
     list_information: List[Dict],
     raise_exception: Optional[bool] = True,
 ) -> List[List[str]]:
@@ -553,7 +553,7 @@ def clinica_list_of_files_reader(
         List of sessions ID associated to `participant_ids`
         Example: ['ses-M00', 'ses-M18', 'ses-M00']
 
-    bids_or_caps_directory : str
+    bids_or_caps_directory : PathLike
         Path to the BIDS of CAPS directory to read from.
 
     list_information : List[Dict]

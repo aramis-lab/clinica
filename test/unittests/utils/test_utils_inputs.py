@@ -22,12 +22,24 @@ def build_bids_directory(directory: os.PathLike, subjects_sessions: Dict) -> Non
     This function is a simple prototype for creating fake datasets for testing.
     It only adds (for now...) T1W nifti images for all subjects and sessions.
     """
+    data_types = {"anat"}
+    suffixes = {"T1w", "flair"}
+    extensions = {"nii.gz"}
     for sub, sessions in subjects_sessions.items():
         (directory / sub).mkdir()
         for ses in sessions:
             (directory / sub / ses).mkdir()
-            (directory / sub / ses / "anat").mkdir()
-            (directory / sub / ses / "anat" / f"{sub}_{ses}_T1w.nii.gz").mkdir()
+            for data_type in data_types:
+                (directory / sub / ses / data_type).mkdir()
+                for suffix in suffixes:
+                    for extension in extensions:
+                        (
+                            directory
+                            / sub
+                            / ses
+                            / data_type
+                            / f"{sub}_{ses}_{suffix}.{extension}"
+                        ).mkdir()
 
 
 def build_caps_directory(directory: os.PathLike, subjects_sessions: Dict) -> None:
@@ -286,7 +298,8 @@ def test_format_errors():
     )
 
 
-def test_clinica_file_reader_bids_directory(tmp_path):
+@pytest.mark.parametrize("data_type", ["T1w", "flair"])
+def test_clinica_file_reader_bids_directory(tmp_path, data_type):
     """Test reading from a BIDS directory with function `clinica_file_reader`."""
     from clinica.utils.exceptions import ClinicaBIDSError
     from clinica.utils.inputs import clinica_file_reader
@@ -299,9 +312,10 @@ def test_clinica_file_reader_bids_directory(tmp_path):
 
     build_bids_directory(tmp_path, config)
 
+    desc = "T1w MRI" if data_type == "T1w" else "FLAIR T2w MRI"
     information = {
-        "pattern": "sub-*_ses-*_t1w.nii*",
-        "description": "T1w MRI",
+        "pattern": f"sub-*_ses-*_{data_type}.nii*",
+        "description": desc,
     }
 
     with pytest.raises(
@@ -324,9 +338,9 @@ def test_clinica_file_reader_bids_directory(tmp_path):
     )
     assert len(results) == 1
     assert Path(results[0]).relative_to(tmp_path) == Path(
-        "sub-01/ses-M00/anat/sub-01_ses-M00_T1w.nii.gz"
+        f"sub-01/ses-M00/anat/sub-01_ses-M00_{data_type}.nii.gz"
     )
-    assert error_msg == "Clinica encountered 0 problem(s) while getting T1w MRI:\n"
+    assert error_msg == f"Clinica encountered 0 problem(s) while getting {desc}:\n"
 
     results, error_msg = clinica_file_reader(
         ["sub-01", "sub-02", "sub-02", "sub-06"],
@@ -337,17 +351,21 @@ def test_clinica_file_reader_bids_directory(tmp_path):
         n_procs=4,
     )
     assert len(results) == 4
-    assert error_msg == "Clinica encountered 0 problem(s) while getting T1w MRI:\n"
+    assert error_msg == f"Clinica encountered 0 problem(s) while getting {desc}:\n"
 
     (
-        tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_foo-bar_T1w.nii.gz"
+        tmp_path
+        / "sub-01"
+        / "ses-M00"
+        / "anat"
+        / f"sub-01_ses-M00_foo-bar_{data_type}.nii.gz"
     ).mkdir()
     results, error_msg = clinica_file_reader(
         ["sub-01"], ["ses-M00"], tmp_path, information, raise_exception=False, n_procs=1
     )
     assert len(results) == 0
     expected_msg = (
-        "Clinica encountered 1 problem(s) while getting T1w MRI:\n"
+        f"Clinica encountered 1 problem(s) while getting {desc}:\n"
         "\t*  (sub-01 | ses-M00): More than 1 file found:\n\t\t"
     )
     assert expected_msg in error_msg
@@ -454,3 +472,66 @@ def test_clinica_file_reader_caps_directory(tmp_path):
             raise_exception=True,
             n_procs=1,
         )
+
+
+def test_clinica_list_of_files_reader(tmp_path):
+    from clinica.utils.exceptions import ClinicaBIDSError
+    from clinica.utils.inputs import clinica_list_of_files_reader
+
+    config = {
+        "sub-01": ["ses-M00"],
+        "sub-02": ["ses-M00", "ses-M06"],
+        "sub-06": ["ses-M00"],
+    }
+
+    build_bids_directory(tmp_path, config)
+
+    informations = [
+        {
+            "pattern": "sub-*_ses-*_t1w.nii*",
+            "description": "T1w MRI",
+        },
+        {
+            "pattern": "sub-*_ses-*_flair.nii*",
+            "description": "FLAIR T2w MRI",
+        },
+    ]
+
+    results = clinica_list_of_files_reader(
+        ["sub-02", "sub-06", "sub-02"],
+        ["ses-M00", "ses-M00", "ses-M06"],
+        tmp_path,
+        informations,
+        raise_exception=True,
+    )
+    assert len(results) == 2
+    assert [len(r) for r in results] == [3, 3]
+
+    (
+        tmp_path
+        / "sub-02"
+        / "ses-M00"
+        / "anat"
+        / f"sub-02_ses-M00_foo-bar_flair.nii.gz"
+    ).mkdir()
+    with pytest.raises(
+        ClinicaBIDSError,
+        match="Clinica faced",
+    ):
+        clinica_list_of_files_reader(
+            ["sub-02", "sub-06", "sub-02"],
+            ["ses-M00", "ses-M00", "ses-M06"],
+            tmp_path,
+            informations,
+            raise_exception=True,
+        )
+    results = clinica_list_of_files_reader(
+        ["sub-02", "sub-06", "sub-02"],
+        ["ses-M00", "ses-M00", "ses-M06"],
+        tmp_path,
+        informations,
+        raise_exception=False,
+    )
+    assert len(results) == 2
+    assert len(results[0]) == 3
+    assert len(results[1]) == 0
