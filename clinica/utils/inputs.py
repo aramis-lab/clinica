@@ -154,12 +154,12 @@ def check_bids_folder(bids_directory: os.PathLike) -> None:
         )
 
 
-def check_caps_folder(caps_directory: str) -> None:
+def check_caps_folder(caps_directory: os.PathLike) -> None:
     """Check if provided `caps_directory`is a CAPS folder.
 
     Parameters
     ----------
-    caps_directory : str
+    caps_directory : os.PathLike
         The input folder to check.
 
     Raises
@@ -176,15 +176,14 @@ def check_caps_folder(caps_directory: str) -> None:
 
     Notes
     -----
-    Keep in mind that CAPS folder can be empty.
+    Keep in mind that a CAPS folder can be empty.
     """
     from clinica.utils.exceptions import ClinicaCAPSError
 
+    caps_directory = Path(caps_directory)
     _common_checks(caps_directory, "CAPS")
 
-    sub_folders = [
-        item for item in os.listdir(caps_directory) if item.startswith("sub-")
-    ]
+    sub_folders = [f for f in caps_directory.iterdir() if f.name.startswith("sub-")]
     if len(sub_folders) > 0:
         error_string = (
             "Your CAPS directory contains at least one folder whose name "
@@ -201,7 +200,7 @@ def check_caps_folder(caps_directory: str) -> None:
 
 
 def find_sub_ses_pattern_path(
-    input_directory: str,
+    input_directory: os.PathLike,
     subject: str,
     session: str,
     error_encountered: list,
@@ -217,6 +216,12 @@ def find_sub_ses_pattern_path(
     ----------
     input_directory : str
         Path to the root of the input directory (BIDS or CAPS).
+
+        .. warning::
+            This function does not perform any check on `input_directory`.
+            It is assumed that it has been previously checked by either
+            `check_bids_directory` or `check_caps_directory`, and that
+            the flag `is_bids` has been set accordingly.
 
     subject : str
         Name given to the folder of a participant (ex: sub-ADNI002S0295).
@@ -238,16 +243,14 @@ def find_sub_ses_pattern_path(
     pattern : str
         Define the pattern of the final file.
     """
-    from os.path import join
-
+    input_directory = Path(input_directory)
     if is_bids:
-        origin_pattern = join(input_directory, subject, session)
+        origin_pattern = input_directory / subject / session
     else:
-        origin_pattern = join(input_directory, "subjects", subject, session)
+        origin_pattern = input_directory / "subjects" / subject / session
 
-    current_pattern = join(origin_pattern, "**/", pattern)
-    current_glob_found = insensitive_glob(current_pattern, recursive=True)
-
+    current_pattern = origin_pattern / "**" / pattern
+    current_glob_found = insensitive_glob(str(current_pattern), recursive=True)
     # Error handling if more than 1 file are found, or when no file is found
     if len(current_glob_found) > 1:
         error_str = f"\t*  ({subject} | {session}): More than 1 file found:\n"
@@ -296,8 +299,7 @@ def _format_errors(errors: List, information: Dict) -> str:
             "Please note that the following clinica pipeline(s) must "
             f"have run to obtain these files: {information['needed_pipeline']}\n"
         )
-    for msg in error_encountered:
-        error_message += msg
+    error_message += "\n".join(errors)
 
     return error_message
 
@@ -305,7 +307,7 @@ def _format_errors(errors: List, information: Dict) -> str:
 def clinica_file_reader(
     subjects: List[str],
     sessions: List[str],
-    input_directory: str,
+    input_directory: os.PathLike,
     information: Dict,
     raise_exception: Optional[bool] = True,
     n_procs: Optional[int] = 1,
@@ -322,7 +324,7 @@ def clinica_file_reader(
     sessions : List[str]
         List of sessions. Must be same size as `subjects` and must correspond.
 
-    input_directory : str
+    input_directory : PathLike
         Path to the BIDS or CAPS directory to read from.
 
     information : Dict
@@ -448,6 +450,7 @@ def clinica_file_reader(
     _check_information(information)
     pattern = information["pattern"]
 
+    input_directory = Path(input_directory)
     is_bids = determine_caps_or_bids(input_directory)
     if is_bids:
         check_bids_folder(input_directory)
@@ -471,7 +474,7 @@ def clinica_file_reader(
     )
     error_message = _format_errors(errors_encountered, information)
 
-    if len(error_encountered) > 0 and raise_exception:
+    if len(errors_encountered) > 0 and raise_exception:
         if is_bids:
             raise ClinicaBIDSError(error_message)
         else:
