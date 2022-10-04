@@ -242,6 +242,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         from clinica.utils.dwi import compute_average_b0
 
         from .dwi_preprocessing_using_t1_utils import (
+            delete_apply_transform,
             init_input_node,
             prepare_reference_b0,
             print_end_pipeline,
@@ -304,7 +305,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             initrand=self.parameters["initrand"],
         )
         # Susceptibility distortion correction using T1w image
-        sdc = epi_pipeline(name="SusceptibilityDistortionCorrection")
+        sdc = epi_pipeline(self, name="SusceptibilityDistortionCorrection")
+
         # Remove bias correction from (Jeurissen et al., 2014)
         bias = npe.Node(mrtrix3.DWIBiasCorrect(use_ants=True), name="RemoveBias")
         # Compute b0 mask on corrected avg b0

@@ -21,6 +21,7 @@ pipeline_name = "t1-linear"
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option.light_version
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -28,6 +29,7 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    light_version: bool = False,
 ) -> None:
     """Affine registration of T1w images to the MNI standard space.
 
@@ -39,7 +41,7 @@ def cli(
 
     from .anat_linear_pipeline import AnatLinear
 
-    parameters = {"uncropped_image": uncropped_image}
+    parameters = {"uncropped_image": uncropped_image, "light_version": light_version}
 
     # Most of the time, you will want to instantiate your pipeline with a
     # BIDS and CAPS directory as inputs:

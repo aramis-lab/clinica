@@ -82,7 +82,7 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     return wf
 
 
-def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
+def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
     """Perform EPI correction.
 
     This workflow allows to correct for echo-planar induced susceptibility artifacts without fieldmap
@@ -108,6 +108,7 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     from .dwi_preprocessing_using_t1_utils import (
         ants_apply_transforms,
         change_itk_transform_type,
+        delete_apply_transform,
         expend_matrix_list,
         rotate_bvecs,
     )
@@ -225,6 +226,17 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     )
 
     merge = pe.Node(fsl.Merge(dimension="t"), name="MergeDWIs")
+    # Delete the temporary directory that takes too much place
+    delete_warp_field_tmp = pe.Node(
+        name="deletewarpfieldtmp",
+        interface=niu.Function(
+            inputs=["marker", "dir_to_del", "base_dir", "light"],
+            function=delete_apply_transform,
+        ),
+    )
+    delete_warp_field_tmp.inputs.base_dir = self.base_dir
+    delete_warp_field_tmp.inputs.dir_to_del = apply_transform_field.name
+    delete_warp_field_tmp.inputs.light = self.parameters["light"]
 
     outputnode = pe.Node(
         niu.IdentityInterface(
@@ -282,6 +294,7 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
                                              ("warped_image", "epi_correction_image_warped")]),
             (merge_transform, outputnode, [("out", "warp_epi")]),
             (rot_bvec, outputnode, [("out_file", "out_bvec")]),
+            (merge, delete_warp_field_tmp, [("merged_file", "marker")]),
         ]
     )
     # fmt: on

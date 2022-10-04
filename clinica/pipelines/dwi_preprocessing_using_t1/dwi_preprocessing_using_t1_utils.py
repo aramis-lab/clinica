@@ -308,3 +308,16 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
     )
 
     return out_reference_b0, out_b0_dwi_merge, out_updated_bval, out_updated_bvec
+
+
+def delete_apply_transform(marker, dir_to_del, base_dir, light):
+    import shutil
+    from pathlib import Path
+
+    print("\n", base_dir, "\n")
+    print("\n", dir_to_del, "\n")
+    if not light:
+        for z in Path(base_dir).rglob(f"*{dir_to_del}*"):
+            print(z)
+            shutil.rmtree(z)
+    return

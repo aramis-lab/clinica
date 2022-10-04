@@ -241,7 +241,7 @@ class AnatLinear(cpe.Pipeline):
 
         from clinica.utils.filemanip import get_filename_no_ext
 
-        from .anat_linear_utils import crop_nifti, print_end_pipeline
+        from .anat_linear_utils import crop_nifti, exp_func, print_end_pipeline
 
         image_id_node = npe.Node(
             interface=nutil.Function(
@@ -286,6 +286,17 @@ class AnatLinear(cpe.Pipeline):
         )
         cropnifti.inputs.ref_crop = self.ref_crop
 
+        exp_node = npe.Node(
+            name="exp_node",
+            interface=nutil.Function(
+                function=exp_func,
+                input_names=["useless_stuff", "working_dir", "input_name", "light"],
+            ),
+        )
+        exp_node.inputs.working_dir = self.base_dir
+        exp_node.inputs.input_name = n4biascorrection.name
+        exp_node.inputs.light = self.parameters["light_version"]
+
         # 4. Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
@@ -308,6 +319,7 @@ class AnatLinear(cpe.Pipeline):
                 (ants_registration_node, self.output_node, [("out_matrix", "affine_mat")]),
                 (ants_registration_node, self.output_node, [("warped_image", "outfile_reg")]),
                 (self.input_node, print_end_message, [("anat", "anat")]),
+                (cropnifti, exp_node,  [("output_img", "useless_stuff")])
             ]
         )
         if not (self.parameters.get("uncropped_image")):
