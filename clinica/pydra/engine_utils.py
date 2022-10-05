@@ -18,76 +18,77 @@ def list_out_fields(wf: Workflow) -> list:
     return [x[0] for x in wf.output_spec.fields if not x[0].startswith("_")]
 
 
-def list_in_fields(wf: Workflow) -> list:
-    """Extract the input fields from a Workflow
-
-    Parameters
-    ----------
-    wf : Workflow
-
-    Returns
-    -------
-    list
-        list of wf workflow's fields from input_spec
-    """
-    return [x[0] for x in wf.input_spec.fields if not x[0].startswith("_")]
-
-
-def list_dict_in_fields(wf: Workflow) -> dict:
+def list_workflow_inputs(wf: Workflow) -> dict:
     """Extract the input default dictionary values from a Workflow.
 
     This is used as a way to pass data from the core Workflow
     to the input_workflow in order to properly query input folders.
 
-    Better ways to do that ???
-
     Parameters
     ----------
-    wf: Workflow
+    wf : Workflow
+        Workflow to list inputs from.
 
     Returns
     -------
     dict : Dictionary of wf default values from input_spec.
     """
-    return {
-        x[0]: x[2]
-        for x in wf.input_spec.fields
-        if not x[0].startswith("_") and x[1] == dict
-    }
+    inputs = {}
+    for input_field in wf.input_spec.fields:
+        if not input_field[0].startswith("_"):
+            if input_field[1] == dict:
+                inputs[input_field[0]] = input_field[2]
+            elif input_field[1] == str:
+                inputs[input_field[0]] = {}
+            else:
+                raise ValueError(
+                    f"Could not parse input field {input_field}."
+                    "Please review your input specifications."
+                )
+    return inputs
 
 
-def bids_query(keys: list) -> dict:
-    """Form dictionary of BIDS query based on modality or key
+def bids_query(raw_query: dict) -> dict:
+    """Parse a raw BIDS query dictionary and return a properly
+    formatted query dictionary that is compatible with the
+    `BIDSDataGrabber` interface.
 
     Parameters
     ----------
-    keys : list
-            The BIDS items to query
+    raw_query : dict
+        The raw BIDS query as a dictionary. This may contain data
+        that is not supported by the `BIDSDataGrabber`.
+
     Returns
     -------
-    dict
-        Query dictionary compatible with BIDSDataGrabber()
+    query : dict
+        The formatted query dictionary compatible with `BIDSDataGrabber`.
     """
-    bids_keys_available = {
+    query = {}
+    bids_default_queries = {
         "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}
     }
+    for k, q in raw_query.items():
+        if k in bids_default_queries:
+            query[k] = {**bids_default_queries[k], **q}
+    return query
 
-    return {key: bids_keys_available[key] for key in keys if key in bids_keys_available}
 
-
-def caps_query(query: dict) -> dict:
-    """Form dictionary of CAPS query based on a raw query.
+def caps_query(raw_query: dict) -> dict:
+    """Parse a raw CAPS query dictionary and return a properly
+    formatted query dictionary that is compatible with the
+    `CAPSDataGrabber` interface.
 
     Parameters
     ----------
-    query : Raw query dictionary
-        The CAPS items to query as keys and the associated
-        parameters as values.
+    raw_query : dict
+        The raw CAPS query as a dictionary. This may contain data
+        that is not supported by the `CAPSDataGrabber`.
 
     Returns
     -------
-    dict
-        Query dictionary compatible with CAPSDataGrabber()
+    query : dict
+        The formatted query dictionary compatible with `CAPSDataGrabber`.
     """
     from clinica.utils.input_files import (
         t1_volume_deformation_to_template,
@@ -96,6 +97,7 @@ def caps_query(query: dict) -> dict:
         t1_volume_native_tpm_in_mni,
     )
 
+    query = {}
     caps_keys_available_file_reader = {
         "mask_tissues": t1_volume_native_tpm_in_mni,
         "flow_fields": t1_volume_deformation_to_template,
@@ -104,15 +106,14 @@ def caps_query(query: dict) -> dict:
     caps_keys_available_group_reader = {
         "dartel_template": t1_volume_final_group_template,
     }
-    query_dict = {}
-    for k, v in query.items():
+    for k, v in raw_query.items():
         if k in caps_keys_available_file_reader:
-            query_dict[k] = caps_keys_available_file_reader[k](**v)
-            query_dict[k]["reader"] = "file"
+            query[k] = caps_keys_available_file_reader[k](**v)
+            query[k]["reader"] = "file"
         elif k in caps_keys_available_group_reader:
-            query_dict[k] = caps_keys_available_group_reader[k](**v)
-            query_dict[k]["reader"] = "group"
-    return query_dict
+            query[k] = caps_keys_available_group_reader[k](**v)
+            query[k]["reader"] = "group"
+    return query
 
 
 def run(wf: Workflow) -> str:

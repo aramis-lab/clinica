@@ -50,7 +50,7 @@ click-option-group = "^0.5"
 xlrd = "*"
 openpyxl = "*"
 fsspec = "*"
-pydra = "^0.18"
+pydra = {git = "https://github.com/nipype/pydra", rev = "8c8a79cece4adc2f09271db06ea5118af3fcbcd9"}
 pydra-nipype1 = "^0.1.0"
 pybids = "^0.15.1"
 joblib = "^1.2.0"

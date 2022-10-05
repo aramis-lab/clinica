@@ -1,6 +1,8 @@
+import typing as ty
 from os import PathLike, path
 from pathlib import Path, PurePath
 
+import pydra
 import pytest
 from pydra import Workflow
 from pydra.mark import annotate, task
@@ -35,7 +37,12 @@ def pipeline():
 
 @pytest.fixture
 def core_workflow():
-    wf = Workflow("smoothing_t1w", input_spec=["T1w"])
+    input_spec = pydra.specs.SpecInfo(
+        name="Input",
+        fields=[("T1w", str, {"mandatory": True})],
+        bases=(pydra.specs.BaseSpec,),
+    )
+    wf = Workflow("smoothing_t1w", input_spec=input_spec)
     wf.add(
         smooth_image(
             name="smooth_image",
@@ -68,8 +75,11 @@ def test_add_input_task(bids_query: dict):
     input_workflow = Workflow(name="input_workflow", input_spec=["input_dir"])
 
     input_workflow.inputs.input_dir = Path(CURRENT_DIR) / "data"
-
-    add_input_task(input_workflow, bids_reader, bids_query)
+    reader = bids_reader(
+        query=bids_query,
+        input_dir=input_workflow.lzin.input_dir,
+    )
+    add_input_task(input_workflow, reader)
 
     assert "bids_reader_task" in [x.name for x in input_workflow.nodes]
     return
