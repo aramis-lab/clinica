@@ -75,8 +75,11 @@ def test_add_input_task(bids_query: dict):
     input_workflow = Workflow(name="input_workflow", input_spec=["input_dir"])
 
     input_workflow.inputs.input_dir = Path(CURRENT_DIR) / "data"
-
-    add_input_task(input_workflow, bids_reader, bids_query)
+    reader = bids_reader(
+        query=bids_query,
+        input_dir=input_workflow.lzin.input_dir,
+    )
+    add_input_task(input_workflow, reader)
 
     assert "bids_reader_task" in [x.name for x in input_workflow.nodes]
     return
