@@ -235,7 +235,13 @@ def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
         ),
     )
     delete_warp_field_tmp.inputs.base_dir = self.base_dir
-    delete_warp_field_tmp.inputs.dir_to_del = apply_transform_field.name
+    delete_warp_field_tmp.inputs.dir_to_del = [
+        apply_transform_field.name,
+        jacobian.name,
+        jacmult.name,
+        thres.name,
+        apply_transform_image.name,
+    ]
     delete_warp_field_tmp.inputs.light = self.parameters["light_version"]
 
     outputnode = pe.Node(
@@ -287,6 +293,7 @@ def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
             (jacobian, jacmult, [("jacobian_image", "in_file")]),
             (jacmult, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
+
             (merge, outputnode, [("merged_file", "DWIs_epicorrected")]),
             (flirt_b0_2_t1, outputnode, [("out_matrix_file", "DWI_2_T1_Coregistration_matrix")]),
             (ants_registration, outputnode, [("forward_warp_field", "epi_correction_deformation_field"),
@@ -294,6 +301,7 @@ def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
                                              ("warped_image", "epi_correction_image_warped")]),
             (merge_transform, outputnode, [("out", "warp_epi")]),
             (rot_bvec, outputnode, [("out_file", "out_bvec")]),
+
             (merge, delete_warp_field_tmp, [("merged_file", "marker")]),
         ]
     )
