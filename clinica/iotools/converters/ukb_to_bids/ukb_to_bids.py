@@ -14,6 +14,9 @@ def convert_images(
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
+
+    import clinica.iotools.bids_utils as bids
+
     from .ukb_utils import (
         complete_clinical,
         dataset_to_bids,
@@ -44,4 +47,18 @@ def convert_images(
         sessions=result["sessions"],
         scans=result["scans"],
         dataset_directory=path_to_dataset,
+    )
+    readme_data = {
+        "link": "https://www.ukbiobank.ac.uk/",
+        "desc": (
+            "UK Biobank is a large-scale biomedical database and research resource, containing in-depth genetic and "
+            "health information from half a million UK participants. The database is regularly augmented with "
+            "additional data and is globally accessible to approved researchers undertaking vital research into the "
+            "most common and life-threatening diseases. It is a major contributor to the advancement of modern "
+            "medicine it and has led to the discovery of several scientific advances and numerous treatments to "
+            "improve human health."
+        ),
+    }
+    bids.write_modality_agnostic_files(
+        study_name="UKB", readme_data=readme_data, bids_dir=bids_dir
     )

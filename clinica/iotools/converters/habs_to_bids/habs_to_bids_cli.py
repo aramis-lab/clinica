@@ -2,6 +2,8 @@ from pathlib import Path
 
 import click
 
+import clinica.iotools.bids_utils as bids
+
 
 @click.command(name="habs-to-bids")
 @click.argument(
