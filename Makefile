@@ -13,6 +13,10 @@ help: Makefile
 build:
 	@$(POETRY) build
 
+.PHONY: check.lock
+check.lock:
+	@$(POETRY) lock --check
+
 .PHONY: clean.doc
 clean.doc:
 	@$(RM) -rf site
