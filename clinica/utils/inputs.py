@@ -596,7 +596,7 @@ def clinica_list_of_files_reader(
 
 
 def clinica_group_reader(
-    caps_directory: str,
+    caps_directory: os.PathLike,
     information: Dict,
     raise_exception: Optional[bool] = True,
 ) -> str:
@@ -607,7 +607,7 @@ def clinica_group_reader(
 
     Parameters
     ----------
-    caps_directory : str
+    caps_directory : PathLike
         Path to the input CAPS directory.
 
     information : Dict
@@ -634,23 +634,24 @@ def clinica_group_reader(
     ClinicaCAPSError :
         If no file is found, or more than 1 files are found.
     """
-    from os.path import join
-
     _check_information(information)
     pattern = information["pattern"]
+    caps_directory = Path(caps_directory)
     check_caps_folder(caps_directory)
 
-    current_pattern = join(caps_directory, "**/", pattern)
-    found_files = insensitive_glob(current_pattern, recursive=True)
+    current_pattern = caps_directory / "**" / pattern
+    found_files = insensitive_glob(str(current_pattern), recursive=True)
 
-    if len(found_files) != 1 and raise_exception is True:
+    # Since we are returning found_files[0], force raising even if raise_exception is False
+    # Otherwise we'll get an uninformative IndexError...
+    if (len(found_files) == 0) or (len(found_files) > 1 and raise_exception is True):
         _format_and_raise_group_reader_errors(caps_directory, found_files, information)
 
     return found_files[0]
 
 
 def _format_and_raise_group_reader_errors(
-    caps_directory: str,
+    caps_directory: os.PathLike,
     found_files: List,
     information: Dict,
 ) -> None:

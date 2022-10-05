@@ -72,7 +72,7 @@ def build_caps_directory(directory: os.PathLike, subjects_sessions: Dict) -> Non
                 / sub
                 / ses
                 / "t1_linear"
-                / "sub-01_ses-M00_T1w_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz"
+                / f"{sub}_{ses}_T1w_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz"
             ).mkdir()
 
 
@@ -535,3 +535,57 @@ def test_clinica_list_of_files_reader(tmp_path):
     assert len(results) == 2
     assert len(results[0]) == 3
     assert len(results[1]) == 0
+
+
+def test_clinica_group_reader(tmp_path):
+    from clinica.utils.exceptions import ClinicaCAPSError
+    from clinica.utils.inputs import clinica_group_reader
+
+    config = {
+        "sub-01": ["ses-M00"],
+        "sub-02": ["ses-M00", "ses-M06"],
+        "sub-06": ["ses-M00"],
+    }
+    build_caps_directory(tmp_path, config)
+    group_label = "UnitTest"
+    information = {
+        "pattern": os.path.join(
+            f"group-{group_label}", "t1", f"group-{group_label}_template.nii*"
+        ),
+        "description": f"T1w template file of group {group_label}",
+        "needed_pipeline": "t1-volume or t1-volume-create-dartel",
+    }
+    with pytest.raises(
+        ClinicaCAPSError,
+        match="Clinica encountered a problem while getting T1w template file of group UnitTest. No file was found",
+    ):
+        for raise_exception in [True, False]:
+            clinica_group_reader(tmp_path, information, raise_exception=raise_exception)
+    (tmp_path / "groups").mkdir()
+    (tmp_path / "groups" / f"group-{group_label}").mkdir()
+    (tmp_path / "groups" / f"group-{group_label}" / "t1").mkdir()
+    (
+        tmp_path
+        / "groups"
+        / f"group-{group_label}"
+        / "t1"
+        / f"group-{group_label}_template.nii.gz"
+    ).mkdir()
+    result = clinica_group_reader(tmp_path, information, raise_exception=True)
+    assert Path(result).relative_to(tmp_path) == Path(
+        "groups/group-UnitTest/t1/group-UnitTest_template.nii.gz"
+    )
+    (
+        tmp_path
+        / "groups"
+        / f"group-{group_label}"
+        / "t1"
+        / f"group-{group_label}_template.nii.gz2"
+    ).mkdir()
+    with pytest.raises(
+        ClinicaCAPSError,
+        match="Clinica encountered a problem while getting T1w template file of group UnitTest. 2 files were found",
+    ):
+        clinica_group_reader(tmp_path, information, raise_exception=True)
+    result = clinica_group_reader(tmp_path, information, raise_exception=False)
+    assert Path(result).stem == "group-UnitTest_template.nii"
