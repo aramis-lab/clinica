@@ -1,9 +1,9 @@
 def sort_session_list(session_list):
-    session_idx = [int(session[5:]) for session in session_list]
-    session_idx.sort()
     session_id_list = []
+    session_idx = [((session[5:]), int(session[5:])) for session in session_list]
+    session_idx.sort(key=lambda x: x[1])
     for session in session_idx:
-        session_id_list.append(f"ses-M{session:03d}")
+        session_id_list.append(f"ses-M{session[0]}")
     return session_id_list
 
 
