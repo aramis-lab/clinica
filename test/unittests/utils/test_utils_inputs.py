@@ -22,6 +22,7 @@ def build_bids_directory(directory: os.PathLike, subjects_sessions: Dict) -> Non
     This function is a simple prototype for creating fake datasets for testing.
     It only adds (for now...) T1W nifti images for all subjects and sessions.
     """
+    directory = Path(directory)
     data_types = {"anat"}
     suffixes = {"T1w", "flair"}
     extensions = {"nii.gz"}
@@ -60,6 +61,7 @@ def build_caps_directory(directory: os.PathLike, subjects_sessions: Dict) -> Non
     It only adds (for now...) partial results of the t1-linear pipeline
     for all subjects and sessions.
     """
+    directory = Path(directory)
     (directory / "subjects").mkdir()
     for sub, sessions in subjects_sessions.items():
         (directory / "subjects" / sub).mkdir()
@@ -152,7 +154,7 @@ def test_common_checks(folder_type):
         error,
         match=f"The {folder_type} directory you gave is not a folder.",
     ):
-        _common_checks("fooooo", folder_type)
+        _common_checks(Path("fooooo"), folder_type)
 
 
 def test_check_bids_folder(tmp_path):
@@ -215,7 +217,6 @@ def test_find_sub_ses_pattern_path(tmp_path):
     assert len(errors) == 1
     assert errors[0] == "\t* (sub-01 | ses-M00): No file found\n"
 
-    errors = []
     (tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_T1w.nii.gz").mkdir()
 
     errors, results = [], []
@@ -486,7 +487,7 @@ def test_clinica_list_of_files_reader(tmp_path):
 
     build_bids_directory(tmp_path, config)
 
-    informations = [
+    information = [
         {
             "pattern": "sub-*_ses-*_t1w.nii*",
             "description": "T1w MRI",
@@ -501,7 +502,7 @@ def test_clinica_list_of_files_reader(tmp_path):
         ["sub-02", "sub-06", "sub-02"],
         ["ses-M00", "ses-M00", "ses-M06"],
         tmp_path,
-        informations,
+        information,
         raise_exception=True,
     )
     assert len(results) == 2
@@ -522,14 +523,14 @@ def test_clinica_list_of_files_reader(tmp_path):
             ["sub-02", "sub-06", "sub-02"],
             ["ses-M00", "ses-M00", "ses-M06"],
             tmp_path,
-            informations,
+            information,
             raise_exception=True,
         )
     results = clinica_list_of_files_reader(
         ["sub-02", "sub-06", "sub-02"],
         ["ses-M00", "ses-M00", "ses-M06"],
         tmp_path,
-        informations,
+        information,
         raise_exception=False,
     )
     assert len(results) == 2

@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple
 RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "checksum"])
 
 
-def insensitive_glob(pattern_glob: str, recursive: Optional[bool] = False) -> str:
+def insensitive_glob(pattern_glob: str, recursive: Optional[bool] = False) -> List[str]:
     """This function is the glob.glob() function that is insensitive to the case.
 
     Parameters
@@ -23,7 +23,7 @@ def insensitive_glob(pattern_glob: str, recursive: Optional[bool] = False) -> st
 
     Returns
     -------
-    str :
+    List[str] :
         Insensitive-to-the-case pattern.
     """
     from glob import glob
@@ -64,6 +64,8 @@ def _list_subjects_sub_folders(
 ) -> List[os.PathLike]:
     from clinica.utils.stream import cprint
 
+    root_dir = Path(root_dir)
+    groups_dir = Path(groups_dir)
     warning_msg = (
         f"Could not determine if {groups_dir.parent} is a CAPS or BIDS directory. "
         "Clinica will assume this is a CAPS directory."
@@ -371,8 +373,8 @@ def clinica_file_reader(
 
     Notes
     -----
-    This function is case insensitive, meaning that the pattern argument can, for example,
-    contain upper case letters that do not exists in the existing file path.
+    This function is case-insensitive, meaning that the pattern argument can, for example,
+    contain upper case letters that do not exist in the existing file path.
 
     You should always use `clinica_file_reader` in the following manner:
 
@@ -463,7 +465,7 @@ def clinica_file_reader(
     if len(subjects) == 0:
         return [], ""
 
-    file_reader = _read_files_parrallel if n_procs > 1 else _read_files_sequential
+    file_reader = _read_files_parallel if n_procs > 1 else _read_files_sequential
     results, errors_encountered = file_reader(
         input_directory,
         subjects,
@@ -483,8 +485,8 @@ def clinica_file_reader(
     return results, error_message
 
 
-def _read_files_parrallel(
-    input_directory: str,
+def _read_files_parallel(
+    input_directory: os.PathLike,
     subjects: List[str],
     sessions: List[str],
     is_bids: bool,
@@ -516,7 +518,7 @@ def _read_files_parrallel(
 
 
 def _read_files_sequential(
-    input_directory: str,
+    input_directory: os.PathLike,
     subjects: List[str],
     sessions: List[str],
     is_bids: bool,
@@ -758,7 +760,7 @@ def get_file_from_server(
         the file to retrieve.
 
     cache_path : str, optional
-        Path to cache. Defaul="~/.cache/clinica/data".
+        Path to cache. Default="~/.cache/clinica/data".
 
     Returns
     -------
