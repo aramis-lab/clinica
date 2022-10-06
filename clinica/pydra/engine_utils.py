@@ -97,7 +97,6 @@ def caps_query(raw_query: dict) -> dict:
         t1_volume_native_tpm_in_mni,
     )
 
-    query = {}
     caps_keys_available_file_reader = {
         "mask_tissues": t1_volume_native_tpm_in_mni,
         "flow_fields": t1_volume_deformation_to_template,
