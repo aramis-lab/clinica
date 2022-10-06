@@ -1,6 +1,5 @@
 import functools
 from os import PathLike
-from typing import Callable
 
 from pydra import Workflow
 from pydra.engine.core import TaskBase
@@ -51,14 +50,13 @@ def add_input_reading_task(
     pipeline : Workflow
         The main Workflow to which the readers should be added.
 
-    core_inputs : dict
-        The inputs specified by the core workflow. This defines
-        what the reader workflow should read and how it should
-        connect to the core Workflow.
+    core_workflow : Workflow
+        The core workflow. It defines, through its inputs,
+        what the reader workflow should read and these two
+        workflows should connect.
 
-    query_maker : Callable
-        Function responsible for parsing the core_inputs into a
-        proper query.
+    query_type : {"bids", "caps_file", "caps_group"}
+        The type of query that should be run.
 
     reader : TaskBase
         Task responsible for reading data.
