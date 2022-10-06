@@ -146,7 +146,7 @@ def test_common_checks(folder_type):
         ValueError,
         match="Argument you provided to ",
     ):
-        _common_checks(1, folder_type)
+        _common_checks(1, folder_type)  # noqa
 
     error = ClinicaBIDSError if folder_type == "BIDS" else ClinicaCAPSError
 
@@ -249,7 +249,7 @@ def test_check_information():
         TypeError,
         match="A dict must be provided for the argument 'information'",
     ):
-        _check_information(42)
+        _check_information(42)  # noqa
 
     with pytest.raises(
         ValueError,
