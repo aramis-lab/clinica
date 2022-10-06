@@ -7,6 +7,8 @@ from nipype.interfaces.base import Directory, DynamicTraitedSpec, Str, isdefined
 from nipype.interfaces.io import IOBase, add_traits
 from pydra.tasks.nipype1.utils import Nipype1Task
 
+from clinica.pydra.query import BIDSQuery, CAPSFileQuery, CAPSGroupQuery, CAPSQuery
+
 
 class CAPSDataGrabberInputSpec(DynamicTraitedSpec):
     base_dir = Directory(exists=True, desc="Path to CAPS Directory.", mandatory=True)
@@ -20,12 +22,12 @@ class CAPSDataGrabberInputSpec(DynamicTraitedSpec):
     )
 
 
-class CAPSDataGrabber(IOBase):
+class CAPSFileDataGrabber(IOBase):
     input_spec = CAPSDataGrabberInputSpec
     output_spec = DynamicTraitedSpec
 
     def __init__(self, **kwargs):
-        super(CAPSDataGrabber, self).__init__(**kwargs)
+        super(CAPSFileDataGrabber, self).__init__(**kwargs)
 
         if not isdefined(self.inputs.output_query):
             self.inputs.output_query = {}
@@ -34,7 +36,7 @@ class CAPSDataGrabber(IOBase):
         self.inputs.trait_set(trait_change_notify=False, **undefined_traits)
 
     def _list_outputs(self):
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.participant import get_subject_session_list
 
         sessions, subjects = get_subject_session_list(
@@ -42,44 +44,67 @@ class CAPSDataGrabber(IOBase):
             is_bids_dir=False,
         )
         output_query = {}
-        for k, q in self.inputs.output_query.items():
-            reader = q["reader"]
-            query = q["query"]
-            if reader == "file":
-                if isinstance(query, list):
-                    temp = [
-                        clinica_file_reader(
-                            subjects,
-                            sessions,
-                            self.inputs.base_dir,
-                            sub_query,
-                        )[0]
-                        for sub_query in query
-                    ]
-                    if len(temp) != len(subjects) and len(temp[0]) == len(subjects):
-                        transpose = []
-                        for x in zip(*temp):
-                            transpose.append(x)
-                        assert len(transpose) == len(subjects)
-                        temp = transpose
-                    output_query[k] = temp
-                else:
-                    output_query[k] = clinica_file_reader(
+        for k, query in self.inputs.output_query.items():
+            if isinstance(query, list):
+                temp = [
+                    clinica_file_reader(
                         subjects,
                         sessions,
                         self.inputs.base_dir,
-                        query,
+                        q,
                     )[0]
-            elif reader == "group":
-                if isinstance(query, list):
-                    output_query[k] = [
-                        clinica_group_reader(self.inputs.base_dir, sub_query)
-                        for sub_query in query
-                    ]
-                else:
-                    output_query[k] = clinica_group_reader(self.inputs.base_dir, query)
+                    for q in query
+                ]
+                if len(temp) != len(subjects) and len(temp[0]) == len(subjects):
+                    transpose = []
+                    for x in zip(*temp):
+                        transpose.append(x)
+                    assert len(transpose) == len(subjects)
+                    temp = transpose
+                output_query[k] = temp
             else:
-                raise ValueError(f"Unknown reader {reader}.")
+                output_query[k] = clinica_file_reader(
+                    subjects,
+                    sessions,
+                    self.inputs.base_dir,
+                    query,
+                )[0]
+        return output_query
+
+    def _add_output_traits(self, base):
+        return add_traits(base, list(self.inputs.output_query.keys()))
+
+
+class CAPSGroupDataGrabber(IOBase):
+    input_spec = CAPSDataGrabberInputSpec
+    output_spec = DynamicTraitedSpec
+
+    def __init__(self, **kwargs):
+        super(CAPSGroupDataGrabber, self).__init__(**kwargs)
+
+        if not isdefined(self.inputs.output_query):
+            self.inputs.output_query = {}
+        # used for mandatory inputs check
+        undefined_traits = {}
+        self.inputs.trait_set(trait_change_notify=False, **undefined_traits)
+
+    def _list_outputs(self):
+        from clinica.utils.inputs import clinica_group_reader
+        from clinica.utils.participant import get_subject_session_list
+
+        sessions, subjects = get_subject_session_list(
+            self.inputs.base_dir,
+            is_bids_dir=False,
+        )
+        output_query = {}
+        for k, query in self.inputs.output_query.items():
+            if isinstance(query, list):
+                output_query[k] = [
+                    clinica_group_reader(self.inputs.base_dir, sub_query)
+                    for sub_query in query
+                ]
+            else:
+                output_query[k] = clinica_group_reader(self.inputs.base_dir, query)
         return output_query
 
     def _add_output_traits(self, base):
@@ -109,11 +134,11 @@ def bids_writer(output_dir: PathLike, output_file: PathLike) -> str:
     return output_file
 
 
-def bids_reader(query: dict, input_dir: PathLike):
+def bids_reader(query: BIDSQuery, input_dir: PathLike):
     """
     Parameters
     ----------
-    query : dict
+    query : BIDSQuery
         Input to BIDSDataGrabber (c.f https://nipype.readthedocs.io/en/latest/api/generated/nipype.interfaces.io.html#bidsdatagrabber)
     input_dir :  PathLike
         The BIDS input directory.
@@ -123,7 +148,7 @@ def bids_reader(query: dict, input_dir: PathLike):
     Nipype1Task
         The task used for reading files from BIDS.
     """
-    bids_data_grabber = nio.BIDSDataGrabber(output_query=query)
+    bids_data_grabber = nio.BIDSDataGrabber(output_query=query.query)
     bids_reader_task = Nipype1Task(
         name="bids_reader_task",
         interface=bids_data_grabber,
@@ -132,11 +157,11 @@ def bids_reader(query: dict, input_dir: PathLike):
     return bids_reader_task
 
 
-def caps_reader(query: dict, input_dir: PathLike):
+def caps_reader(query: CAPSQuery, input_dir: PathLike):
     """
     Parameters
     ----------
-    query : dict
+    query : CAPSQuery
         Input to CAPSDataGrabber.
     input_dir :  PathLike
         The CAPS input directory.
@@ -146,7 +171,13 @@ def caps_reader(query: dict, input_dir: PathLike):
     Nipype1Task
         The task used for reading files from CAPS.
     """
-    caps_data_grabber = CAPSDataGrabber(output_query=query)
+    if isinstance(query, CAPSFileQuery):
+        grabber = CAPSFileDataGrabber
+    elif isinstance(query, CAPSGroupQuery):
+        grabber = CAPSGroupDataGrabber
+    else:
+        raise TypeError(".")
+    caps_data_grabber = grabber(output_query=query.query)
     caps_reader_task = Nipype1Task(
         name="caps_reader_task",
         interface=caps_data_grabber,
