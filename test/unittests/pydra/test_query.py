@@ -1,14 +1,15 @@
-def test_query():
-    from clinica.pydra.query import Query
+import pytest
 
+from clinica.pydra.query import BIDSQuery, CAPSFileQuery, CAPSGroupQuery, Query
+
+
+def test_query():
     q = Query({})
     assert q.query == {}
     assert len(q) == 0
 
 
 def test_bids_query():
-    from clinica.pydra.query import BIDSQuery
-
     q = BIDSQuery({})
     assert q.query == {}
     assert len(q) == 0
@@ -38,8 +39,6 @@ def test_bids_query():
 
 
 def test_caps_file_query():
-    from clinica.pydra.query import CAPSFileQuery
-
     q = CAPSFileQuery({"mask_tissues": {"tissue_number": (1, 2), "modulation": False}})
     assert len(q) == 1
     assert q.query == {
@@ -86,8 +85,6 @@ def test_caps_file_query():
 
 
 def test_caps_group_query():
-    from clinica.pydra.query import CAPSGroupQuery
-
     q = CAPSGroupQuery({"dartel_template": {"group_label": "UnitTest"}})
     assert len(q) == 1
     assert q.query == {
@@ -97,3 +94,20 @@ def test_caps_group_query():
             "needed_pipeline": "t1-volume or t1-volume-create-dartel",
         }
     }
+
+
+@pytest.mark.parametrize(
+    "query_type,expected",
+    [("bids", BIDSQuery), ("caps_file", CAPSFileQuery), ("caps_group", CAPSGroupQuery)],
+)
+def test_query_factory(query_type, expected):
+    from clinica.pydra.query import query_factory
+
+    assert isinstance(query_factory({}, query_type), expected)
+
+
+def test_query_factory_error():
+    from clinica.pydra.query import query_factory
+
+    with pytest.raises(ValueError):
+        query_factory({}, "fooo")
