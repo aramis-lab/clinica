@@ -74,6 +74,11 @@ lint.isort:
 	$(info Linting code with isort)
 	@$(POETRY) run isort --check --diff $(PACKAGES)
 
+## lock 		: Refresh locked dependencies.
+.PHONY: lock
+lock:
+	@$(POETRY) lock --no-update
+
 ## publish		: Publish the package to pypi.
 .PHONY: publish
 publish: publish.pypi
