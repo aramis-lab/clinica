@@ -1,5 +1,7 @@
 # from pathlib import PurePath
+import abc
 from os import PathLike
+from typing import Dict, List
 
 import nipype.interfaces.io as nio
 import pydra
@@ -22,93 +24,73 @@ class CAPSDataGrabberInputSpec(DynamicTraitedSpec):
     )
 
 
-class CAPSFileDataGrabber(IOBase):
+class CAPSDataGrabber(IOBase):
     input_spec = CAPSDataGrabberInputSpec
     output_spec = DynamicTraitedSpec
 
     def __init__(self, **kwargs):
-        super(CAPSFileDataGrabber, self).__init__(**kwargs)
+        super(CAPSDataGrabber, self).__init__(**kwargs)
 
         if not isdefined(self.inputs.output_query):
             self.inputs.output_query = {}
         # used for mandatory inputs check
         undefined_traits = {}
         self.inputs.trait_set(trait_change_notify=False, **undefined_traits)
+        self.sessions = None
+        self.subjects = None
 
     def _list_outputs(self):
-        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.participant import get_subject_session_list
 
         sessions, subjects = get_subject_session_list(
             self.inputs.base_dir,
             is_bids_dir=False,
         )
+        self.sessions = sessions
+        self.subjects = subjects
+
         output_query = {}
         for k, query in self.inputs.output_query.items():
             if isinstance(query, list):
-                temp = [
-                    clinica_file_reader(
-                        subjects,
-                        sessions,
-                        self.inputs.base_dir,
-                        q,
-                    )[0]
-                    for q in query
-                ]
-                if len(temp) != len(subjects) and len(temp[0]) == len(subjects):
+                temp = [self._execute_single_query(q) for q in query]
+                if len(temp) != len(self.subjects) and len(temp[0]) == len(
+                    self.subjects
+                ):
                     transpose = []
                     for x in zip(*temp):
                         transpose.append(x)
-                    assert len(transpose) == len(subjects)
+                    assert len(transpose) == len(self.subjects)
                     temp = transpose
                 output_query[k] = temp
             else:
-                output_query[k] = clinica_file_reader(
-                    subjects,
-                    sessions,
-                    self.inputs.base_dir,
-                    query,
-                )[0]
+                output_query[k] = self._execute_single_query(query)
         return output_query
+
+    @abc.abstractmethod
+    def _execute_single_query(self, query: Dict) -> List[str]:
+        pass
 
     def _add_output_traits(self, base):
         return add_traits(base, list(self.inputs.output_query.keys()))
 
 
-class CAPSGroupDataGrabber(IOBase):
-    input_spec = CAPSDataGrabberInputSpec
-    output_spec = DynamicTraitedSpec
+class CAPSFileDataGrabber(CAPSDataGrabber):
+    def _execute_single_query(self, query: Dict) -> List[str]:
+        from clinica.utils.inputs import clinica_file_reader
 
-    def __init__(self, **kwargs):
-        super(CAPSGroupDataGrabber, self).__init__(**kwargs)
-
-        if not isdefined(self.inputs.output_query):
-            self.inputs.output_query = {}
-        # used for mandatory inputs check
-        undefined_traits = {}
-        self.inputs.trait_set(trait_change_notify=False, **undefined_traits)
-
-    def _list_outputs(self):
-        from clinica.utils.inputs import clinica_group_reader
-        from clinica.utils.participant import get_subject_session_list
-
-        sessions, subjects = get_subject_session_list(
+        return clinica_file_reader(
+            self.subjects,
+            self.sessions,
             self.inputs.base_dir,
-            is_bids_dir=False,
-        )
-        output_query = {}
-        for k, query in self.inputs.output_query.items():
-            if isinstance(query, list):
-                output_query[k] = [
-                    clinica_group_reader(self.inputs.base_dir, sub_query)
-                    for sub_query in query
-                ]
-            else:
-                output_query[k] = clinica_group_reader(self.inputs.base_dir, query)
-        return output_query
+            query,
+        )[0]
 
-    def _add_output_traits(self, base):
-        return add_traits(base, list(self.inputs.output_query.keys()))
+
+class CAPSGroupDataGrabber(CAPSDataGrabber):
+    def _execute_single_query(self, query: Dict) -> List[str]:
+        from clinica.utils.inputs import clinica_group_reader
+
+        return clinica_group_reader(self.inputs.base_dir, query)
 
 
 @pydra.mark.task
