@@ -56,11 +56,7 @@ class CAPSDataGrabber(IOBase):
                 if len(temp) != len(self.subjects) and len(temp[0]) == len(
                     self.subjects
                 ):
-                    transpose = []
-                    for x in zip(*temp):
-                        transpose.append(x)
-                    assert len(transpose) == len(self.subjects)
-                    temp = transpose
+                    temp = [list(i) for i in zip(*temp)]  # Transpose
                 output_query[k] = temp
             else:
                 output_query[k] = self._execute_single_query(query)
