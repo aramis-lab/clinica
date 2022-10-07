@@ -176,7 +176,9 @@ def caps_reader(query: CAPSQuery, input_dir: PathLike):
     elif isinstance(query, CAPSGroupQuery):
         grabber = CAPSGroupDataGrabber
     else:
-        raise TypeError(".")
+        raise TypeError(
+            f"caps_reader received an unexpected query type {type(query)}. Supported types are: CAPSFileQuery and CAPSGroupQuery."
+        )
     caps_data_grabber = grabber(output_query=query.query)
     caps_reader_task = Nipype1Task(
         name="caps_reader_task",
