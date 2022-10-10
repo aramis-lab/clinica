@@ -216,16 +216,20 @@ class MissingModsTracker:
         return self.missing
 
 
-def viscode_to_session(viscode):
+def viscode_to_session(viscode: str) -> str:
     """Replace the session label 'bl' with 'M000' or capitalize the session name passed as input.
 
-    Args:
-        viscode: session name
+    Parameters
+    ----------
+        viscode: str
+            The name of the session.
 
-    Returns:
-        M000 if is the baseline session or the original session name capitalized
+    Returns
+    -------
+        str:
+            "M000" if the session is the baseline session. Otherwise returns the original session name capitalized.
     """
-    if viscode == "bl" or viscode == "m0":
+    if viscode in {"bl", "m0"}:
         return "ses-M000"
     else:
         return "ses-" + f"M{(int(viscode[1:])):03d}"
