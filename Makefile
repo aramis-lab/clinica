@@ -61,7 +61,7 @@ format.isort:
 
 ## install		: Install the project.
 .PHONY: install
-install:
+install: check.lock
 	@$(POETRY) install
 
 ## lint			: Lint the codebase.
