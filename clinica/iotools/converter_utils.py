@@ -1,4 +1,7 @@
-def sort_session_list(session_list: list) -> list:
+from typing import List
+
+
+def sort_session_list(session_list: List[str]) -> List[str]:
     """Sorts the list of session IDs provided based on their session number.
 
     Parameters
