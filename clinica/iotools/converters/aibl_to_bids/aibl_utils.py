@@ -841,7 +841,6 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
                 "examination_date": examdates,
             }
         )
-        # print("el datafram:" , sessions)
         sessions = sessions.assign(
             session_id=lambda df: df.months.apply(lambda x: f"ses-M{int(x):03d}")
         )

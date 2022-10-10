@@ -1,10 +1,23 @@
-def sort_session_list(session_list):
-    session_id_list = []
-    session_idx = [((session[5:]), int(session[5:])) for session in session_list]
+def sort_session_list(session_list: list[str]) -> list[str]:
+    """Sorts the list of session IDs provided based on their session number.
+
+    Parameters
+    ------------
+    session_list : list[str]
+        List of session IDs to sort.
+
+    Returns
+    --------
+    list[str] :
+        Sorted list of session IDs.
+    """
+    prefix_length = len("ses-M")
+    session_idx = [
+        ((session[prefix_length:]), int(session[prefix_length:]))
+        for session in session_list
+    ]
     session_idx.sort(key=lambda x: x[1])
-    for session in session_idx:
-        session_id_list.append(f"ses-M{session[0]}")
-    return session_id_list
+    return [f"ses-M{session[0]}" for session in session_idx]
 
 
 def print_statistics(summary_file, num_subjs, ses_aval, mmt):
