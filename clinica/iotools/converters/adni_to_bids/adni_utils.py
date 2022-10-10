@@ -879,14 +879,9 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                     scans_df["filename"] = path.join(mod_name, file_name)
                     converted_mod = find_conversion_mod(file_name)
                     conversion_df = converted_dict[converted_mod]
-                    # print("scan_df: ", scans_df)
                     try:
-                        # viscode=viscode_to_session(viscode)
                         scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
-                        # print("\n\nconversion_df: ", conversion_df)
-                        # print("\nscan_df: ", scans_df)
                         scans_df["scan_id"] = scan_id
-                        # print("\nscans_df2: ", scans_df)
                         if "Field_Strength" in conversion_df.columns.values:
                             field_strength = conversion_df.loc[
                                 (subject_id, viscode), "Field_Strength"
@@ -1262,13 +1257,13 @@ def create_file(image, modality, bids_dir, mod_to_update):
 
 
 def viscode_to_session(viscode):
-    """Replace the session label 'bl' with 'M00' or capitalize the session name passed as input.
+    """Replace the session label 'bl' with 'M000' or capitalize the session name passed as input.
 
     Args:
         viscode: session name
 
     Returns:
-        M00 if is the baseline session or the original session name capitalized
+        M000 if is the baseline session or the original session name capitalized
     """
     if viscode == "bl" or viscode == "m0":
         return "ses-M000"
@@ -1277,13 +1272,13 @@ def viscode_to_session(viscode):
 
 
 def session_to_viscode(session_name):
-    """Replace the session label 'bl' with 'M00' or capitalize the session name passed as input.
+    """Replace the session name passed as input with the session label 'bl' or 'mXX'.
 
     Args:
-        session_name: MXX
+        session_name: MXXX
 
     Returns:
-        M00 if is the baseline session or the original session name capitalized
+        M000 if is the baseline session or the original session name capitalized
     """
     if session_name == "M000":
         return "bl"
