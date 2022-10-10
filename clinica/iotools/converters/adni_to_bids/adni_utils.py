@@ -635,6 +635,8 @@ def get_visit_id(row, location):
     """Return a common visit ID across different files"""
     import pandas as pd
 
+    from clinica.iotools.converter_utils import viscode_to_session
+
     locations_visicode2 = [
         "ADAS_ADNIGO2.csv",
         "DXSUM_PDXCONV_ADNIALL.csv",
@@ -1049,6 +1051,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
     from numpy import nan
 
     from clinica.iotools.bids_utils import run_dcm2niix
+    from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
@@ -1254,21 +1257,6 @@ def create_file(image, modality, bids_dir, mod_to_update):
 
     else:
         return nan
-
-
-def viscode_to_session(viscode):
-    """Replace the session label 'bl' with 'M000' or capitalize the session name passed as input.
-
-    Args:
-        viscode: session name
-
-    Returns:
-        M000 if is the baseline session or the original session name capitalized
-    """
-    if viscode == "bl" or viscode == "m0":
-        return "ses-M000"
-    else:
-        return "ses-" + f"M{(int(viscode[1:])):03d}"
 
 
 def session_to_viscode(session_name):

@@ -234,20 +234,6 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
     return nifti_file
 
 
-def viscode_to_session(viscode):
-    """Replace the session label 'bl' with 'M000' or capitalize the session name passed as input.
-
-    :param viscode: session name
-
-    :return: M000 if is the baseline session or the original session name
-    capitalized
-    """
-    if viscode == "bl":
-        return "M000"
-    else:
-        return f"M{(int(viscode[1:])):03d}"
-
-
 def find_path_to_pet_modality(path_to_dataset, csv_file):
     """Create a Dataframe which contains all the paths to the PET image of a modality (for example AV45 or PIB).
 
@@ -497,6 +483,7 @@ def create_file(image, modality, bids_dir, overwrite):
     from numpy import nan
 
     from clinica.iotools.bids_utils import json_from_dcm
+    from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint

@@ -211,3 +211,18 @@ class MissingModsTracker:
              The hash map containing the list of missing files.
         """
         return self.missing
+
+
+def viscode_to_session(viscode):
+    """Replace the session label 'bl' with 'M000' or capitalize the session name passed as input.
+
+    Args:
+        viscode: session name
+
+    Returns:
+        M000 if is the baseline session or the original session name capitalized
+    """
+    if viscode == "bl" or viscode == "m0":
+        return "ses-M000"
+    else:
+        return "ses-" + f"M{(int(viscode[1:])):03d}"
