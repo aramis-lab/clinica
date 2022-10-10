@@ -1260,7 +1260,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
 
 
 def session_to_viscode(session_name):
-    """Replace the session name passed as input with the session label 'bl' or 'mXX'.
+    """Replace the session name passed as input with the session label 'bl' or 'mXXX'.
 
     Args:
         session_name: MXXX
