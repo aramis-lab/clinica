@@ -290,13 +290,21 @@ class AnatLinear(cpe.Pipeline):
             name="exp_node",
             interface=nutil.Function(
                 function=exp_func,
-                input_names=["useless_stuff", "working_dir", "input_name", "light"],
+                input_names=[
+                    "useless_stuff",
+                    "working_dir",
+                    "input_name",
+                    "light",
+                    "sub_ses",
+                ],
             ),
         )
         exp_node.inputs.working_dir = self.base_dir
         exp_node.inputs.input_name = n4biascorrection.name
         exp_node.inputs.light = self.parameters["light_version"]
-
+        exp_node.inputs.sub_ses = n4biascorrection._hashvalue
+        # exp_node.inputs.sub_ses = self.
+        # n4biascorrection.itername
         # 4. Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
