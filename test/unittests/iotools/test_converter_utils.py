@@ -25,15 +25,22 @@ def test_sort_session_list(input_list, expected):
     assert sort_session_list(input_list) == expected
 
 
-def test_viscode_to_session():
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        ("bl", "ses-M000"),
+        ("m0", "ses-M000"),
+        ("m3", "ses-M003"),
+        ("m03", "ses-M003"),
+        ("m003", "ses-M003"),
+        ("m0003", "ses-M003"),
+        ("m00", "ses-M000"),
+        ("m0000000", "ses-M000"),
+    ],
+)
+def test_viscode_to_session(input, expected):
     """Test function `viscode_to_session`."""
 
     from clinica.iotools.converter_utils import viscode_to_session
 
-    assert viscode_to_session("bl") == "ses-M000"
-    assert viscode_to_session("m0") == "ses-M000"
-    assert viscode_to_session("m3") == "ses-M003"
-    assert viscode_to_session("m03") == "ses-M003"
-    assert viscode_to_session("m003") == "ses-M003"
-    assert viscode_to_session("m0003") == "ses-M003"
-    assert viscode_to_session("m00") == "ses-M000"
+    assert viscode_to_session(input) == expected
