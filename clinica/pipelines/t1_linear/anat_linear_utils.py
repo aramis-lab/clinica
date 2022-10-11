@@ -63,21 +63,3 @@ def print_end_pipeline(anat, final_file):
     from clinica.utils.ux import print_end_image
 
     print_end_image(get_subject_id(anat))
-
-
-def exp_func(useless_stuff, working_dir, input_name, light, sub_ses):
-    import shutil
-    from pathlib import Path
-
-    print("useless stuff lol: ", Path(Path(useless_stuff).parent).parent)
-
-    print("sub_ses: ", sub_ses)
-    print("\n", working_dir, "\n")
-    print("\n", input_name, "\n")
-    if not light:
-        for z in Path(working_dir).rglob(
-            f"*{Path(Path(useless_stuff).parent).parent}*{input_name}*"
-        ):
-            print(z)
-            shutil.rmtree(z)
-    return
