@@ -314,12 +314,13 @@ def delete_apply_transform(marker, dir_to_del, base_dir, light):
     import shutil
     from pathlib import Path
 
-    print("\n", marker, "\n")
-    print("\n", base_dir, "\n")
-    print("\n", dir_to_del, "\n")
     if not light:
         for a in dir_to_del:
-            for z in Path(base_dir).rglob(f"*{Path(Path(marker).parent).parent}*{a}*"):
+            print("dir to delete: ", f"{Path(Path(marker).parent).parent}/{a}*")
+            print("dir to delete: ", f"{(Path(Path(marker).parent).parent).name}/{a}*")
+            for z in Path(base_dir).rglob(
+                f"*{(Path(Path(marker).parent).parent).name}*{a}*"
+            ):
                 print(z)
                 shutil.rmtree(z)
     return
