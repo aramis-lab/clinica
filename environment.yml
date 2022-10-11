@@ -4,7 +4,6 @@ channels:
   - conda-forge
 dependencies:
   - python=3.8
-  - poetry
   - dcm2niix
   - petpvc
   - convert3d  
