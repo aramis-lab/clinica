@@ -41,10 +41,6 @@ env.conda:
 .PHONY: env.dev
 env.dev: install
 
-.PHONY: env.doc
-env.doc:
-	@$(CONDA) env create -f docs/environment.yml -p $(CONDA_ENV)
-
 ## format			: Format the codebase.
 .PHONY: format
 format: install format.black format.isort
