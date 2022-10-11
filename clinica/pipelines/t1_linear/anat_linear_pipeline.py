@@ -241,7 +241,7 @@ class AnatLinear(cpe.Pipeline):
 
         from clinica.utils.filemanip import get_filename_no_ext
 
-        from .anat_linear_utils import crop_nifti, exp_func, print_end_pipeline
+        from .anat_linear_utils import crop_nifti, print_end_pipeline
 
         image_id_node = npe.Node(
             interface=nutil.Function(
