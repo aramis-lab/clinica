@@ -325,7 +325,6 @@ def write_bids(
             str(to / "dataset_description.json"), "w"
         ) as dataset_description_file:
             BIDSDatasetDescription(name="UKB").write(to=dataset_description_file)
-
         with fs.open(str(to / "participants.tsv"), "w") as participant_file:
             write_to_tsv(participants, participant_file)
 

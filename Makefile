@@ -13,6 +13,10 @@ help: Makefile
 build:
 	@$(POETRY) build
 
+.PHONY: check.lock
+check.lock:
+	@$(POETRY) lock --check
+
 .PHONY: clean.doc
 clean.doc:
 	@$(RM) -rf site
@@ -57,7 +61,7 @@ format.isort:
 
 ## install		: Install the project.
 .PHONY: install
-install:
+install: check.lock
 	@$(POETRY) install
 
 ## lint			: Lint the codebase.
@@ -73,6 +77,11 @@ lint.black:
 lint.isort:
 	$(info Linting code with isort)
 	@$(POETRY) run isort --check --diff $(PACKAGES)
+
+## lock 		: Refresh locked dependencies.
+.PHONY: lock
+lock:
+	@$(POETRY) lock --no-update
 
 ## publish		: Publish the package to pypi.
 .PHONY: publish

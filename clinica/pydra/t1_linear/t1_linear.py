@@ -1,6 +1,8 @@
+import typing as ty
 from os import PathLike
 from pathlib import PurePath
 
+import pydra
 from nipype.interfaces.ants import N4BiasFieldCorrection, RegistrationSynQuick
 from pydra import Workflow
 from pydra.mark import annotate, task
@@ -79,7 +81,13 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     """
     from pydra.tasks.nipype1.utils import Nipype1Task
 
-    wf = Workflow(name, input_spec=["T1w"])
+    input_spec = pydra.specs.SpecInfo(
+        name="Input",
+        fields=[("T1w", str, {"mandatory": True})],
+        bases=(pydra.specs.BaseSpec,),
+    )
+
+    wf = Workflow(name, input_spec=input_spec)
 
     wf.add(download_mni_template(name="download_mni_template"))
 

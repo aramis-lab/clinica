@@ -50,7 +50,7 @@ click-option-group = "^0.5"
 xlrd = "*"
 openpyxl = "*"
 fsspec = "*"
-pydra = "^0.18"
+pydra = {git = "https://github.com/nipype/pydra", rev = "8c8a79cece4adc2f09271db06ea5118af3fcbcd9"}
 pydra-nipype1 = "^0.1.0"
 pybids = "^0.15.1"
 joblib = "^1.2.0"
@@ -61,8 +61,6 @@ pymdown-extensions = {version = "*", optional = true}
 attrs = ">=20.1.0"
 cattrs = "^1.9.0"
 brainstat = "^0.3.6"
-brainspace = "^v0.1.4"
-vtk = {version = "^9.2.0rc1", allow-prereleases = true}
 
 [tool.poetry.dev-dependencies]
 black = "*"
@@ -72,7 +70,8 @@ pytest = "*"
 pytest-timeout = "*"
 pytest-xdist = "*"
 pytest-cov = "^3.0.0"
-nipy = "^0.5.0"
+scikit-image = "^0.19"
+nibabel = "*"
 
 [tool.poetry.extras]
 docs = [

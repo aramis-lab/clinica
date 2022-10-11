@@ -15,6 +15,7 @@ pipeline {
           environment {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
+            PATH = "$HOME/.local/bin:$PATH"
           }
           stages {
             stage('Build environment') {
@@ -162,6 +163,7 @@ pipeline {
           environment {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
+            PATH = "$HOME/.local/bin:$PATH"
           }
           stages {
             stage('Build environment') {
@@ -300,6 +302,7 @@ pipeline {
           environment {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
+            PATH = "$HOME/.local/bin:$PATH"
           }
           steps {
             sh '''
@@ -329,6 +332,7 @@ pipeline {
       environment {
         CONDA_ENV = "$WORKSPACE/env"
         CONDA_HOME = "$HOME/miniconda"
+        PATH = "$HOME/.local/bin:$PATH"
       }
       steps {
         withCredentials(
