@@ -91,11 +91,11 @@ def caps_query(raw_query: dict) -> dict:
         The formatted query dictionary compatible with `CAPSDataGrabber`.
     """
     from clinica.utils.input_files import (
+        t1_volume_dartel_input_tissue,
         t1_volume_deformation_to_template,
         t1_volume_final_group_template,
         t1_volume_native_tpm,
         t1_volume_native_tpm_in_mni,
-        t1_volume_dartel_input_tissue,
     )
 
     query = {}
