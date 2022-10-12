@@ -293,7 +293,7 @@ def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
             (jacobian, jacmult, [("jacobian_image", "in_file")]),
             (jacmult, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
-
+            (merge, delete_warp_field_tmp, [("merged_file", "marker")]),
             (merge, outputnode, [("merged_file", "DWIs_epicorrected")]),
             (flirt_b0_2_t1, outputnode, [("out_matrix_file", "DWI_2_T1_Coregistration_matrix")]),
             (ants_registration, outputnode, [("forward_warp_field", "epi_correction_deformation_field"),
@@ -302,7 +302,7 @@ def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
             (merge_transform, outputnode, [("out", "warp_epi")]),
             (rot_bvec, outputnode, [("out_file", "out_bvec")]),
 
-            (merge, delete_warp_field_tmp, [("merged_file", "marker")]),
+            
         ]
     )
     # fmt: on
