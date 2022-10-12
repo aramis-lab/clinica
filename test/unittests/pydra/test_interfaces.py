@@ -41,4 +41,4 @@ def test_caps_reader_error(tmp_path):
         TypeError,
         match="caps_reader received an unexpected",
     ):
-        caps_reader(BIDSQuery({}), tmp_path)
+        caps_reader(BIDSQuery({}), tmp_path)  # noqa

@@ -213,7 +213,7 @@ def aggregator(func):
         arg_sizes += [
             len(arg) for k, arg in kwargs.items() if isinstance(arg, Iterable)
         ]
-        if len(np.unique(arg_sizes)) > 1:
+        if len(set(arg_sizes)) > 1:
             raise ValueError(f"Arguments must have the same length.")
         if len(arg_sizes) == 0:
             return func(*args, **kwargs)
