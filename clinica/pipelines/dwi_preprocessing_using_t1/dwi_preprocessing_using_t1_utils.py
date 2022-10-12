@@ -318,9 +318,14 @@ def delete_apply_transform(marker, dir_to_del, base_dir, light):
         for a in dir_to_del:
             print("dir to delete: ", f"{Path(Path(marker).parent).parent}/{a}*")
             print("dir to delete: ", f"{(Path(Path(marker).parent).parent).name}/{a}*")
-            for z in Path(base_dir).rglob(
-                f"*{(Path(Path(marker).parent).parent).name}*{a}*"
-            ):
+            print("base_dir: ", base_dir)
+            for z in Path(base_dir).rglob(f"*{a}*"):
                 print(z)
-                shutil.rmtree(z)
+                print("(Path(z).parent).name:  ", (Path(z).parent).name)
+                print(
+                    "(Path(Path(marker).parent).parent).name: ",
+                    (Path(Path(marker).parent).parent).name,
+                )
+                if (Path(z).parent).name == (Path(Path(marker).parent).parent).name:
+                    shutil.rmtree(z)
     return

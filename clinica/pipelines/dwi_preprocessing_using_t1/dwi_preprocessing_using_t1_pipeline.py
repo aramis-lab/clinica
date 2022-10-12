@@ -242,7 +242,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         from clinica.utils.dwi import compute_average_b0
 
         from .dwi_preprocessing_using_t1_utils import (
-            delete_apply_transform,
             init_input_node,
             prepare_reference_b0,
             print_end_pipeline,
