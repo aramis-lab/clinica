@@ -205,18 +205,109 @@ def aggregator(func):
     value in the iterable and aggregate the results in a list.
     This works only if the iterables provided have the same length.
     Arguments lefts as non-iterable will be repeated.
+
+    Examples
+    --------
+    The function `t1_volume_native_tpm` expects an integer defining the
+    mask tissue and returns a dictionary describing the files to read:
+
+    >>> import json
+    >>> from clinica.utils.input_files import t1_volume_native_tpm
+    >>> print(json.dumps(t1_volume_native_tpm(1), indent=3))
+    {
+        "pattern": "t1/spm/segmentation/native_space/*_*_T1w_segm-graymatter_probability.nii*",
+        "description": "Tissue probability map graymatter in native space",
+        "needed_pipeline": "t1-volume-tissue-segmentation"
+    }
+
+    Without the `aggregator` decorator, querying files for multiple
+    tissues would have to be implemented in a loop:
+
+    >>> print(json.dumps([t1_volume_native_tpm(tissue) for tissue in (1, 2)], indent=3))
+    [
+        {
+            "pattern": "t1/spm/segmentation/native_space/*_*_T1w_segm-graymatter_probability.nii*",
+            "description": "Tissue probability map graymatter in native space",
+            "needed_pipeline": "t1-volume-tissue-segmentation"
+        },
+        {
+            "pattern": "t1/spm/segmentation/native_space/*_*_T1w_segm-whitematter_probability.nii*",
+            "description": "Tissue probability map whitematter in native space",
+            "needed_pipeline": "t1-volume-tissue-segmentation"
+        }
+    ]
+
+    Although this is fine, you might not know in a pipeline what was provided (scalar or iterable).
+    With the `aggregator` decorator, you can pass both:
+
+    >>> t1_volume_native_tpm((1, 2))
+    [
+        {
+            "pattern": "t1/spm/segmentation/native_space/*_*_T1w_segm-graymatter_probability.nii*",
+            "description": "Tissue probability map graymatter in native space",
+            "needed_pipeline": "t1-volume-tissue-segmentation"
+        },
+        {
+            "pattern": "t1/spm/segmentation/native_space/*_*_T1w_segm-whitematter_probability.nii*",
+            "description": "Tissue probability map whitematter in native space",
+            "needed_pipeline": "t1-volume-tissue-segmentation"
+        }
+    ]
+
+    This works also with multiple args and kwargs:
+
+    >>> from clinica.utils.input_files import t1_volume_native_tpm_in_mni
+    >>> print(json.dumps(t1_volume_native_tpm_in_mni(1, False), indent=3))
+    {
+        "pattern": "t1/spm/segmentation/normalized_space/*_*_T1w_segm-graymatter_space-Ixi549Space_modulated-off_probability.nii*",
+        "description": "Tissue probability map graymatter based on native MRI in MNI space (Ixi549) without modulation.",
+        "needed_pipeline": "t1-volume-tissue-segmentation"
+    }
+    >>> print(json.dumps(t1_volume_native_tpm_in_mni(1, (True, False)), indent=3))
+    [
+        {
+            "pattern": "t1/spm/segmentation/normalized_space/*_*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii*",
+            "description": "Tissue probability map graymatter based on native MRI in MNI space (Ixi549) with modulation.",
+            "needed_pipeline": "t1-volume-tissue-segmentation"
+        },
+        {
+            "pattern": "t1/spm/segmentation/normalized_space/*_*_T1w_segm-graymatter_space-Ixi549Space_modulated-off_probability.nii*",
+            "description": "Tissue probability map graymatter based on native MRI in MNI space (Ixi549) without modulation.",
+            "needed_pipeline": "t1-volume-tissue-segmentation"
+        }
+    ]
+    >>> print(json.dumps(t1_volume_native_tpm_in_mni((1, 2), (True, False)), indent=3))
+    [
+        {
+            "pattern": "t1/spm/segmentation/normalized_space/*_*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii*",
+            "description": "Tissue probability map graymatter based on native MRI in MNI space (Ixi549) with modulation.",
+            "needed_pipeline": "t1-volume-tissue-segmentation"
+        },
+        {
+            "pattern": "t1/spm/segmentation/normalized_space/*_*_T1w_segm-whitematter_space-Ixi549Space_modulated-off_probability.nii*",
+            "description": "Tissue probability map whitematter based on native MRI in MNI space (Ixi549) without modulation.",
+            "needed_pipeline": "t1-volume-tissue-segmentation"
+        }
+    ]
     """
 
     @functools.wraps(func)
     def wrapper_aggregator(*args, **kwargs):
+        # Get the lengths of iterable args and kwargs
         arg_sizes = [len(arg) for arg in args if isinstance(arg, Iterable)]
         arg_sizes += [
             len(arg) for k, arg in kwargs.items() if isinstance(arg, Iterable)
         ]
+
+        # If iterable args/kwargs have different lengths, raise
         if len(set(arg_sizes)) > 1:
             raise ValueError(f"Arguments must have the same length.")
+
+        # No iterable case, just call the function
         if len(arg_sizes) == 0:
             return func(*args, **kwargs)
+
+        # Handle args first by repeating non-iterable values
         arg_size = arg_sizes[0]
         new_args = []
         for arg in args:
@@ -224,6 +315,8 @@ def aggregator(func):
                 new_args.append((arg,) * arg_size)
             else:
                 new_args.append(arg)
+
+        # Same thing for kwargs
         new_kwargs = [{} for _ in range(arg_size)]
         for k, arg in kwargs.items():
             for i in range(len(new_kwargs)):
@@ -231,6 +324,8 @@ def aggregator(func):
                     new_kwargs[i][k] = arg
                 else:
                     new_kwargs[i][k] = arg[i]
+
+        # Properly encapsulate in a for loop
         if len(new_args) == 0:
             return [func(**x) for x in new_kwargs]
         elif len(new_kwargs) == 0:
