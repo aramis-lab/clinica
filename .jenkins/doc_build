@@ -17,11 +17,11 @@ pipeline {
       }
       steps {
         sh '''
-                source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                conda create -y -p "${CONDA_ENV}" python=3.9
-                conda activate "${CONDA_ENV}"
-                make doc
-                '''
+          source "${CONDA_HOME}/etc/profile.d/conda.sh"
+          conda create -y -p "${CONDA_ENV}" python=3.9
+          conda activate "${CONDA_ENV}"
+          make doc
+        '''
         stash(name: 'doc_html', includes: 'site/**')
       }
       post {
@@ -37,7 +37,7 @@ pipeline {
         sh 'echo "Agent name: ${NODE_NAME}"'
         sh 'echo "My branch name is ${BRANCH_NAME}"'
         unstash(name: 'doc_html')
-        sh 'mv site "${CHANGE_ID:-$BRANCH_NAME}"'
+        sh 'mv site "${BRANCH_NAME}"'
         sshPublisher(
               publishers: [
                 sshPublisherDesc(
@@ -55,7 +55,7 @@ pipeline {
                       remoteDirectory: 'clinica/docs/public/',
                       remoteDirectorySDF: false,
                       removePrefix: '',
-                      sourceFiles: "${CHANGE_ID:-$BRANCH_NAME}/**"
+                      sourceFiles: "${BRANCH_NAME}/**"
                     )
                   ],
                   usePromotionTimestamp: false,
