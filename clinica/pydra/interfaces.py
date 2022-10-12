@@ -63,7 +63,7 @@ class CAPSDataGrabber(IOBase):
         return output_query
 
     @abc.abstractmethod
-    def _execute_single_query(self, query: Dict) -> List[str]:
+    def _execute_single_query(self, query: dict) -> list:
         pass
 
     def _add_output_traits(self, base):
