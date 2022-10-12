@@ -307,7 +307,7 @@ pipeline {
           steps {
             sh '''
               source "${CONDA_HOME}/etc/profile.d/conda.sh"
-              make env.doc
+              conda create -y -p "${CONDA_ENV}" python=3.9
               conda activate "${CONDA_ENV}"
               make doc
               mv site "${CHANGE_ID:-$BRANCH_NAME}"
@@ -346,7 +346,7 @@ pipeline {
         ) {
           sh '''
             source "${CONDA_HOME}/etc/profile.d/conda.sh"
-            make env.conda
+            conda create -y -p "${CONDA_ENV}" python=3.9
             conda activate "${CONDA_ENV}"
             poetry publish --build -u "${USERNAME}" -p "${PASSWORD}"
           '''
