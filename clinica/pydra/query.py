@@ -1,5 +1,5 @@
 import abc
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 
 class Query:
@@ -7,17 +7,18 @@ class Query:
 
     Attributes
     ----------
-    query : Dict
+    query : Dict, optional
         Raw input query defined as a dictionary.
+        Default=None.
     """
 
     default_queries = {}
     repr_indent = 4
 
-    def __init__(self, query: Dict):
+    def __init__(self, query: Optional[Dict] = None):
         self.query = self.format_query(query)
 
-    def format_query(self, query: Dict) -> Dict:
+    def format_query(self, query: Optional[Dict] = None) -> Dict:
         """Format the input query by combining and filtering with
         the class default queries available.
 
@@ -32,6 +33,8 @@ class Query:
             Resulting formatted query.
         """
         formatted_query = {}
+        if not query:
+            return formatted_query
         for k, q in query.items():
             if k in self.default_queries:
                 formatted_query[k] = self.combine_queries(self.default_queries[k], q)
@@ -133,6 +136,27 @@ class CAPSGroupQuery(CAPSQuery):
 
 
 def query_factory(query: Dict, query_type: str) -> Query:
+    """Return the Query instance initialized from passed `query`,
+    based on provided `query_type`.
+
+    Parameters
+    ----------
+    query : dict
+        The query in dictionary format.
+
+    query_type : {"bids", "caps_file", "caps_group"}
+        The type of query to build.
+
+    Returns
+    -------
+    Query :
+        The resulting Query instance.
+
+    Raises
+    ------
+    ValueError
+        If `query_type` is not a valid value.
+    """
     if query_type == "bids":
         return BIDSQuery(query)
     elif query_type == "caps_file":
@@ -141,6 +165,6 @@ def query_factory(query: Dict, query_type: str) -> Query:
         return CAPSGroupQuery(query)
     else:
         raise ValueError(
-            f"query_factory() received an unvalid argument for 'query_type' : {query_type}"
+            f"query_factory() received an invalid argument for 'query_type' : {query_type}"
             f"Supported values are 'bids', 'caps_file', and 'caps_group'."
         )
