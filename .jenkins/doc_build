@@ -12,7 +12,7 @@ pipeline {
       }
       environment {
         CONDA_ENV = "$WORKSPACE/env"
-        CONDA_HOME = "$HOME/miniconda"
+        CONDA_HOME = "$HOME/miniconda3"
         PATH = "$HOME/.local/bin:$PATH"
       }
       steps {
