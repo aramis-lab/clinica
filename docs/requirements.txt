@@ -1,3 +1,0 @@
-# Requirements to build the Clinica's documentation (installed by pip)
-mkdocs-material
-pymdown-extensions  

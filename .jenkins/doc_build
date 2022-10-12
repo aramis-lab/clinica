@@ -4,35 +4,41 @@
 // Author: mauricio.diaz@inria.fr
 
 pipeline {
-  agent none
+    agent none
     stages {
-      stage('Build the docs') {
-        agent {
-        dockerfile {
-              filename 'Dockerfile'
-              dir 'docs'
-              reuseNode true
-        }
-        }
-        //when { changeset "requirements.txt" }
-        steps {
-          sh 'echo "My branch name is ${BRANCH_NAME}"'
-          sh 'echo "Agent name: ${NODE_NAME}"'
-          sh '''
-             mkdocs build
-             '''
-          stash(name: 'doc_html', includes: 'site/**')
+        stage('Build the docs') {
+      agent {
+        label 'ubuntu'
+      }
+      environment {
+        CONDA_ENV = "$WORKSPACE/env"
+        CONDA_HOME = "$HOME/miniconda"
+        PATH = "$HOME/.local/bin:$PATH"
+      }
+      steps {
+        sh '''
+                source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                conda create -y -p "${CONDA_ENV}" python=3.9
+                conda activate "${CONDA_ENV}"
+                make doc
+                '''
+        stash(name: 'doc_html', includes: 'site/**')
+      }
+      post {
+        always {
+          cleanWs()
         }
       }
-      stage('Deploy') {
-        agent { label 'ubuntu' }
-          steps {
-            echo 'Deploying in webserver...'
-            sh 'echo "Agent name: ${NODE_NAME}"'
-            sh 'echo "My branch name is ${BRANCH_NAME}"'
-            unstash(name: 'doc_html')
-            sh "mv site ${BRANCH_NAME}"
-            sshPublisher(
+        }
+        stage('Deploy') {
+      agent { label 'ubuntu' }
+      steps {
+        echo 'Deploying in webserver...'
+        sh 'echo "Agent name: ${NODE_NAME}"'
+        sh 'echo "My branch name is ${BRANCH_NAME}"'
+        unstash(name: 'doc_html')
+        sh 'mv site "${CHANGE_ID:-$BRANCH_NAME}"'
+        sshPublisher(
               publishers: [
                 sshPublisherDesc(
                   configName: 'web',
@@ -49,22 +55,24 @@ pipeline {
                       remoteDirectory: 'clinica/docs/public/',
                       remoteDirectorySDF: false,
                       removePrefix: '',
-                      sourceFiles: "${BRANCH_NAME}/**")
-                      ],
-                    usePromotionTimestamp: false,
-                    useWorkspaceInPromotion: false,
-                    verbose: false)
+                      sourceFiles: "${CHANGE_ID:-$BRANCH_NAME}/**"
+                    )
+                  ],
+                  usePromotionTimestamp: false,
+                  useWorkspaceInPromotion: false,
+                  verbose: false
+                )
               ]
             )
-            echo 'Finish uploading artifacts'
-          }
+        echo 'Finish uploading artifacts'
       }
+        }
     }
     post {
-      failure {
-        mail to: 'clinica-ci@inria.fr',
+        failure {
+      mail to: 'clinica-ci@inria.fr',
           subject: "The build of the Clinica's user documentatio has failed: ${currentBuild.fullDisplayName}",
           body: "Something is wrong with the build of the welcome guide ${env.BUILD_URL}"
-      }
+        }
     }
 }
