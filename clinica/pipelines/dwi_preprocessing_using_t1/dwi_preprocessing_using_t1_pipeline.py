@@ -304,7 +304,11 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             initrand=self.parameters["initrand"],
         )
         # Susceptibility distortion correction using T1w image
-        sdc = epi_pipeline(self, name="SusceptibilityDistortionCorrection")
+        sdc = epi_pipeline(
+            self.base_dir,
+            self.parameters["light_mode"],
+            name="SusceptibilityDistortionCorrection",
+        )
 
         # Remove bias correction from (Jeurissen et al., 2014)
         bias = npe.Node(mrtrix3.DWIBiasCorrect(use_ants=True), name="RemoveBias")

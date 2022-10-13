@@ -82,7 +82,9 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     return wf
 
 
-def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
+def epi_pipeline(
+    base_dir, light_mode, name="susceptibility_distortion_correction_using_t1"
+):
     """Perform EPI correction.
 
     This workflow allows to correct for echo-planar induced susceptibility artifacts without fieldmap
@@ -234,7 +236,7 @@ def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
             function=delete_apply_transform,
         ),
     )
-    delete_warp_field_tmp.inputs.base_dir = self.base_dir
+    delete_warp_field_tmp.inputs.base_dir = base_dir
     delete_warp_field_tmp.inputs.dir_to_del = [
         apply_transform_field.name,
         jacobian.name,
@@ -242,7 +244,7 @@ def epi_pipeline(self, name="susceptibility_distortion_correction_using_t1"):
         thres.name,
         apply_transform_image.name,
     ]
-    delete_warp_field_tmp.inputs.light = self.parameters["light_version"]
+    delete_warp_field_tmp.inputs.light_mode = light_mode
 
     outputnode = pe.Node(
         niu.IdentityInterface(

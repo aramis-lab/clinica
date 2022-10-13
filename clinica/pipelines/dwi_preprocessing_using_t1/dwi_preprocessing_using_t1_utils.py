@@ -310,13 +310,29 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
     return out_reference_b0, out_b0_dwi_merge, out_updated_bval, out_updated_bvec
 
 
-def delete_apply_transform(marker, dir_to_del, base_dir, light):
+def delete_temp_dirs(marker, dir_to_del, base_dir, light_mode):
+    """This function deletes the directory of the given list, if the pipeline is in "light_mode".
+
+    Parameters
+    ----------
+    marker: str
+    Path to a file. Used to ensure, that the tempory directory we want to delete are not useful anymore, and to verify that the subject and session are right.
+
+    dir_to_del: List[str]
+    Names of the directories we want to delete.
+
+    base_dir: str
+    Path to the working directory.
+
+    light_mode: bool
+    If it is True, then the nodes passed are deleted.
+    """
     import shutil
     from pathlib import Path
 
     from clinica.utils.stream import cprint
 
-    if not light:
+    if not light_mode:
         for a in dir_to_del:
             for z in Path(base_dir).rglob(f"*{a}*"):
                 if (Path(z).parent).name == (Path(Path(marker).parent).parent).name:
