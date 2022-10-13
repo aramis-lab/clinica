@@ -89,7 +89,7 @@ def add_input_reading_task(
     pipeline.add(input_workflow)
 
     # connect input workflow to core workflow
-    for field, _ in query.query.items():
+    for field, _ in query.items():
         read_data = getattr(input_workflow.lzout, field)
         setattr(core_workflow.inputs, field, read_data)
 
