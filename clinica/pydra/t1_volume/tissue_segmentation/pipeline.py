@@ -1,4 +1,7 @@
+import typing as ty
+
 import nipype.interfaces.spm as spm
+import pydra
 from nipype.algorithms.misc import Gunzip
 from pydra import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
@@ -34,9 +37,15 @@ def t1volume_tissue_segmentation(
         task_volume_location_in_world_coordinate_system,
     )
 
+    input_spec = pydra.specs.SpecInfo(
+        name="Input",
+        fields=[("T1w", str, {"mandatory": True})],
+        bases=(pydra.specs.BaseSpec,),
+    )
+
     workflow = Workflow(
         name,
-        input_spec=["T1w"],
+        input_spec=input_spec,
     )
 
     workflow.split("T1w")

@@ -13,6 +13,10 @@ help: Makefile
 build:
 	@$(POETRY) build
 
+.PHONY: check.lock
+check.lock:
+	@$(POETRY) lock --check
+
 .PHONY: clean.doc
 clean.doc:
 	@$(RM) -rf site
@@ -23,7 +27,7 @@ config.testpypi:
 
 ## doc			: Build the documentation.
 .PHONY: doc
-doc: clean.doc 
+doc: clean.doc install.doc
 	@$(POETRY) run mkdocs build
 
 ## env			: Bootstap an environment.
@@ -36,10 +40,6 @@ env.conda:
 
 .PHONY: env.dev
 env.dev: install
-
-.PHONY: env.doc
-env.doc:
-	@$(CONDA) env create -f docs/environment.yml -p $(CONDA_ENV)
 
 ## format			: Format the codebase.
 .PHONY: format
@@ -57,8 +57,12 @@ format.isort:
 
 ## install		: Install the project.
 .PHONY: install
-install:
+install: check.lock
 	@$(POETRY) install
+
+.PHONY: install.doc
+install.doc:
+	@$(POETRY) install --only docs
 
 ## lint			: Lint the codebase.
 .PHONY: lint
@@ -73,6 +77,11 @@ lint.black:
 lint.isort:
 	$(info Linting code with isort)
 	@$(POETRY) run isort --check --diff $(PACKAGES)
+
+## lock 		: Refresh locked dependencies.
+.PHONY: lock
+lock:
+	@$(POETRY) lock --no-update
 
 ## publish		: Publish the package to pypi.
 .PHONY: publish

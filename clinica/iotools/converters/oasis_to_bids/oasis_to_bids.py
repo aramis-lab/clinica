@@ -25,9 +25,6 @@ class OasisToBids(Converter):
         iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         clinic_specs_path = path.join(iotools_folder, "data", "clinical_specifications")
 
-        # -- Creation of modality agnostic files --
-        bids.write_modality_agnostic_files("OASIS-1", bids_dir)
-
         # --Create participants.tsv--
         participants_df = bids.create_participants_df(
             "OASIS", clinic_specs_path, clinical_data_dir, bids_ids
@@ -73,7 +70,21 @@ class OasisToBids(Converter):
         )
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
-        bids.write_modality_agnostic_files(study_name="OASIS-1", bids_dir=bids_dir)
+        # -- Creation of modality agnostic files --
+        readme_data = {
+            "link": "https://www.oasis-brains.org/#access",
+            "desc": (
+                "This set consists of a cross-sectional collection of 416 subjects aged 18 to 96. For each subject, 3 "
+                "or 4 individual T1-weighted MRI scans obtained in single scan sessions are included. The subjects are "
+                "all right-handed and include both men and women. 100 of the included subjects over the age of 60 have "
+                "been clinically diagnosed with very mild to moderate Alzheimer’s disease (AD). Additionally, a "
+                "reliability data set is included containing 20 nondemented subjects imaged on a subsequent visit "
+                "within 90 days of their initial session."
+            ),
+        }
+        bids.write_modality_agnostic_files(
+            study_name="OASIS-1", readme_data=readme_data, bids_dir=bids_dir
+        )
 
     @staticmethod
     def convert_single_subject(subj_folder, dest_dir):

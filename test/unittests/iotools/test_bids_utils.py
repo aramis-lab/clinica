@@ -11,7 +11,7 @@ from clinica.iotools.bids_utils import (
 )
 
 MODALITY_AGNOSTIC_FILE_WRITERS = {
-    "readme": _write_readme,
+    #    "readme": _write_readme,
     "bids-validator": _write_bids_validator_config,
     "bidsignore": _write_bidsignore,
 }
@@ -29,6 +29,11 @@ EXPECTED_README_CONTENT = Template(
     (
         "This BIDS directory was generated with Clinica v$version.\n"
         "More information on $website\n"
+        "\n"
+        "Study: \n"
+        "\n"
+        "description\n\n"
+        "Find more about it and about the data user agreement: link"
     )
 )
 
@@ -82,6 +87,7 @@ def test_write_bids_dataset_description(
     )
 
 
+@pytest.fixture
 def expected_readme_content() -> str:
     import clinica
 
@@ -122,9 +128,34 @@ def test_write_modality_agnostic_files(tmp_path):
 
     from clinica.iotools.bids_utils import write_modality_agnostic_files
 
+    data_dict = {"link": "", "desc": ""}
     assert len(os.listdir(tmp_path)) == 0
-    write_modality_agnostic_files("ADNI", tmp_path)
+    write_modality_agnostic_files("ADNI", data_dict, tmp_path)
     files = os.listdir(tmp_path)
     assert len(files) == 4
     for _, v in EXPECTED_MODALITY_AGNOSTIC_FILES.items():
         assert v in files
+
+
+@pytest.mark.parametrize("study_name", [""])
+@pytest.mark.parametrize("bids_version", ["1.7.0"])
+def test_write_bids_readme(
+    tmp_path,
+    study_name,
+    bids_version,
+    expected_readme_content,
+):
+    """Test function `_write_bids_readme`.
+
+    .. note::
+        Tested independantly for convenience since it takes
+        a different set of input parameters.
+
+    """
+
+    data_dict = {"link": "link", "desc": "description"}
+    _write_readme(study_name=study_name, data_dict=data_dict, bids_dir=tmp_path)
+    _validate_file_and_content(
+        file=tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES["readme"],
+        expected_content=expected_readme_content,
+    )
