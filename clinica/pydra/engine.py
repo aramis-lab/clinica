@@ -1,6 +1,5 @@
 import functools
 from os import PathLike
-from typing import Callable
 
 from pydra import Workflow
 from pydra.engine.core import TaskBase
@@ -41,7 +40,7 @@ def clinica_io(func):
 def add_input_reading_task(
     pipeline: Workflow,
     core_workflow: Workflow,
-    query_maker: Callable,
+    query_type: str,
     reader: TaskBase,
 ) -> Workflow:
     """Configure and add the reading tasks of input workflow.
@@ -51,14 +50,13 @@ def add_input_reading_task(
     pipeline : Workflow
         The main Workflow to which the readers should be added.
 
-    core_inputs : dict
-        The inputs specified by the core workflow. This defines
-        what the reader workflow should read and how it should
-        connect to the core Workflow.
+    core_workflow : Workflow
+        The core workflow. It defines, through its inputs,
+        what the reader workflow should read and these two
+        workflows should connect.
 
-    query_maker : Callable
-        Function responsible for parsing the core_inputs into a
-        proper query.
+    query_type : {"bids", "caps_file", "caps_group"}
+        The type of query that should be run.
 
     reader : TaskBase
         Task responsible for reading data.
@@ -68,7 +66,9 @@ def add_input_reading_task(
     pipeline : Workflow
         The main Workflow with readers added to it.
     """
-    query = query_maker(pu.list_workflow_inputs(core_workflow))
+    from clinica.pydra.query import query_factory
+
+    query = query_factory(pu.list_workflow_inputs(core_workflow), query_type=query_type)
     if len(query) == 0:
         return pipeline
     input_dir = "bids_dir" if "bids" in reader.__name__ else "caps_dir"
@@ -89,7 +89,7 @@ def add_input_reading_task(
     pipeline.add(input_workflow)
 
     # connect input workflow to core workflow
-    for field, _ in query.items():
+    for field, _ in query.query.items():
         read_data = getattr(input_workflow.lzout, field)
         setattr(core_workflow.inputs, field, read_data)
 
@@ -98,14 +98,21 @@ def add_input_reading_task(
 
 add_input_reading_task_bids = functools.partial(
     add_input_reading_task,
-    query_maker=pu.bids_query,
+    query_type="bids",
     reader=bids_reader,
 )
 
 
-add_input_reading_task_caps = functools.partial(
+add_input_reading_task_caps_file = functools.partial(
     add_input_reading_task,
-    query_maker=pu.caps_query,
+    query_type="caps_file",
+    reader=caps_reader,
+)
+
+
+add_input_reading_task_caps_group = functools.partial(
+    add_input_reading_task,
+    query_type="caps_group",
     reader=caps_reader,
 )
 
@@ -116,7 +123,8 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> Workflo
     For now, the input workflow is responsible for:
 
         - reading BIDS data
-        - reading CAPS data
+        - reading CAPS data with clinica_file_reader
+        - reading CAPS data with clinica_group_reader
 
     Parameters
     ----------
@@ -132,7 +140,8 @@ def build_input_workflow(pipeline: Workflow, core_workflow: Workflow) -> Workflo
         The pipeline with the input workflow.
     """
     pipeline = add_input_reading_task_bids(pipeline, core_workflow)
-    pipeline = add_input_reading_task_caps(pipeline, core_workflow)
+    pipeline = add_input_reading_task_caps_file(pipeline, core_workflow)
+    pipeline = add_input_reading_task_caps_group(pipeline, core_workflow)
     return pipeline
 
 
