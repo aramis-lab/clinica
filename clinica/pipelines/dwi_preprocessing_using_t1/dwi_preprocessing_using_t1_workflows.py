@@ -98,13 +98,13 @@ def epi_pipeline(
     Parameters
     ----------
     base_dir: str
-    Working directory, whcih contains all of the intermediary data generated.
+        Working directory, which contains all of the intermediary data generated.
 
     delete_cache: bool
-    If True, part of the temporary data is automatically deleted after usage.
+        If True, part of the temporary data is automatically deleted after usage.
 
     name: str
-    Name of the pipeline.
+        Name of the pipeline, optional
 
     Warnings:
         This workflow rotates the b-vectors.
@@ -242,22 +242,22 @@ def epi_pipeline(
 
     merge = pe.Node(fsl.Merge(dimension="t"), name="MergeDWIs")
     # Delete the temporary directory that takes too much place
-    delete_warp_field_tmp = pe.Node(
-        name="deletewarpfieldtmp",
-        interface=niu.Function(
-            inputs=["marker", "dir_to_del", "base_dir", "delete_cache"],
-            function=delete_temp_dirs,
-        ),
-    )
-    delete_warp_field_tmp.inputs.base_dir = base_dir
-    delete_warp_field_tmp.inputs.dir_to_del = [
-        apply_transform_field.name,
-        jacobian.name,
-        jacmult.name,
-        thres.name,
-        apply_transform_image.name,
-    ]
-    delete_warp_field_tmp.inputs.delete_cache = delete_cache
+    if delete_cache:
+        delete_warp_field_tmp = pe.Node(
+            name="deletewarpfieldtmp",
+            interface=niu.Function(
+                inputs=["checkpoint", "dir_to_del", "base_dir"],
+                function=delete_temp_dirs,
+            ),
+        )
+        delete_warp_field_tmp.inputs.base_dir = base_dir
+        delete_warp_field_tmp.inputs.dir_to_del = [
+            apply_transform_field.name,
+            jacobian.name,
+            jacmult.name,
+            thres.name,
+            apply_transform_image.name,
+        ]
 
     outputnode = pe.Node(
         niu.IdentityInterface(
@@ -308,7 +308,7 @@ def epi_pipeline(
             (jacobian, jacmult, [("jacobian_image", "in_file")]),
             (jacmult, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
-            (merge, delete_warp_field_tmp, [("merged_file", "marker")]),
+            (merge, delete_warp_field_tmp, [("merged_file", "checkpoint")]),
             (merge, outputnode, [("merged_file", "DWIs_epicorrected")]),
             (flirt_b0_2_t1, outputnode, [("out_matrix_file", "DWI_2_T1_Coregistration_matrix")]),
             (ants_registration, outputnode, [("forward_warp_field", "epi_correction_deformation_field"),

@@ -190,5 +190,5 @@ delete_cache = option(
     "-dc",
     "--delete_cache",
     is_flag=True,
-    help="Use a lighter version of the pipeline",
+    help="If True,  large intermediary files will be deleted before the end of the pipeline. This option is only implemented in dwi_preprocessing_using_t1 for now.",
 )
