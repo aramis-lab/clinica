@@ -310,7 +310,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
     return out_reference_b0, out_b0_dwi_merge, out_updated_bval, out_updated_bvec
 
 
-def delete_temp_dirs(marker, dir_to_del, base_dir, delete_cache):
+def delete_temp_dirs(marker: str, dir_to_del: list, base_dir: str, delete_cache: bool):
     """This function deletes the directory of the given list, if the pipeline is in "light_mode".
 
     Parameters
