@@ -306,7 +306,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(
             self.base_dir,
-            self.parameters["light_mode"],
+            self.parameters["delete_cache"],
             name="SusceptibilityDistortionCorrection",
         )
 

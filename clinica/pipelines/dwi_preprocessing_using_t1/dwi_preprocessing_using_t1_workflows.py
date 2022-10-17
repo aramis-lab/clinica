@@ -83,7 +83,7 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
 
 
 def epi_pipeline(
-    base_dir, light_mode, name="susceptibility_distortion_correction_using_t1"
+    base_dir, delete_cache, name="susceptibility_distortion_correction_using_t1"
 ):
     """Perform EPI correction.
 
@@ -110,7 +110,7 @@ def epi_pipeline(
     from .dwi_preprocessing_using_t1_utils import (
         ants_apply_transforms,
         change_itk_transform_type,
-        delete_apply_transform,
+        delete_temp_dirs,
         expend_matrix_list,
         rotate_bvecs,
     )
@@ -232,8 +232,8 @@ def epi_pipeline(
     delete_warp_field_tmp = pe.Node(
         name="deletewarpfieldtmp",
         interface=niu.Function(
-            inputs=["marker", "dir_to_del", "base_dir", "light"],
-            function=delete_apply_transform,
+            inputs=["marker", "dir_to_del", "base_dir", "delete_cache"],
+            function=delete_temp_dirs,
         ),
     )
     delete_warp_field_tmp.inputs.base_dir = base_dir
@@ -244,7 +244,7 @@ def epi_pipeline(
         thres.name,
         apply_transform_image.name,
     ]
-    delete_warp_field_tmp.inputs.light_mode = light_mode
+    delete_warp_field_tmp.inputs.delete_cache = delete_cache
 
     outputnode = pe.Node(
         niu.IdentityInterface(

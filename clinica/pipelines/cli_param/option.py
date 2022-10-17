@@ -186,9 +186,9 @@ atlas_path = option(
     help="Compute atlases at the end of the path",
 )
 
-light_version = option(
-    "-li",
-    "--light_version",
+delete_cache = option(
+    "-dc",
+    "--delete_cache",
     is_flag=True,
     help="Use a lighter version of the pipeline",
 )
