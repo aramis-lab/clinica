@@ -83,7 +83,9 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
 
 
 def epi_pipeline(
-    base_dir, delete_cache, name="susceptibility_distortion_correction_using_t1"
+    base_dir: str,
+    delete_cache: bool,
+    name="susceptibility_distortion_correction_using_t1",
 ):
     """Perform EPI correction.
 
@@ -92,6 +94,17 @@ def epi_pipeline(
     structural scans using an inverse consistent registration algorithm with a mutual information cost
     function (SyN algorithm). This workflow allows also a coregistration of DWIs with their respective
     baseline T1-weighted structural scans in order to latter combine tracks and cortex parcellation.
+
+    Parameters
+    ----------
+    base_dir: str
+    Working directory, whcih contains all of the intermediary data generated.
+
+    delete_cache: bool
+    If True, part of the temporary data is automatically deleted after usage.
+
+    name: str
+    Name of the pipeline.
 
     Warnings:
         This workflow rotates the b-vectors.
