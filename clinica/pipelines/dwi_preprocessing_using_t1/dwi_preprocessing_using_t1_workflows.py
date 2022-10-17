@@ -103,8 +103,8 @@ def epi_pipeline(
     delete_cache: bool
         If True, part of the temporary data is automatically deleted after usage.
 
-    name: str
-        Name of the pipeline, optional
+    name: str, optional
+        Name of the pipeline.
 
     Warnings:
         This workflow rotates the b-vectors.
