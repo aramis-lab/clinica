@@ -310,7 +310,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
     return out_reference_b0, out_b0_dwi_merge, out_updated_bval, out_updated_bvec
 
 
-def delete_temp_dirs(marker, dir_to_del, base_dir, light_mode):
+def delete_temp_dirs(marker, dir_to_del, base_dir, delete_cache):
     """This function deletes the directory of the given list, if the pipeline is in "light_mode".
 
     Parameters
@@ -332,7 +332,7 @@ def delete_temp_dirs(marker, dir_to_del, base_dir, light_mode):
 
     from clinica.utils.stream import cprint
 
-    if not light_mode:
+    if delete_cache:
         for a in dir_to_del:
             for z in Path(base_dir).rglob(f"*{a}*"):
                 if (Path(z).parent).name == (Path(Path(marker).parent).parent).name:
