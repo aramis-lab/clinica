@@ -24,7 +24,9 @@ CONTEXT_SETTINGS = dict(
 )
 
 
-def setup_logging(verbose: bool = False) -> None:
+def setup_logging(
+    verbose: bool = False, logging_file_path: str = "/pypeline.log"
+) -> None:
     """Setup Clinica's logging facilities.
 
     Args:
@@ -39,6 +41,13 @@ def setup_logging(verbose: bool = False) -> None:
     from colorlog import ColoredFormatter, StreamHandler
 
     logging_level = "DEBUG" if verbose else "INFO"
+    logging.basicConfig(
+        filename=logging_file_path,
+        filemode="a",
+        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.DEBUG,
+    )
 
     # Root logger configuration.
     root_logger = logging.getLogger()
@@ -62,7 +71,7 @@ def setup_logging(verbose: bool = False) -> None:
         {
             "logging": {"log_directory": os.getcwd(), "log_to_file": True},
             "execution": {"check_version": False},
-        },
+        }
     )
     nipype.logging.update_logging(nipype.config)
     # Disable nipype logging to console.
@@ -74,8 +83,15 @@ def setup_logging(verbose: bool = False) -> None:
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.version_option(version=clinica.__version__)
 @click.option("-v", "--verbose", is_flag=True, help="Increase logging verbosity.")
-def cli(verbose: bool) -> None:
-    setup_logging(verbose=verbose)
+@click.option(
+    "-lfp",
+    "--logging_file_path",
+    type=str,
+    help="The path to the logging file path.",
+    default="/pypeline.log",
+)
+def cli(verbose: bool, logging_file_path: str) -> None:
+    setup_logging(verbose=verbose, logging_file_path=logging_file_path)
 
 
 cli.add_command(convert_cli)
