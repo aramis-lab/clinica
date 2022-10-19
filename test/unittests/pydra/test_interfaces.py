@@ -14,7 +14,7 @@ def test_bids_reader(tmp_path):
 
     from clinica.pydra.interfaces import bids_reader
 
-    task = bids_reader(BIDSQuery({}), tmp_path)
+    task = bids_reader(BIDSQuery(), tmp_path)
     assert isinstance(task, Nipype1Task)
     assert task.name == "bids_reader_task"
     assert task.inputs.base_dir == tmp_path
@@ -24,8 +24,8 @@ def test_bids_reader(tmp_path):
 @pytest.mark.parametrize(
     "query,grabber",
     [
-        (CAPSFileQuery({}), CAPSFileDataGrabber),
-        (CAPSGroupQuery({}), CAPSGroupDataGrabber),
+        (CAPSFileQuery(), CAPSFileDataGrabber),
+        (CAPSGroupQuery(), CAPSGroupDataGrabber),
     ],
 )
 def test_caps_reader(tmp_path, query, grabber):
@@ -41,4 +41,4 @@ def test_caps_reader_error(tmp_path):
         TypeError,
         match="caps_reader received an unexpected",
     ):
-        caps_reader(BIDSQuery({}), tmp_path)  # noqa
+        caps_reader(BIDSQuery(), tmp_path)  # noqa

@@ -51,10 +51,7 @@ def t1volume_create_dartel(
         input_spec=input_spec,
     )
 
-    workflow = Workflow(
-        name,
-        input_spec=input_spec,
-    )
+    workflow.split("dartel_input_tissue")
 
     workflow.add(
         Nipype1Task(

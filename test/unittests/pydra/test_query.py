@@ -4,13 +4,13 @@ from clinica.pydra.query import BIDSQuery, CAPSFileQuery, CAPSGroupQuery, Query
 
 
 def test_query():
-    q = Query({})
+    q = Query()
     assert q.query == {}
     assert len(q) == 0
 
 
 def test_bids_query():
-    q = BIDSQuery({})
+    q = BIDSQuery()
     assert q.query == {}
     assert len(q) == 0
 

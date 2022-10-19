@@ -14,9 +14,7 @@ from clinica.pydra.query import BIDSQuery, CAPSFileQuery, CAPSGroupQuery, CAPSQu
 
 class CAPSDataGrabberInputSpec(DynamicTraitedSpec):
     base_dir = Directory(exists=True, desc="Path to CAPS Directory.", mandatory=True)
-    output_query = traits.Dict(
-        key_trait=Str, value_trait=traits.Dict, desc="Queries for outfield outputs"
-    )
+    output_query = traits.Dict(key_trait=Str, desc="Queries for outfield outputs")
     raise_on_empty = traits.Bool(
         True,
         usedefault=True,

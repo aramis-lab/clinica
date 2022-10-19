@@ -27,7 +27,7 @@ config.testpypi:
 
 ## doc			: Build the documentation.
 .PHONY: doc
-doc: clean.doc 
+doc: clean.doc install.doc
 	@$(POETRY) run mkdocs build
 
 ## env			: Bootstap an environment.
@@ -40,10 +40,6 @@ env.conda:
 
 .PHONY: env.dev
 env.dev: install
-
-.PHONY: env.doc
-env.doc:
-	@$(CONDA) env create -f docs/environment.yml -p $(CONDA_ENV)
 
 ## format			: Format the codebase.
 .PHONY: format
@@ -63,6 +59,10 @@ format.isort:
 .PHONY: install
 install: check.lock
 	@$(POETRY) install
+
+.PHONY: install.doc
+install.doc:
+	@$(POETRY) install --only docs
 
 ## lint			: Lint the codebase.
 .PHONY: lint
