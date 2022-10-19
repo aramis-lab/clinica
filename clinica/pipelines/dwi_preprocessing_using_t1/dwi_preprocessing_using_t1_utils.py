@@ -311,22 +311,29 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
 
 
 def extract_sub_ses_folder_name(file_path: str) -> str:
-    """This function extracts the name of the folder corresponding to a subject and a session, which is checksum and thus cannot be infered using the subject and session.
+    """This function extracts the name of the folder corresponding to a subject and a session.
 
     Parameters
     ----------
     file_path: str
-        Path to a file.
+        Path to a temporary file for the subject and session of interest.
 
-    Example:
-    extract_sub_ses_folder_name("/localdrive10TB/users/matthieu.joulot/wd/dwi-preprocessing-using-t1/epi_pipeline/4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/MergeDWIs/Jacobian_image_maths_thresh_merged.nii.gz") = "4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea"
+    Returns
+    -------
+    str:
+    Name of the folder corresponding to a subject and a session.
+
+    Examples
+    --------
+    >>> extract_sub_ses_folder_name("/localdrive10TB/users/matthieu.joulot/wd/dwi-preprocessing-using-t1/epi_pipeline/4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/MergeDWIs/Jacobian_image_maths_thresh_merged.nii.gz")
+    4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea
     """
     from pathlib import Path
 
     return (Path(Path(file_path).parent).parent).name
 
 
-def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str):
+def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str) -> None:
     """This function deletes the directories of the given list".
 
     Parameters
@@ -334,14 +341,11 @@ def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str):
     checkpoint: str
     Path to a file. Used to ensure, that the tempory directories we want to delete are not useful anymore, and to verify that the subject and session are right.
 
-    dir_to_del: List[str]
+    dir_to_del: list
     Names of the directories we want to delete.
 
     base_dir: str
     Path to the working directory.
-
-    light_mode: bool
-    If it is True, then the nodes passed are deleted.
     """
     import shutil
     from pathlib import Path

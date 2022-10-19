@@ -84,7 +84,7 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
 
 def epi_pipeline(
     base_dir: str,
-    delete_cache: bool,
+    delete_cache: bool = False,
     name="susceptibility_distortion_correction_using_t1",
 ):
     """Perform EPI correction.
@@ -242,22 +242,22 @@ def epi_pipeline(
 
     merge = pe.Node(fsl.Merge(dimension="t"), name="MergeDWIs")
     # Delete the temporary directory that takes too much place
-    if delete_cache:
-        delete_warp_field_tmp = pe.Node(
-            name="deletewarpfieldtmp",
-            interface=niu.Function(
-                inputs=["checkpoint", "dir_to_del", "base_dir"],
-                function=delete_temp_dirs,
-            ),
-        )
-        delete_warp_field_tmp.inputs.base_dir = base_dir
-        delete_warp_field_tmp.inputs.dir_to_del = [
-            apply_transform_field.name,
-            jacobian.name,
-            jacmult.name,
-            thres.name,
-            apply_transform_image.name,
-        ]
+
+    delete_warp_field_tmp = pe.Node(
+        name="deletewarpfieldtmp",
+        interface=niu.Function(
+            inputs=["checkpoint", "dir_to_del", "base_dir"],
+            function=delete_temp_dirs,
+        ),
+    )
+    delete_warp_field_tmp.inputs.base_dir = base_dir
+    delete_warp_field_tmp.inputs.dir_to_del = [
+        apply_transform_field.name,
+        jacobian.name,
+        jacmult.name,
+        thres.name,
+        apply_transform_image.name,
+    ]
 
     outputnode = pe.Node(
         niu.IdentityInterface(
