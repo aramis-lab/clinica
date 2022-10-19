@@ -150,8 +150,10 @@ def caps_reader(query: CAPSQuery, input_dir: PathLike):
     """
     if isinstance(query, CAPSFileQuery):
         grabber = CAPSFileDataGrabber
+        name = "caps_file_reader_task"
     elif isinstance(query, CAPSGroupQuery):
         grabber = CAPSGroupDataGrabber
+        name = "caps_group_reader_task"
     else:
         raise TypeError(
             f"caps_reader received an unexpected query type {type(query)}. "
@@ -159,7 +161,7 @@ def caps_reader(query: CAPSQuery, input_dir: PathLike):
         )
     caps_data_grabber = grabber(output_query=query.query)
     caps_reader_task = Nipype1Task(
-        name="caps_reader_task",
+        name=name,
         interface=caps_data_grabber,
         base_dir=input_dir,
     )

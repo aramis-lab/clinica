@@ -179,8 +179,8 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         name="Input",
         fields=[
             ("_graph_checksums", Any),
-            ("T1w", str, {"mandatory": True}),
-            ("pet", str, {"mandatory": True}),
+            ("T1w", dict, {}, {"mandatory": True}),
+            ("pet", dict, {"tracer": parameters["acq_label"]}, {"mandatory": True}),
             (
                 "mask_tissues",
                 dict,
