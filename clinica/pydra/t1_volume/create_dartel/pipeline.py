@@ -67,10 +67,10 @@ def t1volume_create_dartel(
 
     workflow.add(
         wrap_list(
-            name="task_wrap_list",
-            interface=wrap_list,
             in_list=workflow.task_unzip.lzout.out_file,
         )
+        name="task_wrap_list",
+        interface=wrap_list,
     )
 
     dartel_template_task = Nipype1Task(
