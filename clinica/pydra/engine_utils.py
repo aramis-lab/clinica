@@ -1,6 +1,7 @@
 from os import PathLike
 
 from pydra import Submitter, Workflow
+from pydra.engine.specs import Result
 
 
 def list_out_fields(wf: Workflow) -> list:
@@ -48,16 +49,20 @@ def list_workflow_inputs(wf: Workflow) -> dict:
     return inputs
 
 
-def run(wf: Workflow) -> str:
-    """Execute a Pydra workflow
+def run(wf: Workflow) -> Result:
+    """Execute a Pydra workflow.
+
+    If the execution of the workflow fails, the
+    errors are printed on stdout.
 
     Parameters
     ----------
-        wf : Workflow
+    wf : Workflow
+        The workflow to be executed.
 
     Returns
     -------
-    str
+    Result :
         The result of running the Workflow
 
     """
@@ -69,11 +74,10 @@ def run(wf: Workflow) -> str:
     except Exception as e:
         path = re.search("\/.*\.pklz", str(e))
         if path:
-            return read_error(path.group(0))
-        return str(e)
+            print(read_error(path.group(0)))
+        return print(str(e))
 
-    results = wf.result(return_inputs=False)
-    return str(results)
+    return wf.result(return_inputs=False)
 
 
 def read_error(path: PathLike) -> str:
