@@ -14,6 +14,7 @@ from clinica.engine.template import cli as generate_cli
 from clinica.iotools.converters.cli import cli as convert_cli
 from clinica.iotools.utils.cli import cli as iotools_cli
 from clinica.pipelines.cli import cli as run_cli
+from clinica.pipelines import cli_param as cli_pipeline_param
 from clinica.utils.exceptions import ClinicaException
 from clinica.utils.stream import cprint
 
@@ -81,7 +82,7 @@ def setup_logging(verbose: bool = False, working_directory: str = None) -> None:
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.version_option(version=clinica.__version__)
 @click.option("-v", "--verbose", is_flag=True, help="Increase logging verbosity.")
-@run_cli.option.working_directory
+@cli_pipeline_param.option.working_directory
 def cli(verbose: bool, working_directory: Optional[str] = None) -> None:
     setup_logging(verbose=verbose, working_directory=working_directory)
 
