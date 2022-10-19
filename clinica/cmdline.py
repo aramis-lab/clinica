@@ -5,6 +5,7 @@ and gives to the user some other utils to work with the pipelines.
 """
 import os
 import sys
+from typing import Optional
 
 import click
 
@@ -24,9 +25,7 @@ CONTEXT_SETTINGS = dict(
 )
 
 
-def setup_logging(
-    verbose: bool = False, logging_file_path: str = "/pypeline.log"
-) -> None:
+def setup_logging(verbose: bool = False, working_directory: str = None) -> None:
     """Setup Clinica's logging facilities.
 
     Args:
@@ -41,13 +40,6 @@ def setup_logging(
     from colorlog import ColoredFormatter, StreamHandler
 
     logging_level = "DEBUG" if verbose else "INFO"
-    logging.basicConfig(
-        filename=logging_file_path,
-        filemode="a",
-        format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
-        datefmt="%H:%M:%S",
-        level=logging.DEBUG,
-    )
 
     # Root logger configuration.
     root_logger = logging.getLogger()
@@ -67,9 +59,15 @@ def setup_logging(
     nipype.utils.logger.RFHandler = RFHandler
     # Setup debug logging to file.
     nipype.config.enable_debug_mode()
+
     nipype.config.update_config(
         {
-            "logging": {"log_directory": os.getcwd(), "log_to_file": True},
+            "logging": {
+                "log_directory": os.getcwd()
+                if working_directory is None
+                else working_directory,
+                "log_to_file": True,
+            },
             "execution": {"check_version": False},
         }
     )
@@ -83,15 +81,9 @@ def setup_logging(
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.version_option(version=clinica.__version__)
 @click.option("-v", "--verbose", is_flag=True, help="Increase logging verbosity.")
-@click.option(
-    "-lfp",
-    "--logging_file_path",
-    type=str,
-    help="The path to the logging file path.",
-    default="/pypeline.log",
-)
-def cli(verbose: bool, logging_file_path: str) -> None:
-    setup_logging(verbose=verbose, logging_file_path=logging_file_path)
+@run_cli.option.working_directory
+def cli(verbose: bool, working_directory: Optional[str] = None) -> None:
+    setup_logging(verbose=verbose, working_directory=working_directory)
 
 
 cli.add_command(convert_cli)
