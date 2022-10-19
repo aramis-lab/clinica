@@ -437,6 +437,7 @@ def t1_volume_deformation_to_template(group_label):
     }
     return information
 
+
 @aggregator
 def t1_volume_i_th_iteration_group_template(group_label, i):
     import os
@@ -451,6 +452,7 @@ def t1_volume_i_th_iteration_group_template(group_label, i):
         "needed_pipeline": "t1-volume or t1-volume-create-dartel",
     }
     return information
+
 
 @aggregator
 def t1_volume_final_group_template(group_label):
