@@ -129,6 +129,29 @@ def _build_t1(directory: Path, sub: str, ses: str, configuration: dict) -> None:
             / "dartel"
             / f"group-{group_label}"
         ).mkdir()
+    (
+        directory
+        / "subjects"
+        / sub
+        / ses
+        / "t1"
+        / "spm"
+        / "dartel"
+        / f"group-{group_label}"
+        / f"{sub}_{ses}_T1w_target-{group_label}_transformation-forward_deformation.nii.gz"
+    ).touch()
+    for tissue in ["csf", "graymatter", "whitematter"]:
+        (
+            directory
+            / "subjects"
+            / sub
+            / ses
+            / "t1"
+            / "spm"
+            / "dartel"
+            / f"group-{group_label}"
+            / f"{sub}_{ses}_T1w_segm-{tissue}_space-Ixi549Space_modulated-on_probability.nii.gz"
+        ).touch()
     for folder in ["dartel_input", "native_space", "normalized_space"]:
         (
             directory / "subjects" / sub / ses / "t1" / "spm" / "segmentation" / folder
