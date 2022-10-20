@@ -130,6 +130,7 @@ def bids_reader(query: BIDSQuery, input_dir: PathLike):
         name="bids_reader_task",
         interface=bids_data_grabber,
         base_dir=input_dir,
+        output_query=query.query,
     )
     return bids_reader_task
 
@@ -164,5 +165,6 @@ def caps_reader(query: CAPSQuery, input_dir: PathLike):
         name=name,
         interface=caps_data_grabber,
         base_dir=input_dir,
+        output_query=query.query,
     )
     return caps_reader_task
