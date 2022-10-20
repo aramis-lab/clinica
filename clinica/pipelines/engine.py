@@ -772,7 +772,21 @@ class Pipeline(Workflow):
                 cprint(
                     msg=(
                         f"{len(cross_subj)} subjects in your BIDS folder did not respect the longitudinal organisation "
-                        "from BIDS specification. Clinica does not know how to handle cross sectional dataset, but it "
+                        "from BIDS specification."
+                    ),
+                    lvl="warning",
+                )
+                for subj in cross_subj:
+                    cprint(
+                        msg=(
+                            f"Subject {(sub)} in your BIDS folder does not respect the longitudinal organisation "
+                            "from BIDS specification."
+                        ),
+                        lvl="warning",
+                    )
+                cprint(
+                    msg=(
+                        f"Clinica does not know how to handle cross sectional dataset, but it "
                         "can convert it to a Clinica compliant form (using session ses-M00)"
                     ),
                     lvl="warning",
