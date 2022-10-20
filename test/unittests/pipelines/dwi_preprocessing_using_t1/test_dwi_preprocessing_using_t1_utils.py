@@ -15,24 +15,21 @@ from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_uti
     "checkpoint, dir_to_del, expected",
     [
         (
-            Path(os.getcwd())
-            / Path(
+            Path(
                 "ed42125b6abc244af649ff5eff1df41b/node_3_name/Jacobian_image_maths_thresh_merged.nii.gz"
             ),
             ["node_1_name"],
             [True, True],
         ),
         (
-            Path(os.getcwd())
-            / Path(
+            Path(
                 "4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/node_3_name/Jacobian_image_maths_thresh_merged.nii.gz"
             ),
             ["node_1_name"],
             [False, True],
         ),
         (
-            Path(os.getcwd())
-            / Path(
+            Path(
                 "4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/node_3_name/Jacobian_image_maths_thresh_merged.nii.gz"
             ),
             ["node_1_name", "node_2_name"],
@@ -40,20 +37,16 @@ from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_uti
         ),
     ],
 )
-def test_delete_temp_dirs(checkpoint, dir_to_del, expected):
-
-    base_path = os.getcwd()
-    dir_1 = Path(base_path) / Path(
-        "wd/pipeline_name/4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/node_1_name"
-    )
-    dir_2 = Path(base_path) / Path(
-        "wd/pipeline_name/4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/node_2_name"
-    )
-    if not Path(dir_1).is_dir():
-        os.makedirs(dir_1)
-    if not Path(dir_2).is_dir():
-        os.makedirs(dir_2)
-    base_dir = Path(base_path) / Path("wd")
+def test_delete_temp_dirs(tmp_path, checkpoint, dir_to_del, expected):
+    checkpoint = tmp_path / checkpoint
+    base_dir = tmp_path / Path("wd")
+    dirs = [
+        tmp_path
+        / Path(f"wd/pipeline_name/4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/{name}")
+        for name in ["node_1_name", "node_2_name"]
+    ]
+    for dir in dirs:
+        if not dir.is_dir():
+            os.makedirs(dir)
     delete_temp_dirs(checkpoint, dir_to_del, base_dir)
-    assert Path(dir_1).is_dir() == expected[0]
-    assert Path(dir_2).is_dir() == expected[1]
+    assert [dir.is_dir() for dir in dirs] == expected

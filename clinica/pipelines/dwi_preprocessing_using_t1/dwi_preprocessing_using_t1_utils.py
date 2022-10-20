@@ -358,4 +358,3 @@ def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str) -> None:
             if (Path(z).parent).name == subject_session_folder_name:
                 shutil.rmtree(z)
                 cprint(msg=f"Temporary folder {z} deleted", lvl="info")
-    return
