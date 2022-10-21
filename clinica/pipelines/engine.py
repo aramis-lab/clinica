@@ -748,8 +748,6 @@ class Pipeline(Workflow):
                 for f in listdir(bids_dir)
                 if isdir(join(bids_dir, f)) and f.startswith("sub-")
             ]
-            # print("all sub: ", all_subs)
-            # if self.tsv_file:
 
             cross_subj = []
             long_subj = []
@@ -762,7 +760,6 @@ class Pipeline(Workflow):
                     for f in listdir(join(bids_dir, sub))
                     if isdir(join(bids_dir, sub, f))
                 ]
-                # print("folder list: ", folder_list)
                 for fold in folder_list:
                     if not fold.startswith("ses-"):
                         is_cross_sectional = True
