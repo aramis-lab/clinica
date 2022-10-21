@@ -268,7 +268,9 @@ def find_sub_ses_pattern_path(
 
 def _check_information(information: Dict) -> None:
     if not isinstance(information, (dict, list)):
-        raise TypeError("A dict or list of dicts must be provided for the argument 'information'")
+        raise TypeError(
+            "A dict or list of dicts must be provided for the argument 'information'"
+        )
 
     if isinstance(information, list):
         for item in information:
