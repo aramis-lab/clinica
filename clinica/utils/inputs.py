@@ -293,6 +293,26 @@ def _check_information(information: Dict) -> None:
                     "If you want to indicate the exact name of the file, use the format "
                     "directory_name/filename.extension or filename.extension in the pattern argument."
                 )
+    else:
+        if not all(elem in item for elem in ["pattern", "description"]):
+            raise ValueError(
+                "'information' must contain the keys 'pattern' and 'description'"
+            )
+
+        if not all(
+            elem in ["pattern", "description", "needed_pipeline"]
+            for elem in item.keys()
+        ):
+            raise ValueError(
+                "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
+            )
+
+        if item["pattern"][0] == "/":
+            raise ValueError(
+                "pattern argument cannot start with char: / (does not work in os.path.join function). "
+                "If you want to indicate the exact name of the file, use the format "
+                "directory_name/filename.extension or filename.extension in the pattern argument."
+            )
 
 
 def _format_errors(errors: List, information: Dict) -> str:
