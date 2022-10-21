@@ -6,7 +6,6 @@ These dictionaries describe files to grab.
 import functools
 from collections.abc import Iterable
 
-
 """ T1w """
 
 # BIDS
