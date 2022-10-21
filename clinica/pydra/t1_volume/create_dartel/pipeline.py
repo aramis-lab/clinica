@@ -65,14 +65,10 @@ def t1volume_create_dartel(
 
     # TODO: remove this task once list arguments are properly handled in Nipype1Task (cf https://github.com/nipype/pydra-nipype1/issues/23)
 
-    workflow.add(
-        wrap_list(
-            
-            in_list=workflow.task_unzip.lzout.out_file,
-            name="task_wrap_list",
-            interface=wrap_list,
-        )
-    )
+    task_wrap_list = wrap_list(in_list=workflow.task_unzip.lzout.out_file)
+    task_wrap_list.name = "task_wrap_list"
+
+    workflow.add(task_wrap_list)
 
     dartel_template_task = Nipype1Task(
         name="dartel_template",

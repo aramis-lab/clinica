@@ -6,7 +6,6 @@ These dictionaries describe files to grab.
 import functools
 from collections.abc import Iterable
 
-import numpy as np
 
 """ T1w """
 
@@ -454,7 +453,6 @@ def t1_volume_i_th_iteration_group_template(group_label, i):
     return information
 
 
-@aggregator
 def t1_volume_final_group_template(group_label):
     import os
 
