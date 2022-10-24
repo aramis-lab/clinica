@@ -773,16 +773,17 @@ class Pipeline(Workflow):
                 cprint(
                     msg=(
                         f"{len(cross_subj)} subjects in your BIDS folder did not respect the longitudinal organisation "
-                        "from BIDS specification."
+                        "from BIDS specification.\nThe subjects concerned are:"
                     ),
+                    lvl="warning",
+                )
+                cprint(
+                    msg=(f"The subjects concerned are:"),
                     lvl="warning",
                 )
                 for subj in cross_subj:
                     cprint(
-                        msg=(
-                            f"Subject {(subj)} in your BIDS folder does not respect the longitudinal organisation "
-                            "from BIDS specification."
-                        ),
+                        msg=(f" - {(subj)}"),
                         lvl="warning",
                     )
                 cprint(
