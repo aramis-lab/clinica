@@ -73,7 +73,7 @@ def add_input_reading_task(
         return pipeline
     input_dir = "bids_dir" if "bids" in reader.__name__ else "caps_dir"
     input_workflow = Workflow(
-        name=f"input_workflow_{reader.__name__}",
+        name=f"input_workflow_{query_type}_reader",
         input_spec=["input_dir"],
     )
     try:

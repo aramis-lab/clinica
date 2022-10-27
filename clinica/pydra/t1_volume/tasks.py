@@ -65,10 +65,10 @@ def task_prepare_dartel_input_images(
         data structure with the right format for DARTELExistingTemplate(SPMCommand)
     """
     from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_utils import (
-        prepare_dartel_input_images,
+        prepare_dartel_input_images_pydra,
     )
 
-    return prepare_dartel_input_images(nifti_input)
+    return prepare_dartel_input_images_pydra(nifti_input)
 
 
 @task
