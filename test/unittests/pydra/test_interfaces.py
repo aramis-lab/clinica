@@ -53,7 +53,10 @@ def test_bids_reader(tmp_path):
 def test_caps_reader_instantiation(tmp_path, query, grabber):
     task = caps_reader(query, tmp_path)
     assert isinstance(task, Nipype1Task)
-    assert task.name == "caps_reader_task"
+    if "Group" in query:
+        assert task.name == "caps_group_reader_task"
+    elif "File" in query:
+        assert task.name == "caps_file_reader_task"
     assert task.inputs.base_dir == tmp_path
     assert isinstance(task._interface, grabber)
 
