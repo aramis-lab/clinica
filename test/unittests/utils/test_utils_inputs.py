@@ -1,90 +1,13 @@
 import os
 from pathlib import Path
-from typing import Dict
 
 import pytest
 
-
-def build_bids_directory(directory: os.PathLike, subjects_sessions: Dict) -> None:
-    """Build a fake BIDS dataset at the specified location following the
-    specified structure.
-
-    Parameters
-    ----------
-    directory : PathLike
-        Path to folder where the fake BIDS dataset should be created.
-
-    subjects_sessions : Dict
-        Dictionary containing the subjects and their associated sessions.
-
-    Notes
-    -----
-    This function is a simple prototype for creating fake datasets for testing.
-    It only adds (for now...) T1W nifti images for all subjects and sessions.
-    """
-    directory = Path(directory)
-    data_types = {"anat"}
-    suffixes = {"T1w", "flair"}
-    extensions = {"nii.gz"}
-    for sub, sessions in subjects_sessions.items():
-        (directory / sub).mkdir()
-        for ses in sessions:
-            (directory / sub / ses).mkdir()
-            for data_type in data_types:
-                (directory / sub / ses / data_type).mkdir()
-                for suffix in suffixes:
-                    for extension in extensions:
-                        (
-                            directory
-                            / sub
-                            / ses
-                            / data_type
-                            / f"{sub}_{ses}_{suffix}.{extension}"
-                        ).mkdir()
-
-
-def build_caps_directory(directory: os.PathLike, subjects_sessions: Dict) -> None:
-    """Build a fake CAPS dataset at the specified location following the
-    specified structure.
-
-    Parameters
-    ----------
-    directory : PathLike
-        Path to folder where the fake CAPS dataset should be created.
-
-    subjects_sessions : Dict
-        Dictionary containing the subjects and their associated sessions.
-
-    Notes
-    -----
-    This function is a simple prototype for creating fake datasets for testing.
-    It only adds (for now...) partial results of the t1-linear pipeline
-    for all subjects and sessions.
-    """
-    directory = Path(directory)
-    (directory / "subjects").mkdir()
-    for sub, sessions in subjects_sessions.items():
-        (directory / "subjects" / sub).mkdir()
-        for ses in sessions:
-            (directory / "subjects" / sub / ses).mkdir()
-            (directory / "subjects" / sub / ses / "t1_linear").mkdir()
-            (
-                directory
-                / "subjects"
-                / sub
-                / ses
-                / "t1_linear"
-                / f"{sub}_{ses}_T1w_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz"
-            ).mkdir()
-
-
-def rmtree(f: Path):
-    if f.is_file():
-        f.unlink()
-    else:
-        for child in f.iterdir():
-            rmtree(child)
-        f.rmdir()
+from clinica.utils.testing_utils import (
+    build_bids_directory,
+    build_caps_directory,
+    rmtree,
+)
 
 
 def test_insensitive_glob(tmp_path):
@@ -389,9 +312,12 @@ def test_clinica_file_reader_caps_directory(tmp_path):
     from clinica.utils.inputs import clinica_file_reader
 
     config = {
-        "sub-01": ["ses-M00"],
-        "sub-02": ["ses-M00", "ses-M06"],
-        "sub-06": ["ses-M00"],
+        "pipelines": ["t1_linear"],
+        "subjects": {
+            "sub-01": ["ses-M00"],
+            "sub-02": ["ses-M00", "ses-M06"],
+            "sub-06": ["ses-M00"],
+        },
     }
 
     build_caps_directory(tmp_path, config)

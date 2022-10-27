@@ -306,7 +306,13 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(name="SusceptibilityDistortionCorrection")
         # Remove bias correction from (Jeurissen et al., 2014)
-        bias = npe.Node(mrtrix3.DWIBiasCorrect(use_ants=True), name="RemoveBias")
+        bias = npe.Node(
+            mrtrix3.DWIBiasCorrect(
+                use_ants=True,
+                out_file="Jacobian_image_maths_thresh_merged_biascorr.nii.gz",
+            ),
+            name="RemoveBias",
+        )
         # Compute b0 mask on corrected avg b0
         compute_avg_b0 = npe.Node(
             nutil.Function(

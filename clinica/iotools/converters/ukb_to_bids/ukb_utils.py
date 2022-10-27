@@ -80,6 +80,9 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     dataframe_nifti = pd.DataFrame.from_records(
         source_path_series_nifti, columns=["source_zipfile", "source_filename"]
     )
+    dataframe_nifti = dataframe_nifti[
+        ~dataframe_nifti["source_filename"].str.contains("unusable")
+    ]
     dataframe_dicom = pd.DataFrame.from_records(
         source_path_series_dicom, columns=["source_zipfile", "source_filename"]
     )

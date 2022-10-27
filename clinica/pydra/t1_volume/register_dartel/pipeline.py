@@ -23,7 +23,7 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
 
     if "group_label" not in parameters.keys():
         raise KeyError("Missing compulsory group_label key in pipeline parameter.")
-    parameters.setdefault("tissues", [1, 2, 3])
+    parameters.setdefault("dartel_tissues", [1, 2, 3])
 
     check_group_label(parameters["group_label"])
 
@@ -65,7 +65,7 @@ def t1volume_register_dartel(
             (
                 "dartel_input_tissue",
                 dict,
-                {"tissue_number": parameters["tissues"]},
+                {"tissue_number": parameters["dartel_tissues"]},
                 {"mandatory": True},
             ),
             (
