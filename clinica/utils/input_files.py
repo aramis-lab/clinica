@@ -436,7 +436,6 @@ def t1_volume_deformation_to_template(group_label):
     return information
 
 
-@aggregator
 def t1_volume_i_th_iteration_group_template(group_label, i):
     import os
 
