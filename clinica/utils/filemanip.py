@@ -207,3 +207,43 @@ def extract_metadata_from_json(json_file, list_keys):
         file.close()
 
     return list_values
+
+
+def compute_total_readout_time(dict_values):
+    # if dict_values["TotalReadoutTime"] == ''
+    if dict_values["TotalReadoutTime"] != "":
+        readouttime = dict_values["TotalReadoutTime"]
+    elif (
+        dict_values["PhaseEncodingSteps"] != "" and dict_values["PixelBandwidth"] != ""
+    ):
+        readouttime = dict_values["PhaseEncodingSteps"] / dict_values["PixelBandwidth"]
+    else:
+        raise ("error")
+    if dict_values["PhaseEncodingDirection"] != "":
+        phaseencodingdirection = dict_values["PhaseEncodingDirection"]
+    elif dict_values["PhaseEncodingAxis"] != "":
+        phaseencodingdirection = dict_values["PhaseEncodingAxis"]
+    else:
+        raise ("error")
+    return readouttime, phaseencodingdirection
+
+
+def extract_metadata_from_json2(json_file, list_keys):
+    """Extract fields from JSON file."""
+    import datetime
+    import json
+
+    # from clinica.utils.exceptions import ClinicaException
+    dict_values = {}
+
+    with open(json_file, "r") as file:
+        data = json.load(file)
+        for key in list_keys:
+            try:
+                dict_values[key] = data[key]
+            except:
+                dict_values[key] = ""
+    # finally:
+    #     file.close()
+
+    return compute_total_readout_time(dict_values)
