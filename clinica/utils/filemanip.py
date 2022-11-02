@@ -243,7 +243,7 @@ def select_values_from_metadata(dict_values: dict, json_file: str) -> list:
     if dict_values["PhaseEncodingDirection"] != "":
         phaseencodingdirection = dict_values["PhaseEncodingDirection"]
     elif dict_values["PhaseEncodingAxis"] != "":
-        phaseencodingdirection = dict_values["PhaseEncodingAxis"]
+        phaseencodingdirection = dict_values["PhaseEncodingAxis"] + "+"
     else:
         raise (
             f"Error: Clinica could not find the PhaseEcondingDirection or the PhaseEncodingAxis in the following json file: {json_file}"
