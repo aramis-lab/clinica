@@ -121,7 +121,11 @@ def init_input_node(
     import nibabel as nib
 
     from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
-    from clinica.utils.filemanip import extract_metadata_from_json, get_subject_id
+    from clinica.utils.filemanip import (
+        extract_metadata_from_dwi_json,
+        extract_metadata_from_json,
+        get_subject_id,
+    )
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
 
@@ -151,7 +155,7 @@ def init_input_node(
         raise NotImplementedError(error_msg)
 
     # Read metadata from DWI JSON file:
-    [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
+    [total_readout_time, phase_encoding_direction] = extract_metadata_from_dwi_json(
         dwi_json, ["TotalReadoutTime", "PhaseEncodingDirection"]
     )
     phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)

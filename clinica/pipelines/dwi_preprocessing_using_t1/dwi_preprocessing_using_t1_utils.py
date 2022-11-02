@@ -187,7 +187,7 @@ def ants_apply_transforms(
 def init_input_node(t1w, dwi, bvec, bval, dwi_json):
     """Initialize the pipeline."""
     from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
-    from clinica.utils.filemanip import extract_metadata_from_json, get_subject_id
+    from clinica.utils.filemanip import extract_metadata_from_dwi_json, get_subject_id
     from clinica.utils.ux import print_begin_image
 
     # Extract image ID
@@ -197,7 +197,7 @@ def init_input_node(t1w, dwi, bvec, bval, dwi_json):
     check_dwi_volume(dwi, bvec, bval)
 
     # Read metadata from DWI JSON file:
-    [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
+    [total_readout_time, phase_encoding_direction] = extract_metadata_from_dwi_json(
         dwi_json, ["TotalReadoutTime", "PhaseEncodingDirection"]
     )
     phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)

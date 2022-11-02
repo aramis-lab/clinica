@@ -1,3 +1,6 @@
+from logging.config import dictConfig
+
+
 def zip_nii(in_file: str, same_dir: bool = False):
     import gzip
     import shutil
@@ -209,31 +212,61 @@ def extract_metadata_from_json(json_file, list_keys):
     return list_values
 
 
-def compute_total_readout_time(dict_values):
-    # if dict_values["TotalReadoutTime"] == ''
+def select_values_from_metadata(dict_values: dict, json_file: str) -> list:
+    """This function selects the data needed for dwi-preprocessing-using-t1: TotalReadoutTime and PhaseEncodinDirection.
+    If it is not there, it looks for alternative metrics which work as well. If they're not found, the functions errors.
+
+    Parameters
+    ----------
+    dict_values: dict
+    Requested values dictionnary.
+
+    json_file: str
+    Path to a json file containing metadata needed for the pipeline.
+
+    Returns
+    -------
+    list: contains the values for the TotalReadoutTime and the PhaseEncodingDirection
+    """
     if dict_values["TotalReadoutTime"] != "":
         readouttime = dict_values["TotalReadoutTime"]
+    elif dict_values["EstimatedTotalReadoutTime"] != "":
+        readouttime = dict_values["EstimatedTotalReadoutTime"]
     elif (
         dict_values["PhaseEncodingSteps"] != "" and dict_values["PixelBandwidth"] != ""
     ):
         readouttime = dict_values["PhaseEncodingSteps"] / dict_values["PixelBandwidth"]
     else:
-        raise ("error")
+        raise (
+            f"Error: Clinica could not find the TotalReadoutTime or data to compute it in the following json file: {json_file}"
+        )
     if dict_values["PhaseEncodingDirection"] != "":
         phaseencodingdirection = dict_values["PhaseEncodingDirection"]
     elif dict_values["PhaseEncodingAxis"] != "":
         phaseencodingdirection = dict_values["PhaseEncodingAxis"]
     else:
-        raise ("error")
-    return readouttime, phaseencodingdirection
+        raise (
+            f"Error: Clinica could not find the PhaseEcondingDirection or the PhaseEncodingAxis in the following json file: {json_file}"
+        )
+    return [readouttime, phaseencodingdirection]
 
 
-def extract_metadata_from_json2(json_file, list_keys):
-    """Extract fields from JSON file."""
-    import datetime
+def extract_metadata_from_dwi_json(json_file: str, list_keys: list) -> list:
+    """Extract fields from JSON file.
+
+    Parameters
+    ----------
+    json_file: str
+    Path to a json file containing metadata needed for the pipeline.
+
+    list_keys: list
+    List of fields the users wants to obtain from the json.
+
+    Returns
+    -------
+    list: contains the values for the TotalReadoutTime and the PhaseEncodingDirection."""
     import json
 
-    # from clinica.utils.exceptions import ClinicaException
     dict_values = {}
 
     with open(json_file, "r") as file:
@@ -243,7 +276,6 @@ def extract_metadata_from_json2(json_file, list_keys):
                 dict_values[key] = data[key]
             except:
                 dict_values[key] = ""
-    # finally:
-    #     file.close()
+    file.close()
 
-    return compute_total_readout_time(dict_values)
+    return select_values_from_metadata(dict_values, json_file)
