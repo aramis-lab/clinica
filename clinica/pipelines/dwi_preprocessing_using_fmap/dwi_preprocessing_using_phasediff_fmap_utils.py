@@ -156,7 +156,15 @@ def init_input_node(
 
     # Read metadata from DWI JSON file:
     [total_readout_time, phase_encoding_direction] = extract_metadata_from_dwi_json(
-        dwi_json, ["TotalReadoutTime", "PhaseEncodingDirection"]
+        dwi_json,
+        [
+            "TotalReadoutTime",
+            "EstimatedTotalReadoutTime",
+            "PhaseEncodingSteps",
+            "PixelBandwidth",
+            "PhaseEncodingDirection",
+            "PhaseEncodingAxis",
+        ],
     )
     phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
 
