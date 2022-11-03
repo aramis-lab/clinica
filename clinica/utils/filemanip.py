@@ -228,6 +228,8 @@ def select_values_from_metadata(dict_values: dict, json_file: str) -> list:
     -------
     list: contains the values for the TotalReadoutTime and the PhaseEncodingDirection
     """
+    from clinica.utils.exceptions import ClinicaException
+
     if dict_values["TotalReadoutTime"] != "":
         readouttime = dict_values["TotalReadoutTime"]
     elif dict_values["EstimatedTotalReadoutTime"] != "":
@@ -237,7 +239,7 @@ def select_values_from_metadata(dict_values: dict, json_file: str) -> list:
     ):
         readouttime = dict_values["PhaseEncodingSteps"] / dict_values["PixelBandwidth"]
     else:
-        raise (
+        raise ClinicaException(
             f"Error: Clinica could not find the TotalReadoutTime or data to compute it in the following json file: {json_file}"
         )
     if dict_values["PhaseEncodingDirection"] != "":
@@ -245,7 +247,7 @@ def select_values_from_metadata(dict_values: dict, json_file: str) -> list:
     elif dict_values["PhaseEncodingAxis"] != "":
         phaseencodingdirection = dict_values["PhaseEncodingAxis"] + "+"
     else:
-        raise (
+        raise ClinicaException(
             f"Error: Clinica could not find the PhaseEcondingDirection or the PhaseEncodingAxis in the following json file: {json_file}"
         )
     return [readouttime, phaseencodingdirection]
