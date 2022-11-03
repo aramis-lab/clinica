@@ -770,29 +770,16 @@ class Pipeline(Workflow):
 
             # The following code is run if cross sectional subjects have been found
             if len(cross_subj) > 0:
-                cprint(
-                    msg=(
-                        f"{len(cross_subj)} subjects in your BIDS folder did not respect the longitudinal organisation "
-                        "from BIDS specification.\nThe subjects concerned are:"
-                    ),
-                    lvl="warning",
+                msg = (
+                    f"{len(cross_subj)} subjects in your BIDS folder did not respect the longitudinal organisation "
+                    "from BIDS specification.\nThe subjects concerned are:\n\t- "
                 )
-                cprint(
-                    msg=(f"The subjects concerned are:"),
-                    lvl="warning",
+                msg += "\n\t- ".join(cross_subj)
+                msg += (
+                    f"\nClinica does not know how to handle cross sectional dataset, but it "
+                    "can convert it to a Clinica compliant form (using session ses-M00)"
                 )
-                for subj in cross_subj:
-                    cprint(
-                        msg=(f" - {(subj)}"),
-                        lvl="warning",
-                    )
-                cprint(
-                    msg=(
-                        f"Clinica does not know how to handle cross sectional dataset, but it "
-                        "can convert it to a Clinica compliant form (using session ses-M00)"
-                    ),
-                    lvl="warning",
-                )
+                cprint(msg, lvl="warning")
                 proposed_bids = join(
                     dirname(bids_dir), basename(bids_dir) + "_clinica_compliant"
                 )
