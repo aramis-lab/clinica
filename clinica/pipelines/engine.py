@@ -260,6 +260,7 @@ class Pipeline(Workflow):
         if not self.is_built:
             self.build()
         self.check_not_cross_sectional()
+
         if not bypass_check:
             self.check_size()
             plugin_args = self.update_parallelize_info(plugin_args)
@@ -607,7 +608,30 @@ class Pipeline(Workflow):
         from os import listdir
         from os.path import abspath, basename, dirname, isdir, join
 
+        from clinica.utils.exceptions import ClinicaInconsistentDatasetError
         from clinica.utils.stream import cprint
+
+        def detect_cross(all_subs, bids_dir, cross_subj, long_subj):
+            for sub in all_subs:
+                # Use is_cross_sectional to know if the current subject needs to be
+                # labeled as cross sectional
+                is_cross_sectional = False
+                folder_list = [
+                    f
+                    for f in listdir(join(bids_dir, sub))
+                    if isdir(join(bids_dir, sub, f))
+                ]
+                for fold in folder_list:
+                    if not fold.startswith("ses-"):
+                        is_cross_sectional = True
+                if is_cross_sectional:
+                    cross_subj.append(sub)
+                else:
+                    long_subj.append(sub)
+
+            # The following code is run if cross sectional subjects have been found
+            if len(cross_subj) > 0:
+                raise ClinicaInconsistentDatasetError(cross_subj)
 
         def convert_cross_sectional(bids_in, bids_out, cross_subjects, long_subjects):
             """
@@ -751,37 +775,9 @@ class Pipeline(Workflow):
 
             cross_subj = []
             long_subj = []
-            for sub in all_subs:
-                # Use is_cross_sectional to know if the current subject needs to be
-                # labeled as cross sectional
-                is_cross_sectional = False
-                folder_list = [
-                    f
-                    for f in listdir(join(bids_dir, sub))
-                    if isdir(join(bids_dir, sub, f))
-                ]
-                for fold in folder_list:
-                    if not fold.startswith("ses-"):
-                        is_cross_sectional = True
-                if is_cross_sectional:
-                    cross_subj.append(sub)
-                else:
-                    long_subj.append(sub)
-
-            # The following code is run if cross sectional subjects have been found
-            if len(cross_subj) > 0:
-                max_subjects_displayed = 50
-                bound = min(len(cross_subj), max_subjects_displayed)
-                msg = (
-                    f"{len(cross_subj)} subjects in your BIDS folder did not respect the longitudinal organisation "
-                    f"from BIDS specification.\nThe subjects concerned are (showing only the first {bound}):\n\t- "
-                )
-                msg += "\n\t- ".join(cross_subj[:bound])
-                msg += (
-                    f"\nClinica does not know how to handle cross sectional dataset, but it "
-                    "can convert it to a Clinica compliant form (using session ses-M00)"
-                )
-                cprint(msg, lvl="warning")
+            try:
+                detect_cross(all_subs, bids_dir, cross_subj, long_subj)
+            except ClinicaInconsistentDatasetError:
                 proposed_bids = join(
                     dirname(bids_dir), basename(bids_dir) + "_clinica_compliant"
                 )
