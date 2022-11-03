@@ -770,11 +770,13 @@ class Pipeline(Workflow):
 
             # The following code is run if cross sectional subjects have been found
             if len(cross_subj) > 0:
+                max_subjects_displayed = 50
+                bound = min(len(cross_subj), max_subjects_displayed)
                 msg = (
                     f"{len(cross_subj)} subjects in your BIDS folder did not respect the longitudinal organisation "
-                    "from BIDS specification.\nThe subjects concerned are:\n\t- "
+                    f"from BIDS specification.\nThe subjects concerned are (showing only the first {bound}):\n\t- "
                 )
-                msg += "\n\t- ".join(cross_subj)
+                msg += "\n\t- ".join(cross_subj[:bound])
                 msg += (
                     f"\nClinica does not know how to handle cross sectional dataset, but it "
                     "can convert it to a Clinica compliant form (using session ses-M00)"
