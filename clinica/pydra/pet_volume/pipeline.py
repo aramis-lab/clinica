@@ -53,27 +53,40 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
 
 
 def _sanitize_fwhm(
-    fwhm: ty.Union[int, ty.List[int], ty.List[ty.List[int]]],
-) -> ty.List[ty.List[int]]:
+    fwhm: ty.Union[float, ty.List[float], ty.List[ty.List[float]]],
+) -> ty.List[ty.List[float]]:
     """Make sure the FWHM is in the right format for the Smooth SPM interface.
 
     Parameters
     ----------
-    fwhm : Union[int, List[int], List[List[int]]
+    fwhm : Union[float, List[float], List[List[float]]
         Smoothing kernel(s) that should get passed to the SPM Smooth() interface.
         There are three ways to specify fwhm:
-            - An integer
-            - A list of integers
-            - A list of lists of integers
+            - A float
+            - A list of floats
+            - A list of lists of floats
 
     Returns
     -------
-    fwhm : List[List[int]]
-        The FWHM kernels as a list of lists of integers. All inner lists are of
+    fwhm : List[List[float]]
+        The FWHM kernels as a list of lists of floats. All inner lists are of
         length 3 as they encode each physical dimension.
+
+    Examples
+    --------
+    >>> _sanitize_fwhm(3.0)
+    [[3.0, 3.0, 3.0]]
+    >>> _sanitize_fwhm([3.0])
+    [[3.0, 3.0, 3.0]]
+    >>> _sanitize_fwhm([3.0, 2.0])
+    [[3.0, 3.0, 3.0], [2.0, 2.0, 2.0]]
+    >>> _sanitize_fwhm([3.0, 2.0, 1.0])
+    [[3.0, 3.0, 3.0], [2.0, 2.0, 2.0], [1.0, 1.0, 1.0]]
+    >>> _sanitize_fwhm([[3.0, 2.0, 1.0], [2.0, 2.0, 1.0]])
+    [[3.0, 2.0, 1.0], [2.0, 2.0, 1.0]]
     """
     if isinstance(fwhm, (int, float)):
-        fwhm = [[fwhm] * 3]
+        fwhm = [[float(fwhm)] * 3]
     if isinstance(fwhm, list):
         if len(fwhm) == 0:
             raise ValueError("Empty FWHM list provided.")
@@ -93,17 +106,17 @@ def _sanitize_fwhm(
                     )
         else:
             if all([isinstance(f, (int, float)) for f in fwhm]):
-                return [[f] * 3 for f in fwhm]
+                return [[float(f)] * 3 for f in fwhm]
             else:
                 raise ValueError(
-                    "Expecting a list of lists of ints or a list of ints for FWHM."
+                    "Expecting a list of lists of floats or a list of floats for FWHM."
                 )
     return fwhm
 
 
 def build_smoothing_workflow(
     name: str,
-    fwhm: ty.List[ty.List[int]],
+    fwhm: ty.List[ty.List[float]],
 ) -> Workflow:
     """Build and parametrize a smoothing workflow.
 
@@ -112,7 +125,7 @@ def build_smoothing_workflow(
     name : str
         The name of the Workflow.
 
-    fwhm : List[List[int]]
+    fwhm : List[List[float]]
         The smoothing kernel(s) to use for smoothing.
         If multiple kernels are provided, the workflow
         will outut files for each specified kernel.
