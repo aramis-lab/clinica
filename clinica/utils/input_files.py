@@ -6,8 +6,6 @@ These dictionaries describe files to grab.
 import functools
 from collections.abc import Iterable
 
-import numpy as np
-
 """ T1w """
 
 # BIDS

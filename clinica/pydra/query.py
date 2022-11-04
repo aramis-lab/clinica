@@ -252,6 +252,7 @@ class CAPSFileQuery(CAPSQuery):
     """
 
     from clinica.utils.input_files import (
+        t1_volume_dartel_input_tissue,
         t1_volume_deformation_to_template,
         t1_volume_native_tpm,
         t1_volume_native_tpm_in_mni,
@@ -261,6 +262,7 @@ class CAPSFileQuery(CAPSQuery):
         "mask_tissues": t1_volume_native_tpm_in_mni,
         "flow_fields": t1_volume_deformation_to_template,
         "pvc_mask_tissues": t1_volume_native_tpm,
+        "dartel_input_tissue": t1_volume_dartel_input_tissue,
     }
 
 

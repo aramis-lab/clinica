@@ -45,3 +45,21 @@ def task_volume_location_in_world_coordinate_system(
     return check_volume_location_in_world_coordinate_system(
         nifti_list, bids_dir, modality, skip_question
     )
+
+
+@task
+@annotate({"return": {"out_list": list}})
+def wrap_list(in_list: list):
+    """Wraps a list inside another list to comply with Pydra Nipype1Task requirements
+
+    Parameters
+    ----------
+    in_list: list
+        The input list to wrap
+
+    Returns
+    -------
+    list
+        The wrapped list
+    """
+    return [in_list]
