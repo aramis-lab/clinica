@@ -4,6 +4,7 @@ Subclasses are located in clinica/pipeline/<pipeline_name>/<pipeline_name>_pipel
 """
 
 import abc
+from typing import Tuple
 
 import click
 from nipype.pipeline.engine import Workflow
@@ -33,8 +34,8 @@ def postset(attribute, value):
 
 def detect_cross_sectional_and_longitudinal_subjects(
     all_subs: list, bids_dir: str
-) -> list:
-    """This function detects whether a subject as a longitudinal or cross sectionnal structure.
+) -> Tuple[list, list]:
+    """This function detects whether a subject has a longitudinal or cross sectional structure.
     If it has a mixed structure, it will be considered cross sectionnal.
 
     Parameters
@@ -47,7 +48,7 @@ def detect_cross_sectional_and_longitudinal_subjects(
     Returns
     -------
     cross_subj: list
-        List of all the subject detected with a cross_sectionnal organisation.
+        List of all the subject detected with a cross_sectional organisation.
     long_subj: list
         List of all the subject detected with a longitudinal organisation.
     """
