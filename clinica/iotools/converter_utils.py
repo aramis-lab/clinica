@@ -221,13 +221,13 @@ def viscode_to_session(viscode: str) -> str:
 
     Parameters
     ----------
-        viscode: str
-            The name of the session.
+    viscode: str
+        The name of the session.
 
     Returns
     -------
-        str:
-            "M000" if the session is the baseline session. Otherwise returns the original session name capitalized.
+    str:
+        "M000" if the session is the baseline session. Otherwise returns the original session name capitalized.
     """
     if viscode in {"bl", "m0"}:
         return "ses-M000"
