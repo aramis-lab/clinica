@@ -31,6 +31,43 @@ def postset(attribute, value):
     return postset_decorator
 
 
+def detect_cross_sectional_and_longitudinal_subjects(
+    all_subs: list, bids_dir: str
+) -> list:
+    """This function detects whether a subject as a longitudinal or cross sectionnal structure.
+    If it has a mixed structure, it will be considered cross sectionnal.
+
+    Parameters
+    ----------
+    all_subs: list
+        List containing all the names of the subjects.
+
+    bids_dir: str
+        Path to the bids directory.
+    Returns
+    -------
+    cross_subj: list
+        List of all the subject detected with a cross_sectionnal organisation.
+    long_subj: list
+        List of all the subject detected with a longitudinal organisation.
+    """
+    from os import listdir
+    from os.path import isdir, join
+
+    cross_subj = []
+    long_subj = []
+    for sub in all_subs:
+        folder_list = [
+            f for f in listdir(join(bids_dir, sub)) if isdir(join(bids_dir, sub, f))
+        ]
+
+        if not all([fold.startswith("ses-") for fold in folder_list]):
+            cross_subj.append(sub)
+        else:
+            long_subj.append(sub)
+    return cross_subj, long_subj
+
+
 class Pipeline(Workflow):
     """Clinica Pipeline class.
 
@@ -609,9 +646,6 @@ class Pipeline(Workflow):
         from os.path import abspath, basename, dirname, isdir, join
 
         from clinica.utils.exceptions import ClinicaInconsistentDatasetError
-        from clinica.utils.filemanip import (
-            detect_cross_sectional_and_longitudinal_subjects,
-        )
         from clinica.utils.stream import cprint
 
         def _check_cross_subj(cross_subj: list) -> None:
