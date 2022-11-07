@@ -120,21 +120,9 @@ def run_centernifti(
     output_dir = output_dir / "bids_centered"
     bids_dir = input_dir / "bids"
 
-    all_modalities = [
-        "t1w",
-        "pet",
-        "dwi",
-        "magnitude",
-        "bold",
-        "flair",
-        "t2",
-        "phasediff",
-    ]
-
     center_all_nifti(
         fspath(bids_dir),
         fspath(output_dir),
-        all_modalities,
         center_all_files=True,
     )
     hashes_out = create_list_hashes(
