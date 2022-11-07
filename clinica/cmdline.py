@@ -60,7 +60,10 @@ def setup_logging(verbose: bool = False) -> None:
     nipype.config.enable_debug_mode()
     nipype.config.update_config(
         {
-            "logging": {"log_directory": os.getcwd(), "log_to_file": True},
+            "logging": {
+                "log_directory": os.getenv("CLINICA_LOGGING_DIR", os.getcwd()),
+                "log_to_file": True,
+            },
             "execution": {"check_version": False},
         },
     )
