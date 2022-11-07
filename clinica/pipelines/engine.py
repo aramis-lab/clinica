@@ -45,10 +45,12 @@ def detect_cross_sectional_and_longitudinal_subjects(
 
     bids_dir: str
         Path to the bids directory.
+
     Returns
     -------
     cross_subj: list
         List of all the subject detected with a cross_sectional organisation.
+
     long_subj: list
         List of all the subject detected with a longitudinal organisation.
     """
