@@ -1,8 +1,10 @@
 import click
 
+pipeline_name = "deeplearning-prepare-data"
+
 
 @click.command(
-    "deeplearning-prepare-data",
+    name=pipeline_name,
     deprecated=True,
     context_settings={
         "allow_extra_args": True,
