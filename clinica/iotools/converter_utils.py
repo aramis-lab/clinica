@@ -13,6 +13,11 @@ def sort_session_list(session_list: List[str]) -> List[str]:
     --------
     list[str] :
         Sorted list of session IDs.
+
+    Examples
+    --------
+    1. sort_session_list(["ses-M000", "ses-M006", "ses-M012", "ses-M024", "ses-M048", "ses-M003"]) = ["ses-M000", "ses-M003", "ses-M006", "ses-M012", "ses-M024", "ses-M048"]
+    2. sort_session_list(["ses-M0", "ses-M6", "ses-M12", "ses-M24", "ses-M48", "ses-M3"]) = ["ses-M0", "ses-M3", "ses-M6", "ses-M12", "ses-M24", "ses-M48"]
     """
     prefix_length = len("ses-M")
     session_idx = [
