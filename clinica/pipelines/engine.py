@@ -609,27 +609,14 @@ class Pipeline(Workflow):
         from os.path import abspath, basename, dirname, isdir, join
 
         from clinica.utils.exceptions import ClinicaInconsistentDatasetError
+        from clinica.utils.filemanip import (
+            detect_cross_sectional_and_longitudinal_subjects,
+        )
         from clinica.utils.stream import cprint
 
         def _check_cross_subj(cross_subj: list) -> None:
             if len(cross_subj) > 0:
                 raise ClinicaInconsistentDatasetError(cross_subj)
-
-        def detect_cross(all_subs, bids_dir):
-            cross_subj = []
-            long_subj = []
-            for sub in all_subs:
-                folder_list = [
-                    f
-                    for f in listdir(join(bids_dir, sub))
-                    if isdir(join(bids_dir, sub, f))
-                ]
-
-                if not all([fold.startswith("ses-") for fold in folder_list]):
-                    cross_subj.append(sub)
-                else:
-                    long_subj.append(sub)
-            return cross_subj, long_subj
 
         def convert_cross_sectional(bids_in, bids_out, cross_subjects, long_subjects):
             """
@@ -771,7 +758,9 @@ class Pipeline(Workflow):
                 if isdir(join(bids_dir, f)) and f.startswith("sub-")
             ]
 
-            cross_subj, long_subj = detect_cross(all_subs, bids_dir)
+            cross_subj, long_subj = detect_cross_sectional_and_longitudinal_subjects(
+                all_subs, bids_dir
+            )
             try:
                 _check_cross_subj(cross_subj)
             except ClinicaInconsistentDatasetError as e:
