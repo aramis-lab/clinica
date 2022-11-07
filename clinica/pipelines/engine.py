@@ -53,6 +53,16 @@ def detect_cross_sectional_and_longitudinal_subjects(
 
     long_subj: list
         List of all the subject detected with a longitudinal organisation.
+
+    Examples
+    --------
+    BIDS
+    ├── sub-01
+    │   └── anat
+    └── sub-02
+        └── ses-M000
+    >>> detect_cross_sectional_and_longitudinal_subjects(["sub-01", "sub-02"], /Users/name.surname/BIDS)
+    (["sub-01"], ["sub-02])
     """
     from os import listdir
     from os.path import isdir, join
