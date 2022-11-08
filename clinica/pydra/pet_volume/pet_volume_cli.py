@@ -18,10 +18,6 @@ pipeline_name = "pydra-pet-volume"
 @cli_param.option_group.pipeline_specific_options
 @cli_param.option.pvc_psf_tsv
 @cli_param.option_group.common_pipelines_options
-@cli_param.option.subjects_sessions_tsv
-@cli_param.option.working_directory
-@cli_param.option.n_procs
-@cli_param.option.yes
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-mask",
@@ -66,10 +62,6 @@ def cli(
     mask_threshold: float = 0.3,
     pvc_mask_tissues: List[int] = (1, 2, 3),
     smooth: List[float] = [8.0],
-    subjects_sessions_tsv: Optional[str] = None,
-    working_directory: Optional[str] = None,
-    n_procs: Optional[int] = None,
-    yes: bool = False,
 ) -> None:
     """SPM-based pre-processing of PET images (Pydra engine).
 
@@ -98,14 +90,11 @@ def cli(
         "mask_threshold": mask_threshold,
         "pvc_mask_tissues": pvc_mask_tissues,
         "smooth": smooth,
-        "skip_question": yes,
     }
     pipeline = pydra_pet_volume.build_core_workflow(
         name="pet-volume-pydra",
         input_dir=bids_directory,
         output_dir=caps_directory,
-        # tsv_file=subjects_sessions_tsv,
-        # base_dir=working_directory,
         parameters=parameters,
     )
     pydra_utils.run(pipeline)
