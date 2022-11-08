@@ -176,8 +176,6 @@ def pet_pvc_name(pet_image: PurePath, pvc_method: str) -> str:
     pet_pvc_path : str
         Name for the PET PVC interface.
     """
-    from os.path import basename
-
     return "pvc-" + pvc_method.lower() + "_" + basename(pet_image)
 
 
@@ -214,7 +212,7 @@ def normalize_to_reference(pet_image: PurePath, region_mask: PurePath) -> PurePa
     return Path(suvr_pet_path)
 
 
-def atlas_statistics(in_image: str, in_atlas_list: ty.List) -> ty.List:
+def atlas_statistics(in_image: PurePath, in_atlas_list: ty.List) -> ty.List:
     """Generate regional measure from atlas_list in TSV files.
 
     For each atlas name provided it calculates for the input image the mean
@@ -240,7 +238,7 @@ def atlas_statistics(in_image: str, in_atlas_list: ty.List) -> ty.List:
     from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.statistics import statistics_on_atlas
 
-    orig_dir, base, ext = split_filename(in_image)
+    orig_dir, base, ext = split_filename(str(in_image))
     atlas_classes = AtlasAbstract.__subclasses__()
     atlas_statistics_list = []
     for atlas in in_atlas_list:
@@ -249,7 +247,7 @@ def atlas_statistics(in_image: str, in_atlas_list: ty.List) -> ty.List:
                 out_atlas_statistics = abspath(
                     join(getcwd(), base + "_space-" + atlas + "_statistics.tsv")
                 )
-                statistics_on_atlas(in_image, atlas_class(), out_atlas_statistics)
+                statistics_on_atlas(str(in_image), atlas_class(), out_atlas_statistics)
                 atlas_statistics_list.append(out_atlas_statistics)
                 break
     return atlas_statistics_list
