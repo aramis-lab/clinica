@@ -12,13 +12,13 @@ from pydra.tasks.nipype1.utils import Nipype1Task
 
 from clinica.pydra.engine import clinica_io
 from clinica.pydra.pet_volume.tasks import (
-    apply_binary_mask,
-    atlas_statistics,
-    create_binary_mask,
-    create_pvc_mask,
+    apply_binary_mask_task,
+    atlas_statistics_task,
+    create_binary_mask_task,
+    create_pvc_mask_task,
     get_psf_task,
-    normalize_to_reference,
-    pet_pvc_name,
+    normalize_to_reference_task,
+    pet_pvc_name_task,
 )
 
 
@@ -291,9 +291,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
     # Normalize PET values according to reference region
     wf.add(
-        normalize_to_reference(
+        normalize_to_reference_task(
             name="norm_to_ref",
-            interface=normalize_to_reference,
+            interface=normalize_to_reference_task,
             pet_image=wf.dartel_mni_reg.lzout.normalized_files,
             region_mask=wf.reslice.lzout.out_file,
         )
@@ -301,9 +301,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
     # Create binary mask from segmented tissues
     wf.add(
-        create_binary_mask(
+        create_binary_mask_task(
             name="binary_mask",
-            interface=create_binary_mask,
+            interface=create_binary_mask_task,
             tissues=wf.unzip_mask_tissues.lzout.out_file,
             threshold=parameters["mask_threshold"],
         )
@@ -311,9 +311,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
     # Mask PET image
     wf.add(
-        apply_binary_mask(
+        apply_binary_mask_task(
             name="apply_mask",
-            interface=apply_binary_mask,
+            interface=apply_binary_mask_task,
             image=wf.norm_to_ref.lzout.suvr_pet_path,
             binary_mask=wf.binary_mask.lzout.out_mask,
         )
@@ -331,9 +331,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
     # Atlas Statistics
     wf.add(
-        atlas_statistics(
+        atlas_statistics_task(
             name="atlas_stats_node",
-            interface=atlas_statistics,
+            interface=atlas_statistics_task,
             in_image=wf.norm_to_ref.lzout.suvr_pet_path,
             in_atlas_list=parameters["atlases"],
         )
@@ -355,18 +355,18 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
         # Creating Mask to use in PVC
         wf.add(
-            create_pvc_mask(
+            create_pvc_mask_task(
                 name="pvc_mask",
-                interface=create_pvc_mask,
+                interface=create_pvc_mask_task,
                 tissues=wf.unzip_pvc_mask_tissues.lzout.out_file,
             )
         )
 
         # Build PET PVC name for PET PVC task
         wf.add(
-            pet_pvc_name(
+            pet_pvc_name_task(
                 name="pet_pvc_name",
-                interface=pet_pvc_name,
+                interface=pet_pvc_name_task,
                 pet_image=wf.coreg_pet_t1.lzout.coregistered_source,
                 pvc_method="RBV",
             )
@@ -422,9 +422,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
         # Normalize PET values according to reference region
         wf.add(
-            normalize_to_reference(
+            normalize_to_reference_task(
                 name="norm_to_ref_pvc",
-                interface=normalize_to_reference,
+                interface=normalize_to_reference_task,
                 pet_image=wf.dartel_mni_reg_pvc.lzout.normalized_files,
                 region_mask=wf.reslice_pvc.lzout.out_file,
             )
@@ -432,9 +432,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
         # Mask PET image
         wf.add(
-            apply_binary_mask(
+            apply_binary_mask_task(
                 name="apply_mask_pvc",
-                interface=apply_binary_mask,
+                interface=apply_binary_mask_task,
                 image=wf.norm_to_ref_pvc.lzout.suvr_pet_path,
                 binary_mask=wf.binary_mask.lzout.out_mask,
             )
@@ -454,9 +454,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
         # Atlas Statistics
         wf.add(
-            atlas_statistics(
+            atlas_statistics_task(
                 name="atlas_stats_pvc",
-                interface=atlas_statistics,
+                interface=atlas_statistics_task,
                 in_image=wf.norm_to_ref_pvc.lzout.suvr_pet_path,
                 in_atlas_list=parameters["atlases"],
             )
