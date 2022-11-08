@@ -83,3 +83,27 @@ def test_extract_image_ids():
         )
         == ["sub-01_ses-M000"] * 3
     )
+
+
+def test_extract_subjects_sessions_from_filename():
+    from clinica.utils.filemanip import extract_subjects_sessions_from_filename
+
+    assert (
+        extract_subjects_sessions_from_filename(
+            [
+                "sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz",
+                "foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json",
+                "sub-01_ses-M000.tar.gz",
+            ]
+        )
+    ) == (["sub-01", "sub-01", "sub-01"], ["ses-M000", "ses-M000", "ses-M000"])
+
+
+def test_extract_crash_files_from_log_file_error():
+    from clinica.utils.filemanip import extract_crash_files_from_log_file
+
+    with pytest.raises(
+        ValueError,
+        match="extract_crash_files_from_log_file",
+    ):
+        extract_crash_files_from_log_file("foo.log")

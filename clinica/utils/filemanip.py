@@ -1,5 +1,10 @@
+import os
 import re
-from typing import List
+from typing import List, Tuple
+
+import pandas as pd
+
+from clinica.utils.exceptions import ClinicaException
 
 
 def zip_nii(in_file: str, same_dir: bool = False):
@@ -56,10 +61,6 @@ def unzip_nii(in_file: str):
 
 def save_participants_sessions(participant_ids, session_ids, out_folder, out_file=None):
     """Save <participant_ids> <session_ids> in <out_folder>/<out_file> TSV file."""
-    import os
-
-    import pandas
-
     from clinica.utils.stream import cprint
 
     assert len(participant_ids) == len(session_ids)
@@ -72,7 +73,7 @@ def save_participants_sessions(participant_ids, session_ids, out_folder, out_fil
         tsv_file = os.path.join(out_folder, "participants.tsv")
 
     try:
-        data = pandas.DataFrame(
+        data = pd.DataFrame(
             {
                 "participant_id": participant_ids,
                 "session_id": session_ids,
@@ -201,8 +202,33 @@ def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
     return id_bids_or_caps_files
 
 
-def extract_subjects_sessions_from_filename(bids_or_caps_files):
-    """Extract subjects/sessions (e.g. ['sub-CLNC01', 'sub-CLNC01']/['ses-M00', 'ses-M18'] from `bids_or_caps_files`."""
+def extract_subjects_sessions_from_filename(
+    bids_or_caps_files: List[str],
+) -> Tuple[List[str], List[str]]:
+    """Extract the subject and session labels from a list of BIDS or CAPS files.
+
+    Parameters
+    ----------
+    bids_or_caps_files: List[str]
+        List of files for which to extract the subject and session labels.
+
+    Returns
+    -------
+    subject_ids: List[str]
+        List of subject labels in the same order as `bids_or_caps_files`.
+
+    session_ids: List[str]
+        List of session labels in the same order as `bids_or_caps_files`.
+
+    Examples
+    --------
+    >>> extract_subjects_sessions_from_filename(["sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz", "foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json", "sub-01_ses-M000.tar.gz"])
+    (['sub-01', 'sub-01', 'sub-01'], ['ses-M000', 'ses-M000', 'ses-M000'])
+
+    See also
+    --------
+    extract_image_ids
+    """
     id_bids_or_caps_files = extract_image_ids(bids_or_caps_files)
     split = [image_id.split("_") for image_id in id_bids_or_caps_files]
     subject_ids = [p_id[0] for p_id in split]
@@ -210,37 +236,58 @@ def extract_subjects_sessions_from_filename(bids_or_caps_files):
     return subject_ids, session_ids
 
 
-def extract_crash_files_from_log_file(filename):
-    """Extract crash files (*.pklz) from `filename`."""
-    import os
-    import re
+def extract_crash_files_from_log_file(filename: str) -> List[str]:
+    """Extract crash files (*.pklz) from `filename`.
 
-    assert os.path.isfile(
-        filename
-    ), f"extract_crash_files_from_log_file: filename parameter is not a file ({filename})"
+    Parameters
+    ----------
+    filename: str
+        Path to log file for which the crash files should be extracted.
 
-    log_file = open(filename, "r")
+    Returns
+    -------
+    crash_files: List[str]
+        List of crash files.
+    """
+    if not os.path.isfile(filename):
+        raise ValueError(
+            f"extract_crash_files_from_log_file: filename parameter is not a file ({filename})"
+        )
     crash_files = []
-    for line in log_file:
-        if re.match("(.*)crashfile:(.*)", line):
-            crash_files.append(line.replace("\t crashfile:", "").replace("\n", ""))
+    with open(filename, "r") as log_file:
+        for line in log_file:
+            if re.match("(.*)crashfile:(.*)", line):
+                crash_files.append(line.replace("\t crashfile:", "").replace("\n", ""))
 
     return crash_files
 
 
-def read_participant_tsv(tsv_file):
+def read_participant_tsv(tsv_file: str) -> Tuple[List[str], List[str]]:
     """Extract participant IDs and session IDs from TSV file.
 
-    Raise:
-        ClinicaException if tsv_file is not a file
-        ClinicaException if participant_id or session_id column is missing from TSV file
+    Parameters
+    ----------
+    tsv_file: str
+        Participant TSV file from which to extract the participant and session IDs.
+
+    Returns
+    -------
+    participants: List[str]
+        List of participant IDs.
+
+    sessions: List[str]
+        List of session IDs.
+
+    Raises
+    ------
+    ClinicaException
+        If `tsv_file` is not a file.
+        If `participant_id` or `session_id` column is missing from TSV file.
+
+    Examples
+    --------
+
     """
-    import os
-
-    import pandas as pd
-
-    from clinica.utils.exceptions import ClinicaException
-
     if not os.path.isfile(tsv_file):
         raise ClinicaException(
             "The TSV file you gave is not a file.\n"
@@ -270,8 +317,6 @@ def extract_metadata_from_json(json_file, list_keys):
     """Extract fields from JSON file."""
     import datetime
     import json
-
-    from clinica.utils.exceptions import ClinicaException
 
     list_values = []
     try:
