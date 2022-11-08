@@ -76,9 +76,10 @@ def similarity_measure(
     file2: PathLike,
     threshold: float,
 ) -> bool:
-    """Compares 2 Nifti inputs using a correlation metric.
+    """Compare two NIfTI inputs using a similarity metric.
 
-    Nifti are equals if the correlation is higher than the specified threshold.
+    Both NIfTI inputs are considered equal if the computed similarity metric
+    is higher than the specified threshold.
 
     Parameters
     ----------
@@ -90,19 +91,22 @@ def similarity_measure(
     -------
     bool
         True if file1 and file2 can be considered similar enough, i.e. the
-        correlation is higher than the threshold.
+        similarity metric is higher than the threshold.
     """
-    import nipype.pipeline.engine as npe
-    from nipype.algorithms.metrics import Similarity
+    from os import fspath
 
-    # Node similarity (nipy required)
-    img_similarity = npe.Node(name="img_similarity", interface=Similarity())
-    img_similarity.inputs.metric = "cc"  # stands for correlation coefficient
-    img_similarity.inputs.volume1 = file1
-    img_similarity.inputs.volume2 = file2
-    res = img_similarity.run()
+    import nibabel
+    from skimage.metrics import structural_similarity
 
-    return np.mean(res.outputs.similarity) > threshold
+    image1 = nibabel.load(fspath(file1)).get_fdata()
+    image2 = nibabel.load(fspath(file2)).get_fdata()
+
+    # See https://scikit-image.org/docs/stable/api/skimage.metrics.html#skimage.metrics.structural_similarity
+    similarity = structural_similarity(
+        image1, image2, gaussian_weights=True, sigma=1.5, use_sample_covariance=False
+    )
+
+    return similarity > threshold
 
 
 def identical_subject_list(
@@ -160,10 +164,10 @@ def identical_subject_list(
     )
 
 
-def _sort_subject_field(subjects: List, fields: List) -> Tuple:
+def _sort_subject_field(subjects: List, fields: List) -> List:
     """Helper function for `same_missing_modality_tsv`.
     Returns a sorted list of fields. The list is sorted by corresponding
-    subject_id and by field_id if the subject_ids are equal..
+    subject_id and by field_id if the subject_ids are equal.
     """
     return [list(_) for _ in zip(*sorted(zip(subjects, fields)))][1]
 

@@ -13,6 +13,10 @@ help: Makefile
 build:
 	@$(POETRY) build
 
+.PHONY: check.lock
+check.lock:
+	@$(POETRY) lock --check
+
 .PHONY: clean.doc
 clean.doc:
 	@$(RM) -rf site
@@ -23,7 +27,7 @@ config.testpypi:
 
 ## doc			: Build the documentation.
 .PHONY: doc
-doc: clean.doc 
+doc: clean.doc install.doc
 	@$(POETRY) run mkdocs build
 
 ## env			: Bootstap an environment.
@@ -37,42 +41,47 @@ env.conda:
 .PHONY: env.dev
 env.dev: install
 
-.PHONY: env.doc
-env.doc:
-	@$(CONDA) env create -f docs/environment.yml -p $(CONDA_ENV)
-
 ## format			: Format the codebase.
 .PHONY: format
-format: format.black format.isort
+format: install format.black format.isort
 
 .PHONY: format.black
-format.black: env.dev
+format.black:
 	$(info Formatting code with black)
 	@$(POETRY) run black --quiet $(PACKAGES)
 
 .PHONY: format.isort
-format.isort: env.dev
+format.isort:
 	$(info Formatting code with isort)
 	@$(POETRY) run isort --quiet $(PACKAGES)
 
 ## install		: Install the project.
 .PHONY: install
-install:
+install: check.lock
 	@$(POETRY) install
+
+.PHONY: install.doc
+install.doc:
+	@$(POETRY) install --only docs
 
 ## lint			: Lint the codebase.
 .PHONY: lint
-lint: lint.black lint.isort
+lint: install lint.black lint.isort
 
 .PHONY: lint.black
-lint.black: env.dev
+lint.black:
 	$(info Linting code with black)
 	@$(POETRY) run black --check --diff $(PACKAGES)
 
 .PHONY: lint.isort
-lint.isort: env.dev
+lint.isort:
 	$(info Linting code with isort)
 	@$(POETRY) run isort --check --diff $(PACKAGES)
+
+## lock 		: Refresh locked dependencies.
+.PHONY: lock
+lock:
+	@$(POETRY) lock --no-update
 
 ## publish		: Publish the package to pypi.
 .PHONY: publish
@@ -87,5 +96,5 @@ publish.testpypi: build config.testpypi
 	@$(POETRY) publish --repository testpypi
 
 .PHONY: test
-test:
+test: install
 	@$(POETRY) run python -m pytest -v test/unittests

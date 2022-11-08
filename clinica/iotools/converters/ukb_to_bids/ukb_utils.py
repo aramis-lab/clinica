@@ -80,6 +80,9 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     dataframe_nifti = pd.DataFrame.from_records(
         source_path_series_nifti, columns=["source_zipfile", "source_filename"]
     )
+    dataframe_nifti = dataframe_nifti[
+        ~dataframe_nifti["source_filename"].str.contains("unusable")
+    ]
     dataframe_dicom = pd.DataFrame.from_records(
         source_path_series_dicom, columns=["source_zipfile", "source_filename"]
     )
@@ -325,7 +328,6 @@ def write_bids(
             str(to / "dataset_description.json"), "w"
         ) as dataset_description_file:
             BIDSDatasetDescription(name="UKB").write(to=dataset_description_file)
-
         with fs.open(str(to / "participants.tsv"), "w") as participant_file:
             write_to_tsv(participants, participant_file)
 

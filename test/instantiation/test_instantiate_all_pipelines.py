@@ -139,6 +139,7 @@ def test_instantiate_DWIPreprocessingUsingT1(cmdopt):
         "initrand": False,
         "low_bval": 5,
         "use_cuda": False,
+        "delete_cache": True,
     }
     pipeline = DwiPreprocessingUsingT1(
         bids_directory=fspath(root / "in" / "bids"),

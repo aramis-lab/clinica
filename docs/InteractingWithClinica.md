@@ -70,10 +70,8 @@ clinica run modality-pipeline bids_directory caps_directory -tsv my_participants
 "modality" is a prefix that corresponds to the data modality (e.g. T1, DWI, fMRI, PET) or to the category of processing (machine learning, statistics...).
 If you execute `clinica run --help`, you can see the list of `modality-pipeline` available: they correspond to the different pipelines displayed on the [main page of the documentation](..).
 
-<!-- ### clinica visualize
-
 !!! note
-    We are currently rewriting this section. We will update this section ASAP. -->
+    Clinica run logs are written in the current working directory by default. A different directory may be specified by setting the `CLINICA_LOGGING_DIR` environment variable.
 
 ### `clinica convert`
 

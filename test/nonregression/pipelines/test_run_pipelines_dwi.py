@@ -115,6 +115,7 @@ def run_DWIPreprocessingUsingPhaseDiffFieldmap(
         "initrand": True,
         "low_bval": 5,
         "use_cuda": False,
+        "delete_cache": True,
     }
     pipeline = DwiPreprocessingUsingPhaseDiffFMap(
         bids_directory=fspath(input_dir / "bids"),

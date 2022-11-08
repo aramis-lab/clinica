@@ -467,15 +467,22 @@ def _write_bids_dataset_description(
         bids_desc.write(to=f)
 
 
-def _write_readme(bids_dir: Union[str, Path]) -> None:
-    """Write `README`file at the root of the BIDS directory."""
-    import clinica
+def _write_readme(
+    study_name: str,
+    data_dict: dict,
+    bids_dir: Union[str, Path],
+) -> None:
+    """Write `README` at the root of the BIDS directory."""
+    from clinica.iotools.bids_readme import BIDSReadme
+
+    bids_readme = BIDSReadme(
+        name=study_name,
+        link=data_dict["link"],
+        description=data_dict["desc"],
+    )
 
     with open(Path(bids_dir) / "README", "w") as f:
-        f.write(
-            f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
-            f"More information on https://www.clinica.run\n"
-        )
+        bids_readme.write(to=f)
 
 
 def _write_bids_validator_config(bids_dir: Union[str, Path]) -> None:
@@ -496,6 +503,7 @@ def _write_bidsignore(bids_dir: Union[str, Path]) -> None:
 
 def write_modality_agnostic_files(
     study_name: str,
+    readme_data: dict,
     bids_dir: Union[str, Path],
     bids_version: Optional[str] = None,
 ) -> None:
@@ -505,11 +513,12 @@ def write_modality_agnostic_files(
 
     Args:
         study_name: name of the study (Ex ADNI)
+        readme_data: dictionnary containing the data specific to the dataset to write in the readme
         bids_dir: path to the bids directory
         bids_version: BIDS version if different from the version supported by Clinica.
     """
     _write_bids_dataset_description(study_name, bids_dir, bids_version)
-    _write_readme(bids_dir)
+    _write_readme(study_name, readme_data, bids_dir)
     _write_bids_validator_config(bids_dir)
     _write_bidsignore(bids_dir)
 

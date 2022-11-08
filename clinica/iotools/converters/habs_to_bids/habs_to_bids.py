@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from pandas import DataFrame, Series
 
+import clinica.iotools.bids_utils as bids
+
 PROTOCOL_TO_BIDS = {
     "3DFLAIR": {"datatype": "anat", "modality": "FLAIR"},
     "ADNI_1X-MPRAGE": {"datatype": "anat", "modality": "T1w"},
@@ -265,3 +267,15 @@ def write_bids(
 
         with fsspec.open(bids_basedir / f"{bids_prefix}_scans.tsv", mode="wb") as f:
             write_to_tsv(dataframe, f)
+
+    readme_data = {
+        "link": "https://habs.mgh.harvard.edu",
+        "desc": (
+            "The overall goal of the Harvard Aging Brain Study (HABS) is to elucidate the earliest changes in "
+            "molecular, functional and structural imaging markers that signal the transition from normal cognition to "
+            "progressive cognitive decline along the trajectory of preclinical Alzheimer’s Disease."
+        ),
+    }
+    bids.write_modality_agnostic_files(
+        study_name="HABS", readme_data=readme_data, bids_dir=rawdata
+    )
