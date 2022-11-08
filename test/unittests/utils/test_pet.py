@@ -10,7 +10,7 @@ def psf_df() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "participant_id": ["sub-CLNC01"] * 3 + ["sub-CLNC02", "sub-CLNC03"],
-            "session_id": ["ses-M00", "ses-M18"] + ["ses-M00"] * 3,
+            "session_id": ["ses-M000", "ses-M018"] + ["ses-M000"] * 3,
             "acq_label": ["FDG", "FDG", "AV45", "FDG", "FDG"],
             "psf_x": [8, 8, 7, 8, 8],
             "psf_y": [9, 9, 6, 9, 9],
@@ -36,7 +36,7 @@ def test_read_psf_information_errors(tmp_path: os.PathLike, psf_df: pd.DataFrame
     with pytest.raises(
         RuntimeError,
         match=(
-            "Subject sub-CLNC06 with session ses-M18 and tracer FDG "
+            "Subject sub-CLNC06 with session ses-M018 and tracer FDG "
             "that you want to proceed was not found in the TSV file containing "
             "PSF specifications"
         ),
