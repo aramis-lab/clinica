@@ -1,4 +1,29 @@
+import json
+
+import pandas as pd
 import pytest
+
+
+def test_zip_nii(tmp_path):
+    from clinica.utils.filemanip import zip_nii
+
+    assert zip_nii(None) is None
+    assert zip_nii(tmp_path / "foo.gz", same_dir=True) == tmp_path / "foo.gz"
+    assert not (tmp_path / "foo.gz").exists()
+    with pytest.raises(FileNotFoundError):
+        zip_nii(tmp_path / "foo.nii")
+    (tmp_path / "foo.nii").touch()
+    assert zip_nii(tmp_path / "foo.nii", same_dir=True) == tmp_path / "foo.nii.gz"
+    for ext in ("", ".gz"):
+        assert (tmp_path / f"foo.nii{ext}").exists()
+
+
+def test_unzip_nii(tmp_path):
+    from clinica.utils.filemanip import unzip_nii
+
+    assert unzip_nii(None) is None
+    assert unzip_nii(tmp_path / "foo.nii") == tmp_path / "foo.nii"
+    assert not (tmp_path / "foo.nii").exists()
 
 
 @pytest.mark.parametrize(
@@ -107,3 +132,61 @@ def test_extract_crash_files_from_log_file_error():
         match="extract_crash_files_from_log_file",
     ):
         extract_crash_files_from_log_file("foo.log")
+
+
+def test_read_participant_tsv(tmp_path):
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.filemanip import read_participant_tsv
+
+    with pytest.raises(
+        ClinicaException,
+        match="The TSV file you gave is not a file.",
+    ):
+        read_participant_tsv(tmp_path / "foo.tsv")
+
+    df = pd.DataFrame(
+        {
+            "participant_id": ["sub-01", "sub-01", "sub-02"],
+            "session_id": ["ses-M000", "ses-M006", "ses-M000"],
+        }
+    )
+    df.to_csv(tmp_path / "foo.tsv", sep="\t")
+    assert read_participant_tsv(tmp_path / "foo.tsv") == (
+        ["sub-01", "sub-01", "sub-02"],
+        ["ses-M000", "ses-M006", "ses-M000"],
+    )
+
+    for column in ("participant_id", "session_id"):
+        df.drop(column, axis=1).to_csv(tmp_path / "foo.tsv", sep="\t")
+        with pytest.raises(
+            ClinicaException,
+            match=f"The TSV file does not contain {column} column",
+        ):
+            read_participant_tsv(tmp_path / "foo.tsv")
+
+
+def test_extract_metadata_from_json(tmp_path):
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.filemanip import extract_metadata_from_json
+
+    data = {"foo": "foo_val", "bar": "bar_val"}
+
+    with pytest.raises(
+        FileNotFoundError,
+        match="Clinica could not open the following JSON file",
+    ):
+        extract_metadata_from_json(tmp_path / "foo.json", ["foo", "bar"])
+
+    with open(tmp_path / "foo.json", "w") as fp:
+        json.dump(data, fp)
+
+    with pytest.raises(
+        ClinicaException,
+        match="Clinica could not find the following keys in the following JSON file",
+    ):
+        extract_metadata_from_json(tmp_path / "foo.json", ["foo", "baz"])
+
+    assert extract_metadata_from_json(tmp_path / "foo.json", ["foo", "bar"]) == [
+        "foo_val",
+        "bar_val",
+    ]

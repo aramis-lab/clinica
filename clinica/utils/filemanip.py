@@ -1,62 +1,89 @@
 import os
 import re
-from typing import List, Tuple
+from pathlib import Path, PurePath
+from typing import List, Tuple, Union
 
 import pandas as pd
+from nipype.utils.filemanip import split_filename
 
 from clinica.utils.exceptions import ClinicaException
 
 
-def zip_nii(in_file: str, same_dir: bool = False):
+def zip_nii(
+    in_file: Union[PurePath, List[PurePath]], same_dir: bool = False
+) -> PurePath:
+    """Compress the provided file(s).
+
+    Parameters
+    ----------
+    in_file: PurePath or List[PurePath]
+        File to be zipped, or list of files to be zipped.
+
+    same_dir: bool, optional
+        If True, the zip file is written in the same directory as the
+        provided file. Otherwise, it is written in the current working
+        directory. Default=False.
+
+    Returns
+    -------
+    out_file: PurePath
+        Path to the resulting zip file.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the provided file does not exist.
+    """
     import gzip
     import shutil
     from os import getcwd
     from os.path import abspath, join
 
-    from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
 
     if (in_file is None) or isinstance(in_file, _Undefined):
         return None
 
-    if not isinstance(in_file, str):  # type(in_file) is list:
+    if isinstance(in_file, list):
         return [zip_nii(f, same_dir) for f in in_file]
 
-    orig_dir, base, ext = split_filename(str(in_file))
-
-    # Already compressed
-    if ext[-3:].lower() == ".gz":
+    if in_file.suffix == ".gz":
         return in_file
-    # Not compressed
+
+    if not in_file.exists():
+        raise FileNotFoundError(f"File {in_file} does not exist.")
+
+    orig_dir, base, ext = split_filename(str(in_file))
 
     out_file = abspath(join(orig_dir if same_dir else getcwd(), base + ext + ".gz"))
 
     with open(in_file, "rb") as f_in, gzip.open(out_file, "wb") as f_out:
         shutil.copyfileobj(f_in, f_out)
 
-    return out_file
+    return Path(out_file)
 
 
-def unzip_nii(in_file: str):
+def unzip_nii(in_file: PurePath) -> PurePath:
     from nipype.algorithms.misc import Gunzip
-    from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
 
     if (in_file is None) or isinstance(in_file, _Undefined):
         return None
 
-    if not isinstance(in_file, str):  # type(in_file) is list:
+    if isinstance(in_file, list):
         return [unzip_nii(f) for f in in_file]
 
-    _, base, ext = split_filename(in_file)
-
-    # Not compressed
-    if ext[-3:].lower() != ".gz":
+    if in_file.suffix != ".gz":
         return in_file
-    # Compressed
+
+    if not in_file.exists():
+        raise FileNotFoundError(f"File {in_file} does not exist.")
+
+    _, base, ext = split_filename(str(in_file))
+
     gunzip = Gunzip(in_file=in_file)
     gunzip.run()
-    return gunzip.aggregate_outputs().out_file
+    return Path(gunzip.aggregate_outputs().out_file)
 
 
 def save_participants_sessions(participant_ids, session_ids, out_folder, out_file=None):
@@ -85,14 +112,14 @@ def save_participants_sessions(participant_ids, session_ids, out_folder, out_fil
         raise e
 
 
-def _raise_non_bids_or_caps_compliant_filename(filename: str) -> None:
+def _raise_non_bids_or_caps_compliant_filename(filename: PurePath) -> None:
     raise ValueError(
         f"Input filename {filename} is not in a BIDS or CAPS compliant format."
         " It does not contain the subject and session information."
     )
 
 
-def get_subject_id(bids_or_caps_file: str) -> str:
+def get_subject_id(bids_or_caps_file: PurePath) -> str:
     """Extract the subject ID from a BIDS or CAPS file path.
 
     The subject ID is defined as
@@ -104,7 +131,7 @@ def get_subject_id(bids_or_caps_file: str) -> str:
 
     Parameters
     ----------
-    bids_or_caps_file: str
+    bids_or_caps_file: PurePath
         Path to a file from a BIDS or CAPS folder.
 
     Returns
@@ -114,9 +141,9 @@ def get_subject_id(bids_or_caps_file: str) -> str:
 
     Examples
     --------
-    >>> get_subject_id("sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz")
+    >>> get_subject_id(Path("sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz"))
     'sub-01_ses-M000'
-    >>> get_subject_id("sub-01_ses-M000_trc-18FAV45_pet.nii.gz")
+    >>> get_subject_id(Path("sub-01_ses-M000_trc-18FAV45_pet.nii.gz"))
     Traceback (most recent call last):
     ValueError: Input filename sub-01_ses-M000_trc-18FAV45_pet.nii.gz is not in a BIDS or CAPS compliant format. It does not contain the subject and session information.
 
@@ -124,7 +151,7 @@ def get_subject_id(bids_or_caps_file: str) -> str:
     --------
     extract_image_ids
     """
-    m = re.search(r"(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)", bids_or_caps_file)
+    m = re.search(r"(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)", str(bids_or_caps_file))
     if not m:
         _raise_non_bids_or_caps_compliant_filename(bids_or_caps_file)
     subject_id = m.group(1) + "_" + m.group(2)
@@ -132,12 +159,12 @@ def get_subject_id(bids_or_caps_file: str) -> str:
     return subject_id
 
 
-def get_filename_no_ext(filename: str) -> str:
+def get_filename_no_ext(filename: PurePath) -> str:
     """Get the filename without the extension.
 
     Parameters
     ----------
-    filename: str
+    filename: PurePath
         The full filename from which to extract the extension out.
 
     Returns
@@ -147,19 +174,17 @@ def get_filename_no_ext(filename: str) -> str:
 
     Examples
     --------
-    >>> get_filename_no_ext("foo.nii.gz")
+    >>> get_filename_no_ext(Path("foo.nii.gz"))
     'foo'
-    >>> get_filename_no_ext("sub-01/ses-M000/sub-01_ses-M000.tar.gz")
+    >>> get_filename_no_ext(Path("sub-01/ses-M000/sub-01_ses-M000.tar.gz"))
     'sub-01_ses-M000'
     """
-    from nipype.utils.filemanip import split_filename
-
-    _, filename_no_ext, _ = split_filename(filename)
+    _, filename_no_ext, _ = split_filename(str(filename))
 
     return filename_no_ext
 
 
-def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
+def extract_image_ids(bids_or_caps_files: List[PurePath]) -> List[str]:
     """Extract the image IDs from a list of BIDS or CAPS files.
 
     .. warning::
@@ -169,8 +194,8 @@ def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
 
     Parameters
     ----------
-    bids_or_caps_files: List[str]
-        List of file names from which to extract the image IDs.
+    bids_or_caps_files: List[PurePath]
+        List of file paths from which to extract the image IDs.
 
     Returns
     -------
@@ -179,13 +204,13 @@ def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
 
     Examples
     --------
-    >>> extract_image_ids(["sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz"])
+    >>> extract_image_ids([Path("sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz")])
     ['sub-01_ses-M000']
 
     Beware, the image IDs is extracted from the filename and not from the folder names
     as it is the case for `get_subject_id()`:
 
-    >>> extract_image_ids(["foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json"])
+    >>> extract_image_ids([Path("foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json")])
     ['sub-01_ses-M000']
 
     See also
@@ -194,7 +219,7 @@ def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
     """
     id_bids_or_caps_files = []
     for f in bids_or_caps_files:
-        m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)", f)
+        m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)", str(f))
         if not m:
             _raise_non_bids_or_caps_compliant_filename(f)
         id_bids_or_caps_files.append(m.group())
@@ -203,14 +228,14 @@ def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
 
 
 def extract_subjects_sessions_from_filename(
-    bids_or_caps_files: List[str],
+    bids_or_caps_files: List[PurePath],
 ) -> Tuple[List[str], List[str]]:
     """Extract the subject and session labels from a list of BIDS or CAPS files.
 
     Parameters
     ----------
-    bids_or_caps_files: List[str]
-        List of files for which to extract the subject and session labels.
+    bids_or_caps_files: List[PurePath]
+        List of file paths for which to extract the subject and session labels.
 
     Returns
     -------
@@ -222,7 +247,7 @@ def extract_subjects_sessions_from_filename(
 
     Examples
     --------
-    >>> extract_subjects_sessions_from_filename(["sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz", "foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json", "sub-01_ses-M000.tar.gz"])
+    >>> extract_subjects_sessions_from_filename([Path("sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz"), Path("foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json", "sub-01_ses-M000.tar.gz")])
     (['sub-01', 'sub-01', 'sub-01'], ['ses-M000', 'ses-M000', 'ses-M000'])
 
     See also
@@ -236,12 +261,12 @@ def extract_subjects_sessions_from_filename(
     return subject_ids, session_ids
 
 
-def extract_crash_files_from_log_file(filename: str) -> List[str]:
+def extract_crash_files_from_log_file(filename: PurePath) -> List[str]:
     """Extract crash files (*.pklz) from `filename`.
 
     Parameters
     ----------
-    filename: str
+    filename: PurePath
         Path to log file for which the crash files should be extracted.
 
     Returns
@@ -249,7 +274,8 @@ def extract_crash_files_from_log_file(filename: str) -> List[str]:
     crash_files: List[str]
         List of crash files.
     """
-    if not os.path.isfile(filename):
+    filename = Path(filename)
+    if not filename.is_file():
         raise ValueError(
             f"extract_crash_files_from_log_file: filename parameter is not a file ({filename})"
         )
@@ -262,12 +288,12 @@ def extract_crash_files_from_log_file(filename: str) -> List[str]:
     return crash_files
 
 
-def read_participant_tsv(tsv_file: str) -> Tuple[List[str], List[str]]:
+def read_participant_tsv(tsv_file: PurePath) -> Tuple[List[str], List[str]]:
     """Extract participant IDs and session IDs from TSV file.
 
     Parameters
     ----------
-    tsv_file: str
+    tsv_file: PurePath
         Participant TSV file from which to extract the participant and session IDs.
 
     Returns
@@ -286,53 +312,67 @@ def read_participant_tsv(tsv_file: str) -> Tuple[List[str], List[str]]:
 
     Examples
     --------
-
+    >>> df = pd.DataFrame({"participant_id": ["sub-01", "sub-01", "sub-02"], "session_id": ["ses-M000", "ses-M006", "ses-M000"]})
+    >>> df.to_csv("participants.tsv", sep="\t")
+    >>> read_participant_tsv(Path("participant.tsv"))
+    (["sub-01", "sub-01", "sub-02"], ["ses-M000", "ses-M006", "ses-M000"])
     """
-    if not os.path.isfile(tsv_file):
+    tsv_file = Path(tsv_file)
+    if not tsv_file.is_file():
         raise ClinicaException(
-            "The TSV file you gave is not a file.\n"
-            "Error explanations:\n"
+            "The TSV file you gave is not a file.\nError explanations:\n"
             f"\t- Clinica expected the following path to be a file: {tsv_file}\n"
             "\t- If you gave relative path, did you run Clinica on the good folder?"
         )
-    ss_df = pd.read_csv(tsv_file, sep="\t")
-    if "participant_id" not in list(ss_df.columns.values):
-        raise ClinicaException(
-            f"The TSV file does not contain participant_id column (path: {tsv_file})"
-        )
-    if "session_id" not in list(ss_df.columns.values):
-        raise ClinicaException(
-            f"The TSV file does not contain session_id column (path: {tsv_file})"
-        )
-    participants = list(ss_df.participant_id)
-    sessions = list(ss_df.session_id)
 
-    # Remove potential whitespace in participant_id or session_id
-    return [sub.strip(" ") for sub in participants], [
-        ses.strip(" ") for ses in sessions
-    ]
+    df = pd.read_csv(tsv_file, sep="\t")
+    for column in ("participant_id", "session_id"):
+        if column not in list(df.columns.values):
+            raise ClinicaException(
+                f"The TSV file does not contain {column} column (path: {tsv_file})"
+            )
+
+    return (
+        [sub.strip(" ") for sub in list(df.participant_id)],
+        [ses.strip(" ") for ses in list(df.session_id)],
+    )
 
 
-def extract_metadata_from_json(json_file, list_keys):
-    """Extract fields from JSON file."""
-    import datetime
+def extract_metadata_from_json(json_file: PurePath, list_keys: List[str]) -> List[str]:
+    """Extract fields from JSON file.
+
+    Parameters
+    ----------
+    json_file: PurePath
+        Path to JSON file from which to extract metadata.
+
+    list_keys: List[str]
+        List of keys to extract.
+
+    Returns
+    -------
+    list_values: List[str]
+        List of values extracted from the JSON file and corresponding to the keys.
+    """
     import json
 
-    list_values = []
-    try:
-        with open(json_file, "r") as file:
-            data = json.load(file)
-            for key in list_keys:
-                list_values.append(data[key])
-    except EnvironmentError:
-        raise EnvironmentError(
-            f"[Error] Clinica could not open the following JSON file: {json_file}"
+    json_file = Path(json_file)
+    if not json_file.exists():
+        raise FileNotFoundError(
+            f"Clinica could not open the following JSON file: {json_file}"
         )
-    except KeyError:
-        now = datetime.datetime.now().strftime("%H:%M:%S")
-        error_message = f"[{now}] Error: Clinica could not find the e key in the following JSON file: {json_file}"
+    with open(json_file, "r") as file:
+        data = json.load(file)
+    list_values = []
+    missing_keys = []
+    for key in list_keys:
+        if key in data:
+            list_values.append(data[key])
+        else:
+            missing_keys.append(key)
+    if len(missing_keys) > 0:
+        error_message = f"Clinica could not find the following keys in the following JSON file: {json_file}:\n- "
+        error_message += "\n- ".join(missing_keys)
         raise ClinicaException(error_message)
-    finally:
-        file.close()
 
     return list_values
