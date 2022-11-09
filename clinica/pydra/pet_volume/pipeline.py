@@ -1,5 +1,4 @@
 import typing as ty
-from os import PathLike
 from typing import Any
 
 import pydra
@@ -128,7 +127,7 @@ def build_smoothing_workflow(
     fwhm : List[List[float]]
         The smoothing kernel(s) to use for smoothing.
         If multiple kernels are provided, the workflow
-        will outut files for each specified kernel.
+        will output files for each specified kernel.
         Each file name has the kernel size added.
 
     Returns
@@ -140,24 +139,28 @@ def build_smoothing_workflow(
         name,
         input_spec=["input_file"],
     )
+    outputs = []
     for fwhm_value in fwhm:
+        if not isinstance(fwhm_value, list) or len(fwhm_value) != 3:
+            raise ValueError(
+                f"FWHM value is not valid. Expected a length 3 list and got: {fwhm_value}."
+            )
+        fwhm_name = f"{'-'.join([str(int(f)) for f in fwhm_value])}mm"
         task = Nipype1Task(
-            name=f"smoothing_node_{fwhm_value[0]}mm",
+            name=f"smoothing_node_{fwhm_name}",
             interface=Smooth(),
         )
         task.inputs.fwhm = fwhm_value
-        task.inputs.out_prefix = f"fwhm-{fwhm_value[0]}mm_"
+        task.inputs.out_prefix = f"fwhm-{fwhm_name}_"
         task.inputs.in_files = wf.lzin.input_file
         wf.add(task)
-    wf.set_output(
-        [
+        outputs.append(
             (
                 "smoothed_files",
-                getattr(wf, f"smoothing_node_{fwhm_value[0]}mm").lzout.smoothed_files,
+                getattr(wf, f"smoothing_node_{fwhm_name}").lzout.smoothed_files,
             )
-            for fwhm_value in fwhm
-        ]
-    )
+        )
+    wf.set_output(outputs)
     return wf
 
 
