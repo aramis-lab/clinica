@@ -54,10 +54,8 @@ def find_clinical_data(
 
 
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
-    import sys
     from pathlib import Path
 
-    import click
     import pandas as pd
 
     from clinica.utils.stream import cprint
@@ -99,12 +97,9 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     dataframe = dataframe[filename.isin(file_mod_list)]
     filename = filename[filename.isin(file_mod_list)]
     if dataframe.empty:
-        cprint(
-            f"Dataset not found, or not handled by Clinica. Please check your data.",
-            lvl="warning",
+        raise ValueError(
+            f"Dataset not found, or not handled by Clinica. Please check your data."
         )
-        click.echo("Clinica will now exit...")
-        sys.exit()
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
         {0: "source_id", 1: "modality_num", 2: "source_sessions_number"}, axis="columns"
