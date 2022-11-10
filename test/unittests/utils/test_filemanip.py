@@ -1,7 +1,9 @@
 import json
+import os
 
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
 
 
 def test_zip_nii(tmp_path):
@@ -24,6 +26,40 @@ def test_unzip_nii(tmp_path):
     assert unzip_nii(None) is None
     assert unzip_nii(tmp_path / "foo.nii") == tmp_path / "foo.nii"
     assert not (tmp_path / "foo.nii").exists()
+
+
+def test_zip_unzip_nii(tmp_path):
+    """Test that unzip(zip(x)) == x."""
+    from clinica.utils.filemanip import unzip_nii, zip_nii
+
+    p = tmp_path / "foo.nii"
+    with p.open(mode="w") as f:
+        f.write("Test")
+    zip_nii(p, same_dir=True)
+    os.remove(p)
+    assert (tmp_path / "foo.nii.gz").exists()
+    unzip_nii(tmp_path / "foo.nii.gz", same_dir=True)
+    assert (tmp_path / "foo.nii").exists()
+    with (tmp_path / "foo.nii").open() as f:
+        line = f.readline()
+    assert line == "Test"
+
+
+def test_save_participants_sessions(tmp_path):
+    from clinica.utils.filemanip import save_participants_sessions
+
+    with pytest.raises(
+        ValueError,
+        match="The number of participant IDs is not equal to the number of session IDs.",
+    ):
+        save_participants_sessions(["sub-01"], ["ses-M000", "ses-M006"], tmp_path)
+    save_participants_sessions(["sub-01"] * 2, ["ses-M000", "ses-M006"], tmp_path)
+    assert (tmp_path / "participants.tsv").exists()
+    df = pd.read_csv(tmp_path / "participants.tsv", sep="\t")
+    for col in ("participant_id", "session_id"):
+        assert col in df.columns
+    assert_array_equal(df.participant_id.values, ["sub-01"] * 2)
+    assert_array_equal(df.session_id.values, ["ses-M000", "ses-M006"])
 
 
 @pytest.mark.parametrize(

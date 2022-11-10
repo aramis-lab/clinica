@@ -1,7 +1,7 @@
 import os
 import re
 from pathlib import Path, PurePath
-from typing import List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import pandas as pd
 from nipype.utils.filemanip import split_filename
@@ -9,9 +9,50 @@ from nipype.utils.filemanip import split_filename
 from clinica.utils.exceptions import ClinicaException
 
 
+def _zip_unzip_nii(
+    in_file: Union[PurePath, List[PurePath]],
+    func: Callable,
+    same_dir: bool = False,
+) -> Union[PurePath, List[PurePath]]:
+    import gzip
+    import operator
+    import shutil
+    from os import getcwd
+    from os.path import abspath, join
+
+    from traits.trait_base import _Undefined
+
+    zipping = func.__name__ == "zip_nii"
+
+    if (in_file is None) or isinstance(in_file, _Undefined):
+        return None
+
+    if isinstance(in_file, list):
+        return [func(f, same_dir) for f in in_file]
+
+    op = operator.eq if zipping else operator.ne
+    if op(in_file.suffix, ".gz"):
+        return in_file
+
+    if not in_file.exists():
+        raise FileNotFoundError(f"File {in_file} does not exist.")
+
+    orig_dir, base, ext = split_filename(str(in_file))
+    new_ext = ext + ".gz" if zipping else ext[:-3]
+    out_file = abspath(join(orig_dir if same_dir else getcwd(), base + new_ext))
+
+    outer = open if zipping else gzip.open
+    inner = gzip.open if zipping else open
+    with outer(in_file, "rb") as f_in:
+        with inner(out_file, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    return Path(out_file)
+
+
 def zip_nii(
     in_file: Union[PurePath, List[PurePath]], same_dir: bool = False
-) -> PurePath:
+) -> Union[PurePath, List[PurePath]]:
     """Compress the provided file(s).
 
     Parameters
@@ -26,86 +67,106 @@ def zip_nii(
 
     Returns
     -------
-    out_file: PurePath
-        Path to the resulting zip file.
+    out_file: PurePath or List[PurePath]
+        Path to the resulting zip file, or list of paths to the
+        resulting zip files if a list was provided.
+
+    Notes
+    -----
+    If the provided file is already zipped (that is, its extension
+    is '.gz'), then nothing is done and the path to the provided file
+    is returned.
 
     Raises
     ------
     FileNotFoundError
         If the provided file does not exist.
     """
-    import gzip
-    import shutil
-    from os import getcwd
-    from os.path import abspath, join
-
-    from traits.trait_base import _Undefined
-
-    if (in_file is None) or isinstance(in_file, _Undefined):
-        return None
-
-    if isinstance(in_file, list):
-        return [zip_nii(f, same_dir) for f in in_file]
-
-    if in_file.suffix == ".gz":
-        return in_file
-
-    if not in_file.exists():
-        raise FileNotFoundError(f"File {in_file} does not exist.")
-
-    orig_dir, base, ext = split_filename(str(in_file))
-
-    out_file = abspath(join(orig_dir if same_dir else getcwd(), base + ext + ".gz"))
-
-    with open(in_file, "rb") as f_in, gzip.open(out_file, "wb") as f_out:
-        shutil.copyfileobj(f_in, f_out)
-
-    return Path(out_file)
+    return _zip_unzip_nii(in_file, zip_nii, same_dir)
 
 
-def unzip_nii(in_file: PurePath) -> PurePath:
-    from nipype.algorithms.misc import Gunzip
-    from traits.trait_base import _Undefined
+def unzip_nii(
+    in_file: Union[PurePath, List[PurePath]],
+    same_dir: bool = False,
+) -> Union[PurePath, List[PurePath]]:
+    """Decompress the provided file(s).
 
-    if (in_file is None) or isinstance(in_file, _Undefined):
-        return None
+    Parameters
+    ----------
+    in_file: PurePath or List[PurePath]
+        File to be zipped, or list of files to be zipped.
 
-    if isinstance(in_file, list):
-        return [unzip_nii(f) for f in in_file]
+    same_dir: bool, optional
+        If True, the unzipped file is written in the same directory as the
+        provided zip file. Otherwise, it is written in the current working
+        directory. Default=False.
 
-    if in_file.suffix != ".gz":
-        return in_file
+    Returns
+    -------
+    out_file: PurePath or List[PurePath]
+        Path to the resulting zip file, or list of paths to the
+        resulting zip files if a list was provided.
 
-    if not in_file.exists():
-        raise FileNotFoundError(f"File {in_file} does not exist.")
+    Notes
+    -----
+    If the provided file is not zipped (that is, its extension
+    is different from '.gz'), then nothing is done and the path
+    to the provided file is returned.
 
-    _, base, ext = split_filename(str(in_file))
+    Raises
+    ------
+    FileNotFoundError
+        If the provided file does not exist.
+    """
+    return _zip_unzip_nii(in_file, unzip_nii, same_dir)
 
-    gunzip = Gunzip(in_file=in_file)
-    gunzip.run()
-    return Path(gunzip.aggregate_outputs().out_file)
 
+def save_participants_sessions(
+    participant_ids: List[str],
+    session_ids: List[str],
+    out_folder: PurePath,
+    out_file: Optional[str] = "participants.tsv",
+) -> None:
+    """Save the participants and sessions to TSV.
 
-def save_participants_sessions(participant_ids, session_ids, out_folder, out_file=None):
-    """Save <participant_ids> <session_ids> in <out_folder>/<out_file> TSV file."""
+    Parameters
+    ----------
+    participant_ids: List[str]
+        List of participant IDs.
+
+    session_ids: List[str]
+        List of session IDs.
+
+    out_folder: PurePath
+        Folder where the resulting TSV file should be written.
+
+    out_file: str, optional
+        Name of the TSV file. Default="participants.tsv".
+
+    Raises
+    ------
+    ValueError
+        If provided `participant_ids` and `session_ids` do not have
+        the same length.
+    """
     from clinica.utils.stream import cprint
 
-    assert len(participant_ids) == len(session_ids)
-
-    os.makedirs(out_folder, exist_ok=True)
-
-    if out_file:
-        tsv_file = os.path.join(out_folder, out_file)
-    else:
-        tsv_file = os.path.join(out_folder, "participants.tsv")
-
-    try:
-        data = pd.DataFrame(
-            {
-                "participant_id": participant_ids,
-                "session_id": session_ids,
-            }
+    if len(participant_ids) != len(session_ids):
+        raise ValueError(
+            "The number of participant IDs is not equal to the number of session IDs."
         )
+
+    out_folder = Path(out_folder)
+    os.makedirs(out_folder, exist_ok=True)
+    tsv_file = out_folder / out_file
+
+    data = pd.DataFrame(
+        {
+            "participant_id": participant_ids,
+            "session_id": session_ids,
+        }
+    )
+    try:
         data.to_csv(tsv_file, sep="\t", index=False, encoding="utf-8")
     except Exception as e:
         cprint(msg=f"Impossible to save {out_file} with pandas", lvl="error")
