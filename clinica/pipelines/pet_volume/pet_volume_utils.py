@@ -1,14 +1,6 @@
-import typing as ty
-from os import getcwd
-from os.path import basename, join
-from pathlib import Path, PurePath
-
-import nibabel as nib
-import numpy as np
-from nibabel.nifti1 import Nifti1Header
-
-
 def init_input_node(pet_nii):
+    import nibabel as nib
+
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
@@ -31,7 +23,7 @@ def init_input_node(pet_nii):
     return pet_nii
 
 
-def _check_non_empty_tissue_list(tissues: ty.List[PurePath]) -> None:
+def _check_non_empty_tissue_list(tissues: list) -> None:
     """Check that provided list is non-empty."""
     if len(tissues) == 0:
         raise RuntimeError(
@@ -39,9 +31,7 @@ def _check_non_empty_tissue_list(tissues: ty.List[PurePath]) -> None:
         )
 
 
-def _load_tissues(
-    tissues: ty.List[PurePath],
-) -> ty.Tuple[np.ndarray, np.ndarray, Nifti1Header]:
+def _load_tissues(tissues: list):
     """Aggregates the image data contained in the tissue images provided.
 
     Parameters
@@ -62,6 +52,13 @@ def _load_tissues(
     header : Nifti1Header
         Header of the aggregated image.
     """
+    import nibabel as nib
+    import numpy as np
+
+    from clinica.pipelines.pet_volume.pet_volume_utils import (  # noqa
+        _check_non_empty_tissue_list,
+    )
+
     _check_non_empty_tissue_list(tissues)
     img_0 = nib.load(tissues[0])
     shape = list(img_0.get_fdata(dtype="float32").shape)
@@ -72,9 +69,9 @@ def _load_tissues(
 
 
 def create_binary_mask(
-    tissues: ty.List[PurePath],
+    tissues: list,
     threshold: float = 0.3,
-) -> PurePath:
+) -> str:
     """Create a binary mask Nifti1Image from the list of tissues.
 
     Tissue images are summed and the result is thresholded with the
@@ -82,7 +79,7 @@ def create_binary_mask(
 
     Parameters
     ----------
-    tissues : List[PurePath]
+    tissues : list
         List of paths to tissue Nifti1Images. Must be non-empty.
 
     threshold : float, optional
@@ -91,33 +88,45 @@ def create_binary_mask(
 
     Returns
     -------
-    out_mask : PurePath
-        Path to the binary mask Nifti1Image.
+    out_mask : str
+        Path to the binary mask Nifti1Image as a string.
     """
+    from os import getcwd
+    from os.path import basename, join
+
+    import nibabel as nib
+
+    from clinica.pipelines.pet_volume.pet_volume_utils import _load_tissues  # noqa
+
     data, affine, header = _load_tissues(tissues)
     data = (data > threshold) * 1.0
     out_mask = join(getcwd(), basename(tissues[0]) + "_brainmask.nii")
     mask = nib.Nifti1Image(data, affine, header=header)
     nib.save(mask, out_mask)
-    return Path(out_mask)
+    return out_mask
 
 
-def apply_binary_mask(image: PurePath, binary_mask: PurePath) -> PurePath:
+def apply_binary_mask(image: str, binary_mask: str) -> str:
     """Apply the provided `binary_mask` to the provided `image`.
 
     Parameters
     ----------
-    image : PurePath
+    image : str
         Path to the Nifti1Image to apply the mask on.
 
-    binary_mask : PurePath
+    binary_mask : str
         Path to the Nifti1Image containing the mask.
 
     Returns
     -------
-    masked_image_path : PurePath
+    masked_image_path : str
         Path to the masked Nifti1Image.
     """
+    from os import getcwd
+    from os.path import basename, join
+
+    import nibabel as nib
+
     original_image = nib.load(image)
     mask = nib.load(binary_mask)
 
@@ -128,22 +137,30 @@ def apply_binary_mask(image: PurePath, binary_mask: PurePath) -> PurePath:
         data, original_image.affine, header=original_image.header
     )
     nib.save(masked_image, masked_image_path)
-    return Path(masked_image_path)
+    return masked_image_path
 
 
-def create_pvc_mask(tissues: ty.List) -> PurePath:
+def create_pvc_mask(tissues: list) -> str:
     """Create a pvc mask from tissue list.
 
     Parameters
     ----------
-    tissues : List
+    tissues : list
         List of paths to tissue Nifti1Images. Must be non-empty.
 
     Returns
     -------
-    out_mask : PurePath
+    out_mask : str
         Path to the resulting mask Nifti1Image.
     """
+    from os import getcwd
+    from os.path import join
+
+    import nibabel as nib
+    import numpy as np
+
+    from clinica.pipelines.pet_volume.pet_volume_utils import _load_tissues  # noqa
+
     background, affine, header = _load_tissues(tissues)
     shape = background.shape
     shape += tuple([len(tissues) + 1])
@@ -156,15 +173,15 @@ def create_pvc_mask(tissues: ty.List) -> PurePath:
     out_mask = join(getcwd(), "pvc_mask.nii")
     mask = nib.Nifti1Image(data, affine, header=header)
     nib.save(mask, out_mask)
-    return Path(out_mask)
+    return out_mask
 
 
-def pet_pvc_name(pet_image: PurePath, pvc_method: str) -> str:
+def pet_pvc_name(pet_image: str, pvc_method: str) -> str:
     """Build the name for the PET PVC interface.
 
     Parameters
     ----------
-    pet_image : PurePath
+    pet_image : str
         Path to the PET scan file.
 
     pvc_method : str
@@ -176,26 +193,34 @@ def pet_pvc_name(pet_image: PurePath, pvc_method: str) -> str:
     pet_pvc_path : str
         Name for the PET PVC interface.
     """
+    from os.path import basename
+
     return "pvc-" + pvc_method.lower() + "_" + basename(pet_image)
 
 
-def normalize_to_reference(pet_image: PurePath, region_mask: PurePath) -> PurePath:
+def normalize_to_reference(pet_image: str, region_mask: str) -> str:
     """Normalize the provided `pet_image` by dividing by the mean
     value of the region defined by the provided `region_mask`.
 
     Parameters
     ----------
-    pet_image : PurePath
+    pet_image : str
         Path to the Nifti1Image which should be normalized.
 
-    region_mask : PurePath
+    region_mask : str
         Path to the mask to be used to define the region.
 
     Returns
     -------
-    suvr_pet_path : PurePath
+    suvr_pet_path : str
         Path to the normalized Nifti1Image.
     """
+    from os import getcwd
+    from os.path import basename, join
+
+    import nibabel as nib
+    import numpy as np
+
     pet = nib.load(pet_image)
     ref = nib.load(region_mask)
 
@@ -209,10 +234,10 @@ def normalize_to_reference(pet_image: PurePath, region_mask: PurePath) -> PurePa
     suvr_pet = nib.Nifti1Image(data, pet.affine, header=pet.header)
     nib.save(suvr_pet, suvr_pet_path)
 
-    return Path(suvr_pet_path)
+    return suvr_pet_path
 
 
-def atlas_statistics(in_image: PurePath, in_atlas_list: ty.List) -> ty.List:
+def atlas_statistics(in_image: str, in_atlas_list: list) -> list:
     """Generate regional measure from atlas_list in TSV files.
 
     For each atlas name provided it calculates for the input image the mean
@@ -231,6 +256,7 @@ def atlas_statistics(in_image: PurePath, in_atlas_list: ty.List) -> ty.List:
     atlas_statistics : List
         List of paths to TSV files.
     """
+    from os import getcwd
     from os.path import abspath, join
 
     from nipype.utils.filemanip import split_filename
