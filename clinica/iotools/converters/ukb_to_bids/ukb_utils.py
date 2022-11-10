@@ -58,8 +58,6 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
 
     import pandas as pd
 
-    from clinica.utils.stream import cprint
-
     source_path_series_nifti = pd.Series(
         find_imaging_data(imaging_data_directory), name="source_path"
     )
@@ -98,7 +96,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     filename = filename[filename.isin(file_mod_list)]
     if dataframe.empty:
         raise ValueError(
-            f"Dataset not found, or not handled by Clinica. Please check your data."
+            f"No imaging data were found in the provided folder: {imaging_data_directory}, or they are not handled by Clinica. Please check your data."
         )
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
