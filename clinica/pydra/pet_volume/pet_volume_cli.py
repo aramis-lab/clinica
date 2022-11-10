@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Union
 
 import click
 
@@ -61,7 +61,7 @@ def cli(
     mask_tissues: List[int] = (1, 2, 3),
     mask_threshold: float = 0.3,
     pvc_mask_tissues: List[int] = (1, 2, 3),
-    smooth: List[float] = [8.0],
+    smooth: Union[float, List[float], List[List[float]]] = 8.0,
 ) -> None:
     """SPM-based pre-processing of PET images (Pydra engine).
 
