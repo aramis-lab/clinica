@@ -94,6 +94,11 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     )
     dataframe = dataframe[filename.isin(file_mod_list)]
     filename = filename[filename.isin(file_mod_list)]
+    if dataframe.empty:
+        raise ValueError(
+            f"No imaging data were found in the provided folder: {imaging_data_directory}, "
+            "or they are not handled by Clinica. Please check your data."
+        )
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
         {0: "source_id", 1: "modality_num", 2: "source_sessions_number"}, axis="columns"
