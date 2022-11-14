@@ -10,12 +10,12 @@ def test_zip_nii(tmp_path):
     from clinica.utils.filemanip import zip_nii
 
     assert zip_nii(None) is None
-    assert zip_nii(tmp_path / "foo.gz", same_dir=True) == tmp_path / "foo.gz"
+    assert zip_nii(tmp_path / "foo.gz", same_dir=True) == str(tmp_path / "foo.gz")
     assert not (tmp_path / "foo.gz").exists()
     with pytest.raises(FileNotFoundError):
         zip_nii(tmp_path / "foo.nii")
     (tmp_path / "foo.nii").touch()
-    assert zip_nii(tmp_path / "foo.nii", same_dir=True) == tmp_path / "foo.nii.gz"
+    assert zip_nii(tmp_path / "foo.nii", same_dir=True) == str(tmp_path / "foo.nii.gz")
     for ext in ("", ".gz"):
         assert (tmp_path / f"foo.nii{ext}").exists()
 
@@ -24,7 +24,7 @@ def test_unzip_nii(tmp_path):
     from clinica.utils.filemanip import unzip_nii
 
     assert unzip_nii(None) is None
-    assert unzip_nii(tmp_path / "foo.nii") == tmp_path / "foo.nii"
+    assert unzip_nii(tmp_path / "foo.nii") == str(tmp_path / "foo.nii")
     assert not (tmp_path / "foo.nii").exists()
 
 
