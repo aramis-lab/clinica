@@ -3,6 +3,7 @@ from typing import List, Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.cli import cli as run_cli
 from clinica.utils.atlas import T1_VOLUME_ATLASES
 
 pipeline_name = "machinelearning-classification"
@@ -226,6 +227,8 @@ def cli(
 
     pipeline.run()
 
+
+run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()
