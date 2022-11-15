@@ -52,17 +52,17 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
 
 
 def _sanitize_fwhm(
-    fwhm: ty.Union[float, ty.List[float], ty.List[ty.List[float]]],
+    fwhm: ty.Union[float, ty.Tuple[float], ty.List[float], ty.List[ty.List[float]]],
 ) -> ty.List[ty.List[float]]:
     """Make sure the FWHM is in the right format for the Smooth SPM interface.
 
     Parameters
     ----------
-    fwhm : Union[float, List[float], List[List[float]]
+    fwhm : Union[float, Tuple[float], List[float], List[List[float]]
         Smoothing kernel(s) that should get passed to the SPM Smooth() interface.
         There are three ways to specify fwhm:
             - A float
-            - A list of floats
+            - A list/tuple of floats
             - A list of lists of floats
 
     Returns
@@ -77,13 +77,19 @@ def _sanitize_fwhm(
     [[3.0, 3.0, 3.0]]
     >>> _sanitize_fwhm([3.0])
     [[3.0, 3.0, 3.0]]
+    >>> _sanitize_fwhm((3,))
+    [[3.0, 3.0, 3.0]]
     >>> _sanitize_fwhm([3.0, 2.0])
+    [[3.0, 3.0, 3.0], [2.0, 2.0, 2.0]]
+    >>> _sanitize_fwhm((3.0, 2.0))
     [[3.0, 3.0, 3.0], [2.0, 2.0, 2.0]]
     >>> _sanitize_fwhm([3.0, 2.0, 1.0])
     [[3.0, 3.0, 3.0], [2.0, 2.0, 2.0], [1.0, 1.0, 1.0]]
     >>> _sanitize_fwhm([[3.0, 2.0, 1.0], [2.0, 2.0, 1.0]])
     [[3.0, 2.0, 1.0], [2.0, 2.0, 1.0]]
     """
+    if isinstance(fwhm, tuple):
+        fwhm = list(fwhm)
     if isinstance(fwhm, (int, float)):
         fwhm = [[float(fwhm)] * 3]
     if isinstance(fwhm, list):
