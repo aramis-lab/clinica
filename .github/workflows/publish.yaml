@@ -1,0 +1,22 @@
+name: publish
+
+on:
+  # Trigger this workflow when a release is created.
+  release:
+    types:
+      - created
+
+permissions:
+  # Allow checkout of the project.
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: snok/install-poetry@v1
+      - name: Publish to PyPI
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: make publish
