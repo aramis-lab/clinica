@@ -26,7 +26,7 @@ def bids_query():
     from clinica.pydra.query import BIDSQuery
 
     return BIDSQuery(
-        {"T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}}
+        {"T1w": {"suffix": "T1w", "extension": [".nii.gz"]}}
     )
 
 
