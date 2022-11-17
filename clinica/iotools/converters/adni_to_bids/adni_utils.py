@@ -1259,14 +1259,18 @@ def create_file(image, modality, bids_dir, mod_to_update):
         return nan
 
 
-def session_to_viscode(session_name):
+def session_to_viscode(session_name: str) -> str:
     """Replace the session name passed as input with the session label 'bl' or 'mXXX'.
 
-    Args:
-        session_name: MXXX
+    Parameters
+    ----------
+    session_name: str
+        Name of the session (MXXX).
 
-    Returns:
-        M000 if is the baseline session or the original session name capitalized
+    Returns
+    -------
+    str: 
+        'bl' if is the baseline session or the original session name.
     """
     if session_name == "M000":
         return "bl"
