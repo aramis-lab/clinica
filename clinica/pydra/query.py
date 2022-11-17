@@ -154,7 +154,8 @@ class BIDSQuery(Query):
     """
 
     _default_queries = {
-        "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}
+        "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]},
+        "pet": {"datatype": "pet", "suffix": "pet", "extension": [".nii.gz"]},
     }
 
     def parse_query(self, query: Dict) -> Dict:

@@ -31,6 +31,7 @@ class CAPSDataGrabber(IOBase):
 
         if not isdefined(self.inputs.output_query):
             self.inputs.output_query = {}
+
         # used for mandatory inputs check
         undefined_traits = {}
         self.inputs.trait_set(trait_change_notify=False, **undefined_traits)
@@ -129,6 +130,7 @@ def bids_reader(query: BIDSQuery, input_dir: PathLike):
         name="bids_reader_task",
         interface=bids_data_grabber,
         base_dir=input_dir,
+        output_query=query.query,
     )
     return bids_reader_task
 
@@ -149,8 +151,10 @@ def caps_reader(query: CAPSQuery, input_dir: PathLike):
     """
     if isinstance(query, CAPSFileQuery):
         grabber = CAPSFileDataGrabber
+        name = "caps_file_reader_task"
     elif isinstance(query, CAPSGroupQuery):
         grabber = CAPSGroupDataGrabber
+        name = "caps_group_reader_task"
     else:
         raise TypeError(
             f"caps_reader received an unexpected query type {type(query)}. "
@@ -158,8 +162,9 @@ def caps_reader(query: CAPSQuery, input_dir: PathLike):
         )
     caps_data_grabber = grabber(output_query=query.query)
     caps_reader_task = Nipype1Task(
-        name="caps_reader_task",
+        name=name,
         interface=caps_data_grabber,
         base_dir=input_dir,
+        output_query=query.query,
     )
     return caps_reader_task

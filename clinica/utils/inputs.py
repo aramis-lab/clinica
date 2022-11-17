@@ -773,7 +773,7 @@ def fetch_file(remote: RemoteFileStructure, dirname: Optional[str]) -> str:
 
 def get_file_from_server(
     remote_file: RemoteFileStructure,
-    cache_path: Optional[str],
+    cache_path: Optional[str] = None,
 ) -> str:
     """Download file from server.
 
