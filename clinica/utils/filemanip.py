@@ -168,7 +168,7 @@ def save_participants_sessions(
         )
 
     out_folder = Path(out_folder)
-    os.makedirs(out_folder, exist_ok=True)
+    out_folder.mkdir(parents=True, exist_ok=True)
     tsv_file = out_folder / out_file
 
     data = pd.DataFrame(
@@ -255,11 +255,13 @@ def get_filename_no_ext(filename: str) -> str:
     >>> get_filename_no_ext("sub-01/ses-M000/sub-01_ses-M000.tar.gz")
     'sub-01_ses-M000'
     """
-    from nipype.utils.filemanip import split_filename
+    from pathlib import PurePath
+    
+    stem = PurePath(filename).stem
+    while('.' in stem):
+        stem = PurePath(stem).stem
 
-    _, filename_no_ext, _ = split_filename(filename)
-
-    return filename_no_ext
+    return stem
 
 
 def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
