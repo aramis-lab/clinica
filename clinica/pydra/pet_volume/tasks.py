@@ -7,7 +7,12 @@ from pydra.mark import annotate, task
 @task
 @annotate({"return": {"suvr_pet_path": PurePath}})
 def normalize_to_reference_task(pet_image: PurePath, region_mask: PurePath) -> PurePath:
-    """Pydra task for normalizing the provided `pet_image`."""
+    """Pydra task for normalizing the provided `pet_image`.
+
+    .. note::
+        Please refer to the documentation of function
+        `clinica.pipelines.pet_volume.pet_volume_utils.normalize_to_reference`.
+    """
     from clinica.pipelines.pet_volume.pet_volume_utils import normalize_to_reference
 
     return normalize_to_reference(pet_image, region_mask)
@@ -19,7 +24,12 @@ def create_binary_mask_task(
     tissues: ty.List[PurePath],
     threshold: float = 0.3,
 ) -> PurePath:
-    """Pydra task for creating a binary mask Nifti1Image from the list of tissues."""
+    """Pydra task for creating a binary mask Nifti1Image from the list of tissues.
+
+    .. note::
+        Please refer to the documentation of function
+        `clinica.pipelines.pet_volume.pet_volume_utils.create_binary_mask`.
+    """
     from clinica.pipelines.pet_volume.pet_volume_utils import create_binary_mask
 
     return create_binary_mask(tissues, threshold)
@@ -28,7 +38,12 @@ def create_binary_mask_task(
 @task
 @annotate({"return": {"masked_image_path": PurePath}})
 def apply_binary_mask_task(image: PurePath, binary_mask: PurePath) -> PurePath:
-    """Pydra task for applying the provided `binary_mask` to the provided `image`."""
+    """Pydra task for applying the provided `binary_mask` to the provided `image`.
+
+    .. note::
+        Please refer to the documentation of function
+        `clinica.pipelines.pet_volume.pet_volume_utils.apply_binary_mask`.
+    """
     from clinica.pipelines.pet_volume.pet_volume_utils import apply_binary_mask
 
     return apply_binary_mask(image, binary_mask)
@@ -37,7 +52,12 @@ def apply_binary_mask_task(image: PurePath, binary_mask: PurePath) -> PurePath:
 @task
 @annotate({"return": {"atlas_statistics": ty.List}})
 def atlas_statistics_task(in_image: str, in_atlas_list: ty.List) -> ty.List:
-    """Pydra task for generating regional measures from atlas_list in TSV files."""
+    """Pydra task for generating regional measures from atlas_list in TSV files.
+
+    .. note::
+        Please refer to the documentation of function
+        `clinica.pipelines.pet_volume.pet_volume_utils.atlas_statistics`.
+    """
     from clinica.pipelines.pet_volume.pet_volume_utils import atlas_statistics
 
     return atlas_statistics(in_image, in_atlas_list)
@@ -46,7 +66,12 @@ def atlas_statistics_task(in_image: str, in_atlas_list: ty.List) -> ty.List:
 @task
 @annotate({"return": {"out_mask": PurePath}})
 def create_pvc_mask_task(tissues: ty.List) -> PurePath:
-    """Pydra task for creating a pvc mask from tissue list."""
+    """Pydra task for creating a pvc mask from tissue list.
+
+    .. note::
+        Please refer to the documentation of function
+        `clinica.pipelines.pet_volume.pet_volume_utils.create_pvc_mask`.
+    """
     from clinica.pipelines.pet_volume.pet_volume_utils import create_pvc_mask
 
     return create_pvc_mask(tissues)
@@ -55,7 +80,12 @@ def create_pvc_mask_task(tissues: ty.List) -> PurePath:
 @task
 @annotate({"return": {"pet_pvc_path": str}})
 def pet_pvc_name_task(pet_image: PurePath, pvc_method: str) -> str:
-    """Pydra task for building the name for the PET PVC interface."""
+    """Pydra task for building the name for the PET PVC interface.
+
+    .. note::
+        Please refer to the documentation of function
+        `clinica.pipelines.pet_volume.pet_volume_utils.pet_pvc_name`.
+    """
     from clinica.pipelines.pet_volume.pet_volume_utils import pet_pvc_name
 
     return pet_pvc_name(pet_image, pvc_method)
