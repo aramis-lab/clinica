@@ -444,17 +444,16 @@ def extract_metadata_from_json(json_file: str, list_keys: List[str]) -> List[str
         List of values extracted from the JSON file and corresponding to the keys.
     """
     import json
-    from pathlib import Path
 
     from clinica.utils.exceptions import ClinicaException
 
-    json_file = Path(json_file)
-    if not json_file.exists():
+    try:
+        with open(json_file, "r") as file:
+            data = json.load(file)
+    except FileNotFoundError:
         raise FileNotFoundError(
             f"Clinica could not open the following JSON file: {json_file}"
         )
-    with open(json_file, "r") as file:
-        data = json.load(file)
     list_values = []
     missing_keys = []
     for key in list_keys:
