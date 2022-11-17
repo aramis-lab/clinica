@@ -184,11 +184,17 @@ def save_participants_sessions(
         raise e
 
 
-def _raise_non_bids_or_caps_compliant_filename(filename: str) -> None:
-    raise ValueError(
-        f"Input filename {filename} is not in a BIDS or CAPS compliant format."
-        " It does not contain the subject and session information."
-    )
+def _check_bids_or_caps_compliance(filename: str, sep: str):
+    import re
+
+    m = re.search(sep.join([r"(sub-[a-zA-Z0-9]+)", r"(ses-[a-zA-Z0-9]+)"]), filename)
+    if not m:
+        raise ValueError(
+            f"Input filename {filename} is not in a BIDS or CAPS compliant format."
+            " It does not contain the subject and session information."
+        )
+
+    return m
 
 
 def get_subject_id(bids_or_caps_file: str) -> str:
@@ -223,12 +229,8 @@ def get_subject_id(bids_or_caps_file: str) -> str:
     --------
     extract_image_ids
     """
-    import re
-
-    m = re.search(r"(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)", bids_or_caps_file)
-    if not m:
-        _raise_non_bids_or_caps_compliant_filename(bids_or_caps_file)
-    subject_id = m.group(1) + "_" + m.group(2)
+    match = _check_bids_or_caps_compliance(bids_or_caps_file, sep="/")
+    subject_id = match.group(1) + "_" + match.group(2)
 
     return subject_id
 
@@ -293,14 +295,10 @@ def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
     --------
     get_subject_id
     """
-    import re
-
     id_bids_or_caps_files = []
     for f in bids_or_caps_files:
-        m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)", f)
-        if not m:
-            _raise_non_bids_or_caps_compliant_filename(f)
-        id_bids_or_caps_files.append(m.group())
+        match = _check_bids_or_caps_compliance(f, sep="_")
+        id_bids_or_caps_files.append(match.group())
 
     return id_bids_or_caps_files
 
