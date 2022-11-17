@@ -192,6 +192,15 @@ def pet_pvc_name(pet_image: str, pvc_method: str) -> str:
     -------
     pet_pvc_path : str
         Name for the PET PVC interface.
+
+    Examples
+    --------
+    >>> pet_pvc_name(
+    ...     "/home/bids/sub-01/ses-M00/pet/sub-01_ses-M00_task-rest_trc-av45_pet.nii.gz",
+    ...     "RBV"
+    ...)
+    'pvc-rbv_sub-01_ses-M00_task-rest_trc-av45_pet.nii.gz'
+
     """
     from os.path import basename
 
