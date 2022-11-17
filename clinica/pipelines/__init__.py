@@ -2,7 +2,6 @@ from ..pydra.t1_linear import t1_linear_cli as pydra_t1_linear_cli  # noqa
 from ..pydra.t1_volume.create_dartel import cli as pydra_t1vol_cd_cli  # noqa
 from ..pydra.t1_volume.tissue_segmentation import cli as pydra_t1vol_ts_cli  # noqa
 from . import (
-    cli,
     deeplearning_prepare_data,
     dwi_connectome,
     dwi_dti,

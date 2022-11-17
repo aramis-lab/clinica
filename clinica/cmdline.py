@@ -12,6 +12,7 @@ import clinica
 from clinica.engine.template import cli as generate_cli
 from clinica.iotools.converters.cli import cli as convert_cli
 from clinica.iotools.utils.cli import cli as iotools_cli
+from clinica.pipelines.cli import cli as run_cli
 from clinica.utils.exceptions import ClinicaException
 from clinica.utils.stream import cprint
 
@@ -83,6 +84,7 @@ def cli(verbose: bool) -> None:
 cli.add_command(convert_cli)
 cli.add_command(generate_cli)
 cli.add_command(iotools_cli)
+cli.add_command(run_cli)
 
 
 def main() -> None:
