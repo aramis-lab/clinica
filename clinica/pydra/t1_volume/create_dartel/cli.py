@@ -6,11 +6,12 @@ import click
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.t1_volume.create_dartel.pipeline as pydra_create_dartel
 from clinica.pipelines import cli_param
-from clinica.pipelines.cli import cli as run_cli
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "pydra-create-dartel"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name, hidden=True)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
@@ -46,8 +47,6 @@ def cli(
     )
     pydra_utils.run(t1_volume_create_dartel_pipeline)
 
-
-run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()
