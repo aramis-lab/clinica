@@ -256,9 +256,9 @@ def get_filename_no_ext(filename: str) -> str:
     'sub-01_ses-M000'
     """
     from pathlib import PurePath
-    
+
     stem = PurePath(filename).stem
-    while('.' in stem):
+    while "." in stem:
         stem = PurePath(stem).stem
 
     return stem
