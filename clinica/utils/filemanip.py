@@ -402,21 +402,19 @@ def read_participant_tsv(tsv_file: str) -> Tuple[List[str], List[str]]:
     >>> read_participant_tsv("participant.tsv")
     (["sub-01", "sub-01", "sub-02"], ["ses-M000", "ses-M006", "ses-M000"])
     """
-    from pathlib import Path
-
     import pandas as pd
 
     from clinica.utils.exceptions import ClinicaException
 
-    tsv_file = Path(tsv_file)
-    if not tsv_file.is_file():
+    try:
+        df = pd.read_csv(tsv_file, sep="\t")
+    except FileNotFoundError:
         raise ClinicaException(
             "The TSV file you gave is not a file.\nError explanations:\n"
             f"\t- Clinica expected the following path to be a file: {tsv_file}\n"
             "\t- If you gave relative path, did you run Clinica on the good folder?"
         )
 
-    df = pd.read_csv(tsv_file, sep="\t")
     for column in ("participant_id", "session_id"):
         if column not in list(df.columns.values):
             raise ClinicaException(
