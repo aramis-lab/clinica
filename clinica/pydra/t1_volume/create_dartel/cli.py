@@ -11,7 +11,7 @@ from clinica.pipelines.cli import cli as run_cli
 pipeline_name = "pydra-create-dartel"
 
 
-@click.command(name=pipeline_name, hidden=False)
+@click.command(name=pipeline_name, hidden=True)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
