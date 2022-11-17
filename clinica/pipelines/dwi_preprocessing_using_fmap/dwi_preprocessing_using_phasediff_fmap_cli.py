@@ -3,6 +3,7 @@ from typing import Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.cli import cli as run_cli
 
 pipeline_name = "dwi-preprocessing-using-phasediff-fmap"
 
@@ -67,6 +68,8 @@ def cli(
             pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
 
+
+run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()
