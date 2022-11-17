@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple
 
 
-def _zip_unzip_nii(in_file: str, func, same_dir):
+def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
     import gzip
     import operator
     import shutil
@@ -12,17 +12,15 @@ def _zip_unzip_nii(in_file: str, func, same_dir):
     from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
 
-    zipping = func.__name__ == "zip_nii"
-
     if (in_file is None) or isinstance(in_file, _Undefined):
         return None
 
     if isinstance(in_file, list):
-        return [func(f, same_dir) for f in in_file]
+        return [_zip_unzip_nii(f, same_dir, compress) for f in in_file]
 
     in_file = Path(in_file)
 
-    op = operator.eq if zipping else operator.ne
+    op = operator.eq if compress else operator.ne
     if op(in_file.suffix, ".gz"):
         return str(in_file)
 
@@ -30,11 +28,11 @@ def _zip_unzip_nii(in_file: str, func, same_dir):
         raise FileNotFoundError(f"File {in_file} does not exist.")
 
     orig_dir, base, ext = split_filename(str(in_file))
-    new_ext = ext + ".gz" if zipping else ext[:-3]
+    new_ext = ext + ".gz" if compress else ext[:-3]
     out_file = abspath(join(orig_dir if same_dir else getcwd(), base + new_ext))
 
-    outer = open if zipping else gzip.open
-    inner = gzip.open if zipping else open
+    outer = open if compress else gzip.open
+    inner = gzip.open if compress else open
     with outer(in_file, "rb") as f_in:
         with inner(out_file, "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
@@ -81,7 +79,7 @@ def zip_nii(in_file: str, same_dir: bool = False) -> str:
     """
     from clinica.utils.filemanip import _zip_unzip_nii  # noqa
 
-    return _zip_unzip_nii(in_file, zip_nii, same_dir)
+    return _zip_unzip_nii(in_file, same_dir, compress=True)
 
 
 def unzip_nii(
@@ -126,7 +124,7 @@ def unzip_nii(
     """
     from clinica.utils.filemanip import _zip_unzip_nii  # noqa
 
-    return _zip_unzip_nii(in_file, unzip_nii, same_dir)
+    return _zip_unzip_nii(in_file, same_dir, compress=False)
 
 
 def save_participants_sessions(
