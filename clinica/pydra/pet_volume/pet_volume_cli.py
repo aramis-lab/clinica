@@ -5,6 +5,7 @@ import click
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.pet_volume.pipeline as pydra_pet_volume
 from clinica.pipelines import cli_param
+from clinica.pipelines.cli import cli as run_cli
 
 pipeline_name = "pydra-pet-volume"
 
@@ -99,6 +100,8 @@ def cli(
     )
     pydra_utils.run(pipeline)
 
+
+run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()
