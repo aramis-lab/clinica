@@ -195,28 +195,28 @@ def extract_image_id_from_longitudinal_segmentation(freesurfer_id):
 
     Example:
         >>> from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
-        >>> extract_image_id_from_longitudinal_segmentation('sub-CLNC01_ses-M000')
-        image_id(participant_id='sub-CLNC01', session_id='ses-M000', long_id='')
-        >>> extract_image_id_from_longitudinal_segmentation('sub-CLNC01_long-M0018')
-        image_id(participant_id='sub-CLNC01', session_id='', long_id='long-M0018')
-        >>> extract_image_id_from_longitudinal_segmentation('sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018')
-        image_id(participant_id='sub-CLNC01', session_id='ses-M000', long_id='long-M000M018')
+        >>> extract_image_id_from_longitudinal_segmentation('sub-CLNC001_ses-M000')
+        image_id(participant_id='sub-CLNC001', session_id='ses-M000', long_id='')
+        >>> extract_image_id_from_longitudinal_segmentation('sub-CLNC001_long-M018')
+        image_id(participant_id='sub-CLNC001', session_id='', long_id='long-M018')
+        >>> extract_image_id_from_longitudinal_segmentation('sub-CLNC001_ses-M000.long.sub-CLNC001_long-M000M018')
+        image_id(participant_id='sub-CLNC001', session_id='ses-M000', long_id='long-M000M018')
     """
     from collections import namedtuple
 
     image_id = namedtuple("image_id", ["participant_id", "session_id", "long_id"])
 
-    # Case 'sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018'
+    # Case 'sub-CLNC001_ses-M000.long.sub-CLNC001_long-M000M018'
     if ".long." in freesurfer_id:
         participant_id = freesurfer_id.split(".long.")[0].split("_")[0]
         session_id = freesurfer_id.split(".long.")[0].split("_")[1]
         long_id = freesurfer_id.split(".long.")[1].split("_")[1]
-    # Case 'sub-CLNC01_long-M000M018'
+    # Case 'sub-CLNC001_long-M000M018'
     elif "long-" in freesurfer_id:
         participant_id = freesurfer_id.split("_")[0]
         session_id = ""
         long_id = freesurfer_id.split("_")[1]
-    # Case 'sub-CLNC01_ses-M000'
+    # Case 'sub-CLNC001_ses-M000'
     else:
         participant_id = freesurfer_id.split("_")[0]
         session_id = freesurfer_id.split("_")[1]
