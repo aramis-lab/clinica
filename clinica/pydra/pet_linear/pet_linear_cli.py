@@ -5,11 +5,12 @@ import click
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.pet_linear.pipeline as pydra_pet_linear
 from clinica.pipelines import cli_param
+from clinica.pipelines.cli import cli as run_cli
 
 pipeline_name = "pydra-pet-linear"
 
 
-@click.command(name=pipeline_name)
+@click.command(name=pipeline_name, hidden=False)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.argument.acq_label
@@ -95,6 +96,8 @@ def cli(
     )
     pydra_utils.run(pipeline)
 
+
+run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()
