@@ -36,7 +36,7 @@ def _load_tissues(tissues: list):
 
     Parameters
     ----------
-    tissues : List[PurePath]
+    tissues : list
         List of tissue images to aggregate.
 
     Returns
