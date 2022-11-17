@@ -13,15 +13,13 @@ from clinica.utils.testing_utils import build_bids_directory, build_caps_directo
 
 
 def test_bids_reader_instantiation(tmp_path):
-    from nipype.interfaces.io import BIDSDataGrabber
-
     from clinica.pydra.interfaces import bids_reader
+    from pydra.engine.task import FunctionTask
 
     task = bids_reader(BIDSQuery(), tmp_path)
-    assert isinstance(task, Nipype1Task)
+    assert isinstance(task, FunctionTask)
     assert task.name == "bids_reader_task"
-    assert task.inputs.base_dir == tmp_path
-    assert isinstance(task._interface, BIDSDataGrabber)
+    assert task.inputs.dataset_path == tmp_path
 
 
 def test_bids_reader(tmp_path):
