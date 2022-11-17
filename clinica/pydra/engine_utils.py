@@ -72,7 +72,7 @@ def run(wf: Workflow) -> Result:
         with Submitter(plugin="cf") as submitter:
             submitter(wf)
     except Exception as e:
-        path = re.search("\/.*\.pklz", str(e))
+        path = re.search(r"/.*\.pklz", str(e))
         if path:
             print(read_error(path.group(0)))
         return print(str(e))
