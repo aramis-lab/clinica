@@ -5,11 +5,12 @@ import click
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.pet_volume.pipeline as pydra_pet_volume
 from clinica.pipelines import cli_param
-from clinica.pipelines.cli import cli as run_cli
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "pydra-pet-volume"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name, hidden=True)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
@@ -100,8 +101,6 @@ def cli(
     )
     pydra_utils.run(pipeline)
 
-
-run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()
