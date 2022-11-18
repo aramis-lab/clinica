@@ -69,7 +69,7 @@ class Query:
 
             {"label" : {query dict} or list of query dicts}
 
-            example: {"T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}}
+            example: {"T1w": {"suffix": "T1w", "extension": [".nii.gz"]}}
 
         Parameters
         ----------
@@ -150,12 +150,12 @@ class BIDSQuery(Query):
     >>> len(q)
     1
     >>> q.query
-    {'T1w': {'datatype': 'anat', 'suffix': 'T1w', 'extension': ['.nii.gz']}}
+    {'T1w': {'suffix': 'T1w', 'extension': ['.nii.gz']}}
     """
 
     _default_queries = {
-        "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]},
-        "pet": {"datatype": "pet", "suffix": "pet", "extension": [".nii.gz"]},
+        "T1w": {"suffix": "T1w", "extension": [".nii.gz"]},
+        "pet": {"suffix": "pet", "extension": [".nii.gz"]},
     }
 
     def parse_query(self, query: Dict) -> Dict:
