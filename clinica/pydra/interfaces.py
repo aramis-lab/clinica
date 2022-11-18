@@ -116,7 +116,7 @@ def bids_reader(query: BIDSQuery, input_dir: PathLike):
     Parameters
     ----------
     query : BIDSQuery
-        Input to BIDSDataGrabber (c.f https://nipype.readthedocs.io/en/latest/api/generated/nipype.interfaces.io.html#bidsdatagrabber)
+        BIDS dataset reader query.
     input_dir :  PathLike
         The BIDS input directory.
 
@@ -125,9 +125,9 @@ def bids_reader(query: BIDSQuery, input_dir: PathLike):
     Nipype1Task
         The task used for reading files from BIDS.
     """
-    from pydra.tasks.bids import BIDSDataReader
+    from pydra.tasks.bids import BIDSDatasetReader
 
-    return BIDSDataReader(output_query=query.query).to_task(
+    return BIDSDatasetReader(output_query=query.query).to_task(
         name="bids_reader_task", dataset_path=input_dir
     )
 
