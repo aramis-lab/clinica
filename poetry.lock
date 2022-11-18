@@ -1299,14 +1299,14 @@ tests = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (
 
 [[package]]
 name = "pydra-bids"
-version = "0.0.2"
+version = "0.0.3"
 description = "Pydra tasks for BIDS I/O"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
-ancpbids = ">=0.2.0,<0.3.0"
+ancpbids = ">=0.2.1,<0.3.0"
 pydra = ">=0.20,<0.21"
 
 [[package]]
@@ -2004,7 +2004,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "b1ec4a75f7034539af489c77021df780b9c5dd40af0e20e979052404a6f59776"
+content-hash = "8cb5d3cdc86a50fd4e1c2454e9b88d753b93cd8137f786bdefb9b944e3105fda"
 
 [metadata.files]
 abagen = [
@@ -3066,8 +3066,8 @@ pydra = [
     {file = "pydra-0.20-py3-none-any.whl", hash = "sha256:8e6c823a046c1a2d9fa64a4215d0058bb1d47ad4d8e79f94909c55da75ecc747"},
 ]
 pydra-bids = [
-    {file = "pydra_bids-0.0.2-py3-none-any.whl", hash = "sha256:86b1981db95ccc69090ff4fe92be56f061dc2082e576685e509ed3abce7c1d3a"},
-    {file = "pydra_bids-0.0.2.tar.gz", hash = "sha256:0c395138ba1e0acbeeee5057e14282ff443b52617f82256617f5bc1e6875358d"},
+    {file = "pydra_bids-0.0.3-py3-none-any.whl", hash = "sha256:c4ba96dc97da25a52b6f2e14f0537738730503599b67fe50447816e2dbfc2817"},
+    {file = "pydra_bids-0.0.3.tar.gz", hash = "sha256:4c4279ce95d27060a88d2a10178ae57773d2a8753789b2968528a50b4ecc8796"},
 ]
 pydra-nipype1 = [
     {file = "pydra-nipype1-0.1.0.tar.gz", hash = "sha256:4a080871317ea23b73bf703ae4ccf105884b5580a093d621ad2a71047fed985c"},
