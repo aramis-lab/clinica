@@ -6,6 +6,29 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.7.3
+
+### Enhanced
+
+- [CI] Add caching support for unit tests
+- [CI] Refactor testing tools
+- [Dependencies] Bump lxml from 4.9.0 to 4.9.1
+- [Dependencies] Upgrade joblib to 1.2.0
+- [Dependencies] build: Install nipype up to version 1.8.2
+- [SurfStat] Pure python implementation
+- [IOTools] Fix warnings in merge-tsv
+- [Adni2BIDS] Deal with new data from ADNI3
+
+### Added
+
+- [IOTools] Extend the create-subjects-sessions iotool to CAPS directories
+- [IOTools] Add pet-linear to checks for missing processing
+
+### Fixed
+
+- [Adni2BIDS] Handle empty lines in `create_subs_sess_list`
+- [IOTools] Fix `vox_to_world_space_method_1`
+
 ## Clinica 0.7.2
 
 ### Fixed
