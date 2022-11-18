@@ -18,14 +18,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [SurfStat] Pure python implementation
 - [IOTools] Fix warnings in merge-tsv
 - [Adni2BIDS] Deal with new data from ADNI3
+- [DWIPreprocessingUsingT1] Optimized disk usage of Pipeline DWIPreprocessingUsingT1
+- [IOTools] Allow setting a custom logging directory via environment variable
+- [IOTools] Center all modalities if no modality is specified
+- [Pipelines] Report uncompliant BIDS subjects
 
 ### Added
 
+- [Converters] Add support for BIDS Readme 
 - [IOTools] Extend the create-subjects-sessions iotool to CAPS directories
 - [IOTools] Add pet-linear to checks for missing processing
 
 ### Fixed
 
+- [UKB2BIDS] Add error if data is not found or filtered 
+- [DWIPreprocessingUsingT1] Add missing `out_file` parameter to DWIBiasCorrect
+- [Converters] UKB2BIDS drop directories labeled as unusable
 - [Adni2BIDS] Handle empty lines in `create_subs_sess_list`
 - [IOTools] Fix `vox_to_world_space_method_1`
 
@@ -40,9 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [Adni2Bids] Add compatibility for edge cases introduced in Adni3
 
-
 ## Clinica 0.7.1
-
 
 ### Added
 - [Doc] add ukbiobank documentation
