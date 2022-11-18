@@ -25,9 +25,7 @@ def smooth_image(input_image: PathLike) -> PurePath:
 def bids_query():
     from clinica.pydra.query import BIDSQuery
 
-    return BIDSQuery(
-        {"T1w": {"suffix": "T1w", "extension": [".nii.gz"]}}
-    )
+    return BIDSQuery({"T1w": {"suffix": "T1w", "extension": [".nii.gz"]}})
 
 
 @pytest.fixture

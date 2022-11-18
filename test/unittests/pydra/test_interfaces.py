@@ -13,8 +13,9 @@ from clinica.utils.testing_utils import build_bids_directory, build_caps_directo
 
 
 def test_bids_reader_instantiation(tmp_path):
-    from clinica.pydra.interfaces import bids_reader
     from pydra.engine.task import FunctionTask
+
+    from clinica.pydra.interfaces import bids_reader
 
     task = bids_reader(BIDSQuery(), tmp_path)
     assert isinstance(task, FunctionTask)
