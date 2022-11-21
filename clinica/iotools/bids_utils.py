@@ -401,6 +401,8 @@ def create_scans_dict(
                     glob.glob(file_to_read_path)[0], sheet_name=sheet
                 )
             elif file_ext == ".csv":
+                # Following issue: https://github.com/aramis-lab/clinica/issues/786
+                # we keep all columns except the last one (37th), for AIBL
                 columns_to_use = list(range(0, 36)) if study_name == "AIBL" else None
                 file_to_read = pd.read_csv(
                     glob.glob(file_to_read_path)[0],
