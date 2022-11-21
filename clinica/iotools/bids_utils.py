@@ -401,19 +401,13 @@ def create_scans_dict(
                     glob.glob(file_to_read_path)[0], sheet_name=sheet
                 )
             elif file_ext == ".csv":
-                if study_name == "AIBL":
-                    file_to_read = pd.read_csv(
-                        glob.glob(file_to_read_path)[0],
-                        sep=None,
-                        usecols=list(range(0, 36)),
-                        engine="python",
-                    )
-                else:
-                    file_to_read = pd.read_csv(
-                        glob.glob(file_to_read_path)[0],
-                        sep=None,
-                        engine="python",
-                    )
+                columns_to_use = list(range(0, 36)) if study_name == "AIBL" else None
+                file_to_read = pd.read_csv(
+                    glob.glob(file_to_read_path)[0],
+                    sep=None,
+                    usecols=columns_to_use,
+                    engine="python",
+                )
             prev_file = file_name
             prev_sheet = sheet
 
