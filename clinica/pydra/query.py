@@ -259,11 +259,17 @@ class CAPSFileQuery(CAPSQuery):
         t1_volume_native_tpm_in_mni,
     )
 
+    def t1w_to_mni_transform():
+        from clinica.utils.input_files import T1W_TO_MNI_TRANSFORM
+
+        return T1W_TO_MNI_TRANSFORM
+
     _query_makers = {
         "mask_tissues": t1_volume_native_tpm_in_mni,
         "flow_fields": t1_volume_deformation_to_template,
         "pvc_mask_tissues": t1_volume_native_tpm,
         "dartel_input_tissue": t1_volume_dartel_input_tissue,
+        "t1w_to_mni": t1w_to_mni_transform,
     }
 
 
