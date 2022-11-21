@@ -1,10 +1,10 @@
 name: publish
 
 on:
-  # Trigger this workflow when a release is created.
+  # Trigger this workflow when a release is published.
   release:
     types:
-      - created
+      - published
 
 permissions:
   # Allow checkout of the project.
