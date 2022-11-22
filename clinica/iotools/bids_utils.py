@@ -402,8 +402,10 @@ def create_scans_dict(
                 )
             elif file_ext == ".csv":
                 # Following issue: https://github.com/aramis-lab/clinica/issues/786
-                # we keep all columns except the last one (37th), for AIBL
-                columns_to_use = list(range(0, 36)) if study_name == "AIBL" else None
+                # we keep only the useful columns for AIBL
+                columns_to_use = (
+                    ["RID", "VISCODE", "EXAMDATE"] if study_name == "AIBL" else None
+                )
                 file_to_read = pd.read_csv(
                     glob.glob(file_to_read_path)[0],
                     sep=None,
@@ -434,14 +436,12 @@ def create_scans_dict(
                     row_to_extract = row_to_extract[0]
                     # Fill the dictionary with all the information
                     value = file_to_read.iloc[row_to_extract][fields_dataset[i]]
-
                     if study_name == "AIBL":  # Deal with special format in AIBL
                         if value == "-4":
                             value = "n/a"
                         elif fields_bids[i] == "acq_time":
                             date_obj = datetime.datetime.strptime(value, "%m/%d/%Y")
                             value = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
-
                     scans_dict[bids_id][session_name][fields_mod[i]][
                         fields_bids[i]
                     ] = value
@@ -453,7 +453,6 @@ def create_scans_dict(
                     scans_dict[bids_id][session_name][fields_mod[i]][
                         fields_bids[i]
                     ] = "n/a"
-
     return scans_dict
 
 
