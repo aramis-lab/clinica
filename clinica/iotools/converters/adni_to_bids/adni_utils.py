@@ -1269,7 +1269,7 @@ def session_to_viscode(session_name: str) -> str:
 
     Returns
     -------
-    str: 
+    str:
         'bl' if is the baseline session or the original session name.
     """
     if session_name == "M000":
