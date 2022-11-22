@@ -305,7 +305,6 @@ def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
     return id_bids_or_caps_files
 
 
-
 def extract_subjects_sessions_from_filename(
     bids_or_caps_files: List[str],
 ) -> Tuple[List[str], List[str]]:
