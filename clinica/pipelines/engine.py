@@ -4,6 +4,7 @@ Subclasses are located in clinica/pipeline/<pipeline_name>/<pipeline_name>_pipel
 """
 
 import abc
+from typing import Tuple
 
 import click
 from nipype.pipeline.engine import Workflow
@@ -29,6 +30,55 @@ def postset(attribute, value):
         return func_wrapper
 
     return postset_decorator
+
+
+def detect_cross_sectional_and_longitudinal_subjects(
+    all_subs: list, bids_dir: str
+) -> Tuple[list, list]:
+    """This function detects whether a subject has a longitudinal or cross sectional structure.
+    If it has a mixed structure, it will be considered cross sectionnal.
+
+    Parameters
+    ----------
+    all_subs: list
+        List containing all the names of the subjects.
+
+    bids_dir: str
+        Path to the bids directory.
+
+    Returns
+    -------
+    cross_subj: list
+        List of all the subject detected with a cross_sectional organisation.
+
+    long_subj: list
+        List of all the subject detected with a longitudinal organisation.
+
+    Examples
+    --------
+    BIDS
+    ├── sub-01
+    │   └── anat
+    └── sub-02
+        └── ses-M000
+    >>> detect_cross_sectional_and_longitudinal_subjects(["sub-01", "sub-02"], /Users/name.surname/BIDS)
+    (["sub-01"], ["sub-02])
+    """
+    from os import listdir
+    from os.path import isdir, join
+
+    cross_subj = []
+    long_subj = []
+    for sub in all_subs:
+        folder_list = [
+            f for f in listdir(join(bids_dir, sub)) if isdir(join(bids_dir, sub, f))
+        ]
+
+        if not all([fold.startswith("ses-") for fold in folder_list]):
+            cross_subj.append(sub)
+        else:
+            long_subj.append(sub)
+    return cross_subj, long_subj
 
 
 class Pipeline(Workflow):
@@ -260,6 +310,7 @@ class Pipeline(Workflow):
         if not self.is_built:
             self.build()
         self.check_not_cross_sectional()
+
         if not bypass_check:
             self.check_size()
             plugin_args = self.update_parallelize_info(plugin_args)
@@ -607,7 +658,12 @@ class Pipeline(Workflow):
         from os import listdir
         from os.path import abspath, basename, dirname, isdir, join
 
+        from clinica.utils.exceptions import ClinicaInconsistentDatasetError
         from clinica.utils.stream import cprint
+
+        def _check_cross_subj(cross_subj: list) -> None:
+            if len(cross_subj) > 0:
+                raise ClinicaInconsistentDatasetError(cross_subj)
 
         def convert_cross_sectional(bids_in, bids_out, cross_subjects, long_subjects):
             """
@@ -748,35 +804,15 @@ class Pipeline(Workflow):
                 for f in listdir(bids_dir)
                 if isdir(join(bids_dir, f)) and f.startswith("sub-")
             ]
-            cross_subj = []
-            long_subj = []
-            for sub in all_subs:
-                # Use is_cross_sectional to know if the current subject needs to be
-                # labeled as cross sectional
-                is_cross_sectional = False
-                folder_list = [
-                    f
-                    for f in listdir(join(bids_dir, sub))
-                    if isdir(join(bids_dir, sub, f))
-                ]
-                for fold in folder_list:
-                    if not fold.startswith("ses-"):
-                        is_cross_sectional = True
-                if is_cross_sectional:
-                    cross_subj.append(sub)
-                else:
-                    long_subj.append(sub)
 
-            # The following code is run if cross sectional subjects have been found
-            if len(cross_subj) > 0:
-                cprint(
-                    msg=(
-                        f"{len(cross_subj)} subjects in your BIDS folder did not respect the longitudinal organisation "
-                        "from BIDS specification. Clinica does not know how to handle cross sectional dataset, but it "
-                        "can convert it to a Clinica compliant form (using session ses-M000)"
-                    ),
-                    lvl="warning",
-                )
+            cross_subj, long_subj = detect_cross_sectional_and_longitudinal_subjects(
+                all_subs, bids_dir
+            )
+            try:
+                _check_cross_subj(cross_subj)
+            except ClinicaInconsistentDatasetError as e:
+                cprint(e, lvl="warning")
+
                 proposed_bids = join(
                     dirname(bids_dir), basename(bids_dir) + "_clinica_compliant"
                 )

@@ -73,7 +73,7 @@ def add_input_reading_task(
         return pipeline
     input_dir = "bids_dir" if "bids" in reader.__name__ else "caps_dir"
     input_workflow = Workflow(
-        name=f"input_workflow_{reader.__name__}",
+        name=f"input_workflow_{query_type}_reader",
         input_spec=["input_dir"],
     )
     try:
@@ -197,7 +197,6 @@ def build_output_workflow(
     output_attrs = []
 
     for i, field in enumerate(pu.list_out_fields(core_workflow)):
-
         pipeline.add(bids_writer(name="bids_writer_task_" + str(field)))
 
         writer_task = getattr(pipeline, "bids_writer_task_" + str(field))

@@ -31,6 +31,7 @@ class CAPSDataGrabber(IOBase):
 
         if not isdefined(self.inputs.output_query):
             self.inputs.output_query = {}
+
         # used for mandatory inputs check
         undefined_traits = {}
         self.inputs.trait_set(trait_change_notify=False, **undefined_traits)
@@ -115,7 +116,7 @@ def bids_reader(query: BIDSQuery, input_dir: PathLike):
     Parameters
     ----------
     query : BIDSQuery
-        Input to BIDSDataGrabber (c.f https://nipype.readthedocs.io/en/latest/api/generated/nipype.interfaces.io.html#bidsdatagrabber)
+        BIDS dataset reader query.
     input_dir :  PathLike
         The BIDS input directory.
 
@@ -124,13 +125,11 @@ def bids_reader(query: BIDSQuery, input_dir: PathLike):
     Nipype1Task
         The task used for reading files from BIDS.
     """
-    bids_data_grabber = nio.BIDSDataGrabber(output_query=query.query)
-    bids_reader_task = Nipype1Task(
-        name="bids_reader_task",
-        interface=bids_data_grabber,
-        base_dir=input_dir,
+    from pydra.tasks.bids import BIDSDatasetReader
+
+    return BIDSDatasetReader(output_query=query.query).to_task(
+        name="bids_reader_task", dataset_path=input_dir
     )
-    return bids_reader_task
 
 
 def caps_reader(query: CAPSQuery, input_dir: PathLike):
@@ -149,8 +148,10 @@ def caps_reader(query: CAPSQuery, input_dir: PathLike):
     """
     if isinstance(query, CAPSFileQuery):
         grabber = CAPSFileDataGrabber
+        name = "caps_file_reader_task"
     elif isinstance(query, CAPSGroupQuery):
         grabber = CAPSGroupDataGrabber
+        name = "caps_group_reader_task"
     else:
         raise TypeError(
             f"caps_reader received an unexpected query type {type(query)}. "
@@ -158,8 +159,9 @@ def caps_reader(query: CAPSQuery, input_dir: PathLike):
         )
     caps_data_grabber = grabber(output_query=query.query)
     caps_reader_task = Nipype1Task(
-        name="caps_reader_task",
+        name=name,
         interface=caps_data_grabber,
         base_dir=input_dir,
+        output_query=query.query,
     )
     return caps_reader_task

@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.cli import cli as run_cli
 
 pipeline_name = "t1-volume"
 
@@ -140,6 +141,8 @@ def cli(
         n_procs=n_procs,
     )
 
+
+run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()

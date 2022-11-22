@@ -15,15 +15,12 @@ def test_bids_query():
     assert len(q) == 0
 
     q = BIDSQuery({"T1w": {}})
-    assert q.query == {
-        "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}
-    }
+    assert q.query == {"T1w": {"suffix": "T1w", "extension": [".nii.gz"]}}
     assert len(q) == 1
 
     q = BIDSQuery({"T1w": {"foo": "bar"}})
     assert q.query == {
         "T1w": {
-            "datatype": "anat",
             "suffix": "T1w",
             "extension": [".nii.gz"],
             "foo": "bar",
@@ -32,9 +29,7 @@ def test_bids_query():
     assert len(q) == 1
 
     q = BIDSQuery({"T1w": {}, "foo": {"bar": "baz"}})
-    assert q.query == {
-        "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}
-    }
+    assert q.query == {"T1w": {"suffix": "T1w", "extension": [".nii.gz"]}}
     assert len(q) == 1
 
 

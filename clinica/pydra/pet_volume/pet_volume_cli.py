@@ -1,14 +1,16 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Union
 
 import click
 
+import clinica.pydra.engine_utils as pydra_utils
+import clinica.pydra.pet_volume.pipeline as pydra_pet_volume
 from clinica.pipelines import cli_param
 from clinica.pipelines.cli import cli as run_cli
 
-pipeline_name = "pet-volume"
+pipeline_name = "pydra-pet-volume"
 
 
-@click.command(name=pipeline_name)
+@click.command(name=pipeline_name, hidden=True)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
@@ -17,10 +19,6 @@ pipeline_name = "pet-volume"
 @cli_param.option_group.pipeline_specific_options
 @cli_param.option.pvc_psf_tsv
 @cli_param.option_group.common_pipelines_options
-@cli_param.option.subjects_sessions_tsv
-@cli_param.option.working_directory
-@cli_param.option.n_procs
-@cli_param.option.yes
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-mask",
@@ -64,32 +62,26 @@ def cli(
     mask_tissues: List[int] = (1, 2, 3),
     mask_threshold: float = 0.3,
     pvc_mask_tissues: List[int] = (1, 2, 3),
-    smooth: List[int] = (8, 8),
-    subjects_sessions_tsv: Optional[str] = None,
-    working_directory: Optional[str] = None,
-    n_procs: Optional[int] = None,
-    yes: bool = False,
+    smooth: Union[float, List[float], List[List[float]]] = 8.0,
 ) -> None:
-    """SPM-based pre-processing of PET images.
+    """SPM-based pre-processing of PET images (Pydra engine).
 
-       GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
-    For this pipeline, it is associated to the DARTEL template that you had created when running the t1-volume pipeline.
+    GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
 
-       ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the tracer used.
+    This pipeline is associated to the DARTEL template that you had created when
+    running the t1-volume pipeline.
+
+    ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the
+    tracer used.
     Frequently used values are '18FFDG' or '18FAV45'.
 
-       The reference region must be specified to perform intensity normalization.
+    The reference region must be specified to perform intensity normalization.
     Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
 
     Prerequisite: You need to have performed the t1-volume pipeline on your T1-weighted MR images.
 
     See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Volume/
     """
-    from networkx import Graph
-
-    from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
-    from clinica.utils.ux import print_end_pipeline
-
     parameters = {
         "group_label": group_label,
         "acq_label": acq_label,
@@ -99,32 +91,17 @@ def cli(
         "mask_threshold": mask_threshold,
         "pvc_mask_tissues": pvc_mask_tissues,
         "smooth": smooth,
-        "skip_question": yes,
     }
-
-    pipeline = PETVolume(
-        bids_directory=bids_directory,
-        caps_directory=caps_directory,
-        tsv_file=subjects_sessions_tsv,
-        base_dir=working_directory,
+    pipeline = pydra_pet_volume.build_core_workflow(
+        name="pet-volume-pydra",
+        input_dir=bids_directory,
+        output_dir=caps_directory,
         parameters=parameters,
-        name=pipeline_name,
     )
-
-    exec_pipeline = (
-        pipeline.run(plugin="MultiProc", plugin_args={"n_procs": n_procs})
-        if n_procs
-        else pipeline.run()
-    )
-
-    if isinstance(exec_pipeline, Graph):
-        print_end_pipeline(
-            pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
-        )
+    pydra_utils.run(pipeline)
 
 
 run_cli.add_command(cli)
-
 
 if __name__ == "__main__":
     cli()

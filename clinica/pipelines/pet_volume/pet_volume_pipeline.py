@@ -120,7 +120,9 @@ class PETVolume(cpe.Pipeline):
         all_errors = []
 
         # Grab reference mask
-        reference_mask_file = get_suvr_mask(self.parameters["suvr_reference_region"])
+        reference_mask_file = str(
+            get_suvr_mask(self.parameters["suvr_reference_region"])
+        )
 
         # PET from BIDS directory
         try:
@@ -307,7 +309,7 @@ class PETVolume(cpe.Pipeline):
         # Writing all images into CAPS
         # ============================
         write_images_node = npe.Node(name="write_caps_node", interface=nio.DataSink())
-        write_images_node.inputs.base_directory = self.caps_directory
+        write_images_node.inputs.base_directory = str(self.caps_directory)
         write_images_node.inputs.parameterization = False
         write_images_node.inputs.regexp_substitutions = [
             (r"(.*/)pet_t1_native/r(sub-.*)(\.nii(\.gz)?)$", r"\1\2_space-T1w_pet\3"),
@@ -368,7 +370,7 @@ class PETVolume(cpe.Pipeline):
         # Writing atlas statistics into CAPS
         # ==================================
         write_atlas_node = npe.Node(name="write_atlas_node", interface=nio.DataSink())
-        write_atlas_node.inputs.base_directory = self.caps_directory
+        write_atlas_node.inputs.base_directory = str(self.caps_directory)
         write_atlas_node.inputs.parameterization = False
         write_atlas_node.inputs.regexp_substitutions = [
             (

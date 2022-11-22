@@ -51,6 +51,14 @@ python-versions = ">=3.6"
 frozenlist = ">=1.1.0"
 
 [[package]]
+name = "ancpbids"
+version = "0.2.1"
+description = "Read/write/validate/query BIDS datasets"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "argcomplete"
 version = "1.12.3"
 description = "Bash tab completion for argparse"
@@ -886,21 +894,27 @@ test = ["nose (>=0.10.1)"]
 
 [[package]]
 name = "nibabel"
-version = "2.5.1"
+version = "3.2.2"
 description = "Access a multitude of neuroimaging data formats"
 category = "main"
 optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
+python-versions = ">=3.6"
 
 [package.dependencies]
-numpy = ">=1.8"
-six = ">=1.3"
+numpy = ">=1.14"
+packaging = ">=14.3"
+setuptools = "*"
 
 [package.extras]
-all = ["dicom (>=0.9.9)", "nose (>=0.11)", "sphinx (>=0.3)"]
-dicom = ["dicom (>=0.9.9)"]
-doc = ["sphinx (>=0.3)"]
-test = ["nose (>=0.11)"]
+all = ["coverage", "flake8", "gitpython", "h5py", "matplotlib (>=1.5.3)", "numpydoc", "pillow", "pydicom (>=1.0.0)", "pytest (!=5.3.4)", "pytest (<7)", "pytest-cov", "pytest-doctestplus (!=0.9.0)", "scipy", "sphinx (>=0.3,<3)", "texext", "twine"]
+dev = ["gitpython", "twine"]
+dicom = ["pydicom (>=1.0.0)"]
+dicomfs = ["pillow", "pydicom (>=1.0.0)"]
+doc = ["matplotlib (>=1.5.3)", "numpydoc", "sphinx (>=0.3,<3)", "texext"]
+minc2 = ["h5py"]
+spm = ["scipy"]
+style = ["flake8"]
+test = ["coverage", "pytest (!=5.3.4)", "pytest (<7)", "pytest-cov", "pytest-doctestplus (!=0.9.0)"]
 
 [[package]]
 name = "niflow-nipype1-workflows"
@@ -917,20 +931,30 @@ nipype = "*"
 
 [[package]]
 name = "nilearn"
-version = "0.7.1"
+version = "0.9.2"
 description = "Statistical learning for neuroimaging in Python"
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.6"
 
 [package.dependencies]
-joblib = ">=0.12"
-nibabel = ">=2.0.2"
-numpy = ">=1.11"
-pandas = ">=0.18.0"
+joblib = ">=0.15"
+lxml = "*"
+matplotlib = {version = ">=3.0", optional = true, markers = "extra == \"plotting\""}
+nibabel = ">=3.0.0"
+numpy = ">=1.18"
+pandas = ">=1.0"
 requests = ">=2"
-scikit-learn = ">=0.19"
-scipy = ">=0.19"
+scikit-learn = ">=0.22"
+scipy = ">=1.5"
+
+[package.extras]
+dev = ["codecov", "coverage", "flake8", "furo", "kaleido", "matplotlib (>=3.0)", "memory-profiler", "mkl", "myst-parser", "numpydoc", "plotly", "pytest (>=3.9)", "pytest-cov", "sphinx", "sphinx-copybutton", "sphinx-design", "sphinx-gallery", "sphinxcontrib-bibtex", "sphinxext-opengraph"]
+doc = ["coverage", "flake8", "furo", "kaleido", "memory-profiler", "mkl", "myst-parser", "numpydoc", "plotly", "sphinx", "sphinx-copybutton", "sphinx-design", "sphinx-gallery", "sphinxcontrib-bibtex", "sphinxext-opengraph"]
+min = ["joblib (==0.15)", "nibabel (==3.0.0)", "numpy (==1.18)", "pandas (==1.0)", "scikit-learn (==0.22)", "scipy (==1.5)"]
+plotly = ["kaleido", "plotly"]
+plotting = ["matplotlib (>=3.0)"]
+test = ["codecov", "coverage", "pytest (>=3.9)", "pytest-cov"]
 
 [[package]]
 name = "nimare"
@@ -1272,6 +1296,18 @@ doc = ["attrs (>=19.1.0)", "cloudpickle", "filelock", "packaging", "sphinx (>=2.
 docs = ["attrs (>=19.1.0)", "cloudpickle", "filelock", "packaging", "sphinx (>=2.1.2)", "sphinx-rtd-theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-napoleon", "sphinxcontrib-versioning"]
 test = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "tornado"]
 tests = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "tornado"]
+
+[[package]]
+name = "pydra-bids"
+version = "0.0.3"
+description = "Pydra tasks for BIDS I/O"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+ancpbids = ">=0.2.1,<0.3.0"
+pydra = ">=0.20,<0.21"
 
 [[package]]
 name = "pydra-nipype1"
@@ -1968,7 +2004,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "0b8499af80f0a9bbf00d117d91082c34376d0c04479ecd97961f8d9c85cfc99c"
+content-hash = "8cb5d3cdc86a50fd4e1c2454e9b88d753b93cd8137f786bdefb9b944e3105fda"
 
 [metadata.files]
 abagen = [
@@ -2068,6 +2104,10 @@ aiosignal = [
     {file = "aiosignal-1.2.0-py3-none-any.whl", hash = "sha256:26e62109036cd181df6e6ad646f91f0dcfd05fe16d0cb924138ff2ab75d64e3a"},
     {file = "aiosignal-1.2.0.tar.gz", hash = "sha256:78ed67db6c7b7ced4f98e495e572106d5c432a93e1ddd1bf475e1dc05f5b7df2"},
 ]
+ancpbids = [
+    {file = "ancpbids-0.2.1-py3-none-any.whl", hash = "sha256:feefcc08caa29f316bbc58026f7e4be42d894164c00eed6e55ad313823a77fc2"},
+    {file = "ancpbids-0.2.1.tar.gz", hash = "sha256:b0dfb67c169418af330a442d81776fc4ca98d30555c04afc57fb77c699021d71"},
+]
 argcomplete = [
     {file = "argcomplete-1.12.3-py2.py3-none-any.whl", hash = "sha256:291f0beca7fd49ce285d2f10e4c1c77e9460cf823eef2de54df0c0fec88b0d81"},
     {file = "argcomplete-1.12.3.tar.gz", hash = "sha256:2c7dbffd8c045ea534921e63b0be6fe65e88599990d8dc408ac8c542b72a5445"},
@@ -2130,23 +2170,14 @@ biopython = [
     {file = "biopython-1.79.tar.gz", hash = "sha256:edb07eac99d3b8abd7ba56ff4bedec9263f76dfc3c3f450e7d2e2bcdecf8559b"},
 ]
 black = [
-    {file = "black-22.10.0-1fixedarch-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:5cc42ca67989e9c3cf859e84c2bf014f6633db63d1cbdf8fdb666dcd9e77e3fa"},
-    {file = "black-22.10.0-1fixedarch-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:5d8f74030e67087b219b032aa33a919fae8806d49c867846bfacde57f43972ef"},
-    {file = "black-22.10.0-1fixedarch-cp37-cp37m-macosx_10_16_x86_64.whl", hash = "sha256:197df8509263b0b8614e1df1756b1dd41be6738eed2ba9e9769f3880c2b9d7b6"},
-    {file = "black-22.10.0-1fixedarch-cp38-cp38-macosx_10_16_x86_64.whl", hash = "sha256:2644b5d63633702bc2c5f3754b1b475378fbbfb481f62319388235d0cd104c2d"},
-    {file = "black-22.10.0-1fixedarch-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:e41a86c6c650bcecc6633ee3180d80a025db041a8e2398dcc059b3afa8382cd4"},
-    {file = "black-22.10.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:2039230db3c6c639bd84efe3292ec7b06e9214a2992cd9beb293d639c6402edb"},
     {file = "black-22.10.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:14ff67aec0a47c424bc99b71005202045dc09270da44a27848d534600ac64fc7"},
     {file = "black-22.10.0-cp310-cp310-win_amd64.whl", hash = "sha256:819dc789f4498ecc91438a7de64427c73b45035e2e3680c92e18795a839ebb66"},
-    {file = "black-22.10.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:5b9b29da4f564ba8787c119f37d174f2b69cdfdf9015b7d8c5c16121ddc054ae"},
     {file = "black-22.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b8b49776299fece66bffaafe357d929ca9451450f5466e997a7285ab0fe28e3b"},
     {file = "black-22.10.0-cp311-cp311-win_amd64.whl", hash = "sha256:21199526696b8f09c3997e2b4db8d0b108d801a348414264d2eb8eb2532e540d"},
     {file = "black-22.10.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1e464456d24e23d11fced2bc8c47ef66d471f845c7b7a42f3bd77bf3d1789650"},
     {file = "black-22.10.0-cp37-cp37m-win_amd64.whl", hash = "sha256:9311e99228ae10023300ecac05be5a296f60d2fd10fff31cf5c1fa4ca4b1988d"},
-    {file = "black-22.10.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:fba8a281e570adafb79f7755ac8721b6cf1bbf691186a287e990c7929c7692ff"},
     {file = "black-22.10.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:915ace4ff03fdfff953962fa672d44be269deb2eaf88499a0f8805221bc68c87"},
     {file = "black-22.10.0-cp38-cp38-win_amd64.whl", hash = "sha256:444ebfb4e441254e87bad00c661fe32df9969b2bf224373a448d8aca2132b395"},
-    {file = "black-22.10.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:974308c58d057a651d182208a484ce80a26dac0caef2895836a92dd6ebd725e0"},
     {file = "black-22.10.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:72ef3925f30e12a184889aac03d77d031056860ccae8a1e519f6cbb742736383"},
     {file = "black-22.10.0-cp39-cp39-win_amd64.whl", hash = "sha256:432247333090c8c5366e69627ccb363bc58514ae3e63f7fc75c54b1ea80fa7de"},
     {file = "black-22.10.0-py3-none-any.whl", hash = "sha256:c957b2b4ea88587b46cf49d1dc17681c1e672864fd7af32fc1e9664d572b3458"},
@@ -2830,17 +2861,16 @@ neurosynth = [
     {file = "neurosynth-0.3.8.tar.gz", hash = "sha256:97ec422721b454e38ff7a1bd3b084393005299c462464a4aaf1de8044dddf75c"},
 ]
 nibabel = [
-    {file = "nibabel-2.5.1-py2-none-any.whl", hash = "sha256:88a8867aa5a1eec70dc74c880d149539918b2983430bf3c3f3bca0a46bd9a7f4"},
-    {file = "nibabel-2.5.1-py3-none-any.whl", hash = "sha256:44678e9ec6151643736329103987c70f4a7b5b251e2ebb7012648365f29e2324"},
-    {file = "nibabel-2.5.1.tar.gz", hash = "sha256:83ecac4773ece02c49c364d99b465644c17cc66f1719560117e74991d9eb566b"},
+    {file = "nibabel-3.2.2-py3-none-any.whl", hash = "sha256:7df7a2733461441d3aacc61f36f5e100ec533d43ed09a191293bb4ca5a4f10f6"},
+    {file = "nibabel-3.2.2.tar.gz", hash = "sha256:b0dcc174b30405ce9e8fec1eab3cbbb20f5c5e4920976c08b22e050b7c124f94"},
 ]
 niflow-nipype1-workflows = [
     {file = "niflow-nipype1-workflows-0.0.5.tar.gz", hash = "sha256:4df3abd4d1fad60374fbd7b29b98a6c0cda2abb907c9ca571ff92de852818e3c"},
     {file = "niflow_nipype1_workflows-0.0.5-py2.py3-none-any.whl", hash = "sha256:c444c8d698efe7d6c1add4b359403e94bbd6d982fadb9a23f84cb050146f5e10"},
 ]
 nilearn = [
-    {file = "nilearn-0.7.1-py3-none-any.whl", hash = "sha256:9d2681c7e828f6e1a8715470416c2f3bc752f06fcd1308b0ed0b7bb33fd32c3d"},
-    {file = "nilearn-0.7.1.tar.gz", hash = "sha256:8b1409a5e1f0f6d1a1f02555c2f11115a2364f45f1e57bcb5fb3c9ea11f346fa"},
+    {file = "nilearn-0.9.2-py3-none-any.whl", hash = "sha256:71b9d9a948ffb3fdb70fe7ff671fdaade436168c91f99d8b8fefa78e2ee2ee6d"},
+    {file = "nilearn-0.9.2.tar.gz", hash = "sha256:8da8d3835d92cd7b8a6cc92455a489d7e7f5994cf64fc71bce653e362773b9e4"},
 ]
 nimare = [
     {file = "NiMARE-0.0.2-py3-none-any.whl", hash = "sha256:f2a6595495ead01fd9c035074f1a7ecb5866a50894501c04481d193d5fe92583"},
@@ -3034,6 +3064,10 @@ pydot = [
 ]
 pydra = [
     {file = "pydra-0.20-py3-none-any.whl", hash = "sha256:8e6c823a046c1a2d9fa64a4215d0058bb1d47ad4d8e79f94909c55da75ecc747"},
+]
+pydra-bids = [
+    {file = "pydra_bids-0.0.3-py3-none-any.whl", hash = "sha256:c4ba96dc97da25a52b6f2e14f0537738730503599b67fe50447816e2dbfc2817"},
+    {file = "pydra_bids-0.0.3.tar.gz", hash = "sha256:4c4279ce95d27060a88d2a10178ae57773d2a8753789b2968528a50b4ecc8796"},
 ]
 pydra-nipype1 = [
     {file = "pydra-nipype1-0.1.0.tar.gz", hash = "sha256:4a080871317ea23b73bf703ae4ccf105884b5580a093d621ad2a71047fed985c"},
