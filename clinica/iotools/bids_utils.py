@@ -401,8 +401,23 @@ def create_scans_dict(
                     glob.glob(file_to_read_path)[0], sheet_name=sheet
                 )
             elif file_ext == ".csv":
+                file_path = glob.glob(file_to_read_path)[0]
+
+                # Fix for malformed flutemeta file in AIBL (see #796).
+                # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
+                # contains a comma which adds an extra column and shifts the remaining values to the right. In this
+                # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
+                on_bad_lines = (
+                    lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]
+                    if "flutemeta" in file_path and study_name == "AIBL"
+                    else "error"
+                )
+
                 file_to_read = pd.read_csv(
-                    glob.glob(file_to_read_path)[0], sep=None, engine="python"
+                    file_path,
+                    sep=",",
+                    engine="python",
+                    on_bad_lines=on_bad_lines,
                 )
             prev_file = file_name
             prev_sheet = sheet
