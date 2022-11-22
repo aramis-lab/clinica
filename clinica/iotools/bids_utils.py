@@ -630,26 +630,6 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
             )
 
 
-# -- Other methods --
-def contain_dicom(folder_path):
-    """Check if a folder contains DICOM images.
-
-    Args:
-        folder_path: path to the folder
-
-    Returns:
-        True if DICOM files are found inside the folder, False otherwise
-    """
-    from glob import glob
-    from os import path
-
-    dcm_files = glob(path.join(folder_path, "*.dcm"))
-    if len(dcm_files) > 0:
-        return True
-
-    return False
-
-
 def get_supported_dataset():
     """Return the list of supported datasets."""
     return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
