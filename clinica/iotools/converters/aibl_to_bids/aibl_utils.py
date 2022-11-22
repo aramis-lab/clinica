@@ -1,22 +1,30 @@
 """Utils to convert AIBL dataset in BIDS."""
 from functools import partial
-from typing import Sequence
+from typing import List, Sequence
 
 import pandas as pd
 
 
-def listdir_nohidden(path):
+def listdir_nohidden(path: str) -> List[str]:
     """List all the subdirectories of path except the hidden folders.
 
-    Args:
-        path (str): path whose subdirectories are needed
+    Parameters
+    ----------
+    path: str
+        Path to list subdirectories from.
 
-    Returns:
-        List(str): list of all the subdirectories of path
+    Returns
+    -------
+    list of str:
+        Subdirectories found within path.
     """
-    from os import listdir
+    from pathlib import Path
 
-    return [result for result in listdir(path) if not result.startswith(".")]
+    return [
+        str(p.name)
+        for p in Path(path).iterdir()
+        if p.is_dir() and not p.name.startswith(".")
+    ]
 
 
 def find_t1_in_paths(
