@@ -418,7 +418,7 @@ def create_scans_dict(
                             filter(
                                 None, file_to_read[name_column_ses].str.split("ses-")
                             )
-                        )[0]
+                        )[0][0]
                         == ses_dict[bids_id][
                             list(filter(None, session_name.split("ses-")))[0]
                         ]
