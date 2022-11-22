@@ -658,29 +658,6 @@ def get_bids_subjs_paths(bids_path: str) -> List[str]:
     return [str(d) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
-def compute_new_subjects(original_ids, bids_ids):
-    """Check for new subject to convert.
-
-    This function checks for news subjects to convert to the BIDS version i.e. subjects
-    contained in the unorganised version that are not available in the BIDS version.
-
-    Args:
-        original_ids: list of all the ids of the unorganized folder.
-        bids_ids: list of all the BIDS ids contained inside the BIDS converted version of the dataset
-
-    Returns:
-        a list containing the original_ids of the subjects that are not available in the BIDS converted version
-    """
-    to_return = []
-    original_ids = remove_space_and_symbols(original_ids)
-
-    for s in original_ids:
-        if not any(s in id for id in bids_ids):
-            to_return.append(s)
-
-    return to_return
-
-
 def remove_space_and_symbols(data):
     """Remove spaces and  - _ from a list (or a single) of strings.
 
