@@ -656,7 +656,18 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
 
 
 def get_bids_subjs_list(bids_path: str) -> List[str]:
-    """Given a BIDS compliant dataset, return the list of all the subjects available."""
+    """Given a BIDS compliant dataset, return the list of all the subjects available.
+
+    Parameters
+    ----------
+    bids_path : str
+        Path to the BIDS directory.
+
+    Returns
+    -------
+    List[str] :
+        List of subject IDs available in this BIDS dataset.
+    """
     from pathlib import Path
 
     return [str(d.name) for d in Path(bids_path).glob("sub-*") if d.is_dir()]

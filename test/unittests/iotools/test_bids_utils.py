@@ -48,6 +48,21 @@ def test_create_scans_dict_error(tmp_path):
         create_scans_dict(str(tmp_path), "foo", str(tmp_path), [], "", "", {})
 
 
+def test_get_bids_subjs_list(tmp_path):
+    from clinica.iotools.bids_utils import get_bids_subjs_list
+
+    (tmp_path / "file").touch()
+    (tmp_path / "sub-03").touch()
+    (tmp_path / "folder").mkdir()
+
+    for sub in ("sub-01", "sub-02", "sub-16"):
+        (tmp_path / sub).mkdir()
+
+    assert set(get_bids_subjs_list(str(tmp_path))) == set(
+        ["sub-01", "sub-02", "sub-16"]
+    )
+
+
 def _validate_file_and_content(file: Path, expected_content: str) -> None:
     import os
 
