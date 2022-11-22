@@ -721,22 +721,6 @@ def remove_space_and_symbols(data):
     return data
 
 
-def compress_nii(file_path):
-    """Compress nii files.
-
-    Args:
-        file_path (str): path to the file to convert
-    """
-    import gzip
-    import shutil
-    from os import remove
-
-    with open(file_path, "rb") as f_in:
-        with gzip.open(file_path + ".gz", "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
-    remove(file_path)
-
-
 def json_from_dcm(dcm_dir, json_path):
     """
     Writes descriptive JSON file from DICOM header
