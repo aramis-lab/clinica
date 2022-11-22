@@ -6,6 +6,16 @@ from typing import BinaryIO, List, Optional, Union
 
 from pandas import DataFrame
 
+SUPPORTED_DATASETS = {
+    "ADNI",
+    "CLINAD",
+    "PREVDEMALS",
+    "INSIGHT",
+    "OASIS",
+    "OASIS3",
+    "AIBL",
+}
+
 BIDS_VALIDATOR_CONFIG = {
     "ignore": [
         # Possibly dcm2nii(x) errors
@@ -349,9 +359,10 @@ def create_scans_dict(
     prev_file = ""
     prev_sheet = ""
 
-    if study_name not in get_supported_dataset():
-        raise Exception(
-            "Dataset not supported. Supported datasets are:", get_supported_dataset()
+    if study_name not in SUPPORTED_DATASETS:
+        raise ValueError(
+            f"Dataset {study_name} is not supported. "
+            f"Supported datasets are: {SUPPORTED_DATASETS}."
         )
 
     # Init the dictionary with the subject ids
@@ -642,11 +653,6 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                 sep="\t",
                 encoding="utf8",
             )
-
-
-def get_supported_dataset():
-    """Return the list of supported datasets."""
-    return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
 
 
 def get_bids_subjs_list(bids_path: str) -> List[str]:

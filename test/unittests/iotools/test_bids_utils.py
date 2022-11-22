@@ -38,6 +38,16 @@ EXPECTED_README_CONTENT = Template(
 )
 
 
+def test_create_scans_dict_error(tmp_path):
+    from clinica.iotools.bids_utils import create_scans_dict
+
+    with pytest.raises(
+        ValueError,
+        match=f"Dataset foo is not supported.",
+    ):
+        create_scans_dict(str(tmp_path), "foo", str(tmp_path), [], "", "", {})
+
+
 def _validate_file_and_content(file: Path, expected_content: str) -> None:
     import os
 
