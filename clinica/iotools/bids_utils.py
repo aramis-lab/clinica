@@ -721,17 +721,6 @@ def remove_space_and_symbols(data):
     return data
 
 
-def get_ext(file_path):
-    import os
-
-    root, ext = os.path.splitext(file_path)
-    if ext in ".gz":
-        file_ext = os.path.splitext(root)[1] + ext
-    else:
-        file_ext = ext
-    return file_ext
-
-
 def json_from_dcm(dcm_dir, json_path):
     """
     Writes descriptive JSON file from DICOM header
