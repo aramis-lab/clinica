@@ -115,5 +115,5 @@ profile = "black"
 
 [tool.codespell]
 summary = ''
-skip = ".git"
+skip = ".git,LICENSE.txt"
 quiet-level = 3
