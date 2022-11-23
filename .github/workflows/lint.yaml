@@ -2,12 +2,15 @@ name: Lint
 
 on:
   push:
-    branches: [dev]
+    branches: [ dev ]
   pull_request:
-    branches: [dev]
+    branches: [ dev ]
 
 permissions:
   contents: read
+
+env:
+  DEFAULT_PYTHON_VERSION: '3.10'
 
 jobs:
   lint:
@@ -17,7 +20,19 @@ jobs:
       - uses: snok/install-poetry@v1
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
           cache: poetry
       - name: Lint code
         run: make lint
+
+  spellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: snok/install-poetry@v1
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
+          cache: poetry
+      - name: Check spelling
+        run: make spellcheck
