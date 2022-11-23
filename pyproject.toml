@@ -112,3 +112,8 @@ force-exclude = '''
 
 [tool.isort]
 profile = "black"
+
+[tool.codespell]
+summary = ''
+skip = ".git"
+quiet-level = 3
