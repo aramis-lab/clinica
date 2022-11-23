@@ -215,7 +215,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- [`oasis-to-bids`]: Remove FSL library depency for OASIS-to-bids conversion.
+- [`oasis-to-bids`]: Remove FSL library dependency for OASIS-to-bids conversion.
 - [Clinica]: Replace exception by warning when CAPs folder not recognized.
 - [`aibl-to-bids`]: Center output nifti files of AIBL.
 - [`aibl-to-bids`]: Extracts DICOM metadata in JSON files.

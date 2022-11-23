@@ -212,7 +212,7 @@ Optional arguments:
      - The filename is `sub-01_ses-M0_T1w.nii`.
      - The algorithm tests (in a case insensitive way) if the string `18ffdg_pet` is in the filename: False.
      - The algorithm tests (in a case insensitive way) if the string `t1w` is in the filename: True!
-     - The algorithm tests if the volume has its center at more than 50 mm (Euclidian distance) from the origin: True.
+     - The algorithm tests if the volume has its center at more than 50 mm (Euclidean distance) from the origin: True.
      - This file will be centered by the algorithm.
 
      Understanding this, you can now center any modality you want! If your files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality as follows:`--modality "magnitude1"`.

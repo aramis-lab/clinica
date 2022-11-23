@@ -177,7 +177,7 @@ clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation A
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph (group comparison):"
-    Theses results have been obtained using the `statistics-surface` command of Clinica [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
+    These results have been obtained using the `statistics-surface` command of Clinica [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     More precisely, a point-wise, vertex-to-vertex model based on the Matlab SurfStat toolbox (<http://www.math.mcgill.ca/keith/surfstat/>) was used to conduct a group comparison of whole brain cortical thickness.
     The data were smoothed using a Gaussian kernel with a full width at half maximum (FWHM) set to `<FWHM>` mm.
     The general linear model was used to control for the effect of `<covariate_1>`, ... and `<covariate_N>`.

@@ -133,7 +133,7 @@ The main output file is:
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph for the `t1-volume` pipeline:"
-    Theses results have been obtained using the `t1-volume` pipeline of Clinica
+    These results have been obtained using the `t1-volume` pipeline of Clinica
     [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
     This pipeline is a wrapper of the `Segmentation`, `Run Dartel` and `Normalise to MNI Space` routines implemented in [SPM](http://www.fil.ion.ucl.ac.uk/spm/).

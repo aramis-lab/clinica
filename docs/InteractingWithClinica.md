@@ -25,7 +25,7 @@ See [here](../DatabasesToBIDS) for more details.
             └── sub-CLNC0001_trc-18FFDG_pet.nii.gz
     ```
     Clinica will propose you to create a new BIDS dataset with a fake timepoint.
-    This will result to a new dataset ressembling to:
+    This will result to a new dataset resembling to:
     ```Text
     BIDS
     └── sub-CLNC0001
