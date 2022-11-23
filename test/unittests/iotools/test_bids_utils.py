@@ -63,6 +63,22 @@ def test_get_bids_subjs_list(tmp_path):
     )
 
 
+@pytest.mark.parametrize(
+    "input_string,expected",
+    [
+        ("foo", "foo"),
+        ("foo_bar", "foobar"),
+        ("foo bar", "foobar"),
+        ("foo bar_baz", "foobarbaz"),
+        ("foo-ba_r baz", "foobarbaz"),
+    ],
+)
+def test_remove_space_and_symbols(input_string, expected):
+    from clinica.iotools.bids_utils import remove_space_and_symbols
+
+    assert remove_space_and_symbols(input_string) == expected
+
+
 def _validate_file_and_content(file: Path, expected_content: str) -> None:
     import os
 

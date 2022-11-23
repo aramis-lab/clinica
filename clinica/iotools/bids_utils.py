@@ -549,29 +549,39 @@ def write_modality_agnostic_files(
     _write_bidsignore(bids_dir)
 
 
-def write_sessions_tsv(bids_dir, sessions_dict):
+def write_sessions_tsv(bids_dir: str, sessions_dict: dict) -> None:
     """Create <participant_id>_sessions.tsv files.
 
-    Write the content of the function create scans dict in several TSV files
+    Basically writes the content of the function
+    `clinica.iotools.bids_utils.create_sessions_dict` in several TSV files
     following the BIDS specification.
 
-    Args:
-        bids_dir: path to the bids directory
-        sessions_dict: output of the function create_sessions_dict
+    Parameters
+    ----------
+    bids_dir : str
+        Path to the BIDS directory.
+
+    sessions_dict : dict
+        Dictionary containing sessions metadata.
+
+        .. note::
+            This is the output of the function
+            `clinica.iotools.bids_utils.create_sessions_dict`.
+
+    See also
+    --------
+    create_sessions_dict
+    write_scans_tsv
     """
-    import os
-    from glob import glob
-    from os import path
+    from pathlib import Path
 
     import pandas as pd
 
-    bids_paths = glob(path.join(bids_dir, "sub-*"))
+    bids_dir = Path(bids_dir)
 
-    for sp in bids_paths:
-        bids_id = sp.split(os.sep)[-1]
-
-        if bids_id in sessions_dict:
-            session_df = pd.DataFrame.from_dict(sessions_dict[bids_id], orient="index")
+    for sp in bids_dir.glob("sub-*"):
+        if sp.name in sessions_dict:
+            session_df = pd.DataFrame.from_dict(sessions_dict[sp.name], orient="index")
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
@@ -579,80 +589,102 @@ def write_sessions_tsv(bids_dir, sessions_dict):
             print(f"No session data available for {sp}")
             session_df = pd.DataFrame(columns=["session_id"])
             session_df["session_id"] = pd.Series("M000")
-
         session_df = session_df.set_index("session_id").fillna("n/a")
-        session_df.to_csv(
-            path.join(sp, bids_id + "_sessions.tsv"),
-            sep="\t",
-            encoding="utf8",
+        session_df.to_csv(sp / f"{sp.name}_sessions.tsv", sep="\t", encoding="utf8")
+
+
+def _get_pet_tracer_from_filename(filename: str) -> str:
+    """Return the PET tracer from the provided filename.
+
+    Parameters
+    ----------
+    filename : str
+        The filename from which to extract the PET tracer.
+
+    Returns
+    -------
+    tracer : str
+        The PET tracer.
+
+    Raises
+    ------
+    ValueError
+        If no tracer found in the filename.
+    """
+    import re
+
+    tracer = None
+    for entity in ("trc", "acq"):
+        m = re.search(rf"({entity}-[a-zA-Z0-9]+)", filename)
+        if m:
+            tracer = m.group(1)[4:].upper()
+    if tracer is None:
+        raise ValueError(
+            f"Could not extract the PET tracer from the following file name {filename}."
         )
 
+    return tracer
 
-def write_scans_tsv(bids_dir, bids_ids, scans_dict):
+
+def write_scans_tsv(bids_dir: str, bids_ids: List[str], scans_dict: dict) -> None:
     """Write the scans dict into TSV files.
 
-    Args:
-        bids_dir:  path to the BIDS directory
-        bids_ids: list of bids ids
-        scans_dict:  the output of the function create_scans_dict
+    Parameters
+    ----------
+    bids_dir : str
+        Path to the BIDS directory.
 
+    bids_ids : List[str]
+        List of bids ids for which to write the scans TSV files.
+
+    scans_dict : dict
+        Dictionary containing scans metadata.
+
+        .. note::
+            This is the output of the function
+            `clinica.iotools.bids_utils.create_scans_dict`.
+
+    See also
+    --------
+    write_sessions_tsv
     """
-    import os
-    from glob import glob
-    from os import path
+    from pathlib import Path
 
     import pandas as pd
 
+    bids_dir = Path(bids_dir)
+    supported_modalities = ("anat", "dwi", "func", "pet")
+
     for bids_id in bids_ids:
-        sessions_paths = glob(path.join(bids_dir, bids_id, "ses-*"))
-        for session_path in sessions_paths:
-            session_name = session_path.split(os.sep)[-1]
+        for session_path in (bids_dir / bids_id).glob("ses-*"):
             scans_df = pd.DataFrame()
-            tsv_name = bids_id + "_" + session_name + "_scans.tsv"
-            # If the file already exists, remove it
-            if os.path.exists(path.join(bids_dir, bids_id, session_name, tsv_name)):
-                os.remove(path.join(bids_dir, bids_id, session_name, tsv_name))
-
-            mod_available = glob(path.join(bids_dir, bids_id, session_name, "*"))
-            for mod in mod_available:
-                mod_name = os.path.basename(mod)
-                # Grab scan files excluding their sidecar JSON.
-                files = [
-                    file
-                    for file in glob(path.join(mod, "*"))
-                    if "json" not in os.path.splitext(file)[1]
-                ]
-                for file in files:
-                    file_name = os.path.basename(file)
-                    if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
-                        f_type = "T1/DWI/fMRI/FMAP"
-                    elif mod_name == "pet":
-                        description_dict = {
-                            carac.split("-")[0]: carac.split("-")[1]
-                            for carac in file_name.split("_")
-                            if "-" in carac
-                        }
-                        if "trc" in description_dict.keys():
-                            f_type = description_dict["trc"].upper()
-                        elif "acq" in description_dict.keys():
-                            f_type = description_dict["acq"].upper()
-                    elif mod_name == "swi":
-                        pass
-                    else:
-                        continue
-                    row_to_append = pd.DataFrame(
-                        scans_dict[bids_id][session_name][f_type], index=[0]
-                    )
-                    # Insert the column filename as first value
-                    row_to_append.insert(0, "filename", path.join(mod_name, file_name))
-                    scans_df = pd.concat([scans_df, row_to_append])
-
-            scans_df = scans_df.set_index("filename").fillna("n/a")
-            scans_df.to_csv(
-                path.join(bids_dir, bids_id, session_name, tsv_name),
-                sep="\t",
-                encoding="utf8",
+            tsv_file = (
+                bids_dir
+                / bids_id
+                / session_path.name
+                / f"{bids_id}_{session_path.name}_scans.tsv"
             )
+            tsv_file.unlink(missing_ok=True)
+
+            for mod in (bids_dir / bids_id / session_path.name).glob("*"):
+                if mod.name in supported_modalities:
+                    for file in [
+                        file for file in mod.iterdir() if mod.suffix != ".json"
+                    ]:
+                        f_type = (
+                            "T1/DWI/fMRI/FMAP"
+                            if mod.name in ("anat", "dwi", "func")
+                            else _get_pet_tracer_from_filename(file.name)
+                        )
+                        row_to_append = pd.DataFrame(
+                            scans_dict[bids_id][session_path.name][f_type], index=[0]
+                        )
+                        row_to_append.insert(
+                            0, "filename", str(Path(mod.name) / Path(file.name))
+                        )
+                        scans_df = pd.concat([scans_df, row_to_append])
+            scans_df = scans_df.set_index("filename").fillna("n/a")
+            scans_df.to_csv(tsv_file, sep="\t", encoding="utf8")
 
 
 def get_bids_subjs_list(bids_path: str) -> List[str]:
@@ -667,6 +699,11 @@ def get_bids_subjs_list(bids_path: str) -> List[str]:
     -------
     List[str] :
         List of subject IDs available in this BIDS dataset.
+
+    See also
+    --------
+    get_bids_sess_list
+    get_bids_subjs_paths
     """
     from pathlib import Path
 
@@ -674,8 +711,23 @@ def get_bids_subjs_list(bids_path: str) -> List[str]:
 
 
 def get_bids_sess_list(subj_path: str) -> List[str]:
-    """
-    Given a subject path, return the list of sessions available
+    """Given a path to a subject's folder, this function returns the
+    list of sessions available.
+
+    Parameters
+    ----------
+    subj_path : str
+        Path to the subject folder for which to list the sessions.
+
+    Returns
+    -------
+    List[str] :
+        The list of session names for this subject.
+
+    See also
+    --------
+    get_bids_subjs_list
+    get_bids_subjs_paths
     """
     from pathlib import Path
 
@@ -683,39 +735,61 @@ def get_bids_sess_list(subj_path: str) -> List[str]:
 
 
 def get_bids_subjs_paths(bids_path: str) -> List[str]:
-    """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders."""
+    """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders.
+
+    Parameters
+    ----------
+    bids_path : str
+        Path to the BIDS directory.
+
+    Returns
+    -------
+    List[str] :
+        List of paths to the subjects folders.
+
+    See also
+    --------
+    get_bids_subjs_list
+    get_bids_sess_list
+    """
     from pathlib import Path
 
     return [str(d) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
-def remove_space_and_symbols(data):
-    """Remove spaces and  - _ from a list (or a single) of strings.
+def remove_space_and_symbols(data: Union[str, List[str]]) -> Union[str, List[str]]:
+    """Remove spaces, "-", and "_" characters from a string.
 
-    Args:
-        data: list of strings or a single string to clean
+    If a list of strings is provided, this function will be called
+    on each item of the list.
 
-    Returns:
-        data: list of strings or a string without space and symbols _ and -
+    Parameters
+    ----------
+    data : str or List[str]
+        String or list of strings to be cleaned.
+
+    Returns
+    -------
+    str or List[str] :
+        Cleaned string(s).
     """
     import re
 
-    if type(data) is list:
-        for i in range(0, len(data)):
-            data[i] = re.sub("[-_ ]", "", data[i])
-    else:
-        data = re.sub("[-_ ]", "", data)
-
-    return data
+    if isinstance(data, list):
+        return [remove_space_and_symbols(d) for d in data]
+    return re.sub("[-_ ]", "", data)
 
 
-def json_from_dcm(dcm_dir, json_path):
-    """
-    Writes descriptive JSON file from DICOM header
+def json_from_dcm(dcm_dir: str, json_path: str) -> None:
+    """Writes descriptive JSON file from DICOM header.
 
-    Args:
-        dcm_dir (str): Path to the DICOM directory
-        json_path (str): Path to the output JSON file
+    Parameters
+    ----------
+    dcm_dir : str
+        Path to the DICOM directory.
+
+    json_path : str
+        Path to the output JSON file.
     """
     import json
     from glob import glob
@@ -749,16 +823,30 @@ def json_from_dcm(dcm_dir, json_path):
     try:
         dcm_path = glob(path.join(dcm_dir, "*.dcm"))[0]
         ds = dcmread(dcm_path)
-        json_dict = dict()
-        for key, tag in fields_dict.items():
-            if tag in ds.keys():
-                json_dict[key] = ds.get(tag).value
-
+        json_dict = {
+            key: ds.get(tag).value for key, tag in fields_dict.items() if tag in ds
+        }
         json = json.dumps(json_dict, skipkeys=True, indent=4)
         with open(json_path, "w") as f:
             f.write(json)
     except IndexError:
         cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
+
+
+def _build_dcm2niix_command(
+    input_dir: str,
+    output_dir: str,
+    output_fmt: str,
+    compress: bool = False,
+    bids_sidecar: bool = True,
+) -> list:
+    """Generate the dcm2niix command from user inputs."""
+    command = ["dcm2niix", "-w", "0", "-f", output_fmt, "-o", output_dir]
+    command += ["-9", "-z", "y"] if compress else ["-z", "n"]
+    command += ["-b", "y", "-ba", "y"] if bids_sidecar else ["-b", "n"]
+    command += [input_dir]
+
+    return command
 
 
 def run_dcm2niix(
@@ -768,19 +856,35 @@ def run_dcm2niix(
     compress: bool = False,
     bids_sidecar: bool = True,
 ) -> None:
-    """Runs the dcm2niix command using a subprocess.
+    """Runs the `dcm2niix` command using a subprocess.
 
-    Args: the dcm2niix command with the right arguments.
+    Parameters
+    ----------
+    input_dir : str
+        Input folder.
+
+    output_dir : str
+        Output folder. This will be passed to the
+        dcm2niix "-o" option.
+
+    output_fmt : str
+        Output format. This will be passed to the
+        dcm2niix "-f" option.
+
+    compress : bool, optional
+        Whether to compress or not.
+        Default=False.
+
+    bids_sidecar : bool, optional
+        Whether to generate a BIDS sidecar or not. Default=True.
     """
     import subprocess
 
     from clinica.utils.stream import cprint
 
-    command = ["dcm2niix", "-w", "0", "-f", output_fmt, "-o", output_dir]
-    command += ["-9", "-z", "y"] if compress else ["-z", "n"]
-    command += ["-b", "y", "-ba", "y"] if bids_sidecar else ["-b", "n"]
-    command += [input_dir]
-
+    command = _build_dcm2niix_command(
+        input_dir, output_dir, output_fmt, compress, bids_sidecar
+    )
     completed_process = subprocess.run(command, capture_output=True)
 
     if completed_process.returncode != 0:
@@ -794,6 +898,15 @@ def run_dcm2niix(
         )
 
 
-def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
-    # Save dataframe as a BIDS-compliant TSV file.
-    dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
+def write_to_tsv(df: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
+    """Save dataframe as a BIDS-compliant TSV file.
+
+    Parameters
+    ----------
+    df : DataFrame
+        Pandas DataFrame to write to TSV file.
+
+    buffer : PathLike or BinaryIO
+        Either a file or a stream to write the DataFrame to.
+    """
+    df.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
