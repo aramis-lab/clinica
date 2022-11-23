@@ -117,4 +117,4 @@ profile = "black"
 summary = ''
 skip = ".git,LICENSE.txt,*.m"
 quiet-level = 3
-ignore-words = ".codespell-ignore-words"
+ignore-words-list = "nd,fwe,commun,fo,te"
