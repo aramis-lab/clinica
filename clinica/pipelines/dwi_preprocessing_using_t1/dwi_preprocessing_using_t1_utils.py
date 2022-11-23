@@ -339,7 +339,7 @@ def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str) -> None:
     Parameters
     ----------
     checkpoint: str
-    Path to a file. Used to ensure, that the tempory directories we want to delete are not useful anymore, and to verify that the subject and session are right.
+    Path to a file. Used to ensure, that the temporary directories we want to delete are not useful anymore, and to verify that the subject and session are right.
 
     dir_to_del: list
     Names of the directories we want to delete.

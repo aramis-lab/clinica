@@ -55,14 +55,14 @@ def read_clinical_data(
     df_pet, df_mri, df_subject, df_pup, df_adrc = find_clinical_data(
         clinical_data_directory
     )
-    dictionnary = {
+    dictionary = {
         "pet": df_pet,
         "mri": df_mri,
         "subject": df_subject,
         "pup": df_pup,
         "adrc": df_adrc,
     }
-    return dictionnary
+    return dictionary
 
 
 def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:

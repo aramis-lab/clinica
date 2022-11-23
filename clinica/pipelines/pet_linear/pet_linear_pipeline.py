@@ -358,7 +358,7 @@ class PETLinear(cpe.Pipeline):
             name="WriteEndMessage",
         )
 
-        # 6. Optionnal node: compute PET image in T1w
+        # 6. Optional node: compute PET image in T1w
         ants_applytransform_optional_node = npe.Node(
             name="antsApplyTransformPET2T1w", interface=ants.ApplyTransforms()
         )
@@ -405,7 +405,7 @@ class PETLinear(cpe.Pipeline):
                     (normalize_intensity_node, print_end_message, [("output_img", "final_file")]),
                 ]
             )
-        # STEP 6: Optionnal argument
+        # STEP 6: Optional argument
         if self.parameters.get("save_PETinT1w"):
             self.connect(
                 [

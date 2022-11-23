@@ -115,6 +115,6 @@ profile = "black"
 
 [tool.codespell]
 summary = ''
-skip = ".git,LICENSE.txt"
+skip = ".git,LICENSE.txt,*.m"
 quiet-level = 3
 ignore-words = ".codespell-ignore-words"

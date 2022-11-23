@@ -31,7 +31,7 @@ Indicate if the genotype is mutated or not	prevdemals_genetic_status_mutated	Y (
 	prevdemals_aoo_transmitting_parent	in years							
 	prevdemals_family_phenotype_als	Y or N							
 	prevdemals_family_phenotype_ftd	Y or N							
-Average age onset disease in all the family memeber	prevdemals_aoo_mean_family		float						
+Average age onset disease in all the family member	prevdemals_aoo_mean_family		float						
 	prevdemals_expected_years_aoo_bl		signed float						
 	age_first_symptoms								
 	clinad_inclusion								

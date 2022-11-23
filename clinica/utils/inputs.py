@@ -458,7 +458,7 @@ def clinica_file_reader(
             caps,
             {
                 'pattern': 'rh.white',
-                'description': 'right hemisphere of outter cortical surface.',
+                'description': 'right hemisphere of outer cortical surface.',
                 'needed_pipeline': 't1-freesurfer'
             }
         )
