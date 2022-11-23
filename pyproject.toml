@@ -63,6 +63,7 @@ pydra-bids = "^0.0.3"
 black = "*"
 isort = "*"
 pre-commit = "*"
+codespell = {extras = ["toml"], version = "^2.2.2"}
 
 [tool.poetry.group.docs]
 optional = true
