@@ -29,7 +29,7 @@ endif
 doc: clean.doc install.doc
 	@$(POETRY) run mkdocs build
 
-## env			: Bootstap an environment.
+## env			: Bootstrap an environment.
 .PHONY: env
 env: env.dev
 

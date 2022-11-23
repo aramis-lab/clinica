@@ -159,7 +159,7 @@ convention is used but some rules are ignored (they are listed in the
 [`.pep8speaks.yml` configuration file](https://github.com/aramis-lab/clinica/blob/dev/.pep8speaks.yml).
 
 Recently, we started using [Black code formatter](https://black.readthedocs.io).
-Please, be sure that you run it before commiting your new code. To
+Please, be sure that you run it before committing your new code. To
 automatically do it, you can install a pre-commit hook, as described above.
 
 For Markdown files, currently we don't have a consistent style (but try to keep
