@@ -42,7 +42,7 @@ env.dev: install
 
 ## format			: Format the codebase.
 .PHONY: format
-format: install format.black format.isort
+format: install.dev format.black format.isort
 
 .PHONY: format.black
 format.black:
@@ -59,13 +59,17 @@ format.isort:
 install: check.lock
 	@$(POETRY) install
 
+.PHONY: install.dev
+install.dev: check.lock
+	@$(POETRY) install --only dev
+
 .PHONY: install.doc
-install.doc:
+install.doc: check.lock
 	@$(POETRY) install --only docs
 
 ## lint			: Lint the codebase.
 .PHONY: lint
-lint: install lint.black lint.isort
+lint: install.dev lint.black lint.isort
 
 .PHONY: lint.black
 lint.black:
@@ -89,6 +93,10 @@ publish: publish.pypi
 .PHONY: publish.pypi
 publish.pypi: config.pypi
 	@$(POETRY) publish --build
+
+.PHONY: spellcheck
+spellcheck: install.dev
+	@$(POETRY) run codespell
 
 .PHONY: test
 test: install
