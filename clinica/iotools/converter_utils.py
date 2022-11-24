@@ -95,9 +95,7 @@ def print_longitudinal_analysis(
 
     import pandas as pd
 
-    print(ses_aval)
     ses_aval = sort_session_list(ses_aval)
-    print(ses_aval)
     summary_file.write("**********************************************\n\n")
     summary_file.write("Number of present diagnoses and modalities for each session:\n")
 
