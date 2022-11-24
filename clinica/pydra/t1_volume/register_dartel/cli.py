@@ -4,10 +4,12 @@ import click
 
 import clinica.pydra.engine_utils as pydra_utils
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "pydra-t1-volume-register-dartel"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name, hidden=True)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
@@ -24,26 +26,36 @@ def cli(
     group_label: str,
     dartel_tissues: List[int] = (1, 2, 3),
 ) -> None:
-    """Inter-subject registration using Dartel (using an existing Dartel template).
+    """Inter-subject registration using an existing Dartel template (Pydra engine).
 
     Parameters
     ----------
+    bids_directory : str
+        Path to the input BIDS directory.
+
+    caps_directory : str
+        Path to the CAPS directory.
 
     group_label : str
-        User-defined identifier to target a specific group of subjects. For this pipeline, it is associated to the
-        DARTEL template that you had created when running the t1-volume pipeline.
+        User-defined identifier to target a specific group of subjects.
+        For this pipeline, it is associated to the DARTEL template that was created
+        when running the t1-volume pipeline.
 
-    dartel_tissues : List
-        indices for tissues in ["graymatter", 2: "whitematter", 3: "csf", 4: "bone", 5: "softtissue", 6: "background"]
-    Returns
-    -------
-    None
+    dartel_tissues : List[int], optional
+        Indices for selecting the tissues. Possible values are:
+            - 1: "graymatter"
+            - 2: "whitematter"
+            - 3: "csf"
+            - 4: "bone"
+            - 5: "softtissue"
+            - 6: "background"
+
+        Default=[1, 2, 3].
 
     Notes
     -----
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """
-
     import clinica.pydra.t1_volume.register_dartel.pipeline as pydra_t1vol_rd
 
     parameters = {"group_label": group_label, "dartel_tissues": dartel_tissues}

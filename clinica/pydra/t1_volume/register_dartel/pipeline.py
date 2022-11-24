@@ -111,6 +111,7 @@ def t1volume_register_dartel(
     workflow.add(
         task_prepare_dartel_input_images(
             name="task_prepare_dartel_input_images",
+            interface=task_prepare_dartel_input_images,
             nifti_input=workflow.unzip_dartel_input_tissue.lzout.out_file,
         )
     )

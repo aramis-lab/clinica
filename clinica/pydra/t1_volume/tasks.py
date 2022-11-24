@@ -65,6 +65,7 @@ def wrap_list(in_list: list):
     return [in_list]
 
 
+@task
 @annotate({"return": {"image_files": list}})
 def task_prepare_dartel_input_images(
     nifti_input: PathLike,
