@@ -3,6 +3,7 @@ from typing import Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.cli import cli as run_cli
 
 pipeline_name = "dwi-preprocessing-using-t1"
 
@@ -19,6 +20,7 @@ pipeline_name = "dwi-preprocessing-using-t1"
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.use_cuda
 @cli_param.option.initrand
+@cli_param.option.delete_cache
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -28,6 +30,7 @@ def cli(
     n_procs: Optional[int] = None,
     use_cuda: bool = False,
     initrand: bool = False,
+    delete_cache: bool = False,
 ) -> None:
     """Preprocessing of raw DWI datasets using a T1w image.
 
@@ -43,6 +46,7 @@ def cli(
         "low_bval": low_bval,
         "use_cuda": use_cuda,
         "initrand": initrand,
+        "delete_cache": delete_cache,
     }
 
     pipeline = DwiPreprocessingUsingT1(
@@ -65,6 +69,8 @@ def cli(
             pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
 
+
+run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()

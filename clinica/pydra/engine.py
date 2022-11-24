@@ -89,7 +89,7 @@ def add_input_reading_task(
     pipeline.add(input_workflow)
 
     # connect input workflow to core workflow
-    for field, _ in query.items():
+    for field, _ in query.query.items():
         read_data = getattr(input_workflow.lzout, field)
         setattr(core_workflow.inputs, field, read_data)
 
@@ -197,7 +197,6 @@ def build_output_workflow(
     output_attrs = []
 
     for i, field in enumerate(pu.list_out_fields(core_workflow)):
-
         pipeline.add(bids_writer(name="bids_writer_task_" + str(field)))
 
         writer_task = getattr(pipeline, "bids_writer_task_" + str(field))

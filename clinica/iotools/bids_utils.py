@@ -401,8 +401,23 @@ def create_scans_dict(
                     glob.glob(file_to_read_path)[0], sheet_name=sheet
                 )
             elif file_ext == ".csv":
+                file_path = glob.glob(file_to_read_path)[0]
+
+                # Fix for malformed flutemeta file in AIBL (see #796).
+                # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
+                # contains a comma which adds an extra column and shifts the remaining values to the right. In this
+                # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
+                on_bad_lines = (
+                    lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]
+                    if "flutemeta" in file_path and study_name == "AIBL"
+                    else "error"
+                )
+
                 file_to_read = pd.read_csv(
-                    glob.glob(file_to_read_path)[0], sep=None, engine="python"
+                    file_path,
+                    sep=",",
+                    engine="python",
+                    on_bad_lines=on_bad_lines,
                 )
             prev_file = file_name
             prev_sheet = sheet
@@ -418,7 +433,7 @@ def create_scans_dict(
                             filter(
                                 None, file_to_read[name_column_ses].str.split("ses-")
                             )
-                        )[0]
+                        )[0][0]
                         == ses_dict[bids_id][
                             list(filter(None, session_name.split("ses-")))[0]
                         ]
@@ -630,26 +645,6 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
             )
 
 
-# -- Other methods --
-def contain_dicom(folder_path):
-    """Check if a folder contains DICOM images.
-
-    Args:
-        folder_path: path to the folder
-
-    Returns:
-        True if DICOM files are found inside the folder, False otherwise
-    """
-    from glob import glob
-    from os import path
-
-    dcm_files = glob(path.join(folder_path, "*.dcm"))
-    if len(dcm_files) > 0:
-        return True
-
-    return False
-
-
 def get_supported_dataset():
     """Return the list of supported datasets."""
     return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
@@ -678,29 +673,6 @@ def get_bids_subjs_paths(bids_path: str) -> List[str]:
     return [str(d) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
-def compute_new_subjects(original_ids, bids_ids):
-    """Check for new subject to convert.
-
-    This function checks for news subjects to convert to the BIDS version i.e. subjects
-    contained in the unorganised version that are not available in the BIDS version.
-
-    Args:
-        original_ids: list of all the ids of the unorganized folder.
-        bids_ids: list of all the BIDS ids contained inside the BIDS converted version of the dataset
-
-    Returns:
-        a list containing the original_ids of the subjects that are not available in the BIDS converted version
-    """
-    to_return = []
-    original_ids = remove_space_and_symbols(original_ids)
-
-    for s in original_ids:
-        if not any(s in id for id in bids_ids):
-            to_return.append(s)
-
-    return to_return
-
-
 def remove_space_and_symbols(data):
     """Remove spaces and  - _ from a list (or a single) of strings.
 
@@ -719,33 +691,6 @@ def remove_space_and_symbols(data):
         data = re.sub("[-_ ]", "", data)
 
     return data
-
-
-def get_ext(file_path):
-    import os
-
-    root, ext = os.path.splitext(file_path)
-    if ext in ".gz":
-        file_ext = os.path.splitext(root)[1] + ext
-    else:
-        file_ext = ext
-    return file_ext
-
-
-def compress_nii(file_path):
-    """Compress nii files.
-
-    Args:
-        file_path (str): path to the file to convert
-    """
-    import gzip
-    import shutil
-    from os import remove
-
-    with open(file_path, "rb") as f_in:
-        with gzip.open(file_path + ".gz", "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
-    remove(file_path)
 
 
 def json_from_dcm(dcm_dir, json_path):

@@ -8,11 +8,6 @@ help: Makefile
 	@echo "Commands:"
 	@sed -n 's/^##//p' $<
 
-## build			: Build the package.
-.PHONY: build
-build:
-	@$(POETRY) build
-
 .PHONY: check.lock
 check.lock:
 	@$(POETRY) lock --check
@@ -21,9 +16,13 @@ check.lock:
 clean.doc:
 	@$(RM) -rf site
 
-.PHONY: config.testpypi
-config.testpypi:
-	@$(POETRY) config repositories.testpypi https://test.pypi.org/legacy
+.PHONY: config.pypi
+config.pypi:
+ifdef PYPI_TOKEN
+	@$(POETRY) config pypi-token.pypi "${PYPI_TOKEN}"
+else
+	$(error "Missing API token for PyPI repository")
+endif
 
 ## doc			: Build the documentation.
 .PHONY: doc
@@ -83,17 +82,13 @@ lint.isort:
 lock:
 	@$(POETRY) lock --no-update
 
-## publish		: Publish the package to pypi.
+## publish		: Publish the package to PyPI.
 .PHONY: publish
 publish: publish.pypi
 
 .PHONY: publish.pypi
-publish.pypi: build
-	@$(POETRY) publish
-
-.PHONY: publish.testpypi
-publish.testpypi: build config.testpypi
-	@$(POETRY) publish --repository testpypi
+publish.pypi: config.pypi
+	@$(POETRY) publish --build
 
 .PHONY: test
 test: install

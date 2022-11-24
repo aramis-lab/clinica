@@ -151,15 +151,14 @@ a PR proposing a new pipeline will probably be integrated by "rebase and
 merge". In this case we would like to keep intermediate commit messages (if we
 consider them important for the project).
 
-## Coding/style conventions
+## Coding style conventions
 
-For Python files, we use [Google Python Style
-Guide](https://google.github.io/styleguide/pyguide.html) for docstrings. The [PEP
-8](https://www.python.org/dev/peps/pep-0008/) convention is used but some rules
-are ignored (they are listed in the [`.pep8speaks.yml` configuration
-file](https://github.com/aramis-lab/clinica/blob/dev/.pep8speaks.yml).
+For Python files, we use the [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html)
+style for docstrings. The [PEP 8](https://www.python.org/dev/peps/pep-0008/)
+convention is used but some rules are ignored (they are listed in the
+[`.pep8speaks.yml` configuration file](https://github.com/aramis-lab/clinica/blob/dev/.pep8speaks.yml).
 
-Recently, we start using [Black code formatter](https://black.readthedocs.io).
+Recently, we started using [Black code formatter](https://black.readthedocs.io).
 Please, be sure that you run it before commiting your new code. To
 automatically do it, you can install a pre-commit hook, as described above.
 

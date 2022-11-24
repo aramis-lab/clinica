@@ -185,3 +185,10 @@ atlas_path = option(
     type=click.Path(exists=True, dir_okay=True, resolve_path=True),
     help="Compute atlases at the end of the path",
 )
+
+delete_cache = option(
+    "-dc",
+    "--delete_cache",
+    is_flag=True,
+    help="If True, large intermediary files will be deleted before the end of the pipeline.",  # This option is only implemented in dwi_preprocessing_using_t1 for now.
+)

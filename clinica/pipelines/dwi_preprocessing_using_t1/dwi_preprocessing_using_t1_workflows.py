@@ -82,7 +82,11 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     return wf
 
 
-def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
+def epi_pipeline(
+    base_dir: str,
+    delete_cache: bool = False,
+    name="susceptibility_distortion_correction_using_t1",
+):
     """Perform EPI correction.
 
     This workflow allows to correct for echo-planar induced susceptibility artifacts without fieldmap
@@ -90,6 +94,17 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     structural scans using an inverse consistent registration algorithm with a mutual information cost
     function (SyN algorithm). This workflow allows also a coregistration of DWIs with their respective
     baseline T1-weighted structural scans in order to latter combine tracks and cortex parcellation.
+
+    Parameters
+    ----------
+    base_dir: str
+        Working directory, which contains all of the intermediary data generated.
+
+    delete_cache: bool
+        If True, part of the temporary data is automatically deleted after usage.
+
+    name: str, optional
+        Name of the pipeline.
 
     Warnings:
         This workflow rotates the b-vectors.
@@ -108,6 +123,7 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     from .dwi_preprocessing_using_t1_utils import (
         ants_apply_transforms,
         change_itk_transform_type,
+        delete_temp_dirs,
         expend_matrix_list,
         rotate_bvecs,
     )
@@ -225,6 +241,23 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
     )
 
     merge = pe.Node(fsl.Merge(dimension="t"), name="MergeDWIs")
+    # Delete the temporary directory that takes too much place
+
+    delete_warp_field_tmp = pe.Node(
+        name="deletewarpfieldtmp",
+        interface=niu.Function(
+            inputs=["checkpoint", "dir_to_del", "base_dir"],
+            function=delete_temp_dirs,
+        ),
+    )
+    delete_warp_field_tmp.inputs.base_dir = base_dir
+    delete_warp_field_tmp.inputs.dir_to_del = [
+        apply_transform_field.name,
+        jacobian.name,
+        jacmult.name,
+        thres.name,
+        apply_transform_image.name,
+    ]
 
     outputnode = pe.Node(
         niu.IdentityInterface(
@@ -275,6 +308,7 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
             (jacobian, jacmult, [("jacobian_image", "in_file")]),
             (jacmult, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
+            
             (merge, outputnode, [("merged_file", "DWIs_epicorrected")]),
             (flirt_b0_2_t1, outputnode, [("out_matrix_file", "DWI_2_T1_Coregistration_matrix")]),
             (ants_registration, outputnode, [("forward_warp_field", "epi_correction_deformation_field"),
@@ -282,8 +316,17 @@ def epi_pipeline(name="susceptibility_distortion_correction_using_t1"):
                                              ("warped_image", "epi_correction_image_warped")]),
             (merge_transform, outputnode, [("out", "warp_epi")]),
             (rot_bvec, outputnode, [("out_file", "out_bvec")]),
+
+            
+            
         ]
     )
+    if delete_cache:
+        wf.connect(
+            [
+                (merge, delete_warp_field_tmp, [("merged_file", "checkpoint")])
+            ]
+        )
     # fmt: on
     return wf
 

@@ -267,28 +267,52 @@ def find_sub_ses_pattern_path(
 
 
 def _check_information(information: Dict) -> None:
-    if not isinstance(information, dict):
-        raise TypeError("A dict must be provided for the argument 'information'")
-
-    if not all(elem in information for elem in ["pattern", "description"]):
-        raise ValueError(
-            "'information' must contain the keys 'pattern' and 'description'"
+    if not isinstance(information, (dict, list)):
+        raise TypeError(
+            "A dict or list of dicts must be provided for the argument 'information'"
         )
 
-    if not all(
-        elem in ["pattern", "description", "needed_pipeline"]
-        for elem in information.keys()
-    ):
-        raise ValueError(
-            "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
-        )
+    if isinstance(information, list):
+        for item in information:
+            if not all(elem in item for elem in ["pattern", "description"]):
+                raise ValueError(
+                    "'information' must contain the keys 'pattern' and 'description'"
+                )
 
-    if information["pattern"][0] == "/":
-        raise ValueError(
-            "pattern argument cannot start with char: / (does not work in os.path.join function). "
-            "If you want to indicate the exact name of the file, use the format "
-            "directory_name/filename.extension or filename.extension in the pattern argument."
-        )
+            if not all(
+                elem in ["pattern", "description", "needed_pipeline"]
+                for elem in item.keys()
+            ):
+                raise ValueError(
+                    "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
+                )
+
+            if item["pattern"][0] == "/":
+                raise ValueError(
+                    "pattern argument cannot start with char: / (does not work in os.path.join function). "
+                    "If you want to indicate the exact name of the file, use the format "
+                    "directory_name/filename.extension or filename.extension in the pattern argument."
+                )
+    else:
+        if not all(elem in information for elem in ["pattern", "description"]):
+            raise ValueError(
+                "'information' must contain the keys 'pattern' and 'description'"
+            )
+
+        if not all(
+            elem in ["pattern", "description", "needed_pipeline"]
+            for elem in information.keys()
+        ):
+            raise ValueError(
+                "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
+            )
+
+        if information["pattern"][0] == "/":
+            raise ValueError(
+                "pattern argument cannot start with char: / (does not work in os.path.join function). "
+                "If you want to indicate the exact name of the file, use the format "
+                "directory_name/filename.extension or filename.extension in the pattern argument."
+            )
 
 
 def _format_errors(errors: List, information: Dict) -> str:
@@ -749,7 +773,7 @@ def fetch_file(remote: RemoteFileStructure, dirname: Optional[str]) -> str:
 
 def get_file_from_server(
     remote_file: RemoteFileStructure,
-    cache_path: Optional[str],
+    cache_path: Optional[str] = None,
 ) -> str:
     """Download file from server.
 

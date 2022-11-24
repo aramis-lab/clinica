@@ -13,15 +13,14 @@ from clinica.utils.testing_utils import build_bids_directory, build_caps_directo
 
 
 def test_bids_reader_instantiation(tmp_path):
-    from nipype.interfaces.io import BIDSDataGrabber
+    from pydra.engine.task import FunctionTask
 
     from clinica.pydra.interfaces import bids_reader
 
     task = bids_reader(BIDSQuery(), tmp_path)
-    assert isinstance(task, Nipype1Task)
+    assert isinstance(task, FunctionTask)
     assert task.name == "bids_reader_task"
-    assert task.inputs.base_dir == tmp_path
-    assert isinstance(task._interface, BIDSDataGrabber)
+    assert task.inputs.dataset_path == tmp_path
 
 
 def test_bids_reader(tmp_path):
@@ -44,19 +43,16 @@ def test_bids_reader(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "query,grabber",
+    "query,grabber,name",
     [
-        (CAPSFileQuery(), CAPSFileDataGrabber),
-        (CAPSGroupQuery(), CAPSGroupDataGrabber),
+        (CAPSFileQuery(), CAPSFileDataGrabber, "caps_file_reader_task"),
+        (CAPSGroupQuery(), CAPSGroupDataGrabber, "caps_group_reader_task"),
     ],
 )
-def test_caps_reader_instantiation(tmp_path, query, grabber):
+def test_caps_reader_instantiation(tmp_path, query, grabber, name):
     task = caps_reader(query, tmp_path)
     assert isinstance(task, Nipype1Task)
-    if "Group" in query:
-        assert task.name == "caps_group_reader_task"
-    elif "File" in query:
-        assert task.name == "caps_file_reader_task"
+    assert task.name == name
     assert task.inputs.base_dir == tmp_path
     assert isinstance(task._interface, grabber)
 

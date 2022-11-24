@@ -11,8 +11,6 @@ These dictionaries describe files to grab.
 import functools
 from collections.abc import Iterable
 
-import numpy as np
-
 """ T1w """
 
 
@@ -249,7 +247,6 @@ FLAIR_T2W_TO_MNI_TRANSFROM = {
     "description": "Transformation matrix from T2W image to MNI space using t2-linear pipeline",
     "needed_pipeline": "flair-linear",
 }
-# T1-Volume
 
 
 def aggregator(func):

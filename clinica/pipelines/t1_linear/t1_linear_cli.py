@@ -3,6 +3,7 @@ from typing import Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.cli import cli as run_cli
 
 pipeline_name = "t1-linear"
 
@@ -62,6 +63,9 @@ def cli(
         print_end_pipeline(
             pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
+
+
+run_cli.add_command(cli)
 
 
 if __name__ == "__main__":

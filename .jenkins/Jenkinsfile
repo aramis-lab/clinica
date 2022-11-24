@@ -297,37 +297,6 @@ pipeline {
         }
       }
     }
-    stage('Deploy') {
-      agent {
-        label 'ubuntu'
-      }
-      when {
-        buildingTag()
-      }
-      environment {
-        CONDA_ENV = "$WORKSPACE/env"
-        CONDA_HOME = "$HOME/miniconda"
-        PATH = "$HOME/.local/bin:$PATH"
-      }
-      steps {
-        withCredentials(
-          [
-            usernamePassword(
-              credentialsId: 'jenkins-token-for-pypi-clinica',
-              usernameVariable: 'USERNAME',
-              passwordVariable: 'PASSWORD'
-            )
-          ]
-        ) {
-          sh '''
-            source "${CONDA_HOME}/etc/profile.d/conda.sh"
-            conda create -y -p "${CONDA_ENV}" python=3.9
-            conda activate "${CONDA_ENV}"
-            poetry publish --build -u "${USERNAME}" -p "${PASSWORD}"
-          '''
-        }
-      }
-    }
   }
   post {
     failure {
