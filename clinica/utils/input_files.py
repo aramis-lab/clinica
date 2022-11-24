@@ -6,7 +6,7 @@ These dictionaries describe files to grab.
 import functools
 from collections.abc import Iterable
 
-""" T1w """
+import numpy as np
 
 # BIDS
 
@@ -291,9 +291,15 @@ def aggregator(func):
     @functools.wraps(func)
     def wrapper_aggregator(*args, **kwargs):
         # Get the lengths of iterable args and kwargs
-        arg_sizes = [len(arg) for arg in args if isinstance(arg, Iterable)]
+        arg_sizes = [
+            len(arg)
+            for arg in args
+            if (isinstance(arg, Iterable) and not isinstance(arg, str))
+        ]
         arg_sizes += [
-            len(arg) for k, arg in kwargs.items() if isinstance(arg, Iterable)
+            len(arg)
+            for k, arg in kwargs.items()
+            if (isinstance(arg, Iterable) and not isinstance(arg, str))
         ]
 
         # If iterable args/kwargs have different lengths, raise
@@ -308,7 +314,7 @@ def aggregator(func):
         arg_size = arg_sizes[0]
         new_args = []
         for arg in args:
-            if not isinstance(arg, Iterable):
+            if not (isinstance(arg, Iterable) and not isinstance(arg, str)):
                 new_args.append((arg,) * arg_size)
             else:
                 new_args.append(arg)
@@ -317,7 +323,7 @@ def aggregator(func):
         new_kwargs = [{} for _ in range(arg_size)]
         for k, arg in kwargs.items():
             for i in range(len(new_kwargs)):
-                if not isinstance(arg, Iterable):
+                if not (isinstance(arg, Iterable) and not isinstance(arg, str)):
                     new_kwargs[i][k] = arg
                 else:
                     new_kwargs[i][k] = arg[i]
@@ -435,6 +441,7 @@ def t1_volume_deformation_to_template(group_label):
     return information
 
 
+@aggregator
 def t1_volume_i_th_iteration_group_template(group_label, i):
     import os
 

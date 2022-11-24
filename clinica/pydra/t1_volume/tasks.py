@@ -63,3 +63,50 @@ def wrap_list(in_list: list):
         The wrapped list
     """
     return [in_list]
+
+
+@annotate({"return": {"image_files": list}})
+def task_prepare_dartel_input_images(
+    nifti_input: PathLike,
+) -> bool:
+    """Creates dartel images data structure for SPMCommand input
+
+    Parameters
+    ----
+    nifti_input: PathLike
+        Path to nifti file
+
+    Returns
+    -------
+    list
+        data structure with the right format for DARTELExistingTemplate(SPMCommand)
+    """
+    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_utils import (
+        prepare_dartel_input_images_pydra,
+    )
+
+    return prepare_dartel_input_images_pydra(nifti_input)
+
+
+@task
+@annotate({"return": {"iteration_parameters": list}})
+def task_create_iteration_parameters(
+    template_input: PathLike,
+) -> bool:
+    """Creates iteration data structure for SPMCommand input
+
+    Parameters
+    ----
+    template_input: PathLike
+        Path to the template file
+
+    Returns
+    -------
+    list
+        data structure with the right format for DARTELExistingTemplate(SPMCommand) iteration parameter
+    """
+    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_utils import (
+        create_iteration_parameters,
+    )
+
+    return create_iteration_parameters(template_input, None)
