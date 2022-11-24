@@ -182,7 +182,7 @@ def create_subjects_visits(current_directory: str, output_tsv: str) -> None:
             "dwi-dti",
         ]
     ),
-    help="Pipeline to merge to the ouput TSV file. All pipelines are merged by default.",
+    help="Pipeline to merge to the output TSV file. All pipelines are merged by default.",
 )
 @click.option(
     "-vas",

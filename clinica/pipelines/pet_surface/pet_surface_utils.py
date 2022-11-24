@@ -119,7 +119,7 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
 
 
 def remove_nan(volname):
-    """remove_nan is a method needed after a registration performed by spmregister : insted of filling space with 0, nan
+    """remove_nan is a method needed after a registration performed by spmregister : instead of filling space with 0, nan
     are used to extend the PET space. We propose to replace them with 0s.
 
     Args:
@@ -207,7 +207,7 @@ def make_label_conversion(gtmsegfile, csv):
     # Check that each label of original volume (old_label) has a matching transformation in the csv file
     for i in range(old_labels.size):
         index = numpy.argwhere(src_val == old_labels[i])
-        # Size 0 means no occurence found
+        # Size 0 means no occurrence found
         if index.size == 0:
             raise Exception(
                 f"Could not find label {old_labels[i]} on conversion table. Add it manually in CSV file to correct error"
@@ -215,7 +215,7 @@ def make_label_conversion(gtmsegfile, csv):
         # else:
         #     cprint(str(old_labels[i]) + " has been found on conversion table")
 
-    # Instanciation of final volume, with same dtype as original volume
+    # Instantiation of final volume, with same dtype as original volume
     new_volume = numpy.zeros(volume.shape, dtype=volume.dtype)
     # Computing the transformation
     for i in range(len(src)):
@@ -253,7 +253,7 @@ def runApplyInverseDeformationField_SPM_standalone(
 ):
     """
     This function does the exact same job as runApplyInverseDeformationField but with SPM standalone. We directly create
-    a batch file that SPM standalone can run. This function does not check wether SPM standalone must be used. Previous
+    a batch file that SPM standalone can run. This function does not check whether SPM standalone must be used. Previous
     check when building the pipeline ensures that all the env vars exists ($SPMSTANDALONE_HOME and $MCR_HOME)
     """
     import os
@@ -311,8 +311,8 @@ def runApplyInverseDeformationField_SPM_standalone(
             "Something went wrong while trying to run runApplyInverseDeformationField_SPM_standalone"
             + ". Output file not generated. Command launched :\n\t "
             + cmdline
-            + "\n. We strongly recommand that you use the supported version of Matlab MCR "
-            + " recommanded by the creators of SPM."
+            + "\n. We strongly recommend that you use the supported version of Matlab MCR "
+            + " recommended by the creators of SPM."
         )
     return output_file
 
@@ -381,7 +381,7 @@ def suvr_normalization(pet_path, mask):
     mask_size = sum(sum(sum(eroded_mask)))
     if mask_size == 0:
         raise Exception(
-            "Number of non-zero value of mask is 0. A problem occured when moving the eroded mask from MNI to gtmsegspace"
+            "Number of non-zero value of mask is 0. A problem occurred when moving the eroded mask from MNI to gtmsegspace"
         )
 
     # Mask unwanted values to determine mean uptake value
@@ -808,7 +808,7 @@ def produce_tsv(pet, atlas_files):
 
         Args:
             (string) pet      : list of path to the PET projection (must be a MGH file) [left_hemisphere, right_hemisphere]
-            (string) atlas_files  : Dictionnary containing path to lh and rh annotation files for any number of atlases.
+            (string) atlas_files  : Dictionary containing path to lh and rh annotation files for any number of atlases.
 
         Returns:
             (string) tsv  : path to the tsv containing average PET values

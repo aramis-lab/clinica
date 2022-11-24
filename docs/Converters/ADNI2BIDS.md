@@ -98,7 +98,7 @@ The clinical data being converted are defined in a spreadsheet (`clinical_specif
 The user can easily modify this file if they want to convert additional clinical data.
 
 For further details regarding clinica data, we recommend to look at the [ADNI Data Package
-](https://adni.bitbucket.io/index.html) developped by the Alzheimer's Disease Neuroimaging Initiative.
+](https://adni.bitbucket.io/index.html) developed by the Alzheimer's Disease Neuroimaging Initiative.
 
 ## Using the converter
 

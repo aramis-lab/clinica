@@ -44,7 +44,7 @@ def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> str:
     Parameters
     ----------
     base_dir : PathLike
-        Base directory to seach for the template.
+        Base directory to search for the template.
 
     Returns
     -------

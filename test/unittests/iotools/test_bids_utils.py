@@ -74,7 +74,7 @@ def test_write_bids_dataset_description(
     """Test function `_write_bids_dataset_description`.
 
     .. note::
-        Tested independantly for convenience since it takes
+        Tested independently for convenience since it takes
         a different set of input parameters.
 
     """
@@ -148,7 +148,7 @@ def test_write_bids_readme(
     """Test function `_write_bids_readme`.
 
     .. note::
-        Tested independantly for convenience since it takes
+        Tested independently for convenience since it takes
         a different set of input parameters.
 
     """

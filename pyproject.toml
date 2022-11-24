@@ -63,6 +63,7 @@ pydra-bids = "^0.0.3"
 black = "*"
 isort = "*"
 pre-commit = "*"
+codespell = {extras = ["toml"], version = "^2.2.2"}
 
 [tool.poetry.group.docs]
 optional = true
@@ -111,3 +112,9 @@ force-exclude = '''
 
 [tool.isort]
 profile = "black"
+
+[tool.codespell]
+summary = ''
+skip = ".git,LICENSE.txt,*.m"
+quiet-level = 3
+ignore-words-list = "nd,fwe,commun,fo,te"

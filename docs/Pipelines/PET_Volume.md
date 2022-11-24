@@ -90,7 +90,7 @@ The main output files are:
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph:"
-    Theses results have been obtained using the `pet-volume` pipeline of Clinica
+    These results have been obtained using the `pet-volume` pipeline of Clinica
     [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
     This pipeline first performs intra-subject registration of the PET image into

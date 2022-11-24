@@ -495,7 +495,7 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
     return data
 
 
-# Covert the AIBL PET images into the BIDS specification.
+# Convert the AIBL PET images into the BIDS specification.
 # There are three pet modalities: av45, pib, flute. All of them are converted
 # in BIDS
 def create_file(image, modality, bids_dir, overwrite):

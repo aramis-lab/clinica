@@ -528,7 +528,7 @@ def write_modality_agnostic_files(
 
     Args:
         study_name: name of the study (Ex ADNI)
-        readme_data: dictionnary containing the data specific to the dataset to write in the readme
+        readme_data: dictionary containing the data specific to the dataset to write in the readme
         bids_dir: path to the bids directory
         bids_version: BIDS version if different from the version supported by Clinica.
     """

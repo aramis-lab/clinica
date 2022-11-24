@@ -15,7 +15,7 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
     """Write statistics file.
 
     Print to a given input file statistics about missing files and modalities
-    in a dataset.  This metod takes in input a MissingModsTracker object (mmt)
+    in a dataset.  This method takes in input a MissingModsTracker object (mmt)
     that contains the number of missing modalities for each session and the
     number of missing sessions for each subject.
 
@@ -112,16 +112,16 @@ def print_longitudinal_analysis(
         summary_file.write("\n\n")
 
 
-def increment_dict(dictionnary, key):
-    if key not in dictionnary:
-        dictionnary[key] = 1
+def increment_dict(dictionary, key):
+    if key not in dictionary:
+        dictionary[key] = 1
     else:
-        dictionnary[key] += 1
+        dictionary[key] += 1
 
 
 def print_table(summary_file, double_dict):
 
-    # Find all keys at the second level of the dictionnary
+    # Find all keys at the second level of the dictionary
     diagnoses = set()
     mods = double_dict.keys()
     for mod in mods:
