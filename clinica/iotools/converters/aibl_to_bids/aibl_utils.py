@@ -521,12 +521,12 @@ def create_file(image, modality, bids_dir, overwrite):
 
     # creation of the path
     if modality == "t1":
-        output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
-        output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
+        output_path = join(bids_dir, f"sub-AIBL{subject}", f"{session}", "anat")
+        output_filename = f"sub-AIBL{subject}_{session}_T1w"
     elif modality in ["flute", "pib", "av45"]:
         tracer = {"flute": Tracer.FMM, "pib": Tracer.PIB, "av45": Tracer.AV45}[modality]
-        output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
-        output_filename = f"sub-AIBL{subject}_ses-{session}_trc-{tracer}_pet"
+        output_path = join(bids_dir, f"sub-AIBL{subject}", f"{session}", "pet")
+        output_filename = f"sub-AIBL{subject}_{session}_trc-{tracer}_pet"
     else:
         return None
 
