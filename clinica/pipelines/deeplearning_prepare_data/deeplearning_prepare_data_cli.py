@@ -1,8 +1,9 @@
 import click
 
-from clinica.pipelines.cli import cli as run_cli
+from clinica.pipelines.engine import clinica_pipeline
 
 
+@clinica_pipeline
 @click.command(
     "deeplearning-prepare-data",
     deprecated=True,
@@ -18,6 +19,3 @@ def cli(*args, **kwargs):
         "\n\n"
         "See: https://clinicadl.readthedocs.io/en/stable/Preprocessing/Extract/"
     )
-
-
-run_cli.add_command(cli)

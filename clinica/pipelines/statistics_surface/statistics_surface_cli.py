@@ -3,11 +3,12 @@ from typing import List, Optional
 import click
 
 from clinica.pipelines import cli_param
-from clinica.pipelines.cli import cli as run_cli
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "statistics-surface"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
@@ -197,8 +198,6 @@ def cli(
             pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
         )
 
-
-run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()

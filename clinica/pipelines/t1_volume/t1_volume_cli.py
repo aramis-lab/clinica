@@ -3,11 +3,12 @@ from typing import List, Optional, Tuple
 import click
 
 from clinica.pipelines import cli_param
-from clinica.pipelines.cli import cli as run_cli
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "t1-volume"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
@@ -141,8 +142,6 @@ def cli(
         n_procs=n_procs,
     )
 
-
-run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()

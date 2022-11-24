@@ -10,6 +10,20 @@ import click
 from nipype.pipeline.engine import Workflow
 
 
+def clinica_pipeline(func):
+    """Turns a CLI implementation into a Clinica Pipeline.
+
+    More precisely, this decorator takes care of:
+        - registering the implemented command as a subcommand
+          of `clinica run`.
+    """
+    from clinica.pipelines.cli import cli as run_cli
+
+    run_cli.add_command(func)
+
+    return func
+
+
 def postset(attribute, value):
     """Sets the attribute of an object after the execution.
 
