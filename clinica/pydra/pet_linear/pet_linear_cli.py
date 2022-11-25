@@ -5,11 +5,12 @@ import click
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.pet_linear.pipeline as pydra_pet_linear
 from clinica.pipelines import cli_param
-from clinica.pipelines.cli import cli as run_cli
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "pydra-pet-linear"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name, hidden=False)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
@@ -60,25 +61,23 @@ def cli(
         Label given to the PET acquisition, specifying the tracer used.
         Frequently used values are '18FFDG' or '18FAV45'.
 
-    suvr_reference_region : str
-        ???
-        The reference region must be specified to perform intensity normalization.
-        Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
+    suvr_reference_region : {'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'}
+        Reference region used for intensity normalization.
 
     uncropped_image : bool, optional
         Whether to also return the uncropped image or not. Default=False.
 
     save_pet_in_t1w_space : bool, optional
-        ???. Default=False.
+        Save PET imaging data registered to corresponding T1 space. Default=False.
 
     subjects_sessions_tsv : str, optional
-        ???. Default=None.
+        Process this list of subject - session pairs only.
 
     working_directory : str, optional
-        ???. Default=None.
+        Save intermediate results to this working directory.
 
     n_procs : int, optional
-        Number of processes to use. Default=None.
+        Number of processes to use.
     """
     parameters = {
         "acq_label": acq_label,
@@ -96,8 +95,6 @@ def cli(
     )
     pydra_utils.run(pipeline)
 
-
-run_cli.add_command(cli)
 
 if __name__ == "__main__":
     cli()

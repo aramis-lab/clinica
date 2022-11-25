@@ -93,28 +93,28 @@ def suvr_normalization(
 
 
 @task
-@annotate({"return": {"output_img": Nifti1Image}})
-def crop_nifti(input_img: os.PathLike, ref_crop: os.PathLike) -> Nifti1Image:
+@annotate({"return": {"output_img": os.PathLike}})
+def crop_nifti(input_img: os.PathLike, ref_img: os.PathLike) -> os.PathLike:
     """Crop input image based on the reference.
 
     It uses nilearn `resample_to_img` function.
 
     Parameters
     ----------
-    input_img : PathLike
-        Image to be processed.
+    input_img : path-like
+        Path to the input image.
 
-    ref_img : PathLike
-        Template used to crop the image.
+    ref_img : path-like
+        Path to the reference image used for cropping.
 
     Returns
     -------
-    output_img : Nifti1Image
-        Cropped image on disk.
+    output_img : path-like
+        Path to the cropped image.
     """
     from nilearn.image import resample_to_img
 
-    basedir = Path(os.getcwd())
+    basedir = Path.cwd()
     # resample the individual MRI into the cropped template image
     crop_img = resample_to_img(str(input_img), str(ref_crop), force_resample=True)
     crop_filename = Path(str(input_img).split(".nii")[0] + "_cropped.nii.gz")
