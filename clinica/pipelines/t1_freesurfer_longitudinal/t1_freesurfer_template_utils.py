@@ -115,7 +115,7 @@ def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
         subjects_dir: $(TMP), if segmentation was performed on 1 time point,
             <base_dir>/<Pipeline.Name>/ReconAll/`subject_id` otherwise
         source_dir: <base_dir>/<Pipeline.Name>/ReconAll folder
-        subject_id: Subject ID (e.g. "sub-CLNC01_ses-M00" or "sub-CLNC01_ses-M00M18")
+        subject_id: Subject ID (e.g. "sub-CLNC01_ses-M000" or "sub-CLNC01_ses-M000M018")
 
     Returns:
         subject_id for node connection with Nipype

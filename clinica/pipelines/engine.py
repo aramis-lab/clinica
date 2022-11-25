@@ -704,15 +704,15 @@ class Pipeline(Workflow):
                 Use this function to transform a cross sectional filename into
                 a longitudinal one.
                 Examples:
-                sub-ADNI001_scans.tsv -> sub-ADNI001_ses-M00_scans.tsv
-                sub-023a_ses-M12_T1w.nii.gz -> sub-023a_ses-M12_T1w.nii.gz (no
+                sub-ADNI001_scans.tsv -> sub-ADNI001_ses-M000_scans.tsv
+                sub-023a_ses-M012_T1w.nii.gz -> sub-023a_ses-M012_T1w.nii.gz (no
                     modification done if filename already has a session)
 
                 Args:
                     f: filename
 
                 Returns:
-                    filename with '_ses-M00_ added just after participant_id
+                    filename with '_ses-M000_ added just after participant_id
                 """
                 import re
 
@@ -725,7 +725,7 @@ class Pipeline(Workflow):
                 # (.*) catches the rest of the string
                 m = re.search(r"(^sub-[a-zA-Z0-9]*)_(?!ses-[a-zA-Z0-9])(.*)", f)
                 try:
-                    return m.group(1) + "_ses-M00_" + m.group(2)
+                    return m.group(1) + "_ses-M000_" + m.group(2)
                 except AttributeError:
                     # If something goes wrong, we return the original filename
                     return f
@@ -766,11 +766,11 @@ class Pipeline(Workflow):
                 # working
                 if not exists(join(bids_out, subj)):
                     mkdir(join(bids_out, subj))
-                if not exists(join(bids_out, subj, "ses-M00")):
-                    mkdir(join(bids_out, subj, "ses-M00"))
+                if not exists(join(bids_out, subj, "ses-M000")):
+                    mkdir(join(bids_out, subj, "ses-M000"))
                 for el in to_copy:
                     path_el = join(bids_in, subj, el)
-                    if not exists(join(bids_out, subj, "ses-M00", el)):
+                    if not exists(join(bids_out, subj, "ses-M000", el)):
                         # If the element to copy is a folder...
                         if isdir(path_el):
                             # Copytree is used with a 'custom' copy function,
@@ -778,7 +778,7 @@ class Pipeline(Workflow):
                             # the copied folders
                             copytree(
                                 path_el,
-                                join(bids_out, subj, "ses-M00", basename(path_el)),
+                                join(bids_out, subj, "ses-M000", basename(path_el)),
                                 copy_function=copy2_add_ses,
                             )
                         # If the element to copy is a file...
@@ -787,7 +787,7 @@ class Pipeline(Workflow):
                             new_filename_wo_ses = add_ses(el)
                             copy2(
                                 path_el,
-                                join(bids_out, subj, "ses-M00", new_filename_wo_ses),
+                                join(bids_out, subj, "ses-M000", new_filename_wo_ses),
                             )
             # Second part of the algorithm: deal with subjects that do not
             # have the problem. We only xopy the content of the folder, and no

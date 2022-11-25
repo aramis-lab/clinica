@@ -166,12 +166,12 @@ def run_T1VolumeTissueSegmentation(
         / "caps"
         / "subjects"
         / "sub-ADNI011S4105"
-        / "ses-M00"
+        / "ses-M0000"
         / "t1"
         / "spm"
         / "segmentation"
         / "dartel_input"
-        / "sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz",
+        / "sub-ADNI011S4105_ses-M000_T1w_segm-graymatter_dartelinput.nii.gz",
     )
 
     ref_file = fspath(
@@ -179,12 +179,12 @@ def run_T1VolumeTissueSegmentation(
         / "caps"
         / "subjects"
         / "sub-ADNI011S4105"
-        / "ses-M00"
+        / "ses-M000"
         / "t1"
         / "spm"
         / "segmentation"
         / "dartel_input"
-        / "sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz",
+        / "sub-ADNI011S4105_ses-M000_T1w_segm-graymatter_dartelinput.nii.gz",
     )
 
     assert likeliness_measure(out_file, ref_file, (1e-1, 0.02), (0.4, 0.01))
@@ -235,14 +235,14 @@ def run_T1VolumeCreateDartel(
             / "caps"
             / "subjects"
             / sub
-            / "ses-M00"
+            / "ses-M000"
             / "t1"
             / "spm"
             / "dartel"
             / "group-UnitTest"
             / (
                 sub
-                + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
+                + "_ses-M000_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
             )
         )
         for sub in subjects
@@ -252,7 +252,7 @@ def run_T1VolumeCreateDartel(
             ref_dir
             / (
                 sub
-                + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
+                + "_ses-M000_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
             )
         )
         for sub in subjects
@@ -301,14 +301,14 @@ def run_T1VolumeDartel2MNI(
             / "caps"
             / "subjects"
             / sub
-            / "ses-M00"
+            / "ses-M000"
             / "t1"
             / "spm"
             / "dartel"
             / "group-UnitTest"
             / (
                 sub
-                + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz"
+                + "_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz"
             )
         )
         for sub in subjects
@@ -318,7 +318,7 @@ def run_T1VolumeDartel2MNI(
             ref_dir
             / (
                 sub
-                + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz"
+                + "_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz"
             )
         )
         for sub in subjects
@@ -367,14 +367,14 @@ def run_T1VolumeRegisterDartel(
             / "caps"
             / "subjects"
             / sub
-            / "ses-M00"
+            / "ses-M000"
             / "t1"
             / "spm"
             / "dartel"
             / "group-UnitTest"
             / (
                 sub
-                + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
+                + "_ses-M000_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
             )
         )
         for sub in subjects
@@ -384,7 +384,7 @@ def run_T1VolumeRegisterDartel(
             ref_dir
             / (
                 sub
-                + "_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
+                + "_ses-M000_T1w_target-UnitTest_transformation-forward_deformation.nii.gz"
             )
         )
         for sub in subjects
@@ -428,14 +428,14 @@ def run_T1VolumeParcellation(
             / "caps"
             / "subjects"
             / "sub-ADNI018S4696"
-            / "ses-M00"
+            / "ses-M000"
             / "t1"
             / "spm"
             / "dartel"
             / "group-UnitTest"
             / "atlas_statistics"
             / (
-                "sub-ADNI018S4696_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-"
+                "sub-ADNI018S4696_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-"
                 + atlas
                 + "_map-graymatter_statistics.tsv"
             )
@@ -446,7 +446,7 @@ def run_T1VolumeParcellation(
         fspath(
             ref_dir
             / (
-                "sub-ADNI018S4696_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-"
+                "sub-ADNI018S4696_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-"
                 + atlas
                 + "_map-graymatter_statistics.tsv"
             )

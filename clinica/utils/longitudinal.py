@@ -9,19 +9,19 @@ def get_long_id(list_session_id):
 
     Args:
         list_session_id (list[str]): List of session IDs
-            (e.g. ["ses-M00"] or ["ses-M00", "ses-M18", "ses-M36"])
+            (e.g. ["ses-M000"] or ["ses-M000", "ses-M018", "ses-M036"])
 
     Returns:
         Longitudinal ID (str)
 
     Example:
         >>> from clinica.utils.longitudinal import get_long_id
-        >>> get_long_id(['ses-M00'])
-        'long-M00'
-        >>> get_long_id(['ses-M00', 'ses-M18', 'ses-M36'])
-        'long-M00M18M36'
-        >>> get_long_id(['ses-M18', 'ses-M36', 'ses-M00']) # Session IDs do not need to be sorted
-        'long-M00M18M36'
+        >>> get_long_id(['ses-M000'])
+        'long-M000'
+        >>> get_long_id(['ses-M000', 'ses-M018', 'ses-M036'])
+        'long-M000M018M036'
+        >>> get_long_id(['ses-M018', 'ses-M036', 'ses-M000']) # Session IDs do not need to be sorted
+        'long-M000M018M036'
     """
     sorted_list = sorted(list_session_id)
     list_session_label = [session_id[4:] for session_id in sorted_list]
@@ -35,8 +35,8 @@ def get_participants_long_id(list_participant_id, list_session_id):
 
     Example:
         >>> from clinica.utils.longitudinal import get_participants_long_id
-        >>> get_participants_long_id(['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'], ['ses-M00', 'ses-M18', 'ses-M00'])
-        ['long-M00M18', 'long-M00M18', 'long-M00']
+        >>> get_participants_long_id(['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'], ['ses-M000', 'ses-M018', 'ses-M000'])
+        ['long-M000M018', 'long-M000M018', 'long-M000']
     """
     from .participant import get_unique_subjects
 

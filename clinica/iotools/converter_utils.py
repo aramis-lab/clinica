@@ -1,14 +1,33 @@
-def sort_session_list(session_list):
-    session_idx = [int(session[5:]) for session in session_list]
-    session_idx.sort()
-    session_id_list = []
-    for session in session_idx:
-        if session < 10:
-            session_id_list.append(f"ses-M0{session}")
-        else:
-            session_id_list.append(f"ses-M{session}")
+from typing import List
 
-    return session_id_list
+
+def sort_session_list(session_list: List[str]) -> List[str]:
+    """Sorts the list of session IDs provided based on their session number.
+
+    Parameters
+    ------------
+    session_list : list[str]
+        List of session IDs to sort.
+
+    Returns
+    --------
+    list[str] :
+        Sorted list of session IDs.
+
+    Examples
+    --------
+    >>>sort_session_list(["ses-M000", "ses-M006", "ses-M012", "ses-M024", "ses-M048", "ses-M003"])
+    ["ses-M000", "ses-M003", "ses-M006", "ses-M012", "ses-M024", "ses-M048"]
+    >>>sort_session_list(["ses-M0", "ses-M6", "ses-M12", "ses-M24", "ses-M48", "ses-M3"])
+    ["ses-M0", "ses-M3", "ses-M6", "ses-M12", "ses-M24", "ses-M48"]
+    """
+    prefix_length = len("ses-M")
+    session_idx = [
+        ((session[prefix_length:]), int(session[prefix_length:]))
+        for session in session_list
+    ]
+    session_idx.sort(key=lambda x: x[1])
+    return [f"ses-M{session[0]}" for session in session_idx]
 
 
 def print_statistics(summary_file, num_subjs, ses_aval, mmt):
@@ -77,7 +96,6 @@ def print_longitudinal_analysis(
     import pandas as pd
 
     ses_aval = sort_session_list(ses_aval)
-
     summary_file.write("**********************************************\n\n")
     summary_file.write("Number of present diagnoses and modalities for each session:\n")
 
@@ -201,3 +219,22 @@ class MissingModsTracker:
              The hash map containing the list of missing files.
         """
         return self.missing
+
+
+def viscode_to_session(viscode: str) -> str:
+    """Replace the session label 'bl' with 'M000' or capitalize the session name passed as input.
+
+    Parameters
+    ----------
+    viscode: str
+        The name of the session.
+
+    Returns
+    -------
+    str:
+        "M000" if the session is the baseline session. Otherwise returns the original session name capitalized.
+    """
+    if viscode in {"bl", "m0"}:
+        return "ses-M000"
+    else:
+        return "ses-" + f"M{(int(viscode[1:])):03d}"

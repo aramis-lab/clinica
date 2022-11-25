@@ -242,20 +242,6 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
     return nifti_file
 
 
-def viscode_to_session(viscode):
-    """Replace the session label 'bl' with 'M00' or capitalize the session name passed as input.
-
-    :param viscode: session name
-
-    :return: M00 if is the baseline session or the original session name
-    capitalized
-    """
-    if viscode == "bl":
-        return "M00"
-    else:
-        return viscode.capitalize()
-
-
 def find_path_to_pet_modality(path_to_dataset, csv_file):
     """Create a Dataframe which contains all the paths to the PET image of a modality (for example AV45 or PIB).
 
@@ -505,6 +491,7 @@ def create_file(image, modality, bids_dir, overwrite):
     from numpy import nan
 
     from clinica.iotools.bids_utils import json_from_dcm
+    from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
@@ -542,12 +529,12 @@ def create_file(image, modality, bids_dir, overwrite):
 
     # creation of the path
     if modality == "t1":
-        output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "anat")
-        output_filename = f"sub-AIBL{subject}_ses-{session}_T1w"
+        output_path = join(bids_dir, f"sub-AIBL{subject}", f"{session}", "anat")
+        output_filename = f"sub-AIBL{subject}_{session}_T1w"
     elif modality in ["flute", "pib", "av45"]:
         tracer = {"flute": Tracer.FMM, "pib": Tracer.PIB, "av45": Tracer.AV45}[modality]
-        output_path = join(bids_dir, f"sub-AIBL{subject}", f"ses-{session}", "pet")
-        output_filename = f"sub-AIBL{subject}_ses-{session}_trc-{tracer}_pet"
+        output_path = join(bids_dir, f"sub-AIBL{subject}", f"{session}", "pet")
+        output_filename = f"sub-AIBL{subject}_{session}_trc-{tracer}_pet"
     else:
         return None
 
@@ -836,12 +823,12 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         )
         age = get_ages(PTDOB.values[0], examdates)
 
-        viscode[viscode == "bl"] = "M00"
+        viscode[viscode == "bl"] = "M000"
         viscode = viscode.str.upper()
 
         sessions = pd.DataFrame(
             {
-                "session_id": "ses-" + viscode,
+                "months": viscode.str[1:],
                 "age": age,
                 "MMS": MMSCORE,
                 "cdr_global": CDGLOBAL,
@@ -849,7 +836,9 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
                 "examination_date": examdates,
             }
         )
-
+        sessions = sessions.assign(
+            session_id=lambda df: df.months.apply(lambda x: f"ses-M{int(x):03d}")
+        )
         cols = sessions.columns.tolist()
         sessions = sessions[cols[-1:] + cols[:-1]]
 

@@ -11,7 +11,7 @@ def extract_subject_session_longitudinal_ids_from_filename(bids_or_caps_files):
     """Extract participant/session/longitudinal IDs from filename.
 
     Example:
-        ['sub-CLNC01', 'sub-CLNC01'], ['ses-M00', 'ses-M18'], ['long-M00M18', 'long-M00M18'])
+        ['sub-CLNC01', 'sub-CLNC01'], ['ses-M000', 'ses-M018'], ['long-M000M018', 'long-M000M018'])
 
     TODO: Find a way to merge with utils/filemanip.py::extract_subjects_sessions_from_filename into one util
     """
@@ -132,17 +132,17 @@ def grab_image_ids_from_caps_directory(caps_dir):
     - CAPS
         - subjects
             - sub-CLNC01
-                - long-M00M18
-                - ses-M00
-                - ses-M18
-                - ses-M36
+                - long-M000M018
+                - ses-M000
+                - ses-M018
+                - ses-M036
             - sub-CLNC02
-                - ses-M00
-                - ses-M18
+                - ses-M000
+                - ses-M018
 
     part_ids = ["sub-CLNC01",  "sub-CLNC01",  "sub-CLNC01" ]
-    sess_ids = ["ses-M00",     "ses-M18",     "ses-M36"    ]
-    long_ids = ["long-M00M18", "long-M00M18", "long-M00M18"]
+    sess_ids = ["ses-M000",     "ses-M018",     "ses-M036"    ]
+    long_ids = ["long-M000M018", "long-M000M018", "long-M000M018"]
     (sub-CLNC02 does not have longitudinal ID so it does not appear on the result)
 
     Args:

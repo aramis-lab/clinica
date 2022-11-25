@@ -137,7 +137,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         if spm_standalone_is_available():
             use_spm_standalone()
 
-        # Get <subject_id> (e.g. sub-CLNC01_ses-M00) from input_node
+        # Get <subject_id> (e.g. sub-CLNC01_ses-M000) from input_node
         # and print begin message
         # =======================
         init_node = npe.Node(
