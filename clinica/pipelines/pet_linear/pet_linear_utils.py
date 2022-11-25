@@ -1,7 +1,11 @@
 # Functions used by nipype interface.
+import os
 
-# Initiate the pipeline
+from nibabel.nifti1 import Nifti1Image
+
+
 def init_input_node(pet):
+    """Initiate the pipeline."""
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
 
@@ -11,33 +15,55 @@ def init_input_node(pet):
     return pet
 
 
-# Concatenate two transformation in one transformation list
-def concatenate_transforms(pet_to_t1w_tranform, t1w_to_mni_tranform):
+def concatenate_transforms(
+    pet_to_t1w_transform: str, t1w_to_mni_transform: str
+) -> list:
     """Concatenate two input transformation files into a list.
-    Args:
-       transform1 (str): first transformation to apply
-       transform2 (str): second transformation to apply
-    Returns:
-       transform_list (list of string): both transform files path in a list
+
+    Parameters
+    ----------
+    pet_to_t1w_transform : str
+        First transformation to apply.
+
+    t1w_to_mni_transform : str
+        Second transformation to apply.
+
+    Returns
+    -------
+    list :
+        Both transform files path in a list.
     """
-    return [t1w_to_mni_tranform, pet_to_t1w_tranform]
+    return [t1w_to_mni_transform, pet_to_t1w_transform]
 
 
 # Normalize the images based on the reference mask region
-def suvr_normalization(input_img, norm_img, ref_mask):
+def suvr_normalization(
+    input_img: os.PathLike,
+    norm_img: os.PathLike,
+    ref_mask: os.PathLike,
+) -> Nifti1Image:
     """Normalize the input image according to the reference region.
+
     It uses nilearn `resample_to_img` and scipy `trim_mean` functions.
     This function is different than the one in other PET pipelines
     because there is a downsampling step.
-    Args:
-       input_img (str): image to be processed
-       norm_img (str): image used to compute the mean of the reference region
-       ref_mask (str): mask of the reference region
-    Returns:
-       output_img (nifty image): normalized nifty image
-       mask_template (nifty image): output mask on disk
-    """
 
+    Parameters
+    ----------
+    input_img : PathLike
+        Path to the image to be processed.
+
+    norm_img : PathLike
+        Path to the image used to compute the mean of the reference region.
+
+    ref_mask : PathLike
+        Path to the mask of the reference region.
+
+    Returns
+    -------
+    output_img : Nifti1Image
+        Normalized nifty image
+    """
     import os
 
     import nibabel as nib
@@ -76,36 +102,35 @@ def suvr_normalization(input_img, norm_img, ref_mask):
     return output_img
 
 
-# It crops an image based on the reference.
-def crop_nifti(input_img, ref_crop):
-    """Crop input image based on the reference. It uses nilearn
-    `resample_to_img` function.
-    Args:
-       input_img (str): image to be processed
-       ref_img (str): template used to crop the image
-    Returns:
-       output_img (nifty image): crop image on disk.
-       crop_template (nifty image): output template on disk.
+def crop_nifti(input_img: str, ref_img: str) -> str:
+    """Crop input image based on the reference.
+
+    It uses nilearn `resample_to_img` function.
+
+    Parameters
+    ----------
+    input_img : str
+        Path to the input image.
+
+    ref_img : str
+        Path to the reference image used for cropping.
+
+    Returns
+    -------
+    output_img : str
+        Path to the cropped image.
     """
+    from pathlib import Path
 
-    import os
-
-    import nibabel as nib
-    import numpy as np
     from nilearn.image import resample_to_img
 
-    basedir = os.getcwd()
-
+    basedir = Path.cwd()
     # resample the individual MRI into the cropped template image
-    crop_img = resample_to_img(input_img, ref_crop, force_resample=True)
-
-    output_img = os.path.join(
-        basedir, os.path.basename(input_img).split(".nii")[0] + "_cropped.nii.gz"
-    )
-
-    crop_img.to_filename(output_img)
-
-    return output_img
+    crop_img = resample_to_img(input_img, ref_img, force_resample=True)
+    crop_filename = Path(input_img.split(".nii")[0] + "_cropped.nii.gz")
+    output_img = basedir / crop_filename
+    crop_img.to_filename(str(output_img))
+    return str(output_img)
 
 
 def rename_into_caps(

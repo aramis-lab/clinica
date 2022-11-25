@@ -7,9 +7,9 @@ from pydra.tasks.nipype1.utils import Nipype1Task
 
 from clinica.pydra.engine import clinica_io
 from clinica.pydra.pet_linear.tasks import (
-    concatenate_transforms,
-    crop_nifti,
-    suvr_normalization,
+    concatenate_transforms_task,
+    crop_nifti_task,
+    suvr_normalization_task,
 )
 from clinica.pydra.tasks import download_mni_template, download_ref_template
 from clinica.utils.pet import get_suvr_mask
@@ -72,9 +72,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
     # Concatenate
     wf.add(
-        concatenate_transforms(
+        concatenate_transforms_task(
             name="concatenate_transforms",
-            interface=concatenate_transforms,
+            interface=concatenate_transforms_task,
             pet_to_t1w_tranform=wf.ants_registration.lzout.out_matrix,
             t1w_to_mni_tranform=wf.lzin.t1w_to_mni,
         )
@@ -140,9 +140,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     wf.add(apply_transform_non_linear)
 
     wf.add(
-        suvr_normalization(
+        suvr_normalization_task(
             name="suvr_normalization",
-            interface=suvr_normalization,
+            interface=suvr_normalization_task,
             input_img=wf.apply_transform_pet_to_mni.lzout.output_image,
             norm_img=wf.apply_transform_non_linear.lzout.output_image,
             ref_mask=ref_mask,
@@ -157,9 +157,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     # Crop image
     if not parameters["uncropped_image"]:
         wf.add(
-            crop_nifti(
+            crop_nifti_task(
                 name="crop_nifti",
-                interface=crop_nifti,
+                interface=crop_nifti_task,
                 input_img=wf.suvr_normalization.lzout.output_img,
                 ref_crop=wf.download_ref_template.lzout.ref_template_file,
             )
@@ -169,7 +169,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
             ("outfile_crop", wf.crop_nifti.lzout.output_img),
         ]
 
-    # Optionnal argument
+    # Optional argument
     if parameters["save_PETinT1w"]:
         apply_transform_pet_to_t1w = Nipype1Task(
             name="apply_transform_pet_to_t1w",
