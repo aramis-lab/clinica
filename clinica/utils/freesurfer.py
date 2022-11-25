@@ -1,8 +1,14 @@
 """This module contains FreeSurfer utilities."""
+from enum import Enum, auto
 from pathlib import PurePath
 from typing import List, Optional
 
 import pandas as pd
+
+
+class ColumnType(Enum):
+    PARCELLATION = auto()  # The actual value is meaningless.
+    SEGMENTATION = auto()
 
 
 def _get_prefix(subject_id: str) -> str:
@@ -11,9 +17,9 @@ def _get_prefix(subject_id: str) -> str:
     return "_".join([i for i in image_id if i])
 
 
-def _read_stats_file(stats_filename: PurePath, column_type: str) -> pd.DataFrame:
+def _read_stats_file(stats_filename: PurePath, column_type: ColumnType) -> pd.DataFrame:
     """Read the provided statistics file and extract the relevant data."""
-    if column_type == "parcellation":
+    if column_type == ColumnType.PARCELLATION:
         # Columns in ?h.BA.stats, ?h.aparc.stats or ?h.aparc.a2009s.stats file
         columns = [
             "StructName",
@@ -27,7 +33,7 @@ def _read_stats_file(stats_filename: PurePath, column_type: str) -> pd.DataFrame
             "FoldInd",
             "CurvInd",
         ]
-    elif column_type == "segmentation":
+    elif column_type == ColumnType.SEGMENTATION:
         # Columns in aseg.stats or wmparc.stats file
         columns = [
             "Index",
@@ -83,7 +89,7 @@ def _generate_tsv_for_parcellation(
             for hemi in ("lh", "rh")
         }
         df_dict = {
-            hemi: _read_stats_file(stats_filename_dict[hemi], "parcellation")
+            hemi: _read_stats_file(stats_filename_dict[hemi], ColumnType.PARCELLATION)
             for hemi in ("lh", "rh")
         }
         for info in ("volume", "thickness", "area", "meancurv"):
@@ -112,7 +118,7 @@ def _generate_tsv_for_segmentation(
         ["segmentationVolumes.tsv", "parcellation-wm_volume.tsv"],
     ):
         stats_filename = stats_folder / filename
-        df = _read_stats_file(stats_filename, "segmentation")
+        df = _read_stats_file(stats_filename, ColumnType.SEGMENTATION)
         secondary_stats_dict = get_secondary_stats(stats_filename, "volume")
         key_list = list(df["StructName"]) + list(secondary_stats_dict.keys())
         value_list = list(df["Volume_mm3"]) + list(secondary_stats_dict.values())
@@ -246,7 +252,14 @@ def extract_image_id_from_longitudinal_segmentation(freesurfer_id: str):
     return image_id(participant_id, session_id, long_id)
 
 
-def get_secondary_stats(stats_filename: PurePath, info_type: str) -> dict:
+class InfoType(Enum):
+    VOLUME = auto()
+    THICKNESS = auto()
+    AREA = auto()
+    MEANCURV = auto()
+
+
+def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> dict:
     """Read the 'secondary' statistical info from .stats file.
 
     Extract the information from .stats file that is commented out
@@ -258,8 +271,8 @@ def get_secondary_stats(stats_filename: PurePath, info_type: str) -> dict:
     stats_filename : PurePath
         Path to the .stats file.
 
-    info_type : str
-        Either 'volume', 'thickness' or 'area'.
+    info_type : InfoType
+        Type of information to read from .stats file.
 
     Returns
     -------
@@ -272,19 +285,23 @@ def get_secondary_stats(stats_filename: PurePath, info_type: str) -> dict:
 
     # currently no additional information is provided by .stats file for
     # the mean curvature
-    if info_type == "meancurv":
+    if info_type == InfoType.MEANCURV:
         return {}
 
     # define how lines are supposed to end in the stats file, depending
     # on the type of information that is searched for
-    endline_dict = {"volume": "mm^3", "thickness": "mm", "area": "mm^2"}
+    endline_dict = {
+        InfoType.VOLUME: "mm^3",
+        InfoType.THICKNESS: "mm",
+        InfoType.AREA: "mm^2",
+    }
 
     # define keywords that are supposed to appear in commented lines
     # containing statistical information
     info_keyword_dict = {
-        "volume": ["volume", "Volume"],
-        "area": ["area", "Area"],
-        "thickness": ["thickness", "Thickness"],
+        InfoType.VOLUME: ["volume", "Volume"],
+        InfoType.AREA: ["area", "Area"],
+        InfoType.THICKNESS: ["thickness", "Thickness"],
     }
     with open(stats_filename, "r") as stats_file:
         stats = stats_file.read()
@@ -315,20 +332,26 @@ def write_tsv_file(
     ----------
     out_filename : PurePath
         Path to the .tsv file to write to.
+        Must have the same length as `name_list`.
 
     name_list : List[str]
-        list of keys.
+        list of keys. Must have the same length as `out_filename`.
 
     scalar_list : List[float]
         list of values corresponding to the keys.
     """
-    import warnings
+    from clinica.utils.stream import cprint
 
+    if len(name_list) != len(scalar_list):
+        raise ValueError(
+            "Cannot write to TSV because keys and values have different "
+            f"lengths {len(name_list)} vs. {len(scalar_list)}."
+        )
     try:
         data = pd.DataFrame({"label_name": name_list, "label_value": scalar_list})
         data.to_csv(out_filename, sep="\t", index=False, encoding="utf-8")
     except Exception as exception:
-        warnings.warn(f"Impossible to save {out_filename} file.")
+        cprint(msg=f"Impossible to save {out_filename} file.", lvl="warning")
         raise exception
 
 
@@ -355,8 +378,6 @@ def check_flags(in_t1w: str, recon_all_args: str) -> str:
     f = nib.load(in_t1w)
     voxel_size = f.header.get_zooms()
     t1_size = f.header.get_data_shape()
-    optional_flag = ""
     if any([v * t > 256 for v, t in zip(voxel_size, t1_size)]):
-        optional_flag = " -cw256"
-
-    return f"{recon_all_args}{optional_flag}"
+        return " ".join([recon_all_args, "-cw256"])
+    return recon_all_args
