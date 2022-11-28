@@ -37,7 +37,7 @@ def test_get_prefix(sub_id, expected):
 
 
 @pytest.mark.parametrize("column_type", ["foo", "parcellation", "segmentation"])
-def test_read_stats_file_errors(tmp_path, column_type):
+def test_read_stats_file_columns_errors(tmp_path, column_type):
     from clinica.utils.freesurfer import _read_stats_file
 
     with pytest.raises(
@@ -45,6 +45,19 @@ def test_read_stats_file_errors(tmp_path, column_type):
         match=f"Unknown column type {column_type}. Use either parcellation or segmentation.",
     ):
         _read_stats_file(tmp_path, column_type)
+
+
+@pytest.mark.parametrize(
+    "column_type", [ColumnType.PARCELLATION, ColumnType.SEGMENTATION]
+)
+def test_read_stats_file_file_errors(tmp_path, column_type):
+    from clinica.utils.freesurfer import _read_stats_file
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"Stats file {tmp_path / 'foo.stats'} could not be found.",
+    ):
+        _read_stats_file(tmp_path / "foo.stats", column_type)
 
 
 @pytest.fixture
@@ -103,12 +116,67 @@ def test_read_stats_file(tmp_path, columns, column_type, n_rows, fake_stats_data
     assert set(df.columns) == set(columns)
 
 
-def test_generate_regional_measures():
+@pytest.mark.parametrize(
+    "atlas,expected",
+    [
+        ("desikan", "aparc.stats"),
+        ("destrieux", "aparc.a2009s.stats"),
+        ("ba", "BA_exvivo.stats"),
+        ("foo", "foo.stats"),
+    ],
+)
+def test_get_stats_filename_for_atlas(tmp_path, atlas, expected):
+    from clinica.utils.freesurfer import _get_stats_filename_for_atlas
+
+    df = _get_stats_filename_for_atlas(tmp_path, atlas)
+    for hemi in ("lh", "rh"):
+        assert df[hemi] == tmp_path / f"{hemi}.{expected}"
+
+
+def test_generate_tsv_for_parcellation_errors(tmp_path):
+    from clinica.utils.freesurfer import _generate_tsv_for_parcellation
+
+    not_supported_atlas = "foo"
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"Stats file {tmp_path / 'lh.foo.stats'} could not be found.",
+    ):
+        _generate_tsv_for_parcellation(
+            tmp_path,
+            tmp_path,
+            "sub-CLNC01_ses-M00",
+            [not_supported_atlas],
+        )
+
+
+"""@pytest.mark.parametrize(
+    "prefix",
+    [
+        ("sub-CLNC01_ses-M00"),
+        ("sub-CLNC01_long-M00M18"),
+        ("sub-CLNC01_ses-M00_long-M00M18"),
+    ],
+)
+def test_generate_tsv_for_parcellation(tmp_path, prefix):
+    from clinica.utils.freesurfer import _generate_tsv_for_parcellation
+
+    stats_folder = tmp_path / "stats"
+    stats_folder.mkdir()
+    _generate_tsv_for_parcellation(stats_folder, tmp_path, prefix, atlases)"""
+
+
+def test_generate_regional_measures_error():
     from clinica.utils.freesurfer import generate_regional_measures
 
     with pytest.raises(
-        OSError,
+        FileNotFoundError,
         match="Image sub-CLNC01 | ses-M00 does not contain FreeSurfer segmentation",
+    ):
+        generate_regional_measures("", "sub-CLNC01_ses-M00", ["destrieux"])
+
+    with pytest.raises(
+        ValueError,
+        match="atlases should be a list of strings. <class 'str'> was provided instead.",
     ):
         generate_regional_measures("", "sub-CLNC01_ses-M00", "destrieux")
 

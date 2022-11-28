@@ -18,7 +18,16 @@ def _get_prefix(subject_id: str) -> str:
 
 
 def _read_stats_file(stats_filename: PurePath, column_type: ColumnType) -> pd.DataFrame:
-    """Read the provided statistics file and extract the relevant data."""
+    """Read the provided statistics file and extract the relevant data.
+
+    Raises
+    ------
+    ValueError
+        If `column_type` is not supported.
+
+    FileNotFoundError
+        If `stats_filename` is not a valid file name.
+    """
     if column_type == ColumnType.PARCELLATION:
         # Columns in ?h.BA.stats, ?h.aparc.stats or ?h.aparc.a2009s.stats file
         columns = [
@@ -52,6 +61,9 @@ def _read_stats_file(stats_filename: PurePath, column_type: ColumnType) -> pd.Da
             f"Unknown column type {column_type}. Use either parcellation or segmentation."
         )
 
+    if not stats_filename.exists():
+        raise FileNotFoundError(f"Stats file {stats_filename} could not be found.")
+
     return pd.read_csv(
         stats_filename,
         names=columns,
@@ -60,6 +72,31 @@ def _read_stats_file(stats_filename: PurePath, column_type: ColumnType) -> pd.Da
         delimiter="\s+",
         dtype=str,
     )
+
+
+def _get_stats_filename_for_atlas(stats_folder: PurePath, atlas: str) -> dict:
+    """Gets the stats file names for each hemisphere for requested atlas.
+
+    Parameters
+    ----------
+    stats_folder : PurePath
+        Path to the statistics folder.
+
+    atlas : str
+        Name of the atlas to get statistics for.
+
+    Returns
+    -------
+    dict :
+        Dictionary mapping hemispheres to statistics file names.
+        Indexes are 'lh' for 'left hemisphere', and 'rh' for 'right hemisphere'.
+    """
+    atlas_dict = {"desikan": "aparc", "destrieux": "aparc.a2009s", "ba": "BA_exvivo"}
+    atlas_filename = atlas_dict.get(atlas, atlas)
+
+    return {
+        hemi: stats_folder / f"{hemi}.{atlas_filename}.stats" for hemi in ("lh", "rh")
+    }
 
 
 def _generate_tsv_for_parcellation(
@@ -75,35 +112,33 @@ def _generate_tsv_for_parcellation(
         - the secondary (commented out) information common to
           both 'left' and 'right' .stats files
     """
-    atlas_dict = {"desikan": "aparc", "destrieux": "aparc.a2009s", "ba": "BA_exvivo"}
     info_dict = {
-        "volume": "GrayVol",
-        "thickness": "ThickAvg",
-        "area": "SurfArea",
-        "meancurv": "MeanCurv",
+        InfoType.VOLUME: "GrayVol",
+        InfoType.THICKNESS: "ThickAvg",
+        InfoType.AREA: "SurfArea",
+        InfoType.MEANCURV: "MeanCurv",
     }
     for atlas in atlases:
-        atlas_filename = atlas_dict.get(atlas, atlas)
-        stats_filename_dict = {
-            hemi: stats_folder / f"{hemi}.{atlas_filename}.stats"
-            for hemi in ("lh", "rh")
+        hemi_to_stats_filename = _get_stats_filename_for_atlas(stats_folder, atlas)
+        hemi_to_stats_df = {
+            hemi: _read_stats_file(filename, ColumnType.PARCELLATION)
+            for hemi, filename in hemi_to_stats_filename.items()
         }
-        df_dict = {
-            hemi: _read_stats_file(stats_filename_dict[hemi], ColumnType.PARCELLATION)
-            for hemi in ("lh", "rh")
-        }
-        for info in ("volume", "thickness", "area", "meancurv"):
-            # Secondary information (common to 'left' and 'right')
-            secondary_stats_dict = get_secondary_stats(stats_filename_dict["lh"], info)
-            # Join primary and secondary information
+        for info, col_name in info_dict.items():
+            # Secondary information are common to left and right hemispheres
+            secondary_stats_dict = get_secondary_stats(
+                hemi_to_stats_filename["lf"], info
+            )
             key_list = [
-                hemi + "_" + df_dict[hemi]["StructName"] for hemi in ("lh", "rh")
+                hemi + "_" + hemi_to_stats_df[hemi]["StructName"]
+                for hemi in ("lh", "rh")
             ]
             key_list += list(secondary_stats_dict.keys())
-            col_name = info_dict[info]
-            value_list = [df_dict[hemi][col_name] for hemi in ("lh", "rh")]
+            value_list = [hemi_to_stats_df[hemi][col_name] for hemi in ("lh", "rh")]
             value_list += list(secondary_stats_dict.values())
-            output_filename = output_dir / f"{prefix}_parcellation-{atlas}_{info}.tsv"
+            output_filename = (
+                output_dir / f"{prefix}_parcellation-{atlas}_{str(info)}.tsv"
+            )
             write_tsv_file(output_filename, key_list, value_list)
 
 
@@ -169,27 +204,24 @@ def generate_regional_measures(
         If no output folder is provided, files will be written to
         [path_segmentation]/regional_measures.
     """
-    import errno
     import os
     from pathlib import Path
 
     atlases = atlases or ["desikan", "destrieux", "ba"]
+    if not isinstance(atlases, list):
+        raise ValueError(
+            f"atlases should be a list of strings. {type(atlases)} was provided instead."
+        )
     prefix = _get_prefix(subject_id)
     seg_path = Path(os.path.expanduser(segmentation_path))
     stats_folder = seg_path / subject_id / "stats"
 
     if not stats_folder.is_dir():
-        raise IOError(
-            "Image %s does not contain FreeSurfer segmentation"
-            % prefix.replace("_", " | ")
+        raise FileNotFoundError(
+            f"Image {prefix.replace('_', ' | ')} does not contain FreeSurfer segmentation"
         )
     output_dir = Path(output_dir) if output_dir else seg_path / "regional_measures"
-    try:
-        os.makedirs(output_dir)
-    except OSError as exception:
-        # if dest_dir exists, go on, if its other error, raise
-        if exception.errno != errno.EEXIST:
-            raise
+    os.makedirs(output_dir, exist_ok=True)
     _generate_tsv_for_parcellation(stats_folder, output_dir, prefix, atlases)
     _generate_tsv_for_segmentation(stats_folder, output_dir, prefix)
 
@@ -257,6 +289,9 @@ class InfoType(Enum):
     THICKNESS = auto()
     AREA = auto()
     MEANCURV = auto()
+
+    def __str__(self):
+        return self._name_.lower()
 
 
 def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> dict:
