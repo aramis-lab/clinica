@@ -1,7 +1,8 @@
 import pytest
 
+from clinica.utils.freesurfer import _get_prefix  # noqa
 from clinica.utils.freesurfer import (
-    _get_prefix,
+    ColumnType,
     extract_image_id_from_longitudinal_segmentation,
 )
 
@@ -33,6 +34,73 @@ def test_get_prefix(sub_id, expected):
     from clinica.utils.freesurfer import _get_prefix
 
     assert _get_prefix(sub_id) == expected
+
+
+@pytest.mark.parametrize("column_type", ["foo", "parcellation", "segmentation"])
+def test_read_stats_file_errors(tmp_path, column_type):
+    from clinica.utils.freesurfer import _read_stats_file
+
+    with pytest.raises(
+        ValueError,
+        match=f"Unknown column type {column_type}. Use either parcellation or segmentation.",
+    ):
+        _read_stats_file(tmp_path, column_type)
+
+
+@pytest.fixture
+def fake_stats_dataframe(columns, n_rows):
+    """Generate a fake dummy stats Pandas dataframe for testing purposes."""
+    import pandas as pd
+
+    return pd.DataFrame({k: ["foo"] * n_rows for k in columns})
+
+
+@pytest.mark.parametrize(
+    "columns,column_type,n_rows",
+    [
+        (
+            [
+                "StructName",
+                "NumVert",
+                "SurfArea",
+                "GrayVol",
+                "ThickAvg",
+                "ThickStd",
+                "MeanCurv",
+                "GausCurv",
+                "FoldInd",
+                "CurvInd",
+            ],
+            ColumnType.PARCELLATION,
+            6,
+        ),
+        (
+            [
+                "Index",
+                "SegId",
+                "NVoxels",
+                "Volume_mm3",
+                "StructName",
+                "normMean",
+                "normStdDev",
+                "normMin",
+                "normMax",
+                "normRange",
+            ],
+            ColumnType.SEGMENTATION,
+            6,
+        ),
+    ],
+)
+def test_read_stats_file(tmp_path, columns, column_type, n_rows, fake_stats_dataframe):
+    from clinica.utils.freesurfer import _read_stats_file
+
+    fake_stats_dataframe.to_csv(
+        tmp_path / "stats_file.csv", sep=" ", index=False, header=False
+    )
+    df = _read_stats_file(tmp_path / "stats_file.csv", column_type)
+    assert len(df) == n_rows
+    assert set(df.columns) == set(columns)
 
 
 def test_generate_regional_measures():
