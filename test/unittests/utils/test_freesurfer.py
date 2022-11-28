@@ -73,6 +73,6 @@ def test_extract_image_id_from_longitudinal_segmentation(sub_id, expected_image_
 
 
 def test_get_secondary_stats(tmp_path):
-    from clinica.utils.freesurfer import get_secondary_stats
+    from clinica.utils.freesurfer import InfoType, get_secondary_stats
 
-    assert get_secondary_stats(tmp_path, "meancurv") == {}
+    assert get_secondary_stats(tmp_path, InfoType.MEANCURV) == {}
