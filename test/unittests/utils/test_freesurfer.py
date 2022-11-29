@@ -3,6 +3,7 @@ import pytest
 from clinica.utils.freesurfer import _get_prefix  # noqa
 from clinica.utils.freesurfer import (
     ColumnType,
+    InfoType,
     extract_image_id_from_longitudinal_segmentation,
 )
 
@@ -208,7 +209,93 @@ def test_extract_image_id_from_longitudinal_segmentation(sub_id, expected_image_
     assert extract_image_id_from_longitudinal_segmentation(sub_id) == expected_image_id
 
 
+@pytest.mark.parametrize(
+    "line,info,expected",
+    [
+        ("foo", InfoType.VOLUME, ("", "")),
+        ("", InfoType.VOLUME, ("", "")),
+        ("# Measure, foo", InfoType.THICKNESS, ("", "")),
+        (
+            "# Measure BrainSeg, BrainSegVol, Brain Segmentation Volume, 42.00, mm^3",
+            InfoType.VOLUME,
+            ("BrainSeg", "42.00"),
+        ),
+        (
+            "# Measure BrainSeg, BrainSegVol, Brain Segmentation Volume, 42.00, mm^3",
+            InfoType.AREA,
+            ("", ""),
+        ),
+        (
+            "# Measure Cortex, MeanThickness, Mean Thickness, 2.6, mm",
+            InfoType.THICKNESS,
+            ("Cortex", "2.6"),
+        ),
+        (
+            "# Measure Cortex, MeanThickness, Mean Thickness, 2.6, mm",
+            InfoType.VOLUME,
+            ("", ""),
+        ),
+        (
+            "# Measure Cortex, WhiteSurfArea, White Surface Total Area, 82.1, mm^2",
+            InfoType.AREA,
+            ("Cortex", "82.1"),
+        ),
+        (
+            "# Measure Cortex, WhiteSurfArea, White Surface Total Area, 82.1, mm^2",
+            InfoType.THICKNESS,
+            ("", ""),
+        ),
+    ],
+)
+def test_extract_region_and_stat_value(line, info, expected):
+    from clinica.utils.freesurfer import _extract_region_and_stat_value
+
+    assert _extract_region_and_stat_value(line, info) == expected
+
+
+@pytest.mark.parametrize(
+    "line,info,expected",
+    [
+        ("", InfoType.AREA, False),
+        ("foo", InfoType.VOLUME, False),
+        ("#Measure", InfoType.VOLUME, False),
+        ("# Measure", InfoType.THICKNESS, False),
+        ("# Measure foo mm^3", InfoType.VOLUME, True),
+        ("# Measure foo mm^2", InfoType.AREA, True),
+        ("# Measure foo mm", InfoType.THICKNESS, True),
+        ("# Measure foo, bar baz, mm^3", InfoType.VOLUME, True),
+        ("#Measure foo mm^3", InfoType.VOLUME, False),
+    ],
+)
+def test_stats_line_filter(line, info, expected):
+    from clinica.utils.freesurfer import _stats_line_filter
+
+    assert _stats_line_filter(line, info) == expected
+
+
 def test_get_secondary_stats(tmp_path):
     from clinica.utils.freesurfer import InfoType, get_secondary_stats
 
-    assert get_secondary_stats(tmp_path, InfoType.MEANCURV) == {}
+    stats_file_content = (
+        "# Measure BrainSeg, BrainSegVol, Brain Segmentation Volume, 42.00, mm^3\n"
+        "# foo\n#bar\n"
+        "# Measure Cortex, MeanThickness, Mean Thickness, 2.6, mm\n"
+        "# Measure BrainSegNotVentSurf, BrainSegVolNotVentSurf, Brain Segmentation "
+        "Volume Without Ventricles from Surf, 111.726, mm^3\n"
+        "# Measure Cortex, WhiteSurfArea, White Surface Total Area, 82.1, mm^2\n"
+        "# foo\n#bar\n"
+        "foo bar baz"
+    )
+    with open(tmp_path / "stats_file.stats", "w") as fp:
+        fp.write(stats_file_content)
+    assert get_secondary_stats(tmp_path / "stats_file.stats", InfoType.MEANCURV) == {}
+    assert get_secondary_stats(tmp_path / "stats_file.stats", InfoType.VOLUME) == {
+        "BrainSeg": "42.00",
+        "BrainSegNotVentSurf": "111.726",
+    }
+    assert get_secondary_stats(tmp_path / "stats_file.stats", InfoType.AREA) == {
+        "Cortex": "82.1"
+    }
+    assert get_secondary_stats(tmp_path / "stats_file.stats", InfoType.THICKNESS) == {
+        "Cortex": "2.6"
+    }

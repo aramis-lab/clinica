@@ -1,7 +1,7 @@
 """This module contains FreeSurfer utilities."""
 from enum import Enum, auto
 from pathlib import PurePath
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import pandas as pd
 
@@ -294,6 +294,80 @@ class InfoType(Enum):
         return self._name_.lower()
 
 
+def _stats_line_filter(line: str, info: InfoType) -> bool:
+    """Helper function to filter lines from stats files.
+
+    The function returns True if the line starts with '# Measure',
+    and ends with a marker specific to the type of info provided.
+    More precisely, the marker is:
+
+        - `mm^3` if info type is `volume`.
+        - `mm` if  info type is `thickness`.
+        - `mm^2` if info type is `area`.
+
+    .. note::
+        Info type `meancurv` is not supported.
+
+    Parameters
+    ----------
+    line : str
+        The line of the stat file to analyze.
+
+    info : InfoType
+        The type of information we are looking for.
+
+    Returns
+    -------
+    bool :
+        True if line should be kept, False otherwise.
+    """
+    end_line_marker = {
+        InfoType.VOLUME: "mm^3",
+        InfoType.THICKNESS: "mm",
+        InfoType.AREA: "mm^2",
+    }
+    return line.startswith("# Measure") and line.endswith(end_line_marker[info])
+
+
+def _extract_region_and_stat_value(line: str, info: InfoType) -> Tuple[str, str]:
+    """Helper function to extract the region label and corresponding stat value
+    from a stat line kept by `_stats_line_filter`.
+
+    Parameters
+    ----------
+    line : str
+        The line of the stat file to analyze.
+
+    info : InfoType
+        The type of information we are looking for.
+
+    Returns
+    -------
+    region : str
+        The region name for this line.
+
+        .. note::
+            This will be an empty string if the line does not contain
+            specific keywords related to the type of information.
+
+    value : str
+        The corresponding statistics value.
+
+        .. note::
+            This will be an empty string if the line does not contain
+            specific keywords related to the type of information.
+    """
+    info_to_keywords = {
+        InfoType.VOLUME: ["volume", "Volume"],
+        InfoType.AREA: ["area", "Area"],
+        InfoType.THICKNESS: ["thickness", "Thickness"],
+    }
+    word_list = line.replace(",", "").split()
+    if any(x in word_list for x in info_to_keywords[info]):
+        return word_list[2], word_list[-2]
+    return "", ""
+
+
 def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> dict:
     """Read the 'secondary' statistical info from .stats file.
 
@@ -316,44 +390,22 @@ def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> dict:
         are the corresponding volume/thickness/area depending on the
         input info type.
     """
-    secondary_stats_dict = {}
-
-    # currently no additional information is provided by .stats file for
-    # the mean curvature
     if info_type == InfoType.MEANCURV:
         return {}
 
-    # define how lines are supposed to end in the stats file, depending
-    # on the type of information that is searched for
-    endline_dict = {
-        InfoType.VOLUME: "mm^3",
-        InfoType.THICKNESS: "mm",
-        InfoType.AREA: "mm^2",
-    }
-
-    # define keywords that are supposed to appear in commented lines
-    # containing statistical information
-    info_keyword_dict = {
-        InfoType.VOLUME: ["volume", "Volume"],
-        InfoType.AREA: ["area", "Area"],
-        InfoType.THICKNESS: ["thickness", "Thickness"],
-    }
     with open(stats_filename, "r") as stats_file:
         stats = stats_file.read()
-    stats_line_list = stats.splitlines()
-    for stats_line in stats_line_list:
-        startswith_condition = stats_line.startswith("# Measure")
-        endswith_condition = stats_line.endswith(endline_dict[info_type])
-        if startswith_condition and endswith_condition:
-            stats_line_word_list = stats_line.replace(",", "").split()
-            # sanity check: make sure any sensible variation of
-            # 'volume', 'thickness' or 'area' appears inside the line
-            if any(x in stats_line_word_list for x in info_keyword_dict[info_type]):
-                info_region = stats_line_word_list[2]
-                info_value = stats_line_word_list[-2]
-                secondary_stats_dict[info_region] = info_value
+    stats_lines = [
+        line for line in stats.splitlines() if _stats_line_filter(line, info_type)
+    ]
 
-    return secondary_stats_dict
+    return {
+        k: v
+        for k, v in [
+            _extract_region_and_stat_value(line, info_type) for line in stats_lines
+        ]
+        if (k, v) != ("", "")
+    }
 
 
 def write_tsv_file(
