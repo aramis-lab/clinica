@@ -387,9 +387,9 @@ def test_extract_image_id_from_longitudinal_segmentation(sub_id, expected):
 @pytest.mark.parametrize(
     "line,info,expected",
     [
-        ("foo", InfoType.VOLUME, ("", "")),
-        ("", InfoType.VOLUME, ("", "")),
-        ("# Measure, foo", InfoType.THICKNESS, ("", "")),
+        ("foo", InfoType.VOLUME, None),
+        ("", InfoType.VOLUME, None),
+        ("# Measure, foo", InfoType.THICKNESS, None),
         (
             "# Measure BrainSeg, BrainSegVol, Brain Segmentation Volume, 42.00, mm^3",
             InfoType.VOLUME,
@@ -398,7 +398,7 @@ def test_extract_image_id_from_longitudinal_segmentation(sub_id, expected):
         (
             "# Measure BrainSeg, BrainSegVol, Brain Segmentation Volume, 42.00, mm^3",
             InfoType.AREA,
-            ("", ""),
+            None,
         ),
         (
             "# Measure Cortex, MeanThickness, Mean Thickness, 2.6, mm",
@@ -408,7 +408,7 @@ def test_extract_image_id_from_longitudinal_segmentation(sub_id, expected):
         (
             "# Measure Cortex, MeanThickness, Mean Thickness, 2.6, mm",
             InfoType.VOLUME,
-            ("", ""),
+            None,
         ),
         (
             "# Measure Cortex, WhiteSurfArea, White Surface Total Area, 82.1, mm^2",
@@ -418,7 +418,7 @@ def test_extract_image_id_from_longitudinal_segmentation(sub_id, expected):
         (
             "# Measure Cortex, WhiteSurfArea, White Surface Total Area, 82.1, mm^2",
             InfoType.THICKNESS,
-            ("", ""),
+            None,
         ),
     ],
 )
@@ -463,7 +463,7 @@ def test_get_secondary_stats(tmp_path):
     )
     with open(tmp_path / "stats_file.stats", "w") as fp:
         fp.write(stats_file_content)
-    assert get_secondary_stats(tmp_path / "stats_file.stats", InfoType.MEANCURV).empty
+    assert get_secondary_stats(tmp_path / "stats_file.stats", InfoType.MEANCURV) is None
     df = get_secondary_stats(tmp_path / "stats_file.stats", InfoType.VOLUME)
     assert list(df["label_name"]) == ["BrainSeg", "BrainSegNotVentSurf"]
     assert list(df["label_value"]) == ["42.00", "111.726"]

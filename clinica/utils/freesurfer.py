@@ -341,7 +341,9 @@ def _stats_line_filter(line: str, info: InfoType) -> bool:
     return line.startswith("# Measure") and line.endswith(end_line_marker[info])
 
 
-def _extract_region_and_stat_value(line: str, info: InfoType) -> Tuple[str, str]:
+def _extract_region_and_stat_value(
+    line: str, info: InfoType
+) -> Optional[Tuple[str, str]]:
     """Helper function to extract the region label and corresponding stat value
     from a stat line kept by `_stats_line_filter`.
 
@@ -377,10 +379,12 @@ def _extract_region_and_stat_value(line: str, info: InfoType) -> Tuple[str, str]
     word_list = line.replace(",", "").split()
     if any(x in word_list for x in info_to_keywords[info]):
         return word_list[2], word_list[-2]
-    return "", ""
+    return None
 
 
-def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> pd.DataFrame:
+def get_secondary_stats(
+    stats_filename: PurePath, info_type: InfoType
+) -> Optional[pd.DataFrame]:
     """Read the 'secondary' statistical info from .stats file.
 
     Extract the information from .stats file that is commented out
@@ -403,7 +407,7 @@ def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> pd.Dat
         input info type (in a column named 'label_value').
     """
     if info_type == InfoType.MEANCURV:
-        return pd.DataFrame()
+        return None
 
     with open(stats_filename, "r") as stats_file:
         stats = stats_file.read()
@@ -413,15 +417,9 @@ def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> pd.Dat
     regions_stats = [
         _extract_region_and_stat_value(line, info_type) for line in stats_lines
     ]
-    regions = [r[0] for r in regions_stats if r[0] != ""]
-    values = [r[1] for r in regions_stats if r[1] != ""]
-    if len(regions) != len(values):
-        raise ValueError(
-            f"In stats file {stats_filename}, the extracted secondary stats "
-            f"have different lengths {len(regions)} vs. {len(values)}. "
-            "Please check the lines starting with '# Measure' in this file."
-        )
-    return pd.DataFrame({"label_name": regions, "label_value": values})
+    return pd.DataFrame.from_records(
+        regions_stats, columns=["label_name", "label_value"]
+    )
 
 
 def check_flags(in_t1w: str, recon_all_args: str) -> str:
