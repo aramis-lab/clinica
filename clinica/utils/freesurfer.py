@@ -126,20 +126,23 @@ def _generate_tsv_for_parcellation(
         }
         for info, col_name in info_dict.items():
             # Secondary information are common to left and right hemispheres
-            secondary_stats_dict = get_secondary_stats(
-                hemi_to_stats_filename["lf"], info
-            )
-            key_list = [
-                hemi + "_" + hemi_to_stats_df[hemi]["StructName"]
-                for hemi in ("lh", "rh")
-            ]
-            key_list += list(secondary_stats_dict.keys())
-            value_list = [hemi_to_stats_df[hemi][col_name] for hemi in ("lh", "rh")]
-            value_list += list(secondary_stats_dict.values())
+            stats_df = get_secondary_stats(hemi_to_stats_filename["lh"], info)
+            for hemi in ("lh", "rh"):
+                stats_df = pd.concat(
+                    [
+                        stats_df,
+                        hemi_to_stats_df[hemi][["StructName", col_name]].rename(
+                            columns={
+                                "StructName": "label_name",
+                                col_name: "label_value",
+                            }
+                        ),
+                    ]
+                )
             output_filename = (
                 output_dir / f"{prefix}_parcellation-{atlas}_{str(info)}.tsv"
             )
-            write_tsv_file(output_filename, key_list, value_list)
+            stats_df.to_csv(output_filename, sep="\t", index=False, encoding="utf-8")
 
 
 def _generate_tsv_for_segmentation(
@@ -153,12 +156,21 @@ def _generate_tsv_for_segmentation(
         ["segmentationVolumes.tsv", "parcellation-wm_volume.tsv"],
     ):
         stats_filename = stats_folder / filename
-        df = _read_stats_file(stats_filename, ColumnType.SEGMENTATION)
-        secondary_stats_dict = get_secondary_stats(stats_filename, "volume")
-        key_list = list(df["StructName"]) + list(secondary_stats_dict.keys())
-        value_list = list(df["Volume_mm3"]) + list(secondary_stats_dict.values())
-        output_filename = output_dir / f"{prefix}_{suffix}"
-        write_tsv_file(output_filename, key_list, value_list)
+        primary_stats_df = _read_stats_file(stats_filename, ColumnType.SEGMENTATION)
+        primary_stats_df.rename(
+            columns={"StructName": "label_name", "Volume_mm3": "label_value"},
+            inplace=True,
+        )
+        secondary_stats_df = get_secondary_stats(stats_filename, InfoType.VOLUME)
+        full_stats_df = pd.concat(
+            [
+                primary_stats_df[["label_name", "label_value"]],
+                secondary_stats_df,
+            ]
+        )
+        full_stats_df.to_csv(
+            output_dir / f"{prefix}_{suffix}", sep="\t", index=False, encoding="utf-8"
+        )
 
 
 def generate_regional_measures(
@@ -368,7 +380,7 @@ def _extract_region_and_stat_value(line: str, info: InfoType) -> Tuple[str, str]
     return "", ""
 
 
-def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> dict:
+def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> pd.DataFrame:
     """Read the 'secondary' statistical info from .stats file.
 
     Extract the information from .stats file that is commented out
@@ -385,61 +397,31 @@ def get_secondary_stats(stats_filename: PurePath, info_type: InfoType) -> dict:
 
     Returns
     -------
-    secondary_stats_dict : dict
-        The keys are regions of the brain, and the associated values
-        are the corresponding volume/thickness/area depending on the
-        input info type.
+    secondary_stats_dict : pd.DataFrame
+        DataFrame containing the regions of the brain (in a column named 'label_name'),
+        and the corresponding volume/thickness/area values depending on the
+        input info type (in a column named 'label_value').
     """
     if info_type == InfoType.MEANCURV:
-        return {}
+        return pd.DataFrame()
 
     with open(stats_filename, "r") as stats_file:
         stats = stats_file.read()
     stats_lines = [
         line for line in stats.splitlines() if _stats_line_filter(line, info_type)
     ]
-
-    return {
-        k: v
-        for k, v in [
-            _extract_region_and_stat_value(line, info_type) for line in stats_lines
-        ]
-        if (k, v) != ("", "")
-    }
-
-
-def write_tsv_file(
-    out_filename: PurePath,
-    name_list: List[str],
-    scalar_list: List[float],
-) -> None:
-    """Write a .tsv file with list of keys and values.
-
-    Parameters
-    ----------
-    out_filename : PurePath
-        Path to the .tsv file to write to.
-        Must have the same length as `name_list`.
-
-    name_list : List[str]
-        list of keys. Must have the same length as `out_filename`.
-
-    scalar_list : List[float]
-        list of values corresponding to the keys.
-    """
-    from clinica.utils.stream import cprint
-
-    if len(name_list) != len(scalar_list):
+    regions_stats = [
+        _extract_region_and_stat_value(line, info_type) for line in stats_lines
+    ]
+    regions = [r[0] for r in regions_stats if r[0] != ""]
+    values = [r[1] for r in regions_stats if r[1] != ""]
+    if len(regions) != len(values):
         raise ValueError(
-            "Cannot write to TSV because keys and values have different "
-            f"lengths {len(name_list)} vs. {len(scalar_list)}."
+            f"In stats file {stats_filename}, the extracted secondary stats "
+            f"have different lengths {len(regions)} vs. {len(values)}. "
+            "Please check the lines starting with '# Measure' in this file."
         )
-    try:
-        data = pd.DataFrame({"label_name": name_list, "label_value": scalar_list})
-        data.to_csv(out_filename, sep="\t", index=False, encoding="utf-8")
-    except Exception as exception:
-        cprint(msg=f"Impossible to save {out_filename} file.", lvl="warning")
-        raise exception
+    return pd.DataFrame({"label_name": regions, "label_value": values})
 
 
 def check_flags(in_t1w: str, recon_all_args: str) -> str:
