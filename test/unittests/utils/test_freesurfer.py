@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -362,31 +364,24 @@ def test_generate_regional_measures_error():
         generate_regional_measures("", "sub-CLNC01_ses-M00", "destrieux")
 
 
-@pytest.fixture
-def expected_image_id(sub_id):
-    from collections import namedtuple
-
-    image_id = namedtuple("image_id", ["participant_id", "session_id", "long_id"])
-    if sub_id == "sub-CLNC01_ses-M00":
-        return image_id("sub-CLNC01", "ses-M00", "")
-    if sub_id == "sub-CLNC01_long-M00M18":
-        return image_id("sub-CLNC01", "", "long-M00M18")
-    if sub_id == "sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18":
-        return image_id("sub-CLNC01", "ses-M00", "long-M00M18")
+image_id = namedtuple("image_id", ["participant_id", "session_id", "long_id"])
 
 
 @pytest.mark.parametrize(
-    "sub_id",
+    "sub_id,expected",
     [
-        "sub-CLNC01_ses-M00",
-        "sub-CLNC01_long-M00M18",
-        "sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18",
+        ("sub-CLNC01_ses-M00", image_id("sub-CLNC01", "ses-M00", "")),
+        ("sub-CLNC01_long-M00M18", image_id("sub-CLNC01", "", "long-M00M18")),
+        (
+            "sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18",
+            image_id("sub-CLNC01", "ses-M00", "long-M00M18"),
+        ),
     ],
 )
-def test_extract_image_id_from_longitudinal_segmentation(sub_id, expected_image_id):
+def test_extract_image_id_from_longitudinal_segmentation(sub_id, expected):
     from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
 
-    assert extract_image_id_from_longitudinal_segmentation(sub_id) == expected_image_id
+    assert extract_image_id_from_longitudinal_segmentation(sub_id) == expected
 
 
 @pytest.mark.parametrize(
@@ -478,3 +473,22 @@ def test_get_secondary_stats(tmp_path):
     df = get_secondary_stats(tmp_path / "stats_file.stats", InfoType.THICKNESS)
     assert list(df["label_name"]) == ["Cortex"]
     assert list(df["label_value"]) == ["2.6"]
+
+
+@pytest.mark.parametrize(
+    "data_shape,expected",
+    [
+        ((6, 6, 6), "args"),
+        ((6, 6, 290), "args -cw256"),
+    ],
+)
+def test_check_flags(tmp_path, data_shape, expected):
+    import nibabel as nib
+
+    from clinica.utils.freesurfer import check_flags
+
+    nib.save(
+        nib.nifti1.Nifti1Image(np.random.random(data_shape), np.eye(4)),
+        tmp_path / "test.nii.gz",
+    )
+    assert check_flags(tmp_path / "test.nii.gz", "args") == expected
