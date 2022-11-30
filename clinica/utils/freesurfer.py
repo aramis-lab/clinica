@@ -61,17 +61,17 @@ def _read_stats_file(stats_filename: PurePath, column_type: ColumnType) -> pd.Da
             f"Unknown column type {column_type}. Use either parcellation or segmentation."
         )
 
-    if not stats_filename.exists():
+    try:
+        return pd.read_csv(
+            stats_filename,
+            names=columns,
+            comment="#",
+            header=None,
+            delimiter="\s+",
+            dtype=str,
+        )
+    except FileNotFoundError:
         raise FileNotFoundError(f"Stats file {stats_filename} could not be found.")
-
-    return pd.read_csv(
-        stats_filename,
-        names=columns,
-        comment="#",
-        header=None,
-        delimiter="\s+",
-        dtype=str,
-    )
 
 
 def _get_stats_filename_for_atlas(stats_folder: PurePath, atlas: str) -> dict:
