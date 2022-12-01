@@ -19,7 +19,6 @@ pipeline_name = "pydra-pet-volume"
 @cli_param.argument.suvr_reference_region
 @cli_param.option_group.pipeline_specific_options
 @cli_param.option.pvc_psf_tsv
-@cli_param.option_group.common_pipelines_options
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-mask",
