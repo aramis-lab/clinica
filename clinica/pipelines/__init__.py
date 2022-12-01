@@ -1,4 +1,4 @@
-from ..pydra.pet_volume import pet_volume_cli as pydra_pet_volume_cli  # noqa
+from ..pydra import pet_volume  # noqa
 from ..pydra.t1_linear import t1_linear_cli as pydra_t1_linear_cli  # noqa
 from ..pydra.t1_volume.create_dartel import cli as pydra_t1vol_cd_cli  # noqa
 from ..pydra.t1_volume.register_dartel import cli as pydra_t1vol_rd_cli  # noqa

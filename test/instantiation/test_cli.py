@@ -101,6 +101,7 @@ def test_second_lv_iotools(generate_cli_second_lv_iotools):
         "t1-volume-parcellation",
         "t1-freesurfer-template",
         "t1-freesurfer-longitudinal-correction",
+        "pydra-pet-volume",
     ]
 )
 def generate_cli_second_lv_run(request):
