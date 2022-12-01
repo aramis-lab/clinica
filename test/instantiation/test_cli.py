@@ -102,6 +102,10 @@ def test_second_lv_iotools(generate_cli_second_lv_iotools):
         "t1-freesurfer-template",
         "t1-freesurfer-longitudinal-correction",
         "pydra-pet-volume",
+        "pydra-t1-linear",
+        "pydra-create-dartel",
+        "pydra-t1-volume-register-dartel",
+        "pydra-t1vol-ts",
     ]
 )
 def generate_cli_second_lv_run(request):
