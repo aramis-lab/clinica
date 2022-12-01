@@ -415,7 +415,10 @@ def get_secondary_stats(
         line for line in stats.splitlines() if _stats_line_filter(line, info_type)
     ]
     regions_stats = list(
-        filter(None, (_extract_region_and_stat_value(line, info_type) for line in stats_lines))
+        filter(
+            None,
+            (_extract_region_and_stat_value(line, info_type) for line in stats_lines),
+        )
     )
 
     return pd.DataFrame.from_records(
