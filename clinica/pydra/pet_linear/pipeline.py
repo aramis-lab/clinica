@@ -161,7 +161,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 name="crop_nifti",
                 interface=crop_nifti_task,
                 input_img=wf.suvr_normalization.lzout.output_img,
-                ref_crop=wf.download_ref_template.lzout.ref_template_file,
+                ref_img=wf.download_ref_template.lzout.ref_template_file,
             )
         )
 
