@@ -79,6 +79,32 @@ def test_remove_space_and_symbols(input_string, expected):
     assert remove_space_and_symbols(input_string) == expected
 
 
+@pytest.mark.parametrize("compress", [True, False])
+@pytest.mark.parametrize("sidecar", [True, False])
+def test_build_dcm2niix_command(compress, sidecar):
+    from clinica.iotools.bids_utils import _build_dcm2niix_command
+
+    compress_flag = "y" if compress else "n"
+    sidecar_flag = "y" if sidecar else "n"
+    expected = ["dcm2niix", "-w", "0", "-f", "fmt", "-o", "output_dir"]
+    if compress:
+        expected += ["-9"]
+    expected += ["-z", compress_flag, "-b", sidecar_flag]
+    if sidecar:
+        expected += ["-ba", "y"]
+    expected += ["input_dir/inputs"]
+    assert (
+        _build_dcm2niix_command(
+            "input_dir/inputs",
+            "output_dir",
+            "fmt",
+            compress=compress,
+            bids_sidecar=sidecar,
+        )
+        == expected
+    )
+
+
 def _validate_file_and_content(file: Path, expected_content: str) -> None:
     import os
 
