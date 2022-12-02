@@ -38,9 +38,9 @@ def concatenate_transforms(
 
 # Normalize the images based on the reference mask region
 def suvr_normalization(
-    input_img: os.PathLike,
-    norm_img: os.PathLike,
-    ref_mask: os.PathLike,
+    input_img: str,
+    norm_img: str,
+    ref_mask: str,
 ) -> str:
     """Normalize the input image according to the reference region.
 
@@ -50,13 +50,13 @@ def suvr_normalization(
 
     Parameters
     ----------
-    input_img : PathLike
+    input_img : str
         Path to the image to be processed.
 
-    norm_img : PathLike
+    norm_img : str
         Path to the image used to compute the mean of the reference region.
 
-    ref_mask : PathLike
+    ref_mask : str
         Path to the mask of the reference region.
 
     Returns
