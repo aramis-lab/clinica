@@ -8,7 +8,7 @@ import clinica.pydra.t1_volume.create_dartel.pipeline as pydra_create_dartel
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
-pipeline_name = "pydra-create-dartel"
+pipeline_name = "pydra-t1-volume-create-dartel"
 
 
 @clinica_pipeline
