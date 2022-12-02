@@ -579,18 +579,24 @@ def write_sessions_tsv(bids_dir: str, sessions_dict: dict) -> None:
 
     bids_dir = Path(bids_dir)
 
-    for sp in bids_dir.glob("sub-*"):
-        if sp.name in sessions_dict:
-            session_df = pd.DataFrame.from_dict(sessions_dict[sp.name], orient="index")
+    for subject_path in bids_dir.glob("sub-*"):
+        if subject_path.name in sessions_dict:
+            session_df = pd.DataFrame.from_dict(
+                sessions_dict[subject_path.name], orient="index"
+            )
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
         else:
-            print(f"No session data available for {sp}")
+            print(f"No session data available for {subject_path}")
             session_df = pd.DataFrame(columns=["session_id"])
             session_df["session_id"] = pd.Series("M000")
         session_df = session_df.set_index("session_id").fillna("n/a")
-        session_df.to_csv(sp / f"{sp.name}_sessions.tsv", sep="\t", encoding="utf8")
+        session_df.to_csv(
+            subject_path / f"{subject_path.name}_sessions.tsv",
+            sep="\t",
+            encoding="utf8",
+        )
 
 
 def _get_pet_tracer_from_filename(filename: str) -> str:
