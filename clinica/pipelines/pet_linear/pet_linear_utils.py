@@ -41,7 +41,7 @@ def suvr_normalization(
     input_img: os.PathLike,
     norm_img: os.PathLike,
     ref_mask: os.PathLike,
-) -> Nifti1Image:
+) -> str:
     """Normalize the input image according to the reference region.
 
     It uses nilearn `resample_to_img` and scipy `trim_mean` functions.
@@ -61,8 +61,8 @@ def suvr_normalization(
 
     Returns
     -------
-    output_img : Nifti1Image
-        Normalized nifty image
+    output_img : str
+        Path to the normalized nifti image.
     """
     import os
 

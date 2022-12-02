@@ -22,12 +22,12 @@ def concatenate_transforms_task(
 
 
 @task
-@annotate({"return": {"output_img": Nifti1Image}})
+@annotate({"return": {"output_img": str}})
 def suvr_normalization_task(
     input_img: os.PathLike,
     norm_img: os.PathLike,
     ref_mask: os.PathLike,
-) -> Nifti1Image:
+) -> str:
     """Pydra task for normalizing the input image according to the reference region.
 
     .. note::
