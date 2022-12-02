@@ -626,7 +626,9 @@ def _get_pet_tracer_from_filename(filename: str) -> str:
     return tracer
 
 
-def write_scans_tsv(bids_dir: str, bids_ids: List[str], scans_dict: dict) -> None:
+def write_scans_tsv(
+    bids_dir: str, participant_ids: List[str], scans_dict: dict
+) -> None:
     """Write the scans dict into TSV files.
 
     Parameters
@@ -635,7 +637,7 @@ def write_scans_tsv(bids_dir: str, bids_ids: List[str], scans_dict: dict) -> Non
         Path to the BIDS directory.
 
     participant_ids : List[str]
-        List of bids ids for which to write the scans TSV files.
+        List of participant ids for which to write the scans TSV files.
 
     scans_dict : dict
         Dictionary containing scans metadata.
@@ -655,18 +657,18 @@ def write_scans_tsv(bids_dir: str, bids_ids: List[str], scans_dict: dict) -> Non
     bids_dir = Path(bids_dir)
     supported_modalities = ("anat", "dwi", "func", "pet")
 
-    for bids_id in bids_ids:
-        for session_path in (bids_dir / bids_id).glob("ses-*"):
+    for sub in participant_ids:
+        for session_path in (bids_dir / sub).glob("ses-*"):
             scans_df = pd.DataFrame()
             tsv_file = (
                 bids_dir
-                / bids_id
+                / sub
                 / session_path.name
-                / f"{bids_id}_{session_path.name}_scans.tsv"
+                / f"{sub}_{session_path.name}_scans.tsv"
             )
             tsv_file.unlink(missing_ok=True)
 
-            for mod in (bids_dir / bids_id / session_path.name).glob("*"):
+            for mod in (bids_dir / sub / session_path.name).glob("*"):
                 if mod.name in supported_modalities:
                     for file in [
                         file for file in mod.iterdir() if mod.suffix != ".json"
@@ -677,7 +679,7 @@ def write_scans_tsv(bids_dir: str, bids_ids: List[str], scans_dict: dict) -> Non
                             else _get_pet_tracer_from_filename(file.name)
                         )
                         row_to_append = pd.DataFrame(
-                            scans_dict[bids_id][session_path.name][f_type], index=[0]
+                            scans_dict[sub][session_path.name][f_type], index=[0]
                         )
                         row_to_append.insert(
                             0, "filename", str(Path(mod.name) / Path(file.name))
