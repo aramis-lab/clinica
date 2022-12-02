@@ -783,10 +783,9 @@ def remove_space_and_symbols(data: Union[str, List[str]]) -> Union[str, List[str
     """
     import re
 
-    try:
+    if isinstance(data, list):
         return [remove_space_and_symbols(d) for d in data]
-    except TypeError:
-        return re.sub("[-_ ]", "", data)
+    return re.sub("[-_ ]", "", data)
 
 
 def json_from_dcm(dcm_dir: str, json_path: str) -> None:
