@@ -634,7 +634,7 @@ def write_scans_tsv(bids_dir: str, bids_ids: List[str], scans_dict: dict) -> Non
     bids_dir : str
         Path to the BIDS directory.
 
-    bids_ids : List[str]
+    participant_ids : List[str]
         List of bids ids for which to write the scans TSV files.
 
     scans_dict : dict
@@ -775,9 +775,10 @@ def remove_space_and_symbols(data: Union[str, List[str]]) -> Union[str, List[str
     """
     import re
 
-    if isinstance(data, list):
+    try:
         return [remove_space_and_symbols(d) for d in data]
-    return re.sub("[-_ ]", "", data)
+    except TypeError:
+        return re.sub("[-_ ]", "", data)
 
 
 def json_from_dcm(dcm_dir: str, json_path: str) -> None:
