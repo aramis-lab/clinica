@@ -40,6 +40,7 @@ EXPECTED_README_CONTENT = Template(
 
 def test_create_scans_dict_error(tmp_path):
     from clinica.iotools.bids_utils import create_scans_dict
+
     dataset = "foo"
 
     with pytest.raises(
@@ -59,9 +60,7 @@ def test_get_bids_subjs_list(tmp_path):
     for sub in ("sub-01", "sub-02", "sub-16"):
         (tmp_path / sub).mkdir()
 
-    assert set(get_bids_subjs_list(str(tmp_path))) == {
-        "sub-01", "sub-02", "sub-16"
-    }
+    assert set(get_bids_subjs_list(str(tmp_path))) == {"sub-01", "sub-02", "sub-16"}
 
 
 @pytest.mark.parametrize(
