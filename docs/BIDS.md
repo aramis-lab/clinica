@@ -17,32 +17,32 @@ If you need more details, please check the [documentation](https://bids-specific
 ```Text
 BIDS_Dataset/
 ├── sub-CLNC01/
-│   │   ├── ses-M00/
+│   │   ├── ses-M000/
 │   │   │   ├── anat/
-│   │   │   │   ├── sub-CLNC01_ses-M00_T1w.json
-│   │   │   │   └── sub-CLNC01_ses-M00_T1w.nii.gz
+│   │   │   │   ├── sub-CLNC01_ses-M000_T1w.json
+│   │   │   │   └── sub-CLNC01_ses-M000_T1w.nii.gz
 │   │   │   ├── dwi/
-│   │   │   │   ├── sub-CLNC01_ses-M00_dwi.bval
-│   │   │   │   ├── sub-CLNC01_ses-M00_dwi.bvec
-│   │   │   │   ├── sub-CLNC01_ses-M00_dwi.json
-│   │   │   │   ├── sub-CLNC01_ses-M00_dwi.nii.gz
+│   │   │   │   ├── sub-CLNC01_ses-M000_dwi.bval
+│   │   │   │   ├── sub-CLNC01_ses-M000_dwi.bvec
+│   │   │   │   ├── sub-CLNC01_ses-M000_dwi.json
+│   │   │   │   ├── sub-CLNC01_ses-M000_dwi.nii.gz
 │   │   │   │   └── ...
 │   │   │   ├── fmap/
-│   │   │   │   ├── sub-CLNC01_ses-M00_phasediff.json
-│   │   │   │   ├── sub-CLNC01_ses-M00_phasediff.nii.gz
-│   │   │   │   ├── sub-CLNC01_ses-M00_magnitude1.nii.gz
-│   │   │   │   └── sub-CLNC01_ses-M00_magnitude2.nii.gz
+│   │   │   │   ├── sub-CLNC01_ses-M000_phasediff.json
+│   │   │   │   ├── sub-CLNC01_ses-M000_phasediff.nii.gz
+│   │   │   │   ├── sub-CLNC01_ses-M000_magnitude1.nii.gz
+│   │   │   │   └── sub-CLNC01_ses-M000_magnitude2.nii.gz
 │   │   │   ├── func/
-│   │   │   │   ├── sub-CLNC01_ses-M00_task­-rest_bold.json
-│   │   │   │   ├── sub-CLNC01_ses-M00_task­-rest_bold.nii.gz
+│   │   │   │   ├── sub-CLNC01_ses-M000_task­-rest_bold.json
+│   │   │   │   ├── sub-CLNC01_ses-M000_task­-rest_bold.nii.gz
 │   │   │   │   └── ...
 │   │   │   ├── pet/
-│   │   │   │   ├── sub-CLNC01_ses-M00_trc-11CPIB_pet.json
-│   │   │   │   ├── sub-CLNC01_ses-M00_trc-11CPIB_pet.nii.gz
-│   │   │   │   ├── sub-CLNC01_ses-M00_trc-18FFDG_pet.json
-│   │   │   │   ├── sub-CLNC01_ses-M00_trc-18FFDG_pet.nii.gz
-│   │   │   └── sub-CLNC01_ses-M00_scans.tsv
-│   │   ├── ses-M18/
+│   │   │   │   ├── sub-CLNC01_ses-M000_trc-11CPIB_pet.json
+│   │   │   │   ├── sub-CLNC01_ses-M000_trc-11CPIB_pet.nii.gz
+│   │   │   │   ├── sub-CLNC01_ses-M000_trc-18FFDG_pet.json
+│   │   │   │   ├── sub-CLNC01_ses-M000_trc-18FFDG_pet.nii.gz
+│   │   │   └── sub-CLNC01_ses-M000_scans.tsv
+│   │   ├── ses-M018/
 │   │   │   └── ...
 │   │   └── sub-CLNC01_sessions.tsv
 ├── sub-CLNC02/

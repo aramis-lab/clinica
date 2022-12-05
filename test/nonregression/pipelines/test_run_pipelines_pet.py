@@ -70,10 +70,10 @@ def run_PETVolume(
             / "caps"
             / "subjects"
             / sub
-            / "ses-M00/pet/preprocessing/group-UnitTest"
+            / "ses-M000/pet/preprocessing/group-UnitTest"
             / (
                 sub
-                + f"_ses-M00_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+                + f"_ses-M000_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
             )
         )
         for sub in subjects
@@ -83,7 +83,7 @@ def run_PETVolume(
             ref_dir
             / (
                 sub
-                + f"_ses-M00_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+                + f"_ses-M000_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
             )
         )
         for sub in subjects
@@ -155,9 +155,9 @@ def run_PETSurfaceCrossSectional(
     out_files = [
         (
             output_dir
-            / "caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface"
+            / "caps/subjects/sub-ADNI011S4105/ses-M000/pet/surface"
             / (
-                f"sub-ADNI011S4105_ses-M00_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
+                f"sub-ADNI011S4105_ses-M000_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
                 + h
                 + "_fwhm-"
                 + str(f)
@@ -171,7 +171,7 @@ def run_PETSurfaceCrossSectional(
         (
             ref_dir
             / (
-                f"sub-ADNI011S4105_ses-M00_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
+                f"sub-ADNI011S4105_ses-M000_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
                 + h
                 + "_fwhm-"
                 + str(f)
@@ -252,8 +252,8 @@ def test_run_pet(cmdopt, tmp_path, test_name):
 #
 #     # Check files
 #     part_id = 'sub-ADNI041S1260'
-#     sess_id = 'ses-M24'
-#     long_id = 'long-M00M06M12M18M24'
+#     sess_id = 'ses-M024'
+#     long_id = 'long-M000M006M012M018M024'
 #     image_id = part_id + '_' + sess_id + '_' + long_id
 #     out_files = [join(root, 'out', 'caps', 'subjects', part_id, sess_id, 'pet', long_id, 'surface_longitudinal',
 #                       image_id + f'_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'

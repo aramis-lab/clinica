@@ -31,7 +31,7 @@ You will find this notion when working on longitudinal datasets.
 This is simply a label that will define the set of sessions considered.
 Unlike group, longitudinal template is dedicated to intra-subject analysis.
 Besides, the longitudinal label for a participant is defined concatenating the different session labels in alphabetical order so that the longitudinal label will be unique.
-For instance, if the intra-subject template is computed on `M18` and `M00` sessions, the longitudinal ID will be `long-M00M18`.
+For instance, if the intra-subject template is computed on `M018` and `M000` sessions, the longitudinal ID will be `long-M000M018`.
 
 ## Differences with BIDS
 
@@ -58,33 +58,33 @@ This CAPS folder contains the outputs of the [`dwi-preprocessing-*` pipeline](..
 ```Text
 subjects/
 └─ sub-CLNC01/
-   └─ ses-M00/
+   └─ ses-M000/
       └─ dwi/
          ├─ dti_based_processing/
          │  ├─ atlas_statistics/
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-FA_statistics.tsv
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-MD_statistics.tsv
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-AD_statistics.tsv
-         │  │  └─ sub-CNLC01_ses-M00_dwi_space-JHUTracts0_res-1x1x1_map-RD_statistics.tsv
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-JHUTracts0_res-1x1x1_map-FA_statistics.tsv
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-JHUTracts0_res-1x1x1_map-MD_statistics.tsv
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-JHUTracts0_res-1x1x1_map-AD_statistics.tsv
+         │  │  └─ sub-CNLC01_ses-M000_dwi_space-JHUTracts0_res-1x1x1_map-RD_statistics.tsv
          │  ├─ native_space/
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_model-DTI_diffmodel.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_FA.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_MD.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_AD.nii.gz
-         │  │  ├─ sub-CNLC01_ses-M00_dwi_space-b0_RD.nii.gz
-         │  │  └─ sub-CNLC01_ses-M00_dwi_space-b0_DECFA.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_model-DTI_diffmodel.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-b0_FA.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-b0_MD.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-b0_AD.nii.gz
+         │  │  ├─ sub-CNLC01_ses-M000_dwi_space-b0_RD.nii.gz
+         │  │  └─ sub-CNLC01_ses-M000_dwi_space-b0_DECFA.nii.gz
          │  └─ normalized_space/
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_AD.nii.gz
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_affine.mat
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_deformation.nii.gz
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_FA.nii.gz
-         │     ├─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_MD.nii.gz
-         │     └─ sub-CNLC01_ses-M00_dwi_space-MNI152Lin_res-1x1x1_RD.nii.gz
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_AD.nii.gz
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_affine.mat
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_deformation.nii.gz
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_FA.nii.gz
+         │     ├─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_MD.nii.gz
+         │     └─ sub-CNLC01_ses-M000_dwi_space-MNI152Lin_res-1x1x1_RD.nii.gz
          └─ preprocessing/
-            ├─ sub-CNLC01_ses-M00_dwi_space-b0_brainmask.nii.gz
-            ├─ sub-CNLC01_ses-M00_dwi_space-b0_preproc.bval
-            ├─ sub-CNLC01_ses-M00_dwi_space-b0_preproc.bvec
-            └─ sub-CNLC01_ses-M00_dwi_space-b0_preproc.nii.gz
+            ├─ sub-CNLC01_ses-M000_dwi_space-b0_brainmask.nii.gz
+            ├─ sub-CNLC01_ses-M000_dwi_space-b0_preproc.bval
+            ├─ sub-CNLC01_ses-M000_dwi_space-b0_preproc.bvec
+            └─ sub-CNLC01_ses-M000_dwi_space-b0_preproc.nii.gz
 ```
 
 ### Group level example
@@ -119,55 +119,55 @@ groups/
 
 ### Subject level example with longitudinal analysis
 
-This CAPS folder contains the outputs of longitudinal segmentations performed with FreeSurfer for a fictional participant `CLNC01` at sessions `M00` and `M18`.
+This CAPS folder contains the outputs of longitudinal segmentations performed with FreeSurfer for a fictional participant `CLNC01` at sessions `M000` and `M018`.
 First, the [`t1-freesurfer` pipeline](../../Pipelines/T1_FreeSurfer) is run on the two sessions.
-Then, the [`t1-freesurfer-longitudinal` pipeline](../../Pipelines/T1_FreeSurfer_Longitudinal) will compute the intra-subject template `sub-CLNC01_long-M00M18` using the `M00` and `M18` sessions.
-This template is finally used to longitudinally correct the segmentations, whose results are stored in the `sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18` and `sub-CLNC01_ses-M18.long.sub-CLNC01_long-M00M18` folders.
+Then, the [`t1-freesurfer-longitudinal` pipeline](../../Pipelines/T1_FreeSurfer_Longitudinal) will compute the intra-subject template `sub-CLNC01_long-M000M018` using the `M000` and `M018` sessions.
+This template is finally used to longitudinally correct the segmentations, whose results are stored in the `sub-CLNC01_ses-M00.long.sub-CLNC01_long-M000M018` and `sub-CLNC01_ses-M018.long.sub-CLNC01_long-M000M018` folders.
 
 Of note, the `<time_point_id>.long.<template_id>` naming comes from FreeSurfer when running the longitudinal `recon-all` command.
 
 ```Text
 subjects/
 ├── sub-CLNC01/
-│   ├── long-M00M18/
-│   │   ├── long-M00M18_sessions.tsv
+│   ├── long-M000M018/
+│   │   ├── long-M000M018_sessions.tsv
 │   │   └── freesurfer_unbiased_template/
-│   │       └── sub-CLNC01_long-M00M18/
+│   │       └── sub-CLNC01_long-M000M018/
 │   │           ├── base-tps/
 │   │           ├── label/
 │   │           ├── mri/
 │   │           ├── stats/
 │   │           └── surf/
-│   ├── ses-M00/
+│   ├── ses-M000/
 │   │   └── t1/
 │   │       ├── freesurfer_cross_sectional/
 │   │       │   ├── regional_measures/
-│   │       │   └── sub-CLNC01_ses-M00/
+│   │       │   └── sub-CLNC01_ses-M000/
 │   │       │       ├── label/
 │   │       │       ├── mri/
 │   │       │       ├── stats/
 │   │       │       └── surf/
-│   │       └── long-M00M18/
+│   │       └── long-M000M018/
 │   │           └── freesurfer_longitudinal/
 │   │               ├── regional_measures/
-│   │               └── sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18/
+│   │               └── sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018/
 │   │                   ├── label/
 │   │                   ├── mri/
 │   │                   ├── stats/
 │   │                   └── surf/
-│   └── ses-M18/
+│   └── ses-M018/
 │       └── t1/
 │           ├── freesurfer_cross_sectional/
 │           │   ├── regional_measures/
-│           │   └── sub-CLNC01_ses-M18/
+│           │   └── sub-CLNC01_ses-M018/
 │           │       ├── label/
 │           │       ├── mri/
 │           │       ├── stats/
 │           │       └── surf/
-│           └── long-M00M18
+│           └── long-M000M018
 │               └── freesurfer_longitudinal
 │                   ├── regional_measures
-│                   └── sub-CLNC01_ses-M18.long.sub-CLNC01_long-M00M18/
+│                   └── sub-CLNC01_ses-M018.long.sub-CLNC01_long-M000M018/
 │                       ├── label/
 │                       ├── mri/
 │                       ├── stats/

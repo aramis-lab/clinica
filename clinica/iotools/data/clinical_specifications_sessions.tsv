@@ -117,7 +117,7 @@ Number of words that was not cointaned in the original dataset of words	grober_b
 	clinad_volbrain_cerebrum_l_gm_%		float			Cerebrum L GM %						
 	clinad_volbrain_cerebrum_l_wm_cm3		float			Cerebrum L WM cm3						
 	clinad_volbrain_cerebrum_l_wm_%		float			Cerebrum L WM %						
-	clinad_volbrain_cerebrum_assymetry		float			Cerebrum Assymetry						
+	clinad_volbrain_cerebrum_assymetry		float			Cerebrum Asymmetry						
 	clinad_volbrain_cerebelum_total_cm3		float			Cerebelum Total cm3						
 	clinad_volbrain_cerebelum_total_%		float			Cerebelum Total %						
 	clinad_volbrain_cerebelum_t_gm_cm3		float			Cerebelum T GM cm3						
@@ -136,7 +136,7 @@ Number of words that was not cointaned in the original dataset of words	grober_b
 	clinad_volbrain_cerebelum_l_gm_%		float			Cerebelum L GM %						
 	clinad_volbrain_cerebelum_l_wm_cm3		float			Cerebelum L WM cm3						
 	clinad_volbrain_cerebelum_l_wm_%		float			Cerebelum L WM %						
-	clinad_volbrain_cerebelum_assymetry		float			Cerebelum Assymetry						
+	clinad_volbrain_cerebelum_assymetry		float			Cerebelum Asymmetry						
 	clinad_volbrain_brainstem_cm3		float			Brainstem cm3						
 	clinad_volbrain_brainstem_%		float			Brainstem %						
 	clinad_volbrain_lateral_ventricles_total_cm3		float			Lateral ventricles Total cm3						

@@ -5,10 +5,12 @@ import click
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.t1_volume.tissue_segmentation.pipeline as pydra_t1vol
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 
-pipeline_name = "pydra-t1vol-ts"
+pipeline_name = "pydra-t1-volume-tissue-segmentation"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name, hidden=True)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory

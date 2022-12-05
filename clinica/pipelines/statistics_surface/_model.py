@@ -365,7 +365,7 @@ class CorrelationGLM(GLM):
     ----------
     See documentation for `GLM` class.
 
-    group_label : str, optinal
+    group_label : str, optional
         The label to use for group GLM models. Default=None.
     """
 
@@ -875,7 +875,7 @@ class StatisticsResults(Results):
         threshold_uncorrected_p_value: float,
         threshold_corrected_p_value: float,
     ):
-        """Instanciate from a SLM model.
+        """Instantiate from a SLM model.
 
         Parameters
         ----------
@@ -1027,17 +1027,17 @@ class StatisticsResultsSerializer:
         writer(result)
 
     def _get_writer(self, method: str) -> Callable[[StatisticsResults], None]:
-        """Returns a writter method from its name.
+        """Returns a writer method from its name.
 
         Parameters
         ----------
         method : str
-            The name of the writting method to use.
+            The name of the writing method to use.
 
         Returns
         -------
         Callable :
-            The writting method.
+            The writing method.
         """
         if method.lower() == "json":
             return self._write_to_json

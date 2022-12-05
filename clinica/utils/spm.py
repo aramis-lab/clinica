@@ -81,7 +81,7 @@ def spm_standalone_is_available():
     """Tell if SPM standalone can be used.
 
     Returns:
-        True if SPM standalone is detected, False otherwise. Note that it does not guarentee that SPM (classical) is
+        True if SPM standalone is detected, False otherwise. Note that it does not guarantee that SPM (classical) is
         up and running in the system.
     """
     import os

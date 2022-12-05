@@ -1,6 +1,7 @@
 """Data handling scripts."""
 
 from os import PathLike
+from typing import Iterable, List
 
 import click
 from nibabel.nifti1 import Nifti1Header
@@ -266,7 +267,7 @@ def find_mods_and_sess(bids_dir):
         mods_dict: a dictionary that stores the sessions and modalities found and has the following structure.
     Example:
     {
-        'sessions': ['ses-M00', 'ses-M18'],
+        'sessions': ['ses-M000', 'ses-M018'],
         'fmap': ['fmap'],
         'anat': ['flair', 't1w'],
         'func': ['func_task-rest'],
@@ -803,20 +804,32 @@ def center_nifti_origin(input_image, output_image):
     return output_image, error_str
 
 
-def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
+def center_all_nifti(
+    bids_dir: str,
+    output_dir: str,
+    modalities: Iterable[str] = None,
+    center_all_files: bool = False,
+) -> List[str]:
     """Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
 
     All the files from bids_dir are copied into output_dir, then all the NIfTI images found are replaced by their
     centered version if their center is off the origin by more than 50 mm.
 
-    Args:
-        bids_dir: (str) path to bids directory
-        output_dir: (str) path to EMPTY output directory
-        modality: (list of str) modalities to convert
-        center_all_files: (bool) center only files that may cause problem for SPM if false. If true, center all NIfTI
+    Parameters
+    ----------
+    bids_dir: str
+        Path to the BIDS directory.
+    output_dir: str
+        Path to the output directory where the centered files will be written to.
+    modalities: iterable of str, optional
+        Process these modalities only. Process all modalities otherwise.
+    center_all_files: bool, default=False
+        Center files that may cause problem for SPM if set to False, all files otherwise.
 
-    Returns:
-        List of the centered files
+    Returns
+    -------
+    list of str
+        Centered NIfTI files.
     """
     from glob import glob
     from os import listdir
@@ -846,11 +859,15 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     #   For each file:
     #       if any modality name (lowercase) is found in the basename of the file:
     #           keep the file
-    nifti_files_filtered = [
-        f
-        for f in nifti_files
-        if any(elem.lower() in basename(f).lower() for elem in modality)
-    ]
+    nifti_files_filtered = (
+        [
+            f
+            for f in nifti_files
+            if any(elem.lower() in basename(f).lower() for elem in modalities)
+        ]
+        if modalities
+        else nifti_files
+    )
 
     # Remove those who are centered
     if not center_all_files:
@@ -1024,22 +1041,19 @@ def check_volume_location_in_world_coordinate_system(
     ----
     nifti_list: list
         list of path to nifti files or path
-    bids_dir: str
+    bids_dir: PathLike
         path to bids directory associated with this check
     modality: str, optional
-        the modality of the image. Default="t1w".
+        the modality of the image. Default='t1w'.
     skip_question: bool, optional
         if True, assume answer is yes. Default=False.
-
     Returns
     -------
     bool
         True if they are centered, False otherwise
-
     Warns
     ------
-    If volume is not centered on origin of the world coordinate system.
-
+    If volume is not centered on origin of the world coordinate system
     Notes
     -----
     the NIfTI file list provided in argument are approximately centered around the origin of the

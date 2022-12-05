@@ -68,7 +68,7 @@ class T1FreeSurfer(cpe.Pipeline):
 
         Note:
             The list of outputs of the T1FreeSurfer pipeline is:
-                * image_id (str): Image ID (e.g. sub-CLNC01_ses-M00)
+                * image_id (str): Image ID (e.g. sub-CLNC01_ses-M000)
 
         Returns:
             A list of (string) output fields name.
@@ -225,7 +225,7 @@ class T1FreeSurfer(cpe.Pipeline):
         # Nodes declaration
         # =================
         # Initialize the pipeline
-        #   - Extract <image_id> (e.g. sub-CLNC01_ses-M00) T1w filename;
+        #   - Extract <image_id> (e.g. sub-CLNC01_ses-M000) T1w filename;
         #   - Check FOV of T1w;
         #   - Create <subjects_dir> folder in <WD>/<Pipeline.name>/ReconAll/<image_id>/;
         #   - Print begin execution message.

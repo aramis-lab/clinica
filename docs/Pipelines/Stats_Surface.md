@@ -125,14 +125,14 @@ The TSV file containing the participants and covariates will look like this:
 
 ```Text
 participant_id    session_id    sex       group    age
-sub-CLNC0001      ses-M00       Female    CN       71.1
-sub-CLNC0002      ses-M00       Male      CN       81.3
-sub-CLNC0003      ses-M00       Male      CN       75.4
-sub-CLNC0004      ses-M00       Female    CN       73.9
-sub-CLNC0005      ses-M00       Female    AD       64.1
-sub-CLNC0006      ses-M00       Male      AD       80.1
-sub-CLNC0007      ses-M00       Male      AD       78.3
-sub-CLNC0008      ses-M00       Female    AD       73.2
+sub-CLNC0001      ses-M000       Female    CN       71.1
+sub-CLNC0002      ses-M000       Male      CN       81.3
+sub-CLNC0003      ses-M000       Male      CN       75.4
+sub-CLNC0004      ses-M000       Female    CN       73.9
+sub-CLNC0005      ses-M000       Female    AD       64.1
+sub-CLNC0006      ses-M000       Male      AD       80.1
+sub-CLNC0007      ses-M000       Male      AD       78.3
+sub-CLNC0008      ses-M000       Female    AD       73.2
 ```
 
 Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file.
@@ -177,7 +177,7 @@ clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation A
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph (group comparison):"
-    Theses results have been obtained using the `statistics-surface` command of Clinica [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
+    These results have been obtained using the `statistics-surface` command of Clinica [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
     More precisely, a point-wise, vertex-to-vertex model based on the Matlab SurfStat toolbox (<http://www.math.mcgill.ca/keith/surfstat/>) was used to conduct a group comparison of whole brain cortical thickness.
     The data were smoothed using a Gaussian kernel with a full width at half maximum (FWHM) set to `<FWHM>` mm.
     The general linear model was used to control for the effect of `<covariate_1>`, ... and `<covariate_N>`.
@@ -207,7 +207,7 @@ Here is the generic link to the surface data files:
 
     `CAPS/subjects/sub-*/ses-M*/t1/freesurfer_cross_sectional/sub-*_ses-M*/surf/*h.thickness.fwhm*.fsaverage.mgh`
 
-    Example: `CAPS/subjects/sub-ADNI011S4075/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4075_ses-M00/surf/lh.thickness.fwhm15.fsaverage.mgh`
+    Example: `CAPS/subjects/sub-ADNI011S4075/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4075_ses-M000/surf/lh.thickness.fwhm15.fsaverage.mgh`
 
     Note that the file must be in the `CAPS/subjects` directory.
     So my `CUSTOM_STRING` must only describe the path starting after the `subjects` folder.

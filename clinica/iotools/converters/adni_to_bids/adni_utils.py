@@ -607,7 +607,7 @@ def update_age(row):
     """Update age with time passed since bl to current visit"""
     from datetime import datetime
 
-    if row["session_id"] != "ses-M00":
+    if row["session_id"] != "ses-M000":
         examdate = datetime.strptime(row["EXAMDATE"], "%Y-%m-%d")
         examdate_bl = datetime.strptime(row["EXAMDATE_bl"], "%Y-%m-%d")
         delta = examdate - examdate_bl
@@ -634,6 +634,8 @@ def pad_id(ref_id):
 def get_visit_id(row, location):
     """Return a common visit ID across different files"""
     import pandas as pd
+
+    from clinica.iotools.converter_utils import viscode_to_session
 
     locations_visicode2 = [
         "ADAS_ADNIGO2.csv",
@@ -1049,6 +1051,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
     from numpy import nan
 
     from clinica.iotools.bids_utils import run_dcm2niix
+    from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
@@ -1256,34 +1259,23 @@ def create_file(image, modality, bids_dir, mod_to_update):
         return nan
 
 
-def viscode_to_session(viscode):
-    """Replace the session label 'bl' with 'M00' or capitalize the session name passed as input.
+def session_to_viscode(session_name: str) -> str:
+    """Replace the session name passed as input with the session label 'bl' or 'mXXX'.
 
-    Args:
-        viscode: session name
+    Parameters
+    ----------
+    session_name: str
+        Name of the session (MXXX).
 
-    Returns:
-        M00 if is the baseline session or the original session name capitalized
+    Returns
+    -------
+    str:
+        'bl' if is the baseline session or the original session name.
     """
-    if viscode == "bl" or viscode == "m0":
-        return "ses-M00"
-    else:
-        return "ses-" + viscode.capitalize()
-
-
-def session_to_viscode(session_name):
-    """Replace the session label 'bl' with 'M00' or capitalize the session name passed as input.
-
-    Args:
-        session_name: MXX
-
-    Returns:
-        M00 if is the baseline session or the original session name capitalized
-    """
-    if session_name == "M00":
+    if session_name == "M000":
         return "bl"
     else:
-        return session_name.lower()
+        return f"m{(int(session_name[1:])):02d}"
 
 
 def check_two_dcm_folder(dicom_path, bids_folder, image_uid):

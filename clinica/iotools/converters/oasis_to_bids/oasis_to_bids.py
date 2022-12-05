@@ -50,10 +50,10 @@ class OasisToBids(Converter):
             clinical_data_dir, bids_dir, "OASIS", clinic_specs_path, bids_ids, "ID"
         )
         for y in bids_ids:
-            if sessions_dict[y]["M00"]["diagnosis"] > 0:
-                sessions_dict[y]["M00"]["diagnosis"] = "AD"
+            if sessions_dict[y]["M000"]["diagnosis"] > 0:
+                sessions_dict[y]["M000"]["diagnosis"] = "AD"
             else:
-                sessions_dict[y]["M00"]["diagnosis"] = "CN"
+                sessions_dict[y]["M000"]["diagnosis"] = "CN"
 
         bids.write_sessions_tsv(bids_dir, sessions_dict)
 
@@ -104,14 +104,16 @@ class OasisToBids(Converter):
         if not path.isdir(bids_subj_folder):
             os.mkdir(bids_subj_folder)
 
-        session_folder = path.join(bids_subj_folder, "ses-M00")
+        session_folder = path.join(bids_subj_folder, "ses-M000")
         if not os.path.isdir(session_folder):
             os.mkdir(path.join(session_folder))
             os.mkdir(path.join(session_folder, "anat"))
 
         # In order do convert the Analyze format to Nifti the path to the .img file is required
         img_file_path = str(next(Path(t1_folder).glob("*.img")))
-        output_path = path.join(session_folder, "anat", bids_id + "_ses-M00_T1w.nii.gz")
+        output_path = path.join(
+            session_folder, "anat", bids_id + "_ses-M000_T1w.nii.gz"
+        )
 
         # First, convert to Nifti so that we can extract the s_form with NiBabel
         # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method

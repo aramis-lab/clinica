@@ -15,10 +15,10 @@ def container_from_filename(bids_or_caps_filename: str) -> str:
 
     Examples:
        >>> from clinica.utils.nipype import container_from_filename
-       >>> container_from_filename('/path/to/bids/sub-CLNC01/ses-M00/anat/sub-CLNC01_ses-M00_T1w.nii.gz')
-               'subjects/sub-CLNC01/ses-M00'
-       >>> container_from_filename('caps/subjects/sub-CLNC01/ses-M00/dwi/preprocessing/sub-CLNC01_ses-M00_preproc.nii')
-               'subjects/sub-CLNC01/ses-M00'
+       >>> container_from_filename('/path/to/bids/sub-CLNC01/ses-M000/anat/sub-CLNC01_ses-M000_T1w.nii.gz')
+               'subjects/sub-CLNC01/ses-M000'
+       >>> container_from_filename('caps/subjects/sub-CLNC01/ses-M000/dwi/preprocessing/sub-CLNC01_ses-M000_preproc.nii')
+               'subjects/sub-CLNC01/ses-M000'
     """
     import os
     import re

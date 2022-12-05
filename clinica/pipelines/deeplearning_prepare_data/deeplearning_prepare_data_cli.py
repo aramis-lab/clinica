@@ -1,6 +1,9 @@
 import click
 
+from clinica.pipelines.engine import clinica_pipeline
 
+
+@clinica_pipeline
 @click.command(
     "deeplearning-prepare-data",
     deprecated=True,

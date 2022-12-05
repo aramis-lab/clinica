@@ -181,7 +181,7 @@ def compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir):
 def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
     """
     One image among those in the input list is chosen according to QC
-    and then correspoding metadata is extracted to a dictionary.
+    and then corresponding metadata is extracted to a dictionary.
 
     Args:
         subject_id: Subject identifier

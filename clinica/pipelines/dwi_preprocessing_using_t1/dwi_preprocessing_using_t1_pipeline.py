@@ -62,6 +62,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
         self.parameters.setdefault("use_cuda", False)
         self.parameters.setdefault("initrand", False)
+        self.parameters.setdefault("delete_cache", False)
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -304,7 +305,12 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             initrand=self.parameters["initrand"],
         )
         # Susceptibility distortion correction using T1w image
-        sdc = epi_pipeline(name="SusceptibilityDistortionCorrection")
+        sdc = epi_pipeline(
+            self.base_dir,
+            self.parameters["delete_cache"],
+            name="SusceptibilityDistortionCorrection",
+        )
+
         # Remove bias correction from (Jeurissen et al., 2014)
         bias = npe.Node(
             mrtrix3.DWIBiasCorrect(

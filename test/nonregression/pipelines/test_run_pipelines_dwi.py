@@ -85,13 +85,13 @@ def run_DWIPreprocessingUsingT1(
         caps_dir
         / "subjects"
         / "sub-PREVDEMALS0010025PG"
-        / "ses-M00"
+        / "ses-M000"
         / "dwi"
         / "preprocessing"
-        / "sub-PREVDEMALS0010025PG-ses-M00_dwi_space-T1w_preproc.nii.gz"
+        / "sub-PREVDEMALS0010025PG-ses-M000_dwi_space-T1w_preproc.nii.gz"
     )
     ref_file = fspath(
-        ref_dir / "sub-PREVDEMALS0010025PG_ses-M00_dwi_space-T1w_preproc.nii.gz"
+        ref_dir / "sub-PREVDEMALS0010025PG_ses-M000_dwi_space-T1w_preproc.nii.gz"
     )
 
     assert similarity_measure(out_file, ref_file, 0.97)
@@ -115,6 +115,7 @@ def run_DWIPreprocessingUsingPhaseDiffFieldmap(
         "initrand": True,
         "low_bval": 5,
         "use_cuda": False,
+        "delete_cache": True,
     }
     pipeline = DwiPreprocessingUsingPhaseDiffFMap(
         bids_directory=fspath(input_dir / "bids"),
@@ -131,13 +132,13 @@ def run_DWIPreprocessingUsingPhaseDiffFieldmap(
         caps_dir
         / "subjects"
         / "sub-PREVDEMALS0010025PG"
-        / "ses-M00"
+        / "ses-M000"
         / "dwi"
         / "preprocessing"
-        / "sub-PREVDEMALS0010025PG_ses-M00_dwi_space-b0_preproc.nii.gz"
+        / "sub-PREVDEMALS0010025PG_ses-M000_dwi_space-b0_preproc.nii.gz"
     )
     ref_file = fspath(
-        ref_dir / "sub-PREVDEMALS0010025PG_ses-M00_dwi_space-b0_preproc.nii.gz"
+        ref_dir / "sub-PREVDEMALS0010025PG_ses-M000_dwi_space-b0_preproc.nii.gz"
     )
 
     assert similarity_measure(out_file, ref_file, 0.95)
@@ -175,13 +176,13 @@ def run_DWIDTI(
             caps_dir
             / "subjects"
             / subject_id
-            / "ses-M00"
+            / "ses-M000"
             / "dwi"
             / "dti_based_processing"
             / "atlas_statistics"
             / (
                 subject_id
-                + "_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-"
+                + "_ses-M000_dwi_space-JHUDTI81_res-1x1x1_map-"
                 + m
                 + "_statistics.tsv"
             )
@@ -236,7 +237,7 @@ def run_DWIConnectome(
     # Check files
     atlases = ["desikan", "destrieux"]
     subject_id = "sub-PREVDEMALS0010025PG"
-    session_id = "ses-M00"
+    session_id = "ses-M000"
 
     out_fod_file = fspath(
         caps_dir

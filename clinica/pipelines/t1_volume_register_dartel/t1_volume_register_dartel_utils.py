@@ -119,6 +119,10 @@ def prepare_dartel_input_images(dartel_input_images):
     return [[[tissue] for tissue in subject] for subject in zip(*dartel_input_images)]
 
 
+def prepare_dartel_input_images_pydra(dartel_input_images):
+    return [[x] for x in dartel_input_images]
+
+
 def create_iteration_parameters(dartel_templates, iteration_parameters):
 
     if len(dartel_templates) != 6:

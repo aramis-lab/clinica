@@ -3,10 +3,12 @@ import click
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.t1_linear.t1_linear as pydra_t1_linear
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "pydra-t1-linear"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name, hidden=True)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory

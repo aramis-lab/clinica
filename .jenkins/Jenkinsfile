@@ -16,6 +16,7 @@ pipeline {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
             PATH = "$HOME/.local/bin:$PATH"
+            POETRY = "poetry"
           }
           stages {
             stage('Build environment') {
@@ -26,6 +27,13 @@ pipeline {
                   make env.conda
                   conda activate "${CONDA_ENV}"
                   conda info
+                  if ! command -v $POETRY &> /dev/null
+                  then
+                    echo "$POETRY could not be found"
+                    exit
+                  else
+                    echo "$($POETRY --version) installed at : $(which $POETRY)"
+                  fi
                 '''
               }
             }
@@ -294,37 +302,6 @@ pipeline {
               cleanWs()
             }
           }
-        }
-      }
-    }
-    stage('Deploy') {
-      agent {
-        label 'ubuntu'
-      }
-      when {
-        buildingTag()
-      }
-      environment {
-        CONDA_ENV = "$WORKSPACE/env"
-        CONDA_HOME = "$HOME/miniconda"
-        PATH = "$HOME/.local/bin:$PATH"
-      }
-      steps {
-        withCredentials(
-          [
-            usernamePassword(
-              credentialsId: 'jenkins-token-for-pypi-clinica',
-              usernameVariable: 'USERNAME',
-              passwordVariable: 'PASSWORD'
-            )
-          ]
-        ) {
-          sh '''
-            source "${CONDA_HOME}/etc/profile.d/conda.sh"
-            conda create -y -p "${CONDA_ENV}" python=3.9
-            conda activate "${CONDA_ENV}"
-            poetry publish --build -u "${USERNAME}" -p "${PASSWORD}"
-          '''
         }
       }
     }

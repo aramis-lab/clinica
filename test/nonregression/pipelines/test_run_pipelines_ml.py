@@ -183,13 +183,13 @@ def run_SpatialSVM(
                 caps_dir
                 / "subjects"
                 / sub
-                / "ses-M00"
+                / "ses-M000"
                 / "machine_learning"
                 / "input_spatial_svm"
                 / "group-ADNIbl"
                 / (
                     sub
-                    + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
+                    + "_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
                 )
             )
         ).get_fdata(dtype="float32")
@@ -201,7 +201,7 @@ def run_SpatialSVM(
                 ref_dir
                 / (
                     sub
-                    + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
+                    + "_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
                 )
             )
         ).get_fdata(dtype="float32")

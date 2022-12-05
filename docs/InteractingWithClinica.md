@@ -25,16 +25,16 @@ See [here](../DatabasesToBIDS) for more details.
             └── sub-CLNC0001_trc-18FFDG_pet.nii.gz
     ```
     Clinica will propose you to create a new BIDS dataset with a fake timepoint.
-    This will result to a new dataset ressembling to:
+    This will result to a new dataset resembling to:
     ```Text
     BIDS
     └── sub-CLNC0001
         └── ses-M00
             ├── anat
-            │   └── sub-CLNC0001_ses-M00_T1w.nii.gz
+            │   └── sub-CLNC0001_ses-M000_T1w.nii.gz
             └── pet
-                ├── sub-CLNC0001_ses-M00_trc-18FFDG_pet.json
-                └── sub-CLNC0001_ses-M00_trc-18FFDG_pet.nii.gz
+                ├── sub-CLNC0001_ses-M000_trc-18FFDG_pet.json
+                └── sub-CLNC0001_ses-M000_trc-18FFDG_pet.nii.gz
     ```
 
 !!! tip
@@ -70,10 +70,8 @@ clinica run modality-pipeline bids_directory caps_directory -tsv my_participants
 "modality" is a prefix that corresponds to the data modality (e.g. T1, DWI, fMRI, PET) or to the category of processing (machine learning, statistics...).
 If you execute `clinica run --help`, you can see the list of `modality-pipeline` available: they correspond to the different pipelines displayed on the [main page of the documentation](..).
 
-<!-- ### clinica visualize
-
 !!! note
-    We are currently rewriting this section. We will update this section ASAP. -->
+    Clinica run logs are written in the current working directory by default. A different directory may be specified by setting the `CLINICA_LOGGING_DIR` environment variable.
 
 ### `clinica convert`
 
@@ -130,13 +128,13 @@ where your TSV file looks as follows:
 
 ```text
 participant_id  session_id
-sub-CLNC0001    ses-M00
-sub-CLNC0001    ses-M18
-sub-CLNC0001    ses-M36
-sub-CLNC0002    ses-M00
-sub-CLNC0002    ses-M18
-sub-CLNC0002    ses-M36
-sub-CLNC0003    ses-M00
+sub-CLNC0001    ses-M000
+sub-CLNC0001    ses-M018
+sub-CLNC0001    ses-M036
+sub-CLNC0002    ses-M000
+sub-CLNC0002    ses-M018
+sub-CLNC0002    ses-M036
+sub-CLNC0003    ses-M000
 ```
 <!-- Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file. -->
 

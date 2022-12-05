@@ -23,7 +23,7 @@ APOE (number of E4 alleles)	apoe4	Number: 0; 1; 2 (number of E4 alleles)	int	APO
 Genotype (Allele 1)	apoe_gen1	Number: 2; 3; 4		APGEN1	APOERES.csv
 Genotype (Allele 2)	apoe_gen2	Number: 2; 3; 4		APGEN2	APOERES.csv
 Rey's Auditory Verbal Learning Test - immediate	ravlt_immediate_bl	Number (int)		RAVLT_immediate_bl	ADNIMERGE.csv
-MOntreal Cognitive Assessment Test	moca_bl	Numer (int)		MOCA_bl	ADNIMERGE.csv
+MOntreal Cognitive Assessment Test	moca_bl	Number (int)		MOCA_bl	ADNIMERGE.csv
 Trails B	trabscor_bl			TRABSCOR_bl	ADNIMERGE.csv
 ADNI modified Preclinical Alzheimer's Cognitive Composite (PACC) with Digit Symbol Substitution	mpaccdigit_bl			mPACCdigit_bl	ADNIMERGE.csv
 ADNI modified Preclinical Alzheimer's Cognitive Composite (PACC) with Trails B	mpacctrails_bl			mPACCtrailsB_bl	ADNIMERGE.csv

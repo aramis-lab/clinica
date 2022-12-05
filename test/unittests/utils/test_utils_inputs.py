@@ -170,7 +170,7 @@ def test_check_information():
 
     with pytest.raises(
         TypeError,
-        match="A dict must be provided for the argument 'information'",
+        match="A dict or list of dicts must be provided for the argument 'information'",
     ):
         _check_information(42)  # noqa
 

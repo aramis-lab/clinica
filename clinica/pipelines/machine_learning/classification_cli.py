@@ -3,11 +3,13 @@ from typing import List, Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 from clinica.utils.atlas import T1_VOLUME_ATLASES
 
 pipeline_name = "machinelearning-classification"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label

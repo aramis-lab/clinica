@@ -77,7 +77,7 @@ The data needs to be formatted before downloading by following the step-by-step 
 
 To download the images of the OASIS-3 dataset:
 
-1. From the page on which you were to donwload the clinical date, click on "Download Images" button. You will have a download interface with different options, such as shown below.
+1. From the page on which you were to download the clinical date, click on "Download Images" button. You will have a download interface with different options, such as shown below.
 
 <img width="959" alt="Screenshot 2021-07-15 at 10 48 45" src="https://user-images.githubusercontent.com/85217698/125761542-bfcfb824-af4f-4e0d-b597-510418986313.png">
 
@@ -89,7 +89,7 @@ To download the images of the OASIS-3 dataset:
     
     b. For the "Scan Types", select only T1w and pet, since it is the only format converted right now.
     
-    c. For the "Additionnal Ressources", select BIDS.
+    c. For the "Additional Resources", select BIDS.
     
     d. For the "Assessments", do not select anything.
     

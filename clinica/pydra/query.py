@@ -69,7 +69,7 @@ class Query:
 
             {"label" : {query dict} or list of query dicts}
 
-            example: {"T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}}
+            example: {"T1w": {"suffix": "T1w", "extension": [".nii.gz"]}}
 
         Parameters
         ----------
@@ -150,11 +150,12 @@ class BIDSQuery(Query):
     >>> len(q)
     1
     >>> q.query
-    {'T1w': {'datatype': 'anat', 'suffix': 'T1w', 'extension': ['.nii.gz']}}
+    {'T1w': {'suffix': 'T1w', 'extension': ['.nii.gz']}}
     """
 
     _default_queries = {
-        "T1w": {"datatype": "anat", "suffix": "T1w", "extension": [".nii.gz"]}
+        "T1w": {"suffix": "T1w", "extension": [".nii.gz"]},
+        "pet": {"suffix": "pet", "extension": [".nii.gz"]},
     }
 
     def parse_query(self, query: Dict) -> Dict:
@@ -252,6 +253,7 @@ class CAPSFileQuery(CAPSQuery):
     """
 
     from clinica.utils.input_files import (
+        t1_volume_dartel_input_tissue,
         t1_volume_deformation_to_template,
         t1_volume_native_tpm,
         t1_volume_native_tpm_in_mni,
@@ -261,6 +263,7 @@ class CAPSFileQuery(CAPSQuery):
         "mask_tissues": t1_volume_native_tpm_in_mni,
         "flow_fields": t1_volume_deformation_to_template,
         "pvc_mask_tissues": t1_volume_native_tpm,
+        "dartel_input_tissue": t1_volume_dartel_input_tissue,
     }
 
 
@@ -287,10 +290,14 @@ class CAPSGroupQuery(CAPSQuery):
     }
     """
 
-    from clinica.utils.input_files import t1_volume_final_group_template
+    from clinica.utils.input_files import (
+        t1_volume_final_group_template,
+        t1_volume_i_th_iteration_group_template,
+    )
 
     _query_makers = {
         "dartel_template": t1_volume_final_group_template,
+        "dartel_iteration_templates": t1_volume_i_th_iteration_group_template,
     }
 
 

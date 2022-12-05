@@ -3,10 +3,12 @@ from typing import Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "machinelearning-prepare-spatial-svm"
 
 
+@clinica_pipeline
 @click.command(pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
