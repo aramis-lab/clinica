@@ -277,7 +277,7 @@ class PETLinear(cpe.Pipeline):
         )
         concatenate_node = npe.Node(
             interface=nutil.Function(
-                input_names=["pet_to_t1w_tranform", "t1w_to_mni_tranform"],
+                input_names=["pet_to_t1w_transform", "t1w_to_mni_transform"],
                 output_names=["transforms_list"],
                 function=utils.concatenate_transforms,
             ),
@@ -344,11 +344,11 @@ class PETLinear(cpe.Pipeline):
             name="cropNifti",
             interface=nutil.Function(
                 function=utils.crop_nifti,
-                input_names=["input_img", "ref_crop"],
+                input_names=["input_img", "ref_img"],
                 output_names=["output_img"],
             ),
         )
-        crop_nifti_node.inputs.ref_crop = self.ref_crop
+        crop_nifti_node.inputs.ref_img = self.ref_crop
 
         # 5. Print end message
         print_end_message = npe.Node(
@@ -374,8 +374,8 @@ class PETLinear(cpe.Pipeline):
                 (self.input_node, ants_registration_node, [("t1w", "fixed_image")]),
                 (init_node, ants_registration_node, [("pet", "moving_image")]),
                 # STEP 2
-                (ants_registration_node, concatenate_node, [("out_matrix", "pet_to_t1w_tranform")]),
-                (self.input_node, concatenate_node, [("t1w_to_mni", "t1w_to_mni_tranform")]),
+                (ants_registration_node, concatenate_node, [("out_matrix", "pet_to_t1w_transform")]),
+                (self.input_node, concatenate_node, [("t1w_to_mni", "t1w_to_mni_transform")]),
                 (self.input_node, ants_applytransform_node, [("pet", "input_image")]),
                 (concatenate_node, ants_applytransform_node, [("transforms_list", "transforms")]),
                 # STEP 3
