@@ -170,11 +170,6 @@ def parse_imaging_data(paths: List[Tuple[str, str]]) -> Optional[DataFrame]:
     return dataframe
 
 
-def write_to_tsv(dataframe: DataFrame, buffer: TextIOBase) -> None:
-    """Save the input dataframe to a BIDS-compliant TSV format."""
-    dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
-
-
 def install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
     """Install a NIfTI file from a source archive to the target BIDS path."""
     import fsspec
@@ -195,6 +190,7 @@ def write_bids(
     from pandas import notna
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
+    from clinica.iotools.bids_utils import write_to_tsv
 
     participants = (
         clinical_data["Demographics"]
