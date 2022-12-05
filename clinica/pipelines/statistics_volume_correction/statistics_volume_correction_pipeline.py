@@ -2,7 +2,7 @@ import clinica.pipelines.engine as cpe
 
 
 class StatisticsVolumeCorrection(cpe.Pipeline):
-    """StatisticsVolumeCorrection - Statistical correction of Statistical correction of StatisticsVolume pipeline.
+    """StatisticsVolumeCorrection - Statistical correction of StatisticsVolume pipeline.
 
     Returns:
         A clinica pipeline object containing the StatisticsVolumeCorrection pipeline.
