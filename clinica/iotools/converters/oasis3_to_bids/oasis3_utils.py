@@ -260,11 +260,6 @@ def dataset_to_bids(
     return df_participants, df_session, df_scan
 
 
-def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
-    # Save dataframe as a BIDS-compliant TSV file.
-    dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
-
-
 def install_bids(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     from pathlib import Path
 
@@ -306,6 +301,7 @@ def write_bids(
     from fsspec.implementations.local import LocalFileSystem
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
+    from clinica.iotools.bids_utils import write_to_tsv
 
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
