@@ -39,8 +39,6 @@ def cli(
     suvr_reference_region: str,
     uncropped_image: bool = False,
     save_pet_in_t1w_space: bool = False,
-    subjects_sessions_tsv: Optional[str] = None,
-    working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
     """Affine registration of PET images to the MNI standard space (Pydra engine).
@@ -70,12 +68,6 @@ def cli(
     save_pet_in_t1w_space : bool, optional
         Save PET imaging data registered to corresponding T1 space. Default=False.
 
-    subjects_sessions_tsv : str, optional
-        Process this list of subject - session pairs only.
-
-    working_directory : str, optional
-        Save intermediate results to this working directory.
-
     n_procs : int, optional
         Number of processes to use.
     """
@@ -89,8 +81,6 @@ def cli(
         name="pet-linear-pydra",
         input_dir=bids_directory,
         output_dir=caps_directory,
-        # tsv_file=subjects_sessions_tsv,
-        # base_dir=working_directory,
         parameters=parameters,
     )
     pydra_utils.run(pipeline)
