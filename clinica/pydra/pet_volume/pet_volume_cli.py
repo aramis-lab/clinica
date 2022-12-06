@@ -52,6 +52,7 @@ pipeline_name = "pydra-pet-volume"
     ),
 )
 @cli_param.option.smooth
+@cli_param.option.n_procs
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -63,6 +64,7 @@ def cli(
     mask_threshold: float = 0.3,
     pvc_mask_tissues: List[int] = (1, 2, 3),
     smooth: Union[float, List[float], List[List[float]]] = 8.0,
+    n_procs: Optional[int] = None,
 ) -> None:
     """SPM-based pre-processing of PET images (Pydra engine).
 
@@ -98,7 +100,7 @@ def cli(
         output_dir=caps_directory,
         parameters=parameters,
     )
-    pydra_utils.run(pipeline)
+    pydra_utils.run(pipeline, n_procs=n_procs)
 
 
 if __name__ == "__main__":

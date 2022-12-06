@@ -45,7 +45,7 @@ def cli(
         output_dir=caps_directory,
         parameters=parameters,
     )
-    pydra_utils.run(t1_volume_create_dartel_pipeline)
+    pydra_utils.run(t1_volume_create_dartel_pipeline, n_procs=n_procs)
 
 
 if __name__ == "__main__":

@@ -55,7 +55,7 @@ def cli(
         output_dir=caps_directory,
         parameters=parameters,
     )
-    pydra_utils.run(t1_volume_tissue_segmentation_pipeline)
+    pydra_utils.run(t1_volume_tissue_segmentation_pipeline, n_procs=n_procs)
 
 
 if __name__ == "__main__":
