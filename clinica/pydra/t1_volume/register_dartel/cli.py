@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import click
 
@@ -17,7 +17,7 @@ pipeline_name = "pydra-t1-volume-register-dartel"
 # @cli_param.option_group.common_pipelines_options
 # @cli_param.option.subjects_sessions_tsv
 # @cli_param.option.working_directory
-# @cli_param.option.n_procs
+@cli_param.option.n_procs
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.dartel_tissues
 def cli(
@@ -25,6 +25,7 @@ def cli(
     caps_directory: str,
     group_label: str,
     dartel_tissues: List[int] = (1, 2, 3),
+    n_procs: Optional[int] = None,
 ) -> None:
     """Inter-subject registration using an existing Dartel template (Pydra engine).
 
@@ -52,6 +53,9 @@ def cli(
 
         Default=[1, 2, 3].
 
+    n_procs : int, optional
+        Number of processes to use.
+
     Notes
     -----
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
@@ -66,4 +70,4 @@ def cli(
         output_dir=caps_directory,
         parameters=parameters,
     )
-    pydra_utils.run(t1_volume_tissue_segmentation_pipeline)
+    pydra_utils.run(t1_volume_tissue_segmentation_pipeline, n_procs=n_procs)

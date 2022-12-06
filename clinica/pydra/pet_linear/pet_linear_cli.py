@@ -83,7 +83,7 @@ def cli(
         output_dir=caps_directory,
         parameters=parameters,
     )
-    pydra_utils.run(pipeline)
+    pydra_utils.run(pipeline, n_procs=n_procs)
 
 
 if __name__ == "__main__":
