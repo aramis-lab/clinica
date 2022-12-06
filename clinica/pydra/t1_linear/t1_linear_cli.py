@@ -14,6 +14,7 @@ pipeline_name = "pydra-t1-linear"
 @click.command(name=pipeline_name, hidden=True)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
+@cli_param.option_group.common_pipelines_options
 @cli_param.option.n_procs
 def cli(
     bids_directory: str,
