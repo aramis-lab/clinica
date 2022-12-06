@@ -19,6 +19,16 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
     dict :
         Cleaned dictionary of parameters.
     """
+    from clinica.utils.group import check_group_label
+
+    if "group_label" not in parameters:
+        raise KeyError("Missing compulsory group_label key in pipeline parameter.")
+    check_group_label(parameters["group_label"])
+    parameters.setdefault("tissues", [1, 2, 3])
+    parameters.setdefault("voxel_size", None)
+    parameters.setdefault("modulate", True)
+    parameters.setdefault("smooth", 8.0)
+
     return parameters
 
 
@@ -48,18 +58,21 @@ def t1volume_dartel2mni(
         fields=[
             ("_graph_checksums", Any),
             (
-                "dartel_input_tissue",
+                "tissues",
                 dict,
-                {"tissue_number": parameters["dartel_tissues"]},
+                {"tissue_number": parameters["tissues"]},
+                {"mandatory": False},
+            ),
+            (
+                "flow_fields",
+                dict,
+                {"group_label": parameters["group_label"]},
                 {"mandatory": True},
             ),
             (
-                "dartel_iteration_templates",
+                "dartel_template",
                 dict,
-                {
-                    "group_label": parameters["group_label"],
-                    "i": range(1, 7),
-                },
+                {"group_label": parameters["group_label"]},
                 {"mandatory": True},
             ),
         ],
@@ -68,9 +81,9 @@ def t1volume_dartel2mni(
     wf = Workflow(name, input_spec=input_spec)
     wf.split("in_file")
     compressed_inputs = [
-        "native_segmentations",
-        "flowfield_files",
-        "template_file",
+        "tissues",
+        "flow_fields",
+        "dartel_template",
     ]
     # Unzipping
     for input_name in compressed_inputs:

@@ -14,6 +14,14 @@ pipeline_name = "pydra-t1-volume-dartel2mni"
 @click.command(name=pipeline_name, hidden=True)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
+@cli_param.argument.group_label
+@cli_param.option_group.pipeline_specific_options
+@cli_param.option.smooth
+@cli_param.option_group.advanced_pipeline_options
+@cli_param.option.tissues
+@cli_param.option.modulate
+@cli_param.option.voxel_size
+@cli_param.option.n_procs
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -47,7 +55,7 @@ def cli(
         output_dir=caps_directory,
         parameters=parameters,
     )
-    pydra_utils.run(pipeline)
+    pydra_utils.run(pipeline, n_procs=n_procs)
 
 
 if __name__ == "__main__":
