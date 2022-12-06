@@ -1,4 +1,5 @@
 from os import PathLike
+from typing import Optional
 
 from pydra import Submitter, Workflow
 from pydra.engine.specs import Result
