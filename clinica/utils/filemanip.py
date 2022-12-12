@@ -5,6 +5,7 @@ def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
     import gzip
     import operator
     import shutil
+    from collections.abc import Iterable
     from os import getcwd
     from os.path import abspath, join
     from pathlib import Path
@@ -15,7 +16,7 @@ def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
     if (in_file is None) or isinstance(in_file, _Undefined):
         return None
 
-    if isinstance(in_file, list):
+    if isinstance(in_file, Iterable):
         return [_zip_unzip_nii(f, same_dir, compress) for f in in_file]
 
     in_file = Path(in_file)
