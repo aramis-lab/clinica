@@ -71,8 +71,8 @@ pipeline {
     post {
         failure {
       mail to: 'clinica-ci@inria.fr',
-          subject: "The build of the Clinica's user documentatio has failed: ${currentBuild.fullDisplayName}",
-          body: "Something is wrong with the build of the welcome guide ${env.BUILD_URL}"
+          subject: "Build of Clinica's user documentation failed: ${currentBuild.fullDisplayName}",
+          body: "Something went wrong during the build of Clinica's user documentation, check ${env.BUILD_URL} for details."
         }
     }
 }
