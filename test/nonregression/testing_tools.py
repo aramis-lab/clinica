@@ -8,6 +8,20 @@ import numpy as np
 import pandas as pd
 
 
+def configure_paths(
+    base_dir: PathLike,
+    tmp_path: PathLike,
+    name: str,
+) -> Tuple[PathLike, PathLike, PathLike]:
+    """Configure paths for tests."""
+    input_dir = base_dir / name / "in"
+    ref_dir = base_dir / name / "ref"
+    tmp_out_dir = tmp_path / name / "out"
+    tmp_out_dir.mkdir(parents=True)
+
+    return input_dir, tmp_out_dir, ref_dir
+
+
 def likeliness_measure(
     file1: PathLike,
     file2: PathLike,

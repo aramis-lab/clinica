@@ -5,25 +5,16 @@ This file contains a set of functional tests designed to check the correct execu
 different functions available in Clinica
 """
 
+import functools
 import warnings
 from os import fspath
 from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
-import functools
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
-
-
-def configure_paths(base_dir, tmp_path, name):
-    input_dir = base_dir / name / "in"
-    ref_dir = base_dir / name / "ref"
-    tmp_out_dir = tmp_path / name / "out"
-    tmp_out_dir.mkdir(parents=True)
-    
-    return input_dir, tmp_out_dir, ref_dir
 
 
 @pytest.mark.fast
@@ -53,35 +44,45 @@ def test_t1_freesurfer_cross_sectional(cmdopt, tmp_path):
 def test_t1_volume_tissue_segmentation(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
-    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1VolumeTissueSegmentation")
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeTissueSegmentation"
+    )
     run_T1VolumeTissueSegmentation(input_dir, tmp_dir, ref_dir, working_dir)
 
 
 def test_t1_volume_create_dartel(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
-    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1VolumeCreateDartel")
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeCreateDartel"
+    )
     run_T1VolumeCreateDartel(input_dir, tmp_dir, ref_dir, working_dir)
 
 
 def test_t1_volume_dartel2mni(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
-    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1VolumeDartel2MNI")
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeDartel2MNI"
+    )
     run_T1VolumeDartel2MNI(input_dir, tmp_dir, ref_dir, working_dir)
 
 
 def test_t1_volume_register_dartel(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
-    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1VolumeRegisterDartel")
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeRegisterDartel"
+    )
     run_T1VolumeRegisterDartel(input_dir, tmp_dir, ref_dir, working_dir)
 
 
 def test_t1_volume_parcellation(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
-    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1VolumeParcellation")
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeParcellation"
+    )
     run_T1VolumeParcellation(input_dir, tmp_dir, ref_dir, working_dir)
 
 
@@ -89,7 +90,9 @@ def test_t1_volume_parcellation(cmdopt, tmp_path):
 def test_t1_freesurfer_template(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
-    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1FreeSurferTemplate")
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1FreeSurferTemplate"
+    )
     run_T1FreeSurferTemplate(input_dir, tmp_dir, ref_dir, working_dir)
 
 
@@ -97,7 +100,9 @@ def test_t1_freesurfer_template(cmdopt, tmp_path):
 def test_t1_freesurfer_longitudinal_correction(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
-    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1FreeSurferLongitudinalCorrection")
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1FreeSurferLongitudinalCorrection"
+    )
     run_T1FreeSurferLongitudinalCorrection(input_dir, tmp_dir, ref_dir, working_dir)
 
 
