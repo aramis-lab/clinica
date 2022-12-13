@@ -12,13 +12,16 @@ def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
     from nipype.utils.filemanip import split_filename
     from traits.trait_base import _Undefined
 
-    if (in_file is None) or isinstance(in_file, _Undefined):
-        return None
-
-    if isinstance(in_file, (list, tuple)):
-        return [_zip_unzip_nii(f, same_dir, compress) for f in in_file]
-
-    in_file = Path(in_file)
+    try:
+        # Assuming in_file is path-like.
+        in_file = Path(in_file)
+    except TypeError:
+        try:
+            # Assuming in_file is a sequence type.
+            return [_zip_unzip_nii(f, same_dir, compress) for f in in_file]
+        except TypeError:
+            # All other cases.
+            return None
 
     op = operator.eq if compress else operator.ne
     if op(in_file.suffix, ".gz"):
