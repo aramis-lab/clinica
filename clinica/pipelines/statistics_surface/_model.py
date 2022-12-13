@@ -976,7 +976,7 @@ class StatisticsResultsPlotter:
         """
         from nilearn.plotting import plot_surf_stat_map
 
-        for name, res in result.to_dict(jsonable=False).items():
+        for name, res in result.to_dict().items():
             if name not in self.no_plot:
                 texture = res
                 threshold = None

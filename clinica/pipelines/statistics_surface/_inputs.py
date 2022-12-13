@@ -38,6 +38,12 @@ def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
         )
 
 
+T1_FREESURFER_TEMPLATE_PATH_FROM_CAPS_ROOT = (
+    "/%(subject)s/%(session)s/t1/freesurfer_cross_sectional/%(subject)s_%(session)s"
+    "/surf/%(hemi)s.thickness.fwhm%(fwhm)s.fsaverage.mgh"
+)
+
+
 def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> str:
     """Returns a Template for the path to the desired surface file.
 
@@ -51,10 +57,7 @@ def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> str:
     template_path : str
         Path to the t1 freesurfer template.
     """
-    return str(base_dir) + (
-        "/%(subject)s/%(session)s/t1/freesurfer_cross_sectional/%(subject)s_%(session)s"
-        "/surf/%(hemi)s.thickness.fwhm%(fwhm)s.fsaverage.mgh"
-    )
+    return str(base_dir) + T1_FREESURFER_TEMPLATE_PATH_FROM_CAPS_ROOT
 
 
 def _build_thickness_array(
@@ -74,7 +77,7 @@ def _build_thickness_array(
         Template for the path to the surface file of interest.
 
     df : pd.DataFrame
-        Subjects DataFrame.
+        Subjects DataFrame, indexed by participant_id, and session_id..
 
     fwhm : float
         Smoothing parameter only used to retrieve the right surface file.
@@ -88,14 +91,12 @@ def _build_thickness_array(
 
     thickness = []
     for idx, row in df.iterrows():
-        subject = row[TSV_FIRST_COLUMN]
-        session = row[TSV_SECOND_COLUMN]
+        subject, session = idx
         parts = []
         for hemi in ["lh", "rh"]:
             query = {"subject": subject, "session": session, "fwhm": fwhm, "hemi": hemi}
-            parts.append(
-                load(str(Path(input_dir) / Path(surface_file % query))).get_fdata()
-            )
+            surface_file_path = str(Path(input_dir) / Path(str(surface_file % query)))
+            parts.append(load(surface_file_path).get_fdata())
         combined = np.vstack(parts)
         thickness.append(combined.flatten())
     thickness = np.vstack(thickness)

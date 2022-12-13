@@ -136,8 +136,7 @@ def clinica_surfstat(
     """
     # Load subjects data
     df_subjects = _read_and_check_tsv_file(tsv_file)
-    if surface_file is None:
-        surface_file = _get_t1_freesurfer_custom_file_template(input_dir)
+    surface_file = surface_file or _get_t1_freesurfer_custom_file_template(input_dir)
     thickness = _build_thickness_array(input_dir, surface_file, df_subjects, fwhm)
 
     # Load average surface template
@@ -159,4 +158,4 @@ def clinica_surfstat(
     )
     glm_model.fit(thickness, average_surface)
     glm_model.save_results(output_dir, ["json", "mat"])
-    glm_model.plot_results(output_dir, ["nilearn_plot_surf_stat_map"], average_mesh)
+    # glm_model.plot_results(output_dir, ["nilearn_plot_surf_stat_map"], average_mesh)
