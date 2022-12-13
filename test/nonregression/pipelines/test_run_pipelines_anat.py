@@ -5,6 +5,7 @@ This file contains a set of functional tests designed to check the correct execu
 different functions available in Clinica
 """
 
+import functools
 import warnings
 from os import fspath
 from pathlib import Path
@@ -16,74 +17,93 @@ import pytest
 warnings.filterwarnings("ignore")
 
 
-@pytest.fixture(
-    params=[
-        "T1FreeSurferCrossSectional",
-        "T1VolumeTissueSegmentation",
-        "T1VolumeCreateDartel",
-        "T1VolumeDartel2MNI",
-        "T1VolumeRegisterDartel",
-        "T1VolumeParcellation",
-        "T1Linear",
-        "FlairLinear",
-        "T1FreeSurferTemplate",
-        "T1FreeSurferLongitudinalCorrection",
-    ]
-)
-def test_name(request):
-    return request.param
-
-
-def test_run_anat(cmdopt, tmp_path, test_name):
-    import shutil
-
+@pytest.mark.fast
+def test_t1_linear(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
-    input_dir = base_dir / test_name / "in"
-    ref_dir = base_dir / test_name / "ref"
-    tmp_out_dir = tmp_path / test_name / "out"
-    tmp_out_dir.mkdir(parents=True)
     working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1Linear")
+    run_T1Linear(input_dir, tmp_dir, ref_dir, working_dir)
 
-    if test_name == "T1FreeSurferCrossSectional":
-        run_T1FreeSurferCrossSectional(
-            base_dir / "T1FreeSurfer" / "in",
-            tmp_out_dir,
-            base_dir / "T1FreeSurfer" / "ref",
-            working_dir,
-        )
 
-    elif test_name == "T1VolumeTissueSegmentation":
-        run_T1VolumeTissueSegmentation(input_dir, tmp_out_dir, ref_dir, working_dir)
+@pytest.mark.fast
+def test_flair_linear(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "FlairLinear")
+    run_FlairLinear(input_dir, tmp_dir, ref_dir, working_dir)
 
-    elif test_name == "T1VolumeCreateDartel":
-        run_T1VolumeCreateDartel(input_dir, tmp_out_dir, ref_dir, working_dir)
 
-    elif test_name == "T1VolumeDartel2MNI":
-        run_T1VolumeDartel2MNI(input_dir, tmp_out_dir, ref_dir, working_dir)
+@pytest.mark.slow
+def test_t1_freesurfer_cross_sectional(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1FreeSurfer")
+    run_T1FreeSurferCrossSectional(input_dir, tmp_dir, ref_dir, working_dir)
 
-    elif test_name == "T1VolumeRegisterDartel":
-        run_T1VolumeRegisterDartel(input_dir, tmp_out_dir, ref_dir, working_dir)
 
-    elif test_name == "T1VolumeParcellation":
-        run_T1VolumeParcellation(input_dir, tmp_out_dir, ref_dir, working_dir)
+def test_t1_volume_tissue_segmentation(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeTissueSegmentation"
+    )
+    run_T1VolumeTissueSegmentation(input_dir, tmp_dir, ref_dir, working_dir)
 
-    elif test_name == "T1Linear":
-        run_T1Linear(input_dir, tmp_out_dir, ref_dir, working_dir)
 
-    elif test_name == "FlairLinear":
-        run_FlairLinear(input_dir, tmp_out_dir, ref_dir, working_dir)
+def test_t1_volume_create_dartel(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeCreateDartel"
+    )
+    run_T1VolumeCreateDartel(input_dir, tmp_dir, ref_dir, working_dir)
 
-    elif test_name == "T1FreeSurferTemplate":
-        run_T1FreeSurferTemplate(input_dir, tmp_out_dir, ref_dir, working_dir)
 
-    elif test_name == "T1FreeSurferLongitudinalCorrection":
-        run_T1FreeSurferLongitudinalCorrection(
-            input_dir, tmp_out_dir, ref_dir, working_dir
-        )
+def test_t1_volume_dartel2mni(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeDartel2MNI"
+    )
+    run_T1VolumeDartel2MNI(input_dir, tmp_dir, ref_dir, working_dir)
 
-    else:
-        print(f"Test {test_name} not available.")
-        assert 0
+
+def test_t1_volume_register_dartel(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeRegisterDartel"
+    )
+    run_T1VolumeRegisterDartel(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+def test_t1_volume_parcellation(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeParcellation"
+    )
+    run_T1VolumeParcellation(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+@pytest.mark.slow
+def test_t1_freesurfer_template(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1FreeSurferTemplate"
+    )
+    run_T1FreeSurferTemplate(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+@pytest.mark.slow
+def test_t1_freesurfer_longitudinal_correction(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1FreeSurferLongitudinalCorrection"
+    )
+    run_T1FreeSurferLongitudinalCorrection(input_dir, tmp_dir, ref_dir, working_dir)
 
 
 def run_T1FreeSurferCrossSectional(

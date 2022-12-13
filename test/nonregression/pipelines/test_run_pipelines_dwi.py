@@ -16,46 +16,47 @@ import pytest
 warnings.filterwarnings("ignore")
 
 
-@pytest.fixture(
-    params=[
-        "DWIPreprocessingUsingT1",
-        "DWIPreprocessingUsingPhaseDiffFieldmap",
-        "DWIDTI",
-        "DWIConnectome",
-    ]
-)
-def test_name(request):
-    return request.param
-
-
-def test_run_dwi(cmdopt, tmp_path, test_name):
+@pytest.mark.slow
+def test_dwi_preprocessing_using_t1(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
-    input_dir = base_dir / test_name / "in"
-    ref_dir = base_dir / test_name / "ref"
-    tmp_out_dir = tmp_path / test_name / "out"
-    tmp_out_dir.mkdir(parents=True)
     working_dir = Path(cmdopt["wd"])
-
-    if test_name == "DWIPreprocessingUsingT1":
-        run_DWIPreprocessingUsingT1(input_dir, tmp_out_dir, ref_dir, working_dir)
-
-    elif test_name == "DWIPreprocessingUsingPhaseDiffFieldmap":
-        run_DWIPreprocessingUsingPhaseDiffFieldmap(
-            input_dir, tmp_out_dir, ref_dir, working_dir
-        )
-
-    elif test_name == "DWIDTI":
-        run_DWIDTI(input_dir, tmp_out_dir, ref_dir, working_dir)
-
-    elif test_name == "DWIConnectome":
-        run_DWIConnectome(input_dir, tmp_out_dir, ref_dir, working_dir)
-
-    else:
-        print(f"Test {test_name} not available.")
-        assert 0
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWIPreprocessingUsingT1"
+    )
+    run_dwi_preprocessing_using_t1(input_dir, tmp_dir, ref_dir, working_dir)
 
 
-def run_DWIPreprocessingUsingT1(
+@pytest.mark.slow
+def test_dwi_preprocessing_using_phase_diff_field_map(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir,
+        tmp_path,
+        "DWIPreprocessingUsingPhaseDiffFieldmap",
+    )
+    run_dwi_preprocessing_using_phase_diff_field_map(
+        input_dir, tmp_dir, ref_dir, working_dir
+    )
+
+
+@pytest.mark.slow
+def test_dwi_dti(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIDTI")
+    run_dwi_dti(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+@pytest.mark.slow
+def test_dwi_connectome(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIConnectome")
+    run_dwi_dti(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+def run_dwi_preprocessing_using_t1(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import (
@@ -97,7 +98,7 @@ def run_DWIPreprocessingUsingT1(
     assert similarity_measure(out_file, ref_file, 0.97)
 
 
-def run_DWIPreprocessingUsingPhaseDiffFieldmap(
+def run_dwi_preprocessing_using_phase_diff_field_map(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     import warnings
@@ -144,7 +145,7 @@ def run_DWIPreprocessingUsingPhaseDiffFieldmap(
     assert similarity_measure(out_file, ref_file, 0.95)
 
 
-def run_DWIDTI(
+def run_dwi_dti(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     import shutil
@@ -211,7 +212,7 @@ def run_DWIDTI(
         assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=0.025, equal_nan=True)
 
 
-def run_DWIConnectome(
+def run_dwi_connectome(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     import shutil

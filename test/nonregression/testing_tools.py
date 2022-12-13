@@ -2,10 +2,25 @@
 
 import os
 from os import PathLike
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
+
+
+def configure_paths(
+    base_dir: Path,
+    tmp_path: Path,
+    name: str,
+) -> Tuple[Path, Path, Path]:
+    """Configure paths for tests."""
+    input_dir = base_dir / name / "in"
+    ref_dir = base_dir / name / "ref"
+    tmp_out_dir = tmp_path / name / "out"
+    tmp_out_dir.mkdir(parents=True)
+
+    return input_dir, tmp_out_dir, ref_dir
 
 
 def likeliness_measure(

@@ -16,36 +16,23 @@ import pytest
 warnings.filterwarnings("ignore")
 
 
-@pytest.fixture(
-    params=[
-        "WorkflowsML",
-        "SpatialSVM",
-    ]
-)
-def test_name(request):
-    return request.param
-
-
-def test_run_ml(cmdopt, tmp_path, test_name):
+@pytest.mark.fast
+def test_workflows_ml(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
-    input_dir = base_dir / test_name / "in"
-    ref_dir = base_dir / test_name / "ref"
-    tmp_out_dir = tmp_path / test_name / "out"
-    tmp_out_dir.mkdir(parents=True)
     working_dir = Path(cmdopt["wd"])
-
-    if test_name == "WorkflowsML":
-        run_WorkflowsML(input_dir, tmp_out_dir, ref_dir, working_dir)
-
-    elif test_name == "SpatialSVM":
-        run_SpatialSVM(input_dir, tmp_out_dir, ref_dir, working_dir)
-
-    else:
-        print(f"Test {test_name} not available.")
-        assert 0
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "WorkflowsML")
+    run_workflows_ml(input_dir, tmp_dir, ref_dir, working_dir)
 
 
-def run_WorkflowsML(
+@pytest.mark.fast
+def test_spatial_svm(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "SpatialSVM")
+    run_spatial_svm(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+def run_workflows_ml(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     import warnings
@@ -144,7 +131,7 @@ def run_WorkflowsML(
     wf4.run()
 
 
-def run_SpatialSVM(
+def run_spatial_svm(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
 

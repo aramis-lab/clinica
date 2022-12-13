@@ -50,7 +50,7 @@ pipeline {
                 '''
               }
             }
-            stage('PET:nonreg') {
+            stage('PET:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/PET"
@@ -75,6 +75,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_pet.py
                 '''
                 }
@@ -88,7 +89,7 @@ pipeline {
                 }
               }
             }
-            stage('Stats:nonreg') {
+            stage('Stats:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/Stats"
@@ -113,6 +114,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_stats.py
                 '''
                 }
@@ -126,7 +128,7 @@ pipeline {
                 }
               }
             }
-            stage('ML:nonreg') {
+            stage('ML:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/ML"
@@ -151,6 +153,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_ml.py
                 '''
                 }
@@ -164,7 +167,7 @@ pipeline {
                 }
               }
             }
-            stage('Anat:nonreg') {
+            stage('Anat:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/Anat"
@@ -189,6 +192,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_anat.py
                 '''
                 }
@@ -202,7 +206,7 @@ pipeline {
                 }
               }
             }
-            stage('DWI:nonreg') {
+            stage('DWI:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/DWI"
@@ -227,6 +231,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_dwi.py
                 '''
                 }
@@ -278,8 +283,7 @@ pipeline {
                 '''
               }
             }
-            /*
-            stage("PET:nonreg") {
+            stage("PET:nonreg:slow") {
                environment {
                  WORK_DIR = "/Volumes/data/working_dir_mac/PET"
                  INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -302,6 +306,7 @@ pipeline {
                      --disable-warnings \
                      --timeout=0 \
                      -n 4 \
+                     -m "slow" \
                      ./nonregression/pipelines/test_run_pipelines_pet.py
                  '''
                }
@@ -314,7 +319,7 @@ pipeline {
                 }
                }
              }
-            stage('Stats:nonreg') {
+            stage('Stats:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/Stats"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -337,6 +342,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_stats.py
                 '''
               }
@@ -349,7 +355,7 @@ pipeline {
                 }
               }
             }
-            stage('ML:nonreg') {
+            stage('ML:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/ML"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -372,6 +378,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_ml.py
                 '''
               }
@@ -384,7 +391,7 @@ pipeline {
                 }
               }
             }
-            stage('Anat:nonreg') {
+            stage('Anat:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/Anat"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -407,6 +414,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_anat.py
                 '''
               }
@@ -419,7 +427,7 @@ pipeline {
                 }
               }
             }
-          stage('DWI:nonreg') {
+          stage('DWI:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/DWI"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -442,6 +450,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_dwi.py
                 '''
               }
