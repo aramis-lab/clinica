@@ -283,7 +283,6 @@ pipeline {
                 '''
               }
             }
-            /*
             stage("PET:nonreg:notslow") {
                environment {
                  WORK_DIR = "/Volumes/data/working_dir_mac/PET"
@@ -463,7 +462,7 @@ pipeline {
                   sh 'rm -rf ${WORK_DIR}/*'
                 }
               }
-            } */
+            }
           }
           post {
             always {
