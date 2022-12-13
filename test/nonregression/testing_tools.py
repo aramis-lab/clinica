@@ -9,10 +9,10 @@ import pandas as pd
 
 
 def configure_paths(
-    base_dir: PathLike,
-    tmp_path: PathLike,
+    base_dir: Path,
+    tmp_path: Path,
     name: str,
-) -> Tuple[PathLike, PathLike, PathLike]:
+) -> Tuple[Path, Path, Path]:
     """Configure paths for tests."""
     input_dir = base_dir / name / "in"
     ref_dir = base_dir / name / "ref"
