@@ -2,6 +2,7 @@
 
 import os
 from os import PathLike
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
