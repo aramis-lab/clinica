@@ -21,7 +21,7 @@ pipeline {
             POETRY = "poetry"
             WORK_DIR = '/mnt/data/ci/working_dir_linux'
             INPUT_DATA_DIR = '/mnt/data_ci'
-            TMP_BASE = '/mnt/data/ci/tmp'
+            TMP_DIR = '/mnt/data/ci/tmp'
           }
           stages {
             stage('Build environment') {
@@ -38,7 +38,13 @@ pipeline {
             }
             stage('Test instantiation') {
               steps {
-		        runTest(os: "linux", name: "./instantiation", n_jobs: "4", junit:"instantiation_linux.xml")
+		        runTest(
+		            os: "linux",
+		            name: "./instantiation",
+		            mark: "all",
+		            n_jobs: "4",
+		            junit:"instantiation_linux.xml"
+		        )
               }
               post {
                 always {
@@ -51,7 +57,13 @@ pipeline {
             }
             stage('Test converters') {
               steps {
-		        runTest(os: "linux", name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_linux.xml")
+		        runTest(
+		            os: "linux",
+		            name: "./nonregression/iotools/test_run_converters.py",
+		            mark: "all",
+		            n_jobs: "2",
+		            junit:"run_converters_linux.xml"
+		        )
               }
               post {
                 always {
@@ -60,7 +72,7 @@ pipeline {
                 success {
                   sh '''
                     rm -rf ${WORK_DIR}/*
-                    rm -rf ${TMP_BASE}/*
+                    rm -rf ${TMP_DIR}/*
                   '''
                 }
               }
@@ -68,25 +80,13 @@ pipeline {
 	        stage('Non Regression Fast') {
               steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate $CONDA_ENV
-                  mkdir -p $WORK_DIR
-                  source /usr/local/Modules/init/profile.sh
-                  module load clinica.all
-                  cd test
-                  poetry run pytest \
-                    --junitxml=./test-reports/nonregression_linux.xml \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --input_data_directory=$INPUT_DATA_DIR \
-                    --basetemp=$TMP_DIR \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    -m "fast" \
-                    ./nonregression
-                '''
+                  runTest(
+		            os: "linux",
+		            name: "./nonregression",
+		            mark: "fast",
+		            n_jobs: "4",
+		            junit:"run_nonregression_fast_linux.xml"
+		          )
                 }
               }
 	        post {
@@ -100,7 +100,13 @@ pipeline {
             }
             stage('Test iotools') {
               steps {
-		        runTest(os: "linux", name: "./nonregression/iotools/test_run_utils.py", n_jobs: "2", junit:"run_iotools_utils_linux.xml")
+		        runTest(
+		            os: "linux",
+		            name: "./nonregression/iotools/test_run_utils.py",
+		            mark: "all",
+		            n_jobs: "2",
+		            junit:"run_iotools_utils_linux.xml"
+		        )
               }
               post {
                 always {
@@ -109,7 +115,7 @@ pipeline {
                 success {
                   sh '''
                     rm -rf ${WORK_DIR}/*
-                    rm -rf ${TMP_BASE}/*
+                    rm -rf ${TMP_DIR}/*
                   '''
                 }
               }
@@ -131,7 +137,7 @@ pipeline {
             PATH = "$HOME/.local/bin:$PATH"
             WORK_DIR = '/Volumes/data/working_dir_mac'
             INPUT_DATA_DIR = '/Volumes/data_ci'
-            TMP_BASE = '/Volumes/data/tmp'
+            TMP_DIR = '/Volumes/data/tmp'
           }
           stages {
             stage('Build environment') {
@@ -148,7 +154,13 @@ pipeline {
             }
             stage('Test instantiation') {
               steps {
-        		runTest(os: "mac", name: "./instantiation", n_jobs: "4", junit:"instantiation_mac.xml")
+        		runTest(
+        		    os: "mac",
+        		    name: "./instantiation",
+        		    mark: "all",
+        		    n_jobs: "4",
+        		    junit:"instantiation_mac.xml"
+        		)
               }
               post {
                 always {
@@ -161,7 +173,13 @@ pipeline {
             }
             stage('Test converters') {
               steps {
-        		runTest(os: "mac", name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_mac.xml")
+        		runTest(
+        		    os: "mac",
+        		    name: "./nonregression/iotools/test_run_converters.py",
+        		    mark: "all",
+        		    n_jobs: "2",
+        		    junit:"run_converters_mac.xml"
+        		)
               }
               post {
                 always {
@@ -170,14 +188,41 @@ pipeline {
                 success {
                   sh '''
                     rm -rf ${WORK_DIR}/*
-                    rm -rf ${TMP_BASE}/*
+                    rm -rf ${TMP_DIR}/*
                   '''
+                }
+              }
+            }
+            stage('Non Regression Fast') {
+              steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
+                  runTest(
+		            os: "mac",
+		            name: "./nonregression",
+		            mark: "fast",
+		            n_jobs: "4",
+		            junit:"run_nonregression_fast_mac.xml"
+		          )
+                }
+              }
+	        post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}'
                 }
               }
             }
             stage('Test iotools') {
               steps {
-		        runTest(os: "mac", name: "./nonregression/iotools/test_run_utils.py", n_jobs: "2", junit:"run_iotools_utils_mac.xml")
+		        runTest(
+		            os: "mac",
+		            name: "./nonregression/iotools/test_run_utils.py",
+		            mark: "all",
+		            n_jobs: "2",
+		            junit:"run_iotools_utils_mac.xml"
+		        )
               }
               post {
                 always {
@@ -186,7 +231,7 @@ pipeline {
                 success {
                   sh '''
                     rm -rf ${WORK_DIR}/*
-                    rm -rf ${TMP_BASE}/*
+                    rm -rf ${TMP_DIR}/*
                   '''
                 }
               }
