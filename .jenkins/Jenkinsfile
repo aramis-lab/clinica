@@ -17,30 +17,28 @@ pipeline {
           environment {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
-            PATH = "$HOME/.local/bin:$PATH"
+            PATH = "$HOME/.local/bin:/usr/local/Modules/bin:$PATH"
             POETRY = "poetry"
+            WORK_DIR = '/mnt/data/ci/working_dir_linux'
+            INPUT_DATA_DIR = '/mnt/data_ci'
+            TMP_BASE = '/mnt/data/ci/tmp'
           }
           stages {
             stage('Build environment') {
               steps {
-		sh 'echo "Agent name is ${NODE_NAME}"'
-		buildCondaEnv()		
-		checkCommand(name: "poetry")
+                sh 'echo "Agent name is ${NODE_NAME}"'
+		        buildCondaEnv()
+		        checkCommand(name: "poetry")
               }
             }
             stage('Install Clinica') {
               steps {
-		installPackage()
+		        installPackage()
               }
             }
             stage('Test instantiation') {
-              environment {
-                PATH = "/usr/local/Modules/bin:$PATH"
-                WORK_DIR = '/mnt/data/ci/working_dir_linux'
-                INPUT_DATA_DIR = '/mnt/data_ci'
-              }
               steps {
-		runTest(os: "linux", name: "./instantiation", n_jobs: "4", junit:"instantiation_linux.xml")                
+		        runTest(os: "linux", name: "./instantiation", n_jobs: "4", junit:"instantiation_linux.xml")
               }
               post {
                 always {
@@ -52,14 +50,8 @@ pipeline {
               }
             }
             stage('Test converters') {
-              environment {
-                PATH = "/usr/local/Modules/bin:$PATH"
-                WORK_DIR = '/mnt/data/ci/working_dir_linux'
-                INPUT_DATA_DIR = '/mnt/data_ci'
-                TMP_BASE = '/mnt/data/ci/tmp'
-              }
               steps {
-		runTest(os: "linux", name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_linux.xml")                
+		        runTest(os: "linux", name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_linux.xml")
               }
               post {
                 always {
@@ -73,13 +65,7 @@ pipeline {
                 }
               }
             }
-	    stage('Non Regression Fast') {
-              environment {
-                PATH = "/usr/local/Modules/bin:$PATH"
-                WORK_DIR = "/mnt/data/ci/working_dir_linux"
-                INPUT_DATA_DIR = "/mnt/data_ci"
-                TMP_DIR = "/mnt/data/ci/tmp"
-                }
+	        stage('Non Regression Fast') {
               steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
                 sh '''
@@ -103,7 +89,7 @@ pipeline {
                 '''
                 }
               }
-	     post {
+	        post {
                 always {
                   junit 'test/test-reports/*.xml'
                 }
@@ -113,30 +99,8 @@ pipeline {
               }
             }
             stage('Test iotools') {
-              environment {
-                PATH = "/usr/local/Modules/bin:$PATH"
-                WORK_DIR = '/mnt/data/ci/working_dir_linux'
-                INPUT_DATA_DIR = '/mnt/data_ci'
-                TMP_BASE = '/mnt/data/ci/tmp'
-              }
               steps {
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${CONDA_ENV}"
-                  source /usr/local/Modules/init/profile.sh
-                  module load clinica.all
-                  cd test
-                  taskset -c 0-21 poetry run pytest \
-                    --junitxml=./test-reports/run_converters_linux.xml \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --input_data_directory=$INPUT_DATA_DIR \
-                    --basetemp=$TMP_BASE \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 2 \
-                    ./nonregression/iotools/test_run_utils.py
-                  '''
+		        runTest(os: "linux", name: "./nonregression/iotools/test_run_utils.py", n_jobs: "2", junit:"run_iotools_utils_linux.xml")
               }
               post {
                 always {
@@ -165,28 +129,26 @@ pipeline {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
             PATH = "$HOME/.local/bin:$PATH"
+            WORK_DIR = '/Volumes/data/working_dir_mac'
+            INPUT_DATA_DIR = '/Volumes/data_ci'
+            TMP_BASE = '/Volumes/data/tmp'
           }
           stages {
             stage('Build environment') {
               steps {
-		sh 'echo "Agent name is ${NODE_NAME}"'
-		buildCondaEnv()		
-		checkCommand(name: "poetry")
+		        sh 'echo "Agent name is ${NODE_NAME}"'
+		        buildCondaEnv()
+		        checkCommand(name: "poetry")
               }
             }
             stage('Install Clinica') {
               steps {
-		installPackage()
+		        installPackage()
               }
             }
             stage('Test instantiation') {
-              environment {
-                WORK_DIR = '/Volumes/data/working_dir_mac'
-                INPUT_DATA_DIR = '/Volumes/data_ci'
-                TMP_BASE = '/Volumes/data/tmp'
-              }
               steps {
-		runTest(os: "mac", name: "./instantiation", n_jobs: "4", junit:"instantiation_mac.xml") 
+        		runTest(os: "mac", name: "./instantiation", n_jobs: "4", junit:"instantiation_mac.xml")
               }
               post {
                 always {
@@ -198,13 +160,8 @@ pipeline {
               }
             }
             stage('Test converters') {
-              environment {
-                WORK_DIR = '/Volumes/data/working_dir_mac'
-                INPUT_DATA_DIR = '/Volumes/data_ci'
-                TMP_BASE = '/Volumes/data/tmp'
-              }
               steps {
-		runTest(os: "mac", name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_mac.xml")                
+        		runTest(os: "mac", name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_mac.xml")
               }
               post {
                 always {
@@ -219,27 +176,8 @@ pipeline {
               }
             }
             stage('Test iotools') {
-              environment {
-                WORK_DIR = '/Volumes/data/working_dir_mac'
-                INPUT_DATA_DIR = '/Volumes/data_ci'
-                TMP_BASE = '/Volumes/data/tmp'
-              }
               steps {
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${CONDA_ENV}"
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
-                  module load clinica.all
-                  cd test
-                  poetry run pytest \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --input_data_directory=$INPUT_DATA_DIR \
-                    --basetemp=$TMP_BASE \
-                    --junitxml=./test-reports/run_converters_mac.xml \
-                    --disable-warnings \
-                    ./nonregression/iotools/test_run_utils.py
-                '''
+		        runTest(os: "mac", name: "./nonregression/iotools/test_run_utils.py", n_jobs: "2", junit:"run_iotools_utils_mac.xml")
               }
               post {
                 always {
