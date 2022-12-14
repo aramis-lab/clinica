@@ -5,8 +5,9 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 
+
 @pytest.mark.parametrize(
-    "dictionnary, expected",
+    "dictionary, expected",
     [
         (
             {
@@ -21,48 +22,41 @@ from numpy.testing import assert_array_equal
         ),
         (
             {
-                "TotalReadoutTime": "",
                 "EstimatedTotalReadoutTime": 1,
-                "PhaseEncodingSteps": "",
-                "PixelBandwidth": "",
                 "PhaseEncodingDirection": "j",
-                "PhaseEncodingAxis": "",
             },
             [1, "j"],
         ),
         (
             {
-                "TotalReadoutTime": "",
-                "EstimatedTotalReadoutTime": "",
                 "PhaseEncodingSteps": 1,
                 "PixelBandwidth": 0.5,
                 "PhaseEncodingDirection": "j-",
-                "PhaseEncodingAxis": "",
             },
             [2, "j-"],
         ),
     ],
 )
-def test_extract_metadata_from_dwi_json(dictionnary, expected):
+def test_extract_metadata_from_json(dictionary, expected):
     """This function tests something."""
     import json
 
-    from clinica.utils.filemanip import extract_metadata_from_dwi_json
+    from clinica.utils.filemanip import (
+        _handle_missing_keys_dwi,
+        extract_metadata_from_json,
+    )
 
     # create a json with parametrize ?
     with open("metadata.json", "w") as outfile:
-        json.dump(dictionnary, outfile)
+        json.dump(dictionary, outfile)
     assert (
-        extract_metadata_from_dwi_json(
+        extract_metadata_from_json(
             "metadata.json",
             [
                 "TotalReadoutTime",
-                "EstimatedTotalReadoutTime",
-                "PhaseEncodingSteps",
-                "PixelBandwidth",
                 "PhaseEncodingDirection",
-                "PhaseEncodingAxis",
             ],
+            _handle_missing_keys_dwi,
         )
         == expected
     )

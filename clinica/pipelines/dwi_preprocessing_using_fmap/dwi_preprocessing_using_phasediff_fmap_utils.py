@@ -122,7 +122,7 @@ def init_input_node(
 
     from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
     from clinica.utils.filemanip import (
-        extract_metadata_from_dwi_json,
+        _handle_missing_keys_dwi,
         extract_metadata_from_json,
         get_subject_id,
     )
@@ -155,16 +155,13 @@ def init_input_node(
         raise NotImplementedError(error_msg)
 
     # Read metadata from DWI JSON file:
-    [total_readout_time, phase_encoding_direction] = extract_metadata_from_dwi_json(
+    [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
         dwi_json,
         [
             "TotalReadoutTime",
-            "EstimatedTotalReadoutTime",
-            "PhaseEncodingSteps",
-            "PixelBandwidth",
             "PhaseEncodingDirection",
-            "PhaseEncodingAxis",
         ],
+        _handle_missing_keys_dwi,
     )
     phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
 
