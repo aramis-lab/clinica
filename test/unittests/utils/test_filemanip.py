@@ -38,7 +38,7 @@ from numpy.testing import assert_array_equal
     ],
 )
 def test_extract_metadata_from_json(tmp_path, dictionary, expected):
-    """This function tests something."""
+    """This function tests that the outputs of `extract_metadata_from_json` are what you'd expect in the case of DWI."""
     import json
 
     from clinica.utils.filemanip import (
