@@ -449,12 +449,14 @@ def extract_metadata_from_json(
             f"Clinica could not open the following JSON file: {json_file}"
         )
     list_values = []
-    missing_keys = []
+    data_keys = []
     for key in list_keys:
         if key in data:
             list_values.append(data[key])
-        else:
-            missing_keys.append(key)
+            data_keys.append(key)
+        # else:
+        #     missing_keys.append(key)
+    missing_keys = set(list_keys).difference(set(data_keys))
     if len(missing_keys) > 0 and handle_missing_keys is None:
         raise ClinicaException(
             f"Clinica could not find the following keys in the following JSON file: {missing_keys}."
