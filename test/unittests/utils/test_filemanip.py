@@ -37,7 +37,7 @@ from numpy.testing import assert_array_equal
         ),
     ],
 )
-def test_extract_metadata_from_json(dictionary, expected):
+def test_extract_metadata_from_json(tmp_path, dictionary, expected):
     """This function tests something."""
     import json
 
@@ -46,12 +46,11 @@ def test_extract_metadata_from_json(dictionary, expected):
         handle_missing_keys_dwi,
     )
 
-    # create a json with parametrize ?
-    with open("metadata.json", "w") as outfile:
+    with open(tmp_path / "metadata.json", "w") as outfile:
         json.dump(dictionary, outfile)
     assert (
         extract_metadata_from_json(
-            "metadata.json",
+            tmp_path / "metadata.json",
             [
                 "TotalReadoutTime",
                 "PhaseEncodingDirection",
