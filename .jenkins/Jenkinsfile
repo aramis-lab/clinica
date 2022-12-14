@@ -183,6 +183,7 @@ pipeline {
               environment {
                 WORK_DIR = '/Volumes/data/working_dir_mac'
                 INPUT_DATA_DIR = '/Volumes/data_ci'
+                TMP_BASE = '/Volumes/data/tmp'
               }
               steps {
 		runTest(os: "mac", name: "./instantiation", n_jobs: "4", junit:"instantiation_mac.xml") 
