@@ -434,9 +434,22 @@ def extract_metadata_from_json(
     list_keys: List[str],
     handle_missing_keys: Optional[Callable] = None,
 ) -> List[str]:
-    """Same function but with additional parameter.
-    Would need to update callers but they look limited.
-    """
+    """Extract fields from JSON file.
+
+    Parameters
+    ----------
+    json_file: str
+    Path to a json file containing metadata needed for the pipeline.
+
+    list_keys: list
+    List of fields the users wants to obtain from the json.
+
+    handle_missing_keys: Optional[Callable]
+    Function to use to handle the fields of the json that may be missing.
+
+    Returns
+    -------
+    list: contains the values for the requested fields."""
     import json
 
     from clinica.utils.exceptions import ClinicaException
@@ -468,6 +481,19 @@ def extract_metadata_from_json(
 
 
 def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
+    """Find alternative fields from JSON file to replace those which were not found.
+
+    Parameters
+    ----------
+    data: dict
+    Dictionary containing the json data.
+
+    missing_keys: set
+    Set of keys that are required and were not found in the json.
+
+    Returns
+    -------
+    dict: contains the values for the requested fields."""
     handlers = {
         "TotalReadoutTime": _handle_missing_total_readout_time,
         "PhaseEncodingDirection": _handle_missing_phase_encoding_direction,
@@ -481,6 +507,19 @@ def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
 
 
 def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
+    """Find an alternative field in the json to replace the TotalReadoutTime.
+
+    Parameters
+    ----------
+    data: dict
+    Dictionary containing the json data.
+
+    missing_keys: set
+    Set of keys that are required and were not found in the json.
+
+    Returns
+    -------
+    float: contains the value for TotalReadoutTime."""
     from clinica.utils.exceptions import ClinicaException
 
     if "EstimatedTotalReadoutTime" in data:
@@ -498,6 +537,19 @@ def _handle_missing_phase_encoding_direction(
     data: dict,
     missing_keys: set,
 ) -> float:
+    """Find an alternative field in the json to replace the PhaseEncodingDirection.
+
+    Parameters
+    ----------
+    data: dict
+    Dictionary containing the json data.
+
+    missing_keys: set
+    Set of keys that are required and were not found in the json.
+
+    Returns
+    -------
+    float: contains the value for PhaseEncodingDirection."""
     from clinica.utils.exceptions import ClinicaException
 
     if "PhaseEncodingAxis" in data:
