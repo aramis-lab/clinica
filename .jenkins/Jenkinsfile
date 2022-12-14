@@ -23,31 +23,13 @@ pipeline {
           stages {
             stage('Build environment') {
               steps {
-                sh 'echo "Agent name is ${NODE_NAME}"'
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  make env.conda
-                  conda activate "${CONDA_ENV}"
-                  conda info
-                  if ! command -v $POETRY &> /dev/null
-                  then
-                    echo "$POETRY could not be found"
-                    exit
-                  else
-                    echo "$($POETRY --version) installed at : $(which $POETRY)"
-                  fi
-                '''
+		sh 'echo "Agent name is ${NODE_NAME}"'
+		buildEnvironment()
               }
             }
             stage('Install Clinica') {
               steps {
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${CONDA_ENV}"
-                  make install
-                  clinica --help
-                  conda list
-                '''
+		installPackage()
 		helloWorldExternal(name: "Nicolas", dayOfWeek:"Saturday")
               }
             }
