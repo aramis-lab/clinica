@@ -1,9 +1,3 @@
-# Use hash instead of parameters for iterables folder names
-# Otherwise path will be too long and generate OSError
-from pathlib import Path
-from typing import Optional
-
-from networkx.generators import atlas
 from nipype import config
 
 import clinica.pipelines.engine as cpe
