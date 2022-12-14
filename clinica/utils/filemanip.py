@@ -439,13 +439,13 @@ def extract_metadata_from_json(
     Parameters
     ----------
     json_file: str
-    Path to a json file containing metadata needed for the pipeline.
+        Path to a json file containing metadata needed for the pipeline.
 
-    list_keys: list
-    List of fields the users wants to obtain from the json.
+    list_keys: list of str
+        List of fields the users wants to obtain from the json.
 
     handle_missing_keys: Optional[Callable]
-    Function to use to handle the fields of the json that may be missing.
+        Function to use to handle the fields of the json that may be missing.
 
     Returns
     -------
@@ -486,10 +486,10 @@ def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
     Parameters
     ----------
     data: dict
-    Dictionary containing the json data.
+        Dictionary containing the json data.
 
     missing_keys: set
-    Set of keys that are required and were not found in the json.
+        Set of keys that are required and were not found in the json.
 
     Returns
     -------
@@ -512,10 +512,10 @@ def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
     Parameters
     ----------
     data: dict
-    Dictionary containing the json data.
+        Dictionary containing the json data.
 
     missing_keys: set
-    Set of keys that are required and were not found in the json.
+        Set of keys that are required and were not found in the json.
 
     Returns
     -------
@@ -529,7 +529,7 @@ def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
             return data["PhaseEncodingSteps"] / data["PixelBandwidth"]
         raise ValueError("Pixel Bandwidth value is not valid.")
     raise ClinicaException(
-        f"Could not recover the missing keys {missing_keys} from JSON file."
+        "Could not recover the TotalReadoutTime from JSON file."
     )
 
 
@@ -542,10 +542,10 @@ def _handle_missing_phase_encoding_direction(
     Parameters
     ----------
     data: dict
-    Dictionary containing the json data.
+        Dictionary containing the json data.
 
     missing_keys: set
-    Set of keys that are required and were not found in the json.
+        Set of keys that are required and were not found in the json.
 
     Returns
     -------
@@ -555,5 +555,5 @@ def _handle_missing_phase_encoding_direction(
     if "PhaseEncodingAxis" in data:
         return data["PhaseEncodingAxis"] + "+"
     raise ClinicaException(
-        f"Could not recover the missing keys {missing_keys} from JSON file."
+        "Could not recover the PhaseEncodingDirection from JSON file."
     )

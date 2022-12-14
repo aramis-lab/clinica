@@ -161,7 +161,7 @@ def init_input_node(
             "TotalReadoutTime",
             "PhaseEncodingDirection",
         ],
-        handle_missing_keys_dwi=handle_missing_keys_dwi,
+        handle_missing_keys=handle_missing_keys_dwi,
     )
     phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
 
