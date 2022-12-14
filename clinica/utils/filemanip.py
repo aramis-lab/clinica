@@ -488,15 +488,20 @@ def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
             data["PhaseEncodingSteps"] / data["PixelBandwidth"]
         )  # What about zero div errors here ?
     else:
-        raise ClinicaException("bla bla bla")
+        raise ClinicaException(
+            f"Could not recover the missing keys {missing_keys} from JSON file."
+        )
 
 
 def _handle_missing_phase_encoding_direction(
     data: dict,
+    missing_keys: set,
 ) -> float:
     from clinica.utils.exceptions import ClinicaException
 
     if "PhaseEncodingAxis" in data:
         return data["PhaseEncodingAxis"] + "+"
     else:
-        raise ClinicaException("bla bla bla")
+        raise ClinicaException(
+            f"Could not recover the missing keys {missing_keys} from JSON file."
+        )
