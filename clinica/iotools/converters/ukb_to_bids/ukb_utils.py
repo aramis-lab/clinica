@@ -86,7 +86,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     dataframe_dicom = pd.DataFrame.from_records(
         source_path_series_dicom, columns=["source_zipfile", "source_filename"]
     )
-    dataframe = pd.concat([dataframe_nifti, dataframe_dicom], 0)
+    dataframe = pd.concat([dataframe_nifti, dataframe_dicom])
     filename = (
         dataframe["source_filename"]
         .apply(lambda x: Path(str(x)).name)
