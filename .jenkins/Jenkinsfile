@@ -40,7 +40,7 @@ pipeline {
                 INPUT_DATA_DIR = '/mnt/data_ci'
               }
               steps {
-		runTest(name: "./instantiation", n_jobs: "4", junit:"instantiation_linux.xml")                
+		runTest(os: "linux", name: "./instantiation", n_jobs: "4", junit:"instantiation_linux.xml")                
               }
               post {
                 always {
@@ -59,7 +59,7 @@ pipeline {
                 TMP_BASE = '/mnt/data/ci/tmp'
               }
               steps {
-		runTest(name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_linux.xml")                
+		runTest(os: "linux", name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_linux.xml")                
               }
               post {
                 always {
@@ -185,7 +185,7 @@ pipeline {
                 INPUT_DATA_DIR = '/Volumes/data_ci'
               }
               steps {
-		runTest(name: "./instantiation", n_jobs: "4", junit:"instantiation_mac.xml") 
+		runTest(os: "mac", name: "./instantiation", n_jobs: "4", junit:"instantiation_mac.xml") 
               }
               post {
                 always {
@@ -203,7 +203,7 @@ pipeline {
                 TMP_BASE = '/Volumes/data/tmp'
               }
               steps {
-		runTest(name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_mac.xml")                
+		runTest(os: "mac", name: "./nonregression/iotools/test_run_converters.py", n_jobs: "2", junit:"run_converters_mac.xml")                
               }
               post {
                 always {
