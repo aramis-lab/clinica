@@ -12,9 +12,21 @@ help: Makefile
 check.lock:
 	@$(POETRY) lock --check
 
+# clean			: Clean project tree.
+.PHONY: clean
+clean: clean.doc clean.py clean.test
+
 .PHONY: clean.doc
 clean.doc:
-	@$(RM) -rf site
+	@$(RM) -rf site/
+
+.PHONY: clean.py
+clean.py:
+	@find . -name __pycache__ -exec $(RM) -r {} +
+
+.PHONY: clean.test
+clean.test:
+	@$(RM) -r .pytest_cache/
 
 .PHONY: config.pypi
 config.pypi:
