@@ -200,24 +200,13 @@ pipeline {
           stages {
             stage('Build environment') {
               steps {
-                sh 'echo "Agent name is ${NODE_NAME}"'
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  make env.conda
-                  conda activate "${CONDA_ENV}"
-                  conda info
-                '''
+		sh 'echo "Agent name is ${NODE_NAME}"'
+		buildEnvironment()
               }
             }
             stage('Install Clinica') {
               steps {
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate "${CONDA_ENV}"
-                  make install
-                  clinica --help
-                  conda list
-                '''
+		installPackage()
               }
             }
             stage('Test instantiation') {
