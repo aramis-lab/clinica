@@ -24,7 +24,15 @@ pipeline {
             stage('Build environment') {
               steps {
 		sh 'echo "Agent name is ${NODE_NAME}"'
-		buildEnvironment()
+		checkCommand(name: "poetry")
+		checkCommand(name: "conda")
+		sh '''
+			source "${CONDA_HOME}/etc/profile.d/conda.sh"
+			make env.conda
+			conda activate "${CONDA_ENV}"
+			conda info
+		'''
+		checkCommand(name: "conda")
               }
             }
             stage('Install Clinica') {
@@ -201,7 +209,15 @@ pipeline {
             stage('Build environment') {
               steps {
 		sh 'echo "Agent name is ${NODE_NAME}"'
-		buildEnvironment()
+		checkCommand(name: "poetry")
+		checkCommand(name: "conda")
+		sh '''
+			source "${CONDA_HOME}/etc/profile.d/conda.sh"
+			make env.conda
+			conda activate "${CONDA_ENV}"
+			conda info
+		'''
+		checkCommand(name: "conda")
               }
             }
             stage('Install Clinica') {
