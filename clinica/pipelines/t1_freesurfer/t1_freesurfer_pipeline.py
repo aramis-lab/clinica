@@ -129,17 +129,17 @@ class T1FreeSurfer(cpe.Pipeline):
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-        try:
-            t1w_files, error_message = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII, False
-            )
-        except ClinicaException as e:
-            err_msg = (
-                "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
-                + str(e)
-            )
+        t1w_files, error_message = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.bids_directory,
+            T1W_NII,
+            raise_exception=False,
+        )
+
         if error_message:
             cprint(error_message, lvl="warning")
+
         if not t1w_files:
             raise ClinicaException("Empty dataset or already processed")
 
