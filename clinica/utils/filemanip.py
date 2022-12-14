@@ -465,7 +465,7 @@ def extract_metadata_from_json(
     return [data[k] for k in list_keys]
 
 
-def _handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
+def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
     handlers = {
         "TotalReadoutTime": _handle_missing_total_readout_time,
         "PhaseEncodingDirection": _handle_missing_phase_encoding_direction,

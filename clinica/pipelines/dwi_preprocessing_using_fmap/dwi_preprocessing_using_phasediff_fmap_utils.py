@@ -122,9 +122,9 @@ def init_input_node(
 
     from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
     from clinica.utils.filemanip import (
-        _handle_missing_keys_dwi,
         extract_metadata_from_json,
         get_subject_id,
+        handle_missing_keys_dwi,
     )
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
@@ -161,7 +161,7 @@ def init_input_node(
             "TotalReadoutTime",
             "PhaseEncodingDirection",
         ],
-        _handle_missing_keys_dwi,
+        handle_missing_keys_dwi,
     )
     phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
 
