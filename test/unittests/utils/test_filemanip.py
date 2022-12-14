@@ -42,8 +42,8 @@ def test_extract_metadata_from_json(dictionary, expected):
     import json
 
     from clinica.utils.filemanip import (
-        _handle_missing_keys_dwi,
         extract_metadata_from_json,
+        handle_missing_keys_dwi,
     )
 
     # create a json with parametrize ?
@@ -56,7 +56,7 @@ def test_extract_metadata_from_json(dictionary, expected):
                 "TotalReadoutTime",
                 "PhaseEncodingDirection",
             ],
-            _handle_missing_keys_dwi,
+            handle_missing_keys_dwi,
         )
         == expected
     )
