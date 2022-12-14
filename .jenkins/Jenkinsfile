@@ -1,3 +1,5 @@
+@Library('clinica-jenkins-sharedlibrary') _
+
 pipeline {
   options {
     timeout(time: 2, unit: 'HOURS')
@@ -46,6 +48,7 @@ pipeline {
                   clinica --help
                   conda list
                 '''
+		helloWorldExternal(name: "Nicolas", dayOfWeek:"Saturday")
               }
             }
             stage('Test instantiation') {
