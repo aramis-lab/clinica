@@ -69,7 +69,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     # list of the files we want to build the bids for each modality
     file_mod_list = [
         "T1.nii.gz",
-        "T2_FLAIR.nii.gz",
+        "T2_FLAIR_orig_defaced.nii.gz",
         "AP.nii.gz",
         "PA.nii.gz",
         "rfMRI.dcm",
@@ -164,7 +164,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     df_clinical = df_clinical.join(
         df_clinical.filename.map(
             {
-                "T2_FLAIR.nii.gz": {
+                "T2_FLAIR_orig_defaced.nii.gz": {
                     "datatype": "anat",
                     "modality": "FLAIR",
                     "suffix": "FLAIR",
