@@ -461,15 +461,7 @@ def extract_metadata_from_json(
         raise FileNotFoundError(
             f"Clinica could not open the following JSON file: {json_file}"
         )
-    list_values = []
-    data_keys = []
-    for key in list_keys:
-        if key in data:
-            list_values.append(data[key])
-            data_keys.append(key)
-        # else:
-        #     missing_keys.append(key)
-    missing_keys = set(list_keys).difference(set(data_keys))
+    missing_keys = set(list_keys).difference(set(data.keys()))
     if len(missing_keys) > 0 and handle_missing_keys is None:
         raise ClinicaException(
             f"Clinica could not find the following keys in the following JSON file: {missing_keys}."
@@ -528,9 +520,7 @@ def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
         if data["PixelBandwidth"] != 0:
             return data["PhaseEncodingSteps"] / data["PixelBandwidth"]
         raise ValueError("Pixel Bandwidth value is not valid.")
-    raise ClinicaException(
-        "Could not recover the TotalReadoutTime from JSON file."
-    )
+    raise ClinicaException("Could not recover the TotalReadoutTime from JSON file.")
 
 
 def _handle_missing_phase_encoding_direction(
