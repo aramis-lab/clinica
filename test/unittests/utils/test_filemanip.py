@@ -118,7 +118,7 @@ def test_extract_metadata_from_json_dwi(tmp_path, dictionary, expected):
 def test_extract_metadata_from_json_dwi_errors(
     tmp_path, input_list, dictionary, error_type, error_log
 ):
-    """This function tests that the outputs of `extract_metadata_from_json` are what you'd expect in the case of DWI."""
+    """This function tests that `extract_metadata_from_json` errors as expected in the case of DWI."""
     import json
 
     from clinica.utils.filemanip import (

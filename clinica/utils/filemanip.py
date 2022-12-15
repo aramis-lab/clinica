@@ -475,7 +475,8 @@ def extract_metadata_from_json(
 
 
 def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
-    """Find alternative fields from the bids/sub-X/ses-Y/dwi/sub-X_ses-Y_dwi.json file to replace those which were not found in this very json.
+    """Find alternative fields from the bids/sub-X/ses-Y/dwi/sub-X_ses-Y_dwi.json
+    file to replace those which were not found in this very json.
 
 
     Parameters
@@ -488,7 +489,7 @@ def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
 
     Returns
     -------
-    dict: 
+    dict:
         Contains the values for the requested fields.
     """
     handlers = {
