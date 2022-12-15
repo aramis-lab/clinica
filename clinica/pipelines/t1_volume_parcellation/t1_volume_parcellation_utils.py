@@ -1,15 +1,21 @@
-def atlas_statistics(in_image, atlas_list):
+def atlas_statistics(in_image: str, atlas_list: list) -> list:
     """Generate regional measure from atlas_list in TSV files.
 
     For each atlas name provided it calculates for the input image the mean
     for each region in the atlas and saves it to a TSV file.
 
-    Args:
-        in_image: A Nifti image
-        atlas_list: List of names of atlas to be applied
+    Parameters
+    ----------
+    in_image: str
+        Path to the input Nifti image.
 
-    Returns:
-        List of paths to TSV files
+    atlas_list: list of str
+        List of names of atlas to be applied.
+
+    Returns
+    -------
+    atlas_statistics_list : list
+        List of paths to TSV files.
     """
     from os.path import abspath, join
 

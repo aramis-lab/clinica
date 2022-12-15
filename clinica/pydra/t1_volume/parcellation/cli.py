@@ -46,7 +46,6 @@ def cli(
         tsv_file=subjects_sessions_tsv,
         base_dir=working_directory,
         parameters=parameters,
-        name=pipeline_name,
     )
     pydra_utils.run(pipeline, n_procs=n_procs)
 
