@@ -449,7 +449,9 @@ def extract_metadata_from_json(
 
     Returns
     -------
-    list: contains the values for the requested fields."""
+    list:
+        Contains the values for the requested fields.
+    """
     import json
 
     from clinica.utils.exceptions import ClinicaException
@@ -486,7 +488,9 @@ def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
 
     Returns
     -------
-    dict: contains the values for the requested fields."""
+    dict: 
+        Contains the values for the requested fields.
+    """
     handlers = {
         "TotalReadoutTime": _handle_missing_total_readout_time,
         "PhaseEncodingDirection": _handle_missing_phase_encoding_direction,
@@ -512,7 +516,9 @@ def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
 
     Returns
     -------
-    float: contains the value for TotalReadoutTime."""
+    float:
+        Value for TotalReadoutTime.
+    """
     from clinica.utils.exceptions import ClinicaException
 
     if "EstimatedTotalReadoutTime" in data:
@@ -540,7 +546,9 @@ def _handle_missing_phase_encoding_direction(
 
     Returns
     -------
-    float: contains the value for PhaseEncodingDirection."""
+    float:
+        Value for PhaseEncodingDirection.
+    """
     from clinica.utils.exceptions import ClinicaException
 
     if "PhaseEncodingAxis" in data:

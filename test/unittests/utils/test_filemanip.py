@@ -115,7 +115,7 @@ def test_extract_metadata_from_json_dwi(tmp_path, dictionary, expected):
         ),
     ],
 )
-def test_crash_extract_metadata_from_json_dwi(
+def test_extract_metadata_from_json_dwi_errors(
     tmp_path, input_list, dictionary, error_type, error_log
 ):
     """This function tests that the outputs of `extract_metadata_from_json` are what you'd expect in the case of DWI."""
