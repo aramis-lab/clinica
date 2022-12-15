@@ -13,13 +13,6 @@ pipeline_name = "t1-volume-parcellation"
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
 @cli_param.option_group.common_pipelines_options
-@cli_param.option_group.option(
-    "-fwhm",
-    "--full_width_at_half_maximum",
-    default=8,
-    show_default=True,
-    help="Full Width at Half Maximum (FWHM) of the smoothing used in your input files.",
-)
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
@@ -29,7 +22,6 @@ def cli(
     caps_directory: str,
     group_label: str,
     subjects_sessions_tsv: Optional[str] = None,
-    full_width_at_half_maximum: int = 8,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
     modulate: bool = True,
@@ -49,7 +41,6 @@ def cli(
     parameters = {
         "group_label": group_label,
         "modulate": modulate,
-        "full_width_at_half_maximum": full_width_at_half_maximum,
     }
 
     pipeline = T1VolumeParcellation(

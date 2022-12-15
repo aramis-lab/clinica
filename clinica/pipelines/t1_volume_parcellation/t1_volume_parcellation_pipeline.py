@@ -19,7 +19,6 @@ class T1VolumeParcellation(cpe.Pipeline):
         self.parameters.setdefault("group_label", None)
         check_group_label(self.parameters["group_label"])
 
-        self.parameters.setdefault("full_width_at_half_maximum", 8)
         self.parameters.setdefault("atlases", T1_VOLUME_ATLASES)
         self.parameters.setdefault("modulate", True)
 
@@ -75,7 +74,6 @@ class T1VolumeParcellation(cpe.Pipeline):
                     group_label=self.parameters["group_label"],
                     tissue_number=1,
                     modulation=self.parameters["modulate"],
-                    fwhm=self.parameters["full_width_at_half_maximum"],
                 ),
             )
         except ClinicaException as e:
