@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 
 def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
@@ -432,21 +432,28 @@ def read_participant_tsv(tsv_file: str) -> Tuple[List[str], List[str]]:
     )
 
 
-def extract_metadata_from_json(json_file: str, list_keys: List[str]) -> List[str]:
+def extract_metadata_from_json(
+    json_file: str,
+    list_keys: List[str],
+    handle_missing_keys: Optional[Callable] = None,
+) -> List[str]:
     """Extract fields from JSON file.
 
     Parameters
     ----------
     json_file: str
-        Path to JSON file from which to extract metadata.
+        Path to a json file containing metadata needed for the pipeline.
 
-    list_keys: List[str]
-        List of keys to extract.
+    list_keys: list of str
+        List of fields the users wants to obtain from the json.
+
+    handle_missing_keys: Optional[Callable]
+        Function to use to handle the fields of the json that may be missing.
 
     Returns
     -------
-    list_values: List[str]
-        List of values extracted from the JSON file and corresponding to the keys.
+    list:
+        Contains the values for the requested fields.
     """
     import json
 
@@ -459,16 +466,97 @@ def extract_metadata_from_json(json_file: str, list_keys: List[str]) -> List[str
         raise FileNotFoundError(
             f"Clinica could not open the following JSON file: {json_file}"
         )
-    list_values = []
-    missing_keys = []
-    for key in list_keys:
-        if key in data:
-            list_values.append(data[key])
-        else:
-            missing_keys.append(key)
-    if len(missing_keys) > 0:
-        error_message = f"Clinica could not find the following keys in the following JSON file: {json_file}:\n- "
-        error_message += "\n- ".join(missing_keys)
-        raise ClinicaException(error_message)
+    missing_keys = set(list_keys).difference(set(data.keys()))
+    if len(missing_keys) > 0 and handle_missing_keys is None:
+        raise ClinicaException(
+            f"Clinica could not find the following keys in the following JSON file: {missing_keys}."
+        )
+    if handle_missing_keys:
+        patch = handle_missing_keys(data, missing_keys)
+        data.update(patch)
+    return [data[k] for k in list_keys]
 
-    return list_values
+
+def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
+    """Find alternative fields from the bids/sub-X/ses-Y/dwi/sub-X_ses-Y_dwi.json
+    file to replace those which were not found in this very json.
+
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary containing the json data.
+
+    missing_keys: set
+        Set of keys that are required and were not found in the json.
+
+    Returns
+    -------
+    dict:
+        Contains the values for the requested fields.
+    """
+    handlers = {
+        "TotalReadoutTime": _handle_missing_total_readout_time,
+        "PhaseEncodingDirection": _handle_missing_phase_encoding_direction,
+    }
+    try:
+        return {k: handlers[k](data, missing_keys) for k in missing_keys}
+    except KeyError:
+        raise ValueError(
+            f"Could not recover the missing keys {missing_keys} from JSON file."
+        )
+
+
+def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
+    """Find an alternative field in the json to replace the TotalReadoutTime.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary containing the json data.
+
+    missing_keys: set
+        Set of keys that are required and were not found in the json.
+
+    Returns
+    -------
+    float:
+        Value for TotalReadoutTime.
+    """
+    from clinica.utils.exceptions import ClinicaException
+
+    if "EstimatedTotalReadoutTime" in data:
+        return data["EstimatedTotalReadoutTime"]
+    if "PhaseEncodingSteps" in data and "PixelBandwidth" in data:
+        if data["PixelBandwidth"] != 0:
+            return data["PhaseEncodingSteps"] / data["PixelBandwidth"]
+        raise ValueError("Pixel Bandwidth value is not valid.")
+    raise ClinicaException("Could not recover the TotalReadoutTime from JSON file.")
+
+
+def _handle_missing_phase_encoding_direction(
+    data: dict,
+    missing_keys: set,
+) -> float:
+    """Find an alternative field in the json to replace the PhaseEncodingDirection.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary containing the json data.
+
+    missing_keys: set
+        Set of keys that are required and were not found in the json.
+
+    Returns
+    -------
+    float:
+        Value for PhaseEncodingDirection.
+    """
+    from clinica.utils.exceptions import ClinicaException
+
+    if "PhaseEncodingAxis" in data:
+        return data["PhaseEncodingAxis"] + "+"
+    raise ClinicaException(
+        "Could not recover the PhaseEncodingDirection from JSON file."
+    )
