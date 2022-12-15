@@ -1,6 +1,6 @@
 pipeline {
   triggers {
-      cron('0 16 * * *')
+      cron('0 18 * * *')
     }
   options {
     timeout(time: 6, unit: 'HOURS')
