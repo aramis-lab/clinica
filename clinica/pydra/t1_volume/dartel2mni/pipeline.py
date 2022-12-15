@@ -1,4 +1,6 @@
+from typing import Any
 import pydra
+from pydra import Workflow
 from nipype.algorithms.misc import Gunzip
 from nipype.interfaces.spm import DARTELNorm2MNI
 from pydra.tasks.nipype1.utils import Nipype1Task
@@ -33,7 +35,7 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
 
 
 @clinica_io
-def t1volume_dartel2mni(
+def build_core_workflow(
     name: str = "t1-volume-dartel2mni", parameters: dict = {}
 ) -> Workflow:
     """Core workflow for T1VolumeDartel2MNI - Dartel template to MNI (Pydra engine).
@@ -47,6 +49,7 @@ def t1volume_dartel2mni(
         Dictionary of parameters. Default={}.
     """
     from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+    from clinica.pydra.t1_volume.dartel2mni.tasks import prepare_flowfields_task
 
     if spm_standalone_is_available():
         use_spm_standalone()
@@ -78,13 +81,16 @@ def t1volume_dartel2mni(
         ],
         bases=(pydra.specs.BaseSpec,),
     )
+    
     wf = Workflow(name, input_spec=input_spec)
-    wf.split("in_file")
+    
+    wf.split(("tissues", "flow_fields"))
+    
     compressed_inputs = [
-        "tissues",
         "flow_fields",
         "dartel_template",
     ]
+
     # Unzipping
     for input_name in compressed_inputs:
         wf.add(
@@ -95,16 +101,38 @@ def t1volume_dartel2mni(
             )
         )
 
+    wf.add(
+        Nipype1Task(
+            name="unzip_tissues",
+            interface=Gunzip(),
+            in_file=wf.lzin.tissues,
+        )
+        .split("in_file")
+        .combine("in_file")
+    )
+    
     # DARTEL2MNI Registration
+    wf.add(
+        prepare_flowfields_task(
+            name="prepare_flowfields",
+            interface=prepare_flowfields_task,
+            flowfields=wf.unzip_flow_fields.lzout.out_file,
+            tissues=parameters["tissues"],
+        )
+    )
+    
     dartel2mni_node = Nipype1Task(
-        name="dartel_2mni",
+        name="dartel2mni",
         interface=DARTELNorm2MNI(),
     )
     if parameters["voxel_size"] is not None:
         dartel2mni_node.inputs.voxel_size = tuple(parameters["voxel_size"])
     dartel2mni_node.inputs.modulate = parameters["modulate"]
     dartel2mni_node.inputs.fwhm = 0
-    dartel2mni_node.inputs.apply_to_files = wf.unzip_native_segmentations.lzout.out_file
+    dartel2mni_node.inputs.apply_to_files = wf.unzip_tissues.lzout.out_file
+    dartel2mni_node.inputs.template_file = wf.unzip_dartel_template.lzout.out_file
+    dartel2mni_node.inputs.flowfield_files = wf.prepare_flowfields.lzout.prepared_flowfields
+    wf.add(dartel2mni_node)
 
     # Smoothing
     if parameters["smooth"] is not None:
@@ -118,5 +146,14 @@ def t1volume_dartel2mni(
             "smoothing_workflow",
             smoothing_fwhm,
         )
-        smoothing_wf.inputs.input_file = wf.dartel2mni_node.lzout.normalized_files
+        smoothing_wf.inputs.input_file = wf.dartel2mni.lzout.normalized_files
         wf.add(smoothing_wf)
+
+    output_connections = [
+        ("smoothed_normalized_files", wf.smoothing_workflow.lzout.smoothed_files),
+        ("normalized_files", wf.dartel2mni.lzout.normalized_files),
+    ]
+    
+    wf.set_output(output_connections)
+
+    return wf
