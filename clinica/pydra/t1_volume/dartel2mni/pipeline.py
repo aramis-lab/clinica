@@ -49,7 +49,9 @@ def build_core_workflow(
     parameters : dict, optional
         Dictionary of parameters. Default={}.
     """
+    from clinica.pydra.shared_workflows.smoothing import build_smoothing_workflow
     from clinica.pydra.t1_volume.dartel2mni.tasks import prepare_flowfields_task
+    from clinica.pydra.utils import sanitize_fwhm
     from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
     if spm_standalone_is_available():
@@ -139,15 +141,9 @@ def build_core_workflow(
 
     # Smoothing
     if parameters["smooth"] is not None:
-        from clinica.pydra.pet_volume.pipeline import (
-            _sanitize_fwhm,
-            build_smoothing_workflow,
-        )
-
-        smoothing_fwhm = _sanitize_fwhm(parameters["smooth"])
         smoothing_wf = build_smoothing_workflow(
             "smoothing_workflow",
-            smoothing_fwhm,
+            sanitize_fwhm(parameters["smooth"]),
         )
         smoothing_wf.inputs.input_file = wf.dartel2mni.lzout.normalized_files
         wf.add(smoothing_wf)
