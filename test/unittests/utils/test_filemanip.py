@@ -5,6 +5,8 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 
+from clinica.utils.exceptions import ClinicaException
+
 
 @pytest.mark.parametrize(
     "dictionary, expected",
@@ -23,9 +25,9 @@ from numpy.testing import assert_array_equal
         (
             {
                 "EstimatedTotalReadoutTime": 1,
-                "PhaseEncodingDirection": "j",
+                "PhaseEncodingAxis": "j",
             },
-            [1, "j"],
+            [1, "j+"],
         ),
         (
             {
@@ -37,7 +39,7 @@ from numpy.testing import assert_array_equal
         ),
     ],
 )
-def test_extract_metadata_from_json(tmp_path, dictionary, expected):
+def test_extract_metadata_from_json_dwi(tmp_path, dictionary, expected):
     """This function tests that the outputs of `extract_metadata_from_json` are what you'd expect in the case of DWI."""
     import json
 
@@ -59,6 +61,83 @@ def test_extract_metadata_from_json(tmp_path, dictionary, expected):
         )
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "input_list, dictionary, error_type, error_log",
+    [
+        (
+            [
+                "TotalReadoutTime",
+                "PhaseEncodingDirection",
+            ],
+            {
+                "PhaseEncodingSteps": 1,
+                "PixelBandwidth": 0.5,
+            },
+            ClinicaException,
+            "Could not recover the PhaseEncodingDirection from JSON file.",
+        ),
+        (
+            [
+                "TotalReadoutTime",
+                "PhaseEncodingDirection",
+            ],
+            {
+                "PhaseEncodingDirection": "j+",
+            },
+            ClinicaException,
+            "Could not recover the TotalReadoutTime from JSON file.",
+        ),
+        (
+            [
+                "TotalReadoutTime",
+                "PhaseEncodingDirection",
+            ],
+            {
+                "PhaseEncodingSteps": 1,
+                "PixelBandwidth": 0,
+                "PhaseEncodingDirection": "j+",
+            },
+            ValueError,
+            "Pixel Bandwidth value is not valid.",
+        ),
+        (
+            [
+                "blabla",
+                "PhaseEncodingDirection",
+            ],
+            {
+                "PhaseEncodingDirection": "j+",
+            },
+            ValueError,
+            "Could not recover the missing keys {'blabla'} from JSON file.",
+        ),
+    ],
+)
+def test_crash_extract_metadata_from_json_dwi(
+    tmp_path, input_list, dictionary, error_type, error_log
+):
+    """This function tests that the outputs of `extract_metadata_from_json` are what you'd expect in the case of DWI."""
+    import json
+
+    from clinica.utils.filemanip import (
+        extract_metadata_from_json,
+        handle_missing_keys_dwi,
+    )
+
+    with open(tmp_path / "metadata.json", "w") as outfile:
+        json.dump(dictionary, outfile)
+    with pytest.raises(
+        error_type,
+        match=error_log,
+    ):
+
+        extract_metadata_from_json(
+            tmp_path / "metadata.json",
+            input_list,
+            handle_missing_keys_dwi,
+        )
 
 
 def test_zip_nii(tmp_path):
