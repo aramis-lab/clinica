@@ -1,4 +1,5 @@
 from typing import Iterable
+
 from pydra.mark import annotate, task
 
 
@@ -31,7 +32,7 @@ def prepare_flowfields(flowfields: Iterable, tissues: Iterable) -> list:
     list:
         Either a simple list with the flowfields path repeated for each tissue,
         of a list of lists of shape (n_flowfields, n_tissues).
-    
+
     Raises
     ------
     ValueError
@@ -50,9 +51,9 @@ def prepare_flowfields(flowfields: Iterable, tissues: Iterable) -> list:
     ['path_to_flowfield_1', 'path_to_flowfield_1']
     """
     if not isinstance(tissues, Iterable):
-        raise ValueError(f"Unvalid tissues type: {type(tissues)}.")
+        raise ValueError(f"Invalid tissues type: {type(tissues)}.")
     if isinstance(flowfields, (list, tuple)):
         return [[f] * len(tissues) for f in flowfields]
     if isinstance(flowfields, str):
         return [flowfields] * len(tissues)
-    raise ValueError(f"Unvalid flowfields type: {type(flowfields)}.")
+    raise ValueError(f"Invalid flowfields type: {type(flowfields)}.")

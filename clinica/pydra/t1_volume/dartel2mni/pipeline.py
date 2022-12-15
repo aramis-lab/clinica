@@ -1,8 +1,9 @@
 from typing import Any
+
 import pydra
-from pydra import Workflow
 from nipype.algorithms.misc import Gunzip
 from nipype.interfaces.spm import DARTELNorm2MNI
+from pydra import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
 
 from clinica.pydra.engine import clinica_io
@@ -48,8 +49,8 @@ def build_core_workflow(
     parameters : dict, optional
         Dictionary of parameters. Default={}.
     """
-    from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
     from clinica.pydra.t1_volume.dartel2mni.tasks import prepare_flowfields_task
+    from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
     if spm_standalone_is_available():
         use_spm_standalone()
@@ -81,11 +82,11 @@ def build_core_workflow(
         ],
         bases=(pydra.specs.BaseSpec,),
     )
-    
+
     wf = Workflow(name, input_spec=input_spec)
-    
+
     wf.split(("tissues", "flow_fields"))
-    
+
     compressed_inputs = [
         "flow_fields",
         "dartel_template",
@@ -110,7 +111,7 @@ def build_core_workflow(
         .split("in_file")
         .combine("in_file")
     )
-    
+
     # DARTEL2MNI Registration
     wf.add(
         prepare_flowfields_task(
@@ -120,7 +121,7 @@ def build_core_workflow(
             tissues=parameters["tissues"],
         )
     )
-    
+
     dartel2mni_node = Nipype1Task(
         name="dartel2mni",
         interface=DARTELNorm2MNI(),
@@ -131,7 +132,9 @@ def build_core_workflow(
     dartel2mni_node.inputs.fwhm = 0
     dartel2mni_node.inputs.apply_to_files = wf.unzip_tissues.lzout.out_file
     dartel2mni_node.inputs.template_file = wf.unzip_dartel_template.lzout.out_file
-    dartel2mni_node.inputs.flowfield_files = wf.prepare_flowfields.lzout.prepared_flowfields
+    dartel2mni_node.inputs.flowfield_files = (
+        wf.prepare_flowfields.lzout.prepared_flowfields
+    )
     wf.add(dartel2mni_node)
 
     # Smoothing
@@ -153,7 +156,7 @@ def build_core_workflow(
         ("smoothed_normalized_files", wf.smoothing_workflow.lzout.smoothed_files),
         ("normalized_files", wf.dartel2mni.lzout.normalized_files),
     ]
-    
+
     wf.set_output(output_connections)
 
     return wf
