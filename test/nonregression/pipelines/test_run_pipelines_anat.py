@@ -186,7 +186,7 @@ def run_T1VolumeTissueSegmentation(
         / "caps"
         / "subjects"
         / "sub-ADNI011S4105"
-        / "ses-M0000"
+        / "ses-M000"
         / "t1"
         / "spm"
         / "segmentation"
