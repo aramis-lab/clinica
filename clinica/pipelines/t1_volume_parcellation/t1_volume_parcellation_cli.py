@@ -38,7 +38,10 @@ def cli(
 
     from .t1_volume_parcellation_pipeline import T1VolumeParcellation
 
-    parameters = {"group_label": group_label, "modulate": modulate}
+    parameters = {
+        "group_label": group_label,
+        "modulate": modulate,
+    }
 
     pipeline = T1VolumeParcellation(
         caps_directory=caps_directory,

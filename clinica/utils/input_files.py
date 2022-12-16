@@ -401,24 +401,49 @@ def t1_volume_native_tpm_in_mni(tissue_number, modulation):
     }
 
 
-def t1_volume_template_tpm_in_mni(group_label, tissue_number, modulation):
+def t1_volume_template_tpm_in_mni(group_label, tissue_number, modulation, fwhm=None):
+    """Build the dictionary required by clinica_file_reader to get the tissue
+    probability maps based on group template in MNI space.
+
+    Parameters
+    ----------
+    group_label : str
+        Label used for the group of interest.
+
+    tissue_number : int
+        An integer defining the tissue of interest.
+
+    modulation : {"on", "off"}
+        Whether modulation is on or off.
+
+    fwhm : int, optional
+        The smoothing kernel in millimeters.
+
+    Returns
+    -------
+    dict :
+        Information dict to be passed to clinica_file_reader.
+    """
     import os
 
     from .spm import INDEX_TISSUE_MAP
 
     pattern_modulation = "on" if modulation else "off"
     description_modulation = "with" if modulation else "without"
+    fwhm_key_value = f"_fwhm-{fwhm}mm" if fwhm else ""
+    fwhm_description = f"with {fwhm}mm smoothing" if fwhm else "with no smoothing"
+
     return {
         "pattern": os.path.join(
             "t1",
             "spm",
             "dartel",
             f"group-{group_label}",
-            f"*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_space-Ixi549Space_modulated-{pattern_modulation}_probability.nii*",
+            f"*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_space-Ixi549Space_modulated-{pattern_modulation}{fwhm_key_value}_probability.nii*",
         ),
         "description": (
             f"Tissue probability map {INDEX_TISSUE_MAP[tissue_number]} based "
-            f"on {group_label} template in MNI space (Ixi549) {description_modulation} modulation."
+            f"on {group_label} template in MNI space (Ixi549) {description_modulation} modulation and {fwhm_description}."
         ),
         "needed_pipeline": "t1-volume",
     }
