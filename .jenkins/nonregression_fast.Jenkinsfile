@@ -259,6 +259,8 @@ pipeline {
           environment {
 	    CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
+            PATH = "$HOME/.local/bin:$PATH"
+            POETRY="poetry"
           }
           stages {
             stage('Build environment') {
@@ -269,6 +271,13 @@ pipeline {
                   make env.conda
                   conda activate $CONDA_ENV
                   conda info
+                  if ! command -v $POETRY &> /dev/null
+                  then
+                    echo "$POETRY could not be found"
+                    exit
+                  else
+                    echo "$($POETRY --version) installed at : $(which $POETRY)"
+                  fi
                 '''
               }
             }
