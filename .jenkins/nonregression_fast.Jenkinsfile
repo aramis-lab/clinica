@@ -259,7 +259,7 @@ pipeline {
           environment {
 	    CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
-            PATH = "$HOME/.local/bin:$PATH"
+            PATH = "$HOME/.local/bin:/usr/local/bin:$PATH"
             POETRY="poetry"
           }
           stages {

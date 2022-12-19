@@ -217,25 +217,21 @@ pipeline {
               steps {
                 sh 'echo "Agent name is ${NODE_NAME}"'
                 sh '''
-                  echo $PATH
 		  source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   make env.conda
                   conda activate "${CONDA_ENV}"
                   conda info
-		 echo $PATH
                 '''
               }
             }
             stage('Install Clinica') {
               steps {
                 sh '''
-		  echo $PATH
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
                   make install
                   clinica --help
                   conda list
-		  echo $PATH
                 '''
               }
             }
@@ -246,10 +242,8 @@ pipeline {
               }
               steps {
                 sh '''
-		  echo $PATH
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
-		  echo $PATH
                   source "$(brew --prefix)/opt/modules/init/bash"
                   module load clinica.all
                   cd test
