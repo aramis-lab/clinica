@@ -302,7 +302,7 @@ pipeline {
                  sh '''
                    source "${CONDA_HOME}/etc/profile.d/conda.sh"
                    conda activate $CONDA_ENV
-                   source /usr/local/opt/modules/init/bash
+                   source "$(brew --prefix)/opt/modules/init/bash"
                    mkdir -p $WORK_DIR
                    module load clinica.all
                    cd test
