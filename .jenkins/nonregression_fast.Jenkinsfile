@@ -259,7 +259,7 @@ pipeline {
           environment {
 	    CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
-            PATH = "$HOME/.local/bin:$PATH"
+            PATH = "$HOME/.local/bin:/usr/local/bin:$PATH"
             POETRY="poetry"
           }
           stages {
@@ -302,7 +302,7 @@ pipeline {
                  sh '''
                    source "${CONDA_HOME}/etc/profile.d/conda.sh"
                    conda activate $CONDA_ENV
-                   source /usr/local/opt/modules/init/bash
+                   source "$(brew --prefix)/opt/modules/init/bash"
                    mkdir -p $WORK_DIR
                    module load clinica.all
                    cd test
@@ -338,7 +338,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -374,7 +374,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -410,7 +410,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -446,7 +446,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
