@@ -244,7 +244,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   module load clinica.all
                   cd test
                   poetry run pytest \
@@ -275,7 +275,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   module load clinica.all
                   cd test
                   poetry run pytest \
@@ -310,7 +310,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   module load clinica.all
                   cd test
                   poetry run pytest \
