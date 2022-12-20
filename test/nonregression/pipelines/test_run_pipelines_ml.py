@@ -140,6 +140,7 @@ def run_spatial_svm(
 
     import nibabel as nib
     import numpy as np
+    from numpy.testing import assert_allclose
 
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import (
         SpatialSVM,
@@ -152,7 +153,6 @@ def run_spatial_svm(
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
     parameters = {"group_label": "ADNIbl", "orig_input_data": "t1-volume"}
-    # Instantiate pipeline and run()
     pipeline = SpatialSVM(
         caps_directory=fspath(caps_dir),
         tsv_file=fspath(tsv),
@@ -162,39 +162,29 @@ def run_spatial_svm(
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
-    # Check output vs ref
-    subjects = ["sub-ADNI011S0023", "sub-ADNI013S0325"]
-    out_data_REG_NIFTI = [
-        nib.load(
+    for subject in ("sub-ADNI011S0023", "sub-ADNI013S0325"):
+        out_data = nib.load(
             fspath(
                 caps_dir
                 / "subjects"
-                / sub
+                / subject
                 / "ses-M000"
                 / "machine_learning"
                 / "input_spatial_svm"
                 / "group-ADNIbl"
                 / (
-                    sub
+                    subject
                     + "_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
                 )
             )
         ).get_fdata(dtype="float32")
-        for sub in subjects
-    ]
-    ref_data_REG_NIFTI = [
-        nib.load(
+        ref_data = nib.load(
             fspath(
                 ref_dir
                 / (
-                    sub
+                    subject
                     + "_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
                 )
             )
         ).get_fdata(dtype="float32")
-        for sub in subjects
-    ]
-    for i in range(len(out_data_REG_NIFTI)):
-        assert np.allclose(
-            out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i], rtol=1e-3, equal_nan=True
-        )
+        assert_allclose(out_data, ref_data, rtol=1e-03, atol=1e-7)
