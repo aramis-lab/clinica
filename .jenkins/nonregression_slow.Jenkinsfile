@@ -18,7 +18,7 @@ pipeline {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
             PATH = "$HOME/.local/bin:$PATH"
-            POETRY="poetry"
+            POETRY = "poetry"
           }
           stages {
             stage('Build environment') {
@@ -257,10 +257,10 @@ pipeline {
             label 'macos'
           }
           environment {
-	    CONDA_ENV = "$WORKSPACE/env"
+	        CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
             PATH = "$HOME/.local/bin:/usr/local/bin:/Users/ci-aramis-clinica/.brew/bin:$PATH"
-            POETRY="poetry"
+            POETRY = "poetry"
           }
           stages {
             stage('Build environment') {
@@ -471,7 +471,7 @@ pipeline {
                   sh 'rm -rf ${WORK_DIR}/*'
                 }
               }
-            } */
+            }
           }
           post {
             always {
