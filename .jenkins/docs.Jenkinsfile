@@ -4,9 +4,9 @@
 // Author: mauricio.diaz@inria.fr
 
 pipeline {
-    agent none
-    stages {
-        stage('Build the docs') {
+  agent none
+  stages {
+    stage('Build the docs') {
       agent {
         label 'ubuntu'
       }
@@ -29,8 +29,8 @@ pipeline {
           cleanWs()
         }
       }
-        }
-        stage('Deploy') {
+    }
+    stage('Deploy') {
       agent { label 'ubuntu' }
       steps {
         echo 'Deploying in webserver...'
@@ -39,40 +39,40 @@ pipeline {
         unstash(name: 'doc_html')
         sh 'mv site "${BRANCH_NAME}"'
         sshPublisher(
-              publishers: [
-                sshPublisherDesc(
-                  configName: 'web',
-                  transfers: [
-                    sshTransfer(
-                      cleanRemote: false,
-                      excludes: '',
-                      execCommand: '',
-                      execTimeout: 120000,
-                      flatten: false,
-                      makeEmptyDirs: false,
-                      noDefaultExcludes: false,
-                      patternSeparator: '[, ]+',
-                      remoteDirectory: 'clinica/docs/public/',
-                      remoteDirectorySDF: false,
-                      removePrefix: '',
-                      sourceFiles: "${BRANCH_NAME}/**"
-                    )
-                  ],
-                  usePromotionTimestamp: false,
-                  useWorkspaceInPromotion: false,
-                  verbose: false
+          publishers: [
+            sshPublisherDesc(
+              configName: 'web',
+              transfers: [
+                sshTransfer(
+                  cleanRemote: false,
+                  excludes: '',
+                  execCommand: '',
+                  execTimeout: 120000,
+                  flatten: false,
+                  makeEmptyDirs: false,
+                  noDefaultExcludes: false,
+                  patternSeparator: '[, ]+',
+                  remoteDirectory: 'clinica/docs/public/',
+                  remoteDirectorySDF: false,
+                  removePrefix: '',
+                  sourceFiles: "${BRANCH_NAME}/**"
                 )
-              ]
+              ],
+              usePromotionTimestamp: false,
+              useWorkspaceInPromotion: false,
+              verbose: false
             )
+          ]
+        )
         echo 'Finish uploading artifacts'
       }
-        }
     }
-    post {
-        failure {
+  }
+  post {
+    failure {
       mail to: 'clinica-ci@inria.fr',
-          subject: "Build of Clinica's user documentation failed: ${currentBuild.fullDisplayName}",
-          body: "Something went wrong during the build of Clinica's user documentation, check ${env.BUILD_URL} for details."
-        }
+        subject: "Build of Clinica's user documentation failed: ${currentBuild.fullDisplayName}",
+        body: "Something went wrong during the build of Clinica's user documentation, check ${env.BUILD_URL} for details."
     }
+  }
 }

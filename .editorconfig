@@ -16,8 +16,11 @@ trim_trailing_whitespace = false
 [*.tsv]
 indent_style = tab
 
-[*.y{,a}ml]
+[*.{yml,yaml}]
 indent_size = 2
 
 [Makefile]
 indent_style = tab
+
+[*Jenkinsfile]
+indent_size = 2

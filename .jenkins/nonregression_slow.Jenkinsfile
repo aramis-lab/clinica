@@ -1,7 +1,7 @@
 pipeline {
   triggers {
-      cron('H 20 * * 5')
-    }
+    cron('H 20 * * 5')
+  }
   options {
     timeout(time: 60, unit: 'HOURS')
     disableConcurrentBuilds(abortPrevious: true)
@@ -18,7 +18,7 @@ pipeline {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
             PATH = "$HOME/.local/bin:$PATH"
-            POETRY="poetry"
+            POETRY = "poetry"
           }
           stages {
             stage('Build environment') {
@@ -56,10 +56,10 @@ pipeline {
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/PET"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   source /usr/local/Modules/init/profile.sh
@@ -95,10 +95,10 @@ pipeline {
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/Stats"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   mkdir -p $WORK_DIR
@@ -134,10 +134,10 @@ pipeline {
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/ML"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   mkdir -p $WORK_DIR
@@ -173,10 +173,10 @@ pipeline {
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/Anat"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   mkdir -p $WORK_DIR
@@ -212,10 +212,10 @@ pipeline {
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/DWI"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   mkdir -p $WORK_DIR
@@ -257,10 +257,10 @@ pipeline {
             label 'macos'
           }
           environment {
-	    CONDA_ENV = "$WORKSPACE/env"
+            CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
             PATH = "$HOME/.local/bin:/usr/local/bin:/Users/ci-aramis-clinica/.brew/bin:$PATH"
-            POETRY="poetry"
+            POETRY = "poetry"
           }
           stages {
             stage('Build environment') {
@@ -293,13 +293,13 @@ pipeline {
               }
             }
             stage("PET:nonreg:slow") {
-               environment {
-                 WORK_DIR = "/Volumes/data/working_dir_mac/PET"
-                 INPUT_DATA_DIR = "/Volumes/data_ci"
-                 TMP_DIR = "/Volumes/data/tmp"
-               }
-               steps {
-                 sh '''
+              environment {
+                WORK_DIR = "/Volumes/data/working_dir_mac/PET"
+                INPUT_DATA_DIR = "/Volumes/data_ci"
+                TMP_DIR = "/Volumes/data/tmp"
+              }
+              steps {
+                sh '''
                    source "${CONDA_HOME}/etc/profile.d/conda.sh"
                    conda activate $CONDA_ENV
                    source "$(brew --prefix)/opt/modules/init/bash"
@@ -318,16 +318,16 @@ pipeline {
                      -m "slow" \
                      ./nonregression/pipelines/test_run_pipelines_pet.py
                  '''
-               }
-               post {
-                 always {
-                   junit 'test/test-reports/*.xml'
-                 }
-                 success {
-                   sh 'rm -rf ${WORK_DIR}/*'
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
                 }
-               }
-             }
+                success {
+                  sh 'rm -rf ${WORK_DIR}/*'
+                }
+              }
+            }
             stage('Stats:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/Stats"
@@ -436,7 +436,7 @@ pipeline {
                 }
               }
             }
-          stage('DWI:nonreg:slow') {
+            stage('DWI:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/DWI"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -471,7 +471,7 @@ pipeline {
                   sh 'rm -rf ${WORK_DIR}/*'
                 }
               }
-            } */
+            }
           }
           post {
             always {
