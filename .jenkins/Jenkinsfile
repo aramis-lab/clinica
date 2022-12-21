@@ -119,16 +119,16 @@ pipeline {
                 }
               }
             }
-	    stage('Non Regression Fast') {
+            stage('Non Regression Fast') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE'){
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   mkdir -p $WORK_DIR
@@ -149,7 +149,7 @@ pipeline {
                 '''
                 }
               }
-	     post {
+              post {
                 always {
                   junit 'test/test-reports/*.xml'
                 }
