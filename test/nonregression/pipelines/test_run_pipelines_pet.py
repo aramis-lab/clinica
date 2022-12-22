@@ -34,13 +34,11 @@ def test_pet_linear(cmdopt, tmp_path):
 
 
 @pytest.mark.slow
-def test_pet_surface_cross_sectional(cmdopt, tmp_path):
+def test_pet_surface(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
-    input_dir, tmp_dir, ref_dir = configure_paths(
-        base_dir, tmp_path, "PETSurfaceCrossSectional"
-    )
-    run_pet_surface_cross_sectional(input_dir, tmp_dir, ref_dir, working_dir)
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETSurface")
+    run_pet_surface(input_dir, tmp_dir, ref_dir, working_dir)
 
 
 def run_pet_volume(
@@ -135,7 +133,7 @@ def run_pet_linear(
     compare_folders(output_dir / "caps", ref_dir / "caps", output_dir)
 
 
-def run_pet_surface_cross_sectional(
+def run_pet_surface(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     import shutil
