@@ -12,7 +12,7 @@ jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v6
+      - uses: actions/stale@v7
         with:
           stale-issue-message: 'This issue is considered stale because it has not received further activity for the last 14 days. You may remove the `inactive` label or add a comment, otherwise it will be closed after the next 14 days.'
           stale-issue-label: 'inactive'
