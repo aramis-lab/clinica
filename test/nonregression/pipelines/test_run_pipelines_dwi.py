@@ -195,7 +195,7 @@ def run_dwi_dti(
             ref_dir
             / (
                 subject_id
-                + "_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-"
+                + "_ses-M000_dwi_space-JHUDTI81_res-1x1x1_map-"
                 + m
                 + "_statistics.tsv"
             )
