@@ -53,7 +53,7 @@ def test_dwi_connectome(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIConnectome")
-    run_dwi_dti(input_dir, tmp_dir, ref_dir, working_dir)
+    run_dwi_connectome(input_dir, tmp_dir, ref_dir, working_dir)
 
 
 def run_dwi_preprocessing_using_t1(
