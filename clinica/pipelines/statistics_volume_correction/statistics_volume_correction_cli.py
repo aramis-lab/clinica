@@ -11,7 +11,7 @@ pipeline_name = "statistics-volume-correction"
 @clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
-@click.argument("t_map", type=click.Path(exists=True, resolve_path=True))
+@click.argument("t_map", type=str)
 @click.argument("height_threshold", type=float)
 @click.argument("FWEp", type=float)
 @click.argument("FDRp", type=float)
