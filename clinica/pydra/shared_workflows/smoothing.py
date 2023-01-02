@@ -7,7 +7,7 @@ from pydra.tasks.nipype1.utils import Nipype1Task
 
 def build_smoothing_workflow(
     name: str,
-    fwhm: ty.List[ty.List[float]],
+    fwhm: ty.Iterable[ty.Tuple[float, float, float]],
 ) -> Workflow:
     """Build and parametrize a smoothing workflow.
 
@@ -32,12 +32,8 @@ def build_smoothing_workflow(
         input_spec=["input_file"],
     )
     outputs = []
-    for fwhm_value in fwhm:
-        if not isinstance(fwhm_value, list) or len(fwhm_value) != 3:
-            raise ValueError(
-                f"FWHM value is not valid. Expected a length 3 list and got: {fwhm_value}."
-            )
-        fwhm_name = f"{'-'.join([str(int(f)) for f in fwhm_value])}mm"
+    for x, y, z in fwhm:
+        fwhm_name = f"{'-'.join([str(int(f)) for f in (x, y, z)])}mm"
         task = Nipype1Task(
             name=f"smoothing_node_{fwhm_name}",
             interface=Smooth(),

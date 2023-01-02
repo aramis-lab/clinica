@@ -4,7 +4,7 @@ import typing as ty
 
 def sanitize_fwhm(
     fwhm: ty.Union[float, ty.Tuple[float], ty.List[float], ty.List[ty.List[float]]],
-) -> ty.List[ty.List[float]]:
+) -> ty.List[ty.Tuple[float, float, float]]:
     """Make sure the FWHM is in the right format for the Smooth SPM interface.
 
     Parameters

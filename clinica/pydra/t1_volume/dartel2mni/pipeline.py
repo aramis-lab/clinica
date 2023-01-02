@@ -138,6 +138,8 @@ def build_core_workflow(
         wf.prepare_flowfields.lzout.prepared_flowfields
     )
     wf.add(dartel2mni_node)
+    
+    output_connections = [("normalized_files", wf.dartel2mni.lzout.normalized_files)]
 
     # Smoothing
     if parameters["smooth"] is not None:
@@ -147,11 +149,9 @@ def build_core_workflow(
         )
         smoothing_wf.inputs.input_file = wf.dartel2mni.lzout.normalized_files
         wf.add(smoothing_wf)
-
-    output_connections = [
-        ("smoothed_normalized_files", wf.smoothing_workflow.lzout.smoothed_files),
-        ("normalized_files", wf.dartel2mni.lzout.normalized_files),
-    ]
+        output_connections += [
+            ("smoothed_normalized_files", wf.smoothing_workflow.lzout.smoothed_files),
+        ]
 
     wf.set_output(output_connections)
 
