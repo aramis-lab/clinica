@@ -24,7 +24,7 @@ def build_smoothing_workflow(
 
     Returns
     -------
-    wf : Workflow
+    Workflow
         The resulting smoothing workflow.
     """
     wf = Workflow(

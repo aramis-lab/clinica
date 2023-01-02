@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Union
 
 from pydra.mark import annotate, task
 
@@ -10,7 +10,7 @@ def prepare_flowfields_task(flowfields: Iterable, tissues: Iterable) -> list:
     return prepare_flowfields(flowfields, tissues)
 
 
-def prepare_flowfields(flowfields: Iterable, tissues: Iterable) -> list:
+def prepare_flowfields(flowfields: Union[Iterable[str], str], tissues: Iterable[int]) -> list:
     """Reshape the flow fields according to the number of tissues.
 
     This function broadcasts the flow fields to the number of tissues
