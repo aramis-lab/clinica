@@ -9,32 +9,6 @@ from pydra.tasks.nipype1.utils import Nipype1Task
 from clinica.pydra.engine import clinica_io
 
 
-def _check_pipeline_parameters(parameters: dict) -> dict:
-    """Check the parameters passed to the pipeline.
-
-    Parameters
-    ----------
-    parameters : dict
-        Dictionary of parameters to analyze.
-
-    Returns
-    -------
-    dict :
-        Cleaned dictionary of parameters.
-    """
-    from clinica.utils.group import check_group_label
-
-    if "group_label" not in parameters:
-        raise KeyError("Missing compulsory group_label key in pipeline parameter.")
-    check_group_label(parameters["group_label"])
-    parameters.setdefault("tissues", [1, 2, 3])
-    parameters.setdefault("voxel_size", None)
-    parameters.setdefault("modulate", True)
-    parameters.setdefault("smooth", 8.0)
-
-    return parameters
-
-
 @clinica_io
 def build_core_workflow(
     name: str = "t1-volume-dartel2mni", parameters: dict = {}
@@ -56,8 +30,6 @@ def build_core_workflow(
 
     if spm_standalone_is_available():
         use_spm_standalone()
-
-    parameters = _check_pipeline_parameters(parameters)
 
     input_spec = pydra.specs.SpecInfo(
         name="Input",

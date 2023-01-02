@@ -40,6 +40,9 @@ def cli(
     when running the t1-volume pipeline.
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """
+    from clinica.utils.group import check_group_label
+
+    check_group_label(group_label)
     parameters = {
         "group_label": group_label,
         "tissues": tissues,
