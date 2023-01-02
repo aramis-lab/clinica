@@ -138,7 +138,7 @@ def build_core_workflow(
         wf.prepare_flowfields.lzout.prepared_flowfields
     )
     wf.add(dartel2mni_node)
-    
+
     output_connections = [("normalized_files", wf.dartel2mni.lzout.normalized_files)]
 
     # Smoothing
