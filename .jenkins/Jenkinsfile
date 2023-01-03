@@ -61,14 +61,13 @@ pipeline {
                   source /usr/local/Modules/init/profile.sh
                   module load clinica.all
                   cd test
-                  taskset -c 0-21 poetry run pytest \
+                  poetry run pytest \
                     --junitxml=./test-reports/instantiation_linux.xml \
                     --verbose \
                     --working_directory=$WORK_DIR \
                     --input_data_directory=$INPUT_DATA_DIR \
                     --disable-warnings \
                     --timeout=0 \
-                    -n 3 \
                     ./instantiation/
                 '''
               }
