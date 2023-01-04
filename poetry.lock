@@ -2353,13 +2353,14 @@ pyparsing = ">=2.1.4"
 
 [[package]]
 name = "pydra"
-version = "0.20"
+version = "0.21"
 description = "Pydra dataflow engine"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pydra-0.20-py3-none-any.whl", hash = "sha256:8e6c823a046c1a2d9fa64a4215d0058bb1d47ad4d8e79f94909c55da75ecc747"},
+    {file = "pydra-0.21-py3-none-any.whl", hash = "sha256:188cd8ff6e8b819104bce22cd51b00af5f1e4802fa30b08a801a78661ac66e14"},
+    {file = "pydra-0.21.tar.gz", hash = "sha256:93209b7840537a3a1aeb449eb0a052fc02ab879d2c512c6441b8e94dbeaa45e2"},
 ]
 
 [package.dependencies]
@@ -2369,29 +2370,29 @@ etelemetry = ">=0.2.2"
 filelock = ">=3.0.0"
 
 [package.extras]
-all = ["attrs (>=19.1.0)", "black (==21.4b2)", "boutiques", "cloudpickle", "codecov", "filelock", "numpy", "packaging", "pre-commit", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "sphinx (>=2.1.2)", "sphinx-rtd-theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-napoleon", "sphinxcontrib-versioning", "tornado"]
-dask = ["boutiques", "codecov", "dask", "distributed", "numpy", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "tornado"]
-dev = ["black (==21.4b2)", "boutiques", "codecov", "numpy", "pre-commit", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "tornado"]
-doc = ["attrs (>=19.1.0)", "cloudpickle", "filelock", "packaging", "sphinx (>=2.1.2)", "sphinx-rtd-theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-napoleon", "sphinxcontrib-versioning"]
-docs = ["attrs (>=19.1.0)", "cloudpickle", "filelock", "packaging", "sphinx (>=2.1.2)", "sphinx-rtd-theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-napoleon", "sphinxcontrib-versioning"]
+all = ["pydra[dev,doc]"]
+dask = ["dask", "distributed"]
+dev = ["black", "pre-commit", "pydra[test]"]
+doc = ["packaging", "sphinx (>=2.1.2)", "sphinx_rtd_theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-versioning"]
+docs = ["pydra[doc]"]
 test = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "tornado"]
-tests = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "tornado"]
+tests = ["pydra[test]"]
 
 [[package]]
 name = "pydra-bids"
-version = "0.0.3"
+version = "0.0.7"
 description = "Pydra tasks for BIDS I/O"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "pydra_bids-0.0.3-py3-none-any.whl", hash = "sha256:c4ba96dc97da25a52b6f2e14f0537738730503599b67fe50447816e2dbfc2817"},
-    {file = "pydra_bids-0.0.3.tar.gz", hash = "sha256:4c4279ce95d27060a88d2a10178ae57773d2a8753789b2968528a50b4ecc8796"},
+    {file = "pydra_bids-0.0.7-py3-none-any.whl", hash = "sha256:25b3060b20f2c3c199fd0caab6a0cb6e93ab129f2ae4b1be906f9b7c6d513248"},
+    {file = "pydra_bids-0.0.7.tar.gz", hash = "sha256:f0b831bbac6b870bcf51dcd0c1c98acb3bcdde6cb77cb4c525789bbe13a00694"},
 ]
 
 [package.dependencies]
 ancpbids = ">=0.2.1,<0.3.0"
-pydra = ">=0.20,<0.21"
+pydra = ">=0.21,<0.22"
 
 [[package]]
 name = "pydra-nipype1"
@@ -3886,4 +3887,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.11"
-content-hash = "3e7cae88acb1ff175d1fd5ed549cdaf9487b765560662aed3077992ca20e62db"
+content-hash = "7fcb7a9b6b210f56ccf2e75180a54d1e065fa22f5e2fe10bc629fb5e621126a0"
