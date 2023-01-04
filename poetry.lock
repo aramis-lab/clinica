@@ -2379,14 +2379,14 @@ tests = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (
 
 [[package]]
 name = "pydra-bids"
-version = "0.0.3"
+version = "0.0.6"
 description = "Pydra tasks for BIDS I/O"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "pydra_bids-0.0.3-py3-none-any.whl", hash = "sha256:c4ba96dc97da25a52b6f2e14f0537738730503599b67fe50447816e2dbfc2817"},
-    {file = "pydra_bids-0.0.3.tar.gz", hash = "sha256:4c4279ce95d27060a88d2a10178ae57773d2a8753789b2968528a50b4ecc8796"},
+    {file = "pydra_bids-0.0.6-py3-none-any.whl", hash = "sha256:5ea05348a5931918594ec6f29a5d95721f988a972dbbf0b89e73224392599f45"},
+    {file = "pydra_bids-0.0.6.tar.gz", hash = "sha256:a762ff7e03c13dbe8073d6b91c43fcbe8cfb7078c238f5fb8356368f4c1ca4db"},
 ]
 
 [package.dependencies]
@@ -3886,4 +3886,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.11"
-content-hash = "3e7cae88acb1ff175d1fd5ed549cdaf9487b765560662aed3077992ca20e62db"
+content-hash = "22ffa266f2e24ee614de654303219659aa696521e1fd478ff3d127c4b0c411ca"
