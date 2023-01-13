@@ -38,6 +38,73 @@ EXPECTED_README_CONTENT = Template(
 )
 
 
+def test_create_scans_dict_error(tmp_path):
+    from clinica.iotools.bids_utils import create_scans_dict
+
+    dataset = "foo"
+
+    with pytest.raises(
+        ValueError,
+        match=f"Dataset {dataset} is not supported.",
+    ):
+        create_scans_dict(str(tmp_path), dataset, str(tmp_path), [], "", "", {})
+
+
+def test_get_bids_subjs_list(tmp_path):
+    from clinica.iotools.bids_utils import get_bids_subjs_list
+
+    (tmp_path / "file").touch()
+    (tmp_path / "sub-03").touch()
+    (tmp_path / "folder").mkdir()
+
+    for sub in ("sub-01", "sub-02", "sub-16"):
+        (tmp_path / sub).mkdir()
+
+    assert set(get_bids_subjs_list(str(tmp_path))) == {"sub-01", "sub-02", "sub-16"}
+
+
+@pytest.mark.parametrize(
+    "input_string,expected",
+    [
+        ("foo", "foo"),
+        ("foo_bar", "foobar"),
+        ("foo bar", "foobar"),
+        ("foo bar_baz", "foobarbaz"),
+        ("foo-ba_r baz", "foobarbaz"),
+    ],
+)
+def test_remove_space_and_symbols(input_string, expected):
+    from clinica.iotools.bids_utils import remove_space_and_symbols
+
+    assert remove_space_and_symbols(input_string) == expected
+
+
+@pytest.mark.parametrize("compress", [True, False])
+@pytest.mark.parametrize("sidecar", [True, False])
+def test_build_dcm2niix_command(compress, sidecar):
+    from clinica.iotools.bids_utils import _build_dcm2niix_command
+
+    compress_flag = "y" if compress else "n"
+    sidecar_flag = "y" if sidecar else "n"
+    expected = ["dcm2niix", "-w", "0", "-f", "fmt", "-o", "output_dir"]
+    if compress:
+        expected += ["-9"]
+    expected += ["-z", compress_flag, "-b", sidecar_flag]
+    if sidecar:
+        expected += ["-ba", "y"]
+    expected += ["input_dir/inputs"]
+    assert (
+        _build_dcm2niix_command(
+            "input_dir/inputs",
+            "output_dir",
+            "fmt",
+            compress=compress,
+            bids_sidecar=sidecar,
+        )
+        == expected
+    )
+
+
 def _validate_file_and_content(file: Path, expected_content: str) -> None:
     import os
 
