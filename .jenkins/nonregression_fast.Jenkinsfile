@@ -75,7 +75,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
-                    -m "not slow" \n
+                    -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_pet.py
                 '''
                 }
@@ -153,7 +153,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
-                    -m "not slow" \n
+                    -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_ml.py
                 '''
                 }
@@ -192,7 +192,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
-                    -m "not slow" \n
+                    -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_anat.py
                 '''
                 }
@@ -231,7 +231,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
-                    -m "not slow" \n
+                    -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_dwi.py
                 '''
                 }
