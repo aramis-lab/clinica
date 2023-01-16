@@ -354,5 +354,27 @@ def write_bids(
             to / str(Path(bids_full_path).parent),
             metadata["bids_filename"],
         )
+    correct_fieldmaps_name(to)
+    return
 
+
+def correct_fieldmaps_name(to: PathLike):
+    import os
+
+    for z in Path(to).rglob("*magnitude_e*"):
+        path = Path(z).parent
+        file = Path(z).name
+        file_new = (
+            file.split(".")[0][:-3]
+            + file.split(".")[0][-1:]
+            + "."
+            + file.split(".", 1)[1]
+        )
+        os.rename(z, path / Path(file_new))
+
+    for z in Path(to).rglob("*phasediff_e*_ph*"):
+        path = Path(z).parent
+        file = Path(z).name
+        file_new = file.split(".")[0][:-6] + "." + file.split(".", 1)[1]
+        os.rename(z, path / Path(file_new))
     return
