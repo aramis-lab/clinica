@@ -260,10 +260,14 @@ class T1FreeSurfer(cpe.Pipeline):
                 # Get <image_id> from input_node and print begin message
                 (self.input_node, init_input, [("t1w", "t1w")]),
                 # Run recon-all command
-                (init_input, recon_all, [("subjects_dir", "subjects_dir"),
-                                         ("t1w", "T1_files"),
-                                         ("image_id", "subject_id"),
-                                         ("flags", "flags")],
+                (
+                    init_input,
+                    recon_all, [
+                        ("subjects_dir", "subjects_dir"),
+                        ("t1w", "T1_files"),
+                        ("image_id", "subject_id"),
+                        ("flags", "flags")
+                    ],
                 ),
                 # Generate TSV files
                 (init_input, create_tsv, [("subjects_dir", "subjects_dir")]),
