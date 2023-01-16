@@ -83,7 +83,7 @@ class T1FreeSurfer(cpe.Pipeline):
         from clinica.iotools.utils.data_handling import (
             check_volume_location_in_world_coordinate_system,
         )
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.exceptions import ClinicaException
         from clinica.utils.filemanip import (
             extract_subjects_sessions_from_filename,
             save_participants_sessions,
