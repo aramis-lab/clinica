@@ -44,17 +44,17 @@ def convert_images(
     df_complete = intersect_data(imaging_data, df_clinical_complete)
 
     # build the tsv
-    participants, sessions, scans = dataset_to_bids(df_complete)
+    results = dataset_to_bids(df_complete)
 
     write_bids(
         to=bids_dir,
-        participants=participants,
-        sessions=sessions,
-        scans=scans,
+        participants=results["participants"],
+        sessions=results["sessions"],
+        scans=results["scans"],
         dataset_directory=path_to_dataset,
     )
     readme_data = {
-        "link": "https://www.ukbiobank.ac.uk/",
+        "link": "https://www.genfi.org",
         "desc": (
             "UK Biobank is a large-scale biomedical database and research resource, containing in-depth genetic and "
             "health information from half a million UK participants. The database is regularly augmented with "

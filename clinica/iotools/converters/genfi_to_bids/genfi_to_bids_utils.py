@@ -184,37 +184,25 @@ def complete_clinical_data(df_demographics, df_imaging, df_clinical):
 
 
 def dataset_to_bids(complete_data_df):
+    import os
+
     # generates participants, sessions and scans tsv
     complete_data_df = complete_data_df.set_index(
         ["participant_id", "session_id", "modality", "bids_filename"],
         verify_integrity=True,
     )
-    participants = complete_data_df.filter(
-        items=[
-            "participant_id",
-            "source",
-            "gender",
-            "handedness",
-            "education",
-            "genetic_group",
-            "genetic_status_1",
-            "genetic_status_2",
-        ]
+    # open the reference for building the tsvs:
+    path_to_ref_csv = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "data",
+        "genfi_ref.csv",
     )
-    sessions = complete_data_df.filter(
-        items=[
-            "participant_id",
-            "session_id",
-            "genfi_version",
-            "age_at_visit",
-            "date_of_scan",
-            "diagnosis",
-            "ftld-cdr-global",
-            "cdr-sob",
-        ]
-    )
-    scans = complete_data_df
-    return participants, sessions, scans
+    df_ref = pd.read_csv(path_to_ref_csv, sep=";")
+
+    return {
+        col: complete_data_df.filter(items=list(df_ref[col]))
+        for col in ["participants", "sessions", "scans"]
+    }
 
 
 def intersect_data(imaging_data, df_clinical_complete):
