@@ -85,12 +85,102 @@ def convert_dicom_to_nifti(in_file: str, bids_path: str, bids_filename: str):
     return
 
 
-def find_clinical_data():
-    return
+def find_clinical_data(
+    clinical_data_directory: PathLike,
+) -> DataFrame:
+    from pathlib import Path
+
+    import pandas as pd
+
+    from clinica.utils.stream import cprint
+
+    # Read the xls
+    try:
+        image_data_file = list(
+            Path(clinical_data_directory).glob("FINAL*IMAGING*.xlsx")
+        )
+    except StopIteration:
+        raise FileNotFoundError("Clinical data file not found.")
+    if len(image_data_file) == 0:
+        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
+    if len(image_data_file) > 1:
+        raise ValueError("Too many data files found, expected one. Aborting.")
+
+    try:
+        demographics_data_file = list(
+            Path(clinical_data_directory).glob("FINAL*DEMOGRAPHICS*.xlsx")
+        )
+    except StopIteration:
+        raise FileNotFoundError("Clinical data file not found.")
+    if len(demographics_data_file) == 0:
+        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
+    if len(demographics_data_file) > 1:
+        raise ValueError("Too many data files found, expected one. Aborting.")
+
+    try:
+        clinical_data_file = list(
+            Path(clinical_data_directory).glob("FINAL*CLINICAL*.xlsx")
+        )
+    except StopIteration:
+        raise FileNotFoundError("Clinical data file not found.")
+    if len(clinical_data_file) == 0:
+        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
+    if len(clinical_data_file) > 1:
+        raise ValueError("Too many data files found, expected one. Aborting.")
+
+    df_imaging = (
+        pd.concat(
+            [
+                pd.read_excel(str(image_data_file[0])),
+                pd.read_excel(str(image_data_file[0]), sheet_name=1),
+            ]
+        )
+        .convert_dtypes()
+        .rename(columns=lambda x: x.lower().replace(" ", "_"))
+    )
+    df_demographics = (
+        pd.concat(
+            [
+                pd.read_excel(str(demographics_data_file[0])),
+                pd.read_excel(str(demographics_data_file[0]), sheet_name=1),
+            ]
+        )
+        .convert_dtypes()
+        .rename(columns=lambda x: x.lower().replace(" ", "_"))
+    )
+    df_clinical = (
+        pd.concat(
+            [
+                pd.read_excel(str(clinical_data_file[0])),
+                pd.read_excel(str(clinical_data_file[0]), sheet_name=1),
+            ]
+        )
+        .convert_dtypes()
+        .rename(columns=lambda x: x.lower().replace(" ", "_"))
+    )
+    return df_demographics, df_imaging, df_clinical
 
 
-def complete_clinical():
-    return
+def complete_clinical_data(df_demographics, df_imaging, df_clinical):
+    df_clinical_complete = df_imaging.merge(
+        df_demographics, how="inner", on=["blinded_code", "blinded_site", "visit"]
+    ).drop(columns="diagnosis")
+    df_clinical = df_clinical.dropna(subset=["blinded_code", "blinded_site", "visit"])
+    df_clinical_complete = df_clinical_complete.merge(
+        df_clinical[
+            [
+                "blinded_code",
+                "blinded_site",
+                "visit",
+                "diagnosis",
+                "ftld-cdr-global",
+                "cdr-sob",
+            ]
+        ],
+        how="inner",
+        on=["blinded_code", "blinded_site", "visit"],
+    )
+    return df_clinical_complete
 
 
 def dataset_to_bids(complete_data_df):
@@ -99,16 +189,43 @@ def dataset_to_bids(complete_data_df):
         ["participant_id", "session_id", "modality", "bids_filename"],
         verify_integrity=True,
     )
-    participants = complete_data_df.filter(items=["participant_id", "source"])
+    participants = complete_data_df.filter(
+        items=[
+            "participant_id",
+            "source",
+            "gender",
+            "handedness",
+            "education",
+            "genetic_group",
+            "genetic_status_1",
+            "genetic_status_2",
+        ]
+    )
     sessions = complete_data_df.filter(
-        items=["participant_id", "session_id", "genfi_version"]
+        items=[
+            "participant_id",
+            "session_id",
+            "genfi_version",
+            "age_at_visit",
+            "date_of_scan",
+            "diagnosis",
+            "ftld-cdr-global",
+            "cdr-sob",
+        ]
     )
     scans = complete_data_df
     return participants, sessions, scans
 
 
-def intersect_data():
-    return
+def intersect_data(imaging_data, df_clinical_complete):
+    df_complete = imaging_data.merge(
+        df_clinical_complete,
+        how="inner",
+        left_on=["source_id", "source_ses_id"],
+        right_on=["blinded_code", "visit"],
+    )
+    df_complete = df_complete.loc[:, ~df_complete.columns.duplicated()]
+    return df_complete
 
 
 def read_imaging_data(source_path):
@@ -117,7 +234,7 @@ def read_imaging_data(source_path):
     return df_dicom
 
 
-def complete_data(df_dicom):
+def complete_imaging_data(df_dicom):
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(
             lambda x: Path(Path(Path(x).parent).parent).name.split("-")[0]

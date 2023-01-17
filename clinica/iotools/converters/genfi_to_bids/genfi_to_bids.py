@@ -18,8 +18,8 @@ def convert_images(
     import clinica.iotools.bids_utils as bids
 
     from .genfi_to_bids_utils import (
-        complete_clinical,
-        complete_data,
+        complete_clinical_data,
+        complete_imaging_data,
         dataset_to_bids,
         find_clinical_data,
         intersect_data,
@@ -28,21 +28,23 @@ def convert_images(
     )
 
     # read the clinical data files
-    # df_clinical = find_clinical_data(path_to_clinical)
+    df_demographics, df_imaging, df_clinical = find_clinical_data(path_to_clinical)
     # makes a df of the imaging data
     imaging_data = read_imaging_data(path_to_dataset)
 
     # complete the data extracted
-    imaging_data = complete_data(imaging_data)
-
-    # intersect the data
-    # df_clinical = intersect_data(imaging_data, df_clinical)
+    imaging_data = complete_imaging_data(imaging_data)
 
     # complete clinical data
-    # df_clinical = complete_clinical(df_clinical)
+    df_clinical_complete = complete_clinical_data(
+        df_demographics, df_imaging, df_clinical
+    )
+
+    # intersect the data
+    df_complete = intersect_data(imaging_data, df_clinical_complete)
 
     # build the tsv
-    participants, sessions, scans = dataset_to_bids(imaging_data)
+    participants, sessions, scans = dataset_to_bids(df_complete)
 
     write_bids(
         to=bids_dir,
@@ -63,5 +65,5 @@ def convert_images(
         ),
     }
     bids.write_modality_agnostic_files(
-        study_name="UKB", readme_data=readme_data, bids_dir=bids_dir
+        study_name="GENFI", readme_data=readme_data, bids_dir=bids_dir
     )
