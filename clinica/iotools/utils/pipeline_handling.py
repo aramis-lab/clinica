@@ -18,7 +18,13 @@ def _get_atlas_name(atlas_path: Path, pipeline: str) -> str:
         splitter = "_space-"
     else:
         raise ValueError(f"Not supported pipeline {pipeline}.")
-    return atlas_path.stem.split(splitter)[1].split("_")[0]
+    try:
+        atlas_name = atlas_path.stem.split(splitter)[1].split("_")[0]
+    except Exception:
+        raise ValueError(
+            f"Unable to infer the atlas name from {atlas_path} for pipeline {pipeline}."
+        )
+    return atlas_name
 
 
 def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
@@ -45,6 +51,7 @@ def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
         return ses_path / "t1" / "spm" / "dartel"
     if pipeline == "pet_volume":
         return ses_path / "pet" / "preprocessing"
+    raise ValueError(f"Not supported pipeline {pipeline}.")
 
 
 def _get_label_list(
@@ -105,11 +112,13 @@ def _skip_atlas(
         skip = []
         if pvc_restriction is not None:
             if pvc_restriction:
-                skip.append("pvc-rbv" not in atlas_path)
+                skip.append("pvc-rbv" not in str(atlas_path))
             else:
-                skip.append("pvc-rbv" in atlas_path)
+                skip.append("pvc-rbv" in str(atlas_path))
         if tracers_selection:
-            skip.append(all([tracer not in atlas_path for tracer in tracers_selection]))
+            skip.append(
+                all([tracer not in str(atlas_path) for tracer in tracers_selection])
+            )
         return any(skip)
     return False
 
