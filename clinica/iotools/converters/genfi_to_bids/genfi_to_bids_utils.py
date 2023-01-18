@@ -28,8 +28,7 @@ def filter_dicoms(df_dicom):
         "MoCo",
     ]
     not_genfi2_list = [
-        "ASL",
-        "motioncorrected",
+        "ASL" "motioncorrected",
         "localiser",
         "localizer",
     ]
@@ -65,6 +64,8 @@ def identify_modality(x):
         return "fieldmap"
     if "fmri" in x:
         return "rsfmri"
+    # if "asl" in x:
+    #     return "asl"
     else:
         return None
 
@@ -316,6 +317,12 @@ def complete_imaging_data(df_dicom):
                     "sidecars": ["fmap.json"],
                     "task": "",
                 },
+                # "asl": {
+                #     "datatype": "perf",
+                #     "suffix": "asl",
+                #     "sidecars": ["asl.json"],
+                #     "task": "",
+                # },
             }
         ).apply(pd.Series)
     )

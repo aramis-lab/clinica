@@ -56,12 +56,21 @@ def convert_images(
     readme_data = {
         "link": "https://www.genfi.org",
         "desc": (
-            "UK Biobank is a large-scale biomedical database and research resource, containing in-depth genetic and "
-            "health information from half a million UK participants. The database is regularly augmented with "
-            "additional data and is globally accessible to approved researchers undertaking vital research into the "
-            "most common and life-threatening diseases. It is a major contributor to the advancement of modern "
-            "medicine it and has led to the discovery of several scientific advances and numerous treatments to "
-            "improve human health."
+            "The Genetic Frontotemporal dementia Initiative (GENFI) is a group of research centres across Europe "
+            "and Canada with expertise in familial FTD, and is co-ordinated by Professor Jonathan Rohrer at "
+            "University College London. GENFI is the largest genetic FTD consortium to date and currently consists "
+            "of sites across the UK, Netherlands, Belgium, France, Spain, Portugal, Italy, Germany, Sweden, "
+            "Denmark, Finland and Canada. The aim of the study is to understand more about genetic FTD, "
+            "particularly in those who have mutations in the progranulin (GRN), microtubule-associated protein tau "
+            "(MAPT) and chromosome 9 open reading frame 72 (C9orf72) genes. GENFI investigates both people who have "
+            "developed symptoms and also people who have a risk of developing symptoms in the future because they "
+            "carry an abnormal genetic mutation. By studying these individuals who are destined to develop the "
+            "disease later in life we can understand the development from the very earliest changes. The key "
+            "objectives of GENFI are therefore to develop markers which help identify the disease at its earliest "
+            "stage as well as markers that allow the progression of the disease to be tracked. We are now "
+            "collaborating closely with other similar studies around the world through the FTD Prevention "
+            "Initiative. Through this worldwide initiative we are working with pharmaceutical companies to help "
+            "design clinical trials for genetic FTD."
         ),
     }
     bids.write_modality_agnostic_files(
