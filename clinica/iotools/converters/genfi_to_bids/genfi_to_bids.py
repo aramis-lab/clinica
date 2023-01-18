@@ -28,7 +28,8 @@ def convert_images(
     )
 
     # read the clinical data files
-    df_demographics, df_imaging, df_clinical = find_clinical_data(path_to_clinical)
+    if path_to_clinical:
+        df_demographics, df_imaging, df_clinical = find_clinical_data(path_to_clinical)
     # makes a df of the imaging data
     imaging_data = read_imaging_data(path_to_dataset)
 
@@ -36,13 +37,16 @@ def convert_images(
     imaging_data = complete_imaging_data(imaging_data)
 
     # complete clinical data
-    df_clinical_complete = complete_clinical_data(
-        df_demographics, df_imaging, df_clinical
-    )
+    if path_to_clinical:
+        df_clinical_complete = complete_clinical_data(
+            df_demographics, df_imaging, df_clinical
+        )
 
     # intersect the data
-    df_complete = intersect_data(imaging_data, df_clinical_complete)
-
+    if path_to_clinical:
+        df_complete = intersect_data(imaging_data, df_clinical_complete)
+    else:
+        df_complete = imaging_data
     # build the tsv
     results = dataset_to_bids(df_complete)
 

@@ -1,18 +1,28 @@
 from os import PathLike
+from typing import Optional
 
 import click
 
 from clinica.iotools.converters import cli_param
 
+clinical_data_directory = click.option(
+    "-cdd",
+    "--clinical-data-dir",
+    "clinical_data_directory",
+    type=click.Path(exists=True, file_okay=False, resolve_path=True),
+    help="Path to the clinical data directory",
+)
+
 
 @click.command(name="genfi-to-bids")
 @cli_param.dataset_directory
-@cli_param.clinical_data_directory
+# @cli_param.clinical_data_directory
 @cli_param.bids_directory
+@clinical_data_directory
 def cli(
     dataset_directory: PathLike,
-    clinical_data_directory: PathLike,
     bids_directory: PathLike,
+    clinical_data_directory: Optional[PathLike] = None,
 ) -> None:
     """GENFI to BIDS converter.
 
