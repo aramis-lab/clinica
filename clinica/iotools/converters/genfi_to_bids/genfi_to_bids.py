@@ -51,7 +51,6 @@ def convert_images(
         participants=results["participants"],
         sessions=results["sessions"],
         scans=results["scans"],
-        dataset_directory=path_to_dataset,
     )
     readme_data = {
         "link": "https://www.genfi.org",

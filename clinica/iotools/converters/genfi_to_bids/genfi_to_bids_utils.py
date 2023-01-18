@@ -51,7 +51,8 @@ def filter_dicoms(df_dicom: DataFrame) -> DataFrame:
         "MoCo",
     ]
     not_genfi2_list = [
-        "ASL" "motioncorrected",
+        "ASL",
+        "motioncorrected",
         "localiser",
         "localizer",
     ]
@@ -136,7 +137,7 @@ def convert_dicom_to_nifti(in_file: str, bids_path: str, bids_filename: str):
 
 def find_clinical_data(
     clinical_data_directory: PathLike,
-) -> list[DataFrame]:
+) -> List[DataFrame]:
     """Finds the clinical data associated with the dataset.
 
     Parameters
