@@ -10,7 +10,7 @@ import pandas as pd
 
 def _get_atlas_name(atlas_path: Path, pipeline: str) -> str:
     """Helper function for _extract_metrics_from_pipeline."""
-    if pipeline == "dwi-dti":
+    if pipeline == "dwi_dti":
         splitter = "_dwi_space-"
     elif pipeline in ("t1_freesurfer_longitudinal", "t1_freesurfer"):
         splitter = "_parcellation-"
@@ -32,7 +32,7 @@ def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
     Returns the path to the modality of interest depending
     on the pipeline considered.
     """
-    if pipeline == "dwi-dti":
+    if pipeline == "dwi_dti":
         return ses_path / "dwi" / "dti_based_processing" / "atlas_statistics"
     if pipeline == "t1_freesurfer_longitudinal":
         mod_path = ses_path / "t1"
@@ -83,7 +83,7 @@ def _get_label_list(
             f"{pipeline}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
             for roi_name in atlas_df.label_name.values
         ]
-    if pipeline == "dwi-dti":
+    if pipeline == "dwi_dti":
         prefix = "dwi-dti_"
         metric = metric.rstrip("_statistics")
     elif pipeline == "t1-freesurfer_longitudinal":

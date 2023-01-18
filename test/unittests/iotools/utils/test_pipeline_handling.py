@@ -23,7 +23,7 @@ def test_get_atlas_name(tmp_path):
         ValueError,
         match="Unable to infer the atlas name",
     ):
-        _get_atlas_name(atlas_path, "dwi-dti")
+        _get_atlas_name(atlas_path, "dwi_dti")
 
 
 def test_get_mod_path(tmp_path):
@@ -35,7 +35,7 @@ def test_get_mod_path(tmp_path):
     ):
         _get_mod_path(tmp_path, "foo")
     assert (
-        _get_mod_path(tmp_path, "dwi-dti")
+        _get_mod_path(tmp_path, "dwi_dti")
         == tmp_path / "dwi" / "dti_based_processing" / "atlas_statistics"
     )
     assert (
