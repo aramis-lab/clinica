@@ -8,13 +8,36 @@ import pydicom as pdcm
 from pandas import DataFrame, Series
 
 
-def find_dicoms(path_to_source_data):
+def find_dicoms(path_to_source_data: str) -> Iterable[PathLike]:
+    """Find the dicoms in the given directory.
 
+    Parameters
+    ----------
+    path_to_source_data: str
+        Path to the source data
+
+    Returns
+    -------
+    Iterable[PathLike]
+        Path to found files and parent directory
+    """
     for z in Path(path_to_source_data).rglob("*.dcm"):
         yield str(z), str(Path(z).parent)
 
 
-def filter_dicoms(df_dicom):
+def filter_dicoms(df_dicom: DataFrame) -> DataFrame:
+    """Filters modalities handled by the converter.
+
+    Parameters
+    ----------
+    df_dicom: DataFrame
+        Dataframe containing all of the dicoms available in the source directory.
+
+    Returns
+    -------
+    df_dicom: DataFrame
+        Dataframe with only the modalities handled.
+    """
     not_genfi_list = [
         "t2_2d_axial",
         "dwi_trace",
@@ -52,7 +75,19 @@ def filter_dicoms(df_dicom):
     return df_dicom
 
 
-def identify_modality(x):
+def identify_modality(x: str) -> str:
+    """Identifies the modality of a file given its name.
+
+    Parameters
+    ----------
+    x: str
+        Input filename
+
+    Returns
+    -------
+    str:
+        Modality
+    """
     x = x.lower()
     if "dwi" in x:
         return "dwi"
@@ -71,6 +106,19 @@ def identify_modality(x):
 
 
 def convert_dicom_to_nifti(in_file: str, bids_path: str, bids_filename: str):
+    """Converts a dicom file to nifti.
+
+    Parameters
+    ----------
+    in_file: str
+        Input dicom file
+
+    bids_path: str
+        Path to write the output
+
+    bids_filename:str
+        Name of the output file.
+    """
     import subprocess
 
     command = [
@@ -88,7 +136,25 @@ def convert_dicom_to_nifti(in_file: str, bids_path: str, bids_filename: str):
 
 def find_clinical_data(
     clinical_data_directory: PathLike,
-) -> DataFrame:
+) -> list[DataFrame]:
+    """Finds the clinical data associated with the dataset.
+
+    Parameters
+    ----------
+    clinical_data_directory: PathLike
+        Path to the clinical data.
+
+    Returns
+    -------
+    df_demographics: DataFrame
+        Dataframe containing the demographic data
+
+    df_imaging: DataFrame
+        Dataframe containing the imaging data
+
+    df_clinical: DataFrame
+        Dataframe containing the clinical data
+    """
     from pathlib import Path
 
     import pandas as pd
@@ -162,7 +228,27 @@ def find_clinical_data(
     return df_demographics, df_imaging, df_clinical
 
 
-def complete_clinical_data(df_demographics, df_imaging, df_clinical):
+def complete_clinical_data(
+    df_demographics: DataFrame, df_imaging: DataFrame, df_clinical: DataFrame
+) -> DataFrame:
+    """Merges the different clincal dataframes into one.
+
+    Parameters
+    ----------
+    df_demographics: DataFrame
+        Dataframe containing the demographic data
+
+    df_imaging: DataFrame
+        Dataframe containing the imaging data
+
+    df_clinical: DataFrame
+        Dataframe containing the clinical data
+
+    Returns
+    -------
+    df_clinical_complete: DataFrame
+        Dataframe with the data of the 3 input dataframes
+    """
     df_clinical_complete = df_imaging.merge(
         df_demographics, how="inner", on=["blinded_code", "blinded_site", "visit"]
     ).drop(columns="diagnosis")
@@ -184,7 +270,19 @@ def complete_clinical_data(df_demographics, df_imaging, df_clinical):
     return df_clinical_complete
 
 
-def dataset_to_bids(complete_data_df):
+def dataset_to_bids(complete_data_df: DataFrame) -> Dict[str, DataFrame]:
+    """Selects the data needed to write the participants, sessions, and scans tsvs.
+
+    Parameters
+    ----------
+    complete_data_df: DataFrame
+        Dataframe containing the merged data extracted from the raw images and the clinical data
+
+    Returns
+    -------
+    Dict[str, DataFrame]
+        Dictionary containing as key participants, sessions and scans, and the values wanted for each tsv
+    """
     import os
 
     # generates participants, sessions and scans tsv
@@ -206,7 +304,24 @@ def dataset_to_bids(complete_data_df):
     }
 
 
-def intersect_data(imaging_data, df_clinical_complete):
+def intersect_data(
+    imaging_data: DataFrame, df_clinical_complete: DataFrame
+) -> DataFrame:
+    """This function merges the dataframe containing the data extracted from the raw images and from the clinical data
+
+    Parameters
+    ----------
+    imaging_data: DataFrame
+        Dataframe containing the data extracted from the raw images
+
+    df_clinical_complete: DataFrame
+        Dataframe containing the clinical data
+
+    Returns
+    -------
+    df_complete: DataFrame
+        Dataframe containing the merged data
+    """
     df_complete = imaging_data.merge(
         df_clinical_complete,
         how="inner",
@@ -217,13 +332,36 @@ def intersect_data(imaging_data, df_clinical_complete):
     return df_complete
 
 
-def read_imaging_data(source_path):
+def read_imaging_data(source_path: PathLike) -> DataFrame:
+    """This function finds the imaging data and filters it.
+
+    Parameters
+    ----------
+    source_path: PathLike
+        Path to the raw data
+
+    Returns
+    -------
+    df_dicom: DataFrame
+        Dataframe containing the data extracted."""
     df_dicom = pd.DataFrame(find_dicoms(source_path), columns=["source_path", "source"])
     df_dicom = filter_dicoms(df_dicom)
     return df_dicom
 
 
-def complete_imaging_data(df_dicom):
+def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
+    """This function uses the raw information extracted from the images, to obtain all the information necessary for the BIDS
+
+    Parameters
+    ----------
+    df_dicom: DataFrame
+        Dataframe containing the data extracted from the images
+
+    Returns
+    -------
+    df_sub_ses_run: DataFrame
+        Dataframe with the data necessary for the BIDS
+    """
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(
             lambda x: Path(Path(Path(x).parent).parent).name.split("-")[0]
@@ -424,8 +562,22 @@ def write_bids(
     participants: DataFrame,
     sessions: DataFrame,
     scans: DataFrame,
-    dataset_directory: PathLike,
 ) -> None:
+    """This function writes the BIDS
+
+    Parameters
+    ----------
+    to: PathLike
+        Path where the BIDS should be written
+
+    participants: DataFrame
+        DataFrame containing the data for the participants.tsv
+
+    sessions: DataFrame
+        DataFrame containing the data for the sessions.tsv
+
+    scans: DataFrame
+        DataFrame containing the data for the scans.tsv"""
     import os
     from pathlib import Path
 
@@ -471,6 +623,13 @@ def write_bids(
 
 
 def correct_fieldmaps_name(to: PathLike):
+    """This function scans the BIDS after it has been written to correct the nameds of the fieldmap files.
+
+    Parameters
+    ----------
+
+    to: PathLike
+        Path to the BIDS"""
     import os
 
     for z in Path(to).rglob("*magnitude_e*"):
