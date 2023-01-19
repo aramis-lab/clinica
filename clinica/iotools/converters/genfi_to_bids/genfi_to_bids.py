@@ -1,4 +1,4 @@
-"""Convert the UKB dataset into BIDS."""
+"""Convert the GENFI dataset into BIDS."""
 
 from os import PathLike
 
@@ -7,12 +7,23 @@ def convert_images(
     path_to_dataset: PathLike,
     bids_dir: PathLike,
     path_to_clinical: PathLike,
-):
+) -> None:
     """Convert the entire dataset to BIDS.
 
     Scans available files in the path_to_dataset,
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
+
+    Parameters
+    ----------
+    path_to_dataset: PathLike
+        Path to the raw images
+
+    bids_dir: PathLike
+        Path to directory where the bids will be written
+
+    path_to_clinical: PathLike
+        Path to the clinical data associated with the dataset
     """
 
     import clinica.iotools.bids_utils as bids

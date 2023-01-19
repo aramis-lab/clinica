@@ -1,19 +1,18 @@
-from cmath import nan
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List
 
 import pandas as pd
 import pydicom as pdcm
-from pandas import DataFrame, Series
+from pandas import DataFrame
 
 
-def find_dicoms(path_to_source_data: str) -> Iterable[PathLike]:
+def find_dicoms(path_to_source_data: PathLike) -> Iterable[PathLike]:
     """Find the dicoms in the given directory.
 
     Parameters
     ----------
-    path_to_source_data: str
+    path_to_source_data: PathLike
         Path to the source data
 
     Returns
@@ -25,7 +24,7 @@ def find_dicoms(path_to_source_data: str) -> Iterable[PathLike]:
         yield str(z), str(Path(z).parent)
 
 
-def filter_dicoms(df_dicom: DataFrame) -> DataFrame:
+def filter_dicoms(df: DataFrame) -> DataFrame:
     """Filters modalities handled by the converter.
 
     Parameters
@@ -57,23 +56,23 @@ def filter_dicoms(df_dicom: DataFrame) -> DataFrame:
         "localizer",
     ]
 
-    df_dicom = df_dicom.drop_duplicates(subset=["source"])  # .set_index("source_path")
-    df_dicom = df_dicom.assign(
+    df = df.drop_duplicates(subset=["source"])  # .set_index("source_path")
+    df = df.assign(
         series_desc=lambda df: df.source_path.apply(
             lambda x: pdcm.dcmread(x).SeriesDescription
         )
     )
-    df_dicom = df_dicom.assign(
+    df = df.assign(
         acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate)
     )
-    df_dicom = df_dicom.set_index(["source_path"], verify_integrity=True)
+    df = df.set_index(["source_path"], verify_integrity=True)
 
-    df_dicom = df_dicom[~df_dicom["source"].str.contains("secondary", case=False)]
+    df = df[~df["source"].str.contains("secondary", case=False)]
     for file_mod in not_genfi2_list:
-        df_dicom = df_dicom[~df_dicom["series_desc"].str.contains(file_mod, case=False)]
+        df = df[~df["series_desc"].str.contains(file_mod, case=False)]
     for file_mod in not_genfi_list:
-        df_dicom = df_dicom[~df_dicom["series_desc"].str.contains(file_mod, case=False)]
-    return df_dicom
+        df = df[~df["series_desc"].str.contains(file_mod, case=False)]
+    return df
 
 
 def identify_modality(x: str) -> str:
@@ -344,7 +343,8 @@ def read_imaging_data(source_path: PathLike) -> DataFrame:
     Returns
     -------
     df_dicom: DataFrame
-        Dataframe containing the data extracted."""
+        Dataframe containing the data extracted.
+    """
     df_dicom = pd.DataFrame(find_dicoms(source_path), columns=["source_path", "source"])
     df_dicom = filter_dicoms(df_dicom)
     return df_dicom
@@ -578,7 +578,8 @@ def write_bids(
         DataFrame containing the data for the sessions.tsv
 
     scans: DataFrame
-        DataFrame containing the data for the scans.tsv"""
+        DataFrame containing the data for the scans.tsv
+    """
     import os
     from pathlib import Path
 
@@ -623,14 +624,14 @@ def write_bids(
     return
 
 
-def correct_fieldmaps_name(to: PathLike):
+def correct_fieldmaps_name(to: PathLike) -> None:
     """This function scans the BIDS after it has been written to correct the nameds of the fieldmap files.
 
     Parameters
     ----------
-
     to: PathLike
-        Path to the BIDS"""
+        Path to the BIDS
+    """
     import os
 
     for z in Path(to).rglob("*magnitude_e*"):
@@ -649,4 +650,3 @@ def correct_fieldmaps_name(to: PathLike):
         file = Path(z).name
         file_new = file.split(".")[0][:-6] + "." + file.split(".", 1)[1]
         os.rename(z, path / Path(file_new))
-    return
