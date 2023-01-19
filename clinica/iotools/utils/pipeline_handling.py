@@ -179,12 +179,13 @@ def _extract_metrics_from_pipeline(
     """
     from clinica.utils.stream import cprint
 
-    try:
-        df.set_index(
-            ["participant_id", "session_id"], inplace=True, verify_integrity=True
-        )
-    except KeyError:
-        raise KeyError("Fields `participant_id` and `session_id` are required.")
+    if df.index.names != ["participant_id", "session_id"]:
+        try:
+            df.set_index(
+                ["participant_id", "session_id"], inplace=True, verify_integrity=True
+            )
+        except KeyError:
+            raise KeyError("Fields `participant_id` and `session_id` are required.")
 
     if group_selection is None:
         try:

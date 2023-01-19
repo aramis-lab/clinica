@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 
 
@@ -116,3 +117,41 @@ def test_skip_atlas(tmp_path):
             pvc_restriction=False,
             tracers_selection=["trc2", "fdg"],
         )
+
+
+def test_extract_metrics_from_pipeline(tmp_path):
+    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline
+
+    with pytest.raises(
+        KeyError,
+        match="Fields `participant_id` and `session_id` are required.",
+    ):
+        _extract_metrics_from_pipeline(tmp_path, pd.DataFrame(), ["metrics"], "foo")
+    df = pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
+    assert _extract_metrics_from_pipeline(tmp_path, df, ["metrics"], "foo") == (
+        df,
+        None,
+    )
+    (tmp_path / "groups").mkdir()
+    (tmp_path / "groups" / "UnitTest").mkdir()
+    with pytest.raises(
+        ValueError,
+        match="Not supported pipeline foo",
+    ):
+        _extract_metrics_from_pipeline(tmp_path, df, ["metrics"], "foo")
+    x, y = _extract_metrics_from_pipeline(tmp_path, df, ["metrics"], "t1_volume")
+    assert isinstance(x, pd.DataFrame)
+    assert isinstance(y, pd.DataFrame)
+    assert len(x) == 1
+    assert len(y) == 0
+    assert set(x.columns) == {"participant_id", "session_id"}
+    assert set(y.columns) == {
+        "atlas_id",
+        "pvc",
+        "last_column_name",
+        "tracer",
+        "pipeline_name",
+        "first_column_name",
+        "group_id",
+        "regions_number",
+    }
