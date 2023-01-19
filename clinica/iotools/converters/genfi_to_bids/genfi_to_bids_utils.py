@@ -37,7 +37,8 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     df_dicom: DataFrame
         Dataframe with only the modalities handled.
     """
-    not_genfi_list = [
+    to_filter = [
+        # from GENFI 1
         "t2_2d_axial",
         "dwi_trace",
         "dwi_adc",
@@ -48,15 +49,14 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
         "dual_pd_t2_axial",
         "t1_1.25mm_iso",
         "MoCo",
-    ]
-    not_genfi2_list = [
+        # from GENFI 2
         "ASL",
         "motioncorrected",
         "localiser",
         "localizer",
     ]
 
-    df = df.drop_duplicates(subset=["source"])  # .set_index("source_path")
+    df = df.drop_duplicates(subset=["source"])
     df = df.assign(
         series_desc=lambda df: df.source_path.apply(
             lambda x: pdcm.dcmread(x).SeriesDescription
@@ -68,41 +68,9 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     df = df.set_index(["source_path"], verify_integrity=True)
 
     df = df[~df["source"].str.contains("secondary", case=False)]
-    for file_mod in not_genfi2_list:
-        df = df[~df["series_desc"].str.contains(file_mod, case=False)]
-    for file_mod in not_genfi_list:
+    for file_mod in to_filter:
         df = df[~df["series_desc"].str.contains(file_mod, case=False)]
     return df
-
-
-def identify_modality(x: str) -> str:
-    """Identifies the modality of a file given its name.
-
-    Parameters
-    ----------
-    x: str
-        Input filename
-
-    Returns
-    -------
-    str:
-        Modality
-    """
-    x = x.lower()
-    if "dwi" in x:
-        return "dwi"
-    if "t1" in x:
-        return "T1"
-    if "t2" in x:
-        return "T2w"
-    if "fieldmap" in x:
-        return "fieldmap"
-    if "fmri" in x:
-        return "rsfmri"
-    # if "asl" in x:
-    #     return "asl"
-    else:
-        return None
 
 
 def convert_dicom_to_nifti(in_file: str, bids_path: str, bids_filename: str):
@@ -323,6 +291,8 @@ def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
     df_sub_ses_run: DataFrame
         Dataframe with the data necessary for the BIDS
     """
+    from clinica.iotools.bids_utils import identify_modality
+
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(
             lambda x: Path(Path(Path(x).parent).parent).name.split("-")[0]
@@ -546,7 +516,7 @@ def write_bids(
     from fsspec.implementations.local import LocalFileSystem
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
-    from clinica.iotools.bids_utils import write_to_tsv
+    from clinica.iotools.bids_utils import run_dcm2niix, write_to_tsv
 
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
@@ -575,10 +545,11 @@ def write_bids(
             os.makedirs(to / (Path(bids_full_path).parent))
         except OSError:
             pass
-        convert_dicom_to_nifti(
+        run_dcm2niix(
             Path(metadata["source_path"]).parent,
             to / str(Path(bids_full_path).parent),
             metadata["bids_filename"],
+            True,
         )
     correct_fieldmaps_name(to)
     return
@@ -591,6 +562,44 @@ def correct_fieldmaps_name(to: PathLike) -> None:
     ----------
     to: PathLike
         Path to the BIDS
+
+    Examples
+    --------
+    bids
+    ├── README
+    ├── dataset_description.json
+    ├── participants.tsv
+    └── sub-GRN001
+        ├── ses-M000
+        │   ├── fmap
+        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude_e1.json
+        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude_e1.nii.gz
+        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude_e2.json
+        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude_e2.nii.gz
+        │   │   ├── sub-GRN001_ses-M000_run-01_phasediff_e2_ph.json
+        │   │   └── sub-GRN001_ses-M000_run-01_phasediff_e2_ph.nii.gz
+        │   └── func
+        │       ├── sub-GRN001_ses-M000_run-01_bold.json
+        │       └── sub-GRN001_ses-M000_run-01_bold.nii.gz
+        └── sub-GRN001_sessions.tsv
+    >>> correct_fieldmaps_name("path/to/bids)
+    bids
+    ├── README
+    ├── dataset_description.json
+    ├── participants.tsv
+    └── sub-GRN001
+        ├── ses-M000
+        │   ├── fmap
+        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude1.json
+        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude1.nii.gz
+        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude2.json
+        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude2.nii.gz
+        │   │   ├── sub-GRN001_ses-M000_run-01_phasediff.json
+        │   │   └── sub-GRN001_ses-M000_run-01_phasediff.nii.gz
+        │   └── func
+        │       ├── sub-GRN001_ses-M000_run-01_bold.json
+        │       └── sub-GRN001_ses-M000_run-01_bold.nii.gz
+        └── sub-GRN001_sessions.tsv
     """
     import os
 

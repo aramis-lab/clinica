@@ -780,3 +780,33 @@ def run_dcm2niix(
 def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
     # Save dataframe as a BIDS-compliant TSV file.
     dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
+
+
+def identify_modality(x: str) -> str:
+    """Identifies the modality of a file given its name.
+
+    Parameters
+    ----------
+    x: str
+        Input filename
+
+    Returns
+    -------
+    str:
+        Modality
+    """
+    x = x.lower()
+    if "dwi" in x:
+        return "dwi"
+    if "t1" in x:
+        return "T1"
+    if "t2" in x:
+        return "T2w"
+    if "fieldmap" in x:
+        return "fieldmap"
+    if "fmri" in x:
+        return "rsfmri"
+    # if "asl" in x:
+    #     return "asl"
+    else:
+        return None
