@@ -4,9 +4,7 @@ from os import PathLike
 
 
 def convert_images(
-    path_to_dataset: PathLike,
-    bids_dir: PathLike,
-    path_to_clinical: PathLike,
+    path_to_dataset: PathLike, bids_dir: PathLike, path_to_clinical: PathLike, gif: bool
 ) -> None:
     """Convert the entire dataset to BIDS.
 
@@ -24,7 +22,11 @@ def convert_images(
 
     path_to_clinical: PathLike
         Path to the clinical data associated with the dataset
+
+    gif: bool
+        If True, indicates the user wants to have the values of the gif parcellation
     """
+    import os
 
     import clinica.iotools.bids_utils as bids
 
@@ -59,7 +61,7 @@ def convert_images(
     else:
         df_complete = imaging_data
     # build the tsv
-    results = dataset_to_bids(df_complete)
+    results = dataset_to_bids(df_complete, gif)
 
     write_bids(
         to=bids_dir,
@@ -67,8 +69,19 @@ def convert_images(
         sessions=results["sessions"],
         scans=results["scans"],
     )
+    # import markdown
+    # path_to_markdown = os.path.join(
+    #     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))),
+    #     "docs", "Converters",
+    #     "GENFItoBIDS.md",)
+
+    # f = open(path_to_markdown, 'r')
+    # a = markdown.markdown( f.read())
+
+    # print("markdown content:", markdown.markdown( f.read()) )
     readme_data = {
         "link": "https://www.genfi.org",
+        # "desc":
         "desc": (
             "The Genetic Frontotemporal dementia Initiative (GENFI) is a group of research centres across Europe "
             "and Canada with expertise in familial FTD, and is co-ordinated by Professor Jonathan Rohrer at "

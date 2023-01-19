@@ -73,35 +73,6 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     return df
 
 
-def convert_dicom_to_nifti(in_file: str, bids_path: str, bids_filename: str):
-    """Converts a dicom file to nifti.
-
-    Parameters
-    ----------
-    in_file: str
-        Input dicom file
-
-    bids_path: str
-        Path to write the output
-
-    bids_filename:str
-        Name of the output file.
-    """
-    import subprocess
-
-    command = [
-        "dcm2niix",
-        "-w",
-        "0",
-    ]
-    command += ["-9", "-z", "y"]
-    command += ["-b", "y", "-ba", "y"]
-    command += ["-o", bids_path, "-f", bids_filename]
-    command += [in_file]
-    subprocess.run(command, capture_output=True)
-    return
-
-
 def _check_file(directory: PathLike, pattern: str) -> PathLike:
     from pathlib import Path
 
@@ -198,13 +169,16 @@ def complete_clinical_data(
     return df_clinical_complete
 
 
-def dataset_to_bids(complete_data_df: DataFrame) -> Dict[str, DataFrame]:
+def dataset_to_bids(complete_data_df: DataFrame, gif: bool) -> Dict[str, DataFrame]:
     """Selects the data needed to write the participants, sessions, and scans tsvs.
 
     Parameters
     ----------
     complete_data_df: DataFrame
         Dataframe containing the merged data extracted from the raw images and the clinical data
+
+    gif: bool
+        If True, indicates the user wants to have the values of the gif parcellation
 
     Returns
     -------
@@ -225,7 +199,8 @@ def dataset_to_bids(complete_data_df: DataFrame) -> Dict[str, DataFrame]:
         "genfi_ref.csv",
     )
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
-
+    if not gif:
+        print(df_ref.head(8))
     return {
         col: complete_data_df.filter(items=list(df_ref[col]))
         for col in ["participants", "sessions", "scans"]
