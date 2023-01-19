@@ -134,6 +134,35 @@ def convert_dicom_to_nifti(in_file: str, bids_path: str, bids_filename: str):
     return
 
 
+def _check_file(directory: PathLike, pattern: str) -> PathLike:
+    from pathlib import Path
+
+    try:
+        data_file = list(Path(directory).glob(pattern))
+    except StopIteration:
+        raise FileNotFoundError("Clinical data file not found.")
+    if len(data_file) == 0:
+        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
+    if len(data_file) > 1:
+        raise ValueError("Too many data files found, expected one. Aborting.")
+    return data_file[0]
+
+
+def _read_file(data_file: PathLike) -> pd.DataFrame:
+    import pandas as pd
+
+    return (
+        pd.concat(
+            [
+                pd.read_excel(str(data_file)),
+                pd.read_excel(str(data_file), sheet_name=1),
+            ]
+        )
+        .convert_dtypes()
+        .rename(columns=lambda x: x.lower().replace(" ", "_"))
+    )
+
+
 def find_clinical_data(
     clinical_data_directory: PathLike,
 ) -> List[DataFrame]:
@@ -146,86 +175,17 @@ def find_clinical_data(
 
     Returns
     -------
-    df_demographics: DataFrame
-        Dataframe containing the demographic data
-
-    df_imaging: DataFrame
-        Dataframe containing the imaging data
-
-    df_clinical: DataFrame
-        Dataframe containing the clinical data
+    List[DataFrame]
+        Dataframes containing the clinical data
     """
-    from pathlib import Path
-
-    import pandas as pd
-
-    from clinica.utils.stream import cprint
-
-    # Read the xls
-    try:
-        image_data_file = list(
-            Path(clinical_data_directory).glob("FINAL*IMAGING*.xlsx")
+    return (
+        _read_file(_check_file(clinical_data_directory, pattern))
+        for pattern in (
+            "FINAL*DEMOGRAPHICS*.xlsx",
+            "FINAL*IMAGING*.xlsx",
+            "FINAL*CLINICAL*.xlsx",
         )
-    except StopIteration:
-        raise FileNotFoundError("Clinical data file not found.")
-    if len(image_data_file) == 0:
-        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
-    if len(image_data_file) > 1:
-        raise ValueError("Too many data files found, expected one. Aborting.")
-
-    try:
-        demographics_data_file = list(
-            Path(clinical_data_directory).glob("FINAL*DEMOGRAPHICS*.xlsx")
-        )
-    except StopIteration:
-        raise FileNotFoundError("Clinical data file not found.")
-    if len(demographics_data_file) == 0:
-        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
-    if len(demographics_data_file) > 1:
-        raise ValueError("Too many data files found, expected one. Aborting.")
-
-    try:
-        clinical_data_file = list(
-            Path(clinical_data_directory).glob("FINAL*CLINICAL*.xlsx")
-        )
-    except StopIteration:
-        raise FileNotFoundError("Clinical data file not found.")
-    if len(clinical_data_file) == 0:
-        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
-    if len(clinical_data_file) > 1:
-        raise ValueError("Too many data files found, expected one. Aborting.")
-
-    df_imaging = (
-        pd.concat(
-            [
-                pd.read_excel(str(image_data_file[0])),
-                pd.read_excel(str(image_data_file[0]), sheet_name=1),
-            ]
-        )
-        .convert_dtypes()
-        .rename(columns=lambda x: x.lower().replace(" ", "_"))
     )
-    df_demographics = (
-        pd.concat(
-            [
-                pd.read_excel(str(demographics_data_file[0])),
-                pd.read_excel(str(demographics_data_file[0]), sheet_name=1),
-            ]
-        )
-        .convert_dtypes()
-        .rename(columns=lambda x: x.lower().replace(" ", "_"))
-    )
-    df_clinical = (
-        pd.concat(
-            [
-                pd.read_excel(str(clinical_data_file[0])),
-                pd.read_excel(str(clinical_data_file[0]), sheet_name=1),
-            ]
-        )
-        .convert_dtypes()
-        .rename(columns=lambda x: x.lower().replace(" ", "_"))
-    )
-    return df_demographics, df_imaging, df_clinical
 
 
 def complete_clinical_data(
