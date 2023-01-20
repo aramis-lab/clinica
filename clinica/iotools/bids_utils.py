@@ -787,7 +787,7 @@ def identify_modality(filename: str) -> Optional[str]:
 
     Parameters
     ----------
-    x: str
+    filename: str
         Input filename
 
     Returns
@@ -813,12 +813,42 @@ def identify_modality(filename: str) -> Optional[str]:
 
 
 def parse_description(filepath: PathLike, start_line: int, end_line: int) -> str:
+    """Parse the description of the dataset from the readme in the documentation.
+    
+    Parameters
+    ----------
+    filepath : PathLike
+        Path to the readme file from which to extract the description.
+        
+    start_line : int
+        Line number where the description starts.
+        
+    end_line : int
+        Line number where the description ends.
+        
+    Returns
+    -------
+    str :
+        The description extracted from the readme file.
+    """
     with open(filepath, "r") as fp:
         txt = fp.readlines()
     return "\n".join(txt[start_line:end_line])
 
 
 def parse_url(filepath: PathLike) -> List[str]:
+    """Parse the URLs from the readme in the documentation.
+    
+    Parameters
+    ----------
+    filepath : PathLike
+        Path to the readme file from which to extract the URLs.
+        
+    Returns
+    -------
+    List[str] :
+        The list of found URLs.
+    """
     import re
 
     with open(filepath, "r") as fp:

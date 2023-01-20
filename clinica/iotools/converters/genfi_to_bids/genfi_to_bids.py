@@ -25,7 +25,8 @@ def convert_images(
         Path to directory where the bids will be written
 
     path_to_clinical: PathLike
-        Path to the clinical data associated with the dataset
+        Path to the clinical data associated with the dataset.
+        If None, the clinical data won't be converted.
 
     gif: bool
         If True, indicates the user wants to have the values of the gif parcellation
