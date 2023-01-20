@@ -92,7 +92,7 @@ def build_core_workflow(
             name="prepare_flowfields",
             interface=prepare_flowfields_task,
             flowfields=wf.unzip_flow_fields.lzout.out_file,
-            tissues=parameters["tissues"],
+            number_of_tissues=len(parameters["tissues"]),
         )
     )
 

@@ -5,14 +5,12 @@ from pydra.mark import annotate, task
 
 @task
 @annotate({"return": {"prepared_flowfields": list}})
-def prepare_flowfields_task(flowfields: Iterable, tissues: Iterable) -> list:
+def prepare_flowfields_task(flowfields: Iterable, number_of_tissues: int) -> list:
     """Pydra task for prepare_flow_fields."""
-    return prepare_flowfields(flowfields, tissues)
+    return prepare_flowfields(flowfields, number_of_tissues)
 
 
-def prepare_flowfields(
-    flowfields: Union[Iterable[str], str], tissues: Iterable[int]
-) -> list:
+def prepare_flowfields(flowfields: Iterable, number_of_tissues: int) -> list:
     """Reshape the flow fields according to the number of tissues.
 
     This function broadcasts the flow fields to the number of tissues
@@ -25,9 +23,8 @@ def prepare_flowfields(
         with a path to a single file, or a list if we are dealing with a
         list of paths.
 
-    tissues : Iterable
-        The tissues selected. It should be a list of integers encoding the
-        different tissues.
+    number_of_tissues : int
+        The number of tissues selected.
 
     Returns
     -------
@@ -37,25 +34,27 @@ def prepare_flowfields(
 
     Raises
     ------
-    ValueError
+    TypeError
         If the provided flowfields is not a string, a list, or a tuple.
-        If the provided tissues is not an iterable.
+        If the provided number of tissues is not an integer.
 
     Examples
     --------
-    >>> prepare_flowfields(["path_to_flowfield_1", "path_to_flowfield_2"], (1, 2, 3))
+    >>> prepare_flowfields(["path_to_flowfield_1", "path_to_flowfield_2"], 3)
     [['path_to_flowfield_1', 'path_to_flowfield_1', 'path_to_flowfield_1'], ['path_to_flowfield_2', 'path_to_flowfield_2', 'path_to_flowfield_2']]
-    >>> prepare_flowfields(["path_to_flowfield_1", "path_to_flowfield_2"], (1, 3))
+    >>> prepare_flowfields(["path_to_flowfield_1", "path_to_flowfield_2"], 2)
     [['path_to_flowfield_1', 'path_to_flowfield_1'], ['path_to_flowfield_2', 'path_to_flowfield_2']]
-    >>> prepare_flowfields(["path_to_flowfield_1"], (1, 3))
+    >>> prepare_flowfields(["path_to_flowfield_1"], 2)
     [['path_to_flowfield_1', 'path_to_flowfield_1']]
-    >>> prepare_flowfields("path_to_flowfield_1", (1, 3))
+    >>> prepare_flowfields("path_to_flowfield_1", 2)
     ['path_to_flowfield_1', 'path_to_flowfield_1']
     """
-    if not isinstance(tissues, Iterable):
-        raise ValueError(f"Invalid tissues type: {type(tissues)}.")
+    if not isinstance(number_of_tissues, int):
+        raise TypeError(
+            f"Invalid type for number_of_tissues. Expected int, got {type(number_of_tissues)}."
+        )
     if isinstance(flowfields, (list, tuple)):
-        return [[f] * len(tissues) for f in flowfields]
+        return [[f] * number_of_tissues for f in flowfields]
     if isinstance(flowfields, str):
-        return [flowfields] * len(tissues)
-    raise ValueError(f"Invalid flowfields type: {type(flowfields)}.")
+        return [flowfields] * number_of_tissues
+    raise TypeError(f"Invalid flowfields type: {type(flowfields)}.")
