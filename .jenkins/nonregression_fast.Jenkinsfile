@@ -58,7 +58,6 @@ pipeline {
                 TMP_DIR = "/mnt/data/ci/tmp"
               }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
                   sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
@@ -78,7 +77,6 @@ pipeline {
                     -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_pet.py
                 '''
-                }
               }
               post {
                 always {
@@ -97,7 +95,6 @@ pipeline {
                 TMP_DIR = "/mnt/data/ci/tmp"
               }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
                   sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
@@ -117,7 +114,6 @@ pipeline {
                     -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_stats.py
                 '''
-                }
               }
               post {
                 always {
@@ -136,7 +132,6 @@ pipeline {
                 TMP_DIR = "/mnt/data/ci/tmp"
               }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
                   sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
@@ -156,7 +151,6 @@ pipeline {
                     -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_ml.py
                 '''
-                }
               }
               post {
                 always {
@@ -175,7 +169,6 @@ pipeline {
                 TMP_DIR = "/mnt/data/ci/tmp"
               }
               steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
                   sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
@@ -195,46 +188,6 @@ pipeline {
                     -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_anat.py
                 '''
-                }
-              }
-              post {
-                always {
-                  junit 'test/test-reports/*.xml'
-                }
-                success {
-                  sh 'rm -rf ${WORK_DIR}'
-                }
-              }
-            }
-            stage('DWI:nonreg:notslow') {
-              environment {
-                PATH = "/usr/local/Modules/bin:$PATH"
-                WORK_DIR = "/mnt/data/ci/working_dir_linux/DWI"
-                INPUT_DATA_DIR = "/mnt/data_ci"
-                TMP_DIR = "/mnt/data/ci/tmp"
-              }
-              steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
-                  sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate $CONDA_ENV
-                  mkdir -p $WORK_DIR
-                  source /usr/local/Modules/init/profile.sh
-                  module load clinica.all
-                  cd test
-                  poetry run pytest \
-                    --junitxml=./test-reports/nonregression_linux_dwi.xml \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --input_data_directory=$INPUT_DATA_DIR \
-                    --basetemp=$TMP_DIR \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    -m "not slow" \
-                    ./nonregression/pipelines/test_run_pipelines_dwi.py
-                '''
-                }
               }
               post {
                 always {
@@ -425,42 +378,6 @@ pipeline {
                     -n 4 \
                     -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_anat.py
-                '''
-              }
-              post {
-                always {
-                  junit 'test/test-reports/*.xml'
-                }
-                success {
-                  sh 'rm -rf ${WORK_DIR}/*'
-                }
-              }
-            }
-            stage('DWI:nonreg:notslow') {
-              environment {
-                WORK_DIR = "/Volumes/data/working_dir_mac/DWI"
-                INPUT_DATA_DIR = "/Volumes/data_ci"
-                TMP_DIR = "/Volumes/data/tmp"
-              }
-              steps {
-                sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
-                  conda activate $CONDA_ENV
-                  source "$(brew --prefix)/opt/modules/init/bash"
-                  mkdir -p $WORK_DIR
-                  module load clinica.all
-                  cd test
-                  poetry run pytest \
-                    --junitxml=./test-reports/nonregression_mac_dwi.xml \
-                    --verbose \
-                    --working_directory=$WORK_DIR \
-                    --input_data_directory=$INPUT_DATA_DIR \
-                    --basetemp=$TMP_DIR \
-                    --disable-warnings \
-                    --timeout=0 \
-                    -n 4 \
-                    -m "not slow" \
-                    ./nonregression/pipelines/test_run_pipelines_dwi.py
                 '''
               }
               post {
