@@ -782,7 +782,7 @@ def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> Non
     dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
 
 
-def identify_modality(filename: str) -> str:
+def identify_modality(filename: str) -> Optional[str]:
     """Identifies the modality of a file given its name.
 
     Parameters
@@ -792,8 +792,8 @@ def identify_modality(filename: str) -> str:
 
     Returns
     -------
-    str:
-        Modality
+    Optional[str]:
+        Modality or None if parsing uns
     """
     filename = filename.lower()
     if "dwi" in filename:

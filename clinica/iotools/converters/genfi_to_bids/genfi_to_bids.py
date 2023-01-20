@@ -1,10 +1,14 @@
 """Convert the GENFI dataset into BIDS."""
 
 from os import PathLike
+from typing import Optional
 
 
 def convert_images(
-    path_to_dataset: PathLike, bids_dir: PathLike, path_to_clinical: PathLike, gif: bool
+    path_to_dataset: PathLike,
+    bids_dir: PathLike,
+    path_to_clinical: Optional[PathLike],
+    gif: bool,
 ) -> None:
     """Convert the entire dataset to BIDS.
 
