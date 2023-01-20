@@ -4,7 +4,7 @@ from clinica.pydra.engine import clinica_io
 
 
 @clinica_io
-def build_core_workflow(name: str, parameters: dict) -> pydra.Workflow:
+def build_core_workflow(name: str = "core", parameters: dict = {}) -> pydra.Workflow:
     from pydra.tasks.bids import BIDSFileInfo
     from pydra.tasks.freesurfer import ReconAll
 
@@ -18,17 +18,15 @@ def build_core_workflow(name: str, parameters: dict) -> pydra.Workflow:
 
     workflow = pydra.Workflow(name=name, input_spec=input_spec)
 
-    workflow.add(
-        BIDSFileInfo(
-            output_entities={
-                "participant_id": "sub",
-                "session_id": "ses",
-            }
-        ).to_task(
-            name="bids_file_info",
-            file_path=workflow.lzin.T1w,
-        ).split("file_path")
-    )
+    # Parse participant and session IDs from T1w volume file.
+    bids_file_info = BIDSFileInfo(
+        output_entities={
+            "participant_id": "sub",
+            "session_id": "ses",
+        }
+    ).to_task(name="bids_file_info")
+
+    workflow.add(bids_file_info(file_path=workflow.lzin.T1w).split("file_path"))
 
     workflow.add(
         compute_freesurfer_subject_id(
