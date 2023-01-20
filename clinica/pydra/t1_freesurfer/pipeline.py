@@ -27,7 +27,7 @@ def build_core_workflow(name: str, parameters: dict) -> pydra.Workflow:
         ).to_task(
             name="bids_file_info",
             file_path=workflow.lzin.T1w,
-        )
+        ).split("file_path")
     )
 
     workflow.add(
