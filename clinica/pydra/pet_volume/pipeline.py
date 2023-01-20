@@ -1,4 +1,3 @@
-import typing as ty
 from typing import Any
 
 import pydra
@@ -51,125 +50,6 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
     return parameters
 
 
-def _sanitize_fwhm(
-    fwhm: ty.Union[float, ty.Tuple[float], ty.List[float], ty.List[ty.List[float]]],
-) -> ty.List[ty.List[float]]:
-    """Make sure the FWHM is in the right format for the Smooth SPM interface.
-
-    Parameters
-    ----------
-    fwhm : Union[float, Tuple[float], List[float], List[List[float]]
-        Smoothing kernel(s) that should get passed to the SPM Smooth() interface.
-        There are three ways to specify fwhm:
-            - A float
-            - A list/tuple of floats
-            - A list of lists of floats
-
-    Returns
-    -------
-    fwhm : List[List[float]]
-        The FWHM kernels as a list of lists of floats. All inner lists are of
-        length 3 as they encode each physical dimension.
-
-    Examples
-    --------
-    >>> _sanitize_fwhm(3.0)
-    [[3.0, 3.0, 3.0]]
-    >>> _sanitize_fwhm([3.0])
-    [[3.0, 3.0, 3.0]]
-    >>> _sanitize_fwhm((3,))
-    [[3.0, 3.0, 3.0]]
-    >>> _sanitize_fwhm([3.0, 2.0])
-    [[3.0, 3.0, 3.0], [2.0, 2.0, 2.0]]
-    >>> _sanitize_fwhm((3.0, 2.0))
-    [[3.0, 3.0, 3.0], [2.0, 2.0, 2.0]]
-    >>> _sanitize_fwhm([3.0, 2.0, 1.0])
-    [[3.0, 3.0, 3.0], [2.0, 2.0, 2.0], [1.0, 1.0, 1.0]]
-    >>> _sanitize_fwhm([[3.0, 2.0, 1.0], [2.0, 2.0, 1.0]])
-    [[3.0, 2.0, 1.0], [2.0, 2.0, 1.0]]
-    """
-    if isinstance(fwhm, tuple):
-        fwhm = list(fwhm)
-    if isinstance(fwhm, (int, float)):
-        fwhm = [[float(fwhm)] * 3]
-    if isinstance(fwhm, list):
-        if len(fwhm) == 0:
-            raise ValueError("Empty FWHM list provided.")
-        if isinstance(fwhm[0], list):
-            if not all([isinstance(f, list) for f in fwhm]):
-                raise ValueError(
-                    "Expecting a list of lists of ints or a list of ints for FWHM."
-                )
-            if not all([len(f) == 3 for f in fwhm]):
-                raise ValueError(
-                    "When providing a list of lists of ints for FWHM, all inner lists must have length 3"
-                )
-            for f in fwhm:
-                if not all([isinstance(ff, (int, float)) for ff in f]):
-                    raise ValueError(
-                        "Expecting a list of lists of ints or a list of ints for FWHM."
-                    )
-        else:
-            if all([isinstance(f, (int, float)) for f in fwhm]):
-                return [[float(f)] * 3 for f in fwhm]
-            else:
-                raise ValueError(
-                    "Expecting a list of lists of floats or a list of floats for FWHM."
-                )
-    return fwhm
-
-
-def build_smoothing_workflow(
-    name: str,
-    fwhm: ty.List[ty.List[float]],
-) -> Workflow:
-    """Build and parametrize a smoothing workflow.
-
-    Parameters
-    ----------
-    name : str
-        The name of the Workflow.
-
-    fwhm : List[List[float]]
-        The smoothing kernel(s) to use for smoothing.
-        If multiple kernels are provided, the workflow
-        will output files for each specified kernel.
-        Each file name has the kernel size added.
-
-    Returns
-    -------
-    wf : Workflow
-        The resulting smoothing workflow.
-    """
-    wf = Workflow(
-        name,
-        input_spec=["input_file"],
-    )
-    outputs = []
-    for fwhm_value in fwhm:
-        if not isinstance(fwhm_value, list) or len(fwhm_value) != 3:
-            raise ValueError(
-                f"FWHM value is not valid. Expected a length 3 list and got: {fwhm_value}."
-            )
-        fwhm_name = f"{'-'.join([str(int(f)) for f in fwhm_value])}mm"
-        task = Nipype1Task(
-            name=f"smoothing_node_{fwhm_name}",
-            interface=Smooth(),
-        )
-        task.inputs.fwhm = fwhm_value
-        task.inputs.out_prefix = f"fwhm-{fwhm_name}_"
-        task.inputs.in_files = wf.lzin.input_file
-        wf.add(task)
-        outputs.append(
-            (
-                "smoothed_files",
-                getattr(wf, f"smoothing_node_{fwhm_name}").lzout.smoothed_files,
-            )
-        )
-    wf.set_output(outputs)
-    return wf
-
-
 @clinica_io
 def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     """Build the core workflow for the PET Volume pipeline.
@@ -189,6 +69,8 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     wf : Workflow
         The core workflow.
     """
+    from clinica.pydra.shared_workflows.smoothing import build_smoothing_workflow
+    from clinica.pydra.utils import sanitize_fwhm
     from clinica.utils.pet import get_suvr_mask
     from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
@@ -330,10 +212,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
     # Smoothing
     if parameters["smooth"] is not None:
-        smoothing_fwhm = _sanitize_fwhm(parameters["smooth"])
         smoothing_wf = build_smoothing_workflow(
             "smoothing_workflow",
-            smoothing_fwhm,
+            sanitize_fwhm(parameters["smooth"]),
         )
         smoothing_wf.inputs.input_file = wf.apply_mask.lzout.masked_image_path
         wf.add(smoothing_wf)
@@ -451,10 +332,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
         # Smoothing
         if parameters["smooth"] is not None:
-            smoothing_fwhm = _sanitize_fwhm(parameters["smooth"])
             pvc_smoothing_wf = build_smoothing_workflow(
                 "pvc_smoothing_workflow",
-                smoothing_fwhm,
+                sanitize_fwhm(parameters["smooth"]),
             )
             pvc_smoothing_wf.inputs.input_file = (
                 wf.apply_mask_pvc.lzout.masked_image_path

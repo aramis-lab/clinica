@@ -265,6 +265,7 @@ class CAPSFileQuery(CAPSQuery):
         return T1W_TO_MNI_TRANSFORM
 
     _query_makers = {
+        "tissues": t1_volume_native_tpm,
         "mask_tissues": t1_volume_native_tpm_in_mni,
         "flow_fields": t1_volume_deformation_to_template,
         "pvc_mask_tissues": t1_volume_native_tpm,
