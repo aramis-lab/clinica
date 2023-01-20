@@ -248,9 +248,9 @@ def read_imaging_data(source_path: PathLike) -> DataFrame:
     df_dicom: DataFrame
         Dataframe containing the data extracted.
     """
-    df_dicom = pd.DataFrame(find_dicoms(source_path), columns=["source_path", "source"])
-    df_dicom = filter_dicoms(df_dicom)
-    return df_dicom
+    return filter_dicoms(
+        pd.DataFrame(find_dicoms(source_path), columns=["source_path", "source"])
+    )
 
 
 def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
