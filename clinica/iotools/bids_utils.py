@@ -810,3 +810,19 @@ def identify_modality(filename: str) -> Optional[str]:
     #     return "asl"
     else:
         return None
+
+
+def parse_description(filepath: PathLike, start_line: int, end_line: int) -> str:
+    with open(filepath, "r") as fp:
+        txt = fp.readlines()
+    return "\n".join(txt[start_line:end_line])
+
+
+def parse_url(filepath: PathLike) -> List[str]:
+    import re
+
+    with open(filepath, "r") as fp:
+        txt = fp.readlines()
+    txt = "".join(txt)
+    url_extract_pattern = "https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)"
+    return re.findall(url_extract_pattern, txt)
