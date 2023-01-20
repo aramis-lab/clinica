@@ -7,7 +7,7 @@ import pydicom as pdcm
 from pandas import DataFrame
 
 
-def find_dicoms(path_to_source_data: PathLike) -> Iterable[PathLike]:
+def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathLike]]:
     """Find the dicoms in the given directory.
 
     Parameters
@@ -17,7 +17,7 @@ def find_dicoms(path_to_source_data: PathLike) -> Iterable[PathLike]:
 
     Returns
     -------
-    Iterable[PathLike]
+    Iterable[Tuple[PathLike, PathLike]]
         Path to found files and parent directory
     """
     for z in Path(path_to_source_data).rglob("*.dcm"):

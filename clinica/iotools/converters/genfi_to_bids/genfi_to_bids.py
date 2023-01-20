@@ -24,7 +24,7 @@ def convert_images(
     bids_dir: PathLike
         Path to directory where the bids will be written
 
-    path_to_clinical: PathLike
+    path_to_clinical: PathLike, optional
         Path to the clinical data associated with the dataset.
         If None, the clinical data won't be converted.
 
