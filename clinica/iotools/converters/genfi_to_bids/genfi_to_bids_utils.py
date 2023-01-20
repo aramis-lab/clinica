@@ -577,20 +577,10 @@ def correct_fieldmaps_name(to: PathLike) -> None:
         └── sub-GRN001_sessions.tsv
     """
     import os
+    import re
 
     for z in Path(to).rglob("*magnitude_e*"):
-        path = Path(z).parent
-        file = Path(z).name
-        file_new = (
-            file.split(".")[0][:-3]
-            + file.split(".")[0][-1:]
-            + "."
-            + file.split(".", 1)[1]
-        )
-        os.rename(z, path / Path(file_new))
+        os.rename(z, z.parent / re.sub(r"magnitude_e", "magnitude", z.name))
 
     for z in Path(to).rglob("*phasediff_e*_ph*"):
-        path = Path(z).parent
-        file = Path(z).name
-        file_new = file.split(".")[0][:-6] + "." + file.split(".", 1)[1]
-        os.rename(z, path / Path(file_new))
+        os.rename(z, z.parent / re.sub(r"phasediff_e[1-9]_ph", "phasediff", z.name))
