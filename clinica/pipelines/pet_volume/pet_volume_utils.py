@@ -1,23 +1,9 @@
 def init_input_node(pet_nii):
-    import nibabel as nib
-
-    from clinica.utils.filemanip import get_subject_id
-    from clinica.utils.stream import cprint
+    from clinica.utils.filemanip import check_img_3d, get_subject_id
     from clinica.utils.ux import print_begin_image
 
-    # Extract image ID
     image_id = get_subject_id(pet_nii)
-
-    # Check that the PET file is a 3D volume
-    img = nib.load(pet_nii)
-    if len(img.shape) == 4:
-        error_msg = (
-            f"Clinica does not handle 4D volumes for {image_id.replace('_', ' | ')}"
-        )
-        cprint(error_msg, lvl="error")
-        raise NotImplementedError(error_msg)
-
-    # Print begin message
+    pet_nii = check_img_3d(pet_nii)
     print_begin_image(image_id)
 
     return pet_nii
