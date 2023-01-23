@@ -3,7 +3,7 @@ def init_input_node(pet_nii):
     from clinica.utils.ux import print_begin_image
 
     image_id = get_subject_id(pet_nii)
-    pet_nii = load_img_3d(pet_nii)
+    load_img_3d(pet_nii)
     print_begin_image(image_id)
 
     return pet_nii
