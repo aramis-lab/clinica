@@ -196,14 +196,14 @@ def test_image(case):
 
 
 @pytest.mark.parametrize("case", ["3d", "4d_dummy", "4d", "5d"])
-def test_check_img_3d(tmp_path, case, test_image):
-    from clinica.utils.filemanip import check_img_3d
+def test_load_img_3d(tmp_path, case, test_image):
+    from clinica.utils.filemanip import load_img_3d
 
     with pytest.raises(
         FileNotFoundError,
         match="No such file or no access: 'foo'",
     ):
-        check_img_3d("foo")
+        load_img_3d("foo")
     (tmp_path / "sub-01").mkdir()
     (tmp_path / "sub-01" / "ses-M000").mkdir()
     filepath = tmp_path / "sub-01" / "ses-M000" / "sub-01_ses-M000_foo.nii.gz"
@@ -213,9 +213,9 @@ def test_check_img_3d(tmp_path, case, test_image):
             NotImplementedError,
             match=f"Clinica does not handle {case[0]}D volumes for sub-01 | ses-M000",
         ):
-            check_img_3d(filepath)
+            load_img_3d(filepath)
     else:
-        img2 = check_img_3d(filepath)
+        img2 = load_img_3d(filepath)
         if case == "3d":
             assert_array_equal(test_image.get_fdata(), img2.get_fdata())
         elif case == "4d_dummy":

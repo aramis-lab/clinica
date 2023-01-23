@@ -1,9 +1,9 @@
 def init_input_node(pet_nii):
-    from clinica.utils.filemanip import check_img_3d, get_subject_id
+    from clinica.utils.filemanip import get_subject_id, load_img_3d
     from clinica.utils.ux import print_begin_image
 
     image_id = get_subject_id(pet_nii)
-    pet_nii = check_img_3d(pet_nii)
+    pet_nii = load_img_3d(pet_nii)
     print_begin_image(image_id)
 
     return pet_nii

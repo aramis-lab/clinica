@@ -130,7 +130,7 @@ def unzip_nii(
     return _zip_unzip_nii(in_file, same_dir, compress=False)
 
 
-def check_img_3d(image_path: str):
+def load_img_3d(image_path: str):
     """Load a 3D nifti image from its path.
 
     If the image is 4D with a dummy fourth dimension,
