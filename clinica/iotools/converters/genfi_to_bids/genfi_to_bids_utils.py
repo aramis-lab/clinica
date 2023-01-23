@@ -253,9 +253,18 @@ def read_imaging_data(source_path: PathLike) -> DataFrame:
     )
 
 
-def compute_baseline_date(df: pd.DataFrame) -> pd.DataFrame:
+def compute_baseline_date(df: DataFrame) -> DataFrame:
     """Computes the baseline date by taking the minimum
     acq_date for each subject.
+
+    Parameters
+    ----------
+    df: Dataframe
+
+    Returns
+    -------
+    Dataframe
+        Contains the baseline date.
     """
     df_1 = (
         df[["source_id", "source_ses_id", "acq_date"]]
@@ -266,9 +275,18 @@ def compute_baseline_date(df: pd.DataFrame) -> pd.DataFrame:
     return df_1.join(df_2.rename(columns={"acq_date": "baseline"}))
 
 
-def compute_session_numbers(df: pd.DataFrame) -> pd.DataFrame:
+def compute_session_numbers(df: DataFrame) -> DataFrame:
     """Computes the session number in months by subtracting the
     baseline date from the acq_date and converting to months.
+
+    Parameters
+    ----------
+    df:Dataframe
+
+    Returns
+    -------
+    Dataframe
+        Contains the session number in the following format: ses-MXXX.
     """
     df = df.assign(
         ses_month=lambda x: (
@@ -283,9 +301,18 @@ def compute_session_numbers(df: pd.DataFrame) -> pd.DataFrame:
     return df.assign(session_id=lambda x: x.ses_month.map(lambda y: f"ses-M{y:03d}"))
 
 
-def compute_modality(df: pd.DataFrame) -> pd.DataFrame:
+def compute_modality(df: DataFrame) -> DataFrame:
     """Parses the series_desc column to identify the modality, and map
     this modality to a metadata dictionary.
+
+    Parameters
+    ----------
+    df:Dataframe
+
+    Returns
+    -------
+    Dataframe
+        Contains the datatype, suffix, sidecars and task that may be needed to form the complete file name.
     """
     from clinica.iotools.bids_utils import identify_modality
 
@@ -337,10 +364,21 @@ def compute_modality(df: pd.DataFrame) -> pd.DataFrame:
     return df.join(df.modality.map(modality_mapping).apply(pd.Series))
 
 
-def compute_fieldmaps(df: pd.DataFrame) -> pd.DataFrame:
+def identify_fieldmaps(df: DataFrame) -> DataFrame:
+    """Identifies the fieldmaps imaging type: magnitude or phase difference.
+
+    Parameters
+    ----------
+    df:Dataframe
+        Dataframe without the fieldmaps identified.
+
+    Returns
+    -------
+    Dataframe
+        Dataframe with the fieldmaps identified
+    """
     filter = ["source_id", "source_ses_id", "modality", "dir_num", "suffix"]
     df1 = df[filter][df["modality"].str.contains("fieldmap")].groupby(filter[:-1]).min()
-    print(df1)
     df2 = (
         df[["source_id", "source_ses_id", "modality", "dir_num"]][
             df["modality"].str.contains("fieldmap")
@@ -348,7 +386,6 @@ def compute_fieldmaps(df: pd.DataFrame) -> pd.DataFrame:
         .groupby(["source_id", "source_ses_id", "modality"])
         .min()
     )
-    print(df2)
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
     df_alt = df1.reset_index().assign(
         fmap_type_p=lambda x: (x.run_01_dir_num != x.dir_num)
@@ -358,16 +395,43 @@ def compute_fieldmaps(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def merge_fieldmaps(df, df_alt):
+def merge_fieldmaps(df: DataFrame, df_fmap: DataFrame):
+    """Merges the dataframe containing the fieldmaps names
+
+    Parameters
+    ----------
+    df: Dataframe
+        Initial dataframe. Fieldmaps are identified on information extracted here.
+
+    df_fmap: Dataframe
+        Dataframe in which fieldmaps are identified.
+
+    Returns
+    -------
+    Dataframe
+        Dataframe containing the correct fieldmap for each fieldmap acquisition.
+    """
     filter = ["source_id", "source_ses_id", "modality", "dir_num", "fmap"]
-    df1 = df.merge(df_alt[filter], how="inner", on=filter[:-1])
-    df2 = df.merge(df_alt[filter], how="left", on=filter[:-1])
+    df1 = df.merge(df_fmap[filter], how="inner", on=filter[:-1])
+    df2 = df.merge(df_fmap[filter], how="left", on=filter[:-1])
     df2 = df2[~df2["modality"].str.contains("fieldmap")]
     df1 = df1.assign(suffix=lambda x: x.fmap)
     return pd.concat([df2, df1], ignore_index=True)
 
 
-def merge_runs(df: pd.DataFrame) -> pd.DataFrame:
+def compute_runs(df: DataFrame) -> DataFrame:
+    """This functions computes the run numbers.
+
+    Parameters
+    ----------
+    df: DataFrame
+        Dataframe without runs.
+
+    Returns
+    -------
+    DataFrame
+        Dataframe containing the correct run for each acquisition.
+    """
     filter = ["source_id", "source_ses_id", "suffix", "dir_num"]
     df1 = df[filter].groupby(filter).min()
     df2 = df[filter].groupby(filter[:-1]).min()
@@ -389,7 +453,6 @@ def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
     df_sub_ses_run: DataFrame
         Dataframe with the data necessary for the BIDS
     """
-    from clinica.iotools.bids_utils import identify_modality
 
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(
@@ -413,31 +476,8 @@ def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
     df_dicom = df_dicom.assign(
         genfi_version=lambda df: df.source_ses_id.apply(lambda x: f"GENFI{len(str(x))}")
     )
-    # df_1 = (
-    #     df_dicom[["source_id", "source_ses_id", "acq_date"]]
-    #     .groupby(["source_id", "source_ses_id"])
-    #     .min()
-    # )
-    # df_2 = df_dicom[["source_id", "acq_date"]].groupby(["source_id"]).min()
-    # df_1 = df_1.join(df_2.rename(columns={"acq_date": "baseline"}))
     df_1 = compute_baseline_date(df_dicom)
 
-    # df_1 = df_1.assign(
-    #     ses_month=lambda df: (
-    #         (
-    #             df["acq_date"].str[:4].astype("int")
-    #             - df["baseline"].str[:4].astype("int")
-    #         )
-    #         * 12
-    #         + (
-    #             df["acq_date"].str[4:6].astype("int")
-    #             - df["baseline"].str[4:6].astype("int")
-    #         )
-    #     )
-    # )
-    # df_1 = df_1.assign(
-    #     session_id=lambda df: df.ses_month.map(lambda x: f"ses-M{x:03d}")
-    # )
     df_1 = compute_session_numbers(df_1)
 
     df_sub_ses = df_dicom.merge(
@@ -446,130 +486,20 @@ def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
     df_sub_ses = df_sub_ses.assign(
         participant_id=lambda df: df.source_id.apply(lambda x: f"sub-{x}")
     )
-
-    # df_sub_ses = df_sub_ses.assign(
-    #     modality=lambda df: df.series_desc.apply(lambda x: identify_modality(x))
-    # )
-    # df_sub_ses = df_sub_ses.join(
-    #     df_sub_ses.modality.map(
-    #         {
-    #             "T2w": {
-    #                 "datatype": "anat",
-    #                 "suffix": "T2w",
-    #                 "sidecars": ["T2w.json"],
-    #                 "task": "",
-    #             },
-    #             "T1": {
-    #                 "datatype": "anat",
-    #                 "suffix": "T1w",
-    #                 "sidecars": ["T1w.json"],
-    #                 "task": "",
-    #             },
-    #             "dwi": {
-    #                 "datatype": "dwi",
-    #                 "suffix": "dwi",
-    #                 "sidecars": [
-    #                     "dwi.json",
-    #                     "dwi.bval",
-    #                     "dwi.bvec",
-    #                 ],
-    #                 "task": "",
-    #             },
-    #             "rsfmri": {
-    #                 "datatype": "func",
-    #                 "suffix": "bold",
-    #                 "sidecars": ["rsfmri.json"],
-    #                 "task": "_task-rest",
-    #             },
-    #             "fieldmap": {
-    #                 "datatype": "fmap",
-    #                 "suffix": "fmap",
-    #                 "sidecars": ["fmap.json"],
-    #                 "task": "",
-    #             },
-    #             # "asl": {
-    #             #     "datatype": "perf",
-    #             #     "suffix": "asl",
-    #             #     "sidecars": ["asl.json"],
-    #             #     "task": "",
-    #             # },
-    #         }
-    #     ).apply(pd.Series)
-    # )
     df_sub_ses = compute_modality(df_sub_ses)
 
     # take into account fieldmaps -> same method as for baseline (extract number of directory)
-    df_sub_ses_fmap = df_sub_ses.assign(
-        dir_num=lambda df: df.source.apply(lambda x: int(Path(Path(x).parent).name))
-    )
     df_fmap = df_sub_ses.assign(
         dir_num=lambda x: x.source.apply(lambda y: int(Path(Path(y).parent).name))
     )
 
-    # df_map_1 = (
-    #     df_sub_ses_fmap[
-    #         ["source_id", "source_ses_id", "modality", "dir_num", "suffix"]
-    #     ][df_sub_ses["modality"].str.contains("fieldmap")]
-    #     .groupby(["source_id", "source_ses_id", "modality", "dir_num"])
-    #     .min()
-    # )
-    # print(df_map_1)
-    # df_map_2 = (
-    #     df_sub_ses_fmap[["source_id", "source_ses_id", "modality", "dir_num"]][
-    #         df_sub_ses["modality"].str.contains("fieldmap")
-    #     ]
-    #     .groupby(["source_id", "source_ses_id", "modality"])
-    #     .min()
-    # )
-    # print(df_map_2, '\n')
-    # df_map_1 = df_map_1.join(df_map_2.rename(columns={"dir_num": "run_01_dir_num"}))
-    # df_alt_map = df_map_1.reset_index().assign(
-    #     fmap_type_p=lambda df: (df.run_01_dir_num != df.dir_num)
-    # )
-    # df_alt_map = df_alt_map.assign(
-    #     fmap=lambda df: df.fmap_type_p.apply(
-    #         lambda x: "phasediff" if x else "magnitude"
-    #     )
-    # )
-    df_suf = merge_fieldmaps(df_fmap, compute_fieldmaps(df_fmap))
-    # df_suf = merge_fieldmaps(df_sub_ses_fmap, df_alt_map)
-    # merge fieldmap suffix
-    # df_sub_ses_map_1 = df_sub_ses_fmap.merge(
-    #     df_alt_map[["source_id", "source_ses_id", "modality", "dir_num", "fmap"]],
-    #     how="inner",
-    #     on=["source_id", "source_ses_id", "modality", "dir_num"],
-    # )
-    # df_sub_ses_map_2 = df_sub_ses_fmap.merge(
-    #     df_alt_map[["source_id", "source_ses_id", "modality", "dir_num", "fmap"]],
-    #     how="left",
-    #     on=["source_id", "source_ses_id", "modality", "dir_num"],
-    # )
-    # df_sub_ses_map_2 = df_sub_ses_map_2[
-    #     ~df_sub_ses_map_2["modality"].str.contains("fieldmap")
-    # ]
-    # df_sub_ses_map_1 = df_sub_ses_map_1.assign(suffix=lambda df: df.fmap)
-    # df_suf = pd.concat([df_sub_ses_map_2, df_sub_ses_map_1], ignore_index=True)
+    df_suf = merge_fieldmaps(df_fmap, identify_fieldmaps(df_fmap))
 
     # take into account runs -> same method as for baseline (extract number of directory)
     df_suf_dir = df_suf.assign(
         dir_num=lambda df: df.source.apply(lambda x: int(Path(Path(x).parent).name))
     )
-    # df_1 = (
-    #     df_suf_dir[["source_id", "source_ses_id", "suffix", "dir_num"]]
-    #     .groupby(["source_id", "source_ses_id", "suffix", "dir_num"])
-    #     .min()
-    # )
-    # df_2 = (
-    #     df_suf_dir[["source_id", "source_ses_id", "suffix", "dir_num"]]
-    #     .groupby(["source_id", "source_ses_id", "suffix"])
-    #     .min()
-    # )
-    # df_1 = df_1.join(df_2.rename(columns={"dir_num": "run_01_dir_num"}))
-    # df_alt = df_1.reset_index().assign(run=lambda df: (df.run_01_dir_num != df.dir_num))
-    # df_alt = df_alt.assign(
-    #     run_num=lambda df: df.run.apply(lambda x: f"run-0{int(x)+1}")
-    # )
-    df_alt = merge_runs(df_suf_dir)
+    df_alt = compute_runs(df_suf_dir)
     df_sub_ses_run = df_suf_dir.merge(
         df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "run_num"]],
         how="left",
