@@ -165,7 +165,7 @@ def check_img_3d(image_path: str):
             klass = img.__class__
             header = copy.deepcopy(img.header)
             return klass(data[:, :, :, 0], img.affine, header=header)
-        image_id = get_subject_id(image_path)
+        image_id = get_subject_id(str(image_path))
         error_msg = (
             f"Clinica does not handle {dim}D volumes for {image_id.replace('_', ' | ')}"
         )
