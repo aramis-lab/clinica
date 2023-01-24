@@ -148,11 +148,12 @@ def complete_clinical_data(
     df_clinical_complete: DataFrame
         Dataframe with the data of the 3 input dataframes
     """
+    merge_key = ["blinded_code", "blinded_site", "visit"]
     df_clinical_complete = df_imaging.merge(
-        df_demographics, how="inner", on=["blinded_code", "blinded_site", "visit"]
+        df_demographics, how="inner", on=merge_key
     ).drop(columns="diagnosis")
-    df_clinical = df_clinical.dropna(subset=["blinded_code", "blinded_site", "visit"])
-    df_clinical_complete = df_clinical_complete.merge(
+    df_clinical = df_clinical.dropna(subset=merge_key)
+    return df_clinical_complete.merge(
         df_clinical[
             [
                 "blinded_code",
@@ -164,9 +165,8 @@ def complete_clinical_data(
             ]
         ],
         how="inner",
-        on=["blinded_code", "blinded_site", "visit"],
+        on=merge_key,
     )
-    return df_clinical_complete
 
 
 def dataset_to_bids(complete_data_df: DataFrame, gif: bool) -> Dict[str, DataFrame]:
@@ -231,8 +231,7 @@ def intersect_data(
         left_on=["source_id", "source_ses_id"],
         right_on=["blinded_code", "visit"],
     )
-    df_complete = df_complete.loc[:, ~df_complete.columns.duplicated()]
-    return df_complete
+    return df_complete.loc[:, ~df_complete.columns.duplicated()]
 
 
 def read_imaging_data(source_path: PathLike) -> DataFrame:
@@ -281,7 +280,8 @@ def compute_session_numbers(df: DataFrame) -> DataFrame:
 
     Parameters
     ----------
-    df:Dataframe
+    df : Dataframe
+        DataFrame on which to compute the session numbers.
 
     Returns
     -------
@@ -307,7 +307,8 @@ def compute_modality(df: DataFrame) -> DataFrame:
 
     Parameters
     ----------
-    df:Dataframe
+    df: Dataframe
+        DataFrame on which to compute the modality.
 
     Returns
     -------
