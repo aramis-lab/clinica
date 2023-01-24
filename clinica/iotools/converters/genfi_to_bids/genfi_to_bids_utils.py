@@ -29,12 +29,12 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
 
     Parameters
     ----------
-    df_dicom: DataFrame
+    df: DataFrame
         Dataframe containing all of the dicoms available in the source directory.
 
     Returns
     -------
-    df_dicom: DataFrame
+    df: DataFrame
         Dataframe with only the modalities handled.
     """
     to_filter = [
@@ -380,10 +380,10 @@ def identify_fieldmaps(df: DataFrame) -> DataFrame:
     filter = ["source_id", "source_ses_id", "modality", "dir_num", "suffix"]
     df1 = df[filter][df["modality"].str.contains("fieldmap")].groupby(filter[:-1]).min()
     df2 = (
-        df[["source_id", "source_ses_id", "modality", "dir_num"]][
+        df[filter[:-1]][
             df["modality"].str.contains("fieldmap")
         ]
-        .groupby(["source_id", "source_ses_id", "modality"])
+        .groupby(filter[:-1])
         .min()
     )
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
@@ -395,7 +395,7 @@ def identify_fieldmaps(df: DataFrame) -> DataFrame:
     )
 
 
-def merge_fieldmaps(df: DataFrame, df_fmap: DataFrame):
+def merge_fieldmaps(df: DataFrame, df_fmap: DataFrame) -> DataFrame:
     """Merges the dataframe containing the fieldmaps names
 
     Parameters
