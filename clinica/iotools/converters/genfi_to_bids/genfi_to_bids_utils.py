@@ -440,6 +440,35 @@ def compute_runs(df: DataFrame) -> DataFrame:
     return df_alt.assign(run_num=lambda df: df.run.apply(lambda x: f"run-0{int(x)+1}"))
 
 
+def compose_filename(df: DataFrame, cols: List[str], joiner: str) -> str:
+    return joiner.join([df[col] for col in cols])
+
+
+def get_parent(path: str, n: int = 1) -> Path:
+    """Get the path to the nth parent.
+
+    Parameters
+    ----------
+    path: str
+        path to a file.
+    n: int
+        depth we want to go up in the parents.
+
+    Returns
+    -------
+    Path
+        Path to a parent directory.
+
+    Examples
+    --------
+    >>> get_parent('/path/to/a/file', 2)
+    /path/to
+    """
+    if n <= 0:
+        return Path(path)
+    return get_parent(Path(path).parent, n - 1)
+
+
 def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
     """This function uses the raw information extracted from the images, to obtain all the information necessary for the BIDS
 
@@ -456,25 +485,21 @@ def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(
-            lambda x: Path(Path(Path(x).parent).parent).name.split("-")[0]
-        )
-    )
-    df_dicom = df_dicom.assign(
+            lambda x: get_parent(x, 2).name.split("-")[0]
+        ),
         source_ses_id=lambda df: df.source.apply(
-            lambda x: Path(Path(Path(x).parent).parent).name.split("-")[1]
-        )
-    )
-    df_dicom = df_dicom.assign(
-        origin=lambda df: df.source.apply(
-            lambda x: Path(Path(Path(Path(Path(x).parent).parent).parent).parent)
-        )
+            lambda x: get_parent(x, 2).name.split("-")[1]
+        ),
+        origin=lambda df: df.source.apply(lambda x: get_parent(x, 4)),
     )
 
     df_dicom = df_dicom.reset_index()
 
-    df_dicom = df_dicom.assign(source_ses_id=lambda df: df.source_ses_id.astype("int"))
     df_dicom = df_dicom.assign(
-        genfi_version=lambda df: df.source_ses_id.apply(lambda x: f"GENFI{len(str(x))}")
+        source_ses_id=lambda df: df.source_ses_id.astype("int"),
+        genfi_version=lambda df: df.source_ses_id.apply(
+            lambda x: f"GENFI{len(str(x))}"
+        ),
     )
     df_1 = compute_baseline_date(df_dicom)
 
@@ -523,6 +548,14 @@ def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
             + df.bids_filename
         )
     )
+    # df_sub_ses_run = df_sub_ses_run.assign(
+    # bids_filename=lambda df: compose_filename(
+    #     df, ["participant_id", "session_id", "run_num", "suffix"], "_"
+    # ))
+    # df_sub_ses_run = df_sub_ses_run.assign(bids_full_path=lambda df: compose_filename(
+    #     df, ["participant_id", "session_id", "datatype", "bids_filename"], "/"
+    # )
+    # )
 
     return df_sub_ses_run
 
