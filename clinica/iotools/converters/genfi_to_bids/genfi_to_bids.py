@@ -37,10 +37,10 @@ def convert_images(
 
     from .genfi_to_bids_utils import (
         complete_clinical_data,
-        complete_imaging_data,
         dataset_to_bids,
         find_clinical_data,
         intersect_data,
+        merge_imaging_data,
         read_imaging_data,
         write_bids,
     )
@@ -52,7 +52,7 @@ def convert_images(
     imaging_data = read_imaging_data(path_to_dataset)
 
     # complete the data extracted
-    imaging_data = complete_imaging_data(imaging_data)
+    imaging_data = merge_imaging_data(imaging_data)
 
     # complete clinical data
     if path_to_clinical:

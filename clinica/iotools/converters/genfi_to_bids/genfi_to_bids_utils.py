@@ -200,7 +200,10 @@ def dataset_to_bids(complete_data_df: DataFrame, gif: bool) -> Dict[str, DataFra
     )
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
     if not gif:
-        print(df_ref.head(8))
+        return {
+            col: complete_data_df.filter(items=list(df_ref.head(8)[col]))
+            for col in ["participants", "sessions", "scans"]
+        }
     return {
         col: complete_data_df.filter(items=list(df_ref[col]))
         for col in ["participants", "sessions", "scans"]
@@ -470,7 +473,7 @@ def get_parent(path: str, n: int = 1) -> Path:
     return get_parent(Path(path).parent, n - 1)
 
 
-def complete_imaging_data(df_dicom: DataFrame) -> DataFrame:
+def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
     """This function uses the raw information extracted from the images, to obtain all the information necessary for the BIDS
 
     Parameters
