@@ -536,30 +536,30 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
     )
 
     ##builds path to bids
-    df_sub_ses_run = df_sub_ses_run.assign(
-        bids_filename=lambda df: (
-            df.participant_id + "_" + df.session_id + "_" + df.run_num + "_" + df.suffix
-        )
-    )
-    df_sub_ses_run = df_sub_ses_run.assign(
-        bids_full_path=lambda df: (
-            df.participant_id
-            + "/"
-            + df.session_id
-            + "/"
-            + df.datatype
-            + "/"
-            + df.bids_filename
-        )
-    )
     # df_sub_ses_run = df_sub_ses_run.assign(
-    # bids_filename=lambda df: compose_filename(
-    #     df, ["participant_id", "session_id", "run_num", "suffix"], "_"
-    # ))
-    # df_sub_ses_run = df_sub_ses_run.assign(bids_full_path=lambda df: compose_filename(
-    #     df, ["participant_id", "session_id", "datatype", "bids_filename"], "/"
+    #     bids_filename=lambda df: (
+    #         df.participant_id + "_" + df.session_id + "_" + df.run_num + "_" + df.suffix
+    #     )
     # )
+    # df_sub_ses_run = df_sub_ses_run.assign(
+    #     bids_full_path=lambda df: (
+    #         df.participant_id
+    #         + "/"
+    #         + df.session_id
+    #         + "/"
+    #         + df.datatype
+    #         + "/"
+    #         + df.bids_filename
+    #     )
     # )
+    df_sub_ses_run = df_sub_ses_run.assign(
+        bids_filename=lambda df: df[
+            ["participant_id", "session_id", "run_num", "suffix"]
+        ].agg("_".join, axis=1),
+        bids_full_path=lambda df: df[
+            ["participant_id", "session_id", "datatype", "bids_filename"]
+        ].agg("/".join, axis=1),
+    )
 
     return df_sub_ses_run
 
