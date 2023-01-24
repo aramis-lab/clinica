@@ -380,10 +380,10 @@ def identify_fieldmaps(df: DataFrame) -> DataFrame:
     filter = ["source_id", "source_ses_id", "modality", "dir_num", "suffix"]
     df1 = df[filter][df["modality"].str.contains("fieldmap")].groupby(filter[:-1]).min()
     df2 = (
-        df[filter[:-1]][
+        df[["source_id", "source_ses_id", "modality", "dir_num"]][
             df["modality"].str.contains("fieldmap")
         ]
-        .groupby(filter[:-1])
+        .groupby(["source_id", "source_ses_id", "modality"])
         .min()
     )
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
