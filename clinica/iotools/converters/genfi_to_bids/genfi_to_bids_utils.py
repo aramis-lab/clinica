@@ -276,40 +276,6 @@ def compute_baseline_date(df: DataFrame) -> DataFrame:
     return df_1.join(df_2.rename(columns={"acq_date": "baseline"}))
 
 
-# def compute_session_numbers(df: DataFrame) -> DataFrame:
-#     """Computes the session number in months by subtracting the
-#     baseline date from the acq_date and converting to months.
-
-#     Parameters
-#     ----------
-#     df : Dataframe
-#         DataFrame on which to compute the session numbers.
-
-#     Returns
-#     -------
-#     Dataframe
-#         Contains the session number in the following format: ses-MXXX.
-#     """
-#     df = df.assign(
-#         ses_month=lambda x: (
-#             (x["acq_date"].str[:4].astype("int") - x["baseline"].str[:4].astype("int"))
-#             * 12
-#             + (
-#                 x["acq_date"].str[4:6].astype("int")
-#                 - x["baseline"].str[4:6].astype("int")
-#             )
-#         )
-#     )
-#     return df.assign(session_id=lambda x: x.ses_month.map(lambda y: f"ses-M{y:03d}"))
-
-
-# def compute_time_delta_month(end, start):
-#    """Computes the number of months between end and start datetime objects."""
-#    print(end)
-#    print(start)
-#    return 12 * (end.year - start.year) + (end.month - start.month)
-
-
 def compute_session_numbers(df: DataFrame) -> DataFrame:
     """Computes the session IDs obtained from the number of months between an acquisition and the baseline acquisition.
 
@@ -386,12 +352,6 @@ def compute_modality(df: DataFrame) -> DataFrame:
             "sidecars": ["fmap.json"],
             "task": "",
         },
-        # "asl": {
-        #     "datatype": "perf",
-        #     "suffix": "asl",
-        #     "sidecars": ["asl.json"],
-        #     "task": "",
-        # },
     }
     df = df.assign(
         modality=lambda x: x.series_desc.apply(lambda y: identify_modality(y))
