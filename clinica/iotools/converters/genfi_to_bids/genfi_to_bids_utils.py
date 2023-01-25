@@ -199,11 +199,9 @@ def dataset_to_bids(complete_data_df: DataFrame, gif: bool) -> Dict[str, DataFra
         "genfi_ref.csv",
     )
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
+
     if not gif:
-        return {
-            col: complete_data_df.filter(items=list(df_ref.head(8)[col]))
-            for col in ["participants", "sessions", "scans"]
-        }
+        df_ref = df_ref.head(8)
     return {
         col: complete_data_df.filter(items=list(df_ref[col]))
         for col in ["participants", "sessions", "scans"]
@@ -445,10 +443,6 @@ def compute_runs(df: DataFrame) -> DataFrame:
     return df_alt.assign(run_num=lambda df: df.run.apply(lambda x: f"run-0{int(x)+1}"))
 
 
-def compose_filename(df: DataFrame, cols: List[str], joiner: str) -> str:
-    return joiner.join([df[col] for col in cols])
-
-
 def get_parent(path: str, n: int = 1) -> Path:
     """Get the path to the nth parent.
 
@@ -537,23 +531,6 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
 
-    ##builds path to bids
-    # df_sub_ses_run = df_sub_ses_run.assign(
-    #     bids_filename=lambda df: (
-    #         df.participant_id + "_" + df.session_id + "_" + df.run_num + "_" + df.suffix
-    #     )
-    # )
-    # df_sub_ses_run = df_sub_ses_run.assign(
-    #     bids_full_path=lambda df: (
-    #         df.participant_id
-    #         + "/"
-    #         + df.session_id
-    #         + "/"
-    #         + df.datatype
-    #         + "/"
-    #         + df.bids_filename
-    #     )
-    # )
     return df_sub_ses_run.assign(
         bids_filename=lambda df: df[
             ["participant_id", "session_id", "run_num", "suffix"]
@@ -562,7 +539,6 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
             ["participant_id", "session_id", "datatype", "bids_filename"]
         ].agg("/".join, axis=1),
     )
-
 
 
 def write_bids(
