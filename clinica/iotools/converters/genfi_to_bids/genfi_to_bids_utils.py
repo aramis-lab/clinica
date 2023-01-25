@@ -213,7 +213,8 @@ def dataset_to_bids(complete_data_df: DataFrame, gif: bool) -> Dict[str, DataFra
 def intersect_data(
     imaging_data: DataFrame, df_clinical_complete: DataFrame
 ) -> DataFrame:
-    """This function merges the dataframe containing the data extracted from the raw images and from the clinical data
+    """This function merges the dataframe containing the data extracted
+    from the raw images and from the clinical data.
 
     Parameters
     ----------
@@ -474,7 +475,8 @@ def get_parent(path: str, n: int = 1) -> Path:
 
 
 def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
-    """This function uses the raw information extracted from the images, to obtain all the information necessary for the BIDS
+    """This function uses the raw information extracted from the images,
+    to obtain all the information necessary for the BIDS conversion.
 
     Parameters
     ----------
@@ -519,14 +521,14 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     # take into account fieldmaps -> same method as for baseline (extract number of directory)
     df_fmap = df_sub_ses.assign(
-        dir_num=lambda x: x.source.apply(lambda y: int(Path(Path(y).parent).name))
+        dir_num=lambda x: x.source.apply(lambda y: int(get_parent(y).name))
     )
 
     df_suf = merge_fieldmaps(df_fmap, identify_fieldmaps(df_fmap))
 
     # take into account runs -> same method as for baseline (extract number of directory)
     df_suf_dir = df_suf.assign(
-        dir_num=lambda df: df.source.apply(lambda x: int(Path(Path(x).parent).name))
+        dir_num=lambda x: x.source.apply(lambda y: int(get_parent(y).name))
     )
     df_alt = compute_runs(df_suf_dir)
     df_sub_ses_run = df_suf_dir.merge(
@@ -552,7 +554,7 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
     #         + df.bids_filename
     #     )
     # )
-    df_sub_ses_run = df_sub_ses_run.assign(
+    return df_sub_ses_run.assign(
         bids_filename=lambda df: df[
             ["participant_id", "session_id", "run_num", "suffix"]
         ].agg("_".join, axis=1),
@@ -561,7 +563,6 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         ].agg("/".join, axis=1),
     )
 
-    return df_sub_ses_run
 
 
 def write_bids(
