@@ -276,31 +276,64 @@ def compute_baseline_date(df: DataFrame) -> DataFrame:
     return df_1.join(df_2.rename(columns={"acq_date": "baseline"}))
 
 
+# def compute_session_numbers(df: DataFrame) -> DataFrame:
+#     """Computes the session number in months by subtracting the
+#     baseline date from the acq_date and converting to months.
+
+#     Parameters
+#     ----------
+#     df : Dataframe
+#         DataFrame on which to compute the session numbers.
+
+#     Returns
+#     -------
+#     Dataframe
+#         Contains the session number in the following format: ses-MXXX.
+#     """
+#     df = df.assign(
+#         ses_month=lambda x: (
+#             (x["acq_date"].str[:4].astype("int") - x["baseline"].str[:4].astype("int"))
+#             * 12
+#             + (
+#                 x["acq_date"].str[4:6].astype("int")
+#                 - x["baseline"].str[4:6].astype("int")
+#             )
+#         )
+#     )
+#     return df.assign(session_id=lambda x: x.ses_month.map(lambda y: f"ses-M{y:03d}"))
+
+
+# def compute_time_delta_month(end, start):
+#    """Computes the number of months between end and start datetime objects."""
+#    print(end)
+#    print(start)
+#    return 12 * (end.year - start.year) + (end.month - start.month)
+
+
 def compute_session_numbers(df: DataFrame) -> DataFrame:
-    """Computes the session number in months by subtracting the
-    baseline date from the acq_date and converting to months.
+    """Computes the number of months since between an acquisition and the baseline acquisition
 
     Parameters
     ----------
-    df : Dataframe
-        DataFrame on which to compute the session numbers.
+    df: DataFrame
+        Dataframe containing the timestamp of the acquisition.
 
     Returns
     -------
-    Dataframe
-        Contains the session number in the following format: ses-MXXX.
+    DataFrame
+        Dataframe containing the session_id computed from the timestamps.
     """
-    df = df.assign(
-        ses_month=lambda x: (
-            (x["acq_date"].str[:4].astype("int") - x["baseline"].str[:4].astype("int"))
-            * 12
-            + (
-                x["acq_date"].str[4:6].astype("int")
-                - x["baseline"].str[4:6].astype("int")
-            )
-        )
+    from datetime import datetime
+
+    for col in ("acq_date", "baseline"):
+        df[col] = df[col].apply(lambda x: datetime.strptime(x, "%Y%m%d"))
+    return df.assign(
+        # ses_month=lambda x: compute_time_delta_month(x.acq_date, x.baseline),
+        ses_month=lambda x: 12
+        * (x.acq_date.apply(lambda y: y.year) - x.baseline.apply(lambda y: y.year))
+        + (x.acq_date.apply(lambda y: y.month) - x.baseline.apply(lambda y: y.month)),
+        session_id=lambda x: x.ses_month.map(lambda y: f"ses-M{y:03d}"),
     )
-    return df.assign(session_id=lambda x: x.ses_month.map(lambda y: f"ses-M{y:03d}"))
 
 
 def compute_modality(df: DataFrame) -> DataFrame:
@@ -383,10 +416,8 @@ def identify_fieldmaps(df: DataFrame) -> DataFrame:
     filter = ["source_id", "source_ses_id", "modality", "dir_num", "suffix"]
     df1 = df[filter][df["modality"].str.contains("fieldmap")].groupby(filter[:-1]).min()
     df2 = (
-        df[["source_id", "source_ses_id", "modality", "dir_num"]][
-            df["modality"].str.contains("fieldmap")
-        ]
-        .groupby(["source_id", "source_ses_id", "modality"])
+        df[filter[:-1]][df["modality"].str.contains("fieldmap")]
+        .groupby(filter[:-2])
         .min()
     )
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
