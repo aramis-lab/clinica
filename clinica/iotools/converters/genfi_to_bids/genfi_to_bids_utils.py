@@ -311,7 +311,7 @@ def compute_baseline_date(df: DataFrame) -> DataFrame:
 
 
 def compute_session_numbers(df: DataFrame) -> DataFrame:
-    """Computes the number of months since between an acquisition and the baseline acquisition
+    """Computes the session IDs obtained from the number of months between an acquisition and the baseline acquisition.
 
     Parameters
     ----------
@@ -328,7 +328,6 @@ def compute_session_numbers(df: DataFrame) -> DataFrame:
     for col in ("acq_date", "baseline"):
         df[col] = df[col].apply(lambda x: datetime.strptime(x, "%Y%m%d"))
     return df.assign(
-        # ses_month=lambda x: compute_time_delta_month(x.acq_date, x.baseline),
         ses_month=lambda x: 12
         * (x.acq_date.apply(lambda y: y.year) - x.baseline.apply(lambda y: y.year))
         + (x.acq_date.apply(lambda y: y.month) - x.baseline.apply(lambda y: y.month)),
@@ -544,14 +543,12 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
     )
     df_sub_ses = compute_modality(df_sub_ses)
 
-    # take into account fieldmaps -> same method as for baseline (extract number of directory)
     df_fmap = df_sub_ses.assign(
         dir_num=lambda x: x.source.apply(lambda y: int(get_parent(y).name))
     )
 
     df_suf = merge_fieldmaps(df_fmap, identify_fieldmaps(df_fmap))
 
-    # take into account runs -> same method as for baseline (extract number of directory)
     df_suf_dir = df_suf.assign(
         dir_num=lambda x: x.source.apply(lambda y: int(get_parent(y).name))
     )
