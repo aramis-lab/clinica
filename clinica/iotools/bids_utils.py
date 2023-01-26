@@ -936,18 +936,18 @@ def identify_modality(filename: str) -> Optional[str]:
 
 def parse_description(filepath: PathLike, start_line: int, end_line: int) -> str:
     """Parse the description of the dataset from the readme in the documentation.
-    
+
     Parameters
     ----------
     filepath : PathLike
         Path to the readme file from which to extract the description.
-        
+
     start_line : int
         Line number where the description starts.
-        
+
     end_line : int
         Line number where the description ends.
-        
+
     Returns
     -------
     str :
@@ -960,12 +960,12 @@ def parse_description(filepath: PathLike, start_line: int, end_line: int) -> str
 
 def parse_url(filepath: PathLike) -> List[str]:
     """Parse the URLs from the readme in the documentation.
-    
+
     Parameters
     ----------
     filepath : PathLike
         Path to the readme file from which to extract the URLs.
-        
+
     Returns
     -------
     List[str] :
