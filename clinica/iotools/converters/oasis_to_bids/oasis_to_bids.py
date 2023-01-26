@@ -99,8 +99,8 @@ class OasisToBids(Converter):
         subj_id = path.basename(subj_folder)
         print("Converting ", subj_id)
         numerical_id = (subj_id.split("_"))[1]
-        bids_id = "sub-OASIS1" + str(numerical_id)
-        bids_subj_folder = path.join(dest_dir, bids_id)
+        participant_id = "sub-OASIS1" + str(numerical_id)
+        bids_subj_folder = path.join(dest_dir, participant_id)
         if not path.isdir(bids_subj_folder):
             os.mkdir(bids_subj_folder)
 
@@ -112,7 +112,7 @@ class OasisToBids(Converter):
         # In order do convert the Analyze format to Nifti the path to the .img file is required
         img_file_path = str(next(Path(t1_folder).glob("*.img")))
         output_path = path.join(
-            session_folder, "anat", bids_id + "_ses-M000_T1w.nii.gz"
+            session_folder, "anat", f"{participant_id}_ses-M000_T1w.nii.gz"
         )
 
         # First, convert to Nifti so that we can extract the s_form with NiBabel

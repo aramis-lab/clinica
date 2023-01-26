@@ -1,1 +1,1 @@
-from . import create_dartel, register_dartel, tissue_segmentation
+from . import create_dartel, dartel2mni, register_dartel, tissue_segmentation

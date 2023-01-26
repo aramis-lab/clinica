@@ -497,7 +497,8 @@ def create_file(image, modality, bids_dir, overwrite):
     from clinica.utils.stream import cprint
 
     subject = image.Subjects_ID
-    session = image.Session_ID
+    participant_id = f"sub-AIBL{image.Subjects_ID}"
+    session_id = image.Session_ID
     name_of_path = {
         "t1": "Path_to_T1",
         "av45": "Path_to_pet",
@@ -511,7 +512,7 @@ def create_file(image, modality, bids_dir, overwrite):
         cprint(
             msg=(
                 f"[{modality.upper()}] No path specified for {subject} "
-                f"in session {session}"
+                f"in session {session_id}"
             ),
             lvl="info",
         )
@@ -520,27 +521,27 @@ def create_file(image, modality, bids_dir, overwrite):
         cprint(
             msg=(
                 f"[{modality.upper()}] Processing subject {subject} "
-                f"in session {session}"
+                f"in session {session_id}"
             ),
             lvl="info",
         )
 
-    session = viscode_to_session(session)
+    session_id = viscode_to_session(session_id)
 
     # creation of the path
     if modality == "t1":
-        output_path = join(bids_dir, f"sub-AIBL{subject}", f"{session}", "anat")
-        output_filename = f"sub-AIBL{subject}_{session}_T1w"
+        output_path = join(bids_dir, f"{participant_id}", f"{session_id}", "anat")
+        output_filename = f"{participant_id}_{session_id}_T1w"
     elif modality in ["flute", "pib", "av45"]:
         tracer = {"flute": Tracer.FMM, "pib": Tracer.PIB, "av45": Tracer.AV45}[modality]
-        output_path = join(bids_dir, f"sub-AIBL{subject}", f"{session}", "pet")
-        output_filename = f"sub-AIBL{subject}_{session}_trc-{tracer}_pet"
+        output_path = join(bids_dir, f"{participant_id}", f"{session_id}", "pet")
+        output_filename = f"{participant_id}_{session_id}_trc-{tracer}_pet"
     else:
         return None
 
     # image is saved following BIDS specifications
     if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
-        cprint(f"Subject {str(subject)} - session {session} already processed.")
+        cprint(f"Subject {str(subject)} - session {session_id} already processed.")
         output_image = join(output_path, output_filename + ".nii.gz")
     else:
         if exists(join(output_path, output_filename + ".nii.gz")):

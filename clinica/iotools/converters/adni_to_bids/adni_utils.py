@@ -859,7 +859,7 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
         sessions_paths = glob(path.join(bids_subj_path, "ses-*"))
         for session_path in sessions_paths:
             session_name = session_path.split(os.sep)[-1]
-            viscode = session_to_viscode(session_name[4::])
+            viscode = session_label_to_viscode(session_name[4::])
             tsv_name = f"{bids_id}_{session_name}_scans.tsv"
 
             # If the file already exists, remove it
@@ -1259,7 +1259,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
         return nan
 
 
-def session_to_viscode(session_name: str) -> str:
+def session_label_to_viscode(session_name: str) -> str:
     """Replace the session name passed as input with the session label 'bl' or 'mXXX'.
 
     Parameters
