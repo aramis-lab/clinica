@@ -88,7 +88,6 @@ def _check_file(directory: PathLike, pattern: str) -> PathLike:
 
 
 def _read_file(data_file: PathLike) -> pd.DataFrame:
-    import pandas as pd
 
     return (
         pd.concat(

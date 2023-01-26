@@ -806,8 +806,6 @@ def identify_modality(filename: str) -> Optional[str]:
         return "fieldmap"
     if "fmri" in filename:
         return "rsfmri"
-    # if "asl" in x:
-    #     return "asl"
     else:
         return None
 
