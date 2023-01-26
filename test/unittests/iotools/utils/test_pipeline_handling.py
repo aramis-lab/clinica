@@ -19,7 +19,7 @@ def test_get_atlas_name(tmp_path):
         / "atlas_statistics"
         / "sub-01_ses-M000_T1w_space-AAL2_map-graymatter_statistics.tsv"
     )
-    assert _get_atlas_name(atlas_path, "t1_volume") == "AAL2"
+    assert _get_atlas_name(atlas_path, "t1-volume") == "AAL2"
     with pytest.raises(
         ValueError,
         match="Unable to infer the atlas name",
@@ -43,8 +43,8 @@ def test_get_mod_path(tmp_path):
         _get_mod_path(tmp_path, "t1_freesurfer")
         == tmp_path / "t1" / "freesurfer_cross_sectional" / "regional_measures"
     )
-    assert _get_mod_path(tmp_path, "t1_volume") == tmp_path / "t1" / "spm" / "dartel"
-    assert _get_mod_path(tmp_path, "pet_volume") == tmp_path / "pet" / "preprocessing"
+    assert _get_mod_path(tmp_path, "t1-volume") == tmp_path / "t1" / "spm" / "dartel"
+    assert _get_mod_path(tmp_path, "pet-volume") == tmp_path / "pet" / "preprocessing"
     assert _get_mod_path(tmp_path, "t1_freesurfer_longitudinal") is None
     (tmp_path / "t1").mkdir()
     (tmp_path / "t1" / "longfoo").mkdir()
@@ -67,26 +67,26 @@ def test_get_label_list(tmp_path):
 def test_skip_atlas(tmp_path):
     from clinica.iotools.utils.pipeline_handling import _skip_atlas
 
-    for pipeline in ("foo", "t1-freesurfer_longitudinal", "t1_volume", "pet_volume"):
+    for pipeline in ("foo", "t1-freesurfer_longitudinal", "t1-volume", "pet-volume"):
         assert not _skip_atlas(tmp_path, pipeline)
     for txt in ("-wm_", "-ba_"):
         (tmp_path / f"foo{txt}bar.tsv").touch()
         assert _skip_atlas(tmp_path / f"foo{txt}bar.tsv", "t1-freesurfer_longitudinal")
     atlas_path = tmp_path / "stats.tsv"
-    for pipeline in ("t1_volume", "pet_volume"):
+    for pipeline in ("t1-volume", "pet-volume"):
         assert _skip_atlas(atlas_path, pipeline, pvc_restriction=True)
         assert not _skip_atlas(atlas_path, pipeline, pvc_restriction=False)
     atlas_path = tmp_path / "pvc-rbv_stats.tsv"
-    for pipeline in ("t1_volume", "pet_volume"):
+    for pipeline in ("t1-volume", "pet-volume"):
         assert not _skip_atlas(atlas_path, pipeline, pvc_restriction=True)
         assert _skip_atlas(atlas_path, pipeline, pvc_restriction=False)
-    for pipeline in ("t1_volume", "pet_volume"):
+    for pipeline in ("t1-volume", "pet-volume"):
         assert _skip_atlas(atlas_path, pipeline, tracers_selection=["fdg"])
         assert _skip_atlas(
             atlas_path, pipeline, tracers_selection=["trc1", "fdg", "trc2"]
         )
     atlas_path = tmp_path / "trc-fdg_pvc-rbv_stats.tsv"
-    for pipeline in ("t1_volume", "pet_volume"):
+    for pipeline in ("t1-volume", "pet-volume"):
         assert not _skip_atlas(atlas_path, pipeline, tracers_selection=["fdg"])
         assert not _skip_atlas(atlas_path, pipeline, tracers_selection=["trc2", "fdg"])
         assert not _skip_atlas(
@@ -102,7 +102,7 @@ def test_skip_atlas(tmp_path):
             tracers_selection=["trc2", "fdg"],
         )
     atlas_path = tmp_path / "trc-fdg_stats.tsv"
-    for pipeline in ("t1_volume", "pet_volume"):
+    for pipeline in ("t1-volume", "pet-volume"):
         assert not _skip_atlas(atlas_path, pipeline, tracers_selection=["fdg"])
         assert not _skip_atlas(atlas_path, pipeline, tracers_selection=["trc2", "fdg"])
         assert _skip_atlas(
@@ -139,7 +139,7 @@ def test_extract_metrics_from_pipeline(tmp_path):
         match="Not supported pipeline foo",
     ):
         _extract_metrics_from_pipeline(tmp_path, df, ["metrics"], "foo")
-    x, y = _extract_metrics_from_pipeline(tmp_path, df, ["metrics"], "t1_volume")
+    x, y = _extract_metrics_from_pipeline(tmp_path, df, ["metrics"], "t1-volume")
     assert isinstance(x, pd.DataFrame)
     assert isinstance(y, pd.DataFrame)
     assert len(x) == 1

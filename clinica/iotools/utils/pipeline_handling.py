@@ -226,7 +226,7 @@ def _extract_metrics_from_pipeline(
                                 (group_path / "atlas_statistics").glob(
                                     f"{participant_id}_{session_id}_*{metric}.tsv"
                                 )
-                        )
+                            )
                         for atlas_path in atlas_paths:
                             if not _skip_atlas(
                                 atlas_path, pipeline, pvc_restriction, tracers_selection
