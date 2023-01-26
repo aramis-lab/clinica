@@ -1,9 +1,15 @@
 def init_input_node(pet_nii):
-    from clinica.utils.filemanip import get_subject_id, load_img_3d
+    from clinica.utils.filemanip import get_subject_id, load_volume
+    from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
 
     image_id = get_subject_id(pet_nii)
-    load_img_3d(pet_nii)
+    try:
+        load_volume(pet_nii)
+    except ValueError as e:
+        error_msg = f"Clinica could not load volumes for {image_id.replace('_', ' | ')}. {str(e)}"
+        cprint(error_msg, lvl="error")
+        raise ValueError(error_msg)
     print_begin_image(image_id)
 
     return pet_nii

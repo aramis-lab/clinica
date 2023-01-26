@@ -130,7 +130,7 @@ def unzip_nii(
     return _zip_unzip_nii(in_file, same_dir, compress=False)
 
 
-def load_img_3d(image_path: str):
+def load_volume(image_path: str):
     """Load a 3D nifti image from its path.
 
     If the image is 4D with a dummy fourth dimension,
@@ -148,14 +148,12 @@ def load_img_3d(image_path: str):
 
     Raises
     ------
-    NotImplementedError
+    ValueError
         If the loaded image isn't 3D.
     """
     import copy
 
     import nibabel as nib
-
-    from clinica.utils.stream import cprint
 
     img = nib.load(image_path)
     dim = len(img.shape)
@@ -165,12 +163,7 @@ def load_img_3d(image_path: str):
             klass = img.__class__
             header = copy.deepcopy(img.header)
             return klass(data[:, :, :, 0], img.affine, header=header)
-        image_id = get_subject_id(str(image_path))
-        error_msg = (
-            f"Clinica does not handle {dim}D volumes for {image_id.replace('_', ' | ')}"
-        )
-        cprint(error_msg, lvl="error")
-        raise NotImplementedError(error_msg)
+        raise ValueError(f"The image is not 3D but {dim}D.")
     return img
 
 
