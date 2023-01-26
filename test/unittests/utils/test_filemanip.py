@@ -204,8 +204,7 @@ def test_load_img_3d(tmp_path, case, test_image):
         match="No such file or no access: 'foo'",
     ):
         load_img_3d("foo")
-    (tmp_path / "sub-01").mkdir()
-    (tmp_path / "sub-01" / "ses-M000").mkdir()
+    (tmp_path / "sub-01" / "ses-M000").mkdir(parents=True)
     filepath = tmp_path / "sub-01" / "ses-M000" / "sub-01_ses-M000_foo.nii.gz"
     nib.save(test_image, filepath)
     if case in ("4d", "5d"):
