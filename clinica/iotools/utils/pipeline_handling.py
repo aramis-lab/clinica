@@ -14,7 +14,7 @@ def _get_atlas_name(atlas_path: Path, pipeline: str) -> str:
         splitter = "_dwi_space-"
     elif pipeline in ("t1_freesurfer_longitudinal", "t1_freesurfer"):
         splitter = "_parcellation-"
-    elif pipeline in ("t1_volume", "pet_volume"):
+    elif pipeline in ("t1-volume", "pet-volume"):
         splitter = "_space-"
     else:
         raise ValueError(f"Not supported pipeline {pipeline}.")
@@ -47,9 +47,9 @@ def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
         )
     if pipeline == "t1_freesurfer":
         return ses_path / "t1" / "freesurfer_cross_sectional" / "regional_measures"
-    if pipeline == "t1_volume":
+    if pipeline == "t1-volume":
         return ses_path / "t1" / "spm" / "dartel"
-    if pipeline == "pet_volume":
+    if pipeline == "pet-volume":
         return ses_path / "pet" / "preprocessing"
     raise ValueError(f"Not supported pipeline {pipeline}.")
 
@@ -72,12 +72,12 @@ def _get_label_list(
             f"t1-freesurfer_atlas-{atlas_name}_ROI-{replace_sequence_chars(roi_name)}_thickness"
             for roi_name in atlas_df.label_name.values
         ]
-    if pipeline in ("t1_volume", "pet_volume"):
+    if pipeline in ("t1-volume", "pet-volume"):
         additional_desc = ""
-        if "trc" in atlas_path:
+        if "trc" in str(atlas_path):
             tracer = str(atlas_path).split("_trc-")[1].split("_")[0]
             additional_desc += f"_trc-{tracer}"
-        if "pvc-rbv" in atlas_path:
+        if "pvc-rbv" in str(atlas_path):
             additional_desc += f"_pvc-rbv"
         return [
             f"{pipeline}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
@@ -108,7 +108,7 @@ def _skip_atlas(
     """
     if pipeline == "t1-freesurfer_longitudinal":
         return "-wm_" in str(atlas_path) or "-ba_" in str(atlas_path.stem)
-    if pipeline in ("t1_volume", "pet_volume"):
+    if pipeline in ("t1-volume", "pet-volume"):
         skip = []
         if pvc_restriction is not None:
             if pvc_restriction:
@@ -217,9 +217,15 @@ def _extract_metrics_from_pipeline(
                 if group_path.exists():
                     for metric in metrics:
                         atlas_paths = sorted(
-                            mod_path.glob(
+                            group_path.glob(
                                 f"{participant_id}_{session_id}_*{metric}.tsv"
                             )
+                        )
+                        if len(atlas_paths) == 0:
+                            atlas_paths = sorted(
+                                (group_path / "atlas_statistics").glob(
+                                    f"{participant_id}_{session_id}_*{metric}.tsv"
+                                )
                         )
                         for atlas_path in atlas_paths:
                             if not _skip_atlas(
@@ -276,13 +282,13 @@ t1_freesurfer_pipeline = functools.partial(
 t1_volume_pipeline = functools.partial(
     _extract_metrics_from_pipeline,
     metrics=["statistics"],
-    pipeline="t1_volume",
+    pipeline="t1-volume",
 )
 
 pet_volume_pipeline = functools.partial(
     _extract_metrics_from_pipeline,
     metrics=["statistics"],
-    pipeline="pet_volume",
+    pipeline="pet-volume",
 )
 
 
