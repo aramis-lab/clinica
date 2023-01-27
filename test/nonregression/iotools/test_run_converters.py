@@ -220,14 +220,9 @@ def run_genfitobids(
     output_dir = PurePath(output_dir)
     ref_dir = PurePath(ref_dir)
 
-    # Arrange
-    clinical_data_directory = input_dir / "clinical_data"
-
     # Act
     check_dcm2niix()
-    convert_images(
-        input_dir / "unorganized", output_dir / "bids", clinical_data_directory
-    )
+    convert_images(input_dir / "unorganized", output_dir / "bids")
 
     # Assert
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir / "bids")
