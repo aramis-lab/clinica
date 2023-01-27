@@ -130,6 +130,43 @@ def unzip_nii(
     return _zip_unzip_nii(in_file, same_dir, compress=False)
 
 
+def load_volume(image_path: str):
+    """Load a 3D nifti image from its path.
+
+    If the image is 4D with a dummy fourth dimension,
+    then "squeeze" the image into a proper 3D image.
+
+    Parameters
+    ----------
+    image_path : str
+        Path to the image to load.
+
+    Returns
+    -------
+    img : Nifti1Image
+        The loaded 3D image.
+
+    Raises
+    ------
+    ValueError
+        If the loaded image isn't 3D.
+    """
+    import copy
+
+    import nibabel as nib
+
+    img = nib.load(image_path)
+    dim = len(img.shape)
+    if dim != 3:
+        if dim == 4 and img.shape[3] == 1:
+            data = img.get_fdata()
+            klass = img.__class__
+            header = copy.deepcopy(img.header)
+            return klass(data[:, :, :, 0], img.affine, header=header)
+        raise ValueError(f"The image is not 3D but {dim}D.")
+    return img
+
+
 def save_participants_sessions(
     participant_ids: List[str],
     session_ids: List[str],

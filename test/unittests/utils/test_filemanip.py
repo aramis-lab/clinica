@@ -1,6 +1,8 @@
 import json
 import os
 
+import nibabel as nib
+import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
@@ -177,6 +179,45 @@ def test_zip_unzip_nii(tmp_path):
     with (tmp_path / "foo.nii").open() as f:
         line = f.readline()
     assert line == "Test"
+
+
+@pytest.fixture
+def test_image(case):
+    shapes = {
+        "3d": (5, 6, 7),
+        "4d_dummy": (5, 6, 7, 1),
+        "4d": (5, 6, 7, 8),
+        "5d": (5, 6, 7, 8, 9),
+    }
+    data = np.zeros(shapes[case])
+    data[2:4, 1:5, 3:6] = 1
+    affine = np.diag((4, 3, 2, 1))
+    return nib.Nifti1Image(data, affine=affine)
+
+
+@pytest.mark.parametrize("case", ["3d", "4d_dummy", "4d", "5d"])
+def test_load_img_3d(tmp_path, case, test_image):
+    from clinica.utils.filemanip import load_volume
+
+    with pytest.raises(
+        FileNotFoundError,
+        match="No such file or no access: 'foo'",
+    ):
+        load_volume("foo")
+    filepath = tmp_path / "foo.nii.gz"
+    nib.save(test_image, filepath)
+    if case in ("4d", "5d"):
+        with pytest.raises(
+            ValueError,
+            match=f"The image is not 3D but {case.upper()}.",
+        ):
+            load_volume(filepath)
+    else:
+        img2 = load_volume(filepath)
+        if case == "3d":
+            assert_array_equal(test_image.get_fdata(), img2.get_fdata())
+        elif case == "4d_dummy":
+            assert_array_equal(test_image.get_fdata().squeeze(), img2.get_fdata())
 
 
 def test_save_participants_sessions(tmp_path):

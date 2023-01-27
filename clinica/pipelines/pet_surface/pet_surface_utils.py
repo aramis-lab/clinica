@@ -928,7 +928,6 @@ def get_wf(
     """
     import os
 
-    import nibabel as nib
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
@@ -938,22 +937,19 @@ def get_wf(
     from nipype.interfaces.spm import Coregister, Normalize12
 
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
-    from clinica.utils.filemanip import unzip_nii
+    from clinica.utils.filemanip import get_subject_id, load_volume, unzip_nii
     from clinica.utils.pet import get_suvr_mask, read_psf_information
     from clinica.utils.spm import get_tpm
-    from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
 
-    # Check that the PET file is a 3D volume
-    img = nib.load(pet)
-    if len(img.shape) == 4:
-        error_msg = (
-            f"Clinica does not handle 4D volumes for {subject_id} | {session_id}"
+    image_id = get_subject_id(pet)
+    try:
+        load_volume(pet)
+    except ValueError as e:
+        raise ValueError(
+            f"Clinica could not load volumes for {image_id.replace('_', ' | ')}. {str(e)}"
         )
-        cprint(error_msg, lvl="error")
-        raise NotImplementedError(error_msg)
-
-    print_begin_image(subject_id + "_" + session_id)
+    print_begin_image(image_id)
 
     # Creation of workflow
     # 1 Creation of node
