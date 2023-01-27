@@ -426,7 +426,7 @@ class Pipeline(Workflow):
         # Dependencies checking
         for d in self.info["dependencies"]:
             if d["type"] == "software":
-                check_software[d["name"]](d["version"])
+                check_software[d["name"]]()
             elif d["type"] == "binary":
                 check_binary(d["name"])
             elif d["type"] == "toolbox":
