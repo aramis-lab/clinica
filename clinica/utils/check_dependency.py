@@ -106,7 +106,7 @@ def _check_software(
     name : str
         Name of the software.
 
-    binaries : List[str], optional
+    binaries : list of str, optional
         List of associated binaries to check.
         If None, nothing is checked.
 

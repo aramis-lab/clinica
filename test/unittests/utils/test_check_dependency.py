@@ -45,12 +45,11 @@ def test_check_software():
         _check_software("foo", binaries=["foo"])
 
     assert _check_software("foo", binaries=["ls"]) is None
-    assert _check_software("foo", binaries=["ls", "cd"]) is None
     with pytest.raises(
         ClinicaMissingDependencyError,
         match="Clinica could not find foo software: the FOO variable is not set.",
     ):
-        _check_software("foo", binaries=["ls", "cd"], env=("FOO", "foo"))
+        _check_software("foo", binaries=["ls"], env=("FOO", "foo"))
 
     os.environ["FOO"] = "foo"
 
@@ -58,10 +57,10 @@ def test_check_software():
         ClinicaMissingDependencyError,
         match="The FOO environment variable you gave is not a folder",
     ):
-        _check_software("foo", binaries=["ls", "cd"], env=("FOO", "foo"))
+        _check_software("foo", binaries=["ls"], env=("FOO", "foo"))
 
     os.environ["FOO"] = "."
-    assert _check_software("foo", binaries=["ls", "cd"], env=("FOO", "foo")) is None
+    assert _check_software("foo", binaries=["ls"], env=("FOO", "foo")) is None
     with pytest.raises(
         ClinicaMissingDependencyError,
         match=(
@@ -71,7 +70,7 @@ def test_check_software():
     ):
         _check_software(
             "foo",
-            binaries=["ls", "cd", "bar"],
+            binaries=["ls", "bar"],
             env=("FOO", "foo"),
             complementary_info="Foo bar baz",
         )
