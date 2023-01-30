@@ -684,7 +684,7 @@ def compute_missing_mods(
         missing_mods_df = pd.DataFrame(columns=cols_dataframe)
 
     write_statistics(
-        out_dir / out_file_name / "summary.txt",
+        out_dir / (out_file_name + "summary.txt"),
         len(subjects_paths_lists),
         sessions_found,
         mmt,

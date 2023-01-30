@@ -125,7 +125,7 @@ def write_statistics(
     mmt : MissingModsTracker
         Instance of MissingModsTracker.
     """
-    with open(summary_file, "r") as fp:
+    with open(summary_file, "w") as fp:
         fp.write(compute_statistics(num_subjs, ses_aval, mmt))
 
 
