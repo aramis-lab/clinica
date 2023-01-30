@@ -162,7 +162,7 @@ check_convert3d = functools.partial(
     binaries=["c3d_affine_tool", "c3d"],
 )
 
-check_freesurfer = functools.partial(
+_check_freesurfer = functools.partial(
     _check_software,
     name="FreeSurfer",
     binaries=["mri_convert", "recon-all"],
@@ -231,6 +231,22 @@ def check_fsl() -> None:
         if fsl.Info.version().split(".") < ["5", "0", "5"]:
             raise ClinicaMissingDependencyError(
                 "FSL version must be greater than 5.0.5"
+            )
+    except Exception as e:
+        cprint(msg=str(e), lvl="error")
+
+
+def check_freesurfer() -> None:
+    """Check FreeSurfer software."""
+    import nipype.interfaces.freesurfer as freesurfer
+
+    from clinica.utils.stream import cprint
+
+    _check_freesurfer()
+    try:
+        if freesurfer.Info().version().split("-")[3].split(".") < ["6", "0", "0"]:
+            raise ClinicaMissingDependencyError(
+                "FreeSurfer version must be greater than 6.0.0"
             )
     except Exception as e:
         cprint(msg=str(e), lvl="error")
