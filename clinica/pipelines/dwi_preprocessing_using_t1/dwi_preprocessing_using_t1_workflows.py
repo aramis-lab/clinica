@@ -106,10 +106,12 @@ def epi_pipeline(
     name: str, optional
         Name of the pipeline.
 
-    Warnings:
+    Warnings
+    --------
         This workflow rotates the b-vectors.
 
-    Notes:
+    Notes
+    -----
         Nir et al. (2015): Connectivity network measures predict volumetric atrophy in mild cognitive impairment
         Leow et al. (2007): Statistical Properties of Jacobian Maps and the Realization of
         Unbiased Large Deformation Nonlinear Image Registration
