@@ -106,10 +106,12 @@ def epi_pipeline(
     name: str, optional
         Name of the pipeline.
 
-    Warnings:
+    Warnings
+    --------
         This workflow rotates the b-vectors.
 
-    Notes:
+    Notes
+    -----
         Nir et al. (2015): Connectivity network measures predict volumetric atrophy in mild cognitive impairment
         Leow et al. (2007): Statistical Properties of Jacobian Maps and the Realization of
         Unbiased Large Deformation Nonlinear Image Registration
@@ -140,9 +142,6 @@ def epi_pipeline(
     flirt_b0_2_t1.inputs.interp = "spline"
     flirt_b0_2_t1.inputs.cost = "normmi"
     flirt_b0_2_t1.inputs.cost_func = "normmi"
-
-    apply_xfm = pe.Node(interface=fsl.preprocess.ApplyXFM(), name="apply_xfm")
-    apply_xfm.inputs.apply_xfm = True
 
     expend_matrix = pe.Node(
         interface=niu.Function(
@@ -184,7 +183,8 @@ def epi_pipeline(
 
     merge_transform = pe.Node(niu.Merge(3), name="MergeTransforms")
 
-    # the nipype function is not used since the results it gives are not as good as the ones we get by using the command directly.
+    # the nipype function is not used since the results it gives are not
+    # as good as the ones we get by using the command directly.
     apply_transform_image = pe.MapNode(
         interface=niu.Function(
             input_names=[
