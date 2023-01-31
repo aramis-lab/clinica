@@ -141,9 +141,6 @@ def epi_pipeline(
     flirt_b0_2_t1.inputs.cost = "normmi"
     flirt_b0_2_t1.inputs.cost_func = "normmi"
 
-    apply_xfm = pe.Node(interface=fsl.preprocess.ApplyXFM(), name="apply_xfm")
-    apply_xfm.inputs.apply_xfm = True
-
     expend_matrix = pe.Node(
         interface=niu.Function(
             input_names=["in_matrix", "in_bvec"],
