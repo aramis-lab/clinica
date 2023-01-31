@@ -2,23 +2,39 @@
 
 These functions can check binaries, software (e.g. FreeSurfer) or toolboxes (e.g. SPM).
 """
+import functools
+from typing import List, Optional, Tuple
+
 from clinica.utils.exceptions import ClinicaMissingDependencyError
 
 
-def is_binary_present(binary):
+def is_binary_present(binary: str) -> bool:
     """Check if a binary is present.
 
-    This function checks if the program is present. Do not use this function
-    with a binary GUI, it will open the GUI.
+    Parameters
+    ----------
+    binary : str
+        The name of the program.
 
+    Returns
+    -------
+    True if the binary is present, False otherwise.
+
+    Warnings
+    --------
+    Do not use this function with a binary GUI, it will open the GUI.
+
+    References
+    ----------
     Taken from:
     https://stackoverflow.com/questions/11210104/check-if-a-program-exists-from-a-python-script
 
-    Args:
-        binary (str): Name of the program.
-
-    Returns:
-        True if the binary is present, False otherwise.
+    Examples
+    --------
+    >>> is_binary_present("ls")
+    True
+    >>> is_binary_present("foo")
+    False
     """
     import os
     import subprocess
@@ -34,7 +50,33 @@ def is_binary_present(binary):
     return True
 
 
-def check_environment_variable(environment_variable, software_name):
+def check_environment_variable(environment_variable: str, software_name: str) -> str:
+    """Check if the provided environment variable is set and returns its value.
+
+    Parameters
+    ----------
+    environment_variable : str
+        The name of the environment variable to check.
+
+    software_name : str
+        The name of the software related to the environment variable.
+
+    Returns
+    -------
+    str :
+        The value associated to the environment variable.
+
+    Raises
+    ------
+    ClinicaMissingDependencyError
+        If the variable is not set.
+        If the variable associated value is not a directory.
+
+    Examples
+    --------
+    >>> check_environment_variable("ANTSPATH", "ANTs")
+    '/opt/ANTs/bin/'
+    """
     import os
 
     content_var = os.environ.get(environment_variable, "")
@@ -51,114 +93,96 @@ def check_environment_variable(environment_variable, software_name):
     return content_var
 
 
-def check_software_requirements(current_version, version_requirements, software_name):
-    from string import punctuation
+def _check_software(
+    name: str,
+    binaries: Optional[List[str]] = None,
+    env: Optional[Tuple[str, str]] = None,
+    complementary_info: Optional[str] = None,
+) -> None:
+    """Check if the software is available.
 
-    comparison_operator = "".join(
-        [c for c in version_requirements if c in punctuation.replace(".", "")]
-    )
-    required_version = version_requirements.replace(comparison_operator, "")
+    Parameters
+    ----------
+    name : str
+        Name of the software.
 
-    satisfy_version = eval(
-        f"LooseVersion('{current_version}') {comparison_operator} LooseVersion('{required_version}')"
-    )
+    binaries : list of str, optional
+        List of associated binaries to check.
+        If None, nothing is checked.
 
-    if not satisfy_version:
-        raise ClinicaMissingDependencyError(
-            f"Your {software_name} version ({current_version}) "
-            f"does not satisfy version requirements ({version_requirements})."
-        )
+    env : (str, str), optional
+        Tuple (environment variable, software name).
+        This environment variable will be checked, meaning
+        that it should be set and point to an existing folder.
+        If None, nothing is checked.
 
+    complementary_info : str, optional
+        Information specific to the software that should be
+        added at the end of the error message when checking
+        for binaries.
 
-def check_dcm2niix():
-    """Check dcm2niix software."""
-    if not is_binary_present("dcm2niix"):
-        raise ClinicaMissingDependencyError(
-            "Clinica could not find dcm2niix software in your PATH environment: "
-            "this can be downloaded or installed from https://github.com/rordenlab/dcm2niix."
-        )
-
-
-def check_ants(version_requirements=None):
-    """Check ANTs software."""
-    check_environment_variable("ANTSPATH", "ANTs")
-
-    list_binaries = ["N4BiasFieldCorrection", "antsRegistrationSyNQuick.sh"]
-    for binary in list_binaries:
+    Raises
+    ------
+    ClinicaMissingDependencyError
+        If the software checks fail.
+    """
+    if env:
+        check_environment_variable(*env)
+    binaries = binaries or []
+    complementary_info = complementary_info or ""
+    for binary in binaries:
         if not is_binary_present(binary):
             raise ClinicaMissingDependencyError(
-                "Clinica could not find ANTs software: "
-                f"the {binary} command is not present in your PATH environment."
+                f"[Error] Clinica could not find {name} software: "
+                f"the {binary} command is not present in your PATH "
+                f"environment. {complementary_info}"
             )
 
 
-def check_convert3d(version_requirements=None):
-    """Check Convert3D software."""
-    list_binaries = ["c3d_affine_tool", "c3d"]
-    for binary in list_binaries:
-        if not is_binary_present(binary):
-            raise ClinicaMissingDependencyError(
-                f"[Error] Clinica could not find Convert3D software: "
-                f"the {binary} command is not present in your PATH environment."
-            )
+check_dcm2niix = functools.partial(
+    _check_software,
+    name="dcm2niix",
+    binaries=["dcm2niix"],
+    complementary_info=(
+        "This software can be downloaded and installed "
+        "from https://github.com/rordenlab/dcm2niix."
+    ),
+)
 
+check_ants = functools.partial(
+    _check_software,
+    name="ANTs",
+    binaries=["N4BiasFieldCorrection", "antsRegistrationSyNQuick.sh"],
+    env=("ANTSPATH", "ANTs"),
+)
 
-def check_freesurfer(version_requirements=None):
-    """Check FreeSurfer software."""
-    check_environment_variable("FREESURFER_HOME", "FreeSurfer")
+check_convert3d = functools.partial(
+    _check_software,
+    name="Convert3D",
+    binaries=["c3d_affine_tool", "c3d"],
+)
 
-    list_binaries = ["mri_convert", "recon-all"]
-    for binary in list_binaries:
-        if not is_binary_present(binary):
-            raise ClinicaMissingDependencyError(
-                "Clinica could not find FreeSurfer software: "
-                f"the {binary} command is not present in your PATH environment: "
-                "did you have the line `source $FREESURFER_HOME/SetUpFreeSurfer.sh` "
-                "in your configuration file?"
-            )
+_check_freesurfer = functools.partial(
+    _check_software,
+    name="FreeSurfer",
+    binaries=["mri_convert", "recon-all"],
+    env=("FREESURFER_HOME", "FreeSurfer"),
+    complementary_info=(
+        "Do you have the line `source $FREESURFER_HOME/SetUpFreeSurfer.sh` "
+        "in your configuration file?"
+    ),
+)
 
+check_mrtrix = functools.partial(
+    _check_software,
+    name="MRtrix",
+    binaries=["transformconvert", "mrtransform", "dwi2response", "tckgen"],
+)
 
-def check_fsl(version_requirements=None):
-    """Check FSL software."""
-    import nipype.interfaces.fsl as fsl
-
-    from clinica.utils.stream import cprint
-
-    check_environment_variable("FSLDIR", "FSL")
-
-    try:
-        if fsl.Info.version().split(".") < ["5", "0", "5"]:
-            raise ClinicaMissingDependencyError(
-                "FSL version must be greater than 5.0.5"
-            )
-    except Exception as e:
-        cprint(msg=str(e), lvl="error")
-
-    list_binaries = ["bet", "flirt", "fast", "first"]
-    for binary in list_binaries:
-        if not is_binary_present(binary):
-            raise ClinicaMissingDependencyError(
-                "Clinica could not find FSL software: "
-                f"the {binary} command is not present in your PATH environment."
-            )
-
-
-def check_mrtrix(version_requirements=None):
-    """Check MRtrix software."""
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
-    list_binaries = ["transformconvert", "mrtransform", "dwi2response", "tckgen"]
-    for binary in list_binaries:
-        if not is_binary_present(binary):
-            raise ClinicaMissingDependencyError(
-                f"Clinica could not find MRtrix software: "
-                f"the {binary} command is not present in your PATH environment."
-            )
-
-
-def check_petpvc(version_requirements=None):
-    """Check PETPVC software."""
-    list_binaries = [
+check_petpvc = functools.partial(
+    _check_software,
+    name="PETPVC",
+    binaries=[
         "petpvc",
         "pvc_diy",
         "pvc_gtm",
@@ -173,30 +197,56 @@ def check_petpvc(version_requirements=None):
         "pvc_simulate",
         "pvc_stc",
         "pvc_vc",
-    ]
-    for binary in list_binaries:
-        if not is_binary_present(binary):
+    ],
+)
+
+check_spm = functools.partial(
+    _check_software,
+    name="SPM",
+    env=("SPM_HOME", "SPM"),
+)
+
+check_matlab = functools.partial(
+    _check_software,
+    name="Matlab",
+    binaries=["matlab"],
+)
+
+_check_fsl = functools.partial(
+    _check_software,
+    name="FSL",
+    binaries=["bet", "flirt", "fast", "first"],
+    env=("FSLDIR", "FSL"),
+)
+
+
+def check_fsl() -> None:
+    """Check FSL software."""
+    import nipype.interfaces.fsl as fsl
+
+    from clinica.utils.stream import cprint
+
+    _check_fsl()
+    try:
+        if fsl.Info.version().split(".") < ["5", "0", "5"]:
             raise ClinicaMissingDependencyError(
-                "Clinica could not find PETPVC software: "
-                f"the {binary} command is not present in your PATH environment."
+                "FSL version must be greater than 5.0.5"
             )
+    except Exception as e:
+        cprint(msg=str(e), lvl="error")
 
 
-def check_spm(version_requirements=None):
-    """Check SPM software."""
-    check_environment_variable("SPM_HOME", "SPM")
+def check_freesurfer() -> None:
+    """Check FreeSurfer software."""
+    import nipype.interfaces.freesurfer as freesurfer
 
-    # list_binaries = ['matlab']
-    # for binary in list_binaries:
-    #     if not is_binary_present(binary):
-    #         raise RuntimeError(
-    #             f"{binary} from SPM Software is not present in your PATH environment.
-    #           )
+    from clinica.utils.stream import cprint
 
-
-def check_matlab():
-    """Check Matlab toolbox."""
-    if not is_binary_present("matlab"):
-        raise ClinicaMissingDependencyError(
-            "Matlab was not found in PATH environment. Did you add it?"
-        )
+    _check_freesurfer()
+    try:
+        if freesurfer.Info().version().split("-")[3].split(".") < ["6", "0", "0"]:
+            raise ClinicaMissingDependencyError(
+                "FreeSurfer version must be greater than 6.0.0"
+            )
+    except Exception as e:
+        cprint(msg=str(e), lvl="error")
