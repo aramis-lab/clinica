@@ -183,7 +183,8 @@ def epi_pipeline(
 
     merge_transform = pe.Node(niu.Merge(3), name="MergeTransforms")
 
-    # the nipype function is not used since the results it gives are not as good as the ones we get by using the command directly.
+    # the nipype function is not used since the results it gives are not
+    # as good as the ones we get by using the command directly.
     apply_transform_image = pe.MapNode(
         interface=niu.Function(
             input_names=[
