@@ -23,10 +23,10 @@ def cli(
 
     parameters = {"atlas_path": atlas_path}
 
-    workflow = pipeline.build_core_workflow(
+    workflow = pipeline.build_workflow(
         name=name,
-        input_dir=bids_directory,
-        output_dir=caps_directory,
+        bids_dir=bids_directory,
+        caps_dir=caps_directory,
         parameters=parameters,
     )
 
