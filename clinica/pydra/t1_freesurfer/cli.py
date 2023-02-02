@@ -21,16 +21,14 @@ def cli(
     """Cross-sectional pre-processing of T1w volumes with FreeSurfer."""
     from . import pipeline
 
-    parameters = {"atlas_path": atlas_path}
-
     workflow = pipeline.build_workflow(
         name=name,
         bids_dir=bids_directory,
         caps_dir=caps_directory,
-        parameters=parameters,
+        atlas_path=atlas_path,
     )
 
-    engine_utils.run(workflow)
+    print(engine_utils.run(workflow))
 
 
 if __name__ == "__main__":
