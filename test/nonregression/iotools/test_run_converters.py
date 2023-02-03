@@ -225,7 +225,7 @@ def run_genfitobids(
     convert_images(
         input_dir / "unorganized",
         output_dir / "bids",
-        path_to_clinica=None,
+        path_to_clinical=None,
         gif=False,
     )
 
