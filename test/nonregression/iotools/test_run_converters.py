@@ -222,7 +222,12 @@ def run_genfitobids(
 
     # Act
     check_dcm2niix()
-    convert_images(input_dir / "unorganized", output_dir / "bids")
+    convert_images(
+        input_dir / "unorganized",
+        output_dir / "bids",
+        path_to_clinica=None,
+        gif=False,
+    )
 
     # Assert
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir / "bids")
