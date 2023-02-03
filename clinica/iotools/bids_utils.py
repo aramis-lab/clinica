@@ -906,6 +906,80 @@ def run_dcm2niix(
         )
 
 
+def identify_modality(filename: str) -> Optional[str]:
+    """Identifies the modality of a file given its name.
+
+    Parameters
+    ----------
+    filename: str
+        Input filename
+
+    Returns
+    -------
+    Optional[str]:
+        Modality or None if parsing uns
+    """
+    filename = filename.lower()
+    if "dwi" in filename:
+        return "dwi"
+    if "t1" in filename:
+        return "T1"
+    if "t2" in filename:
+        return "T2w"
+    if "fieldmap" in filename:
+        return "fieldmap"
+    if "fmri" in filename:
+        return "rsfmri"
+    else:
+        return None
+
+
+def parse_description(filepath: PathLike, start_line: int, end_line: int) -> str:
+    """Parse the description of the dataset from the readme in the documentation.
+
+    Parameters
+    ----------
+    filepath : PathLike
+        Path to the readme file from which to extract the description.
+
+    start_line : int
+        Line number where the description starts.
+
+    end_line : int
+        Line number where the description ends.
+
+    Returns
+    -------
+    str :
+        The description extracted from the readme file.
+    """
+    with open(filepath, "r") as fp:
+        txt = fp.readlines()
+    return "\n".join(txt[start_line:end_line])
+
+
+def parse_url(filepath: PathLike) -> List[str]:
+    """Parse the URLs from the readme in the documentation.
+
+    Parameters
+    ----------
+    filepath : PathLike
+        Path to the readme file from which to extract the URLs.
+
+    Returns
+    -------
+    List[str] :
+        The list of found URLs.
+    """
+    import re
+
+    with open(filepath, "r") as fp:
+        txt = fp.readlines()
+    txt = "".join(txt)
+    url_extract_pattern = "https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)"
+    return re.findall(url_extract_pattern, txt)
+
+
 def write_to_tsv(df: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
     """Save dataframe as a BIDS-compliant TSV file.
 
