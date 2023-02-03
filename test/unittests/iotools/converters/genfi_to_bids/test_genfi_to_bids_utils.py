@@ -1,6 +1,6 @@
 import pytest
 
-import clinica.iotools.converters.genfi_to_bids.genfi_to_bids_utils as gen
+from clinica.iotools.bids_utils import identify_modality
 
 
 @pytest.mark.parametrize(
