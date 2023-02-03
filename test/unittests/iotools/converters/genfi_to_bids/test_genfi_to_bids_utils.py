@@ -15,4 +15,4 @@ from clinica.iotools.bids_utils import identify_modality
     ],
 )
 def test_identify_modality(input, expected):
-    assert gen.identify_modality(input) == expected
+    assert identify_modality(input) == expected
