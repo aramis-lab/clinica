@@ -524,27 +524,39 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
     output_df.to_csv(out_file, sep="\t", index=False)
 
 
-def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
+def compute_missing_mods(
+    bids_dir: PathLike, out_dir: PathLike, output_prefix: str = ""
+) -> None:
     """Compute the list of missing modalities for each subject in a BIDS compliant dataset.
 
-    Args:
-        bids_dir: path to the BIDS directory
-        out_dir: path to the output folder
-        output_prefix: string that replace the default prefix ('missing_mods_') in the name of all the output files
-    created
+    Parameters
+    ----------
+    bids_dir : PathLike
+        Path to the BIDS directory.
+
+    out_dir : PathLike
+        Path to the output folder.
+
+    output_prefix : str, optional
+        String that replaces the default prefix ('missing_mods_')
+        in the name of all the created output files.
+        Default = "".
     """
     import os
     from glob import glob
     from os import path
+    from pathlib import Path
 
     import pandas as pd
 
     from ..converter_utils import (
         MissingModsTracker,
-        print_longitudinal_analysis,
-        print_statistics,
+        write_longitudinal_analysis,
+        write_statistics,
     )
 
+    out_dir = Path(out_dir)
+    bids_dir = Path(bids_dir)
     os.makedirs(out_dir, exist_ok=True)
 
     # Find all the modalities and sessions available for the input dataset
@@ -557,13 +569,8 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
     cols_dataframe.insert(0, "participant_id")
     mmt = MissingModsTracker(sessions_found, mods_avail)
 
-    if output_prefix == "":
-        out_file_name = "missing_mods_"
-    else:
-        out_file_name = output_prefix + "_"
+    out_file_name = "missing_mods_" if output_prefix == "" else output_prefix + "_"
 
-    summary_file = open(path.join(out_dir, out_file_name + "summary.txt"), "w")
-    analysis_file = open(path.join(out_dir, "analysis.txt"), "w")
     missing_mods_df = pd.DataFrame(columns=cols_dataframe)
     row_to_append_df = pd.DataFrame(columns=cols_dataframe)
     subjects_paths_lists = glob(path.join(bids_dir, "*sub-*"))
@@ -676,9 +683,14 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
         )
         missing_mods_df = pd.DataFrame(columns=cols_dataframe)
 
-    print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt)
-    print_longitudinal_analysis(
-        analysis_file, bids_dir, out_dir, sessions_found, out_file_name
+    write_statistics(
+        out_dir / (out_file_name + "summary.txt"),
+        len(subjects_paths_lists),
+        sessions_found,
+        mmt,
+    )
+    write_longitudinal_analysis(
+        out_dir / "analysis.txt", bids_dir, out_dir, sessions_found, out_file_name
     )
 
 
