@@ -304,7 +304,7 @@ def compute_table(mod_dict: dict) -> str:
     table : str
         The summary table as a string.
     """
-    diagnoses = sorted(list(set().union(*mod_dict.values())))
+    diagnoses = sorted(set().union(*mod_dict.values()))
     table = "\t" + "\t| ".join(diagnoses)
     table += "\n" + "-" * 8 * (len(diagnoses) + 2) + "\n"
     for mod_key, mod_value in mod_dict.items():
