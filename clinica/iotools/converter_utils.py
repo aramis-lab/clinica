@@ -102,7 +102,10 @@ def sort_session_list(session_list: List[str]) -> List[str]:
 
 
 def write_statistics(
-    summary_file: PathLike, num_subjs: int, ses_aval: List[str], mmt: MissingModsTracker
+    summary_file: PathLike,
+    num_subjs: int,
+    ses_avail: List[str],
+    mmt: MissingModsTracker,
 ) -> None:
     """Write statistics file.
 
@@ -119,18 +122,18 @@ def write_statistics(
     num_subjs : int
         Number of subjects.
 
-    ses_aval : list of str
+    ses_avail : list of str
         List of sessions available.
 
     mmt : MissingModsTracker
         Instance of MissingModsTracker.
     """
     with open(summary_file, "w") as fp:
-        fp.write(compute_statistics(num_subjs, ses_aval, mmt))
+        fp.write(compute_statistics(num_subjs, ses_avail, mmt))
 
 
 def compute_statistics(
-    num_subjs: int, ses_aval: List[str], mmt: MissingModsTracker
+    num_subjs: int, ses_avail: List[str], mmt: MissingModsTracker
 ) -> str:
     """Compute statistics and return them as a string for printing/writing.
 
@@ -144,7 +147,7 @@ def compute_statistics(
     num_subjs : int
         Number of subjects.
 
-    ses_aval : list of str
+    ses_avail : list of str
         List of sessions available.
 
     mmt : MissingModsTracker
@@ -156,13 +159,13 @@ def compute_statistics(
         The statistics formatted as a summary string.
     """
     missing_list = mmt.get_missing_list()
-    ses_aval = sort_session_list(ses_aval)
-    ses_founds = {ses: num_subjs - missing_list[ses]["session"] for ses in ses_aval}
+    ses_avail = sort_session_list(ses_avail)
+    ses_founds = {ses: num_subjs - missing_list[ses]["session"] for ses in ses_avail}
     summary = "\n".join(
         [
             "*" * 46,
             f"Number of subjects converted: {num_subjs}",
-            f"Sessions available: {ses_aval}\n",
+            f"Sessions available: {ses_avail}\n",
             "\n".join(
                 [
                     f"Number of sessions {ses} found: {ses_found} ({ses_found * 100 / num_subjs}%)\n"
@@ -172,7 +175,7 @@ def compute_statistics(
             "*" * 46 + "\n\n" + "Number of missing modalities for each session:\n",
         ]
     )
-    for ses in ses_aval:
+    for ses in ses_avail:
         summary += "\n" + ses + "\n"
         for mod in missing_list[ses]:
             if mod != "session":
@@ -194,7 +197,7 @@ def write_longitudinal_analysis(
     summary_file: PathLike,
     bids_dir: PathLike,
     out_dir: PathLike,
-    ses_aval: List[str],
+    ses_avail: List[str],
     out_file_name: str,
 ) -> None:
     """Write to a given input file statistics about the present modalities and diagnoses in a dataset for each session.
@@ -210,7 +213,7 @@ def write_longitudinal_analysis(
     out_dir : PathLike
         Path to the output directory of the check-missing-modality pipeline.
 
-    ses_aval : list of str
+    ses_avail : list of str
         List of sessions available.
 
     out_file_name : str
@@ -219,14 +222,14 @@ def write_longitudinal_analysis(
     """
     with open(summary_file, "w") as fp:
         fp.write(
-            compute_longitudinal_analysis(bids_dir, out_dir, ses_aval, out_file_name)
+            compute_longitudinal_analysis(bids_dir, out_dir, ses_avail, out_file_name)
         )
 
 
 def compute_longitudinal_analysis(
     bids_dir: PathLike,
     out_dir: PathLike,
-    ses_aval: List[str],
+    ses_avail: List[str],
     out_file_name: str,
 ) -> str:
     """Compute statistics about the present modalities and diagnoses in a dataset for each session.
@@ -239,7 +242,7 @@ def compute_longitudinal_analysis(
     out_dir : PathLike
         Path to the output directory of the check-missing-modality pipeline.
 
-    ses_aval : list of str
+    ses_avail : list of str
         List of sessions available.
 
     out_file_name : str
@@ -258,11 +261,11 @@ def compute_longitudinal_analysis(
 
     out_dir = Path(out_dir)
     bids_dir = Path(bids_dir)
-    ses_aval = sort_session_list(ses_aval)
+    ses_avail = sort_session_list(ses_avail)
     summary = "\n\n".join(
         ["*" * 46, f"Number of present diagnoses and modalities for each session:\n"]
     )
-    for ses in ses_aval:
+    for ses in ses_avail:
         ses_df = pd.read_csv(
             out_dir / (out_file_name + ses + ".tsv"), sep="\t"
         ).set_index("participant_id")
