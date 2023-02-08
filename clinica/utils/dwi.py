@@ -401,9 +401,14 @@ def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
 def rename_files(in_caps_dwi: str, mapping: dict) -> tuple:
     """Rename files provided.
 
+    The new files are symbolic links to old files.
+    For this reason, the old files still exists after renaming.
+
     Parameters
     ----------
     in_caps_dwi : str
+        A DWI file from the CAPS folder.
+        This is used only to extract the BIDS identifier.
 
     mapping : dict
         Mapping between original file names and suffixes for
