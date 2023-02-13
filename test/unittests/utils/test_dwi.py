@@ -121,3 +121,74 @@ def test_generate_index_file(tmp_path, image_id):
         assert index_file == str(tmp_path / "index.txt")
     index = np.loadtxt(index_file)
     assert_array_equal(index, np.ones(8))
+
+
+def test_get_b0_filter_error(tmp_path):
+    from clinica.utils.dwi import get_b0_filter
+
+    with pytest.raises(
+        FileNotFoundError,
+        match="Cannot find bval file",
+    ):
+        get_b0_filter(tmp_path / "foo.bval")
+
+
+def test_get_b0_filter(tmp_path):
+    from clinica.utils.dwi import get_b0_filter
+
+    np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
+    assert_array_equal(get_b0_filter(tmp_path / "foo.bval"), np.array([2, 3, 4, 7]))
+    assert_array_equal(get_b0_filter(tmp_path / "foo.bval", low_bval=-1), np.array([]))
+    assert_array_equal(
+        get_b0_filter(tmp_path / "foo.bval", low_bval=500), np.array([2, 3, 4, 7])
+    )
+    assert_array_equal(
+        get_b0_filter(tmp_path / "foo.bval", low_bval=1000), np.arange(8)
+    )
+    assert_array_equal(
+        get_b0_filter(tmp_path / "foo.bval", low_bval=1001), np.arange(8)
+    )
+
+
+def test_count_b0s(tmp_path):
+    from clinica.utils.dwi import count_b0s
+
+    np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
+    assert count_b0s(tmp_path / "foo.bval") == 4
+    assert count_b0s(tmp_path / "foo.bval", low_bval=-1) == 0
+    assert count_b0s(tmp_path / "foo.bval", low_bval=500) == 4
+    assert count_b0s(tmp_path / "foo.bval", low_bval=1000) == 8
+    assert count_b0s(tmp_path / "foo.bval", low_bval=1001) == 8
+
+
+@pytest.mark.parametrize("extension", ["nii", "nii.gz"])
+def test_compute_average_b0(tmp_path, extension):
+    from clinica.utils.dwi import compute_average_b0
+
+    np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
+    img_data = np.zeros((5, 5, 5, 8))
+    img_data[2:4, 2:4, 2:4, 0:4] = 1.0
+    img_data[2:4, 2:4, 2:4, 4:8] = 2.0
+    img = nib.Nifti1Image(img_data, affine=np.eye(4))
+    nib.save(img, tmp_path / f"foo.{extension}")
+
+    # No filtering with the bvalues
+    out_file = compute_average_b0(tmp_path / f"foo.{extension}")
+    assert out_file == tmp_path / f"foo_avg_b0.{extension}"
+    result = nib.load(out_file)
+    assert result.shape == (5, 5, 5)
+    expected = np.zeros((5, 5, 5))
+    expected[2:4, 2:4, 2:4] = 1.5
+    assert_array_equal(result.get_fdata(), expected)
+
+    # With filtering
+    out_file = compute_average_b0(
+        tmp_path / f"foo.{extension}",
+        tmp_path / "foo.bval",
+    )
+    assert out_file == tmp_path / f"foo_avg_b0.{extension}"
+    result = nib.load(out_file)
+    assert result.shape == (5, 5, 5)
+    expected = np.zeros((5, 5, 5))
+    expected[2:4, 2:4, 2:4] = 1.5
+    assert_array_equal(result.get_fdata(), expected)
