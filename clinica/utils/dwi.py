@@ -1,77 +1,119 @@
 """This module contains utilities for DWI handling."""
 
 
-def merge_volumes_tdim(in_file1, in_file2):
-    """Merge 'in_file1' and 'in_file2' in the t dimension.
-
-    Args:
-        in_file1 (str): First set of volumes.
-        in_file2 (str): Second set of volumes.
-
-    Returns:
-        out_file (str): The two sets of volumes merged.
-    """
-    import os
-
-    out_file = os.path.abspath("merged_files.nii.gz")
-    cmd = f"fslmerge -t {out_file} {in_file1} {in_file2}"
-    os.system(cmd)
-    return out_file
-
-
-def count_b0s(in_bval, low_bval=5.0):
+def count_b0s(in_bval: str, low_bval: float = 5.0) -> int:
     """Count the number of volumes where b<=low_bval.
 
-    Args:
-        in_bval (str): bval file.
-        low_bval (int, optional): Define the b0 volumes as all volume bval <= lowbval. Defaults to 5.0.
+    Parameters
+    ----------
+    in_bval : str
+        Path to the bval file.
 
-    Returns:
-        num_b0s: Number of b0s.
+    low_bval : int, optional
+        Define the threshold for the b0 volumes as all volumes will
+        satisfy bval <= lowbval. Defaults to 5.0.
+
+    Returns
+    -------
+    num_b0s : int
+        Number of b0 volumes.
     """
-    import numpy as np
-
-    bvals = np.loadtxt(in_bval)
-    num_b0s = len(np.where(bvals <= low_bval)[0])
-
-    return num_b0s
+    return len(get_b0_filter(in_bval, low_bval=low_bval))
 
 
-def b0_average(in_file, out_file=None):
-    """
-    Average the b0 volumes.
+def get_b0_filter(in_bval: str, low_bval: float = 5.0):
+    """Return the index for the volumes where b<=low_bval.
 
-    Args:
-        in_file (str): The b0 volumes already registered.
-        out_file (str, optional): Name of the file. Defaults to None.
+    Parameters
+    ----------
+    in_bval : str
+        Path to the bval file.
 
-    Returns:
-        The mean of the b0 volumes.
+    low_bval : int, optional
+        Define the threshold for the b0 volumes as all volumes will
+        satisfy bval <= lowbval. Defaults to 5.0.
 
-    Warnings:
-        The b0 volumes must be registered.
+    Returns
+    -------
+    np.array :
+        Index of the b0 volumes.
+
+    Raises
+    ------
+    FileNotFoundError:
+        If in_bval file cannot be found.
     """
     import os
 
-    import nibabel as nb
     import numpy as np
 
+    if not os.path.isfile(in_bval):
+        raise FileNotFoundError(f"Cannot find bval file : {in_bval}.")
+    values = np.loadtxt(in_bval)
+    return np.where(values <= low_bval)[0]
+
+
+def compute_average_b0(
+    in_dwi: str, in_bval: str = None, low_bval: float = 5.0, out_file: str = None
+) -> str:
+    """Compute the average of the b0 volumes from DWI dataset.
+
+    Parameters
+    ----------
+    in_dwi : str
+        The path to the DWI files containing the volumes of interest.
+
+    in_bval : str, optional
+        The path to the bval file. This will be used to filter the volumes.
+        Only volumes for which bval is less than low_bval will be kept for computations.
+        If None, all volumes are kept. Default is None.
+
+    low_bval : float, optional
+        The threshold to apply to bvalues to get the volumes which should be kept.
+        Default=5.0.
+
+    out_file : str, optional
+        Name of the output file.
+        If None, the output file will be built from the input DWI file base with
+        the suffix '_avg_b0.nii[.gz]'. Defaults to None.
+
+    Returns
+    -------
+    out_file : str
+        The path to the nifti image file containing the mean of the b0 volumes.
+
+    Raises
+    ------
+    FileNotFoundError:
+        If the DWI input file does not exist.
+
+    ValueError:
+        If low_bval < 0.
+    """
+    from pathlib import Path
+
+    import numpy as np
+
+    from clinica.utils.image import compute_aggregated_volume, get_new_image_like
+
+    in_dwi = Path(in_dwi)
+
+    if not in_dwi.exists():
+        raise FileNotFoundError(f"DWI file not found : {in_dwi}.")
+
+    if low_bval < 0:
+        raise ValueError(f"low_bval should be >=0. You provided : {low_bval}.")
+
     if not out_file:
-        fname, ext = os.path.splitext(os.path.basename(in_file))
+        ext = in_dwi.suffix
         if ext == ".gz":
-            fname, ext2 = os.path.splitext(fname)
-            ext = ext2 + ext
-        out_file = os.path.abspath(f"{fname}_avg_b0{ext}")
+            ext = "." + in_dwi.stem.split(".")[-1] + ext
+        out_file = in_dwi.parent / f"{in_dwi.name.rstrip(ext)}_avg_b0{ext}"
 
-    imgs = np.array(nb.four_to_three(nb.load(in_file)))
-    b0s = [im.get_fdata(dtype="float32").astype(np.float32) for im in imgs]
-    b0 = np.average(np.array(b0s), axis=0)
-
-    hdr = imgs[0].get_header().copy()
-    hdr.set_data_shape(b0.shape)
-    hdr.set_xyzt_units("mm")
-    hdr.set_data_dtype(np.float32)
-    nb.Nifti1Image(b0, imgs[0].get_affine(), hdr).to_filename(out_file)
+    volume_filter = get_b0_filter(in_bval, low_bval=low_bval) if in_bval else None
+    b0 = compute_aggregated_volume(in_dwi, np.average, volume_filter)
+    b0_img = get_new_image_like(in_dwi, b0)
+    b0_img.to_filename(out_file)
 
     return out_file
 
@@ -154,39 +196,6 @@ def b0_dwi_split(in_dwi: str, in_bval: str, in_bvec: str, low_bval: float = 5.0)
     return out_b0, out_dwi, out_bvals, out_bvecs
 
 
-def compute_average_b0(in_dwi: str, in_bval: str, low_bval: float = 5.0):
-    """Compute average b0 volume from DWI dataset."""
-    import os
-
-    import nibabel
-    import numpy as np
-
-    assert os.path.isfile(in_dwi)
-    assert os.path.isfile(in_bval)
-    assert low_bval >= 0
-
-    imgs = np.array(nibabel.four_to_three(nibabel.load(in_dwi)))
-    bvals = np.loadtxt(in_bval)
-    low_bvals = np.where(bvals <= low_bval)[0]
-
-    fname_b0, ext_b0 = os.path.splitext(os.path.basename(in_dwi))
-    if ext_b0 == ".gz":
-        fname_b0, ext2 = os.path.splitext(fname_b0)
-        ext_b0 = ext2 + ext_b0
-    out_b0_average = os.path.abspath(f"{fname_b0}_avg_b0{ext_b0}")
-
-    b0s_data = [imgs[i].get_data() for i in low_bvals]
-    avg_b0_data = np.average(np.array(b0s_data), axis=0)
-
-    hdr = imgs[0].get_header().copy()
-    hdr.set_data_shape(avg_b0_data.shape)
-    nibabel.Nifti1Image(avg_b0_data, imgs[0].get_affine(), hdr).to_filename(
-        out_b0_average
-    )
-
-    return out_b0_average
-
-
 def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
     """Insert a b0 volume into the dwi dataset as the first volume and update the bvals and bvecs files.
 
@@ -205,12 +214,14 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
 
     import numpy as np
 
+    from clinica.utils.image import merge_volumes_time_dimension
+
     assert os.path.isfile(in_b0)
     assert os.path.isfile(in_dwi)
     assert os.path.isfile(in_bval)
     assert os.path.isfile(in_bvec)
 
-    out_dwi = merge_volumes_tdim(in_b0, in_dwi)
+    out_dwi = merge_volumes_time_dimension(in_b0, in_dwi)
 
     lst = np.loadtxt(in_bval).tolist()
     lst.insert(0, 0)

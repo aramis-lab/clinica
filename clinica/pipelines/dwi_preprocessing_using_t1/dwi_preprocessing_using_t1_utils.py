@@ -267,8 +267,8 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
         b0_flirt_pipeline,
     )
     from clinica.utils.dwi import (
-        b0_average,
         b0_dwi_split,
+        compute_average_b0,
         count_b0s,
         insert_b0_into_dwi,
     )
@@ -306,7 +306,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
         )
         # cprint('B0 s will be averaged (file = ' + registered_b0s + ')')
         # Average the b0s to obtain the reference b0
-        out_reference_b0 = b0_average(in_file=registered_b0s)
+        out_reference_b0 = compute_average_b0(registered_b0s)
     else:
         raise ValueError(
             f"The number of b0s should be strictly positive (b-val file: {in_bval})."
