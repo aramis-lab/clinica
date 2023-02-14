@@ -1,7 +1,7 @@
 import nibabel as nib
 import numpy as np
 import pytest
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 
 def test_rename_files_errors(tmp_path):
@@ -192,3 +192,60 @@ def test_compute_average_b0(tmp_path, extension):
     expected = np.zeros((5, 5, 5))
     expected[2:4, 2:4, 2:4] = 1.5
     assert_array_equal(result.get_fdata(), expected)
+
+
+def test_b0_dwi_split_errors(tmp_path):
+    from clinica.utils.dwi import b0_dwi_split
+
+    for filename in ("foo.nii.gz", "foo.bval", "foo.bvec"):
+        with pytest.raises(
+            FileNotFoundError,
+            match=f"File {tmp_path / filename} could not be found.",
+        ):
+            b0_dwi_split(
+                tmp_path / "foo.nii.gz", tmp_path / "foo.bval", tmp_path / "foo.bvec"
+            )
+        (tmp_path / filename).touch()
+    with pytest.raises(
+        ValueError,
+        match="low_bval should be >=0. You provided -1.",
+    ):
+        b0_dwi_split(
+            tmp_path / "foo.nii.gz",
+            tmp_path / "foo.bval",
+            tmp_path / "foo.bvec",
+            low_bval=-1,
+        )
+
+
+@pytest.mark.parametrize("extension", ["nii", "nii.gz"])
+def test_b0_dwi_split(tmp_path, extension):
+    from clinica.utils.dwi import b0_dwi_split
+
+    bvecs_data = np.random.random((3, 8))
+    np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
+    np.savetxt(tmp_path / "foo.bvec", bvecs_data)
+    img_data = np.zeros((5, 5, 5, 8))
+    img_data[2:4, 2:4, 2:4, 0:4] = 1.0
+    img_data[2:4, 2:4, 2:4, 4:8] = 2.0
+    img = nib.Nifti1Image(img_data, affine=np.eye(4))
+    nib.save(img, tmp_path / f"foo.{extension}")
+
+    out_b0, out_dwi, out_bvals, out_bvecs = b0_dwi_split(
+        tmp_path / f"foo.{extension}", tmp_path / "foo.bval", tmp_path / "foo.bvec"
+    )
+    assert out_b0 == tmp_path / f"foo_b0.{extension}"
+    assert out_dwi == tmp_path / f"dwi.{extension}"
+    assert out_bvals == tmp_path / "bvals"
+    assert out_bvecs == tmp_path / "bvecs"
+    b0_img = nib.load(out_b0)
+    expected = np.zeros((5, 5, 5, 4))
+    expected[2:4, 2:4, 2:4, 0:2] = 1.0
+    expected[2:4, 2:4, 2:4, 2:4] = 2.0
+    assert_array_equal(b0_img.get_fdata(), expected)
+    dwi = nib.load(out_dwi)
+    assert_array_equal(dwi.get_fdata(), expected)
+    bvals = np.loadtxt(out_bvals)
+    assert_array_equal(bvals, np.array([1000] * 4))
+    bvecs = np.loadtxt(out_bvecs)
+    assert_array_almost_equal(bvecs, bvecs_data[:, np.array([0, 1, 5, 6])], decimal=5)
