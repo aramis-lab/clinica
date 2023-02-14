@@ -1,6 +1,7 @@
 """This module contains utilities for DWI handling."""
 from os import PathLike
-from typing import Optional, Tuple
+from pathlib import Path
+from typing import Iterable, Optional, Tuple
 
 import numpy as np
 
@@ -121,6 +122,18 @@ def compute_average_b0(
     return out_file
 
 
+def _check_input_paths(files: Iterable[PathLike]) -> Iterable[Path]:
+    """Utility function to check that provided input files exist."""
+    file_paths = []
+    for input_file in files:
+        input_file_path = Path(input_file)
+        if not input_file_path.exists():
+            raise FileNotFoundError(f"File {input_file_path} could not be found.")
+        file_paths.append(input_file_path)
+
+    return file_paths
+
+
 def b0_dwi_split(
     in_dwi: PathLike,
     in_bval: PathLike,
@@ -174,17 +187,11 @@ def b0_dwi_split(
         If low_bval < 0.
     """
     import warnings
-    from pathlib import Path
 
     from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
-    in_dwi = Path(in_dwi)
-    in_bval = Path(in_bval)
-    in_bvec = Path(in_bvec)
+    in_dwi, in_bval, in_bvec = _check_input_paths([in_dwi, in_bval, in_bvec])
 
-    for input_file in (in_dwi, in_bval, in_bvec):
-        if not input_file.exists():
-            raise FileNotFoundError(f"File {input_file} could not be found.")
     if low_bval < 0:
         raise ValueError(f"low_bval should be >=0. You provided {low_bval}.")
 
@@ -223,48 +230,55 @@ def b0_dwi_split(
     return out_b0, out_dwi, out_bvals, out_bvecs
 
 
-def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
+def insert_b0_into_dwi(
+    in_b0: PathLike,
+    in_dwi: PathLike,
+    in_bval: PathLike,
+    in_bvec: PathLike,
+) -> Tuple[Path, Path, Path]:
     """Insert a b0 volume into the dwi dataset as the first volume and update the bvals and bvecs files.
 
-    Args:
-        in_b0 (str): One b=0 volume (could be the average of a b0 dataset).
-        in_dwi (str): The set of DWI volumes.
-        in_bval (str): File describing the b-values of the DWI dataset.
-        in_bvec (str): File describing the directions of the DWI dataset.
+    Parameters
+    ----------
+    in_b0 : PathLike
+        Path to image file containing one b=0 volume (could be the average of a b0 dataset).
 
-    Returns:
-        out_dwi (str): Diffusion dataset : b0 volume + dwi volumes.
-        out_bval (str): B-values update.
-        out_bvec (str): Directions of diffusion update.
+    in_dwi : PathLike
+        Path to the image file containing the set of DWI volumes.
+
+    in_bval : PathLike
+        Path to the text file describing the b-values of the DWI dataset.
+
+    in_bvec : PathLike
+        Path to the text file describing the directions of the DWI dataset.
+
+    Returns
+    -------
+    out_dwi : Path
+        Path to the diffusion dataset : b0 volume + dwi volumes.
+
+    out_bval : Path
+        Path to the B-values update.
+
+    out_bvec : Path
+        Path to the directions of diffusion update.
     """
-    import os
-
-    import numpy as np
-
     from clinica.utils.image import merge_volumes_time_dimension
 
-    assert os.path.isfile(in_b0)
-    assert os.path.isfile(in_dwi)
-    assert os.path.isfile(in_bval)
-    assert os.path.isfile(in_bvec)
-
+    in_b0, in_dwi, in_bval, in_bvec = _check_input_paths(
+        [in_b0, in_dwi, in_bval, in_bvec]
+    )
     out_dwi = merge_volumes_time_dimension(in_b0, in_dwi)
 
-    lst = np.loadtxt(in_bval).tolist()
-    lst.insert(0, 0)
-    out_bvals = os.path.abspath("bvals")
-    np.savetxt(out_bvals, np.matrix(lst), fmt="%d", delimiter=" ")
+    bvals = np.loadtxt(in_bval)
+    bvals = np.insert(bvals, 0, 0)
+    out_bvals = in_dwi.parent / "bvals"
+    np.savetxt(out_bvals, bvals, fmt="%d", delimiter=" ")
 
     bvecs = np.loadtxt(in_bvec)
-    bvecs_0 = bvecs[0].tolist()
-    bvecs_0.insert(0, 0.0)
-    bvecs_1 = bvecs[1].tolist()
-    bvecs_1.insert(0, 0.0)
-    bvecs_2 = bvecs[2].tolist()
-    bvecs_2.insert(0, 0.0)
-    bvecs_dwi = np.array([bvecs_0, bvecs_1, bvecs_2])
-    out_bvecs = os.path.abspath("bvecs")
-    np.savetxt(out_bvecs, bvecs_dwi, fmt="%10.5f", delimiter=" ")
+    bvecs = np.insert(bvecs, 0, 0.0, axis=1)
+    out_bvecs = in_dwi.parent / "bvecs"
+    np.savetxt(out_bvecs, bvecs, fmt="%10.5f", delimiter=" ")
 
     return out_dwi, out_bvals, out_bvecs
 
