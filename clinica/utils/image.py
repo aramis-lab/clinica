@@ -1,6 +1,7 @@
 import functools
 import warnings
 from os import PathLike
+from typing import Callable, Optional
 
 import nibabel as nib
 import numpy as np
@@ -8,7 +9,9 @@ from nibabel.nifti1 import Nifti1Image
 
 
 def compute_aggregated_volume(
-    image_filename: PathLike, aggregator, volumes_to_keep=None
+    image_filename: PathLike,
+    aggregator: Optional[Callable] = None,
+    volumes_to_keep: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """Computes the aggregated 3D volumes from a 4D image and an aggregator function.
 
@@ -21,8 +24,9 @@ def compute_aggregated_volume(
     image_filename : str
         The path to the input image.
 
-    aggregator : Callable
+    aggregator : Callable, optional
         The aggregator function. Example: np.average, np.median.
+        If None, no aggregation will be performed.
 
     volumes_to_keep : np.array, optional
         The volumes to be kept during aggregation. This is a 1D index array.
@@ -39,25 +43,22 @@ def compute_aggregated_volume(
         volumes_to_keep = volumes
     else:
         volumes_to_keep = volumes[volumes_to_keep]
+    data = [
+        volume.get_fdata(dtype="float32").astype(np.float32)
+        for volume in volumes_to_keep
+    ]
+    if aggregator is None:
+        return np.stack(data, axis=-1)
+    return aggregator(data, axis=0)
 
-    return aggregator(
-        [
-            volume.get_fdata(dtype="float32").astype(np.float32)
-            for volume in volumes_to_keep
-        ],
-        axis=0,
-    )
 
-
-def get_new_image_like(
-    old_image: Nifti1Image, new_image_data: np.ndarray
-) -> Nifti1Image:
+def get_new_image_like(old_image: PathLike, new_image_data: np.ndarray) -> Nifti1Image:
     """Build a new Nifti1Image from the provided image and new data.
 
     Parameters
     ----------
-    old_image : Nifti1Image
-        The old image from which to get the header and affine.
+    old_image : PathLike
+        The path to the old image file from which to get the header and affine.
 
     new_image_data : np.ndarray
         The data for the new image to build.
@@ -77,8 +78,8 @@ def get_new_image_like(
 
 
 def merge_volumes(
-    volume1: PathLike, volume2: PathLike, axis, out_file: str = None
-) -> str:
+    volume1: PathLike, volume2: PathLike, axis: int, out_file: Optional[str] = None
+) -> PathLike:
     """Merge 'volume1' and 'volume2' in the provided 'axis' dimension.
 
     Parameters
@@ -101,7 +102,7 @@ def merge_volumes(
 
     Returns
     -------
-    out_file : str
+    out_file : PathLike
         Path to the image containing the two sets of volumes merged.
     """
     from pathlib import Path

@@ -1,12 +1,16 @@
 """This module contains utilities for DWI handling."""
+from os import PathLike
+from typing import Optional, Tuple
+
+import numpy as np
 
 
-def count_b0s(in_bval: str, low_bval: float = 5.0) -> int:
+def count_b0s(in_bval: PathLike, low_bval: float = 5.0) -> int:
     """Count the number of volumes where b<=low_bval.
 
     Parameters
     ----------
-    in_bval : str
+    in_bval : PathLike
         Path to the bval file.
 
     low_bval : int, optional
@@ -21,12 +25,12 @@ def count_b0s(in_bval: str, low_bval: float = 5.0) -> int:
     return len(get_b0_filter(in_bval, low_bval=low_bval))
 
 
-def get_b0_filter(in_bval: str, low_bval: float = 5.0):
+def get_b0_filter(in_bval: PathLike, low_bval: float = 5.0) -> np.ndarray:
     """Return the index for the volumes where b<=low_bval.
 
     Parameters
     ----------
-    in_bval : str
+    in_bval : PathLike
         Path to the bval file.
 
     low_bval : int, optional
@@ -35,7 +39,7 @@ def get_b0_filter(in_bval: str, low_bval: float = 5.0):
 
     Returns
     -------
-    np.array :
+    np.ndarray :
         Index of the b0 volumes.
 
     Raises
@@ -45,8 +49,6 @@ def get_b0_filter(in_bval: str, low_bval: float = 5.0):
     """
     import os
 
-    import numpy as np
-
     if not os.path.isfile(in_bval):
         raise FileNotFoundError(f"Cannot find bval file : {in_bval}.")
     values = np.loadtxt(in_bval)
@@ -54,16 +56,19 @@ def get_b0_filter(in_bval: str, low_bval: float = 5.0):
 
 
 def compute_average_b0(
-    in_dwi: str, in_bval: str = None, low_bval: float = 5.0, out_file: str = None
-) -> str:
+    in_dwi: PathLike,
+    in_bval: Optional[PathLike] = None,
+    low_bval: float = 5.0,
+    out_file: Optional[str] = None,
+) -> PathLike:
     """Compute the average of the b0 volumes from DWI dataset.
 
     Parameters
     ----------
-    in_dwi : str
+    in_dwi : PathLike
         The path to the DWI files containing the volumes of interest.
 
-    in_bval : str, optional
+    in_bval : PathLike, optional
         The path to the bval file. This will be used to filter the volumes.
         Only volumes for which bval is less than low_bval will be kept for computations.
         If None, all volumes are kept. Default is None.
@@ -92,8 +97,6 @@ def compute_average_b0(
     """
     from pathlib import Path
 
-    import numpy as np
-
     from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
     in_dwi = Path(in_dwi)
@@ -118,42 +121,75 @@ def compute_average_b0(
     return out_file
 
 
-def b0_dwi_split(in_dwi: str, in_bval: str, in_bvec: str, low_bval: float = 5.0):
-    """Split DWI dataset.
+def b0_dwi_split(
+    in_dwi: PathLike,
+    in_bval: PathLike,
+    in_bvec: PathLike,
+    low_bval: float = 5.0,
+) -> Tuple[PathLike, PathLike, PathLike, PathLike]:
+    """Split the DWI dataset.
 
     Split the DWI volumes into two datasets :
      - the first dataset contains the set of b<=low_bval volumes.
      - the second dataset contains the set of DWI volumes.
 
-    Args:
-        in_dwi (str): DWI dataset.
-        in_bval (str): File describing the b-values of the DWI dataset.
-        in_bvec (str): File describing the directions of the DWI dataset.
-        low_bval (float, optional): Define the b0 volumes as all volume bval <= lowbval. Defaults to 5.0.
+    The function writes 4 files and return a tuple containing their paths.
 
-    Returns:
-        out_b0 (str): The set of b<=low_bval volumes.
-        out_dwi (str): Output. The set of b>low_bval volumes.
-        out_bvals (str): The b-values corresponding to the out_dwi.
-        out_bvecs (str): The b-vecs corresponding to the out_dwi.
+    Parameters
+    ----------
+    in_dwi : PathLike
+        Path to the DWI image dataset.
+
+    in_bval : PathLike
+        Path to the file describing the b-values of the DWI dataset.
+
+    in_bvec : PathLike
+        Path to the file describing the directions of the DWI dataset.
+
+    low_bval : float, optional
+        Define the b0 volumes as all volume bval <= lowbval.
+        Defaults to 5.0.
+
+    Returns
+    -------
+    out_b0 : PathLike
+        The path to the image file containing the set of volumes for which b<=low_bval.
+
+    out_dwi : PathLike
+        The path to the image file containing the set of volumes for which b>low_bval.
+
+    out_bvals : PathLike
+        The path to the text file containing the b-values corresponding
+        to the volumes of out_dwi.
+
+    out_bvecs : PathLike
+        The path to the file containing the b-vecs corresponding to the out_dwi.
+
+    Raises
+    ------
+    FileNotFoundError:
+        If in_dwi, or in_bval, or in_bvec file does not exist.
+
+    ValueError:
+        If low_bval < 0.
     """
-    import os
     import warnings
+    from pathlib import Path
 
-    import nibabel as nib
-    import numpy as np
+    from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
-    assert os.path.isfile(in_dwi)
-    assert os.path.isfile(in_bval)
-    assert os.path.isfile(in_bvec)
-    assert low_bval >= 0
+    in_dwi = Path(in_dwi)
+    in_bval = Path(in_bval)
+    in_bvec = Path(in_bvec)
 
-    im = nib.load(in_dwi)
-    data = im.get_fdata(dtype="float32")
-    hdr = im.get_header().copy()
+    for input_file in (in_dwi, in_bval, in_bvec):
+        if not input_file.exists():
+            raise FileNotFoundError(f"File {input_file} could not be found.")
+    if low_bval < 0:
+        raise ValueError(f"low_bval should be >=0. You provided {low_bval}.")
+
     bvals = np.loadtxt(in_bval)
     bvecs = np.loadtxt(in_bvec)
-
     if bvals.shape[0] == bvecs.shape[0]:
         warnings.warn(
             "Warning: The b-vectors file should be column-wise. The b-vectors will be transposed",
@@ -161,37 +197,28 @@ def b0_dwi_split(in_dwi: str, in_bval: str, in_bvec: str, low_bval: float = 5.0)
         )
         bvecs = bvecs.T
 
-    lowbs = np.where(bvals <= low_bval)[0]
+    ext = in_dwi.suffix
+    if ext == ".gz":
+        ext = "." + in_dwi.stem.split(".")[-1] + ext
+    out_b0 = in_dwi.parent / f"{in_dwi.name.rstrip(ext)}_b0{ext}"
+    out_dwi = in_dwi.parent / f"dwi{ext}"
+    out_bvals = in_dwi.parent / "bvals"
+    out_bvecs = in_dwi.parent / "bvecs"
 
-    fname_b0, ext_b0 = os.path.splitext(os.path.basename(in_dwi))
-    if ext_b0 == ".gz":
-        fname_b0, ext2 = os.path.splitext(fname_b0)
-        ext_b0 = ext2 + ext_b0
-    out_b0 = os.path.abspath(f"{fname_b0}_b0{ext_b0}")
-    # out_b0 = op.abspath('b0.nii.gz')
-    b0data = data[..., lowbs]
-    hdr.set_data_shape(b0data.shape)
-    nib.Nifti1Image(b0data, im.get_affine(), hdr).to_filename(out_b0)
+    b0_filter = get_b0_filter(in_bval, low_bval=low_bval)
+    dwi_filter = np.array([i for i in range(len(bvals)) if i not in b0_filter])
 
-    dwi_bvals = np.where(bvals > low_bval)[0]
-    out_dwi = os.path.abspath("dwi.nii.gz")
-    dwi_data = data[..., dwi_bvals]
-    hdr.set_data_shape(dwi_data.shape)
-    nib.Nifti1Image(dwi_data, im.get_affine(), hdr).to_filename(out_dwi)
+    for volume_filter, out_filename in zip([b0_filter, dwi_filter], [out_b0, out_dwi]):
+        data = compute_aggregated_volume(
+            in_dwi, aggregator=None, volumes_to_keep=volume_filter
+        )
+        img = get_new_image_like(in_dwi, data)
+        img.to_filename(out_filename)
 
-    bvals_dwi = bvals[dwi_bvals]
-    out_bvals = os.path.abspath("bvals")
-    np.savetxt(out_bvals, bvals_dwi, fmt="%d", delimiter=" ")
-
-    bvecs_dwi = np.array(
-        [
-            bvecs[0][dwi_bvals].tolist(),
-            bvecs[1][dwi_bvals].tolist(),
-            bvecs[2][dwi_bvals].tolist(),
-        ]
+    np.savetxt(out_bvals, bvals[dwi_filter], fmt="%d", delimiter=" ")
+    np.savetxt(
+        out_bvecs, np.array([b[dwi_filter] for b in bvecs]), fmt="%10.5f", delimiter=" "
     )
-    out_bvecs = os.path.abspath("bvecs")
-    np.savetxt(out_bvecs, bvecs_dwi, fmt="%10.5f", delimiter=" ")
 
     return out_b0, out_dwi, out_bvals, out_bvecs
 
