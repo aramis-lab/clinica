@@ -94,6 +94,7 @@ lock:
 spellcheck: install.dev
 	@$(POETRY) run codespell
 
+## test 		: Run unit tests.
 .PHONY: test
 test: install
 	@$(POETRY) run python -m pytest -v test/unittests
