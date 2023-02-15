@@ -1,22 +1,27 @@
 name: publish
 
 on:
-  # Trigger this workflow when a release is published.
   release:
-    types:
-      - published
+    types: [ published ]
 
 permissions:
-  # Allow checkout of the project.
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: snok/install-poetry@v1
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Build distribution
+        run: pipx run build
       - name: Publish to PyPI
-        env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: make publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
