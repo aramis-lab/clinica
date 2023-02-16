@@ -28,14 +28,6 @@ clean.py:
 clean.test:
 	@$(RM) -r .pytest_cache/
 
-.PHONY: config.pypi
-config.pypi:
-ifdef PYPI_TOKEN
-	@$(POETRY) config pypi-token.pypi "${PYPI_TOKEN}"
-else
-	$(error "Missing API token for PyPI repository")
-endif
-
 ## doc			: Build the documentation.
 .PHONY: doc
 doc: clean.doc install.doc
@@ -98,18 +90,11 @@ lint.isort:
 lock:
 	@$(POETRY) lock --no-update
 
-## publish		: Publish the package to PyPI.
-.PHONY: publish
-publish: publish.pypi
-
-.PHONY: publish.pypi
-publish.pypi: config.pypi
-	@$(POETRY) publish --build
-
 .PHONY: spellcheck
 spellcheck: install.dev
 	@$(POETRY) run codespell
 
+## test 		: Run unit tests.
 .PHONY: test
 test: install
 	@$(POETRY) run python -m pytest -v test/unittests
