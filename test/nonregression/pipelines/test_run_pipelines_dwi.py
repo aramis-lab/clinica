@@ -16,6 +16,26 @@ import pytest
 warnings.filterwarnings("ignore")
 
 
+@pytest.mark.fast
+def test_dwi_b0_flirt(cmdopt, tmp_path):
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+        b0_flirt_pipeline,
+    )
+ 
+    base_dir = Path(cmdopt["input"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIB0Flirt")
+    b0_flirt = b0_flirt_pipeline(num_b0s=11)
+    b0_flirt.inputs.inputnode.in_file = str(input_dir / "sub-01_ses-M000_dwi_b0.nii.gz")
+    (tmp_path / "tmp").mkdir()
+    b0_flirt.base_dir = str(tmp_path / "tmp")
+    b0_flirt.run()
+
+    out_file = fspath(tmp_path / "tmp" / "b0_coregistration" / "concat_ref_moving" / "merged_files.nii.gz")
+    ref_file = fspath(ref_dir / "merged_files.nii.gz")
+
+    assert similarity_measure(out_file, ref_file, 0.99)
+
+
 @pytest.mark.slow
 def test_dwi_preprocessing_using_t1(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
