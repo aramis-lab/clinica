@@ -198,6 +198,42 @@ pipeline {
                 }
               }
             }
+	    stage('DWI:nonreg:notslow') {
+               environment {
+                 PATH = "/usr/local/Modules/bin:$PATH"
+                 WORK_DIR = "/mnt/data/ci/working_dir_linux/DWI"
+                 INPUT_DATA_DIR = "/mnt/data_ci"
+                 TMP_DIR = "/mnt/data/ci/tmp"
+               }
+               steps {
+                 sh '''
+                 source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                 conda activate $CONDA_ENV
+                 mkdir -p $WORK_DIR
+                 source /usr/local/Modules/init/profile.sh
+                 module load clinica.all
+                 cd test
+                 poetry run pytest \
+                   --junitxml=./test-reports/nonregression_linux_dwi.xml \
+                   --verbose \
+                   --working_directory=$WORK_DIR \
+                   --input_data_directory=$INPUT_DATA_DIR \
+                   --basetemp=$TMP_DIR \
+                   --disable-warnings \
+                   --timeout=0 \
+                   -n 4 \
+                   -m "not slow" \
+                   ./nonregression/pipelines/test_run_pipelines_dwi.py
+                 '''
+              }
+              post {
+                 always {
+                   junit 'test/test-reports/*.xml'
+                 }
+                 success {
+                   sh 'rm -rf ${WORK_DIR}'
+                 }
+             } 
           }
           post {
             always {
