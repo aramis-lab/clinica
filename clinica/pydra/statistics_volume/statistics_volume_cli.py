@@ -147,7 +147,7 @@ def cli(
 
     statistics_volume_pipeline = pydra_statistics_volume.build_core_workflow(
         name="t1-linear-pydra",
-        output_directory=caps_directory,
+        output_dir=caps_directory,
         base_dir=working_directory,
         parameters=parameters,
     )
