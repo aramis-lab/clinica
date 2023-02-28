@@ -23,12 +23,19 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             (
                 "pet_volume",
                 dict,
-                {"acq_label": parameters["acq_label"]},
-                {"group_label": parameters["group_label_dartel"]},
-                {"suvr_reference_region": parameters["suvr_reference_region"]},
-                {"use_brainmasked_image": True},
-                {"use_pvc_data": parameters["use_pvc_data"]},
-                {"fwhm": parameters["full_width_at_half_maximum"]},
+                {
+                    "acq_label": parameters["acq_label"],
+                    "group_label": parameters["group_label_dartel"],
+                    "suvr_reference_region": parameters["suvr_reference_region"],
+                    "use_brainmasked_image": True,
+                    "use_pvc_data": parameters["use_pvc_data"],
+                    "fwhm": parameters["full_width_at_half_maximum"],
+                },
+                # {"group_label": parameters["group_label_dartel"]},
+                # {"suvr_reference_region": parameters["suvr_reference_region"]},
+                # {"use_brainmasked_image": True},
+                # {"use_pvc_data": parameters["use_pvc_data"]},
+                # {"fwhm": parameters["full_width_at_half_maximum"]},
                 {"mandatory": True},
             ),
         ],
@@ -151,14 +158,14 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     )
     wf.set_output(
         [
-            ("spmT_0001", wf.read_ouput_node.lzout.spmT_0001),
-            ("spmT_0002", wf.read_ouput_node.lzout.spmT_0002),
-            ("spm_figures", wf.read_ouput_node.lzout.spm_figures),
-            ("variance_of_error", wf.read_ouput_node.lzout.variance_of_error),
-            ("resels_per_voxels", wf.read_ouput_node.lzout.resels_per_voxels),
-            ("mask", wf.read_ouput_node.lzout.mask),
-            ("regression_coeff", wf.read_ouput_node.lzout.regression_coeff),
-            ("contrasts", wf.read_ouput_node.lzout.contrasts),
+            ("spmT_0001", wf.read_output_node.lzout.spmT_0001),
+            ("spmT_0002", wf.read_output_node.lzout.spmT_0002),
+            ("spm_figures", wf.read_output_node.lzout.spm_figures),
+            ("variance_of_error", wf.read_output_node.lzout.variance_of_error),
+            ("resels_per_voxels", wf.read_output_node.lzout.resels_per_voxels),
+            ("mask", wf.read_output_node.lzout.mask),
+            ("regression_coeff", wf.read_output_node.lzout.regression_coeff),
+            ("contrasts", wf.read_output_node.lzout.contrasts),
         ]
     )
 
