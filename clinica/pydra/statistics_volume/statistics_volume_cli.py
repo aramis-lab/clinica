@@ -143,12 +143,12 @@ def cli(
         # Advanced arguments
         "cluster_threshold": cluster_threshold,
         "tsv_file": subject_visits_with_covariates_tsv,
+        "base_dir": working_directory,
     }
 
     statistics_volume_pipeline = pydra_statistics_volume.build_core_workflow(
         name="t1-linear-pydra",
         output_dir=caps_directory,
-        base_dir=working_directory,
         parameters=parameters,
     )
     pydra_utils.run(statistics_volume_pipeline, n_procs=n_procs)
