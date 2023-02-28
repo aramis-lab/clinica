@@ -445,9 +445,14 @@ def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
 
     Rigid registration is achieved using FLIRT and the normalized correlation.
 
-    Args:
-        num_b0s (int): Number of the B0 volumes in the dataset.
-        name (str): Name of the workflow.
+    Parameters
+    ----------
+    num_b0s : int
+        Number of B0 volumes in the dataset.
+
+    name : str, optional
+        Name of the workflow.
+        Default="b0_coregistration".
 
     Inputnode:
         in_file(str): B0 dataset.
