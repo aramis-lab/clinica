@@ -1,9 +1,12 @@
 """This module contains utilities for DWI handling."""
+from collections import namedtuple
 from os import PathLike
 from pathlib import Path
 from typing import Iterable, Optional, Tuple
 
 import numpy as np
+
+DWIDataset = namedtuple("DWIDataset", "dwi b_values b_vectors")
 
 
 def count_b0s(in_bval: PathLike, low_bval: float = 5.0) -> int:
@@ -122,24 +125,25 @@ def compute_average_b0(
     return out_file
 
 
-def _check_input_paths(files: Iterable[PathLike]) -> Iterable[Path]:
-    """Utility function to check that provided input files exist."""
+def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
+    """Utility function to check that provided input files of the
+    DWI dataset exist.
+    If they exist, a new dataset object is returned with file paths
+    converted to Path objects instead of strings.
+    """
     file_paths = []
-    for input_file in files:
+    for input_file in dwi_dataset:
         input_file_path = Path(input_file)
         if not input_file_path.exists():
             raise FileNotFoundError(f"File {input_file_path} could not be found.")
         file_paths.append(input_file_path)
 
-    return file_paths
+    return DWIDataset(*file_paths)
 
 
 def b0_dwi_split(
-    in_dwi: PathLike,
-    in_bval: PathLike,
-    in_bvec: PathLike,
-    low_bval: float = 5.0,
-) -> Tuple[PathLike, PathLike, PathLike, PathLike]:
+    dwi_dataset: DWIDataset, low_bval: float = 5.0
+) -> Tuple[DWIDataset, DWIDataset]:
     """Split the DWI dataset.
 
     Split the DWI volumes into two datasets :
@@ -150,14 +154,8 @@ def b0_dwi_split(
 
     Parameters
     ----------
-    in_dwi : PathLike
-        Path to the DWI image dataset.
-
-    in_bval : PathLike
-        Path to the file describing the b-values of the DWI dataset.
-
-    in_bvec : PathLike
-        Path to the file describing the directions of the DWI dataset.
+    dwi_dataset : DWIDataset
+        DWI image dataset.
 
     low_bval : float, optional
         Define the b0 volumes as all volume bval <= lowbval.
@@ -165,18 +163,11 @@ def b0_dwi_split(
 
     Returns
     -------
-    out_b0 : PathLike
-        The path to the image file containing the set of volumes for which b<=low_bval.
+    small_b_dataset : DWIDataset
+        DWI dataset for volumes for which b<=low_bval.
 
-    out_dwi : PathLike
-        The path to the image file containing the set of volumes for which b>low_bval.
-
-    out_bvals : PathLike
-        The path to the text file containing the b-values corresponding
-        to the volumes of out_dwi.
-
-    out_bvecs : PathLike
-        The path to the file containing the b-vecs corresponding to the out_dwi.
+    large_b_dataset : DWIDataset
+        DWI dataset for volumes for which b>low_bval.
 
     Raises
     ------
@@ -190,13 +181,13 @@ def b0_dwi_split(
 
     from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
-    in_dwi, in_bval, in_bvec = _check_input_paths([in_dwi, in_bval, in_bvec])
+    dwi_dataset = check_dwi_dataset(dwi_dataset)
 
     if low_bval < 0:
         raise ValueError(f"low_bval should be >=0. You provided {low_bval}.")
 
-    bvals = np.loadtxt(in_bval)
-    bvecs = np.loadtxt(in_bvec)
+    bvals = np.loadtxt(dwi_dataset.b_values)
+    bvecs = np.loadtxt(dwi_dataset.b_vectors)
     if bvals.shape[0] == bvecs.shape[0]:
         warnings.warn(
             "Warning: The b-vectors file should be column-wise. The b-vectors will be transposed",
@@ -204,38 +195,35 @@ def b0_dwi_split(
         )
         bvecs = bvecs.T
 
-    ext = in_dwi.suffix
+    ext = dwi_dataset.dwi.suffix
     if ext == ".gz":
-        ext = "." + in_dwi.stem.split(".")[-1] + ext
-    out_b0 = in_dwi.parent / f"{in_dwi.name.rstrip(ext)}_b0{ext}"
-    out_dwi = in_dwi.parent / f"dwi{ext}"
-    out_bvals = in_dwi.parent / "bvals"
-    out_bvecs = in_dwi.parent / "bvecs"
+        ext = "." + dwi_dataset.dwi.stem.split(".")[-1] + ext
+    out_b0 = dwi_dataset.dwi.parent / f"{dwi_dataset.dwi.name.rstrip(ext)}_b0{ext}"
+    out_dwi = dwi_dataset.dwi.parent / f"dwi{ext}"
+    out_bvals = dwi_dataset.dwi.parent / "bvals"
+    out_bvecs = dwi_dataset.dwi.parent / "bvecs"
 
-    b0_filter = get_b0_filter(in_bval, low_bval=low_bval)
+    b0_filter = get_b0_filter(dwi_dataset.b_values, low_bval=low_bval)
     dwi_filter = np.array([i for i in range(len(bvals)) if i not in b0_filter])
 
     for volume_filter, out_filename in zip([b0_filter, dwi_filter], [out_b0, out_dwi]):
         data = compute_aggregated_volume(
-            in_dwi, aggregator=None, volumes_to_keep=volume_filter
+            dwi_dataset.dwi, aggregator=None, volumes_to_keep=volume_filter
         )
-        img = get_new_image_like(in_dwi, data)
+        img = get_new_image_like(dwi_dataset.dwi, data)
         img.to_filename(out_filename)
 
     np.savetxt(out_bvals, bvals[dwi_filter], fmt="%d", delimiter=" ")
     np.savetxt(
         out_bvecs, np.array([b[dwi_filter] for b in bvecs]), fmt="%10.5f", delimiter=" "
     )
+    small_b_dwi = DWIDataset(dwi=out_b0, b_values=None, b_vectors=None)
+    large_b_dwi = DWIDataset(dwi=out_dwi, b_values=out_bvals, b_vectors=out_bvecs)
 
-    return out_b0, out_dwi, out_bvals, out_bvecs
+    return small_b_dwi, large_b_dwi
 
 
-def insert_b0_into_dwi(
-    in_b0: PathLike,
-    in_dwi: PathLike,
-    in_bval: PathLike,
-    in_bvec: PathLike,
-) -> Tuple[Path, Path, Path]:
+def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
     """Insert a b0 volume into the dwi dataset as the first volume and update the bvals and bvecs files.
 
     Parameters
@@ -243,63 +231,55 @@ def insert_b0_into_dwi(
     in_b0 : PathLike
         Path to image file containing one b=0 volume (could be the average of a b0 dataset).
 
-    in_dwi : PathLike
-        Path to the image file containing the set of DWI volumes.
-
-    in_bval : PathLike
-        Path to the text file describing the b-values of the DWI dataset.
-
-    in_bvec : PathLike
-        Path to the text file describing the directions of the DWI dataset.
+    dwi_dataset : DWIDataset
+        DWI dataset in which to insert the b0 volume.
 
     Returns
     -------
-    out_dwi : Path
-        Path to the diffusion dataset : b0 volume + dwi volumes.
-
-    out_bval : Path
-        Path to the B-values update.
-
-    out_bvec : Path
-        Path to the directions of diffusion update.
+    DWIDataset :
+        The diffusion dataset : b0 volume + dwi volumes.
     """
     from clinica.utils.image import merge_volumes_time_dimension
 
-    in_b0, in_dwi, in_bval, in_bvec = _check_input_paths(
-        [in_b0, in_dwi, in_bval, in_bvec]
-    )
-    out_dwi = merge_volumes_time_dimension(in_b0, in_dwi)
+    dwi_dataset = check_dwi_dataset(dwi_dataset)
+    out_dwi = merge_volumes_time_dimension(in_b0, dwi_dataset.dwi)
 
-    bvals = np.loadtxt(in_bval)
+    bvals = np.loadtxt(dwi_dataset.b_values)
     bvals = np.insert(bvals, 0, 0)
-    out_bvals = in_dwi.parent / "bvals"
+    out_bvals = dwi_dataset.dwi.parent / "bvals"
     np.savetxt(out_bvals, bvals, fmt="%d", delimiter=" ")
 
-    bvecs = np.loadtxt(in_bvec)
+    bvecs = np.loadtxt(dwi_dataset.b_vectors)
     bvecs = np.insert(bvecs, 0, 0.0, axis=1)
-    out_bvecs = in_dwi.parent / "bvecs"
+    out_bvecs = dwi_dataset.dwi.parent / "bvecs"
     np.savetxt(out_bvecs, bvecs, fmt="%10.5f", delimiter=" ")
 
-    return out_dwi, out_bvals, out_bvecs
+    return DWIDataset(dwi=out_dwi, b_values=out_bvals, b_vectors=out_bvecs)
 
 
-def check_dwi_volume(in_dwi, in_bvec, in_bval):
-    """Check that # DWI = # B-val = # B-vec.
+def check_dwi_volume(dwi_dataset: DWIDataset) -> None:
+    """Check the consistency of a given DWIDataset.
+
+    More precisely, checks that the number of DWI volumes,
+    the number of B-values, and the number of B-vectors are equal.
+
+    Parameters
+    ----------
+    dwi_dataset : DWIDataset
+        The DWI dataset to check.
 
     Raises
-        ValueError if # DWI, # B-val and # B-vec mismatch.
+    ------
+    ValueError:
+        if the number of DWI volumes, the number of B-values,
+        and the number of B-vectors are not equal.
     """
     import nibabel as nib
     import numpy as np
 
-    bvals = np.loadtxt(in_bval)
-    num_b_vals = len(bvals)
-
-    bvecs = np.loadtxt(in_bvec)
-    _, num_b_vecs = bvecs.shape
-
-    img = nib.load(in_dwi)
-    _, _, _, num_dwis = img.shape
+    num_b_vals = len(np.loadtxt(dwi_dataset.b_values))
+    num_b_vecs = np.loadtxt(dwi_dataset.b_vectors).shape[-1]
+    num_dwis = nib.load(dwi_dataset.dwi).shape[-1]
 
     if not (num_b_vals == num_b_vecs == num_dwis):
         raise IOError(

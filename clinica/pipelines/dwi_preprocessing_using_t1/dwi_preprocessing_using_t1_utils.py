@@ -1,3 +1,11 @@
+import os
+import shutil
+from os import PathLike
+from typing import Tuple
+
+from clinica.utils.dwi import DWIDataset
+
+
 def rename_into_caps(
     in_bids_dwi: str,
     fname_dwi: str,
@@ -198,13 +206,9 @@ def init_input_node(t1w, dwi, bvec, bval, dwi_json):
     )
     from clinica.utils.ux import print_begin_image
 
-    # Extract image ID
     image_id = get_subject_id(t1w)
+    check_dwi_volume(DWIDataset(dwi=dwi, b_values=bval, b_vectors=bvec))
 
-    # Check that the number of DWI, bvec & bval are the same
-    check_dwi_volume(dwi, bvec, bval)
-
-    # Read metadata from DWI JSON file:
     [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
         dwi_json,
         [
@@ -240,87 +244,181 @@ def print_end_pipeline(image_id, final_file):
     print_end_image(image_id)
 
 
-def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory=None):
+def prepare_reference_b0(
+    in_dwi: str,
+    in_bval: str,
+    in_bvec: str,
+    low_bval: int = 5,
+    working_directory=None,
+):
     """Prepare reference b=0 image.
 
-    This function prepare the data for further corrections. It co-registers the B0 images
-    and then average it in order to obtain only one average B0 images.
+    This function prepares the data for further corrections.
+    It co-registers the B0 images and then average them in order to
+    obtain only one average B0 image.
 
-    Args:
-        in_dwi (str): Input DWI file.
-        in_bvec (str): Vector file of the diffusion directions of the DWI dataset.
-        in_bval (str): B-values file.
-        low_bval (optional, int): Set b<=low_bval such that images are considered b0. Defaults to 5.
-        working_directory (str): Temporary folder results where the results are stored. Defaults to None.
+    Parameters
+    ----------
+    in_dwi : str
+        Path to the input DWI file.
 
-    Returns:
-        out_reference_b0 (str): Average of the B0 images or the only B0 image.
-        out_b0_dwi_merge (str): Average of B0 images merged to the DWIs.
-        out_updated_bval (str): Updated gradient values table.
-        out_updated_bvec (str): Updated gradient vectors table.
+    in_bvec : str
+        Path to the vector file of the diffusion directions of the DWI dataset.
+
+    in_bval : str
+        Path to the B-values file.
+
+    low_bval : int, optional
+        Threshold for B0 images: images with b<=low_bval will be considered as b0 images.
+        Default=5.
+
+    working_directory : str, optional
+        Temporary folder results where the results are stored.
+        Defaults to None.
+
+    Returns
+    -------
+    out_reference_b0 : str
+        Path to the average of the B0 images or the only B0 image.
+
+    out_b0_dwi_merge : str
+        Path to the average of B0 images merged to the DWIs.
+
+    out_updated_bval : str
+        Path to the updated gradient values table.
+
+    out_updated_bvec : str
+        Path to the updated gradient vectors table.
     """
-    import hashlib
-    import os
-    import tempfile
+    from clinica.utils.dwi import b0_dwi_split, check_dwi_dataset, insert_b0_into_dwi
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
-        b0_flirt_pipeline,
+    dwi_dataset = check_dwi_dataset(
+        DWIDataset(dwi=in_dwi, b_values=in_bval, b_vectors=in_bvec)
     )
-    from clinica.utils.dwi import (
-        b0_dwi_split,
-        compute_average_b0,
-        count_b0s,
-        insert_b0_into_dwi,
+    working_directory = configure_working_directory(dwi_dataset.dwi, working_directory)
+    small_b_dataset, large_b_dataset = b0_dwi_split(dwi_dataset, low_bval=low_bval)
+    reference_b0 = compute_reference_b0(
+        small_b_dataset.dwi, dwi_dataset.b_values, low_bval, working_directory
     )
+    reference_dataset = insert_b0_into_dwi(reference_b0, large_b_dataset)
 
-    # Count the number of b0s
+    return str(reference_b0), *tuple(str(_) for _ in reference_dataset)
+
+
+def compute_reference_b0(
+    extracted_b0: PathLike,
+    in_bval: PathLike,
+    low_bval: int,
+    working_directory,
+    clean_working_dir: bool = True,
+) -> PathLike:
+    """Compute the reference B0.
+
+    This function calls the b0_flirt FSL pipeline under the hood.
+    The pipeline will write files to the provided working directory.
+
+    .. warning::
+        If the option clean_working_dir is set to True, this directory
+        will be cleaned after execution of the pipeline.
+
+    Raises
+    ------
+    ValueError :
+        If the number of B0 volumes is <= 0.
+    """
+    from clinica.utils.dwi import compute_average_b0, count_b0s
+
     nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
-
-    # Split dataset into two datasets: the b0 and the b>low_bval datasets
-    [extracted_b0, out_split_dwi, out_split_bval, out_split_bvec] = b0_dwi_split(
-        in_dwi=in_dwi, in_bval=in_bval, in_bvec=in_bvec, low_bval=low_bval
-    )
-
-    if nb_b0s == 1:
-        # The reference b0 is the extracted b0
-        # cprint('Only one b0 for %s' % in_dwi)
-        out_reference_b0 = extracted_b0
-    elif nb_b0s > 1:
-        # Register the b0 onto the first b0
-        b0_flirt = b0_flirt_pipeline(num_b0s=nb_b0s)
-        b0_flirt.inputs.inputnode.in_file = extracted_b0
-        if working_directory is None:
-            working_directory = tempfile.mkdtemp()
-        tmp_dir = os.path.join(
-            working_directory, hashlib.md5(in_dwi.encode()).hexdigest()
-        )
-        b0_flirt.base_dir = tmp_dir
-        b0_flirt.run()
-        # BUG: Nipype does allow to extract the output after running the
-        # workflow: we need to 'guess' where the output will be generated
-        # out_node = b0_flirt.get_node('outputnode')
-        registered_b0s = os.path.abspath(
-            os.path.join(
-                tmp_dir, "b0_coregistration", "concat_ref_moving", "merged_files.nii.gz"
-            )
-        )
-        # cprint('B0 s will be averaged (file = ' + registered_b0s + ')')
-        # Average the b0s to obtain the reference b0
-        out_reference_b0 = compute_average_b0(registered_b0s)
-    else:
+    if nb_b0s <= 0:
         raise ValueError(
             f"The number of b0s should be strictly positive (b-val file: {in_bval})."
         )
+    if nb_b0s == 1:
+        return extracted_b0
+    registered_b0s = register_b0(
+        nb_b0s,
+        extracted_b0,
+        working_directory=working_directory,
+    )
+    out_reference_b0 = compute_average_b0(registered_b0s)
+    registered_b0_file_name = extracted_b0.with_name("merged_files.nii.gz")
+    shutil.copy(out_reference_b0, registered_b0_file_name)
+    if clean_working_dir:
+        shutil.rmtree(working_directory)
 
-    # Merge datasets such that bval(DWI) = (0 b1 ... bn)
-    [out_b0_dwi_merge, out_updated_bval, out_updated_bvec] = insert_b0_into_dwi(
-        in_b0=out_reference_b0,
-        in_dwi=out_split_dwi,
-        in_bval=out_split_bval,
-        in_bvec=out_split_bvec,
+    return registered_b0_file_name
+
+
+def configure_working_directory(
+    in_dwi: PathLike, working_directory: PathLike = None
+) -> PathLike:
+    """Configure a temporary working directory for writing the output files of
+    the b0 co-registration.
+
+    Parameters
+    ----------
+    in_dwi : str
+        Path to DWI file. This is used to create the name of the folder.
+
+    working_directory : str, optional
+        The folder to be used if provided by the user.
+        If None, then create a temporary folder to work in.
+
+    Returns
+    -------
+    str:
+        The configured working directory.
+    """
+    import hashlib
+    import tempfile
+    from pathlib import Path
+
+    working_directory = working_directory or tempfile.mkdtemp()
+    working_directory = Path(working_directory)
+    return working_directory / hashlib.md5(str(in_dwi).encode()).hexdigest()
+
+
+def register_b0(
+    nb_b0s: int, extracted_b0: PathLike, working_directory: PathLike
+) -> PathLike:
+    """Run the FSL pipeline 'b0_flirt_pipeline' in order to co-register the b0 images.
+
+    This function is a simple wrapper around the b0_flirt_pipeline which configures it,
+    runs it, and returns the path to the merged file of interest.
+
+    Parameters
+    ----------
+    nb_b0s : int
+        The number of B0 volumes in the dataset.
+
+    extracted_b0 : str
+        The extracted B0 volumes to co-register.
+
+    working_directory : str
+        The working directory in which the pipeline will write intermediary files.
+
+    Returns
+    -------
+    str:
+        The path to the nifti image containing the co-registered B0 volumes.
+        If the pipeline ran successfully, this file should be located in :
+        working_directory / b0_coregistration / concat_ref_moving / merged_files.nii.gz
+    """
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+        b0_flirt_pipeline,
     )
 
-    return out_reference_b0, out_b0_dwi_merge, out_updated_bval, out_updated_bvec
+    b0_flirt = b0_flirt_pipeline(num_b0s=nb_b0s)
+    b0_flirt.inputs.inputnode.in_file = str(extracted_b0)
+    b0_flirt.base_dir = str(working_directory)
+    b0_flirt.run()
+
+    return (
+        working_directory
+        / "b0_coregistration"
+        / "concat_ref_moving"
+        / "merged_files.nii.gz"
+    )
 
 
 def extract_sub_ses_folder_name(file_path: str) -> str:
