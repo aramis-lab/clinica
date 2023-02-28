@@ -5,7 +5,7 @@ from pydra.mark import annotate, task
 
 
 @task
-@annotate({"return": {"unzipped_nii": list | str | None}})
+@annotate({"return": {"unzipped_nii": list}})
 def unzip_nii(
     in_file: str,
     same_dir: bool = False,
