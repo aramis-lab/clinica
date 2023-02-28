@@ -31,7 +31,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                 {"fwhm": parameters["full_width_at_half_maximum"]},
                 {"mandatory": True},
             ),
-            ("tsv_file", str),
         ],
         bases=(pydra.specs.BaseSpec,),
     )
@@ -45,11 +44,10 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             in_file=wf.lzin.pet_volume,
         )
     )
-
     wf.add(
         utils.get_group_1_and_2(
             name="get_groups",
-            tsv=wf.lzin.tsv_file,
+            tsv=parameters["tsv_file"],
             contrast=parameters["contrast"],
             # idx_group1=wf.02_get_groups.lzout.first_group_idx,
             # idx_group2=wf.02_get_groups.lzout.second_group_idx,
@@ -62,7 +60,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     wf.add(
         utils.model_creation(
             name="model_creation",
-            tsv=wf.lzin.tsv_file,
+            tsv=parameters["tsv_file"],
             contrast=parameters["contrast"],
             template_file=join(dirname(__file__), "template_model_creation.m"),
             file_list=wf.unzip_nii.lzout.unzipped_nii,
