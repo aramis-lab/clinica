@@ -1,7 +1,3 @@
-import typing as ty
-from os import PathLike
-from pathlib import PurePath
-
 import pydra
 from pydra import Workflow
 
@@ -12,14 +8,18 @@ from clinica.pydra.engine import clinica_io
 def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     """doc"""
     from os.path import dirname, join
-
-    from pydra.tasks.nipype1.utils import Nipype1Task
+    from typing import Any
 
     import clinica.pydra.statistics_volume.task as utils
+    from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+
+    if spm_standalone_is_available():
+        use_spm_standalone()
 
     input_spec = pydra.specs.SpecInfo(
         name="Input",
         fields=[
+            ("_graph_checksums", Any),
             (
                 "pet_volume",
                 dict,
@@ -31,11 +31,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                     "use_pvc_data": parameters["use_pvc_data"],
                     "fwhm": parameters["full_width_at_half_maximum"],
                 },
-                # {"group_label": parameters["group_label_dartel"]},
-                # {"suvr_reference_region": parameters["suvr_reference_region"]},
-                # {"use_brainmasked_image": True},
-                # {"use_pvc_data": parameters["use_pvc_data"]},
-                # {"fwhm": parameters["full_width_at_half_maximum"]},
                 {"mandatory": True},
             ),
         ],
@@ -168,5 +163,9 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             ("contrasts", wf.read_output_node.lzout.contrasts),
         ]
     )
-
+    # wf.set_output(
+    #     [
+    #         ("bidon", wf.unzip_nii.lzout.unzipped_nii),
+    #     ]
+    # )
     return wf

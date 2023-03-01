@@ -147,11 +147,12 @@ def cli(
     }
 
     statistics_volume_pipeline = pydra_statistics_volume.build_core_workflow(
-        name="t1-linear-pydra",
+        name="pydra-statistics-volume",
         input_dir=None,
         output_dir=caps_directory,
         parameters=parameters,
     )
+    # import pdb;pdb.set_trace()
     pydra_utils.run(statistics_volume_pipeline, n_procs=n_procs)
 
 
