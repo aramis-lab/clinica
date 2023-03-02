@@ -165,7 +165,9 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     )
     # wf.set_output(
     #     [
-    #         ("bidon", wf.unzip_nii.lzout.unzipped_nii),
+    #         ("bidon",wf.unzip_nii.lzout.unzipped_nii),
+    #         ("first_group", wf.get_groups.lzout.first_group_idx),
+    #         ("current_model", wf.model_creation.lzout.current_model)
     #     ]
     # )
     return wf
