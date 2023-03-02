@@ -341,7 +341,7 @@ def compute_reference_b0(
         working_directory=working_directory,
     )
     out_reference_b0 = compute_average_b0(registered_b0s)
-    registered_b0_file_name = extracted_b0.with_name("merged_files.nii.gz")
+    registered_b0_file_name = extracted_b0.with_name("reference_b0_volume.nii.gz")
     shutil.copy(out_reference_b0, registered_b0_file_name)
     if clean_working_dir:
         shutil.rmtree(working_directory)
@@ -374,8 +374,12 @@ def configure_working_directory(
     from pathlib import Path
 
     working_directory = working_directory or tempfile.mkdtemp()
-    working_directory = Path(working_directory)
-    return working_directory / hashlib.md5(str(in_dwi).encode()).hexdigest()
+    working_directory = (
+        Path(working_directory) / hashlib.md5(str(in_dwi).encode()).hexdigest()
+    )
+    working_directory.mkdir(parents=True)
+
+    return working_directory
 
 
 def register_b0(

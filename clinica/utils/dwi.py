@@ -141,6 +141,17 @@ def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
     return DWIDataset(*file_paths)
 
 
+def remove_entity_from_filename(filename: Path, entity: str) -> Path:
+    return Path(filename.parent / filename.name.replace(f"_{entity}", ""))
+
+
+def add_suffix_to_filename(filename: Path, suffix: str) -> Path:
+    ext = filename.suffix
+    if ext == ".gz":
+        ext = "." + filename.stem.split(".")[-1] + ext
+    return filename.parent / f"{filename.name.replace(ext, '')}_{suffix}{ext}"
+
+
 def b0_dwi_split(
     dwi_dataset: DWIDataset, low_bval: float = 5.0
 ) -> Tuple[DWIDataset, DWIDataset]:
@@ -195,13 +206,10 @@ def b0_dwi_split(
         )
         bvecs = bvecs.T
 
-    ext = dwi_dataset.dwi.suffix
-    if ext == ".gz":
-        ext = "." + dwi_dataset.dwi.stem.split(".")[-1] + ext
-    out_b0 = dwi_dataset.dwi.parent / f"{dwi_dataset.dwi.name.rstrip(ext)}_b0{ext}"
-    out_dwi = dwi_dataset.dwi.parent / f"dwi{ext}"
-    out_bvals = dwi_dataset.dwi.parent / "bvals"
-    out_bvecs = dwi_dataset.dwi.parent / "bvecs"
+    out_b0 = add_suffix_to_filename(dwi_dataset.dwi, "small_b")
+    out_dwi = add_suffix_to_filename(dwi_dataset.dwi, "large_b")
+    out_bvals = add_suffix_to_filename(dwi_dataset.b_values, "large_b")
+    out_bvecs = add_suffix_to_filename(dwi_dataset.b_vectors, "large_b")
 
     b0_filter = get_b0_filter(dwi_dataset.b_values, low_bval=low_bval)
     dwi_filter = np.array([i for i in range(len(bvals)) if i not in b0_filter])
@@ -242,16 +250,29 @@ def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
     from clinica.utils.image import merge_volumes_time_dimension
 
     dwi_dataset = check_dwi_dataset(dwi_dataset)
-    out_dwi = merge_volumes_time_dimension(in_b0, dwi_dataset.dwi)
+    out_dwi = merge_volumes_time_dimension(
+        in_b0,
+        dwi_dataset.dwi,
+        out_file=str(
+            add_suffix_to_filename(
+                remove_entity_from_filename(dwi_dataset.dwi, "large_b"),
+                "merged",
+            )
+        ),
+    )
 
     bvals = np.loadtxt(dwi_dataset.b_values)
     bvals = np.insert(bvals, 0, 0)
-    out_bvals = dwi_dataset.dwi.parent / "bvals"
+    out_bvals = add_suffix_to_filename(
+        remove_entity_from_filename(dwi_dataset.b_values, "large_b"), "merged"
+    )
     np.savetxt(out_bvals, bvals, fmt="%d", delimiter=" ")
 
     bvecs = np.loadtxt(dwi_dataset.b_vectors)
     bvecs = np.insert(bvecs, 0, 0.0, axis=1)
-    out_bvecs = dwi_dataset.dwi.parent / "bvecs"
+    out_bvecs = add_suffix_to_filename(
+        remove_entity_from_filename(dwi_dataset.b_vectors, "large_b"), "merged"
+    )
     np.savetxt(out_bvecs, bvecs, fmt="%10.5f", delimiter=" ")
 
     return DWIDataset(dwi=out_dwi, b_values=out_bvals, b_vectors=out_bvecs)
