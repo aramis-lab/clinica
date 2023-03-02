@@ -38,8 +38,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     )
     wf = Workflow(name, input_spec=input_spec)
 
-    # wf.split(("pet_volume"))
-
     wf.add(
         utils.unzip_nii(
             name="unzip_nii",
@@ -51,9 +49,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             name="get_groups",
             tsv=parameters["tsv_file"],
             contrast=parameters["contrast"],
-            # idx_group1=wf.02_get_groups.lzout.first_group_idx,
-            # idx_group2=wf.02_get_groups.lzout.second_group_idx,
-            # class_names=wf.02_get_groups.lzout.class_names,
         )
     )
     # 1. Model creation
@@ -68,36 +63,26 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             file_list=wf.unzip_nii.lzout.unzipped_nii,
             idx_group1=wf.get_groups.lzout.first_group_idx,
             idx_group2=wf.get_groups.lzout.second_group_idx,
-            # output
-            # script_file=wf.model_creation.lzout.current_model,
-            # covariate=wf.model_creation.lzout.covariates,
         )
     )
     wf.add(
         utils.run_m_script(
             name="run_spm_model_creation",
             m_file=wf.model_creation.lzout.current_model,
-            # output
-            # spm_mat=wf.run_spm_model_creation.lzout.output_mat_file,
         )
     )
     # 2. Model estimation
     wf.add(
         utils.estimate(
             name="model_estimation",
-            # interface=utils.estimate
             mat_file=wf.run_spm_model_creation.lzout.output_mat_file,
             template_file=join(dirname(__file__), "template_model_estimation.m"),
-            # output
-            # script_file=wf.model_estimation.lzout.current_model_estimation,
         )
     )
     wf.add(
         utils.run_m_script(
             name="run_spm_model_estimation",
             m_file=wf.model_estimation.lzout.current_model_estimation,
-            # output
-            # spm_mat=wf.run_spm_model_estimation.lzout.output_mat_file,
         )
     )
     # 3. Contrast
@@ -108,16 +93,12 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             template_file=join(dirname(__file__), "template_model_contrast.m"),
             covariates=wf.model_creation.lzout.covariates,
             class_names=wf.get_groups.lzout.class_names,
-            # output
-            # script_file=wf.model_contrast.lzout.current_model_estimation,
         )
     )
     wf.add(
         utils.run_m_script(
             name="run_spm_model_contrast",
             m_file=wf.model_contrast.lzout.current_model_estimation,
-            # output
-            # spm_mat=wf.run_spm_model_contrast.lzout.output_mat_file,
         )
     )
     # 4. Results
@@ -128,16 +109,12 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             template_file=join(dirname(__file__), "template_model_results.m"),
             method="none",
             threshold=parameters["cluster_threshold"],
-            # output
-            # script_file=wf.06_1_model_result_no_correction.lzout.current_model_result,
         )
     )
     wf.add(
         utils.run_m_script(
             name="run_spm_model_result_no_correction",
             m_file=wf.model_result_no_correction.lzout.current_model_result,
-            # output
-            # spm_mat=wf.run_spm_model_result_no_correction.lzout.output_mat_file,
         )
     )
     wf.add(
@@ -163,11 +140,4 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             ("contrasts", wf.read_output_node.lzout.contrasts),
         ]
     )
-    # wf.set_output(
-    #     [
-    #         ("bidon", wf.unzip_nii.lzout.unzipped_nii),
-    #         ("first_group", wf.get_groups.lzout.first_group_idx),
-    #         ("current_model", wf.model_creation.lzout.current_model),
-    #     ]
-    # )
     return wf

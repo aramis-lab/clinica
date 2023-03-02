@@ -152,7 +152,6 @@ def cli(
         output_dir=caps_directory,
         parameters=parameters,
     )
-    # import pdb;pdb.set_trace()
     pydra_utils.run(statistics_volume_pipeline, n_procs=n_procs)
 
 
