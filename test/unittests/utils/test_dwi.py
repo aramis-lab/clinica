@@ -194,21 +194,40 @@ def test_compute_average_b0(tmp_path, extension):
     assert_array_equal(result.get_fdata(), expected)
 
 
-def test_b0_dwi_split_errors(tmp_path):
-    from clinica.utils.dwi import DWIDataset, b0_dwi_split
+@pytest.fixture
+def dwi_dataset(tmp_path):
+    from clinica.utils.dwi import DWIDataset
 
-    dwi_dataset = DWIDataset(
-        dwi=tmp_path / "foo.nii.gz",
+    return DWIDataset(
+        dwi=str(tmp_path / "foo.nii.gz"),
         b_values=tmp_path / "foo.bval",
         b_vectors=tmp_path / "foo.bvec",
     )
+
+
+def test_check_dwi_dataset(tmp_path, dwi_dataset):
+    from clinica.utils.dwi import check_dwi_dataset
+
     for filename in ("foo.nii.gz", "foo.bval", "foo.bvec"):
         with pytest.raises(
             FileNotFoundError,
             match=f"File {tmp_path / filename} could not be found.",
         ):
-            b0_dwi_split(dwi_dataset)
+            check_dwi_dataset(dwi_dataset)
         (tmp_path / filename).touch()
+    dwi_dataset_checked = check_dwi_dataset(dwi_dataset)
+    assert len(dwi_dataset_checked) == 3
+    assert dwi_dataset_checked.dwi == tmp_path / "foo.nii.gz"
+    assert dwi_dataset_checked.b_values == tmp_path / "foo.bval"
+    assert dwi_dataset_checked.b_vectors == tmp_path / "foo.bvec"
+
+
+def test_b0_dwi_split_errors(tmp_path, dwi_dataset):
+    from clinica.utils.dwi import b0_dwi_split
+
+    for filename in ("foo.nii.gz", "foo.bval", "foo.bvec"):
+        (tmp_path / filename).touch()
+
     with pytest.raises(
         ValueError,
         match="low_bval should be >=0. You provided -1.",
@@ -254,28 +273,57 @@ def test_b0_dwi_split(tmp_path, extension):
     assert_array_almost_equal(bvecs, bvecs_data[:, np.array([0, 1, 5, 6])], decimal=5)
 
 
+def build_dwi_dataset(tmp_path, nb_dwi_volumes, nb_b_values, nb_b_vectors):
+    from clinica.utils.dwi import DWIDataset
+
+    dwi_data = 4.0 * np.ones((5, 5, 5, nb_dwi_volumes))
+    dwi_img = nib.Nifti1Image(dwi_data, affine=np.eye(4))
+    nib.save(dwi_img, tmp_path / "foo.nii.gz")
+    np.savetxt(tmp_path / "foo.bval", [1000] * nb_b_values)
+    bvecs_data = np.random.random((3, nb_b_vectors))
+    np.savetxt(tmp_path / "foo.bvec", bvecs_data)
+
+    return DWIDataset(
+        dwi=tmp_path / "foo.nii.gz",
+        b_values=tmp_path / "foo.bval",
+        b_vectors=tmp_path / "foo.bvec",
+    )
+
+
+@pytest.mark.parametrize(
+    "nb_dwi,nb_bvals,nb_bvecs", [(10, 9, 9), (9, 10, 9), (9, 9, 10), (8, 9, 10)]
+)
+def test_check_dwi_volume_errors(tmp_path, nb_dwi, nb_bvals, nb_bvecs):
+    from clinica.utils.dwi import check_dwi_volume
+
+    dwi_dataset = build_dwi_dataset(tmp_path, nb_dwi, nb_bvals, nb_bvecs)
+    with pytest.raises(
+        IOError,
+        match="Number of DWIs, b-vals and b-vecs mismatch",
+    ):
+        check_dwi_volume(dwi_dataset)
+
+
+def test_check_dwi_volume(tmp_path, dwi_dataset):
+    from clinica.utils.dwi import check_dwi_volume
+
+    check_dwi_volume(build_dwi_dataset(tmp_path, 9, 9, 9))
+
+
 def test_insert_b0_into_dwi(tmp_path):
-    from clinica.utils.dwi import DWIDataset, insert_b0_into_dwi
+    from clinica.utils.dwi import insert_b0_into_dwi
 
     b0_data = 6.0 * np.ones((5, 5, 5, 1))
     b0_img = nib.Nifti1Image(b0_data, affine=np.eye(4))
     nib.save(b0_img, tmp_path / "b0.nii.gz")
-    dwi_data = 4.0 * np.ones((5, 5, 5, 9))
-    dwi_img = nib.Nifti1Image(dwi_data, affine=np.eye(4))
-    nib.save(dwi_img, tmp_path / "dwi.nii.gz")
-    np.savetxt(tmp_path / "bvals", [1000] * 9)
-    bvecs_data = np.random.random((3, 9))
-    np.savetxt(tmp_path / "bvecs", bvecs_data)
-    dwi_dataset = DWIDataset(
-        dwi=tmp_path / "dwi.nii.gz",
-        b_values=tmp_path / "bvals",
-        b_vectors=tmp_path / "bvecs",
-    )
+    dwi_dataset = build_dwi_dataset(tmp_path, 9, 9, 9)
+
     out_dataset = insert_b0_into_dwi(tmp_path / "b0.nii.gz", dwi_dataset)
     assert out_dataset.dwi == tmp_path / "merged_files.nii.gz"
     assert out_dataset.b_values == tmp_path / "bvals"
     assert out_dataset.b_vectors == tmp_path / "bvecs"
     dwi = nib.load(out_dataset.dwi)
+    dwi_img = nib.load(tmp_path / "foo.nii.gz")
     assert_array_equal(dwi.affine, dwi_img.affine)
     expected = 4.0 * np.ones((5, 5, 5, 10))
     expected[..., 0] += 2.0
@@ -283,5 +331,6 @@ def test_insert_b0_into_dwi(tmp_path):
     bvals = np.loadtxt(out_dataset.b_values)
     assert_array_equal(bvals, np.array([0] + [1000] * 9))
     bvecs = np.loadtxt(out_dataset.b_vectors)
+    bvecs_data = np.loadtxt(tmp_path / "foo.bvec")
     expected = np.insert(bvecs_data, 0, 0.0, axis=1)
     assert_array_almost_equal(bvecs, expected, decimal=5)
