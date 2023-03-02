@@ -73,101 +73,101 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             # covariate=wf.model_creation.lzout.covariates,
         )
     )
-    # wf.add(
-    #     utils.run_m_script(
-    #         name="run_spm_model_creation",
-    #         m_file=wf.model_creation.lzout.current_model,
-    #         # output
-    #         # spm_mat=wf.run_spm_model_creation.lzout.output_mat_file,
-    #     )
-    # )
-    # # 2. Model estimation
-    # wf.add(
-    #     utils.estimate(
-    #         name="model_estimation",
-    #         # interface=utils.estimate
-    #         mat_file=wf.run_spm_model_creation.lzout.output_mat_file,
-    #         template_file=join(dirname(__file__), "template_model_estimation.m"),
-    #         # output
-    #         # script_file=wf.model_estimation.lzout.current_model_estimation,
-    #     )
-    # )
-    # wf.add(
-    #     utils.run_m_script(
-    #         name="run_spm_model_estimation",
-    #         m_file=wf.model_estimation.lzout.current_model_estimation,
-    #         # output
-    #         # spm_mat=wf.run_spm_model_estimation.lzout.output_mat_file,
-    #     )
-    # )
-    # # 3. Contrast
-    # wf.add(
-    #     utils.contrast(
-    #         name="model_contrast",
-    #         mat_file=wf.run_spm_model_estimation.lzout.output_mat_file,
-    #         template_file=join(dirname(__file__), "template_model_contrast.m"),
-    #         covariates=wf.model_creation.lzout.covariates,
-    #         class_names=wf.get_groups.lzout.class_names,
-    #         # output
-    #         # script_file=wf.model_contrast.lzout.current_model_estimation,
-    #     )
-    # )
-    # wf.add(
-    #     utils.run_m_script(
-    #         name="run_spm_model_contrast",
-    #         m_file=wf.model_contrast.lzout.current_model_estimation,
-    #         # output
-    #         # spm_mat=wf.run_spm_model_contrast.lzout.output_mat_file,
-    #     )
-    # )
-    # # 4. Results
-    # wf.add(
-    #     utils.results(
-    #         name="model_result_no_correction",
-    #         mat_file=wf.run_spm_model_contrast.lzout.output_mat_file,
-    #         template_file=join(dirname(__file__), "template_model_results.m"),
-    #         method="none",
-    #         threshold=parameters["cluster_threshold"],
-    #         # output
-    #         # script_file=wf.06_1_model_result_no_correction.lzout.current_model_result,
-    #     )
-    # )
-    # wf.add(
-    #     utils.run_m_script(
-    #         name="run_spm_model_result_no_correction",
-    #         m_file=wf.model_result_no_correction.lzout.current_model_result,
-    #         # output
-    #         # spm_mat=wf.run_spm_model_result_no_correction.lzout.output_mat_file,
-    #     )
-    # )
-    # wf.add(
-    #     utils.read_output(
-    #         name="read_output_node",
-    #         spm_mat=wf.run_spm_model_result_no_correction.lzout.output_mat_file,
-    #         class_names=wf.get_groups.lzout.class_names,
-    #         covariates=wf.model_creation.lzout.covariates,
-    #         group_label=parameters["group_label"],
-    #         fwhm=parameters["full_width_at_half_maximum"],
-    #         measure=parameters["measure_label"],
-    #     )
-    # )
-    # wf.set_output(
-    #     [
-    #         ("spmT_0001", wf.read_output_node.lzout.spmT_0001),
-    #         ("spmT_0002", wf.read_output_node.lzout.spmT_0002),
-    #         ("spm_figures", wf.read_output_node.lzout.spm_figures),
-    #         ("variance_of_error", wf.read_output_node.lzout.variance_of_error),
-    #         ("resels_per_voxels", wf.read_output_node.lzout.resels_per_voxels),
-    #         ("mask", wf.read_output_node.lzout.mask),
-    #         ("regression_coeff", wf.read_output_node.lzout.regression_coeff),
-    #         ("contrasts", wf.read_output_node.lzout.contrasts),
-    #     ]
-    # )
+    wf.add(
+        utils.run_m_script(
+            name="run_spm_model_creation",
+            m_file=wf.model_creation.lzout.current_model,
+            # output
+            # spm_mat=wf.run_spm_model_creation.lzout.output_mat_file,
+        )
+    )
+    # 2. Model estimation
+    wf.add(
+        utils.estimate(
+            name="model_estimation",
+            # interface=utils.estimate
+            mat_file=wf.run_spm_model_creation.lzout.output_mat_file,
+            template_file=join(dirname(__file__), "template_model_estimation.m"),
+            # output
+            # script_file=wf.model_estimation.lzout.current_model_estimation,
+        )
+    )
+    wf.add(
+        utils.run_m_script(
+            name="run_spm_model_estimation",
+            m_file=wf.model_estimation.lzout.current_model_estimation,
+            # output
+            # spm_mat=wf.run_spm_model_estimation.lzout.output_mat_file,
+        )
+    )
+    # 3. Contrast
+    wf.add(
+        utils.contrast(
+            name="model_contrast",
+            mat_file=wf.run_spm_model_estimation.lzout.output_mat_file,
+            template_file=join(dirname(__file__), "template_model_contrast.m"),
+            covariates=wf.model_creation.lzout.covariates,
+            class_names=wf.get_groups.lzout.class_names,
+            # output
+            # script_file=wf.model_contrast.lzout.current_model_estimation,
+        )
+    )
+    wf.add(
+        utils.run_m_script(
+            name="run_spm_model_contrast",
+            m_file=wf.model_contrast.lzout.current_model_estimation,
+            # output
+            # spm_mat=wf.run_spm_model_contrast.lzout.output_mat_file,
+        )
+    )
+    # 4. Results
+    wf.add(
+        utils.results(
+            name="model_result_no_correction",
+            mat_file=wf.run_spm_model_contrast.lzout.output_mat_file,
+            template_file=join(dirname(__file__), "template_model_results.m"),
+            method="none",
+            threshold=parameters["cluster_threshold"],
+            # output
+            # script_file=wf.06_1_model_result_no_correction.lzout.current_model_result,
+        )
+    )
+    wf.add(
+        utils.run_m_script(
+            name="run_spm_model_result_no_correction",
+            m_file=wf.model_result_no_correction.lzout.current_model_result,
+            # output
+            # spm_mat=wf.run_spm_model_result_no_correction.lzout.output_mat_file,
+        )
+    )
+    wf.add(
+        utils.read_output(
+            name="read_output_node",
+            spm_mat=wf.run_spm_model_result_no_correction.lzout.output_mat_file,
+            class_names=wf.get_groups.lzout.class_names,
+            covariates=wf.model_creation.lzout.covariates,
+            group_label=parameters["group_label"],
+            fwhm=parameters["full_width_at_half_maximum"],
+            measure=parameters["measure_label"],
+        )
+    )
     wf.set_output(
         [
-            ("bidon", wf.unzip_nii.lzout.unzipped_nii),
-            ("first_group", wf.get_groups.lzout.first_group_idx),
-            ("current_model", wf.model_creation.lzout.current_model),
+            ("spmT_0001", wf.read_output_node.lzout.spmT_0001),
+            ("spmT_0002", wf.read_output_node.lzout.spmT_0002),
+            ("spm_figures", wf.read_output_node.lzout.spm_figures),
+            ("variance_of_error", wf.read_output_node.lzout.variance_of_error),
+            ("resels_per_voxels", wf.read_output_node.lzout.resels_per_voxels),
+            ("mask", wf.read_output_node.lzout.mask),
+            ("regression_coeff", wf.read_output_node.lzout.regression_coeff),
+            ("contrasts", wf.read_output_node.lzout.contrasts),
         ]
     )
+    # wf.set_output(
+    #     [
+    #         ("bidon", wf.unzip_nii.lzout.unzipped_nii),
+    #         ("first_group", wf.get_groups.lzout.first_group_idx),
+    #         ("current_model", wf.model_creation.lzout.current_model),
+    #     ]
+    # )
     return wf
