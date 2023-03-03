@@ -148,4 +148,7 @@ def merge_volumes_time_dimension_task(volume1: str, volume2: str) -> str:
     """
     from pathlib import Path
 
+    # This is needed because Nipype needs to have self-contained functions
+    from clinica.utils.image import merge_volumes_time_dimension  # noqa
+
     return str(merge_volumes_time_dimension(Path(volume1), Path(volume2)))
