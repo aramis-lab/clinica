@@ -176,8 +176,8 @@ def test_compute_average_b0(tmp_path, extension):
     out_file = compute_average_b0(tmp_path / f"foo.{extension}")
     assert out_file == tmp_path / f"foo_avg_b0.{extension}"
     result = nib.load(out_file)
-    assert result.shape == (5, 5, 5)
-    expected = np.zeros((5, 5, 5))
+    assert result.shape == (5, 5, 5, 1)
+    expected = np.zeros((5, 5, 5, 1))
     expected[2:4, 2:4, 2:4] = 1.5
     assert_array_equal(result.get_fdata(), expected)
 
@@ -188,8 +188,8 @@ def test_compute_average_b0(tmp_path, extension):
     )
     assert out_file == tmp_path / f"foo_avg_b0.{extension}"
     result = nib.load(out_file)
-    assert result.shape == (5, 5, 5)
-    expected = np.zeros((5, 5, 5))
+    assert result.shape == (5, 5, 5, 1)
+    expected = np.zeros((5, 5, 5, 1))
     expected[2:4, 2:4, 2:4] = 1.5
     assert_array_equal(result.get_fdata(), expected)
 
@@ -254,12 +254,12 @@ def test_b0_dwi_split(tmp_path, extension):
         b_vectors=tmp_path / "foo.bvec",
     )
     small_b_dataset, large_b_dataset = b0_dwi_split(dwi_dataset)
-    assert small_b_dataset.dwi == tmp_path / f"foo_b0.{extension}"
+    assert small_b_dataset.dwi == tmp_path / f"foo_small_b.{extension}"
     assert small_b_dataset.b_values is None
     assert small_b_dataset.b_vectors is None
-    assert large_b_dataset.dwi == tmp_path / f"dwi.{extension}"
-    assert large_b_dataset.b_values == tmp_path / "bvals"
-    assert large_b_dataset.b_vectors == tmp_path / "bvecs"
+    assert large_b_dataset.dwi == tmp_path / f"foo_large_b.{extension}"
+    assert large_b_dataset.b_values == tmp_path / "foo_large_b.bval"
+    assert large_b_dataset.b_vectors == tmp_path / "foo_large_b.bvec"
     b0_img = nib.load(small_b_dataset.dwi)
     expected = np.zeros((5, 5, 5, 4))
     expected[2:4, 2:4, 2:4, 0:2] = 1.0
@@ -319,9 +319,9 @@ def test_insert_b0_into_dwi(tmp_path):
     dwi_dataset = build_dwi_dataset(tmp_path, 9, 9, 9)
 
     out_dataset = insert_b0_into_dwi(tmp_path / "b0.nii.gz", dwi_dataset)
-    assert out_dataset.dwi == tmp_path / "merged_files.nii.gz"
-    assert out_dataset.b_values == tmp_path / "bvals"
-    assert out_dataset.b_vectors == tmp_path / "bvecs"
+    assert out_dataset.dwi == str(tmp_path / "foo_merged.nii.gz")
+    assert out_dataset.b_values == tmp_path / "foo_merged.bval"
+    assert out_dataset.b_vectors == tmp_path / "foo_merged.bvec"
     dwi = nib.load(out_dataset.dwi)
     dwi_img = nib.load(tmp_path / "foo.nii.gz")
     assert_array_equal(dwi.affine, dwi_img.affine)
