@@ -63,6 +63,7 @@ def compute_average_b0(
     in_dwi: PathLike,
     in_bval: Optional[PathLike] = None,
     low_bval: float = 5.0,
+    squeeze: bool = False,
     out_file: Optional[str] = None,
 ) -> PathLike:
     """Compute the average of the b0 volumes from DWI dataset.
@@ -80,6 +81,11 @@ def compute_average_b0(
     low_bval : float, optional
         The threshold to apply to bvalues to get the volumes which should be kept.
         Default=5.0.
+
+    squeeze : bool, optional
+        Whether the returned volume should be squeezed or not.
+        If True, it will be a 3D array, if False, a 4D array with a dummy 4th dimension.
+        Default=False
 
     out_file : str, optional
         Name of the output file.
@@ -111,14 +117,11 @@ def compute_average_b0(
     if low_bval < 0:
         raise ValueError(f"low_bval should be >=0. You provided : {low_bval}.")
 
-    if not out_file:
-        ext = in_dwi.suffix
-        if ext == ".gz":
-            ext = "." + in_dwi.stem.split(".")[-1] + ext
-        out_file = in_dwi.parent / f"{in_dwi.name.rstrip(ext)}_avg_b0{ext}"
-
+    out_file = out_file or add_suffix_to_filename(in_dwi, "avg_b0")
     volume_filter = get_b0_filter(in_bval, low_bval=low_bval) if in_bval else None
     b0 = compute_aggregated_volume(in_dwi, np.average, volume_filter)
+    if not squeeze:
+        b0 = b0[..., np.newaxis]
     b0_img = get_new_image_like(in_dwi, b0)
     b0_img.to_filename(out_file)
 
@@ -142,10 +145,12 @@ def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
 
 
 def remove_entity_from_filename(filename: Path, entity: str) -> Path:
+    """Remove the provided entity from the given file name."""
     return Path(filename.parent / filename.name.replace(f"_{entity}", ""))
 
 
 def add_suffix_to_filename(filename: Path, suffix: str) -> Path:
+    """Add the provided suffix to the given file name."""
     ext = filename.suffix
     if ext == ".gz":
         ext = "." + filename.stem.split(".")[-1] + ext

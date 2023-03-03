@@ -340,7 +340,7 @@ def compute_reference_b0(
         extracted_b0,
         working_directory=working_directory,
     )
-    out_reference_b0 = compute_average_b0(registered_b0s)
+    out_reference_b0 = compute_average_b0(registered_b0s, squeeze=False)
     registered_b0_file_name = extracted_b0.with_name("reference_b0_volume.nii.gz")
     shutil.copy(out_reference_b0, registered_b0_file_name)
     if clean_working_dir:
