@@ -131,9 +131,10 @@ def merge_volumes(
     return out_file
 
 
-def merge_volumes_time_dimension(
-    volume1: str, volume2: str, out_file: str = None
-) -> str:
+merge_volumes_time_dimension = functools.partial(merge_volumes, axis=-1)
+
+
+def merge_volumes_time_dimension_task(volume1: str, volume2: str) -> str:
     """Merge provided volumes in the time (4th) dimension.
 
     .. note::
@@ -147,4 +148,4 @@ def merge_volumes_time_dimension(
     """
     from pathlib import Path
 
-    return str(merge_volumes(Path(volume1), Path(volume2), axis=-1, out_file=out_file))
+    return str(merge_volumes_time_dimension(Path(volume1), Path(volume2)))

@@ -464,7 +464,7 @@ def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
     import nipype.pipeline.engine as pe
     from nipype.interfaces import fsl
 
-    from clinica.utils.image import merge_volumes_time_dimension
+    from clinica.utils.image import merge_volumes_time_dimension_task
 
     inputnode = pe.Node(niu.IdentityInterface(fields=["in_file"]), name="inputnode")
     fslroi_ref = pe.Node(fsl.ExtractROI(args="0 1"), name="b0_reference")
@@ -506,7 +506,7 @@ def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
         niu.Function(
             input_names=["volume1", "volume2"],
             output_names=["out_file"],
-            function=merge_volumes_time_dimension,
+            function=merge_volumes_time_dimension_task,
         ),
         name="concat_ref_moving",
     )
@@ -530,8 +530,8 @@ def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
             (split_moving, flirt, [("out_files", "in_file")]),
             (flirt, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
-            (merge, insert_ref, [("merged_file", "in_file2")]),
-            (fslroi_ref, insert_ref, [("roi_file", "in_file1")]),
+            (merge, insert_ref, [("merged_file", "volume2")]),
+            (fslroi_ref, insert_ref, [("roi_file", "volume1")]),
             (insert_ref, outputnode, [("out_file", "out_file")]),
             (flirt, outputnode, [("out_matrix_file", "out_xfms")])
         ]
