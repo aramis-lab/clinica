@@ -349,14 +349,15 @@ def generate_acq_file(
     acq_filename = f"{image_id}_acq.txt" if image_id else "acq.txt"
     acq_filename = dwi_filename.parent / acq_filename
     nb_volumes = nb.load(dwi_filename).shape[-1]
-    block = _get_phase_to_acq_building_block(fsl_phase_encoding_direction)
-    block.append(float(total_readout_time))
-    np.savetxt(acq_filename, np.vstack([block] * nb_volumes), fmt="%d " * 3 + "%f")
+    basis_vector = _get_phase_basis_vector(fsl_phase_encoding_direction)
+    basis_vector.append(float(total_readout_time))
+    np.savetxt(acq_filename, np.vstack([basis_vector] * nb_volumes), fmt="%d " * 3 + "%f")
 
     return str(acq_filename)
 
 
-def _get_phase_to_acq_building_block(phase: str) -> list:
+def _get_phase_basis_vector(phase: str) -> list:
+    """Returns the unit vector corresponding to the given phase."""
     mult = -1 if phase.endswith("-") else 1
     idx = ["x", "y", "z"].index(phase[0])
     result = [0] * 3
