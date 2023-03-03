@@ -57,16 +57,23 @@ def unzip_nii(
     {"return": {"first_group_idx": list, "second_group_idx": list, "class_names": list}}
 )
 def get_group_1_and_2(tsv, contrast):
-    """
-        Based on the TSV file given in parameter, compute indexes of each group
-    Args:
-        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariates
-        contrast: (str) name of a column of the tsv
+    """Based on the TSV file given in parameter, compute indexes of each group
 
-    Returns:
-        first_group_idx: (list of int) list of indexes of first group
-        second_group_idx: (list of int) list of indexes of second group
-        class_names: (list of str of len 2) list of the class names read in the column contrast of the tsv
+    Parameters
+    ----------
+    tsv: str
+        Path to the tsv file containing information on subjects/sessions with all covariates
+    contrast: str
+        Name of a column of the tsv
+
+    Returns
+    -------
+    first_group_idx: list of int
+        list of indexes of first group
+    second_group_idx: list of int
+        list of indexes of second group
+    class_names: list of str of len 2
+        list of the class names read in the column contrast of the tsv
     """
     import pandas as pds
 
@@ -78,11 +85,9 @@ def get_group_1_and_2(tsv, contrast):
     tsv = pds.read_csv(tsv, sep="\t")
     columns = list(tsv.columns)
 
-    # An error is raised if the contrast column is not found in the tsv
     if contrast not in columns:
         raise ClinicaException(contrast + " is not present in " + tsv)
 
-    # list(set(my_list)) gives unique values of my_list
     class_names = list(set(tsv[contrast]))
 
     # This is a 2-sample t-test: we can only allow 2 classes
@@ -106,20 +111,29 @@ def get_group_1_and_2(tsv, contrast):
 @task
 @annotate({"return": {"current_model": str, "covariates": list}})
 def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_file):
-    """
-        Create the matlab .m file for the instantiation of the 2-sample t-test model in SPM
+    """Create the matlab .m file for the instantiation of the 2-sample t-test model in SPM
 
-    Args:
-        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariates
-        contrast: (str) name of a column of the tsv
-        idx_group1: (list of int) list of indexes of first group
-        idx_group2: (list of int) list of indexes of second group
-        file_list: List of files used in the statistical test. Their order is the same as it appears on the tsv file
-        template_file: (str) path to the template file used to generate the .m file
+    Parameters
+    ----------
+    tsv: str
+        Path to the tsv file containing information on subjects/sessions with all covariates
+    contrast: str
+        Name of a column of the tsv
+    idx_group1: list of int
+        List of indexes of first group
+    idx_group2: list of int
+        List of indexes of second group
+    file_list: List
+        List of files used in the statistical test. Their order is the same as it appears on the tsv file
+    template_file: str
+        Path to the template file used to generate the .m file
 
-    Returns:
-        current_model: (str) path to the matlab files with all the @TEXT replaced with the correct names
-        covariates: list of str with the names of covariates
+    Returns
+    -------
+    current_model: str
+        Path to the matlab files with all the @TEXT replaced with the correct names
+    covariates: list of str
+        Names of covariates
     """
     from numbers import Number
     from os import mkdir, remove
@@ -140,10 +154,8 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
     current_model = abspath("./current_model_creation.m")
 
     if isfile(current_model):
-        # This should never be reached
         remove(current_model)
 
-    # Read template
     with open(template_file, "r") as file:
         filedata = file.read()
 
@@ -168,7 +180,6 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
         ),
     )
 
-    # Write filedata in the output file
     with open(current_model, "w+") as file:
         file.write(filedata)
 
@@ -222,12 +233,16 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
 
 
 def is_number(s: str):
-    """
+    """Returns True is the input can be converted to float, False otherwise.
 
-    Args:
-        s: (str) string to test if it can be converted into float
+    Parameters
+    ----------
+    s: str
+        String to test if it can be converted into float
 
-    Returns:
+    Returns
+    -------
+    bool
         True or False
     """
     try:
@@ -239,13 +254,16 @@ def is_number(s: str):
 
 
 def unravel_list_for_matlab(my_list):
-    """
-        Unpack a list into a Matlab compliant format to insert in .m files.
-    Args:
-        my_list: (list) of str
+    """Unpack a list into a Matlab compliant format to insert in .m files.
 
-    Returns:
-        (str) that join the different str of the list, with '
+    Parameters
+    ----------
+    my_list: list of str
+
+    Returns
+    -------
+    str
+        Contains the different element of the list joined in one string.
     """
     result = "','".join(my_list)
     result = "'" + result + "'"
@@ -253,16 +271,18 @@ def unravel_list_for_matlab(my_list):
 
 
 def write_covariate_lines(m_file_to_write_in, covar_number, covar_name, covar_values):
-    """
-        Use this function to add covariate lines in the Matlab file m_file_to_write_in for one covariate
-    Args:
-        m_file_to_write_in: (str) path to the m-file
-        covar_number: (int) this is the number of the covariate (must start at 1)
-        covar_name: (str) name of the covariate (ex: 'age', 'sex')
-        covar_values: (list) of float with the values of the covariates
+    """Use this function to add covariate lines in the Matlab file m_file_to_write_in for one covariate.
 
-    Returns:
-        nothing
+    Parameters
+    ----------
+    m_file_to_write_in: str
+        Path to the m-file
+    covar_number: int
+        This is the number of the covariate (must start at 1)
+    covar_name: str
+        Name of the covariate (ex: 'age', 'sex')
+    covar_values: list of float
+        Values of the covariates
     """
     from os.path import isfile
 
@@ -301,15 +321,18 @@ def write_covariate_lines(m_file_to_write_in, covar_number, covar_name, covar_va
 @task
 @annotate({"return": {"output_mat_file": str}})
 def run_m_script(m_file):
-    """
-        Runs a matlab m file for SPM, determining automatically if it must be launched with SPM or SPM Standalone
-        If launch with spm standalone, the line 'spm_jobman('run', matlabbatch)' must be removed because unnecessary
+    """Runs a matlab m file for SPM, determining automatically if it must be launched with SPM or SPM standalone
+    If launch with spm standalone, the line 'spm_jobman('run', matlabbatch)' must be removed because unnecessary
 
-    Args:
-        m_file: (str) path to Matlab m file
+    Parameters
+    ----------
+    m_file: str
+        Path to Matlab m file
 
-    Returns:
-        output_mat_file: (str) path to the SPM.mat file needed in SPM analysis
+    Returns
+    -------
+    output_mat_file: str
+        Path to the SPM.mat file needed in SPM analysis
     """
     import platform
     from os import system
@@ -359,13 +382,12 @@ def run_m_script(m_file):
 
 
 def delete_last_line(filename):
-    """
-    Use this function to remove the call to spm jobman if m file is used with SPM standalone
-    Args:
-        filename: path to filename
+    """Use this function to remove the call to spm jobman if m file is used with SPM standalone
 
-    Returns:
-        Nothing
+    Parameters
+    ----------
+    filename: str
+        Path to filename
     """
     import os
 
@@ -396,18 +418,22 @@ def delete_last_line(filename):
 @task
 @annotate({"return": {"current_model_estimation": str}})
 def estimate(mat_file, template_file):
-    """
-        Make a copy of the template file (for estimation) and replace @SPMMAT by the real path to SPM.mat (mat_file)
-    Args:
-        mat_file: (str) path to the SPM.mat file of the SPM analysis
-        template_file: (str) path to the template file for the estimation of the model
+    """Make a copy of the template file (for estimation) and replace @SPMMAT by the real path to SPM.mat (mat_file)
 
-    Returns:
-        current_model_estimation: (str) path to the template file filled with SPM.mat information, ready to be launched
+    Parameters
+    ----------
+    mat_file: str
+        Path to the SPM.mat file of the SPM analysis
+    template_file: str
+        Path to the template file for the estimation of the model
+
+    Returns
+    -------
+    current_model_estimation: str
+        Path to the template file filled with SPM.mat information, ready to be launched
     """
     from os.path import abspath
 
-    # Read template
     with open(template_file, "r") as file:
         filedata = file.read()
     # Replace by the real path to spm.mat
@@ -422,16 +448,23 @@ def estimate(mat_file, template_file):
 @task
 @annotate({"return": {"current_model_result": str}})
 def results(mat_file, template_file, method, threshold):
-    """
-        Make a copy of the template file (for results) and replace @SPMMAT by the real path to SPM.mat (mat_file)
-    Args:
-        mat_file: (str) path to the SPM.mat file of the SPM analysis
-        template_file: (str) path to the template file for getting the results of the model
-        method: (str)
-        threshold
+    """Make a copy of the template file (for results) and replace @SPMMAT by the real path to SPM.mat (mat_file)
 
-    Returns:
-        current_model_estimation: (str) path to the template file filled with SPM.mat information, ready to be launched
+    Parameters
+    ----------
+    mat_file: str
+        Path to the SPM.mat file of the SPM analysis
+    template_file: str
+        Path to the template file for getting the results of the model
+    method: str
+        method. In our case, "none"
+    threshold: float
+        cluster threshold
+
+    Returns
+    -------
+    current_model_estimation: str
+        Path to the template file filled with SPM.mat information, ready to be launched
     """
     import time
     from os.path import abspath
@@ -456,24 +489,29 @@ def results(mat_file, template_file, method, threshold):
 @task
 @annotate({"return": {"current_model_estimation": str}})
 def contrast(mat_file, template_file, covariates, class_names):
-    """
-        Make a copy of the template file (for results) and replace @SPMMAT, @COVARNUMBER, @GROUP1, @GROUP2
-        by the corresponding variables
+    """Make a copy of the template file (for results) and replace @SPMMAT, @COVARNUMBER, @GROUP1, @GROUP2
+    by the corresponding variables
 
-    Args:
-        mat_file: (str) path to the SPM.mat file of the SPM analysis
-        template_file: (str) path to the template file for getting the results of the model
-        covariates: (list) of str: list of covariates
-        class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
+    Parameters
+    ----------
+    mat_file: str
+        Path to the SPM.mat file of the SPM analysis
+    template_file: str
+        Path to the template file for getting the results of the model
+    covariates: list of str
+        List of covariates
+    class_names: list of str
+        Corresponds to the 2 classes for the group comparison
 
-    Returns:
-        current_model_estimation: (str) path to the template file filled with variables, ready to be launched
+    Returns
+    -------
+    current_model_estimation: str
+        Path to the template file filled with variables, ready to be launched
     """
     from os.path import abspath
 
     number_of_covariates = len(covariates)
 
-    # Read template
     with open(template_file, "r") as file:
         filedata = file.read()
     # Replace by the real path to spm.mat
@@ -504,27 +542,42 @@ def contrast(mat_file, template_file, covariates, class_names):
     }
 )
 def read_output(spm_mat, class_names, covariates, group_label, fwhm, measure):
-    """
-        Once analysis is done, grab all the different filenames and rename them in current directory according to class
+    """Once analysis is done, grab all the different filenames and rename them in current directory according to class
         names
-    Args:
-        spm_mat: (str) path to the SPM.mat file of the SPM analysis
-        class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
-        covariates: (list) of str: list of covariates
-        group_label: name of the group label
-        fwhm: fwhm in mm used
-        measure: measure used
 
-    Returns:
-        spmT_0001: (str) path to t maps for the first group comparison
-        spmT_0002: (str) path to t maps for the second group comparison
-        spm_figures: (list) path to figure files
-        variance_of_error: (str) path to variance of error
-        resels_per_voxels: (str) path to resels per voxel
-        mask: (str) path to mask of included voxels
-        regression_coeff: (str list) path to regression coefficients
-        contrasts: (str list) path to weighted parameter estimation for the 2 contrasts
+    Parameters
+    ----------
+    spm_mat: str
+        Path to the SPM.mat file of the SPM analysis
+    class_names: list of str
+        Corresponds to the 2 classes for the group comparison
+    covariates: list of str
+        List of covariates
+    group_label: str
+        Name of the group label
+    fwhm: int
+        Fwhm in mm used
+    measure: str
+        Measure used
 
+    Returns
+    -------
+    spmT_0001: str
+        Path to t maps for the first group comparison
+    spmT_0002: str
+        Path to t maps for the second group comparison
+    spm_figures: list
+        Path to figure files
+    variance_of_error: str
+        Path to variance of error
+    resels_per_voxels: str
+        Path to resels per voxel
+    mask: str
+        Path to mask of included voxels
+    regression_coeff: str list
+        Path to regression coefficients
+    contrasts: str list
+        Path to weighted parameter estimation for the 2 contrasts
     """
     from os import listdir
     from os.path import abspath, dirname, isdir, isfile, join
