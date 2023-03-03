@@ -334,13 +334,9 @@ def run_m_script(m_file):
     output_mat_file: str
         Path to the SPM.mat file needed in SPM analysis
     """
-    import platform
-    from os import system
-    from os.path import abspath, basename, dirname, isfile, join
 
-    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
+    from os.path import abspath, dirname, isfile, join
 
-    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
     from clinica.utils.spm import spm_standalone_is_available
 
     assert isinstance(m_file, str), "[Error] Argument must be a string"
@@ -352,33 +348,49 @@ def run_m_script(m_file):
 
     # Generate command line to run
     if spm_standalone_is_available():
-        utls.delete_last_line(m_file)
-        # SPM standalone must be run directly from its root folder
-        if platform.system().lower().startswith("darwin"):
-            # Mac OS
-            cmdline = (
-                "cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch " + m_file
-            )
-        elif platform.system().lower().startswith("linux"):
-            # Linux OS
-            cmdline = "$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch " + m_file
-        else:
-            raise SystemError("Clinica only support Mac OS and Linux")
-        system(cmdline)
+        run_matlab_script_with_spm_standalone(m_file)
     else:
-        MatlabCommand.set_default_matlab_cmd(get_matlab_command())
-        matlab = MatlabCommand()
-        if platform.system().lower().startswith("linux"):
-            matlab.inputs.args = "-nosoftwareopengl"
-        matlab.inputs.paths = dirname(m_file)
-        matlab.inputs.script = basename(m_file)[:-2]
-        matlab.inputs.single_comp_thread = False
-        matlab.inputs.logfile = abspath("./matlab_output.log")
-        matlab.run()
+        run_matlab_script_with_matlab(m_file)
     output_mat_file = abspath(join(dirname(m_file), "..", "2_sample_t_test", "SPM.mat"))
     if not isfile(output_mat_file):
         raise RuntimeError("Output matrix " + output_mat_file + " was not produced")
     return output_mat_file
+
+
+def run_matlab_script_with_matlab(m_file):
+    import platform
+    from os.path import abspath, basename, dirname, isfile, join
+
+    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
+
+    MatlabCommand.set_default_matlab_cmd(get_matlab_command())
+    matlab = MatlabCommand()
+    if platform.system().lower().startswith("linux"):
+        matlab.inputs.args = "-nosoftwareopengl"
+    matlab.inputs.paths = dirname(m_file)
+    matlab.inputs.script = basename(m_file)[:-2]
+    matlab.inputs.single_comp_thread = False
+    matlab.inputs.logfile = abspath("./matlab_output.log")
+    matlab.run()
+
+
+def run_matlab_script_with_spm_standalone(m_file):
+    import platform
+    from os import system
+
+    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+
+    utls.delete_last_line(m_file)
+    # SPM standalone must be run directly from its root folder
+    if platform.system().lower().startswith("darwin"):
+        # Mac OS
+        cmdline = "cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch " + m_file
+    elif platform.system().lower().startswith("linux"):
+        # Linux OS
+        cmdline = "$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch " + m_file
+    else:
+        raise SystemError("Clinica only support Mac OS and Linux")
+    system(cmdline)
 
 
 def delete_last_line(filename):
