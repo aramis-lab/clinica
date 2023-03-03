@@ -310,53 +310,59 @@ def generate_index_file(
 def generate_acq_file(
     dwi_filename: str,
     fsl_phase_encoding_direction: str,
-    total_readout_time,
+    total_readout_time: str,
     image_id=None,
-):
+) -> str:
     """Generate [`image_id`]_acq.txt file for FSL eddy command.
 
-    Args:
-        dwi_filename (str): DWI file.
-        fsl_phase_encoding_direction (str): PhaseEncodingDirection from BIDS specifications in FSL format (i.e. x/y/z instead of i/j/k).
-        total_readout_time (str): TotalReadoutTime from BIDS specifications.
-        image_id (str, optional): Optional prefix. Defaults to None.
+    Parameters
+    ----------
+    dwi_filename : str
+        Path to the DWI file.
 
-    Returns:
-        out_acq: [`image_id`]_acq.txt or acq.txt file.
+    fsl_phase_encoding_direction : str
+        Phase encoding direction from the BIDS specifications in FSL format
+        (i.e. x/y/z instead of i/j/k).
+
+    total_readout_time : str
+        Total readout time from BIDS specifications.
+
+    image_id : str, optional
+        Optional prefix for the output file. Defaults to None.
+
+    Returns
+    -------
+    acq_filename : str
+        Path to the acq.txt file.
     """
-    import os
+    from pathlib import Path
 
     import nibabel as nb
     import numpy as np
 
-    if image_id:
-        out_acq = os.path.abspath(f"{image_id}_acq.txt")
-    else:
-        out_acq = os.path.abspath("acq.txt")
-    vols = nb.load(dwi_filename).get_data().shape[-1]
-    arr = np.ones([vols, 4])
-    for i in range(vols):
-        if fsl_phase_encoding_direction == "y-":
-            arr[i, :] = np.array((0, -1, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "y":
-            arr[i, :] = np.array((0, 1, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "x":
-            arr[i, :] = np.array((1, 0, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "x-":
-            arr[i, :] = np.array((-1, 0, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "z":
-            arr[i, :] = np.array((0, 1, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "z-":
-            arr[i, :] = np.array((0, 0, -1, total_readout_time))
-        else:
-            raise RuntimeError(
-                f"FSL PhaseEncodingDirection (found value: {fsl_phase_encoding_direction}) "
-                f"is unknown, it should be a value in (x, y, z, x-, y-, z-)"
-            )
+    if fsl_phase_encoding_direction not in ("x", "y", "z", "x-", "y-", "z-"):
+        raise RuntimeError(
+            f"FSL PhaseEncodingDirection (found value: {fsl_phase_encoding_direction}) "
+            f"is unknown, it should be a value in (x, y, z, x-, y-, z-)"
+        )
+    dwi_filename = Path(dwi_filename)
+    acq_filename = f"{image_id}_acq.txt" if image_id else "acq.txt"
+    acq_filename = dwi_filename.parent / acq_filename
+    nb_volumes = nb.load(dwi_filename).shape[-1]
+    block = _get_phase_to_acq_building_block(fsl_phase_encoding_direction)
+    block.append(float(total_readout_time))
+    np.savetxt(acq_filename, np.vstack([block] * nb_volumes), fmt="%d " * 3 + "%f")
 
-    np.savetxt(out_acq, arr, fmt="%d " * 3 + "%f")
+    return str(acq_filename)
 
-    return out_acq
+
+def _get_phase_to_acq_building_block(phase: str) -> list:
+    mult = -1 if phase.endswith("-") else 1
+    idx = ["x", "y", "z"].index(phase[0])
+    result = [0] * 3
+    result[idx] = mult
+
+    return result
 
 
 def bids_dir_to_fsl_dir(bids_dir):
