@@ -131,4 +131,20 @@ def merge_volumes(
     return out_file
 
 
-merge_volumes_time_dimension = functools.partial(merge_volumes, axis=-1)
+def merge_volumes_time_dimension(
+    volume1: str, volume2: str, out_file: str = None
+) -> str:
+    """Merge provided volumes in the time (4th) dimension.
+
+    .. note::
+        This was implemented as a partial function, but it does
+        not integrate correctly with Nipype because Nipype doesn't
+        allow wrapping partials in function tasks. Also, the functions
+        need to be self-contained, so we cannot have complex types (like
+        Path). Here we just use plain strings and convert them to Path
+        objects when passing them to the generic merge_volumes function.
+
+    """
+    from pathlib import Path
+
+    return str(merge_volumes(Path(volume1), Path(volume2), axis=-1, out_file=out_file))

@@ -256,8 +256,8 @@ def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
 
     dwi_dataset = check_dwi_dataset(dwi_dataset)
     out_dwi = merge_volumes_time_dimension(
-        in_b0,
-        dwi_dataset.dwi,
+        str(in_b0),
+        str(dwi_dataset.dwi),
         out_file=str(
             add_suffix_to_filename(
                 remove_entity_from_filename(dwi_dataset.dwi, "large_b"),
