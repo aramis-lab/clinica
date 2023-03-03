@@ -57,7 +57,8 @@ joblib = "^1.2.0"
 attrs = ">=20.1.0"
 cattrs = "^1.9.0"
 brainstat = "^0.3.6"
-pydra-bids = "^0.0.7"
+pydra-bids = "^0.0.10"
+pydra-freesurfer = "^0.0.9"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"

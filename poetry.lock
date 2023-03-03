@@ -2121,19 +2121,34 @@ tests = ["pydra[test]"]
 
 [[package]]
 name = "pydra-bids"
-version = "0.0.7"
+version = "0.0.10"
 description = "Pydra tasks for BIDS I/O"
 category = "main"
 optional = false
-python-versions = ">=3.7,<4.0"
+python-versions = ">=3.7"
 files = [
-    {file = "pydra_bids-0.0.7-py3-none-any.whl", hash = "sha256:25b3060b20f2c3c199fd0caab6a0cb6e93ab129f2ae4b1be906f9b7c6d513248"},
-    {file = "pydra_bids-0.0.7.tar.gz", hash = "sha256:f0b831bbac6b870bcf51dcd0c1c98acb3bcdde6cb77cb4c525789bbe13a00694"},
+    {file = "pydra_bids-0.0.10-py3-none-any.whl", hash = "sha256:4e1fbccd8d939bbcb1305dd93d73fac29cb08545c4422badbc3d8648d579cfd3"},
+    {file = "pydra_bids-0.0.10.tar.gz", hash = "sha256:a2444d73d8a33e2563313ef462e313bd83729b3016d2eefce9fdb944cc4ade6c"},
 ]
 
 [package.dependencies]
-ancpbids = ">=0.2.1,<0.3.0"
-pydra = ">=0.21,<0.22"
+ancpbids = ">=0.2,<0.3"
+pydra = ">=0.21"
+
+[[package]]
+name = "pydra-freesurfer"
+version = "0.0.9"
+description = "Pydra tasks for FreeSurfer"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pydra_freesurfer-0.0.9-py3-none-any.whl", hash = "sha256:aab1ed28093d684f60bc61ba4fe5b0a044c0cd0c76cc16ad233341d165f75c0b"},
+    {file = "pydra_freesurfer-0.0.9.tar.gz", hash = "sha256:d7f43235d0ba310624d9ee433ba6d4101ec5c2d39c3eb1c8c0803f3e66203a12"},
+]
+
+[package.dependencies]
+pydra = ">=0.21"
 
 [[package]]
 name = "pydra-nipype1"
@@ -3519,4 +3534,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "3752fd8a1c0e2ba68c9115afbdd70affc35f5b537e5b1df9e147ec97f70fd987"
+content-hash = "7772c0bfe803dfa148be9bff4102910652e0011285e1572cf6e0cc1ee8996f05"

@@ -1,9 +1,3 @@
-# Use hash instead of parameters for iterables folder names
-# Otherwise path will be too long and generate OSError
-from pathlib import Path
-from typing import Optional
-
-from networkx.generators import atlas
 from nipype import config
 
 import clinica.pipelines.engine as cpe
@@ -89,7 +83,7 @@ class T1FreeSurfer(cpe.Pipeline):
         from clinica.iotools.utils.data_handling import (
             check_volume_location_in_world_coordinate_system,
         )
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.exceptions import ClinicaException
         from clinica.utils.filemanip import (
             extract_subjects_sessions_from_filename,
             save_participants_sessions,
@@ -135,17 +129,17 @@ class T1FreeSurfer(cpe.Pipeline):
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-        try:
-            t1w_files, error_message = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII, False
-            )
-        except ClinicaException as e:
-            err_msg = (
-                "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
-                + str(e)
-            )
+        t1w_files, error_message = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.bids_directory,
+            T1W_NII,
+            raise_exception=False,
+        )
+
         if error_message:
             cprint(error_message, lvl="warning")
+
         if not t1w_files:
             raise ClinicaException("Empty dataset or already processed")
 
@@ -266,10 +260,14 @@ class T1FreeSurfer(cpe.Pipeline):
                 # Get <image_id> from input_node and print begin message
                 (self.input_node, init_input, [("t1w", "t1w")]),
                 # Run recon-all command
-                (init_input, recon_all, [("subjects_dir", "subjects_dir"),
-                                         ("t1w", "T1_files"),
-                                         ("image_id", "subject_id"),
-                                         ("flags", "flags")],
+                (
+                    init_input,
+                    recon_all, [
+                        ("subjects_dir", "subjects_dir"),
+                        ("t1w", "T1_files"),
+                        ("image_id", "subject_id"),
+                        ("flags", "flags")
+                    ],
                 ),
                 # Generate TSV files
                 (init_input, create_tsv, [("subjects_dir", "subjects_dir")]),
