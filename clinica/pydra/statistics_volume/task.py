@@ -106,7 +106,7 @@ def run_m_script_task(m_file):
 
 @task
 @annotate({"return": {"current_model_estimation": str}})
-def estimate(mat_file, template_file):
+def estimate_task(mat_file, template_file):
     """Pydra task for estimation script.
 
     ..note::
@@ -134,7 +134,7 @@ def results_task(mat_file, template_file, method, threshold):
 
 @task
 @annotate({"return": {"current_model_estimation": str}})
-def contrast(mat_file, template_file, covariates, class_names):
+def contrast_task(mat_file, template_file, covariates, class_names):
     """Pydra task for contrast script.
 
     ..note::

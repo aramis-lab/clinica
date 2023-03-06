@@ -61,7 +61,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         )
     )
     wf.add(
-        utils.get_group_1_and_2(
+        utils.get_group_1_and_2_task(
             name="get_groups",
             tsv=parameters["tsv_file"],
             contrast=parameters["contrast"],
@@ -71,7 +71,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     # We use overwrite option to be sure this node is always run so that it can delete the output dir if it
     # already exists (this may cause error in output files otherwise)
     wf.add(
-        utils.model_creation(
+        utils.model_creation_task(
             name="model_creation",
             tsv=parameters["tsv_file"],
             contrast=parameters["contrast"],
@@ -82,28 +82,28 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         )
     )
     wf.add(
-        utils.run_m_script(
+        utils.run_m_script_task(
             name="run_spm_model_creation",
             m_file=wf.model_creation.lzout.current_model,
         )
     )
     # 2. Model estimation
     wf.add(
-        utils.estimate(
+        utils.estimat_task(
             name="model_estimation",
             mat_file=wf.run_spm_model_creation.lzout.output_mat_file,
             template_file=join(dirname(__file__), "template_model_estimation.m"),
         )
     )
     wf.add(
-        utils.run_m_script(
+        utils.run_m_scrip_task(
             name="run_spm_model_estimation",
             m_file=wf.model_estimation.lzout.current_model_estimation,
         )
     )
     # 3. Contrast
     wf.add(
-        utils.contrast(
+        utils.contrast_task(
             name="model_contrast",
             mat_file=wf.run_spm_model_estimation.lzout.output_mat_file,
             template_file=join(dirname(__file__), "template_model_contrast.m"),
@@ -112,14 +112,14 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         )
     )
     wf.add(
-        utils.run_m_script(
+        utils.run_m_script_task(
             name="run_spm_model_contrast",
             m_file=wf.model_contrast.lzout.current_model_estimation,
         )
     )
     # 4. Results
     wf.add(
-        utils.results(
+        utils.results_task(
             name="model_result_no_correction",
             mat_file=wf.run_spm_model_contrast.lzout.output_mat_file,
             template_file=join(dirname(__file__), "template_model_results.m"),
@@ -128,13 +128,13 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         )
     )
     wf.add(
-        utils.run_m_script(
+        utils.run_m_script_task(
             name="run_spm_model_result_no_correction",
             m_file=wf.model_result_no_correction.lzout.current_model_result,
         )
     )
     wf.add(
-        utils.read_output(
+        utils.read_output_task(
             name="read_output_node",
             spm_mat=wf.run_spm_model_result_no_correction.lzout.output_mat_file,
             class_names=wf.get_groups.lzout.class_names,
