@@ -6,7 +6,23 @@ from clinica.pydra.engine import clinica_io
 
 @clinica_io
 def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
-    """doc"""
+    """Build the core workflow for the Statistics Volume pipeline.
+
+    Parameters
+    ----------
+    name : str, optional
+        The name of the workflow. Default="core".
+
+    parameters : dict, optional
+        Dictionary of parameters to be used
+        within the workflow.
+        Default={}.
+
+    Returns
+    -------
+    wf : Workflow
+        The core workflow.
+    """
     from os.path import dirname, join
     from typing import Any
 
