@@ -194,13 +194,16 @@ def is_number(s: str):
 
 
 def unravel_list_for_matlab(my_list):
-    """
-        Unpack a list into a Matlab compliant format to insert in .m files.
-    Args:
-        my_list: (list) of str
+    """Unpack a list into a Matlab compliant format to insert in .m files.
 
-    Returns:
-        (str) that join the different str of the list, with '
+    Parameters
+    ----------
+    my_list: list of str
+
+    Returns
+    -------
+    str
+        Contains the different element of the list joined in one string.
     """
     result = "','".join(my_list)
     result = "'" + result + "'"
@@ -208,20 +211,23 @@ def unravel_list_for_matlab(my_list):
 
 
 def write_covariate_lines(m_file_to_write_in, covar_number, covar_name, covar_values):
-    """
-        Use this function to add covariate lines in the Matlab file m_file_to_write_in for one covariate
-    Args:
-        m_file_to_write_in: (str) path to the m-file
-        covar_number: (int) this is the number of the covariate (must start at 1)
-        covar_name: (str) name of the covariate (ex: 'age', 'sex')
-        covar_values: (list) of float with the values of the covariates
+    """Use this function to add covariate lines in the Matlab file m_file_to_write_in for one covariate.
 
-    Returns:
-        nothing
+    Parameters
+    ----------
+    m_file_to_write_in: str
+        Path to the m-file
+    covar_number: int
+        This is the number of the covariate (must start at 1)
+    covar_name: str
+        Name of the covariate (ex: 'age', 'sex')
+    covar_values: list of float
+        Values of the covariates
     """
     from os.path import isfile
 
-    assert isfile(m_file_to_write_in), "Could not find file " + m_file_to_write_in
+    if not m_file_to_write_in.exist():
+        raise FileNotFoundError(f"Could not find file {m_file_to_write_in}")
     covar_values_string = [str(elem) for elem in covar_values]
     covar_values_for_script = "[" + " ".join(covar_values_string) + "]"
 
@@ -254,71 +260,87 @@ def write_covariate_lines(m_file_to_write_in, covar_number, covar_name, covar_va
 
 
 def run_m_script(m_file):
+    """Runs a matlab m file for SPM, determining automatically if it must be launched with SPM or SPM standalone
+    If launch with spm standalone, the line 'spm_jobman('run', matlabbatch)' must be removed because unnecessary
+
+    Parameters
+    ----------
+    m_file: str
+        Path to Matlab m file
+
+    Returns
+    -------
+    output_mat_file: str
+        Path to the SPM.mat file needed in SPM analysis
     """
-        Runs a matlab m file for SPM, determining automatically if it must be launched with SPM or SPM Standalone
-        If launch with spm standalone, the line 'spm_jobman('run', matlabbatch)' must be removed because unnecessary
 
-    Args:
-        m_file: (str) path to Matlab m file
+    from os.path import abspath, dirname, isfile, join
 
-    Returns:
-        output_mat_file: (str) path to the SPM.mat file needed in SPM analysis
-    """
-    import platform
-    from os import system
-    from os.path import abspath, basename, dirname, isfile, join
-
-    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
-
-    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
     from clinica.utils.spm import spm_standalone_is_available
 
-    assert isinstance(m_file, str), "[Error] Argument must be a string"
+    if not type(m_file) == str:
+        raise TypeError("[Error] Argument must be a string")
     if not isfile(m_file):
         raise FileNotFoundError("[Error] File " + m_file + "does not exist")
-    assert m_file[-2:] == ".m", (
-        "[Error] " + m_file + " is not a Matlab file (extension must be .m)"
-    )
+    if not m_file[-2:] == ".m":
+        raise ValueError(
+            f"[Error] {m_file} is not a Matlab file (extension must be .m)"
+        )
 
     # Generate command line to run
     if spm_standalone_is_available():
-        utls.delete_last_line(m_file)
-        # SPM standalone must be run directly from its root folder
-        if platform.system().lower().startswith("darwin"):
-            # Mac OS
-            cmdline = (
-                "cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch " + m_file
-            )
-        elif platform.system().lower().startswith("linux"):
-            # Linux OS
-            cmdline = "$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch " + m_file
-        else:
-            raise SystemError("Clinica only support Mac OS and Linux")
-        system(cmdline)
+        run_matlab_script_with_spm_standalone(m_file)
     else:
-        MatlabCommand.set_default_matlab_cmd(get_matlab_command())
-        matlab = MatlabCommand()
-        if platform.system().lower().startswith("linux"):
-            matlab.inputs.args = "-nosoftwareopengl"
-        matlab.inputs.paths = dirname(m_file)
-        matlab.inputs.script = basename(m_file)[:-2]
-        matlab.inputs.single_comp_thread = False
-        matlab.inputs.logfile = abspath("./matlab_output.log")
-        matlab.run()
+        run_matlab_script_with_matlab(m_file)
     output_mat_file = abspath(join(dirname(m_file), "..", "2_sample_t_test", "SPM.mat"))
     if not isfile(output_mat_file):
         raise RuntimeError("Output matrix " + output_mat_file + " was not produced")
     return output_mat_file
 
 
-def delete_last_line(filename):
-    """
-    Use this function to remove the call to spm jobman if m file is used with SPM standalone
-    Args:
-        filename: path to filename
+def run_matlab_script_with_matlab(m_file):
+    import platform
+    from os.path import abspath, basename, dirname, isfile, join
 
-    Returns:
-        Nothing
+    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
+
+    MatlabCommand.set_default_matlab_cmd(get_matlab_command())
+    matlab = MatlabCommand()
+    if platform.system().lower().startswith("linux"):
+        matlab.inputs.args = "-nosoftwareopengl"
+    matlab.inputs.paths = dirname(m_file)
+    matlab.inputs.script = basename(m_file)[:-2]
+    matlab.inputs.single_comp_thread = False
+    matlab.inputs.logfile = abspath("./matlab_output.log")
+    matlab.run()
+
+
+def run_matlab_script_with_spm_standalone(m_file):
+    import platform
+    from os import system
+
+    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+
+    utls.delete_last_line(m_file)
+    # SPM standalone must be run directly from its root folder
+    if platform.system().lower().startswith("darwin"):
+        # Mac OS
+        cmdline = "cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch " + m_file
+    elif platform.system().lower().startswith("linux"):
+        # Linux OS
+        cmdline = "$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch " + m_file
+    else:
+        raise SystemError("Clinica only support Mac OS and Linux")
+    system(cmdline)
+
+
+def delete_last_line(filename):
+    """Use this function to remove the call to spm jobman if m file is used with SPM standalone
+
+    Parameters
+    ----------
+    filename: str
+        Path to filename
     """
     import os
 
@@ -347,18 +369,22 @@ def delete_last_line(filename):
 
 
 def estimate(mat_file, template_file):
-    """
-        Make a copy of the template file (for estimation) and replace @SPMMAT by the real path to SPM.mat (mat_file)
-    Args:
-        mat_file: (str) path to the SPM.mat file of the SPM analysis
-        template_file: (str) path to the template file for the estimation of the model
+    """Make a copy of the template file (for estimation) and replace @SPMMAT by the real path to SPM.mat (mat_file)
 
-    Returns:
-        current_model_estimation: (str) path to the template file filled with SPM.mat information, ready to be launched
+    Parameters
+    ----------
+    mat_file: str
+        Path to the SPM.mat file of the SPM analysis
+    template_file: str
+        Path to the template file for the estimation of the model
+
+    Returns
+    -------
+    current_model_estimation: str
+        Path to the template file filled with SPM.mat information, ready to be launched
     """
     from os.path import abspath
 
-    # Read template
     with open(template_file, "r") as file:
         filedata = file.read()
     # Replace by the real path to spm.mat
@@ -371,16 +397,23 @@ def estimate(mat_file, template_file):
 
 
 def results(mat_file, template_file, method, threshold):
-    """
-        Make a copy of the template file (for results) and replace @SPMMAT by the real path to SPM.mat (mat_file)
-    Args:
-        mat_file: (str) path to the SPM.mat file of the SPM analysis
-        template_file: (str) path to the template file for getting the results of the model
-        method: (str)
-        threshold
+    """Make a copy of the template file (for results) and replace @SPMMAT by the real path to SPM.mat (mat_file)
 
-    Returns:
-        current_model_estimation: (str) path to the template file filled with SPM.mat information, ready to be launched
+    Parameters
+    ----------
+    mat_file: str
+        Path to the SPM.mat file of the SPM analysis
+    template_file: str
+        Path to the template file for getting the results of the model
+    method: str
+        method. In our case, "none"
+    threshold: float
+        cluster threshold
+
+    Returns
+    -------
+    current_model_estimation: str
+        Path to the template file filled with SPM.mat information, ready to be launched
     """
     import time
     from os.path import abspath
@@ -403,24 +436,29 @@ def results(mat_file, template_file, method, threshold):
 
 
 def contrast(mat_file, template_file, covariates, class_names):
-    """
-        Make a copy of the template file (for results) and replace @SPMMAT, @COVARNUMBER, @GROUP1, @GROUP2
-        by the corresponding variables
+    """Make a copy of the template file (for results) and replace @SPMMAT, @COVARNUMBER, @GROUP1, @GROUP2
+    by the corresponding variables
 
-    Args:
-        mat_file: (str) path to the SPM.mat file of the SPM analysis
-        template_file: (str) path to the template file for getting the results of the model
-        covariates: (list) of str: list of covariates
-        class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
+    Parameters
+    ----------
+    mat_file: str
+        Path to the SPM.mat file of the SPM analysis
+    template_file: str
+        Path to the template file for getting the results of the model
+    covariates: list of str
+        List of covariates
+    class_names: list of str
+        Corresponds to the 2 classes for the group comparison
 
-    Returns:
-        current_model_estimation: (str) path to the template file filled with variables, ready to be launched
+    Returns
+    -------
+    current_model_estimation: str
+        Path to the template file filled with variables, ready to be launched
     """
     from os.path import abspath
 
     number_of_covariates = len(covariates)
 
-    # Read template
     with open(template_file, "r") as file:
         filedata = file.read()
     # Replace by the real path to spm.mat
@@ -436,27 +474,42 @@ def contrast(mat_file, template_file, covariates, class_names):
 
 
 def read_output(spm_mat, class_names, covariates, group_label, fwhm, measure):
-    """
-        Once analysis is done, grab all the different filenames and rename them in current directory according to class
+    """Once analysis is done, grab all the different filenames and rename them in current directory according to class
         names
-    Args:
-        spm_mat: (str) path to the SPM.mat file of the SPM analysis
-        class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
-        covariates: (list) of str: list of covariates
-        group_label: name of the group label
-        fwhm: fwhm in mm used
-        measure: measure used
 
-    Returns:
-        spmT_0001: (str) path to t maps for the first group comparison
-        spmT_0002: (str) path to t maps for the second group comparison
-        spm_figures: (list) path to figure files
-        variance_of_error: (str) path to variance of error
-        resels_per_voxels: (str) path to resels per voxel
-        mask: (str) path to mask of included voxels
-        regression_coeff: (str list) path to regression coefficients
-        contrasts: (str list) path to weighted parameter estimation for the 2 contrasts
+    Parameters
+    ----------
+    spm_mat: str
+        Path to the SPM.mat file of the SPM analysis
+    class_names: list of str
+        Corresponds to the 2 classes for the group comparison
+    covariates: list of str
+        List of covariates
+    group_label: str
+        Name of the group label
+    fwhm: int
+        Fwhm in mm used
+    measure: str
+        Measure used
 
+    Returns
+    -------
+    spmT_0001: str
+        Path to t maps for the first group comparison
+    spmT_0002: str
+        Path to t maps for the second group comparison
+    spm_figures: list
+        Path to figure files
+    variance_of_error: str
+        Path to variance of error
+    resels_per_voxels: str
+        Path to resels per voxel
+    mask: str
+        Path to mask of included voxels
+    regression_coeff: str list
+        Path to regression coefficients
+    contrasts: str list
+        Path to weighted parameter estimation for the 2 contrasts
     """
     from os import listdir
     from os.path import abspath, dirname, isdir, isfile, join
