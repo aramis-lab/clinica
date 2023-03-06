@@ -1,14 +1,21 @@
 def get_group_1_and_2(tsv, contrast):
-    """
-        Based on the TSV file given in parameter, compute indexes of each group
-    Args:
-        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariates
-        contrast: (str) name of a column of the tsv
+    """Based on the TSV file given in parameter, compute indexes of each group
 
-    Returns:
-        first_group_idx: (list of int) list of indexes of first group
-        second_group_idx: (list of int) list of indexes of second group
-        class_names: (list of str of len 2) list of the class names read in the column contrast of the tsv
+    Parameters
+    ----------
+    tsv: str
+        Path to the tsv file containing information on subjects/sessions with all covariates
+    contrast: str
+        Name of a column of the tsv
+
+    Returns
+    -------
+    first_group_idx: list of int
+        list of indexes of first group
+    second_group_idx: list of int
+        list of indexes of second group
+    class_names: list of str of len 2
+        list of the class names read in the column contrast of the tsv
     """
     import pandas as pds
 
@@ -20,11 +27,9 @@ def get_group_1_and_2(tsv, contrast):
     tsv = pds.read_csv(tsv, sep="\t")
     columns = list(tsv.columns)
 
-    # An error is raised if the contrast column is not found in the tsv
     if contrast not in columns:
         raise ClinicaException(contrast + " is not present in " + tsv)
 
-    # list(set(my_list)) gives unique values of my_list
     class_names = list(set(tsv[contrast]))
 
     # This is a 2-sample t-test: we can only allow 2 classes
@@ -46,20 +51,29 @@ def get_group_1_and_2(tsv, contrast):
 
 
 def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_file):
-    """
-        Create the matlab .m file for the instantiation of the 2-sample t-test model in SPM
+    """Create the matlab .m file for the instantiation of the 2-sample t-test model in SPM
 
-    Args:
-        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariates
-        contrast: (str) name of a column of the tsv
-        idx_group1: (list of int) list of indexes of first group
-        idx_group2: (list of int) list of indexes of second group
-        file_list: List of files used in the statistical test. Their order is the same as it appears on the tsv file
-        template_file: (str) path to the template file used to generate the .m file
+    Parameters
+    ----------
+    tsv: str
+        Path to the tsv file containing information on subjects/sessions with all covariates
+    contrast: str
+        Name of a column of the tsv
+    idx_group1: list of int
+        List of indexes of first group
+    idx_group2: list of int
+        List of indexes of second group
+    file_list: List
+        List of files used in the statistical test. Their order is the same as it appears on the tsv file
+    template_file: str
+        Path to the template file used to generate the .m file
 
-    Returns:
-        current_model: (str) path to the matlab files with all the @TEXT replaced with the correct names
-        covariates: list of str with the names of covariates
+    Returns
+    -------
+    current_model: str
+        Path to the matlab files with all the @TEXT replaced with the correct names
+    covariates: list of str
+        Names of covariates
     """
     from numbers import Number
     from os import mkdir, remove
@@ -80,10 +94,8 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
     current_model = abspath("./current_model_creation.m")
 
     if isfile(current_model):
-        # This should never be reached
         remove(current_model)
 
-    # Read template
     with open(template_file, "r") as file:
         filedata = file.read()
 
@@ -108,7 +120,6 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
         ),
     )
 
-    # Write filedata in the output file
     with open(current_model, "w+") as file:
         file.write(filedata)
 
@@ -162,12 +173,16 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
 
 
 def is_number(s: str):
-    """
+    """Returns True is the input can be converted to float, False otherwise.
 
-    Args:
-        s: (str) string to test if it can be converted into float
+    Parameters
+    ----------
+    s: str
+        String to test if it can be converted into float
 
-    Returns:
+    Returns
+    -------
+    bool
         True or False
     """
     try:
