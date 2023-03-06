@@ -1,4 +1,7 @@
-def get_group_1_and_2(tsv, contrast):
+import typing as ty
+
+
+def get_group_1_and_2(tsv: str, contrast: str) -> ty.Tuple[list]:
     """Based on the TSV file given in parameter, compute indexes of each group
 
     Parameters
@@ -50,7 +53,19 @@ def get_group_1_and_2(tsv, contrast):
     return first_group_idx, second_group_idx, class_names
 
 
-def create_spm_output_folder(current_model):
+def create_spm_output_folder(current_model: str) -> str:
+    """Creates the spm output folder. If it already exists, it is deleted and created again.
+
+    Parameters
+    ----------
+    current_model: str
+        Path to the matlab files with all the @TEXT replaced with the correct names
+
+    Returns
+    -------
+    output_folder: str
+        Path to the spm output_folder
+    """
     from os import mkdir
     from os.path import abspath, dirname, isdir, join
     from shutil import rmtree
@@ -63,8 +78,30 @@ def create_spm_output_folder(current_model):
 
 
 def set_output_and_groups(
-    output_folder, current_model, file_list, idx_group1, idx_group2, filedata
-):
+    output_folder: str,
+    current_model: str,
+    file_list: list,
+    idx_group1: list,
+    idx_group2: list,
+    filedata: str,
+) -> None:
+    """Sets path to output and groups in the .m script
+
+    Parameters
+    ----------
+    output_folder: str
+        Path to the folder where the pipelines output will be generated
+    current_model: str
+        Path to the matlab files with all the @TEXT replaced with the correct names
+    file_list: List
+        List of files used in the statistical test. Their order is the same as it appears on the tsv file
+    idx_group1: list of int
+        List of indexes of first group
+    idx_group2: list of int
+        List of indexes of second group
+    filedata:
+        .m script template which is to be modified and then run
+    """
     import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
 
     filedata = filedata.replace("@OUTPUTDIR", "'" + output_folder + "'")
@@ -85,7 +122,16 @@ def set_output_and_groups(
         file.write(filedata)
 
 
-def transform_data(current_covar_data):
+def transform_data(current_covar_data: list) -> list:
+    """Transforms data
+
+    Parameters
+    ----------
+    current_covar_data: list
+    Returns
+    -------
+    current_covar_data: list
+    """
     import numpy as np
 
     import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
@@ -101,8 +147,28 @@ def transform_data(current_covar_data):
 
 
 def write_covariates(
-    current_covar_data, idx_group1, idx_group2, current_model, covar, covar_number
-):
+    current_covar_data: list,
+    idx_group1: list,
+    idx_group2: list,
+    current_model: str,
+    covar: int,
+    covar_number: int,
+) -> None:
+    """Writes covariates
+
+    Parameters
+    ----------
+    current_covar_data: list
+    idx_group1: list of int
+        List of indexes of first group
+    idx_group2: list of int
+        List of indexes of second group
+    current_model: str
+        Path to the matlab files with all the @TEXT replaced with the correct names
+    covar: int
+        Covariance
+    covar_number: int
+    """
     import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
 
     current_covar_data_group1 = [
@@ -117,7 +183,14 @@ def write_covariates(
     )
 
 
-def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_file):
+def model_creation(
+    tsv: str,
+    contrast: str,
+    idx_group1: list,
+    idx_group2: list,
+    file_list: list,
+    template_file: str,
+):
     """Create the matlab .m file for the instantiation of the 2-sample t-test model in SPM
 
     Parameters
@@ -143,9 +216,8 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
         Names of covariates
     """
     from numbers import Number
-    from os import mkdir, remove
-    from os.path import abspath, dirname, isdir, isfile, join
-    from shutil import rmtree
+    from os import remove
+    from os.path import abspath, isfile
 
     import numpy as np
     import pandas as pds
@@ -210,7 +282,7 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
     return current_model, covariates
 
 
-def is_number(s: str):
+def is_number(s: str) -> bool:
     """Returns True is the input can be converted to float, False otherwise.
 
     Parameters
@@ -231,7 +303,7 @@ def is_number(s: str):
         return False
 
 
-def unravel_list_for_matlab(my_list):
+def unravel_list_for_matlab(my_list: list) -> str:
     """Unpack a list into a Matlab compliant format to insert in .m files.
 
     Parameters
@@ -248,7 +320,9 @@ def unravel_list_for_matlab(my_list):
     return result
 
 
-def write_covariate_lines(m_file_to_write_in, covar_number, covar_name, covar_values):
+def write_covariate_lines(
+    m_file_to_write_in: str, covar_number: int, covar_name: str, covar_values: list
+) -> None:
     """Use this function to add covariate lines in the Matlab file m_file_to_write_in for one covariate.
 
     Parameters
@@ -297,7 +371,7 @@ def write_covariate_lines(m_file_to_write_in, covar_number, covar_name, covar_va
     m_file.close()
 
 
-def run_m_script(m_file):
+def run_m_script(m_file: str) -> str:
     """Runs a matlab m file for SPM, determining automatically if it must be launched with SPM or SPM standalone
     If launch with spm standalone, the line 'spm_jobman('run', matlabbatch)' must be removed because unnecessary
 
@@ -336,9 +410,16 @@ def run_m_script(m_file):
     return output_mat_file
 
 
-def run_matlab_script_with_matlab(m_file):
+def run_matlab_script_with_matlab(m_file: str) -> None:
+    """Runs a matlab script using matlab
+
+    Parameters
+    ----------
+    m_file: str
+        Path to the script
+    """
     import platform
-    from os.path import abspath, basename, dirname, isfile, join
+    from os.path import abspath, basename, dirname
 
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
 
@@ -353,7 +434,14 @@ def run_matlab_script_with_matlab(m_file):
     matlab.run()
 
 
-def run_matlab_script_with_spm_standalone(m_file):
+def run_matlab_script_with_spm_standalone(m_file: str) -> None:
+    """Runs a matlab script spm_standalone
+
+    Parameters
+    ----------
+    m_file: str
+        Path to the script
+    """
     import platform
     from os import system
 
@@ -372,7 +460,7 @@ def run_matlab_script_with_spm_standalone(m_file):
     system(cmdline)
 
 
-def delete_last_line(filename):
+def delete_last_line(filename: str) -> None:
     """Use this function to remove the call to spm jobman if m file is used with SPM standalone
 
     Parameters
@@ -406,7 +494,7 @@ def delete_last_line(filename):
             file.truncate()
 
 
-def estimate(mat_file, template_file):
+def estimate(mat_file: str, template_file: str) -> str:
     """Make a copy of the template file (for estimation) and replace @SPMMAT by the real path to SPM.mat (mat_file)
 
     Parameters
@@ -434,7 +522,7 @@ def estimate(mat_file, template_file):
     return current_model_estimation
 
 
-def results(mat_file, template_file, method, threshold):
+def results(mat_file: str, template_file: str, method: str, threshold: float) -> str:
     """Make a copy of the template file (for results) and replace @SPMMAT by the real path to SPM.mat (mat_file)
 
     Parameters
@@ -473,7 +561,7 @@ def results(mat_file, template_file, method, threshold):
     return current_model_result
 
 
-def contrast(mat_file, template_file, covariates, class_names):
+def contrast(mat_file: str, template_file: str, covariates: list, class_names: list):
     """Make a copy of the template file (for results) and replace @SPMMAT, @COVARNUMBER, @GROUP1, @GROUP2
     by the corresponding variables
 
@@ -511,7 +599,14 @@ def contrast(mat_file, template_file, covariates, class_names):
     return current_model_estimation
 
 
-def read_output(spm_mat, class_names, covariates, group_label, fwhm, measure):
+def read_output(
+    spm_mat: str,
+    class_names: list,
+    covariates: list,
+    group_label: str,
+    fwhm: int,
+    measure: str,
+):
     """Once analysis is done, grab all the different filenames and rename them in current directory according to class
         names
 
@@ -600,7 +695,7 @@ def read_output(spm_mat, class_names, covariates, group_label, fwhm, measure):
     )
 
 
-def handle_figures(spm_mat, list_files, group_label):
+def handle_figures(spm_mat: str, list_files: list, group_label: str) -> list:
     """Handles the figures generated by the pipeline.
 
     Parameters
@@ -635,7 +730,14 @@ def handle_figures(spm_mat, list_files, group_label):
     return spm_figures
 
 
-def handle_spm_t_maps(spm_mat, list_files, fwhm, group_label, class_names, measure):
+def handle_spm_t_maps(
+    spm_mat: str,
+    list_files: list,
+    fwhm: int,
+    group_label: str,
+    class_names: list,
+    measure: str,
+) -> ty.Tuple[str]:
     """Parameters
     ----------
     spm_mat: str
@@ -687,7 +789,9 @@ def handle_spm_t_maps(spm_mat, list_files, fwhm, group_label, class_names, measu
     return spmT_0001, spmT_0002
 
 
-def handle_contrast_files(spm_mat, list_files, group_label, class_names, measure):
+def handle_contrast_files(
+    spm_mat: str, list_files: list, group_label: str, class_names: list, measure: str
+) -> list:
     """Handles the contrast files.
 
     Parameters
@@ -729,7 +833,9 @@ def handle_contrast_files(spm_mat, list_files, group_label, class_names, measure
     return contrasts
 
 
-def handle_beta_files(spm_mat, list_files, covariates, class_names):
+def handle_beta_files(
+    spm_mat: str, list_files: list, covariates: list, class_names: list
+) -> list:
     """Handles the beta files.
 
     Parameters

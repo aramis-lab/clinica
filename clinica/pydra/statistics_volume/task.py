@@ -1,5 +1,4 @@
 import typing as ty
-from pathlib import PurePath
 
 from pydra.mark import annotate, task
 
@@ -8,7 +7,7 @@ from pydra.mark import annotate, task
 @annotate(
     {"return": {"first_group_idx": list, "second_group_idx": list, "class_names": list}}
 )
-def get_group_1_and_2_task(tsv, contrast):
+def get_group_1_and_2_task(tsv: str, contrast: str) -> ty.Tuple[list]:
     """Pydra task for computing indexes of each group.
 
     ..note::
@@ -25,7 +24,12 @@ def get_group_1_and_2_task(tsv, contrast):
 @task
 @annotate({"return": {"current_model": str, "covariates": list}})
 def model_creation_task(
-    tsv, contrast, idx_group1, idx_group2, file_list, template_file
+    tsv: str,
+    contrast: str,
+    idx_group1: list,
+    idx_group2: list,
+    file_list: list,
+    template_file: str,
 ):
     """Pydra task for creating the .m file for the instantiation of the 2-sample t-test model in SPM
 
@@ -44,7 +48,7 @@ def model_creation_task(
 
 @task
 @annotate({"return": {"output_mat_file": str}})
-def run_m_script_task(m_file):
+def run_m_script_task(m_file: str) -> str:
     """Pydra task for running an .m script
 
     ..note::
@@ -58,7 +62,7 @@ def run_m_script_task(m_file):
 
 @task
 @annotate({"return": {"current_model_estimation": str}})
-def estimate_task(mat_file, template_file):
+def estimate_task(mat_file: str, template_file: str) -> str:
     """Pydra task for estimation script.
 
     ..note::
@@ -72,7 +76,9 @@ def estimate_task(mat_file, template_file):
 
 @task
 @annotate({"return": {"current_model_result": str}})
-def results_task(mat_file, template_file, method, threshold):
+def results_task(
+    mat_file: str, template_file: str, method: str, threshold: float
+) -> str:
     """Pydra task for result script.
 
     ..note::
@@ -86,7 +92,9 @@ def results_task(mat_file, template_file, method, threshold):
 
 @task
 @annotate({"return": {"current_model_estimation": str}})
-def contrast_task(mat_file, template_file, covariates, class_names):
+def contrast_task(
+    mat_file: str, template_file: str, covariates: list, class_names: list
+):
     """Pydra task for contrast script.
 
     ..note::
@@ -113,7 +121,14 @@ def contrast_task(mat_file, template_file, covariates, class_names):
         }
     }
 )
-def read_output_task(spm_mat, class_names, covariates, group_label, fwhm, measure):
+def read_output_task(
+    spm_mat: str,
+    class_names: list,
+    covariates: list,
+    group_label: str,
+    fwhm: int,
+    measure: str,
+):
     """Pydra task for reading outputs of the statistics volume pipeline.
 
     ..note::
