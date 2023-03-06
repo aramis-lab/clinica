@@ -89,14 +89,14 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     )
     # 2. Model estimation
     wf.add(
-        utils.estimat_task(
+        utils.estimate_task(
             name="model_estimation",
             mat_file=wf.run_spm_model_creation.lzout.output_mat_file,
             template_file=join(dirname(__file__), "template_model_estimation.m"),
         )
     )
     wf.add(
-        utils.run_m_scrip_task(
+        utils.run_m_script_task(
             name="run_spm_model_estimation",
             m_file=wf.model_estimation.lzout.current_model_estimation,
         )
