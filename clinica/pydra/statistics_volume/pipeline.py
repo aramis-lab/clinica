@@ -64,11 +64,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         .split("in_file")
         .combine("in_file")
     )
-    #     utils.unzip_nii(
-    #         name="unzip_nii",
-    #         in_file=wf.lzin.pet_volume,
-    #     )
-    # )
     wf.add(
         utils.get_group_1_and_2_task(
             name="get_groups",

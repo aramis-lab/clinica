@@ -5,54 +5,6 @@ from pydra.mark import annotate, task
 
 
 @task
-@annotate({"return": {"unzipped_nii": list}})
-def unzip_nii(
-    in_file: str,
-    same_dir: bool = False,
-) -> str:
-    """Decompress the provided file(s).
-
-    .. note::
-        If a list of file paths is provided, then this function
-        will be called on each item and a list of paths to the
-        resulting unzipped files will be returned.
-        The type hint is not reflecting this fact because of the
-        self-contained requirement from Nipype which is preventing
-        the usage of types outside of Python's builtins.
-
-    Parameters
-    ----------
-    in_file: str
-        Path to file to be zipped.
-
-    same_dir: bool, optional
-        If True, the unzipped file is written in the same directory as the
-        provided zip file. Otherwise, it is written in the current working
-        directory. Default=False.
-
-    Returns
-    -------
-    out_file: str
-        Path to the resulting unzipped file.
-
-    Notes
-    -----
-    If the provided file is not zipped (that is, its extension
-    is different from '.gz'), then nothing is done and the path
-    to the provided file is returned.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the provided file does not exist.
-    """
-    from clinica.utils.filemanip import _zip_unzip_nii  # noqa
-
-    unzipped_nii = _zip_unzip_nii(in_file, same_dir, compress=False)
-    return unzipped_nii
-
-
-@task
 @annotate(
     {"return": {"first_group_idx": list, "second_group_idx": list, "class_names": list}}
 )
