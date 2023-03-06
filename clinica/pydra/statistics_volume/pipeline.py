@@ -1,5 +1,7 @@
 import pydra
+from nipype.algorithms.misc import Gunzip
 from pydra import Workflow
+from pydra.tasks.nipype1.utils import Nipype1Task
 
 from clinica.pydra.engine import clinica_io
 
@@ -53,13 +55,20 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         bases=(pydra.specs.BaseSpec,),
     )
     wf = Workflow(name, input_spec=input_spec)
-
     wf.add(
-        utils.unzip_nii(
-            name="unzip_nii",
+        Nipype1Task(
+            name=f"unzip_nii",
+            interface=Gunzip(),
             in_file=wf.lzin.pet_volume,
         )
+        .split("in_file")
+        .combine("in_file")
     )
+    #     utils.unzip_nii(
+    #         name="unzip_nii",
+    #         in_file=wf.lzin.pet_volume,
+    #     )
+    # )
     wf.add(
         utils.get_group_1_and_2_task(
             name="get_groups",
@@ -76,7 +85,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             tsv=parameters["tsv_file"],
             contrast=parameters["contrast"],
             template_file=join(dirname(__file__), "template_model_creation.m"),
-            file_list=wf.unzip_nii.lzout.unzipped_nii,
+            file_list=wf.unzip_nii.lzout.out_file,
             idx_group1=wf.get_groups.lzout.first_group_idx,
             idx_group2=wf.get_groups.lzout.second_group_idx,
         )
