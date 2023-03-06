@@ -79,7 +79,12 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             name="model_creation",
             tsv=parameters["tsv_file"],
             contrast=parameters["contrast"],
-            template_file=join(dirname(__file__), "template_model_creation.m"),
+            template_file=join(
+                dirname(dirname(dirname(__file__))),
+                "pipelines",
+                "statistics_volume",
+                "template_model_creation.m",
+            ),
             file_list=wf.unzip_nii.lzout.out_file,
             idx_group1=wf.get_groups.lzout.first_group_idx,
             idx_group2=wf.get_groups.lzout.second_group_idx,
@@ -96,7 +101,12 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         utils.estimate_task(
             name="model_estimation",
             mat_file=wf.run_spm_model_creation.lzout.output_mat_file,
-            template_file=join(dirname(__file__), "template_model_estimation.m"),
+            template_file=join(
+                dirname(dirname(dirname(__file__))),
+                "pipelines",
+                "statistics_volume",
+                "template_model_estimation.m",
+            ),
         )
     )
     wf.add(
@@ -110,7 +120,12 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         utils.contrast_task(
             name="model_contrast",
             mat_file=wf.run_spm_model_estimation.lzout.output_mat_file,
-            template_file=join(dirname(__file__), "template_model_contrast.m"),
+            template_file=join(
+                dirname(dirname(dirname(__file__))),
+                "pipelines",
+                "statistics_volume",
+                "template_model_contrast.m",
+            ),
             covariates=wf.model_creation.lzout.covariates,
             class_names=wf.get_groups.lzout.class_names,
         )
@@ -126,7 +141,12 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         utils.results_task(
             name="model_result_no_correction",
             mat_file=wf.run_spm_model_contrast.lzout.output_mat_file,
-            template_file=join(dirname(__file__), "template_model_results.m"),
+            template_file=join(
+                dirname(dirname(dirname(__file__))),
+                "pipelines",
+                "statistics_volume",
+                "template_model_results.m",
+            ),
             method="none",
             threshold=parameters["cluster_threshold"],
         )
