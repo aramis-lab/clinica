@@ -50,6 +50,73 @@ def get_group_1_and_2(tsv, contrast):
     return first_group_idx, second_group_idx, class_names
 
 
+def create_spm_output_folder(current_model):
+    from os import mkdir
+    from os.path import abspath, dirname, isdir, join
+    from shutil import rmtree
+
+    output_folder = abspath(join(dirname(current_model), "..", "2_sample_t_test"))
+    if isdir(output_folder):
+        rmtree(output_folder)
+    mkdir(output_folder)
+    return output_folder
+
+
+def set_output_and_groups(
+    output_folder, current_model, file_list, idx_group1, idx_group2, filedata
+):
+    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+
+    filedata = filedata.replace("@OUTPUTDIR", "'" + output_folder + "'")
+    filedata = filedata.replace(
+        "@SCANS1",
+        utls.unravel_list_for_matlab(
+            [f for i, f in enumerate(file_list) if i in idx_group1]
+        ),
+    )
+    filedata = filedata.replace(
+        "@SCANS2",
+        utls.unravel_list_for_matlab(
+            [f for i, f in enumerate(file_list) if i in idx_group2]
+        ),
+    )
+
+    with open(current_model, "w+") as file:
+        file.write(filedata)
+
+
+def transform_data(current_covar_data):
+    import numpy as np
+
+    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+
+    temp_data = [elem.replace(",", ".") for elem in current_covar_data]
+    if all(utls.is_number(elem) for elem in temp_data):
+        current_covar_data = [float(elem) for elem in temp_data]
+    else:
+        # categorical variables (like Male; Female; M, F etc...)
+        unique_values = list(np.unique(np.array(current_covar_data)))
+        current_covar_data = [unique_values.index(elem) for elem in current_covar_data]
+    return current_covar_data
+
+
+def write_covariates(
+    current_covar_data, idx_group1, idx_group2, current_model, covar, covar_number
+):
+    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+
+    current_covar_data_group1 = [
+        elem for i, elem in enumerate(current_covar_data) if i in idx_group1
+    ]
+    current_covar_data_group2 = [
+        elem for i, elem in enumerate(current_covar_data) if i in idx_group2
+    ]
+    covar_data_concatenated = current_covar_data_group1 + current_covar_data_group2
+    utls.write_covariate_lines(
+        current_model, covar_number, covar, covar_data_concatenated
+    )
+
+
 def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_file):
     """Create the matlab .m file for the instantiation of the 2-sample t-test model in SPM
 
@@ -99,29 +166,12 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
     with open(template_file, "r") as file:
         filedata = file.read()
 
-    # Create output folder for SPM (and remove it if it already exists)
-    output_folder = abspath(join(dirname(current_model), "..", "2_sample_t_test"))
-    if isdir(output_folder):
-        rmtree(output_folder)
-    mkdir(output_folder)
+    output_folder = create_spm_output_folder(current_model)
 
     # Replace string in matlab file to set the output directory, and all the scans used for group 1 and 2
-    filedata = filedata.replace("@OUTPUTDIR", "'" + output_folder + "'")
-    filedata = filedata.replace(
-        "@SCANS1",
-        utls.unravel_list_for_matlab(
-            [f for i, f in enumerate(file_list) if i in idx_group1]
-        ),
+    set_output_and_groups(
+        output_folder, current_model, file_list, idx_group1, idx_group2, filedata
     )
-    filedata = filedata.replace(
-        "@SCANS2",
-        utls.unravel_list_for_matlab(
-            [f for i, f in enumerate(file_list) if i in idx_group2]
-        ),
-    )
-
-    with open(current_model, "w+") as file:
-        file.write(filedata)
 
     # Add our covariates
     tsv = pds.read_csv(tsv, sep="\t")
@@ -141,29 +191,17 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
         current_covar_data = list(tsv[covar])
         if isinstance(current_covar_data[0], str):
             # Transform data
-            temp_data = [elem.replace(",", ".") for elem in current_covar_data]
-            if all(utls.is_number(elem) for elem in temp_data):
-                current_covar_data = [float(elem) for elem in temp_data]
-            else:
-                # categorical variables (like Male; Female; M, F etc...)
-                unique_values = list(np.unique(np.array(current_covar_data)))
-                current_covar_data = [
-                    unique_values.index(elem) for elem in current_covar_data
-                ]
-
+            current_covar_data = transform_data(current_covar_data)
         elif isinstance(current_covar_data[0], Number):
             # Do nothing
             pass
-
-        current_covar_data_group1 = [
-            elem for i, elem in enumerate(current_covar_data) if i in idx_group1
-        ]
-        current_covar_data_group2 = [
-            elem for i, elem in enumerate(current_covar_data) if i in idx_group2
-        ]
-        covar_data_concatenated = current_covar_data_group1 + current_covar_data_group2
-        utls.write_covariate_lines(
-            current_model, covar_number, covar, covar_data_concatenated
+        write_covariates(
+            current_covar_data,
+            idx_group1,
+            idx_group2,
+            current_model,
+            covar,
+            covar_number,
         )
 
     # Tell matlab to run the script at the end
@@ -226,7 +264,7 @@ def write_covariate_lines(m_file_to_write_in, covar_number, covar_name, covar_va
     """
     from os.path import isfile
 
-    if not m_file_to_write_in.exist():
+    if not isfile(m_file_to_write_in):
         raise FileNotFoundError(f"Could not find file {m_file_to_write_in}")
     covar_values_string = [str(elem) for elem in covar_values]
     covar_values_for_script = "[" + " ".join(covar_values_string) + "]"
