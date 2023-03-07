@@ -258,6 +258,7 @@ class CAPSFileQuery(CAPSQuery):
         t1_volume_deformation_to_template,
         t1_volume_native_tpm,
         t1_volume_native_tpm_in_mni,
+        t1_volume_template_tpm_in_mni,
     )
 
     def t1w_to_mni_transform():
@@ -273,6 +274,7 @@ class CAPSFileQuery(CAPSQuery):
         "dartel_input_tissue": t1_volume_dartel_input_tissue,
         "t1w_to_mni": t1w_to_mni_transform,
         "pet_volume": pet_volume_normalized_suvr_pet,
+        "t1_volume": t1_volume_template_tpm_in_mni,
     }
 
 
