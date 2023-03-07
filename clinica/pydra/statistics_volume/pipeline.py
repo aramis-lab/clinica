@@ -75,7 +75,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     # We use overwrite option to be sure this node is always run so that it can delete the output dir if it
     # already exists (this may cause error in output files otherwise)
     wf.add(
-        utils.model_creation_task(
+        utils.write_matlab_model_task(
             name="model_creation",
             tsv=parameters["tsv_file"],
             contrast=parameters["contrast"],
@@ -98,7 +98,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     )
     # 2. Model estimation
     wf.add(
-        utils.estimate_task(
+        utils.clean_template_file_task(
             name="model_estimation",
             mat_file=wf.run_spm_model_creation.lzout.output_mat_file,
             template_file=join(
@@ -117,7 +117,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     )
     # 3. Contrast
     wf.add(
-        utils.contrast_task(
+        utils.clean_spm_contrast_file_task(
             name="model_contrast",
             mat_file=wf.run_spm_model_estimation.lzout.output_mat_file,
             template_file=join(
@@ -138,7 +138,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     )
     # 4. Results
     wf.add(
-        utils.results_task(
+        utils.clean_spm_result_file_task(
             name="model_result_no_correction",
             mat_file=wf.run_spm_model_contrast.lzout.output_mat_file,
             template_file=join(
@@ -158,7 +158,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         )
     )
     wf.add(
-        utils.read_output_task(
+        utils.copy_and_rename_spm_output_files_task(
             name="read_output_node",
             spm_mat=wf.run_spm_model_result_no_correction.lzout.output_mat_file,
             class_names=wf.get_groups.lzout.class_names,

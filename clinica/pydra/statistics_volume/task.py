@@ -23,7 +23,7 @@ def get_group_1_and_2_task(tsv: str, contrast: str) -> ty.Tuple[list]:
 
 @task
 @annotate({"return": {"current_model": str, "covariates": list}})
-def model_creation_task(
+def write_matlab_model_task(
     tsv: str,
     contrast: str,
     idx_group1: list,
@@ -38,10 +38,10 @@ def model_creation_task(
         `clinica.pipelines.statistics_volume.statistics_volume_utils.model_creation`.
     """
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        model_creation,
+        write_matlab_model,
     )
 
-    return model_creation(
+    return write_matlab_model(
         tsv, contrast, idx_group1, idx_group2, file_list, template_file
     )
 
@@ -62,21 +62,23 @@ def run_m_script_task(m_file: str) -> str:
 
 @task
 @annotate({"return": {"current_model_estimation": str}})
-def estimate_task(mat_file: str, template_file: str) -> str:
+def clean_template_file_task(mat_file: str, template_file: str) -> str:
     """Pydra task for estimation script.
 
     ..note::
         Please refer to the documentation of function
         `clinica.pipelines.statistics_volume.statistics_volume_utils.estimate`.
     """
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import estimate
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        clean_template_file,
+    )
 
-    return estimate(mat_file, template_file)
+    return clean_template_file(mat_file, template_file)
 
 
 @task
 @annotate({"return": {"current_model_result": str}})
-def results_task(
+def clean_spm_result_file_task(
     mat_file: str, template_file: str, method: str, threshold: float
 ) -> str:
     """Pydra task for result script.
@@ -85,14 +87,16 @@ def results_task(
         Please refer to the documentation of function
         `clinica.pipelines.statistics_volume.statistics_volume_utils.results`.
     """
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import results
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        clean_spm_result_file,
+    )
 
-    return results(mat_file, template_file, method, threshold)
+    return clean_spm_result_file(mat_file, template_file, method, threshold)
 
 
 @task
 @annotate({"return": {"current_model_estimation": str}})
-def contrast_task(
+def clean_spm_contrast_file_task(
     mat_file: str, template_file: str, covariates: list, class_names: list
 ):
     """Pydra task for contrast script.
@@ -101,9 +105,11 @@ def contrast_task(
         Please refer to the documentation of function
         `clinica.pipelines.statistics_volume.statistics_volume_utils.contrast`.
     """
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import contrast
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        clean_spm_contrast_file,
+    )
 
-    return contrast(mat_file, template_file, covariates, class_names)
+    return clean_spm_contrast_file(mat_file, template_file, covariates, class_names)
 
 
 @task
@@ -121,7 +127,7 @@ def contrast_task(
         }
     }
 )
-def read_output_task(
+def copy_and_rename_spm_output_files_task(
     spm_mat: str,
     class_names: list,
     covariates: list,
@@ -135,6 +141,10 @@ def read_output_task(
         Please refer to the documentation of function
         `clinica.pipelines.statistics_volume.statistics_volume_utils.read_output`.
     """
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import read_output
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        copy_and_rename_spm_output_files,
+    )
 
-    return read_output(spm_mat, class_names, covariates, group_label, fwhm, measure)
+    return copy_and_rename_spm_output_files(
+        spm_mat, class_names, covariates, group_label, fwhm, measure
+    )
