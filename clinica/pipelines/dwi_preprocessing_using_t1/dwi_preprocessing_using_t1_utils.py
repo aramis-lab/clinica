@@ -1,68 +1,44 @@
-def rename_into_caps(in_bids_dwi, fname_dwi, fname_bval, fname_bvec, fname_brainmask):
+def rename_into_caps(
+    in_bids_dwi: str,
+    fname_dwi: str,
+    fname_bval: str,
+    fname_bvec: str,
+    fname_brainmask: str,
+):
     """Rename the outputs of the pipelines into CAPS.
 
+    Parameters
+    ----------
+    in_bids_dwi : str
+        Path to input BIDS DWI to extract the <source_file>
 
-    Args:
-        in_bids_dwi (str): Input BIDS DWI to extract the <source_file>
-        fname_dwi (str): Preprocessed DWI file.
-        fname_bval (str): Preprocessed bval.
-        fname_bvec (str): Preprocessed bvec.
-        fname_brainmask (str): B0 mask.
+    fname_dwi : str
+        Name of preprocessed DWI file.
 
-    Returns:
-        Tuple[str, str, str, str]: The different outputs in CAPS format.
+    fname_bval : str
+        Name of preprocessed bval file.
+
+    fname_bvec : str
+        Name of preprocessed bvec file.
+
+    fname_brainmask : str
+        Name of B0 mask file.
+
+    Returns
+    -------
+    Tuple[str, str, str, str]
+        The different outputs in CAPS format.
     """
-    import os
+    from clinica.utils.dwi import rename_files
 
-    from nipype.interfaces.utility import Rename
-    from nipype.utils.filemanip import split_filename
-
-    # Extract <source_file> in format sub-CLNC01_ses-M000[_acq-label]_dwi
-    _, source_file_dwi, _ = split_filename(in_bids_dwi)
-
-    # Extract base path from fname:
-    base_dir_dwi, _, _ = split_filename(fname_dwi)
-    base_dir_bval, _, _ = split_filename(fname_bval)
-    base_dir_bvec, _, _ = split_filename(fname_bvec)
-    base_dir_brainmask, _, _ = split_filename(fname_brainmask)
-
-    # Rename into CAPS DWI:
-    rename_dwi = Rename()
-    rename_dwi.inputs.in_file = fname_dwi
-    rename_dwi.inputs.format_string = os.path.join(
-        base_dir_dwi, f"{source_file_dwi}_space-T1w_preproc.nii.gz"
-    )
-    out_caps_dwi = rename_dwi.run()
-
-    # Rename into CAPS bval:
-    rename_bval = Rename()
-    rename_bval.inputs.in_file = fname_bval
-    rename_bval.inputs.format_string = os.path.join(
-        base_dir_bval, f"{source_file_dwi}_space-T1w_preproc.bval"
-    )
-    out_caps_bval = rename_bval.run()
-
-    # Rename into CAPS bvec:
-    rename_bvec = Rename()
-    rename_bvec.inputs.in_file = fname_bvec
-    rename_bvec.inputs.format_string = os.path.join(
-        base_dir_bvec, f"{source_file_dwi}_space-T1w_preproc.bvec"
-    )
-    out_caps_bvec = rename_bvec.run()
-
-    # Rename into CAPS DWI:
-    rename_brainmask = Rename()
-    rename_brainmask.inputs.in_file = fname_brainmask
-    rename_brainmask.inputs.format_string = os.path.join(
-        base_dir_brainmask, f"{source_file_dwi}_space-T1w_brainmask.nii.gz"
-    )
-    out_caps_brainmask = rename_brainmask.run()
-
-    return (
-        out_caps_dwi.outputs.out_file,
-        out_caps_bval.outputs.out_file,
-        out_caps_bvec.outputs.out_file,
-        out_caps_brainmask.outputs.out_file,
+    return rename_files(
+        in_bids_dwi,
+        {
+            fname_dwi: "_space-T1w_preproc.nii.gz",
+            fname_bval: "_space-T1w_preproc.bval",
+            fname_bvec: "_space-T1w_preproc.bval",
+            fname_brainmask: "_space-T1w_brainmask.nii.gz",
+        },
     )
 
 

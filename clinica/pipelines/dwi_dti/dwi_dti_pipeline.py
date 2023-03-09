@@ -217,9 +217,9 @@ class DwiDti(cpe.Pipeline):
         from nipype.interfaces.mrtrix.preprocess import DWI2Tensor
 
         from clinica.utils.check_dependency import check_environment_variable
+        from clinica.utils.dwi import extract_bids_identifier_from_filename
 
         from .dwi_dti_utils import (
-            extract_bids_identifier_from_caps_filename,
             get_ants_transforms,
             get_caps_filenames,
             print_begin_pipeline,
@@ -233,7 +233,7 @@ class DwiDti(cpe.Pipeline):
             interface=nutil.Function(
                 input_names=["caps_dwi_filename"],
                 output_names=["bids_identifier"],
-                function=extract_bids_identifier_from_caps_filename,
+                function=extract_bids_identifier_from_filename,
             ),
             name="0-Get_BIDS_Identifier",
         )

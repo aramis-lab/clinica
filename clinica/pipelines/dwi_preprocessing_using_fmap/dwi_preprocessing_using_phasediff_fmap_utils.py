@@ -1,109 +1,59 @@
 def rename_into_caps(
-    in_bids_dwi,
-    fname_dwi,
-    fname_bval,
-    fname_bvec,
-    fname_brainmask,
-    fname_magnitude,
-    fname_fmap,
-    fname_smoothed_fmap,
-):
+    in_bids_dwi: str,
+    fname_dwi: str,
+    fname_bval: str,
+    fname_bvec: str,
+    fname_brainmask: str,
+    fname_magnitude: str,
+    fname_fmap: str,
+    fname_smoothed_fmap: str,
+) -> tuple:
     """Rename the outputs of the pipelines into CAPS.
 
-    Args:
-        in_bids_dwi (str): Input BIDS DWI to extract the <source_file>
-        fname_dwi (str): Preprocessed DWI file.
-        fname_bval (str): Preprocessed bval.
-        fname_bvec (str): Preprocessed bvec.
-        fname_brainmask (str): B0 mask.
-        fname_smoothed_fmap (str): Smoothed (calibrated) fmap on b0 space.
-        fname_fmap (str): Calibrated fmap on b0 space.
-        fname_magnitude (str): Magnitude image on b0 space.
+    Parameters
+    ----------
+    in_bids_dwi : str
+        Path to input BIDS DWI to extract the <source_file>
 
-    Returns:
-        Tuple[str, str, str, str, str, str, str]: The different outputs in CAPS format.
+    fname_dwi : str
+        Name of preprocessed DWI file.
+
+    fname_bval : str
+        Name of preprocessed bval file.
+
+    fname_bvec : str
+        Name of preprocessed bvec file.
+
+    fname_brainmask : str
+        Name of B0 mask file.
+
+    fname_smoothed_fmap : str
+        Name of smoothed (calibrated) fmap file on b0 space.
+
+    fname_fmap : str
+        Name of calibrated fmap file on b0 space.
+
+    fname_magnitude : str
+        Name of magnitude image file on b0 space.
+
+    Returns
+    -------
+    Tuple[str, str, str, str, str, str, str] :
+        The different outputs in CAPS format.
     """
-    import os
+    from clinica.utils.dwi import rename_files
 
-    from nipype.interfaces.utility import Rename
-    from nipype.utils.filemanip import split_filename
-
-    # Extract <source_file> in format sub-CLNC01_ses-M000_[acq-label]_dwi
-    _, source_file_dwi, _ = split_filename(in_bids_dwi)
-
-    # Extract base path from fname:
-    base_dir_dwi, _, _ = split_filename(fname_dwi)
-    base_dir_bval, _, _ = split_filename(fname_bval)
-    base_dir_bvec, _, _ = split_filename(fname_bvec)
-    base_dir_brainmask, _, _ = split_filename(fname_brainmask)
-    base_dir_smoothed_fmap, _, _ = split_filename(fname_smoothed_fmap)
-    base_dir_calibrated_fmap, _, _ = split_filename(fname_fmap)
-    base_dir_magnitude, _, _ = split_filename(fname_magnitude)
-
-    # Rename into CAPS DWI:
-    rename_dwi = Rename()
-    rename_dwi.inputs.in_file = fname_dwi
-    rename_dwi.inputs.format_string = os.path.join(
-        base_dir_dwi, f"{source_file_dwi}_space-b0_preproc.nii.gz"
-    )
-    out_caps_dwi = rename_dwi.run()
-
-    # Rename into CAPS bval:
-    rename_bval = Rename()
-    rename_bval.inputs.in_file = fname_bval
-    rename_bval.inputs.format_string = os.path.join(
-        base_dir_bval, f"{source_file_dwi}_space-b0_preproc.bval"
-    )
-    out_caps_bval = rename_bval.run()
-
-    # Rename into CAPS bvec:
-    rename_bvec = Rename()
-    rename_bvec.inputs.in_file = fname_bvec
-    rename_bvec.inputs.format_string = os.path.join(
-        base_dir_bvec, f"{source_file_dwi}_space-b0_preproc.bvec"
-    )
-    out_caps_bvec = rename_bvec.run()
-
-    # Rename into CAPS brainmask:
-    rename_brainmask = Rename()
-    rename_brainmask.inputs.in_file = fname_brainmask
-    rename_brainmask.inputs.format_string = os.path.join(
-        base_dir_brainmask, f"{source_file_dwi}_space-b0_brainmask.nii.gz"
-    )
-    out_caps_brainmask = rename_brainmask.run()
-
-    # Rename into CAPS magnitude:
-    rename_magnitude = Rename()
-    rename_magnitude.inputs.in_file = fname_magnitude
-    rename_magnitude.inputs.format_string = os.path.join(
-        base_dir_magnitude, f"{source_file_dwi}_space-b0_magnitude1.nii.gz"
-    )
-    out_caps_magnitude = rename_magnitude.run()
-
-    # Rename into CAPS fmap:
-    rename_calibrated_fmap = Rename()
-    rename_calibrated_fmap.inputs.in_file = fname_fmap
-    rename_calibrated_fmap.inputs.format_string = os.path.join(
-        base_dir_calibrated_fmap, f"{source_file_dwi}_space-b0_fmap.nii.gz"
-    )
-    out_caps_fmap = rename_calibrated_fmap.run()
-
-    # Rename into CAPS smoothed fmap:
-    rename_smoothed_fmap = Rename()
-    rename_smoothed_fmap.inputs.in_file = fname_smoothed_fmap
-    rename_smoothed_fmap.inputs.format_string = os.path.join(
-        base_dir_smoothed_fmap, f"{source_file_dwi}_space-b0_fwhm-4_fmap.nii.gz"
-    )
-    out_caps_smoothed_fmap = rename_smoothed_fmap.run()
-
-    return (
-        out_caps_dwi.outputs.out_file,
-        out_caps_bval.outputs.out_file,
-        out_caps_bvec.outputs.out_file,
-        out_caps_brainmask.outputs.out_file,
-        out_caps_magnitude.outputs.out_file,
-        out_caps_fmap.outputs.out_file,
-        out_caps_smoothed_fmap.outputs.out_file,
+    return rename_files(
+        in_bids_dwi,
+        {
+            fname_dwi: "_space-b0_preproc.nii.gz",
+            fname_bval: "_space-b0_preproc.bval",
+            fname_bvec: "_space-b0_preproc.bval",
+            fname_brainmask: "_space-b0_brainmask.nii.gz",
+            fname_magnitude: "_space-b0_magnitude1.nii.gz",
+            fname_fmap: "_space-b0_fmap.nii.gz",
+            fname_smoothed_fmap: "_space-b0_fwhm-4_fmap.nii.gz",
+        },
     )
 
 

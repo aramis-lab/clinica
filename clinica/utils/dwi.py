@@ -363,3 +363,74 @@ def bids_dir_to_fsl_dir(bids_dir):
         )
 
     return fsl_dir.replace("i", "x").replace("j", "y").replace("k", "z")
+
+
+def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
+    """Extract BIDS identifier from CAPS filename.
+
+    Parameters
+    ----------
+    dwi_filename : str
+        DWI file name for which to extract the bids identifier.
+
+    Returns
+    -------
+    str :
+        The corresponding BIDS identifier.
+
+    Examples
+    --------
+    >>> extract_bids_identifier_from_filename("sub-01_ses-M000_dwi_space-b0_preproc.bval")
+    'sub-01_ses-M000_dwi'
+    >>> extract_bids_identifier_from_filename("sub-01_ses-M000_dwi.bvec")
+    'sub-01_ses-M000_dwi'
+    >>> extract_bids_identifier_from_filename("foo/bar/sub-01_ses-M000_dwi_baz.foo.bar")
+    'sub-01_ses-M000_dwi'
+    """
+    import re
+
+    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi", dwi_filename)
+    if not m:
+        raise ValueError(
+            f"Could not extract the BIDS identifier from the DWI input filename {dwi_filename}."
+        )
+
+    return m.group(0)
+
+
+def rename_files(in_caps_dwi: str, mapping: dict) -> tuple:
+    """Rename files provided.
+
+    The new files are symbolic links to old files.
+    For this reason, the old files still exists after renaming.
+
+    Parameters
+    ----------
+    in_caps_dwi : str
+        A DWI file from the CAPS folder.
+        This is used only to extract the BIDS identifier.
+
+    mapping : dict
+        Mapping between original file names and suffixes for
+        new file names.
+
+    Returns
+    -------
+    tuple :
+        New file names.
+    """
+    import os
+
+    from nipype.interfaces.utility import Rename
+    from nipype.utils.filemanip import split_filename
+
+    bids_id = extract_bids_identifier_from_filename(in_caps_dwi)
+    renamed_files = []
+    for original_file, suffix in mapping.items():
+        base_dir, _, _ = split_filename(original_file)
+        rename = Rename()
+        rename.inputs.in_file = original_file
+        rename.inputs.format_string = os.path.join(base_dir, f"{bids_id}{suffix}")
+        renamed_files.append(rename.run().outputs.out_file)
+
+    return tuple(renamed_files)
