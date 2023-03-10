@@ -257,23 +257,37 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
 
 
 def generate_index_file(
-    b_values_filename: str, b_value_threshold: float = 5.0, image_id=None
-):
+    b_values_filename: str, b_value_threshold: float = 5.0, image_id: str = None
+) -> str:
     """Generate [`image_id`]_index.txt file for FSL eddy command.
 
-    Args:
-        b_values_filename (str): Bval file.
-        b_value_threshold (float): Define the b0 volumes as all volume bval <= low_bval. Default to 5.0.
-        image_id (str, optional): Optional prefix. Defaults to None.
+    Parameters
+    ----------
+    b_values_filename : str
+        Path to the b-values file.
 
-    Returns:
-        out_index: [`image_id`]_index.txt or index.txt file.
+    b_bvalue_threshold : float, optional
+        Define the threshold for the b0 volumes.
+        Volumes are considered B0 volumes if their bval <= low_bval.
+        Default=5.0.
+
+    image_id : str, optional
+        Optional prefix for the output file name.
+        Defaults to None.
+
+    Returns
+    -------
+    index_filename: str
+        Path to output index file. [`image_id`]_index.txt or index.txt file.
     """
-    import os
+    from pathlib import Path
 
     import numpy as np
 
-    assert os.path.isfile(b_values_filename)
+    b_values_filename = Path(b_values_filename)
+    if not b_values_filename.is_file():
+        raise FileNotFoundError(f"Unable to find b-values file: {b_values_filename}.")
+
     bvals = np.loadtxt(b_values_filename)
     idx_low_bvals = np.where(bvals <= b_value_threshold)
     b0_index = idx_low_bvals[0].tolist()
@@ -282,29 +296,34 @@ def generate_index_file(
         raise ValueError(
             f"Could not find b-value <= {b_value_threshold} in bval file ({b_values_filename}). Found values: {bvals}"
         )
+    index_filename = f"{image_id}_index.txt" if image_id else "index.txt"
+    index_filename = in_bval.parent / index_filename
+    np.savetxt(index_filename, _generate_index_array(b0_index, len(bvals)).T)
 
-    if image_id:
-        out_index = os.path.abspath(f"{image_id}_index.txt")
-    else:
-        out_index = os.path.abspath("index.txt")
+    return str(index_filename)
 
-    vols = len(bvals)
+
+def _generate_index_array(b0_index: list, nb_volumes: int):
+    import numpy as np
+
     index_list = []
-    for i in range(0, len(b0_index)):
+    for i, idx_b0 in enumerate(b0_index):
         if i == (len(b0_index) - 1):
-            index_list.extend([i + 1] * (vols - b0_index[i]))
+            index_list.extend([i + 1] * (nb_volumes - idx_b0))
         else:
-            index_list.extend([i + 1] * (b0_index[i + 1] - b0_index[i]))
-    index_array = np.asarray(index_list)
-    try:
-        len(index_list) == vols
-    except ValueError:
-        raise ValueError(
-            "It seems that you do not define the index file for FSL eddy correctly!"
-        )
-    np.savetxt(out_index, index_array.T)
+            index_list.extend([i + 1] * (b0_index[i + 1] - idx_b0))
+    # _check_index_list(index_list, nb_volumes)
 
-    return out_index
+    return np.asarray(index_list)
+
+
+def _check_index_list(index_list: list, nb_volumes: int) -> None:
+    if len(index_list) != nb_volumes:
+        raise ValueError(
+            "Could not generate the index file for the Eddy command."
+            f"The size of the computed index list ({len(index_list)}) "
+            f"does not match the number of volumes ({nb_volumes})."
+        )
 
 
 def generate_acq_file(
