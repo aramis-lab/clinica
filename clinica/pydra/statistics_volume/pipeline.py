@@ -35,50 +35,30 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     if spm_standalone_is_available():
         use_spm_standalone()
 
-    if parameters["orig_input_data_volume"] == "pet-volume":
-        input_name = "pet_volume"
-        parameters["measure_label"] = parameters["acq_label"]
-        input_spec = pydra.specs.SpecInfo(
-            name="Input",
-            fields=[
-                ("_graph_checksums", Any),
-                (
-                    "pet_volume",
-                    dict,
-                    {
-                        "acq_label": parameters["acq_label"],
-                        "group_label": parameters["group_label_dartel"],
-                        "suvr_reference_region": parameters["suvr_reference_region"],
-                        "use_brainmasked_image": True,
-                        "use_pvc_data": parameters["use_pvc_data"],
-                        "fwhm": parameters["full_width_at_half_maximum"],
-                    },
-                    {"mandatory": True},
-                ),
-            ],
-            bases=(pydra.specs.BaseSpec,),
+    input_name = parameters["orig_input_data_volume"]
+    query = {
+        "group_label": parameters["group_label_dartel"],
+        "fwhm": parameters["full_width_at_half_maximum"],
+    }
+    if input_name == "pet_volume":
+        query.update(
+            {
+                "acq_label": parameters["acq_label"],
+                "suvr_reference_region": parameters["suvr_reference_region"],
+                "use_brainmasked_image": True,
+                "use_pvc_data": parameters["use_pvc_data"],
+            }
         )
-    elif parameters["orig_input_data_volume"] == "t1-volume":
-        input_name = "t1_volume"
-        parameters["measure_label"] = "graymatter"
-        input_spec = pydra.specs.SpecInfo(
-            name="Input",
-            fields=[
-                ("_graph_checksums", Any),
-                (
-                    "t1_volume",
-                    dict,
-                    {
-                        "group_label": parameters["group_label_dartel"],
-                        "tissue_number": 1,
-                        "modulation": True,
-                        "fwhm": parameters["full_width_at_half_maximum"],
-                    },
-                    {"mandatory": True},
-                ),
-            ],
-            bases=(pydra.specs.BaseSpec,),
-        )
+    elif input_name == "t1_volume":
+        query.update({"tissue_number": 1, "modulation": True})
+    input_spec = pydra.specs.SpecInfo(
+        name="Input",
+        fields=[
+            ("_graph_checksums", Any),
+            (input_name, dict, query, {"mandatory": True}),
+        ],
+        bases=(pydra.specs.BaseSpec,),
+    )
     # elif parameters["orig_input_data_volume"] == "custom-pipeline":
     #     if not parameters["custom_file"]:
     #             raise ClinicaException(
