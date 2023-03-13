@@ -89,6 +89,14 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         )
     elif input_name == "t1_volume":
         query.update({"tissue_number": 1, "modulation": True})
+
+    elif input_name == "custom-pipeline":
+        if not parameters["custom_file"]:
+            raise ClinicaException(
+                "Custom pipeline was selected but no 'custom_file' was specified."
+            )
+        query = {"pattern": parameters["custom_file"]}
+
     input_spec = pydra.specs.SpecInfo(
         name="Input",
         fields=[
@@ -97,11 +105,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         ],
         bases=(pydra.specs.BaseSpec,),
     )
-    # elif parameters["orig_input_data_volume"] == "custom-pipeline":
-    #     if not parameters["custom_file"]:
-    #             raise ClinicaException(
-    #                 "Custom pipeline was selected but no 'custom_file' was specified."
-    #             )
     wf = Workflow(name, input_spec=input_spec)
     wf.add(
         Nipype1Task(

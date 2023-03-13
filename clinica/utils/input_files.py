@@ -636,3 +636,9 @@ def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
         "needed_pipeline": "pet-linear",
     }
     return information
+
+
+# CUSTOM
+def custom_pipeline(pattern):
+    information = {"pattern": pattern}
+    return information
