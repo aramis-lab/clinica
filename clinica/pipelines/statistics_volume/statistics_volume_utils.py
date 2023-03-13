@@ -157,7 +157,7 @@ def write_covariates(
     covar: int,
     covar_number: int,
 ) -> None:
-    """Writes covariates
+    """Concatenate covariates for group1 and group2 and write them to disk.
 
     Parameters
     ----------
@@ -172,7 +172,7 @@ def write_covariates(
         Covariance
     covar_number: int
     """
-    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import write_covariate_lines
 
     current_covar_data_group1 = [
         elem for i, elem in enumerate(current_covar_data) if i in idx_group1
@@ -181,7 +181,7 @@ def write_covariates(
         elem for i, elem in enumerate(current_covar_data) if i in idx_group2
     ]
     covar_data_concatenated = current_covar_data_group1 + current_covar_data_group2
-    utls.write_covariate_lines(
+    write_covariate_lines(
         current_model, covar_number, covar, covar_data_concatenated
     )
 
