@@ -6,6 +6,42 @@ from pydra.tasks.nipype1.utils import Nipype1Task
 from clinica.pydra.engine import clinica_io
 
 
+def _check_pipeline_parameters(parameters: dict) -> None:
+    """Check the parameters passed to the pipeline.
+
+    Parameters
+    ----------
+    parameters : dict
+        Dictionary of parameters to analyze.
+
+    Returns
+    -------
+    dict :
+        Cleaned dictionary of parameters.
+    """
+    from clinica.utils.exceptions import ClinicaException
+
+    # PET-Volume pipeline
+    if parameters["orig_input_data_volume"] == "pet-volume":
+        if not parameters["acq_label"]:
+            raise ClinicaException(
+                "You selected pet-volume pipeline without setting --acq_label flag. "
+                "Clinica will now exit."
+            )
+        if not parameters["suvr_reference_region"]:
+            raise ClinicaException(
+                "You selected pet-volume pipeline without setting --suvr_reference_region flag. "
+                "Clinica will now exit."
+            )
+
+    # Custom pipeline
+    if parameters["orig_input_data_volume"] == "custom-pipeline":
+        if not all([parameters["custom_file"], parameters["measure_label"]]):
+            raise ClinicaException(
+                "You must set --measure_label and --custom_file flags."
+            )
+
+
 @clinica_io
 def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     """Build the core workflow for the Statistics Volume pipeline.
@@ -34,6 +70,8 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
 
     if spm_standalone_is_available():
         use_spm_standalone()
+
+    parameters = _check_pipeline_parameters(parameters)
 
     input_name = parameters["orig_input_data_volume"]
     query = {
