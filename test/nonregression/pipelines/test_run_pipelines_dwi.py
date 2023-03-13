@@ -42,6 +42,23 @@ def test_dwi_b0_flirt(cmdopt, tmp_path):
     assert similarity_measure(out_file, ref_file, 0.99)
 
 
+@pytest.mark.fast
+def test_dwi_eddy_fsl(cmdopt, tmp_path):
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+        eddy_fsl_pipeline,
+    )
+
+    base_dir = Path(cmdopt["input"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEddyFSL")
+    eddy_fsl = eddy_fsl_pipeline(low_bval=5, use_cuda=False, initrand=True)
+    eddy_fsl.inputnode.total_readout_time = 0.0342002
+    eddy_fsl.inputnode.phase_encoding_direction = "j-"
+    eddy_fsl.inputnode.in_file = str(input_dir / "sub-01_ses-M000_dwi.nii.gz")
+    eddy_fsl.inputnode.in_bval = str(input_dir / "sub-01_ses-M000_dwi.bval")
+    eddy_fsl.inputnode.in_bvec = str(input_dir / "sub-01_ses-M000_dwi.bvec")
+    eddy_fsl.inputnode.ref_b0 = str(input_dir / "sub-01_ses-M000_dwi_b0.nii.gz")
+
+
 @pytest.mark.slow
 def test_dwi_preprocessing_using_t1(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
