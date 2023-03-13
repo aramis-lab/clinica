@@ -56,11 +56,12 @@ def eddy_fsl_pipeline(
     """
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
+    from nipype.interfaces.fsl import BET
     from nipype.interfaces.fsl.epi import Eddy
 
     from clinica.utils.dwi import generate_acq_file, generate_index_file
 
-    inputnode = pe.Node(
+    input_node = pe.Node(
         niu.IdentityInterface(
             fields=[
                 "dwi_filename",
@@ -74,8 +75,10 @@ def eddy_fsl_pipeline(
                 "phase_encoding_direction",
             ]
         ),
-        name="inputnode",
+        name="input_node",
     )
+
+    mask_b0_pre = pe.Node(BET(frac=0.3, mask=True, robust=True), name="PreMaskB0")
 
     generate_acq = pe.Node(
         niu.Function(
@@ -124,6 +127,8 @@ def eddy_fsl_pipeline(
         ),
         (inputnode, generate_index, [("b_values_filename", "b_values_filename")]),
         (inputnode, generate_index, [("image_id", "image_id")]),
+        (input_node, mask_b0_pre, [('ref_b0', 'in_file')]),
+        (mask_b0_pre, eddy, [('mask_file', 'in_mask')]),
         (inputnode, eddy, [("b_vectors_filename", "in_bvec")]),
         (inputnode, eddy, [("b_values_filename", "in_bval")]),
         (inputnode, eddy, [("dwi_filename", "in_file")]),
