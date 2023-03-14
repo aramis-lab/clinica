@@ -44,14 +44,11 @@ def get_group_1_and_2(tsv: str, contrast: str) -> ty.Tuple[list]:
             + " to perform 2-sample t-tests. Here Clinica found: "
             + str(class_names)
         )
-    first_group_idx = [
-        i for i, label in enumerate(list(tsv[contrast])) if label == class_names[0]
-    ]
-    second_group_idx = [
-        i for i, label in enumerate(list(tsv[contrast])) if label == class_names[1]
-    ]
+    classes_idx = {c: [] for c in class_names}
+    for i, label in enumerate(list(tsv[contrast])):
+        classes_idx[label].append(i)
 
-    return first_group_idx, second_group_idx, class_names
+    return classes_idx
 
 
 def create_spm_output_folder(current_model: str) -> str:
@@ -84,8 +81,9 @@ def set_output_and_groups(
     output_folder: str,
     current_model: str,
     file_list: list,
-    idx_group1: list,
-    idx_group2: list,
+    # idx_group1: list,
+    # idx_group2: list,
+    classes_idx: dict,
     filedata: str,
 ) -> None:
     """Sets path to output and groups in the .m script
@@ -109,25 +107,19 @@ def set_output_and_groups(
         unravel_list_for_matlab,
     )
 
-    filedata = filedata.replace("@OUTPUTDIR", "'" + output_folder + "'")
-    filedata = filedata.replace(
-        "@SCANS1",
-        unravel_list_for_matlab(
-            [f for i, f in enumerate(file_list) if i in idx_group1]
-        ),
-    )
-    filedata = filedata.replace(
-        "@SCANS2",
-        unravel_list_for_matlab(
-            [f for i, f in enumerate(file_list) if i in idx_group2]
-        ),
-    )
+    replacement = {"@OUTPUTDIR": f"'{output_folder}'"}
+    for c, class_idx in enumerate(classes_idx.items()):
+        replacement[f"@SCANS{c}"] = unravel_list_for_matlab(
+            [file_list[i] for i in class_idx[c]]
+        )
+    for old, new in replacement.items():
+        filedata = filedata.replace(old, new)
 
     with open(current_model, "w+") as file:
         file.write(filedata)
 
 
-def convert_to_numeric(current_covar_data: list) -> list:
+def convert_to_numeric(data: list) -> list:
     """Convert the string values from the input list to numeric values.
 
     If the values can be casted to floats, then outputs a list of floats.
@@ -144,18 +136,19 @@ def convert_to_numeric(current_covar_data: list) -> list:
 
     from clinica.pipelines.statistics_volume.statistics_volume_utils import is_number
 
-    temp_data = [elem.replace(",", ".") for elem in current_covar_data]
+    temp_data = [elem.replace(",", ".") for elem in data]
     if all(is_number(elem) for elem in temp_data):
         return [float(elem) for elem in temp_data]
     # categorical variables (like Male; Female; M, F etc...)
-    unique_values = list(np.unique(np.array(current_covar_data)))
-    return [unique_values.index(elem) for elem in current_covar_data]
+    unique_values = list(np.unique(np.array(data)))
+    return [unique_values.index(elem) for elem in data]
 
 
 def write_covariates(
     current_covar_data: list,
-    idx_group1: list,
-    idx_group2: list,
+    # idx_group1: list,
+    # idx_group2: list,
+    classes_idx: dict,
     model: str,
     covar: int,
     covar_number: int,
@@ -175,25 +168,36 @@ def write_covariates(
         Covariance
     covar_number: int
     """
+    # current_covar_data_group1 = [
+    #     elem for i, elem in enumerate(current_covar_data) if i in idx_group1
+    # ]
+    # current_covar_data_group2 = [
+    #     elem for i, elem in enumerate(current_covar_data) if i in idx_group2
+    # ]
+    import itertools
+
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
         write_covariate_lines,
     )
 
-    current_covar_data_group1 = [
-        elem for i, elem in enumerate(current_covar_data) if i in idx_group1
-    ]
-    current_covar_data_group2 = [
-        elem for i, elem in enumerate(current_covar_data) if i in idx_group2
-    ]
-    covar_data_concatenated = current_covar_data_group1 + current_covar_data_group2
-    write_covariate_lines(model, covar_number, covar, covar_data_concatenated)
+    concatenated_covariates = list(
+        itertools.chain.from_iterable(
+            [
+                [current_covar_data[i] for i in class_idx]
+                for _, class_idx in classes_idx.items()
+            ]
+        )
+    )
+    # covar_data_concatenated = current_covar_data_group1 + current_covar_data_group2
+    write_covariate_lines(model, covar_number, covar, concatenated_covariates)
 
 
 def write_matlab_model(
     tsv: str,
     contrast: str,
-    idx_group1: list,
-    idx_group2: list,
+    # idx_group1: list,
+    # idx_group2: list,
+    classes_idx: dict,
     file_list: list,
     template_file: str,
 ):
@@ -248,7 +252,11 @@ def write_matlab_model(
 
     # Replace string in matlab file to set the output directory, and all the scans used for group 1 and 2
     set_output_and_groups(
-        output_folder, current_model, file_list, idx_group1, idx_group2, filedata
+        output_folder,
+        current_model,
+        file_list,
+        classes_idx,
+        filedata,  # idx_group1, idx_group2, filedata
     )
 
     # Add our covariates
@@ -275,8 +283,9 @@ def write_matlab_model(
             pass
         write_covariates(
             current_covar_data,
-            idx_group1,
-            idx_group2,
+            # idx_group1,
+            # idx_group2,
+            classes_idx,
             current_model,
             covar,
             covar_number,
