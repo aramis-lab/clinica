@@ -54,7 +54,9 @@ def get_group_1_and_2(tsv: str, contrast: str) -> ty.Tuple[list]:
 
 
 def create_spm_output_folder(current_model: str) -> str:
-    """Creates the spm output folder. If it already exists, it is deleted and created again.
+    """Creates the spm output folder.
+    
+    If it already exists, it is deleted and created again.
 
     Parameters
     ----------
@@ -137,10 +139,10 @@ def convert_to_numeric(current_covar_data: list) -> list:
     """
     import numpy as np
 
-    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import is_number
 
     temp_data = [elem.replace(",", ".") for elem in current_covar_data]
-    if all(utls.is_number(elem) for elem in temp_data):
+    if all(is_number(elem) for elem in temp_data):
         current_covar_data = [float(elem) for elem in temp_data]
     else:
         # categorical variables (like Male; Female; M, F etc...)
@@ -326,7 +328,7 @@ def unravel_list_for_matlab(my_list: list) -> str:
 def write_covariate_lines(
     m_file_to_write_in: str, covar_number: int, covar_name: str, covar_values: list
 ) -> None:
-    """Use this function to add covariate lines in the Matlab file m_file_to_write_in for one covariate.
+    """Add one line in the Matlab file `m_file_to_write_in` for each covariate.
 
     Parameters
     ----------
@@ -375,7 +377,9 @@ def write_covariate_lines(
 
 
 def run_m_script(m_file: str) -> str:
-    """Runs a matlab m file for SPM, determining automatically if it must be launched with SPM or SPM standalone
+    """Runs a Matlab file for SPM.
+    
+    Determines automatically if the script should be launched with SPM or SPM standalone.
     If launch with spm standalone, the line 'spm_jobman('run', matlabbatch)' must be removed because unnecessary
 
     Parameters
@@ -413,7 +417,7 @@ def run_m_script(m_file: str) -> str:
     return output_mat_file
 
 
-def run_matlab_script_with_matlab(m_file: str) -> None:
+def run_matlab_script_with_matlab(m_file: Path) -> None:
     """Runs a matlab script using matlab
 
     Parameters
@@ -422,7 +426,7 @@ def run_matlab_script_with_matlab(m_file: str) -> None:
         Path to the script
     """
     import platform
-    from os.path import abspath, basename, dirname
+    from os.path import abspath
 
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
 
@@ -430,8 +434,8 @@ def run_matlab_script_with_matlab(m_file: str) -> None:
     matlab = MatlabCommand()
     if platform.system().lower().startswith("linux"):
         matlab.inputs.args = "-nosoftwareopengl"
-    matlab.inputs.paths = dirname(m_file)
-    matlab.inputs.script = basename(m_file)[:-2]
+    matlab.inputs.paths = m_file.parent
+    matlab.inputs.script = m_file.stem
     matlab.inputs.single_comp_thread = False
     matlab.inputs.logfile = abspath("./matlab_output.log")
     matlab.run()
@@ -670,7 +674,7 @@ def copy_and_rename_spm_output_files(
         spm_dir, list_files, fwhm, group_label, class_names, measure
     )
 
-    variance_of_error = abspath("./group-" + group_label + "_VarianceError.nii")
+    variance_of_error = abspath(f"./group-{group_label}_VarianceError.nii")
     copyfile(abspath(join(spm_dir, "ResMS.nii")), variance_of_error)
 
     resels_per_voxels = abspath("./resels_per_voxel.nii")
@@ -859,7 +863,7 @@ def rename_beta_files(
     betas = sorted(betas)
     if len(betas) != 2 + len(covariates):
         raise RuntimeError("[Error] Not enough betas files found in output directory")
-    regression_coeff_covar = [abspath("./" + covar + ".nii") for covar in covariates]
+    regression_coeff_covar = [abspath(f"./{covar}.nii") for covar in covariates]
     regression_coeff = [abspath(f"./{c}.nii") for c in class_names]
     regression_coeff.extend(regression_coeff_covar)
     # Order is respected:
