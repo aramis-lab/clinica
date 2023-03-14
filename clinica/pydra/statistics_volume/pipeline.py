@@ -76,7 +76,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         "group_label": parameters["group_label_dartel"],
         "fwhm": parameters["full_width_at_half_maximum"],
     }
-    if input_name == "pet_volume":
+    if input_name == "pet-volume":
         query.update(
             {
                 "acq_label": parameters["acq_label"],
@@ -85,7 +85,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                 "use_pvc_data": parameters["use_pvc_data"],
             }
         )
-    elif input_name == "t1_volume":
+    elif input_name == "t1-volume":
         query.update({"tissue_number": 1, "modulation": True})
 
     elif input_name == "custom-pipeline":
