@@ -1,4 +1,5 @@
 import typing as ty
+from pathlib import Path
 
 
 def get_group_1_and_2(tsv: str, contrast: str) -> ty.Tuple[list]:
@@ -55,7 +56,7 @@ def get_group_1_and_2(tsv: str, contrast: str) -> ty.Tuple[list]:
 
 def create_spm_output_folder(current_model: str) -> str:
     """Creates the spm output folder.
-    
+
     If it already exists, it is deleted and created again.
 
     Parameters
@@ -104,18 +105,20 @@ def set_output_and_groups(
     filedata: str
         .m script template which is to be modified and then run
     """
-    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        unravel_list_for_matlab,
+    )
 
     filedata = filedata.replace("@OUTPUTDIR", "'" + output_folder + "'")
     filedata = filedata.replace(
         "@SCANS1",
-        utls.unravel_list_for_matlab(
+        unravel_list_for_matlab(
             [f for i, f in enumerate(file_list) if i in idx_group1]
         ),
     )
     filedata = filedata.replace(
         "@SCANS2",
-        utls.unravel_list_for_matlab(
+        unravel_list_for_matlab(
             [f for i, f in enumerate(file_list) if i in idx_group2]
         ),
     )
@@ -143,19 +146,17 @@ def convert_to_numeric(current_covar_data: list) -> list:
 
     temp_data = [elem.replace(",", ".") for elem in current_covar_data]
     if all(is_number(elem) for elem in temp_data):
-        current_covar_data = [float(elem) for elem in temp_data]
-    else:
-        # categorical variables (like Male; Female; M, F etc...)
-        unique_values = list(np.unique(np.array(current_covar_data)))
-        current_covar_data = [unique_values.index(elem) for elem in current_covar_data]
-    return current_covar_data
+        return [float(elem) for elem in temp_data]
+    # categorical variables (like Male; Female; M, F etc...)
+    unique_values = list(np.unique(np.array(current_covar_data)))
+    return [unique_values.index(elem) for elem in current_covar_data]
 
 
 def write_covariates(
     current_covar_data: list,
     idx_group1: list,
     idx_group2: list,
-    current_model: str,
+    model: str,
     covar: int,
     covar_number: int,
 ) -> None:
@@ -168,13 +169,15 @@ def write_covariates(
         List of indexes of first group
     idx_group2: list of int
         List of indexes of second group
-    current_model: str
+    model: str
         Path to the matlab files with all the @TEXT replaced with the correct names
     covar: int
         Covariance
     covar_number: int
     """
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import write_covariate_lines
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        write_covariate_lines,
+    )
 
     current_covar_data_group1 = [
         elem for i, elem in enumerate(current_covar_data) if i in idx_group1
@@ -183,9 +186,7 @@ def write_covariates(
         elem for i, elem in enumerate(current_covar_data) if i in idx_group2
     ]
     covar_data_concatenated = current_covar_data_group1 + current_covar_data_group2
-    write_covariate_lines(
-        current_model, covar_number, covar, covar_data_concatenated
-    )
+    write_covariate_lines(model, covar_number, covar, covar_data_concatenated)
 
 
 def write_matlab_model(
@@ -378,7 +379,7 @@ def write_covariate_lines(
 
 def run_m_script(m_file: str) -> str:
     """Runs a Matlab file for SPM.
-    
+
     Determines automatically if the script should be launched with SPM or SPM standalone.
     If launch with spm standalone, the line 'spm_jobman('run', matlabbatch)' must be removed because unnecessary
 
@@ -394,14 +395,14 @@ def run_m_script(m_file: str) -> str:
     """
 
     from os.path import abspath, dirname, isfile, join
+    from pathlib import Path
 
     from clinica.utils.spm import spm_standalone_is_available
 
-    if not type(m_file) == str:
-        raise TypeError("[Error] Argument must be a string")
-    if not isfile(m_file):
+    m_file = Path(m_file)
+    if not m_file.exists():
         raise FileNotFoundError("[Error] File " + m_file + "does not exist")
-    if not m_file[-2:] == ".m":
+    if m_file.suffix != ".m":
         raise ValueError(
             f"[Error] {m_file} is not a Matlab file (extension must be .m)"
         )

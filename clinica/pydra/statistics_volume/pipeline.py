@@ -6,7 +6,7 @@ from pydra.tasks.nipype1.utils import Nipype1Task
 from clinica.pydra.engine import clinica_io
 
 
-def _check_pipeline_parameters(parameters: dict) -> None:
+def _check_pipeline_parameters(parameters: dict) -> dict:
     """Check the parameters passed to the pipeline.
 
     Parameters
@@ -23,16 +23,12 @@ def _check_pipeline_parameters(parameters: dict) -> None:
 
     # PET-Volume pipeline
     if parameters["orig_input_data_volume"] == "pet-volume":
-        if not parameters["acq_label"]:
-            raise ClinicaException(
-                "You selected pet-volume pipeline without setting --acq_label flag. "
-                "Clinica will now exit."
-            )
-        if not parameters["suvr_reference_region"]:
-            raise ClinicaException(
-                "You selected pet-volume pipeline without setting --suvr_reference_region flag. "
-                "Clinica will now exit."
-            )
+        for param in ("acq_label", "suvr_reference_region"):
+            if not parameters[param]:
+                raise ClinicaException(
+                    f"You selected pet-volume pipeline without setting --{param} flag. "
+                    "Clinica will now exit."
+                )
 
     # Custom pipeline
     if parameters["orig_input_data_volume"] == "custom-pipeline":
@@ -40,6 +36,8 @@ def _check_pipeline_parameters(parameters: dict) -> None:
             raise ClinicaException(
                 "You must set --measure_label and --custom_file flags."
             )
+
+    return parameters
 
 
 @clinica_io
