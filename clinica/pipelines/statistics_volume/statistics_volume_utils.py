@@ -152,7 +152,7 @@ def convert_to_numeric(data: list) -> list:
 
 
 def write_covariates(
-    current_covar_data: list,
+    covariates: list,
     idx_group1: list,
     idx_group2: list,
     model: str,
@@ -179,10 +179,10 @@ def write_covariates(
     )
 
     current_covar_data_group1 = [
-        elem for i, elem in enumerate(current_covar_data) if i in idx_group1
+        elem for i, elem in enumerate(covariates) if i in idx_group1
     ]
     current_covar_data_group2 = [
-        elem for i, elem in enumerate(current_covar_data) if i in idx_group2
+        elem for i, elem in enumerate(covariates) if i in idx_group2
     ]
     concatenated_covariates = current_covar_data_group1 + current_covar_data_group2
     write_covariate_lines(model, covar_number, covar, concatenated_covariates)
