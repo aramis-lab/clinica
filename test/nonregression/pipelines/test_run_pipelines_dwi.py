@@ -8,6 +8,7 @@ different functions available in Clinica
 import warnings
 from os import fspath
 from pathlib import Path
+from numpy.testing import assert_array_almost_equal
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -42,7 +43,7 @@ def test_dwi_b0_flirt(cmdopt, tmp_path):
     assert similarity_measure(out_file, ref_file, 0.99)
 
 
-@pytest.mark.fast
+@pytest.mark.slow
 def test_dwi_eddy_fsl(cmdopt, tmp_path):
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
         eddy_fsl_pipeline,
@@ -50,13 +51,29 @@ def test_dwi_eddy_fsl(cmdopt, tmp_path):
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEddyFSL")
-    eddy_fsl = eddy_fsl_pipeline(low_bval=5, use_cuda=False, initrand=True)
-    eddy_fsl.inputnode.total_readout_time = 0.0342002
-    eddy_fsl.inputnode.phase_encoding_direction = "j-"
-    eddy_fsl.inputnode.in_file = str(input_dir / "sub-01_ses-M000_dwi.nii.gz")
-    eddy_fsl.inputnode.in_bval = str(input_dir / "sub-01_ses-M000_dwi.bval")
-    eddy_fsl.inputnode.in_bvec = str(input_dir / "sub-01_ses-M000_dwi.bvec")
-    eddy_fsl.inputnode.ref_b0 = str(input_dir / "sub-01_ses-M000_dwi_b0.nii.gz")
+    (tmp_path / "tmp").mkdir()
+    eddy_fsl = eddy_fsl_pipeline(
+        low_bval=5, use_cuda=False, initrand=True, working_directory=str(tmp_path / "tmp")
+    )
+    eddy_fsl.inputs.input_node.total_readout_time = 0.0342002
+    eddy_fsl.inputs.input_node.phase_encoding_direction = "y-"
+    eddy_fsl.inputs.input_node.in_file = str(input_dir / "sub-01_ses-M000_dwi.nii.gz")
+    eddy_fsl.inputs.input_node.in_bval = str(input_dir / "sub-01_ses-M000_dwi.bval")
+    eddy_fsl.inputs.input_node.in_bvec = str(input_dir / "sub-01_ses-M000_dwi.bvec")
+    eddy_fsl.inputs.input_node.ref_b0 = str(input_dir / "sub-01_ses-M000_dwi_b0.nii.gz")
+    eddy_fsl.run()
+
+    out_file = fspath(tmp_path / "tmp" / "eddy_corrected.nii.gz")
+    ref_file = fspath(ref_dir / "eddy_corrected.nii.gz")
+
+    assert similarity_measure(out_file, ref_file, 0.97)
+
+    out_file = fspath(tmp_path / "tmp" / "eddy_rotated_bvecs")
+    ref_file = fspath(ref_dir / "eddy_rotated_bvecs")
+    out_bvecs = np.loadtxt(out_file)
+    ref_bvecs = np.loadtxt(ref_file)
+
+    assert_array_almost_equal(out_bvecs, ref_bvecs)
 
 
 @pytest.mark.slow
