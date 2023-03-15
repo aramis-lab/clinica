@@ -639,6 +639,6 @@ def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
 
 
 # CUSTOM
-def custom_pipeline(pattern):
-    information = {"pattern": pattern}
+def custom_pipeline(pattern, description):
+    information = {"pattern": pattern, "description": description}
     return information

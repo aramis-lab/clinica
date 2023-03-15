@@ -96,7 +96,10 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             raise ClinicaException(
                 "Custom pipeline was selected but no 'custom_file' was specified."
             )
-        query = {"pattern": parameters["custom_file"]}
+        query = {
+            "pattern": parameters["custom_file"],
+            "description": "custom file provided by user",
+        }
 
     input_spec = pydra.specs.SpecInfo(
         name="Input",
