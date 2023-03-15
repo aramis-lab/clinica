@@ -4,10 +4,8 @@ from pydra.mark import annotate, task
 
 
 @task
-@annotate(
-    {"return": {"first_group_idx": list, "second_group_idx": list, "class_names": list}}
-)
-def get_group_1_and_2_task(tsv: str, contrast: str) -> ty.Tuple[list]:
+@annotate({"return": {"classes_idx": dict}})
+def get_group_1_and_2_task(tsv: str, contrast: str) -> dict:
     """Pydra task for computing indexes of each group.
 
     ..note::
@@ -26,8 +24,7 @@ def get_group_1_and_2_task(tsv: str, contrast: str) -> ty.Tuple[list]:
 def write_matlab_model_task(
     tsv: str,
     contrast: str,
-    idx_group1: list,
-    idx_group2: list,
+    classes_idx: dict,
     file_list: list,
     template_file: str,
 ):
@@ -41,9 +38,7 @@ def write_matlab_model_task(
         write_matlab_model,
     )
 
-    return write_matlab_model(
-        tsv, contrast, idx_group1, idx_group2, file_list, template_file
-    )
+    return write_matlab_model(tsv, contrast, classes_idx, file_list, template_file)
 
 
 @task
@@ -97,7 +92,7 @@ def clean_spm_result_file_task(
 @task
 @annotate({"return": {"current_model_estimation": str}})
 def clean_spm_contrast_file_task(
-    mat_file: str, template_file: str, covariates: list, class_names: list
+    mat_file: str, template_file: str, covariates: list, classes_idx: dict
 ):
     """Pydra task for contrast script.
 
@@ -109,7 +104,7 @@ def clean_spm_contrast_file_task(
         clean_spm_contrast_file,
     )
 
-    return clean_spm_contrast_file(mat_file, template_file, covariates, class_names)
+    return clean_spm_contrast_file(mat_file, template_file, covariates, classes_idx)
 
 
 @task
@@ -129,7 +124,7 @@ def clean_spm_contrast_file_task(
 )
 def copy_and_rename_spm_output_files_task(
     spm_mat: str,
-    class_names: list,
+    classes_idx: list,
     covariates: list,
     group_label: str,
     fwhm: int,
@@ -146,5 +141,5 @@ def copy_and_rename_spm_output_files_task(
     )
 
     return copy_and_rename_spm_output_files(
-        spm_mat, class_names, covariates, group_label, fwhm, measure
+        spm_mat, classes_idx, covariates, group_label, fwhm, measure
     )

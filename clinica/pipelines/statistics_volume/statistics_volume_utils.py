@@ -108,9 +108,10 @@ def set_output_and_groups(
     )
 
     replacement = {"@OUTPUTDIR": f"'{output_folder}'"}
-    for c, class_idx in enumerate(classes_idx.items()):
+    keys = list(classes_idx.keys())
+    for c in keys:
         replacement[f"@SCANS{c}"] = unravel_list_for_matlab(
-            [file_list[i] for i in class_idx[c]]
+            [file_list[i] for i in classes_idx[c]]
         )
     for old, new in replacement.items():
         filedata = filedata.replace(old, new)
@@ -622,7 +623,7 @@ def clean_spm_contrast_file(
 
 def copy_and_rename_spm_output_files(
     spm_mat: str,
-    class_names: list,
+    classes_idx: dict,
     covariates: list,
     group_label: str,
     fwhm: int,
@@ -669,6 +670,7 @@ def copy_and_rename_spm_output_files(
     from os.path import abspath, dirname, isdir, isfile, join
     from shutil import copyfile
 
+    class_names = list(classes_idx.keys())
     spm_dir = dirname(spm_mat)
     if not isfile(spm_mat):
         if not isdir(spm_dir):

@@ -276,7 +276,7 @@ class CAPSFileQuery(CAPSQuery):
         "t1w_to_mni": t1w_to_mni_transform,
         "pet_volume": pet_volume_normalized_suvr_pet,
         "t1_volume": t1_volume_template_tpm_in_mni,
-        "custom-pipeline": custom_pipeline,
+        "custom_pipeline": custom_pipeline,
     }
 
 

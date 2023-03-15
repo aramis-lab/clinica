@@ -77,6 +77,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         "fwhm": parameters["full_width_at_half_maximum"],
     }
     if input_name == "pet-volume":
+        input_name = "pet_volume"
         query.update(
             {
                 "acq_label": parameters["acq_label"],
@@ -86,9 +87,11 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             }
         )
     elif input_name == "t1-volume":
+        input_name = "t1_volume"
         query.update({"tissue_number": 1, "modulation": True})
 
     elif input_name == "custom-pipeline":
+        input_name = "custom_pipeline"
         if not parameters["custom_file"]:
             raise ClinicaException(
                 "Custom pipeline was selected but no 'custom_file' was specified."
@@ -135,8 +138,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                 "template_model_creation.m",
             ),
             file_list=wf.unzip_nii.lzout.out_file,
-            idx_group1=wf.get_groups.lzout.first_group_idx,
-            idx_group2=wf.get_groups.lzout.second_group_idx,
+            classes_idx=wf.get_groups.lzout.classes_idx,
         )
     )
     wf.add(
@@ -176,7 +178,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                 "template_model_contrast.m",
             ),
             covariates=wf.model_creation.lzout.covariates,
-            class_names=wf.get_groups.lzout.class_names,
+            classes_idx=wf.get_groups.lzout.classes_idx,
         )
     )
     wf.add(
@@ -210,7 +212,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         utils.copy_and_rename_spm_output_files_task(
             name="read_output_node",
             spm_mat=wf.run_spm_model_result_no_correction.lzout.output_mat_file,
-            class_names=wf.get_groups.lzout.class_names,
+            classes_idx=wf.get_groups.lzout.classes_idx,
             covariates=wf.model_creation.lzout.covariates,
             group_label=parameters["group_label"],
             fwhm=parameters["full_width_at_half_maximum"],
