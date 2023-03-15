@@ -401,10 +401,9 @@ def run_m_script(m_file: str) -> str:
 
     from clinica.utils.spm import spm_standalone_is_available
 
-    m_file = Path(m_file)
-    if not m_file.exists():
+    if not Path(m_file).exists():
         raise FileNotFoundError("[Error] File " + m_file + "does not exist")
-    if m_file.suffix != ".m":
+    if Path(m_file).suffix != ".m":
         raise ValueError(
             f"[Error] {m_file} is not a Matlab file (extension must be .m)"
         )
