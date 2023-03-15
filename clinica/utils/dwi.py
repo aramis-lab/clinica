@@ -136,7 +136,7 @@ def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
     """
     file_paths = []
     for input_file in dwi_dataset:
-        input_file_path = Path(input_file)
+        input_file_path = Path(input_file).resolve()
         if not input_file_path.exists():
             raise FileNotFoundError(f"File {input_file_path} could not be found.")
         file_paths.append(input_file_path)
@@ -211,27 +211,70 @@ def b0_dwi_split(
         )
         bvecs = bvecs.T
 
-    out_b0 = add_suffix_to_filename(dwi_dataset.dwi, "small_b")
-    out_dwi = add_suffix_to_filename(dwi_dataset.dwi, "large_b")
-    out_bvals = add_suffix_to_filename(dwi_dataset.b_values, "large_b")
-    out_bvecs = add_suffix_to_filename(dwi_dataset.b_vectors, "large_b")
+    small_b_filter = get_b0_filter(dwi_dataset.b_values, low_bval=low_bval)
+    large_b_filter = np.array([i for i in range(len(bvals)) if i not in small_b_filter])
 
-    b0_filter = get_b0_filter(dwi_dataset.b_values, low_bval=low_bval)
-    dwi_filter = np.array([i for i in range(len(bvals)) if i not in b0_filter])
+    out_filename_small_dwi = add_suffix_to_filename(dwi_dataset.dwi, "small_b")
+    out_filename_large_dwi = add_suffix_to_filename(dwi_dataset.dwi, "large_b")
 
-    for volume_filter, out_filename in zip([b0_filter, dwi_filter], [out_b0, out_dwi]):
+    for volume_filter, out_filename in zip(
+        [small_b_filter, large_b_filter],
+        [out_filename_small_dwi, out_filename_large_dwi],
+    ):
         data = compute_aggregated_volume(
             dwi_dataset.dwi, aggregator=None, volumes_to_keep=volume_filter
         )
         img = get_new_image_like(dwi_dataset.dwi, data)
         img.to_filename(out_filename)
 
-    np.savetxt(out_bvals, bvals[dwi_filter], fmt="%d", delimiter=" ")
-    np.savetxt(
-        out_bvecs, np.array([b[dwi_filter] for b in bvecs]), fmt="%10.5f", delimiter=" "
+    out_filename_large_b_values = add_suffix_to_filename(
+        dwi_dataset.b_values, "large_b"
     )
-    small_b_dwi = DWIDataset(dwi=out_b0, b_values=None, b_vectors=None)
-    large_b_dwi = DWIDataset(dwi=out_dwi, b_values=out_bvals, b_vectors=out_bvecs)
+    np.savetxt(
+        out_filename_large_b_values, bvals[large_b_filter], fmt="%d", delimiter=" "
+    )
+
+    out_filename_small_b_values = add_suffix_to_filename(
+        dwi_dataset.b_values, "small_b"
+    )
+    np.savetxt(
+        out_filename_small_b_values, bvals[small_b_filter], fmt="%d", delimiter=" "
+    )
+
+    out_filename_large_b_vectors = add_suffix_to_filename(
+        dwi_dataset.b_vectors, "large_b"
+    )
+    np.savetxt(
+        out_filename_large_b_vectors,
+        np.array([b[large_b_filter] for b in bvecs]),
+        fmt="%10.5f",
+        delimiter=" ",
+    )
+
+    out_filename_small_b_vectors = add_suffix_to_filename(
+        dwi_dataset.b_vectors, "small_b"
+    )
+    np.savetxt(
+        out_filename_small_b_vectors,
+        np.array([b[small_b_filter] for b in bvecs]),
+        fmt="%10.5f",
+        delimiter=" ",
+    )
+
+    small_b_dwi = check_dwi_dataset(
+        DWIDataset(
+            dwi=out_filename_small_dwi,
+            b_values=out_filename_small_b_values,
+            b_vectors=out_filename_small_b_vectors,
+        )
+    )
+    large_b_dwi = check_dwi_dataset(
+        DWIDataset(
+            dwi=out_filename_large_dwi,
+            b_values=out_filename_large_b_values,
+            b_vectors=out_filename_large_b_vectors,
+        )
+    )
 
     return small_b_dwi, large_b_dwi
 
@@ -252,17 +295,14 @@ def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
     DWIDataset :
         The diffusion dataset : b0 volume + dwi volumes.
     """
-    from clinica.utils.image import merge_volumes_time_dimension
+    from clinica.utils.image import merge_nifti_images_in_time_dimension
 
     dwi_dataset = check_dwi_dataset(dwi_dataset)
-    out_dwi = merge_volumes_time_dimension(
-        str(in_b0),
-        str(dwi_dataset.dwi),
-        out_file=str(
-            add_suffix_to_filename(
-                remove_entity_from_filename(dwi_dataset.dwi, "large_b"),
-                "merged",
-            )
+    out_dwi = merge_nifti_images_in_time_dimension(
+        (in_b0, dwi_dataset.dwi),
+        out_file=add_suffix_to_filename(
+            remove_entity_from_filename(dwi_dataset.dwi, "large_b"),
+            "merged",
         ),
     )
 

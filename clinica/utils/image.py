@@ -1,7 +1,6 @@
-import functools
-import warnings
 from os import PathLike
-from typing import Callable, Optional
+from pathlib import Path
+from typing import Callable, Optional, Tuple, Union
 
 import nibabel as nib
 import numpy as np
@@ -77,78 +76,60 @@ def get_new_image_like(old_image: PathLike, new_image_data: np.ndarray) -> Nifti
     return nib.Nifti1Image(new_image_data, old_img.affine, hdr)
 
 
-def merge_volumes(
-    volume1: PathLike, volume2: PathLike, axis: int, out_file: Optional[str] = None
-) -> PathLike:
-    """Merge 'volume1' and 'volume2' in the provided 'axis' dimension.
+def merge_nifti_images_in_time_dimension(
+    images: Tuple[Union[str, PathLike], ...], out_file: Optional[PathLike] = None
+):
+    """Concatenate the provided images in the 4th dimension.
 
-    Parameters
-    ----------
-    volume1 : PathLike
-        Path to the image containing the first set of volumes.
-
-    volume2 : PathLike
-        Path to the image containing the second set of volumes.
-
-    axis : int
-        The axis along which the concatenation should be done.
-
-    out_file : str, optional
-        The file on which the concatenated image should be written.
-        If None, the file name will be 'merge_files.nii.gz', and the
-        base path of volume1 will be used. In this case, if volume1
-        and volume2 have different paths, the base path of volume1
-        will still be used but a warning will be given.
-
-    Returns
-    -------
-    out_file : PathLike
-        Path to the image containing the two sets of volumes merged.
+    The provided images must all be 3D or 4D. For 3D images, a dummy
+    4th dimension will be added before concatenation.
     """
-    from pathlib import Path
+    import os
 
-    if axis not in range(-1, 4):
-        raise ValueError(
-            f"Axis should be an integer value in [-1, 3]. You provided {axis}."
-        )
-
-    volume1 = Path(volume1)
-    volume2 = Path(volume2)
-    if out_file is None:
-        out_file = volume1.parent / "merged_files.nii.gz"
-        if volume1.parent != volume2.parent:
-            warnings.warn(
-                f"Merging volumes {volume1} and {volume2} in {out_file}."
-                "Please provide a custom location through the out_file "
-                "argument if needed."
-            )
-    img1 = nib.load(volume1)
-    img2 = nib.load(volume2)
-    vol = np.concatenate((img1.get_fdata(), img2.get_fdata()), axis=axis)
-    new = get_new_image_like(volume1, vol)
-    nib.save(new, out_file)
+    images = _check_existence(images)
+    out_file = out_file or os.path.abspath("merged_files.nii.gz")
+    volumes = _check_volumes_from_images(images)
+    merged_volume = np.concatenate(volumes, axis=-1)
+    merged_image = get_new_image_like(images[0], merged_volume)
+    nib.save(merged_image, out_file)
 
     return out_file
 
 
-merge_volumes_time_dimension = functools.partial(merge_volumes, axis=-1)
-
-
-def merge_volumes_time_dimension_task(volume1: str, volume2: str) -> str:
-    """Merge provided volumes in the time (4th) dimension.
-
-    .. note::
-        This was implemented as a partial function, but it does
-        not integrate correctly with Nipype because Nipype doesn't
-        allow wrapping partials in function tasks. Also, the functions
-        need to be self-contained, so we cannot have complex types (like
-        Path). Here we just use plain strings and convert them to Path
-        objects when passing them to the generic merge_volumes function.
-
-    """
+def _check_existence(filenames: Tuple[PathLike, ...]) -> Tuple[Path, ...]:
+    """Convert all element in provided tuple to Path objects and check for existence."""
     from pathlib import Path
 
-    # This is needed because Nipype needs to have self-contained functions
-    from clinica.utils.image import merge_volumes_time_dimension  # noqa
+    if len(filenames) < 2:
+        raise ValueError("At least 2 files are required.")
+    filenames = tuple(Path(f) for f in filenames)
+    missing_files = tuple(f for f in filenames if not f.exists())
+    if missing_files:
+        raise FileNotFoundError(f"the following file(s) are missing: {missing_files}")
+    return filenames
 
-    return str(merge_volumes_time_dimension(Path(volume1), Path(volume2)))
+
+def _check_volumes_from_images(images: Tuple[Path, ...]) -> Tuple[np.ndarray, ...]:
+    """Load the images and check the dimensions."""
+    images = tuple(nib.load(i) for i in images)
+    volumes = tuple(i.get_fdata() for i in images)
+    four_dimensional_volumes = []
+    for volume in volumes:
+        if volume.ndim == 3:
+            four_dimensional_volumes.append(volume[..., np.newaxis])
+        elif volume.ndim == 4:
+            four_dimensional_volumes.append(volume)
+        else:
+            raise ValueError(
+                f"Only 3D or 4D images can be concatenated. A {volume.ndim}D image was found."
+            )
+
+    return tuple(four_dimensional_volumes)
+
+
+def merge_nifti_images_in_time_dimension_task(image1: str, image2: str) -> str:
+    """Merge the two provided volumes in the time (4th) dimension."""
+    # This is needed because Nipype needs to have self-contained functions
+    from clinica.utils.image import merge_nifti_images_in_time_dimension  # noqa
+
+    return str(merge_nifti_images_in_time_dimension((image1, image2)))
