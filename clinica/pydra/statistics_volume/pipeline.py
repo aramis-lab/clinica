@@ -138,7 +138,8 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                 "template_model_creation.m",
             ),
             file_list=wf.unzip_nii.lzout.out_file,
-            classes_idx=wf.get_groups.lzout.classes_idx,
+            idx_group1=wf.get_groups.lzout.idx_group1,
+            idx_group2=wf.get_groups.lzout.idx_group2,
         )
     )
     wf.add(
@@ -178,7 +179,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                 "template_model_contrast.m",
             ),
             covariates=wf.model_creation.lzout.covariates,
-            classes_idx=wf.get_groups.lzout.classes_idx,
+            class_names=wf.get_groups.lzout.class_names,
         )
     )
     wf.add(
@@ -212,7 +213,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         utils.copy_and_rename_spm_output_files_task(
             name="read_output_node",
             spm_mat=wf.run_spm_model_result_no_correction.lzout.output_mat_file,
-            classes_idx=wf.get_groups.lzout.classes_idx,
+            class_names=wf.get_groups.lzout.class_names,
             covariates=wf.model_creation.lzout.covariates,
             group_label=parameters["group_label"],
             fwhm=parameters["full_width_at_half_maximum"],

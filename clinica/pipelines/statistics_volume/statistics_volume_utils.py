@@ -44,11 +44,14 @@ def get_group_1_and_2(tsv: str, contrast: str) -> ty.Tuple[list]:
             + " to perform 2-sample t-tests. Here Clinica found: "
             + str(class_names)
         )
-    classes_idx = {c: [] for c in class_names}
-    for i, label in enumerate(list(tsv[contrast])):
-        classes_idx[label].append(i)
+    first_group_idx = [
+        i for i, label in enumerate(list(tsv[contrast])) if label == class_names[0]
+    ]
+    second_group_idx = [
+        i for i, label in enumerate(list(tsv[contrast])) if label == class_names[1]
+    ]
 
-    return classes_idx
+    return first_group_idx, second_group_idx, class_names
 
 
 def create_spm_output_folder(current_model: str) -> str:
@@ -81,9 +84,8 @@ def set_output_and_groups(
     output_folder: str,
     current_model: str,
     file_list: list,
-    # idx_group1: list,
-    # idx_group2: list,
-    classes_idx: dict,
+    idx_group1: list,
+    idx_group2: list,
     filedata: str,
 ) -> None:
     """Sets path to output and groups in the .m script
@@ -107,15 +109,19 @@ def set_output_and_groups(
         unravel_list_for_matlab,
     )
 
-    replacement = {"@OUTPUTDIR": f"'{output_folder}'"}
-    keys = list(classes_idx.keys())
-    for c in keys:
-        replacement[f"@SCANS{c}"] = unravel_list_for_matlab(
-            [file_list[i] for i in classes_idx[c]]
-        )
-    for old, new in replacement.items():
-        filedata = filedata.replace(old, new)
-
+    filedata = filedata.replace("@OUTPUTDIR", "'" + output_folder + "'")
+    filedata = filedata.replace(
+        "@SCANS1",
+        unravel_list_for_matlab(
+            [f for i, f in enumerate(file_list) if i in idx_group1]
+        ),
+    )
+    filedata = filedata.replace(
+        "@SCANS2",
+        unravel_list_for_matlab(
+            [f for i, f in enumerate(file_list) if i in idx_group2]
+        ),
+    )
     with open(current_model, "w+") as file:
         file.write(filedata)
 
@@ -147,9 +153,8 @@ def convert_to_numeric(data: list) -> list:
 
 def write_covariates(
     current_covar_data: list,
-    # idx_group1: list,
-    # idx_group2: list,
-    classes_idx: dict,
+    idx_group1: list,
+    idx_group2: list,
     model: str,
     covar: int,
     covar_number: int,
@@ -169,36 +174,25 @@ def write_covariates(
         Covariance
     covar_number: int
     """
-    # current_covar_data_group1 = [
-    #     elem for i, elem in enumerate(current_covar_data) if i in idx_group1
-    # ]
-    # current_covar_data_group2 = [
-    #     elem for i, elem in enumerate(current_covar_data) if i in idx_group2
-    # ]
-    import itertools
-
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
         write_covariate_lines,
     )
 
-    concatenated_covariates = list(
-        itertools.chain.from_iterable(
-            [
-                [current_covar_data[i] for i in class_idx]
-                for _, class_idx in classes_idx.items()
-            ]
-        )
-    )
-    # covar_data_concatenated = current_covar_data_group1 + current_covar_data_group2
+    current_covar_data_group1 = [
+        elem for i, elem in enumerate(current_covar_data) if i in idx_group1
+    ]
+    current_covar_data_group2 = [
+        elem for i, elem in enumerate(current_covar_data) if i in idx_group2
+    ]
+    concatenated_covariates = current_covar_data_group1 + current_covar_data_group2
     write_covariate_lines(model, covar_number, covar, concatenated_covariates)
 
 
 def write_matlab_model(
     tsv: str,
     contrast: str,
-    # idx_group1: list,
-    # idx_group2: list,
-    classes_idx: dict,
+    idx_group1: list,
+    idx_group2: list,
     file_list: list,
     template_file: str,
 ):
@@ -230,10 +224,8 @@ def write_matlab_model(
     from os import remove
     from os.path import abspath, isfile
 
-    import numpy as np
     import pandas as pds
 
-    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
     from clinica.utils.exceptions import ClinicaException
 
     # Get template for model creation
@@ -256,8 +248,9 @@ def write_matlab_model(
         output_folder,
         current_model,
         file_list,
-        classes_idx,
-        filedata,  # idx_group1, idx_group2, filedata
+        idx_group1,
+        idx_group2,
+        filedata,
     )
 
     # Add our covariates
@@ -284,9 +277,8 @@ def write_matlab_model(
             pass
         write_covariates(
             current_covar_data,
-            # idx_group1,
-            # idx_group2,
-            classes_idx,
+            idx_group1,
+            idx_group2,
             current_model,
             covar,
             covar_number,
@@ -428,7 +420,7 @@ def run_m_script(m_file: str) -> str:
     return output_mat_file
 
 
-def run_matlab_script_with_matlab(m_file: Path) -> None:
+def run_matlab_script_with_matlab(m_file: str) -> None:
     """Runs a matlab script using matlab
 
     Parameters
@@ -469,12 +461,11 @@ def run_matlab_script_with_spm_standalone(m_file: str) -> None:
     # SPM standalone must be run directly from its root folder
     if platform.system().lower().startswith("darwin"):
         # Mac OS
-        cmdline = "cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch " + str(
-            m_file
-        )
+        cmdline = "cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch " + m_file
+
     elif platform.system().lower().startswith("linux"):
         # Linux OS
-        cmdline = "$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch " + str(m_file)
+        cmdline = "$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch " + m_file
     else:
         raise SystemError("Clinica only support Mac OS and Linux")
     system(cmdline)
@@ -625,7 +616,7 @@ def clean_spm_contrast_file(
 
 def copy_and_rename_spm_output_files(
     spm_mat: str,
-    classes_idx: dict,
+    class_names: list,
     covariates: list,
     group_label: str,
     fwhm: int,
@@ -672,7 +663,6 @@ def copy_and_rename_spm_output_files(
     from os.path import abspath, dirname, isdir, isfile, join
     from shutil import copyfile
 
-    class_names = list(classes_idx.keys())
     spm_dir = dirname(spm_mat)
     if not isfile(spm_mat):
         if not isdir(spm_dir):
