@@ -58,7 +58,6 @@ def eddy_fsl_pipeline(
     import nipype.pipeline.engine as pe
     from nipype.interfaces.fsl import BET
     from nipype.interfaces.fsl.epi import Eddy
-    import os
 
     from clinica.utils.dwi import generate_acq_file, generate_index_file
 
@@ -88,14 +87,12 @@ def eddy_fsl_pipeline(
                 "fsl_phase_encoding_direction",
                 "total_readout_time",
                 "image_id",
-                "working_directory",
             ],
             output_names=["out_file"],
             function=generate_acq_file,
         ),
         name="generate_acq",
     )
-    generate_acq.inputs.working_directory = working_directory
 
     generate_index = pe.Node(
         niu.Function(
@@ -110,7 +107,8 @@ def eddy_fsl_pipeline(
     eddy.inputs.repol = True
     eddy.inputs.use_cuda = use_cuda
     eddy.inputs.initrand = initrand
-    eddy.inputs.out_base = os.path.join(working_directory, "eddy_corrected")
+    if working_directory:
+        eddy.inputs.out_base = os.path.join(working_directory, "eddy_corrected")
 
     outputnode = pe.Node(
         niu.IdentityInterface(
