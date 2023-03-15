@@ -43,54 +43,103 @@ def test_get_new_image_like(tmp_path):
     assert_array_equal(img.affine, img2.affine)
 
 
-@pytest.mark.parametrize("axis", [-2, 5, 2.34])
-def test_merge_volumes_errors(tmp_path, axis):
-    from clinica.utils.image import merge_volumes
+def test_merge_nifti_images_in_time_dimension_wrong_file_number(tmp_path):
+    from clinica.utils.image import merge_nifti_images_in_time_dimension
 
     with pytest.raises(
         ValueError,
-        match="Axis should be an integer",
+        match="At least 2 files are required.",
     ):
-        merge_volumes(tmp_path / "vol1.nii.gz", tmp_path / "vol2.nii.gz", axis)
+        merge_nifti_images_in_time_dimension(())
+        merge_nifti_images_in_time_dimension((tmp_path / "vol1.nii.gz"))
 
 
-@pytest.mark.parametrize("axis", [0, 1, 2, 3, -1])
-def test_merge_volumes(tmp_path, axis):
-    from clinica.utils.image import merge_volumes
+def test_merge_nifti_images_in_time_dimension_non_existing_file(tmp_path):
+    from clinica.utils.image import merge_nifti_images_in_time_dimension
+
+    with pytest.raises(
+        FileNotFoundError,
+        match="the following",
+    ):
+        merge_nifti_images_in_time_dimension(
+            (tmp_path / "vol1.nii.gz", tmp_path / "vol2.nii.gz")
+        )
+
+
+def test_merge_nifti_images_in_time_dimension_wrong_dimension(tmp_path):
+    from clinica.utils.image import merge_nifti_images_in_time_dimension
+
+    for i, input_data in enumerate((np.zeros((5, 5, 5, 10)), np.zeros((5, 5)))):
+        img = nib.Nifti1Image(input_data, affine=np.eye(4))
+        nib.save(img, tmp_path / f"foo{i}.nii.gz")
+
+    with pytest.raises(
+        ValueError,
+        match="Only 3D or 4D images can be concatenated.",
+    ):
+        merge_nifti_images_in_time_dimension(
+            tuple(tmp_path / f"foo{i}.nii.gz" for i in range(2))
+        )
+
+
+@pytest.mark.parametrize("nb_images", [2, 3, 6])
+def test_merge_nifti_images_in_time_dimension(tmp_path, nb_images):
+    from clinica.utils.image import merge_nifti_images_in_time_dimension
 
     input_data = []
-    for i in (1, 2):
+    for i in range(nb_images):
         img_data = np.zeros((5, 5, 5, 10))
         img_data[2:4, 2:4, 2:4, 0:2] = i
         input_data.append(img_data)
         img = nib.Nifti1Image(img_data, affine=np.eye(4))
         nib.save(img, tmp_path / f"foo{i}.nii.gz")
-    out_file = merge_volumes(
-        tmp_path / "foo1.nii.gz", tmp_path / "foo2.nii.gz", axis=axis
+    out_file = merge_nifti_images_in_time_dimension(
+        tuple(tmp_path / f"foo{i}.nii.gz" for i in range(nb_images)),
+        out_file=tmp_path / "merged_files.nii.gz",
     )
     out_img = nib.load(out_file)
     assert out_file == tmp_path / "merged_files.nii.gz"
-    assert_array_equal(out_img.affine, img.affine)
-    assert_array_equal(out_img.get_fdata(), np.concatenate(input_data, axis=axis))
-    (tmp_path / "bar").mkdir()
-    nib.save(img, tmp_path / "bar" / f"foo2.nii.gz")
-    with pytest.warns(
-        UserWarning,
-        match="Merging volumes",
-    ):
-        out_file = merge_volumes(
-            tmp_path / "bar" / "foo2.nii.gz", tmp_path / "foo1.nii.gz", axis=axis
-        )
-    out_img = nib.load(out_file)
-    assert out_file == tmp_path / "bar" / "merged_files.nii.gz"
-    assert_array_equal(out_img.affine, img.affine)
-    assert_array_equal(out_img.get_fdata(), np.concatenate(input_data[::-1], axis=axis))
-    assert (
-        merge_volumes(
-            tmp_path / "foo1.nii.gz",
-            tmp_path / "foo2.nii.gz",
-            axis=axis,
-            out_file=tmp_path / "foo3.nii.gz",
-        )
-        == tmp_path / "foo3.nii.gz"
+    assert_array_equal(out_img.affine, np.eye(4))
+    assert_array_equal(out_img.get_fdata(), np.concatenate(input_data, axis=-1))
+
+
+@pytest.mark.parametrize(
+    "shape1,shape2,expected_shape",
+    [
+        (
+            (5, 5, 5, 10),
+            (5, 5, 5),
+            (5, 5, 5, 11),
+        ),
+        (
+            (5, 5, 5),
+            (5, 5, 5, 10),
+            (5, 5, 5, 11),
+        ),
+        (
+            (5, 5, 5),
+            (5, 5, 5),
+            (5, 5, 5, 2),
+        ),
+    ],
+)
+def test_merge_nifti_images_in_time_dimension_3d_and_4d(
+    tmp_path, shape1, shape2, expected_shape
+):
+    """Checks that 3D and 4D images are merged correctly."""
+    from clinica.utils.image import merge_nifti_images_in_time_dimension
+
+    input_data = (np.zeros(shape1), np.zeros(shape2))
+    for i, data in enumerate(input_data):
+        img = nib.Nifti1Image(data, affine=np.eye(4))
+        nib.save(img, tmp_path / f"foo{i}.nii.gz")
+
+    out_file = merge_nifti_images_in_time_dimension(
+        tuple(tmp_path / f"foo{i}.nii.gz" for i in (0, 1)),
+        out_file=tmp_path / "merged_files.nii.gz",
     )
+    out_img = nib.load(out_file)
+    assert out_file == tmp_path / "merged_files.nii.gz"
+    assert_array_equal(out_img.affine, np.eye(4))
+    expected_data = np.zeros(expected_shape)
+    assert_array_equal(out_img.get_fdata(), expected_data)

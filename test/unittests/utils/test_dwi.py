@@ -255,8 +255,8 @@ def test_b0_dwi_split(tmp_path, extension):
     )
     small_b_dataset, large_b_dataset = b0_dwi_split(dwi_dataset)
     assert small_b_dataset.dwi == tmp_path / f"foo_small_b.{extension}"
-    assert small_b_dataset.b_values is None
-    assert small_b_dataset.b_vectors is None
+    assert small_b_dataset.b_values == tmp_path / "foo_small_b.bval"
+    assert small_b_dataset.b_vectors == tmp_path / "foo_small_b.bvec"
     assert large_b_dataset.dwi == tmp_path / f"foo_large_b.{extension}"
     assert large_b_dataset.b_values == tmp_path / "foo_large_b.bval"
     assert large_b_dataset.b_vectors == tmp_path / "foo_large_b.bvec"
@@ -319,7 +319,7 @@ def test_insert_b0_into_dwi(tmp_path):
     dwi_dataset = build_dwi_dataset(tmp_path, 9, 9, 9)
 
     out_dataset = insert_b0_into_dwi(tmp_path / "b0.nii.gz", dwi_dataset)
-    assert out_dataset.dwi == str(tmp_path / "foo_merged.nii.gz")
+    assert out_dataset.dwi == tmp_path / "foo_merged.nii.gz"
     assert out_dataset.b_values == tmp_path / "foo_merged.bval"
     assert out_dataset.b_vectors == tmp_path / "foo_merged.bvec"
     dwi = nib.load(out_dataset.dwi)
