@@ -146,7 +146,7 @@ def _check_b_value_threshold(b_value_threshold: float) -> None:
 
 
 def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
-    """Check that provided input files of the DWI dataset exist.
+    """Checks that provided input files of the DWI dataset exist.
 
     If they exist, a new dataset object is returned with file paths
     converted to Path objects instead of strings.
@@ -302,7 +302,7 @@ def _build_dwi_dataset_from_filter(
 def _filter_dwi(
     dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
 ) -> Path:
-    """Filter the dwi component of the provided DWI dataset."""
+    """Filters the dwi component of the provided DWI dataset."""
     from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
     dwi_filename = add_suffix_to_filename(dwi_dataset.dwi, filter_name)
@@ -318,7 +318,7 @@ def _filter_dwi(
 def _filter_b_values(
     dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
 ) -> Path:
-    """Filter the b-values component of the provided DWI dataset."""
+    """Filters the b-values component of the provided DWI dataset."""
     b_values, _ = _check_b_values_and_b_vectors(dwi_dataset)
     b_values_filename = add_suffix_to_filename(dwi_dataset.b_values, filter_name)
     _write_b_values(b_values_filename, b_values[filter_array])
@@ -329,7 +329,7 @@ def _filter_b_values(
 def _filter_b_vectors(
     dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
 ) -> Path:
-    """Filter the b-vectors component of the provided DWI dataset."""
+    """Filters the b-vectors component of the provided DWI dataset."""
     b_values, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
     b_vectors_filename = add_suffix_to_filename(dwi_dataset.b_vectors, filter_name)
     _write_b_vectors(b_vectors_filename, np.array([b[filter_array] for b in b_vectors]))
