@@ -209,90 +209,113 @@ def b0_dwi_split(
     ValueError:
         If low_bval < 0.
     """
-    import warnings
-
-    from clinica.utils.image import compute_aggregated_volume, get_new_image_like
-
-    dwi_dataset = check_dwi_dataset(dwi_dataset)
-
     if low_bval < 0:
         raise ValueError(f"low_bval should be >=0. You provided {low_bval}.")
 
-    bvals = np.loadtxt(dwi_dataset.b_values)
-    bvecs = np.loadtxt(dwi_dataset.b_vectors)
-    if bvals.shape[0] == bvecs.shape[0]:
+    dwi_dataset = check_dwi_dataset(dwi_dataset)
+    b_values, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
+
+    small_b_filter = get_b0_filter(dwi_dataset.b_values, low_bval=low_bval)
+    large_b_filter = np.array(
+        [i for i in range(len(b_values)) if i not in small_b_filter]
+    )
+
+    return (
+        _build_dwi_dataset_from_filter(dwi_dataset, "small_b", small_b_filter),
+        _build_dwi_dataset_from_filter(dwi_dataset, "large_b", large_b_filter),
+    )
+
+
+def _check_b_values_and_b_vectors(
+    dwi_dataset: DWIDataset,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Opens the b-values and b-vectors files and transpose the b-vectors if needed."""
+    import warnings
+
+    b_values = np.loadtxt(dwi_dataset.b_values)
+    b_vectors = np.loadtxt(dwi_dataset.b_vectors)
+    if b_values.shape[0] == b_vectors.shape[0]:
         warnings.warn(
             "Warning: The b-vectors file should be column-wise. The b-vectors will be transposed",
             UserWarning,
         )
-        bvecs = bvecs.T
+        b_vectors = b_vectors.T
 
-    small_b_filter = get_b0_filter(dwi_dataset.b_values, low_bval=low_bval)
-    large_b_filter = np.array([i for i in range(len(bvals)) if i not in small_b_filter])
+    return b_values, b_vectors
 
-    out_filename_small_dwi = add_suffix_to_filename(dwi_dataset.dwi, "small_b")
-    out_filename_large_dwi = add_suffix_to_filename(dwi_dataset.dwi, "large_b")
 
-    for volume_filter, out_filename in zip(
-        [small_b_filter, large_b_filter],
-        [out_filename_small_dwi, out_filename_large_dwi],
-    ):
-        data = compute_aggregated_volume(
-            dwi_dataset.dwi, aggregator=None, volumes_to_keep=volume_filter
+def _build_dwi_dataset_from_filter(
+    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+) -> DWIDataset:
+    """Builds a new DWI dataset from a given DWI dataset and a filter.
+
+    Parameters
+    ----------
+    dwi_dataset : DWIDataset
+        The DWI dataset to filter.
+
+    filter_name : str
+        The name of the filter. This will be used to build the
+        file names associated with the new dataset.
+
+    filter_array : np.ndarray
+        1D array of indices to filter the DWI dataset.
+
+    Returns
+    -------
+    DWIDataset :
+        The new filtered DWI dataset.
+    """
+    return check_dwi_dataset(
+        DWIDataset(
+            dwi=_filter_dwi(dwi_dataset, filter_name, filter_array),
+            b_values=_filter_b_values(dwi_dataset, filter_name, filter_array),
+            b_vectors=_filter_b_vectors(dwi_dataset, filter_name, filter_array),
         )
-        img = get_new_image_like(dwi_dataset.dwi, data)
-        img.to_filename(out_filename)
-
-    out_filename_large_b_values = add_suffix_to_filename(
-        dwi_dataset.b_values, "large_b"
-    )
-    np.savetxt(
-        out_filename_large_b_values, bvals[large_b_filter], fmt="%d", delimiter=" "
     )
 
-    out_filename_small_b_values = add_suffix_to_filename(
-        dwi_dataset.b_values, "small_b"
-    )
-    np.savetxt(
-        out_filename_small_b_values, bvals[small_b_filter], fmt="%d", delimiter=" "
-    )
 
-    out_filename_large_b_vectors = add_suffix_to_filename(
-        dwi_dataset.b_vectors, "large_b"
+def _filter_dwi(
+    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+) -> Path:
+    """Filter the dwi component of the provided DWI dataset."""
+    from clinica.utils.image import compute_aggregated_volume, get_new_image_like
+
+    dwi_filename = add_suffix_to_filename(dwi_dataset.dwi, filter_name)
+    data = compute_aggregated_volume(
+        dwi_dataset.dwi, aggregator=None, volumes_to_keep=filter_array
     )
+    img = get_new_image_like(dwi_dataset.dwi, data)
+    img.to_filename(dwi_filename)
+
+    return dwi_filename
+
+
+def _filter_b_values(
+    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+) -> Path:
+    """Filter the b-values component of the provided DWI dataset."""
+    b_values, _ = _check_b_values_and_b_vectors(dwi_dataset)
+    b_values_filename = add_suffix_to_filename(dwi_dataset.b_values, filter_name)
+    np.savetxt(b_values_filename, b_values[filter_array], fmt="%d", delimiter=" ")
+
+    return b_values_filename
+
+
+def _filter_b_vectors(
+    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+) -> Path:
+    """Filter the b-vectors component of the provided DWI dataset."""
+    b_values, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
+    b_vectors_filename = add_suffix_to_filename(dwi_dataset.b_vectors, filter_name)
     np.savetxt(
-        out_filename_large_b_vectors,
-        np.array([b[large_b_filter] for b in bvecs]),
+        b_vectors_filename,
+        np.array([b[filter_array] for b in b_vectors]),
         fmt="%10.5f",
         delimiter=" ",
     )
 
-    out_filename_small_b_vectors = add_suffix_to_filename(
-        dwi_dataset.b_vectors, "small_b"
-    )
-    np.savetxt(
-        out_filename_small_b_vectors,
-        np.array([b[small_b_filter] for b in bvecs]),
-        fmt="%10.5f",
-        delimiter=" ",
-    )
-
-    small_b_dwi = check_dwi_dataset(
-        DWIDataset(
-            dwi=out_filename_small_dwi,
-            b_values=out_filename_small_b_values,
-            b_vectors=out_filename_small_b_vectors,
-        )
-    )
-    large_b_dwi = check_dwi_dataset(
-        DWIDataset(
-            dwi=out_filename_large_dwi,
-            b_values=out_filename_large_b_values,
-            b_vectors=out_filename_large_b_vectors,
-        )
-    )
-
-    return small_b_dwi, large_b_dwi
+    return b_vectors_filename
 
 
 def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
