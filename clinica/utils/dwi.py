@@ -2,7 +2,7 @@
 from collections import namedtuple
 from os import PathLike
 from pathlib import Path
-from typing import Iterable, Optional, Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -129,10 +129,28 @@ def compute_average_b0(
 
 
 def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
-    """Utility function to check that provided input files of the
-    DWI dataset exist.
+    """Check that provided input files of the DWI dataset exist.
+
     If they exist, a new dataset object is returned with file paths
     converted to Path objects instead of strings.
+
+    The resulting dataset will contain absolute paths which can be
+    required by downstream tools.
+
+    Parameters
+    ----------
+    dwi_dataset : DWIDataset
+        Input DWI dataset to be checked.
+
+    Returns
+    -------
+    DWIDataset :
+        Checked DWI dataset.
+
+    Raises
+    ------
+    FileNotFoundError
+        If one of the files doesn't exist.
     """
     file_paths = []
     for input_file in dwi_dataset:
@@ -163,18 +181,19 @@ def b0_dwi_split(
     """Splits the DWI dataset.
 
     Split the DWI volumes into two datasets :
-     - the first dataset contains the set of b<=low_bval volumes.
-     - the second dataset contains the set of DWI volumes.
+     - the first dataset is relative to volumes having a b-value <= low_bval.
+     - the second dataset is relative to volumes having a b-value > low_bval.
 
-    The function writes 4 files and return a tuple containing their paths.
+    The function writes 6 files (3 files for each dataset), and returns a
+    length 2 tuple containing the two DWI datasets.
 
     Parameters
     ----------
     dwi_dataset : DWIDataset
-        DWI image dataset.
+        DWI image dataset to split.
 
     low_bval : float, optional
-        Defines the b0 volumes as all volume bval <= lowbval.
+        Defines the b0 volumes as all volumes bval <= lowbval.
         Defaults to 5.0.
 
     Returns
@@ -187,9 +206,6 @@ def b0_dwi_split(
 
     Raises
     ------
-    FileNotFoundError:
-        If in_dwi, or in_bval, or in_bvec file does not exist.
-
     ValueError:
         If low_bval < 0.
     """
@@ -280,7 +296,7 @@ def b0_dwi_split(
 
 
 def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
-    """Inserts a b0 volume into the dwi dataset as the first volume and update the bvals and bvecs files.
+    """Inserts a b0 volume into the DWI dataset as the first volume and update the bvals and bvecs files.
 
     Parameters
     ----------
