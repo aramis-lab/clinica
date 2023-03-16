@@ -133,35 +133,34 @@ def test_get_b0_filter_error(tmp_path):
         get_b0_filter(tmp_path / "foo.bval")
 
 
-def test_get_b0_filter(tmp_path):
+@pytest.mark.parametrize(
+    "threshold,expected",
+    [
+        (None, np.array([2, 3, 4, 7])),
+        (-1, np.array([])),
+        (500, np.array([2, 3, 4, 7])),
+        (1000, np.arange(8)),
+        (1001, np.arange(8)),
+    ],
+)
+def test_get_b0_filter(tmp_path, threshold, expected):
     from clinica.utils.dwi import get_b0_filter
 
     np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
-    assert_array_equal(get_b0_filter(tmp_path / "foo.bval"), np.array([2, 3, 4, 7]))
-    assert_array_equal(
-        get_b0_filter(tmp_path / "foo.bval", b_value_threshold=-1), np.array([])
-    )
-    assert_array_equal(
-        get_b0_filter(tmp_path / "foo.bval", b_value_threshold=500),
-        np.array([2, 3, 4, 7]),
-    )
-    assert_array_equal(
-        get_b0_filter(tmp_path / "foo.bval", b_value_threshold=1000), np.arange(8)
-    )
-    assert_array_equal(
-        get_b0_filter(tmp_path / "foo.bval", b_value_threshold=1001), np.arange(8)
-    )
+    kwargs = {"b_value_threshold": threshold} if threshold else {}
+
+    assert_array_equal(get_b0_filter(tmp_path / "foo.bval", **kwargs), expected)
 
 
-def test_count_b0s(tmp_path):
+@pytest.mark.parametrize(
+    "threshold,expected", [(None, 4), (-1, 0), (500, 4), (1000, 8), (1001, 8)]
+)
+def test_count_b0s(tmp_path, threshold, expected):
     from clinica.utils.dwi import count_b0s
 
     np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
-    assert count_b0s(tmp_path / "foo.bval") == 4
-    assert count_b0s(tmp_path / "foo.bval", b_value_threshold=-1) == 0
-    assert count_b0s(tmp_path / "foo.bval", b_value_threshold=500) == 4
-    assert count_b0s(tmp_path / "foo.bval", b_value_threshold=1000) == 8
-    assert count_b0s(tmp_path / "foo.bval", b_value_threshold=1001) == 8
+    kwargs = {"b_value_threshold": threshold} if threshold else {}
+    assert count_b0s(tmp_path / "foo.bval", **kwargs) == expected
 
 
 @pytest.mark.parametrize("extension", ["nii", "nii.gz"])
