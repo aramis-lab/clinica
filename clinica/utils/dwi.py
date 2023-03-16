@@ -173,7 +173,21 @@ def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
 
 
 def remove_entity_from_filename(filename: Path, entity: str) -> Path:
-    """Removes the provided entity from the given file name."""
+    """Removes the provided entity from the given file name.
+
+    Parameters
+    ----------
+    filename : Path
+        The path object on which to operate removal of entity.
+
+    entity : str
+        The entity which should be removed.
+
+    Returns
+    -------
+    Path :
+        The new Path object without the entity.
+    """
     return Path(filename.parent / filename.name.replace(f"_{entity}", ""))
 
 
