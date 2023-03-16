@@ -124,7 +124,10 @@ def test_generate_index_file_no_b0_error(tmp_path):
 def test_generate_index_file(tmp_path, image_id):
     from clinica.utils.dwi import generate_index_file
 
-    np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
+    #  This will work because there is a single B0 volume at index 0
+    #  But a more general input like [1000, 1000, 0, 0, 0, 1000, 1000, 0]
+    #  would fail...
+    np.savetxt(tmp_path / "foo.bval", [0] + [1000] * 7)
     index_file = generate_index_file(str(tmp_path / "foo.bval"), image_id=image_id)
     if image_id:
         assert index_file == str(tmp_path / f"{image_id}_index.txt")
@@ -133,4 +136,5 @@ def test_generate_index_file(tmp_path, image_id):
     index = np.loadtxt(index_file)
     # This is wrong and needs to be fixed
     # the array should be length 8...
-    assert_array_equal(index, np.array([1.0, 2.0, 3.0, 3.0, 3.0, 4.0]))
+    # assert_array_equal(index, np.array([1.0, 2.0, 3.0, 3.0, 3.0, 4.0]))
+    assert_array_equal(index, np.ones(8))

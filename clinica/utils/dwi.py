@@ -312,7 +312,7 @@ def _generate_index_array(b0_index: list, nb_volumes: int):
             index_list.extend([i + 1] * (nb_volumes - idx_b0))
         else:
             index_list.extend([i + 1] * (b0_index[i + 1] - idx_b0))
-    # _check_index_list(index_list, nb_volumes)
+    _check_index_list(index_list, nb_volumes)
 
     return np.asarray(index_list)
 
