@@ -14,7 +14,7 @@ def compute_aggregated_volume(
 ) -> np.ndarray:
     """Computes the aggregated 3D volumes from a 4D image and an aggregator function.
 
-    The aggregation is computes on the last (fourth) dimension.
+    The aggregation is computed on the last (fourth) dimension.
     It is possible to compute the aggregation on a subset of the volumes through the
     parameter 'volumes_to_keep'.
 
@@ -52,7 +52,7 @@ def compute_aggregated_volume(
 
 
 def get_new_image_like(old_image: PathLike, new_image_data: np.ndarray) -> Nifti1Image:
-    """Build a new Nifti1Image from the provided image and new data.
+    """Builds a new Nifti1Image from the provided image and new data.
 
     Parameters
     ----------
@@ -79,7 +79,7 @@ def get_new_image_like(old_image: PathLike, new_image_data: np.ndarray) -> Nifti
 def merge_nifti_images_in_time_dimension(
     images: Tuple[Union[str, PathLike], ...], out_file: Optional[PathLike] = None
 ):
-    """Concatenate the provided images in the 4th dimension.
+    """Concatenates the provided images in the 4th dimension.
 
     The provided images must all be 3D or 4D. For 3D images, a dummy
     4th dimension will be added before concatenation.
@@ -97,7 +97,7 @@ def merge_nifti_images_in_time_dimension(
 
 
 def _check_existence(filenames: Tuple[PathLike, ...]) -> Tuple[Path, ...]:
-    """Convert all element in provided tuple to Path objects and check for existence."""
+    """Converts all element in provided tuple to Path objects and check for existence."""
     from pathlib import Path
 
     if len(filenames) < 2:
@@ -110,7 +110,7 @@ def _check_existence(filenames: Tuple[PathLike, ...]) -> Tuple[Path, ...]:
 
 
 def _check_volumes_from_images(images: Tuple[Path, ...]) -> Tuple[np.ndarray, ...]:
-    """Load the images and check the dimensions."""
+    """Loads the images and check the dimensions."""
     images = tuple(nib.load(i) for i in images)
     volumes = tuple(i.get_fdata() for i in images)
     four_dimensional_volumes = []
@@ -128,7 +128,7 @@ def _check_volumes_from_images(images: Tuple[Path, ...]) -> Tuple[np.ndarray, ..
 
 
 def merge_nifti_images_in_time_dimension_task(image1: str, image2: str) -> str:
-    """Merge the two provided volumes in the time (4th) dimension."""
+    """Merges the two provided volumes in the time (4th) dimension."""
     # This is needed because Nipype needs to have self-contained functions
     from clinica.utils.image import merge_nifti_images_in_time_dimension  # noqa
 

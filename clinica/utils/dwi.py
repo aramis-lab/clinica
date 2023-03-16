@@ -10,7 +10,7 @@ DWIDataset = namedtuple("DWIDataset", "dwi b_values b_vectors")
 
 
 def count_b0s(in_bval: PathLike, low_bval: float = 5.0) -> int:
-    """Count the number of volumes where b<=low_bval.
+    """Counts the number of volumes where b<=low_bval.
 
     Parameters
     ----------
@@ -18,7 +18,7 @@ def count_b0s(in_bval: PathLike, low_bval: float = 5.0) -> int:
         Path to the bval file.
 
     low_bval : int, optional
-        Define the threshold for the b0 volumes as all volumes will
+        Defines the threshold for the b0 volumes as all volumes will
         satisfy bval <= lowbval. Defaults to 5.0.
 
     Returns
@@ -38,7 +38,7 @@ def get_b0_filter(in_bval: PathLike, low_bval: float = 5.0) -> np.ndarray:
         Path to the bval file.
 
     low_bval : int, optional
-        Define the threshold for the b0 volumes as all volumes will
+        Defines the threshold for the b0 volumes as all volumes will
         satisfy bval <= lowbval. Defaults to 5.0.
 
     Returns
@@ -66,7 +66,7 @@ def compute_average_b0(
     squeeze: bool = False,
     out_file: Optional[str] = None,
 ) -> PathLike:
-    """Compute the average of the b0 volumes from DWI dataset.
+    """Computes the average of the b0 volumes from DWI dataset.
 
     Parameters
     ----------
@@ -145,12 +145,12 @@ def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
 
 
 def remove_entity_from_filename(filename: Path, entity: str) -> Path:
-    """Remove the provided entity from the given file name."""
+    """Removes the provided entity from the given file name."""
     return Path(filename.parent / filename.name.replace(f"_{entity}", ""))
 
 
 def add_suffix_to_filename(filename: Path, suffix: str) -> Path:
-    """Add the provided suffix to the given file name."""
+    """Adds the provided suffix to the given file name."""
     ext = filename.suffix
     if ext == ".gz":
         ext = "." + filename.stem.split(".")[-1] + ext
@@ -160,7 +160,7 @@ def add_suffix_to_filename(filename: Path, suffix: str) -> Path:
 def b0_dwi_split(
     dwi_dataset: DWIDataset, low_bval: float = 5.0
 ) -> Tuple[DWIDataset, DWIDataset]:
-    """Split the DWI dataset.
+    """Splits the DWI dataset.
 
     Split the DWI volumes into two datasets :
      - the first dataset contains the set of b<=low_bval volumes.
@@ -174,7 +174,7 @@ def b0_dwi_split(
         DWI image dataset.
 
     low_bval : float, optional
-        Define the b0 volumes as all volume bval <= lowbval.
+        Defines the b0 volumes as all volume bval <= lowbval.
         Defaults to 5.0.
 
     Returns
@@ -280,7 +280,7 @@ def b0_dwi_split(
 
 
 def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
-    """Insert a b0 volume into the dwi dataset as the first volume and update the bvals and bvecs files.
+    """Inserts a b0 volume into the dwi dataset as the first volume and update the bvals and bvecs files.
 
     Parameters
     ----------
@@ -324,7 +324,7 @@ def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
 
 
 def check_dwi_volume(dwi_dataset: DWIDataset) -> None:
-    """Check the consistency of a given DWIDataset.
+    """Checks the consistency of a given DWIDataset.
 
     More precisely, checks that the number of DWI volumes,
     the number of B-values, and the number of B-vectors are equal.

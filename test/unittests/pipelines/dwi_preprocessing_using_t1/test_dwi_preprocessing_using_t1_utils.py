@@ -275,7 +275,7 @@ def test_compute_reference_b0_with_single_b0(tmp_path):
 
 @pytest.mark.parametrize("clean_working_dir", [False, True])
 def test_compute_reference_b0_with_multiple_b0(tmp_path, mocker, clean_working_dir):
-    """Test the function compute_reference_b0.
+    """Tests the function compute_reference_b0.
 
     `compute_reference_b0` calls `register_b0` which is a simple wrapper around the
     FSL pipeline implemented in `b0_flirt_pipeline`.

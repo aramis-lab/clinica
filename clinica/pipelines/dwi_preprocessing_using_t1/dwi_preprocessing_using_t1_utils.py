@@ -352,7 +352,7 @@ def compute_reference_b0(
 def configure_working_directory(
     in_dwi: PathLike, working_directory: PathLike = None
 ) -> PathLike:
-    """Configure a temporary working directory for writing the output files of
+    """Configures a temporary working directory for writing the output files of
     the b0 co-registration.
 
     Parameters
