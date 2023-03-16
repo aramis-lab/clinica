@@ -128,7 +128,7 @@ def test_get_b0_filter_error(tmp_path):
 
     with pytest.raises(
         FileNotFoundError,
-        match="Cannot find bval file",
+        match="File not found",
     ):
         get_b0_filter(tmp_path / "foo.bval")
 
@@ -138,15 +138,18 @@ def test_get_b0_filter(tmp_path):
 
     np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
     assert_array_equal(get_b0_filter(tmp_path / "foo.bval"), np.array([2, 3, 4, 7]))
-    assert_array_equal(get_b0_filter(tmp_path / "foo.bval", low_bval=-1), np.array([]))
     assert_array_equal(
-        get_b0_filter(tmp_path / "foo.bval", low_bval=500), np.array([2, 3, 4, 7])
+        get_b0_filter(tmp_path / "foo.bval", b_value_threshold=-1), np.array([])
     )
     assert_array_equal(
-        get_b0_filter(tmp_path / "foo.bval", low_bval=1000), np.arange(8)
+        get_b0_filter(tmp_path / "foo.bval", b_value_threshold=500),
+        np.array([2, 3, 4, 7]),
     )
     assert_array_equal(
-        get_b0_filter(tmp_path / "foo.bval", low_bval=1001), np.arange(8)
+        get_b0_filter(tmp_path / "foo.bval", b_value_threshold=1000), np.arange(8)
+    )
+    assert_array_equal(
+        get_b0_filter(tmp_path / "foo.bval", b_value_threshold=1001), np.arange(8)
     )
 
 
@@ -155,10 +158,10 @@ def test_count_b0s(tmp_path):
 
     np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
     assert count_b0s(tmp_path / "foo.bval") == 4
-    assert count_b0s(tmp_path / "foo.bval", low_bval=-1) == 0
-    assert count_b0s(tmp_path / "foo.bval", low_bval=500) == 4
-    assert count_b0s(tmp_path / "foo.bval", low_bval=1000) == 8
-    assert count_b0s(tmp_path / "foo.bval", low_bval=1001) == 8
+    assert count_b0s(tmp_path / "foo.bval", b_value_threshold=-1) == 0
+    assert count_b0s(tmp_path / "foo.bval", b_value_threshold=500) == 4
+    assert count_b0s(tmp_path / "foo.bval", b_value_threshold=1000) == 8
+    assert count_b0s(tmp_path / "foo.bval", b_value_threshold=1001) == 8
 
 
 @pytest.mark.parametrize("extension", ["nii", "nii.gz"])
@@ -211,7 +214,7 @@ def test_check_dwi_dataset(tmp_path, dwi_dataset):
     for filename in ("foo.nii.gz", "foo.bval", "foo.bvec"):
         with pytest.raises(
             FileNotFoundError,
-            match=f"File {tmp_path / filename} could not be found.",
+            match="File not found",
         ):
             check_dwi_dataset(dwi_dataset)
         (tmp_path / filename).touch()
@@ -222,26 +225,26 @@ def test_check_dwi_dataset(tmp_path, dwi_dataset):
     assert dwi_dataset_checked.b_vectors == tmp_path / "foo.bvec"
 
 
-def test_b0_dwi_split_errors(tmp_path, dwi_dataset):
-    from clinica.utils.dwi import b0_dwi_split
+def test_split_dwi_dataset_with_b_values_errors(tmp_path, dwi_dataset):
+    from clinica.utils.dwi import split_dwi_dataset_with_b_values
 
     for filename in ("foo.nii.gz", "foo.bval", "foo.bvec"):
         (tmp_path / filename).touch()
 
     with pytest.raises(
         ValueError,
-        match="low_bval should be >=0. You provided -1.",
+        match="b_value_threshold should be >=0. You provided -1.",
     ):
-        b0_dwi_split(dwi_dataset, low_bval=-1)
+        split_dwi_dataset_with_b_values(dwi_dataset, b_value_threshold=-1)
 
 
 @pytest.mark.parametrize("extension", ["nii", "nii.gz"])
-def test_b0_dwi_split(tmp_path, extension):
-    from clinica.utils.dwi import DWIDataset, b0_dwi_split
+def test_split_dwi_dataset_with_b_values(tmp_path, extension):
+    from clinica.utils.dwi import DWIDataset, split_dwi_dataset_with_b_values
 
-    bvecs_data = np.random.random((3, 8))
+    b_vectors_data = np.random.random((3, 8))
     np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
-    np.savetxt(tmp_path / "foo.bvec", bvecs_data)
+    np.savetxt(tmp_path / "foo.bvec", b_vectors_data)
     img_data = np.zeros((5, 5, 5, 8))
     img_data[2:4, 2:4, 2:4, 0:4] = 1.0
     img_data[2:4, 2:4, 2:4, 4:8] = 2.0
@@ -253,7 +256,7 @@ def test_b0_dwi_split(tmp_path, extension):
         b_values=tmp_path / "foo.bval",
         b_vectors=tmp_path / "foo.bvec",
     )
-    small_b_dataset, large_b_dataset = b0_dwi_split(dwi_dataset)
+    small_b_dataset, large_b_dataset = split_dwi_dataset_with_b_values(dwi_dataset)
     assert small_b_dataset.dwi == tmp_path / f"foo_small_b.{extension}"
     assert small_b_dataset.b_values == tmp_path / "foo_small_b.bval"
     assert small_b_dataset.b_vectors == tmp_path / "foo_small_b.bvec"
@@ -267,10 +270,12 @@ def test_b0_dwi_split(tmp_path, extension):
     assert_array_equal(b0_img.get_fdata(), expected)
     dwi = nib.load(large_b_dataset.dwi)
     assert_array_equal(dwi.get_fdata(), expected)
-    bvals = np.loadtxt(large_b_dataset.b_values)
-    assert_array_equal(bvals, np.array([1000] * 4))
-    bvecs = np.loadtxt(large_b_dataset.b_vectors)
-    assert_array_almost_equal(bvecs, bvecs_data[:, np.array([0, 1, 5, 6])], decimal=5)
+    b_values = np.loadtxt(large_b_dataset.b_values)
+    assert_array_equal(b_values, np.array([1000] * 4))
+    b_vectors = np.loadtxt(large_b_dataset.b_vectors)
+    assert_array_almost_equal(
+        b_vectors, b_vectors_data[:, np.array([0, 1, 5, 6])], decimal=5
+    )
 
 
 def build_dwi_dataset(tmp_path, nb_dwi_volumes, nb_b_values, nb_b_vectors):
@@ -280,8 +285,8 @@ def build_dwi_dataset(tmp_path, nb_dwi_volumes, nb_b_values, nb_b_vectors):
     dwi_img = nib.Nifti1Image(dwi_data, affine=np.eye(4))
     nib.save(dwi_img, tmp_path / "foo.nii.gz")
     np.savetxt(tmp_path / "foo.bval", [1000] * nb_b_values)
-    bvecs_data = np.random.random((3, nb_b_vectors))
-    np.savetxt(tmp_path / "foo.bvec", bvecs_data)
+    b_vectors_data = np.random.random((3, nb_b_vectors))
+    np.savetxt(tmp_path / "foo.bvec", b_vectors_data)
 
     return DWIDataset(
         dwi=tmp_path / "foo.nii.gz",
@@ -291,12 +296,12 @@ def build_dwi_dataset(tmp_path, nb_dwi_volumes, nb_b_values, nb_b_vectors):
 
 
 @pytest.mark.parametrize(
-    "nb_dwi,nb_bvals,nb_bvecs", [(10, 9, 9), (9, 10, 9), (9, 9, 10), (8, 9, 10)]
+    "n_dwi,n_b_values,n_b_vectors", [(10, 9, 9), (9, 10, 9), (9, 9, 10), (8, 9, 10)]
 )
-def test_check_dwi_volume_errors(tmp_path, nb_dwi, nb_bvals, nb_bvecs):
+def test_check_dwi_volume_errors(tmp_path, n_dwi, n_b_values, n_b_vectors):
     from clinica.utils.dwi import check_dwi_volume
 
-    dwi_dataset = build_dwi_dataset(tmp_path, nb_dwi, nb_bvals, nb_bvecs)
+    dwi_dataset = build_dwi_dataset(tmp_path, n_dwi, n_b_values, n_b_vectors)
     with pytest.raises(
         IOError,
         match="Number of DWIs, b-vals and b-vecs mismatch",

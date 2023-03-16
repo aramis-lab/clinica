@@ -323,7 +323,7 @@ def test_compute_reference_b0_with_multiple_b0(tmp_path, mocker, clean_working_d
     ref = compute_reference_b0(
         tmp_path / "b0.nii.gz",
         tmp_path / "foo.bval",
-        low_bval=5,
+        b_value_threshold=5.0,
         working_directory=tmp_path / "tmp",
         clean_working_dir=clean_working_dir,
     )

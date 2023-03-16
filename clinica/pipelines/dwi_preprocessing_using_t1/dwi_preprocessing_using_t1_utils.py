@@ -1,7 +1,7 @@
-import os
 import shutil
 from os import PathLike
-from typing import Tuple
+from pathlib import Path
+from typing import Optional, Tuple
 
 from clinica.utils.dwi import DWIDataset
 
@@ -290,13 +290,19 @@ def prepare_reference_b0(
     out_updated_bvec : str
         Path to the updated gradient vectors table.
     """
-    from clinica.utils.dwi import b0_dwi_split, check_dwi_dataset, insert_b0_into_dwi
+    from clinica.utils.dwi import (
+        check_dwi_dataset,
+        insert_b0_into_dwi,
+        split_dwi_dataset_with_b_values,
+    )
 
     dwi_dataset = check_dwi_dataset(
         DWIDataset(dwi=in_dwi, b_values=in_bval, b_vectors=in_bvec)
     )
     working_directory = configure_working_directory(dwi_dataset.dwi, working_directory)
-    small_b_dataset, large_b_dataset = b0_dwi_split(dwi_dataset, low_bval=low_bval)
+    small_b_dataset, large_b_dataset = split_dwi_dataset_with_b_values(
+        dwi_dataset, b_value_threshold=low_bval
+    )
     reference_b0 = compute_reference_b0(
         small_b_dataset.dwi, dwi_dataset.b_values, low_bval, working_directory
     )
@@ -306,9 +312,9 @@ def prepare_reference_b0(
 
 
 def compute_reference_b0(
-    extracted_b0: PathLike,
-    in_bval: PathLike,
-    low_bval: int,
+    extracted_b0: Path,
+    b_value_filename: Path,
+    b_value_threshold: int,
     working_directory,
     clean_working_dir: bool = True,
 ) -> PathLike:
@@ -328,10 +334,12 @@ def compute_reference_b0(
     """
     from clinica.utils.dwi import compute_average_b0, count_b0s
 
-    nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
+    nb_b0s = count_b0s(
+        b_value_filename=b_value_filename, b_value_threshold=b_value_threshold
+    )
     if nb_b0s <= 0:
         raise ValueError(
-            f"The number of b0s should be strictly positive (b-val file: {in_bval})."
+            f"The number of b0s should be strictly positive (b-val file: {b_value_filename})."
         )
     if nb_b0s == 1:
         return extracted_b0
@@ -350,17 +358,18 @@ def compute_reference_b0(
 
 
 def configure_working_directory(
-    in_dwi: PathLike, working_directory: PathLike = None
-) -> PathLike:
+    dwi_filename: Path,
+    working_directory: Optional[Path] = None,
+) -> Path:
     """Configures a temporary working directory for writing the output files of
     the b0 co-registration.
 
     Parameters
     ----------
-    in_dwi : str
+    dwi_filename : Path
         Path to DWI file. This is used to create the name of the folder.
 
-    working_directory : str, optional
+    working_directory : Path, optional
         The folder to be used if provided by the user.
         If None, then create a temporary folder to work in.
 
@@ -375,7 +384,7 @@ def configure_working_directory(
 
     working_directory = working_directory or tempfile.mkdtemp()
     working_directory = (
-        Path(working_directory) / hashlib.md5(str(in_dwi).encode()).hexdigest()
+        Path(working_directory) / hashlib.md5(str(dwi_filename).encode()).hexdigest()
     )
     working_directory.mkdir(parents=True)
 
@@ -383,8 +392,10 @@ def configure_working_directory(
 
 
 def register_b0(
-    nb_b0s: int, extracted_b0: PathLike, working_directory: PathLike
-) -> PathLike:
+    nb_b0s: int,
+    extracted_b0_filename: Path,
+    working_directory: Path,
+) -> Path:
     """Run the FSL pipeline 'b0_flirt_pipeline' in order to co-register the b0 images.
 
     This function is a simple wrapper around the b0_flirt_pipeline which configures it,
@@ -395,15 +406,15 @@ def register_b0(
     nb_b0s : int
         The number of B0 volumes in the dataset.
 
-    extracted_b0 : str
+    extracted_b0_filename : Path
         The extracted B0 volumes to co-register.
 
-    working_directory : str
+    working_directory : Path
         The working directory in which the pipeline will write intermediary files.
 
     Returns
     -------
-    str:
+    Path:
         The path to the nifti image containing the co-registered B0 volumes.
         If the pipeline ran successfully, this file should be located in :
         working_directory / b0_coregistration / concat_ref_moving / merged_files.nii.gz
@@ -413,7 +424,7 @@ def register_b0(
     )
 
     b0_flirt = b0_flirt_pipeline(num_b0s=nb_b0s)
-    b0_flirt.inputs.inputnode.in_file = str(extracted_b0)
+    b0_flirt.inputs.inputnode.in_file = str(extracted_b0_filename)
     b0_flirt.base_dir = str(working_directory)
     b0_flirt.run()
 

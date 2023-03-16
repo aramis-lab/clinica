@@ -1,4 +1,5 @@
 """This module contains utilities for DWI handling."""
+import functools
 from collections import namedtuple
 from os import PathLike
 from pathlib import Path
@@ -9,37 +10,41 @@ import numpy as np
 DWIDataset = namedtuple("DWIDataset", "dwi b_values b_vectors")
 
 
-def count_b0s(in_bval: PathLike, low_bval: float = 5.0) -> int:
+def count_b0s(b_value_filename: PathLike, b_value_threshold: float = 5.0) -> int:
     """Counts the number of volumes where b<=low_bval.
 
     Parameters
     ----------
-    in_bval : PathLike
-        Path to the bval file.
+    b_value_filename : PathLike
+        Path to the b-value file.
 
-    low_bval : int, optional
-        Defines the threshold for the b0 volumes as all volumes will
-        satisfy bval <= lowbval. Defaults to 5.0.
+    b_value_threshold : float, optional
+        Defines the threshold for the b0 volumes as all volumes which
+        satisfy b-value <= b_value_threshold.
+        Defaults to 5.0.
 
     Returns
     -------
     num_b0s : int
         Number of b0 volumes.
     """
-    return len(get_b0_filter(in_bval, low_bval=low_bval))
+    return len(get_b0_filter(b_value_filename, b_value_threshold=b_value_threshold))
 
 
-def get_b0_filter(in_bval: PathLike, low_bval: float = 5.0) -> np.ndarray:
+def get_b0_filter(
+    b_value_filename: PathLike, b_value_threshold: float = 5.0
+) -> np.ndarray:
     """Return the index for the volumes where b<=low_bval.
 
     Parameters
     ----------
-    in_bval : PathLike
+    b_value_filename : PathLike
         Path to the bval file.
 
-    low_bval : int, optional
-        Defines the threshold for the b0 volumes as all volumes will
-        satisfy bval <= lowbval. Defaults to 5.0.
+    b_value_threshold : float, optional
+        Defines the threshold for the b0 volumes as all volumes which
+        satisfy b-value <= b_value_threshold.
+        Defaults to 5.0.
 
     Returns
     -------
@@ -49,20 +54,27 @@ def get_b0_filter(in_bval: PathLike, low_bval: float = 5.0) -> np.ndarray:
     Raises
     ------
     FileNotFoundError:
-        If in_bval file cannot be found.
+        If b_value_filename file cannot be found.
     """
-    import os
+    b_value_filename = _check_file(b_value_filename)
+    values = np.loadtxt(b_value_filename)
 
-    if not os.path.isfile(in_bval):
-        raise FileNotFoundError(f"Cannot find bval file : {in_bval}.")
-    values = np.loadtxt(in_bval)
-    return np.where(values <= low_bval)[0]
+    return np.where(values <= b_value_threshold)[0]
+
+
+def _check_file(filename: PathLike, resolve: bool = False) -> Path:
+    """Check that filename exists and return a Path object."""
+    filename = Path(filename).resolve() if resolve else Path(filename)
+    if not filename.exists():
+        raise FileNotFoundError(f"File not found : {filename}.")
+
+    return filename
 
 
 def compute_average_b0(
-    in_dwi: PathLike,
-    in_bval: Optional[PathLike] = None,
-    low_bval: float = 5.0,
+    dwi_filename: PathLike,
+    b_value_filename: Optional[PathLike] = None,
+    b_value_threshold: float = 5.0,
     squeeze: bool = False,
     out_file: Optional[str] = None,
 ) -> PathLike:
@@ -70,16 +82,17 @@ def compute_average_b0(
 
     Parameters
     ----------
-    in_dwi : PathLike
+    dwi_filename : PathLike
         The path to the DWI files containing the volumes of interest.
 
-    in_bval : PathLike, optional
-        The path to the bval file. This will be used to filter the volumes.
-        Only volumes for which bval is less than low_bval will be kept for computations.
-        If None, all volumes are kept. Default is None.
+    b_value_filename : PathLike, optional
+        The path to the b-values file. This will be used to filter the volumes.
+        Only volumes with a corresponding b-value smaller than b_value_threshold
+        will be kept for computations. If None, all volumes are kept.
+        Default is None.
 
-    low_bval : float, optional
-        The threshold to apply to bvalues to get the volumes which should be kept.
+    b_value_threshold : float, optional
+        The threshold to apply to b-values to get the volumes which should be kept.
         Default=5.0.
 
     squeeze : bool, optional
@@ -90,7 +103,8 @@ def compute_average_b0(
     out_file : str, optional
         Name of the output file.
         If None, the output file will be built from the input DWI file base with
-        the suffix '_avg_b0.nii[.gz]'. Defaults to None.
+        the suffix '_avg_b0.nii[.gz]'.
+        Defaults to None.
 
     Returns
     -------
@@ -103,29 +117,32 @@ def compute_average_b0(
         If the DWI input file does not exist.
 
     ValueError:
-        If low_bval < 0.
+        If b_value_threshold < 0.
     """
-    from pathlib import Path
-
     from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
-    in_dwi = Path(in_dwi)
-
-    if not in_dwi.exists():
-        raise FileNotFoundError(f"DWI file not found : {in_dwi}.")
-
-    if low_bval < 0:
-        raise ValueError(f"low_bval should be >=0. You provided : {low_bval}.")
-
-    out_file = out_file or add_suffix_to_filename(in_dwi, "avg_b0")
-    volume_filter = get_b0_filter(in_bval, low_bval=low_bval) if in_bval else None
-    b0 = compute_aggregated_volume(in_dwi, np.average, volume_filter)
+    dwi_filename = _check_file(dwi_filename)
+    _check_b_value_threshold(b_value_threshold)
+    out_file = out_file or add_suffix_to_filename(dwi_filename, "avg_b0")
+    volume_filter = (
+        get_b0_filter(b_value_filename, b_value_threshold=b_value_threshold)
+        if b_value_filename
+        else None
+    )
+    b0 = compute_aggregated_volume(dwi_filename, np.average, volume_filter)
     if not squeeze:
         b0 = b0[..., np.newaxis]
-    b0_img = get_new_image_like(in_dwi, b0)
+    b0_img = get_new_image_like(dwi_filename, b0)
     b0_img.to_filename(out_file)
 
     return out_file
+
+
+def _check_b_value_threshold(b_value_threshold: float) -> None:
+    if b_value_threshold < 0:
+        raise ValueError(
+            f"b_value_threshold should be >=0. You provided {b_value_threshold}."
+        )
 
 
 def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
@@ -152,14 +169,7 @@ def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:
     FileNotFoundError
         If one of the files doesn't exist.
     """
-    file_paths = []
-    for input_file in dwi_dataset:
-        input_file_path = Path(input_file).resolve()
-        if not input_file_path.exists():
-            raise FileNotFoundError(f"File {input_file_path} could not be found.")
-        file_paths.append(input_file_path)
-
-    return DWIDataset(*file_paths)
+    return DWIDataset(*(_check_file(f, resolve=True) for f in dwi_dataset))
 
 
 def remove_entity_from_filename(filename: Path, entity: str) -> Path:
@@ -175,14 +185,15 @@ def add_suffix_to_filename(filename: Path, suffix: str) -> Path:
     return filename.parent / f"{filename.name.replace(ext, '')}_{suffix}{ext}"
 
 
-def b0_dwi_split(
-    dwi_dataset: DWIDataset, low_bval: float = 5.0
+def split_dwi_dataset_with_b_values(
+    dwi_dataset: DWIDataset,
+    b_value_threshold: float = 5.0,
 ) -> Tuple[DWIDataset, DWIDataset]:
-    """Splits the DWI dataset.
+    """Splits the DWI dataset in two through the B-values.
 
-    Split the DWI volumes into two datasets :
-     - the first dataset is relative to volumes having a b-value <= low_bval.
-     - the second dataset is relative to volumes having a b-value > low_bval.
+    Splits the DWI volumes into two datasets :
+     - the first dataset is relative to volumes having a b-value <= b_value_threshold.
+     - the second dataset is relative to volumes having a b-value > b_value_threshold.
 
     The function writes 6 files (3 files for each dataset), and returns a
     length 2 tuple containing the two DWI datasets.
@@ -192,30 +203,29 @@ def b0_dwi_split(
     dwi_dataset : DWIDataset
         DWI image dataset to split.
 
-    low_bval : float, optional
-        Defines the b0 volumes as all volumes bval <= lowbval.
+    b_value_threshold : float, optional
+        Defines the b0 volumes as all volumes b-value <= b_value_threshold.
         Defaults to 5.0.
 
     Returns
     -------
     small_b_dataset : DWIDataset
-        DWI dataset for volumes for which b<=low_bval.
+        DWI dataset for volumes for which b-value <= b_value_threshold.
 
     large_b_dataset : DWIDataset
-        DWI dataset for volumes for which b>low_bval.
+        DWI dataset for volumes for which b-value > b_value_threshold.
 
     Raises
     ------
     ValueError:
-        If low_bval < 0.
+        If b_value_threshold < 0.
     """
-    if low_bval < 0:
-        raise ValueError(f"low_bval should be >=0. You provided {low_bval}.")
-
+    _check_b_value_threshold(b_value_threshold)
     dwi_dataset = check_dwi_dataset(dwi_dataset)
     b_values, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
-
-    small_b_filter = get_b0_filter(dwi_dataset.b_values, low_bval=low_bval)
+    small_b_filter = get_b0_filter(
+        dwi_dataset.b_values, b_value_threshold=b_value_threshold
+    )
     large_b_filter = np.array(
         [i for i in range(len(b_values)) if i not in small_b_filter]
     )
@@ -297,7 +307,7 @@ def _filter_b_values(
     """Filter the b-values component of the provided DWI dataset."""
     b_values, _ = _check_b_values_and_b_vectors(dwi_dataset)
     b_values_filename = add_suffix_to_filename(dwi_dataset.b_values, filter_name)
-    np.savetxt(b_values_filename, b_values[filter_array], fmt="%d", delimiter=" ")
+    _write_b_values(b_values_filename, b_values[filter_array])
 
     return b_values_filename
 
@@ -308,22 +318,30 @@ def _filter_b_vectors(
     """Filter the b-vectors component of the provided DWI dataset."""
     b_values, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
     b_vectors_filename = add_suffix_to_filename(dwi_dataset.b_vectors, filter_name)
-    np.savetxt(
-        b_vectors_filename,
-        np.array([b[filter_array] for b in b_vectors]),
-        fmt="%10.5f",
-        delimiter=" ",
-    )
+    _write_b_vectors(b_vectors_filename, np.array([b[filter_array] for b in b_vectors]))
 
     return b_vectors_filename
 
 
-def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
-    """Inserts a b0 volume into the DWI dataset as the first volume and update the bvals and bvecs files.
+def _write_numpy(filename: Path, data: np.ndarray, fmt: str, delimiter: str) -> None:
+    """Writes the provided array to the provided filename using the provided formatting."""
+    import numpy as np
+
+    np.savetxt(filename, data, fmt=fmt, delimiter=delimiter)
+
+
+_write_b_vectors = functools.partial(_write_numpy, fmt="%10.5f", delimiter=" ")
+_write_b_values = functools.partial(_write_numpy, fmt="%d", delimiter=" ")
+
+
+def insert_b0_into_dwi(b0_filename: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
+    """Inserts a b0 volume into the DWI dataset as the first volume.
+
+    Also updates the b-values and b-vectors files accordingly.
 
     Parameters
     ----------
-    in_b0 : PathLike
+    b0_filename : PathLike
         Path to image file containing one b=0 volume (could be the average of a b0 dataset).
 
     dwi_dataset : DWIDataset
@@ -334,32 +352,56 @@ def insert_b0_into_dwi(in_b0: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
     DWIDataset :
         The diffusion dataset : b0 volume + dwi volumes.
     """
+    dwi_dataset = check_dwi_dataset(dwi_dataset)
+    b0_filename = _check_file(b0_filename)
+
+    return DWIDataset(
+        dwi=_insert_b0_into_dwi_image(dwi_dataset.dwi, b0_filename),
+        b_values=_insert_b0_into_b_values(dwi_dataset.b_values),
+        b_vectors=_insert_b0_into_b_vectors(dwi_dataset.b_vectors),
+    )
+
+
+def _insert_b0_into_dwi_image(dwi_filename: Path, b0_filename: Path) -> Path:
+    """Insert the provided B0 volume into the DWI image.
+
+    This insertion is done at index 0 along the 4th / time dimension.
+    """
     from clinica.utils.image import merge_nifti_images_in_time_dimension
 
-    dwi_dataset = check_dwi_dataset(dwi_dataset)
-    out_dwi = merge_nifti_images_in_time_dimension(
-        (in_b0, dwi_dataset.dwi),
+    output_dwi_filename = merge_nifti_images_in_time_dimension(
+        (b0_filename, dwi_filename),
         out_file=add_suffix_to_filename(
-            remove_entity_from_filename(dwi_dataset.dwi, "large_b"),
+            remove_entity_from_filename(dwi_filename, "large_b"),
             "merged",
         ),
     )
 
-    bvals = np.loadtxt(dwi_dataset.b_values)
-    bvals = np.insert(bvals, 0, 0)
-    out_bvals = add_suffix_to_filename(
-        remove_entity_from_filename(dwi_dataset.b_values, "large_b"), "merged"
-    )
-    np.savetxt(out_bvals, bvals, fmt="%d", delimiter=" ")
+    return output_dwi_filename
 
-    bvecs = np.loadtxt(dwi_dataset.b_vectors)
-    bvecs = np.insert(bvecs, 0, 0.0, axis=1)
-    out_bvecs = add_suffix_to_filename(
-        remove_entity_from_filename(dwi_dataset.b_vectors, "large_b"), "merged"
-    )
-    np.savetxt(out_bvecs, bvecs, fmt="%10.5f", delimiter=" ")
 
-    return DWIDataset(dwi=out_dwi, b_values=out_bvals, b_vectors=out_bvecs)
+def _insert_b0_into_b_values(b_values_filename: Path) -> Path:
+    """Insert a 0 value at index 0 into the b-values file."""
+    b_values = np.loadtxt(b_values_filename)
+    b_values = np.insert(b_values, 0, 0)
+    output_b_values_filename = add_suffix_to_filename(
+        remove_entity_from_filename(b_values_filename, "large_b"), "merged"
+    )
+    _write_b_values(output_b_values_filename, b_values)
+
+    return output_b_values_filename
+
+
+def _insert_b0_into_b_vectors(b_vectors_filename: Path) -> Path:
+    """Insert a 0 vector into the b-vectors file."""
+    b_vectors = np.loadtxt(b_vectors_filename)
+    b_vectors = np.insert(b_vectors, 0, 0.0, axis=1)
+    output_b_vectors_filename = add_suffix_to_filename(
+        remove_entity_from_filename(b_vectors_filename, "large_b"), "merged"
+    )
+    _write_b_vectors(output_b_vectors_filename, b_vectors)
+
+    return output_b_vectors_filename
 
 
 def check_dwi_volume(dwi_dataset: DWIDataset) -> None:
@@ -382,14 +424,14 @@ def check_dwi_volume(dwi_dataset: DWIDataset) -> None:
     import nibabel as nib
     import numpy as np
 
-    num_b_vals = len(np.loadtxt(dwi_dataset.b_values))
-    num_b_vecs = np.loadtxt(dwi_dataset.b_vectors).shape[-1]
-    num_dwis = nib.load(dwi_dataset.dwi).shape[-1]
+    num_b_values = len(np.loadtxt(dwi_dataset.b_values))
+    num_b_vectors = np.loadtxt(dwi_dataset.b_vectors).shape[-1]
+    num_dwi = nib.load(dwi_dataset.dwi).shape[-1]
 
-    if not (num_b_vals == num_b_vecs == num_dwis):
+    if not (num_b_values == num_b_vectors == num_dwi):
         raise IOError(
             f"Number of DWIs, b-vals and b-vecs mismatch "
-            f"(# DWI = {num_dwis}, # B-vec = {num_b_vecs}, #B-val = {num_b_vals}) "
+            f"(# DWI = {num_dwi}, # B-vec = {num_b_vectors}, #B-val = {num_b_values}) "
         )
 
 
