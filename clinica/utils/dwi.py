@@ -236,7 +236,7 @@ def split_dwi_dataset_with_b_values(
     """
     _check_b_value_threshold(b_value_threshold)
     dwi_dataset = check_dwi_dataset(dwi_dataset)
-    b_values, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
+    b_values, _ = _check_b_values_and_b_vectors(dwi_dataset)
     small_b_filter = get_b0_filter(
         dwi_dataset.b_values, b_value_threshold=b_value_threshold
     )
@@ -330,7 +330,7 @@ def _filter_b_vectors(
     dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
 ) -> Path:
     """Filters the b-vectors component of the provided DWI dataset."""
-    b_values, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
+    _, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
     b_vectors_filename = add_suffix_to_filename(dwi_dataset.b_vectors, filter_name)
     _write_b_vectors(b_vectors_filename, np.array([b[filter_array] for b in b_vectors]))
 
