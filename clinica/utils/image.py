@@ -78,11 +78,26 @@ def get_new_image_like(old_image: PathLike, new_image_data: np.ndarray) -> Nifti
 
 def merge_nifti_images_in_time_dimension(
     images: Tuple[Union[str, PathLike], ...], out_file: Optional[PathLike] = None
-):
+) -> PathLike:
     """Concatenates the provided images in the 4th dimension.
 
     The provided images must all be 3D or 4D. For 3D images, a dummy
     4th dimension will be added before concatenation.
+
+    Parameters
+    ----------
+    images : tuple of str or tuple of Pathlike
+        The paths to the images that should get merged.
+
+    out_file : PathLike, optional
+        The path to the file in which to write the merged
+        volumes. If None, the volumes will be written to a
+        file named 'merged_files.nii.gz' in the current folder.
+
+    Returns
+    -------
+    out_file : PathLike
+        Path to merged volumes.
     """
     import os
 
