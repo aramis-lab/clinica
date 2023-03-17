@@ -71,7 +71,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
 
     parameters = _check_pipeline_parameters(parameters)
 
-    input_name = parameters["orig_input_data_volume"]
+    input_name = parameters["orig_input_data_volume"].replace("-", "_")
     query = {
         "group_label": parameters["group_label_dartel"],
         "fwhm": parameters["full_width_at_half_maximum"],
