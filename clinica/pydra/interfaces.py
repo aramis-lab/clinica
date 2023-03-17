@@ -125,10 +125,12 @@ def bids_reader(query: BIDSQuery, input_dir: PathLike):
     Nipype1Task
         The task used for reading files from BIDS.
     """
-    from pydra.tasks.bids import BIDSDatasetReader
+    from pydra.tasks.bids import read_bids_dataset
 
-    return BIDSDatasetReader(output_query=query.query).to_task(
-        name="bids_reader_task", dataset_path=input_dir
+    return read_bids_dataset(
+        output_queries=dict(query),
+        dataset_path=input_dir,
+        name="bids_reader_task",
     )
 
 

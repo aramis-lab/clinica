@@ -49,21 +49,6 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     return atlas_statistics_list
 
 
-def extract_bids_identifier_from_caps_filename(caps_dwi_filename: str) -> str:
-    """Extract BIDS identifier from CAPS filename."""
-    import re
-
-    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi", caps_dwi_filename)
-
-    if not m:
-        raise ValueError(
-            f"Input filename {caps_dwi_filename} is not in a CAPS compliant format."
-        )
-    bids_identifier = m.group(0)
-
-    return bids_identifier
-
-
 def get_caps_filenames(caps_dwi_filename: str):
     """Prepare some filenames with CAPS naming convention."""
     import re
@@ -91,77 +76,43 @@ def get_caps_filenames(caps_dwi_filename: str):
 
 
 def rename_into_caps(
-    in_caps_dwi,
-    in_norm_fa,
-    in_norm_md,
-    in_norm_ad,
-    in_norm_rd,
-    in_b_spline_transform,
-    in_affine_matrix,
-):
+    in_caps_dwi: str,
+    in_norm_fa: str,
+    in_norm_md: str,
+    in_norm_ad: str,
+    in_norm_rd: str,
+    in_b_spline_transform: str,
+    in_affine_matrix: str,
+) -> tuple:
     """Rename different outputs of the pipelines into CAPS format.
 
-    Returns:
+    Parameters
+    ----------
+    in_caps_dwi : str
+    in_norm_fa : str
+    in_norm_md : str
+    in_norm_ad : str
+    in_norm_rd : str
+    in_b_spline_transform : str
+    in_affine_matrix : str
+
+    Returns
+    -------
+    tuple :
         The different outputs with CAPS naming convention
     """
-    from nipype.interfaces.utility import Rename
+    from clinica.utils.dwi import rename_files
 
-    from clinica.pipelines.dwi_dti.dwi_dti_utils import (
-        extract_bids_identifier_from_caps_filename,
-    )
-
-    bids_identifier = extract_bids_identifier_from_caps_filename(in_caps_dwi)
-
-    # CAPS normalized FA
-    rename_fa = Rename()
-    rename_fa.inputs.in_file = in_norm_fa
-    rename_fa.inputs.format_string = (
-        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_FA.nii.gz"
-    )
-    out_caps_fa = rename_fa.run()
-    # CAPS normalized MD
-    rename_md = Rename()
-    rename_md.inputs.in_file = in_norm_md
-    rename_md.inputs.format_string = (
-        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_MD.nii.gz"
-    )
-    out_caps_md = rename_md.run()
-    # CAPS normalized AD
-    rename_ad = Rename()
-    rename_ad.inputs.in_file = in_norm_ad
-    rename_ad.inputs.format_string = (
-        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_AD.nii.gz"
-    )
-    out_caps_ad = rename_ad.run()
-    # CAPS normalized RD
-    rename_rd = Rename()
-    rename_rd.inputs.in_file = in_norm_rd
-    rename_rd.inputs.format_string = (
-        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_RD.nii.gz"
-    )
-    out_caps_rd = rename_rd.run()
-    # CAPS B-spline transform
-    rename_b_spline = Rename()
-    rename_b_spline.inputs.in_file = in_b_spline_transform
-    rename_b_spline.inputs.format_string = (
-        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_deformation.nii.gz"
-    )
-    out_caps_b_spline_transform = rename_b_spline.run()
-    # CAPS Affine matrix
-    rename_affine = Rename()
-    rename_affine.inputs.in_file = in_affine_matrix
-    rename_affine.inputs.format_string = (
-        f"{bids_identifier}_space-MNI152Lin_res-1x1x1_affine.mat"
-    )
-    out_caps_affine_matrix = rename_affine.run()
-
-    return (
-        out_caps_fa.outputs.out_file,
-        out_caps_md.outputs.out_file,
-        out_caps_ad.outputs.out_file,
-        out_caps_rd.outputs.out_file,
-        out_caps_b_spline_transform.outputs.out_file,
-        out_caps_affine_matrix.outputs.out_file,
+    return rename_files(
+        in_caps_dwi,
+        {
+            in_norm_fa: "_space-MNI152Lin_res-1x1x1_FA.nii.gz",
+            in_norm_md: "_space-MNI152Lin_res-1x1x1_MD.nii.gz",
+            in_norm_ad: "_space-MNI152Lin_res-1x1x1_AD.nii.gz",
+            in_norm_rd: "_space-MNI152Lin_res-1x1x1_RD.nii.gz",
+            in_b_spline_transform: "_space-MNI152Lin_res-1x1x1_deformation.nii.gz",
+            in_affine_matrix: "_space-MNI152Lin_res-1x1x1_affine.mat",
+        },
     )
 
 
