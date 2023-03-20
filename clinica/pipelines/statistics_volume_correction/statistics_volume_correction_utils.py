@@ -1,14 +1,20 @@
-def peak_correction(t_map, t_threshold, output_name=None):
+def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> str:
     """
     Threshold the t_map with t_threshold. Pixel intensities that are less than t_threshold are set to 0, other values
     are left unchanged.
 
-    Args:
-        t_map: (str) path to t-statistics nifti map
-        t_threshold: (float) threshold on t value
-        output_name: (str) optional output name
+    Parameters
+    ----------
+    t_map: str
+        path to t-statistics nifti map
+    t_threshold: float
+        threshold on t value
+    output_name: str
+        optional output name
 
-    Returns:
+    Returns
+    -------
+    str:
         path to the generated file.
     """
     from os.path import abspath, basename, join
