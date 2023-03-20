@@ -36,7 +36,10 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
             raise ClinicaException(
                 "You must set --measure_label and --custom_file flags."
             )
-
+        if not parameters["custom_file"]:
+            raise ClinicaException(
+                "Custom pipeline was selected but no 'custom_file' was specified."
+            )
     return parameters
 
 
@@ -89,10 +92,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         query.update({"tissue_number": 1, "modulation": True})
 
     elif input_name == "custom_pipeline":
-        if not parameters["custom_file"]:
-            raise ClinicaException(
-                "Custom pipeline was selected but no 'custom_file' was specified."
-            )
         query = {
             "pattern": parameters["custom_file"],
             "description": "custom file provided by user",
