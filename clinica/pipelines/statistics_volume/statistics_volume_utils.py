@@ -2,7 +2,9 @@ import typing as ty
 from pathlib import Path
 
 
-def get_group_1_and_2(tsv: str, contrast: str) -> ty.Tuple[ty.List[int], ty.List[int], ty.List[str]]:
+def get_group_1_and_2(
+    tsv: str, contrast: str
+) -> ty.Tuple[ty.List[int], ty.List[int], ty.List[str]]:
     """Based on the TSV file given in parameter, compute indexes of each group
 
     Parameters
@@ -114,15 +116,11 @@ def set_output_and_groups(
     filedata = filedata.replace("@OUTPUTDIR", "'" + output_folder + "'")
     filedata = filedata.replace(
         "@SCANS1",
-        unravel_list_for_matlab(
-            [file_list[i] for i in idx_group1]
-        ),
+        unravel_list_for_matlab([file_list[i] for i in idx_group1]),
     )
     filedata = filedata.replace(
         "@SCANS2",
-        unravel_list_for_matlab(
-            [file_list[i] for i in idx_group2]
-        ),
+        unravel_list_for_matlab([file_list[i] for i in idx_group2]),
     )
     with open(current_model, "w+") as file:
         file.write(filedata)
@@ -184,12 +182,8 @@ def write_covariates(
         write_covariate_lines,
     )
 
-    current_covar_data_group1 = [
-        covariates[i] for i in idx_group1
-    ]
-    current_covar_data_group2 = [
-        covariates[i] for i in idx_group2
-    ]
+    current_covar_data_group1 = [covariates[i] for i in idx_group1]
+    current_covar_data_group2 = [covariates[i] for i in idx_group2]
     concatenated_covariates = current_covar_data_group1 + current_covar_data_group2
     write_covariate_lines(model, covar_number, covar, concatenated_covariates)
 
@@ -425,12 +419,12 @@ def run_m_script(m_file: str) -> str:
     return output_mat_file
 
 
-def run_matlab_script_with_matlab(m_file: Path) -> None:
+def run_matlab_script_with_matlab(m_file: str) -> None:
     """Runs a matlab script using matlab
 
     Parameters
     ----------
-    m_file: Path
+    m_file: str
         Path to the script
     """
     import platform
@@ -442,19 +436,19 @@ def run_matlab_script_with_matlab(m_file: Path) -> None:
     matlab = MatlabCommand()
     if platform.system().lower().startswith("linux"):
         matlab.inputs.args = "-nosoftwareopengl"
-    matlab.inputs.paths = m_file.parent
-    matlab.inputs.script = m_file.stem
+    matlab.inputs.paths = Path(m_file).parent
+    matlab.inputs.script = Path(m_file).stem
     matlab.inputs.single_comp_thread = False
     matlab.inputs.logfile = abspath("./matlab_output.log")
     matlab.run()
 
 
-def run_matlab_script_with_spm_standalone(m_file: Path) -> None:
+def run_matlab_script_with_spm_standalone(m_file: str) -> None:
     """Runs a matlab script spm_standalone
 
     Parameters
     ----------
-    m_file: Path
+    m_file: str
         Path to the script
     """
     import platform
@@ -478,7 +472,7 @@ def run_matlab_script_with_spm_standalone(m_file: Path) -> None:
 
 def delete_last_line(filename: Path) -> None:
     """Removes the last line of the provided file.
-    
+
     Used to remove the call to spm jobman if the MATLAB file
     is used with SPM standalone.
 
