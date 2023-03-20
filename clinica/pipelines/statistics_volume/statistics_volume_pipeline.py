@@ -351,7 +351,7 @@ class StatisticsVolume(cpe.Pipeline):
                     "template_file",
                 ],
                 output_names=["script_file", "covariates"],
-                function=utils.model_creation,
+                function=utils.write_matlab_model,
             ),
             name="model_creation",
             overwrite=True,
@@ -367,7 +367,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["mat_file", "template_file"],
                 output_names=["script_file"],
-                function=utils.estimate,
+                function=utils.clean_template_file,
             ),
             name="model_estimation",
         )
@@ -380,7 +380,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["mat_file", "template_file", "covariates", "class_names"],
                 output_names=["script_file"],
-                function=utils.contrast,
+                function=utils.clean_spm_contrast_file,
             ),
             name="model_contrast",
         )
@@ -393,7 +393,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["mat_file", "template_file", "method", "threshold"],
                 output_names=["script_file"],
-                function=utils.results,
+                function=utils.clean_spm_result_file,
             ),
             name="model_result_no_correction",
         )
@@ -429,7 +429,7 @@ class StatisticsVolume(cpe.Pipeline):
                     "regression_coeff",
                     "contrasts",
                 ],
-                function=utils.read_output,
+                function=utils.copy_and_rename_spm_output_files,
             ),
             name="read_output_node",
         )
