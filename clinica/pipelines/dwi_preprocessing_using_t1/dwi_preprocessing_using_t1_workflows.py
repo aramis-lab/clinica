@@ -1,4 +1,6 @@
-def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
+def eddy_fsl_pipeline(
+    low_bval, use_cuda, initrand, image_id=None, field=None, name="eddy_fsl"
+):
     """Use FSL eddy for head motion correction and eddy current distortion correction."""
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
@@ -33,6 +35,7 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
         ),
         name="generate_acq",
     )
+    generate_acq.inputs.image_id = image_id
 
     generate_index = pe.Node(
         niu.Function(
@@ -43,11 +46,16 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
         name="generate_index",
     )
     generate_index.inputs.low_bval = low_bval
+    generate_index.inputs.image_id = image_id
 
     eddy = pe.Node(interface=Eddy(), name="eddy_fsl")
     eddy.inputs.repol = True
     eddy.inputs.use_cuda = use_cuda
     eddy.inputs.initrand = initrand
+    if image_id:
+        eddy.inputs.out_base = image_id
+    if field:
+        eddy.inputs.field = field
 
     outputnode = pe.Node(
         niu.IdentityInterface(
@@ -308,7 +316,7 @@ def epi_pipeline(
             (jacobian, jacmult, [("jacobian_image", "in_file")]),
             (jacmult, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
-            
+
             (merge, outputnode, [("merged_file", "DWIs_epicorrected")]),
             (flirt_b0_2_t1, outputnode, [("out_matrix_file", "DWI_2_T1_Coregistration_matrix")]),
             (ants_registration, outputnode, [("forward_warp_field", "epi_correction_deformation_field"),
@@ -317,8 +325,8 @@ def epi_pipeline(
             (merge_transform, outputnode, [("out", "warp_epi")]),
             (rot_bvec, outputnode, [("out_file", "out_bvec")]),
 
-            
-            
+
+
         ]
     )
     if delete_cache:
