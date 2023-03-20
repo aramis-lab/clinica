@@ -115,13 +115,13 @@ def set_output_and_groups(
     filedata = filedata.replace(
         "@SCANS1",
         unravel_list_for_matlab(
-            [f for i, f in enumerate(file_list) if i in idx_group1]
+            [file_list[i] for i in idx_group1]
         ),
     )
     filedata = filedata.replace(
         "@SCANS2",
         unravel_list_for_matlab(
-            [f for i, f in enumerate(file_list) if i in idx_group2]
+            [file_list[i] for i in idx_group2]
         ),
     )
     with open(current_model, "w+") as file:
@@ -185,10 +185,10 @@ def write_covariates(
     )
 
     current_covar_data_group1 = [
-        elem for i, elem in enumerate(covariates) if i in idx_group1
+        covariates[i] for i in idx_group1
     ]
     current_covar_data_group2 = [
-        elem for i, elem in enumerate(covariates) if i in idx_group2
+        covariates[i] for i in idx_group2
     ]
     concatenated_covariates = current_covar_data_group1 + current_covar_data_group2
     write_covariate_lines(model, covar_number, covar, concatenated_covariates)
@@ -425,12 +425,12 @@ def run_m_script(m_file: str) -> str:
     return output_mat_file
 
 
-def run_matlab_script_with_matlab(m_file: str) -> None:
+def run_matlab_script_with_matlab(m_file: Path) -> None:
     """Runs a matlab script using matlab
 
     Parameters
     ----------
-    m_file: str
+    m_file: Path
         Path to the script
     """
     import platform
@@ -449,12 +449,12 @@ def run_matlab_script_with_matlab(m_file: str) -> None:
     matlab.run()
 
 
-def run_matlab_script_with_spm_standalone(m_file: str) -> None:
+def run_matlab_script_with_spm_standalone(m_file: Path) -> None:
     """Runs a matlab script spm_standalone
 
     Parameters
     ----------
-    m_file: str
+    m_file: Path
         Path to the script
     """
     import platform
@@ -466,11 +466,11 @@ def run_matlab_script_with_spm_standalone(m_file: str) -> None:
     # SPM standalone must be run directly from its root folder
     if platform.system().lower().startswith("darwin"):
         # Mac OS
-        cmdline = "cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch " + m_file
+        cmdline = f"cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch {m_file}"
 
     elif platform.system().lower().startswith("linux"):
         # Linux OS
-        cmdline = "$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch " + m_file
+        cmdline = f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch {m_file}"
     else:
         raise SystemError("Clinica only support Mac OS and Linux")
     system(cmdline)
