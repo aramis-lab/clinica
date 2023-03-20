@@ -104,3 +104,126 @@ def prepare_phasediff_fmap(name="prepare_phasediff_fmap"):
     # fmt: on
 
     return wf
+
+
+def compute_reference_b0(
+    low_bval: float, use_cuda: bool, initrand, name="compute_reference_b0"
+):
+    """Step 1 of the DWI preprocessing using phasediff pipeline.
+
+    Compute the reference b0 (i.e. average b0 with EPI distortions)
+
+    This pipeline needs:
+        - MRtrix3 to compute the whole brain mask
+        - FSL to run Eddy and BET
+
+    It takes as inputs:
+        - "dwi": The path to the DWI image
+        - "b_vecors": The path to the associated B-vectors file
+        - "b_values": The path to the associated B-values file
+        - "total_readout_time": The total readout time extracted from JSON metadata
+        - "phase_encoding_direction": The phase encoding direction extracted from JSON metadata
+        - "image_id": Prefix to be used for output files
+
+    It is parametrized by:
+        - low_bval: float, threshold value to determine the B0 volumes in the DWI image
+        - use_cuda: bool, boolean to indicate whether cuda should be used or not
+        - initrand: ??
+        - name: str, name of the pipeline
+    """
+    import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.mrtrix3 as mrtrix3
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as npe
+
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+        eddy_fsl_pipeline,
+    )
+    from clinica.utils.dwi import compute_average_b0
+
+    from .dwi_preprocessing_using_phasediff_fmap_utils import get_grad_fsl
+
+    inputnode = npe.Node(
+        niu.IdentityInterface(
+            fields=[
+                "dwi",
+                "b_vectors",
+                "b_values",
+                "total_readout_time",
+                "phase_encoding_direction",
+                "image_id",
+            ]
+        ),
+        name="inputnode",
+    )
+
+    fsl_gradient = npe.Node(
+        niu.Function(
+            input_names=["bval", "bvec"],
+            output_names=["grad_fsl"],
+            function=get_grad_fsl,
+        ),
+        name="0-GetFslGrad",
+    )
+
+    # Compute whole brain mask
+    brain_mask = npe.Node(mrtrix3.BrainMask(), name="1a-PreMaskB0")
+    brain_mask.inputs.out_file = "brainmask.nii.gz"
+
+    # Run eddy without calibrated fmap
+    eddy = eddy_fsl_pipeline(
+        low_bval=low_bval,
+        use_cuda=use_cuda,
+        initrand=initrand,
+        name="1b-PreEddy",
+    )
+
+    # Compute the reference b0
+    reference_b0 = npe.Node(
+        niu.Function(
+            input_names=["in_dwi", "in_bval"],
+            output_names=["out_b0_average"],
+            function=compute_average_b0,
+        ),
+        name="1c-ComputeReferenceB0",
+    )
+    reference_b0.inputs.low_bval = low_bval
+
+    # Compute brain mask from reference b0
+    masked_reference_b0 = npe.Node(
+        fsl.BET(mask=True, robust=True), name="1d-MaskReferenceB0"
+    )
+
+    outputnode = npe.Node(
+        niu.IdentityInterface(fields=["out_file", "b0_mask"]),
+        name="outputnode",
+    )
+    wf = npe.Workflow(name=name)
+    wf.connect(
+        [
+            (inputnode, fsl_gradient, [("b_values", "bval"), ("b_vectors", "bvec")]),
+            (fsl_gradient, brain_mask, [("grad_fsl", "grad_fsl")]),
+            (inputnode, brain_mask, [("dwi", "in_file")]),
+            (
+                inputnode,
+                eddy,
+                [
+                    ("total_readout_time", "inputnode.total_readout_time"),
+                    ("phase_encoding_direction", "inputnode.phase_encoding_direction"),
+                    ("dwi", "inputnode.in_file"),
+                    ("b_values", "inputnode.in_bval"),
+                    ("b_vectors", "inputnode.in_bvec"),
+                    ("image_id", "inputnode.image_id"),
+                ],
+            ),
+            (brain_mask, eddy, [("out_file", "inputnode.in_mask")]),
+            (inputnode, reference_b0, [("b_values", "in_bval")]),
+            (eddy, reference_b0, [("out_corrected", "in_dwi")]),
+            (reference_b0, masked_reference_b0, [("out_b0_average", "in_file")]),
+            (masked_reference_b0, outputnode, [("out_file", "out_file")]),
+            (brain_mask, outputnode, [("out_file", "b0_mask")]),
+        ]
+    )
+    # fmt: on
+
+    return wf
