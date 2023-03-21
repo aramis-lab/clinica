@@ -107,7 +107,11 @@ def prepare_phasediff_fmap(name="prepare_phasediff_fmap"):
 
 
 def compute_reference_b0(
-    low_bval: float, use_cuda: bool, initrand, name="compute_reference_b0"
+    low_bval: float,
+    use_cuda: bool,
+    initrand: bool,
+    output_dir=None,
+    name="compute_reference_b0",
 ):
     """Step 1 of the DWI preprocessing using phasediff pipeline.
 
@@ -129,6 +133,8 @@ def compute_reference_b0(
         - low_bval: float, threshold value to determine the B0 volumes in the DWI image
         - use_cuda: bool, boolean to indicate whether cuda should be used or not
         - initrand: ??
+        - output_dir: str, path to output directory. If provided, the pipeline will write
+          its output in this folder.
         - name: str, name of the pipeline
     """
     import nipype.interfaces.fsl as fsl
@@ -195,35 +201,47 @@ def compute_reference_b0(
     )
 
     outputnode = npe.Node(
-        niu.IdentityInterface(fields=["out_file", "b0_mask"]),
+        niu.IdentityInterface(fields=["reference_b0", "brainmask"]),
         name="outputnode",
     )
+
+    if output_dir:
+        write_results = npe.Node(name="write_results", interface=nio.DataSink())
+        write_results.inputs.base_directory = output_dir
+        write_results.inputs.parameterization = False
+
     wf = npe.Workflow(name=name)
-    wf.connect(
-        [
-            (inputnode, fsl_gradient, [("b_values", "bval"), ("b_vectors", "bvec")]),
-            (fsl_gradient, brain_mask, [("grad_fsl", "grad_fsl")]),
-            (inputnode, brain_mask, [("dwi", "in_file")]),
-            (
-                inputnode,
-                eddy,
-                [
-                    ("total_readout_time", "inputnode.total_readout_time"),
-                    ("phase_encoding_direction", "inputnode.phase_encoding_direction"),
-                    ("dwi", "inputnode.in_file"),
-                    ("b_values", "inputnode.in_bval"),
-                    ("b_vectors", "inputnode.in_bvec"),
-                    ("image_id", "inputnode.image_id"),
-                ],
-            ),
-            (brain_mask, eddy, [("out_file", "inputnode.in_mask")]),
-            (inputnode, reference_b0, [("b_values", "in_bval")]),
-            (eddy, reference_b0, [("out_corrected", "in_dwi")]),
-            (reference_b0, masked_reference_b0, [("out_b0_average", "in_file")]),
-            (masked_reference_b0, outputnode, [("out_file", "out_file")]),
-            (brain_mask, outputnode, [("out_file", "b0_mask")]),
+
+    connections = [
+        (inputnode, fsl_gradient, [("b_values", "bval"), ("b_vectors", "bvec")]),
+        (fsl_gradient, brain_mask, [("grad_fsl", "grad_fsl")]),
+        (inputnode, brain_mask, [("dwi", "in_file")]),
+        (
+            inputnode,
+            eddy,
+            [
+                ("total_readout_time", "inputnode.total_readout_time"),
+                ("phase_encoding_direction", "inputnode.phase_encoding_direction"),
+                ("dwi", "inputnode.in_file"),
+                ("b_values", "inputnode.in_bval"),
+                ("b_vectors", "inputnode.in_bvec"),
+                ("image_id", "inputnode.image_id"),
+            ],
+        ),
+        (brain_mask, eddy, [("out_file", "inputnode.in_mask")]),
+        (inputnode, reference_b0, [("b_values", "in_bval")]),
+        (eddy, reference_b0, [("out_corrected", "in_dwi")]),
+        (reference_b0, masked_reference_b0, [("out_b0_average", "in_file")]),
+        (masked_reference_b0, outputnode, [("out_file", "out_file")]),
+        (brain_mask, outputnode, [("out_file", "b0_mask")]),
+    ]
+
+    if output_dir:
+        connections += [
+            (outputnode, write_results, [("reference_b0", "reference_b0")]),
+            (outputnode, write_results, [("brainmask", "brainmask")]),
         ]
-    )
-    # fmt: on
+
+    wf.connect(connections)
 
     return wf

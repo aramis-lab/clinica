@@ -430,7 +430,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                                              ("delta_echo_time", "input_node.delta_echo_time")]),
                 # Register the BET magnitude fmap onto the BET b0
                 (bet_mag_fmap, bet_mag_fmap2b0, [("out_file", "in_file")]),
-                (reference_b0, bet_mag_fmap2b0, [("out_file", "reference")]),
+                (reference_b0, bet_mag_fmap2b0, [("reference_b0", "reference")]),
                 # Apply the transformation on the magnitude image
                 (bet_mag_fmap2b0, mag_fmap2b0, [("out_matrix_file", "in_matrix_file")]),
                 (bias_mag_fmap, mag_fmap2b0, [("output_image", "in_file")]),
@@ -449,7 +449,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                                    ("bvec", "in_bvec"),
                                    ("image_id", "image_id")]),
                 (smoothing, eddy, [("out_file", "field")]),
-                (reference_b0, eddy, [("b0_mask", "in_mask")]),
+                (reference_b0, eddy, [("brainmask", "in_mask")]),
 
                 # Step 4: Bias correction
                 # =======================
@@ -462,7 +462,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                 (init_node, compute_avg_b0, [("bval", "in_bval")]),
                 (bias, compute_avg_b0, [("out_file", "in_dwi")]),
                 # Compute b0 mask on corrected avg b0
-                (compute_avg_b0, mask_avg_b0, [("out_b0_average", "in_file")]),
+                (compute_avg_b0, mask_avg_b0, [("reference_b0", "in_file")]),
 
                 # Print end message
                 (init_node, print_end_message, [("image_id", "image_id")]),
