@@ -1,21 +1,23 @@
+from typing import List
+
+
 def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> str:
-    """
-    Threshold the t_map with t_threshold. Pixel intensities that are less than t_threshold are set to 0, other values
+    """Threshold the t_map with t_threshold. Pixel intensities that are less than t_threshold are set to 0, other values
     are left unchanged.
 
     Parameters
     ----------
     t_map: str
-        path to t-statistics nifti map
+        Path to t-statistics nifti map
     t_threshold: float
-        threshold on t value
+        Threshold on t value
     output_name: str
-        optional output name
+        Optional output name
 
     Returns
     -------
     str:
-        path to the generated file.
+        Path to the generated file.
     """
     from os.path import abspath, basename, join
 
@@ -35,18 +37,27 @@ def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> 
     return abspath(filename)
 
 
-def cluster_correction(t_map, t_thresh, c_thresh, output_name=None):
-    """
-    Performs cluster correction. First t_map is thresholded with t_thresh (like in peak_correction()). Then, clusters
+def cluster_correction(
+    t_map: str, t_thresh: float, c_thresh: int, output_name: str = None
+) -> str:
+    """Performs cluster correction. First t_map is thresholded with t_thresh (like in peak_correction()). Then, clusters
     that have a size less than c_thresh are removed
-    Args:
-        t_map: (str) path to t-statistics nifti map
-        t_thresh: (float) threshold on t value
-        c_thresh: (int) minimal size of clusters after thresholding
-        output_name: (str) optional output name
 
-    Returns:
-        path to the generated file.
+    Parameters
+    ----------
+    t_map: str
+        Path to t-statistics nifti map
+    t_thresh: float
+        Threshold on t value
+    c_thresh: int
+        Minimal size of clusters after thresholding
+    output_name: str
+        Optional output name
+
+    Returns
+    -------
+    str:
+        Path to the generated file.
     """
     from os.path import abspath, basename, join
 
@@ -85,19 +96,34 @@ def cluster_correction(t_map, t_thresh, c_thresh, output_name=None):
     return abspath(filename)
 
 
-def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh, n_cuts):
-    """
-    Produce the output figures
+def produce_figures(
+    nii_file: str,
+    template: str,
+    type_of_correction: str,
+    t_thresh: str,
+    c_thresh: int,
+    n_cuts: int,
+) -> List[str]:
+    """Produce the output figures
 
-    Args:
-        nii_file: (str) path to the nifti file (generated at previous steps)
-        template: (str) path to template used for the stat map plot
-        type_of_correction: (str) Can be either FWE or FDR (used only in potential figure titles)
-        t_thresh: (str) t value threshold used (used only in potential figure titles)
-        c_thresh: (int) cluster minimal size used (used only in potential figure titles)
-        n_cuts: (int) number of cuts in fig
+    Parameters
+    ----------
+    nii_file: str
+        Path to the nifti file (generated at previous steps)
+    template: str
+        Path to template used for the stat map plot
+    type_of_correction: str
+        Can be either FWE or FDR (used only in potential figure titles)
+    t_thresh: str
+        T value threshold used (used only in potential figure titles)
+    c_thresh: int
+        Cluster minimal size used (used only in potential figure titles)
+    n_cuts: int
+        Number of cuts in fig
 
-    Returns:
+    Returns
+    -------
+    list of string:
         List of path to image files: glass brain, statmap along x, statmap along y, statmap along z
     """
     from os.path import abspath
@@ -161,16 +187,17 @@ def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh, 
     ]
 
 
-def generate_output(t_map, figs, name):
-    """
-        Produce output
-    Args:
-        t_map: (str) path to t-map on which whole pipeline was based
-        figs: (list of str) paths to figs to save
-        name: (str) name of the correction (ex: cluster_correction_FWE)
+def generate_output(t_map: str, figs: List[str], name: str) -> None:
+    """Produce output
 
-    Returns:
-        Nothing
+    Parameters
+    ----------
+    t_map: str
+        Path to t-map on which whole pipeline was based
+    figs: list of str
+        Paths to figs to save
+    name: str
+        Name of the correction (ex: cluster_correction_FWE)
     """
     from os import makedirs
     from os.path import basename, dirname, join, splitext
