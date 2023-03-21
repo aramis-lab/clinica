@@ -53,6 +53,60 @@ def test_dwi_preprocessing_using_t1(cmdopt, tmp_path):
 
 
 @pytest.mark.slow
+def test_dwi_compute_reference_b0(cmdopt, tmp_path):
+    """Test step 1 of pipeline DWIPreprocessingUsingPhaseDiff."""
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
+        compute_reference_b0,
+    )
+    from clinica.utils.dwi import bids_dir_to_fsl_dir
+    from clinica.utils.filemanip import (
+        extract_metadata_from_json,
+        handle_missing_keys_dwi,
+    )
+
+    base_dir = Path(cmdopt["input"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWIComputeReferenceB0"
+    )
+    (tmp_path / "tmp").mkdir()
+
+    [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
+        str(input_dir / "sub-01_ses-M000_dwi.json"),
+        ["TotalReadoutTime", "PhaseEncodingDirection"],
+        handle_missing_keys=handle_missing_keys_dwi,
+    )
+    phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
+
+    wf = compute_reference_b0(
+        low_bval=5.0,
+        use_cuda=False,
+        initrand=False,
+        output_dir=str(tmp_path / "tmp"),
+        name="compute_reference_b0",
+    )
+    wf.inputs.inputnode.bval = str(input_dir / "sub-01_ses-M000_dwi.bval")
+    wf.inputs.inputnode.bvec = str(input_dir / "sub-01_ses-M000_dwi.bvec")
+    wf.inputs.inputnode.dwi = str(input_dir / "sub-01_ses-M000_dwi.nii.gz")
+    wf.inputs.inputnode.image_id = "sub-01_ses-M000"
+    wf.inputs.inputnode.total_readout_time = total_readout_time
+    wf.inputs.inputnode.phase_encoding_direction = phase_encoding_direction
+
+    wf.run()
+
+    out_file = fspath(
+        tmp_path / "tmp" / "reference_b0" / "sub-01_ses-M000_avg_b0_brain.nii.gz"
+    )
+    ref_file = fspath(ref_dir / "sub-01_ses-M000_avg_b0_brain.nii.gz")
+
+    assert similarity_measure(out_file, ref_file, 0.99)
+
+    out_file = fspath(tmp_path / "tmp" / "brainmask" / "sbrainmask.nii.gz")
+    ref_file = fspath(ref_dir / "brainmask.nii.gz")
+
+    assert similarity_measure(out_file, ref_file, 0.99)
+
+
+@pytest.mark.slow
 def test_dwi_preprocessing_using_phase_diff_field_map(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
