@@ -103,7 +103,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     wf.add(
         utils.produce_figures_task(
             name="produce_figure_FWE_peak_correction",
-            nii_file=wf.FWE_peak_correction_task.nii_file,
+            nii_file=wf.FWE_peak_correction_task.lzout.nii_file,
             template=join(path_to_mask, FILE1.filename),
             type_of_correction="FWE",
             t_thresh=parameters["FWEp"],
@@ -114,7 +114,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     wf.add(
         utils.produce_figures_task(
             name="produce_figure_FDR_peak_correction",
-            nii_file=wf.FDR_peak_correction_task.nii_file,
+            nii_file=wf.FDR_peak_correction_task.lzout.nii_file,
             template=join(path_to_mask, FILE1.filename),
             type_of_correction="FDR",
             t_thresh=parameters["FDRp"],
@@ -126,7 +126,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     wf.add(
         utils.produce_figures_task(
             name="produce_figure_FWE_cluster_correction",
-            nii_file=wf.FWE_cluster_correction_task.nii_file,
+            nii_file=wf.FWE_cluster_correction_task.lzout.nii_file,
             template=join(path_to_mask, FILE1.filename),
             type_of_correction="FWE",
             t_thresh=parameters["height_threshold"],
@@ -137,7 +137,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     wf.add(
         utils.produce_figures_task(
             name="produce_figure_FDR_cluster_correction",
-            nii_file=wf.FDR_cluster_correction_task.nii_file,
+            nii_file=wf.FDR_cluster_correction_task.lzout.nii_file,
             template=join(path_to_mask, FILE1.filename),
             type_of_correction="FDR",
             t_thresh=parameters["height_threshold"],
@@ -150,7 +150,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             name="save_figure_peak_correction_FWE",
             t_map=wf.lzin.t_map,
             figs=wf.produce_figure_FWE_peak_correction.lzout.figs,
-            name="FWEp",
+            correction_name="FWEp",
         )
     )
     wf.add(
@@ -158,23 +158,24 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             name="save_figure_peak_correction_FDR",
             t_map=wf.lzin.t_map,
             figs=wf.produce_figure_FDR_peak_correction.lzout.figs,
-            name="FDRp",
+            correction_name="FDRp",
         )
     )
     wf.add(
         utils.generate_output_task(
-            name="save_figure_peak_correction_FWE",
+            name="save_figure_cluster_correction_FWE",
             t_map=wf.lzin.t_map,
             figs=wf.produce_figure_FWE_cluster_correction.lzout.figs,
-            name="FWEc",
+            correction_name="FWEc",
         )
     )
     wf.add(
         utils.generate_output_task(
-            name="save_figure_peak_correction_FWE",
+            name="save_figure_cluster_correction_FDR",
             t_map=wf.lzin.t_map,
             figs=wf.produce_figure_FDR_cluster_correction.lzout.figs,
-            name="FDRc",
+            correction_name="FDRc",
         )
     )
+    wf.set_output([("figs", wf.produce_figure_FDR_peak_correction.lzout.figs)])
     return wf

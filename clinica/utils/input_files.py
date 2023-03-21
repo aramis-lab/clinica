@@ -495,6 +495,11 @@ def t1_volume_final_group_template(group_label):
     return information
 
 
+def custom_group(pattern, description):
+    information = {"pattern": pattern, "description": description}
+    return information
+
+
 """ DWI """
 
 # BIDS

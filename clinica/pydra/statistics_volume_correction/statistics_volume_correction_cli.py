@@ -71,7 +71,7 @@ def cli(
 
     pipeline = pydra_statistics_volume_correction.build_core_workflow(
         name="statistics-volume-correction-pydra",
-        input_directory=None,
+        input_dir=None,
         output_dir=caps_directory,
         parameters=parameters,
     )

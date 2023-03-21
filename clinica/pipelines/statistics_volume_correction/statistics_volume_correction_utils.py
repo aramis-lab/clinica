@@ -23,6 +23,7 @@ def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> 
 
     import nibabel as nib
 
+    print("t_map: ", t_map)
     original_nifti = nib.load(t_map)
     data = original_nifti.get_fdata(dtype="float32")
     data[data < t_threshold] = 0
@@ -34,7 +35,8 @@ def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> 
     else:
         filename = join("./peak_corrected_" + str(t_threshold) + basename(t_map))
     nib.save(new_data, filename)
-    return abspath(filename)
+    nii_file = abspath(filename)
+    return nii_file
 
 
 def cluster_correction(
@@ -93,7 +95,8 @@ def cluster_correction(
             + basename(t_map)
         )
     nib.save(new_data, filename)
-    return abspath(filename)
+    nii_file = abspath(filename)
+    return nii_file
 
 
 def produce_figures(
@@ -187,7 +190,7 @@ def produce_figures(
     ]
 
 
-def generate_output(t_map: str, figs: List[str], name: str) -> None:
+def generate_output(t_map: str, figs: List[str], correction_name: str) -> None:
     """Produce output
 
     Parameters
@@ -206,13 +209,17 @@ def generate_output(t_map: str, figs: List[str], name: str) -> None:
     # Will extract group-GroupTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics from TStatistics file
     t_map_basename = splitext(basename(t_map))[0]
 
-    out_folder = join(dirname(t_map), t_map_basename.replace("TStatistics", name))
+    out_folder = join(
+        dirname(t_map), t_map_basename.replace("TStatistics", correction_name)
+    )
     makedirs(out_folder)
     copyfile(
         figs[0],
         join(
             out_folder,
-            t_map_basename.replace("TStatistics", "desc-" + name + "_GlassBrain.png"),
+            t_map_basename.replace(
+                "TStatistics", "desc-" + correction_name + "_GlassBrain.png"
+            ),
         ),
     )
     copyfile(
@@ -220,7 +227,7 @@ def generate_output(t_map: str, figs: List[str], name: str) -> None:
         join(
             out_folder,
             t_map_basename.replace(
-                "TStatistics", "desc-" + name + "_axis-x_TStatistics.png"
+                "TStatistics", "desc-" + correction_name + "_axis-x_TStatistics.png"
             ),
         ),
     )
@@ -229,7 +236,7 @@ def generate_output(t_map: str, figs: List[str], name: str) -> None:
         join(
             out_folder,
             t_map_basename.replace(
-                "TStatistics", "desc-" + name + "_axis-y_TStatistics.png"
+                "TStatistics", "desc-" + correction_name + "_axis-y_TStatistics.png"
             ),
         ),
     )
@@ -238,7 +245,7 @@ def generate_output(t_map: str, figs: List[str], name: str) -> None:
         join(
             out_folder,
             t_map_basename.replace(
-                "TStatistics", "desc-" + name + "_axis-z_TStatistics.png"
+                "TStatistics", "desc-" + correction_name + "_axis-z_TStatistics.png"
             ),
         ),
     )

@@ -4,7 +4,7 @@ from pydra.mark import annotate, task
 
 
 @task
-@annotate({"return": {"t_map": str, "t_threshold": float, "output_name": str}})
+@annotate({"return": {"nii_file": str}})
 def peak_correction_task(
     t_map: str, t_threshold: float, output_name: str = None
 ) -> str:
@@ -22,9 +22,7 @@ def peak_correction_task(
 
 
 @task
-@annotate(
-    {"return": {"t_map": str, "t_thresh": float, "c_thresh": int, "output_name": str}}
-)
+@annotate({"return": {"nii_file": str}})
 def cluster_correction_task(
     t_map: str, t_thresh: float, c_thresh: int, output_name: str = None
 ) -> str:
@@ -42,18 +40,7 @@ def cluster_correction_task(
 
 
 @task
-@annotate(
-    {
-        "return": {
-            "nii_file": str,
-            "template": str,
-            "type_of_correction": str,
-            "t_thresh": str,
-            "c_thresh": int,
-            "n_cuts": int,
-        }
-    }
-)
+@annotate({"return": {"figs": list}})
 def produce_figures_task(
     nii_file: str,
     template: str,
@@ -78,8 +65,8 @@ def produce_figures_task(
 
 
 @task
-@annotate({"return": {"t_map": str, "figs": list, "name": str}})
-def generate_output_task(t_map: str, figs: List[str], name: str) -> None:
+@annotate({"return": {"t_map": str, "figs": list, "correction_name": str}})
+def generate_output_task(t_map: str, figs: List[str], correction_name: str) -> None:
     """Pydra task for output production
 
     ..note::
@@ -90,4 +77,4 @@ def generate_output_task(t_map: str, figs: List[str], name: str) -> None:
         generate_output,
     )
 
-    return generate_output(t_map, figs, name)
+    return generate_output(t_map, figs, correction_name)
