@@ -1,5 +1,4 @@
 import shutil
-from os import PathLike
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -244,13 +243,42 @@ def print_end_pipeline(image_id, final_file):
     print_end_image(image_id)
 
 
-def prepare_reference_b0(
-    in_dwi: str,
-    in_bval: str,
-    in_bvec: str,
-    low_bval: int = 5,
+def prepare_reference_b0_task(
+    dwi_filename: str,
+    b_values_filename: str,
+    b_vectors_filename: str,
+    b_value_threshold: float = 5.0,
     working_directory=None,
 ):
+    """Task called be Nipype to execute prepare_reference_b0."""
+    from pathlib import Path
+
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (  # noqa
+        prepare_reference_b0,
+    )
+    from clinica.utils.dwi import DWIDataset
+
+    if working_directory:
+        working_directory = Path(working_directory)
+
+    b0_reference_filename, reference_dwi_dataset = prepare_reference_b0(
+        DWIDataset(
+            dwi=dwi_filename,
+            b_values=b_values_filename,
+            b_vectors=b_vectors_filename,
+        ),
+        b_value_threshold,
+        working_directory,
+    )
+
+    return str(b0_reference_filename), *(str(_) for _ in reference_dwi_dataset)
+
+
+def prepare_reference_b0(
+    dwi_dataset: DWIDataset,
+    b_value_threshold: float = 5.0,
+    working_directory: Optional[Path] = None,
+) -> Tuple[Path, DWIDataset]:
     """Prepare reference b=0 image.
 
     This function prepares the data for further corrections.
@@ -259,36 +287,26 @@ def prepare_reference_b0(
 
     Parameters
     ----------
-    in_dwi : str
-        Path to the input DWI file.
+    dwi_dataset : DWIDataset
+        DWI dataset for which to prepare the reference B0.
 
-    in_bvec : str
-        Path to the vector file of the diffusion directions of the DWI dataset.
+    b_value_threshold : float, optional
+        Threshold for B0 volumes. Volumes in the DWI image for which the
+        corresponding b_value is <= b_value_threshold will be considered
+        as b0 volumes.
+        Default=5.0.
 
-    in_bval : str
-        Path to the B-values file.
-
-    low_bval : int, optional
-        Threshold for B0 images: images with b<=low_bval will be considered as b0 images.
-        Default=5.
-
-    working_directory : str, optional
-        Temporary folder results where the results are stored.
+    working_directory : Path, optional
+        Path to temporary folder where results are stored.
         Defaults to None.
 
     Returns
     -------
-    out_reference_b0 : str
+    reference_b0 : Path
         Path to the average of the B0 images or the only B0 image.
 
-    out_b0_dwi_merge : str
-        Path to the average of B0 images merged to the DWIs.
-
-    out_updated_bval : str
-        Path to the updated gradient values table.
-
-    out_updated_bvec : str
-        Path to the updated gradient vectors table.
+    reference_dataset : DWIDataset
+        DWI dataset containing the B0 images merged and inserted at index 0.
     """
     from clinica.utils.dwi import (
         check_dwi_dataset,
@@ -296,28 +314,26 @@ def prepare_reference_b0(
         split_dwi_dataset_with_b_values,
     )
 
-    dwi_dataset = check_dwi_dataset(
-        DWIDataset(dwi=in_dwi, b_values=in_bval, b_vectors=in_bvec)
-    )
+    dwi_dataset = check_dwi_dataset(dwi_dataset)
     working_directory = configure_working_directory(dwi_dataset.dwi, working_directory)
     small_b_dataset, large_b_dataset = split_dwi_dataset_with_b_values(
-        dwi_dataset, b_value_threshold=low_bval
+        dwi_dataset, b_value_threshold=b_value_threshold
     )
     reference_b0 = compute_reference_b0(
-        small_b_dataset.dwi, dwi_dataset.b_values, low_bval, working_directory
+        small_b_dataset.dwi, dwi_dataset.b_values, b_value_threshold, working_directory
     )
     reference_dataset = insert_b0_into_dwi(reference_b0, large_b_dataset)
 
-    return str(reference_b0), *tuple(str(_) for _ in reference_dataset)
+    return reference_b0, reference_dataset
 
 
 def compute_reference_b0(
     extracted_b0: Path,
     b_value_filename: Path,
-    b_value_threshold: int,
+    b_value_threshold: float,
     working_directory,
     clean_working_dir: bool = True,
-) -> PathLike:
+) -> Path:
     """Compute the reference B0.
 
     This function calls the b0_flirt FSL pipeline under the hood.

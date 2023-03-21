@@ -358,6 +358,7 @@ def test_prepare_reference_b0(tmp_path, mocker):
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
         prepare_reference_b0,
     )
+    from clinica.utils.dwi import DWIDataset
 
     mocked_output = tmp_path / "reference_b0_volume.nii.gz"
     mocker.patch(
@@ -377,22 +378,20 @@ def test_prepare_reference_b0(tmp_path, mocker):
     bvecs_data = np.random.random((3, 9))
     np.savetxt(tmp_path / "sub-foo_ses-bar_dwi.bvec", bvecs_data)
 
-    (
-        out_reference_b0,
-        out_b0_dwi_merge,
-        out_updated_bval,
-        out_updated_bvec,
-    ) = prepare_reference_b0(
-        str(tmp_path / "sub-foo_ses-bar_dwi.nii.gz"),
-        str(tmp_path / "sub-foo_ses-bar_dwi.bval"),
-        str(tmp_path / "sub-foo_ses-bar_dwi.bvec"),
-        low_bval=5,
+    dataset = DWIDataset(
+        tmp_path / "sub-foo_ses-bar_dwi.nii.gz",
+        tmp_path / "sub-foo_ses-bar_dwi.bval",
+        tmp_path / "sub-foo_ses-bar_dwi.bvec",
+    )
+    reference_b0, reference_dataset = prepare_reference_b0(
+        dataset,
+        b_value_threshold=5.0,
         working_directory=tmp_path / "tmp",
     )
-    assert out_reference_b0 == str(tmp_path / "reference_b0_volume.nii.gz")
-    assert out_b0_dwi_merge == str(tmp_path / "sub-foo_ses-bar_dwi_merged.nii.gz")
-    assert out_updated_bval == str(tmp_path / "sub-foo_ses-bar_dwi_merged.bval")
-    assert out_updated_bvec == str(tmp_path / "sub-foo_ses-bar_dwi_merged.bvec")
+    assert reference_b0 == tmp_path / "reference_b0_volume.nii.gz"
+    assert reference_dataset.dwi == tmp_path / "sub-foo_ses-bar_dwi_merged.nii.gz"
+    assert reference_dataset.b_values == tmp_path / "sub-foo_ses-bar_dwi_merged.bval"
+    assert reference_dataset.b_vectors == tmp_path / "sub-foo_ses-bar_dwi_merged.bvec"
     assert sorted([p.name for p in tmp_path.iterdir()]) == [
         "reference_b0_volume.nii.gz",  # This is the 3D volume corresponding to the co-registered volumes for b<=low_b
         "sub-foo_ses-bar_dwi.bval",  # Initial bvalue file

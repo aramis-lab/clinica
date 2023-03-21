@@ -240,11 +240,11 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.dwi import compute_average_b0
+        from clinica.utils.dwi import compute_average_b0_task
 
         from .dwi_preprocessing_using_t1_utils import (
             init_input_node,
-            prepare_reference_b0,
+            prepare_reference_b0_task,
             print_end_pipeline,
         )
         from .dwi_preprocessing_using_t1_workflows import (
@@ -277,10 +277,10 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             name="PrepareB0",
             interface=nutil.Function(
                 input_names=[
-                    "in_dwi",
-                    "in_bval",
-                    "in_bvec",
-                    "low_bval",
+                    "dwi_filename",
+                    "b_values_filename",
+                    "b_vectors_filename",
+                    "b_value_threshold",
                     "working_directory",
                 ],
                 output_names=[
@@ -289,10 +289,10 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                     "out_updated_bval",
                     "out_updated_bvec",
                 ],
-                function=prepare_reference_b0,
+                function=prepare_reference_b0_task,
             ),
         )
-        prepare_b0.inputs.low_bval = self.parameters["low_bval"]
+        prepare_b0.inputs.b_value_threshold = self.parameters["low_bval"]
         prepare_b0.inputs.working_directory = self.base_dir
 
         # Head-motion correction + Eddy-currents correction
@@ -319,13 +319,13 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         # Compute b0 mask on corrected avg b0
         compute_avg_b0 = npe.Node(
             nutil.Function(
-                input_names=["in_dwi", "in_bval"],
+                input_names=["dwi_filename", "b_value_filename"],
                 output_names=["out_b0_average"],
-                function=compute_average_b0,
+                function=compute_average_b0_task,
             ),
             name="ComputeB0Average",
         )
-        compute_avg_b0.inputs.low_bval = self.parameters["low_bval"]
+        compute_avg_b0.inputs.b_value_threshold = self.parameters["low_bval"]
 
         # Compute brain mask from reference b0
         mask_avg_b0 = npe.Node(fsl.BET(mask=True, robust=True), name="MaskB0")
@@ -350,9 +350,9 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                                               ("bval", "bval"),
                                               ("dwi_json", "dwi_json")]),
                 # Preliminary step (possible computation of a mean b0):
-                (init_node, prepare_b0, [("dwi", "in_dwi"),
-                                         ("bval", "in_bval"),
-                                         ("bvec", "in_bvec")]),
+                (init_node, prepare_b0, [("dwi", "dwi_filename"),
+                                         ("bval", "b_values_filename"),
+                                         ("bvec", "b_vectors_filename")]),
                 # Head-motion correction + eddy current correction
                 (init_node, eddy_fsl, [("total_readout_time", "inputnode.total_readout_time"),
                                        ("phase_encoding_direction", "inputnode.phase_encoding_direction")]),
@@ -369,8 +369,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 (sdc, bias, [("outputnode.DWIs_epicorrected", "in_file"),
                              ("outputnode.out_bvec", "in_bvec")]),
                 # Compute average b0 on corrected dataset (for brain mask extraction)
-                (prepare_b0, compute_avg_b0, [("out_updated_bval", "in_bval")]),
-                (bias, compute_avg_b0, [("out_file", "in_dwi")]),
+                (prepare_b0, compute_avg_b0, [("out_updated_bval", "b_value_filename")]),
+                (bias, compute_avg_b0, [("out_file", "dwi_filename")]),
                 # Compute b0 mask on corrected avg b0
                 (compute_avg_b0, mask_avg_b0, [("out_b0_average", "in_file")]),
                 # Print end message

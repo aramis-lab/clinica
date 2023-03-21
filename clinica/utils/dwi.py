@@ -3,7 +3,7 @@ import functools
 from collections import namedtuple
 from os import PathLike
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 
@@ -62,13 +62,34 @@ def get_b0_filter(
     return np.where(values <= b_value_threshold)[0]
 
 
-def _check_file(filename: PathLike, resolve: bool = False) -> Path:
+def _check_file(filename: Union[str, PathLike], resolve: bool = False) -> Path:
     """Check that filename exists and return a Path object."""
     filename = Path(filename).resolve() if resolve else Path(filename)
     if not filename.exists():
         raise FileNotFoundError(f"File not found : {filename}.")
 
     return filename
+
+
+def compute_average_b0_task(
+    dwi_filename: str,
+    b_value_filename: str,
+    b_value_threshold: float = 5.0,
+    squeeze: bool = False,
+    out_file=None,
+) -> str:
+    """Nipype task for compute_average_b0."""
+    from clinica.utils.dwi import _check_file, compute_average_b0  # noqa
+
+    return str(
+        compute_average_b0(
+            _check_file(dwi_filename),
+            _check_file(b_value_filename),
+            b_value_threshold,
+            squeeze,
+            out_file,
+        )
+    )
 
 
 def compute_average_b0(
