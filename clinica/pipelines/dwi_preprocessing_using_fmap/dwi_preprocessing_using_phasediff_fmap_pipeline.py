@@ -430,32 +430,32 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                                              ("delta_echo_time", "input_node.delta_echo_time")]),
                 # Register the BET magnitude fmap onto the BET b0
                 (bet_mag_fmap, bet_mag_fmap2b0, [("out_file", "in_file")]),
-                (reference_b0, bet_mag_fmap2b0, [("reference_b0", "reference")]),
+                (reference_b0, bet_mag_fmap2b0, [("outputnode.reference_b0", "reference")]),
                 # Apply the transformation on the magnitude image
                 (bet_mag_fmap2b0, mag_fmap2b0, [("out_matrix_file", "in_matrix_file")]),
                 (bias_mag_fmap, mag_fmap2b0, [("output_image", "in_file")]),
-                (reference_b0, mag_fmap2b0, [("out_file", "reference")]),
+                (reference_b0, mag_fmap2b0, [("outputnode.out_file", "reference")]),
                 # Apply the transformation on the calibrated fmap
                 (bet_mag_fmap2b0, fmap2b0, [("out_matrix_file", "in_matrix_file")]),
                 (calibrate_fmap, fmap2b0, [("output_node.calibrated_fmap", "in_file")]),
-                (reference_b0, fmap2b0, [("out_file", "reference")]),
+                (reference_b0, fmap2b0, [("outputnode.out_file", "reference")]),
                 # # Smooth the registered (calibrated) fmap
                 (fmap2b0, smoothing, [("out_file", "in_file")]),
 
                 # Step 3: Run FSL eddy
                 # ====================
-                (init_node, eddy, [("dwi", "in_file"),
-                                   ("bval", "in_bval"),
-                                   ("bvec", "in_bvec"),
-                                   ("image_id", "image_id")]),
-                (smoothing, eddy, [("out_file", "field")]),
-                (reference_b0, eddy, [("brainmask", "in_mask")]),
+                (init_node, eddy, [("dwi", "inputnode.in_file"),
+                                   ("bval", "inputnode.in_bval"),
+                                   ("bvec", "inputnode.in_bvec"),
+                                   ("image_id", "inputnode.image_id")]),
+                (smoothing, eddy, [("out_file", "inputnode.field")]),
+                (reference_b0, eddy, [("brainmask", "inputnode.in_mask")]),
 
                 # Step 4: Bias correction
                 # =======================
                 (init_node, bias, [("bval", "in_bval")]),
-                (eddy, bias, [("out_rotated_bvecs", "in_bvec"),
-                              ("out_corrected", "in_file")]),
+                (eddy, bias, [("outputnode.out_rotated_bvecs", "in_bvec"),
+                              ("outputnode.out_corrected", "in_file")]),
                 # Step 5: Final brainmask
                 # =======================
                 # Compute average b0 on corrected dataset (for brain mask extraction)
@@ -470,7 +470,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
 
                 # Output node
                 (init_node, self.output_node, [("bval", "preproc_bval")]),
-                (eddy, self.output_node, [("out_rotated_bvecs", "preproc_bvec")]),
+                (eddy, self.output_node, [("outputnode.out_rotated_bvecs", "preproc_bvec")]),
                 (bias, self.output_node, [("out_file", "preproc_dwi")]),
                 (mask_avg_b0, self.output_node, [("mask_file", "b0_mask")]),
                 (bet_mag_fmap2b0, self.output_node, [("out_file", "magnitude_on_b0")]),
