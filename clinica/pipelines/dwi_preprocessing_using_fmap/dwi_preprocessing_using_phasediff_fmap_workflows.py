@@ -145,6 +145,7 @@ def compute_reference_b0(
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
         eddy_fsl_pipeline,
     )
+    import nipype.interfaces.io as nio
     from clinica.utils.dwi import compute_average_b0
 
     from .dwi_preprocessing_using_phasediff_fmap_utils import get_grad_fsl
@@ -177,11 +178,11 @@ def compute_reference_b0(
     brain_mask.inputs.out_file = "brainmask.nii.gz"
 
     # Run eddy without calibrated fmap
-    eddy = eddy_fsl_pipeline(
+    pre_eddy = eddy_fsl_pipeline(
         low_bval=low_bval,
         use_cuda=use_cuda,
         initrand=initrand,
-        name="1b-PreEddy",
+        name="pre_eddy",
     )
 
     # Compute the reference b0
@@ -218,7 +219,7 @@ def compute_reference_b0(
         (inputnode, brain_mask, [("dwi", "in_file")]),
         (
             inputnode,
-            eddy,
+            pre_eddy,
             [
                 ("total_readout_time", "inputnode.total_readout_time"),
                 ("phase_encoding_direction", "inputnode.phase_encoding_direction"),
@@ -228,14 +229,13 @@ def compute_reference_b0(
                 ("image_id", "inputnode.image_id"),
             ],
         ),
-        (brain_mask, eddy, [("out_file", "inputnode.in_mask")]),
+        (brain_mask, pre_eddy, [("out_file", "inputnode.in_mask")]),
         (inputnode, reference_b0, [("b_values", "in_bval")]),
-        (eddy, reference_b0, [("out_corrected", "in_dwi")]),
+        (pre_eddy, reference_b0, [("outputnode.out_corrected", "in_dwi")]),
         (reference_b0, masked_reference_b0, [("out_b0_average", "in_file")]),
-        (masked_reference_b0, outputnode, [("out_file", "out_file")]),
-        (brain_mask, outputnode, [("out_file", "b0_mask")]),
+        (masked_reference_b0, outputnode, [("out_file", "reference_b0")]),
+        (brain_mask, outputnode, [("out_file", "brainmask")]),
     ]
-
     if output_dir:
         connections += [
             (outputnode, write_results, [("reference_b0", "reference_b0")]),
