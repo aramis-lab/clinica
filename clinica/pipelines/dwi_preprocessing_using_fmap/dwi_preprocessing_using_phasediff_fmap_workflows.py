@@ -132,12 +132,13 @@ def compute_reference_b0(
     It is parametrized by:
         - low_bval: float, threshold value to determine the B0 volumes in the DWI image
         - use_cuda: bool, boolean to indicate whether cuda should be used or not
-        - initrand: ??
+        - initrand: bool, ???
         - output_dir: str, path to output directory. If provided, the pipeline will write
           its output in this folder.
         - name: str, name of the pipeline
     """
     import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.io as nio
     import nipype.interfaces.mrtrix3 as mrtrix3
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as npe
@@ -145,7 +146,6 @@ def compute_reference_b0(
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
         eddy_fsl_pipeline,
     )
-    import nipype.interfaces.io as nio
     from clinica.utils.dwi import compute_average_b0
 
     from .dwi_preprocessing_using_phasediff_fmap_utils import get_grad_fsl
@@ -170,11 +170,11 @@ def compute_reference_b0(
             output_names=["grad_fsl"],
             function=get_grad_fsl,
         ),
-        name="0-GetFslGrad",
+        name="fsl_gradient",
     )
 
     # Compute whole brain mask
-    brain_mask = npe.Node(mrtrix3.BrainMask(), name="1a-PreMaskB0")
+    brain_mask = npe.Node(mrtrix3.BrainMask(), name="brain_mask")
     brain_mask.inputs.out_file = "brainmask.nii.gz"
 
     # Run eddy without calibrated fmap
@@ -192,13 +192,13 @@ def compute_reference_b0(
             output_names=["out_b0_average"],
             function=compute_average_b0,
         ),
-        name="1c-ComputeReferenceB0",
+        name="reference_b0",
     )
     reference_b0.inputs.low_bval = low_bval
 
     # Compute brain mask from reference b0
     masked_reference_b0 = npe.Node(
-        fsl.BET(mask=True, robust=True), name="1d-MaskReferenceB0"
+        fsl.BET(mask=True, robust=True), name="masked_reference_b0"
     )
 
     outputnode = npe.Node(

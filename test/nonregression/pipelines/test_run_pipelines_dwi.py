@@ -56,29 +56,30 @@ def test_dwi_preprocessing_using_t1(cmdopt, tmp_path):
 def test_dwi_compute_reference_b0(cmdopt, tmp_path):
     """Test step 1 of pipeline DWIPreprocessingUsingPhaseDiff.
 
-    This is a slow test. Expect approximatively a 2.5 hours runtime.
+    This is a slow test. Expect approximately a 2.5 hours runtime.
 
     We use the same input files as for the DWIPreprocessingUsingPhaseDiff pipeline.
+
     However, since we are testing the step 1 in isolation, we don't have the
-    BIDS querying logic available to us.
-    The compute_reference_b0 is not BIDS-aware, it just expects three files:
+    BIDS querying logic available to us. The compute_reference_b0 pipeline is
+    not BIDS-aware, it just expects three files:
         - the DWI image
         - the associated b-values
         - and the associated b-vectors
-    
+
     These files are directly available in the input_dir (no BIDS structure, files
-    are directly at the root level.
-    
+    are directly at the root level).
+
     It also needs the phase encoding direction and total readout time which are
     available in the JSON file (also available in the input_dir).
-    In the main pipeline, the input node is performing the extraction of these metadata
-    from the JSON file. Here, we perform this extraction direclty with the
-    `extract_metadata_from_json` and `bids_dir_to_fsl_dir`functions.
-    
+    In the main pipeline, the input node is performing the extraction of these
+    metadata from the JSON file. Here, we perform this extraction directly with
+    the `extract_metadata_from_json` and `bids_dir_to_fsl_dir`functions.
+
     The compute_reference_b0 workflow produces two outputs that are compared
-    against their references:
+    against their reference values:
         - The reference B0 volume
-        - The brainmask computed on the B0 volume
+        - The brain mask computed on the B0 volume
     """
     from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
         compute_reference_b0,
@@ -120,7 +121,7 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
 
     for folder, filename in zip(
         ["reference_b0", "brainmask"],
-        ["sub-01_ses-M000_avg_b0_brain.nii.gz", "brainmask.nii.gz"]
+        ["sub-01_ses-M000_avg_b0_brain.nii.gz", "brainmask.nii.gz"],
     ):
         out_file = fspath(tmp_path / "tmp" / folder / filename)
         ref_file = fspath(ref_dir / folder / filename)
