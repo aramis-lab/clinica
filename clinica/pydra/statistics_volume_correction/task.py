@@ -22,7 +22,6 @@ def peak_correction_task(
 
 
 @task
-@annotate({"return": {"nii_file": str}})
 def cluster_correction_task(
     t_map: str, t_thresh: float, c_thresh: int, output_name: str = None
 ) -> str:
@@ -65,7 +64,7 @@ def produce_figures_task(
 
 
 @task
-@annotate({"return": {"t_map": str, "figs": list, "correction_name": str}})
+@annotate({"return": {"bool": bool}})
 def generate_output_task(t_map: str, figs: List[str], correction_name: str) -> None:
     """Pydra task for output production
 
