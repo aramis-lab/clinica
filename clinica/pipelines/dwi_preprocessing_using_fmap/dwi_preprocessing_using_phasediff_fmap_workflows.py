@@ -1,3 +1,8 @@
+from typing import Optional
+
+from nipype.pipeline.engine import Workflow
+
+
 def prepare_phasediff_fmap(name="prepare_phasediff_fmap"):
     """This workflow adapts the fsl_prepare_fieldmap script from FSL for the FSL eddy command.
 
@@ -110,10 +115,10 @@ def compute_reference_b0(
     low_bval: float,
     use_cuda: bool,
     initrand: bool,
-    output_dir=None,
-    name="compute_reference_b0",
-):
-    """Step 1 of the DWI preprocessing using phasediff pipeline.
+    output_dir: Optional[str] = None,
+    name: str = "compute_reference_b0",
+) -> Workflow:
+    """Step 1 of the DWI preprocessing using phase diff pipeline.
 
     Compute the reference b0 (i.e. average b0 with EPI distortions)
 
@@ -121,21 +126,39 @@ def compute_reference_b0(
         - MRtrix3 to compute the whole brain mask
         - FSL to run Eddy and BET
 
-    It takes as inputs:
-        - "dwi": The path to the DWI image
-        - "b_vecors": The path to the associated B-vectors file
-        - "b_values": The path to the associated B-values file
-        - "total_readout_time": The total readout time extracted from JSON metadata
-        - "phase_encoding_direction": The phase encoding direction extracted from JSON metadata
-        - "image_id": Prefix to be used for output files
+    Parameters
+    ----------
+    low_bval: float
+        Threshold value to determine the B0 volumes in the DWI image
 
-    It is parametrized by:
-        - low_bval: float, threshold value to determine the B0 volumes in the DWI image
-        - use_cuda: bool, boolean to indicate whether cuda should be used or not
-        - initrand: bool, ???
-        - output_dir: str, path to output directory. If provided, the pipeline will write
-          its output in this folder.
-        - name: str, name of the pipeline
+    use_cuda: bool
+        Boolean to indicate whether cuda should be used or not
+
+    initrand: bool
+        ???
+
+    output_dir: str, optional
+        Path to output directory.
+        If provided, the pipeline will write its output in this folder.
+        Default to None.
+
+    name: str, optional
+        Name of the pipeline. Default='compute_reference_b0'.
+
+    Returns
+    -------
+    Workflow :
+        The Nipype workflow.
+        This workflow has the following inputs:
+            - "dwi": The path to the DWI image
+            - "b_vecors": The path to the associated B-vectors file
+            - "b_values": The path to the associated B-values file
+            - "total_readout_time": The total readout time extracted from JSON metadata
+            - "phase_encoding_direction": The phase encoding direction extracted from JSON metadata
+            - "image_id": Prefix to be used for output files
+        And the following outputs:
+            - "reference_b0": The path to the compute reference B0 volume
+            - "brainmask": The path to the computed whole brain mask
     """
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.io as nio

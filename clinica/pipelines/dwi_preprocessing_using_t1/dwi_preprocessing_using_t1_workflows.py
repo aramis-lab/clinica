@@ -1,12 +1,63 @@
+from nipype.pipeline.engine import Workflow
+
+
 def eddy_fsl_pipeline(
-    low_bval,
-    use_cuda,
-    initrand,
+    low_bval: float,
+    use_cuda: bool,
+    initrand: bool,
     image_id: bool = False,
     field: bool = False,
-    name="eddy_fsl",
-):
-    """Use FSL eddy for head motion correction and eddy current distortion correction."""
+    name: str = "eddy_fsl",
+) -> Workflow:
+    """Build a FSL-based pipeline for head motion correction and eddy current distortion correction.
+
+    This pipeline needs FSL as it relies on the Eddy executable.
+
+    Parameters
+    ----------
+    low_bval : float
+        Threshold value to determine the B0 volumes in the DWI image.
+
+    use_cuda : bool
+        Boolean to indicate whether cuda should be used or not.
+
+    initrand : bool
+        ????
+
+    image_id : bool, optional
+        Boolean to indicate whether the Eddy node should expect
+        a value for its 'out_base' parameter. This is used for
+        building the names of the output files.
+        Default=False.
+
+    field : bool, optional
+        Boolean to indicate whether the Eddy node should expect
+        a value for its 'field' input.
+        Default=False.
+
+    name : str, optional
+        Name of the pipeline. Default='eddy_fsl'.
+
+    Returns
+    -------
+    Workflow :
+        The Nipype workflow.
+        This workflow has the following inputs:
+            - "in_file": The path to the DWI image
+            - "in_bvec": The path to the associated B-vectors file
+            - "in_bval": The path to the associated B-values file
+            - "in_mask": The path to the mask image to be provided to Eddy
+            - "image_id": Prefix to be used for output files
+            - "field": The path to the field image to be used by Eddy
+            - "ref_b0": ???
+            - "total_readout_time": The total readout time extracted from JSON metadata
+            - "phase_encoding_direction": The phase encoding direction extracted from JSON metadata
+
+        And the following outputs:
+            - "out_parameter": Path to the file storing the output parameters
+            - "out_corrected": Path to the corrected image
+            - "out_rotated_bvecs": Path to the file holding the rotated B-vectors
+    """
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     from nipype.interfaces.fsl.epi import Eddy
