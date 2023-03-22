@@ -182,6 +182,7 @@ def compute_reference_b0(
         low_bval=low_bval,
         use_cuda=use_cuda,
         initrand=initrand,
+        image_id=True,
         name="pre_eddy",
     )
 

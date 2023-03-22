@@ -1,4 +1,11 @@
-def eddy_fsl_pipeline(low_bval, use_cuda, initrand, field=None, name="eddy_fsl"):
+def eddy_fsl_pipeline(
+    low_bval,
+    use_cuda,
+    initrand,
+    image_id: bool = False,
+    field: bool = False,
+    name="eddy_fsl",
+):
     """Use FSL eddy for head motion correction and eddy current distortion correction."""
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
@@ -14,7 +21,7 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, field=None, name="eddy_fsl")
                 "in_bval",
                 "in_mask",
                 "image_id",
-                "ref_b0",
+                "field",
                 "total_readout_time",
                 "phase_encoding_direction",
             ]
@@ -49,8 +56,6 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, field=None, name="eddy_fsl")
     eddy.inputs.repol = True
     eddy.inputs.use_cuda = use_cuda
     eddy.inputs.initrand = initrand
-    if field:
-        eddy.inputs.field = field
 
     outputnode = pe.Node(
         niu.IdentityInterface(
@@ -60,31 +65,37 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, field=None, name="eddy_fsl")
     )
 
     wf = pe.Workflow(name=name)
-    # fmt: off
-    wf.connect(
-        [
-            (inputnode, generate_acq, [('in_file', 'in_dwi')]),
-            (inputnode, generate_acq, [('total_readout_time', 'total_readout_time')]),
-            (inputnode, generate_acq, [('phase_encoding_direction', 'fsl_phase_encoding_direction')]),
-            (inputnode, generate_acq, [('image_id', 'image_id')]),
 
-            (inputnode, generate_index, [('in_bval', 'in_bval')]),
-            (inputnode, generate_index, [('image_id', 'image_id')]),
+    connections = [
+        (inputnode, generate_acq, [("in_file", "in_dwi")]),
+        (inputnode, generate_acq, [("total_readout_time", "total_readout_time")]),
+        (
+            inputnode,
+            generate_acq,
+            [("phase_encoding_direction", "fsl_phase_encoding_direction")],
+        ),
+        (inputnode, generate_acq, [("image_id", "image_id")]),
+        (inputnode, generate_index, [("in_bval", "in_bval")]),
+        (inputnode, generate_index, [("image_id", "image_id")]),
+        (inputnode, eddy, [("in_bvec", "in_bvec")]),
+        (inputnode, eddy, [("in_bval", "in_bval")]),
+        (inputnode, eddy, [("in_file", "in_file")]),
+        (inputnode, eddy, [("in_mask", "in_mask")]),
+        (generate_acq, eddy, [("out_file", "in_acqp")]),
+        (generate_index, eddy, [("out_file", "in_index")]),
+        (eddy, outputnode, [("out_parameter", "out_parameter")]),
+        (eddy, outputnode, [("out_corrected", "out_corrected")]),
+        (eddy, outputnode, [("out_rotated_bvecs", "out_rotated_bvecs")]),
+    ]
 
-            (inputnode, eddy, [('in_bvec', 'in_bvec')]),
-            (inputnode, eddy, [('in_bval', 'in_bval')]),
-            (inputnode, eddy, [('in_file', 'in_file')]),
-            (inputnode, eddy, [('in_mask', 'in_mask')]),
-            (inputnode, eddy, [('image_id', 'out_base')]),
-            (generate_acq, eddy, [('out_file', 'in_acqp')]),
-            (generate_index, eddy, [('out_file', 'in_index')]),
+    if image_id:
+        connections += [(inputnode, eddy, [("image_id", "out_base")])]
 
-            (eddy, outputnode, [('out_parameter', 'out_parameter')]),
-            (eddy, outputnode, [('out_corrected', 'out_corrected')]),
-            (eddy, outputnode, [('out_rotated_bvecs', 'out_rotated_bvecs')])
-        ]
-    )
-    # fmt: on
+    if field:
+        connections += [(inputnode, eddy, [("field", "field")])]
+
+    wf.connect(connections)
+
     return wf
 
 
