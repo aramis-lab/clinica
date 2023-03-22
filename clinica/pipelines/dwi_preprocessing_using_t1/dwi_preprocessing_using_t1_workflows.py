@@ -22,6 +22,7 @@ def eddy_fsl_pipeline(
                 "in_mask",
                 "image_id",
                 "field",
+                "ref_b0",
                 "total_readout_time",
                 "phase_encoding_direction",
             ]
