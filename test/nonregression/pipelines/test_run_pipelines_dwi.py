@@ -54,7 +54,32 @@ def test_dwi_preprocessing_using_t1(cmdopt, tmp_path):
 
 @pytest.mark.slow
 def test_dwi_compute_reference_b0(cmdopt, tmp_path):
-    """Test step 1 of pipeline DWIPreprocessingUsingPhaseDiff."""
+    """Test step 1 of pipeline DWIPreprocessingUsingPhaseDiff.
+
+    This is a slow test. Expect approximatively a 2.5 hours runtime.
+
+    We use the same input files as for the DWIPreprocessingUsingPhaseDiff pipeline.
+    However, since we are testing the step 1 in isolation, we don't have the
+    BIDS querying logic available to us.
+    The compute_reference_b0 is not BIDS-aware, it just expects three files:
+        - the DWI image
+        - the associated b-values
+        - and the associated b-vectors
+    
+    These files are directly available in the input_dir (no BIDS structure, files
+    are directly at the root level.
+    
+    It also needs the phase encoding direction and total readout time which are
+    available in the JSON file (also available in the input_dir).
+    In the main pipeline, the input node is performing the extraction of these metadata
+    from the JSON file. Here, we perform this extraction direclty with the
+    `extract_metadata_from_json` and `bids_dir_to_fsl_dir`functions.
+    
+    The compute_reference_b0 workflow produces two outputs that are compared
+    against their references:
+        - The reference B0 volume
+        - The brainmask computed on the B0 volume
+    """
     from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
         compute_reference_b0,
     )
@@ -84,8 +109,8 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
         output_dir=str(tmp_path / "tmp"),
         name="compute_reference_b0",
     )
-    wf.inputs.inputnode.bval = str(input_dir / "sub-01_ses-M000_dwi.bval")
-    wf.inputs.inputnode.bvec = str(input_dir / "sub-01_ses-M000_dwi.bvec")
+    wf.inputs.inputnode.b_values = str(input_dir / "sub-01_ses-M000_dwi.bval")
+    wf.inputs.inputnode.b_vectors = str(input_dir / "sub-01_ses-M000_dwi.bvec")
     wf.inputs.inputnode.dwi = str(input_dir / "sub-01_ses-M000_dwi.nii.gz")
     wf.inputs.inputnode.image_id = "sub-01_ses-M000"
     wf.inputs.inputnode.total_readout_time = total_readout_time
@@ -93,17 +118,14 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
 
     wf.run()
 
-    out_file = fspath(
-        tmp_path / "tmp" / "reference_b0" / "sub-01_ses-M000_avg_b0_brain.nii.gz"
-    )
-    ref_file = fspath(ref_dir / "sub-01_ses-M000_avg_b0_brain.nii.gz")
+    for folder, filename in zip(
+        ["reference_b0", "brainmask"],
+        ["sub-01_ses-M000_avg_b0_brain.nii.gz", "brainmask.nii.gz"]
+    ):
+        out_file = fspath(tmp_path / "tmp" / folder / filename)
+        ref_file = fspath(ref_dir / folder / filename)
 
-    assert similarity_measure(out_file, ref_file, 0.99)
-
-    out_file = fspath(tmp_path / "tmp" / "brainmask" / "sbrainmask.nii.gz")
-    ref_file = fspath(ref_dir / "brainmask.nii.gz")
-
-    assert similarity_measure(out_file, ref_file, 0.99)
+        assert similarity_measure(out_file, ref_file, 0.99)
 
 
 @pytest.mark.slow
