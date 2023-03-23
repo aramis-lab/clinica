@@ -45,7 +45,7 @@ def eddy_fsl_pipeline(
         This workflow has the following inputs:
             - "dwi_filename": The path to the DWI image
             - "b_vectors_filename": The path to the associated B-vectors file
-            - "b_value_filename": The path to the associated B-values file
+            - "b_values_filename": The path to the associated B-values file
             - "in_mask": The path to the mask image to be provided to Eddy
             - "image_id": Prefix to be used for output files
             - "field": The path to the field image to be used by Eddy
@@ -69,7 +69,7 @@ def eddy_fsl_pipeline(
             fields=[
                 "dwi_filename",
                 "b_vectors_filename",
-                "b_value_filename",
+                "b_values_filename",
                 "in_mask",
                 "image_id",
                 "field",
@@ -96,7 +96,7 @@ def eddy_fsl_pipeline(
 
     generate_index = pe.Node(
         niu.Function(
-            input_names=["b_value_filename", "b_value_threshold"],
+            input_names=["b_values_filename", "b_value_threshold"],
             output_names=["out_file"],
             function=generate_index_file,
         ),
@@ -127,10 +127,10 @@ def eddy_fsl_pipeline(
             [("phase_encoding_direction", "fsl_phase_encoding_direction")],
         ),
         (inputnode, generate_acq, [("image_id", "image_id")]),
-        (inputnode, generate_index, [("b_value_filename", "b_value_filename")]),
+        (inputnode, generate_index, [("b_values_filename", "b_values_filename")]),
         (inputnode, generate_index, [("image_id", "image_id")]),
         (inputnode, eddy, [("b_vectors_filename", "in_bvec")]),
-        (inputnode, eddy, [("b_value_filename", "in_bval")]),
+        (inputnode, eddy, [("b_values_filename", "in_bval")]),
         (inputnode, eddy, [("dwi_filename", "in_file")]),
         (inputnode, eddy, [("in_mask", "in_mask")]),
         (generate_acq, eddy, [("out_file", "in_acqp")]),

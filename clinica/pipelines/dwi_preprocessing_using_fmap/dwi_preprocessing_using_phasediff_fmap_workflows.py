@@ -152,7 +152,7 @@ def compute_reference_b0(
         This workflow has the following inputs:
             - "dwi_filename": The path to the DWI image
             - "b_vectors_filename": The path to the associated B-vectors file
-            - "b_values": The path to the associated B-values file
+            - "b_values_filename": The path to the associated B-values file
             - "total_readout_time": The total readout time extracted from JSON metadata
             - "phase_encoding_direction": The phase encoding direction extracted from JSON metadata
             - "image_id": Prefix to be used for output files
