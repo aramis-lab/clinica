@@ -266,7 +266,7 @@ def generate_index_file(
     b_values_filename : str
         Path to the b-values file.
 
-    b_bvalue_threshold : float, optional
+    b_value_threshold : float, optional
         Define the threshold for the b0 volumes.
         Volumes are considered B0 volumes if their bval <= low_bval.
         Default=5.0.
@@ -288,17 +288,18 @@ def generate_index_file(
     if not b_values_filename.is_file():
         raise FileNotFoundError(f"Unable to find b-values file: {b_values_filename}.")
 
-    bvals = np.loadtxt(b_values_filename)
-    idx_low_bvals = np.where(bvals <= b_value_threshold)
-    b0_index = idx_low_bvals[0].tolist()
+    b_values = np.loadtxt(b_values_filename)
+    idx_low_b_values = np.where(b_values <= b_value_threshold)
+    b0_index = idx_low_b_values[0].tolist()
 
     if not b0_index:
         raise ValueError(
-            f"Could not find b-value <= {b_value_threshold} in bval file ({b_values_filename}). Found values: {bvals}"
+            f"Could not find b-value <= {b_value_threshold} in bval "
+            f"file ({b_values_filename}). Found values: {b_values}"
         )
     index_filename = f"{image_id}_index.txt" if image_id else "index.txt"
-    index_filename = in_bval.parent / index_filename
-    np.savetxt(index_filename, _generate_index_array(b0_index, len(bvals)).T)
+    index_filename = b_values_filename.parent / index_filename
+    np.savetxt(index_filename, _generate_index_array(b0_index, len(b_values)).T)
 
     return str(index_filename)
 
