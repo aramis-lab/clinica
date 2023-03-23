@@ -320,7 +320,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         )
 
         reference_b0 = compute_reference_b0(
-            low_bval=self.parameters["low_bval"],
+            b_value_threshold=self.parameters["low_bval"],
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
         )
@@ -360,7 +360,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         # Step 3: Run FSL eddy
         # ====================
         eddy = eddy_fsl_pipeline(
-            low_bval=self.parameters["low_bval"],
+            b_value_threshold=self.parameters["low_bval"],
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
             image_id=True,
@@ -413,9 +413,9 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                                               ("fmap_phasediff_json", "fmap_phasediff_json")]),
                 # Step 1: Computation of the reference b0 (i.e. average b0 but with EPI distortions)
                 # =======================================
-                (init_node, reference_b0, [("bval", "inputnode.b_values"),
-                                           ("bvec", "inputnode.b_vectors"),
-                                           ("dwi", "inputnode.dwi"),
+                (init_node, reference_b0, [("bval", "inputnode.b_values_filename"),
+                                           ("bvec", "inputnode.b_vectors_filename"),
+                                           ("dwi", "inputnode.dwi_filename"),
                                            ("total_readout_time", "inputnode.total_readout_time"),
                                            ("phase_encoding_direction", "inputnode.phase_encoding_direction"),
                                            ("image_id", "inputnode.image_id")]),
@@ -446,9 +446,9 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
 
                 # Step 3: Run FSL eddy
                 # ====================
-                (init_node, eddy, [("dwi", "inputnode.in_file"),
-                                   ("bval", "inputnode.in_bval"),
-                                   ("bvec", "inputnode.in_bvec"),
+                (init_node, eddy, [("dwi", "inputnode.dwi_filename"),
+                                   ("bval", "inputnode.b_values_filename"),
+                                   ("bvec", "inputnode.b_vectors_filename"),
                                    ("image_id", "inputnode.image_id")]),
                 (smoothing, eddy, [("out_file", "inputnode.field")]),
                 (reference_b0, eddy, [("outputnode.brainmask", "inputnode.in_mask")]),

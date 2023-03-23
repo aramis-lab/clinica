@@ -2,7 +2,7 @@ from nipype.pipeline.engine import Workflow
 
 
 def eddy_fsl_pipeline(
-    low_bval: float,
+    b_value_threshold: float,
     use_cuda: bool,
     initrand: bool,
     image_id: bool = False,
@@ -15,7 +15,7 @@ def eddy_fsl_pipeline(
 
     Parameters
     ----------
-    low_bval : float
+    b_value_threshold : float
         Threshold value to determine the B0 volumes in the DWI image.
 
     use_cuda : bool
@@ -43,9 +43,9 @@ def eddy_fsl_pipeline(
     Workflow :
         The Nipype workflow.
         This workflow has the following inputs:
-            - "in_file": The path to the DWI image
-            - "in_bvec": The path to the associated B-vectors file
-            - "in_bval": The path to the associated B-values file
+            - "dwi_filename": The path to the DWI image
+            - "b_vectors_filename": The path to the associated B-vectors file
+            - "b_value_filename": The path to the associated B-values file
             - "in_mask": The path to the mask image to be provided to Eddy
             - "image_id": Prefix to be used for output files
             - "field": The path to the field image to be used by Eddy
@@ -67,9 +67,9 @@ def eddy_fsl_pipeline(
     inputnode = pe.Node(
         niu.IdentityInterface(
             fields=[
-                "in_file",
-                "in_bvec",
-                "in_bval",
+                "dwi_filename",
+                "b_vectors_filename",
+                "b_value_filename",
                 "in_mask",
                 "image_id",
                 "field",
@@ -84,7 +84,7 @@ def eddy_fsl_pipeline(
     generate_acq = pe.Node(
         niu.Function(
             input_names=[
-                "in_dwi",
+                "dwi_filename",
                 "fsl_phase_encoding_direction",
                 "total_readout_time",
             ],
@@ -96,13 +96,13 @@ def eddy_fsl_pipeline(
 
     generate_index = pe.Node(
         niu.Function(
-            input_names=["in_bval", "low_bval"],
+            input_names=["b_value_filename", "b_value_threshold"],
             output_names=["out_file"],
             function=generate_index_file,
         ),
         name="generate_index",
     )
-    generate_index.inputs.low_bval = low_bval
+    generate_index.inputs.b_value_threshold = b_value_threshold
 
     eddy = pe.Node(interface=Eddy(), name="eddy_fsl")
     eddy.inputs.repol = True
@@ -119,7 +119,7 @@ def eddy_fsl_pipeline(
     wf = pe.Workflow(name=name)
 
     connections = [
-        (inputnode, generate_acq, [("in_file", "in_dwi")]),
+        (inputnode, generate_acq, [("dwi_filename", "dwi_filename")]),
         (inputnode, generate_acq, [("total_readout_time", "total_readout_time")]),
         (
             inputnode,
@@ -127,11 +127,11 @@ def eddy_fsl_pipeline(
             [("phase_encoding_direction", "fsl_phase_encoding_direction")],
         ),
         (inputnode, generate_acq, [("image_id", "image_id")]),
-        (inputnode, generate_index, [("in_bval", "in_bval")]),
+        (inputnode, generate_index, [("b_value_filename", "b_value_filename")]),
         (inputnode, generate_index, [("image_id", "image_id")]),
-        (inputnode, eddy, [("in_bvec", "in_bvec")]),
-        (inputnode, eddy, [("in_bval", "in_bval")]),
-        (inputnode, eddy, [("in_file", "in_file")]),
+        (inputnode, eddy, [("b_vectors_filename", "in_bvec")]),
+        (inputnode, eddy, [("b_value_filename", "in_bval")]),
+        (inputnode, eddy, [("dwi_filename", "in_file")]),
         (inputnode, eddy, [("in_mask", "in_mask")]),
         (generate_acq, eddy, [("out_file", "in_acqp")]),
         (generate_index, eddy, [("out_file", "in_index")]),

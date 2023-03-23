@@ -112,7 +112,7 @@ def prepare_phasediff_fmap(name="prepare_phasediff_fmap"):
 
 
 def compute_reference_b0(
-    low_bval: float,
+    b_value_threshold: float,
     use_cuda: bool,
     initrand: bool,
     output_dir: Optional[str] = None,
@@ -128,7 +128,7 @@ def compute_reference_b0(
 
     Parameters
     ----------
-    low_bval: float
+    b_value_threshold: float
         Threshold value to determine the B0 volumes in the DWI image
 
     use_cuda: bool
@@ -150,8 +150,8 @@ def compute_reference_b0(
     Workflow :
         The Nipype workflow.
         This workflow has the following inputs:
-            - "dwi": The path to the DWI image
-            - "b_vecors": The path to the associated B-vectors file
+            - "dwi_filename": The path to the DWI image
+            - "b_vectors_filename": The path to the associated B-vectors file
             - "b_values": The path to the associated B-values file
             - "total_readout_time": The total readout time extracted from JSON metadata
             - "phase_encoding_direction": The phase encoding direction extracted from JSON metadata
@@ -176,9 +176,9 @@ def compute_reference_b0(
     inputnode = npe.Node(
         niu.IdentityInterface(
             fields=[
-                "dwi",
-                "b_vectors",
-                "b_values",
+                "dwi_filename",
+                "b_vectors_filename",
+                "b_values_filename",
                 "total_readout_time",
                 "phase_encoding_direction",
                 "image_id",
@@ -189,7 +189,7 @@ def compute_reference_b0(
 
     fsl_gradient = npe.Node(
         niu.Function(
-            input_names=["bval", "bvec"],
+            input_names=["b_values_filename", "b_vectors_filename"],
             output_names=["grad_fsl"],
             function=get_grad_fsl,
         ),
@@ -202,7 +202,7 @@ def compute_reference_b0(
 
     # Run eddy without calibrated fmap
     pre_eddy = eddy_fsl_pipeline(
-        low_bval=low_bval,
+        b_value_threshold=b_value_threshold,
         use_cuda=use_cuda,
         initrand=initrand,
         image_id=True,
@@ -218,7 +218,7 @@ def compute_reference_b0(
         ),
         name="reference_b0",
     )
-    reference_b0.inputs.low_bval = low_bval
+    reference_b0.inputs.low_bval = b_value_threshold
 
     # Compute brain mask from reference b0
     masked_reference_b0 = npe.Node(
@@ -238,23 +238,30 @@ def compute_reference_b0(
     wf = npe.Workflow(name=name)
 
     connections = [
-        (inputnode, fsl_gradient, [("b_values", "bval"), ("b_vectors", "bvec")]),
+        (
+            inputnode,
+            fsl_gradient,
+            [
+                ("b_values_filename", "b_values_filename"),
+                ("b_vectors_filename", "b_vectors_filename"),
+            ],
+        ),
         (fsl_gradient, brain_mask, [("grad_fsl", "grad_fsl")]),
-        (inputnode, brain_mask, [("dwi", "in_file")]),
+        (inputnode, brain_mask, [("dwi_filename", "in_file")]),
         (
             inputnode,
             pre_eddy,
             [
                 ("total_readout_time", "inputnode.total_readout_time"),
                 ("phase_encoding_direction", "inputnode.phase_encoding_direction"),
-                ("dwi", "inputnode.in_file"),
-                ("b_values", "inputnode.in_bval"),
-                ("b_vectors", "inputnode.in_bvec"),
+                ("dwi_filename", "inputnode.dwi_filename"),
+                ("b_values_filename", "inputnode.b_values_filename"),
+                ("b_vectors_filename", "inputnode.b_vectors_filename"),
                 ("image_id", "inputnode.image_id"),
             ],
         ),
         (brain_mask, pre_eddy, [("out_file", "inputnode.in_mask")]),
-        (inputnode, reference_b0, [("b_values", "in_bval")]),
+        (inputnode, reference_b0, [("b_values_filename", "in_bval")]),
         (pre_eddy, reference_b0, [("outputnode.out_corrected", "in_dwi")]),
         (reference_b0, masked_reference_b0, [("out_b0_average", "in_file")]),
         (masked_reference_b0, outputnode, [("out_file", "reference_b0")]),

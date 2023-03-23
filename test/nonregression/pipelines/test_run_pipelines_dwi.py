@@ -104,15 +104,15 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
     phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
 
     wf = compute_reference_b0(
-        low_bval=5.0,
+        b_value_threshold=5.0,
         use_cuda=False,
         initrand=False,
         output_dir=str(tmp_path / "tmp"),
         name="compute_reference_b0",
     )
-    wf.inputs.inputnode.b_values = str(input_dir / "sub-01_ses-M000_dwi.bval")
-    wf.inputs.inputnode.b_vectors = str(input_dir / "sub-01_ses-M000_dwi.bvec")
-    wf.inputs.inputnode.dwi = str(input_dir / "sub-01_ses-M000_dwi.nii.gz")
+    wf.inputs.inputnode.b_values_filename = str(input_dir / "sub-01_ses-M000_dwi.bval")
+    wf.inputs.inputnode.b_vectors_filename = str(input_dir / "sub-01_ses-M000_dwi.bvec")
+    wf.inputs.inputnode.dwi_filename = str(input_dir / "sub-01_ses-M000_dwi.nii.gz")
     wf.inputs.inputnode.image_id = "sub-01_ses-M000"
     wf.inputs.inputnode.total_readout_time = total_readout_time
     wf.inputs.inputnode.phase_encoding_direction = phase_encoding_direction
