@@ -57,9 +57,8 @@ def rename_into_caps(
     )
 
 
-def get_grad_fsl(bvec, bval):
-    grad_fsl = (bvec, bval)
-    return grad_fsl
+def get_grad_fsl(b_vectors_filename: str, b_values_filename) -> tuple:
+    return b_vectors_filename, b_values_filename
 
 
 def init_input_node(

@@ -256,12 +256,14 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
         )
 
 
-def generate_index_file(in_bval, low_bval=5.0, image_id=None):
+def generate_index_file(
+    b_values_filename: str, b_value_threshold: float = 5.0, image_id=None
+):
     """Generate [`image_id`]_index.txt file for FSL eddy command.
 
     Args:
-        in_bval (str): Bval file.
-        low_bval (float): Define the b0 volumes as all volume bval <= low_bval. Default to 5.0.
+        b_values_filename (str): Bval file.
+        b_value_threshold (float): Define the b0 volumes as all volume bval <= low_bval. Default to 5.0.
         image_id (str, optional): Optional prefix. Defaults to None.
 
     Returns:
@@ -271,14 +273,14 @@ def generate_index_file(in_bval, low_bval=5.0, image_id=None):
 
     import numpy as np
 
-    assert os.path.isfile(in_bval)
-    bvals = np.loadtxt(in_bval)
-    idx_low_bvals = np.where(bvals <= low_bval)
+    assert os.path.isfile(b_values_filename)
+    bvals = np.loadtxt(b_values_filename)
+    idx_low_bvals = np.where(bvals <= b_value_threshold)
     b0_index = idx_low_bvals[0].tolist()
 
     if not b0_index:
         raise ValueError(
-            f"Could not find b-value <= {low_bval} in bval file ({in_bval}). Found values: {bvals}"
+            f"Could not find b-value <= {b_value_threshold} in bval file ({b_values_filename}). Found values: {bvals}"
         )
 
     if image_id:
@@ -306,12 +308,15 @@ def generate_index_file(in_bval, low_bval=5.0, image_id=None):
 
 
 def generate_acq_file(
-    in_dwi, fsl_phase_encoding_direction, total_readout_time, image_id=None
+    dwi_filename: str,
+    fsl_phase_encoding_direction: str,
+    total_readout_time,
+    image_id=None,
 ):
     """Generate [`image_id`]_acq.txt file for FSL eddy command.
 
     Args:
-        in_dwi (str): DWI file.
+        dwi_filename (str): DWI file.
         fsl_phase_encoding_direction (str): PhaseEncodingDirection from BIDS specifications in FSL format (i.e. x/y/z instead of i/j/k).
         total_readout_time (str): TotalReadoutTime from BIDS specifications.
         image_id (str, optional): Optional prefix. Defaults to None.
@@ -328,7 +333,7 @@ def generate_acq_file(
         out_acq = os.path.abspath(f"{image_id}_acq.txt")
     else:
         out_acq = os.path.abspath("acq.txt")
-    vols = nb.load(in_dwi).get_data().shape[-1]
+    vols = nb.load(dwi_filename).get_data().shape[-1]
     arr = np.ones([vols, 4])
     for i in range(vols):
         if fsl_phase_encoding_direction == "y-":
