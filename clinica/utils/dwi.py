@@ -337,7 +337,6 @@ def generate_acq_file(
     """
     from pathlib import Path
 
-    import nibabel as nb
     import numpy as np
 
     if fsl_phase_encoding_direction not in ("x", "y", "z", "x-", "y-", "z-"):
@@ -348,10 +347,9 @@ def generate_acq_file(
     dwi_filename = Path(dwi_filename)
     acq_filename = f"{image_id}_acq.txt" if image_id else "acq.txt"
     acq_filename = dwi_filename.parent / acq_filename
-    nb_volumes = nb.load(dwi_filename).shape[-1]
     basis_vector = _get_phase_basis_vector(fsl_phase_encoding_direction)
     basis_vector.append(float(total_readout_time))
-    np.savetxt(acq_filename, np.vstack([basis_vector] * nb_volumes), fmt="%d " * 3 + "%f")
+    np.savetxt(acq_filename, np.array([basis_vector]), fmt="%d " * 3 + "%f")
 
     return str(acq_filename)
 
