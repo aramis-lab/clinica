@@ -8,10 +8,11 @@ different functions available in Clinica
 import warnings
 from os import fspath
 from pathlib import Path
-from numpy.testing import assert_array_almost_equal
 from test.nonregression.testing_tools import *
 
+import numpy as np
 import pytest
+from numpy.testing import assert_array_almost_equal
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
@@ -53,14 +54,27 @@ def test_dwi_eddy_fsl(cmdopt, tmp_path):
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEddyFSL")
     (tmp_path / "tmp").mkdir()
     eddy_fsl = eddy_fsl_pipeline(
-        low_bval=5, use_cuda=False, initrand=True, working_directory=str(tmp_path / "tmp")
+        b_value_threshold=5.0,
+        use_cuda=False,
+        initrand=True,
+        compute_mask=True,
+        output_dir=str(tmp_path / "tmp"),
     )
     eddy_fsl.inputs.input_node.total_readout_time = 0.0342002
     eddy_fsl.inputs.input_node.phase_encoding_direction = "y-"
-    eddy_fsl.inputs.input_node.in_file = str(input_dir / "sub-01_ses-M000_dwi.nii.gz")
-    eddy_fsl.inputs.input_node.in_bval = str(input_dir / "sub-01_ses-M000_dwi.bval")
-    eddy_fsl.inputs.input_node.in_bvec = str(input_dir / "sub-01_ses-M000_dwi.bvec")
-    eddy_fsl.inputs.input_node.ref_b0 = str(input_dir / "sub-01_ses-M000_dwi_b0.nii.gz")
+    eddy_fsl.inputs.input_node.dwi_filename = str(
+        input_dir / "sub-01_ses-M000_dwi.nii.gz"
+    )
+    eddy_fsl.inputs.input_node.b_values_filename = str(
+        input_dir / "sub-01_ses-M000_dwi.bval"
+    )
+    eddy_fsl.inputs.input_node.b_vectors_filename = str(
+        input_dir / "sub-01_ses-M000_dwi.bvec"
+    )
+    eddy_fsl.inputs.input_node.reference_b0 = str(
+        input_dir / "sub-01_ses-M000_dwi_b0.nii.gz"
+    )
+
     eddy_fsl.run()
 
     out_file = fspath(tmp_path / "tmp" / "eddy_corrected.nii.gz")

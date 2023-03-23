@@ -205,6 +205,7 @@ def compute_reference_b0(
         use_cuda=use_cuda,
         initrand=initrand,
         image_id=True,
+        compute_mask=False,
         name="pre_eddy",
     )
 

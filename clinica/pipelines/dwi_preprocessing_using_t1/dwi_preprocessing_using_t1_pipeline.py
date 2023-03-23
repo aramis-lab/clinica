@@ -299,6 +299,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         eddy_fsl = eddy_fsl_pipeline(
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
+            compute_mask=True,
         )
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(
@@ -358,7 +359,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 (prepare_b0, eddy_fsl, [("out_b0_dwi_merge", "inputnode.dwi_filename"),
                                         ("out_updated_bval", "inputnode.b_values_filename"),
                                         ("out_updated_bvec", "inputnode.b_vectors_filename"),
-                                        ("out_reference_b0", "inputnode.ref_b0")]),  # TODO: check if really needed...
+                                        ("out_reference_b0", "inputnode.reference_b0")]),
                 # Magnetic susceptibility correction
                 (init_node, sdc, [("t1w", "inputnode.T1")]),
                 (eddy_fsl, sdc, [("outputnode.out_corrected", "inputnode.DWI")]),

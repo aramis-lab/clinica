@@ -364,6 +364,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             initrand=self.parameters["initrand"],
             image_id=True,
             field=True,
+            compute_mask=False,
         )
 
         # Step 4: Bias correction
