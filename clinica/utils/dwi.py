@@ -339,6 +339,8 @@ def generate_acq_file(
 
     import numpy as np
 
+    from clinica.utils.dwi import _get_phase_basis_vector  # noqa
+
     if fsl_phase_encoding_direction not in ("x", "y", "z", "x-", "y-", "z-"):
         raise RuntimeError(
             f"FSL PhaseEncodingDirection (found value: {fsl_phase_encoding_direction}) "
