@@ -202,7 +202,6 @@ def compute_reference_b0(
 
     # Run eddy without calibrated fmap
     pre_eddy = eddy_fsl_pipeline(
-        b_value_threshold=b_value_threshold,
         use_cuda=use_cuda,
         initrand=initrand,
         image_id=True,

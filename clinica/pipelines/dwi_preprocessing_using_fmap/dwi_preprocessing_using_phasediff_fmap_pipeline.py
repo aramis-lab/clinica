@@ -360,7 +360,6 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         # Step 3: Run FSL eddy
         # ====================
         eddy = eddy_fsl_pipeline(
-            b_value_threshold=self.parameters["low_bval"],
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
             image_id=True,

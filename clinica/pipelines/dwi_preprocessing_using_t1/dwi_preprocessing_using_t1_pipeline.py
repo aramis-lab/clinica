@@ -300,7 +300,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         )
         # Head-motion correction + Eddy-currents correction
         eddy_fsl = eddy_fsl_pipeline(
-            b_value_threshold=self.parameters["low_bval"],
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
         )

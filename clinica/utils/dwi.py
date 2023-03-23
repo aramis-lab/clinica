@@ -256,20 +256,18 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
         )
 
 
-def generate_index_file(
-    b_values_filename: str, b_value_threshold: float = 5.0, image_id: str = None
-) -> str:
+def generate_index_file(b_values_filename: str, image_id: str = None) -> str:
     """Generate [`image_id`]_index.txt file for FSL eddy command.
+
+    At the moment, all volumes are assumed to be acquired with the
+    same parameters. The generate_acq_file function writes a single
+    line, and this function writes a vector of ones linking each
+    DWI volume to this first line.
 
     Parameters
     ----------
     b_values_filename : str
         Path to the b-values file.
-
-    b_value_threshold : float, optional
-        Define the threshold for the b0 volumes.
-        Volumes are considered B0 volumes if their bval <= low_bval.
-        Default=5.0.
 
     image_id : str, optional
         Optional prefix for the output file name.
@@ -289,42 +287,11 @@ def generate_index_file(
         raise FileNotFoundError(f"Unable to find b-values file: {b_values_filename}.")
 
     b_values = np.loadtxt(b_values_filename)
-    idx_low_b_values = np.where(b_values <= b_value_threshold)
-    b0_index = idx_low_b_values[0].tolist()
-
-    if not b0_index:
-        raise ValueError(
-            f"Could not find b-value <= {b_value_threshold} in bval "
-            f"file ({b_values_filename}). Found values: {b_values}"
-        )
     index_filename = f"{image_id}_index.txt" if image_id else "index.txt"
     index_filename = b_values_filename.parent / index_filename
-    np.savetxt(index_filename, _generate_index_array(b0_index, len(b_values)).T)
+    np.savetxt(index_filename, np.ones(len(b_values)).T)
 
     return str(index_filename)
-
-
-def _generate_index_array(b0_index: list, nb_volumes: int):
-    import numpy as np
-
-    index_list = []
-    for i, idx_b0 in enumerate(b0_index):
-        if i == (len(b0_index) - 1):
-            index_list.extend([i + 1] * (nb_volumes - idx_b0))
-        else:
-            index_list.extend([i + 1] * (b0_index[i + 1] - idx_b0))
-    _check_index_list(index_list, nb_volumes)
-
-    return np.asarray(index_list)
-
-
-def _check_index_list(index_list: list, nb_volumes: int) -> None:
-    if len(index_list) != nb_volumes:
-        raise ValueError(
-            "Could not generate the index file for the Eddy command."
-            f"The size of the computed index list ({len(index_list)}) "
-            f"does not match the number of volumes ({nb_volumes})."
-        )
 
 
 def generate_acq_file(

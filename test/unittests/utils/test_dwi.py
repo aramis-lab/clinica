@@ -109,24 +109,10 @@ def test_generate_index_file_bvalue_file_error(tmp_path):
         generate_index_file(str(tmp_path / "foo.txt"))
 
 
-def test_generate_index_file_no_b0_error(tmp_path):
-    from clinica.utils.dwi import generate_index_file
-
-    np.savetxt(tmp_path / "foo.bval", [1000] * 8)
-    with pytest.raises(
-        ValueError,
-        match="Could not find b-value <= 5.0 in bval file",
-    ):
-        generate_index_file(str(tmp_path / "foo.bval"))
-
-
 @pytest.mark.parametrize("image_id", [None, "foo", "foo_bar"])
 def test_generate_index_file(tmp_path, image_id):
     from clinica.utils.dwi import generate_index_file
 
-    #  This will work because there is a single B0 volume at index 0
-    #  But a more general input like [1000, 1000, 0, 0, 0, 1000, 1000, 0]
-    #  would fail...
     np.savetxt(tmp_path / "foo.bval", [0] + [1000] * 7)
     index_file = generate_index_file(str(tmp_path / "foo.bval"), image_id=image_id)
     if image_id:
@@ -134,7 +120,4 @@ def test_generate_index_file(tmp_path, image_id):
     else:
         assert index_file == str(tmp_path / "index.txt")
     index = np.loadtxt(index_file)
-    # This is wrong and needs to be fixed
-    # the array should be length 8...
-    # assert_array_equal(index, np.array([1.0, 2.0, 3.0, 3.0, 3.0, 4.0]))
     assert_array_equal(index, np.ones(8))
