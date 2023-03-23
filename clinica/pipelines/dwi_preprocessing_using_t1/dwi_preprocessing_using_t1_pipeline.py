@@ -300,7 +300,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         )
         # Head-motion correction + Eddy-currents correction
         eddy_fsl = eddy_fsl_pipeline(
-            low_bval=self.parameters["low_bval"],
+            b_value_threshold=self.parameters["low_bval"],
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
         )
@@ -361,10 +361,10 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 # Head-motion correction + eddy current correction
                 (init_node, eddy_fsl, [("total_readout_time", "inputnode.total_readout_time"),
                                        ("phase_encoding_direction", "inputnode.phase_encoding_direction")]),
-                (prepare_b0, eddy_fsl, [("out_b0_dwi_merge", "inputnode.in_file"),
-                                        ("out_updated_bval", "inputnode.in_bval"),
-                                        ("out_updated_bvec", "inputnode.in_bvec"),
-                                        ("out_reference_b0", "inputnode.ref_b0")]),
+                (prepare_b0, eddy_fsl, [("out_b0_dwi_merge", "inputnode.dwi_filename"),
+                                        ("out_updated_bval", "inputnode.b_values_filename"),
+                                        ("out_updated_bvec", "inputnode.b_vectors_filename"),
+                                        ("out_reference_b0", "inputnode.ref_b0")]),  # TODO: check if really needed...
                 (mask_b0_pre, eddy_fsl, [("mask_file", "inputnode.in_mask")]),
                 # Magnetic susceptibility correction
                 (init_node, sdc, [("t1w", "inputnode.T1")]),
