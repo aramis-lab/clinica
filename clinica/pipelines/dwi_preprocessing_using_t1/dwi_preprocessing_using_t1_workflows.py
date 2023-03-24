@@ -71,6 +71,7 @@ def eddy_fsl_pipeline(
             - "out_corrected": Path to the corrected image
             - "out_rotated_bvecs": Path to the file holding the rotated B-vectors
     """
+    import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     from nipype.interfaces.fsl import BET
