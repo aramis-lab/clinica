@@ -1,6 +1,7 @@
 import nibabel as nib
 import numpy as np
 import pytest
+from numpy.testing import assert_array_equal
 
 
 def test_rename_files_errors(tmp_path):
@@ -96,3 +97,27 @@ def test_generate_acq_file(tmp_path, image_id, phase, expected):
     with open(acq_file, "r") as fp:
         lines = fp.readlines()
     assert lines == expected
+
+
+def test_generate_index_file_bvalue_file_error(tmp_path):
+    from clinica.utils.dwi import generate_index_file
+
+    with pytest.raises(
+        FileNotFoundError,
+        match="Unable to find b-values file",
+    ):
+        generate_index_file(str(tmp_path / "foo.txt"))
+
+
+@pytest.mark.parametrize("image_id", [None, "foo", "foo_bar"])
+def test_generate_index_file(tmp_path, image_id):
+    from clinica.utils.dwi import generate_index_file
+
+    np.savetxt(tmp_path / "foo.bval", [0] + [1000] * 7)
+    index_file = generate_index_file(str(tmp_path / "foo.bval"), image_id=image_id)
+    if image_id:
+        assert index_file == str(tmp_path / f"{image_id}_index.txt")
+    else:
+        assert index_file == str(tmp_path / "index.txt")
+    index = np.loadtxt(index_file)
+    assert_array_equal(index, np.ones(8))

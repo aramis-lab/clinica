@@ -2,7 +2,6 @@ from nipype.pipeline.engine import Workflow
 
 
 def eddy_fsl_pipeline(
-    b_value_threshold: float,
     use_cuda: bool,
     initrand: bool,
     image_id: bool = False,
@@ -15,9 +14,6 @@ def eddy_fsl_pipeline(
 
     Parameters
     ----------
-    b_value_threshold : float
-        Threshold value to determine the B0 volumes in the DWI image.
-
     use_cuda : bool
         Boolean to indicate whether cuda should be used or not.
 
@@ -97,13 +93,12 @@ def eddy_fsl_pipeline(
 
     generate_index = pe.Node(
         niu.Function(
-            input_names=["b_values_filename", "b_value_threshold"],
+            input_names=["b_values_filename"],
             output_names=["out_file"],
             function=generate_index_file,
         ),
         name="generate_index",
     )
-    generate_index.inputs.b_value_threshold = b_value_threshold
 
     eddy = pe.Node(interface=Eddy(), name="eddy_fsl")
     eddy.inputs.repol = True
