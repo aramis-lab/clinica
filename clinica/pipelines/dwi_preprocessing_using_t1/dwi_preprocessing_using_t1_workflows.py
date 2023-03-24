@@ -87,6 +87,7 @@ def eddy_fsl_pipeline(
                 "dwi_filename",
                 "fsl_phase_encoding_direction",
                 "total_readout_time",
+                "image_id",
             ],
             output_names=["out_file"],
             function=generate_acq_file,
@@ -126,7 +127,6 @@ def eddy_fsl_pipeline(
             generate_acq,
             [("phase_encoding_direction", "fsl_phase_encoding_direction")],
         ),
-        (inputnode, generate_acq, [("image_id", "image_id")]),
         (inputnode, generate_index, [("b_values_filename", "b_values_filename")]),
         (inputnode, generate_index, [("image_id", "image_id")]),
         (inputnode, eddy, [("b_vectors_filename", "in_bvec")]),
@@ -141,7 +141,10 @@ def eddy_fsl_pipeline(
     ]
 
     if image_id:
-        connections += [(inputnode, eddy, [("image_id", "out_base")])]
+        connections += [
+            (inputnode, generate_acq, [("image_id", "image_id")]),
+            (inputnode, eddy, [("image_id", "out_base")]),
+        ]
 
     if field:
         connections += [(inputnode, eddy, [("field", "field")])]
