@@ -6,6 +6,26 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.7.4
+
+### Enhanced
+
+- [DWI] Read total readout time and phase encoding direction from JSON files
+- [IOTools] Session numbers are now represented using three digits instead of two
+- [PET] Handle 4D images with dummy fourth dimension
+- [Dependencies] Upgrade Poetry lock files to version 2
+
+### Added
+
+- [Converters] New GENFI to BIDS converter
+
+### Fixed
+
+- [BUG] Fixed issue with NetworkX 3
+- [BUG] Fix run statistics-volume-correction assertion error
+- [DOC] Fix command in statistics volume documentation
+- [IOTools] Fix `create_scan_dict` row extraction condition
+
 ## Clinica 0.7.3
 
 ### Enhanced
