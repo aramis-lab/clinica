@@ -129,8 +129,13 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
         assert similarity_measure(out_file, ref_file, 0.99)
 
 
-@pytest.mark.slow
+@pytest.mark.fast
 def test_prepare_phasediff_fmap(cmdopt, tmp_path):
+    """Test the pipeline prepare_phasediff_fmap which is part of
+     step 2 of the pipeline DWIPreprocessingUsingPhaseDiff.
+
+    This is a fast test which should run in less than a minute.
+    """
     from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
         prepare_phasediff_fmap,
     )
@@ -148,16 +153,16 @@ def test_prepare_phasediff_fmap(cmdopt, tmp_path):
     delta_echo_time = abs(echo_time2 - echo_time1)
 
     wf = prepare_phasediff_fmap(output_dir=str(tmp_path / "tmp"))
-    wf.inputs.inputnode.fmap_mask = str(
+    wf.inputs.input_node.fmap_mask = str(
         input_dir / "sub-01_ses-M000_magnitude1_corrected_brain_mask.nii.gz"
     )
-    wf.inputs.inputnode.fmap_phasediff = str(
+    wf.inputs.input_node.fmap_phasediff = str(
         input_dir / "sub-01_ses-M000_phasediff.nii.gz"
     )
-    wf.inputs.inputnode.fmap_magnitude = str(
+    wf.inputs.input_node.fmap_magnitude = str(
         input_dir / "sub-01_ses-M000_magnitude1_corrected_brain.nii.gz"
     )
-    wf.inputs.inputnode.delta_echo_time = str(delta_echo_time)
+    wf.inputs.input_node.delta_echo_time = str(delta_echo_time)
 
     wf.run()
 
