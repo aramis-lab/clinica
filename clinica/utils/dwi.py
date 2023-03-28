@@ -256,102 +256,101 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
         )
 
 
-def generate_index_file(in_bval, low_bval=5.0, image_id=None):
+def generate_index_file(b_values_filename: str, image_id: str = None) -> str:
     """Generate [`image_id`]_index.txt file for FSL eddy command.
 
-    Args:
-        in_bval (str): Bval file.
-        low_bval (float): Define the b0 volumes as all volume bval <= low_bval. Default to 5.0.
-        image_id (str, optional): Optional prefix. Defaults to None.
+    At the moment, all volumes are assumed to be acquired with the
+    same parameters. The generate_acq_file function writes a single
+    line, and this function writes a vector of ones linking each
+    DWI volume to this first line.
 
-    Returns:
-        out_index: [`image_id`]_index.txt or index.txt file.
+    Parameters
+    ----------
+    b_values_filename : str
+        Path to the b-values file.
+
+    image_id : str, optional
+        Optional prefix for the output file name.
+        Defaults to None.
+
+    Returns
+    -------
+    index_filename: str
+        Path to output index file. [`image_id`]_index.txt or index.txt file.
     """
-    import os
+    from pathlib import Path
 
     import numpy as np
 
-    assert os.path.isfile(in_bval)
-    bvals = np.loadtxt(in_bval)
-    idx_low_bvals = np.where(bvals <= low_bval)
-    b0_index = idx_low_bvals[0].tolist()
+    b_values_filename = Path(b_values_filename)
+    if not b_values_filename.is_file():
+        raise FileNotFoundError(f"Unable to find b-values file: {b_values_filename}.")
 
-    if not b0_index:
-        raise ValueError(
-            f"Could not find b-value <= {low_bval} in bval file ({in_bval}). Found values: {bvals}"
-        )
+    b_values = np.loadtxt(b_values_filename)
+    index_filename = f"{image_id}_index.txt" if image_id else "index.txt"
+    index_filename = b_values_filename.parent / index_filename
+    np.savetxt(index_filename, np.ones(len(b_values)).T)
 
-    if image_id:
-        out_index = os.path.abspath(f"{image_id}_index.txt")
-    else:
-        out_index = os.path.abspath("index.txt")
-
-    vols = len(bvals)
-    index_list = []
-    for i in range(0, len(b0_index)):
-        if i == (len(b0_index) - 1):
-            index_list.extend([i + 1] * (vols - b0_index[i]))
-        else:
-            index_list.extend([i + 1] * (b0_index[i + 1] - b0_index[i]))
-    index_array = np.asarray(index_list)
-    try:
-        len(index_list) == vols
-    except ValueError:
-        raise ValueError(
-            "It seems that you do not define the index file for FSL eddy correctly!"
-        )
-    np.savetxt(out_index, index_array.T)
-
-    return out_index
+    return str(index_filename)
 
 
 def generate_acq_file(
-    in_dwi, fsl_phase_encoding_direction, total_readout_time, image_id=None
-):
+    dwi_filename: str,
+    fsl_phase_encoding_direction: str,
+    total_readout_time: str,
+    image_id=None,
+) -> str:
     """Generate [`image_id`]_acq.txt file for FSL eddy command.
 
-    Args:
-        in_dwi (str): DWI file.
-        fsl_phase_encoding_direction (str): PhaseEncodingDirection from BIDS specifications in FSL format (i.e. x/y/z instead of i/j/k).
-        total_readout_time (str): TotalReadoutTime from BIDS specifications.
-        image_id (str, optional): Optional prefix. Defaults to None.
+    Parameters
+    ----------
+    dwi_filename : str
+        Path to the DWI file.
 
-    Returns:
-        out_acq: [`image_id`]_acq.txt or acq.txt file.
+    fsl_phase_encoding_direction : str
+        Phase encoding direction from the BIDS specifications in FSL format
+        (i.e. x/y/z instead of i/j/k).
+
+    total_readout_time : str
+        Total readout time from BIDS specifications.
+
+    image_id : str, optional
+        Optional prefix for the output file. Defaults to None.
+
+    Returns
+    -------
+    acq_filename : str
+        Path to the acq.txt file.
     """
-    import os
+    from pathlib import Path
 
-    import nibabel as nb
     import numpy as np
 
-    if image_id:
-        out_acq = os.path.abspath(f"{image_id}_acq.txt")
-    else:
-        out_acq = os.path.abspath("acq.txt")
-    vols = nb.load(in_dwi).get_data().shape[-1]
-    arr = np.ones([vols, 4])
-    for i in range(vols):
-        if fsl_phase_encoding_direction == "y-":
-            arr[i, :] = np.array((0, -1, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "y":
-            arr[i, :] = np.array((0, 1, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "x":
-            arr[i, :] = np.array((1, 0, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "x-":
-            arr[i, :] = np.array((-1, 0, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "z":
-            arr[i, :] = np.array((0, 1, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == "z-":
-            arr[i, :] = np.array((0, 0, -1, total_readout_time))
-        else:
-            raise RuntimeError(
-                f"FSL PhaseEncodingDirection (found value: {fsl_phase_encoding_direction}) "
-                f"is unknown, it should be a value in (x, y, z, x-, y-, z-)"
-            )
+    from clinica.utils.dwi import _get_phase_basis_vector  # noqa
 
-    np.savetxt(out_acq, arr, fmt="%d " * 3 + "%f")
+    if fsl_phase_encoding_direction not in ("x", "y", "z", "x-", "y-", "z-"):
+        raise RuntimeError(
+            f"FSL PhaseEncodingDirection (found value: {fsl_phase_encoding_direction}) "
+            f"is unknown, it should be a value in (x, y, z, x-, y-, z-)"
+        )
+    dwi_filename = Path(dwi_filename)
+    acq_filename = f"{image_id}_acq.txt" if image_id else "acq.txt"
+    acq_filename = dwi_filename.parent / acq_filename
+    basis_vector = _get_phase_basis_vector(fsl_phase_encoding_direction)
+    basis_vector.append(float(total_readout_time))
+    np.savetxt(acq_filename, np.array([basis_vector]), fmt="%d " * 3 + "%f")
 
-    return out_acq
+    return str(acq_filename)
+
+
+def _get_phase_basis_vector(phase: str) -> list:
+    """Returns the unit vector corresponding to the given phase."""
+    mult = -1 if phase.endswith("-") else 1
+    idx = ["x", "y", "z"].index(phase[0])
+    result = [0] * 3
+    result[idx] = mult
+
+    return result
 
 
 def bids_dir_to_fsl_dir(bids_dir):
