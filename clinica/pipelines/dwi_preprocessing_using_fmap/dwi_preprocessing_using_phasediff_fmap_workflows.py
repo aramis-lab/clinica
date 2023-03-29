@@ -501,16 +501,16 @@ def calibrate_and_register_fmap(
             [("out_file", "in_file")],
         ),
         # Output connections
-        (smooth_calibrated_fmap, outputnode, ["out_file", "smooth_calibrated_fmap"]),
+        (smooth_calibrated_fmap, outputnode, [("out_file", "smooth_calibrated_fmap")]),
         (
             register_bet_magnitude_fmap_onto_b0,
             outputnode,
-            ["out_file", "bet_magnitude_fmap_registered_onto_b0"],
+            [("out_file", "bet_magnitude_fmap_registered_onto_b0")],
         ),
         (
             apply_xfm_on_calibrated_fmap,
             outputnode,
-            ["out_file", "registered_calibrated_fmap"],
+            [("out_file", "registered_calibrated_fmap")],
         ),
     ]
 

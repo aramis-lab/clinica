@@ -176,7 +176,10 @@ def test_prepare_phasediff_fmap(cmdopt, tmp_path):
 
 @pytest.mark.fast
 def test_dwi_calibrate_and_register_fmap(cmdopt, tmp_path):
-    """Test step 2 of pipeline DWIPreprocessingUsingPhaseDiff."""
+    """Test step 2 of pipeline DWIPreprocessingUsingPhaseDiff.
+
+    This is a fast test which should run in about 1 minute.
+    """
     from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
         calibrate_and_register_fmap,
     )
@@ -193,7 +196,7 @@ def test_dwi_calibrate_and_register_fmap(cmdopt, tmp_path):
     )
     delta_echo_time = abs(echo_time2 - echo_time1)
 
-    wf = calibrate_and_register_fmap()
+    wf = calibrate_and_register_fmap(output_dir=str(tmp_path / "tmp"))
     wf.inputs.inputnode.reference_b0 = str(
         input_dir / "sub-01_ses-M000_avg_b0_brain.nii.gz"
     )

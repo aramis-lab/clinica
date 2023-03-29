@@ -390,7 +390,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
                 init_node,
                 fmap_calibration_and_registration,
                 [
-                    ("fmap_magnitude", "inputnode.magnitude_fmap"),
+                    ("fmap_magnitude", "inputnode.bias_magnitude_fmap"),
                     ("fmap_phasediff", "inputnode.fmap_phasediff"),
                     ("delta_echo_time", "inputnode.delta_echo_time"),
                 ],
