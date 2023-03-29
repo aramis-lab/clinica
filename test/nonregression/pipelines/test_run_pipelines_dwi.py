@@ -140,8 +140,7 @@ def test_prepare_phasediff_fmap(cmdopt, tmp_path):
         prepare_phasediff_fmap,
     )
     from clinica.utils.filemanip import extract_metadata_from_json
-
-    base_dir = Path(cmdopt["input"])
+    base_dir = Path(cmdopt["input"]) 
     input_dir, tmp_dir, ref_dir = configure_paths(
         base_dir, tmp_path, "DWIPreparePhasediffFmap"
     )
@@ -173,6 +172,57 @@ def test_prepare_phasediff_fmap(cmdopt, tmp_path):
     ref_file = fspath(ref_dir / "calibrated_fmap" / out_filename)
 
     assert similarity_measure(out_file, ref_file, 0.99)
+
+
+@pytest.mark.fast
+def test_dwi_calibrate_and_register_fmap(cmdopt, tmp_path):
+    """Test step 2 of pipeline DWIPreprocessingUsingPhaseDiff."""
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
+        calibrate_and_register_fmap,
+    )
+    from clinica.utils.filemanip import extract_metadata_from_json
+
+    base_dir = Path(cmdopt["input"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWICalibrateAndRegisterFmap"
+    )
+    (tmp_path / "tmp").mkdir()
+
+    [echo_time1, echo_time2] = extract_metadata_from_json(
+        str(input_dir / "sub-01_ses-M000_phasediff.json"), ["EchoTime1", "EchoTime2"]
+    )
+    delta_echo_time = abs(echo_time2 - echo_time1)
+
+    wf = calibrate_and_register_fmap()
+    wf.inputs.inputnode.reference_b0 = str(
+        input_dir / "sub-01_ses-M000_avg_b0_brain.nii.gz"
+    )
+    wf.inputs.inputnode.bias_magnitude_fmap = str(
+        input_dir / "sub-01_ses-M000_magnitude1.nii.gz"
+    )
+    wf.inputs.inputnode.fmap_phasediff = str(
+        input_dir / "sub-01_ses-M000_phasediff.nii.gz"
+    )
+    wf.inputs.inputnode.delta_echo_time = delta_echo_time
+
+    wf.run()
+
+    for folder, filename in zip(
+        [
+            "smooth_calibrated_fmap",
+            "bet_magnitude_fmap_registered_onto_b0",
+            "registered_calibrated_fmap",
+        ],
+        [
+            "sub-01_ses-M000_phasediff_rads_unwrapped_radsec_fieldmap_demean_maths_flirt_smooth.nii.gz",
+            "sub-01_ses-M000_magnitude1_corrected_brain_flirt.nii.gz",
+            "sub-01_ses-M000_phasediff_rads_unwrapped_radsec_fieldmap_demean_maths_flirt.nii.gz",
+        ],
+    ):
+        out_file = fspath(tmp_path / "tmp" / folder / filename)
+        ref_file = fspath(ref_dir / folder / filename)
+
+        assert similarity_measure(out_file, ref_file, 0.99)
 
 
 @pytest.mark.slow
