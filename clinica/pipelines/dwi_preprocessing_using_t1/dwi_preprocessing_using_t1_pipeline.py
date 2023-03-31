@@ -361,9 +361,9 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                                         ("out_updated_bvec", "inputnode.b_vectors_filename"),
                                         ("out_reference_b0", "inputnode.reference_b0")]),
                 # Magnetic susceptibility correction
-                (init_node, sdc, [("t1w", "inputnode.T1")]),
-                (eddy_fsl, sdc, [("outputnode.out_corrected", "inputnode.DWI")]),
-                (eddy_fsl, sdc, [("outputnode.out_rotated_bvecs", "inputnode.bvec")]),
+                (init_node, sdc, [("t1w", "inputnode.t1_filename")]),
+                (eddy_fsl, sdc, [("outputnode.out_corrected", "inputnode.dwi_filename")]),
+                (eddy_fsl, sdc, [("outputnode.out_rotated_bvecs", "inputnode.b_vectors_filename")]),
                 # Bias correction
                 (prepare_b0, bias, [("out_updated_bval", "in_bval")]),
                 (sdc, bias, [("outputnode.DWIs_epicorrected", "in_file"),
