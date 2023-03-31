@@ -132,14 +132,17 @@ def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
     coordinates in the original image. Therefore, this matrix should be inverted first, as
     we want to know the target position of :math:`\\vec{r}`.
     """
-    import os
+    from pathlib import Path
 
     import numpy as np
 
-    name, fext = os.path.splitext(os.path.basename(b_vectors_filename))
-    if fext == ".gz":
-        name, _ = os.path.splitext(name)
-    rotated_b_vectors_filename = os.path.abspath(f"{name}_rotated.bvec")
+    b_vectors_filename = Path(b_vectors_filename)
+    stem = (
+        Path(b_vectors_filename.stem).stem
+        if b_vectors_filename.suffix == ".gz"
+        else b_vectors_filename.stem
+    )
+    rotated_b_vectors_filename = b_vectors_filename.with_name(f"{stem}_rotated.bvec")
     b_vectors = np.loadtxt(b_vectors_filename).T
 
     if len(b_vectors) != len(matrix_filenames):
@@ -158,7 +161,7 @@ def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
 
     np.savetxt(rotated_b_vectors_filename, np.array(rotated_b_vectors).T, fmt="%0.15f")
 
-    return rotated_b_vectors_filename
+    return str(rotated_b_vectors_filename)
 
 
 def ants_apply_transforms(
