@@ -42,7 +42,7 @@ def rename_into_caps(
     )
 
 
-def change_itk_transform_type(input_affine_file):
+def change_itk_transform_type(input_affine_file: str) -> str:
     """Change ITK transform type.
 
     This function takes in the affine.txt produced by the c3d_affine_tool (which converted
@@ -50,38 +50,49 @@ def change_itk_transform_type(input_affine_file):
     this affine.txt so that it is compatible with the antsApplyTransforms tool and
     produces a new affine file titled 'updated_affine.txt'.
 
+    Parameters
+    ----------
+    input_affine_file : str
+        Path to the input affine that should be changed.
+
+    Returns
+    -------
+    update_affine_file : str
+        Path to the updated affine.
     """
-    import os
+    from pathlib import Path
 
-    new_file_lines = []
+    input_affine_file = Path(input_affine_file)
+    original_content = input_affine_file.read_text()
+    updated_affine_file = input_affine_file.with_name("updated_affine.txt")
+    updated_affine_file.write_text(
+        original_content.replace(
+            "Transform: MatrixOffsetTransformBase_double_3_3",
+            "Transform: AffineTransform_double_3_3",
+        )
+    )
 
-    with open(input_affine_file) as f:
-        for line in f:
-            if "Transform:" in line:
-                if "MatrixOffsetTransformBase_double_3_3" in line:
-                    transform_line = "Transform: AffineTransform_double_3_3\n"
-                    new_file_lines.append(transform_line)
-            else:
-                new_file_lines.append(line)
-
-    updated_affine_file = os.path.join(os.getcwd(), "updated_affine.txt")
-
-    with open(updated_affine_file, "wt") as f:
-        for line in new_file_lines:
-            f.write(line)
-
-    return updated_affine_file
+    return str(updated_affine_file)
 
 
-def expend_matrix_list(in_matrix, in_bvec):
+def broadcast_matrix_filename_to_match_b_vector_length(
+    matrix_filename: str, b_vectors_filename: str
+) -> list:
+    """Return a list of the matrix filename repeated as many times as there are B-vectors."""
     import numpy as np
 
-    bvecs = np.loadtxt(in_bvec).T
-    out_matrix_list = [in_matrix]
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (  # noqa
+        broadcast_filename_into_list,
+    )
 
-    out_matrix_list = out_matrix_list * len(bvecs)
+    b_vectors = np.loadtxt(b_vectors_filename).T
 
-    return out_matrix_list
+    return broadcast_filename_into_list(matrix_filename, len(b_vectors))
+
+
+def broadcast_filename_into_list(filename: str, desired_length: int) -> list:
+    """Return a list of provided filename repeated to match the desired length."""
+    return [filename] * desired_length
 
 
 def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
@@ -98,42 +109,56 @@ def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
     return out_warp
 
 
-def rotate_bvecs(in_bvec, in_matrix):
-    """Rotate the input bvec file accordingly with a list of matrices.
+def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
+    """Rotate the B-vectors contained in the input b_vectors_filename file
+    according to the provided list of matrices.
 
-    Notes:
-        The input affine matrix transforms points in the destination image to their corresponding
-        coordinates in the original image. Therefore, this matrix should be inverted first, as
-        we want to know the target position of :math:`\\vec{r}`.
+    Parameters
+    ----------
+    b_vectors_filename : str
+        Path to the B-vectors file to rotate.
 
+    matrix_filenames : list of str
+        List of paths to rotation matrices to apply to the B-vectors.
+
+    Returns
+    -------
+    rotated_b_vectors_filename : str
+        Path to the rotated B-vectors.
+
+    Notes
+    -----
+    The input affine matrix transforms points in the destination image to their corresponding
+    coordinates in the original image. Therefore, this matrix should be inverted first, as
+    we want to know the target position of :math:`\\vec{r}`.
     """
     import os
 
     import numpy as np
 
-    name, fext = os.path.splitext(os.path.basename(in_bvec))
+    name, fext = os.path.splitext(os.path.basename(b_vectors_filename))
     if fext == ".gz":
         name, _ = os.path.splitext(name)
-    out_file = os.path.abspath(f"{name}_rotated.bvec")
-    # Warning, bvecs.txt are not in the good configuration, need to put '.T'
-    bvecs = np.loadtxt(in_bvec).T
-    new_bvecs = []
+    rotated_b_vectors_filename = os.path.abspath(f"{name}_rotated.bvec")
+    b_vectors = np.loadtxt(b_vectors_filename).T
 
-    if len(bvecs) != len(in_matrix):
+    if len(b_vectors) != len(matrix_filenames):
         raise RuntimeError(
-            f"Number of b-vectors ({len(bvecs)}) and rotation matrices ({len(in_matrix)}) should match."
+            f"Number of b-vectors ({len(b_vectors)}) and rotation "
+            f"matrices ({len(matrix_filenames)}) should match."
         )
-
-    for bvec, mat in zip(bvecs, in_matrix):
-        if np.all(bvec == 0.0):
-            new_bvecs.append(bvec)
+    rotated_b_vectors = []
+    for b_vector, matrix_filename in zip(b_vectors, matrix_filenames):
+        if np.all(b_vector == 0.0):
+            rotated_b_vectors.append(b_vector)
         else:
-            invrot = np.linalg.inv(np.loadtxt(mat))[:3, :3]
-            newbvec = invrot.dot(bvec)
-            new_bvecs.append((newbvec / np.linalg.norm(newbvec)))
+            inv_rot = np.linalg.inv(np.loadtxt(matrix_filename))[:3, :3]
+            new_b_vector = inv_rot.dot(b_vector)
+            rotated_b_vectors.append((new_b_vector / np.linalg.norm(new_b_vector)))
 
-    np.savetxt(out_file, np.array(new_bvecs).T, fmt="%0.15f")
-    return out_file
+    np.savetxt(rotated_b_vectors_filename, np.array(rotated_b_vectors).T, fmt="%0.15f")
+
+    return rotated_b_vectors_filename
 
 
 def ants_apply_transforms(
