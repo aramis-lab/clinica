@@ -191,10 +191,10 @@ def epi_pipeline(
 
     from .dwi_preprocessing_using_t1_utils import (
         ants_apply_transforms,
+        broadcast_matrix_filename_to_match_b_vector_length,
         change_itk_transform_type,
         delete_temp_dirs,
-        expend_matrix_list,
-        rotate_bvecs,
+        rotate_b_vectors,
     )
 
     inputnode = pe.Node(
@@ -212,18 +212,18 @@ def epi_pipeline(
 
     expend_matrix = pe.Node(
         interface=niu.Function(
-            input_names=["in_matrix", "in_bvec"],
+            input_names=["matrix_filename", "b_vectors_filename"],
             output_names=["out_matrix_list"],
-            function=expend_matrix_list,
+            function=broadcast_matrix_filename_to_match_b_vector_length,
         ),
         name="expend_matrix",
     )
 
     rot_bvec = pe.Node(
         niu.Function(
-            input_names=["in_matrix", "in_bvec"],
+            input_names=["matrix_filenames", "b_vectors_filename"],
             output_names=["out_file"],
-            function=rotate_bvecs,
+            function=rotate_b_vectors,
         ),
         name="Rotate_Bvec",
     )
@@ -349,10 +349,10 @@ def epi_pipeline(
             (split, pick_ref, [("out_files", "inlist")]),
             (pick_ref, flirt_b0_2_t1, [("out", "in_file")]),
             (inputnode, flirt_b0_2_t1, [("T1", "reference")]),
-            (inputnode, rot_bvec, [("bvec", "in_bvec")]),
-            (flirt_b0_2_t1, expend_matrix, [("out_matrix_file", "in_matrix")]),
-            (inputnode, expend_matrix, [("bvec", "in_bvec")]),
-            (expend_matrix, rot_bvec, [("out_matrix_list", "in_matrix")]),
+            (inputnode, rot_bvec, [("bvec", "b_vectors_filename")]),
+            (flirt_b0_2_t1, expend_matrix, [("out_matrix_file", "matrix_filename")]),
+            (inputnode, expend_matrix, [("bvec", "b_vectors_filename")]),
+            (expend_matrix, rot_bvec, [("out_matrix_list", "matrix_filenames")]),
             (inputnode, ants_registration, [("T1", "fixed_image")]),
             (flirt_b0_2_t1, ants_registration, [("out_file", "moving_image")]),
             (inputnode, c3d_flirt2ants, [("T1", "reference_file")]),
