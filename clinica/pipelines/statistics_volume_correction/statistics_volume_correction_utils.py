@@ -3,7 +3,7 @@ from typing import List
 
 def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> str:
     """Threshold the t_map with t_threshold.
-    
+
     Pixel intensities that are less than t_threshold are set to 0, other values
     are left unchanged.
 
@@ -36,15 +36,14 @@ def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> 
     else:
         filename = join("./peak_corrected_" + str(t_threshold) + basename(t_map))
     nib.save(new_data, filename)
-    nii_file = abspath(filename)
-    return nii_file
+    return abspath(filename)
 
 
 def cluster_correction(
     t_map: str, t_thresh: float, c_thresh: int, output_name: str = None
 ) -> str:
     """Performs cluster correction.
-    
+
     First t_map is thresholded with t_thresh (like in peak_correction()). Then, clusters
     that have a size less than c_thresh are removed
 
@@ -98,8 +97,7 @@ def cluster_correction(
             + basename(t_map)
         )
     nib.save(new_data, filename)
-    nii_file = abspath(filename)
-    return nii_file
+    return abspath(filename)
 
 
 def produce_figures(
@@ -216,39 +214,19 @@ def generate_output(t_map: str, figs: List[str], correction_name: str) -> None:
         dirname(t_map), t_map_basename.replace("TStatistics", correction_name)
     )
     makedirs(out_folder)
-    copyfile(
-        figs[0],
-        join(
-            out_folder,
-            t_map_basename.replace(
-                "TStatistics", "desc-" + correction_name + "_GlassBrain.png"
-            ),
-        ),
+    suffixes = (
+        "GlassBrain.png",
+        "axis-x_TStatistics.png",
+        "axis-y_TStatistics.png",
+        "axis-z_TStatistics.png",
     )
-    copyfile(
-        figs[1],
-        join(
-            out_folder,
-            t_map_basename.replace(
-                "TStatistics", "desc-" + correction_name + "_axis-x_TStatistics.png"
+    for fig, suffix in zip(figs, suffixes):
+        copyfile(
+            fig,
+            join(
+                out_folder,
+                t_map_basename.replace(
+                    "TStatistics", f"desc-{correction_name}_{suffix}"
+                ),
             ),
-        ),
-    )
-    copyfile(
-        figs[2],
-        join(
-            out_folder,
-            t_map_basename.replace(
-                "TStatistics", "desc-" + correction_name + "_axis-y_TStatistics.png"
-            ),
-        ),
-    )
-    copyfile(
-        figs[3],
-        join(
-            out_folder,
-            t_map_basename.replace(
-                "TStatistics", "desc-" + correction_name + "_axis-z_TStatistics.png"
-            ),
-        ),
-    )
+        )
