@@ -5,7 +5,7 @@ from nipype.pipeline.engine import Workflow
 
 def prepare_phasediff_fmap(
     output_dir: Optional[str] = None,
-    name: Optional[str] ="prepare_phasediff_fmap",
+    name: Optional[str] = "prepare_phasediff_fmap",
 ) -> Workflow:
     """This workflow adapts the fsl_prepare_fieldmap script from FSL for the FSL eddy command.
 
