@@ -147,8 +147,28 @@ def print_end_pipeline(image_id, final_file):
     print_end_image(image_id)
 
 
-def rads2hz(in_file, delta_te, out_file=None):
-    """Convert input phase difference map to Hz."""
+def rads2hz(in_file: str, delta_te: float, out_file: str = None) -> str:
+    """Convert input phase difference map to Hz.
+
+    Parameters
+    ----------
+    in_file : str
+        Path to the phase difference map image.
+
+    delta_te : float
+        The DeltaEchoTime from BIDS specifications.
+
+    out_file : str, optional
+        Path to output file. If None, the output image
+        will be written in current folder. The file name
+        will have the same base name as in_file, but with
+        the "_radsec.nii.gz" suffix.
+
+    Returns
+    -------
+    out_file : str
+        Path to output file.
+    """
     import math
     import os
 
@@ -162,8 +182,9 @@ def rads2hz(in_file, delta_te, out_file=None):
         out_file = os.path.abspath(f"./{fname}_radsec.nii.gz")
 
     im = nb.load(in_file)
-    data = im.get_data().astype(np.float32) * (1.0 / (delta_te * 2 * math.pi))
+    data = im.get_data().astype(np.float32) * (1.0 / (float(delta_te) * 2 * math.pi))
     nb.Nifti1Image(data, im.affine, im.header).to_filename(out_file)
+
     return out_file
 
 

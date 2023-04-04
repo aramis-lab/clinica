@@ -129,6 +129,52 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
         assert similarity_measure(out_file, ref_file, 0.99)
 
 
+@pytest.mark.fast
+def test_prepare_phasediff_fmap(cmdopt, tmp_path):
+    """Test the pipeline prepare_phasediff_fmap which is part of
+     step 2 of the pipeline DWIPreprocessingUsingPhaseDiff.
+
+    This is a fast test which should run in less than a minute.
+    """
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
+        prepare_phasediff_fmap,
+    )
+    from clinica.utils.filemanip import extract_metadata_from_json
+
+    base_dir = Path(cmdopt["input"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWIPreparePhasediffFmap"
+    )
+    (tmp_path / "tmp").mkdir()
+
+    [echo_time1, echo_time2] = extract_metadata_from_json(
+        str(input_dir / "sub-01_ses-M000_phasediff.json"), ["EchoTime1", "EchoTime2"]
+    )
+    delta_echo_time = abs(echo_time2 - echo_time1)
+
+    wf = prepare_phasediff_fmap(output_dir=str(tmp_path / "tmp"))
+    wf.inputs.input_node.fmap_mask = str(
+        input_dir / "sub-01_ses-M000_magnitude1_corrected_brain_mask.nii.gz"
+    )
+    wf.inputs.input_node.fmap_phasediff = str(
+        input_dir / "sub-01_ses-M000_phasediff.nii.gz"
+    )
+    wf.inputs.input_node.fmap_magnitude = str(
+        input_dir / "sub-01_ses-M000_magnitude1_corrected_brain.nii.gz"
+    )
+    wf.inputs.input_node.delta_echo_time = str(delta_echo_time)
+
+    wf.run()
+
+    out_filename = (
+        "sub-01_ses-M000_phasediff_rads_unwrapped_radsec_fieldmap_demean_maths.nii.gz"
+    )
+    out_file = fspath(tmp_path / "tmp" / "calibrated_fmap" / out_filename)
+    ref_file = fspath(ref_dir / "calibrated_fmap" / out_filename)
+
+    assert similarity_measure(out_file, ref_file, 0.99)
+
+
 @pytest.mark.slow
 def test_dwi_preprocessing_using_phase_diff_field_map(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
