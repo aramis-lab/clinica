@@ -140,7 +140,8 @@ def test_prepare_phasediff_fmap(cmdopt, tmp_path):
         prepare_phasediff_fmap,
     )
     from clinica.utils.filemanip import extract_metadata_from_json
-    base_dir = Path(cmdopt["input"]) 
+
+    base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(
         base_dir, tmp_path, "DWIPreparePhasediffFmap"
     )
