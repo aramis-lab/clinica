@@ -322,3 +322,222 @@ def compute_reference_b0(
     wf.connect(connections)
 
     return wf
+
+
+def calibrate_and_register_fmap(
+    output_dir: Optional[str] = None,
+    name: str = "calibrate_and_register_fmap",
+) -> Workflow:
+    """Step 2 of the DWI preprocessing using phase diff pipeline.
+
+    Calibrate and register the field map.
+
+    This pipeline needs:
+        - ANTS
+        - FSL
+
+    Parameters
+    ----------
+    output_dir: str, optional
+        Path to output directory.
+        If provided, the pipeline will write its output in this folder.
+        Default to None.
+
+    name: str, optional
+        Name of the pipeline. Default='calibrate_and_register_fmap'.
+
+    Returns
+    -------
+    Workflow :
+        The Nipype workflow.
+        This workflow has the following inputs:
+            - "bias_magnitude_fmap": The path to the bias magnitude field map
+            - "fmap_phasediff": ??
+            - "reference_b0": The path to the computed reference B0 volume.
+              This is one of the outputs from the step 1 compute_reference_b0 workflow.
+            - "delta_echo_time": ???
+        And the following outputs:
+            - "smooth_calibrated_fmap": The path to the smoothed and calibrated field map
+            - "bet_magnitude_fmap_registered_onto_b0": The path to the bet magnitude field
+              map registered onto the B0 volume
+    """
+    import nipype.interfaces.ants as ants
+    import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.io as nio
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as npe
+
+    inputnode = npe.Node(
+        niu.IdentityInterface(
+            fields=[
+                "bias_magnitude_fmap",
+                "fmap_phasediff",
+                "reference_b0",
+                "delta_echo_time",
+            ]
+        ),
+        name="inputnode",
+    )
+
+    # Bias field correction of the magnitude image
+    bias_magnitude_fmap = npe.Node(
+        ants.N4BiasFieldCorrection(dimension=3),
+        name="bias_magnitude_fmap",
+    )
+
+    # Brain extraction of the magnitude image
+    bet_magnitude_fmap = npe.Node(
+        fsl.BET(frac=0.4, mask=True),
+        name="bet_magnitude_fmap",
+    )
+
+    # Calibrate FMap
+    calibrate_fmap = prepare_phasediff_fmap(name="calibrate_fmap")
+
+    # Register the BET magnitude fmap onto the BET b0
+    register_bet_magnitude_fmap_onto_b0 = npe.Node(
+        interface=fsl.FLIRT(),
+        name="register_bet_magnitude_fmap_onto_b0",
+    )
+    register_bet_magnitude_fmap_onto_b0.inputs.dof = 6
+    register_bet_magnitude_fmap_onto_b0.inputs.output_type = "NIFTI_GZ"
+
+    # Apply the transformation on the calibrated fmap
+    apply_xfm_on_calibrated_fmap = npe.Node(
+        interface=fsl.ApplyXFM(),
+        name="apply_xfm_on_calibrated_fmap",
+    )
+    apply_xfm_on_calibrated_fmap.inputs.output_type = "NIFTI_GZ"
+
+    # Apply the transformation on the magnitude image
+    apply_xfm_on_magnitude_fmap = apply_xfm_on_calibrated_fmap.clone("2e-2-MagFMapToB0")
+
+    # Smooth the registered (calibrated) fmap
+    smooth_calibrated_fmap = npe.Node(
+        interface=fsl.maths.IsotropicSmooth(),
+        name="smooth_calibrated_fmap",
+    )
+    smooth_calibrated_fmap.inputs.sigma = 4.0
+
+    outputnode = npe.Node(
+        niu.IdentityInterface(
+            fields=[
+                "smooth_calibrated_fmap",
+                "bet_magnitude_fmap_registered_onto_b0",
+                "registered_calibrated_fmap",
+            ]
+        ),
+        name="outputnode",
+    )
+
+    if output_dir:
+        write_results = npe.Node(name="write_results", interface=nio.DataSink())
+        write_results.inputs.base_directory = output_dir
+        write_results.inputs.parameterization = False
+
+    wf = npe.Workflow(name=name)
+
+    connections = [
+        # Bias field correction of the magnitude image
+        (inputnode, bias_magnitude_fmap, [("bias_magnitude_fmap", "input_image")]),
+        # Brain extraction of the magnitude image
+        (bias_magnitude_fmap, bet_magnitude_fmap, [("output_image", "in_file")]),
+        # Calibration of the FMap
+        (
+            bet_magnitude_fmap,
+            calibrate_fmap,
+            [
+                ("mask_file", "input_node.fmap_mask"),
+                ("out_file", "input_node.fmap_magnitude"),
+            ],
+        ),
+        (
+            inputnode,
+            calibrate_fmap,
+            [
+                ("fmap_phasediff", "input_node.fmap_phasediff"),
+                ("delta_echo_time", "input_node.delta_echo_time"),
+            ],
+        ),
+        # Register the BET magnitude fmap onto the BET b0
+        (
+            bet_magnitude_fmap,
+            register_bet_magnitude_fmap_onto_b0,
+            [("out_file", "in_file")],
+        ),
+        (
+            inputnode,
+            register_bet_magnitude_fmap_onto_b0,
+            [("reference_b0", "reference")],
+        ),
+        # Apply the transformation on the magnitude image
+        (
+            register_bet_magnitude_fmap_onto_b0,
+            apply_xfm_on_magnitude_fmap,
+            [("out_matrix_file", "in_matrix_file")],
+        ),
+        (
+            bias_magnitude_fmap,
+            apply_xfm_on_magnitude_fmap,
+            [("output_image", "in_file")],
+        ),
+        (inputnode, apply_xfm_on_magnitude_fmap, [("reference_b0", "reference")]),
+        # Apply the transformation on the calibrated fmap
+        (
+            register_bet_magnitude_fmap_onto_b0,
+            apply_xfm_on_calibrated_fmap,
+            [("out_matrix_file", "in_matrix_file")],
+        ),
+        (
+            calibrate_fmap,
+            apply_xfm_on_calibrated_fmap,
+            [("output_node.calibrated_fmap", "in_file")],
+        ),
+        (inputnode, apply_xfm_on_calibrated_fmap, [("reference_b0", "reference")]),
+        # Smooth the registered (calibrated) fmap
+        (
+            apply_xfm_on_calibrated_fmap,
+            smooth_calibrated_fmap,
+            [("out_file", "in_file")],
+        ),
+        # Output connections
+        (smooth_calibrated_fmap, outputnode, [("out_file", "smooth_calibrated_fmap")]),
+        (
+            register_bet_magnitude_fmap_onto_b0,
+            outputnode,
+            [("out_file", "bet_magnitude_fmap_registered_onto_b0")],
+        ),
+        (
+            apply_xfm_on_calibrated_fmap,
+            outputnode,
+            [("out_file", "registered_calibrated_fmap")],
+        ),
+    ]
+
+    if output_dir:
+        connections += [
+            (
+                outputnode,
+                write_results,
+                [("smooth_calibrated_fmap", "smooth_calibrated_fmap")],
+            ),
+            (
+                outputnode,
+                write_results,
+                [
+                    (
+                        "bet_magnitude_fmap_registered_onto_b0",
+                        "bet_magnitude_fmap_registered_onto_b0",
+                    )
+                ],
+            ),
+            (
+                outputnode,
+                write_results,
+                [("registered_calibrated_fmap", "registered_calibrated_fmap")],
+            ),
+        ]
+
+    wf.connect(connections)
+
+    return wf
