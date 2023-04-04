@@ -2,7 +2,9 @@ from typing import List
 
 
 def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> str:
-    """Threshold the t_map with t_threshold. Pixel intensities that are less than t_threshold are set to 0, other values
+    """Threshold the t_map with t_threshold.
+    
+    Pixel intensities that are less than t_threshold are set to 0, other values
     are left unchanged.
 
     Parameters
@@ -23,7 +25,6 @@ def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> 
 
     import nibabel as nib
 
-    print("t_map: ", t_map)
     original_nifti = nib.load(t_map)
     data = original_nifti.get_fdata(dtype="float32")
     data[data < t_threshold] = 0
@@ -42,7 +43,9 @@ def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> 
 def cluster_correction(
     t_map: str, t_thresh: float, c_thresh: int, output_name: str = None
 ) -> str:
-    """Performs cluster correction. First t_map is thresholded with t_thresh (like in peak_correction()). Then, clusters
+    """Performs cluster correction.
+    
+    First t_map is thresholded with t_thresh (like in peak_correction()). Then, clusters
     that have a size less than c_thresh are removed
 
     Parameters
@@ -107,7 +110,7 @@ def produce_figures(
     c_thresh: int,
     n_cuts: int,
 ) -> List[str]:
-    """Produce the output figures
+    """Produce the output figures.
 
     Parameters
     ----------
@@ -199,7 +202,7 @@ def generate_output(t_map: str, figs: List[str], correction_name: str) -> None:
         Path to t-map on which whole pipeline was based
     figs: list of str
         Paths to figs to save
-    name: str
+    correction_name: str
         Name of the correction (ex: cluster_correction_FWE)
     """
     from os import makedirs
