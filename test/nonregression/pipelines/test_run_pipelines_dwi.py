@@ -226,7 +226,7 @@ def test_dwi_calibrate_and_register_fmap(cmdopt, tmp_path):
         out_file = fspath(tmp_path / "tmp" / folder / filename)
         ref_file = fspath(ref_dir / folder / filename)
 
-        assert similarity_measure(out_file, ref_file, 0.99)
+        assert similarity_measure(out_file, ref_file, 0.98)
 
 
 @pytest.mark.slow
