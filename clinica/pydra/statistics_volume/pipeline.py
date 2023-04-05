@@ -92,8 +92,8 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     from typing import Any
 
     import clinica.pydra.statistics_volume.task as utils
-    from clinica.iotools.converters.genfi_to_bids.genfi_to_bids_utils import get_parent
     from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.filemanip import get_parent
     from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
     if spm_standalone_is_available():
