@@ -2,9 +2,7 @@ import typing as ty
 from pathlib import Path
 
 
-def get_group_1_and_2(
-    tsv: str, contrast: str
-) -> tuple:
+def get_group_1_and_2(tsv: str, contrast: str) -> tuple:
     """Based on the TSV file given in parameter, compute indexes of each group
 
     Parameters
@@ -223,10 +221,15 @@ def write_matlab_model(
     from numbers import Number
     from os import remove
     from os.path import abspath, isfile
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import create_spm_output_folder  # noqa
 
     import pandas as pds
 
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        convert_to_numeric,
+        create_spm_output_folder,
+        set_output_and_groups,
+        write_covariates,
+    )
     from clinica.utils.exceptions import ClinicaException
 
     # Get template for model creation
@@ -385,11 +388,11 @@ def run_m_script(m_file: str) -> str:
 
     from os.path import abspath, dirname, isfile, join
     from pathlib import Path
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
-        run_matlab_script_with_spm_standalone,
-        run_matlab_script_with_matlab,
-    )
 
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        run_matlab_script_with_matlab,
+        run_matlab_script_with_spm_standalone,
+    )
     from clinica.utils.spm import spm_standalone_is_available
 
     if not Path(m_file).exists():
