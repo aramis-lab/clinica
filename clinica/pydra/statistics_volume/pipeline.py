@@ -43,6 +43,32 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
     return parameters
 
 
+def _build_query(parameters: dict) -> dict:
+    input_name = parameters["orig_input_data_volume"].replace("-", "_")
+    query = {
+        "group_label": parameters["group_label_dartel"],
+        "fwhm": parameters["full_width_at_half_maximum"],
+    }
+    if input_name == "pet_volume":
+        query.update(
+            {
+                "acq_label": parameters["acq_label"],
+                "suvr_reference_region": parameters["suvr_reference_region"],
+                "use_brainmasked_image": True,
+                "use_pvc_data": parameters["use_pvc_data"],
+            }
+        )
+    elif input_name == "t1_volume":
+        query.update({"tissue_number": 1, "modulation": True})
+
+    elif input_name == "custom_pipeline":
+        query = {
+            "pattern": parameters["custom_file"],
+            "description": "custom file provided by user",
+        }
+    return parameters
+
+
 @clinica_io
 def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     """Build the core workflow for the Statistics Volume pipeline.
@@ -76,27 +102,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     parameters = _check_pipeline_parameters(parameters)
 
     input_name = parameters["orig_input_data_volume"].replace("-", "_")
-    query = {
-        "group_label": parameters["group_label_dartel"],
-        "fwhm": parameters["full_width_at_half_maximum"],
-    }
-    if input_name == "pet_volume":
-        query.update(
-            {
-                "acq_label": parameters["acq_label"],
-                "suvr_reference_region": parameters["suvr_reference_region"],
-                "use_brainmasked_image": True,
-                "use_pvc_data": parameters["use_pvc_data"],
-            }
-        )
-    elif input_name == "t1_volume":
-        query.update({"tissue_number": 1, "modulation": True})
-
-    elif input_name == "custom_pipeline":
-        query = {
-            "pattern": parameters["custom_file"],
-            "description": "custom file provided by user",
-        }
+    query = _build_query(parameters)
 
     input_spec = pydra.specs.SpecInfo(
         name="Input",

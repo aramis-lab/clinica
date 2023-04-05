@@ -251,8 +251,6 @@ def run_statistics_volume_t1(
         nib.load(fspath(ref_t_stat)).get_fdata(dtype="float32"),
     )
 
-    # Remove data in out folder
-
 
 def run_statistics_volume_correction(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
