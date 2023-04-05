@@ -4,7 +4,7 @@ from pathlib import Path
 
 def get_group_1_and_2(
     tsv: str, contrast: str
-) -> ty.Tuple[ty.List[int], ty.List[int], ty.List[str]]:
+) -> tuple:
     """Based on the TSV file given in parameter, compute indexes of each group
 
     Parameters
@@ -223,6 +223,7 @@ def write_matlab_model(
     from numbers import Number
     from os import remove
     from os.path import abspath, isfile
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import create_spm_output_folder  # noqa
 
     import pandas as pds
 
@@ -384,6 +385,10 @@ def run_m_script(m_file: str) -> str:
 
     from os.path import abspath, dirname, isfile, join
     from pathlib import Path
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        run_matlab_script_with_spm_standalone,
+        run_matlab_script_with_matlab,
+    )
 
     from clinica.utils.spm import spm_standalone_is_available
 
