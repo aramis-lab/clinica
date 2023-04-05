@@ -66,6 +66,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     from typing import Any
 
     import clinica.pydra.statistics_volume.task as utils
+    from clinica.iotools.converters.genfi_to_bids.genfi_to_bids_utils import get_parent
     from clinica.utils.exceptions import ClinicaException
     from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
@@ -131,7 +132,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             tsv=parameters["tsv_file"],
             contrast=parameters["contrast"],
             template_file=join(
-                dirname(dirname(dirname(__file__))),
+                get_parent(__file__, n=3),
                 "pipelines",
                 "statistics_volume",
                 "template_model_creation.m",
@@ -153,7 +154,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             name="model_estimation",
             mat_file=wf.run_spm_model_creation.lzout.output_mat_file,
             template_file=join(
-                dirname(dirname(dirname(__file__))),
+                get_parent(__file__, n=3),
                 "pipelines",
                 "statistics_volume",
                 "template_model_estimation.m",
@@ -172,7 +173,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             name="model_contrast",
             mat_file=wf.run_spm_model_estimation.lzout.output_mat_file,
             template_file=join(
-                dirname(dirname(dirname(__file__))),
+                get_parent(__file__, n=3),
                 "pipelines",
                 "statistics_volume",
                 "template_model_contrast.m",
@@ -193,7 +194,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             name="model_result_no_correction",
             mat_file=wf.run_spm_model_contrast.lzout.output_mat_file,
             template_file=join(
-                dirname(dirname(dirname(__file__))),
+                get_parent(__file__, n=3),
                 "pipelines",
                 "statistics_volume",
                 "template_model_results.m",

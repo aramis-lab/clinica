@@ -248,6 +248,7 @@ def read_imaging_data(source_path: PathLike) -> DataFrame:
     df_dicom: DataFrame
         Dataframe containing the data extracted.
     """
+
     return filter_dicoms(
         pd.DataFrame(find_dicoms(source_path), columns=["source_path", "source"])
     )
@@ -432,31 +433,6 @@ def compute_runs(df: DataFrame) -> DataFrame:
     return df_alt.assign(run_num=lambda df: df.run.apply(lambda x: f"run-0{int(x)+1}"))
 
 
-def get_parent(path: str, n: int = 1) -> Path:
-    """Get the path to the nth parent.
-
-    Parameters
-    ----------
-    path: str
-        path to a file.
-    n: int
-        depth we want to go up in the parents.
-
-    Returns
-    -------
-    Path
-        Path to a parent directory.
-
-    Examples
-    --------
-    >>> get_parent('/path/to/a/file', 2)
-    /path/to
-    """
-    if n <= 0:
-        return Path(path)
-    return get_parent(Path(path).parent, n - 1)
-
-
 def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
     """This function uses the raw information extracted from the images,
     to obtain all the information necessary for the BIDS conversion.
@@ -471,6 +447,7 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
     df_sub_ses_run: DataFrame
         Dataframe with the data necessary for the BIDS
     """
+    from clinica.utils.filemanip import get_parent
 
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(

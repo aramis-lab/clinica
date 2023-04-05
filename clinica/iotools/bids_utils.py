@@ -890,6 +890,7 @@ def run_dcm2niix(
 
     from clinica.utils.stream import cprint
 
+    cprint(msg=f"Attempting to convert {output_fmt}")
     command = _build_dcm2niix_command(
         input_dir, output_dir, output_fmt, compress, bids_sidecar
     )

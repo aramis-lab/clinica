@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 
 
@@ -597,3 +598,28 @@ def _handle_missing_phase_encoding_direction(
     raise ClinicaException(
         "Could not recover the PhaseEncodingDirection from JSON file."
     )
+
+
+def get_parent(path: str, n: int = 1) -> Path:
+    """Get the path to the nth parent.
+
+    Parameters
+    ----------
+    path: str
+        path to a file.
+    n: int
+        depth we want to go up in the parents.
+
+    Returns
+    -------
+    Path
+        Path to a parent directory.
+
+    Examples
+    --------
+    >>> get_parent('/path/to/a/file', 2)
+    /path/to
+    """
+    if n <= 0:
+        return Path(path)
+    return get_parent(Path(path).parent, n - 1)
