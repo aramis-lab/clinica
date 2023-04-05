@@ -659,6 +659,12 @@ def copy_and_rename_spm_output_files(
     from os.path import abspath, dirname, isdir, isfile, join
     from shutil import copyfile
 
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        rename_spm_figures,
+        rename_spm_t_maps,
+        rename_beta_files,
+        rename_spm_contrast_files,
+    )
     spm_dir = dirname(spm_mat)
     if not isfile(spm_mat):
         if not isdir(spm_dir):
