@@ -197,7 +197,7 @@ def ants_apply_transforms(
 
 def init_input_node(t1w, dwi, bvec, bval, dwi_json):
     """Initialize the pipeline."""
-    from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
+    from clinica.utils.dwi import DWIDataset, bids_dir_to_fsl_dir, check_dwi_volume
     from clinica.utils.filemanip import (
         extract_metadata_from_json,
         get_subject_id,
