@@ -112,6 +112,7 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     -m "not slow" \
+                    --dist loadgroup \
                     ./nonregression/pipelines/test_run_pipelines_stats.py
                 '''
               }
@@ -341,6 +342,7 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     -m "not slow" \
+                    --dist loadgroup \
                     ./nonregression/pipelines/test_run_pipelines_stats.py
                 '''
               }
