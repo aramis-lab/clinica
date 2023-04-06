@@ -28,7 +28,13 @@ def test_statistics_surface(cmdopt, tmp_path):
 
 
 @pytest.mark.fast
+@pytest.mark.xdist_group(name="test-group-using-matlab")
 def test_statistics_volume_pet(cmdopt, tmp_path):
+    """Test the StatisticsVolume pipeline with inputs from PETVolume.
+
+    This test should run in the same process as test_statistics_volume_t1
+    to avoid MATLAB race conditions.
+    """
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
     input_dir, tmp_dir, ref_dir = configure_paths(
@@ -38,7 +44,13 @@ def test_statistics_volume_pet(cmdopt, tmp_path):
 
 
 @pytest.mark.fast
+@pytest.mark.xdist_group(name="test-group-using-matlab")
 def test_statistics_volume_t1(cmdopt, tmp_path):
+    """Test the StatisticsVolume pipeline with inputs from T1Volume.
+
+    This test should run in the same process as test_statistics_volume_pet
+    to avoid MATLAB race conditions.
+    """
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
     input_dir, tmp_dir, ref_dir = configure_paths(
