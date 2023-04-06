@@ -66,7 +66,7 @@ def _build_query(parameters: dict) -> dict:
             "pattern": parameters["custom_file"],
             "description": "custom file provided by user",
         }
-    return parameters
+    return query
 
 
 @clinica_io
