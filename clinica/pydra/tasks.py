@@ -19,12 +19,22 @@ def download_file(url: str, to: str) -> PurePath:
 
 @task
 @annotate({"return": {"mni_template_file": PurePath}})
-def download_mni_template() -> PurePath:
+def download_mni_template_2009a() -> PurePath:
+    return _download_mni_template(version="09a")
+
+
+@task
+@annotate({"return": {"mni_template_file": PurePath}})
+def download_mni_template_2009c() -> PurePath:
+    return _download_mni_template(version="09c")
+
+
+def _download_mni_template(version: str) -> PurePath:
     from pathlib import Path
 
     return download_file(
-        url="https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09c.nii.gz",
-        to=str(Path.cwd() / "mni_icbm152_t1_tal_nlin_sym_09c.nii.gz"),
+        url=f"https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_{version}.nii.gz",
+        to=str(Path.cwd() / f"mni_icbm152_t1_tal_nlin_sym_{version}.nii.gz"),
     )
 
 
