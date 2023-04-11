@@ -36,14 +36,13 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     if spm_standalone_is_available():
         use_spm_standalone()
 
-    input_name = "t_map"
     query = {"pattern": parameters["t_map"] + "*", "description": "statistics t map"}
 
     input_spec = pydra.specs.SpecInfo(
         name="Input",
         fields=[
             ("_graph_checksums", Any),
-            (input_name, dict, query, {"mandatory": True}),
+            ("t_map", dict, query, {"mandatory": True}),
         ],
         bases=(pydra.specs.BaseSpec,),
     )
