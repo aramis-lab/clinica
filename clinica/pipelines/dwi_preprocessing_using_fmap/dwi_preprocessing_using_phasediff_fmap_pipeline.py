@@ -276,32 +276,26 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        import nipype.interfaces.ants as ants
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix3 as mrtrix3
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
-        from nipype.interfaces.fsl.epi import Eddy
 
-        from clinica.utils.dwi import (
-            compute_average_b0,
-            generate_acq_file,
-            generate_index_file,
+        from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+            eddy_fsl_pipeline,
         )
+        from clinica.utils.dwi import compute_average_b0
 
         from .dwi_preprocessing_using_phasediff_fmap_utils import (
-            get_grad_fsl,
             init_input_node,
             print_end_pipeline,
         )
         from .dwi_preprocessing_using_phasediff_fmap_workflows import (
-            prepare_phasediff_fmap,
+            calibrate_and_register_fmap,
+            compute_reference_b0,
         )
 
-        # Step 0: Initialization
-        # ======================
-        # Initialize input parameters and print begin message
         init_node = npe.Node(
             interface=nutil.Function(
                 input_names=self.get_input_fields(),
@@ -321,107 +315,21 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             name="0-InitNode",
         )
 
-        # Generate (bvec, bval) tuple for MRtrix interfaces
-        get_grad_fsl = npe.Node(
-            nutil.Function(
-                input_names=["bval", "bvec"],
-                output_names=["grad_fsl"],
-                function=get_grad_fsl,
-            ),
-            name="0-GetFslGrad",
+        reference_b0 = compute_reference_b0(
+            b_value_threshold=self.parameters["low_bval"],
+            use_cuda=self.parameters["use_cuda"],
+            initrand=self.parameters["initrand"],
         )
-
-        # Generate <image_id>_acq.txt for eddy
-        gen_acq_txt = npe.Node(
-            nutil.Function(
-                input_names=[
-                    "in_dwi",
-                    "fsl_phase_encoding_direction",
-                    "total_readout_time",
-                    "image_id",
-                ],
-                output_names=["out_acq"],
-                function=generate_acq_file,
-            ),
-            name="0-GenerateAcqFile",
-        )
-
-        # Generate <image_id>_index.txt for eddy
-        gen_index_txt = npe.Node(
-            nutil.Function(
-                input_names=["in_bval", "low_bval", "image_id"],
-                output_names=["out_index"],
-                function=generate_index_file,
-            ),
-            name="0-GenerateIndexFile",
-        )
-        gen_index_txt.inputs.low_bval = self.parameters["low_bval"]
-
-        # Step 1: Computation of the reference b0 (i.e. average b0 but with EPI distortions)
-        # =======================================
-        # Compute whole brain mask
-        pre_mask_b0 = npe.Node(mrtrix3.BrainMask(), name="1a-PreMaskB0")
-        pre_mask_b0.inputs.out_file = (
-            "brainmask.nii.gz"  # On default, .mif file is generated
-        )
-
-        # Run eddy without calibrated fmap
-        pre_eddy = npe.Node(name="1b-PreEddy", interface=Eddy())
-        pre_eddy.inputs.repol = True
-        pre_eddy.inputs.use_cuda = self.parameters["use_cuda"]
-        pre_eddy.inputs.initrand = self.parameters["initrand"]
-
-        # Compute the reference b0
-        compute_ref_b0 = npe.Node(
-            niu.Function(
-                input_names=["in_dwi", "in_bval"],
-                output_names=["out_b0_average"],
-                function=compute_average_b0,
-            ),
-            name="1c-ComputeReferenceB0",
-        )
-        compute_ref_b0.inputs.low_bval = self.parameters["low_bval"]
-
-        # Compute brain mask from reference b0
-        mask_ref_b0 = npe.Node(
-            fsl.BET(mask=True, robust=True), name="1d-MaskReferenceB0"
-        )
-
-        # Step 2: Calibrate and register FMap
-        # ===================================
-        # Bias field correction of the magnitude image
-        bias_mag_fmap = npe.Node(
-            ants.N4BiasFieldCorrection(dimension=3), name="2a-N4MagnitudeFmap"
-        )
-        # Brain extraction of the magnitude image
-        bet_mag_fmap = npe.Node(
-            fsl.BET(frac=0.4, mask=True), name="2b-BetN4MagnitudeFmap"
-        )
-
-        # Calibrate FMap
-        calibrate_fmap = prepare_phasediff_fmap(name="2c-CalibrateFMap")
-
-        # Register the BET magnitude fmap onto the BET b0
-        bet_mag_fmap2b0 = npe.Node(
-            interface=fsl.FLIRT(), name="2d-RegistrationBetMagToB0"
-        )
-        bet_mag_fmap2b0.inputs.dof = 6
-        bet_mag_fmap2b0.inputs.output_type = "NIFTI_GZ"
-
-        # Apply the transformation on the calibrated fmap
-        fmap2b0 = npe.Node(interface=fsl.ApplyXFM(), name="2e-1-FMapToB0")
-        fmap2b0.inputs.output_type = "NIFTI_GZ"
-
-        # Apply the transformation on the magnitude image
-        mag_fmap2b0 = fmap2b0.clone("2e-2-MagFMapToB0")
-
-        # Smooth the registered (calibrated) fmap
-        smoothing = npe.Node(interface=fsl.maths.IsotropicSmooth(), name="2f-Smoothing")
-        smoothing.inputs.sigma = 4.0
+        fmap_calibration_and_registration = calibrate_and_register_fmap()
 
         # Step 3: Run FSL eddy
         # ====================
-        eddy = pre_eddy.clone("3-Eddy")
+        eddy = eddy_fsl_pipeline(
+            use_cuda=self.parameters["use_cuda"],
+            initrand=self.parameters["initrand"],
+            image_id=True,
+            field=True,
+        )
 
         # Step 4: Bias correction
         # =======================
@@ -431,10 +339,18 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         # Step 5: Final brainmask
         # =======================
         # Compute average b0 on corrected dataset (for brain mask extraction)
-        compute_avg_b0 = compute_ref_b0.clone("5a-ComputeB0Average")
+        compute_avg_b0 = npe.Node(
+            niu.Function(
+                input_names=["in_dwi", "in_bval"],
+                output_names=["out_b0_average"],
+                function=compute_average_b0,
+            ),
+            name="5a-ComputeB0Average",
+        )
+        compute_avg_b0.inputs.low_bval = self.parameters["low_bval"]
 
         # Compute b0 mask on corrected avg b0
-        mask_avg_b0 = mask_ref_b0.clone("5b-MaskB0")
+        mask_avg_b0 = npe.Node(fsl.BET(mask=True, robust=True), name="5b-MaskB0")
 
         # Print end message
         print_end_message = npe.Node(
@@ -444,113 +360,112 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             name="99-WriteEndMessage",
         )
 
-        # Connection
-        # ==========
-        # fmt: off
-        self.connect(
-            [
-                # Step 0: Initialization
-                # ======================
-                # Initialize input parameters and print begin message
-                (self.input_node, init_node, [("dwi", "dwi"),
-                                              ("bvec", "bvec"),
-                                              ("bval", "bval"),
-                                              ("dwi_json", "dwi_json"),
-                                              ("fmap_magnitude", "fmap_magnitude"),
-                                              ("fmap_phasediff", "fmap_phasediff"),
-                                              ("fmap_phasediff_json", "fmap_phasediff_json")]),
-                # Generate (bvec, bval) tuple for MRtrix interfaces
-                (init_node, get_grad_fsl, [("bval", "bval"),
-                                           ("bvec", "bvec")]),
-                # Generate <image_id>_acq.txt for eddy
-                (init_node, gen_acq_txt, [("dwi", "in_dwi"),
-                                          ("total_readout_time", "total_readout_time"),
-                                          ("phase_encoding_direction", "fsl_phase_encoding_direction"),
-                                          ("image_id", "image_id")]),
-                # Generate <image_id>_index.txt for eddy
-                (init_node, gen_index_txt, [("bval", "in_bval"),
-                                            ("image_id", "image_id")]),
+        connections = [
+            (
+                self.input_node,
+                init_node,
+                [
+                    ("dwi", "dwi"),
+                    ("bvec", "bvec"),
+                    ("bval", "bval"),
+                    ("dwi_json", "dwi_json"),
+                    ("fmap_magnitude", "fmap_magnitude"),
+                    ("fmap_phasediff", "fmap_phasediff"),
+                    ("fmap_phasediff_json", "fmap_phasediff_json"),
+                ],
+            ),
+            (
+                init_node,
+                reference_b0,
+                [
+                    ("bval", "inputnode.b_values_filename"),
+                    ("bvec", "inputnode.b_vectors_filename"),
+                    ("dwi", "inputnode.dwi_filename"),
+                    ("total_readout_time", "inputnode.total_readout_time"),
+                    ("phase_encoding_direction", "inputnode.phase_encoding_direction"),
+                    ("image_id", "inputnode.image_id"),
+                ],
+            ),
+            (
+                init_node,
+                fmap_calibration_and_registration,
+                [
+                    ("fmap_magnitude", "inputnode.bias_magnitude_fmap"),
+                    ("fmap_phasediff", "inputnode.fmap_phasediff"),
+                    ("delta_echo_time", "inputnode.delta_echo_time"),
+                ],
+            ),
+            (
+                reference_b0,
+                fmap_calibration_and_registration,
+                [("outputnode.reference_b0", "inputnode.reference_b0")],
+            ),
+            (
+                init_node,
+                eddy,
+                [
+                    ("dwi", "inputnode.dwi_filename"),
+                    ("bval", "inputnode.b_values_filename"),
+                    ("bvec", "inputnode.b_vectors_filename"),
+                    ("image_id", "inputnode.image_id"),
+                ],
+            ),
+            (
+                fmap_calibration_and_registration,
+                eddy,
+                [("outputnode.smooth_calibrated_fmap", "inputnode.field")],
+            ),
+            (reference_b0, eddy, [("outputnode.brainmask", "inputnode.in_mask")]),
+            # Step 4: Bias correction
+            # =======================
+            (init_node, bias, [("bval", "in_bval")]),
+            (
+                eddy,
+                bias,
+                [
+                    ("outputnode.out_rotated_bvecs", "in_bvec"),
+                    ("outputnode.out_corrected", "in_file"),
+                ],
+            ),
+            # Step 5: Final brainmask
+            # =======================
+            # Compute average b0 on corrected dataset (for brain mask extraction)
+            (init_node, compute_avg_b0, [("bval", "in_bval")]),
+            (bias, compute_avg_b0, [("out_file", "in_dwi")]),
+            # Compute b0 mask on corrected avg b0
+            (compute_avg_b0, mask_avg_b0, [("reference_b0", "in_file")]),
+            # Print end message
+            (init_node, print_end_message, [("image_id", "image_id")]),
+            (mask_avg_b0, print_end_message, [("mask_file", "final_file")]),
+            # Output node
+            (init_node, self.output_node, [("bval", "preproc_bval")]),
+            (
+                eddy,
+                self.output_node,
+                [("outputnode.out_rotated_bvecs", "preproc_bvec")],
+            ),
+            (bias, self.output_node, [("out_file", "preproc_dwi")]),
+            (mask_avg_b0, self.output_node, [("mask_file", "b0_mask")]),
+            (
+                fmap_calibration_and_registration,
+                self.output_node,
+                [
+                    (
+                        "outputnode.bet_magnitude_fmap_registered_onto_b0",
+                        "magnitude_on_b0",
+                    )
+                ],
+            ),
+            (
+                fmap_calibration_and_registration,
+                self.output_node,
+                [("outputnode.registered_calibrated_fmap", "calibrated_fmap_on_b0")],
+            ),
+            (
+                fmap_calibration_and_registration,
+                self.output_node,
+                [("outputnode.smooth_calibrated_fmap", "smoothed_fmap_on_b0")],
+            ),
+        ]
 
-                # Step 1: Computation of the reference b0 (i.e. average b0 but with EPI distortions)
-                # =======================================
-                # Compute whole brain mask
-                (get_grad_fsl, pre_mask_b0, [("grad_fsl", "grad_fsl")]),
-                (init_node, pre_mask_b0, [("dwi", "in_file")]),
-                # Run eddy without calibrated fmap
-                (init_node, pre_eddy, [("dwi", "in_file"),
-                                       ("bval", "in_bval"),
-                                       ("bvec", "in_bvec"),
-                                       ("image_id", "out_base")]),
-                (gen_acq_txt, pre_eddy, [("out_acq", "in_acqp")]),
-                (gen_index_txt, pre_eddy, [("out_index", "in_index")]),
-                (pre_mask_b0, pre_eddy, [("out_file", "in_mask")]),
-                # Compute the reference b0
-                (init_node, compute_ref_b0, [("bval", "in_bval")]),
-                (pre_eddy, compute_ref_b0, [("out_corrected", "in_dwi")]),
-                # Compute brain mask from reference b0
-                (compute_ref_b0, mask_ref_b0, [("out_b0_average", "in_file")]),
-
-                # Step 2: Calibrate and register FMap
-                # ===================================
-                # Bias field correction of the magnitude image
-                (init_node, bias_mag_fmap, [("fmap_magnitude", "input_image")]),
-                # Brain extraction of the magnitude image
-                (bias_mag_fmap, bet_mag_fmap, [("output_image", "in_file")]),
-                # Calibration of the FMap
-                (bet_mag_fmap, calibrate_fmap, [("mask_file", "input_node.fmap_mask"),
-                                                ("out_file", "input_node.fmap_magnitude")]),
-                (init_node, calibrate_fmap, [("fmap_phasediff", "input_node.fmap_phasediff"),
-                                             ("delta_echo_time", "input_node.delta_echo_time")]),
-                # Register the BET magnitude fmap onto the BET b0
-                (bet_mag_fmap, bet_mag_fmap2b0, [("out_file", "in_file")]),
-                (mask_ref_b0, bet_mag_fmap2b0, [("out_file", "reference")]),
-                # Apply the transformation on the magnitude image
-                (bet_mag_fmap2b0, mag_fmap2b0, [("out_matrix_file", "in_matrix_file")]),
-                (bias_mag_fmap, mag_fmap2b0, [("output_image", "in_file")]),
-                (mask_ref_b0, mag_fmap2b0, [("out_file", "reference")]),
-                # Apply the transformation on the calibrated fmap
-                (bet_mag_fmap2b0, fmap2b0, [("out_matrix_file", "in_matrix_file")]),
-                (calibrate_fmap, fmap2b0, [("output_node.calibrated_fmap", "in_file")]),
-                (mask_ref_b0, fmap2b0, [("out_file", "reference")]),
-                # # Smooth the registered (calibrated) fmap
-                (fmap2b0, smoothing, [("out_file", "in_file")]),
-
-                # Step 3: Run FSL eddy
-                # ====================
-                (init_node, eddy, [("dwi", "in_file"),
-                                   ("bval", "in_bval"),
-                                   ("bvec", "in_bvec"),
-                                   ("image_id", "out_base")]),
-                (gen_acq_txt, eddy, [("out_acq", "in_acqp")]),
-                (gen_index_txt, eddy, [("out_index", "in_index")]),
-                (smoothing, eddy, [("out_file", "field")]),
-                (pre_mask_b0, eddy, [("out_file", "in_mask")]),
-
-                # Step 4: Bias correction
-                # =======================
-                (init_node, bias, [("bval", "in_bval")]),
-                (eddy, bias, [("out_rotated_bvecs", "in_bvec"),
-                              ("out_corrected", "in_file")]),
-                # Step 5: Final brainmask
-                # =======================
-                # Compute average b0 on corrected dataset (for brain mask extraction)
-                (init_node, compute_avg_b0, [("bval", "in_bval")]),
-                (bias, compute_avg_b0, [("out_file", "in_dwi")]),
-                # Compute b0 mask on corrected avg b0
-                (compute_avg_b0, mask_avg_b0, [("out_b0_average", "in_file")]),
-
-                # Print end message
-                (init_node, print_end_message, [("image_id", "image_id")]),
-                (mask_avg_b0, print_end_message, [("mask_file", "final_file")]),
-
-                # Output node
-                (init_node, self.output_node, [("bval", "preproc_bval")]),
-                (eddy, self.output_node, [("out_rotated_bvecs", "preproc_bvec")]),
-                (bias, self.output_node, [("out_file", "preproc_dwi")]),
-                (mask_avg_b0, self.output_node, [("mask_file", "b0_mask")]),
-                (bet_mag_fmap2b0, self.output_node, [("out_file", "magnitude_on_b0")]),
-                (fmap2b0, self.output_node, [("out_file", "calibrated_fmap_on_b0")]),
-                (smoothing, self.output_node, [("out_file", "smoothed_fmap_on_b0")]),
-            ]
-        )
-        # fmt: on
+        self.connect(connections)

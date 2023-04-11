@@ -1,5 +1,59 @@
-def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
-    """Use FSL eddy for head motion correction and eddy current distortion correction."""
+from nipype.pipeline.engine import Workflow
+
+
+def eddy_fsl_pipeline(
+    use_cuda: bool,
+    initrand: bool,
+    image_id: bool = False,
+    field: bool = False,
+    name: str = "eddy_fsl",
+) -> Workflow:
+    """Build a FSL-based pipeline for head motion correction and eddy current distortion correction.
+
+    This pipeline needs FSL as it relies on the Eddy executable.
+
+    Parameters
+    ----------
+    use_cuda : bool
+        Boolean to indicate whether cuda should be used or not.
+
+    initrand : bool
+        ????
+
+    image_id : bool, optional
+        Boolean to indicate whether the Eddy node should expect
+        a value for its 'out_base' parameter. This is used for
+        building the names of the output files.
+        Default=False.
+
+    field : bool, optional
+        Boolean to indicate whether the Eddy node should expect
+        a value for its 'field' input.
+        Default=False.
+
+    name : str, optional
+        Name of the pipeline. Default='eddy_fsl'.
+
+    Returns
+    -------
+    Workflow :
+        The Nipype workflow.
+        This workflow has the following inputs:
+            - "dwi_filename": The path to the DWI image
+            - "b_vectors_filename": The path to the associated B-vectors file
+            - "b_values_filename": The path to the associated B-values file
+            - "in_mask": The path to the mask image to be provided to Eddy
+            - "image_id": Prefix to be used for output files
+            - "field": The path to the field image to be used by Eddy
+            - "ref_b0": ???
+            - "total_readout_time": The total readout time extracted from JSON metadata
+            - "phase_encoding_direction": The phase encoding direction extracted from JSON metadata
+
+        And the following outputs:
+            - "out_parameter": Path to the file storing the output parameters
+            - "out_corrected": Path to the corrected image
+            - "out_rotated_bvecs": Path to the file holding the rotated B-vectors
+    """
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     from nipype.interfaces.fsl.epi import Eddy
@@ -9,10 +63,12 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     inputnode = pe.Node(
         niu.IdentityInterface(
             fields=[
-                "in_file",
-                "in_bvec",
-                "in_bval",
+                "dwi_filename",
+                "b_vectors_filename",
+                "b_values_filename",
                 "in_mask",
+                "image_id",
+                "field",
                 "ref_b0",
                 "total_readout_time",
                 "phase_encoding_direction",
@@ -24,9 +80,10 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     generate_acq = pe.Node(
         niu.Function(
             input_names=[
-                "in_dwi",
+                "dwi_filename",
                 "fsl_phase_encoding_direction",
                 "total_readout_time",
+                "image_id",
             ],
             output_names=["out_file"],
             function=generate_acq_file,
@@ -36,13 +93,12 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
 
     generate_index = pe.Node(
         niu.Function(
-            input_names=["in_bval", "low_bval"],
+            input_names=["b_values_filename"],
             output_names=["out_file"],
             function=generate_index_file,
         ),
         name="generate_index",
     )
-    generate_index.inputs.low_bval = low_bval
 
     eddy = pe.Node(interface=Eddy(), name="eddy_fsl")
     eddy.inputs.repol = True
@@ -57,28 +113,39 @@ def eddy_fsl_pipeline(low_bval, use_cuda, initrand, name="eddy_fsl"):
     )
 
     wf = pe.Workflow(name=name)
-    # fmt: off
-    wf.connect(
-        [
-            (inputnode, generate_acq, [('in_file', 'in_dwi')]),
-            (inputnode, generate_acq, [('total_readout_time', 'total_readout_time')]),
-            (inputnode, generate_acq, [('phase_encoding_direction', 'fsl_phase_encoding_direction')]),
 
-            (inputnode, generate_index, [('in_bval', 'in_bval')]),
+    connections = [
+        (inputnode, generate_acq, [("dwi_filename", "dwi_filename")]),
+        (inputnode, generate_acq, [("total_readout_time", "total_readout_time")]),
+        (
+            inputnode,
+            generate_acq,
+            [("phase_encoding_direction", "fsl_phase_encoding_direction")],
+        ),
+        (inputnode, generate_index, [("b_values_filename", "b_values_filename")]),
+        (inputnode, generate_index, [("image_id", "image_id")]),
+        (inputnode, eddy, [("b_vectors_filename", "in_bvec")]),
+        (inputnode, eddy, [("b_values_filename", "in_bval")]),
+        (inputnode, eddy, [("dwi_filename", "in_file")]),
+        (inputnode, eddy, [("in_mask", "in_mask")]),
+        (generate_acq, eddy, [("out_file", "in_acqp")]),
+        (generate_index, eddy, [("out_file", "in_index")]),
+        (eddy, outputnode, [("out_parameter", "out_parameter")]),
+        (eddy, outputnode, [("out_corrected", "out_corrected")]),
+        (eddy, outputnode, [("out_rotated_bvecs", "out_rotated_bvecs")]),
+    ]
 
-            (inputnode, eddy, [('in_bvec', 'in_bvec')]),
-            (inputnode, eddy, [('in_bval', 'in_bval')]),
-            (inputnode, eddy, [('in_file', 'in_file')]),
-            (inputnode, eddy, [('in_mask', 'in_mask')]),
-            (generate_acq, eddy, [('out_file', 'in_acqp')]),
-            (generate_index, eddy, [('out_file', 'in_index')]),
-
-            (eddy, outputnode, [('out_parameter', 'out_parameter')]),
-            (eddy, outputnode, [('out_corrected', 'out_corrected')]),
-            (eddy, outputnode, [('out_rotated_bvecs', 'out_rotated_bvecs')])
+    if image_id:
+        connections += [
+            (inputnode, generate_acq, [("image_id", "image_id")]),
+            (inputnode, eddy, [("image_id", "out_base")]),
         ]
-    )
-    # fmt: on
+
+    if field:
+        connections += [(inputnode, eddy, [("field", "field")])]
+
+    wf.connect(connections)
+
     return wf
 
 
@@ -124,10 +191,10 @@ def epi_pipeline(
 
     from .dwi_preprocessing_using_t1_utils import (
         ants_apply_transforms,
+        broadcast_matrix_filename_to_match_b_vector_length,
         change_itk_transform_type,
         delete_temp_dirs,
-        expend_matrix_list,
-        rotate_bvecs,
+        rotate_b_vectors,
     )
 
     inputnode = pe.Node(
@@ -145,18 +212,18 @@ def epi_pipeline(
 
     expend_matrix = pe.Node(
         interface=niu.Function(
-            input_names=["in_matrix", "in_bvec"],
+            input_names=["matrix_filename", "b_vectors_filename"],
             output_names=["out_matrix_list"],
-            function=expend_matrix_list,
+            function=broadcast_matrix_filename_to_match_b_vector_length,
         ),
         name="expend_matrix",
     )
 
     rot_bvec = pe.Node(
         niu.Function(
-            input_names=["in_matrix", "in_bvec"],
+            input_names=["matrix_filenames", "b_vectors_filename"],
             output_names=["out_file"],
-            function=rotate_bvecs,
+            function=rotate_b_vectors,
         ),
         name="Rotate_Bvec",
     )
@@ -282,10 +349,10 @@ def epi_pipeline(
             (split, pick_ref, [("out_files", "inlist")]),
             (pick_ref, flirt_b0_2_t1, [("out", "in_file")]),
             (inputnode, flirt_b0_2_t1, [("T1", "reference")]),
-            (inputnode, rot_bvec, [("bvec", "in_bvec")]),
-            (flirt_b0_2_t1, expend_matrix, [("out_matrix_file", "in_matrix")]),
-            (inputnode, expend_matrix, [("bvec", "in_bvec")]),
-            (expend_matrix, rot_bvec, [("out_matrix_list", "in_matrix")]),
+            (inputnode, rot_bvec, [("bvec", "b_vectors_filename")]),
+            (flirt_b0_2_t1, expend_matrix, [("out_matrix_file", "matrix_filename")]),
+            (inputnode, expend_matrix, [("bvec", "b_vectors_filename")]),
+            (expend_matrix, rot_bvec, [("out_matrix_list", "matrix_filenames")]),
             (inputnode, ants_registration, [("T1", "fixed_image")]),
             (flirt_b0_2_t1, ants_registration, [("out_file", "moving_image")]),
             (inputnode, c3d_flirt2ants, [("T1", "reference_file")]),
@@ -308,7 +375,7 @@ def epi_pipeline(
             (jacobian, jacmult, [("jacobian_image", "in_file")]),
             (jacmult, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
-            
+
             (merge, outputnode, [("merged_file", "DWIs_epicorrected")]),
             (flirt_b0_2_t1, outputnode, [("out_matrix_file", "DWI_2_T1_Coregistration_matrix")]),
             (ants_registration, outputnode, [("forward_warp_field", "epi_correction_deformation_field"),
@@ -317,8 +384,8 @@ def epi_pipeline(
             (merge_transform, outputnode, [("out", "warp_epi")]),
             (rot_bvec, outputnode, [("out_file", "out_bvec")]),
 
-            
-            
+
+
         ]
     )
     if delete_cache:
