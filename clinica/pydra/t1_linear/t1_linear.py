@@ -8,7 +8,7 @@ from pydra import Workflow
 from pydra.mark import annotate, task
 
 from clinica.pydra.engine import clinica_io
-from clinica.pydra.tasks import download_mni_template, download_ref_template
+from clinica.pydra.tasks import download_mni_template_2009c, download_ref_template
 
 n4_bias_field_correction = N4BiasFieldCorrection(bspline_fitting_distance=300)
 registration_syn_quick = RegistrationSynQuick(transform_type="a")
@@ -54,7 +54,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
 
     wf = Workflow(name, input_spec=input_spec)
 
-    wf.add(download_mni_template(name="download_mni_template"))
+    wf.add(download_mni_template_2009c(name="download_mni_template"))
 
     wf.add(download_ref_template(name="download_ref_template"))
 

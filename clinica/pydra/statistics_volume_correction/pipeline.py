@@ -39,8 +39,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     if spm_standalone_is_available():
         use_spm_standalone()
 
-    # parameters = _check_pipeline_parameters(parameters)
-
     input_name = "t_map"
     query = {"pattern": parameters["t_map"] + "*", "description": "statistics t map"}
 

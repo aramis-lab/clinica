@@ -33,7 +33,7 @@ pipeline_name = "pydra-statistics-volume-correction"
 def cli(
     caps_directory: str,
     t_map: str,
-    height_threshold: str,
+    height_threshold: float,
     fwep: float,
     fdrp: float,
     fwec: float,
