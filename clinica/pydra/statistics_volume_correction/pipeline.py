@@ -1,7 +1,5 @@
 import pydra
-from nipype.algorithms.misc import Gunzip
 from pydra import Workflow
-from pydra.tasks.nipype1.utils import Nipype1Task
 
 from clinica.pydra.engine import clinica_io
 
@@ -31,7 +29,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     import numpy as np
 
     import clinica.pydra.statistics_volume_correction.task as utils
-    from clinica.utils.exceptions import ClinicaException
     from clinica.utils.inputs import RemoteFileStructure, fetch_file
     from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
     from clinica.utils.stream import cprint
@@ -51,36 +48,25 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         bases=(pydra.specs.BaseSpec,),
     )
     wf = Workflow(name, input_spec=input_spec)
-    wf.add(
-        utils.peak_correction_task(
-            name="FWE_peak_correction_task",
-            t_map=wf.lzin.t_map,
-            t_threshold=parameters["FWEp"],
+
+    for threshold in ("FWE", "FDR"):
+        wf.add(
+            utils.peak_correction_task(
+                name=f"{threshold}_peak_correction_task",
+                t_map=wf.lzin.t_map,
+                t_threshold=parameters[f"{threshold}p"],
+            )
         )
-    )
-    wf.add(
-        utils.peak_correction_task(
-            name="FDR_peak_correction_task",
-            t_map=wf.lzin.t_map,
-            t_threshold=parameters["FDRp"],
+    for threshold in ("FWE", "FDR"):
+        wf.add(
+            utils.cluster_correction_task(
+                name=f"{threshold}_cluster_correction_task",
+                t_map=wf.lzin.t_map,
+                t_thresh=parameters["height_threshold"],
+                c_threshold=parameters[f"{threshold}c"],
+            )
         )
-    )
-    wf.add(
-        utils.cluster_correction_task(
-            name="FWE_cluster_correction_task",
-            t_map=wf.lzin.t_map,
-            t_thresh=parameters["height_threshold"],
-            c_thresh=parameters["FWEc"],
-        )
-    )
-    wf.add(
-        utils.cluster_correction_task(
-            name="FDR_cluster_correction_task",
-            t_map=wf.lzin.t_map,
-            t_thresh=parameters["height_threshold"],
-            c_thresh=parameters["FDRc"],
-        )
-    )
+
     root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
     path_to_mask = join(root, "resources", "masks")
     url_aramis = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/"
@@ -98,82 +84,32 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                 lvl="error",
             )
 
-    wf.add(
-        utils.produce_figures_task(
-            name="produce_figure_FWE_peak_correction",
-            nii_file=wf.FWE_peak_correction_task.lzout.nii_file,
-            template=join(path_to_mask, FILE1.filename),
-            type_of_correction="FWE",
-            t_thresh=parameters["FWEp"],
-            c_thresh=np.nan,
-            n_cuts=parameters["n_cuts"],
-        )
-    )
-    wf.add(
-        utils.produce_figures_task(
-            name="produce_figure_FDR_peak_correction",
-            nii_file=wf.FDR_peak_correction_task.lzout.nii_file,
-            template=join(path_to_mask, FILE1.filename),
-            type_of_correction="FDR",
-            t_thresh=parameters["FDRp"],
-            c_thresh=np.nan,
-            n_cuts=parameters["n_cuts"],
-        )
-    )
-
-    wf.add(
-        utils.produce_figures_task(
-            name="produce_figure_FWE_cluster_correction",
-            nii_file=wf.FWE_cluster_correction_task.lzout.nii_file,
-            template=join(path_to_mask, FILE1.filename),
-            type_of_correction="FWE",
-            t_thresh=parameters["height_threshold"],
-            c_thresh=parameters["FWEc"],
-            n_cuts=parameters["n_cuts"],
-        )
-    )
-    wf.add(
-        utils.produce_figures_task(
-            name="produce_figure_FDR_cluster_correction",
-            nii_file=wf.FDR_cluster_correction_task.lzout.nii_file,
-            template=join(path_to_mask, FILE1.filename),
-            type_of_correction="FDR",
-            t_thresh=parameters["height_threshold"],
-            c_thresh=parameters["FDRc"],
-            n_cuts=parameters["n_cuts"],
-        )
-    )
-    wf.add(
-        utils.generate_output_task(
-            name="save_figure_peak_correction_FWE",
-            t_map=wf.lzin.t_map,
-            figs=wf.produce_figure_FWE_peak_correction.lzout.figs,
-            correction_name="FWEp",
-        )
-    )
-    wf.add(
-        utils.generate_output_task(
-            name="save_figure_peak_correction_FDR",
-            t_map=wf.lzin.t_map,
-            figs=wf.produce_figure_FDR_peak_correction.lzout.figs,
-            correction_name="FDRp",
-        )
-    )
-    wf.add(
-        utils.generate_output_task(
-            name="save_figure_cluster_correction_FWE",
-            t_map=wf.lzin.t_map,
-            figs=wf.produce_figure_FWE_cluster_correction.lzout.figs,
-            correction_name="FWEc",
-        )
-    )
-    wf.add(
-        utils.generate_output_task(
-            name="save_figure_cluster_correction_FDR",
-            t_map=wf.lzin.t_map,
-            figs=wf.produce_figure_FDR_cluster_correction.lzout.figs,
-            correction_name="FDRc",
-        )
-    )
+    for threshold in ("FWE", "FDR"):
+        for kind in ("peak", "cluster"):
+            t_thresh_key = f"{threshold}p" if kind == "peak" else "height_threshold"
+            c_thresh = parameters[f"{threshold}c"] if kind == "cluster" else np.nan
+            wf.add(
+                utils.produce_figures_task(
+                    name=f"produce_figure_{threshold}_{kind}_correction",
+                    nii_file=getattr(
+                        wf, f"{threshold}_{kind}_correction_task"
+                    ).lzout.nii_file,
+                    template=join(path_to_mask, FILE1.filename),
+                    type_of_correction=threshold,
+                    t_thresh=parameters[t_thresh_key],
+                    c_thresh=c_thresh,
+                    n_cuts=parameters["n_cuts"],
+                )
+            )
+            wf.add(
+                utils.generate_output_task(
+                    name=f"save_figure_{kind}_correction_{threshold}",
+                    t_map=wf.lzin.t_map,
+                    figs=getattr(
+                        wf, f"produce_figure_{threshold}_{kind}_correction"
+                    ).lzout.figs,
+                    correction_name=f"{threshold}{kind[0]}",
+                )
+            )
     wf.set_output([("figs", wf.produce_figure_FDR_peak_correction.lzout.figs)])
     return wf
