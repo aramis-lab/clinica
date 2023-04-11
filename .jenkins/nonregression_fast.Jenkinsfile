@@ -199,14 +199,14 @@ pipeline {
                 }
               }
             }
-	    stage('DWI:nonreg:notslow') {
-               environment {
-                 PATH = "/usr/local/Modules/bin:$PATH"
-                 WORK_DIR = "/mnt/data/ci/working_dir_linux/DWI"
-                 INPUT_DATA_DIR = "/mnt/data_ci"
-                 TMP_DIR = "/mnt/data/ci/tmp"
-               }
-               steps {
+	          stage('DWI:nonreg:notslow') {
+              environment {
+                PATH = "/usr/local/Modules/bin:$PATH"
+                WORK_DIR = "/mnt/data/ci/working_dir_linux/DWI"
+                INPUT_DATA_DIR = "/mnt/data_ci"
+                TMP_DIR = "/mnt/data/ci/tmp"
+              }
+              steps {
                  sh '''
                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
                  conda activate $CONDA_ENV
@@ -228,13 +228,14 @@ pipeline {
                  '''
               }
               post {
-                 always {
-                   junit 'test/test-reports/*.xml'
-                 }
-                 success {
-                   sh 'rm -rf ${WORK_DIR}'
-                 }
-             } 
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}'
+                }
+              }
+            }
           }
           post {
             always {
