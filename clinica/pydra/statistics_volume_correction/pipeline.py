@@ -29,9 +29,8 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     import numpy as np
 
     import clinica.pydra.statistics_volume_correction.task as utils
-    from clinica.utils.inputs import RemoteFileStructure, fetch_file
+    from clinica.pydra.tasks import download_mni_template_2009a
     from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
-    from clinica.utils.stream import cprint
 
     if spm_standalone_is_available():
         use_spm_standalone()
@@ -66,22 +65,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             )
         )
 
-    root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-    path_to_mask = join(root, "resources", "masks")
-    url_aramis = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/"
-    FILE1 = RemoteFileStructure(
-        filename="mni_icbm152_t1_tal_nlin_sym_09a.nii.gz",
-        url=url_aramis,
-        checksum="3b244ee7e287319d36a25263744c468ef0ab2fe5a94b15a2138844db73b49adf",
-    )
-    if not (exists(join(path_to_mask, FILE1.filename))):
-        try:
-            fetch_file(FILE1, path_to_mask)
-        except IOError as err:
-            cprint(
-                msg=f"Unable to download required template (mni_icbm152) for processing: {err}",
-                lvl="error",
-            )
+    wf.add(download_mni_template_2009a(name="download_mni_template"))
 
     for threshold in ("FWE", "FDR"):
         for kind in ("peak", "cluster"):
@@ -93,7 +77,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                     nii_file=getattr(
                         wf, f"{threshold}_{kind}_correction_task"
                     ).lzout.nii_file,
-                    template=join(path_to_mask, FILE1.filename),
+                    template=wf.download_mni_template.lzout.mni_template_file,
                     type_of_correction=threshold,
                     t_thresh=parameters[t_thresh_key],
                     c_thresh=c_thresh,
