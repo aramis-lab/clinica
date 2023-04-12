@@ -13,7 +13,7 @@ def peak_correction(t_map: str, t_threshold: float, output_name: str = None) -> 
         Path to t-statistics nifti map
     t_threshold: float
         Threshold on t value
-    output_name: str
+    output_name: str, optional
         Optional output name
 
     Returns
@@ -55,7 +55,7 @@ def cluster_correction(
         Threshold on t value
     c_thresh: int
         Minimal size of clusters after thresholding
-    output_name: str
+    output_name: str, optional
         Optional output name
 
     Returns
