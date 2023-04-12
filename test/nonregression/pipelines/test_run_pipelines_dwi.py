@@ -81,7 +81,9 @@ def test_dwi_eddy_fsl(cmdopt, tmp_path):
 
     assert similarity_measure(out_file, ref_file, 0.97)
 
-    out_file = fspath(tmp_path / "tmp" / "out_rotated_bvecs" / "eddy_corrected.eddy_rotated_bvecs")
+    out_file = fspath(
+        tmp_path / "tmp" / "out_rotated_bvecs" / "eddy_corrected.eddy_rotated_bvecs"
+    )
     ref_file = fspath(ref_dir / "eddy_corrected.eddy_rotated_bvecs")
     out_bvecs = np.loadtxt(out_file)
     ref_bvecs = np.loadtxt(ref_file)
