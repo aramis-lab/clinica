@@ -107,7 +107,7 @@ def produce_figures(
     t_thresh: str,
     c_thresh: int,
     n_cuts: int,
-) -> List[str]:
+) -> list:
     """Produce the output figures.
 
     Parameters
@@ -191,7 +191,7 @@ def produce_figures(
     ]
 
 
-def generate_output(t_map: str, figs: List[str], correction_name: str) -> None:
+def generate_output(t_map: str, figs: list, correction_name: str) -> None:
     """Produce output
 
     Parameters
