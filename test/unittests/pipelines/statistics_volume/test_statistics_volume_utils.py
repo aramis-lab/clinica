@@ -374,3 +374,47 @@ def test_get_matlab_standalone_command_system_error(mocker):
         match="Clinica only support Mac OS and Linux",
     ):
         _get_matlab_standalone_command(Path("script.m"))
+
+
+@pytest.mark.parametrize(
+    "files",
+    [
+        ["figure_1.txt", "figure_2.pdf"],
+        ["figure_1.txt", "figure_2.pdf", "figure_3.png"],
+    ],
+    ids=("two files but no png", "only one png"),
+)
+def test_rename_spm_figures_error(tmp_path, files):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        rename_spm_figures,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Figures were not generated",
+    ):
+        rename_spm_figures(tmp_path / "spm", files, "group")
+
+
+def test_rename_spm_figures(tmp_path):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        rename_spm_figures,
+    )
+
+    spm_folder = tmp_path / "spm"
+    spm_folder.mkdir()
+    files = ["figure_001.png", "figure_013.png", "figure_666.png"]
+    for f in files:
+        (spm_folder / f).touch()
+
+    output_files = rename_spm_figures(
+        tmp_path / "spm", files, "foo", output_dir=str(tmp_path)
+    )
+
+    assert output_files == [
+        str(tmp_path / "group-foo_report-1.png"),
+        str(tmp_path / "group-foo_report-13.png"),
+        str(tmp_path / "group-foo_report-666.png"),
+    ]
+    for f in output_files:
+        assert Path(f).is_file()
