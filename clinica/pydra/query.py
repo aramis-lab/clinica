@@ -304,6 +304,7 @@ class CAPSGroupQuery(CAPSQuery):
     """
 
     from clinica.utils.input_files import (
+        custom_group,
         t1_volume_final_group_template,
         t1_volume_i_th_iteration_group_template,
     )
@@ -311,6 +312,7 @@ class CAPSGroupQuery(CAPSQuery):
     _query_makers = {
         "dartel_template": t1_volume_final_group_template,
         "dartel_iteration_templates": t1_volume_i_th_iteration_group_template,
+        "t_map": custom_group,
     }
 
 
