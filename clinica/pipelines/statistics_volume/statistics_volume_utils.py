@@ -34,7 +34,7 @@ def get_group_1_and_2(tsv: str, contrast: str) -> tuple:
     if contrast not in columns:
         raise ClinicaException(contrast + " is not present in " + tsv)
 
-    class_names = list(set(tsv[contrast]))
+    class_names = sorted(list(set(tsv[contrast])))
 
     # This is a 2-sample t-test: we can only allow 2 classes
     if len(class_names) != 2:
@@ -298,6 +298,8 @@ def is_number(s: str) -> bool:
         float(s)
         return True
     except ValueError:
+        return False
+    except TypeError:
         return False
 
 
