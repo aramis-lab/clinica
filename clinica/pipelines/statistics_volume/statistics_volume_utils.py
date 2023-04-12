@@ -1,3 +1,4 @@
+import functools
 import typing as ty
 from pathlib import Path
 
@@ -472,16 +473,14 @@ def _get_matlab_standalone_command(m_file: Path) -> str:
     raise SystemError("Clinica only support Mac OS and Linux")
 
 
-def _is_running_on_mac() -> bool:
+def _is_running_on_os(os: str) -> bool:
     import platform
 
-    return platform.system().lower().startswith("darwin")
+    return platform.system().lower().startswith(os)
 
 
-def _is_running_on_linux() -> bool:
-    import platform
-
-    return platform.system().lower().startswith("linux")
+_is_running_on_mac = functools.partial(_is_running_on_os, os="darwin")
+_is_running_on_linux = functools.partial(_is_running_on_os, os="linux")
 
 
 def delete_last_line(filename: Path) -> None:
