@@ -61,7 +61,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
                 name=f"{threshold}_cluster_correction_task",
                 t_map=wf.lzin.t_map,
                 t_thresh=parameters["height_threshold"],
-                c_threshold=parameters[f"{threshold}c"],
+                c_thresh=parameters[f"{threshold}c"],
             )
         )
 
