@@ -749,27 +749,33 @@ def rename_spm_figures(
     spm_figures: list
         Path to figure files
     """
-    from pathlib import Path
     from shutil import copyfile
 
-    spm_dir = Path(spm_dir)
-    if output_dir:
-        output_dir = Path(output_dir)
-    else:
-        output_dir = Path(".")
-    figures = [(spm_dir / f).resolve() for f in list_files if f.endswith("png")]
+    spm_dir, output_dir = _check_spm_and_output_dir(spm_dir, output_dir)
+    figures = [spm_dir / f for f in list_files if f.endswith("png")]
     if len(figures) < 2:
         raise RuntimeError("[Error] Figures were not generated")
     fig_number = [
         int(f.stem[-3:]) for f in figures
     ]  # assumes number is encoded on 3 digits
     spm_figures = [
-        str((output_dir / f"group-{group_label}_report-{i}.png").resolve())
-        for i in fig_number
+        str(output_dir / f"group-{group_label}_report-{i}.png") for i in fig_number
     ]
     for old_name, new_name in zip(figures, spm_figures):
         copyfile(old_name, new_name)
     return spm_figures
+
+
+def _check_spm_and_output_dir(spm_dir: str, output_dir: str) -> ty.Tuple[Path, Path]:
+    from pathlib import Path
+
+    spm_dir = Path(spm_dir)
+    if output_dir:
+        output_dir = Path(output_dir)
+    else:
+        output_dir = Path(".")
+
+    return spm_dir.resolve(), output_dir.resolve()
 
 
 def rename_spm_t_maps(
@@ -779,6 +785,7 @@ def rename_spm_t_maps(
     group_label: str,
     class_names: list,
     measure: str,
+    output_dir: str = None,
 ) -> ty.Tuple[str, str]:
     """Copies and renames the spm t maps.
 
@@ -796,6 +803,9 @@ def rename_spm_t_maps(
         Corresponds to the 2 classes for the group comparison
     measure: str
         Measure used
+    output_dir : str, optional
+        Output folder where the copied files should be written.
+        Default to current folder.
 
     Returns
     -------
@@ -804,31 +814,38 @@ def rename_spm_t_maps(
     spmT_0002: str
         Path to t maps for the second group comparison
     """
-    from os.path import abspath, join
     from shutil import copyfile
 
-    spm_T = [abspath(join(spm_dir, f)) for f in list_files if f.startswith("spmT")]
-    spm_T = sorted(spm_T)
-    if len(spm_T) != 2:
-        raise RuntimeError("[Error] " + str(len(spm_T)) + " SPM t-map(s) were found")
-    if fwhm:
-        spmT_0001 = abspath(
-            f"group-{group_label}_{class_names[0]}-lt-{class_names[1]}_measure-{measure}_fwhm-{int(fwhm)}_TStatistics.nii"
+    spm_dir, output_dir = _check_spm_and_output_dir(spm_dir, output_dir)
+    spm_t_maps = sorted([spm_dir / f for f in list_files if f.startswith("spmT")])
+    if len(spm_t_maps) != 2:
+        raise RuntimeError(
+            "[Error] " + str(len(spm_t_maps)) + " SPM t-map(s) were found"
         )
-        spmT_0002 = abspath(
-            f"group-{group_label}_{class_names[1]}-lt-{class_names[0]}_measure-{measure}_fwhm-{int(fwhm)}_TStatistics.nii"
+    new_map_files = [
+        str(
+            output_dir
+            / _build_t_map_filename(
+                class_names[idx[0]], class_names[idx[1]], group_label, measure, fwhm
+            )
         )
-    else:
-        spmT_0001 = abspath(
-            f"group-{group_label}_{class_names[0]}-lt-{class_names[1]}_measure-{measure}_TStatistics.nii"
-        )
-        spmT_0002 = abspath(
-            f"group-{group_label}_{class_names[1]}-lt-{class_names[0]}_measure-{measure}_TStatistics.nii"
-        )
-    copyfile(join(spm_dir, "spmT_0001.nii"), spmT_0001)
-    copyfile(join(spm_dir, "spmT_0002.nii"), spmT_0002)
+        for idx in [(0, 1), (1, 0)]
+    ]
+    for spm_t_map, new_map_file in zip(spm_t_maps, new_map_files):
+        copyfile(spm_t_map, new_map_file)
 
-    return spmT_0001, spmT_0002
+    return new_map_files[0], new_map_files[1]
+
+
+def _build_t_map_filename(
+    class_name1: str, class_name2: str, group_label: str, measure: str, fwhm: int
+) -> str:
+    filename = f"group-{group_label}_{class_name1}-lt-{class_name2}_measure-{measure}"
+    if fwhm:
+        filename += f"_fwhm-{int(fwhm)}"
+    filename += "_TStatistics.nii"
+
+    return filename
 
 
 def rename_spm_contrast_files(

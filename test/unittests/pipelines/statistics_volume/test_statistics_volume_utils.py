@@ -418,3 +418,63 @@ def test_rename_spm_figures(tmp_path):
     ]
     for f in output_files:
         assert Path(f).is_file()
+
+
+@pytest.mark.parametrize(
+    "files",
+    [
+        ["file1.txt", "file2.pdf"],
+        ["spmT_map.nii.gz", "figure_2.pdf", "figure_3.png"],
+        ["spmT_map.nii.gz", "figure_2.pdf", "spmT_map2.nii.gz", "spmT_map3.nii.gz"],
+    ],
+    ids=("two files but no spmT", "only one spmT", "three spmT"),
+)
+def test_rename_spm_t_maps_error(tmp_path, files):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        rename_spm_t_maps,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="SPM t-map",
+    ):
+        rename_spm_t_maps(tmp_path / "spm", files, 8, "group", ["A", "B"], "measure")
+
+
+@pytest.mark.parametrize(
+    "fwhm,expected1,expected2",
+    [
+        (
+            8,
+            "group-foo_A-lt-B_measure-measure_fwhm-8_TStatistics.nii",
+            "group-foo_B-lt-A_measure-measure_fwhm-8_TStatistics.nii",
+        ),
+        (
+            None,
+            "group-foo_A-lt-B_measure-measure_TStatistics.nii",
+            "group-foo_B-lt-A_measure-measure_TStatistics.nii",
+        ),
+    ],
+)
+def test_rename_spm_t_maps(tmp_path, fwhm, expected1, expected2):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        rename_spm_t_maps,
+    )
+
+    spm_folder = tmp_path / "spm"
+    spm_folder.mkdir()
+    files = ["spmT_0001.nii", "spmT_0002.nii"]
+    for f in files:
+        (spm_folder / f).touch()
+
+    map1, map2 = rename_spm_t_maps(
+        tmp_path / "spm",
+        files,
+        fwhm,
+        "foo",
+        ["A", "B"],
+        "measure",
+        output_dir=str(tmp_path),
+    )
+    assert map1 == str(tmp_path / expected1)
+    assert map2 == str(tmp_path / expected2)
