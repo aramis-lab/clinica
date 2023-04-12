@@ -11,7 +11,7 @@ from clinica.pydra.pet_linear.tasks import (
     crop_nifti_task,
     suvr_normalization_task,
 )
-from clinica.pydra.tasks import download_mni_template, download_ref_template
+from clinica.pydra.tasks import download_mni_template_2009c, download_ref_template
 from clinica.utils.pet import get_suvr_mask
 
 IMAGE_DIMENSION = 3
@@ -55,7 +55,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
     wf.split(("pet", "T1w", "t1w_to_mni"))
 
-    wf.add(download_mni_template(name="download_mni_template"))
+    wf.add(download_mni_template_2009c(name="download_mni_template"))
 
     wf.add(download_ref_template(name="download_ref_template"))
 
