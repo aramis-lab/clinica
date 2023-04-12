@@ -392,27 +392,28 @@ def run_m_script(m_file: str) -> str:
     from pathlib import Path
 
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        delete_last_line,
         run_matlab_script_with_matlab,
         run_matlab_script_with_spm_standalone,
     )
     from clinica.utils.spm import spm_standalone_is_available
 
-    if not Path(m_file).exists():
+    m_file = Path(m_file)
+    if not m_file.exists():
         raise FileNotFoundError(f"[Error] File {m_file} does not exist")
-    if Path(m_file).suffix != ".m":
+    if m_file.suffix != ".m":
         raise ValueError(
             f"[Error] {m_file} is not a Matlab file (extension must be .m)"
         )
-
-    # Generate command line to run
     if spm_standalone_is_available():
+        delete_last_line(m_file)
         run_matlab_script_with_spm_standalone(m_file)
     else:
-        run_matlab_script_with_matlab(m_file)
-    output_mat_file = abspath(join(dirname(m_file), "..", "2_sample_t_test", "SPM.mat"))
-    if not isfile(output_mat_file):
+        run_matlab_script_with_matlab(str(m_file))
+    output_mat_file = (m_file.parent.parent / "2_sample_t_test" / "SPM.mat").resolve()
+    if not output_mat_file.is_file():
         raise RuntimeError(f"Output matrix {output_mat_file} was not produced")
-    return output_mat_file
+    return str(output_mat_file)
 
 
 def run_matlab_script_with_matlab(m_file: str) -> None:
@@ -439,7 +440,7 @@ def run_matlab_script_with_matlab(m_file: str) -> None:
     matlab.run()
 
 
-def run_matlab_script_with_spm_standalone(m_file: str) -> None:
+def run_matlab_script_with_spm_standalone(m_file: Path) -> None:
     """Runs a matlab script spm_standalone
 
     Parameters
@@ -447,23 +448,40 @@ def run_matlab_script_with_spm_standalone(m_file: str) -> None:
     m_file: str
         Path to the script
     """
-    import platform
     from os import system
 
-    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+    system(_get_matlab_standalone_command(m_file))
 
-    utls.delete_last_line(m_file)
-    # SPM standalone must be run directly from its root folder
-    if platform.system().lower().startswith("darwin"):
-        # Mac OS
-        cmdline = f"cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch {m_file}"
 
-    elif platform.system().lower().startswith("linux"):
-        # Linux OS
-        cmdline = f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch {m_file}"
-    else:
-        raise SystemError("Clinica only support Mac OS and Linux")
-    system(cmdline)
+def _get_matlab_standalone_command(m_file: Path) -> str:
+    """Get the matlab standalone command to be run depending on the user's OS.
+
+    Notes
+    -----
+    On MAC systems, SPM standalone must be run directly from its root folder.
+
+    Raises
+    ------
+    SystemError
+        If this is run on unsupported platforms.
+    """
+    if _is_running_on_mac():
+        return f"cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch {m_file}"
+    if _is_running_on_linux():
+        return f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch {m_file}"
+    raise SystemError("Clinica only support Mac OS and Linux")
+
+
+def _is_running_on_mac() -> bool:
+    import platform
+
+    return platform.system().lower().startswith("darwin")
+
+
+def _is_running_on_linux() -> bool:
+    import platform
+
+    return platform.system().lower().startswith("linux")
 
 
 def delete_last_line(filename: Path) -> None:
