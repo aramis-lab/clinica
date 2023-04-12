@@ -300,7 +300,7 @@ def test_run_m_script_no_output_file_error(tmp_path, mocker):
     m_file.touch()
     mocker.patch(
         "clinica.pipelines.statistics_volume.statistics_volume_utils.run_matlab_script_with_matlab",
-        return_value=m_file,
+        return_value=None,
     )
 
     with pytest.raises(
@@ -308,3 +308,69 @@ def test_run_m_script_no_output_file_error(tmp_path, mocker):
         match="Output matrix",
     ):
         run_m_script(m_file)
+
+
+def test_run_m_script(tmp_path, mocker):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import run_m_script
+
+    model_folder = tmp_path / "matlab" / "models"
+    model_folder.mkdir(parents=True)
+    m_file = model_folder / "script.m"
+    m_file.touch()
+    expected_output_folder = tmp_path / "matlab" / "2_sample_t_test"
+    expected_output_folder.mkdir()
+    expected_output_file = expected_output_folder / "SPM.mat"
+    expected_output_file.touch()
+    mocker.patch(
+        "clinica.pipelines.statistics_volume.statistics_volume_utils.run_matlab_script_with_matlab",
+        return_value=None,
+    )
+
+    assert run_m_script(m_file) == str(expected_output_file)
+
+
+@pytest.mark.parametrize(
+    "mocked_values,expected",
+    [
+        (
+            [True, False],
+            "cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch script.m",
+        ),
+        ([False, True], "$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch script.m"),
+    ],
+    ids=("running on MAC OS", "running on Linux"),
+)
+def test_get_matlab_standalone_command(mocker, mocked_values, expected):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        _get_matlab_standalone_command,
+    )
+
+    for func, return_value in zip(
+        ["_is_running_on_mac", "_is_running_on_linux"], mocked_values
+    ):
+        mocker.patch(
+            f"clinica.pipelines.statistics_volume.statistics_volume_utils.{func}",
+            return_value=return_value,
+        )
+
+    assert _get_matlab_standalone_command(Path("script.m")) == expected
+
+
+def test_get_matlab_standalone_command_system_error(mocker):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        _get_matlab_standalone_command,
+    )
+
+    for func, return_value in zip(
+        ["_is_running_on_mac", "_is_running_on_linux"], [False, False]
+    ):
+        mocker.patch(
+            f"clinica.pipelines.statistics_volume.statistics_volume_utils.{func}",
+            return_value=return_value,
+        )
+
+    with pytest.raises(
+        SystemError,
+        match="Clinica only support Mac OS and Linux",
+    ):
+        _get_matlab_standalone_command(Path("script.m"))
