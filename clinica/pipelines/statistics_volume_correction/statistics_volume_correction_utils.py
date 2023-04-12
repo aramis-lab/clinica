@@ -192,7 +192,7 @@ def produce_figures(
 
 
 def generate_output(t_map: str, figs: list, correction_name: str) -> None:
-    """Produce output
+    """Extract the output generated and copy it to the output folder
 
     Parameters
     ----------
