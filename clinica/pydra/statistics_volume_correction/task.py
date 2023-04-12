@@ -22,6 +22,7 @@ def peak_correction_task(
 
 
 @task
+@annotate({"return": {"nii_file": str}})
 def cluster_correction_task(
     t_map: str, t_thresh: float, c_thresh: int, output_name: str = None
 ) -> str:
