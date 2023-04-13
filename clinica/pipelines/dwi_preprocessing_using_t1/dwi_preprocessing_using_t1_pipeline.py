@@ -294,14 +294,12 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         )
         prepare_b0.inputs.low_bval = self.parameters["low_bval"]
         prepare_b0.inputs.working_directory = self.base_dir
-        # Mask b0 for computations purposes
-        mask_b0_pre = npe.Node(
-            fsl.BET(frac=0.3, mask=True, robust=True), name="PreMaskB0"
-        )
+
         # Head-motion correction + Eddy-currents correction
         eddy_fsl = eddy_fsl_pipeline(
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
+            compute_mask=True,
         )
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(
@@ -355,16 +353,13 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 (init_node, prepare_b0, [("dwi", "in_dwi"),
                                          ("bval", "in_bval"),
                                          ("bvec", "in_bvec")]),
-                # Mask b0 before corrections
-                (prepare_b0, mask_b0_pre, [("out_reference_b0", "in_file")]),
                 # Head-motion correction + eddy current correction
                 (init_node, eddy_fsl, [("total_readout_time", "inputnode.total_readout_time"),
                                        ("phase_encoding_direction", "inputnode.phase_encoding_direction")]),
                 (prepare_b0, eddy_fsl, [("out_b0_dwi_merge", "inputnode.dwi_filename"),
                                         ("out_updated_bval", "inputnode.b_values_filename"),
                                         ("out_updated_bvec", "inputnode.b_vectors_filename"),
-                                        ("out_reference_b0", "inputnode.ref_b0")]),  # TODO: check if really needed...
-                (mask_b0_pre, eddy_fsl, [("mask_file", "inputnode.in_mask")]),
+                                        ("out_reference_b0", "inputnode.reference_b0")]),
                 # Magnetic susceptibility correction
                 (init_node, sdc, [("t1w", "inputnode.T1")]),
                 (eddy_fsl, sdc, [("outputnode.out_corrected", "inputnode.DWI")]),
