@@ -20,6 +20,9 @@ def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathL
     Iterable[Tuple[PathLike, PathLike]]
         Path to found files and parent directory
     """
+    from clinica.utils.stream import cprint
+
+    cprint("Looking for imaging data.", lvl="info")
     for z in Path(path_to_source_data).rglob("*.dcm"):
         yield str(z), str(Path(z).parent)
 
@@ -116,6 +119,10 @@ def find_clinical_data(
     List[DataFrame]
         Dataframes containing the clinical data
     """
+    from clinica.utils.stream import cprint
+
+    cprint("Looking for clinical data.", lvl="info")
+
     return (
         _read_file(_check_file(clinical_data_directory, pattern))
         for pattern in (
@@ -557,6 +564,9 @@ def write_bids(
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
     from clinica.iotools.bids_utils import run_dcm2niix, write_to_tsv
+    from clinica.utils.stream import cprint
+
+    cprint("Starting to write the BIDS.", lvl="info")
 
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
