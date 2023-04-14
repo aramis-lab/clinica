@@ -445,9 +445,14 @@ def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
 
     Rigid registration is achieved using FLIRT and the normalized correlation.
 
-    Args:
-        num_b0s (int): Number of the B0 volumes in the dataset.
-        name (str): Name of the workflow.
+    Parameters
+    ----------
+    num_b0s : int
+        Number of B0 volumes in the dataset.
+
+    name : str, optional
+        Name of the workflow.
+        Default="b0_coregistration".
 
     Inputnode:
         in_file(str): B0 dataset.
@@ -459,7 +464,7 @@ def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
     import nipype.pipeline.engine as pe
     from nipype.interfaces import fsl
 
-    from clinica.utils.dwi import merge_volumes_tdim
+    from clinica.utils.image import merge_nifti_images_in_time_dimension_task
 
     inputnode = pe.Node(niu.IdentityInterface(fields=["in_file"]), name="inputnode")
     fslroi_ref = pe.Node(fsl.ExtractROI(args="0 1"), name="b0_reference")
@@ -499,9 +504,9 @@ def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
     )
     insert_ref = pe.Node(
         niu.Function(
-            input_names=["in_file1", "in_file2"],
+            input_names=["image1", "image2"],
             output_names=["out_file"],
-            function=merge_volumes_tdim,
+            function=merge_nifti_images_in_time_dimension_task,
         ),
         name="concat_ref_moving",
     )
@@ -525,8 +530,8 @@ def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
             (split_moving, flirt, [("out_files", "in_file")]),
             (flirt, thres, [("out_file", "in_file")]),
             (thres, merge, [("out_file", "in_files")]),
-            (merge, insert_ref, [("merged_file", "in_file2")]),
-            (fslroi_ref, insert_ref, [("roi_file", "in_file1")]),
+            (merge, insert_ref, [("merged_file", "image2")]),
+            (fslroi_ref, insert_ref, [("roi_file", "image1")]),
             (insert_ref, outputnode, [("out_file", "out_file")]),
             (flirt, outputnode, [("out_matrix_file", "out_xfms")])
         ]
