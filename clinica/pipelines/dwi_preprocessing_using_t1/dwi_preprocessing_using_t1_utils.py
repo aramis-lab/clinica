@@ -331,7 +331,7 @@ def compute_reference_b0(
     extracted_b0: Path,
     b_value_filename: Path,
     b_value_threshold: float,
-    working_directory,
+    working_directory: Path,
     clean_working_dir: bool = True,
 ) -> Path:
     """Compute the reference B0.
@@ -342,6 +342,31 @@ def compute_reference_b0(
     .. warning::
         If the option clean_working_dir is set to True, this directory
         will be cleaned after execution of the pipeline.
+
+    Parameters
+    ----------
+    extracted_b0 : Path
+        Path to the image of the extracted B0 volume.
+
+    b_value_filename : Path
+        Path to the b-values file.
+
+    b_value_threshold : float
+        Threshold on b-values to decide whether a DWI volume is
+        B0 or not.
+
+    working_directory : Path
+        Path to the directory where output files should be written.
+
+    clean_working_dir : bool, optional
+        If True, the working directory will be cleaned at the end of
+        the execution.
+        Default=True.
+
+    Returns
+    -------
+    registered_b0_filename : Path
+        Path to the output image holding the registered B0.
 
     Raises
     ------

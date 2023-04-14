@@ -76,7 +76,7 @@ def compute_average_b0_task(
     b_value_filename: str,
     b_value_threshold: float = 5.0,
     squeeze: bool = False,
-    out_file=None,
+    out_file: str = None,
 ) -> str:
     """Nipype task for compute_average_b0."""
     from clinica.utils.dwi import _check_file, compute_average_b0  # noqa
