@@ -79,6 +79,8 @@ pytest = "*"
 pytest-timeout = "*"
 pytest-xdist = "*"
 pytest-cov = "^3.0.0"
+pytest-mock = "*"
+pytest-random-order = "*"
 scikit-image = "^0.19"
 nibabel = "*"
 
