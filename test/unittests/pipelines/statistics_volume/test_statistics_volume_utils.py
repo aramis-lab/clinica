@@ -478,3 +478,127 @@ def test_rename_spm_t_maps(tmp_path, fwhm, expected1, expected2):
     )
     assert map1 == str(tmp_path / expected1)
     assert map2 == str(tmp_path / expected2)
+
+
+@pytest.mark.parametrize(
+    "files",
+    [
+        ["file1.txt", "file2.pdf"],
+        ["con_1.txt", "figure_2.pdf", "figure_3.png"],
+        ["con_1.txt", "figure_2.pdf", "con_2.txt", "con_3.txt"],
+    ],
+    ids=("two files but no contrast", "only one contrast", "three contrasts"),
+)
+def test_rename_spm_contrast_files_error(tmp_path, files):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        rename_spm_contrast_files,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="There must exists only 2 contrast files",
+    ):
+        rename_spm_contrast_files(
+            tmp_path / "spm", files, "group", ["A", "B"], "measure"
+        )
+
+
+def test_rename_spm_contrast_files(tmp_path):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        rename_spm_contrast_files,
+    )
+
+    spm_folder = tmp_path / "spm"
+    spm_folder.mkdir()
+    files = ["con_1.txt", "con_2.txt"]
+    for f in files:
+        (spm_folder / f).touch()
+
+    contrast_files = rename_spm_contrast_files(
+        tmp_path / "spm",
+        files,
+        "foo",
+        ["A", "B"],
+        "measure",
+        output_dir=str(tmp_path),
+    )
+    assert len(contrast_files) == 2
+    assert contrast_files[0] == str(
+        tmp_path / "group-foo_A-lt-B_measure-measure_contrast.nii"
+    )
+    assert contrast_files[1] == str(
+        tmp_path / "group-foo_B-lt-A_measure-measure_contrast.nii"
+    )
+    for contrast_file in contrast_files:
+        assert Path(contrast_file).is_file()
+
+
+@pytest.mark.parametrize(
+    "covariates",
+    [["cov1", "cov2"], ["cov1", "cov2", "cov3"]],
+    ids=("two covariates", "three covariates"),
+)
+@pytest.mark.parametrize(
+    "files",
+    [
+        ["file1.txt", "file2.pdf"],
+        ["beta_1.nii.gz", "file_1.pdf", "file_2.png"],
+        ["beta_1.nii.gz", "file2.pdf", "beta_2.nii.gz", "beta_3.nii.gz"],
+    ],
+    ids=("two files but no beta file", "only one beta file", "three beta files"),
+)
+def test_rename_beta_files_error(tmp_path, files, covariates):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        rename_beta_files,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Not enough betas files found in output directory",
+    ):
+        rename_beta_files(tmp_path / "spm", files, covariates, ["A", "B"])
+
+
+def test_rename_beta_files(tmp_path):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        rename_beta_files,
+    )
+
+    spm_folder = tmp_path / "spm"
+    spm_folder.mkdir()
+    covariates = ["cov1", "cov2", "cov3"]
+    beta_files = [f"beta_{c}" for c in covariates]
+    beta_files += ["beta_1.nii.gz", "beta_2.nii.gz"]
+    for f in beta_files:
+        (spm_folder / f).touch()
+
+    new_files = rename_beta_files(
+        spm_folder, beta_files, covariates, ["A", "B"], output_dir=str(tmp_path)
+    )
+
+    assert set(new_files) == {
+        str(tmp_path / filename)
+        for filename in ("A.nii", "B.nii", "cov1.nii", "cov2.nii", "cov3.nii")
+    }
+    for new_file in new_files:
+        assert Path(new_file).is_file()
+
+
+def test_copy_files(tmp_path):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import _copy_files
+
+    for folder in ("sources", "destinations"):
+        (tmp_path / folder).mkdir()
+    source_destination_mapping = {}
+    sources = [tmp_path / "sources" / f"file_{i}" for i in (1, 3, 6, 42)]
+    for source in sources:
+        source.touch()
+        source_destination_mapping[str(source)] = str(
+            tmp_path / "destinations" / source.name
+        )
+
+    _copy_files(source_destination_mapping)
+
+    for source, destination in source_destination_mapping.items():
+        assert Path(source).is_file()
+        assert Path(destination).is_file()

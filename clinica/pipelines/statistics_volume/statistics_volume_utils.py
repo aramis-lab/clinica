@@ -592,8 +592,8 @@ def clean_spm_result_file(
 def clean_spm_contrast_file(
     mat_file: str, template_file: str, covariates: list, class_names: list
 ):
-    """Make a copy of the template file (for results) and replace @SPMMAT, @COVARNUMBER, @GROUP1, @GROUP2
-    by the corresponding variables
+    """Make a copy of the template file (for results) and replace
+    @SPMMAT, @COVARNUMBER, @GROUP1, @GROUP2 by the corresponding variables.
 
     Parameters
     ----------
@@ -636,9 +636,10 @@ def copy_and_rename_spm_output_files(
     group_label: str,
     fwhm: int,
     measure: str,
+    output_dir: str = ".",
 ):
-    """Once analysis is done, grab all the different filenames and rename them in current directory according to class
-        names
+    """Once analysis is done, copy and rename (according to class names)
+    the different filenames in the provided output directory.
 
     Parameters
     ----------
@@ -654,6 +655,9 @@ def copy_and_rename_spm_output_files(
         Fwhm in mm used
     measure: str
         Measure used
+    output_dir : str, optional
+        Output folder where the copied figures should be written.
+        Default to current folder.
 
     Returns
     -------
@@ -694,10 +698,18 @@ def copy_and_rename_spm_output_files(
 
     list_files = [f for f in listdir(spm_dir) if not f.startswith(".")]
 
-    spm_figures = rename_spm_figures(spm_dir, list_files, group_label)
+    spm_figures = rename_spm_figures(
+        spm_dir, list_files, group_label, output_dir=output_dir
+    )
 
-    spmT_0001, spmT_0002 = rename_spm_t_maps(
-        spm_dir, list_files, fwhm, group_label, class_names, measure
+    t_map_1, t_map_2 = rename_spm_t_maps(
+        spm_dir,
+        list_files,
+        fwhm,
+        group_label,
+        class_names,
+        measure,
+        output_dir=output_dir,
     )
 
     variance_of_error = abspath(f"./group-{group_label}_VarianceError.nii")
@@ -716,8 +728,8 @@ def copy_and_rename_spm_output_files(
     )
 
     return (
-        spmT_0001,
-        spmT_0002,
+        t_map_1,
+        t_map_2,
         spm_figures,
         variance_of_error,
         resels_per_voxels,
@@ -749,8 +761,6 @@ def rename_spm_figures(
     spm_figures: list
         Path to figure files
     """
-    from shutil import copyfile
-
     spm_dir, output_dir = _check_spm_and_output_dir(spm_dir, output_dir)
     figures = [spm_dir / f for f in list_files if f.endswith("png")]
     if len(figures) < 2:
@@ -761,8 +771,8 @@ def rename_spm_figures(
     spm_figures = [
         str(output_dir / f"group-{group_label}_report-{i}.png") for i in fig_number
     ]
-    for old_name, new_name in zip(figures, spm_figures):
-        copyfile(old_name, new_name)
+    _copy_files({k: v for k, v in zip(figures, spm_figures)})
+
     return spm_figures
 
 
@@ -776,6 +786,14 @@ def _check_spm_and_output_dir(spm_dir: str, output_dir: str) -> ty.Tuple[Path, P
         output_dir = Path(".")
 
     return spm_dir.resolve(), output_dir.resolve()
+
+
+def _copy_files(source_to_destination_mapping: ty.Dict[str, str]) -> None:
+    """Copy the source files in the mapping keys to the destinations in the values."""
+    from shutil import copyfile
+
+    for source, destination in source_to_destination_mapping.items():
+        copyfile(source, destination)
 
 
 def rename_spm_t_maps(
@@ -814,42 +832,48 @@ def rename_spm_t_maps(
     spmT_0002: str
         Path to t maps for the second group comparison
     """
-    from shutil import copyfile
-
     spm_dir, output_dir = _check_spm_and_output_dir(spm_dir, output_dir)
     spm_t_maps = sorted([spm_dir / f for f in list_files if f.startswith("spmT")])
+
     if len(spm_t_maps) != 2:
-        raise RuntimeError(
-            "[Error] " + str(len(spm_t_maps)) + " SPM t-map(s) were found"
-        )
+        raise RuntimeError(f"[Error] {len(spm_t_maps)} SPM t-map(s) were found.")
+
     new_map_files = [
-        str(
-            output_dir
-            / _build_t_map_filename(
-                class_names[idx[0]], class_names[idx[1]], group_label, measure, fwhm
-            )
-        )
-        for idx in [(0, 1), (1, 0)]
+        str(output_dir / filename)
+        for filename in _build_t_map_filenames(class_names, group_label, measure, fwhm)
     ]
-    for spm_t_map, new_map_file in zip(spm_t_maps, new_map_files):
-        copyfile(spm_t_map, new_map_file)
+    _copy_files({k: v for k, v in zip(spm_t_maps, new_map_files)})
 
     return new_map_files[0], new_map_files[1]
 
 
-def _build_t_map_filename(
-    class_name1: str, class_name2: str, group_label: str, measure: str, fwhm: int
-) -> str:
-    filename = f"group-{group_label}_{class_name1}-lt-{class_name2}_measure-{measure}"
-    if fwhm:
-        filename += f"_fwhm-{int(fwhm)}"
-    filename += "_TStatistics.nii"
+def _build_t_map_filenames(
+    class_names: ty.List[str], group_label: str, measure: str, fwhm: int
+) -> ty.List[str]:
+    """Build the T-map filenames from the class names, group label, measure, and fwhm."""
+    fwhm_string = f"_fwhm-{int(fwhm)}" if fwhm else ""
 
-    return filename
+    return [
+        f"group-{group_label}_{contrast}_measure-{measure}{fwhm_string}_TStatistics.nii"
+        for contrast in _build_contrasts_from_class_names(class_names)
+    ]
+
+
+def _build_contrasts_from_class_names(class_names: ty.List[str]) -> ty.List[str]:
+    """Build the contrast strings from the class names."""
+    return [
+        f"{class_names[0]}-lt-{class_names[1]}",
+        f"{class_names[1]}-lt-{class_names[0]}",
+    ]
 
 
 def rename_spm_contrast_files(
-    spm_dir: str, list_files: list, group_label: str, class_names: list, measure: str
+    spm_dir: str,
+    list_files: list,
+    group_label: str,
+    class_names: list,
+    measure: str,
+    output_dir: str = None,
 ) -> list:
     """Handles the contrast files.
 
@@ -865,33 +889,39 @@ def rename_spm_contrast_files(
         Corresponds to the 2 classes for the group comparison
     measure: str
         Measure used
+    output_dir : str, optional
+        Output folder where the copied files should be written.
+        Default to current folder.
 
     Returns
     -------
     contrast: list of str
         contrast
     """
-    from os.path import abspath, join
-    from shutil import copyfile
+    spm_dir, output_dir = _check_spm_and_output_dir(spm_dir, output_dir)
+    spm_contrast_files = [spm_dir / f for f in list_files if f.startswith("con_")]
 
-    con_files = [abspath(join(spm_dir, f)) for f in list_files if f.startswith("con_")]
-    if len(con_files) != 2:
+    if len(spm_contrast_files) != 2:
         raise RuntimeError("There must exists only 2 contrast files !")
-    contrasts = [
-        abspath(
-            f"group-{group_label}_{class_names[0]}-lt-{class_names[1]}_measure-{measure}_contrast.nii"
-        ),
-        abspath(
-            f"group-{group_label}_{class_names[1]}-lt-{class_names[0]}_measure-{measure}_contrast.nii"
-        ),
+
+    new_contrast_files = [
+        str(
+            output_dir
+            / f"group-{group_label}_{contrast}_measure-{measure}_contrast.nii"
+        )
+        for contrast in _build_contrasts_from_class_names(class_names)
     ]
-    for con, contrast in zip(con_files, contrasts):
-        copyfile(con, contrast)
-    return contrasts
+    _copy_files({k: v for k, v in zip(spm_contrast_files, new_contrast_files)})
+
+    return new_contrast_files
 
 
 def rename_beta_files(
-    spm_dir: str, list_files: list, covariates: list, class_names: list
+    spm_dir: str,
+    list_files: list,
+    covariates: list,
+    class_names: list,
+    output_dir: str = None,
 ) -> list:
     """Handles the beta files.
 
@@ -905,23 +935,26 @@ def rename_beta_files(
         List of covariates
     class_names: list of str
         Corresponds to the 2 classes for the group comparison
+    output_dir : str, optional
+        Output folder where the copied files should be written.
+        Default to current folder.
 
     Returns
     -------
     regression_coeff: str list
         Path to regression coefficients
     """
-    from os.path import abspath, join
-    from shutil import copyfile
+    spm_dir, output_dir = _check_spm_and_output_dir(spm_dir, output_dir)
+    spm_beta_files = sorted([spm_dir / f for f in list_files if f.startswith("beta_")])
 
-    betas = [abspath(join(spm_dir, f)) for f in list_files if f.startswith("beta_")]
-    betas = sorted(betas)
-    if len(betas) != 2 + len(covariates):
+    if len(spm_beta_files) != 2 + len(covariates):
         raise RuntimeError("[Error] Not enough betas files found in output directory")
-    regression_coeff_covar = [abspath(f"./{covar}.nii") for covar in covariates]
-    regression_coeff = [abspath(f"./{c}.nii") for c in class_names]
-    regression_coeff.extend(regression_coeff_covar)
-    # Order is respected:
-    for beta, reg_coeff in zip(betas, regression_coeff):
-        copyfile(beta, reg_coeff)
+
+    regression_coeff = [str(output_dir / f"./{c}.nii") for c in class_names]
+    regression_coeff.extend(
+        [str(output_dir / f"./{covar}.nii") for covar in covariates]
+    )
+
+    _copy_files({k: v for k, v in zip(spm_beta_files, regression_coeff)})
+
     return regression_coeff
