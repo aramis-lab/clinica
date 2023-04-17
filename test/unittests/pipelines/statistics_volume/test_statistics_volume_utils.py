@@ -93,12 +93,12 @@ def test_get_group_1_and_2(tmp_path, tsv_data_two_classes):
 
 def test_create_spm_output_folder(tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        create_spm_output_folder,
+        _create_spm_output_folder,
     )
 
     (tmp_path / "spm" / "models").mkdir(parents=True)
     output_folder = Path(
-        create_spm_output_folder(tmp_path / "spm" / "models" / "my_fake_model.m")
+        _create_spm_output_folder(tmp_path / "spm" / "models" / "my_fake_model.m")
     )
 
     assert output_folder == tmp_path / "spm" / "2_sample_t_test"
@@ -107,7 +107,7 @@ def test_create_spm_output_folder(tmp_path):
     (output_folder / "foo.m").touch()
 
     output_folder = Path(
-        create_spm_output_folder(tmp_path / "spm" / "models" / "my_fake_model.m")
+        _create_spm_output_folder(tmp_path / "spm" / "models" / "my_fake_model.m")
     )
 
     assert output_folder == tmp_path / "spm" / "2_sample_t_test"
@@ -117,13 +117,13 @@ def test_create_spm_output_folder(tmp_path):
 
 def test_set_output_and_groups(tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        set_output_and_groups,
+        _set_output_and_groups,
     )
 
     current_model_filename = tmp_path / "current_model.m"
     current_model_filename.write_text("foo bar baz\nfoo\nbar baz")
     template = "foo @OUTPUTDIR bar\nfoo bar @SCANS2\nfoo baz @SCANS1\nfoo bar baz"
-    set_output_and_groups(
+    _set_output_and_groups(
         str(tmp_path / "output_folder"),
         str(current_model_filename),
         [f"file_{i}" for i in range(1, 5)],
@@ -152,10 +152,10 @@ def test_set_output_and_groups(tmp_path):
 )
 def test_convert_to_numeric(input_data, expected):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        convert_to_numeric,
+        _convert_to_numeric,
     )
 
-    assert convert_to_numeric(input_data) == expected
+    assert _convert_to_numeric(input_data) == expected
 
 
 @pytest.mark.parametrize(
@@ -169,10 +169,10 @@ def test_convert_to_numeric(input_data, expected):
 )
 def test_unravel_list_for_matlab(input_list, expected):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        unravel_list_for_matlab,
+        _unravel_list_for_matlab,
     )
 
-    assert unravel_list_for_matlab(input_list) == expected
+    assert _unravel_list_for_matlab(input_list) == expected
 
 
 @pytest.mark.parametrize(
@@ -190,9 +190,9 @@ def test_unravel_list_for_matlab(input_list, expected):
     ],
 )
 def test_is_number(input_number, expected):
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import is_number
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import _is_number
 
-    assert is_number(input_number) == expected
+    assert _is_number(input_number) == expected
 
 
 @pytest.mark.parametrize(
@@ -219,48 +219,48 @@ def test_is_number(input_number, expected):
 )
 def test_delete_last_line(tmp_path, input_data, expected):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        delete_last_line,
+        _delete_last_line,
     )
 
     (tmp_path / "foo.tsv").write_text(input_data)
 
-    delete_last_line(tmp_path / "foo.tsv")
+    _delete_last_line(tmp_path / "foo.tsv")
 
     assert (tmp_path / "foo.tsv").read_text() == expected
 
 
 def test_delete_last_line_empty(tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        delete_last_line,
+        _delete_last_line,
     )
 
     (tmp_path / "foo.tsv").touch()
 
-    delete_last_line(tmp_path / "foo.tsv")
+    _delete_last_line(tmp_path / "foo.tsv")
 
     assert (tmp_path / "foo.tsv").read_text() == ""
 
 
 def test_write_covariate_lines_error(tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        write_covariate_lines,
+        _write_covariate_lines,
     )
 
     with pytest.raises(
         FileNotFoundError,
         match="Could not find file",
     ):
-        write_covariate_lines(tmp_path / "foo.txt", 1, "age", [1.6, 2.3])
+        _write_covariate_lines(tmp_path / "foo.txt", 1, "age", [1.6, 2.3])
 
 
 def test_write_covariate_lines(tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        write_covariate_lines,
+        _write_covariate_lines,
     )
 
     (tmp_path / "foo.m").write_text("Initial content\nfoo bar")
 
-    write_covariate_lines(tmp_path / "foo.m", 1, "age", [1.6, 2.3])
+    _write_covariate_lines(tmp_path / "foo.m", 1, "age", [1.6, 2.3])
 
     assert (tmp_path / "foo.m").read_text() == (
         "Initial content\n"
@@ -299,7 +299,7 @@ def test_run_m_script_no_output_file_error(tmp_path, mocker):
     m_file = tmp_path / "script.m"
     m_file.touch()
     mocker.patch(
-        "clinica.pipelines.statistics_volume.statistics_volume_utils.run_matlab_script_with_matlab",
+        "clinica.pipelines.statistics_volume.statistics_volume_utils._run_matlab_script_with_matlab",
         return_value=None,
     )
 
@@ -322,7 +322,7 @@ def test_run_m_script(tmp_path, mocker):
     expected_output_file = expected_output_folder / "SPM.mat"
     expected_output_file.touch()
     mocker.patch(
-        "clinica.pipelines.statistics_volume.statistics_volume_utils.run_matlab_script_with_matlab",
+        "clinica.pipelines.statistics_volume.statistics_volume_utils._run_matlab_script_with_matlab",
         return_value=None,
     )
 
@@ -386,19 +386,19 @@ def test_get_matlab_standalone_command_system_error(mocker):
 )
 def test_rename_spm_figures_error(tmp_path, files):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        rename_spm_figures,
+        _rename_spm_figures,
     )
 
     with pytest.raises(
         RuntimeError,
         match="Figures were not generated",
     ):
-        rename_spm_figures(tmp_path / "spm", files, "group")
+        _rename_spm_figures(tmp_path / "spm", files, "group")
 
 
 def test_rename_spm_figures(tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        rename_spm_figures,
+        _rename_spm_figures,
     )
 
     spm_folder = tmp_path / "spm"
@@ -407,7 +407,7 @@ def test_rename_spm_figures(tmp_path):
     for f in files:
         (spm_folder / f).touch()
 
-    output_files = rename_spm_figures(
+    output_files = _rename_spm_figures(
         tmp_path / "spm", files, "foo", output_dir=str(tmp_path)
     )
 
@@ -431,14 +431,14 @@ def test_rename_spm_figures(tmp_path):
 )
 def test_rename_spm_t_maps_error(tmp_path, files):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        rename_spm_t_maps,
+        _rename_spm_t_maps,
     )
 
     with pytest.raises(
         RuntimeError,
         match="SPM t-map",
     ):
-        rename_spm_t_maps(tmp_path / "spm", files, 8, "group", ["A", "B"], "measure")
+        _rename_spm_t_maps(tmp_path / "spm", files, 8, "group", ["A", "B"], "measure")
 
 
 @pytest.mark.parametrize(
@@ -458,7 +458,7 @@ def test_rename_spm_t_maps_error(tmp_path, files):
 )
 def test_rename_spm_t_maps(tmp_path, fwhm, expected1, expected2):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        rename_spm_t_maps,
+        _rename_spm_t_maps,
     )
 
     spm_folder = tmp_path / "spm"
@@ -467,7 +467,7 @@ def test_rename_spm_t_maps(tmp_path, fwhm, expected1, expected2):
     for f in files:
         (spm_folder / f).touch()
 
-    map1, map2 = rename_spm_t_maps(
+    map1, map2 = _rename_spm_t_maps(
         tmp_path / "spm",
         files,
         fwhm,
@@ -491,21 +491,21 @@ def test_rename_spm_t_maps(tmp_path, fwhm, expected1, expected2):
 )
 def test_rename_spm_contrast_files_error(tmp_path, files):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        rename_spm_contrast_files,
+        _rename_spm_contrast_files,
     )
 
     with pytest.raises(
         RuntimeError,
         match="There must exists only 2 contrast files",
     ):
-        rename_spm_contrast_files(
+        _rename_spm_contrast_files(
             tmp_path / "spm", files, "group", ["A", "B"], "measure"
         )
 
 
 def test_rename_spm_contrast_files(tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        rename_spm_contrast_files,
+        _rename_spm_contrast_files,
     )
 
     spm_folder = tmp_path / "spm"
@@ -514,7 +514,7 @@ def test_rename_spm_contrast_files(tmp_path):
     for f in files:
         (spm_folder / f).touch()
 
-    contrast_files = rename_spm_contrast_files(
+    contrast_files = _rename_spm_contrast_files(
         tmp_path / "spm",
         files,
         "foo",
@@ -549,19 +549,19 @@ def test_rename_spm_contrast_files(tmp_path):
 )
 def test_rename_beta_files_error(tmp_path, files, covariates):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        rename_beta_files,
+        _rename_beta_files,
     )
 
     with pytest.raises(
         RuntimeError,
         match="Not enough betas files found in output directory",
     ):
-        rename_beta_files(tmp_path / "spm", files, covariates, ["A", "B"])
+        _rename_beta_files(tmp_path / "spm", files, covariates, ["A", "B"])
 
 
 def test_rename_beta_files(tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        rename_beta_files,
+        _rename_beta_files,
     )
 
     spm_folder = tmp_path / "spm"
@@ -572,7 +572,7 @@ def test_rename_beta_files(tmp_path):
     for f in beta_files:
         (spm_folder / f).touch()
 
-    new_files = rename_beta_files(
+    new_files = _rename_beta_files(
         spm_folder, beta_files, covariates, ["A", "B"], output_dir=str(tmp_path)
     )
 
