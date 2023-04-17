@@ -1,5 +1,7 @@
 import math
+from functools import partial
 from pathlib import Path
+from typing import List
 
 import numpy as np
 import pytest
@@ -389,11 +391,65 @@ def test_rename_spm_figures_error(tmp_path, files):
         _rename_spm_figures,
     )
 
+    create_spm_files(tmp_path, files)
+
     with pytest.raises(
         RuntimeError,
-        match="Figures were not generated",
+        match="Wrong number of SPM figures files",
     ):
-        _rename_spm_figures(tmp_path / "spm", files, "group")
+        _rename_spm_figures(
+            spm_dir=tmp_path / "spm",
+            output_dir=tmp_path,
+            parameters_for_new_filename_construction={"group_label": "group"},
+        )
+
+
+def create_spm_files(folder: Path, files: List[str]) -> List[str]:
+    spm_folder = create_spm_folder(folder)
+    for filename in files:
+        (spm_folder / filename).touch()
+
+    return files
+
+
+def create_spm_folder(folder: Path) -> Path:
+    spm_folder = folder / "spm"
+    if not spm_folder.exists():
+        spm_folder.mkdir()
+
+    return spm_folder
+
+
+create_spm_figures = partial(
+    create_spm_files, files=["figure_001.png", "figure_013.png", "figure_666.png"]
+)
+create_spm_t_maps = partial(create_spm_files, files=["spmT_0001.nii", "spmT_0002.nii"])
+create_other_spm_files = partial(
+    create_spm_files, files=["ResMS.nii", "RPV.nii", "mask.nii"]
+)
+create_spm_contrast_files = partial(create_spm_files, files=["con_1.txt", "con_2.txt"])
+create_spm_beta_files = partial(
+    create_spm_files,
+    files=[
+        "beta_1.nii.gz",
+        "beta_2.nii.gz",
+        "beta_cov1.nii.gz",
+        "beta_cov2.nii.gz",
+        "beta_cov3.nii.gz",
+    ],
+)
+
+
+def create_all_spm_files(folder: Path) -> List[str]:
+    spm_file_creators = (
+        create_spm_figures,
+        create_spm_t_maps,
+        create_spm_beta_files,
+        create_spm_contrast_files,
+        create_other_spm_files,
+    )
+
+    return [func(folder) for func in spm_file_creators]
 
 
 def test_rename_spm_figures(tmp_path):
@@ -401,23 +457,18 @@ def test_rename_spm_figures(tmp_path):
         _rename_spm_figures,
     )
 
-    spm_folder = tmp_path / "spm"
-    spm_folder.mkdir()
-    files = ["figure_001.png", "figure_013.png", "figure_666.png"]
-    for f in files:
-        (spm_folder / f).touch()
+    _ = create_spm_figures(tmp_path)
 
     output_files = _rename_spm_figures(
-        tmp_path / "spm", files, "foo", output_dir=str(tmp_path)
+        spm_dir=tmp_path / "spm",
+        output_dir=tmp_path,
+        parameters_for_new_filename_construction={"group_label": "foo"},
     )
 
     assert output_files == [
-        str(tmp_path / "group-foo_report-1.png"),
-        str(tmp_path / "group-foo_report-13.png"),
-        str(tmp_path / "group-foo_report-666.png"),
+        str(tmp_path / f"group-foo_report-{i}.png") for i in (1, 13, 666)
     ]
-    for f in output_files:
-        assert Path(f).is_file()
+    assert all([Path(f).is_file() for f in output_files])
 
 
 @pytest.mark.parametrize(
@@ -434,11 +485,23 @@ def test_rename_spm_t_maps_error(tmp_path, files):
         _rename_spm_t_maps,
     )
 
+    create_spm_files(tmp_path, files)
+    params = {
+        "fwhm": 8,
+        "group_label": "group",
+        "class_names": ["A", "B"],
+        "measure": "measure",
+    }
+
     with pytest.raises(
         RuntimeError,
         match="SPM t-map",
     ):
-        _rename_spm_t_maps(tmp_path / "spm", files, 8, "group", ["A", "B"], "measure")
+        _rename_spm_t_maps(
+            spm_dir=tmp_path / "spm",
+            output_dir=tmp_path,
+            parameters_for_new_filename_construction=params,
+        )
 
 
 @pytest.mark.parametrize(
@@ -461,23 +524,20 @@ def test_rename_spm_t_maps(tmp_path, fwhm, expected1, expected2):
         _rename_spm_t_maps,
     )
 
-    spm_folder = tmp_path / "spm"
-    spm_folder.mkdir()
-    files = ["spmT_0001.nii", "spmT_0002.nii"]
-    for f in files:
-        (spm_folder / f).touch()
+    _ = create_spm_t_maps(tmp_path)
+    params = {
+        "fwhm": fwhm,
+        "group_label": "foo",
+        "class_names": ["A", "B"],
+        "measure": "measure",
+    }
 
-    map1, map2 = _rename_spm_t_maps(
-        tmp_path / "spm",
-        files,
-        fwhm,
-        "foo",
-        ["A", "B"],
-        "measure",
-        output_dir=str(tmp_path),
+    spm_t_maps = _rename_spm_t_maps(
+        spm_dir=tmp_path / "spm",
+        output_dir=tmp_path,
+        parameters_for_new_filename_construction=params,
     )
-    assert map1 == str(tmp_path / expected1)
-    assert map2 == str(tmp_path / expected2)
+    assert spm_t_maps == [str(tmp_path / expected1), str(tmp_path / expected2)]
 
 
 @pytest.mark.parametrize(
@@ -494,12 +554,17 @@ def test_rename_spm_contrast_files_error(tmp_path, files):
         _rename_spm_contrast_files,
     )
 
+    create_spm_files(tmp_path, files)
+    params = {"group_label": "foo", "class_names": ["A", "B"], "measure": "measure"}
+
     with pytest.raises(
         RuntimeError,
-        match="There must exists only 2 contrast files",
+        match="Wrong number of SPM contrast files",
     ):
         _rename_spm_contrast_files(
-            tmp_path / "spm", files, "group", ["A", "B"], "measure"
+            spm_dir=tmp_path / "spm",
+            output_dir=tmp_path,
+            parameters_for_new_filename_construction=params,
         )
 
 
@@ -508,20 +573,15 @@ def test_rename_spm_contrast_files(tmp_path):
         _rename_spm_contrast_files,
     )
 
-    spm_folder = tmp_path / "spm"
-    spm_folder.mkdir()
-    files = ["con_1.txt", "con_2.txt"]
-    for f in files:
-        (spm_folder / f).touch()
+    _ = create_spm_contrast_files(tmp_path)
+    params = {"group_label": "foo", "class_names": ["A", "B"], "measure": "measure"}
 
     contrast_files = _rename_spm_contrast_files(
-        tmp_path / "spm",
-        files,
-        "foo",
-        ["A", "B"],
-        "measure",
-        output_dir=str(tmp_path),
+        spm_dir=tmp_path / "spm",
+        output_dir=tmp_path,
+        parameters_for_new_filename_construction=params,
     )
+
     assert len(contrast_files) == 2
     assert contrast_files[0] == str(
         tmp_path / "group-foo_A-lt-B_measure-measure_contrast.nii"
@@ -529,8 +589,7 @@ def test_rename_spm_contrast_files(tmp_path):
     assert contrast_files[1] == str(
         tmp_path / "group-foo_B-lt-A_measure-measure_contrast.nii"
     )
-    for contrast_file in contrast_files:
-        assert Path(contrast_file).is_file()
+    assert all([Path(contrast_file).is_file() for contrast_file in contrast_files])
 
 
 @pytest.mark.parametrize(
@@ -552,11 +611,18 @@ def test_rename_beta_files_error(tmp_path, files, covariates):
         _rename_beta_files,
     )
 
+    create_spm_files(tmp_path, files)
+    params = {"covariates": covariates, "class_names": ["A", "B"]}
+
     with pytest.raises(
         RuntimeError,
-        match="Not enough betas files found in output directory",
+        match="Wrong number of SPM betas files",
     ):
-        _rename_beta_files(tmp_path / "spm", files, covariates, ["A", "B"])
+        _rename_beta_files(
+            spm_dir=tmp_path / "spm",
+            output_dir=tmp_path,
+            parameters_for_new_filename_construction=params,
+        )
 
 
 def test_rename_beta_files(tmp_path):
@@ -564,24 +630,20 @@ def test_rename_beta_files(tmp_path):
         _rename_beta_files,
     )
 
-    spm_folder = tmp_path / "spm"
-    spm_folder.mkdir()
-    covariates = ["cov1", "cov2", "cov3"]
-    beta_files = [f"beta_{c}" for c in covariates]
-    beta_files += ["beta_1.nii.gz", "beta_2.nii.gz"]
-    for f in beta_files:
-        (spm_folder / f).touch()
+    _ = create_spm_beta_files(tmp_path)
+    params = {"covariates": ["cov1", "cov2", "cov3"], "class_names": ["A", "B"]}
 
     new_files = _rename_beta_files(
-        spm_folder, beta_files, covariates, ["A", "B"], output_dir=str(tmp_path)
+        spm_dir=tmp_path / "spm",
+        output_dir=tmp_path,
+        parameters_for_new_filename_construction=params,
     )
 
     assert set(new_files) == {
         str(tmp_path / filename)
         for filename in ("A.nii", "B.nii", "cov1.nii", "cov2.nii", "cov3.nii")
     }
-    for new_file in new_files:
-        assert Path(new_file).is_file()
+    assert all([Path(new_file).is_file() for new_file in new_files])
 
 
 def test_copy_files(tmp_path):
@@ -602,3 +664,79 @@ def test_copy_files(tmp_path):
     for source, destination in source_destination_mapping.items():
         assert Path(source).is_file()
         assert Path(destination).is_file()
+
+
+def test_copy_and_rename_spm_output_files_error(tmp_path):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        copy_and_rename_spm_output_files,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match=" SPM matrix",
+    ):
+        copy_and_rename_spm_output_files(
+            str(tmp_path), ["A", "B"], ["cov1", "cov2"], "group", 8, "measure"
+        )
+
+    with pytest.raises(
+        RuntimeError,
+        match="output folder",
+    ):
+        copy_and_rename_spm_output_files(
+            str(tmp_path / "spm" / "matrix.mat"),
+            ["A", "B"],
+            ["cov1", "cov2"],
+            "group",
+            8,
+            "measure",
+        )
+
+
+def test_copy_and_rename_spm_output_files(tmp_path):
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+        copy_and_rename_spm_output_files,
+    )
+
+    _ = create_all_spm_files(tmp_path)
+
+    matrix_filename = tmp_path / "spm" / "matrix.mat"
+    matrix_filename.touch()
+
+    res = copy_and_rename_spm_output_files(
+        str(matrix_filename),
+        ["A", "B"],
+        ["cov1", "cov2", "cov3"],
+        "group",
+        8,
+        "measure",
+        output_dir=str(tmp_path),
+    )
+
+    assert res == [
+        [
+            str(tmp_path / "group-group_A-lt-B_measure-measure_fwhm-8_TStatistics.nii"),
+            str(tmp_path / "group-group_B-lt-A_measure-measure_fwhm-8_TStatistics.nii"),
+        ],
+        [
+            str(tmp_path / "group-group_report-1.png"),
+            str(tmp_path / "group-group_report-13.png"),
+            str(tmp_path / "group-group_report-666.png"),
+        ],
+        [
+            str(tmp_path / "group-group_VarianceError.nii"),
+            str(tmp_path / "resels_per_voxel.nii"),
+            str(tmp_path / "included_voxel_mask.nii"),
+        ],
+        [
+            str(tmp_path / "A.nii"),
+            str(tmp_path / "B.nii"),
+            str(tmp_path / "cov1.nii"),
+            str(tmp_path / "cov2.nii"),
+            str(tmp_path / "cov3.nii"),
+        ],
+        [
+            str(tmp_path / "group-group_A-lt-B_measure-measure_contrast.nii"),
+            str(tmp_path / "group-group_B-lt-A_measure-measure_contrast.nii"),
+        ],
+    ]
