@@ -359,8 +359,12 @@ def compute_modality(df: DataFrame) -> DataFrame:
             "task": "",
         },
     }
-    df = df.assign(
-        modality=lambda x: x.series_desc.apply(lambda y: identify_modality(y))
+    df = (
+        df.assign(
+            modality=lambda x: x.series_desc.apply(lambda y: identify_modality(y))
+        )
+        .dropna(subset=["modality"])
+        .drop_duplicates()
     )
     return df.join(df.modality.map(modality_mapping).apply(pd.Series))
 
@@ -436,7 +440,33 @@ def compute_runs(df: DataFrame) -> DataFrame:
     df2 = df[filter].groupby(filter[:-1]).min()
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
     df_alt = df1.reset_index().assign(run=lambda x: (x.run_01_dir_num != x.dir_num))
-    return df_alt.assign(run_num=lambda df: df.run.apply(lambda x: f"run-0{int(x)+1}"))
+    print("df1: ", df1)
+    print("df2: ", df2)
+    print("df_alt: ", df_alt)
+    # df_run_num_1 = df[filter].groupby(filter).sum()
+    # df_run_num_2 = df[filter].groupby(filter[:-1]).sum()
+    # df_run_num_1 = df_run_num_1.join(df_run_num_2.rename(columns={"dir_num": "run_01_dir_num"}))
+    # print("df_run_num_1: ",df_run_num_1)
+    # print("df_run_num_2: ",df_run_num_2)
+    ran_01 = [1]
+    for i in range(1, len(df_alt)):
+        if df_alt.run[i] == True:
+            ran_01.append(ran_01[i - 1] + 1)
+        else:
+            ran_01.append(1)
+
+        # ran = row.run #value of the one before (true or false)
+        # ran_01 = row.run_01_dir_num #run number num of the one before
+    df_ran_01 = pd.DataFrame(ran_01, columns=["run_number"])
+    df_alti = pd.concat([df_alt, df_ran_01], axis=1)
+    df_alti = df_alti.assign(
+        run_num=lambda df: df.run_number.apply(lambda x: f"run-{x:02d}")
+    )
+    print(ran_01)
+    print(df_ran_01)
+    print(df_alti)
+    return df_alti
+    # return df_alt.assign(run_num=lambda df: df.run.apply(lambda x: f"run-0{int(x)+1}"))
 
 
 def get_parent(path: str, n: int = 1) -> Path:
@@ -481,12 +511,12 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 2).name.split("-")[0]
+            lambda x: get_parent(x, 6).name.split("-")[0]
         ),
         source_ses_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 2).name.split("-")[1]
+            lambda x: get_parent(x, 6).name.split("-")[1]
         ),
-        origin=lambda df: df.source.apply(lambda x: get_parent(x, 4)),
+        origin=lambda df: df.source.apply(lambda x: get_parent(x, 8)),
     )
 
     df_dicom = df_dicom.reset_index()
@@ -510,13 +540,17 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
     df_sub_ses = compute_modality(df_sub_ses)
 
     df_fmap = df_sub_ses.assign(
-        dir_num=lambda x: x.source.apply(lambda y: int(get_parent(y).name))
+        dir_num=lambda x: x.source.apply(
+            lambda y: int(get_parent(y, 3).name.split("-")[0])
+        )
     )
 
     df_suf = merge_fieldmaps(df_fmap, identify_fieldmaps(df_fmap))
 
     df_suf_dir = df_suf.assign(
-        dir_num=lambda x: x.source.apply(lambda y: int(get_parent(y).name))
+        dir_num=lambda x: x.source.apply(
+            lambda y: int(get_parent(y, 3).name.split("-")[0])
+        )
     )
     df_alt = compute_runs(df_suf_dir)
     df_sub_ses_run = df_suf_dir.merge(

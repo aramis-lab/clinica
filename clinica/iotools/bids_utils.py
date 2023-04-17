@@ -921,6 +921,8 @@ def identify_modality(filename: str) -> Optional[str]:
     Optional[str]:
         Modality or None if parsing uns
     """
+    import pandas as pd
+
     filename = filename.lower()
     if "dwi" in filename:
         return "dwi"
@@ -933,7 +935,7 @@ def identify_modality(filename: str) -> Optional[str]:
     if "fmri" in filename:
         return "rsfmri"
     else:
-        return None
+        return pd.NA
 
 
 def parse_description(filepath: PathLike, start_line: int, end_line: int) -> str:
