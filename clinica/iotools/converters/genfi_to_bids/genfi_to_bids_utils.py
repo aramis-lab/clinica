@@ -68,6 +68,11 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     df = df.assign(
         acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate)
     )
+    df = df.assign(
+        manufacturer=lambda df: df.source_path.apply(
+            lambda x: pdcm.dcmread(x).Manufacturer
+        )
+    )
     df = df.set_index(["source_path"], verify_integrity=True)
 
     df = df[~df["source"].str.contains("secondary", case=False)]
@@ -435,19 +440,14 @@ def compute_runs(df: DataFrame) -> DataFrame:
     DataFrame
         Dataframe containing the correct run for each acquisition.
     """
-    filter = ["source_id", "source_ses_id", "suffix", "dir_num"]
+
+    filter = ["source_id", "source_ses_id", "suffix", "part_num", "dir_num"]
     df1 = df[filter].groupby(filter).min()
+    print(df1)
     df2 = df[filter].groupby(filter[:-1]).min()
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
     df_alt = df1.reset_index().assign(run=lambda x: (x.run_01_dir_num != x.dir_num))
-    print("df1: ", df1)
-    print("df2: ", df2)
-    print("df_alt: ", df_alt)
-    # df_run_num_1 = df[filter].groupby(filter).sum()
-    # df_run_num_2 = df[filter].groupby(filter[:-1]).sum()
-    # df_run_num_1 = df_run_num_1.join(df_run_num_2.rename(columns={"dir_num": "run_01_dir_num"}))
-    # print("df_run_num_1: ",df_run_num_1)
-    # print("df_run_num_2: ",df_run_num_2)
+
     ran_01 = [1]
     for i in range(1, len(df_alt)):
         if df_alt.run[i] == True:
@@ -455,18 +455,44 @@ def compute_runs(df: DataFrame) -> DataFrame:
         else:
             ran_01.append(1)
 
-        # ran = row.run #value of the one before (true or false)
-        # ran_01 = row.run_01_dir_num #run number num of the one before
     df_ran_01 = pd.DataFrame(ran_01, columns=["run_number"])
+    print(df_ran_01)
     df_alti = pd.concat([df_alt, df_ran_01], axis=1)
     df_alti = df_alti.assign(
         run_num=lambda df: df.run_number.apply(lambda x: f"run-{x:02d}")
     )
-    print(ran_01)
-    print(df_ran_01)
+
     print(df_alti)
     return df_alti
     # return df_alt.assign(run_num=lambda df: df.run.apply(lambda x: f"run-0{int(x)+1}"))
+
+
+def compute_philips_parts(df: DataFrame) -> DataFrame:
+    """Docstring"""
+    filter = ["source_id", "source_ses_id", "suffix", "manufacturer", "dir_num"]
+    # suffix has to be dwi
+    df = df[df["suffix"].str.contains("dwi", case=False)]
+    # shorter_data[~shorter_data["filename"].str.contains('revPE', case=False)]
+    df1 = df[filter].groupby(filter).min()
+    df2 = df[filter].groupby(filter[:-1]).min()
+    df1 = df1.join(df2.rename(columns={"dir_num": "part_01_dir_num"}))
+    # print(df1)
+    df_alt = df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
+
+    part_01 = [1]
+    for i in range(1, len(df_alt)):
+        if df_alt.run[i] == True:
+            part_01.append(part_01[i - 1] + 1)
+        else:
+            part_01.append(1)
+
+    df_part_01 = pd.DataFrame(part_01, columns=["part_number"])
+    df_parts = pd.concat([df_alt, df_part_01], axis=1)
+    df_parts = df_parts.assign(
+        part_num=lambda df: df.part_number.apply(lambda x: f"part-{x:02d}")
+    )
+    # print("df_parts: ", df_parts)
+    return df_parts
 
 
 def get_parent(path: str, n: int = 1) -> Path:
@@ -552,16 +578,31 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
             lambda y: int(get_parent(y, 3).name.split("-")[0])
         )
     )
-    df_alt = compute_runs(df_suf_dir)
-    df_sub_ses_run = df_suf_dir.merge(
-        df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "run_num"]],
+    df_alt = compute_philips_parts(df_suf_dir)
+    # don't forget to use all of the data for runs -> not just dwi
+    df_parts = df_suf_dir.merge(
+        df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "part_num"]],
         how="left",
         on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
+    df_parts[["part_num"]] = df_parts[["part_num"]].fillna(value="part-01")
+    print(df_parts)
 
+    df_alt = compute_runs(df_parts)
+
+    df_sub_ses_run = df_suf_dir.merge(
+        df_alt[
+            ["source_id", "source_ses_id", "suffix", "dir_num", "run_num", "part_num"]
+        ],
+        how="left",
+        on=["source_id", "source_ses_id", "suffix", "dir_num"],
+    )
+    # df_sub_ses_run[['run_num', 'part_num']] = df_sub_ses_run[['run_num', 'part_num']].fillna(value="")
+    # df_sub_ses_run = df_sub_ses_run.a
+    # print("df_sub_ses_run: ", df_sub_ses_run)
     return df_sub_ses_run.assign(
         bids_filename=lambda df: df[
-            ["participant_id", "session_id", "run_num", "suffix"]
+            ["participant_id", "session_id", "run_num", "part_num", "suffix"]
         ].agg("_".join, axis=1),
         bids_full_path=lambda df: df[
             ["participant_id", "session_id", "datatype", "bids_filename"]
