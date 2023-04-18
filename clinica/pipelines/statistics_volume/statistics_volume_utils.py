@@ -732,29 +732,174 @@ def copy_and_rename_spm_output_files(
     ]
 
 
-def _rename_other_spm_files_234(
-    spm_dir: Path, group_label: str, output_dir: Path
-) -> ty.Tuple[str, str, str]:
-    spm_to_clinica_mapping = {
-        "ResMS.nii": f"group-{group_label}_VarianceError.nii",
-        "RPV.nii": "resels_per_voxel.nii",
-        "mask.nii": "included_voxel_mask.nii",
-    }
-    _copy_spm_to_clinica_files(spm_dir, output_dir, spm_to_clinica_mapping)
+def _rename_spm_t_maps(
+    spm_dir: Path,
+    output_dir: Path,
+    parameters_for_new_filename_construction: dict,
+) -> ty.List[str]:
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        _build_t_map_filenames,
+        _get_spm_t_maps,
+    )
 
-    return tuple(str(output_dir / v) for v in spm_to_clinica_mapping.values())
+    return _rename_spm_files(
+        spm_dir,
+        output_dir,
+        spm_filename_getter=_get_spm_t_maps,
+        new_filename_constructor=_build_t_map_filenames,
+        parameters_for_new_filename_construction=parameters_for_new_filename_construction,
+    )
+
+
+def _rename_spm_files(
+    spm_dir: Path,
+    output_dir: Path,
+    spm_filename_getter,
+    new_filename_constructor,
+    parameters_for_new_filename_construction: dict,
+) -> ty.List[str]:
+    """bla"""
+    kwargs = dict()
+    if spm_filename_getter.__name__ == "_get_spm_beta_files":
+        kwargs["expected_number_of_files"] = 2 + len(
+            parameters_for_new_filename_construction["covariates"]
+        )
+    existing_spm_filenames = spm_filename_getter(spm_dir, **kwargs)
+    new_filenames = new_filename_constructor(
+        **parameters_for_new_filename_construction,
+        existing_spm_filenames=existing_spm_filenames,
+    )
+    spm_to_clinica_filename_mapping = {
+        k: v for k, v in zip(existing_spm_filenames, new_filenames)
+    }
+    _copy_spm_to_clinica_files(spm_dir, output_dir, spm_to_clinica_filename_mapping)
+
+    return [str(output_dir / f) for f in new_filenames]
+
+
+def _copy_spm_to_clinica_files(
+    spm_dir: Path, output_dir: Path, name_mapping: ty.Dict[str, str]
+) -> None:
+    _copy_files(
+        {str(spm_dir / k): str(output_dir / v) for k, v in name_mapping.items()}
+    )
+
+
+def _copy_files(source_to_destination_mapping: ty.Dict[str, str]) -> None:
+    """Copy the source files in the mapping keys to the destinations in the values."""
+    from shutil import copyfile
+
+    for source, destination in source_to_destination_mapping.items():
+        copyfile(source, destination)
+
+
+def _rename_spm_contrast_files(
+    spm_dir: Path,
+    output_dir: Path,
+    parameters_for_new_filename_construction: dict,
+) -> ty.List[str]:
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        _get_new_spm_contrast_files,
+        _get_spm_contrast_files,
+    )
+
+    return _rename_spm_files(
+        spm_dir,
+        output_dir,
+        spm_filename_getter=_get_spm_contrast_files,
+        new_filename_constructor=_get_new_spm_contrast_files,
+        parameters_for_new_filename_construction=parameters_for_new_filename_construction,
+    )
+
+
+def _rename_beta_files(
+    spm_dir: Path,
+    output_dir: Path,
+    parameters_for_new_filename_construction: dict,
+) -> ty.List[str]:
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        _get_new_spm_beta_files,
+        _get_spm_beta_files,
+    )
+
+    return _rename_spm_files(
+        spm_dir,
+        output_dir,
+        spm_filename_getter=_get_spm_beta_files,
+        new_filename_constructor=_get_new_spm_beta_files,
+        parameters_for_new_filename_construction=parameters_for_new_filename_construction,
+    )
+
+
+def _rename_spm_figures(
+    spm_dir: Path,
+    output_dir: Path,
+    parameters_for_new_filename_construction: dict,
+) -> ty.List[str]:
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        _get_new_spm_figures,
+        _get_spm_figures,
+    )
+
+    return _rename_spm_files(
+        spm_dir,
+        output_dir,
+        spm_filename_getter=_get_spm_figures,
+        new_filename_constructor=_get_new_spm_figures,
+        parameters_for_new_filename_construction=parameters_for_new_filename_construction,
+    )
+
+
+def _rename_other_spm_files(
+    spm_dir: Path,
+    output_dir: Path,
+    parameters_for_new_filename_construction: dict,
+) -> ty.List[str]:
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        _get_new_other_spm_files,
+        _get_other_spm_files,
+    )
+
+    return _rename_spm_files(
+        spm_dir,
+        output_dir,
+        spm_filename_getter=_get_other_spm_files,
+        new_filename_constructor=_get_new_other_spm_files,
+        parameters_for_new_filename_construction=parameters_for_new_filename_construction,
+    )
+
+
+def _get_spm_t_maps(spm_dir: Path) -> ty.List[str]:
+    return _get_spm_files(spm_dir, pattern="spmT", file_type="t-map(s)")
 
 
 def _get_other_spm_files(spm_dir: Path, **kwargs) -> ty.List[str]:
     return ["ResMS.nii", "RPV.nii", "mask.nii"]
 
 
-def _get_new_other_spm_files(group_label: str, **kwargs):
-    return [
-        f"group-{group_label}_VarianceError.nii",
-        "resels_per_voxel.nii",
-        "included_voxel_mask.nii",
-    ]
+def _get_spm_figures(spm_dir: Path) -> ty.List[str]:
+    import operator
+
+    return _get_spm_files(
+        spm_dir,
+        pattern="png",
+        grab_by_prefix=False,
+        file_type="figures",
+        op=operator.ge,
+    )
+
+
+def _get_spm_beta_files(spm_dir: Path, expected_number_of_files: int) -> ty.List[str]:
+    return _get_spm_files(
+        spm_dir,
+        pattern="beta_",
+        expected_number_of_files=expected_number_of_files,
+        file_type="betas",
+    )
+
+
+def _get_spm_contrast_files(spm_dir: Path) -> ty.List[str]:
+    return _get_spm_files(spm_dir, pattern="con_", file_type="contrast")
 
 
 def _get_spm_files(
@@ -765,6 +910,7 @@ def _get_spm_files(
     expected_number_of_files: int = 2,
     op=operator.eq,
 ) -> ty.List[str]:
+    """Add docstring here."""
     spm_files = [
         f.name
         for f in spm_dir.iterdir()
@@ -790,72 +936,12 @@ def _is_valid_filename(filename: str, pattern: str, grab_by_prefix: bool) -> boo
     return not filename.startswith(".") and pattern_condition
 
 
-_get_spm_figures = functools.partial(
-    _get_spm_files,
-    pattern="png",
-    grab_by_prefix=False,
-    file_type="figures",
-    op=operator.ge,
-)
-_get_spm_figures.__name__ = "_get_spm_figures"
-
-
-_get_spm_t_maps = functools.partial(
-    _get_spm_files,
-    pattern="spmT",
-    file_type="t-map(s)",
-)
-_get_spm_t_maps.__name__ = "_get_spm_t_maps"
-
-
-_get_spm_beta_files = functools.partial(
-    _get_spm_files,
-    pattern="beta_",
-    file_type="betas",
-)
-_get_spm_beta_files.__name__ = "_get_spm_beta_files"
-
-
-_get_spm_contrast_files = functools.partial(
-    _get_spm_files,
-    pattern="con_",
-    file_type="contrast",
-)
-_get_spm_contrast_files.__name__ = "_get_spm_contrast_files"
-
-
-def _rename_spm_figures_234(
-    spm_dir: Path,
-    group_label: str,
-    output_dir: Path,
-) -> list:
-    """Copies and renames the figures generated by the pipeline.
-
-    Parameters
-    ----------
-    spm_dir: str
-        Path to the SPM.mat file's parent directory of the SPM analysis
-    group_label: str
-        Name of the group label
-    output_dir : str, optional
-        Output folder where the copied figures should be written.
-        Default to current folder.
-
-    Returns
-    -------
-    spm_figures: list
-        Path to figure files
-    """
-    spm_figures = _get_spm_figures(spm_dir)
-    fig_number = [
-        int(f[-7:-4]) for f in spm_figures
-    ]  # assumes number is encoded on 3 digits
-    new_spm_figures = [f"group-{group_label}_report-{i}.png" for i in fig_number]
-    _copy_spm_to_clinica_files(
-        spm_dir, output_dir, {k: v for k, v in zip(spm_figures, new_spm_figures)}
-    )
-
-    return new_spm_figures
+def _get_new_other_spm_files(group_label: str, **kwargs):
+    return [
+        f"group-{group_label}_VarianceError.nii",
+        "resels_per_voxel.nii",
+        "included_voxel_mask.nii",
+    ]
 
 
 def _get_new_spm_figures(
@@ -885,64 +971,6 @@ def _check_spm_and_output_dir(
     return spm_dir.resolve(), output_dir.resolve()
 
 
-def _copy_spm_to_clinica_files(
-    spm_dir: Path, output_dir: Path, name_mapping: ty.Dict[str, str]
-) -> None:
-    _copy_files(
-        {str(spm_dir / k): str(output_dir / v) for k, v in name_mapping.items()}
-    )
-
-
-def _copy_files(source_to_destination_mapping: ty.Dict[str, str]) -> None:
-    """Copy the source files in the mapping keys to the destinations in the values."""
-    from shutil import copyfile
-
-    for source, destination in source_to_destination_mapping.items():
-        copyfile(source, destination)
-
-
-def _rename_spm_t_maps_234(
-    spm_dir: Path,
-    fwhm: int,
-    group_label: str,
-    class_names: list,
-    measure: str,
-    output_dir: Path,
-) -> ty.Tuple[str, str]:
-    """Copies and renames the spm t maps.
-
-    Parameters
-    ----------
-    spm_dir: str
-        Path to the SPM.mat file's parent directory of the SPM analysis
-    fwhm: int
-        Fwhm in mm used
-    group_label: str
-        Name of the group label
-    class_names: list of str
-        Corresponds to the 2 classes for the group comparison
-    measure: str
-        Measure used
-    output_dir : str, optional
-        Output folder where the copied files should be written.
-        Default to current folder.
-
-    Returns
-    -------
-    spmT_0001: str
-        Path to t maps for the first group comparison
-    spmT_0002: str
-        Path to t maps for the second group comparison
-    """
-    spm_t_maps = _get_spm_t_maps(spm_dir)
-    new_spm_t_maps = _build_t_map_filenames(class_names, group_label, measure, fwhm)
-    _copy_spm_to_clinica_files(
-        spm_dir, output_dir, {k: v for k, v in zip(spm_t_maps, new_spm_t_maps)}
-    )
-
-    return new_spm_t_maps[0], new_spm_t_maps[1]
-
-
 def _build_t_map_filenames(
     class_names: ty.List[str],
     group_label: str,
@@ -967,91 +995,10 @@ def _build_contrasts_from_class_names(class_names: ty.List[str]) -> ty.List[str]
     ]
 
 
-def _rename_beta_files_234(
-    spm_dir: Path,
-    covariates: list,
-    class_names: list,
-    output_dir: Path,
-) -> list:
-    """Handles the beta files.
-
-    Parameters
-    ----------
-    spm_dir: str
-        Path to the SPM.mat file's parent directory of the SPM analysis
-    covariates: list of str
-        List of covariates
-    class_names: list of str
-        Corresponds to the 2 classes for the group comparison
-    output_dir : str, optional
-        Output folder where the copied files should be written.
-        Default to current folder.
-
-    Returns
-    -------
-    regression_coeff: str list
-        Path to regression coefficients
-    """
-    spm_beta_files = _get_spm_beta_files(
-        spm_dir, expected_number_of_files=2 + len(covariates)
-    )
-    regression_coeff = [f"{c}.nii" for c in class_names] + [
-        f"{covar}.nii" for covar in covariates
-    ]
-
-    _copy_spm_to_clinica_files(
-        spm_dir, output_dir, {k: v for k, v in zip(spm_beta_files, regression_coeff)}
-    )
-
-    return regression_coeff
-
-
 def _get_new_spm_beta_files(
     class_names: ty.List[str], covariates: ty.List[str], **kwargs
 ) -> ty.List[str]:
     return [f"{c}.nii" for c in class_names] + [f"{covar}.nii" for covar in covariates]
-
-
-def _rename_spm_contrast_files_234(
-    spm_dir: Path,
-    group_label: str,
-    class_names: list,
-    measure: str,
-    output_dir: Path,
-) -> list:
-    """Handles the contrast files.
-
-    Parameters
-    ----------
-    spm_dir: str
-        Path to the SPM.mat file's parent directory of the SPM analysis
-    group_label: str
-        Name of the group label
-    class_names: list of str
-        Corresponds to the 2 classes for the group comparison
-    measure: str
-        Measure used
-    output_dir : str, optional
-        Output folder where the copied files should be written.
-        Default to current folder.
-
-    Returns
-    -------
-    contrast: list of str
-        contrast
-    """
-    spm_contrast_files = _get_spm_contrast_files(spm_dir)
-    new_contrast_files = [
-        f"group-{group_label}_{contrast}_measure-{measure}_contrast.nii"
-        for contrast in _build_contrasts_from_class_names(class_names)
-    ]
-    _copy_spm_to_clinica_files(
-        spm_dir,
-        output_dir,
-        {k: v for k, v in zip(spm_contrast_files, new_contrast_files)},
-    )
-
-    return new_contrast_files
 
 
 def _get_new_spm_contrast_files(
@@ -1061,60 +1008,3 @@ def _get_new_spm_contrast_files(
         f"group-{group_label}_{contrast}_measure-{measure}_contrast.nii"
         for contrast in _build_contrasts_from_class_names(class_names)
     ]
-
-
-def _rename_spm_files(
-    spm_dir: Path,
-    output_dir: Path,
-    spm_filename_getter,
-    new_filename_constructor,
-    parameters_for_new_filename_construction: dict,
-) -> ty.List[str]:
-    """bla"""
-    kwargs = dict()
-    if spm_filename_getter.__name__ == "_get_spm_beta_files":
-        kwargs["expected_number_of_files"] = 2 + len(
-            parameters_for_new_filename_construction["covariates"]
-        )
-    existing_spm_filenames = spm_filename_getter(spm_dir, **kwargs)
-    new_filenames = new_filename_constructor(
-        **parameters_for_new_filename_construction,
-        existing_spm_filenames=existing_spm_filenames,
-    )
-    spm_to_clinica_filename_mapping = {
-        k: v for k, v in zip(existing_spm_filenames, new_filenames)
-    }
-    _copy_spm_to_clinica_files(spm_dir, output_dir, spm_to_clinica_filename_mapping)
-
-    return [str(output_dir / f) for f in new_filenames]
-
-
-_rename_spm_contrast_files = functools.partial(
-    _rename_spm_files,
-    spm_filename_getter=_get_spm_contrast_files,
-    new_filename_constructor=_get_new_spm_contrast_files,
-)
-
-_rename_spm_t_maps = functools.partial(
-    _rename_spm_files,
-    spm_filename_getter=_get_spm_t_maps,
-    new_filename_constructor=_build_t_map_filenames,
-)
-
-_rename_beta_files = functools.partial(
-    _rename_spm_files,
-    spm_filename_getter=_get_spm_beta_files,
-    new_filename_constructor=_get_new_spm_beta_files,
-)
-
-_rename_spm_figures = functools.partial(
-    _rename_spm_files,
-    spm_filename_getter=_get_spm_figures,
-    new_filename_constructor=_get_new_spm_figures,
-)
-
-_rename_other_spm_files = functools.partial(
-    _rename_spm_files,
-    spm_filename_getter=_get_other_spm_files,
-    new_filename_constructor=_get_new_other_spm_files,
-)
