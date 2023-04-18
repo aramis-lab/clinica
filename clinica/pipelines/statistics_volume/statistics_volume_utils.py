@@ -754,12 +754,55 @@ def _rename_spm_t_maps(
 def _rename_spm_files(
     spm_dir: Path,
     output_dir: Path,
-    spm_filename_getter,
-    new_filename_constructor,
+    spm_filename_getter: ty.Callable,
+    new_filename_constructor: ty.Callable,
     parameters_for_new_filename_construction: dict,
 ) -> ty.List[str]:
-    """bla"""
+    """Rename SPM files in spm_dir to new file names in output_dir.
+
+    The function consists of three steps:
+        - Get the desired spm files in spm_dir.
+          This is achieved by the provided spm_filename_getter function.
+        - Build the new filenames from provided parameters.
+          This is achieved by the provided new_filename_constructor function.
+        - Copy the files from spm_dir to output_dir and perform the renaming
+          at the same time.
+
+    Parameters
+    ----------
+    spm_dir : Path
+        The path to the SPM folder where SPM output files are located.
+
+    output_dir : Path
+        The path to the desired output folder where the renamed spm files
+        should be written.
+
+    spm_filename_getter : Callable
+        The function responsible for getting the desired SPM files.
+        These functions expect the spm_dir as input and should be
+        partial implementations of the function `_get_spm_files`.
+
+    new_filename_constructor : Callable
+        The function responsible for building the new file names.
+        It is expected that the spm_filename_getter and the
+        new_filename_constructor provide old and new names in the
+        correct order.
+
+    parameters_for_new_filename_construction : dict
+        The dictionary of parameters which will be passed to the
+        new_filename_constructor for building the new file names.
+        This consists of information relative to the class names,
+        the group label, the measure used, the smoothing kernel,
+        and the covariates.
+
+    Returns
+    -------
+    list of str :
+        The list of new file names.
+    """
     kwargs = dict()
+    # The beta file getter needs to know the number of covariates
+    # to verify that it has the correct number of files.
     if spm_filename_getter.__name__ == "_get_spm_beta_files":
         kwargs["expected_number_of_files"] = 2 + len(
             parameters_for_new_filename_construction["covariates"]
@@ -780,13 +823,37 @@ def _rename_spm_files(
 def _copy_spm_to_clinica_files(
     spm_dir: Path, output_dir: Path, name_mapping: ty.Dict[str, str]
 ) -> None:
+    """Copy files in spm_dir to output_dir while renaming them.
+
+    The renaming is controlled by the 'old_name:new_name' mapping 'name_mapping'.
+
+    Parameters
+    ----------
+    spm_dir : Path
+        The path to the SPM folder where SPM output files are located.
+
+    output_dir : Path
+        The path to the desired output folder where the renamed spm files
+        should be written.
+
+    name_mapping : dict
+        Dictionary implementing the mapping between old filenames (the ones
+        in the spm_dir) and desired new file names (the ones that will be
+        written in output_dir).
+    """
     _copy_files(
         {str(spm_dir / k): str(output_dir / v) for k, v in name_mapping.items()}
     )
 
 
 def _copy_files(source_to_destination_mapping: ty.Dict[str, str]) -> None:
-    """Copy the source files in the mapping keys to the destinations in the values."""
+    """Copy the source files in the mapping keys to the destinations in the values.
+
+    Parameters
+    ----------
+    source_to_destination_mapping : dict
+        The mapping between old file paths and new file paths.
+    """
     from shutil import copyfile
 
     for source, destination in source_to_destination_mapping.items():
@@ -798,6 +865,7 @@ def _rename_spm_contrast_files(
     output_dir: Path,
     parameters_for_new_filename_construction: dict,
 ) -> ty.List[str]:
+    """Rename the SPM contrast files."""
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
         _get_new_spm_contrast_files,
         _get_spm_contrast_files,
@@ -836,6 +904,7 @@ def _rename_spm_figures(
     output_dir: Path,
     parameters_for_new_filename_construction: dict,
 ) -> ty.List[str]:
+    """Rename the SPM figure files."""
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
         _get_new_spm_figures,
         _get_spm_figures,
@@ -855,6 +924,7 @@ def _rename_other_spm_files(
     output_dir: Path,
     parameters_for_new_filename_construction: dict,
 ) -> ty.List[str]:
+    """Rename other SPM files of interest."""
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
         _get_new_other_spm_files,
         _get_other_spm_files,
@@ -910,16 +980,54 @@ def _get_spm_files(
     expected_number_of_files: int = 2,
     op=operator.eq,
 ) -> ty.List[str]:
-    """Add docstring here."""
+    """Get the SPM file names of interest in spm_dir.
+
+    Parameters
+    ----------
+    spm_dir : Path
+        The path to the SPM folder where the SPM files are located.
+
+    pattern : str
+        Pattern to look for in the file names. This can be searched as
+        a prefix or a suffix (controlled by 'grab_by_prefix').
+
+    file_type : str
+        The kind of file that the function will be looking for.
+        This is only used for error messages and should be informative
+        for end users.
+
+    grab_by_prefix : bool, optional
+        If True, look for pattern as a prefix in the file names.
+        Otherwise, look for pattern as a suffix in the file names.
+        Default=True.
+
+    expected_number_of_files : int, optional
+        The number of files expected in the spm_dir if the SPM processing
+        took place as expected. If the number of files found does not satisfy
+        the constraint, a RunTimeError will be raised.
+
+    op : operator, optional
+        Used to compare the number of files found to the expected number of files.
+        This is set to equality by default such that an error will be raised if
+        the number of found files is not equal to the desired number.
+        Some functions expect at least some number of files such that 'op.ge'
+        can be used instead.
+
+    Returns
+    -------
+    list of str :
+        List of file names found in spm_dir that match the criteria.
+    """
     spm_files = [
         f.name
         for f in spm_dir.iterdir()
         if _is_valid_filename(f.name, pattern, grab_by_prefix)
     ]
     if not op(len(spm_files), expected_number_of_files):
+        moderator = " at least" if op == operator.ge else ""
         raise RuntimeError(
             f"[Error] Wrong number of SPM {file_type} files. "
-            f"Expected {expected_number_of_files}, got {len(spm_files)}."
+            f"Expected{moderator} {expected_number_of_files}, got {len(spm_files)}."
         )
 
     return spm_files
