@@ -443,42 +443,35 @@ def compute_runs(df: DataFrame) -> DataFrame:
 
     filter = ["source_id", "source_ses_id", "suffix", "number_of_parts", "dir_num"]
     df1 = df[filter].groupby(filter).min()
-    # print(df1)
     df2 = df[filter].groupby(filter[:-1]).min()
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
     df_alt = df1.reset_index().assign(run=lambda x: (x.run_01_dir_num != x.dir_num))
 
-    ran_01 = [1]
+    number_of_runs_list = [1]
     for i in range(1, len(df_alt)):
         if df_alt.run[i] == True:
-            ran_01.append(ran_01[i - 1] + 1)
+            number_of_runs_list.append(number_of_runs_list[i - 1] + 1)
         else:
-            ran_01.append(1)
+            number_of_runs_list.append(1)
 
-    df_ran_01 = pd.DataFrame(ran_01, columns=["run_number"])
-    # print(df_ran_01)
-    df_alti = pd.concat([df_alt, df_ran_01], axis=1)
-    df_alti = df_alti.assign(
+    df_nb_run = pd.DataFrame(number_of_runs_list, columns=["run_number"])
+
+    df_run = pd.concat([df_alt, df_nb_run], axis=1)
+    df_run = df_run.assign(
         run_num=lambda df: df.run_number.apply(lambda x: f"run-{x:02d}")
     )
-
-    # print(df_alti)
-    return df_alti
-    # return df_alt.assign(run_num=lambda df: df.run.apply(lambda x: f"run-0{int(x)+1}"))
+    return df_run
 
 
 def compute_philips_parts(df: DataFrame) -> DataFrame:
     """Docstring"""
     filter = ["source_id", "source_ses_id", "suffix", "manufacturer", "dir_num"]
-    # suffix has to be dwi
     df = df[df["suffix"].str.contains("dwi", case=False)]
-    # shorter_data[~shorter_data["filename"].str.contains('revPE', case=False)]
     df1 = df[filter].groupby(filter).min()
     df2 = df[filter].groupby(filter[:-1]).min()
     df1 = df1.join(df2.rename(columns={"dir_num": "part_01_dir_num"}))
-    # print(df1)
     df_alt = df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
-    # print("df_alt: ", df_alt)
+
     part_01 = [1]
     for i in range(1, len(df_alt)):
         if df_alt.run[i] == True:
@@ -491,23 +484,12 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
 
     filter2 = ["source_id", "source_ses_id", "suffix", "manufacturer", "part_number"]
     df_parts_1 = df_parts[filter2].groupby(filter2).max()
-    # print("df_parts_1: ", df_parts_1)
-    # print("df_parts: ", df_parts)
     df_parts_2 = df_parts[filter2].groupby(filter2[:-1]).max()
-    # print("df_parts_2: ", df_parts_2)
     df_parts_ult = df_parts_1.join(
         df_parts_2.rename(columns={"part_number": "number_of_parts"})
     ).reset_index()
-    # print("df_parts_ult: ", df_parts_ult)
 
     df_parts = pd.concat([df_parts, df_parts_ult["number_of_parts"]], axis=1)
-    # print("df_3: ", df_parts)
-
-    # df_parts = df_parts.assign(
-    #     part_num=lambda df: df.part_number.apply(lambda x: f"part-{x:02d}")
-    # )
-
-    # print("df_parts: ", df_parts)
     return df_parts
 
 
@@ -595,14 +577,13 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         )
     )
     df_alt = compute_philips_parts(df_suf_dir)
-    # don't forget to use all of the data for runs -> not just dwi
+
     df_parts = df_suf_dir.merge(
         df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "number_of_parts"]],
         how="left",
         on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
     df_parts[["number_of_parts"]] = df_parts[["number_of_parts"]].fillna(value="1")
-    # print(df_parts)
 
     df_alt = compute_runs(df_parts)
 
@@ -620,9 +601,6 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         how="left",
         on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
-    # df_sub_ses_run[['run_num', 'part_num']] = df_sub_ses_run[['run_num', 'part_num']].fillna(value="")
-    # df_sub_ses_run = df_sub_ses_run.a
-    # print("df_sub_ses_run: ", df_sub_ses_run)
     return df_sub_ses_run.assign(
         bids_filename=lambda df: df[
             ["participant_id", "session_id", "run_num", "suffix"]
@@ -668,7 +646,6 @@ def write_bids(
 
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
-    # print("scans", scans)
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
         with fs.open(
@@ -689,17 +666,10 @@ def write_bids(
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
 
     for bids_full_path, metadata in scans.iterrows():
-        # print("bids_full_path:  ", bids_full_path)
-        # print("metadata: ", metadata)
         try:
             os.makedirs(to / (Path(bids_full_path).parent))
         except OSError:
             pass
-        # if (metadata.modality == "dwi" and ((int(metadata.number_of_parts) == 9) or (int(metadata.number_of_parts) ==5))):
-        #     # print("bids_full_path:  ", bids_full_path)
-        #     # print("metadata: ", metadata)
-        #     convert_philips_diffusion(to, bids_full_path, metadata, scans)
-        # else:
         run_dcm2niix(
             Path(metadata["source_path"]).parent,
             to / str(Path(bids_full_path).parent),
@@ -708,8 +678,6 @@ def write_bids(
         )
         merge_philips_diffusion(to, scans, metadata, bids_full_path)
     correct_fieldmaps_name(to)
-    # convert_philips_diffusion(to, bids_full_path, metadata)
-
     return
 
 
@@ -769,59 +737,9 @@ def correct_fieldmaps_name(to: PathLike) -> None:
         os.rename(z, z.parent / re.sub(r"phasediff_e[1-9]_ph", "phasediff", z.name))
 
 
-def convert_philips_diffusion(to, bids_full_path, metadata, scans) -> None:
-    import re
-    import subprocess
-
-    if int(metadata.number_of_parts) == 9 and metadata.part_num == "part-09":
-        print("999999:", metadata.source_path)
-        dwi9 = metadata.bids_filename
-        # print("dwi1: ", dwi1)
-        source_path1 = scans[scans["bids_filename"].str.contains(dwi9)]
-        # print("source_path_2: ", source_path_2)
-        # print("\n\n")
-        # print(source_path_2["source_path"].values[0], "\n\n")
-
-        dwi8 = re.sub(r"part-09", "part-08", str(dwi9))
-        dwi7 = re.sub(r"part-09", "part-07", str(dwi9))
-        dwi6 = re.sub(r"part-09", "part-06", str(dwi9))
-        dwi5 = re.sub(r"part-09", "part-05", str(dwi9))
-
-        # source_path9 = get_parent(scans[scans["bids_filename"].str.contains(dwi9)]["source_path"].values[0], n=1)
-        # source_path8 = get_parent(scans[scans["bids_filename"].str.contains(dwi8)]["source_path"].values[0], 1)
-        # source_path7 = get_parent(scans[scans["bids_filename"].str.contains(dwi7)]["source_path"].values[0], 1)
-        # source_path6 = get_parent(scans[scans["bids_filename"].str.contains(dwi6)]["source_path"].values[0], 1)
-        # source_path5 = get_parent(scans[scans["bids_filename"].str.contains(dwi5)]["source_path"].values[0], 1)
-
-        # print(source_path9)
-        # cmd = f"mrcat {source_path9} {source_path8} {source_path7} {source_path6} {source_path5} {to / str(Path(bids_full_path).parent) / str(metadata.bids_filename)}.nii.gz"
-        # print(cmd)
-        # subprocess.run(cmd, shell=True, capture_output=True)
-
-        # dwi4=re.sub(r"part-09", "part-04", str(dwi9))
-        # dwi3=re.sub(r"part-09", "part-03", str(dwi9))
-        # dwi2=re.sub(r"part-09", "part-02", str(dwi9))
-        # dwi1=re.sub(r"part-09", "part-01", str(dwi9))
-
-        # source_path4 = scans[scans["bids_filename"].str.contains(dwi4)]["source_path"].values[0]
-        # source_path3 = scans[scans["bids_filename"].str.contains(dwi3)]["source_path"].values[0]
-        # source_path2 = scans[scans["bids_filename"].str.contains(dwi2)]["source_path"].values[0]
-        # source_path1 = scans[scans["bids_filename"].str.contains(dwi1)]["source_path"].values[0]
-        # cmd = f"mrcat {source_path4} {source_path3} {source_path2} {source_path1} {to / str(Path(bids_full_path).parent) / str(metadata.bids_filename)}"
-    return
-
-
 def merge_philips_diffusion(to, scans, metadata, bids_full_path) -> None:
     import json
-    import re
-    import subprocess
 
-    # different cases to handle
-    print(scans)
-    # if there is 9 scans as there should be:
-    scans_dwi = scans[scans["bids_filename"].str.contains("dwi", case=False)]
-    print(scans_dwi)
-    print(metadata)
     json_path = bids_full_path + ".json"
     with open(to / str(json_path), "r+") as f:
         json_file = json.load(f)
@@ -851,37 +769,3 @@ def merge_philips_diffusion(to, scans, metadata, bids_full_path) -> None:
             ):
                 json_file["MultipartID"] = "dwi_1"
         json.dump(json_file, f, indent=4)
-    # one for each case ?
-
-    # for z9 in Path(to).rglob("*run-09_dwi.nii.gz"):
-    #         if z9
-    #         z8=re.sub(r"part-09", "part-08", str(z9))
-    #         z7=re.sub(r"part-09", "part-07", str(z9))
-    #         z6=re.sub(r"part-09", "part-06", str(z9))
-    #         z5=re.sub(r"part-09", "part-05", str(z9))
-
-    #         z4=re.sub(r"part-09", "part-04", str(z9))
-    #         z3=re.sub(r"part-09", "part-03", str(z9))
-    #         z2=re.sub(r"part-09", "part-02", str(z9))
-    #         z1=re.sub(r"part-09", "part-01", str(z9))
-    #         print("two dwi: ", z9)
-    #         print(z2)
-    # for z in Path(to).rglob("*part-05_dwi.nii.gz"):
-    #         #merge and delete files 1-2-3-4-5
-    #         print("one dwi: ",z)
-
-    # other cases we leave as it is
-
-
-def remove_parts() -> None:
-    # do like correct_fieldmaps
-    return
-
-
-def cat_bvecs():
-    # take the different bvec and juxtapose them...
-    return
-
-
-def cat_bvals():
-    return
