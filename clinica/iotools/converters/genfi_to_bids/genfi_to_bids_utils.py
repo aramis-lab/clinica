@@ -440,7 +440,6 @@ def compute_runs(df: DataFrame) -> DataFrame:
     DataFrame
         Dataframe containing the correct run for each acquisition.
     """
-
     filter = ["source_id", "source_ses_id", "suffix", "number_of_parts", "dir_num"]
     df1 = df[filter].groupby(filter).min()
     df2 = df[filter].groupby(filter[:-1]).min()
@@ -464,7 +463,19 @@ def compute_runs(df: DataFrame) -> DataFrame:
 
 
 def compute_philips_parts(df: DataFrame) -> DataFrame:
-    """Docstring"""
+    """This functions computes the parts numbers for philips dwi acquisitions.
+
+    Parameters
+    ----------
+    df: DataFrame
+        Dataframe without runs.
+
+    Returns
+    -------
+    DataFrame
+        Dataframe containing the correct dwi part number for each acquisition. It also contains
+        the total amount of dwi parts for each subjects-session.
+    """
     filter = ["source_id", "source_ses_id", "suffix", "manufacturer", "dir_num"]
     df = df[df["suffix"].str.contains("dwi", case=False)]
     df1 = df[filter].groupby(filter).min()
@@ -676,7 +687,7 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        merge_philips_diffusion(to, scans, metadata, bids_full_path)
+        merge_philips_diffusion(to, metadata, bids_full_path)
     correct_fieldmaps_name(to)
     return
 
@@ -737,7 +748,8 @@ def correct_fieldmaps_name(to: PathLike) -> None:
         os.rename(z, z.parent / re.sub(r"phasediff_e[1-9]_ph", "phasediff", z.name))
 
 
-def merge_philips_diffusion(to, scans, metadata, bids_full_path) -> None:
+def merge_philips_diffusion(to, metadata, bids_full_path) -> None:
+    """Adds the dwi number for each run of Philips images;"""
     import json
 
     json_path = bids_full_path + ".json"
