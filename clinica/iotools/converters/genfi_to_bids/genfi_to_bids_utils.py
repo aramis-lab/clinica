@@ -472,25 +472,25 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
     df1 = df1.join(df2.rename(columns={"dir_num": "part_01_dir_num"}))
     df_alt = df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
 
-    part_01 = [1]
+    nb_parts_list = [1]
     for i in range(1, len(df_alt)):
         if df_alt.run[i] == True:
-            part_01.append(part_01[i - 1] + 1)
+            nb_parts_list.append(nb_parts_list[i - 1] + 1)
         else:
-            part_01.append(1)
+            nb_parts_list.append(1)
 
-    df_part_01 = pd.DataFrame(part_01, columns=["part_number"])
-    df_parts = pd.concat([df_alt, df_part_01], axis=1)
+    df_part_nb = pd.DataFrame(nb_parts_list, columns=["part_number"])
+    df_parts = pd.concat([df_alt, df_part_nb], axis=1)
 
     filter2 = ["source_id", "source_ses_id", "suffix", "manufacturer", "part_number"]
     df_parts_1 = df_parts[filter2].groupby(filter2).max()
     df_parts_2 = df_parts[filter2].groupby(filter2[:-1]).max()
-    df_parts_ult = df_parts_1.join(
+    df_max_nb_parts = df_parts_1.join(
         df_parts_2.rename(columns={"part_number": "number_of_parts"})
     ).reset_index()
 
-    df_parts = pd.concat([df_parts, df_parts_ult["number_of_parts"]], axis=1)
-    return df_parts
+    df_max_nb_parts = pd.concat([df_parts, df_max_nb_parts["number_of_parts"]], axis=1)
+    return df_max_nb_parts
 
 
 def get_parent(path: str, n: int = 1) -> Path:
