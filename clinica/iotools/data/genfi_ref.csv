@@ -4,9 +4,9 @@ source;session_id;session_id
 gender;genfi_version;bids_filename
 handedness;age_at_visit;bids_full_path
 education;date_of_scan;source_path
-genetic_group;diagnosis;
-genetic_status_1;ftld-cdr-global;
-genetic_status_2;cdr-sob;
+genetic_group;diagnosis;part_num
+genetic_status_1;ftld-cdr-global;run_num
+genetic_status_2;cdr-sob;number_of_parts
 ;non-brain_outer_tissue_-_background;
 ;non-brain_low;
 ;non-brain_mid;
