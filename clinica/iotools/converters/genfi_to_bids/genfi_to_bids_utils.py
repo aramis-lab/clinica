@@ -464,6 +464,8 @@ def compute_runs(df: DataFrame) -> DataFrame:
 
 def compute_philips_parts(df: DataFrame) -> DataFrame:
     """This functions computes the parts numbers for philips dwi acquisitions.
+    The amount of dwi acquisitions linked together is indicated. For example, if a dwi acquisition is split in 9,
+    the `number_of_parts` column will have a value of 9 for all of these acquisition.
 
     Parameters
     ----------
@@ -476,6 +478,7 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
         Dataframe containing the correct dwi part number for each acquisition. It also contains
         the total amount of dwi parts for each subjects-session.
     """
+    # First, we create a column that contains the information of whether a run is a duplicate or not
     filter = ["source_id", "source_ses_id", "suffix", "manufacturer", "dir_num"]
     df = df[df["suffix"].str.contains("dwi", case=False)]
     df1 = df[filter].groupby(filter).min()
@@ -483,16 +486,17 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
     df1 = df1.join(df2.rename(columns={"dir_num": "part_01_dir_num"}))
     df_alt = df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
 
+    # next we compute the number of each part/split
     nb_parts_list = [1]
     for i in range(1, len(df_alt)):
         if df_alt.run[i] == True:
             nb_parts_list.append(nb_parts_list[i - 1] + 1)
         else:
             nb_parts_list.append(1)
-
     df_part_nb = pd.DataFrame(nb_parts_list, columns=["part_number"])
     df_parts = pd.concat([df_alt, df_part_nb], axis=1)
 
+    # finally, we add the number of splits (the max value of the part_number) to each split
     filter2 = ["source_id", "source_ses_id", "suffix", "manufacturer", "part_number"]
     df_parts_1 = df_parts[filter2].groupby(filter2).max()
     df_parts_2 = df_parts[filter2].groupby(filter2[:-1]).max()
