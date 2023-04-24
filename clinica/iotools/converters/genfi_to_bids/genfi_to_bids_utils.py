@@ -819,7 +819,7 @@ def merge_philips_diffusion(
     run_num: str,
     bids_full_path: str,
 ) -> None:
-    """Adds the dwi number for each run of Philips images;"""
+    """Adds the dwi number for each run of Philips images."""
     import json
 
     json_path = bids_full_path + ".json"
