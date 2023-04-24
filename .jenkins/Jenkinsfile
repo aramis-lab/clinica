@@ -145,6 +145,7 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     -m "fast" \
+                    --dist loadgroup \
                     ./nonregression
                 '''
                 }

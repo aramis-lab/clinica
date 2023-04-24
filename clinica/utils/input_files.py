@@ -495,6 +495,11 @@ def t1_volume_final_group_template(group_label):
     return information
 
 
+def custom_group(pattern, description):
+    information = {"pattern": pattern, "description": description}
+    return information
+
+
 """ DWI """
 
 # BIDS
@@ -635,4 +640,10 @@ def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
         "description": "",
         "needed_pipeline": "pet-linear",
     }
+    return information
+
+
+# CUSTOM
+def custom_pipeline(pattern, description):
+    information = {"pattern": pattern, "description": description}
     return information
