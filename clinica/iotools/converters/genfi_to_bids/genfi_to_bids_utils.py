@@ -550,12 +550,12 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 6).name.split("-")[0]
+            lambda x: get_parent(x, 2).name.split("-")[0]
         ),
         source_ses_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 6).name.split("-")[1]
+            lambda x: get_parent(x, 2).name.split("-")[1]
         ),
-        origin=lambda df: df.source.apply(lambda x: get_parent(x, 8)),
+        origin=lambda df: df.source.apply(lambda x: get_parent(x, 4)),
     )
 
     df_dicom = df_dicom.reset_index()
@@ -691,7 +691,9 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        merge_philips_diffusion(to, metadata, bids_full_path)
+        merge_philips_diffusion(
+            to, metadata.number_of_parts, metadata.run_num, bids_full_path
+        )
     correct_fieldmaps_name(to)
     return
 
@@ -752,36 +754,21 @@ def correct_fieldmaps_name(to: PathLike) -> None:
         os.rename(z, z.parent / re.sub(r"phasediff_e[1-9]_ph", "phasediff", z.name))
 
 
-def merge_philips_diffusion(to, metadata, bids_full_path) -> None:
+def merge_philips_diffusion(
+    to: PathLike, number_of_parts: float, run_num: str, bids_full_path: str
+) -> None:
     """Adds the dwi number for each run of Philips images;"""
     import json
 
     json_path = bids_full_path + ".json"
     with open(to / str(json_path), "r+") as f:
         json_file = json.load(f)
-        if int(metadata.number_of_parts) == 9:
-            if (
-                metadata.run_num == "run-01"
-                or metadata.run_num == "run-02"
-                or metadata.run_num == "run-03"
-                or metadata.run_num == "run-04"
-            ):
+        if int(number_of_parts) == 9:
+            if run_num in (f"run-0{k}" for k in range(1, 5)):
                 json_file["MultipartID"] = "dwi_2"
-            if (
-                metadata.run_num == "run-05"
-                or metadata.run_num == "run-06"
-                or metadata.run_num == "run-07"
-                or metadata.run_num == "run-08"
-                or metadata.run_num == "run-09"
-            ):
+            if run_num in (f"run-0{k}" for k in range(5, 10)):
                 json_file["MultipartID"] = "dwi_1"
-        if int(metadata.number_of_parts) == 5:
-            if (
-                metadata.run_num == "run-01"
-                or metadata.run_num == "run-02"
-                or metadata.run_num == "run-03"
-                or metadata.run_num == "run-04"
-                or metadata.run_num == "run-05"
-            ):
+        if int(number_of_parts) == 5:
+            if run_num in (f"run-0{k}" for k in range(1, 5)):
                 json_file["MultipartID"] = "dwi_1"
         json.dump(json_file, f, indent=4)

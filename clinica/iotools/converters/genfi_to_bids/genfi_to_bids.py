@@ -65,7 +65,6 @@ def convert_images(
         df_complete = intersect_data(imaging_data, df_clinical_complete)
     else:
         df_complete = imaging_data
-    # print("df_complete: ", df_complete)
     # build the tsv
     results = dataset_to_bids(df_complete, gif)
 
