@@ -7,7 +7,7 @@ education;date_of_scan;source_path
 genetic_group;diagnosis;part_num
 genetic_status_1;ftld-cdr-global;run_num
 genetic_status_2;cdr-sob;number_of_parts
-;non-brain_outer_tissue_-_background;
+;non-brain_outer_tissue_-_background;manufacturer
 ;non-brain_low;
 ;non-brain_mid;
 ;non-brain_high;

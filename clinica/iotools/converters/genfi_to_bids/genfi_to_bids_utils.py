@@ -446,16 +446,26 @@ def compute_runs(df: DataFrame) -> DataFrame:
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
     df_alt = df1.reset_index().assign(run=lambda x: (x.run_01_dir_num != x.dir_num))
 
-    number_of_runs_list = [1]
-    for i in range(1, len(df_alt)):
-        if df_alt.run[i] == True:
-            number_of_runs_list.append(number_of_runs_list[i - 1] + 1)
-        else:
-            number_of_runs_list.append(1)
+    df_run = pd.concat(
+        [
+            df_alt,
+            pd.DataFrame(
+                _compute_scan_sequence_numbers(df_alt.run.tolist()),
+                columns=["run_number"],
+            ),
+        ],
+        axis=1,
+    )
+    # number_of_runs_list = [1]
+    # for i in range(1, len(df_alt)):
+    #     if df_alt.run[i] == True:
+    #         number_of_runs_list.append(number_of_runs_list[i - 1] + 1)
+    #     else:
+    #         number_of_runs_list.append(1)
 
-    df_nb_run = pd.DataFrame(number_of_runs_list, columns=["run_number"])
+    # df_nb_run = pd.DataFrame(number_of_runs_list, columns=["run_number"])
 
-    df_run = pd.concat([df_alt, df_nb_run], axis=1)
+    # df_run = pd.concat([df_alt, df_nb_run], axis=1)
     df_run = df_run.assign(
         run_num=lambda df: df.run_number.apply(lambda x: f"run-{x:02d}")
     )
@@ -487,14 +497,24 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
     df_alt = df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
 
     # next we compute the number of each part/split
-    nb_parts_list = [1]
-    for i in range(1, len(df_alt)):
-        if df_alt.run[i] == True:
-            nb_parts_list.append(nb_parts_list[i - 1] + 1)
-        else:
-            nb_parts_list.append(1)
-    df_part_nb = pd.DataFrame(nb_parts_list, columns=["part_number"])
-    df_parts = pd.concat([df_alt, df_part_nb], axis=1)
+    df_parts = pd.concat(
+        [
+            df_alt,
+            pd.DataFrame(
+                _compute_scan_sequence_numbers(df_alt.run.tolist()),
+                columns=["part_number"],
+            ),
+        ],
+        axis=1,
+    )
+    # nb_parts_list = [1]
+    # for i in range(1, len(df_alt)):
+    #     if df_alt.run[i] == True:
+    #         nb_parts_list.append(nb_parts_list[i - 1] + 1)
+    #     else:
+    #         nb_parts_list.append(1)
+    # df_part_nb = pd.DataFrame(nb_parts_list, columns=["part_number"])
+    # df_parts = pd.concat([df_alt, df_part_nb], axis=1)
 
     # finally, we add the number of splits (the max value of the part_number) to each split
     filter2 = ["source_id", "source_ses_id", "suffix", "manufacturer", "part_number"]
@@ -506,6 +526,41 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
 
     df_max_nb_parts = pd.concat([df_parts, df_max_nb_parts["number_of_parts"]], axis=1)
     return df_max_nb_parts
+
+
+def _compute_scan_sequence_numbers(first_scan_flags: Iterable[bool]) -> List[int]:
+    """Returns the run number from an iterable of booleans indicating
+    whether each scan is the first of a sequence or not.
+
+    Parameters
+    ---------
+    first_scans_flags : Iterable[bool]
+        If the element at index k is True, then the scan k is the first scan of a sequence.
+        Otherwise, it is part of an ongoing sequence.
+
+    Returns
+    ------
+    ses_numbers : List[int]
+        The list of scan sequence numbers.
+
+    Examples
+    ---------
+    >>> _compute_scan_sequence_numbers([True, True, False, True, False, False, False, True, False, True, True])
+    [1, 1, 2, 1, 2, 3, 4, 1, 2, 1, 1]
+
+    Raises
+    -----
+    ValueError :
+        If the input list is empty.
+    """
+    if len(first_scan_flags) == 0:
+        raise ValueError("Provided list is empty.")
+    ses_numbers = [1]
+    for k in range(1, len(first_scan_flags)):
+        ses_numbers.append(
+            1 if first_scan_flags[k] == False else ses_numbers[k - 1] + 1
+        )
+    return ses_numbers
 
 
 def get_parent(path: str, n: int = 1) -> Path:
@@ -580,7 +635,7 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_fmap = df_sub_ses.assign(
         dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y, 3).name.split("-")[0])
+            lambda y: int(get_parent(y).name.split("-")[0])
         )
     )
 
@@ -588,7 +643,7 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_suf_dir = df_suf.assign(
         dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y, 3).name.split("-")[0])
+            lambda y: int(get_parent(y).name.split("-")[0])
         )
     )
     df_alt = compute_philips_parts(df_suf_dir)
@@ -691,9 +746,13 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        merge_philips_diffusion(
-            to, metadata.number_of_parts, metadata.run_num, bids_full_path
-        )
+        if metadata["bids_filename"].__contains__("dwi"):
+            merge_philips_diffusion(
+                to,
+                metadata.number_of_parts,
+                metadata.run_num,
+                bids_full_path,
+            )
     correct_fieldmaps_name(to)
     return
 
@@ -755,7 +814,10 @@ def correct_fieldmaps_name(to: PathLike) -> None:
 
 
 def merge_philips_diffusion(
-    to: PathLike, number_of_parts: float, run_num: str, bids_full_path: str
+    to: PathLike,
+    number_of_parts: float,
+    run_num: str,
+    bids_full_path: str,
 ) -> None:
     """Adds the dwi number for each run of Philips images;"""
     import json
