@@ -529,15 +529,15 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
     return df_max_nb_parts
 
 
-def _compute_scan_sequence_numbers(first_scan_flags: Iterable[bool]) -> List[int]:
-    """Returns the run number from an iterable of booleans indicating
-    whether each scan is the first of a sequence or not.
+def _compute_scan_sequence_numbers(duplicate_flags: Iterable[bool]) -> List[int]:
+    """Return the run number from an iterable of booleans indicating
+    whether each scan is a duplicate or not.
 
     Parameters
     ---------
-    first_scans_flags : Iterable[bool]
-        If the element at index k is True, then the scan k is the first scan of a sequence.
-        Otherwise, it is part of an ongoing sequence.
+    duplicate_flags : Iterable[bool]
+        If the element at index k is True, then the scan k is a duplicate.
+        Otherwise, it is the first scan of the sequence.
 
     Returns
     ------
@@ -546,21 +546,19 @@ def _compute_scan_sequence_numbers(first_scan_flags: Iterable[bool]) -> List[int
 
     Examples
     ---------
-    >>> _compute_scan_sequence_numbers([True, True, False, True, False, False, False, True, False, True, True])
-    [1, 1, 2, 1, 2, 3, 4, 1, 2, 1, 1]
+    >>> _compute_scan_sequence_numbers([False, True, False, True, False, False, False, True, False, True, True])
+    [1, 2, 1, 2, 1, 1, 1, 2, 1, 2, 3]
 
     Raises
     -----
     ValueError :
         If the input list is empty.
     """
-    if len(first_scan_flags) == 0:
+    if len(duplicate_flags) == 0:
         raise ValueError("Provided list is empty.")
     ses_numbers = [1]
-    for k in range(1, len(first_scan_flags)):
-        ses_numbers.append(
-            1 if first_scan_flags[k] == False else ses_numbers[k - 1] + 1
-        )
+    for k in range(1, len(duplicate_flags)):
+        ses_numbers.append(1 if duplicate_flags[k] == False else ses_numbers[k - 1] + 1)
     return ses_numbers
 
 
