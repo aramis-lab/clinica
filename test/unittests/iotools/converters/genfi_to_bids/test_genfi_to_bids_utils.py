@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 
 from clinica.iotools.bids_utils import identify_modality
@@ -11,7 +12,7 @@ from clinica.iotools.bids_utils import identify_modality
         ("T2", "T2w"),
         ("fieldmap", "fieldmap"),
         ("fmri", "rsfmri"),
-        ("blzflbzv", None),
+        ("blzflbzv", pd.NA),
     ],
 )
 def test_identify_modality(input, expected):
