@@ -706,9 +706,9 @@ def write_bids(
         if "dwi" in metadata["bids_filename"]:
             merge_philips_diffusion(
                 to,
+                Path(bids_full_path),
                 metadata.number_of_parts,
                 metadata.run_num,
-                bids_full_path,
             )
     correct_fieldmaps_name(to)
     return
@@ -771,10 +771,10 @@ def correct_fieldmaps_name(to: PathLike) -> None:
 
 
 def merge_philips_diffusion(
-    to: PathLike,
+    input_file: PathLike,
+    output_file: PathLike,
     number_of_parts: float,
     run_num: str,
-    bids_full_path: str,
 ) -> None:
     """Add the dwi number in the provided JSON file for each run of Philips images.
     The 'MultipartID' field of the input JSON file is set to 'dwi_1' or 'dwi_2' depending
@@ -782,8 +782,8 @@ def merge_philips_diffusion(
     """
     import json
 
-    json_path = bids_full_path + ".json"
-    with open(to / str(json_path), "r+") as f:
+    json_path = output_file.with_suffix(".json")
+    with open(input_file / str(json_path), "r+") as f:
         json_file = json.load(f)
         if int(number_of_parts) == 9:
             if run_num in (f"run-0{k}" for k in range(1, 5)):
