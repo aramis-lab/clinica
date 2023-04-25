@@ -474,8 +474,9 @@ def compute_runs(df: DataFrame) -> DataFrame:
 
 
 def compute_philips_parts(df: DataFrame) -> DataFrame:
-    """This functions computes the parts numbers for philips dwi acquisitions.
-    The amount of dwi acquisitions linked together is indicated. For example, if a dwi acquisition is split in 9,
+    """Compute the parts numbers for philips dwi acquisitions.
+    The amount of dwi acquisitions linked together is indicated.
+    For example, if a dwi acquisition is split in 9,
     the `number_of_parts` column will have a value of 9 for all of these acquisition.
 
     Parameters
@@ -723,7 +724,7 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        if metadata["bids_filename"].__contains__("dwi"):
+        if "dwi" in metadata["bids_filename"]:
             merge_philips_diffusion(
                 to,
                 metadata.number_of_parts,
@@ -796,7 +797,10 @@ def merge_philips_diffusion(
     run_num: str,
     bids_full_path: str,
 ) -> None:
-    """Adds the dwi number for each run of Philips images."""
+    """Add the dwi number in the provided JSON file for each run of Philips images.
+    The 'MultipartID' field of the input JSON file is set to 'dwi_1' or 'dwi_2' depending
+    on the run number.
+    """
     import json
 
     json_path = bids_full_path + ".json"
