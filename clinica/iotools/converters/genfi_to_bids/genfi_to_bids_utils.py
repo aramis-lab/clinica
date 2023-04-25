@@ -63,15 +63,11 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     df = df.assign(
         series_desc=lambda df: df.source_path.apply(
             lambda x: pdcm.dcmread(x).SeriesDescription
-        )
-    )
-    df = df.assign(
-        acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate)
-    )
-    df = df.assign(
+        ),
+        acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate),
         manufacturer=lambda df: df.source_path.apply(
             lambda x: pdcm.dcmread(x).Manufacturer
-        )
+        ),
     )
     df = df.set_index(["source_path"], verify_integrity=True)
 
@@ -457,16 +453,6 @@ def compute_runs(df: DataFrame) -> DataFrame:
         ],
         axis=1,
     )
-    # number_of_runs_list = [1]
-    # for i in range(1, len(df_alt)):
-    #     if df_alt.run[i] == True:
-    #         number_of_runs_list.append(number_of_runs_list[i - 1] + 1)
-    #     else:
-    #         number_of_runs_list.append(1)
-
-    # df_nb_run = pd.DataFrame(number_of_runs_list, columns=["run_number"])
-
-    # df_run = pd.concat([df_alt, df_nb_run], axis=1)
     df_run = df_run.assign(
         run_num=lambda df: df.run_number.apply(lambda x: f"run-{x:02d}")
     )
@@ -478,6 +464,9 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
     The amount of dwi acquisitions linked together is indicated.
     For example, if a dwi acquisition is split in 9,
     the `number_of_parts` column will have a value of 9 for all of these acquisition.
+    Two columns are added:
+        - part_number, which contains the number for each part of a DTI acquisition.
+        - number_of_parts, which contains the amount of parts for each DTI acquisition.
 
     Parameters
     ----------
@@ -509,14 +498,6 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
         ],
         axis=1,
     )
-    # nb_parts_list = [1]
-    # for i in range(1, len(df_alt)):
-    #     if df_alt.run[i] == True:
-    #         nb_parts_list.append(nb_parts_list[i - 1] + 1)
-    #     else:
-    #         nb_parts_list.append(1)
-    # df_part_nb = pd.DataFrame(nb_parts_list, columns=["part_number"])
-    # df_parts = pd.concat([df_alt, df_part_nb], axis=1)
 
     # finally, we add the number of splits (the max value of the part_number) to each split
     filter2 = ["source_id", "source_ses_id", "suffix", "manufacturer", "part_number"]
