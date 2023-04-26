@@ -1,6 +1,7 @@
+from enum import Enum
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 import pydicom as pdcm
@@ -439,7 +440,6 @@ def compute_runs(df: DataFrame) -> DataFrame:
     """
 
     filter = ["source_id", "source_ses_id", "suffix", "number_of_parts", "dir_num"]
-    print("df: ", df[filter])
     df1 = df[filter].groupby(filter).min()
     df2 = df[filter].groupby(filter[:-1]).min()
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
@@ -458,7 +458,6 @@ def compute_runs(df: DataFrame) -> DataFrame:
     df_run = df_run.assign(
         run_num=lambda df: df.run_number.apply(lambda x: f"run-{x:02d}")
     )
-    print("df_run: ", df_run)
     return df_run
 
 
@@ -511,7 +510,6 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
     ).reset_index()
 
     return pd.concat([df_parts, df_max_nb_parts["number_of_parts"]], axis=1)
-    print(df_max_nb_parts)
 
 
 def _compute_scan_sequence_numbers(duplicate_flags: Iterable[bool]) -> List[int]:
@@ -607,7 +605,6 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         )
     )
     df_alt = compute_philips_parts(df_suf_dir)
-
     df_parts = df_suf_dir.merge(
         df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "number_of_parts"]],
         how="left",
@@ -631,6 +628,7 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         how="left",
         on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
+
     return df_sub_ses_run.assign(
         bids_filename=lambda df: df[
             ["participant_id", "session_id", "run_num", "suffix"]
@@ -673,7 +671,7 @@ def write_bids(
     from clinica.utils.stream import cprint
 
     cprint("Starting to write the BIDS.", lvl="info")
-
+    print(scans)
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
     # Ensure BIDS hierarchy is written first.
@@ -696,6 +694,7 @@ def write_bids(
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
 
     for bids_full_path, metadata in scans.iterrows():
+        print("metadata:", metadata)
         try:
             os.makedirs(to / (Path(bids_full_path).parent))
         except OSError:
@@ -706,10 +705,9 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        if "dwi" in metadata["bids_filename"]:
+        if "dwi" in metadata["bids_filename"] and metadata.manufacturer == "Philips":
             merge_philips_diffusion(
-                to,
-                to / bids_full_path.with_suffix(".json"),
+                to / Path(bids_full_path).with_suffix(".json"),
                 metadata.number_of_parts,
                 metadata.run_num,
             )
@@ -774,8 +772,7 @@ def correct_fieldmaps_name(to: PathLike) -> None:
 
 
 def merge_philips_diffusion(
-    input_file: PathLike,
-    output_file: PathLike,
+    json_file: PathLike,
     number_of_parts: float,
     run_num: str,
 ) -> None:
@@ -785,14 +782,52 @@ def merge_philips_diffusion(
     """
     import json
 
-    with open(input_file / str(json_path), "r+") as f:
-        json_file = json.load(f)
-        if int(number_of_parts) == 9:
-            if run_num in (f"run-0{k}" for k in range(1, 5)):
-                json_file["MultipartID"] = "dwi_2"
-            if run_num in (f"run-0{k}" for k in range(5, 10)):
-                json_file["MultipartID"] = "dwi_1"
-        if int(number_of_parts) == 5:
-            if run_num in (f"run-0{k}" for k in range(1, 5)):
-                json_file["MultipartID"] = "dwi_1"
-        json.dump(json_file, f, indent=4)
+    data = json.loads(json_file.read_text())
+    multipart_id = _get_multipart_id(
+        PhillipsNumberOfParts.from_int(int(number_of_parts)), run_num
+    )
+    if multipart_id is not None:
+        data["MultipartID"] = multipart_id
+        json.dump(data, json_file, indent=4)
+
+
+class PhillipsNumberOfParts(Enum):
+    """DWI scans obtained with a Phillips scanner might have
+    been divided in either 5 or 9 parts. This distinction is important
+    because we will output a single nifti image when we have five parts,
+    but two distinct nifti images when we have nine parts.
+    If the number of parts is not 5 or 9, nothing will be done.
+    """
+
+    FIVE = 5
+    NINE = 9
+    OTHER = None
+
+    @classmethod
+    def from_int(cls, nb_parts: int):
+        import warnings
+
+        for member in cls:
+            if member.value == nb_parts:
+                return member
+        warnings.warn(
+            f"Unexpected number of parts {nb_parts}. "
+            f"Should be one of {[c.value for c in cls]}."
+        )
+        return cls.OTHER
+
+
+def _get_multipart_id(nb_parts: PhillipsNumberOfParts, run_num: str) -> Optional[str]:
+    """Return the MultiPartID for the provided run number depending on the number of parts."""
+    if nb_parts == PhillipsNumberOfParts.NINE:
+        if run_num in (f"run-0{k}" for k in range(1, 5)):
+            return "dwi_2"
+        if run_num in (f"run-0{k}" for k in range(5, 10)):
+            return "dwi_1"
+        raise ValueError(f"{run_num} is outside of the scope.")
+    if nb_parts == PhillipsNumberOfParts.FIVE:
+        if run_num in (f"run-0{k}" for k in range(1, 5)):
+            return "dwi_1"
+        raise ValueError(f"{run_num} is outside of the scope.")
+    if nb_parts == PhillipsNumberOfParts.OTHER:
+        return None
