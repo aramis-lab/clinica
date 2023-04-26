@@ -921,7 +921,6 @@ def identify_modality(filename: str) -> Optional[str]:
         Modality or None if parsing uns
     """
     import numpy as np
-    import pandas as pd
 
     filename = filename.lower()
     if "dwi" in filename:

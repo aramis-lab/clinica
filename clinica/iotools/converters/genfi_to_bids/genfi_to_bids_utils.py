@@ -437,7 +437,9 @@ def compute_runs(df: DataFrame) -> DataFrame:
     DataFrame
         Dataframe containing the correct run for each acquisition.
     """
+
     filter = ["source_id", "source_ses_id", "suffix", "number_of_parts", "dir_num"]
+    print("df: ", df[filter])
     df1 = df[filter].groupby(filter).min()
     df2 = df[filter].groupby(filter[:-1]).min()
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
@@ -456,6 +458,7 @@ def compute_runs(df: DataFrame) -> DataFrame:
     df_run = df_run.assign(
         run_num=lambda df: df.run_number.apply(lambda x: f"run-{x:02d}")
     )
+    print("df_run: ", df_run)
     return df_run
 
 
