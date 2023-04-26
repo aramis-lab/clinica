@@ -793,9 +793,8 @@ def merge_philips_diffusion(
 
 class PhillipsNumberOfParts(Enum):
     """DWI scans obtained with a Phillips scanner might have
-    been divided in either 5 or 9 parts. This distinction is important
-    because we will output a single nifti image when we have five parts,
-    but two distinct nifti images when we have nine parts.
+    been divided in either 5 or 9 splits. This distinction is important
+    because we will link these different splits together.
     If the number of parts is not 5 or 9, nothing will be done.
     """
 
@@ -811,7 +810,7 @@ class PhillipsNumberOfParts(Enum):
             if member.value == nb_parts:
                 return member
         warnings.warn(
-            f"Unexpected number of parts {nb_parts}. "
+            f"Unexpected number of splits {nb_parts}. "
             f"Should be one of {[c.value for c in cls]}."
         )
         return cls.OTHER
