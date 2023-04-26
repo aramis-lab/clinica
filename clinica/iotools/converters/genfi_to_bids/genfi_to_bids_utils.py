@@ -481,35 +481,47 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
         Dataframe containing the correct dwi part number for each acquisition. It also contains
         the total amount of dwi parts for each subjects-session.
     """
-    # First, we create a column that contains the information of whether a run is a duplicate or not
+    df_with_duplicate_flags = _find_duplicate_run(df)
+    df_with_part_numbers = _compute_part_numbers(df_with_duplicate_flags)
+    df_with_number_of_parts = _compute_number_of_parts(df_with_part_numbers)
+    return pd.concat(
+        [df_with_part_numbers, df_with_number_of_parts["number_of_parts"]], axis=1
+    )
+
+
+def _find_duplicate_run(df: DataFrame) -> DataFrame:
+    """Create a column that contains the information of whether a run is a duplicate or not."""
     filter = ["source_id", "source_ses_id", "suffix", "manufacturer", "dir_num"]
     df = df[df["suffix"].str.contains("dwi", case=False)]
     df1 = df[filter].groupby(filter).min()
     df2 = df[filter].groupby(filter[:-1]).min()
     df1 = df1.join(df2.rename(columns={"dir_num": "part_01_dir_num"}))
     df_alt = df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
+    return df_alt
 
-    # next we compute the number of each part/split
-    df_parts = pd.concat(
+
+def _compute_part_numbers(df: DataFrame) -> DataFrame:
+    """Compute the sequence number of each part."""
+    return pd.concat(
         [
-            df_alt,
+            df,
             pd.DataFrame(
-                _compute_scan_sequence_numbers(df_alt.run.tolist()),
-                columns=["part_number"],
+                _compute_scan_sequence_numbers(df.run.tolist()), columns=["part_number"]
             ),
         ],
         axis=1,
     )
 
-    # finally, we add the number of splits (the max value of the part_number) to each split
+
+def _compute_number_of_parts(df: pd.DataFrame) -> DataFrame:
+    """Add the number of parts (the max value of the part_number column) to each part."""
     filter2 = ["source_id", "source_ses_id", "suffix", "manufacturer", "part_number"]
-    df_parts_1 = df_parts[filter2].groupby(filter2).max()
-    df_parts_2 = df_parts[filter2].groupby(filter2[:-1]).max()
+    df_parts_1 = df[filter2].groupby(filter2).max()
+    df_parts_2 = df[filter2].groupby(filter2[:-1]).max()
     df_max_nb_parts = df_parts_1.join(
         df_parts_2.rename(columns={"part_number": "number_of_parts"})
     ).reset_index()
-
-    return pd.concat([df_parts, df_max_nb_parts["number_of_parts"]], axis=1)
+    return df_max_nb_parts
 
 
 def _compute_scan_sequence_numbers(duplicate_flags: Iterable[bool]) -> List[int]:
@@ -671,7 +683,6 @@ def write_bids(
     from clinica.utils.stream import cprint
 
     cprint("Starting to write the BIDS.", lvl="info")
-    print(scans)
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
     # Ensure BIDS hierarchy is written first.
@@ -694,7 +705,6 @@ def write_bids(
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
 
     for bids_full_path, metadata in scans.iterrows():
-        print("metadata:", metadata)
         try:
             os.makedirs(to / (Path(bids_full_path).parent))
         except OSError:

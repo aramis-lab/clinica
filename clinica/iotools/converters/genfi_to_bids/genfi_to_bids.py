@@ -53,7 +53,6 @@ def convert_images(
 
     # complete the data extracted
     imaging_data = merge_imaging_data(imaging_data)
-    print("imaging_data", imaging_data)
     # complete clinical data
     if path_to_clinical:
         df_clinical_complete = complete_clinical_data(
@@ -67,7 +66,6 @@ def convert_images(
         df_complete = imaging_data
     # build the tsv
     results = dataset_to_bids(df_complete, gif)
-    print("results", results)
     write_bids(
         to=bids_dir,
         participants=results["participants"],
