@@ -466,7 +466,7 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
     """Compute the parts numbers for philips dwi acquisitions.
     The amount of dwi acquisitions linked together is indicated.
     For example, if a dwi acquisition is split in 9,
-    the `number_of_parts` column will have a value of 9 for all of these acquisition.
+    the `number_of_parts` column will have a value of 9 for all of these acquisitions.
     Two columns are added:
         - part_number, which contains the number for each part of a DTI acquisition.
         - number_of_parts, which contains the amount of parts for each DTI acquisition.
@@ -510,9 +510,8 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
         df_parts_2.rename(columns={"part_number": "number_of_parts"})
     ).reset_index()
 
-    df_max_nb_parts = pd.concat([df_parts, df_max_nb_parts["number_of_parts"]], axis=1)
+    return pd.concat([df_parts, df_max_nb_parts["number_of_parts"]], axis=1)
     print(df_max_nb_parts)
-    return df_max_nb_parts
 
 
 def _compute_scan_sequence_numbers(duplicate_flags: Iterable[bool]) -> List[int]:
@@ -544,7 +543,7 @@ def _compute_scan_sequence_numbers(duplicate_flags: Iterable[bool]) -> List[int]
         raise ValueError("Provided list is empty.")
     ses_numbers = [1]
     for k in range(1, len(duplicate_flags)):
-        ses_numbers.append(1 if duplicate_flags[k] == False else ses_numbers[k - 1] + 1)
+        ses_numbers.append(1 if not duplicate_flags[k] else ses_numbers[k - 1] + 1)
     return ses_numbers
 
 
@@ -710,7 +709,7 @@ def write_bids(
         if "dwi" in metadata["bids_filename"]:
             merge_philips_diffusion(
                 to,
-                Path(bids_full_path),
+                to / bids_full_path.with_suffix(".json"),
                 metadata.number_of_parts,
                 metadata.run_num,
             )
@@ -786,7 +785,6 @@ def merge_philips_diffusion(
     """
     import json
 
-    json_path = output_file.with_suffix(".json")
     with open(input_file / str(json_path), "r+") as f:
         json_file = json.load(f)
         if int(number_of_parts) == 9:
