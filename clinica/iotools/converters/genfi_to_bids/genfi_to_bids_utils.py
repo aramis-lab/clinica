@@ -511,6 +511,7 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
     ).reset_index()
 
     df_max_nb_parts = pd.concat([df_parts, df_max_nb_parts["number_of_parts"]], axis=1)
+    print(df_max_nb_parts)
     return df_max_nb_parts
 
 

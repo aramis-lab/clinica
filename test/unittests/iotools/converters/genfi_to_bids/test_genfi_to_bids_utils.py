@@ -1,8 +1,15 @@
+from typing import List
+
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
 from clinica.iotools.bids_utils import identify_modality
-from clinica.iotools.converters.genfi_to_bids.genfi_to_bids_utils import compute_runs
+from clinica.iotools.converters.genfi_to_bids.genfi_to_bids_utils import (
+    _compute_scan_sequence_numbers,
+    compute_philips_parts,
+    compute_runs,
+)
 
 
 @pytest.mark.parametrize(
@@ -23,10 +30,6 @@ def test_identify_modality_is_nan():
     import math
 
     assert math.isnan(identify_modality("blzflbzv"))
-
-
-# test compute runs
-from pandas.testing import assert_frame_equal
 
 
 @pytest.mark.parametrize(
@@ -60,3 +63,92 @@ from pandas.testing import assert_frame_equal
 )
 def test_compute_runs(input, expected):
     assert_frame_equal(compute_runs(input), expected)
+
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        (
+            pd.DataFrame(
+                {
+                    "source_id": [
+                        "sub-01",
+                        "sub-01",
+                        "sub-01",
+                        "sub-01",
+                        "sub-01",
+                        "sub-02",
+                        "sub-02",
+                        "sub-02",
+                    ],
+                    "source_ses_id": [1, 1, 1, 2, 2, 1, 2, 2],
+                    "suffix": ["dwi", "dwi", "dwi", "dwi", "dwi", "dwi", "dwi", "dwi"],
+                    "manufacturer": [
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                    ],
+                    "dir_num": [10, 20, 30, 40, 50, 10, 20, 30],
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "source_id": [
+                        "sub-01",
+                        "sub-01",
+                        "sub-01",
+                        "sub-01",
+                        "sub-01",
+                        "sub-02",
+                        "sub-02",
+                        "sub-02",
+                    ],
+                    "source_ses_id": [1, 1, 1, 2, 2, 1, 2, 2],
+                    "suffix": ["dwi", "dwi", "dwi", "dwi", "dwi", "dwi", "dwi", "dwi"],
+                    "manufacturer": [
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                        "philips",
+                    ],
+                    "dir_num": [10, 20, 30, 40, 50, 10, 20, 30],
+                    "part_01_dir_num": [10, 10, 10, 40, 40, 10, 20, 20],
+                    "run": [False, True, True, False, True, False, False, True],
+                    "part_number": [1, 2, 3, 1, 2, 1, 1, 2],
+                    "number_of_parts": [3, 3, 3, 2, 2, 1, 2, 2],
+                }
+            ),
+        )
+    ],
+)
+def test_compute_philips_parts(input, expected):
+    assert_frame_equal(compute_philips_parts(input), expected)
+
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        (
+            [False, True, False, True, False, False, False, True, False, True, True],
+            [1, 2, 1, 2, 1, 1, 1, 2, 1, 2, 3],
+        ),
+        ([True, True, True], [1, 2, 3]),
+        ([False, False, False], [1, 1, 1]),
+        ([], ValueError),
+    ],
+)
+def test_compute_scan_sequence_numbers(input: List[bool], expected):
+    if expected == ValueError:
+        with pytest.raises(ValueError):
+            _compute_scan_sequence_numbers(input)
+    else:
+        assert _compute_scan_sequence_numbers(input) == expected
