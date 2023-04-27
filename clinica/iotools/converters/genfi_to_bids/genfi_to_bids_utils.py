@@ -41,6 +41,8 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     df: DataFrame
         Dataframe with only the modalities handled.
     """
+    import warnings
+
     to_filter = [
         # from GENFI 1
         "t2_2d_axial",
@@ -61,15 +63,25 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     ]
 
     df = df.drop_duplicates(subset=["source"])
+
     df = df.assign(
         series_desc=lambda df: df.source_path.apply(
             lambda x: pdcm.dcmread(x).SeriesDescription
         ),
         acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate),
-        manufacturer=lambda df: df.source_path.apply(
-            lambda x: pdcm.dcmread(x).Manufacturer
-        ),
+        # manufacturer=lambda df: df.source_path.apply(
+        #     lambda x: pdcm.dcmread(x).Manufacturer
     )
+
+    try:
+        df = df.assign(
+            manufacturer=lambda df: df.source_path.apply(
+                lambda x: pdcm.dcmread(x).Manufacturer
+            )
+        )
+    except:
+        warnings.warn(f"subject something does not have any manufacturer.")
+    df = df.fillna("Unknown")
     df = df.set_index(["source_path"], verify_integrity=True)
 
     df = df[~df["source"].str.contains("secondary", case=False)]
