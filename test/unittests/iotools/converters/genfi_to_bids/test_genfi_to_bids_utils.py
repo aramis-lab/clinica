@@ -76,8 +76,8 @@ def input_df_compute_philips_parts():
                 "sub-02",
             ],
             "source_ses_id": [1, 1, 1, 2, 2, 1, 2, 2],
-            "suffix": ["dwi", "dwi", "dwi", "dwi", "dwi", "dwi", "dwi", "dwi"],
-            "manufacturer": [
+            "suffix": ["dwi"] * 8,
+            "manufacturer": ["philips"] * 8,
                 "philips",
                 "philips",
                 "philips",
@@ -106,8 +106,8 @@ def test_compute_philips_parts(input_df_compute_philips_parts):
                 "sub-02",
             ],
             "source_ses_id": [1, 1, 1, 2, 2, 1, 2, 2],
-            "suffix": ["dwi", "dwi", "dwi", "dwi", "dwi", "dwi", "dwi", "dwi"],
-            "manufacturer": [
+            "suffix": ["dwi"] * 8,
+            "manufacturer": ["philips"] * 8,
                 "philips",
                 "philips",
                 "philips",

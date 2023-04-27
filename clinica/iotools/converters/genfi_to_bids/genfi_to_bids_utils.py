@@ -803,8 +803,8 @@ def merge_philips_diffusion(
 
 class PhilipsNumberOfParts(Enum):
     """DWI scans obtained with a Philips scanner might have
-    been divided in either 5 or 9 splits. This distinction is important
-    because we will link these different splits together.
+    been divided in either 5 or 9 parts. This distinction is important
+    because we will link these different parts together.
     If the number of parts is not 5 or 9, nothing will be done.
     """
 
