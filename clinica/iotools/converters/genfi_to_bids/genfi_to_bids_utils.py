@@ -794,15 +794,15 @@ def merge_philips_diffusion(
 
     data = json.loads(json_file.read_text())
     multipart_id = _get_multipart_id(
-        PhillipsNumberOfParts.from_int(int(number_of_parts)), run_num
+        PhilipsNumberOfParts.from_int(int(number_of_parts)), run_num
     )
     if multipart_id is not None:
         data["MultipartID"] = multipart_id
         json.dump(data, json_file, indent=4)
 
 
-class PhillipsNumberOfParts(Enum):
-    """DWI scans obtained with a Phillips scanner might have
+class PhilipsNumberOfParts(Enum):
+    """DWI scans obtained with a Philips scanner might have
     been divided in either 5 or 9 splits. This distinction is important
     because we will link these different splits together.
     If the number of parts is not 5 or 9, nothing will be done.
@@ -826,17 +826,17 @@ class PhillipsNumberOfParts(Enum):
         return cls.OTHER
 
 
-def _get_multipart_id(nb_parts: PhillipsNumberOfParts, run_num: str) -> Optional[str]:
+def _get_multipart_id(nb_parts: PhilipsNumberOfParts, run_num: str) -> Optional[str]:
     """Return the MultiPartID for the provided run number depending on the number of parts."""
-    if nb_parts == PhillipsNumberOfParts.NINE:
+    if nb_parts == PhilipsNumberOfParts.NINE:
         if run_num in (f"run-0{k}" for k in range(1, 5)):
             return "dwi_2"
         if run_num in (f"run-0{k}" for k in range(5, 10)):
             return "dwi_1"
         raise ValueError(f"{run_num} is outside of the scope.")
-    if nb_parts == PhillipsNumberOfParts.FIVE:
+    if nb_parts == PhilipsNumberOfParts.FIVE:
         if run_num in (f"run-0{k}" for k in range(1, 5)):
             return "dwi_1"
         raise ValueError(f"{run_num} is outside of the scope.")
-    if nb_parts == PhillipsNumberOfParts.OTHER:
+    if nb_parts == PhilipsNumberOfParts.OTHER:
         return None

@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 import pandas as pd
@@ -27,8 +28,6 @@ def test_identify_modality(input, expected):
 
 
 def test_identify_modality_is_nan():
-    import math
-
     assert math.isnan(identify_modality("blzflbzv"))
 
 
