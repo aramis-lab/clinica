@@ -575,12 +575,12 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 2).name.split("-")[0]
+            lambda x: get_parent(x, 6).name.split("-")[0]
         ),
         source_ses_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 2).name.split("-")[1]
+            lambda x: get_parent(x, 6).name.split("-")[1]
         ),
-        origin=lambda df: df.source.apply(lambda x: get_parent(x, 4)),
+        origin=lambda df: df.source.apply(lambda x: get_parent(x, 8)),
     )
 
     df_dicom = df_dicom.reset_index()
@@ -605,7 +605,7 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_fmap = df_sub_ses.assign(
         dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y).name.split("-")[0])
+            lambda y: int(get_parent(y, 3).name.split("-")[0])
         )
     )
 
@@ -613,7 +613,7 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_suf_dir = df_suf.assign(
         dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y).name.split("-")[0])
+            lambda y: int(get_parent(y, 3).name.split("-")[0])
         )
     )
     df_alt = compute_philips_parts(df_suf_dir)
