@@ -28,6 +28,14 @@ def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathL
         yield str(z), str(Path(z).parent)
 
 
+def handle_manufacturer(x):
+    try:
+        manufacturer = pdcm.dcmread(x).Manufacturer
+    except:
+        manufacturer = "Unknown"
+    return manufacturer
+
+
 def filter_dicoms(df: DataFrame) -> DataFrame:
     """Filters modalities handled by the converter.
 
@@ -69,9 +77,7 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
             lambda x: pdcm.dcmread(x).SeriesDescription
         ),
         acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate),
-        manufacturer=lambda df: df.source_path.apply(
-            lambda x: pdcm.dcmread(x).Manufacturer
-        ),
+        manufacturer=lambda df: df.source_path.apply(lambda x: handle_manufacturer(x)),
     )
 
     # try:
