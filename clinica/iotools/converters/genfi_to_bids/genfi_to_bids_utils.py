@@ -81,7 +81,8 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
         )
     except:
         warnings.warn(f"subject something does not have any manufacturer.")
-    df[["manufacturer"]] = df[["manufacturer"]].fillna(value="Unknown")
+    # df[["manufacturer"]] = df[["manufacturer"]].fillna(value="Unknown")
+    df = df.dropna(subset=["manufacturer"])
     df = df.set_index(["source_path"], verify_integrity=True)
 
     df = df[~df["source"].str.contains("secondary", case=False)]
