@@ -69,20 +69,21 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
             lambda x: pdcm.dcmread(x).SeriesDescription
         ),
         acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate),
-        # manufacturer=lambda df: df.source_path.apply(
-        #     lambda x: pdcm.dcmread(x).Manufacturer
+        manufacturer=lambda df: df.source_path.apply(
+            lambda x: pdcm.dcmread(x).Manufacturer
+        ),
     )
 
-    try:
-        df = df.assign(
-            manufacturer=lambda df: df.source_path.apply(
-                lambda x: pdcm.dcmread(x).Manufacturer
-            )
-        )
-    except:
-        warnings.warn(f"subject something does not have any manufacturer.")
-    print("df:", df)
-    # df[["manufacturer"]] = df[["manufacturer"]].fillna(value="Unknown")
+    # try:
+    #     df = df.assign(
+    #         manufacturer=lambda df: df.source_path.apply(
+    #             lambda x: pdcm.dcmread(x).Manufacturer
+    #         )
+    #     )
+    # except:
+    #     warnings.warn(f"subject something does not have any manufacturer.")
+    # print("df:", df)
+    df[["manufacturer"]] = df[["manufacturer"]].fillna(value="Unknown")
     df = df.dropna(subset=["manufacturer"])
     df = df.set_index(["source_path"], verify_integrity=True)
 
