@@ -208,7 +208,9 @@ def dataset_to_bids(complete_data_df: DataFrame, gif: bool) -> Dict[str, DataFra
     import os
 
     # generates participants, sessions and scans tsv
-    complete_data_df = complete_data_df.set_index(
+    complete_data_df = complete_data_df.drop_duplicates(
+        subset=["participant_id", "session_id", "modality", "run_num", "bids_filename"]
+    ).set_index(
         ["participant_id", "session_id", "modality", "run_num", "bids_filename"],
         verify_integrity=True,
     )
