@@ -81,7 +81,7 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
         )
     except:
         warnings.warn(f"subject something does not have any manufacturer.")
-    df = df.fillna("Unknown")
+    df[["manufacturer"]] = df[["manufacturer"]].fillna(value="Unknown")
     df = df.set_index(["source_path"], verify_integrity=True)
 
     df = df[~df["source"].str.contains("secondary", case=False)]
@@ -654,7 +654,7 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         how="left",
         on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
-
+    print("df_sub_ses_run:", df_sub_ses_run)
     return df_sub_ses_run.assign(
         bids_filename=lambda df: df[
             ["participant_id", "session_id", "run_num", "suffix"]
@@ -696,6 +696,7 @@ def write_bids(
     from clinica.iotools.bids_utils import run_dcm2niix, write_to_tsv
     from clinica.utils.stream import cprint
 
+    print("scans:", scans)
     cprint("Starting to write the BIDS.", lvl="info")
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
@@ -729,7 +730,8 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        if "dwi" in metadata["bids_filename"] and metadata.manufacturer == "Philips":
+        print("manufaturer:", metadata.manufacturer)
+        if "dwi" in metadata["bids_filename"] and "Philips" in metadata.manufacturer:
             merge_philips_diffusion(
                 to / Path(bids_full_path).with_suffix(".json"),
                 metadata.number_of_parts,
@@ -812,7 +814,7 @@ def merge_philips_diffusion(
     )
     if multipart_id is not None:
         data["MultipartID"] = multipart_id
-        json.dump(data, json_file, indent=4)
+        json.dump(data, open(json_file, "r+"), indent=4)
 
 
 class PhilipsNumberOfParts(Enum):
@@ -849,7 +851,7 @@ def _get_multipart_id(nb_parts: PhilipsNumberOfParts, run_num: str) -> Optional[
             return "dwi_1"
         raise ValueError(f"{run_num} is outside of the scope.")
     if nb_parts == PhilipsNumberOfParts.FIVE:
-        if run_num in (f"run-0{k}" for k in range(1, 5)):
+        if run_num in (f"run-0{k}" for k in range(1, 6)):
             return "dwi_1"
         raise ValueError(f"{run_num} is outside of the scope.")
     if nb_parts == PhilipsNumberOfParts.OTHER:
