@@ -503,7 +503,7 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
 
 def _find_duplicate_run(df: DataFrame) -> DataFrame:
     """Create a column that contains the information of whether a run is a duplicate or not."""
-    filter = ["source_id", "source_ses_id", "suffix", "manufacturer", "dir_num"]
+    filter = ["source_id", "source_ses_id", "suffix", "dir_num"]
     df = df[df["suffix"].str.contains("dwi", case=False)]
     df1 = df[filter].groupby(filter).min()
     df2 = df[filter].groupby(filter[:-1]).min()
@@ -527,7 +527,7 @@ def _compute_part_numbers(df: DataFrame) -> DataFrame:
 
 def _compute_number_of_parts(df: pd.DataFrame) -> DataFrame:
     """Add the number of parts (the max value of the part_number column) to each part."""
-    filter2 = ["source_id", "source_ses_id", "suffix", "manufacturer", "part_number"]
+    filter2 = ["source_id", "source_ses_id", "suffix", "part_number"]
     df_parts_1 = df[filter2].groupby(filter2).max()
     df_parts_2 = df[filter2].groupby(filter2[:-1]).max()
     df_max_nb_parts = df_parts_1.join(
