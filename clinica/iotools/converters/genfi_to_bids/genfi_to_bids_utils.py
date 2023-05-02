@@ -663,7 +663,6 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         how="left",
         on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
-    print("df_sub_ses_run:", df_sub_ses_run)
     return df_sub_ses_run.assign(
         bids_filename=lambda df: df[
             ["participant_id", "session_id", "run_num", "suffix"]
@@ -705,7 +704,6 @@ def write_bids(
     from clinica.iotools.bids_utils import run_dcm2niix, write_to_tsv
     from clinica.utils.stream import cprint
 
-    print("scans:", scans)
     cprint("Starting to write the BIDS.", lvl="info")
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
@@ -733,14 +731,18 @@ def write_bids(
             os.makedirs(to / (Path(bids_full_path).parent))
         except OSError:
             pass
-        run_dcm2niix(
+        dcm2niix_success = run_dcm2niix(
             Path(metadata["source_path"]).parent,
             to / str(Path(bids_full_path).parent),
             metadata["bids_filename"],
             True,
         )
         print("manufaturer:", metadata.manufacturer)
-        if "dwi" in metadata["bids_filename"] and "Philips" in metadata.manufacturer:
+        if (
+            "dwi" in metadata["bids_filename"]
+            and "Philips" in metadata.manufacturer
+            and dcm2niix_success
+        ):
             merge_philips_diffusion(
                 to / Path(bids_full_path).with_suffix(".json"),
                 metadata.number_of_parts,
