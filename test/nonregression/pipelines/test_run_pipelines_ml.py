@@ -152,7 +152,7 @@ def run_spatial_svm(
     # Copy necessary data from in to out
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
-    parameters = {"group_label": "ADNIbl", "orig_input_data": "t1-volume"}
+    parameters = {"group_label": "ADNIbl", "orig_input_data_ml": "t1-volume"}
     pipeline = SpatialSVM(
         caps_directory=fspath(caps_dir),
         tsv_file=fspath(tsv),
