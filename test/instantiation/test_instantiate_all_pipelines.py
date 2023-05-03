@@ -381,7 +381,7 @@ def test_instantiate_spatial_svm(cmdopt):
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "SpatialSVM"
-    parameters = {"group_label": "ADNIbl", "orig_input_data": "t1-volume"}
+    parameters = {"group_label": "ADNIbl", "orig_input_data_ml": "t1-volume"}
     pipeline = SpatialSVM(
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
