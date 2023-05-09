@@ -83,6 +83,9 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     source_file_series = source_path_series.apply(
         lambda x: (Path(str(x)).name).split(".")[0].split("_")[-1]
     ).rename("modality")
+    source_run_series = source_path_series.apply(
+        lambda x: identify_runs(str(x))
+    ).rename("run_number")
     df_source = pd.concat(
         [
             source_path_series,
@@ -90,10 +93,11 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
             source_dir_series,
             file_spec_series.str.split("_", expand=True),
             source_file_series,
+            source_run_series,
         ],
         axis=1,
     )
-
+    print("df_source: ", df_source)
     df_source = (
         df_source.rename({0: "Subject", 1: "modality_2", 2: "Date"}, axis="columns")
         .drop_duplicates()
@@ -104,6 +108,15 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         "_".join, axis=1
     )
     return df_source
+
+
+def identify_runs(x: str) -> str:
+    import re
+
+    try:
+        return re.search(r"run-\d+")[0]
+    except:
+        return "run-01"
 
 
 def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
