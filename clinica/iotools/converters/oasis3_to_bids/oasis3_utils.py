@@ -73,7 +73,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     source_path_series = pd.Series(
         find_imaging_data(imaging_data_directory), name="source_path"
     )
-    print("source_path_series: ", source_path_series)
+
     source_dir_series = source_path_series.apply(lambda x: Path(str(x)).parent).rename(
         "source_dir"
     )
@@ -93,10 +93,12 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         ],
         axis=1,
     )
-    df_source = df_source.rename(
-        {0: "Subject", 1: "modality_2", 2: "Date"}, axis="columns"
-    ).drop_duplicates()
 
+    df_source = (
+        df_source.rename({0: "Subject", 1: "modality_2", 2: "Date"}, axis="columns")
+        .drop_duplicates()
+        .sort_values(by=["source_path"])
+    )
     df_source = df_source.assign(participant_id=lambda df: "sub-" + df.Subject)
     df_source["modality"] = df_source[["modality", "modality_2"]].apply(
         "_".join, axis=1
@@ -152,6 +154,7 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
     df_source = df_source.join(
         df_source.modality.map(
             {
+                "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
                 "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
                 # "T2w_MR": {"datatype": "anat", "suffix": "T2w"},
                 "T2star_MR": {"datatype": "anat", "suffix": "T2star"},
