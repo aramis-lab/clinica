@@ -153,7 +153,7 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
         df_source.modality.map(
             {
                 "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
-                "T2w_MR": {"datatype": "anat", "suffix": "T2w"},
+                # "T2w_MR": {"datatype": "anat", "suffix": "T2w"},
                 "T2star_MR": {"datatype": "anat", "suffix": "T2star"},
                 "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
                 "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
