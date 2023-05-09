@@ -333,5 +333,6 @@ def write_bids(
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
         path = Path(dataset_directory) / metadata.source_dir
-        install_bids(sourcedata_dir=path, bids_filename=to / filename)
+        if str(filename).split("_")[-1].split(".")[0] != "nan":
+            install_bids(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
