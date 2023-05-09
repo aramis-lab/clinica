@@ -97,7 +97,6 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         ],
         axis=1,
     )
-    print("df_source: ", df_source)
     df_source = (
         df_source.rename({0: "Subject", 1: "modality_2", 2: "Date"}, axis="columns")
         .drop_duplicates()
@@ -114,7 +113,7 @@ def identify_runs(x: str) -> str:
     import re
 
     try:
-        return re.search(r"run-\d+")[0]
+        return re.search(r"run-\d+", x)[0]
     except:
         return "run-01"
 
@@ -188,7 +187,7 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
                 lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
                 f"{x.participant_id}_{x.ses}"
                 f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
-                f"_{x.suffix}.nii.gz",
+                f"_{x.run_number}_{x.suffix}.nii.gz",
                 axis=1,
             )
         )
@@ -197,7 +196,7 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
             filename=lambda df: df.apply(
                 lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
                 f"{x.participant_id}_{x.ses}"
-                f"_{x.suffix}.nii.gz",
+                f"_{x.run_number}_{x.suffix}.nii.gz",
                 axis=1,
             )
         )
