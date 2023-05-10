@@ -113,7 +113,7 @@ def identify_modality(source_path: str) -> str:
     from pathlib import Path
 
     try:
-        return (Path(str(source_path)).name).split(".")[0].split("_")[-1]
+        return (Path(source_path).name).split(".")[0].split("_")[-1]
     except:
         return "nan"
 
