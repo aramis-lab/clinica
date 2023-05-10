@@ -81,7 +81,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         "path"
     )
     source_file_series = source_path_series.apply(
-        lambda x: identify_modality(x)
+        lambda x: identify_modality(str(x))
     ).rename("modality")
     source_run_series = source_path_series.apply(
         lambda x: identify_runs(str(x))
