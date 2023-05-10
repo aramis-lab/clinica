@@ -109,17 +109,20 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     return df_source
 
 
-def identify_modality(x: str) -> str:
+def identify_modality(source_path: str) -> str:
     from pathlib import Path
 
-    return (Path(str(x)).name).split(".")[0].split("_")[-1]
+    try:
+        return (Path(str(source_path)).name).split(".")[0].split("_")[-1]
+    except:
+        return "nan"
 
 
-def identify_runs(x: str) -> str:
+def identify_runs(source_path: str) -> str:
     import re
 
     try:
-        return re.search(r"run-\d+", x)[0]
+        return re.search(r"run-\d+", source_path)[0]
     except:
         return "run-01"
 
@@ -360,4 +363,5 @@ def write_bids(
 
 
 def extract_suffix_from_filename(filename: str) -> str:
+
     return filename.split("_")[-1].split(".")[0]
