@@ -81,7 +81,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         "path"
     )
     source_file_series = source_path_series.apply(
-        lambda x: (Path(str(x)).name).split(".")[0].split("_")[-1]
+        lambda x: identify_modality(x)
     ).rename("modality")
     source_run_series = source_path_series.apply(
         lambda x: identify_runs(str(x))
@@ -107,6 +107,12 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         "_".join, axis=1
     )
     return df_source
+
+
+def identify_modality(x: str) -> str:
+    from pathlib import Path
+
+    return (Path(str(x)).name).split(".")[0].split("_")[-1]
 
 
 def identify_runs(x: str) -> str:
@@ -348,6 +354,10 @@ def write_bids(
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
         path = Path(dataset_directory) / metadata.source_dir
-        if str(filename).split("_")[-1].split(".")[0] != "nan":
+        if extract_suffix_from_filename(str(filename)) != "nan":
             install_bids(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
+
+
+def extract_suffix_from_filename(filename: str) -> str:
+    return filename.split("_")[-1].split(".")[0]
