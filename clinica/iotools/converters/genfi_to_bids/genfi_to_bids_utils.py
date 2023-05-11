@@ -792,11 +792,11 @@ def merge_philips_diffusion(
     """
     import json
 
-    data = json.loads(json_file.read_text())
     multipart_id = _get_multipart_id(
         PhilipsNumberOfParts.from_int(int(number_of_parts)), run_num
     )
     if multipart_id is not None:
+        data = json.loads(json_file.read_text())
         data["MultipartID"] = multipart_id
         json.dump(data, json_file, indent=4)
 
