@@ -17,6 +17,12 @@ Please note that this converter currently processes the following modalities :
 - Fieldmaps
 - rsfMRI
 
+## Downloading GENFI
+
+To download GENFI in a way that you can convert it, you only need to make sure of two thing: 
+- To only select the "simplify downloaded archive structure" in download data options.
+- And in Select Image Data section Scans Format, select only "DICOM"
+
 ## Using the converter
 
 The converter can be run with the following command line:
