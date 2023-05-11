@@ -68,7 +68,6 @@ def input_df_compute_philips_parts():
             "source_id": ["sub-01"] * 5 + ["sub-02"] * 3,
             "source_ses_id": [1, 1, 1, 2, 2, 1, 2, 2],
             "suffix": ["dwi"] * 8,
-            "manufacturer": ["philips"] * 8,
             "dir_num": [10, 20, 30, 40, 50, 10, 20, 30],
         }
     )
@@ -80,7 +79,6 @@ def test_compute_philips_parts(input_df_compute_philips_parts):
             "source_id": ["sub-01"] * 5 + ["sub-02"] * 3,
             "source_ses_id": [1, 1, 1, 2, 2, 1, 2, 2],
             "suffix": ["dwi"] * 8,
-            "manufacturer": ["philips"] * 8,
             "dir_num": [10, 20, 30, 40, 50, 10, 20, 30],
             "part_01_dir_num": [10, 10, 10, 40, 40, 10, 20, 20],
             "run": [False, True, True, False, True, False, False, True],
