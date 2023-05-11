@@ -361,7 +361,7 @@ def compute_modality(df: DataFrame) -> DataFrame:
             "datatype": "func",
             "suffix": "bold",
             "sidecars": ["rsfmri.json"],
-            "task": "_task-rest",
+            "task": "task-rest",
         },
         "fieldmap": {
             "datatype": "fmap",
@@ -648,14 +648,17 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         how="left",
         on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
-    return df_sub_ses_run.assign(
+    df_sub_ses_run = df_sub_ses_run.assign(
         bids_filename=lambda df: df[
-            ["participant_id", "session_id", "run_num", "suffix"]
-        ].agg("_".join, axis=1),
+            ["participant_id", "session_id", "run_num", "task", "suffix"]
+        ]
+        .agg("_".join, axis=1)
+        .replace("__", "_"),
         bids_full_path=lambda df: df[
             ["participant_id", "session_id", "datatype", "bids_filename"]
         ].agg("/".join, axis=1),
     )
+    return df_sub_ses_run
 
 
 def write_bids(
@@ -719,7 +722,7 @@ def write_bids(
         dcm2niix_success = run_dcm2niix(
             Path(metadata["source_path"]).parent,
             to / str(Path(bids_full_path).parent),
-            metadata["bids_filename"],
+            metadata["bids_filename"].replace("__", "_"),
             True,
         )
         if (
