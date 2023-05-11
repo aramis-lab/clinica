@@ -77,26 +77,54 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     source_dir_series = source_path_series.apply(lambda x: Path(str(x)).parent).rename(
         "source_dir"
     )
-
     file_spec_series = source_path_series.apply(lambda x: Path(str(x)).parts[0]).rename(
         "path"
     )
-
+    source_file_series = source_path_series.apply(
+        lambda x: identify_modality(str(x))
+    ).rename("modality")
+    source_run_series = source_path_series.apply(
+        lambda x: identify_runs(str(x))
+    ).rename("run_number")
     df_source = pd.concat(
         [
             source_path_series,
             file_spec_series,
             source_dir_series,
             file_spec_series.str.split("_", expand=True),
+            source_file_series,
+            source_run_series,
         ],
         axis=1,
     )
-    df_source = df_source.rename(
-        {0: "Subject", 1: "modality", 2: "Date"}, axis="columns"
-    ).drop_duplicates()
-
+    df_source = (
+        df_source.rename({0: "Subject", 1: "modality_2", 2: "Date"}, axis="columns")
+        .drop_duplicates()
+        .sort_values(by=["source_path"])
+    )
     df_source = df_source.assign(participant_id=lambda df: "sub-" + df.Subject)
+    df_source["modality"] = df_source[["modality", "modality_2"]].apply(
+        "_".join, axis=1
+    )
     return df_source
+
+
+def identify_modality(source_path: str) -> str:
+    from pathlib import Path
+
+    try:
+        return (Path(source_path).name).split(".")[0].split("_")[-1]
+    except:
+        return "nan"
+
+
+def identify_runs(source_path: str) -> str:
+    import re
+
+    try:
+        return re.search(r"run-\d+", source_path)[0]
+    except:
+        return "run-01"
 
 
 def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
@@ -147,10 +175,17 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
     df_source = df_source.join(
         df_source.modality.map(
             {
-                "MR": {"datatype": "anat", "suffix": "T1w"},
-                "FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
-                "PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
-                "AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
+                "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
+                "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
+                "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
+                "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
+                "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
+                "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
+                "pet_AV45": {
+                    "datatype": "pet",
+                    "suffix": "pet",
+                    "trc_label": "18FAV45",
+                },
             }
         ).apply(pd.Series)
     )
@@ -160,7 +195,7 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
                 lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
                 f"{x.participant_id}_{x.ses}"
                 f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
-                f"_{x.suffix}.nii.gz",
+                f"_{x.run_number}_{x.suffix}.nii.gz",
                 axis=1,
             )
         )
@@ -169,7 +204,7 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
             filename=lambda df: df.apply(
                 lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
                 f"{x.participant_id}_{x.ses}"
-                f"_{x.suffix}.nii.gz",
+                f"_{x.run_number}_{x.suffix}.nii.gz",
                 axis=1,
             )
         )
@@ -321,5 +356,11 @@ def write_bids(
     # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
         path = Path(dataset_directory) / metadata.source_dir
-        install_bids(sourcedata_dir=path, bids_filename=to / filename)
+        if extract_suffix_from_filename(str(filename)) != "nan":
+            install_bids(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
+
+
+def extract_suffix_from_filename(filename: str) -> str:
+
+    return filename.split("_")[-1].split(".")[0]

@@ -628,7 +628,7 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_fmap = df_sub_ses.assign(
         dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y, 3).name.split("-")[0])
+            lambda y: int(get_parent(y).name.split("-")[0])
         )
     )
 
@@ -636,9 +636,9 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_suf_dir = df_suf.assign(
         dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y, 3).name.split("-")[0])
+                lambda y: int(get_parent(y).name.split("-")[0])
         )
-    )
+    )    
     df_alt = compute_philips_parts(df_suf_dir)
     df_parts = df_suf_dir.merge(
         df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "number_of_parts"]],
@@ -737,7 +737,6 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        print("manufaturer:", metadata.manufacturer)
         if (
             "dwi" in metadata["bids_filename"]
             and "Philips" in metadata.manufacturer
@@ -819,13 +818,14 @@ def merge_philips_diffusion(
     """
     import json
 
-    data = json.loads(json_file.read_text())
     multipart_id = _get_multipart_id(
         PhilipsNumberOfParts.from_int(int(number_of_parts)), run_num
     )
     if multipart_id is not None:
+        data = json.loads(json_file.read_text())
         data["MultipartID"] = multipart_id
-        json.dump(data, open(json_file, "r+"), indent=4)
+        json.dump(data, json_file, indent=4)
+
 
 
 class PhilipsNumberOfParts(Enum):

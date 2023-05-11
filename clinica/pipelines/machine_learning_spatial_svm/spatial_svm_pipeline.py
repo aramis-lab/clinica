@@ -16,7 +16,7 @@ class SpatialSVM(cpe.Pipeline):
         self.parameters.setdefault("group_label", None)
         check_group_label(self.parameters["group_label"])
 
-        if "orig_input_data" not in self.parameters.keys():
+        if "orig_input_data_ml" not in self.parameters.keys():
             raise KeyError(
                 "Missing compulsory orig_input_data key in pipeline parameter."
             )
@@ -83,7 +83,7 @@ class SpatialSVM(cpe.Pipeline):
         )
         all_errors = []
 
-        if self.parameters["orig_input_data"] == "t1-volume":
+        if self.parameters["orig_input_data_ml"] == "t1-volume":
             caps_files_information = {
                 "pattern": os.path.join(
                     "t1",
@@ -95,7 +95,7 @@ class SpatialSVM(cpe.Pipeline):
                 "description": "graymatter tissue segmented in T1w MRI in Ixi549 space",
                 "needed_pipeline": "t1-volume-tissue-segmentation",
             }
-        elif self.parameters["orig_input_data"] == "pet-volume":
+        elif self.parameters["orig_input_data_ml"] == "pet-volume":
             if not (
                 self.parameters["acq_label"]
                 and self.parameters["suvr_reference_region"]
@@ -115,7 +115,7 @@ class SpatialSVM(cpe.Pipeline):
             )
         else:
             raise ValueError(
-                f"Image type {self.parameters['orig_input_data']} unknown."
+                f"Image type {self.parameters['orig_input_data_ml']} unknown."
             )
 
         try:
@@ -200,7 +200,7 @@ class SpatialSVM(cpe.Pipeline):
         datasink = npe.Node(nio.DataSink(), name="sinker")
         datasink.inputs.base_directory = self.caps_directory
         datasink.inputs.parameterization = True
-        if self.parameters["orig_input_data"] == "t1-volume":
+        if self.parameters["orig_input_data_ml"] == "t1-volume":
             datasink.inputs.regexp_substitutions = [
                 (
                     r"(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_probability(.*))$",
@@ -226,7 +226,7 @@ class SpatialSVM(cpe.Pipeline):
                 ),
             ]
 
-        elif self.parameters["orig_input_data"] == "pet-volume":
+        elif self.parameters["orig_input_data_ml"] == "pet-volume":
             datasink.inputs.regexp_substitutions = [
                 (
                     r"(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_(task.*)_pet(.*))$",
