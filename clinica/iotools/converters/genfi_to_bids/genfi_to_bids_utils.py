@@ -1,6 +1,7 @@
+from enum import Enum
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 import pydicom as pdcm
@@ -20,6 +21,9 @@ def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathL
     Iterable[Tuple[PathLike, PathLike]]
         Path to found files and parent directory
     """
+    from clinica.utils.stream import cprint
+
+    cprint("Looking for imaging data.", lvl="info")
     for z in Path(path_to_source_data).rglob("*.dcm"):
         yield str(z), str(Path(z).parent)
 
@@ -60,10 +64,11 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     df = df.assign(
         series_desc=lambda df: df.source_path.apply(
             lambda x: pdcm.dcmread(x).SeriesDescription
-        )
-    )
-    df = df.assign(
-        acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate)
+        ),
+        acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate),
+        manufacturer=lambda df: df.source_path.apply(
+            lambda x: pdcm.dcmread(x).Manufacturer
+        ),
     )
     df = df.set_index(["source_path"], verify_integrity=True)
 
@@ -116,6 +121,10 @@ def find_clinical_data(
     List[DataFrame]
         Dataframes containing the clinical data
     """
+    from clinica.utils.stream import cprint
+
+    cprint("Looking for clinical data.", lvl="info")
+
     return (
         _read_file(_check_file(clinical_data_directory, pattern))
         for pattern in (
@@ -353,8 +362,12 @@ def compute_modality(df: DataFrame) -> DataFrame:
             "task": "",
         },
     }
-    df = df.assign(
-        modality=lambda x: x.series_desc.apply(lambda y: identify_modality(y))
+    df = (
+        df.assign(
+            modality=lambda x: x.series_desc.apply(lambda y: identify_modality(y))
+        )
+        .dropna(subset=["modality"])
+        .drop_duplicates()
     )
     return df.join(df.modality.map(modality_mapping).apply(pd.Series))
 
@@ -425,12 +438,123 @@ def compute_runs(df: DataFrame) -> DataFrame:
     DataFrame
         Dataframe containing the correct run for each acquisition.
     """
-    filter = ["source_id", "source_ses_id", "suffix", "dir_num"]
+
+    filter = ["source_id", "source_ses_id", "suffix", "number_of_parts", "dir_num"]
     df1 = df[filter].groupby(filter).min()
     df2 = df[filter].groupby(filter[:-1]).min()
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
     df_alt = df1.reset_index().assign(run=lambda x: (x.run_01_dir_num != x.dir_num))
-    return df_alt.assign(run_num=lambda df: df.run.apply(lambda x: f"run-0{int(x)+1}"))
+
+    df_run = pd.concat(
+        [
+            df_alt,
+            pd.DataFrame(
+                _compute_scan_sequence_numbers(df_alt.run.tolist()),
+                columns=["run_number"],
+            ),
+        ],
+        axis=1,
+    )
+    df_run = df_run.assign(
+        run_num=lambda df: df.run_number.apply(lambda x: f"run-{x:02d}")
+    )
+    return df_run
+
+
+def compute_philips_parts(df: DataFrame) -> DataFrame:
+    """Compute the parts numbers for philips dwi acquisitions.
+    The amount of dwi acquisitions linked together is indicated.
+    For example, if a dwi acquisition is split in 9,
+    the `number_of_parts` column will have a value of 9 for all of these acquisitions.
+    Two columns are added:
+        - part_number, which contains the number for each part of a DTI acquisition.
+        - number_of_parts, which contains the amount of parts for each DTI acquisition.
+
+    Parameters
+    ----------
+    df: DataFrame
+        Dataframe without runs.
+
+    Returns
+    -------
+    DataFrame
+        Dataframe containing the correct dwi part number for each acquisition. It also contains
+        the total amount of dwi parts for each subjects-session.
+    """
+    df_with_duplicate_flags = _find_duplicate_run(df)
+    df_with_part_numbers = _compute_part_numbers(df_with_duplicate_flags)
+    df_with_number_of_parts = _compute_number_of_parts(df_with_part_numbers)
+    return pd.concat(
+        [df_with_part_numbers, df_with_number_of_parts["number_of_parts"]], axis=1
+    )
+
+
+def _find_duplicate_run(df: DataFrame) -> DataFrame:
+    """Create a column that contains the information of whether a run is a duplicate or not."""
+    filter = ["source_id", "source_ses_id", "suffix", "manufacturer", "dir_num"]
+    df = df[df["suffix"].str.contains("dwi", case=False)]
+    df1 = df[filter].groupby(filter).min()
+    df2 = df[filter].groupby(filter[:-1]).min()
+    df1 = df1.join(df2.rename(columns={"dir_num": "part_01_dir_num"}))
+    df_alt = df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
+    return df_alt
+
+
+def _compute_part_numbers(df: DataFrame) -> DataFrame:
+    """Compute the sequence number of each part."""
+    return pd.concat(
+        [
+            df,
+            pd.DataFrame(
+                _compute_scan_sequence_numbers(df.run.tolist()), columns=["part_number"]
+            ),
+        ],
+        axis=1,
+    )
+
+
+def _compute_number_of_parts(df: pd.DataFrame) -> DataFrame:
+    """Add the number of parts (the max value of the part_number column) to each part."""
+    filter2 = ["source_id", "source_ses_id", "suffix", "manufacturer", "part_number"]
+    df_parts_1 = df[filter2].groupby(filter2).max()
+    df_parts_2 = df[filter2].groupby(filter2[:-1]).max()
+    df_max_nb_parts = df_parts_1.join(
+        df_parts_2.rename(columns={"part_number": "number_of_parts"})
+    ).reset_index()
+    return df_max_nb_parts
+
+
+def _compute_scan_sequence_numbers(duplicate_flags: Iterable[bool]) -> List[int]:
+    """Return the run number from an iterable of booleans indicating
+    whether each scan is a duplicate or not.
+
+    Parameters
+    ---------
+    duplicate_flags : Iterable[bool]
+        If the element at index k is True, then the scan k is a duplicate.
+        Otherwise, it is the first scan of the sequence.
+
+    Returns
+    ------
+    ses_numbers : List[int]
+        The list of scan sequence numbers.
+
+    Examples
+    ---------
+    >>> _compute_scan_sequence_numbers([False, True, False, True, False, False, False, True, False, True, True])
+    [1, 2, 1, 2, 1, 1, 1, 2, 1, 2, 3]
+
+    Raises
+    -----
+    ValueError :
+        If the input list is empty.
+    """
+    if len(duplicate_flags) == 0:
+        raise ValueError("Provided list is empty.")
+    ses_numbers = [1]
+    for k in range(1, len(duplicate_flags)):
+        ses_numbers.append(1 if not duplicate_flags[k] else ses_numbers[k - 1] + 1)
+    return ses_numbers
 
 
 def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
@@ -480,17 +604,39 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
     df_sub_ses = compute_modality(df_sub_ses)
 
     df_fmap = df_sub_ses.assign(
-        dir_num=lambda x: x.source.apply(lambda y: int(get_parent(y).name))
+        dir_num=lambda x: x.source.apply(
+            lambda y: int(get_parent(y).name.split("-")[0])
+        )
     )
 
     df_suf = merge_fieldmaps(df_fmap, identify_fieldmaps(df_fmap))
 
     df_suf_dir = df_suf.assign(
-        dir_num=lambda x: x.source.apply(lambda y: int(get_parent(y).name))
+        dir_num=lambda x: x.source.apply(
+            lambda y: int(get_parent(y).name.split("-")[0])
+        )
     )
-    df_alt = compute_runs(df_suf_dir)
+    df_alt = compute_philips_parts(df_suf_dir)
+    df_parts = df_suf_dir.merge(
+        df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "number_of_parts"]],
+        how="left",
+        on=["source_id", "source_ses_id", "suffix", "dir_num"],
+    )
+    df_parts[["number_of_parts"]] = df_parts[["number_of_parts"]].fillna(value="1")
+
+    df_alt = compute_runs(df_parts)
+
     df_sub_ses_run = df_suf_dir.merge(
-        df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "run_num"]],
+        df_alt[
+            [
+                "source_id",
+                "source_ses_id",
+                "suffix",
+                "dir_num",
+                "run_num",
+                "number_of_parts",
+            ]
+        ],
         how="left",
         on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
@@ -534,10 +680,11 @@ def write_bids(
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
     from clinica.iotools.bids_utils import run_dcm2niix, write_to_tsv
+    from clinica.utils.stream import cprint
 
+    cprint("Starting to write the BIDS.", lvl="info")
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
-
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
         with fs.open(
@@ -568,6 +715,12 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
+        if "dwi" in metadata["bids_filename"] and metadata.manufacturer == "Philips":
+            merge_philips_diffusion(
+                to / Path(bids_full_path).with_suffix(".json"),
+                metadata.number_of_parts,
+                metadata.run_num,
+            )
     correct_fieldmaps_name(to)
     return
 
@@ -626,3 +779,64 @@ def correct_fieldmaps_name(to: PathLike) -> None:
 
     for z in Path(to).rglob("*phasediff_e*_ph*"):
         os.rename(z, z.parent / re.sub(r"phasediff_e[1-9]_ph", "phasediff", z.name))
+
+
+def merge_philips_diffusion(
+    json_file: PathLike,
+    number_of_parts: float,
+    run_num: str,
+) -> None:
+    """Add the dwi number in the provided JSON file for each run of Philips images.
+    The 'MultipartID' field of the input JSON file is set to 'dwi_1' or 'dwi_2' depending
+    on the run number.
+    """
+    import json
+
+    multipart_id = _get_multipart_id(
+        PhilipsNumberOfParts.from_int(int(number_of_parts)), run_num
+    )
+    if multipart_id is not None:
+        data = json.loads(json_file.read_text())
+        data["MultipartID"] = multipart_id
+        json.dump(data, json_file, indent=4)
+
+
+class PhilipsNumberOfParts(Enum):
+    """DWI scans obtained with a Philips scanner might have
+    been divided in either 5 or 9 parts. This distinction is important
+    because we will link these different parts together.
+    If the number of parts is not 5 or 9, nothing will be done.
+    """
+
+    FIVE = 5
+    NINE = 9
+    OTHER = None
+
+    @classmethod
+    def from_int(cls, nb_parts: int):
+        import warnings
+
+        for member in cls:
+            if member.value == nb_parts:
+                return member
+        warnings.warn(
+            f"Unexpected number of splits {nb_parts}. "
+            f"Should be one of {[c.value for c in cls]}."
+        )
+        return cls.OTHER
+
+
+def _get_multipart_id(nb_parts: PhilipsNumberOfParts, run_num: str) -> Optional[str]:
+    """Return the MultiPartID for the provided run number depending on the number of parts."""
+    if nb_parts == PhilipsNumberOfParts.NINE:
+        if run_num in (f"run-0{k}" for k in range(1, 5)):
+            return "dwi_2"
+        if run_num in (f"run-0{k}" for k in range(5, 10)):
+            return "dwi_1"
+        raise ValueError(f"{run_num} is outside of the scope.")
+    if nb_parts == PhilipsNumberOfParts.FIVE:
+        if run_num in (f"run-0{k}" for k in range(1, 5)):
+            return "dwi_1"
+        raise ValueError(f"{run_num} is outside of the scope.")
+    if nb_parts == PhilipsNumberOfParts.OTHER:
+        return None

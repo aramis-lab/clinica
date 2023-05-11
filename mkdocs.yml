@@ -100,6 +100,7 @@ nav:
   - Dataset converters:
     - ADNI to BIDS: Converters/ADNI2BIDS.md
     - AIBL to BIDS: Converters/AIBL2BIDS.md
+    - GENFI to BIDS: Converters/GENFItoBIDS.md
     - HABS to BIDS: Converters/HABS2BIDS.md
     - NIFD to BIDS: Converters/NIFD2BIDS.md
     - OASIS to BIDS: Converters/OASIS2BIDS.md
