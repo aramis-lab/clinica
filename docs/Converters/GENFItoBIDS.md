@@ -23,6 +23,8 @@ To download GENFI in a way that you can convert it, you only need to make sure o
 - To only select the "simplify downloaded archive structure" in download data options.
 - And in Select Image Data section Scans Format, select only "DICOM"
 
+![](../img/GENFI_download/selection.png)
+
 ## Using the converter
 
 The converter can be run with the following command line:
