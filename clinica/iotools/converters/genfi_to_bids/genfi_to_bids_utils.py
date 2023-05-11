@@ -49,8 +49,6 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     df: DataFrame
         Dataframe with only the modalities handled.
     """
-    import warnings
-
     to_filter = [
         # from GENFI 1
         "t2_2d_axial",
@@ -71,7 +69,6 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     ]
 
     df = df.drop_duplicates(subset=["source"])
-
     df = df.assign(
         series_desc=lambda df: df.source_path.apply(
             lambda x: pdcm.dcmread(x).SeriesDescription
@@ -79,18 +76,6 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
         acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate),
         manufacturer=lambda df: df.source_path.apply(lambda x: handle_manufacturer(x)),
     )
-
-    # try:
-    #     df = df.assign(
-    #         manufacturer=lambda df: df.source_path.apply(
-    #             lambda x: pdcm.dcmread(x).Manufacturer
-    #         )
-    #     )
-    # except:
-    #     warnings.warn(f"subject something does not have any manufacturer.")
-    # print("df:", df)
-    df[["manufacturer"]] = df[["manufacturer"]].fillna(value="Unknown")
-    df = df.dropna(subset=["manufacturer"])
     df = df.set_index(["source_path"], verify_integrity=True)
 
     df = df[~df["source"].str.contains("secondary", case=False)]
@@ -598,12 +583,12 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_dicom = df_dicom.assign(
         source_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 6).name.split("-")[0]
+            lambda x: get_parent(x, 2).name.split("-")[0]
         ),
         source_ses_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 6).name.split("-")[1]
+            lambda x: get_parent(x, 2).name.split("-")[1]
         ),
-        origin=lambda df: df.source.apply(lambda x: get_parent(x, 8)),
+        origin=lambda df: df.source.apply(lambda x: get_parent(x, 4)),
     )
 
     df_dicom = df_dicom.reset_index()
@@ -636,9 +621,9 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
 
     df_suf_dir = df_suf.assign(
         dir_num=lambda x: x.source.apply(
-                lambda y: int(get_parent(y).name.split("-")[0])
+            lambda y: int(get_parent(y).name.split("-")[0])
         )
-    )    
+    )
     df_alt = compute_philips_parts(df_suf_dir)
     df_parts = df_suf_dir.merge(
         df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "number_of_parts"]],
@@ -825,7 +810,6 @@ def merge_philips_diffusion(
         data = json.loads(json_file.read_text())
         data["MultipartID"] = multipart_id
         json.dump(data, json_file, indent=4)
-
 
 
 class PhilipsNumberOfParts(Enum):
