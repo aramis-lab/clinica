@@ -66,15 +66,6 @@ def input_df_compute_philips_parts():
     return pd.DataFrame(
         {
             "source_id": ["sub-01"] * 5 + ["sub-02"] * 3,
-                "sub-01",
-                "sub-01",
-                "sub-01",
-                "sub-01",
-                "sub-01",
-                "sub-02",
-                "sub-02",
-                "sub-02",
-            ],
             "source_ses_id": [1, 1, 1, 2, 2, 1, 2, 2],
             "suffix": ["dwi"] * 8,
             "manufacturer": ["philips"] * 8,
@@ -87,15 +78,6 @@ def test_compute_philips_parts(input_df_compute_philips_parts):
     expected = pd.DataFrame(
         {
             "source_id": ["sub-01"] * 5 + ["sub-02"] * 3,
-                "sub-01",
-                "sub-01",
-                "sub-01",
-                "sub-01",
-                "sub-01",
-                "sub-02",
-                "sub-02",
-                "sub-02",
-            ],
             "source_ses_id": [1, 1, 1, 2, 2, 1, 2, 2],
             "suffix": ["dwi"] * 8,
             "manufacturer": ["philips"] * 8,
