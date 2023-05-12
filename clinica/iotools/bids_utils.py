@@ -906,6 +906,8 @@ def run_dcm2niix(
             ),
             lvl="warning",
         )
+    else:
+        return True
 
 
 def identify_modality(filename: str) -> Optional[str]:

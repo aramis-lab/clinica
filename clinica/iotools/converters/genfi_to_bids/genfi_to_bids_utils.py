@@ -651,12 +651,18 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
     df_sub_ses_run = df_sub_ses_run.assign(
         bids_filename=lambda df: df[
             ["participant_id", "session_id", "run_num", "task", "suffix"]
-        ]
-        .agg("_".join, axis=1)
-        .replace("__", "_"),
+        ].agg("_".join, axis=1),
+        # bids_full_path=lambda df: df[
+        #     ["participant_id", "session_id", "datatype", "bids_filename"]
+        # ].agg("/".join, axis=1),
+    )
+    df_sub_ses_run = df_sub_ses_run.assign(
+        bids_filename=lambda df: df.bids_filename.apply(lambda x: x.replace("__", "_"))
+    )
+    df_sub_ses_run = df_sub_ses_run.assign(
         bids_full_path=lambda df: df[
             ["participant_id", "session_id", "datatype", "bids_filename"]
-        ].agg("/".join, axis=1),
+        ].agg("/".join, axis=1)
     )
     return df_sub_ses_run
 
@@ -722,7 +728,7 @@ def write_bids(
         dcm2niix_success = run_dcm2niix(
             Path(metadata["source_path"]).parent,
             to / str(Path(bids_full_path).parent),
-            metadata["bids_filename"].replace("__", "_"),
+            metadata["bids_filename"],
             True,
         )
         if (
@@ -809,10 +815,11 @@ def merge_philips_diffusion(
     multipart_id = _get_multipart_id(
         PhilipsNumberOfParts.from_int(int(number_of_parts)), run_num
     )
-    if multipart_id is not None:
-        data = json.loads(json_file.read_text())
-        data["MultipartID"] = multipart_id
-        json.dump(data, json_file, indent=4)
+    with open(json_file, "r+") as f:
+        if multipart_id is not None:
+            data = json.load(f)
+            data["MultipartID"] = multipart_id
+            json.dump(data, f, indent=4)
 
 
 class PhilipsNumberOfParts(Enum):
