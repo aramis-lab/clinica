@@ -294,15 +294,15 @@ def merge_imaging_data(df: DataFrame) -> DataFrame:
 
 
 def _compute_source_id_and_origin(df: DataFrame) -> DataFrame:
-    """Adds three columns built from the column 'source'.
+    """Adds two columns built from the column 'source'.
 
-    - 'source_id': ???
-    - 'source_ses_id': ???
-    - 'origin': ???
+    - 'source_id': subject ID in the raw dataset
+    - 'source_ses_id': Session ID in the raw dataset
 
     Example
     -------
-    ???
+    source_id = 'C9ORF001'
+    source_ses_id = '11
     """
     from clinica.utils.filemanip import get_parent
 
@@ -313,7 +313,6 @@ def _compute_source_id_and_origin(df: DataFrame) -> DataFrame:
         source_ses_id=lambda x: x.source.apply(
             lambda y: get_parent(y, 2).name.split("-")[1]
         ),
-        origin=lambda x: x.source.apply(lambda y: get_parent(y, 4)),
     )
 
 
