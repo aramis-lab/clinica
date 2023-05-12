@@ -8,7 +8,7 @@ from pandas.testing import assert_frame_equal
 from clinica.iotools.bids_utils import identify_modality
 from clinica.iotools.converters.genfi_to_bids.genfi_to_bids_utils import (
     _compute_philips_parts,
-    _compute_runs,
+    _compute_run_numbers_from_parts,
     _compute_scan_sequence_numbers,
 )
 
@@ -58,7 +58,7 @@ def test_compute_runs(input_df_compute_runs):
             "run_num": ["run-01", "run-01", "run-01", "run-02", "run-01"],
         }
     )
-    assert_frame_equal(_compute_runs(input_df_compute_runs), expected)
+    assert_frame_equal(_compute_run_numbers_from_parts(input_df_compute_runs), expected)
 
 
 @pytest.fixture

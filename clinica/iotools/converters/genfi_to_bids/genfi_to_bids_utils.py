@@ -296,11 +296,13 @@ def merge_imaging_data(df: DataFrame) -> DataFrame:
 def _compute_source_id_and_source_ses_id(df: DataFrame) -> DataFrame:
     """Adds two columns built from the column 'source'.
 
+    - 'source': subject ID and session ID joined by a dash
     - 'source_id': subject ID in the raw dataset
     - 'source_ses_id': Session ID in the raw dataset
 
     Example
     -------
+    source = "'C9ORF001-11'
     source_id = 'C9ORF001'
     source_ses_id = '11
     """
