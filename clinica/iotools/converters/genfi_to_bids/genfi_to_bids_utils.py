@@ -30,10 +30,9 @@ def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathL
 
 def handle_manufacturer(x: str) -> str:
     try:
-        manufacturer = pdcm.dcmread(x).Manufacturer
+        return pdcm.dcmread(x).Manufacturer
     except:
-        manufacturer = "Unknown"
-    return manufacturer
+        return "Unknown"
 
 
 def filter_dicoms(df: DataFrame) -> DataFrame:
