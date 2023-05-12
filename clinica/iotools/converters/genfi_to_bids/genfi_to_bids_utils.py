@@ -281,7 +281,7 @@ def merge_imaging_data(df: DataFrame) -> DataFrame:
     DataFrame :
         Dataframe with the data necessary for the BIDS
     """
-    df = _compute_source_id_and_origin(df).reset_index()
+    df = _compute_source_id_and_source_ses_id(df).reset_index()
     df = _compute_genfi_version(df)
     df = _compute_baseline_and_session_numbers(df)
     df = _compute_participant_id(df)
@@ -293,7 +293,7 @@ def merge_imaging_data(df: DataFrame) -> DataFrame:
     return df
 
 
-def _compute_source_id_and_origin(df: DataFrame) -> DataFrame:
+def _compute_source_id_and_source_ses_id(df: DataFrame) -> DataFrame:
     """Adds two columns built from the column 'source'.
 
     - 'source_id': subject ID in the raw dataset
