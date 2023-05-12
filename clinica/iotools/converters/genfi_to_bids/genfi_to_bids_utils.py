@@ -28,7 +28,7 @@ def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathL
         yield str(z), str(Path(z).parent)
 
 
-def handle_manufacturer(x):
+def handle_manufacturer(x: str) -> str:
     try:
         manufacturer = pdcm.dcmread(x).Manufacturer
     except:
@@ -652,9 +652,6 @@ def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
         bids_filename=lambda df: df[
             ["participant_id", "session_id", "run_num", "task", "suffix"]
         ].agg("_".join, axis=1),
-        # bids_full_path=lambda df: df[
-        #     ["participant_id", "session_id", "datatype", "bids_filename"]
-        # ].agg("/".join, axis=1),
     )
     df_sub_ses_run = df_sub_ses_run.assign(
         bids_filename=lambda df: df.bids_filename.apply(lambda x: x.replace("__", "_"))

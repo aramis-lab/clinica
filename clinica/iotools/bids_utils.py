@@ -864,7 +864,7 @@ def run_dcm2niix(
     output_fmt: str,
     compress: bool = False,
     bids_sidecar: bool = True,
-) -> None:
+) -> bool:
     """Runs the `dcm2niix` command using a subprocess.
 
     Parameters
@@ -886,6 +886,11 @@ def run_dcm2niix(
 
     bids_sidecar : bool, optional
         Whether to generate a BIDS sidecar or not. Default=True.
+
+    Returns
+    -------
+    dcm2niix_success: bool
+        True if the conversion was successful, False otherwise.
     """
     import subprocess
 
@@ -906,6 +911,7 @@ def run_dcm2niix(
             ),
             lvl="warning",
         )
+        return False
     else:
         return True
 
