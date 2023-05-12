@@ -468,12 +468,7 @@ def _compute_fieldmaps(df: DataFrame) -> DataFrame:
         )
     )
     df_suf = _merge_fieldmaps(df_with_dir_num, _identify_fieldmaps(df_with_dir_num))
-
-    return df_suf.assign(
-        dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y).name.split("-")[0])
-        )
-    )
+    return df_suf
 
 
 def _identify_fieldmaps(df: DataFrame) -> DataFrame:
