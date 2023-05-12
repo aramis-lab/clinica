@@ -28,13 +28,6 @@ def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathL
         yield str(z), str(Path(z).parent)
 
 
-def handle_manufacturer(x: str) -> str:
-    try:
-        return pdcm.dcmread(x).Manufacturer
-    except:
-        return "Unknown"
-
-
 def filter_dicoms(df: DataFrame) -> DataFrame:
     """Filters modalities handled by the converter.
 
@@ -69,18 +62,24 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
 
     df = df.drop_duplicates(subset=["source"])
     df = df.assign(
-        series_desc=lambda df: df.source_path.apply(
-            lambda x: pdcm.dcmread(x).SeriesDescription
+        series_desc=lambda x: x.source_path.apply(
+            lambda y: pdcm.dcmread(y).SeriesDescription
         ),
-        acq_date=lambda df: df.source_path.apply(lambda x: pdcm.dcmread(x).StudyDate),
-        manufacturer=lambda df: df.source_path.apply(lambda x: handle_manufacturer(x)),
+        acq_date=lambda x: x.source_path.apply(lambda y: pdcm.dcmread(y).StudyDate),
+        manufacturer=lambda x: x.source_path.apply(lambda y: _handle_manufacturer(y)),
     )
     df = df.set_index(["source_path"], verify_integrity=True)
-
     df = df[~df["source"].str.contains("secondary", case=False)]
     for file_mod in to_filter:
         df = df[~df["series_desc"].str.contains(file_mod, case=False)]
     return df
+
+
+def _handle_manufacturer(x: str) -> str:
+    try:
+        return pdcm.dcmread(x).Manufacturer
+    except:
+        return "Unknown"
 
 
 def _check_file(directory: PathLike, pattern: str) -> PathLike:
@@ -95,20 +94,6 @@ def _check_file(directory: PathLike, pattern: str) -> PathLike:
     if len(data_file) > 1:
         raise ValueError("Too many data files found, expected one. Aborting.")
     return data_file[0]
-
-
-def _read_file(data_file: PathLike) -> pd.DataFrame:
-
-    return (
-        pd.concat(
-            [
-                pd.read_excel(str(data_file)),
-                pd.read_excel(str(data_file), sheet_name=1),
-            ]
-        )
-        .convert_dtypes()
-        .rename(columns=lambda x: x.lower().replace(" ", "_"))
-    )
 
 
 def find_clinical_data(
@@ -137,6 +122,19 @@ def find_clinical_data(
             "FINAL*IMAGING*.xlsx",
             "FINAL*CLINICAL*.xlsx",
         )
+    )
+
+
+def _read_file(data_file: PathLike) -> pd.DataFrame:
+    return (
+        pd.concat(
+            [
+                pd.read_excel(str(data_file)),
+                pd.read_excel(str(data_file), sheet_name=1),
+            ]
+        )
+        .convert_dtypes()
+        .rename(columns=lambda x: x.lower().replace(" ", "_"))
     )
 
 
@@ -264,13 +262,86 @@ def read_imaging_data(source_path: PathLike) -> DataFrame:
     df_dicom: DataFrame
         Dataframe containing the data extracted.
     """
-
     return filter_dicoms(
         pd.DataFrame(find_dicoms(source_path), columns=["source_path", "source"])
     )
 
 
-def compute_baseline_date(df: DataFrame) -> DataFrame:
+def merge_imaging_data(df: DataFrame) -> DataFrame:
+    """This function uses the raw information extracted from the images,
+    to obtain all the information necessary for the BIDS conversion.
+
+    Parameters
+    ----------
+    df: DataFrame
+        Dataframe containing the data extracted from the images
+
+    Returns
+    -------
+    DataFrame :
+        Dataframe with the data necessary for the BIDS
+    """
+    df = _compute_source_id_and_origin(df).reset_index()
+    df = _compute_genfi_version(df)
+    df = _compute_baseline_and_session_numbers(df)
+    df = _compute_participant_id(df)
+    df = _compute_modality(df)
+    df = _compute_fieldmaps(df)
+    df = _compute_runs(df)
+    df = _compute_bids_full_path(df)
+
+    return df
+
+
+def _compute_source_id_and_origin(df: DataFrame) -> DataFrame:
+    """Adds three columns built from the column 'source'.
+
+    - 'source_id': ???
+    - 'source_ses_id': ???
+    - 'origin': ???
+
+    Example
+    -------
+    ???
+    """
+    from clinica.utils.filemanip import get_parent
+
+    return df.assign(
+        source_id=lambda x: x.source.apply(
+            lambda y: get_parent(y, 2).name.split("-")[0]
+        ),
+        source_ses_id=lambda x: x.source.apply(
+            lambda y: get_parent(y, 2).name.split("-")[1]
+        ),
+        origin=lambda x: x.source.apply(lambda y: get_parent(y, 4)),
+    )
+
+
+def _compute_genfi_version(df: DataFrame) -> DataFrame:
+    """Compute the genfi_version from the souce_ses_id column.
+
+    The column `source_ses_id` is casted to integer values.
+    """
+    return df.assign(
+        source_ses_id=lambda x: x.source_ses_id.astype("int"),
+        genfi_version=lambda x: x.source_ses_id.apply(lambda y: f"GENFI{len(str(y))}"),
+    )
+
+
+def _compute_baseline_and_session_numbers(df: DataFrame) -> DataFrame:
+    """Compute the baseline date and session numbers
+    and merge on 'source_id` and `source_ses_id`.
+    """
+    df_with_acq_date = _compute_baseline_date(df)
+    df_with_acq_date_and_session_numbers = _compute_session_numbers(df_with_acq_date)
+    return df.merge(
+        df_with_acq_date_and_session_numbers[["baseline", "session_id"]],
+        how="inner",
+        on=["source_id", "source_ses_id"],
+    )
+
+
+def _compute_baseline_date(df: DataFrame) -> DataFrame:
     """Computes the baseline date by taking the minimum
     acq_date for each subject.
 
@@ -292,8 +363,9 @@ def compute_baseline_date(df: DataFrame) -> DataFrame:
     return df_1.join(df_2.rename(columns={"acq_date": "baseline"}))
 
 
-def compute_session_numbers(df: DataFrame) -> DataFrame:
-    """Computes the session IDs obtained from the number of months between an acquisition and the baseline acquisition.
+def _compute_session_numbers(df: DataFrame) -> DataFrame:
+    """Computes the session IDs obtained from the number of months between
+    an acquisition and the baseline acquisition.
 
     Parameters
     ----------
@@ -317,7 +389,12 @@ def compute_session_numbers(df: DataFrame) -> DataFrame:
     )
 
 
-def compute_modality(df: DataFrame) -> DataFrame:
+def _compute_participant_id(df: DataFrame) -> DataFrame:
+    """Compute the 'participant_id' column from the 'source_id' column."""
+    return df.assign(participant_id=lambda x: x.source_id.apply(lambda y: f"sub-{y}"))
+
+
+def _compute_modality(df: DataFrame) -> DataFrame:
     """Parses the series_desc column to identify the modality, and map
     this modality to a metadata dictionary.
 
@@ -329,7 +406,8 @@ def compute_modality(df: DataFrame) -> DataFrame:
     Returns
     -------
     Dataframe
-        Contains the datatype, suffix, sidecars and task that may be needed to form the complete file name.
+        Contains the datatype, suffix, sidecars and task that may be
+        needed to form the complete file name.
     """
     from clinica.iotools.bids_utils import identify_modality
 
@@ -379,7 +457,27 @@ def compute_modality(df: DataFrame) -> DataFrame:
     return df.join(df.modality.map(modality_mapping).apply(pd.Series))
 
 
-def identify_fieldmaps(df: DataFrame) -> DataFrame:
+def _compute_fieldmaps(df: DataFrame) -> DataFrame:
+    """Compute the fieldmaps. Please add details...
+    For example, why do we need to compute the dir_num before and after ?
+    """
+    from clinica.utils.filemanip import get_parent
+
+    df_with_dir_num = df.assign(
+        dir_num=lambda x: x.source.apply(
+            lambda y: int(get_parent(y).name.split("-")[0])
+        )
+    )
+    df_suf = _merge_fieldmaps(df_with_dir_num, _identify_fieldmaps(df_with_dir_num))
+
+    return df_suf.assign(
+        dir_num=lambda x: x.source.apply(
+            lambda y: int(get_parent(y).name.split("-")[0])
+        )
+    )
+
+
+def _identify_fieldmaps(df: DataFrame) -> DataFrame:
     """Identifies the fieldmaps imaging type: magnitude or phase difference.
 
     Parameters
@@ -392,11 +490,15 @@ def identify_fieldmaps(df: DataFrame) -> DataFrame:
     Dataframe
         Dataframe with the fieldmaps identified
     """
-    filter = ["source_id", "source_ses_id", "modality", "dir_num", "suffix"]
-    df1 = df[filter][df["modality"].str.contains("fieldmap")].groupby(filter[:-1]).min()
+    column_filter = ["source_id", "source_ses_id", "modality", "dir_num", "suffix"]
+    df1 = (
+        df[column_filter][df["modality"].str.contains("fieldmap")]
+        .groupby(column_filter[:-1])
+        .min()
+    )
     df2 = (
-        df[filter[:-1]][df["modality"].str.contains("fieldmap")]
-        .groupby(filter[:-2])
+        df[column_filter[:-1]][df["modality"].str.contains("fieldmap")]
+        .groupby(column_filter[:-2])
         .min()
     )
     df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
@@ -408,7 +510,7 @@ def identify_fieldmaps(df: DataFrame) -> DataFrame:
     )
 
 
-def merge_fieldmaps(df: DataFrame, df_fmap: DataFrame) -> DataFrame:
+def _merge_fieldmaps(df: DataFrame, df_fmap: DataFrame) -> DataFrame:
     """Merges the dataframe containing the fieldmaps names
 
     Parameters
@@ -424,52 +526,49 @@ def merge_fieldmaps(df: DataFrame, df_fmap: DataFrame) -> DataFrame:
     Dataframe
         Dataframe containing the correct fieldmap for each fieldmap acquisition.
     """
-    filter = ["source_id", "source_ses_id", "modality", "dir_num", "fmap"]
-    df1 = df.merge(df_fmap[filter], how="inner", on=filter[:-1])
-    df2 = df.merge(df_fmap[filter], how="left", on=filter[:-1])
+    column_filter = ["source_id", "source_ses_id", "modality", "dir_num", "fmap"]
+    df1 = df.merge(df_fmap[column_filter], how="inner", on=column_filter[:-1])
+    df2 = df.merge(df_fmap[column_filter], how="left", on=column_filter[:-1])
     df2 = df2[~df2["modality"].str.contains("fieldmap")]
     df1 = df1.assign(suffix=lambda x: x.fmap)
     return pd.concat([df2, df1], ignore_index=True)
 
 
-def compute_runs(df: DataFrame) -> DataFrame:
-    """This functions computes the run numbers.
-
-    Parameters
-    ----------
-    df: DataFrame
-        Dataframe without runs.
-
-    Returns
-    -------
-    DataFrame
-        Dataframe containing the correct run for each acquisition.
-    """
-
-    filter = ["source_id", "source_ses_id", "suffix", "number_of_parts", "dir_num"]
-    df1 = df[filter].groupby(filter).min()
-    df2 = df[filter].groupby(filter[:-1]).min()
-    df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
-    df_alt = df1.reset_index().assign(run=lambda x: (x.run_01_dir_num != x.dir_num))
-
-    df_run = pd.concat(
-        [
-            df_alt,
-            pd.DataFrame(
-                _compute_scan_sequence_numbers(df_alt.run.tolist()),
-                columns=["run_number"],
-            ),
+def _compute_runs(df: DataFrame) -> DataFrame:
+    """Compute the run numbers."""
+    df_with_number_of_parts = _compute_number_of_scan_parts(df)
+    df_with_run_numbers = _compute_run_numbers_from_parts(df_with_number_of_parts)
+    return df.merge(
+        df_with_run_numbers[
+            [
+                "source_id",
+                "source_ses_id",
+                "suffix",
+                "dir_num",
+                "run_num",
+                "number_of_parts",
+            ]
         ],
-        axis=1,
+        how="left",
+        on=["source_id", "source_ses_id", "suffix", "dir_num"],
     )
-    df_run = df_run.assign(
-        run_num=lambda df: df.run_number.apply(lambda x: f"run-{x:02d}")
-    )
-    return df_run
 
 
-def compute_philips_parts(df: DataFrame) -> DataFrame:
+def _compute_number_of_scan_parts(df: DataFrame) -> DataFrame:
+    """Compute the number of parts. Explain me please..."""
+    df_alt = _compute_philips_parts(df)
+    df_parts = df.merge(
+        df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "number_of_parts"]],
+        how="left",
+        on=["source_id", "source_ses_id", "suffix", "dir_num"],
+    )
+    df_parts[["number_of_parts"]] = df_parts[["number_of_parts"]].fillna(value="1")
+    return df_parts
+
+
+def _compute_philips_parts(df: DataFrame) -> DataFrame:
     """Compute the parts numbers for philips dwi acquisitions.
+
     The amount of dwi acquisitions linked together is indicated.
     For example, if a dwi acquisition is split in 9,
     the `number_of_parts` column will have a value of 9 for all of these acquisitions.
@@ -498,13 +597,12 @@ def compute_philips_parts(df: DataFrame) -> DataFrame:
 
 def _find_duplicate_run(df: DataFrame) -> DataFrame:
     """Create a column that contains the information of whether a run is a duplicate or not."""
-    filter = ["source_id", "source_ses_id", "suffix", "dir_num"]
+    column_filter = ["source_id", "source_ses_id", "suffix", "dir_num"]
     df = df[df["suffix"].str.contains("dwi", case=False)]
-    df1 = df[filter].groupby(filter).min()
-    df2 = df[filter].groupby(filter[:-1]).min()
+    df1 = df[column_filter].groupby(column_filter).min()
+    df2 = df[column_filter].groupby(column_filter[:-1]).min()
     df1 = df1.join(df2.rename(columns={"dir_num": "part_01_dir_num"}))
-    df_alt = df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
-    return df_alt
+    return df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
 
 
 def _compute_part_numbers(df: DataFrame) -> DataFrame:
@@ -522,13 +620,49 @@ def _compute_part_numbers(df: DataFrame) -> DataFrame:
 
 def _compute_number_of_parts(df: pd.DataFrame) -> DataFrame:
     """Add the number of parts (the max value of the part_number column) to each part."""
-    filter2 = ["source_id", "source_ses_id", "suffix", "part_number"]
-    df_parts_1 = df[filter2].groupby(filter2).max()
-    df_parts_2 = df[filter2].groupby(filter2[:-1]).max()
-    df_max_nb_parts = df_parts_1.join(
+    column_filter = ["source_id", "source_ses_id", "suffix", "part_number"]
+    df_parts_1 = df[column_filter].groupby(column_filter).max()
+    df_parts_2 = df[column_filter].groupby(column_filter[:-1]).max()
+    return df_parts_1.join(
         df_parts_2.rename(columns={"part_number": "number_of_parts"})
     ).reset_index()
-    return df_max_nb_parts
+
+
+def _compute_run_numbers_from_parts(df: DataFrame) -> DataFrame:
+    """This functions computes the run numbers.
+
+    Parameters
+    ----------
+    df: DataFrame
+        Dataframe without runs.
+
+    Returns
+    -------
+    DataFrame
+        Dataframe containing the correct run for each acquisition.
+    """
+    column_filter = [
+        "source_id",
+        "source_ses_id",
+        "suffix",
+        "number_of_parts",
+        "dir_num",
+    ]
+    df1 = df[column_filter].groupby(column_filter).min()
+    df2 = df[column_filter].groupby(column_filter[:-1]).min()
+    df1 = df1.join(df2.rename(columns={"dir_num": "run_01_dir_num"}))
+    df_alt = df1.reset_index().assign(run=lambda x: (x.run_01_dir_num != x.dir_num))
+    df_run = pd.concat(
+        [
+            df_alt,
+            pd.DataFrame(
+                _compute_scan_sequence_numbers(df_alt.run.tolist()),
+                columns=["run_number"],
+            ),
+        ],
+        axis=1,
+    )
+    return df_run.assign(run_num=lambda x: x.run_number.apply(lambda y: f"run-{y:02d}"))
 
 
 def _compute_scan_sequence_numbers(duplicate_flags: Iterable[bool]) -> List[int]:
@@ -564,103 +698,21 @@ def _compute_scan_sequence_numbers(duplicate_flags: Iterable[bool]) -> List[int]
     return ses_numbers
 
 
-def merge_imaging_data(df_dicom: DataFrame) -> DataFrame:
-    """This function uses the raw information extracted from the images,
-    to obtain all the information necessary for the BIDS conversion.
-
-    Parameters
-    ----------
-    df_dicom: DataFrame
-        Dataframe containing the data extracted from the images
-
-    Returns
-    -------
-    df_sub_ses_run: DataFrame
-        Dataframe with the data necessary for the BIDS
-    """
-    from clinica.utils.filemanip import get_parent
-
-    df_dicom = df_dicom.assign(
-        source_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 2).name.split("-")[0]
-        ),
-        source_ses_id=lambda df: df.source.apply(
-            lambda x: get_parent(x, 2).name.split("-")[1]
-        ),
-        origin=lambda df: df.source.apply(lambda x: get_parent(x, 4)),
-    )
-
-    df_dicom = df_dicom.reset_index()
-
-    df_dicom = df_dicom.assign(
-        source_ses_id=lambda df: df.source_ses_id.astype("int"),
-        genfi_version=lambda df: df.source_ses_id.apply(
-            lambda x: f"GENFI{len(str(x))}"
-        ),
-    )
-    df_1 = compute_baseline_date(df_dicom)
-
-    df_1 = compute_session_numbers(df_1)
-
-    df_sub_ses = df_dicom.merge(
-        df_1[["baseline", "session_id"]], how="inner", on=["source_id", "source_ses_id"]
-    )
-    df_sub_ses = df_sub_ses.assign(
-        participant_id=lambda df: df.source_id.apply(lambda x: f"sub-{x}")
-    )
-    df_sub_ses = compute_modality(df_sub_ses)
-
-    df_fmap = df_sub_ses.assign(
-        dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y).name.split("-")[0])
-        )
-    )
-
-    df_suf = merge_fieldmaps(df_fmap, identify_fieldmaps(df_fmap))
-
-    df_suf_dir = df_suf.assign(
-        dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y).name.split("-")[0])
-        )
-    )
-    df_alt = compute_philips_parts(df_suf_dir)
-    df_parts = df_suf_dir.merge(
-        df_alt[["source_id", "source_ses_id", "suffix", "dir_num", "number_of_parts"]],
-        how="left",
-        on=["source_id", "source_ses_id", "suffix", "dir_num"],
-    )
-    df_parts[["number_of_parts"]] = df_parts[["number_of_parts"]].fillna(value="1")
-
-    df_alt = compute_runs(df_parts)
-
-    df_sub_ses_run = df_suf_dir.merge(
-        df_alt[
-            [
-                "source_id",
-                "source_ses_id",
-                "suffix",
-                "dir_num",
-                "run_num",
-                "number_of_parts",
-            ]
-        ],
-        how="left",
-        on=["source_id", "source_ses_id", "suffix", "dir_num"],
-    )
-    df_sub_ses_run = df_sub_ses_run.assign(
-        bids_filename=lambda df: df[
+def _compute_bids_full_path(df: DataFrame) -> DataFrame:
+    """Compute the BIDS full path."""
+    df_with_bids_filename = df.assign(
+        bids_filename=lambda x: x[
             ["participant_id", "session_id", "run_num", "task", "suffix"]
         ].agg("_".join, axis=1),
     )
-    df_sub_ses_run = df_sub_ses_run.assign(
-        bids_filename=lambda df: df.bids_filename.apply(lambda x: x.replace("__", "_"))
+    df_with_bids_filename = df_with_bids_filename.assign(
+        bids_filename=lambda x: x.bids_filename.apply(lambda y: y.replace("__", "_"))
     )
-    df_sub_ses_run = df_sub_ses_run.assign(
-        bids_full_path=lambda df: df[
+    return df_with_bids_filename.assign(
+        bids_full_path=lambda x: x[
             ["participant_id", "session_id", "datatype", "bids_filename"]
         ].agg("/".join, axis=1)
     )
-    return df_sub_ses_run
 
 
 def write_bids(
