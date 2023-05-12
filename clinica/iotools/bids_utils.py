@@ -888,7 +888,7 @@ def run_dcm2niix(
 
     Returns
     -------
-    dcm2niix_success: bool
+    bool :
         True if the conversion was successful, False otherwise.
     """
     import subprocess
@@ -911,8 +911,7 @@ def run_dcm2niix(
             lvl="warning",
         )
         return False
-    else:
-        return True
+    return True
 
 
 def identify_modality(filename: str) -> Optional[str]:
