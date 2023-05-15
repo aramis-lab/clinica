@@ -659,7 +659,11 @@ def get_visit_id(row, location):
     ]
 
     if location in locations_visicode2:
-        if pd.isnull(row["VISCODE2"]) or row["VISCODE2"] == "f":
+        if (
+            pd.isnull(row["VISCODE2"])
+            or row["VISCODE2"] == "f"
+            or row["VISCODE2"] == "uns1"
+        ):
             return None
         if row["VISCODE2"] == "sc":
             return "sc"  # visit_id = "bl"
