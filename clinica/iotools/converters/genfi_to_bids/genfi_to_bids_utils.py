@@ -310,10 +310,10 @@ def _compute_source_id_and_source_ses_id(df: DataFrame) -> DataFrame:
 
     return df.assign(
         source_id=lambda x: x.source.apply(
-            lambda y: get_parent(y, 2).name.split("-")[0]
+            lambda y: get_parent(y, 6).name.split("-")[0]
         ),
         source_ses_id=lambda x: x.source.apply(
-            lambda y: get_parent(y, 2).name.split("-")[1]
+            lambda y: get_parent(y, 6).name.split("-")[1]
         ),
     )
 
@@ -466,7 +466,7 @@ def _compute_fieldmaps(df: DataFrame) -> DataFrame:
 
     df_with_dir_num = df.assign(
         dir_num=lambda x: x.source.apply(
-            lambda y: int(get_parent(y).name.split("-")[0])
+            lambda y: int(get_parent(y, 3).name.split("-")[0])
         )
     )
     df_suf = _merge_fieldmaps(df_with_dir_num, _identify_fieldmaps(df_with_dir_num))
