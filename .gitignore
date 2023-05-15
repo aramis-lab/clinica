@@ -191,6 +191,6 @@ Temporary Items
 .apdisk
 
 # Clinica specific files
-
+clinica/resources/masks/*
 crash*
 test/data
