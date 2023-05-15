@@ -44,7 +44,7 @@ generated to reduce the computing power required when training deep learning mod
 Use the option `--uncropped_image` if you do not want to crop the image.
 
 It is also possible to obtain a deterministic result by setting the value of the random
-seed used by ANTs with the option `--random_seed`. Default will lead to a non-determinstic result.
+seed used by ANTs with the option `--random_seed`. Default will lead to a non-determinstic result. This option requires ANTs version `2.3.0` onwards.
 
 !!! note
     The arguments common to all Clinica pipelines are described in
