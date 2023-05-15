@@ -19,6 +19,12 @@ pipeline_name = "t1-linear"
     is_flag=True,
     help="Do not crop the image with template (cropped image are suggested for using with DL models)",
 )
+@cli_param.option_group.option(
+    "-rs",
+    "--random_seed",
+    type=int,
+    default=None,
+)
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
@@ -27,6 +33,7 @@ def cli(
     bids_directory: str,
     caps_directory: str,
     uncropped_image: bool = False,
+    random_seed: Optional[int] = None,
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
@@ -41,7 +48,10 @@ def cli(
 
     from .anat_linear_pipeline import AnatLinear
 
-    parameters = {"uncropped_image": uncropped_image}
+    parameters = {
+        "uncropped_image": uncropped_image,
+        "random_seed": random_seed,
+    }
 
     # Most of the time, you will want to instantiate your pipeline with a
     # BIDS and CAPS directory as inputs:
