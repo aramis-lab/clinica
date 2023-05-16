@@ -240,7 +240,7 @@ def test_compare_folders_empty_nested(tmp_path):
     dir2 = tmp_path / "folder2" / "subfolder2"
     dir2.mkdir(parents=True)
 
-    assert compare_folders(dir1, dir2, tmp_path)
+    assert compare_folders(tmp_path / "folder1", tmp_path / "folder2", tmp_path)
 
 
 def test_compare_folders(tmp_path):
@@ -298,10 +298,10 @@ def test_compare_folders_multiple_mismatches(tmp_path):
         E                   + file2.xt
         E
         E            There are 4 lines with a mismatch :
-        E           		- subfolder2 != subfolder3
-        E           		- file2.xt != file4.xt
-        E           		- subfolder3 != subfolder4
-        E           		- file3.xt != file2.xt
+        E           	- subfolder2 != subfolder3
+        E           	- file2.xt != file4.xt
+        E           	- subfolder3 != subfolder4
+        E           	- file3.xt != file2.xt
     """
     from test.nonregression.testing_tools import compare_folders
 

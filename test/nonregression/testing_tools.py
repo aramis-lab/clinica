@@ -301,7 +301,7 @@ def _format_line_differences(lines: list) -> str:
     msg = ""
     for line in lines:
         left, right = line
-        msg += f"\t\t- {_format_tree_line(left)} != {_format_tree_line(right)}\n"
+        msg += f"\t- {_format_tree_line(left)} != {_format_tree_line(right)}\n"
 
     return msg
 
