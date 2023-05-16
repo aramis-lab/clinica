@@ -315,20 +315,61 @@ def compute_table(mod_dict: dict) -> str:
     return table
 
 
-def viscode_to_session(viscode: str) -> str:
-    """Replace the session label 'bl' with 'M000' or capitalize the session name passed as input.
+def viscode_to_session(viscode: str, baseline_identifiers: Optional[set] = None) -> str:
+    """Replace the session label from 'baseline_identifiers' with 'ses-M000'.
+
+    If `viscode` is not a baseline identifier, parse the `viscode` and return
+    a session identifier of the form `ses-MXXX`.
+
+    The `viscode` is expected to be formatted in the following way:
+    "m/M{session_number}", where session_number can be casted to an integer.
+    Otherwise, a `ValueError` will be raised.
+
+    Note: This function doesn't perform any check on the number of digits
+    of the session identifier. It will return at least three digits encoded
+    session numbers, but doesn't raise if more digits are needed (see
+    examples section below).
 
     Parameters
     ----------
     viscode: str
         The name of the session.
 
+    baseline_identifiers : set of str, optional
+        Possible identifiers for baseline session.
+        If the `viscode` is among these identifiers, `ses-M000` is returned.
+        Default={"bl", "m0"}.
+
     Returns
     -------
     str:
-        "M000" if the session is the baseline session. Otherwise returns the original session name capitalized.
+        "ses-M000" if the session is the baseline session.
+        Otherwise returns the original session name capitalized.
+
+    Raises
+    ------
+    ValueError :
+        If the `viscode` isn't formatted as expected.
+
+    Examples
+    --------
+    >>> viscode_to_session("m1")
+    'ses-M001'
+    >>> viscode_to_session("M123")
+    'ses-M123'
+    >>> viscode_to_session("m1234")
+    'ses-M1234'
     """
-    if viscode in {"bl", "m0"}:
+    import re
+
+    baseline_identifiers = baseline_identifiers or {"bl", "m0"}
+    if viscode in baseline_identifiers:
         return "ses-M000"
-    else:
+    session_pattern = "^[m,M][0-9]*"
+    if re.match(session_pattern, viscode):
         return "ses-" + f"M{(int(viscode[1:])):03d}"
+    raise ValueError(
+        f"The viscode {viscode} is not correctly formatted."
+        "Expected a session identifier of the form 'MXXX', "
+        f"or a baseline identifier among {baseline_identifiers}."
+    )

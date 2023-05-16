@@ -47,6 +47,29 @@ def test_viscode_to_session(input, expected):
 
 
 @pytest.mark.parametrize(
+    "viscode", ["c1", "A123", "foo", "foo-M1", "ses-M000", "None", ""]
+)
+def test_viscode_to_session_error(viscode):
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    with pytest.raises(
+        ValueError, match=f"The viscode {viscode} is not correctly formatted."
+    ):
+        viscode_to_session(viscode)
+
+
+def test_viscode_to_session_with_custom_baseline_identifiers():
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    assert (
+        viscode_to_session("base", baseline_identifiers={"base", "foo"}) == "ses-M000"
+    )
+    assert viscode_to_session("foo", baseline_identifiers={"base", "foo"}) == "ses-M000"
+    with pytest.raises(ValueError, match="The viscode bl is not correctly formatted."):
+        viscode_to_session("bl", baseline_identifiers={"base", "foo"})
+
+
+@pytest.mark.parametrize(
     "sessions,modalities,expected",
     [
         ([], None, {}),
