@@ -227,25 +227,92 @@ def same_missing_modality_tsv(file1: PathLike, file2: PathLike) -> bool:
     return mods[0] == mods[1]
 
 
-def compare_folders(outdir: PathLike, refdir: PathLike, tmp_path: PathLike) -> bool:
+def compare_folders(
+    output_dir: PathLike, reference_dir: PathLike, tmp_path: PathLike
+) -> bool:
+    """Compare the contents of the two input folders `output_dir` and `reference_dir`.
+
+    Parameters
+    ----------
+    output_dir : PathLike
+        Path to the first folder to be compared.
+
+    reference_dir : PathLike
+        Path to the second folder to be compared.
+
+    tmp_path : PathLike
+        Path to a location where the files containing the trees will be written.
+
+    Returns
+    -------
+    bool :
+        True if the folders have the same files, under the same sub-folders.
+
+    Raises
+    ------
+    ValueError :
+        If the folders have some differences. These differences will be
+        made explicit in the error message.
+    """
     from filecmp import cmp
     from pathlib import PurePath
 
     file_out = PurePath(tmp_path) / "file_out.txt"
     file_ref = PurePath(tmp_path) / "file_ref.txt"
-    tree(outdir, file_out)
-    tree(refdir, file_ref)
+
+    tree(output_dir, file_out)
+    tree(reference_dir, file_ref)
 
     if not cmp(file_out, file_ref):
-        with open(file_out, "r") as fin:
-            out_message = fin.read()
-        with open(file_ref, "r") as fin:
-            ref_message = fin.read()
-        raise ValueError(
-            "Comparison of out and ref directories shows mismatch :\n "
-            "OUT :\n" + out_message + "\n REF :\n" + ref_message
-        )
+        raise ValueError(_build_tree_mismatch_error_message(file_out, file_ref))
+
     return True
+
+
+def _build_tree_mismatch_error_message(file_out: PathLike, file_ref: PathLike) -> str:
+    """Build the error message when two trees differ.
+
+    The message gives the content of each tree as well and highlights
+    the differences between them.
+    """
+    with open(file_out, "r") as fin:
+        out_message = fin.read()
+    with open(file_ref, "r") as fin:
+        ref_message = fin.read()
+    lines_in_out = out_message.strip().split("\n")
+    lines_in_ref = ref_message.strip().split("\n")
+    lines_with_differences = [
+        (line_out, line_ref)
+        for line_out, line_ref in zip(lines_in_out, lines_in_ref)
+        if line_out != line_ref
+    ]
+
+    return (
+        "Comparison of out and ref directories shows mismatch :\n "
+        f"The content of the OUT directory :\n{out_message}\n "
+        f"The content of the REF directory :\n{ref_message}\n "
+        f"There are {len(lines_with_differences)} lines with "
+        f"a mismatch :\n{_format_line_differences(lines_with_differences)}"
+    )
+
+
+def _format_line_differences(lines: list) -> str:
+    """Format the differences between two printed trees for error messaging."""
+    msg = ""
+    for line in lines:
+        left, right = line
+        msg += f"\t\t- {_format_tree_line(left)} != {_format_tree_line(right)}\n"
+
+    return msg
+
+
+def _format_tree_line(line: str) -> str:
+    """Format a line of the printed tree for error messaging."""
+    line = line.strip()
+    if line.startswith("+ "):
+        line = line.lstrip("+ ")
+
+    return line
 
 
 def tree(dir_: PathLike, file_out: PathLike):
