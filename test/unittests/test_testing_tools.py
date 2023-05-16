@@ -219,3 +219,109 @@ def test_compare_folders_structures(
     shutil.rmtree(tmp_path / "sub-02")
     with pytest.raises(ValueError, match="/sub-02/bar.tsv not found !"):
         compare_func(str(tmp_path), str(tmp_path / "hashes.pl"))
+
+
+def test_compare_folders_empty(tmp_path):
+    from test.nonregression.testing_tools import compare_folders
+
+    dir1 = tmp_path / "folder1"
+    dir1.mkdir()
+    dir2 = tmp_path / "folder2"
+    dir2.mkdir()
+
+    assert compare_folders(dir1, dir2, tmp_path)
+
+
+def test_compare_folders_empty_nested(tmp_path):
+    from test.nonregression.testing_tools import compare_folders
+
+    dir1 = tmp_path / "folder1" / "subfolder1"
+    dir1.mkdir(parents=True)
+    dir2 = tmp_path / "folder2" / "subfolder2"
+    dir2.mkdir(parents=True)
+
+    assert compare_folders(dir1, dir2, tmp_path)
+
+
+def test_compare_folders(tmp_path):
+    from test.nonregression.testing_tools import compare_folders
+
+    dir1 = tmp_path / "folder1"
+    dir1.mkdir()
+    dir2 = tmp_path / "folder2"
+    dir2.mkdir()
+    (dir1 / "file1.txt").touch()
+    (dir2 / "file1.txt").touch()
+
+    assert compare_folders(dir1, dir2, tmp_path)
+
+
+def test_compare_folders_errors(tmp_path):
+    from test.nonregression.testing_tools import compare_folders
+
+    dir1 = tmp_path / "folder1" / "subfolder1"
+    dir1.mkdir(parents=True)
+    dir2 = tmp_path / "folder2" / "subfolder2"
+    dir2.mkdir(parents=True)
+    (dir1 / "file2.txt").touch()
+    (dir2 / "file2.txt").touch()
+
+    assert compare_folders(dir1, dir2, tmp_path)
+
+    with pytest.raises(
+        ValueError,
+        match="- subfolder1 != subfolder2",
+    ):
+        compare_folders(tmp_path / "folder1", tmp_path / "folder2", tmp_path)
+
+
+def test_compare_folders_multiple_mismatches(tmp_path):
+    """Test compare_folders with a more complex diff.
+
+    The full expected error message :
+
+        E           ValueError: Comparison of out and ref directories shows mismatch :
+        E            The content of the OUT directory :
+        E               + subfolder1
+        E                   + file1.txt
+        E               + subfolder2
+        E                   + file2.xt
+        E               + subfolder3
+        E                   + file3.xt
+        E
+        E            The content of the REF directory :
+        E               + subfolder1
+        E                   + file1.txt
+        E               + subfolder3
+        E                   + file4.xt
+        E               + subfolder4
+        E                   + file2.xt
+        E
+        E            There are 4 lines with a mismatch :
+        E           		- subfolder2 != subfolder3
+        E           		- file2.xt != file4.xt
+        E           		- subfolder3 != subfolder4
+        E           		- file3.xt != file2.xt
+    """
+    from test.nonregression.testing_tools import compare_folders
+
+    dir1 = tmp_path / "folder1"
+    dir1.mkdir()
+    dir2 = tmp_path / "folder2"
+    dir2.mkdir()
+    for sub in (1, 2, 3):
+        (dir1 / f"subfolder{sub}").mkdir()
+    for sub in (1, 3, 4):
+        (dir2 / f"subfolder{sub}").mkdir()
+    (dir1 / "subfolder1" / "file1.txt").touch()
+    (dir2 / "subfolder1" / "file1.txt").touch()
+    (dir1 / "subfolder2" / "file2.xt").touch()
+    (dir2 / "subfolder4" / "file2.xt").touch()
+    (dir1 / "subfolder3" / "file3.xt").touch()
+    (dir2 / "subfolder3" / "file4.xt").touch()
+
+    with pytest.raises(
+        ValueError,
+        match="There are 4 lines with a mismatch",
+    ):
+        compare_folders(dir1, dir2, tmp_path)
