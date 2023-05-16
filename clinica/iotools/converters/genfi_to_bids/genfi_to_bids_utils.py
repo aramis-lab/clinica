@@ -698,7 +698,7 @@ def _compute_bids_full_path(df: DataFrame) -> DataFrame:
     """Compute the BIDS full path."""
     df_with_bids_filename = df.assign(
         bids_filename=lambda x: x[
-            ["participant_id", "session_id", "run_num", "task", "suffix"]
+            ["participant_id", "session_id", "task", "run_num", "suffix"]
         ].agg("_".join, axis=1),
     )
     df_with_bids_filename = df_with_bids_filename.assign(
