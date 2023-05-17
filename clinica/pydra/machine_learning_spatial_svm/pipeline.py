@@ -4,15 +4,6 @@ from pydra import Workflow
 from clinica.pydra.engine import clinica_io
 
 
-def _build_query(parameters: dict) -> dict:
-    input_name = parameters["orig_input_data"].replace("-", "_")
-    if input_name == "pet_volume":
-        query = {}
-    elif input_name == "t1_volume":
-        query = {}
-    return query
-
-
 @clinica_io
 def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     """Build the core workflow for the machine learning spatial svm pipeline.

@@ -90,23 +90,8 @@ def cli(
         input_dir=None,
         output_dir=caps_directory,
         parameters=parameters,
-        # caps_directory=caps_directory,
-        # tsv_file=subjects_sessions_tsv,
-        # base_dir=working_directory,
-        # parameters=parameters,
-        # name=pipeline_name,
     )
     pydra_utils.run(pipeline, n_procs)
-    # exec_pipeline = (
-    #     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": n_procs})
-    #     if n_procs
-    #     else pipeline.run()
-    # )
-
-    # if isinstance(exec_pipeline, Graph):
-    #     print_end_pipeline(
-    #         pipeline_name, pipeline.base_dir, pipeline.base_dir_was_specified
-    #     )
 
 
 if __name__ == "__main__":
