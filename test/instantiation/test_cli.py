@@ -79,6 +79,7 @@ def test_second_lv_iotools(generate_cli_second_lv_iotools):
 # Test for the pipelines cli (second level)
 @pytest.fixture(
     params=[
+        "flair-linear",
         "t1-freesurfer",
         "t1-volume",
         "t1-freesurfer-longitudinal",
