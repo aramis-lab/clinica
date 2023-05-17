@@ -670,9 +670,15 @@ def get_visit_id(row, location):
         "BHR_BASELINE_QUESTIONNAIRE.csv",
         "BHR_LONGITUDINAL_QUESTIONNAIRE.csv",
     ]:
-        visit_id = row["Timepoint"]
+        if not row["Timepoint"] in {"f", "uns1"}:
+            visit_id = row["Timepoint"]
+        else:
+            return None
     else:
-        visit_id = row["VISCODE"]
+        if not row["VISCODE"] in {"f", "uns1"}:
+            visit_id = row["VISCODE"]
+        else:
+            return None
     return viscode_to_session(visit_id)
 
 
