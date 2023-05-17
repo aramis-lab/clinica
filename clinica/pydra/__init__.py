@@ -1,4 +1,5 @@
 from . import (
+    machine_learning_spatial_svm,
     pet_linear,
     pet_volume,
     statistics_volume,

@@ -5,7 +5,7 @@ from pydra.mark import annotate, task
 
 
 @task
-@annotate({"return": {"g_fisher_tensor": np.NDArray, "output_fisher_tensor": str}})
+@annotate({"return": {"g_fisher_tensor": np.array, "output_fisher_tensor": str}})
 def obtain_g_fisher_tensor_task(dartel_input, FWHM):
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils import (
         obtain_g_fisher_tensor,
@@ -15,7 +15,7 @@ def obtain_g_fisher_tensor_task(dartel_input, FWHM):
 
 
 @task
-@annotate({"return": {"t_step": np.NDArray, "output_data": str}})
+@annotate({"return": {"t_step": np.array, "output_data": str}})
 def obtain_time_step_estimation_task(dartel_input, FWHM, g):
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils import (
         obtain_time_step_estimation,
