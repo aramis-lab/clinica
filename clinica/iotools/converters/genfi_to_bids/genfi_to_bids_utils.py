@@ -859,11 +859,14 @@ def merge_philips_diffusion(
     multipart_id = _get_multipart_id(
         PhilipsNumberOfParts.from_int(int(number_of_parts)), run_num
     )
-    with open(json_file, "r+") as f:
-        if multipart_id is not None:
-            data = json.load(f)
-            data["MultipartID"] = multipart_id
-            json.dump(data, f, indent=4)
+    try:
+        with open(json_file, "r+") as f:
+            if multipart_id is not None:
+                data = json.load(f)
+                data["MultipartID"] = multipart_id
+                json.dump(data, f, indent=4)
+    except:
+        print("this file does not have a json file or was not converted.")
 
 
 class PhilipsNumberOfParts(Enum):
