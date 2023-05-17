@@ -32,9 +32,12 @@ def test_first_lv(generate_cli_first_lv):
     params=[
         "adni-to-bids",
         "aibl-to-bids",
+        "genfi-to-bids",
         "habs-to-bids",
         "nifd-to-bids",
         "oasis-to-bids",
+        "oasis3-to-bids",
+        "ukb-to-bids",
     ]
 )
 def generate_cli_second_lv_convert(request):
@@ -103,6 +106,9 @@ def test_second_lv_iotools(generate_cli_second_lv_iotools):
         "t1-freesurfer-longitudinal-correction",
         "pydra-pet-volume",
         "pydra-pet-linear",
+        "pydra-statistics-volume",
+        "pydra-statistics-volume-correction",
+        "pydra-t1-freesurfer",
         "pydra-t1-linear",
         "pydra-t1-volume-create-dartel",
         "pydra-t1-volume-register-dartel",
