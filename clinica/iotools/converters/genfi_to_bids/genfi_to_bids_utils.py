@@ -868,7 +868,7 @@ def merge_philips_diffusion(
                 data = json.load(f)
                 data["MultipartID"] = multipart_id
                 json.dump(data, f, indent=4)
-    except:
+    except FileNotFoundError:
         cprint(msg=f"the file {json_file} does not exist.", lvl="warning")
 
 
@@ -913,8 +913,8 @@ def _get_multipart_id(nb_parts: PhilipsNumberOfParts, run_num: str) -> Optional[
         return None
 
 
-def delete_real_imaginary_files(to: PathLike) -> None:
-    """This function scans the BIDS after it has been written to delete the `_real` and `_imaginary` files.
+def delete_real_and_imaginary_files(bids_folder: PathLike) -> None:
+    """Delete all files with a `_real` or `_imaginary` suffix from the BIDS folder.
 
     Parameters
     ----------
