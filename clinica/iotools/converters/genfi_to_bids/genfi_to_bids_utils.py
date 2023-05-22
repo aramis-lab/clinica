@@ -786,7 +786,7 @@ def write_bids(
                 metadata.run_num,
             )
     correct_fieldmaps_name(to)
-    delete_real_imaginary_files(to)
+    delete_real_and_imaginary_files(to)
     return
 
 
@@ -921,11 +921,10 @@ def delete_real_and_imaginary_files(bids_folder: PathLike) -> None:
     to: PathLike
         Path to the BIDS
     """
+    from clinica.utils.stream import cprint
 
-    import os
-
-    for z in Path(to).rglob("*_real.*"):
-        os.remove(z)
-
-    for z in Path(to).rglob("*_imaginary.*"):
-        os.remove(z)
+    bids_folder = Path(bids_folder)
+    for file_type in ("real", "imaginary"):
+        for f in bids_folder.rglob(f"*_{file_type}.*"):
+            f.unlink()
+            cprint(f"file {f} was deleted as it is not BIDS compliant.")
