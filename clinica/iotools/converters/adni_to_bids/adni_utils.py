@@ -647,7 +647,9 @@ def _compute_session_id(df: pd.DataFrame, csv_filename: str) -> pd.DataFrame:
             f"the DataFrame are: {df.columns}."
         )
     return df.assign(
-        session_id=lambda _df: _get_session_id_from_visit_code(_df[visit_code_column])
+        session_id=lambda _df: _df[visit_code_column].apply(
+            lambda x: _get_session_id_from_visit_code(x)
+        )
     )
 
 
