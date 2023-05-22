@@ -786,6 +786,7 @@ def write_bids(
                 metadata.run_num,
             )
     correct_fieldmaps_name(to)
+    delete_real_imaginary_files(to)
     return
 
 
@@ -910,3 +911,21 @@ def _get_multipart_id(nb_parts: PhilipsNumberOfParts, run_num: str) -> Optional[
         raise ValueError(f"{run_num} is outside of the scope.")
     if nb_parts == PhilipsNumberOfParts.OTHER:
         return None
+
+
+def delete_real_imaginary_files(to: PathLike) -> None:
+    """This function scans the BIDS after it has been written to delete the `_real` and `_imaginary` files.
+
+    Parameters
+    ----------
+    to: PathLike
+        Path to the BIDS
+    """
+
+    import os
+
+    for z in Path(to).rglob("*_real.*"):
+        os.remove(z)
+
+    for z in Path(to).rglob("*_imaginary.*"):
+        os.remove(z)
