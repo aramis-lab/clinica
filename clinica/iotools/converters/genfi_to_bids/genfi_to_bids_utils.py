@@ -856,14 +856,19 @@ def merge_philips_diffusion(
     """
     import json
 
+    from clinica.utils.stream import cprint
+
     multipart_id = _get_multipart_id(
         PhilipsNumberOfParts.from_int(int(number_of_parts)), run_num
     )
-    with open(json_file, "r+") as f:
-        if multipart_id is not None:
-            data = json.load(f)
-            data["MultipartID"] = multipart_id
-            json.dump(data, f, indent=4)
+    try:
+        with open(json_file, "r+") as f:
+            if multipart_id is not None:
+                data = json.load(f)
+                data["MultipartID"] = multipart_id
+                json.dump(data, f, indent=4)
+    except:
+        cprint(msg=f"the file {json_file} does not exist.", lvl="warning")
 
 
 class PhilipsNumberOfParts(Enum):
