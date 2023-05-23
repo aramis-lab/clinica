@@ -918,8 +918,8 @@ def delete_real_and_imaginary_files(bids_folder: PathLike) -> None:
 
     Parameters
     ----------
-    to: PathLike
-        Path to the BIDS
+    bids_folder : PathLike
+        Path to the BIDS folder.
     """
     from clinica.utils.stream import cprint
 
