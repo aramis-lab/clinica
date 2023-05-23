@@ -1,4 +1,6 @@
-from typing import Union
+from typing import Optional, Union
+
+import pandas as pd
 
 
 def visits_to_timepoints(
@@ -631,13 +633,38 @@ def pad_id(ref_id):
     return rid
 
 
-def get_visit_id(row, location):
-    """Return a common visit ID across different files"""
-    import pandas as pd
+def _compute_session_id(df: pd.DataFrame, csv_filename: str) -> pd.DataFrame:
+    """Compute session ID from visit code.
 
-    from clinica.iotools.converter_utils import viscode_to_session
+    The CSV file name is used to determine in which column of
+    the dataframe the visit code should be found.
+    """
+    visit_code_column = _get_visit_code_column_name(csv_filename)
+    if visit_code_column not in df:
+        raise ValueError(
+            f"DataFrame does not contain a column named '{visit_code_column}', "
+            "which is supposed to encode the visit code. The columns present in "
+            f"the DataFrame are: {df.columns}."
+        )
+    return df.assign(
+        session_id=lambda _df: _df[visit_code_column].apply(
+            lambda x: _get_session_id_from_visit_code(x)
+        )
+    )
 
-    locations_visicode2 = [
+
+def _get_visit_code_column_name(csv_filename: str) -> str:
+    """Return the name of the column containing the visit code."""
+    if _is_a_visit_code_2_type(csv_filename):
+        return "VISCODE2"
+    if _is_a_time_point_type(csv_filename):
+        return "Timepoint"
+    return "VISCODE"
+
+
+def _is_a_visit_code_2_type(csv_filename: str) -> bool:
+    """If the csv file is among these files, then the visit code column is 'VISCODE2'."""
+    return csv_filename in {
         "ADAS_ADNIGO2.csv",
         "DXSUM_PDXCONV_ADNIALL.csv",
         "CDR.csv",
@@ -656,30 +683,40 @@ def get_visit_id(row, location):
         "CCI.csv",
         "NPIQ.csv",
         "NPI.csv",
-    ]
+    }
 
-    if location in locations_visicode2:
-        if pd.isnull(row["VISCODE2"]) or row["VISCODE2"] in {"f", "uns1"}:
-            return None
-        if row["VISCODE2"] == "sc":
-            return "sc"  # visit_id = "bl"
-        else:
-            visit_id = row["VISCODE2"]
-    elif location in [
+
+def _is_a_time_point_type(csv_filename: str) -> bool:
+    """If the csv file is among these files, then the visit code column is 'Timepoint'."""
+    return csv_filename in {
         "BHR_EVERYDAY_COGNITION.csv",
         "BHR_BASELINE_QUESTIONNAIRE.csv",
         "BHR_LONGITUDINAL_QUESTIONNAIRE.csv",
-    ]:
-        if not row["Timepoint"] in {"f", "uns1"}:
-            visit_id = row["Timepoint"]
-        else:
-            return None
-    else:
-        if not row["VISCODE"] in {"f", "uns1"}:
-            visit_id = row["VISCODE"]
-        else:
-            return None
-    return viscode_to_session(visit_id)
+    }
+
+
+def _get_session_id_from_visit_code(visit_code: str) -> Optional[str]:
+    """Checks that the visit code found in the data is supported by
+    the converter utility function `viscode_to_session` before using it.
+    There are a few special cases that are handled here.
+    """
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    if _is_visit_code_not_supported(visit_code):
+        return None
+    if visit_code == "sc":
+        return "sc"
+    return viscode_to_session(visit_code)
+
+
+def _is_visit_code_not_supported(visit_code: str) -> bool:
+    """Return True is the visit code is not supported by the converter.
+
+    There are a few known values like "f" or "uns1" which are present in
+    ADNI data that are not supported for a mapping to a session ID.
+    """
+    unsupported_values = {"f", "uns1"}
+    return pd.isnull(visit_code) or visit_code in unsupported_values
 
 
 def create_adni_sessions_dict(
@@ -722,10 +759,7 @@ def create_adni_sessions_dict(
             df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
 
             if not df_filtered.empty:
-                # Get session ID from visit code.
-                df_filtered["session_id"] = df_filtered.apply(
-                    lambda x: get_visit_id(x, location), axis=1
-                )
+                df_filtered = _compute_session_id(df_filtered, location)
 
                 # Filter rows with invalid session IDs.
                 df_filtered.dropna(subset="session_id", inplace=True)
