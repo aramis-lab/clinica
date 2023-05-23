@@ -7,7 +7,7 @@ import clinica.pydra.machine_learning_spatial_svm.pipeline as pydra_machine_lear
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
-pipeline_name = "pydra-machinelearning-prepare-spatial-svm"
+pipeline_name = "pydra-machine-learning-prepare-spatial-svm"
 
 
 @clinica_pipeline

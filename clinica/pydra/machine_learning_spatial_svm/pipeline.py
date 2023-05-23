@@ -4,6 +4,27 @@ from pydra import Workflow
 from clinica.pydra.engine import clinica_io
 
 
+def _build_query(parameters: dict) -> dict:
+    input_name = parameters["orig_input_data_ml"].replace("-", "_")
+    if input_name == "t1_volume":
+        query = {
+            "modulation": True,
+            "tissue_number": 1,
+            "group_label": parameters["group_label"],
+        }
+    if input_name == "pet_volume":
+        query = {
+            "acq_label": parameters["acq_label"],
+            "suvr_reference_region": parameters["suvr_reference_region"],
+            "use_brainmasked_image": False,
+            "use_pvc_data": parameters["use_pvc_data"],
+            "fwhm": 0,
+            "group_label": parameters["group_label"],
+        }
+
+    return query
+
+
 @clinica_io
 def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     """Build the core workflow for the machine learning spatial svm pipeline.
@@ -27,59 +48,27 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
 
     import clinica.pydra.machine_learning_spatial_svm.tasks as utils
 
-    # query = _build_query(parameters)
+    query = _build_query(parameters)
     input_name = parameters["orig_input_data_ml"].replace("-", "_")
-    if input_name == "t1_volume":
-        input_spec = pydra.specs.SpecInfo(
-            name="Input",
-            fields=[
-                ("_graph_checksums", Any),
-                (
-                    "t1_volume",
-                    dict,
-                    {
-                        "modulation": True,
-                        "tissue_number": 1,
-                        "group_label": parameters["group_label"],
-                    },
-                    {"mandatory": True},
-                ),
-                (
-                    "dartel_template",
-                    dict,
-                    {"group_label": parameters["group_label"]},
-                    {"mandatory": True},
-                ),
-            ],
-            bases=(pydra.specs.BaseSpec,),
-        )
-    if input_name == "pet_volume":
-        input_spec = pydra.specs.SpecInfo(
-            name="Input",
-            fields=[
-                ("_graph_checksums", Any),
-                (
-                    "pet_volume",
-                    dict,
-                    {
-                        "acq_label": parameters["acq_label"],
-                        "suvr_reference_region": parameters["suvr_reference_region"],
-                        "use_brainmasked_image": False,
-                        "use_pvc_data": parameters["use_pvc_data"],
-                        "fwhm": 0,
-                        "group_label": parameters["group_label"],
-                    },
-                    {"mandatory": True},
-                ),
-                (
-                    "dartel_template",
-                    dict,
-                    {"group_label": parameters["group_label"]},
-                    {"mandatory": True},
-                ),
-            ],
-            basqes=(pydra.specs.BaseSpec,),
-        )
+    input_spec = pydra.specs.SpecInfo(
+        name="Input",
+        fields=[
+            ("_graph_checksums", Any),
+            (
+                input_name,
+                dict,
+                query,
+                {"mandatory": True},
+            ),
+            (
+                "dartel_template",
+                dict,
+                {"group_label": parameters["group_label"]},
+                {"mandatory": True},
+            ),
+        ],
+        bases=(pydra.specs.BaseSpec,),
+    )
     wf = Workflow(name, input_spec=input_spec)
 
     wf.split((input_name))
