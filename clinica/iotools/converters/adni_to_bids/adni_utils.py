@@ -1,6 +1,31 @@
+from enum import Enum, auto
 from typing import Optional, Union
 
 import pandas as pd
+
+
+class ADNIStudy(Enum):
+    """Possible versions of ADNI studies."""
+
+    ADNI1 = auto()
+    ADNI2 = auto()
+    ADNI3 = auto()
+    ADNIGO = auto()
+
+    @classmethod
+    def from_string(cls, study_name: str):
+        if study_name == "ADNI1":
+            return cls.ADNI1
+        if study_name == "ADNI2":
+            return cls.ADNI2
+        if study_name == "ADNI3":
+            return cls.ADNI3
+        if study_name == "ADNIGO":
+            return cls.ADNIGO
+        raise ValueError(
+            f"Invalid study name for ADNI: {study_name}. "
+            f"Possible values are {list(ADNIStudy)}"
+        )
 
 
 def visits_to_timepoints(
@@ -37,8 +62,8 @@ def visits_to_timepoints(
     # We try to obtain the corresponding image Visit for a given VISCODE
     for adni_row in adnimerge_subj.iterrows():
         visit = adni_row[1]
-
-        preferred_visit_name = get_preferred_visit_name(visit)
+        study = ADNIStudy.from_string(visit.ORIGPROT)
+        preferred_visit_name = _get_preferred_visit_name(study, visit.VISCODE)
 
         if preferred_visit_name in unique_visits:
             key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
@@ -76,46 +101,81 @@ def visits_to_timepoints(
     return visits
 
 
-def get_preferred_visit_name(visit):
-    """Provide the expected visit name for a given visit.
+def _get_preferred_visit_name(study: ADNIStudy, visit_code: str) -> str:
+    """Return the expected visit name for a given visit depending
+    on the study (ADNI1, ADNI2, ADNI3, ADNIGO).
 
-    Args:
-        visit: A visit entry from ADNIMERGE
+    Parameters
+    ----------
+    study : ADNIStudy
+        The study for this visit.
+    visit_code : str
+        The visit code to convert to a new form.
 
-    Returns:
-        string: expected visit name
+    Returns
+    -------
+    str :
+        The expected visit name.
     """
-    if visit.ORIGPROT == "ADNI3":
-        if visit.VISCODE == "bl":
-            preferred_visit_name = "ADNI Screening"
-        else:
-            year = str(int(visit.VISCODE[1:]) / 12)
-            preferred_visit_name = f"ADNI3 Year {year} Visit"
-    elif visit.ORIGPROT == "ADNI2":
-        if visit.VISCODE == "bl":
-            preferred_visit_name = "ADNI2 Screening MRI-New Pt"
-        elif visit.VISCODE == "m03":
-            preferred_visit_name = "ADNI2 Month 3 MRI-New Pt"
-        elif visit.VISCODE == "m06":
-            preferred_visit_name = "ADNI2 Month 6-New Pt"
-        else:
-            year = str(int(visit.VISCODE[1:]) / 12)
-            preferred_visit_name = f"ADNI2 Year {year} Visit"
-    else:
-        if visit.VISCODE == "bl":
-            if visit.ORIGPROT == "ADNI1":
-                preferred_visit_name = "ADNI Screening"
-            else:  # ADNIGO
-                preferred_visit_name = "ADNIGO Screening MRI"
-        elif visit.VISCODE == "m03":  # Only for ADNIGO Month 3
-            preferred_visit_name = "ADNIGO Month 3 MRI"
-        else:
-            month = int(visit.VISCODE[1:])
-            if month < 54:
-                preferred_visit_name = f"ADNI1/GO Month {str(month)}"
-            else:
-                preferred_visit_name = f"ADNIGO Month {str(month)}"
-    return preferred_visit_name
+    if study == ADNIStudy.ADNI3:
+        return _get_preferred_visit_name_adni3(visit_code)
+    if study == ADNIStudy.ADNI2:
+        return _get_preferred_visit_name_adni2(visit_code)
+    if study == ADNIStudy.ADNI1:
+        return _get_preferred_visit_name_adni1(visit_code)
+    if study == ADNIStudy.ADNIGO:
+        return _get_preferred_visit_name_adnigo(visit_code)
+
+
+def _get_preferred_visit_name_adni3(visit_code: str) -> str:
+    if visit_code == "bl":
+        return "ADNI Screening"
+    return f"ADNI3 Year {_parse_year_from_visit_code(visit_code)} Visit"
+
+
+def _parse_year_from_visit_code(visit_code: str) -> float:
+    """Return the year corresponding to the visit code.
+    Assumes a visit code of the form 'mXXX'.
+    """
+    return _parse_month_from_visit_code(visit_code) / 12
+
+
+def _parse_month_from_visit_code(visit_code: str) -> int:
+    """Return the month corresponding to the visit code.
+    Assumes a visit code of the form 'mXXX'.
+    """
+    try:
+        return int(visit_code[1:])
+    except Exception:
+        raise ValueError(
+            f"Cannot extract month from visit code {visit_code}."
+            "Expected a code of the form 'mXXX' where XXX can be casted to an integer."
+        )
+
+
+def _get_preferred_visit_name_adni2(visit_code: str) -> str:
+    if visit_code == "bl":
+        return "ADNI2 Screening MRI-New Pt"
+    if visit_code == "m03":
+        return "ADNI2 Month 3 MRI-New Pt"
+    if visit_code == "m06":
+        return "ADNI2 Month 6-New Pt"
+    return f"ADNI2 Year {_parse_year_from_visit_code(visit_code)} Visit"
+
+
+def _get_preferred_visit_name_adni1(visit_code: str) -> str:
+    if visit_code == "bl":
+        return "ADNI Screening"
+    if visit_code == "m03":
+        return "ADNIGO Month 3 MRI"  # does not make any sense...
+    month = _parse_month_from_visit_code(visit_code)
+    return f"ADNI{'1/' if month < 54 else ''}GO Month {month}"
+
+
+def _get_preferred_visit_name_adnigo(visit_code: str) -> str:
+    if visit_code == "bl":
+        return "ADNIGO Screening MRI"
+    return _get_preferred_visit_name_adni1(visit_code)
 
 
 def get_closest_visit(image, pending_timepoints, subject, visit_field, scandate_field):
