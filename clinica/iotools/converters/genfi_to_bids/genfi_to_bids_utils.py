@@ -746,6 +746,14 @@ def write_bids(
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
     # Ensure BIDS hierarchy is written first.
+    print("participants: ", participants)
+    participants = (
+        participants.reset_index()
+        .drop(["session_id", "modality", "run_num", "bids_filename", "source"], axis=1)
+        .drop_duplicates()
+        .set_index("participant_id")
+    )
+    print("participants: ", participants)
     with fs.transaction:
         with fs.open(
             str(to / "dataset_description.json"), "w"
@@ -756,7 +764,7 @@ def write_bids(
 
     for participant_id, data_frame in sessions.groupby(["participant_id"]):
         sessions = data_frame.droplevel(
-            ["participant_id", "modality", "bids_filename"]
+            ["participant_id", "modality", "bids_filename", "run_num"]
         ).drop_duplicates()
 
         sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
@@ -775,6 +783,16 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
+        if dcm2niix_success:
+            scans_filepath = (
+                to
+                / str(metadata.participant_id)
+                / str(metadata.session_id)
+                / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
+            )
+            print(scans_filepath)
+            with fs.open(str(scans_filepath), "w") as scans_file:
+                write_to_tsv(scans, scans_file)
         if (
             "dwi" in metadata["bids_filename"]
             and "Philips" in metadata.manufacturer
