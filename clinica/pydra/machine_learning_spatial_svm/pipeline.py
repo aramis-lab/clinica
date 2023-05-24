@@ -5,13 +5,13 @@ from clinica.pydra.engine import clinica_io
 
 
 def _build_query(parameters: dict) -> dict:
-    if input_name == "t1-volume":
+    if parameters["orig_input_data_ml"] == "t1-volume":
         return {
             "modulation": True,
             "tissue_number": 1,
             "group_label": parameters["group_label"],
         }
-    if input_name == "pet-volume":
+    if parameters["orig_input_data_ml"] == "pet-volume":
         return {
             "acq_label": parameters["acq_label"],
             "suvr_reference_region": parameters["suvr_reference_region"],
@@ -20,7 +20,6 @@ def _build_query(parameters: dict) -> dict:
             "fwhm": 0,
             "group_label": parameters["group_label"],
         }
-
 
 
 @clinica_io
