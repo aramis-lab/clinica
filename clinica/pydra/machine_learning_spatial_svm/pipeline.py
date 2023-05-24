@@ -4,6 +4,32 @@ from pydra import Workflow
 from clinica.pydra.engine import clinica_io
 
 
+def _check_pipeline_parameters(parameters: dict) -> dict:
+    """Check the parameters passed to the pipeline.
+
+    Parameters
+    ----------
+    parameters : dict
+        Dictionary of parameters to analyze.
+
+    Returns
+    -------
+    dict :
+        Cleaned dictionary of parameters.
+    """
+    from clinica.utils.exceptions import ClinicaException
+
+    # PET-Volume pipeline
+    if parameters["orig_input_data_ml"] == "pet-volume":
+        for param in ("acq_label", "suvr_reference_region"):
+            if not parameters[param]:
+                raise ClinicaException(
+                    f"You selected pet-volume pipeline without setting --{param} flag. "
+                    "Clinica will now exit."
+                )
+    return parameters
+
+
 def _build_query(parameters: dict) -> dict:
     if parameters["orig_input_data_ml"] == "t1-volume":
         return {
@@ -45,6 +71,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
 
     import clinica.pydra.machine_learning_spatial_svm.tasks as utils
 
+    parameters = _check_pipeline_parameters(parameters)
     query = _build_query(parameters)
     input_name = parameters["orig_input_data_ml"].replace("-", "_")
     input_spec = pydra.specs.SpecInfo(
