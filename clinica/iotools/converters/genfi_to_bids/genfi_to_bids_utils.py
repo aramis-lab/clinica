@@ -746,14 +746,13 @@ def write_bids(
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
     # Ensure BIDS hierarchy is written first.
-    print("participants: ", participants)
+
     participants = (
         participants.reset_index()
         .drop(["session_id", "modality", "run_num", "bids_filename", "source"], axis=1)
         .drop_duplicates()
         .set_index("participant_id")
     )
-    print("participants: ", participants)
     with fs.transaction:
         with fs.open(
             str(to / "dataset_description.json"), "w"
@@ -771,7 +770,7 @@ def write_bids(
         with fs.open(str(sessions_filepath), "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
-    dcm2nixx_bids_path = []
+    dcm2niix_bids_path = []
     dcm2niix_success_list = []
     for bids_full_path, metadata in scans.iterrows():
         try:
@@ -784,18 +783,8 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        dcm2nixx_bids_path.append(bids_full_path)
+        dcm2niix_bids_path.append(bids_full_path)
         dcm2niix_success_list.append(dcm2niix_success)
-        # if dcm2niix_success:
-        #     scans_filepath = (
-        #         to
-        #         / str(metadata.participant_id)
-        #         / str(metadata.session_id)
-        #         / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
-        #     )
-        # print(scans_filepath)
-        # with fs.open(str(scans_filepath), "w") as scans_file:
-        #     write_to_tsv(scans, scans_file)
         if (
             "dwi" in metadata["bids_filename"]
             and "Philips" in metadata.manufacturer
@@ -808,7 +797,7 @@ def write_bids(
             )
 
     dcm2niix_success_df = pd.DataFrame(
-        list(zip(dcm2nixx_bids_path, dcm2niix_success_list)),
+        list(zip(dcm2niix_bids_path, dcm2niix_success_list)),
         columns=["bids_full_path", "dcm2niix_success"],
     )
     converted_scans = scans.merge(
@@ -817,7 +806,6 @@ def write_bids(
         ["participant_id", "session_id", "modality", "run_num", "bids_filename"],
         verify_integrity=True,
     )
-    print(converted_scans)
     for grouped_by, df in converted_scans.groupby(["participant_id", "session_id"]):
         participant_id, session_id = grouped_by
         df_to_write = (
