@@ -61,18 +61,6 @@ def cli(
 
     from clinica.utils.exceptions import ClinicaException
 
-    if orig_input_data_ml == "pet-volume":
-        if not acq_label:
-            raise ClinicaException(
-                "You selected pet-volume pipeline without setting --acq_label flag. "
-                "Clinica will now exit."
-            )
-        if not suvr_reference_region:
-            raise ClinicaException(
-                "You selected pet-volume pipeline without setting --suvr_reference_region flag. "
-                "Clinica will now exit."
-            )
-
     parameters = {
         # Clinica compulsory arguments
         "group_label": group_label,
