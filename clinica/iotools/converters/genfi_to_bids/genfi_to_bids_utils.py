@@ -771,7 +771,8 @@ def write_bids(
         with fs.open(str(sessions_filepath), "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
-
+    dcm2nixx_bids_path = []
+    dcm2niix_success_list = []
     for bids_full_path, metadata in scans.iterrows():
         try:
             os.makedirs(to / (Path(bids_full_path).parent))
@@ -783,16 +784,18 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        if dcm2niix_success:
-            scans_filepath = (
-                to
-                / str(metadata.participant_id)
-                / str(metadata.session_id)
-                / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
-            )
-            print(scans_filepath)
-            with fs.open(str(scans_filepath), "w") as scans_file:
-                write_to_tsv(scans, scans_file)
+        dcm2nixx_bids_path.append(bids_full_path)
+        dcm2niix_success_list.append(dcm2niix_success)
+        # if dcm2niix_success:
+        #     scans_filepath = (
+        #         to
+        #         / str(metadata.participant_id)
+        #         / str(metadata.session_id)
+        #         / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
+        #     )
+        # print(scans_filepath)
+        # with fs.open(str(scans_filepath), "w") as scans_file:
+        #     write_to_tsv(scans, scans_file)
         if (
             "dwi" in metadata["bids_filename"]
             and "Philips" in metadata.manufacturer
@@ -803,6 +806,34 @@ def write_bids(
                 metadata.number_of_parts,
                 metadata.run_num,
             )
+
+    dcm2niix_success_df = pd.DataFrame(
+        list(zip(dcm2nixx_bids_path, dcm2niix_success_list)),
+        columns=["bids_full_path", "dcm2niix_success"],
+    )
+    converted_scans = scans.merge(
+        dcm2niix_success_df, how="inner", on="bids_full_path"
+    ).set_index(
+        ["participant_id", "session_id", "modality", "run_num", "bids_filename"],
+        verify_integrity=True,
+    )
+    print(converted_scans)
+    for grouped_by, df in converted_scans.groupby(["participant_id", "session_id"]):
+        participant_id, session_id = grouped_by
+        df_to_write = (
+            df.reset_index()
+            .drop(columns=["participant_id", "session_id", "number_of_parts"])
+            .set_index("bids_full_path")
+        )
+        scans_filepath = (
+            to
+            / str(participant_id)
+            / str(session_id)
+            / f"{participant_id}_{session_id}_scan.tsv"
+        )
+        with fs.open(str(scans_filepath), "w") as scans_file:
+            write_to_tsv(df_to_write, scans_file)
+
     correct_fieldmaps_name(to)
     return
 
