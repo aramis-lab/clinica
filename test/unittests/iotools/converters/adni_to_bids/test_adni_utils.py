@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 
 @pytest.mark.parametrize(
@@ -149,4 +149,70 @@ def test_compute_session_id(csv_filename, visit_code_column_name):
     assert_frame_equal(
         _compute_session_id(pd.DataFrame(input_data), csv_filename),
         pd.DataFrame(expected_data),
+    )
+
+
+def test_get_closest_visit():
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _get_closest_visit
+
+    assert _get_closest_visit("2012-03-04", "control visit", [], "sub-01") is None
+    time_points = [
+        pd.Series(
+            {
+                "ORIGPROT": "ADNI1",
+                "VISCODE": "bl",
+                "COLPROT": "foo",
+                "EXAMDATE": "2012-01-01",
+            }
+        ),
+    ]
+    assert_series_equal(
+        _get_closest_visit("1809-03-04", "control visit", time_points, "sub-01"),
+        time_points[0],
+    )
+    assert_series_equal(
+        _get_closest_visit("2012-01-01", "control visit", time_points, "sub-01"),
+        time_points[0],
+    )
+    assert_series_equal(
+        _get_closest_visit("2066-12-31", "control visit", time_points, "sub-01"),
+        time_points[0],
+    )
+    time_points = [
+        pd.Series(
+            {
+                "ORIGPROT": "ADNI1",
+                "VISCODE": "bl",
+                "COLPROT": "foo",
+                "EXAMDATE": "2012-01-01",
+            }
+        ),
+        pd.Series(
+            {
+                "ORIGPROT": "ADNI1",
+                "VISCODE": "m03",
+                "COLPROT": "bar",
+                "EXAMDATE": "2012-03-01",
+            }
+        ),
+        pd.Series(
+            {
+                "ORIGPROT": "ADNI2",
+                "VISCODE": "m06",
+                "COLPROT": "baz",
+                "EXAMDATE": "2012-06-01",
+            }
+        ),
+    ]
+    assert_series_equal(
+        _get_closest_visit("2012-03-04", "control visit", time_points, "sub-01"),
+        time_points[1],
+    )
+    assert_series_equal(
+        _get_closest_visit("1989-06-16", "control visit", time_points, "sub-01"),
+        time_points[0],
+    )
+    assert_series_equal(
+        _get_closest_visit("2020-11-26", "control visit", time_points, "sub-01"),
+        time_points[2],
     )
