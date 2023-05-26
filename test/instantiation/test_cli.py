@@ -114,6 +114,7 @@ def test_second_lv_iotools(generate_cli_second_lv_iotools):
         "pydra-t1-volume-create-dartel",
         "pydra-t1-volume-register-dartel",
         "pydra-t1-volume-tissue-segmentation",
+        "pydra-machine-learning-prepare-spatial-svm",
     ]
 )
 def generate_cli_second_lv_run(request):
