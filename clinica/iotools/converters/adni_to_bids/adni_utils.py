@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 
@@ -84,12 +84,20 @@ def visits_to_timepoints(
 
         image = (mri_list_subj[mri_list_subj[visit_field] == visit]).iloc[0]
 
-        key_min_visit = get_closest_visit(
-            image, pending_timepoints, subject, visit_field, scandate_field
+        closest_visit = _get_closest_visit(
+            image[scandate_field],
+            image[visit_field],
+            pending_timepoints,
+            subject,
         )
-
-        if not key_min_visit:
+        if closest_visit is None:
+            cprint(image, lvl="debug")
             continue
+        key_min_visit = (
+            closest_visit.VISCODE,
+            closest_visit.COLPROT,
+            closest_visit.ORIGPROT,
+        )
 
         if key_min_visit not in visits.keys():
             visits[key_min_visit] = image[visit_field]
@@ -178,7 +186,12 @@ def _get_preferred_visit_name_adnigo(visit_code: str) -> str:
     return _get_preferred_visit_name_adni1(visit_code)
 
 
-def get_closest_visit(image, pending_timepoints, subject, visit_field, scandate_field):
+def _get_closest_visit(
+    image_acquisition_date: str,
+    image_visit: str,
+    visits,
+    subject: str,
+) -> Optional[pd.Series]:
     """Choose the visit with the closest date to a given image acquisition date.
 
     Args:
@@ -191,69 +204,154 @@ def get_closest_visit(image, pending_timepoints, subject, visit_field, scandate_
     Returns:
         [Returns]
     """
+    from clinica.utils.stream import cprint
+
+    if len(visits) == 0:
+        cprint(
+            "No corresponding timepoint in ADNIMERGE for "
+            f"subject {subject} in visit {image_visit}"
+        )
+        return None
+
+    if len(visits) == 1:
+        return visits[0]
+
+    (
+        closest_visit,
+        second_closest_visit,
+        smallest_time_difference,
+        second_smallest_time_difference,
+    ) = _get_closest_and_second_closest_visits(visits, image_acquisition_date)
+
+    return (
+        _get_closest_visit_for_large_time_difference(
+            subject,
+            image_visit,
+            image_acquisition_date,
+            closest_visit,
+            second_closest_visit,
+            smallest_time_difference,
+            second_smallest_time_difference,
+        )
+        if smallest_time_difference > 90
+        else closest_visit
+    )
+
+
+def _get_closest_visit_for_large_time_difference(
+    subject,
+    image_visit,
+    image_acquisition_date,
+    closest_visit,
+    second_closest_visit,
+    smallest_time_difference,
+    second_smallest_time_difference,
+):
     from datetime import datetime
 
     from clinica.utils.stream import cprint
 
-    min_db = 100000
-    min_db2 = 0
-    min_visit = None
-    min_visit2 = None
+    cprint(
+        _get_smallest_time_difference_too_large_message(
+            subject,
+            image_visit,
+            image_acquisition_date,
+            closest_visit,
+            second_closest_visit,
+            smallest_time_difference,
+            second_smallest_time_difference,
+        ),
+        lvl="debug",
+    )
+    # If image is too close to the date between two visits we prefer the earlier visit
+    if (
+        datetime.strptime(closest_visit.EXAMDATE, "%Y-%m-%d")
+        > datetime.strptime(image_acquisition_date, "%Y-%m-%d")
+        > datetime.strptime(second_closest_visit.EXAMDATE, "%Y-%m-%d")
+    ):
+        dif = days_between(closest_visit.EXAMDATE, second_closest_visit.EXAMDATE)
+        if abs((dif / 2.0) - smallest_time_difference) < 30:
+            closest_visit = second_closest_visit
 
-    for timepoint in pending_timepoints:
-        db = days_between(image[scandate_field], timepoint.EXAMDATE)
-        if db < min_db:
-            min_db2 = min_db
-            min_visit2 = min_visit
+    cprint(msg=f"We prefer {closest_visit.VISCODE}", lvl="debug")
 
-            min_db = db
-            min_visit = timepoint
+    return closest_visit
 
-    if min_visit is None or min_visit.empty:
-        cprint(
-            f"No corresponding timepoint in ADNIMERGE for subject {subject} in visit {image[visit_field]}"
+
+def _get_closest_and_second_closest_visits(
+    visits: List[pd.Series], reference_date: str
+) -> tuple:
+    """Return the closest and second closest visit from the reference date.
+
+    Parameters
+    ----------
+    visits : list of pd.Series
+        The list of visits to analyze. Should have a length greater than two.
+
+    reference_date : str
+        The reference date used to compute the time differences.
+
+    Returns
+    -------
+    closest_visit : pd.Series
+        The visit whose EXAMDATE is the closest to the reference date.
+
+    second_closest_visit : pd.Series
+        The second closest visit to the reference date.
+
+    min_time_difference : int
+        The number of days between the reference date and the closest visit.
+
+    second_min_time_difference : int
+        The number of days between the reference date and the second closest visit.
+    """
+    import numpy as np
+
+    if len(visits) < 2:
+        raise ValueError(f"Expected at least two visits, received {len(visits)}.")
+    time_differences_between_reference_and_visits_in_days = [
+        days_between(reference_date, visit_date)
+        for visit_date in [visit.EXAMDATE for visit in visits]
+    ]
+    idx = np.argsort(time_differences_between_reference_and_visits_in_days)
+    min_time_difference = time_differences_between_reference_and_visits_in_days[idx[0]]
+    second_min_time_difference = time_differences_between_reference_and_visits_in_days[
+        idx[1]
+    ]
+
+    return (
+        visits[idx[0]],
+        visits[idx[1]],
+        min_time_difference,
+        second_min_time_difference,
+    )
+
+
+def _get_smallest_time_difference_too_large_message(
+    subject: str,
+    image_visit: str,
+    image_acquisition_date: str,
+    closest_visit: pd.Series,
+    second_closest_visit: pd.Series,
+    smallest_time_difference: int,
+    second_smallest_time_difference: int,
+) -> str:
+    """Build the debug message when the closest found visit is further than 90 days in time."""
+    msg = (
+        f"More than 90 days for corresponding timepoint in ADNIMERGE for "
+        f"subject {subject} in visit {image_visit} on {image_acquisition_date}.\n"
+    )
+    idx = 1
+    for visit, difference in zip(
+        [closest_visit, second_closest_visit],
+        [smallest_time_difference, second_smallest_time_difference],
+    ):
+        msg += (
+            f"Timepoint {idx}: {visit.VISCODE} - {visit.ORIGPROT} "
+            f"on {visit.EXAMDATE} (Distance: {difference} days)\n"
         )
-        cprint(image, lvl="debug")
-        return None
-
-    if min_visit2 is not None and min_db > 90:
-        cprint(
-            msg=(
-                f"More than 60 days for corresponding timepoint in ADNIMERGE for "
-                f"subject {subject} in visit {image[visit_field]} on {image[scandate_field]}"
-            ),
-            lvl="debug",
-        )
-        cprint(
-            msg=(
-                f"Timepoint 1: {min_visit.VISCODE} - {min_visit.ORIGPROT} "
-                f"on {min_visit.EXAMDATE} (Distance: {min_db} days)"
-            ),
-            lvl="debug",
-        )
-        cprint(
-            msg=(
-                f"Timepoint 2: {min_visit2.VISCODE} - {min_visit2.ORIGPROT} "
-                f"on {min_visit2.EXAMDATE} (Distance: {min_db2} days)"
-            ),
-            lvl="debug",
-        )
-
-        # If image is too close to the date between two visits we prefer the earlier visit
-        if (
-            datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
-            > datetime.strptime(image[scandate_field], "%Y-%m-%d")
-            > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")
-        ):
-            dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
-            if abs((dif / 2.0) - min_db) < 30:
-                min_visit = min_visit2
-
-        cprint(msg=f"We prefer {min_visit.VISCODE}", lvl="debug")
-
-    key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
-
-    return key_min_visit
+        idx += 1
+    return msg
 
 
 def days_between(d1, d2):
