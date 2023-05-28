@@ -222,9 +222,6 @@ class AnatLinear(cpe.Pipeline):
             ]
         )
 
-
-
-
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
@@ -273,10 +270,9 @@ class AnatLinear(cpe.Pipeline):
         ants_registration_node.inputs.fixed_image = self.ref_template
         ants_registration_node.inputs.transform_type = "a"
         ants_registration_node.inputs.dimension = 3
-        if self.parameters.get("random_seed") is not None:
-            ants_registration_node.inputs.random_seed = self.parameters.get(
-                "random_seed"
-            )
+
+        if random_seed := self.parameters.get("random_seed", None):
+            ants_registration_node.inputs.random_seed = random_seed
 
         # 3. Crop image (using nifti). It uses custom interface, from utils file
 
