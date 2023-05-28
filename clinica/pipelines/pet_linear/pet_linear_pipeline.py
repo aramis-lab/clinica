@@ -329,6 +329,9 @@ class PETLinear(cpe.Pipeline):
         ants_applytransform_nonlinear_node.inputs.dimension = 3
         ants_applytransform_nonlinear_node.inputs.reference_image = self.ref_template
 
+        if random_seed := self.parameters.get("random_seed", None):
+            ants_registration_nonlinear_node.inputs.random_seed = random_seed
+
         normalize_intensity_node = npe.Node(
             name="intensityNormalization",
             interface=nutil.Function(
@@ -380,7 +383,8 @@ class PETLinear(cpe.Pipeline):
                 (concatenate_node, ants_applytransform_node, [("transforms_list", "transforms")]),
                 # STEP 3
                 (self.input_node, ants_registration_nonlinear_node, [("t1w", "moving_image")]),
-                (ants_registration_nonlinear_node, ants_applytransform_nonlinear_node, [("reverse_forward_transforms", "transforms")]),
+                (ants_registration_nonlinear_node, ants_applytransform_nonlinear_node,
+                 [("reverse_forward_transforms", "transforms")]),
                 (ants_applytransform_node, ants_applytransform_nonlinear_node, [("output_image", "input_image")]),
                 (ants_applytransform_node, normalize_intensity_node, [("output_image", "input_img")]),
                 (ants_applytransform_nonlinear_node, normalize_intensity_node, [("output_image", "norm_img")]),

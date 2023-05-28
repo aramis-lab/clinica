@@ -77,6 +77,12 @@ pvc_psf_tsv = option(
     ),
 )
 
+random_seed = option(
+    "--random_seed",
+    type=int,
+    help="Specify the random seed for algorithms that support it.",
+)
+
 save_warped_modulated = option(
     "-swm",
     "--save_warped_modulated",
@@ -186,9 +192,10 @@ atlas_path = option(
     help="Compute atlases at the end of the path",
 )
 
+# This option is only implemented in dwi_preprocessing_using_t1 for now.
 delete_cache = option(
     "-dc",
     "--delete_cache",
     is_flag=True,
-    help="If True, large intermediary files will be deleted before the end of the pipeline.",  # This option is only implemented in dwi_preprocessing_using_t1 for now.
+    help="If True, large intermediary files will be deleted before the end of the pipeline.",
 )
