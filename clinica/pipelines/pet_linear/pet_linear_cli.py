@@ -15,17 +15,18 @@ pipeline_name = "pet-linear"
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
 @cli_param.option_group.pipeline_specific_options
-@cli_param.option_group.option(
+@cli_param.option.option(
     "-ui",
     "--uncropped_image",
     is_flag=True,
     help="Do not crop the image with template (cropped image are suggested for using with DL models)",
 )
-@cli_param.option_group.option(
+@cli_param.option.option(
     "--save_pet_in_t1w_space",
     is_flag=True,
     help="Save the PET image in the T1w space computed in the intermediate step of the pipeline",
 )
+@cli_param.option.random_seed
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
@@ -37,6 +38,7 @@ def cli(
     suvr_reference_region: str,
     uncropped_image: bool = False,
     save_pet_in_t1w_space: bool = False,
+    random_seed: Optional[int] = None,
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
@@ -64,6 +66,7 @@ def cli(
         "suvr_reference_region": suvr_reference_region,
         "uncropped_image": uncropped_image,
         "save_PETinT1w": save_pet_in_t1w_space,
+        "random_seed": random_seed,
     }
 
     pipeline = PETLinear(
