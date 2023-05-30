@@ -218,6 +218,7 @@ def test_instantiate_pet_linear(cmdopt):
         "acq_label": Tracer.FDG,
         "suvr_reference_region": "cerebellumPons2",
         "skip_question": True,
+        "with_reconstruction": "default",
     }
     pipeline = PETLinear(
         bids_directory=fspath(root / "in" / "bids"),
