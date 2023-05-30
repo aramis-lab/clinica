@@ -3,134 +3,152 @@
 """Module for converting FDG PET of ADNI."""
 
 from enum import Enum
+from functools import partial
+from os import PathLike
+from typing import Optional, Union
 
 
-class PreprocessingStep(str, Enum):
-    """BIDS label for PET tracers.
+class ADNIPreprocessingStep(Enum):
+    """ADNI preprocessing steps."""
 
-    Follows the convention proposed in the PET section of the BIDS specification.
+    STEP0 = "ADNI Brain PET: Raw FDG"
+    STEP1 = "Co-registered Dynamic"
+    STEP2 = "Co-registered, Averaged"
+    STEP3 = "Coreg, Avg, Standardized Image and Voxel Size"
+    STEP4 = "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"
+    STEP5 = "Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"
 
-    See: https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/09-positron-emission-tomography.html
-    """
-
-    step_0 = "ADNI Brain PET: Raw FDG"
-    step_1 = "Co-registered Dynamic"
-    step_2 = "Co-registered, Averaged"
-    step_3 = "Coreg, Avg, Standardized Image and Voxel Size"
-    step_4 = "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"
-    step_5 = "Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"
-
-
-def convert_adni_fdg_pet(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
-):
-    """Convert "Co-registered, Averaged" FDG PET images of ADNI into BIDS format.
-
-    Args:
-        source_dir: path to the ADNI directory
-        csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
-        conversion_dir: path to the TSV files including the paths to original images
-        subjs_list: subjects list
-        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
-    """
-    return convert_adni_fdg_pet_generic(
-        source_dir,
-        csv_dir,
-        dest_dir,
-        conversion_dir,
-        preprocessing_step="2",
-        subjs_list=subjs_list,
-        mod_to_update=mod_to_update,
-    )
+    @classmethod
+    def from_step_value(cls, step_value: Union[int, str]):
+        """Accept step specification in raw integer (0, 1, ..., 5) and
+        string forms ("1", "3", "step2", "step_4"....).
+        """
+        error_msg = (
+            f"Step value {step_value} is not a valid ADNI preprocessing step value."
+            f"Valid values are {list(ADNIPreprocessingStep)}."
+        )
+        if isinstance(step_value, str) and step_value.startswith("step"):
+            step_value = step_value.lstrip("step").lstrip("_")
+        try:
+            step_value = int(step_value)
+        except Exception:
+            raise ValueError(error_msg)
+        if 0 <= step_value <= 5:
+            return cls[f"STEP{step_value}"]
+        raise ValueError(error_msg)
 
 
-def convert_adni_fdg_pet_uniform(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
-):
-    """Convert "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution" FDG PET images of ADNI into BIDS format.
-
-    Args:
-        source_dir: path to the ADNI directory
-        csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
-        conversion_dir: path to the TSV files including the paths to original images
-        subjs_list: subjects list
-        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
-    """
-    return convert_adni_fdg_pet_generic(
-        source_dir,
-        csv_dir,
-        dest_dir,
-        conversion_dir,
-        preprocessing_step="4",
-        subjs_list=subjs_list,
-        mod_to_update=mod_to_update,
-    )
-
-
-def convert_adni_fdg_pet_generic(
-    source_dir,
-    csv_dir,
-    dest_dir,
-    conversion_dir,
-    preprocessing_step,
-    subjs_list=None,
-    mod_to_update=False,
+def _convert_adni_fdg_pet(
+    source_dir: PathLike,
+    csv_dir: PathLike,
+    destination_dir: PathLike,
+    conversion_dir: PathLike,
+    preprocessing_step: ADNIPreprocessingStep,
+    subjects: Optional[list] = None,
+    mod_to_update: bool = False,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
-    Args:
-        source_dir: path to the ADNI directory
-        csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
-        conversion_dir: path to the TSV files including the paths to original images
-        preprocessing_step: ADNI processing step, is an int between 0 and 5.
-        subjs_list: subjects list
-        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
+    Parameters
+    ----------
+    source_dir : PathLike
+        Path to the ADNI directory.
+
+    csv_dir : PathLike
+        Path to the clinical data directory.
+
+    destination_dir : PathLike
+        Path to the destination BIDS directory.
+
+    conversion_dir : PathLike
+        Path to the TSV files including the paths to original images.
+
+    preprocessing_step : ADNIPreprocessingStep
+        ADNI processing step.
+
+    subjects : List, optional
+        List of subjects.
+
+    mod_to_update : bool
+        If True, pre-existing images in the BIDS directory
+        will be erased and extracted again.
     """
-    from os import path
+    from pathlib import Path
 
     import pandas as pd
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
-    if not subjs_list:
-        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
-        subjs_list = list(adni_merge.PTID.unique())
-
+    if subjects is None:
+        adni_merge = pd.read_csv(
+            Path(csv_dir) / "ADNIMERGE.csv", sep=",", low_memory=False
+        )
+        subjects = list(adni_merge.PTID.unique())
     cprint(
-        f"Calculating paths of FDG PET images. Output will be stored in {conversion_dir}."
+        "Calculating paths of FDG PET images. "
+        f"Output will be stored in {conversion_dir}."
     )
-    images = compute_fdg_pet_paths(
-        source_dir, csv_dir, subjs_list, conversion_dir, preprocessing_step
+    images = _compute_fdg_pet_paths(
+        source_dir, csv_dir, subjects, conversion_dir, preprocessing_step
     )
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
-    if preprocessing_step == "2":
-        modality = "fdg"
-    elif preprocessing_step == "4":
-        modality = "fdg_uniform"
-    paths_to_bids(images, dest_dir, modality, mod_to_update=mod_to_update)
+    modality = _get_modality_from_adni_preprocessing_step(preprocessing_step)
+    paths_to_bids(images, destination_dir, modality, mod_to_update=mod_to_update)
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
-def compute_fdg_pet_paths(
-    source_dir, csv_dir, subjs_list, conversion_dir, preprocessing_step
+def _get_modality_from_adni_preprocessing_step(step: ADNIPreprocessingStep) -> str:
+    if step == ADNIPreprocessingStep.STEP2:
+        return "fdg"
+    if step == ADNIPreprocessingStep.STEP4:
+        return "fdg_uniform"
+    raise ValueError(
+        f"The ADNI preprocessing step {step} is not (yet) supported by the converter."
+        f"The converter only supports {ADNIPreprocessingStep.STEP2} and "
+        f"{ADNIPreprocessingStep.STEP4} for now."
+    )
+
+
+convert_adni_fdg_pet = partial(
+    _convert_adni_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP2
+)
+convert_adni_fdg_pet_uniform = partial(
+    _convert_adni_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP4
+)
+
+
+def _compute_fdg_pet_paths(
+    source_dir: PathLike,
+    csv_dir: PathLike,
+    subjects: list,
+    conversion_dir: PathLike,
+    preprocessing_step: ADNIPreprocessingStep,
 ):
     """Compute the paths to the FDG PET images and store them in a TSV file.
 
-    Args:
-        source_dir: path to the ADNI directory
-        csv_dir: path to the clinical data directory
-        subjs_list: subjects list
-        conversion_dir: path to the TSV files including the paths to original images
+    Parameters
+    ----------
+    source_dir : PathLike
+        Path to the ADNI directory.
 
-    Returns:
-        images: a dataframe with all the paths to the PET images that will be converted into BIDS
+    csv_dir : PathLike
+        Path to the clinical data directory.
+
+    subjects : list
+        List of subjects.
+
+    conversion_dir : PathLike
+        Path to the TSV files including the paths to original images.
+
+    preprocessing_step : PreprocessingStep
+        ADNI processing step, is an int between 0 and 5.
+
+    Returns
+    -------
+    images: a dataframe with all the paths to the PET images that will be converted into BIDS
     """
-    from os import path
+    from pathlib import Path
 
     import pandas as pd
 
@@ -152,29 +170,31 @@ def compute_fdg_pet_paths(
         "Image_ID",
         "Original",
     ]
+    csv_dir = Path(csv_dir)
     pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
     pet_fdg_dfs_list = []
 
     # Loading needed .csv files
-    petqc = pd.read_csv(path.join(csv_dir, "PETQC.csv"), sep=",", low_memory=False)
-    petqc3 = pd.read_csv(path.join(csv_dir, "PETC3.csv"), sep=",", low_memory=False)
+    petqc = pd.read_csv(csv_dir / "PETQC.csv", sep=",", low_memory=False)
+    petqc3 = pd.read_csv(csv_dir / "PETC3.csv", sep=",", low_memory=False)
     pet_meta_list = pd.read_csv(
-        path.join(csv_dir, "PET_META_LIST.csv"), sep=",", low_memory=False
+        csv_dir / "PET_META_LIST.csv", sep=",", low_memory=False
     )
 
-    for subj in subjs_list:
-
+    for subject in subjects:
         # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subj]
+        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subject]
 
         if subject_pet_meta.empty:
             continue
 
         # QC for FDG PET images for ADNI 1, GO and 2
-        pet_qc_1go2_subj = petqc[(petqc.PASS == 1) & (petqc.RID == int(subj[-4:]))]
+        pet_qc_1go2_subj = petqc[(petqc.PASS == 1) & (petqc.RID == int(subject[-4:]))]
 
         # QC for FDG PET images for ADNI 3
-        pet_qc3_subj = petqc3[(petqc3.SCANQLTY == 1) & (petqc3.RID == int(subj[-4:]))]
+        pet_qc3_subj = petqc3[
+            (petqc3.SCANQLTY == 1) & (petqc3.RID == int(subject[-4:]))
+        ]
         pet_qc3_subj.insert(0, "EXAMDATE", pet_qc3_subj.SCANDATE.to_list())
 
         # Concatenating visits in both QC files
@@ -182,16 +202,13 @@ def compute_fdg_pet_paths(
             [pet_qc_1go2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False
         )
 
-        sequences_preprocessing_step = PreprocessingStep[
-            "step_" + preprocessing_step
-        ].value
         subj_dfs_list = get_images_pet(
-            subj,
+            subject,
             pet_qc_subj,
             subject_pet_meta,
             pet_fdg_col,
             "FDG-PET",
-            sequences_preprocessing_step,
+            [preprocessing_step.value],
         )
         if subj_dfs_list:
             pet_fdg_dfs_list += subj_dfs_list
@@ -222,7 +239,7 @@ def compute_fdg_pet_paths(
 
     images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
     images.to_csv(
-        path.join(conversion_dir, f"{Tracer.FDG}_pet_paths.tsv"), sep="\t", index=False
+        Path(conversion_dir) / f"{Tracer.FDG}_pet_paths.tsv", sep="\t", index=False
     )
 
     return images
