@@ -5,7 +5,10 @@
 from enum import Enum
 from functools import partial
 from os import PathLike
-from typing import Optional, Union
+from pathlib import Path
+from typing import List, Optional, Set, Tuple, Union
+
+import pandas as pd
 
 
 class ADNIPreprocessingStep(Enum):
@@ -15,8 +18,8 @@ class ADNIPreprocessingStep(Enum):
     STEP1 = "Co-registered Dynamic"
     STEP2 = "Co-registered, Averaged"
     STEP3 = "Coreg, Avg, Standardized Image and Voxel Size"
-    STEP4 = "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"
-    STEP5 = "Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"
+    STEP4 = "Coreg, Avg, Std Img and Voxel Size, Uniform Resolution"
+    STEP5 = "Coreg, Avg, Std Img and Voxel Size, Uniform 6mm Res"
 
     @classmethod
     def from_step_value(cls, step_value: Union[int, str]):
@@ -44,7 +47,7 @@ def _convert_adni_fdg_pet(
     destination_dir: PathLike,
     conversion_dir: PathLike,
     preprocessing_step: ADNIPreprocessingStep,
-    subjects: Optional[list] = None,
+    subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
@@ -66,7 +69,7 @@ def _convert_adni_fdg_pet(
     preprocessing_step : ADNIPreprocessingStep
         ADNI processing step.
 
-    subjects : List, optional
+    subjects : List of str, optional
         List of subjects.
 
     mod_to_update : bool
@@ -121,10 +124,10 @@ convert_adni_fdg_pet_uniform = partial(
 def _compute_fdg_pet_paths(
     source_dir: PathLike,
     csv_dir: PathLike,
-    subjects: list,
+    subjects: List[str],
     conversion_dir: PathLike,
     preprocessing_step: ADNIPreprocessingStep,
-):
+) -> pd.DataFrame:
     """Compute the paths to the FDG PET images and store them in a TSV file.
 
     Parameters
@@ -133,9 +136,13 @@ def _compute_fdg_pet_paths(
         Path to the ADNI directory.
 
     csv_dir : PathLike
-        Path to the clinical data directory.
+        Path to the clinical data directory. It must contain the following
+        CSV files:
+            - PETQC.csv
+            - PETC3.csv
+            - PET_META_LIST.csv
 
-    subjects : list
+    subjects : list of str
         List of subjects.
 
     conversion_dir : PathLike
@@ -146,19 +153,46 @@ def _compute_fdg_pet_paths(
 
     Returns
     -------
-    images: a dataframe with all the paths to the PET images that will be converted into BIDS
+    images : pd.DataFrame
+        DataFrame with all the paths to the PET images that will be converted into BIDS.
     """
     from pathlib import Path
 
-    import pandas as pd
-
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        find_image_path,
-        get_images_pet,
-    )
+    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path
     from clinica.utils.pet import Tracer
 
-    pet_fdg_col = [
+    pet_fdg_df = _get_pet_fdg_df(Path(csv_dir), subjects, preprocessing_step)
+    images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
+    images.to_csv(
+        Path(conversion_dir) / f"{Tracer.FDG}_pet_paths.tsv", sep="\t", index=False
+    )
+
+    return images
+
+
+def _get_pet_fdg_df(
+    csv_dir: Path, subjects: List[str], preprocessing_step: ADNIPreprocessingStep
+) -> pd.DataFrame:
+    """Build a DataFrame for the PET FDG images for the provided list of subjects."""
+    import pandas as pd
+
+    dfs = []
+    for subject in subjects:
+        dfs.extend(
+            _get_images_pet_for_subject(
+                subject,
+                _get_csv_data(Path(csv_dir)),
+                preprocessing_step,
+            )
+        )
+    if len(dfs) == 0:
+        return pd.DataFrame(columns=_get_pet_fdg_columns())
+    pet_fdg_df = pd.concat(dfs, ignore_index=True)
+    return _remove_known_conversion_errors(pet_fdg_df)
+
+
+def _get_pet_fdg_columns() -> List[str]:
+    return [
         "Phase",
         "Subject_ID",
         "VISCODE",
@@ -170,55 +204,96 @@ def _compute_fdg_pet_paths(
         "Image_ID",
         "Original",
     ]
-    csv_dir = Path(csv_dir)
-    pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
-    pet_fdg_dfs_list = []
 
-    # Loading needed .csv files
-    petqc = pd.read_csv(csv_dir / "PETQC.csv", sep=",", low_memory=False)
-    petqc3 = pd.read_csv(csv_dir / "PETC3.csv", sep=",", low_memory=False)
-    pet_meta_list = pd.read_csv(
-        csv_dir / "PET_META_LIST.csv", sep=",", low_memory=False
+
+def _get_csv_data(csv_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Load needed data from .csv files in csv_dir folder."""
+    return (
+        _get_pet_qc_df(csv_dir),
+        _get_qc_adni_3_df(csv_dir),
+        _get_meta_list_df(csv_dir),
     )
 
-    for subject in subjects:
-        # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subject]
 
-        if subject_pet_meta.empty:
-            continue
-
-        # QC for FDG PET images for ADNI 1, GO and 2
-        pet_qc_1go2_subj = petqc[(petqc.PASS == 1) & (petqc.RID == int(subject[-4:]))]
-
-        # QC for FDG PET images for ADNI 3
-        pet_qc3_subj = petqc3[
-            (petqc3.SCANQLTY == 1) & (petqc3.RID == int(subject[-4:]))
-        ]
-        pet_qc3_subj.insert(0, "EXAMDATE", pet_qc3_subj.SCANDATE.to_list())
-
-        # Concatenating visits in both QC files
-        pet_qc_subj = pd.concat(
-            [pet_qc_1go2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False
+def _load_df_with_column_check(
+    csv_dir: Path, filename: str, required_columns: Set[str]
+) -> pd.DataFrame:
+    """Load the requested CSV file in a dataframe and check that the requested columns are present."""
+    df = pd.read_csv(csv_dir / filename, sep=",", low_memory=False)
+    if not required_columns.issubset(set(df.columns)):
+        raise ValueError(
+            f"Missing column(s) from {filename} file."
+            f"Required columns for this file are {required_columns}."
         )
+    return df
 
-        subj_dfs_list = get_images_pet(
-            subject,
-            pet_qc_subj,
-            subject_pet_meta,
-            pet_fdg_col,
-            "FDG-PET",
-            [preprocessing_step.value],
-        )
-        if subj_dfs_list:
-            pet_fdg_dfs_list += subj_dfs_list
 
-    if pet_fdg_dfs_list:
-        # Concatenating dataframes into one
-        pet_fdg_df = pd.concat(pet_fdg_dfs_list, ignore_index=True)
+_get_pet_qc_df = partial(
+    _load_df_with_column_check, filename="PETQC.csv", required_columns={"PASS", "RID"}
+)
+_get_qc_adni_3_df = partial(
+    _load_df_with_column_check,
+    filename="PETC3.csv",
+    required_columns={"SCANQLTY", "RID", "SCANDATE"},
+)
+_get_meta_list_df = partial(
+    _load_df_with_column_check,
+    filename="PET_META_LIST.csv",
+    required_columns={"Subject"},
+)
 
-    # Exceptions
-    # ==========
+
+def _get_images_pet_for_subject(
+    subject: str,
+    csv_data: Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame],
+    preprocessing_step: ADNIPreprocessingStep,
+) -> list:
+    from clinica.iotools.converters.adni_to_bids.adni_utils import get_images_pet
+
+    pet_qc_df, pet_qc_adni_3_df, pet_meta_list_df = csv_data
+    # PET images metadata for subject
+    subject_pet_meta = pet_meta_list_df[pet_meta_list_df["Subject"] == subject]
+
+    if subject_pet_meta.empty:
+        return []
+
+    # QC for FDG PET images for ADNI 1, GO and 2
+    pet_qc_1go2_subj = pet_qc_df[
+        (pet_qc_df.PASS == 1) & (pet_qc_df.RID == int(subject[-4:]))
+    ]
+
+    # QC for FDG PET images for ADNI 3
+    pet_qc3_subj = pet_qc_adni_3_df[
+        (pet_qc_adni_3_df.SCANQLTY == 1) & (pet_qc_adni_3_df.RID == int(subject[-4:]))
+    ]
+    pet_qc3_subj.insert(0, "EXAMDATE", pet_qc3_subj.SCANDATE.to_list())
+
+    # Concatenating visits in both QC files
+    pet_qc_subj = pd.concat(
+        [pet_qc_1go2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False
+    )
+
+    return get_images_pet(
+        subject,
+        pet_qc_subj,
+        subject_pet_meta,
+        _get_pet_fdg_columns(),
+        "FDG-PET",
+        [preprocessing_step.value],
+    )
+
+
+def _remove_known_conversion_errors(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove known exceptions from images to convert."""
+    if df.empty:
+        return df
+    error_ind = df.index[df.apply(lambda x: _is_visit_a_conversion_error(x), axis=1)]
+    df.drop(error_ind, inplace=True)
+    return df
+
+
+def _is_visit_a_conversion_error(row: pd.Series) -> bool:
+    """Return whether a given visit row is among the known exceptions or not."""
     conversion_errors = [  # NONAME.nii
         ("031_S_0294", "bl"),
         ("037_S_1421", "m36"),
@@ -227,19 +302,4 @@ def _compute_fdg_pet_paths(
         ("941_S_1195", "m48"),
         ("005_S_0223", "m12"),
     ]
-
-    # Removing known exceptions from images to convert
-    if not pet_fdg_df.empty:
-        error_ind = pet_fdg_df.index[
-            pet_fdg_df.apply(
-                lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1
-            )
-        ]
-        pet_fdg_df.drop(error_ind, inplace=True)
-
-    images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
-    images.to_csv(
-        Path(conversion_dir) / f"{Tracer.FDG}_pet_paths.tsv", sep="\t", index=False
-    )
-
-    return images
+    return (row.Subject_ID, row.VISCODE) in conversion_errors
