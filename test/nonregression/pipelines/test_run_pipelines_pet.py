@@ -7,6 +7,7 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
+from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -16,18 +17,31 @@ from clinica.utils.pet import Tracer
 warnings.filterwarnings("ignore")
 
 
-@pytest.fixture(
-    params=[
-        "PETVolume",
-        "PETLinear",
-        "PETSurfaceCrossSectional",
-    ]
-)
-def test_name(request):
-    return request.param
+# @pytest.mark.slow
+def test_pet_volume(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETVolume")
+    run_pet_volume(input_dir, tmp_dir, ref_dir, working_dir)
 
 
-def run_PETVolume(
+# @pytest.mark.slow
+def test_pet_linear(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETLinear")
+    run_pet_linear(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+@pytest.mark.slow
+def test_pet_surface(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETSurface")
+    run_pet_surface(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+def run_pet_volume(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     import shutil
@@ -69,10 +83,10 @@ def run_PETVolume(
             / "caps"
             / "subjects"
             / sub
-            / "ses-M00/pet/preprocessing/group-UnitTest"
+            / "ses-M000/pet/preprocessing/group-UnitTest"
             / (
                 sub
-                + f"_ses-M00_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+                + f"_ses-M000_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
             )
         )
         for sub in subjects
@@ -82,7 +96,7 @@ def run_PETVolume(
             ref_dir
             / (
                 sub
-                + f"_ses-M00_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+                + f"_ses-M000_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
             )
         )
         for sub in subjects
@@ -94,7 +108,7 @@ def run_PETVolume(
         )
 
 
-def run_PETLinear(
+def run_pet_linear(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
 
@@ -119,7 +133,7 @@ def run_PETLinear(
     compare_folders(output_dir / "caps", ref_dir / "caps", output_dir)
 
 
-def run_PETSurfaceCrossSectional(
+def run_pet_surface(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     import shutil
@@ -154,9 +168,9 @@ def run_PETSurfaceCrossSectional(
     out_files = [
         (
             output_dir
-            / "caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface"
+            / "caps/subjects/sub-ADNI011S4105/ses-M000/pet/surface"
             / (
-                f"sub-ADNI011S4105_ses-M00_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
+                f"sub-ADNI011S4105_ses-M000_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
                 + h
                 + "_fwhm-"
                 + str(f)
@@ -170,7 +184,7 @@ def run_PETSurfaceCrossSectional(
         (
             ref_dir
             / (
-                f"sub-ADNI011S4105_ses-M00_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
+                f"sub-ADNI011S4105_ses-M000_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-"
                 + h
                 + "_fwhm-"
                 + str(f)
@@ -188,32 +202,6 @@ def run_PETSurfaceCrossSectional(
             rtol=3e-2,
             equal_nan=True,
         )
-
-
-def test_run_pet(cmdopt, tmp_path, test_name):
-    base_dir = Path(cmdopt["input"])
-    input_dir = base_dir / test_name / "in"
-    ref_dir = base_dir / test_name / "ref"
-    tmp_out_dir = tmp_path / test_name / "out"
-    tmp_out_dir.mkdir(parents=True)
-    working_dir = Path(cmdopt["wd"])
-
-    if test_name == "PETVolume":
-        run_PETVolume(input_dir, tmp_out_dir, ref_dir, working_dir)
-
-    elif test_name == "PETLinear":
-        run_PETLinear(input_dir, tmp_out_dir, ref_dir, working_dir)
-
-    elif test_name == "PETSurfaceCrossSectional":
-        run_PETSurfaceCrossSectional(
-            base_dir / "PETSurface" / "in",
-            tmp_out_dir,
-            base_dir / "PETSurface" / "ref",
-            working_dir,
-        )
-    else:
-        print(f"Test {test_name} not available.")
-        assert 0
 
 
 # def test_run_PETSurfaceLongitudinal(cmdopt):
@@ -251,8 +239,8 @@ def test_run_pet(cmdopt, tmp_path, test_name):
 #
 #     # Check files
 #     part_id = 'sub-ADNI041S1260'
-#     sess_id = 'ses-M24'
-#     long_id = 'long-M00M06M12M18M24'
+#     sess_id = 'ses-M024'
+#     long_id = 'long-M000M006M012M018M024'
 #     image_id = part_id + '_' + sess_id + '_' + long_id
 #     out_files = [join(root, 'out', 'caps', 'subjects', part_id, sess_id, 'pet', long_id, 'surface_longitudinal',
 #                       image_id + f'_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'

@@ -6,8 +6,70 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Clinica 0.7.1
+## Clinica 0.7.4
 
+### Enhanced
+
+- [DWI] Read total readout time and phase encoding direction from JSON files
+- [IOTools] Session numbers are now represented using three digits instead of two
+- [PET] Handle 4D images with dummy fourth dimension
+- [Dependencies] Upgrade Poetry lock files to version 2
+
+### Added
+
+- [Converters] New GENFI to BIDS converter
+- Support for Python 3.11
+
+### Fixed
+
+- [BUG] Fixed issue with NetworkX 3
+- [BUG] Fix run statistics-volume-correction assertion error
+- [DOC] Fix command in statistics volume documentation
+- [IOTools] Fix `create_scan_dict` row extraction condition
+
+## Clinica 0.7.3
+
+### Enhanced
+
+- [CI] Add caching support for unit tests
+- [CI] Refactor testing tools
+- [Dependencies] Bump lxml from 4.9.0 to 4.9.1
+- [Dependencies] Upgrade joblib to 1.2.0
+- [Dependencies] build: Install nipype up to version 1.8.2
+- [SurfStat] Pure python implementation
+- [IOTools] Fix warnings in merge-tsv
+- [Adni2BIDS] Deal with new data from ADNI3
+- [DWIPreprocessingUsingT1] Optimized disk usage of Pipeline DWIPreprocessingUsingT1
+- [IOTools] Allow setting a custom logging directory via environment variable
+- [IOTools] Center all modalities if no modality is specified
+- [Pipelines] Report uncompliant BIDS subjects
+
+### Added
+
+- [Converters] Add support for BIDS Readme 
+- [IOTools] Extend the create-subjects-sessions iotool to CAPS directories
+- [IOTools] Add pet-linear to checks for missing processing
+
+### Fixed
+
+- [UKB2BIDS] Add error if data is not found or filtered 
+- [DWIPreprocessingUsingT1] Add missing `out_file` parameter to DWIBiasCorrect
+- [Converters] UKB2BIDS drop directories labeled as unusable
+- [Adni2BIDS] Handle empty lines in `create_subs_sess_list`
+- [IOTools] Fix `vox_to_world_space_method_1`
+
+## Clinica 0.7.2
+
+### Fixed
+
+- [Pipelines] Fix bug introduced in previous version with the use of the gunzip interface
+- [DWIConnectome] Use ConstrainedSphericalDeconvolution instead of buggy EstimateFOD 
+
+### Enhanced 
+
+- [Adni2Bids] Add compatibility for edge cases introduced in Adni3
+
+## Clinica 0.7.1
 
 ### Added
 - [Doc] add ukbiobank documentation
@@ -174,7 +236,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- [`oasis-to-bids`]: Remove FSL library depency for OASIS-to-bids conversion.
+- [`oasis-to-bids`]: Remove FSL library dependency for OASIS-to-bids conversion.
 - [Clinica]: Replace exception by warning when CAPs folder not recognized.
 - [`aibl-to-bids`]: Center output nifti files of AIBL.
 - [`aibl-to-bids`]: Extracts DICOM metadata in JSON files.

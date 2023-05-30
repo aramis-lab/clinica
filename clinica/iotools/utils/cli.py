@@ -6,6 +6,10 @@ bids_directory = click.argument(
     "bids_directory", type=click.Path(exists=True, resolve_path=True)
 )
 
+current_directory = click.argument(
+    "current_directory", type=click.Path(exists=True, resolve_path=True)
+)
+
 
 @click.group("iotools")
 def cli() -> None:
@@ -135,21 +139,23 @@ def check_missing_processing(
 
 
 @cli.command()
-@bids_directory
+@current_directory
 @click.argument("output_tsv", type=click.Path(resolve_path=True))
-def create_subjects_visits(bids_directory: str, output_tsv: str) -> None:
+def create_subjects_visits(current_directory: str, output_tsv: str) -> None:
     """Export participants with their sessions."""
     from os import makedirs
     from os.path import basename, dirname
 
     from clinica.iotools.utils.data_handling import create_subs_sess_list
-    from clinica.utils.inputs import check_bids_folder
+    from clinica.utils.inputs import determine_caps_or_bids
     from clinica.utils.stream import cprint
 
-    check_bids_folder(bids_directory)
+    is_bids = determine_caps_or_bids(current_directory)
     output_directory = dirname(output_tsv)
     makedirs(output_directory, exist_ok=True)
-    create_subs_sess_list(bids_directory, output_directory, basename(output_tsv))
+    create_subs_sess_list(
+        current_directory, output_directory, basename(output_tsv), is_bids_dir=is_bids
+    )
     cprint(f"The TSV file was saved to {output_tsv}.")
 
 
@@ -176,7 +182,7 @@ def create_subjects_visits(bids_directory: str, output_tsv: str) -> None:
             "dwi-dti",
         ]
     ),
-    help="Pipeline to merge to the ouput TSV file. All pipelines are merged by default.",
+    help="Pipeline to merge to the output TSV file. All pipelines are merged by default.",
 )
 @click.option(
     "-vas",

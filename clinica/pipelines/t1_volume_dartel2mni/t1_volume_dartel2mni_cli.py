@@ -3,10 +3,12 @@ from typing import List, Optional, Tuple
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "t1-volume-dartel2mni"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory

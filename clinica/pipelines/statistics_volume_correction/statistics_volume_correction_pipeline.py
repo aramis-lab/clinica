@@ -2,7 +2,7 @@ import clinica.pipelines.engine as cpe
 
 
 class StatisticsVolumeCorrection(cpe.Pipeline):
-    """StatisticsVolumeCorrection - Statistical correction of Statistical correction of StatisticsVolume pipeline.
+    """StatisticsVolumeCorrection - Statistical correction of StatisticsVolume pipeline.
 
     Returns:
         A clinica pipeline object containing the StatisticsVolumeCorrection pipeline.
@@ -166,27 +166,27 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
         save_fig_peak_correction_FWE = npe.Node(
             name="save_figure_peak_correction_FWE",
             interface=nutil.Function(
-                input_names=["t_map", "figs", "name"],
+                input_names=["t_map", "figs", "correction_name"],
                 output_names=[],
                 function=utils.generate_output,
             ),
         )
-        save_fig_peak_correction_FWE.inputs.name = "FWEp"
+        save_fig_peak_correction_FWE.inputs.correction_name = "FWEp"
 
         save_fig_peak_correction_FDR = save_fig_peak_correction_FWE.clone(
             name="save_fig_peak_correction_FDR"
         )
-        save_fig_peak_correction_FDR.inputs.name = "FDRp"
+        save_fig_peak_correction_FDR.inputs.correction_name = "FDRp"
 
         save_fig_cluster_correction_FWE = save_fig_peak_correction_FWE.clone(
             name="save_fig_cluster_correction_FWE"
         )
-        save_fig_cluster_correction_FWE.inputs.name = "FWEc"
+        save_fig_cluster_correction_FWE.inputs.correction_name = "FWEc"
 
         save_fig_cluster_correction_FDR = save_fig_peak_correction_FWE.clone(
             name="save_fig_cluster_correction_FDR"
         )
-        save_fig_cluster_correction_FDR.inputs.name = "FDRc"
+        save_fig_cluster_correction_FDR.inputs.correction_name = "FDRc"
 
         # Connection
         # ==========

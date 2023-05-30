@@ -117,7 +117,10 @@ class StatisticsVolume(cpe.Pipeline):
         elif self.parameters["orig_input_data_volume"] == "t1-volume":
             self.parameters["measure_label"] = "graymatter"
             information_dict = t1_volume_template_tpm_in_mni(
-                self.parameters["group_label_dartel"], 1, True
+                group_label=self.parameters["group_label_dartel"],
+                tissue_number=1,
+                modulation=True,
+                fwhm=self.parameters["full_width_at_half_maximum"],
             )
 
         elif self.parameters["orig_input_data_volume"] == "custom-pipeline":
@@ -278,12 +281,19 @@ class StatisticsVolume(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from nipype.algorithms.misc import Gunzip
 
         import clinica.pipelines.statistics_volume.statistics_volume_utils as utils
+        from clinica.utils.filemanip import unzip_nii
 
         # SPM cannot handle zipped files
-        unzip_node = npe.Node(interface=Gunzip(), name="unzip_node")
+        unzip_node = npe.Node(
+            nutil.Function(
+                input_names=["in_file"],
+                output_names=["output_files"],
+                function=unzip_nii,
+            ),
+            name="unzip_node",
+        )
 
         # Get indexes of the 2 groups, based on the contrast column of the tsv file
         get_groups = npe.Node(
@@ -341,7 +351,7 @@ class StatisticsVolume(cpe.Pipeline):
                     "template_file",
                 ],
                 output_names=["script_file", "covariates"],
-                function=utils.model_creation,
+                function=utils.write_matlab_model,
             ),
             name="model_creation",
             overwrite=True,
@@ -357,7 +367,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["mat_file", "template_file"],
                 output_names=["script_file"],
-                function=utils.estimate,
+                function=utils.clean_template_file,
             ),
             name="model_estimation",
         )
@@ -370,7 +380,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["mat_file", "template_file", "covariates", "class_names"],
                 output_names=["script_file"],
-                function=utils.contrast,
+                function=utils.clean_spm_contrast_file,
             ),
             name="model_contrast",
         )
@@ -383,7 +393,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["mat_file", "template_file", "method", "threshold"],
                 output_names=["script_file"],
-                function=utils.results,
+                function=utils.clean_spm_result_file,
             ),
             name="model_result_no_correction",
         )
@@ -419,7 +429,7 @@ class StatisticsVolume(cpe.Pipeline):
                     "regression_coeff",
                     "contrasts",
                 ],
-                function=utils.read_output,
+                function=utils.copy_and_rename_spm_output_files,
             ),
             name="read_output_node",
         )
@@ -433,7 +443,7 @@ class StatisticsVolume(cpe.Pipeline):
         self.connect(
             [
                 (self.input_node, unzip_node, [("input_files", "in_file")]),
-                (unzip_node, model_creation, [("out_file", "file_list")]),
+                (unzip_node, model_creation, [("output_files", "file_list")]),
                 (get_groups, model_creation, [("idx_group1", "idx_group1")]),
                 (get_groups, model_creation, [("idx_group2", "idx_group2")]),
                 (model_creation, run_spm_model_creation, [("script_file", "m_file")]),

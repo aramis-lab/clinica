@@ -7,6 +7,7 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
+from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -15,36 +16,23 @@ import pytest
 warnings.filterwarnings("ignore")
 
 
-@pytest.fixture(
-    params=[
-        "WorkflowsML",
-        "SpatialSVM",
-    ]
-)
-def test_name(request):
-    return request.param
-
-
-def test_run_ml(cmdopt, tmp_path, test_name):
+@pytest.mark.fast
+def test_workflows_ml(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
-    input_dir = base_dir / test_name / "in"
-    ref_dir = base_dir / test_name / "ref"
-    tmp_out_dir = tmp_path / test_name / "out"
-    tmp_out_dir.mkdir(parents=True)
     working_dir = Path(cmdopt["wd"])
-
-    if test_name == "WorkflowsML":
-        run_WorkflowsML(input_dir, tmp_out_dir, ref_dir, working_dir)
-
-    elif test_name == "SpatialSVM":
-        run_SpatialSVM(input_dir, tmp_out_dir, ref_dir, working_dir)
-
-    else:
-        print(f"Test {test_name} not available.")
-        assert 0
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "WorkflowsML")
+    run_workflows_ml(input_dir, tmp_dir, ref_dir, working_dir)
 
 
-def run_WorkflowsML(
+@pytest.mark.fast
+def test_spatial_svm(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "SpatialSVM")
+    run_spatial_svm(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+def run_workflows_ml(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     import warnings
@@ -143,7 +131,7 @@ def run_WorkflowsML(
     wf4.run()
 
 
-def run_SpatialSVM(
+def run_spatial_svm(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
 
@@ -152,6 +140,7 @@ def run_SpatialSVM(
 
     import nibabel as nib
     import numpy as np
+    from numpy.testing import assert_allclose
 
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import (
         SpatialSVM,
@@ -163,8 +152,7 @@ def run_SpatialSVM(
     # Copy necessary data from in to out
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
-    parameters = {"group_label": "ADNIbl", "orig_input_data": "t1-volume"}
-    # Instantiate pipeline and run()
+    parameters = {"group_label": "ADNIbl", "orig_input_data_ml": "t1-volume"}
     pipeline = SpatialSVM(
         caps_directory=fspath(caps_dir),
         tsv_file=fspath(tsv),
@@ -174,39 +162,29 @@ def run_SpatialSVM(
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
-    # Check output vs ref
-    subjects = ["sub-ADNI011S0023", "sub-ADNI013S0325"]
-    out_data_REG_NIFTI = [
-        nib.load(
+    for subject in ("sub-ADNI011S0023", "sub-ADNI013S0325"):
+        out_data = nib.load(
             fspath(
                 caps_dir
                 / "subjects"
-                / sub
-                / "ses-M00"
+                / subject
+                / "ses-M000"
                 / "machine_learning"
                 / "input_spatial_svm"
                 / "group-ADNIbl"
                 / (
-                    sub
-                    + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
+                    subject
+                    + "_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
                 )
             )
         ).get_fdata(dtype="float32")
-        for sub in subjects
-    ]
-    ref_data_REG_NIFTI = [
-        nib.load(
+        ref_data = nib.load(
             fspath(
                 ref_dir
                 / (
-                    sub
-                    + "_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
+                    subject
+                    + "_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz"
                 )
             )
         ).get_fdata(dtype="float32")
-        for sub in subjects
-    ]
-    for i in range(len(out_data_REG_NIFTI)):
-        assert np.allclose(
-            out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i], rtol=1e-3, equal_nan=True
-        )
+        assert_allclose(out_data, ref_data, rtol=1e-03, atol=1e-7)

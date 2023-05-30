@@ -20,8 +20,8 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         Note:
             The list of inputs of the T1FreeSurferLongitudinalCorrection pipeline is:
                 * participant_id (str): Participant ID (e.g. "sub-CLNC01")
-                * session_id (str): Session ID associated to `participant_id` (e.g. "ses-M00")
-                * long_id (str): Longitudinal ID associated to `participant_id` (e.g. "long-M00" or "long-M00M18")
+                * session_id (str): Session ID associated to `participant_id` (e.g. "ses-M000")
+                * long_id (str): Longitudinal ID associated to `participant_id` (e.g. "long-M000" or "long-M000M018")
 
         Returns:
             A list of (string) input fields name.
@@ -34,7 +34,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         Note:
             The list of inputs of the T1FreeSurferLongitudinalCorrection pipeline is:
                 * subject_id (str): FreeSurfer ID
-                    (e.g. "sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18")
+                    (e.g. "sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018")
 
         Returns:
             A list of (string) output fields name.

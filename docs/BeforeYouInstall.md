@@ -5,7 +5,7 @@
 Clinica can be installed on Mac OS X and Linux (Centos or Debian/Ubuntu) machines, and possibly on Windows computers with a Linux Virtual Machine.
 We assume users installing and using Clinica are comfortable with using the command line.
 
-Some Clinica pipelines use third-party sotfware.
+Some Clinica pipelines use third-party software.
 If you are planning to use any of these pipelines, you need to install before the necessary libraries.
 For detailed info, click [here](./Third-party).
 

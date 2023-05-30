@@ -23,8 +23,6 @@ def cli(
     from clinica.utils.check_dependency import check_dcm2niix
     from clinica.utils.stream import cprint
 
-    check_dcm2niix()
-
     convert_images(dataset_directory, bids_directory, clinical_data_directory)
 
     cprint("Conversion to BIDS succeeded.")

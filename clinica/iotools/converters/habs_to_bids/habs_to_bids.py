@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from pandas import DataFrame, Series
 
+import clinica.iotools.bids_utils as bids
+
 PROTOCOL_TO_BIDS = {
     "3DFLAIR": {"datatype": "anat", "modality": "FLAIR"},
     "ADNI_1X-MPRAGE": {"datatype": "anat", "modality": "T1w"},
@@ -46,14 +48,14 @@ def source_session_id_to_bids(dataframe: DataFrame) -> Series:
     def replace_years_dot_months_session(match: re.Match) -> str:
         years = int(match.group(1)) - 1
         months = int(match.group(2))
-        return f"ses-M{12 * years + months:02d}"
+        return f"ses-M{12 * years + months:03d}"
 
     # HABS undocumented format as `{months}m`
     months_only_pattern = r".*_(\d+)m.*"
 
     def replace_months_only_pattern(match: re.Match) -> str:
         months = int(match.group(1))
-        return f"ses-M{months:02d}"
+        return f"ses-M{months:03d}"
 
     return dataframe.source_session_id.str.replace(
         years_dot_months_pattern, replace_years_dot_months_session, regex=True
@@ -168,11 +170,6 @@ def parse_imaging_data(paths: List[Tuple[str, str]]) -> Optional[DataFrame]:
     return dataframe
 
 
-def write_to_tsv(dataframe: DataFrame, buffer: TextIOBase) -> None:
-    """Save the input dataframe to a BIDS-compliant TSV format."""
-    dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
-
-
 def install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
     """Install a NIfTI file from a source archive to the target BIDS path."""
     import fsspec
@@ -193,6 +190,7 @@ def write_bids(
     from pandas import notna
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
+    from clinica.iotools.bids_utils import write_to_tsv
 
     participants = (
         clinical_data["Demographics"]
@@ -203,7 +201,7 @@ def write_bids(
                 "YrsOfEd": "years_of_education",
             }
         )
-        .xs("ses-M00", level="session_id")
+        .xs("ses-M000", level="session_id")
         .reset_index(level="date", drop=True)
     ).rename(columns=str.lower)
 
@@ -265,3 +263,15 @@ def write_bids(
 
         with fsspec.open(bids_basedir / f"{bids_prefix}_scans.tsv", mode="wb") as f:
             write_to_tsv(dataframe, f)
+
+    readme_data = {
+        "link": "https://habs.mgh.harvard.edu",
+        "desc": (
+            "The overall goal of the Harvard Aging Brain Study (HABS) is to elucidate the earliest changes in "
+            "molecular, functional and structural imaging markers that signal the transition from normal cognition to "
+            "progressive cognitive decline along the trajectory of preclinical Alzheimer’s Disease."
+        ),
+    }
+    bids.write_modality_agnostic_files(
+        study_name="HABS", readme_data=readme_data, bids_dir=rawdata
+    )

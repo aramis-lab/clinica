@@ -98,7 +98,7 @@ The clinical data being converted are defined in a spreadsheet (`clinical_specif
 The user can easily modify this file if they want to convert additional clinical data.
 
 For further details regarding clinica data, we recommend to look at the [ADNI Data Package
-](https://adni.bitbucket.io/index.html) developped by the Alzheimer's Disease Neuroimaging Initiative.
+](https://adni.bitbucket.io/index.html) developed by the Alzheimer's Disease Neuroimaging Initiative.
 
 ## Using the converter
 
@@ -190,121 +190,121 @@ clinica convert adni-to-bids -h
 
     - **T1**
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
-            - Subject sub-ADNI031S0830 for session ses-M48
-            - Subject sub-ADNI100S0995 for session ses-M18
-            - Subject sub-ADNI031S0867 for session ses-M48
-            - Subject sub-ADNI100S0892 for session ses-M18
-            - Subject sub-ADNI003S6264 for session ses-M12
-            - Subject sub-ADNI011S4105 for session ses-M72
+            - Subject sub-ADNI031S0830 for session ses-M048
+            - Subject sub-ADNI100S0995 for session ses-M018
+            - Subject sub-ADNI031S0867 for session ses-M048
+            - Subject sub-ADNI100S0892 for session ses-M018
+            - Subject sub-ADNI003S6264 for session ses-M012
+            - Subject sub-ADNI011S4105 for session ses-M072
         - _Image conversion does not generate an output file:_
-            - Subject sub-ADNI029S0845 for session ses-M24
-            - Subject sub-ADNI094S1267 for session ses-M24
-            - Subject sub-ADNI029S0843 for session ses-M24
-            - Subject sub-ADNI027S0307 for session ses-M48
-            - Subject sub-ADNI057S1269 for session ses-M24
-            - Subject sub-ADNI036S4899 for session ses-M03
+            - Subject sub-ADNI029S0845 for session ses-M024
+            - Subject sub-ADNI094S1267 for session ses-M024
+            - Subject sub-ADNI029S0843 for session ses-M024
+            - Subject sub-ADNI027S0307 for session ses-M048
+            - Subject sub-ADNI057S1269 for session ses-M024
+            - Subject sub-ADNI036S4899 for session ses-M003
 
     - **DWI**
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
-            - Subject sub-ADNI006S6252 for session ses-M12
-            - Subject sub-ADNI007S4611 for session ses-M03
+            - Subject sub-ADNI006S6252 for session ses-M012
+            - Subject sub-ADNI007S4611 for session ses-M003
             - Subject sub-ADNI010S0419 for session ses-M156
-            - Subject sub-ADNI016S4638 for session ses-M00
-            - Subject sub-ADNI021S5237 for session ses-M84
+            - Subject sub-ADNI016S4638 for session ses-M000
+            - Subject sub-ADNI021S5237 for session ses-M084
             - Subject sub-ADNI027S2245 for session ses-M120
-            - Subject sub-ADNI027S5118 for session ses-M00
-            - Subject sub-ADNI094S2238 for session ses-M48
-            - Subject sub-ADNI099S6396 for session ses-M24
-            - Subject sub-ADNI126S4507 for session ses-M96
-            - Subject sub-ADNI126S4891 for session ses-M96
-            - Subject sub-ADNI126S4896 for session ses-M96
-            - Subject sub-ADNI126S6559 for session ses-M24
-            - Subject sub-ADNI126S6724 for session ses-M12
+            - Subject sub-ADNI027S5118 for session ses-M000
+            - Subject sub-ADNI094S2238 for session ses-M048
+            - Subject sub-ADNI099S6396 for session ses-M024
+            - Subject sub-ADNI126S4507 for session ses-M096
+            - Subject sub-ADNI126S4891 for session ses-M096
+            - Subject sub-ADNI126S4896 for session ses-M096
+            - Subject sub-ADNI126S6559 for session ses-M024
+            - Subject sub-ADNI126S6724 for session ses-M012
             - Subject sub-ADNI127S0259 for session ses-M156
-            - Subject sub-ADNI127S6203 for session ses-M24
-            - Subject sub-ADNI127S6330 for session ses-M24
-            - Subject sub-ADNI127S6512 for session ses-M24
-            - Subject sub-ADNI127S6549 for session ses-M24
-            - Subject sub-ADNI129S4287 for session ses-M00
-            - Subject sub-ADNI129S6459 for session ses-M24
-            - Subject sub-ADNI129S6763 for session ses-M12
-            - Subject sub-ADNI129S6784 for session ses-M12
-            - Subject sub-ADNI129S6830 for session ses-M00, ses-M12
-            - Subject sub-ADNI135S6104 for session ses-M24
-            - Subject sub-ADNI135S6446 for session ses-M24
-            - Subject sub-ADNI301S6224 for session ses-M36
+            - Subject sub-ADNI127S6203 for session ses-M024
+            - Subject sub-ADNI127S6330 for session ses-M024
+            - Subject sub-ADNI127S6512 for session ses-M024
+            - Subject sub-ADNI127S6549 for session ses-M024
+            - Subject sub-ADNI129S4287 for session ses-M000
+            - Subject sub-ADNI129S6459 for session ses-M024
+            - Subject sub-ADNI129S6763 for session ses-M012
+            - Subject sub-ADNI129S6784 for session ses-M012
+            - Subject sub-ADNI129S6830 for session ses-M000, ses-M012
+            - Subject sub-ADNI135S6104 for session ses-M024
+            - Subject sub-ADNI135S6446 for session ses-M024
+            - Subject sub-ADNI301S6224 for session ses-M036
         - _Two images are generated and we can not choose the correct one:_
-            - Subject sub-ADNI098S4018 for session ses-M00
-            - Subject sub-ADNI098S4003 for session ses-M12
+            - Subject sub-ADNI098S4018 for session ses-M000
+            - Subject sub-ADNI098S4003 for session ses-M012
         - _Wrong b-val/b-vec files:_
-            - Subject sub-ADNI029S4585 for session ses-M48
-            - Subject sub-ADNI029S2395 for session ses-M60
+            - Subject sub-ADNI029S4585 for session ses-M048
+            - Subject sub-ADNI029S2395 for session ses-M060
             - Subject sub-ADNI029S0824 for session ses-M108
             - Subject sub-ADNI029S0914 for session ses-M108
-            - Subject sub-ADNI029S4384 for session ses-M48
-            - Subject sub-ADNI029S4385 for session ses-M48
-            - Subject sub-ADNI094S4630 for session ses-M06
-            - Subject sub-ADNI094S4649 for session ses-M06
-            - Subject sub-ADNI029S5219 for session ses-M24
-            - Subject sub-ADNI020S5203 for session ses-M72
-            - Subject sub-ADNI020S6185 for session ses-M24
-            - Subject sub-ADNI020S6227 for session ses-M24
-            - Subject sub-ADNI020S6449 for session ses-M24
-            - Subject sub-ADNI020S6513 for session ses-M12, ses-M24
+            - Subject sub-ADNI029S4384 for session ses-M048
+            - Subject sub-ADNI029S4385 for session ses-M048
+            - Subject sub-ADNI094S4630 for session ses-M006
+            - Subject sub-ADNI094S4649 for session ses-M006
+            - Subject sub-ADNI029S5219 for session ses-M024
+            - Subject sub-ADNI020S5203 for session ses-M072
+            - Subject sub-ADNI020S6185 for session ses-M024
+            - Subject sub-ADNI020S6227 for session ses-M024
+            - Subject sub-ADNI020S6449 for session ses-M024
+            - Subject sub-ADNI020S6513 for session ses-M012, ses-M024
             - Subject sub-ADNI021S0178 for session ses-M156
-            - Subject sub-ADNI153S6336 for session ses-M12
-            - Subject sub-ADNI153S6755 for session ses-M00
+            - Subject sub-ADNI153S6336 for session ses-M012
+            - Subject sub-ADNI153S6755 for session ses-M000
         - _Volume mismatch between .nii and .bvec / .bval files:_
-            - Subject sub-ADNI006S6610 for session ses-M00
-            - Subject sub-ADNI006S6682 for session ses-M00
-            - Subject sub-ADNI006S6696 for session ses-M00
-            - Subject sub-ADNI006S6770 for session ses-M00
-            - Subject sub-ADNI027S6183 for session ses-M24
-            - Subject sub-ADNI029S6289 for session ses-M00
-            - Subject sub-ADNI123S6891 for session ses-M00
-            - Subject sub-ADNI130S6043 for session ses-M00
-            - Subject sub-ADNI130S6329 for session ses-M00
+            - Subject sub-ADNI006S6610 for session ses-M000
+            - Subject sub-ADNI006S6682 for session ses-M000
+            - Subject sub-ADNI006S6696 for session ses-M000
+            - Subject sub-ADNI006S6770 for session ses-M000
+            - Subject sub-ADNI027S6183 for session ses-M024
+            - Subject sub-ADNI029S6289 for session ses-M000
+            - Subject sub-ADNI123S6891 for session ses-M000
+            - Subject sub-ADNI130S6043 for session ses-M000
+            - Subject sub-ADNI130S6329 for session ses-M000
         - _Wrong output dimensions:_
-            - Subject sub-ADNI027S2219 for session ses-M36 (256 x 256 x 2013)
-            - Subject sub-ADNI129S2332 for session ses-M12 (256 x 256 x 1549)
+            - Subject sub-ADNI027S2219 for session ses-M036 (256 x 256 x 2013)
+            - Subject sub-ADNI129S2332 for session ses-M012 (256 x 256 x 1549)
 
     - **FLAIR**
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
-            - Subject sub-ADNI141S0767 for session ses-M84
-            - Subject sub-ADNI067S5205 for session ses-M00
-            - Subject sub-ADNI127S4928 for session ses-M24
-            - Subject sub-ADNI024S4674 for session ses-M06
-            - Subject sub-ADNI123S2363 for session ses-M24
-            - Subject sub-ADNI053S4578 for session ses-M48
-            - Subject sub-ADNI128S4586 for session ses-M48
-            - Subject sub-ADNI053S4813 for session ses-M48
-            - Subject sub-ADNI053S5272 for session ses-M24
-            - Subject sub-ADNI135S6284 for session ses-M12
-            - Subject sub-ADNI027S5170 for session ses-M72
+            - Subject sub-ADNI141S0767 for session ses-M084
+            - Subject sub-ADNI067S5205 for session ses-M000
+            - Subject sub-ADNI127S4928 for session ses-M024
+            - Subject sub-ADNI024S4674 for session ses-M006
+            - Subject sub-ADNI123S2363 for session ses-M024
+            - Subject sub-ADNI053S4578 for session ses-M048
+            - Subject sub-ADNI128S4586 for session ses-M048
+            - Subject sub-ADNI053S4813 for session ses-M048
+            - Subject sub-ADNI053S5272 for session ses-M024
+            - Subject sub-ADNI135S6284 for session ses-M012
+            - Subject sub-ADNI027S5170 for session ses-M072
             - Subject sub-ADNI068S0127 for session ses-M180
             - Subject sub-ADNI068S2187 for session ses-M120
 
 
     - **fMRI**
         - _Image conversion does not generate an output file:_
-            - Subject sub-ADNI006S4485 for session ses-M84
-            - Subject sub-ADNI123S4127 for session ses-M96
+            - Subject sub-ADNI006S4485 for session ses-M084
+            - Subject sub-ADNI123S4127 for session ses-M096
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
-            - Subject sub-ADNI016S6802 for session ses-M00
-            - Subject sub-ADNI016S6816 for session ses-M00
-            - Subject sub-ADNI126S4891 for session ses-M84
+            - Subject sub-ADNI016S6802 for session ses-M000
+            - Subject sub-ADNI016S6816 for session ses-M000
+            - Subject sub-ADNI126S4891 for session ses-M084
 
     - **FDG PET**
         - _Image conversion does not generate an output file:_
-            - Subject sub-ADNI941S1195 for session ses-M48 folder is empty
-            - Subject sub-ADNI005S0223 for session ses-M12 folder is empty
+            - Subject sub-ADNI941S1195 for session ses-M048 folder is empty
+            - Subject sub-ADNI005S0223 for session ses-M012 folder is empty
         - _Inconsistent output filename (`NONAME.nii`):_
-            - Subject sub-ADNI037S1421 for session ses-M36
-            - Subject sub-ADNI037S1078 for session ses-M36
+            - Subject sub-ADNI037S1421 for session ses-M036
+            - Subject sub-ADNI037S1078 for session ses-M036
 
     - **AV45 PET**
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
-            - Subject sub-ADNI128S2220 for session ses-M48
+            - Subject sub-ADNI128S2220 for session ses-M048
 
 ## Citing this converter in your paper
 

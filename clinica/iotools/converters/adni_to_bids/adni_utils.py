@@ -1,4 +1,31 @@
-from typing import Union
+from enum import Enum, auto
+from typing import Optional, Union
+
+import pandas as pd
+
+
+class ADNIStudy(Enum):
+    """Possible versions of ADNI studies."""
+
+    ADNI1 = auto()
+    ADNI2 = auto()
+    ADNI3 = auto()
+    ADNIGO = auto()
+
+    @classmethod
+    def from_string(cls, study_name: str):
+        if study_name == "ADNI1":
+            return cls.ADNI1
+        if study_name == "ADNI2":
+            return cls.ADNI2
+        if study_name == "ADNI3":
+            return cls.ADNI3
+        if study_name == "ADNIGO":
+            return cls.ADNIGO
+        raise ValueError(
+            f"Invalid study name for ADNI: {study_name}. "
+            f"Possible values are {list(ADNIStudy)}"
+        )
 
 
 def visits_to_timepoints(
@@ -35,8 +62,8 @@ def visits_to_timepoints(
     # We try to obtain the corresponding image Visit for a given VISCODE
     for adni_row in adnimerge_subj.iterrows():
         visit = adni_row[1]
-
-        preferred_visit_name = get_preferred_visit_name(visit)
+        study = ADNIStudy.from_string(visit.ORIGPROT)
+        preferred_visit_name = _get_preferred_visit_name(study, visit.VISCODE)
 
         if preferred_visit_name in unique_visits:
             key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
@@ -74,46 +101,81 @@ def visits_to_timepoints(
     return visits
 
 
-def get_preferred_visit_name(visit):
-    """Provide the expected visit name for a given visit.
+def _get_preferred_visit_name(study: ADNIStudy, visit_code: str) -> str:
+    """Return the expected visit name for a given visit depending
+    on the study (ADNI1, ADNI2, ADNI3, ADNIGO).
 
-    Args:
-        visit: A visit entry from ADNIMERGE
+    Parameters
+    ----------
+    study : ADNIStudy
+        The study for this visit.
+    visit_code : str
+        The visit code to convert to a new form.
 
-    Returns:
-        string: expected visit name
+    Returns
+    -------
+    str :
+        The expected visit name.
     """
-    if visit.ORIGPROT == "ADNI3":
-        if visit.VISCODE == "bl":
-            preferred_visit_name = "ADNI Screening"
-        else:
-            year = str(int(visit.VISCODE[1:]) / 12)
-            preferred_visit_name = f"ADNI3 Year {year} Visit"
-    elif visit.ORIGPROT == "ADNI2":
-        if visit.VISCODE == "bl":
-            preferred_visit_name = "ADNI2 Screening MRI-New Pt"
-        elif visit.VISCODE == "m03":
-            preferred_visit_name = "ADNI2 Month 3 MRI-New Pt"
-        elif visit.VISCODE == "m06":
-            preferred_visit_name = "ADNI2 Month 6-New Pt"
-        else:
-            year = str(int(visit.VISCODE[1:]) / 12)
-            preferred_visit_name = f"ADNI2 Year {year} Visit"
-    else:
-        if visit.VISCODE == "bl":
-            if visit.ORIGPROT == "ADNI1":
-                preferred_visit_name = "ADNI Screening"
-            else:  # ADNIGO
-                preferred_visit_name = "ADNIGO Screening MRI"
-        elif visit.VISCODE == "m03":  # Only for ADNIGO Month 3
-            preferred_visit_name = "ADNIGO Month 3 MRI"
-        else:
-            month = int(visit.VISCODE[1:])
-            if month < 54:
-                preferred_visit_name = f"ADNI1/GO Month {str(month)}"
-            else:
-                preferred_visit_name = f"ADNIGO Month {str(month)}"
-    return preferred_visit_name
+    if study == ADNIStudy.ADNI3:
+        return _get_preferred_visit_name_adni3(visit_code)
+    if study == ADNIStudy.ADNI2:
+        return _get_preferred_visit_name_adni2(visit_code)
+    if study == ADNIStudy.ADNI1:
+        return _get_preferred_visit_name_adni1(visit_code)
+    if study == ADNIStudy.ADNIGO:
+        return _get_preferred_visit_name_adnigo(visit_code)
+
+
+def _get_preferred_visit_name_adni3(visit_code: str) -> str:
+    if visit_code == "bl":
+        return "ADNI Screening"
+    return f"ADNI3 Year {_parse_year_from_visit_code(visit_code)} Visit"
+
+
+def _parse_year_from_visit_code(visit_code: str) -> float:
+    """Return the year corresponding to the visit code.
+    Assumes a visit code of the form 'mXXX'.
+    """
+    return _parse_month_from_visit_code(visit_code) / 12
+
+
+def _parse_month_from_visit_code(visit_code: str) -> int:
+    """Return the month corresponding to the visit code.
+    Assumes a visit code of the form 'mXXX'.
+    """
+    try:
+        return int(visit_code[1:])
+    except Exception:
+        raise ValueError(
+            f"Cannot extract month from visit code {visit_code}."
+            "Expected a code of the form 'mXXX' where XXX can be casted to an integer."
+        )
+
+
+def _get_preferred_visit_name_adni2(visit_code: str) -> str:
+    if visit_code == "bl":
+        return "ADNI2 Screening MRI-New Pt"
+    if visit_code == "m03":
+        return "ADNI2 Month 3 MRI-New Pt"
+    if visit_code == "m06":
+        return "ADNI2 Month 6-New Pt"
+    return f"ADNI2 Year {_parse_year_from_visit_code(visit_code)} Visit"
+
+
+def _get_preferred_visit_name_adni1(visit_code: str) -> str:
+    if visit_code == "bl":
+        return "ADNI Screening"
+    if visit_code == "m03":
+        return "ADNIGO Month 3 MRI"  # does not make any sense...
+    month = _parse_month_from_visit_code(visit_code)
+    return f"ADNI{'1/' if month < 54 else ''}GO Month {month}"
+
+
+def _get_preferred_visit_name_adnigo(visit_code: str) -> str:
+    if visit_code == "bl":
+        return "ADNIGO Screening MRI"
+    return _get_preferred_visit_name_adni1(visit_code)
 
 
 def get_closest_visit(image, pending_timepoints, subject, visit_field, scandate_field):
@@ -607,7 +669,7 @@ def update_age(row):
     """Update age with time passed since bl to current visit"""
     from datetime import datetime
 
-    if row["session_id"] != "ses-M00":
+    if row["session_id"] != "ses-M000":
         examdate = datetime.strptime(row["EXAMDATE"], "%Y-%m-%d")
         examdate_bl = datetime.strptime(row["EXAMDATE_bl"], "%Y-%m-%d")
         delta = examdate - examdate_bl
@@ -631,11 +693,38 @@ def pad_id(ref_id):
     return rid
 
 
-def get_visit_id(row, location):
-    """Return a common visit ID across different files"""
-    import pandas as pd
+def _compute_session_id(df: pd.DataFrame, csv_filename: str) -> pd.DataFrame:
+    """Compute session ID from visit code.
 
-    locations_visicode2 = [
+    The CSV file name is used to determine in which column of
+    the dataframe the visit code should be found.
+    """
+    visit_code_column = _get_visit_code_column_name(csv_filename)
+    if visit_code_column not in df:
+        raise ValueError(
+            f"DataFrame does not contain a column named '{visit_code_column}', "
+            "which is supposed to encode the visit code. The columns present in "
+            f"the DataFrame are: {df.columns}."
+        )
+    return df.assign(
+        session_id=lambda _df: _df[visit_code_column].apply(
+            lambda x: _get_session_id_from_visit_code(x)
+        )
+    )
+
+
+def _get_visit_code_column_name(csv_filename: str) -> str:
+    """Return the name of the column containing the visit code."""
+    if _is_a_visit_code_2_type(csv_filename):
+        return "VISCODE2"
+    if _is_a_time_point_type(csv_filename):
+        return "Timepoint"
+    return "VISCODE"
+
+
+def _is_a_visit_code_2_type(csv_filename: str) -> bool:
+    """If the csv file is among these files, then the visit code column is 'VISCODE2'."""
+    return csv_filename in {
         "ADAS_ADNIGO2.csv",
         "DXSUM_PDXCONV_ADNIALL.csv",
         "CDR.csv",
@@ -654,24 +743,40 @@ def get_visit_id(row, location):
         "CCI.csv",
         "NPIQ.csv",
         "NPI.csv",
-    ]
+    }
 
-    if location in locations_visicode2:
-        if pd.isnull(row["VISCODE2"]) or row["VISCODE2"] == "f":
-            return None
-        if row["VISCODE2"] == "sc":
-            return "sc"  # visit_id = "bl"
-        else:
-            visit_id = row["VISCODE2"]
-    elif location in [
+
+def _is_a_time_point_type(csv_filename: str) -> bool:
+    """If the csv file is among these files, then the visit code column is 'Timepoint'."""
+    return csv_filename in {
         "BHR_EVERYDAY_COGNITION.csv",
         "BHR_BASELINE_QUESTIONNAIRE.csv",
         "BHR_LONGITUDINAL_QUESTIONNAIRE.csv",
-    ]:
-        visit_id = row["Timepoint"]
-    else:
-        visit_id = row["VISCODE"]
-    return viscode_to_session(visit_id)
+    }
+
+
+def _get_session_id_from_visit_code(visit_code: str) -> Optional[str]:
+    """Checks that the visit code found in the data is supported by
+    the converter utility function `viscode_to_session` before using it.
+    There are a few special cases that are handled here.
+    """
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    if _is_visit_code_not_supported(visit_code):
+        return None
+    if visit_code == "sc":
+        return "sc"
+    return viscode_to_session(visit_code)
+
+
+def _is_visit_code_not_supported(visit_code: str) -> bool:
+    """Return True is the visit code is not supported by the converter.
+
+    There are a few known values like "f" or "uns1" which are present in
+    ADNI data that are not supported for a mapping to a session ID.
+    """
+    unsupported_values = {"f", "uns1"}
+    return pd.isnull(visit_code) or visit_code in unsupported_values
 
 
 def create_adni_sessions_dict(
@@ -714,10 +819,7 @@ def create_adni_sessions_dict(
             df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
 
             if not df_filtered.empty:
-                # Get session ID from visit code.
-                df_filtered["session_id"] = df_filtered.apply(
-                    lambda x: get_visit_id(x, location), axis=1
-                )
+                df_filtered = _compute_session_id(df_filtered, location)
 
                 # Filter rows with invalid session IDs.
                 df_filtered.dropna(subset="session_id", inplace=True)
@@ -857,7 +959,7 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
         sessions_paths = glob(path.join(bids_subj_path, "ses-*"))
         for session_path in sessions_paths:
             session_name = session_path.split(os.sep)[-1]
-            viscode = session_to_viscode(session_name[4::])
+            viscode = session_label_to_viscode(session_name[4::])
             tsv_name = f"{bids_id}_{session_name}_scans.tsv"
 
             # If the file already exists, remove it
@@ -1050,6 +1152,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
     from numpy import nan
 
     from clinica.iotools.bids_utils import run_dcm2niix
+    from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
@@ -1263,34 +1366,23 @@ def create_file(image, modality, bids_dir, mod_to_update):
         return nan
 
 
-def viscode_to_session(viscode):
-    """Replace the session label 'bl' with 'M00' or capitalize the session name passed as input.
+def session_label_to_viscode(session_name: str) -> str:
+    """Replace the session name passed as input with the session label 'bl' or 'mXXX'.
 
-    Args:
-        viscode: session name
+    Parameters
+    ----------
+    session_name: str
+        Name of the session (MXXX).
 
-    Returns:
-        M00 if is the baseline session or the original session name capitalized
+    Returns
+    -------
+    str:
+        'bl' if is the baseline session or the original session name.
     """
-    if viscode == "bl" or viscode == "m0":
-        return "ses-M00"
-    else:
-        return "ses-" + viscode.capitalize()
-
-
-def session_to_viscode(session_name):
-    """Replace the session label 'bl' with 'M00' or capitalize the session name passed as input.
-
-    Args:
-        session_name: MXX
-
-    Returns:
-        M00 if is the baseline session or the original session name capitalized
-    """
-    if session_name == "M00":
+    if session_name == "M000":
         return "bl"
     else:
-        return session_name.lower()
+        return f"m{(int(session_name[1:])):02d}"
 
 
 def check_two_dcm_folder(dicom_path, bids_folder, image_uid):

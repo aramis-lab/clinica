@@ -25,9 +25,6 @@ class OasisToBids(Converter):
         iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         clinic_specs_path = path.join(iotools_folder, "data", "clinical_specifications")
 
-        # -- Creation of modality agnostic files --
-        bids.write_modality_agnostic_files("OASIS-1", bids_dir)
-
         # --Create participants.tsv--
         participants_df = bids.create_participants_df(
             "OASIS", clinic_specs_path, clinical_data_dir, bids_ids
@@ -53,10 +50,10 @@ class OasisToBids(Converter):
             clinical_data_dir, bids_dir, "OASIS", clinic_specs_path, bids_ids, "ID"
         )
         for y in bids_ids:
-            if sessions_dict[y]["M00"]["diagnosis"] > 0:
-                sessions_dict[y]["M00"]["diagnosis"] = "AD"
+            if sessions_dict[y]["M000"]["diagnosis"] > 0:
+                sessions_dict[y]["M000"]["diagnosis"] = "AD"
             else:
-                sessions_dict[y]["M00"]["diagnosis"] = "CN"
+                sessions_dict[y]["M000"]["diagnosis"] = "CN"
 
         bids.write_sessions_tsv(bids_dir, sessions_dict)
 
@@ -73,7 +70,21 @@ class OasisToBids(Converter):
         )
         bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
-        bids.write_modality_agnostic_files(study_name="OASIS-1", bids_dir=bids_dir)
+        # -- Creation of modality agnostic files --
+        readme_data = {
+            "link": "https://www.oasis-brains.org/#access",
+            "desc": (
+                "This set consists of a cross-sectional collection of 416 subjects aged 18 to 96. For each subject, 3 "
+                "or 4 individual T1-weighted MRI scans obtained in single scan sessions are included. The subjects are "
+                "all right-handed and include both men and women. 100 of the included subjects over the age of 60 have "
+                "been clinically diagnosed with very mild to moderate Alzheimer’s disease (AD). Additionally, a "
+                "reliability data set is included containing 20 nondemented subjects imaged on a subsequent visit "
+                "within 90 days of their initial session."
+            ),
+        }
+        bids.write_modality_agnostic_files(
+            study_name="OASIS-1", readme_data=readme_data, bids_dir=bids_dir
+        )
 
     @staticmethod
     def convert_single_subject(subj_folder, dest_dir):
@@ -88,19 +99,21 @@ class OasisToBids(Converter):
         subj_id = path.basename(subj_folder)
         print("Converting ", subj_id)
         numerical_id = (subj_id.split("_"))[1]
-        bids_id = "sub-OASIS1" + str(numerical_id)
-        bids_subj_folder = path.join(dest_dir, bids_id)
+        participant_id = "sub-OASIS1" + str(numerical_id)
+        bids_subj_folder = path.join(dest_dir, participant_id)
         if not path.isdir(bids_subj_folder):
             os.mkdir(bids_subj_folder)
 
-        session_folder = path.join(bids_subj_folder, "ses-M00")
+        session_folder = path.join(bids_subj_folder, "ses-M000")
         if not os.path.isdir(session_folder):
             os.mkdir(path.join(session_folder))
             os.mkdir(path.join(session_folder, "anat"))
 
         # In order do convert the Analyze format to Nifti the path to the .img file is required
         img_file_path = str(next(Path(t1_folder).glob("*.img")))
-        output_path = path.join(session_folder, "anat", bids_id + "_ses-M00_T1w.nii.gz")
+        output_path = path.join(
+            session_folder, "anat", f"{participant_id}_ses-M000_T1w.nii.gz"
+        )
 
         # First, convert to Nifti so that we can extract the s_form with NiBabel
         # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method

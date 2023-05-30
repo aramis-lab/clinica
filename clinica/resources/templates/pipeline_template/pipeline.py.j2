@@ -3,7 +3,7 @@ This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://aramislab.paris.inria.fr/clinica/docs/public/latest/InteractingWithClinica/.
 """
 
-# WARNING: Don't put any import statement here except if it's absolutly
+# WARNING: Don't put any import statement here except if it's absolutely
 # necessary. Put it *inside* the different methods.
 # Otherwise it will slow down the dynamic loading of the pipelines list by the
 # command line tool.
@@ -74,7 +74,7 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
         # This node is supposedly used to load BIDS and/or CAPS inputs when this pipeline is
         # not already connected to the output of a previous Clinica pipeline.
         # For this example, we read T1w MRI data which are passed to a read_node with iterable.
-        # This allows to parallelize the pipelines accross sessions
+        # This allows to parallelize the pipelines across sessions
         # when connected to the `self.input_node`.
 
         # Inputs from anat/ folder

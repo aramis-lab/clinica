@@ -1,41 +1,29 @@
-name: 'Test'
+name: Test
 
 on:
   push:
-    branches:
-      - "dev"
+    branches: [dev]
   pull_request:
-    branches:
-      - '*'
+    branches: [dev]
 
-defaults:
-  run:
-    shell: bash
+permissions:
+  contents: read
 
 jobs:
   test:
+    name: Test on ${{ matrix.os }} with Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.8", "3.9", "3.10"]
-    name: Test on ${{ matrix.os }} with Python ${{ matrix.python-version }}
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        id: setup-python
+      - uses: actions/checkout@v3
+      - uses: snok/install-poetry@v1
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: snok/install-poetry@v1
-        with:
-          virtualenvs-in-project: true
-      - uses: actions/cache@v2
-        id: cache-venv
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-      - name: 'Install Clinica'
-        run: make install
-      - name: 'Run unit tests'
+          cache: poetry
+      - name: Run unit tests
         run: make test

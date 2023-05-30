@@ -167,20 +167,25 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
+        import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from nipype.algorithms.misc import Gunzip
 
         import clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_utils as utils
+        from clinica.utils.filemanip import unzip_nii
 
         # Unzipping
         # =========
         unzip_dartel_input_node = npe.MapNode(
-            interface=Gunzip(),
+            nutil.Function(
+                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+            ),
             name="unzip_dartel_input_node",
             iterfield=["in_file"],
         )
         unzip_templates_node = npe.Node(
-            interface=Gunzip(),
+            nutil.Function(
+                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+            ),
             name="unzip_templates_node",
         )
         # DARTEL with existing template

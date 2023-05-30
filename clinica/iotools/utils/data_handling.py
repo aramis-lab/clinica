@@ -1,6 +1,11 @@
 """Data handling scripts."""
 
+from os import PathLike
+from typing import Iterable, List
+
 import click
+from nibabel.nifti1 import Nifti1Header
+from numpy import ndarray
 
 
 def compute_default_filename(out_path):
@@ -248,7 +253,7 @@ def create_merge_file(
         tmp = merged_df.select_dtypes(include=[np.number])
         # Round numeric values in dataframe to 12 floating point values
         merged_df.loc[:, tmp.columns] = np.round(tmp, 12)
-        merged_df.to_csv(out_path, sep="\t")
+        merged_df.to_csv(out_path, sep="\t", index=False)
         cprint("End of CAPS information merge.", lvl="debug")
 
 
@@ -262,7 +267,7 @@ def find_mods_and_sess(bids_dir):
         mods_dict: a dictionary that stores the sessions and modalities found and has the following structure.
     Example:
     {
-        'sessions': ['ses-M00', 'ses-M18'],
+        'sessions': ['ses-M000', 'ses-M018'],
         'fmap': ['fmap'],
         'anat': ['flair', 't1w'],
         'func': ['func_task-rest'],
@@ -505,33 +510,53 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
                 else:
                     row_df.loc[0, f"pet-surface_{trc}"] = "0"
 
+            # Check pet-linear outputs
+            for trc in trc_avail:
+                pet_pattern = path.join(session_path, "pet_linear", f"*{trc}*")
+                if len(glob(pet_pattern)) > 0:
+                    row_df.loc[0, f"pet-linear_{trc}"] = "1"
+                else:
+                    row_df.loc[0, f"pet-linear_{trc}"] = "0"
+
             output_df = pd.concat([output_df, row_df])
 
     output_df.sort_values(["participant_id", "session_id"], inplace=True)
     output_df.to_csv(out_file, sep="\t", index=False)
 
 
-def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
+def compute_missing_mods(
+    bids_dir: PathLike, out_dir: PathLike, output_prefix: str = ""
+) -> None:
     """Compute the list of missing modalities for each subject in a BIDS compliant dataset.
 
-    Args:
-        bids_dir: path to the BIDS directory
-        out_dir: path to the output folder
-        output_prefix: string that replace the default prefix ('missing_mods_') in the name of all the output files
-    created
+    Parameters
+    ----------
+    bids_dir : PathLike
+        Path to the BIDS directory.
+
+    out_dir : PathLike
+        Path to the output folder.
+
+    output_prefix : str, optional
+        String that replaces the default prefix ('missing_mods_')
+        in the name of all the created output files.
+        Default = "".
     """
     import os
     from glob import glob
     from os import path
+    from pathlib import Path
 
     import pandas as pd
 
     from ..converter_utils import (
         MissingModsTracker,
-        print_longitudinal_analysis,
-        print_statistics,
+        write_longitudinal_analysis,
+        write_statistics,
     )
 
+    out_dir = Path(out_dir)
+    bids_dir = Path(bids_dir)
     os.makedirs(out_dir, exist_ok=True)
 
     # Find all the modalities and sessions available for the input dataset
@@ -544,13 +569,8 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
     cols_dataframe.insert(0, "participant_id")
     mmt = MissingModsTracker(sessions_found, mods_avail)
 
-    if output_prefix == "":
-        out_file_name = "missing_mods_"
-    else:
-        out_file_name = output_prefix + "_"
+    out_file_name = "missing_mods_" if output_prefix == "" else output_prefix + "_"
 
-    summary_file = open(path.join(out_dir, out_file_name + "summary.txt"), "w")
-    analysis_file = open(path.join(out_dir, "analysis.txt"), "w")
     missing_mods_df = pd.DataFrame(columns=cols_dataframe)
     row_to_append_df = pd.DataFrame(columns=cols_dataframe)
     subjects_paths_lists = glob(path.join(bids_dir, "*sub-*"))
@@ -651,7 +671,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
                             row_to_append_df[m] = pd.Series("0")
                             mmt.add_missing_mod(ses, m)
 
-            missing_mods_df = missing_mods_df.append(row_to_append_df)
+            missing_mods_df = pd.concat([missing_mods_df, row_to_append_df])
             row_to_append_df = pd.DataFrame(columns=cols_dataframe)
 
         missing_mods_df = missing_mods_df[cols_dataframe]
@@ -663,9 +683,14 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=""):
         )
         missing_mods_df = pd.DataFrame(columns=cols_dataframe)
 
-    print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt)
-    print_longitudinal_analysis(
-        analysis_file, bids_dir, out_dir, sessions_found, out_file_name
+    write_statistics(
+        out_dir / (out_file_name + "summary.txt"),
+        len(subjects_paths_lists),
+        sessions_found,
+        mmt,
+    )
+    write_longitudinal_analysis(
+        out_dir / "analysis.txt", bids_dir, out_dir, sessions_found, out_file_name
     )
 
 
@@ -714,6 +739,7 @@ def create_subs_sess_list(
             session_df = pd.read_csv(
                 path.join(sub_path, subj_id + "_sessions.tsv"), sep="\t"
             )
+            session_df.dropna(how="all", inplace=True)
             session_list = list(session_df["session_id"].to_numpy())
             for session in session_list:
                 subjs_sess_tsv.write(subj_id + "\t" + session + "\n")
@@ -790,20 +816,32 @@ def center_nifti_origin(input_image, output_image):
     return output_image, error_str
 
 
-def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
+def center_all_nifti(
+    bids_dir: str,
+    output_dir: str,
+    modalities: Iterable[str] = None,
+    center_all_files: bool = False,
+) -> List[str]:
     """Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
 
     All the files from bids_dir are copied into output_dir, then all the NIfTI images found are replaced by their
     centered version if their center is off the origin by more than 50 mm.
 
-    Args:
-        bids_dir: (str) path to bids directory
-        output_dir: (str) path to EMPTY output directory
-        modality: (list of str) modalities to convert
-        center_all_files: (bool) center only files that may cause problem for SPM if false. If true, center all NIfTI
+    Parameters
+    ----------
+    bids_dir: str
+        Path to the BIDS directory.
+    output_dir: str
+        Path to the output directory where the centered files will be written to.
+    modalities: iterable of str, optional
+        Process these modalities only. Process all modalities otherwise.
+    center_all_files: bool, default=False
+        Center files that may cause problem for SPM if set to False, all files otherwise.
 
-    Returns:
-        List of the centered files
+    Returns
+    -------
+    list of str
+        Centered NIfTI files.
     """
     from glob import glob
     from os import listdir
@@ -833,11 +871,15 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     #   For each file:
     #       if any modality name (lowercase) is found in the basename of the file:
     #           keep the file
-    nifti_files_filtered = [
-        f
-        for f in nifti_files
-        if any(elem.lower() in basename(f).lower() for elem in modality)
-    ]
+    nifti_files_filtered = (
+        [
+            f
+            for f in nifti_files
+            if any(elem.lower() in basename(f).lower() for elem in modalities)
+        ]
+        if modalities
+        else nifti_files
+    )
 
     # Remove those who are centered
     if not center_all_files:
@@ -1001,29 +1043,44 @@ def check_relative_volume_location_in_world_coordinate_system(
 
 
 def check_volume_location_in_world_coordinate_system(
-    nifti_list, bids_dir, modality="t1w", skip_question=False
-):
+    nifti_list: list,
+    bids_dir: PathLike,
+    modality: str = "t1w",
+    skip_question: bool = False,
+) -> bool:
+    """Check if images are centered around the origin of the world coordinate
+    Parameters
+    ----
+    nifti_list: list
+        list of path to nifti files or path
+    bids_dir: PathLike
+        path to bids directory associated with this check
+    modality: str, optional
+        the modality of the image. Default='t1w'.
+    skip_question: bool, optional
+        if True, assume answer is yes. Default=False.
+    Returns
+    -------
+    bool
+        True if they are centered, False otherwise
+    Warns
+    ------
+    If volume is not centered on origin of the world coordinate system
+    Notes
+    -----
+    the NIfTI file list provided in argument are approximately centered around the origin of the
+    world coordinates. Otherwise, issues may arise with further processing such as SPM segmentation. When not centered,
+    we warn the user of the problem propose to exit clinica to run clinica iotools center-nifti or to continue with the execution
+    of the pipeline
     """
-    Check if the NIfTI file list nifti_list provided in argument are approximately centered around the origin of the
-    world coordinates. Otherwise, issues may arise with further processing such as SPM segmentation.
 
-    If yes, we warn the user of this problem, and propose him to exit clinica in order for him to run:
-        clinica iotools center-nifti ...
-    or to continue with the execution of the pipeline
-
-    Args:
-        nifti_list: (list of str) list of path to nifti files
-        bids_dir: (str) path to bids directory associated with this check (in order to propose directly the good
-            command line for center-nifti tool)
-        modality: (str) to propose directly the good command line option
-        skip_question: (bool) if True user input is not asked for and the answer is automatically yes
-    """
     import sys
     from os.path import abspath, basename
 
     import click
     import numpy as np
 
+    flag_centered = True
     list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
     if len(list_non_centered_files) > 0:
         centers = [
@@ -1033,6 +1090,7 @@ def check_volume_location_in_world_coordinate_system(
 
         # File column width : 3 spaces more than the longest string to display
         file_width = 3 + max(len(basename(file)) for file in list_non_centered_files)
+
         # Center column width (with a fixed minimum size) : 3 spaces more than the longest string to display
         center_width = max(
             len("Coordinate of center") + 3,
@@ -1050,12 +1108,6 @@ def check_volume_location_in_world_coordinate_system(
         # 18 is the length of the string 'Distance to origin'
         warning_message += "\n" + "-" * (file_width + center_width + 18) + "\n"
         for file, center, l2 in zip(list_non_centered_files, centers, l2_norm):
-            # Nice formatting as array
-            # % escape character
-            # - aligned to the left, with the size of the column
-            # s = string, f = float
-            # . for precision with float
-            # https://docs.python.org/2/library/stdtypes.html#string-formatting for more information
             warning_message += (
                 "%-" + str(file_width) + "s%-" + str(center_width) + "s%-25.2f\n"
             ) % (basename(file), str(center), l2)
@@ -1077,71 +1129,81 @@ def check_volume_location_in_world_coordinate_system(
 
         click.echo(warning_message)
 
+        flag_centered = False
+
         if not skip_question:
             if not click.confirm("Do you still want to launch the pipeline?"):
                 click.echo("Clinica will now exit...")
                 sys.exit(0)
 
+    return flag_centered
 
-def is_centered(nii_volume, threshold_l2=50):
-    """Tell if a NIfTI volume is centered on the origin of the world coordinate system.
 
+def is_centered(nii_volume: PathLike, threshold_l2: int = 50) -> bool:
+    """Checks if a NIfTI volume is centered on the origin of the world coordinate system.
+
+    Parameters
+    ---------
+    nii_volume : PathLike
+        path to NIfTI volume
+    threshold_l2: int, optional
+        Maximum distance between origin of the world coordinate system and the center of the volume to
+        be considered centered. The threshold were SPM segmentation stops working is around 100 mm (it was determined empirically after several trials on a generated dataset), so default value is 50mm in order to have a security margin, even when dealing with co-registered files afterward.
+    Returns
+    -------
+    bool :
+        True if the volume is centered, False otherwise.
+
+    Notes
+    ------
     SPM has troubles to segment files if the center of the volume is not close from the origin of the world coordinate
     system. A series of experiment have been conducted: we take a volume whose center is on the origin of the world
     coordinate system. We add an offset using coordinates of affine matrix [0, 3], [1, 3], [2, 3] (or by modifying the
     header['srow_x'][3], header['srow_y'][3], header['srow_z'][3], this is strictly equivalent).
-
     It has been determined that volumes were still segmented with SPM when the L2 distance between origin and center of
     the volume did not exceed 100 mm. Above this distance, either the volume is either not segmented (SPM error), or the
     produced segmentation is wrong (not the shape of a brain anymore)
-
-    Args:
-        nii_volume: path to NIfTI volume
-        threshold_l2: maximum distance between origin of the world coordinate system and the center of the volume to
-                    be considered centered. The threshold were SPM segmentation stops working is around 100 mm
-                    (it was determined empirically after several trials on a generated dataset), so default value is 50
-                    mm in order to have a security margin, even when dealing with co-registered files afterward.
-
-    Returns:
-        True or False
     """
+
     import numpy as np
 
     center = get_world_coordinate_of_center(nii_volume)
 
-    # Compare to the threshold and retun boolean
-    # if center is a np.nan, comparison will be False, and False will be returned
     distance_from_origin = np.linalg.norm(center, ord=2)
-    # if not np.isnan(distance_from_origin):
-    #     print('\t' + basename(nii_volume) + ' has its center at {0:.2f} mm of the origin.'.format(distance_from_origin))
-    if distance_from_origin < threshold_l2:
-        return True
-    else:
-        # If center is a np.nan,
-        return False
+
+    return distance_from_origin < threshold_l2
 
 
-def get_world_coordinate_of_center(nii_volume):
+def get_world_coordinate_of_center(nii_volume: PathLike) -> ndarray:
     """Extract the world coordinates of the center of the image.
 
-    Based on methods described here: https://brainder.org/2012/09/23/the-nifti-file-format/
+    Parameters
+    ---------
+    nii_volume : PathLike
+        path to nii volume
 
-    Args:
-        nii_volume: path to nii volume
-
-    Returns:
-        [Returns]
+    Returns
+    -------
+    np.ndarray :
+        coordinates in the world space
+    References
+    ------
+    https://brainder.org/2012/09/23/the-nifti-file-format/
     """
+
     from os.path import isfile
 
     import nibabel as nib
     import numpy as np
     from nibabel.filebasedimages import ImageFileError
 
+    from clinica.utils.exceptions import ClinicaException
     from clinica.utils.stream import cprint
 
-    assert isinstance(nii_volume, str), "input argument nii_volume must be a str"
-    assert isfile(nii_volume), "input argument must be a path to a file"
+    if not isfile(nii_volume):
+        raise ClinicaException(
+            f"The input {nii_volume} does not appear to be a path to a file."
+        )
 
     try:
         orig_nifti = nib.load(nii_volume)
@@ -1180,66 +1242,82 @@ def get_world_coordinate_of_center(nii_volume):
     return center_coordinates_world
 
 
-def get_center_volume(header):
+def get_center_volume(header: Nifti1Header) -> ndarray:
     """Get the voxel coordinates of the center of the data, using header information.
-
-    Args:
-        header: a nifti header
-
-    Returns:
+    Parameters
+    ----------
+    header: Nifti1Header
+            Contains image metadata
+    Returns
+    -------
+    ndarray
         Voxel coordinates of the center of the volume
     """
     import numpy as np
 
-    center_x = header["dim"][1] / 2
-    center_y = header["dim"][2] / 2
-    center_z = header["dim"][3] / 2
-    return np.array([center_x, center_y, center_z])
+    return np.array([x / 2 for x in header["dim"][1:4]])
 
 
-def vox_to_world_space_method_1(coordinates_vol, header):
-    """
-    The Method 1 is for compatibility with analyze and is not supposed to be used as the main orientation method. But it
-    is used if sform_code = 0. The world coordinates are determined simply by scaling by the voxel size by their
-    dimension stored in pixdim. More information here: https://brainder.org/2012/09/23/the-nifti-file-format/
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: header object
-
-    Returns:
+def vox_to_world_space_method_1(
+    coordinates_vol: ndarray, header: Nifti1Header
+) -> ndarray:
+    """Convert coordinates to world space
+    Parameters
+    ----------
+    coordinates_vol: ndarray
+        Coordinate in the volume (raw data)
+    header: Nifti1Header
+        Contains image metadata
+    Returns
+    -------
+    ndarray
         Coordinates in the world space
+    Notes
+    -----
+    This method is for compatibility with analyze and is not supposed to be used as the main orientation method. But it
+    is used if sform_code = 0. The world coordinates are determined simply by scaling by the voxel size by their
+    dimension stored in pixdim.
+    References
+    ----------
+    https://brainder.org/2012/09/23/the-nifti-file-format/
     """
     import numpy as np
 
     return np.array(coordinates_vol) * np.array(
-        header["pixdim"][1], header["pixdim"][2], header["pixdim"][3]
+        [header["pixdim"][1], header["pixdim"][2], header["pixdim"][3]]
     )
 
 
-def vox_to_world_space_method_2(coordinates_vol, header):
-    """
-    The Method 2 is used when short qform_code is larger than zero. To get the coordinates, we multiply a rotation
+def vox_to_world_space_method_2(
+    coordinates_vol: ndarray, header: Nifti1Header
+) -> ndarray:
+    """Convert coordinates to world space (method 2)
+    Parameters
+    ----------
+    coordinates_vol : ndarray
+        Coordinate in the volume (raw data)
+    header : Nifti1Header
+        Image header containing metadata
+    Returns
+    -------
+    ndarray
+        Coordinates in the world space
+    Notes
+    -----
+    This method is used when short qform_code is larger than zero. To get the coordinates, we multiply a rotation
     matrix (r_mat) by coordinates_vol, then perform Hadamard with pixel dimension pixdim (like in method 1). Then we add
     an offset (qoffset_x, qoffset_y, qoffset_z)
-
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: header object
-
-    Returns:
-        Coordinates in the world space
     """
     import numpy as np
 
     def get_r_matrix(h):
         """Get rotation matrix.
-
         More information here: https://brainder.org/2012/09/23/the-nifti-file-format/
-
-        Args:
+        Parameters
+        ----------
             h: header
-
-        Returns:
+        Returns
+        -------
             Rotation matrix
         """
         b = h["quatern_b"]
@@ -1258,9 +1336,7 @@ def vox_to_world_space_method_2(coordinates_vol, header):
         r[2, 2] = (a**2) + (d**2) - (b**2) - (c**2)
         return r
 
-    i = coordinates_vol[0]
-    j = coordinates_vol[1]
-    k = coordinates_vol[2]
+    i, j, k = coordinates_vol
     if header["qform_code"] > 0:
         r_mat = get_r_matrix(header)
     else:
@@ -1275,32 +1351,39 @@ def vox_to_world_space_method_2(coordinates_vol, header):
     ) + np.array([header["qoffset_x"], header["qoffset_y"], header["qoffset_z"]])
 
 
-def vox_to_world_space_method_3(coordinates_vol, header):
-    """
+def vox_to_world_space_method_3(coordinates_vol: ndarray, header: Nifti1Header):
+    """Convert coordinates to world space (method 3)
+    Parameters
+    ----------
+    coordinates_vol : ndarray
+        Coordinate in the volume (raw data)
+    header : Nifti1Header
+        Image header containing metadata
+    Returns
+    -------
+    ndarray
+        Coordinates in the world space
+    Notes
+    -----
     This method is used when sform_code is larger than zero. It relies on a full affine matrix, stored in the header in
     the fields srow_[x,y,y], to map voxel to world coordinates.
     When a nifti file is created with raw data and affine=..., this is this method that is used to decipher the
     voxel-to-world correspondence.
-
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: header object
-
-    Returns:
-        Coordinates in the world space
     """
     import numpy as np
 
-    def get_aff_matrix(h):
+    def get_aff_matrix(h: Nifti1Header) -> ndarray:
         """Get affine transformation matrix.
-
-        See details here: https://brainder.org/2012/09/23/the-nifti-file-format/
-
-        Args:
-            h: header
-
-        Returns:
-            affine transformation matrix
+        Parameters
+        ----------
+            h : Nifti1Header
+        Returns
+        -------
+        ndarray
+            Affine transformation matrix
+        References
+        ----------
+        https://brainder.org/2012/09/23/the-nifti-file-format/
         """
         mat = np.zeros((4, 4))
         mat[0, 0] = h["srow_x"][0]
@@ -1330,15 +1413,23 @@ def vox_to_world_space_method_3(coordinates_vol, header):
     return np.dot(aff, homogeneous_coord)[0:3]
 
 
-def vox_to_world_space_method_3_bis(coordinates_vol, header):
+def vox_to_world_space_method_3_bis(coordinates_vol: ndarray, header: Nifti1Header):
     """
-    This method relies on the same technique as method 3, but for images created by FreeSurfer (MGHImage, MGHHeader).
-    Args:
-        coordinates_vol: coordinate in the volume (raw data)
-        header: nib.freesurfer.mghformat.MGHHeader object
+    Convert coordinates to world space (method 3 bis).
 
-    Returns:
+    Parameters
+    ----------
+    coordinates_vol : ndarray
+        Coordinate in the volume (raw data)
+    header : Nifti1Header
+        Image header containing metadata
+    Returns
+    -------
+    ndarray
         Coordinates in the world space
+    Notes
+    -----
+    This method relies on the same technique as method 3, but for images created by FreeSurfer (MGHImage, MGHHeader).
     """
     import numpy as np
 

@@ -27,6 +27,7 @@ warnings.filterwarnings("ignore")
         "Aibl2Bids",
         "HabsToBids",
         "UkbToBids",
+        "GenfiToBids",
     ]
 )
 def test_name(request):
@@ -206,6 +207,32 @@ def run_ukbtobids(input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike) 
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir / "bids")
 
 
+def run_genfitobids(
+    input_dir: PathLike, output_dir: PathLike, ref_dir: PathLike
+) -> None:
+    from pathlib import PurePath
+
+    from clinica.iotools.converters.genfi_to_bids.genfi_to_bids import convert_images
+    from clinica.utils.check_dependency import check_dcm2niix
+
+    # Convert
+    input_dir = PurePath(input_dir)
+    output_dir = PurePath(output_dir)
+    ref_dir = PurePath(ref_dir)
+
+    # Act
+    check_dcm2niix()
+    convert_images(
+        input_dir / "unorganized",
+        output_dir / "bids",
+        path_to_clinical=None,
+        gif=False,
+    )
+
+    # Assert
+    compare_folders(output_dir / "bids", ref_dir / "bids", output_dir / "bids")
+
+
 def test_run_convertors(cmdopt, tmp_path, test_name):
     base_dir = Path(cmdopt["input"])
     input_dir = base_dir / test_name / "in"
@@ -232,6 +259,8 @@ def test_run_convertors(cmdopt, tmp_path, test_name):
         run_habs_to_bids(input_dir, tmp_out_dir, ref_dir)
     elif test_name == "UkbToBids":
         run_ukbtobids(input_dir, tmp_out_dir, ref_dir)
+    elif test_name == "GenfiToBids":
+        run_genfitobids(input_dir, tmp_out_dir, ref_dir)
 
     else:
         print(f"Test {test_name} not available.")

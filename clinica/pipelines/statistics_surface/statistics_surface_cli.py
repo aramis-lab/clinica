@@ -3,10 +3,12 @@ from typing import List, Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "statistics-surface"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
@@ -97,19 +99,28 @@ def cli(
 ) -> None:
     """Surface-based mass-univariate analysis with SurfStat.
 
-       GROUP_LABEL is an user-defined identifier to target a specific group of subjects.
+    GROUP_LABEL is a user-defined identifier to target a specific group of
+    subjects.
 
-       The type of surface-based feature can be defined by using the third argument: t1-freesurfer for cortical thickness, pet-surface for projected PET data or custom-pipeline for you own data in CAPS directory.
+    The type of surface-based feature can be defined by using the third
+    argument: t1-freesurfer for cortical thickness, pet-surface for projected
+    PET data or custom-pipeline for you own data in CAPS directory.
 
-       The type of analysis of the model is defined by the argument 'group_comparison' or 'correlation'.
+    The type of analysis of the model is defined by the argument
+    'group_comparison' or 'correlation'.
 
-       SUBJECT_VISITS_WITH_COVARIATES_TSV is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model.
+    SUBJECT_VISITS_WITH_COVARIATES_TSV is a TSV file containing a list of
+    subjects with their sessions and all the covariates and factors in your
+    model.
 
-       CONTRAST s a string defining the contrast matrix or the variable of interest for the GLM, e.g. 'group' or 'age'
+    CONTRAST is a string defining the contrast matrix or the variable of
+    interest in the GLM, e.g. 'group' or 'age'
 
-    Prerequisite: You need to have performed the t1-freesurfer pipeline on your T1-weighted MR images or pet-surface pipeline for measurements of activity map from PET.
+    Prerequisite: You need to have performed the t1-freesurfer pipeline on
+    your T1-weighted MR images or pet-surface pipeline for measurements of
+    activity map from PET.
 
-    See "https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
+    See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
     """
     from networkx import Graph
 

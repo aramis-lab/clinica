@@ -69,7 +69,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     # list of the files we want to build the bids for each modality
     file_mod_list = [
         "T1.nii.gz",
-        "T2_FLAIR.nii.gz",
+        "T2_FLAIR_orig_defaced.nii.gz",
         "AP.nii.gz",
         "PA.nii.gz",
         "rfMRI.dcm",
@@ -80,10 +80,13 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     dataframe_nifti = pd.DataFrame.from_records(
         source_path_series_nifti, columns=["source_zipfile", "source_filename"]
     )
+    dataframe_nifti = dataframe_nifti[
+        ~dataframe_nifti["source_filename"].str.contains("unusable")
+    ]
     dataframe_dicom = pd.DataFrame.from_records(
         source_path_series_dicom, columns=["source_zipfile", "source_filename"]
     )
-    dataframe = pd.concat([dataframe_nifti, dataframe_dicom], 0)
+    dataframe = pd.concat([dataframe_nifti, dataframe_dicom])
     filename = (
         dataframe["source_filename"]
         .apply(lambda x: Path(str(x)).name)
@@ -91,6 +94,11 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     )
     dataframe = dataframe[filename.isin(file_mod_list)]
     filename = filename[filename.isin(file_mod_list)]
+    if dataframe.empty:
+        raise ValueError(
+            f"No imaging data were found in the provided folder: {imaging_data_directory}, "
+            "or they are not handled by Clinica. Please check your data."
+        )
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
         {0: "source_id", 1: "modality_num", 2: "source_sessions_number"}, axis="columns"
@@ -144,7 +152,7 @@ def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFra
 
 def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     """This function uses the existing data to create the columns needed for
-    the bids hierarchy (subject_id, ses, age_at _sessions, ect.)"""
+    the bids hierarchy (subject_id, ses, age_at _sessions, etc.)"""
     import pandas as pd
 
     df_clinical = df_clinical.assign(
@@ -156,7 +164,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     df_clinical = df_clinical.join(
         df_clinical.filename.map(
             {
-                "T2_FLAIR.nii.gz": {
+                "T2_FLAIR_orig_defaced.nii.gz": {
                     "datatype": "anat",
                     "modality": "FLAIR",
                     "suffix": "FLAIR",
@@ -325,7 +333,6 @@ def write_bids(
             str(to / "dataset_description.json"), "w"
         ) as dataset_description_file:
             BIDSDatasetDescription(name="UKB").write(to=dataset_description_file)
-
         with fs.open(str(to / "participants.tsv"), "w") as participant_file:
             write_to_tsv(participants, participant_file)
 

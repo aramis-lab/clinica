@@ -8,25 +8,32 @@ help: Makefile
 	@echo "Commands:"
 	@sed -n 's/^##//p' $<
 
-## build			: Build the package.
-.PHONY: build
-build:
-	@$(POETRY) build
+.PHONY: check.lock
+check.lock:
+	@$(POETRY) lock --check
+
+# clean			: Clean project tree.
+.PHONY: clean
+clean: clean.doc clean.py clean.test
 
 .PHONY: clean.doc
 clean.doc:
-	@$(RM) -rf site
+	@$(RM) -rf site/
 
-.PHONY: config.testpypi
-config.testpypi:
-	@$(POETRY) config repositories.testpypi https://test.pypi.org/legacy
+.PHONY: clean.py
+clean.py:
+	@find . -name __pycache__ -exec $(RM) -r {} +
+
+.PHONY: clean.test
+clean.test:
+	@$(RM) -r .pytest_cache/
 
 ## doc			: Build the documentation.
 .PHONY: doc
-doc: clean.doc 
+doc: clean.doc install.doc
 	@$(POETRY) run mkdocs build
 
-## env			: Bootstap an environment.
+## env			: Bootstrap an environment.
 .PHONY: env
 env: env.dev
 
@@ -37,55 +44,57 @@ env.conda:
 .PHONY: env.dev
 env.dev: install
 
-.PHONY: env.doc
-env.doc:
-	@$(CONDA) env create -f docs/environment.yml -p $(CONDA_ENV)
-
 ## format			: Format the codebase.
 .PHONY: format
-format: format.black format.isort
+format: install.dev format.black format.isort
 
 .PHONY: format.black
-format.black: env.dev
+format.black:
 	$(info Formatting code with black)
 	@$(POETRY) run black --quiet $(PACKAGES)
 
 .PHONY: format.isort
-format.isort: env.dev
+format.isort:
 	$(info Formatting code with isort)
 	@$(POETRY) run isort --quiet $(PACKAGES)
 
 ## install		: Install the project.
 .PHONY: install
-install:
+install: check.lock
 	@$(POETRY) install
+
+.PHONY: install.dev
+install.dev: check.lock
+	@$(POETRY) install --only dev
+
+.PHONY: install.doc
+install.doc: check.lock
+	@$(POETRY) install --only docs
 
 ## lint			: Lint the codebase.
 .PHONY: lint
-lint: lint.black lint.isort
+lint: install.dev lint.black lint.isort
 
 .PHONY: lint.black
-lint.black: env.dev
+lint.black:
 	$(info Linting code with black)
 	@$(POETRY) run black --check --diff $(PACKAGES)
 
 .PHONY: lint.isort
-lint.isort: env.dev
+lint.isort:
 	$(info Linting code with isort)
 	@$(POETRY) run isort --check --diff $(PACKAGES)
 
-## publish		: Publish the package to pypi.
-.PHONY: publish
-publish: publish.pypi
+## lock 		: Refresh locked dependencies.
+.PHONY: lock
+lock:
+	@$(POETRY) lock --no-update
 
-.PHONY: publish.pypi
-publish.pypi: build
-	@$(POETRY) publish
+.PHONY: spellcheck
+spellcheck: install.dev
+	@$(POETRY) run codespell
 
-.PHONY: publish.testpypi
-publish.testpypi: build config.testpypi
-	@$(POETRY) publish --repository testpypi
-
+## test 		: Run unit tests.
 .PHONY: test
-test:
+test: install
 	@$(POETRY) run python -m pytest -v test/unittests

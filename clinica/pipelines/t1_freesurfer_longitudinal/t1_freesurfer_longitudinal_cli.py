@@ -3,10 +3,12 @@ from typing import Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "t1-freesurfer-longitudinal"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.option_group.common_pipelines_options

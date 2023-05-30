@@ -36,9 +36,9 @@ Together with a BIDS compliant dataset, you will need to give as input a TSV fil
 
 ```text
 participant_id   session_id
-sub-01           ses-M0
-sub-01           ses-M24
-sub-02           ses-M24
+sub-01           ses-M000
+sub-01           ses-M024
+sub-02           ses-M024
 ```
 
 You can generate this file using Clinica with command `create-subjects-visit`:

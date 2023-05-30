@@ -21,8 +21,8 @@ def get_unique_subjects(in_subject_list, in_session_list):
 
     Example:
         >>> from clinica.utils.participant import get_unique_subjects
-        >>> get_unique_subjects(['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'], ['ses-M00', 'ses-M18', 'ses-M00'])
-        (['sub-CLNC01', 'sub-CLNC02'], [['ses-M00', 'ses-M18'], ['ses-M00']])
+        >>> get_unique_subjects(['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'], ['ses-M000', 'ses-M018', 'ses-M000'])
+        (['sub-CLNC01', 'sub-CLNC02'], [['ses-M000', 'ses-M018'], ['ses-M000']])
     """
     import numpy as np
 
@@ -59,8 +59,8 @@ def unique_subjects_sessions_to_subjects_sessions(
 
     Example:
         >>> from clinica.utils.participant import unique_subjects_sessions_to_subjects_sessions
-        >>> unique_subjects_sessions_to_subjects_sessions(['sub-01', 'sub-02'], [['ses-M00', 'ses-M18'], ['ses-M00']])
-        (['sub-CLNC01', 'sub-01', 'sub-02'], ['ses-M00', 'ses-M18', 'ses-M00'])
+        >>> unique_subjects_sessions_to_subjects_sessions(['sub-01', 'sub-02'], [['ses-M000', 'ses-M018'], ['ses-M000']])
+        (['sub-CLNC01', 'sub-01', 'sub-02'], ['ses-M000', 'ses-M018', 'ses-M000'])
 
     """
     list_participants = []
@@ -96,11 +96,11 @@ def get_subject_session_list(
 
     Notes:
         This is a generic method based on folder names. If your <BIDS> dataset contains e.g.:
-        - sub-CLNC01/ses-M00/anat/sub-CLNC01_ses-M00_T1w.nii
-        - sub-CLNC02/ses-M00/dwi/sub-CLNC02_ses-M00_dwi.{bval|bvec|json|nii}
-        - sub-CLNC02/ses-M00/anat/sub-CLNC02_ses-M00_T1w.nii
+        - sub-CLNC01/ses-M000/anat/sub-CLNC01_ses-M000_T1w.nii
+        - sub-CLNC02/ses-M000/dwi/sub-CLNC02_ses-M000_dwi.{bval|bvec|json|nii}
+        - sub-CLNC02/ses-M000/anat/sub-CLNC02_ses-M000_T1w.nii
         get_subject_session_list(<BIDS>, None, True) will return
-        ['ses-M00', 'ses-M00'], ['sub-CLNC01', 'sub-CLNC02'].
+        ['ses-M000', 'ses-M000'], ['sub-CLNC01', 'sub-CLNC02'].
 
         However, if your pipeline needs both T1w and DWI files, you will need to check
         with e.g. clinica_file_reader_function.
@@ -130,29 +130,3 @@ def get_subject_session_list(
 
     participant_ids, session_ids = read_participant_tsv(ss_file)
     return session_ids, participant_ids
-
-
-def have_same_subjects(tsv_file_1, tsv_file_2):
-    """Return True if `tsv_file_1` and `tsv_file_2` have the same subjects, False otherwise."""
-    import pandas as pd
-
-    tsv_df_1 = pd.read_csv(tsv_file_1, sep="\t")
-    tsv_df_2 = pd.read_csv(tsv_file_2, sep="\t")
-    image_ids_1 = [
-        f"{p_id}_{s_id}"
-        for (p_id, s_id) in zip(
-            list(tsv_df_1.participant_id), list(tsv_df_1.session_id)
-        )
-    ]
-    image_ids_2 = [
-        f"{p_id}_{s_id}"
-        for (p_id, s_id) in zip(
-            list(tsv_df_2.participant_id), list(tsv_df_2.session_id)
-        )
-    ]
-    diff_image_ids = list(set(image_ids_1) - set(image_ids_2))
-
-    if len(diff_image_ids) == 0:
-        return True
-    else:
-        return False

@@ -1,486 +1,300 @@
 """Methods to find information in the different pipelines of Clinica."""
-
-
+import functools
 import os
-from glob import glob
-from os import path
-from typing import Tuple
+from os import PathLike
+from pathlib import Path
+from typing import List, Optional, Tuple
 
 import pandas as pd
 
 
-def pet_volume_pipeline(
-    caps_dir,
-    df,
-    group_selection=None,
-    volume_atlas_selection=None,
-    pvc_restriction=None,
-    tracers_selection=None,
-    **kwargs,
-):
-    """Merge the data of the PET-Volume pipeline to the merged file containing the BIDS information.
+def _get_atlas_name(atlas_path: Path, pipeline: str) -> str:
+    """Helper function for _extract_metrics_from_pipeline."""
+    if pipeline == "dwi_dti":
+        splitter = "_dwi_space-"
+    elif pipeline in ("t1_freesurfer_longitudinal", "t1_freesurfer"):
+        splitter = "_parcellation-"
+    elif pipeline in ("t1-volume", "pet-volume"):
+        splitter = "_space-"
+    else:
+        raise ValueError(f"Not supported pipeline {pipeline}.")
+    try:
+        atlas_name = atlas_path.stem.split(splitter)[1].split("_")[0]
+    except Exception:
+        raise ValueError(
+            f"Unable to infer the atlas name from {atlas_path} for pipeline {pipeline}."
+        )
+    return atlas_name
 
-    Args:
-        caps_dir: the path to the CAPS directory
-        df: the DataFrame containing the BIDS information
-        group_selection: allows to choose the DARTEL groups to merge. If None all groups are selected.
-        volume_atlas_selection: allows to choose the atlas to merge (default = 'all')
-        pvc_restriction: gives the restriction on the inclusion or not of the file with the label 'pvc-rbv'
-            1       --> only the atlases containing the label will be used
-            0       --> the atlases containing the label won't be used
-            None    --> all the atlases will be used
-        tracers_selection: allows to choose the PET tracer to merge (default = 'all')
 
-    Returns:
-         final_df: a DataFrame containing the information of the bids and the pipeline
+def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
+    """Helper function for _extract_metrics_from_pipeline.
+    Returns the path to the modality of interest depending
+    on the pipeline considered.
     """
-    pet_path = path.join("pet", "preprocessing")
+    if pipeline == "dwi_dti":
+        return ses_path / "dwi" / "dti_based_processing" / "atlas_statistics"
+    if pipeline == "t1_freesurfer_longitudinal":
+        mod_path = ses_path / "t1"
+        long_ids = list(mod_path.glob("long*"))
+        if len(long_ids) == 0:
+            return None
+        return (
+            mod_path
+            / long_ids[0].name
+            / "freesurfer_longitudinal"
+            / "regional_measures"
+        )
+    if pipeline == "t1_freesurfer":
+        return ses_path / "t1" / "freesurfer_cross_sectional" / "regional_measures"
+    if pipeline == "t1-volume":
+        return ses_path / "t1" / "spm" / "dartel"
+    if pipeline == "pet-volume":
+        return ses_path / "pet" / "preprocessing"
+    raise ValueError(f"Not supported pipeline {pipeline}.")
 
-    return volume_pipeline(
-        caps_dir,
-        df,
-        pet_path,
-        group_selection=group_selection,
-        atlas_selection=volume_atlas_selection,
-        pvc_restriction=pvc_restriction,
-        pipeline_name="pet-volume",
-        tracers_selection=tracers_selection,
+
+def _get_label_list(
+    atlas_path: Path, metric: str, pipeline: str, group: str
+) -> List[str]:
+    """Helper function for _extract_metrics_from_pipeline.
+    Returns the list of labels to use in the session df depending on the
+    pipeline, the atlas, and the metric considered.
+    """
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        replace_sequence_chars,
     )
 
-
-def dwi_dti_pipeline(
-    caps_dir: str, df: pd.DataFrame, dti_atlas_selection=None, **kwargs
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    from pathlib import Path
-
-    # Ensures that df is correctly indexed
-    try:
-        df.set_index(
-            ["participant_id", "session_id"], inplace=True, verify_integrity=True
-        )
-    except KeyError:
-        raise KeyError("Fields `participant_id` and `session_id` are required.")
-
-    subjects_dir = Path(caps_dir) / "subjects"
-
-    pipeline_df = pd.DataFrame()
-
-    metrics = ["FA", "MD", "RD", "AD"]
-
-    for participant_id, session_id in df.index.values:
-
-        ses_path = subjects_dir / participant_id / session_id
-        mod_path = ses_path / "dwi" / "dti_based_processing" / "atlas_statistics"
-
-        ses_df = pd.DataFrame(
-            [[participant_id, session_id]], columns=["participant_id", "session_id"]
-        )
-        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
-
-        if mod_path.exists():
-
-            for metric in metrics:
-
-                atlas_paths = sorted(
-                    (mod_path).glob(
-                        f"{participant_id}_{session_id}_*{metric}_statistics.tsv"
-                    )
-                )
-                for atlas_path in atlas_paths:
-
-                    atlas_name = atlas_path.stem.split("_dwi_space-")[1].split("_")[0]
-                    if atlas_path.exists() and (
-                        not (
-                            dti_atlas_selection
-                            or (
-                                dti_atlas_selection
-                                and atlas_name in dti_atlas_selection
-                            )
-                        )
-                    ):
-                        atlas_df = pd.read_csv(atlas_path, sep="\t")
-                        label_list = [
-                            "dwi-dti_" + metric + "_atlas-" + atlas_name + "_" + x
-                            for x in atlas_df.label_name.values
-                        ]
-                        ses_df[label_list] = atlas_df["mean_scalar"].to_numpy()
-
-        pipeline_df = pipeline_df.append(ses_df)
-
-        summary_df = generate_summary(pipeline_df, "dwi-dti", ignore_groups=True)
-
-    final_df = pd.concat([df, pipeline_df], axis=1)
-    final_df.reset_index(inplace=True)
-    return final_df, summary_df
+    atlas_name = _get_atlas_name(atlas_path, pipeline)
+    atlas_df = pd.read_csv(atlas_path, sep="\t")
+    if pipeline == "t1-freesurfer":
+        return [
+            f"t1-freesurfer_atlas-{atlas_name}_ROI-{replace_sequence_chars(roi_name)}_thickness"
+            for roi_name in atlas_df.label_name.values
+        ]
+    if pipeline in ("t1-volume", "pet-volume"):
+        additional_desc = ""
+        if "trc" in str(atlas_path):
+            tracer = str(atlas_path).split("_trc-")[1].split("_")[0]
+            additional_desc += f"_trc-{tracer}"
+        if "pvc-rbv" in str(atlas_path):
+            additional_desc += f"_pvc-rbv"
+        return [
+            f"{pipeline}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
+            for roi_name in atlas_df.label_name.values
+        ]
+    if pipeline == "dwi_dti":
+        prefix = "dwi-dti_"
+        metric = metric.rstrip("_statistics")
+    elif pipeline == "t1-freesurfer_longitudinal":
+        prefix = "t1-fs-long_"
+    else:
+        raise ValueError(f"Not supported pipeline {pipeline}.")
+    return [
+        prefix + metric + "_atlas-" + atlas_name + "_" + x
+        for x in atlas_df.label_name.values
+    ]
 
 
-def t1_freesurfer_longitudinal_pipeline(
-    caps_dir: str, df: pd.DataFrame, freesurfer_atlas_selection=None, **kwargs
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Merge the data of the T1FreesurferLongitudinal pipeline to the merged file containing the BIDS information.
-
-    Args:
-        caps_dir: the path to the CAPS directory
-        df: the DataFrame containing the BIDS information
-        freesurfer_atlas_selection: allows to choose the atlas to merge (default = 'all')
-
-    Returns:
-         final_df: a DataFrame containing the information of the bids and the pipeline
+def _skip_atlas(
+    atlas_path: Path,
+    pipeline: str,
+    pvc_restriction: Optional[bool] = None,
+    tracers_selection: Optional[List[str]] = None,
+) -> bool:
+    """Helper function for _extract_metrics_from_pipeline.
+    Returns whether the atlas provided through its path should be
+    skipped for the provided pipeline.
     """
+    if pipeline == "t1-freesurfer_longitudinal":
+        return "-wm_" in str(atlas_path) or "-ba_" in str(atlas_path.stem)
+    if pipeline in ("t1-volume", "pet-volume"):
+        skip = []
+        if pvc_restriction is not None:
+            if pvc_restriction:
+                skip.append("pvc-rbv" not in str(atlas_path))
+            else:
+                skip.append("pvc-rbv" in str(atlas_path))
+        if tracers_selection:
+            skip.append(
+                all([tracer not in str(atlas_path) for tracer in tracers_selection])
+            )
+        return any(skip)
+    return False
 
-    from pathlib import Path
 
+def _extract_metrics_from_pipeline(
+    caps_dir: PathLike,
+    df: pd.DataFrame,
+    metrics: List[str],
+    pipeline: str,
+    atlas_selection: Optional[List[str]] = None,
+    group_selection: Optional[List[str]] = None,
+    pvc_restriction: Optional[bool] = None,
+    tracers_selection: Optional[List[str]] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Extract and merge the data of the provided pipeline into the
+    merged dataframe already containing the BIDS information.
+
+    Parameters
+    ----------
+    caps_dir : PathLike
+        Path to the CAPS directory.
+
+    df : pd.DataFrame
+        DataFrame containing the BIDS information.
+        New data will be merged into this dataframe.
+
+    metrics : list of str
+        List of metrics to extract from the pipeline's caps folder.
+
+    pipeline : str
+        Name of the pipeline for which to extract information.
+
+    atlas_selection : list of str, optional
+        Allows to choose the atlas to merge.
+        If None all atlases are selected.
+
+    group_selection : list of str, optional
+        Allows to choose the DARTEL groups to merge.
+        If None all groups are selected.
+
+    pvc_restriction : bool, optional
+        If True, only the atlases containing the label 'pvc-rbv' will be used.
+        If False, the atlases containing the label won't be used.
+        If None, all the atlases will be used.
+
+    tracers_selection : list of str, optional
+        Allows to choose the PET tracer to merge.
+        If None, all tracers available will be used.
+
+    Returns
+    -------
+    final_df : pd.DataFrame
+        DataFrame containing the information from the bids dataset as well
+        as the information extracted from the caps pipeline's folder.
+
+    summary_df : pd.DataFrame
+        Summary DataFrame generated by function `generate_summary`.
+    """
     from clinica.utils.stream import cprint
 
-    # Ensures that df is correctly indexed
-    try:
-        df.set_index(
-            ["participant_id", "session_id"], inplace=True, verify_integrity=True
-        )
-    except KeyError:
-        raise KeyError("Fields `participant_id` and `session_id` are required.")
+    if df.index.names != ["participant_id", "session_id"]:
+        try:
+            df.set_index(
+                ["participant_id", "session_id"], inplace=True, verify_integrity=True
+            )
+        except KeyError:
+            raise KeyError("Fields `participant_id` and `session_id` are required.")
+
+    if group_selection is None:
+        try:
+            group_selection = os.listdir(caps_dir / "groups")
+        except FileNotFoundError:
+            return df, None
+    else:
+        group_selection = [f"group-{group}" for group in group_selection]
+    ignore_groups = group_selection == [""]
 
     subjects_dir = Path(caps_dir) / "subjects"
-
     pipeline_df = pd.DataFrame()
-
-    metrics = ["volume", "thickness"]
-
     for participant_id, session_id in df.index.values:
-
         ses_path = subjects_dir / participant_id / session_id
-        mod_path = ses_path / "t1"
-
-        try:
-            long_id = next(mod_path.glob("long*")).name
-        except StopIteration:
+        mod_path = _get_mod_path(ses_path, pipeline)
+        if mod_path is None:
             cprint(
                 f"Could not find a longitudinal dataset for participant {participant_id} {session_id}",
                 lvl="warning",
             )
             continue
-
-        mod_path = mod_path / long_id / "freesurfer_longitudinal" / "regional_measures"
-
         ses_df = pd.DataFrame(
             [[participant_id, session_id]], columns=["participant_id", "session_id"]
         )
         ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
-
         if mod_path.exists():
-
-            for metric in metrics:
-
-                atlas_paths = sorted(
-                    (mod_path).glob(f"{participant_id}_{session_id}_*{metric}.tsv")
-                )
-
-                for atlas_path in atlas_paths:
-                    if "-wm_" not in str(atlas_path) and "-ba_" not in str(
-                        atlas_path.stem
-                    ):
-                        atlas_name = atlas_path.stem.split("_parcellation-")[1].split(
-                            "_"
-                        )[0]
-                        if atlas_path.exists() and (
-                            not freesurfer_atlas_selection
-                            or (
-                                freesurfer_atlas_selection
-                                and atlas_name in freesurfer_atlas_selection
-                            )
-                        ):
-                            atlas_df = pd.read_csv(atlas_path, sep="\t")
-                            label_list = [
-                                "t1-fs-long_"
-                                + metric
-                                + "_atlas-"
-                                + atlas_name
-                                + "_"
-                                + x
-                                for x in atlas_df.label_name.values
-                            ]
-                            ses_df[label_list] = atlas_df["label_value"].to_numpy()
-
-            # Always retrieve subcortical volumes
-
-            try:
-                atlas_path = next(
-                    (mod_path).glob(
-                        f"{participant_id}_{session_id}_*segmentationVolumes.tsv"
-                    )
-                )
-                atlas_df = pd.read_csv(atlas_path, sep="\t")
-                label_list = [
-                    "t1-fs-long_segmentationVolumes_" + x
-                    for x in atlas_df.label_name.values
-                ]
-
-                ses_df[label_list] = atlas_df["label_value"].to_numpy()
-
-            except StopIteration:
-                cprint("Segmentation volume file not found. Skipping.", lvl="warning")
-
-        pipeline_df = pipeline_df.append(ses_df)
-
-    summary_df = generate_summary(
-        pipeline_df, "t1-freesurfer-longitudinal", ignore_groups=True
-    )
-
-    final_df = pd.concat([df, pipeline_df], axis=1)
-    final_df.reset_index(inplace=True)
-
-    return final_df, summary_df
-
-
-def t1_freesurfer_pipeline(caps_dir, df, freesurfer_atlas_selection=None, **kwargs):
-    """Merge the data of the T1Freesurfer pipeline to the merged file containing the BIDS information.
-
-    Args:
-        caps_dir: the path to the CAPS directory
-        df: the DataFrame containing the BIDS information
-        freesurfer_atlas_selection: allows to choose the atlas to merge (default = 'all')
-
-    Returns:
-         final_df: a DataFrame containing the information of the bids and the pipeline
-    """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-    )
-
-    # Ensures that df is correctly indexed
-    try:
-        df.set_index(
-            ["participant_id", "session_id"], inplace=True, verify_integrity=True
-        )
-    except KeyError:
-        raise KeyError("Fields `participant_id` and `session_id` are required.")
-
-    subjects_dir = path.join(caps_dir, "subjects")
-
-    pipeline_df = pd.DataFrame()
-
-    for participant_id, session_id in df.index.values:
-
-        ses_path = path.join(subjects_dir, participant_id, session_id)
-        mod_path = path.join(
-            ses_path, "t1", "freesurfer_cross_sectional", "regional_measures"
-        )
-        ses_df = pd.DataFrame(
-            [[participant_id, session_id]], columns=["participant_id", "session_id"]
-        )
-        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
-
-        if os.path.exists(mod_path):
-            # Looking for atlases
-            atlas_paths = sorted(
-                glob(
-                    path.join(mod_path, f"{participant_id}_{session_id}_*thickness.tsv")
-                )
-            )
-            for atlas_path in atlas_paths:
-                atlas_name = atlas_path.split("_parcellation-")[1].split("_")[0]
-                if path.exists(atlas_path) and (
-                    not freesurfer_atlas_selection
-                    or (
-                        freesurfer_atlas_selection
-                        and atlas_name in freesurfer_atlas_selection
-                    )
-                ):
-                    atlas_df = pd.read_csv(atlas_path, sep="\t")
-                    label_list = [
-                        f"t1-freesurfer_atlas-{atlas_name}_ROI-{replace_sequence_chars(roi_name)}_thickness"
-                        for roi_name in atlas_df.label_name.values
-                    ]
-                    ses_df[label_list] = atlas_df["label_value"].to_numpy()
-
-            # Always retrieve subcortical volumes
-            atlas_path = path.join(
-                mod_path, f"{participant_id}_{session_id}_segmentationVolumes.tsv"
-            )
-            atlas_df = pd.read_csv(atlas_path, sep="\t")
-            label_list = [
-                f"t1-freesurfer_segmentation-volumes_ROI-{replace_sequence_chars(roi_name)}_volume"
-                for roi_name in atlas_df.label_name.values
-            ]
-            ses_df[label_list] = atlas_df["label_value"].to_numpy()
-
-        pipeline_df = pipeline_df.append(ses_df)
-
-    summary_df = generate_summary(pipeline_df, "t1-freesurfer", ignore_groups=True)
-    final_df = pd.concat([df, pipeline_df], axis=1)
-    final_df.reset_index(inplace=True)
-
-    return final_df, summary_df
-
-
-def t1_volume_pipeline(
-    caps_dir, df, group_selection=None, volume_atlas_selection=None, **kwargs
-):
-    """Merge data of the t1-volume pipeline to the merged file containing the BIDS information.
-
-    Args:
-        caps_dir: the path to the CAPS directory
-        df: the DataFrame containing the BIDS information
-        group_selection: allows to choose the DARTEL groups to merge. If None all groups are selected.
-        volume_atlas_selection: allows to choose the atlas to merge. If None all atlases are selected.
-
-    Returns:
-        final_df: a DataFrame containing the information of the bids and the pipeline
-    """
-    t1_spm_path = path.join("t1", "spm", "dartel")
-
-    return volume_pipeline(
-        caps_dir,
-        df,
-        t1_spm_path,
-        group_selection=group_selection,
-        atlas_selection=volume_atlas_selection,
-        pvc_restriction=None,
-        pipeline_name="t1-volume",
-    )
-
-
-def volume_pipeline(
-    caps_dir,
-    df,
-    pipeline_path,
-    pipeline_name,
-    group_selection=None,
-    atlas_selection=None,
-    pvc_restriction=None,
-    tracers_selection=None,
-):
-    """Merge data of the t1-volume and pet-volume pipelines to the merged file containing the BIDS information.
-
-    Args:
-        caps_dir: the path to the CAPS directory
-        df: the DataFrame containing the BIDS information
-        pipeline_path: path between the session folder and the group folder
-        pipeline_name: name of the pipeline
-        group_selection: allows to choose the DARTEL groups to merge. If None all groups are selected.
-        atlas_selection: allows to choose the atlas to merge. If None all atlases are selected.
-        pvc_restriction: gives the restriction on the inclusion or not of the file with the label 'pvc-rbv'
-            1       --> only the atlases containing the label will be used
-            0       --> the atlases containing the label won't be used
-            None    --> all the atlases will be used
-        tracers_selection: allows to choose the PET tracer to merge (default = 'all')
-
-    Returns:
-        final_df: a DataFrame containing the information of the bids and the pipeline
-    """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-    )
-
-    # Ensures that df is correctly indexed
-    try:
-        df.set_index(
-            ["participant_id", "session_id"], inplace=True, verify_integrity=True
-        )
-    except KeyError:
-        raise KeyError("Fields `participant_id` and `session_id` are required.")
-
-    if not group_selection:
-        try:
-            group_selection = os.listdir(path.join(caps_dir, "groups"))
-        except FileNotFoundError:
-            return df, None
-    else:
-        group_selection = [f"group-{group}" for group in group_selection]
-
-    subjects_dir = path.join(caps_dir, "subjects")
-
-    pipeline_df = pd.DataFrame()
-
-    for participant_id, session_id in df.index.values:
-
-        ses_path = path.join(subjects_dir, participant_id, session_id)
-        mod_path = path.join(ses_path, pipeline_path)
-        ses_df = pd.DataFrame(
-            [[participant_id, session_id]], columns=["participant_id", "session_id"]
-        )
-        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
-
-        if os.path.exists(mod_path):
-            # Looking for groups
             for group in group_selection:
-                group_path = path.join(mod_path, group)
-                if os.path.exists(group_path):
-                    # Looking for atlases
-                    if not atlas_selection:
+                group_path = mod_path / group
+                if group_path.exists():
+                    for metric in metrics:
                         atlas_paths = sorted(
-                            glob(
-                                path.join(
-                                    group_path,
-                                    "atlas_statistics",
-                                    f"{participant_id}_{session_id}_*_statistics.tsv",
-                                )
+                            group_path.glob(
+                                f"{participant_id}_{session_id}_*{metric}.tsv"
                             )
                         )
-                    else:
-                        atlas_paths = list()
-                        for atlas in atlas_selection:
-                            atlas_paths += sorted(
-                                glob(
-                                    path.join(
-                                        group_path,
-                                        "atlas_statistics",
-                                        f"{participant_id}_{session_id}_*{atlas}*_statistics.tsv",
-                                    )
+                        if len(atlas_paths) == 0:
+                            atlas_paths = sorted(
+                                (group_path / "atlas_statistics").glob(
+                                    f"{participant_id}_{session_id}_*{metric}.tsv"
                                 )
                             )
-
-                    # Filter pvc_restriction
-                    if pvc_restriction:
-                        if pvc_restriction == 1:
-                            atlas_paths = [
-                                atlas_path
-                                for atlas_path in atlas_paths
-                                if "pvc-rbv" in atlas_path
-                            ]
-                        else:
-                            atlas_paths = [
-                                atlas_path
-                                for atlas_path in atlas_paths
-                                if "pvc-rbv" not in atlas_path
-                            ]
-
-                    # Filter tracers
-                    if tracers_selection:
-                        atlas_paths = [
-                            atlas_path
-                            for atlas_path in atlas_paths
-                            for tracer in tracers_selection
-                            if tracer in atlas_path
-                        ]
-
-                    for atlas_path in atlas_paths:
-                        atlas_name = atlas_path.split("_space-")[-1].split("_")[0]
-                        if path.exists(atlas_path):
-                            atlas_df = pd.read_csv(atlas_path, sep="\t")
-                            additional_desc = ""
-                            if "acq" in atlas_path:
-                                tracer = atlas_path.split("_acq-")[1].split("_")[0]
-                                additional_desc += f"_acq-{tracer}"
-                            if "pvc-rbv" in atlas_path:
-                                additional_desc += f"_pvc-rbv"
-
-                            label_list = [
-                                f"{pipeline_name}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
-                                for roi_name in atlas_df.label_name.values
-                            ]
-                            ses_df[label_list] = atlas_df["mean_scalar"].to_numpy()
-
-        pipeline_df = pipeline_df.append(ses_df)
-
-    summary_df = generate_summary(pipeline_df, pipeline_name)
+                        for atlas_path in atlas_paths:
+                            if not _skip_atlas(
+                                atlas_path, pipeline, pvc_restriction, tracers_selection
+                            ):
+                                atlas_name = _get_atlas_name(atlas_path, pipeline)
+                                if atlas_path.exists():
+                                    if not (
+                                        atlas_selection
+                                        or (
+                                            atlas_selection
+                                            and atlas_name in atlas_selection
+                                        )
+                                    ):
+                                        atlas_df = pd.read_csv(atlas_path, sep="\t")
+                                        label_list = _get_label_list(
+                                            atlas_path, metric, pipeline, group
+                                        )
+                                        key = (
+                                            "label_value"
+                                            if "freesurfer" in pipeline
+                                            else "mean_scalar"
+                                        )
+                                        ses_df[label_list] = atlas_df[key].to_numpy()
+        pipeline_df = pd.concat([pipeline_df, ses_df])
+    summary_df = generate_summary(pipeline_df, pipeline, ignore_groups=ignore_groups)
     final_df = pd.concat([df, pipeline_df], axis=1)
     final_df.reset_index(inplace=True)
-
     return final_df, summary_df
 
 
-def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
+dwi_dti_pipeline = functools.partial(
+    _extract_metrics_from_pipeline,
+    metrics=["FA_statistics", "MD_statistics", "RD_statistics", "AD_statistics"],
+    pipeline="dwi_dti",
+    group_selection=[""],
+)
+
+
+t1_freesurfer_longitudinal_pipeline = functools.partial(
+    _extract_metrics_from_pipeline,
+    metrics=["volume", "thickness", "segmentationVolumes"],
+    pipeline="t1_freesurfer_longitudinal",
+    group_selection=[""],
+)
+
+t1_freesurfer_pipeline = functools.partial(
+    _extract_metrics_from_pipeline,
+    metrics=["thickness", "segmentationVolumes"],
+    pipeline="t1_freesurfer",
+    group_selection=[""],
+)
+
+t1_volume_pipeline = functools.partial(
+    _extract_metrics_from_pipeline,
+    metrics=["statistics"],
+    pipeline="t1-volume",
+)
+
+pet_volume_pipeline = functools.partial(
+    _extract_metrics_from_pipeline,
+    metrics=["statistics"],
+    pipeline="pet-volume",
+)
+
+
+def generate_summary(
+    pipeline_df: pd.DataFrame, pipeline_name: str, ignore_groups: bool = False
+):
 
     columns = [
         "pipeline_name",
@@ -500,19 +314,19 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
     else:
         groups = list({column.split("_")[1] for column in pipeline_df.columns.values})
         atlases = list({column.split("_")[2] for column in pipeline_df.columns.values})
-    pvc_rectrictions = list(
+    pvc_restrictions = list(
         {"pvc-rbv" in column for column in pipeline_df.columns.values}
     )
     tracers = list(
         {
-            column.split("_acq-")[1].split("_")[0]
+            column.split("_trc-")[1].split("_")[0]
             for column in pipeline_df.columns.values
-            if "acq" in column
+            if "trc" in column
         }
     )
     if len(tracers) == 0:
         tracers.append("_")
-        pvc_rectrictions = ["_"]
+        pvc_restrictions = ["_"]
     groups.sort()
     atlases.sort()
 
@@ -521,8 +335,8 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
         for atlas in atlases:
             atlas_id = atlas.split("-")[-1]
             for tracer in tracers:
-                for pvc_rectriction in pvc_rectrictions:
-                    if pvc_rectriction and pvc_rectriction != "_":
+                for pvc_restriction in pvc_restrictions:
+                    if pvc_restriction and pvc_restriction != "_":
                         regions = [
                             column
                             for column in pipeline_df.columns.values
@@ -549,7 +363,7 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
                                     group_id,
                                     atlas_id,
                                     tracer,
-                                    pvc_rectriction,
+                                    pvc_restriction,
                                     len(regions),
                                     regions[0],
                                     regions[-1],
@@ -557,7 +371,7 @@ def generate_summary(pipeline_df, pipeline_name, ignore_groups=False):
                             ],
                             columns=columns,
                         )
-                        summary_df = summary_df.append(row_df, ignore_index=True)
+                        summary_df = pd.concat([summary_df, row_df])
 
     summary_df = summary_df.replace("_", "n/a")
     return summary_df

@@ -120,7 +120,9 @@ class PETVolume(cpe.Pipeline):
         all_errors = []
 
         # Grab reference mask
-        reference_mask_file = get_suvr_mask(self.parameters["suvr_reference_region"])
+        reference_mask_file = str(
+            get_suvr_mask(self.parameters["suvr_reference_region"])
+        )
 
         # PET from BIDS directory
         try:
@@ -307,7 +309,7 @@ class PETVolume(cpe.Pipeline):
         # Writing all images into CAPS
         # ============================
         write_images_node = npe.Node(name="write_caps_node", interface=nio.DataSink())
-        write_images_node.inputs.base_directory = self.caps_directory
+        write_images_node.inputs.base_directory = str(self.caps_directory)
         write_images_node.inputs.parameterization = False
         write_images_node.inputs.regexp_substitutions = [
             (r"(.*/)pet_t1_native/r(sub-.*)(\.nii(\.gz)?)$", r"\1\2_space-T1w_pet\3"),
@@ -368,7 +370,7 @@ class PETVolume(cpe.Pipeline):
         # Writing atlas statistics into CAPS
         # ==================================
         write_atlas_node = npe.Node(name="write_atlas_node", interface=nio.DataSink())
-        write_atlas_node.inputs.base_directory = self.caps_directory
+        write_atlas_node.inputs.base_directory = str(self.caps_directory)
         write_atlas_node.inputs.parameterization = False
         write_atlas_node.inputs.regexp_substitutions = [
             (
@@ -416,9 +418,9 @@ class PETVolume(cpe.Pipeline):
         import nipype.interfaces.spm.utils as spmutils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from nipype.algorithms.misc import Gunzip
         from nipype.interfaces.petpvc import PETPVC
 
+        from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         from .pet_volume_utils import (
@@ -448,22 +450,45 @@ class PETVolume(cpe.Pipeline):
 
         # Unzipping
         # =========
-        unzip_pet_image = npe.Node(interface=Gunzip(), name="unzip_pet_image")
+        unzip_pet_image = npe.Node(
+            nutil.Function(
+                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+            ),
+            name="unzip_pet_image",
+        )
 
         unzip_t1_image_native = npe.Node(
-            interface=Gunzip(), name="unzip_t1_image_native"
+            nutil.Function(
+                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+            ),
+            name="unzip_t1_image_native",
         )
 
-        unzip_flow_fields = npe.Node(interface=Gunzip(), name="unzip_flow_fields")
+        unzip_flow_fields = npe.Node(
+            nutil.Function(
+                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+            ),
+            name="unzip_flow_fields",
+        )
 
         unzip_dartel_template = npe.Node(
-            interface=Gunzip(), name="unzip_dartel_template"
+            nutil.Function(
+                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+            ),
+            name="unzip_dartel_template",
         )
 
-        unzip_reference_mask = npe.Node(interface=Gunzip(), name="unzip_reference_mask")
+        unzip_reference_mask = npe.Node(
+            nutil.Function(
+                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+            ),
+            name="unzip_reference_mask",
+        )
 
         unzip_mask_tissues = npe.MapNode(
-            interface=Gunzip(),
+            nutil.Function(
+                input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+            ),
             name="unzip_mask_tissues",
             iterfield=["in_file"],
         )
@@ -591,7 +616,11 @@ class PETVolume(cpe.Pipeline):
             # Unzipping
             # =========
             unzip_pvc_mask_tissues = npe.MapNode(
-                interface=Gunzip(),
+                nutil.Function(
+                    input_names=["in_file"],
+                    output_names=["out_file"],
+                    function=unzip_nii,
+                ),
                 name="unzip_pvc_mask_tissues",
                 iterfield=["in_file"],
             )

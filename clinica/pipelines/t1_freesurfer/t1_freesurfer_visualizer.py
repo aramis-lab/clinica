@@ -24,7 +24,7 @@ class T1FreeSurferVisualizer(ce.CmdParser):
         clinica_comp.add_argument(
             "participant_id", help="Participant ID (e.g. sub-CLNC01)."
         )
-        clinica_comp.add_argument("session_id", help="Session ID (e.g. ses-M00).")
+        clinica_comp.add_argument("session_id", help="Session ID (e.g. ses-M000).")
 
     def run_command(self, args):
         """"""

@@ -21,7 +21,7 @@ class StatisticsSurface(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.group import check_group_label
 
-        from .statistics_surface_utils import get_t1_freesurfer_custom_file
+        from ._inputs import _get_t1_freesurfer_custom_file_template
 
         # Clinica compulsory parameters
         self.parameters.setdefault("group_label", None)
@@ -51,7 +51,9 @@ class StatisticsSurface(cpe.Pipeline):
         self.parameters.setdefault("suvr_reference_region", None)
 
         # Optional parameters for custom pipeline
-        self.parameters.setdefault("custom_file", get_t1_freesurfer_custom_file())
+        self.parameters.setdefault(
+            "custom_file", _get_t1_freesurfer_custom_file_template(self.base_dir)
+        )
         self.parameters.setdefault("measure_label", "ct")
 
         # Advanced parameters
@@ -103,57 +105,36 @@ class StatisticsSurface(cpe.Pipeline):
                 self.caps_directory, "groups", f"group-{self.parameters['group_label']}"
             )
         ):
-            error_message = (
+            raise ClinicaException(
                 f"Group label {self.parameters['group_label']} already exists, "
                 f"please choose another one or delete the existing folder and "
                 f"also the working directory and rerun the pipeline"
             )
-            raise ClinicaException(error_message)
-            # statistics_dir_tsv = os.path.join(input_directory, 'groups', group_id, 'statistics', 'participant.tsv')
-            # # Copy the subjects_visits_tsv to the result folder
-            # # First, check if the subjects_visits_tsv has the same info with the participant.tsv in the folder of statistics.
-            # # If the participant TSV does not exit, copy subjects_visits_tsv in the folder of statistics too,
-            # # if it is here, compare them.
-            # if not os.path.isfile(statistics_dir_tsv):
-            #     copy(subjects_visits_tsv, statistics_dir_tsv)
-            # else:
-            #     # Compare the two TSV files
-            #     if not have_same_subjects(statistics_dir_tsv, subjects_visits_tsv):
-            #         raise ValueError("It seems that this round of analysis does not contain the same subjects"
-            #                          "where you want to put the results, please check it!")
 
         # Check input files before calling SurfStat with Matlab
         # =====================================================
         all_errors = []
         # clinica_files_reader expects regexp to start at subjects/ so sub-*/ses-*/ is removed here
-        pattern_hemisphere = (
-            self.parameters["custom_file"]
-            .replace("@subject", "sub-*")
-            .replace("@session", "ses-*")
-            .replace("@fwhm", str(self.parameters["full_width_at_half_maximum"]))
-            .replace("sub-*/ses-*/", "")
-        )
-        # Files on left hemisphere
-        lh_surface_based_info = {
-            "pattern": pattern_hemisphere.replace("@hemi", "lh"),
-            "description": f"surface-based features on left hemisphere at FWHM = {self.parameters['full_width_at_half_maximum']}",
-        }
-        try:
-            clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, lh_surface_based_info
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-        rh_surface_based_info = {
-            "pattern": pattern_hemisphere.replace("@hemi", "rh"),
-            "description": f"surface-based features on right hemisphere at FWHM = {self.parameters['full_width_at_half_maximum']}",
-        }
-        try:
-            clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, rh_surface_based_info
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
+        fwhm = str(self.parameters["full_width_at_half_maximum"])
+        for direction, hemi in zip(["left", "right"], ["lh", "rh"]):
+            cut_pattern = "sub-*/ses-*/"
+            query = {"subject": "sub-*", "session": "ses-*", "hemi": hemi, "fwhm": fwhm}
+            pattern_hemisphere = self.parameters["custom_file"] % query
+            surface_based_info = {
+                "pattern": pattern_hemisphere[
+                    pattern_hemisphere.find(cut_pattern) + len(cut_pattern) :
+                ],
+                "description": f"surface-based features on {direction} hemisphere at FWHM = {fwhm}",
+            }
+            try:
+                clinica_file_reader(
+                    self.subjects,
+                    self.sessions,
+                    self.caps_directory,
+                    surface_based_info,
+                )
+            except ClinicaException as e:
+                all_errors.append(e)
         # Raise all errors if something happened
         if len(all_errors) > 0:
             error_message = "Clinica faced errors while trying to read files in your CAPS directory.\n"

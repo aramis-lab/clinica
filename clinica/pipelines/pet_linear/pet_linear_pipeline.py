@@ -279,7 +279,7 @@ class PETLinear(cpe.Pipeline):
         )
         concatenate_node = npe.Node(
             interface=nutil.Function(
-                input_names=["pet_to_t1w_tranform", "t1w_to_mni_tranform"],
+                input_names=["pet_to_t1w_transform", "t1w_to_mni_transform"],
                 output_names=["transforms_list"],
                 function=utils.concatenate_transforms,
             ),
@@ -331,6 +331,9 @@ class PETLinear(cpe.Pipeline):
         ants_applytransform_nonlinear_node.inputs.dimension = 3
         ants_applytransform_nonlinear_node.inputs.reference_image = self.ref_template
 
+        if random_seed := self.parameters.get("random_seed", None):
+            ants_registration_nonlinear_node.inputs.random_seed = random_seed
+
         normalize_intensity_node = npe.Node(
             name="intensityNormalization",
             interface=nutil.Function(
@@ -346,11 +349,11 @@ class PETLinear(cpe.Pipeline):
             name="cropNifti",
             interface=nutil.Function(
                 function=utils.crop_nifti,
-                input_names=["input_img", "ref_crop"],
+                input_names=["input_img", "ref_img"],
                 output_names=["output_img"],
             ),
         )
-        crop_nifti_node.inputs.ref_crop = self.ref_crop
+        crop_nifti_node.inputs.ref_img = self.ref_crop
 
         # 5. Print end message
         print_end_message = npe.Node(
@@ -360,7 +363,7 @@ class PETLinear(cpe.Pipeline):
             name="WriteEndMessage",
         )
 
-        # 6. Optionnal node: compute PET image in T1w
+        # 6. Optional node: compute PET image in T1w
         ants_applytransform_optional_node = npe.Node(
             name="antsApplyTransformPET2T1w", interface=ants.ApplyTransforms()
         )
@@ -376,13 +379,14 @@ class PETLinear(cpe.Pipeline):
                 (self.input_node, ants_registration_node, [("t1w", "fixed_image")]),
                 (init_node, ants_registration_node, [("pet", "moving_image")]),
                 # STEP 2
-                (ants_registration_node, concatenate_node, [("out_matrix", "pet_to_t1w_tranform")]),
-                (self.input_node, concatenate_node, [("t1w_to_mni", "t1w_to_mni_tranform")]),
+                (ants_registration_node, concatenate_node, [("out_matrix", "pet_to_t1w_transform")]),
+                (self.input_node, concatenate_node, [("t1w_to_mni", "t1w_to_mni_transform")]),
                 (self.input_node, ants_applytransform_node, [("pet", "input_image")]),
                 (concatenate_node, ants_applytransform_node, [("transforms_list", "transforms")]),
                 # STEP 3
                 (self.input_node, ants_registration_nonlinear_node, [("t1w", "moving_image")]),
-                (ants_registration_nonlinear_node, ants_applytransform_nonlinear_node, [("reverse_forward_transforms", "transforms")]),
+                (ants_registration_nonlinear_node, ants_applytransform_nonlinear_node,
+                 [("reverse_forward_transforms", "transforms")]),
                 (ants_applytransform_node, ants_applytransform_nonlinear_node, [("output_image", "input_image")]),
                 (ants_applytransform_node, normalize_intensity_node, [("output_image", "input_img")]),
                 (ants_applytransform_nonlinear_node, normalize_intensity_node, [("output_image", "norm_img")]),
@@ -407,7 +411,7 @@ class PETLinear(cpe.Pipeline):
                     (normalize_intensity_node, print_end_message, [("output_img", "final_file")]),
                 ]
             )
-        # STEP 6: Optionnal argument
+        # STEP 6: Optional argument
         if self.parameters.get("save_PETinT1w"):
             self.connect(
                 [

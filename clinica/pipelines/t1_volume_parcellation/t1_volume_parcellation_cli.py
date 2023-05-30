@@ -3,10 +3,12 @@ from typing import Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "t1-volume-parcellation"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
@@ -36,7 +38,10 @@ def cli(
 
     from .t1_volume_parcellation_pipeline import T1VolumeParcellation
 
-    parameters = {"group_label": group_label, "modulate": modulate}
+    parameters = {
+        "group_label": group_label,
+        "modulate": modulate,
+    }
 
     pipeline = T1VolumeParcellation(
         caps_directory=caps_directory,

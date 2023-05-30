@@ -1,3 +1,5 @@
+from os import PathLike
+
 """This module contains SPM utilities."""
 
 INDEX_TISSUE_MAP = {
@@ -37,11 +39,12 @@ def check_spm_home():
     return spm_home
 
 
-def get_tpm():
+def get_tpm() -> PathLike:
     """Get Tissue Probability Map (TPM) from SPM.
-
-    Returns:
-        str: TPM.nii from SPM
+    Returns
+    -------
+    PathLike :
+        TPM.nii path from SPM
     """
     import os
     from glob import glob
@@ -50,7 +53,6 @@ def get_tpm():
     spm_home = os.getenv("SPM_HOME")
 
     if not spm_home:
-        # Try MCR to get a hint on SPM location
         spm_home = os.getenv("SPMSTANDALONE_HOME")
 
     if not spm_home:
@@ -60,13 +62,18 @@ def get_tpm():
         )
 
     tpm_file_glob = glob(join(spm_home, "**/TPM.nii"), recursive=True)
+
     if len(tpm_file_glob) == 0:
         raise RuntimeError(f"No file found for TPM.nii in your $SPM_HOME in {spm_home}")
+
     if len(tpm_file_glob) > 1:
         error_str = f"Multiple files found for TPM.nii in your SPM_HOME {spm_home}:"
+
         for file in tpm_file_glob:
             error_str += "\n\t" + file
+
         raise RuntimeError(error_str)
+
     return tpm_file_glob[0]
 
 
@@ -74,7 +81,7 @@ def spm_standalone_is_available():
     """Tell if SPM standalone can be used.
 
     Returns:
-        True if SPM standalone is detected, False otherwise. Note that it does not guarentee that SPM (classical) is
+        True if SPM standalone is detected, False otherwise. Note that it does not guarantee that SPM (classical) is
         up and running in the system.
     """
     import os

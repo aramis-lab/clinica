@@ -1,9 +1,9 @@
 pipeline {
   triggers {
-      cron('H 21 * * 5')
-    }
+    cron('H 20 * * 5')
+  }
   options {
-    timeout(time: 48, unit: 'HOURS')
+    timeout(time: 60, unit: 'HOURS')
     disableConcurrentBuilds(abortPrevious: true)
   }
   agent none
@@ -17,6 +17,8 @@ pipeline {
           environment {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
+            PATH = "$HOME/.local/bin:$PATH"
+            POETRY = "poetry"
           }
           stages {
             stage('Build environment') {
@@ -27,6 +29,13 @@ pipeline {
                   make env.conda
                   conda activate $CONDA_ENV
                   conda info
+                  if ! command -v $POETRY &> /dev/null
+                  then
+                    echo "$POETRY could not be found"
+                    exit
+                  else
+                    echo "$($POETRY --version) installed at : $(which $POETRY)"
+                  fi
                 '''
               }
             }
@@ -41,15 +50,16 @@ pipeline {
                 '''
               }
             }
-            stage('PET:nonreg') {
+            stage('PET:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/PET"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   source /usr/local/Modules/init/profile.sh
@@ -65,8 +75,10 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_pet.py
                 '''
+                }
               }
               post {
                 always {
@@ -77,15 +89,16 @@ pipeline {
                 }
               }
             }
-            stage('Stats:nonreg') {
+            stage('Stats:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/Stats"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   mkdir -p $WORK_DIR
@@ -101,8 +114,10 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_stats.py
                 '''
+                }
               }
               post {
                 always {
@@ -113,15 +128,16 @@ pipeline {
                 }
               }
             }
-            stage('ML:nonreg') {
+            stage('ML:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/ML"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   mkdir -p $WORK_DIR
@@ -137,8 +153,10 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_ml.py
                 '''
+                }
               }
               post {
                 always {
@@ -149,15 +167,16 @@ pipeline {
                 }
               }
             }
-            stage('Anat:nonreg') {
+            stage('Anat:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/Anat"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   mkdir -p $WORK_DIR
@@ -173,8 +192,10 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_anat.py
                 '''
+                }
               }
               post {
                 always {
@@ -185,15 +206,16 @@ pipeline {
                 }
               }
             }
-            stage('DWI:nonreg') {
+            stage('DWI:nonreg:slow') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
                 WORK_DIR = "/mnt/data/ci/working_dir_linux/DWI"
                 INPUT_DATA_DIR = "/mnt/data_ci"
                 TMP_DIR = "/mnt/data/ci/tmp"
-                }
+              }
               steps {
-                sh '''
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
                   mkdir -p $WORK_DIR
@@ -209,8 +231,10 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_dwi.py
                 '''
+                }
               }
               post {
                 always {
@@ -220,7 +244,7 @@ pipeline {
                   sh 'rm -rf ${WORK_DIR}'
                 }
               }
-            } 
+            }
           }
           post {
             always {
@@ -233,8 +257,10 @@ pipeline {
             label 'macos'
           }
           environment {
-	    CONDA_ENV = "$WORKSPACE/env"
+            CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
+            PATH = "$HOME/.local/bin:/usr/local/bin:/Users/ci-aramis-clinica/.brew/bin:$PATH"
+            POETRY = "poetry"
           }
           stages {
             stage('Build environment') {
@@ -245,6 +271,13 @@ pipeline {
                   make env.conda
                   conda activate $CONDA_ENV
                   conda info
+                  if ! command -v $POETRY &> /dev/null
+                  then
+                    echo "$POETRY could not be found"
+                    exit
+                  else
+                    echo "$($POETRY --version) installed at : $(which $POETRY)"
+                  fi
                 '''
               }
             }
@@ -259,18 +292,17 @@ pipeline {
                 '''
               }
             }
-            /* 
-            stage("PET:nonreg") {
-               environment {
-                 WORK_DIR = "/Volumes/data/working_dir_mac/PET"
-                 INPUT_DATA_DIR = "/Volumes/data_ci"
-                 TMP_DIR = "/Volumes/data/tmp"
-               }
-               steps {
-                 sh '''
+            stage("PET:nonreg:slow") {
+              environment {
+                WORK_DIR = "/Volumes/data/working_dir_mac/PET"
+                INPUT_DATA_DIR = "/Volumes/data_ci"
+                TMP_DIR = "/Volumes/data/tmp"
+              }
+              steps {
+                sh '''
                    source "${CONDA_HOME}/etc/profile.d/conda.sh"
                    conda activate $CONDA_ENV
-                   source /usr/local/opt/modules/init/bash
+                   source "$(brew --prefix)/opt/modules/init/bash"
                    mkdir -p $WORK_DIR
                    module load clinica.all
                    cd test
@@ -283,19 +315,20 @@ pipeline {
                      --disable-warnings \
                      --timeout=0 \
                      -n 4 \
+                     -m "slow" \
                      ./nonregression/pipelines/test_run_pipelines_pet.py
                  '''
-               }
-               post {
-                 always {
-                   junit 'test/test-reports/*.xml'
-                 }
-                 success {
-                   sh 'rm -rf ${WORK_DIR}/*'
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
                 }
-               }
-             }
-            stage('Stats:nonreg') {
+                success {
+                  sh 'rm -rf ${WORK_DIR}/*'
+                }
+              }
+            }
+            stage('Stats:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/Stats"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -305,7 +338,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -318,6 +351,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_stats.py
                 '''
               }
@@ -329,8 +363,8 @@ pipeline {
                   sh 'rm -rf ${WORK_DIR}/*'
                 }
               }
-            } 
-            stage('ML:nonreg') {
+            }
+            stage('ML:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/ML"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -340,7 +374,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -353,6 +387,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_ml.py
                 '''
               }
@@ -365,7 +400,7 @@ pipeline {
                 }
               }
             }
-            stage('Anat:nonreg') {
+            stage('Anat:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/Anat"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -375,7 +410,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -388,6 +423,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_anat.py
                 '''
               }
@@ -400,7 +436,7 @@ pipeline {
                 }
               }
             }
-          stage('DWI:nonreg') {
+            stage('DWI:nonreg:slow') {
               environment {
                 WORK_DIR = "/Volumes/data/working_dir_mac/DWI"
                 INPUT_DATA_DIR = "/Volumes/data_ci"
@@ -410,7 +446,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate $CONDA_ENV
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   mkdir -p $WORK_DIR
                   module load clinica.all
                   cd test
@@ -423,6 +459,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -n 4 \
+                    -m "slow" \
                     ./nonregression/pipelines/test_run_pipelines_dwi.py
                 '''
               }
@@ -434,7 +471,7 @@ pipeline {
                   sh 'rm -rf ${WORK_DIR}/*'
                 }
               }
-            } */
+            }
           }
           post {
             always {

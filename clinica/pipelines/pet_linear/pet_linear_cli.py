@@ -4,10 +4,12 @@ from typing import Optional
 import click
 
 from clinica.pipelines import cli_param
+from clinica.pipelines.engine import clinica_pipeline
 
 pipeline_name = "pet-linear"
 
 
+@clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
@@ -20,17 +22,18 @@ pipeline_name = "pet-linear"
     default="default",
     help="Choose the reconstruction step of PET scans from ADNI",
 )
-@cli_param.option_group.option(
+@cli_param.option.option(
     "-ui",
     "--uncropped_image",
     is_flag=True,
     help="Do not crop the image with template (cropped image are suggested for using with DL models)",
 )
-@cli_param.option_group.option(
+@cli_param.option.option(
     "--save_pet_in_t1w_space",
     is_flag=True,
     help="Save the PET image in the T1w space computed in the intermediate step of the pipeline",
 )
+@cli_param.option.random_seed
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
@@ -43,6 +46,7 @@ def cli(
     with_reconstruction: str = default,
     uncropped_image: bool = False,
     save_pet_in_t1w_space: bool = False,
+    random_seed: Optional[int] = None,
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
@@ -71,6 +75,7 @@ def cli(
         "with_reconstruction": with_reconstruction,
         "uncropped_image": uncropped_image,
         "save_PETinT1w": save_pet_in_t1w_space,
+        "random_seed": random_seed,
     }
 
     pipeline = PETLinear(

@@ -87,13 +87,13 @@ The main output files are:
 
 The final estimation of the gray matter template is stored under the following folder of the
 [CAPS hierarchy](../../CAPS/Specifications/#dartel):
-`groups/<group_id>/t1/<group_id>_template.nii.gz`
+`groups/group-<group_label>/t1/group-<group_label>_template.nii.gz`
 
 <center>![](../img/T1_Volume/ex_Dartel_template_GM.png)</center>
 *<center><small>Example of a group template calculated using DARTEL. Only the gray matter class is shown.</small></center>*
 
 The flow fields containing the deformation from an image to the group template are stored in the folder
-`subjects/<participant_id>/<session_id>/t1/spm/dartel/<group_id>/`
+`subjects/<participant_id>/<session_id>/t1/spm/dartel/group-<group_label>/`
 under the filename
 `<source_file>_target-<group_label>_transformation-forward_deformation.nii.gz`.
 
@@ -101,7 +101,7 @@ under the filename
 
 Results are stored in the following folder of the
 [CAPS hierarchy](../../CAPS/Specifications/#dartel-to-mni):
-`subjects/<participant_id>/<session_id>/t1/spm/dartel/<group_id>`.
+`subjects/<participant_id>/<session_id>/t1/spm/dartel/group-<group_label>`.
 
 The main output files are:
 
@@ -115,7 +115,7 @@ The different tissue maps that have been registered to the MNI space and modulat
 
 Results are stored in the following folder of the
 [CAPS hierarchy](../../CAPS/Specifications/#atlas-statistics):
-`subjects/<participant_id>/<session_id>/t1/spm/dartel/<group_id>/atlas_statistics/`.
+`subjects/<participant_id>/<session_id>/t1/spm/dartel/group-<group_label>/atlas_statistics/`.
 
 The main output file is:
 
@@ -133,7 +133,7 @@ The main output file is:
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph for the `t1-volume` pipeline:"
-    Theses results have been obtained using the `t1-volume` pipeline of Clinica
+    These results have been obtained using the `t1-volume` pipeline of Clinica
     [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675);
     [Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
     This pipeline is a wrapper of the `Segmentation`, `Run Dartel` and `Normalise to MNI Space` routines implemented in [SPM](http://www.fil.ion.ucl.ac.uk/spm/).

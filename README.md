@@ -29,6 +29,9 @@
   <a href="https://github.com/psf/black">
     <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Code style: black">
   </a>
+  <a href="https://pepy.tech/project/clinica">
+    <img src="https://static.pepy.tech/badge/clinica/month" alt="Downloads">
+  </a>
 </p>
 
 <p align="center">
@@ -89,24 +92,39 @@ Alzheimer's disease using
 > Full instructions for installation and additional information can be found in
 the [user documentation](https://aramislab.paris.inria.fr/clinica/docs/public/latest/).
 
-Clinica currently supports macOS and Linux.
-It can be installed by typing the following command:
+### Using pipx (recommended)
 
-```sh
+Clinica can be easily installed and updated using [pipx](https://pypa.github.io/pipx/).
+
+```console
+pipx install clinica
+```
+
+### Using pip
+
+```console
 pip install clinica
 ```
 
-To avoid conflicts with other versions of the dependency packages installed by pip, it is strongly recommended to create a virtual environment before the installation.
-For example, use [Conda](https://docs.conda.io/en/latest/miniconda.html), to create a virtual
-environment and activate it before installing clinica (you can also use
-`virtualenv`):
+### Using Conda
 
-```sh
-conda create --name clinicaEnv python=3.8
-conda activate clinicaEnv
+Clinica relies on multiple third-party tools to perform processing.
+
+An environment file is provided in this repository
+to facilitate their installation in a [Conda](https://docs.conda.io/en/latest/miniconda.html) environment:
+
+```console
+git clone https://github.com/aramis-lab/clinica && cd clinica
+conda env create
+conda activate clinica
 ```
 
+After activation, use `pip` to install Clinica.
+
+### Additional dependencies (required)
+
 Depending on the pipeline that you want to use, you need to install pipeline-specific interfaces.
+Some of which uses a different runtime or use incompatible licensing terms, which prevent their distribution alongside Clinica.
 Not all the dependencies are necessary to run Clinica.
 Please refer to this [page](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Third-party/)
 to determine which third-party libraries you need to install.

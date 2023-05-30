@@ -40,9 +40,6 @@ def init_input_node(parameters, base_dir, subjects_visits_tsv):
     import os
     import shutil
 
-    from clinica.pipelines.statistics_surface.statistics_surface_utils import (
-        create_glm_info_dictionary,
-    )
     from clinica.utils.ux import print_begin_image
 
     group_id = "group-" + parameters["group_label"]
@@ -83,9 +80,9 @@ def get_string_format_from_tsv(tsv_file):
     If the TSV file is like:
 
     participant_id  session_id  sex     group   age
-    sub-CLNC0001    ses-M00     Female  CN      71.1
-    sub-CLNC0002    ses-M00     Male    CN      81.3
-    sub-CLNC0003    ses-M00     Male    CN      75.4
+    sub-CLNC0001    ses-M000     Female  CN      71.1
+    sub-CLNC0002    ses-M000     Male    CN      81.3
+    sub-CLNC0003    ses-M000     Male    CN      75.4
 
     The columns of the TSV file contains consecutively strings, strings,
     strings, strings and float. The string_format is therefore "%s %s %s %s %f".
@@ -173,26 +170,12 @@ def run_matlab(caps_dir, output_dir, subjects_visits_tsv, pipeline_parameters):
     """
     import os
 
-    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
-
-    import clinica.pipelines as clinica_pipelines
-    from clinica.pipelines.statistics_surface.statistics_surface_utils import (
-        covariates_to_design_matrix,
-        get_string_format_from_tsv,
-    )
+    from clinica.pipelines.statistics_surface.clinica_surfstat import clinica_surfstat
     from clinica.utils.check_dependency import check_environment_variable
 
-    path_to_matlab_script = os.path.join(
-        os.path.dirname(clinica_pipelines.__path__[0]), "lib", "clinicasurfstat"
-    )
     freesurfer_home = check_environment_variable("FREESURFER_HOME", "FreeSurfer")
 
-    MatlabCommand.set_default_matlab_cmd(get_matlab_command())
-    matlab = MatlabCommand()
-    matlab.inputs.paths = path_to_matlab_script
-    matlab.inputs.script = """
-    clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
-    """ % (
+    clinica_surfstat(
         os.path.join(caps_dir, "subjects"),
         output_dir,
         subjects_visits_tsv,
@@ -200,35 +183,18 @@ def run_matlab(caps_dir, output_dir, subjects_visits_tsv, pipeline_parameters):
             pipeline_parameters["contrast"], pipeline_parameters["covariates"]
         ),
         pipeline_parameters["contrast"],
-        get_string_format_from_tsv(subjects_visits_tsv),
         pipeline_parameters["glm_type"],
         pipeline_parameters["group_label"],
         freesurfer_home,
         pipeline_parameters["custom_file"],
         pipeline_parameters["measure_label"],
-        "sizeoffwhm",
-        pipeline_parameters["full_width_at_half_maximum"],
-        "thresholduncorrectedpvalue",
-        0.001,
-        "thresholdcorrectedpvalue",
-        0.05,
-        "clusterthreshold",
-        pipeline_parameters["cluster_threshold"],
+        {
+            "sizeoffwhm": pipeline_parameters["full_width_at_half_maximum"],
+            "thresholduncorrectedpvalue": 0.001,
+            "thresholdcorrectedpvalue": 0.05,
+            "clusterthreshold": pipeline_parameters["cluster_threshold"],
+        },
     )
-    # This will create a file: pyscript.m , the pyscript.m is the default name
-    matlab.inputs.mfile = True
-    # This will stop running with single thread
-    matlab.inputs.single_comp_thread = False
-    matlab.inputs.logfile = (
-        "group-" + pipeline_parameters["group_label"] + "_matlab.log"
-    )
-
-    # cprint("Matlab logfile is located at the following path: %s" % matlab.inputs.logfile)
-    # cprint("Matlab script command = %s" % matlab.inputs.script)
-    # cprint("MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread)
-    # cprint("MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command())
-    matlab.run()
-
     return output_dir
 
 

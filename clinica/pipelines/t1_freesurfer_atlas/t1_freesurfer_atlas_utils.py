@@ -120,7 +120,7 @@ def write_tsv_files(subject_dir: str, image_id: str, atlas: str) -> str:
     """
     import os
 
-    from clinica.utils.freesurfer import generate_regional_measures_alt
+    from clinica.utils.freesurfer import generate_regional_measures
     from clinica.utils.stream import cprint
 
     if "long" not in image_id:
@@ -129,7 +129,7 @@ def write_tsv_files(subject_dir: str, image_id: str, atlas: str) -> str:
         sub, ses, long = image_id.split("_")
         folder = sub + "_" + ses + ".long." + sub + "_" + long
     if os.path.isfile(os.path.join(subject_dir, folder, "mri", "aparc+aseg.mgz")):
-        generate_regional_measures_alt(subject_dir, folder, atlas)
+        generate_regional_measures(subject_dir, folder, [atlas])
     else:
         cprint(
             msg=(

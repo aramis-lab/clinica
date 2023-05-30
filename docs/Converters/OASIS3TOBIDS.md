@@ -77,7 +77,7 @@ The data needs to be formatted before downloading by following the step-by-step 
 
 To download the images of the OASIS-3 dataset:
 
-1. From the page on which you were to donwload the clinical date, click on "Download Images" button. You will have a download interface with different options, such as shown below.
+1. From the page on which you were to download the clinical date, click on "Download Images" button. You will have a download interface with different options, such as shown below.
 
 <img width="959" alt="Screenshot 2021-07-15 at 10 48 45" src="https://user-images.githubusercontent.com/85217698/125761542-bfcfb824-af4f-4e0d-b597-510418986313.png">
 
@@ -87,19 +87,26 @@ To download the images of the OASIS-3 dataset:
 
     a. For the "Scan Format" select *both* BIDS and NIFTI. Otherwise, you will be missing data.
     
-    b. For the "Scan Types", select only T1w and pet, since it is the only format converted right now.
+    b. For the "Scan Types", select only the modalities you desire. Do note that if it is not amongst the modality handled by this converter, it will not be converted.
     
-    c. For the "Additionnal Ressources", select BIDS.
+    c. For the "Additional Resources", select BIDS.
     
     d. For the "Assessments", do not select anything.
+
+    e. For the "Download Data", select "Simplify downloaded archive structure" and not the other options.
     
 4. Click submit to download. We advise that you use the XNAT Desktop Client which will be more efficient than download through your web browser.
 
 ## Supported modalities
 
-Please note that this converter only processes T1-weighted MRI images and the clinical data. Support for additional
-modalities may be implemented later.
+Please note that this converter currently processes the clinical data and the following modalities : 
+- T1W
+- T2star
+- Flair
+- DWI
+- PET 
 
+Support for additional modalities may be implemented later.
 For participants with multiple T1-weighted images available, the average of the motion-corrected co-registered
 individual images resampled to 1-mm isotropic resolution is given priority.
 

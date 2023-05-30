@@ -2,7 +2,7 @@ def init_input_node(t1w, recon_all_args, output_dir):
     """Initialize the pipeline.
 
     This function will:
-        - Extract <image_id> (e.g. sub-CLNC01_ses-M00) T1w filename;
+        - Extract <image_id> (e.g. sub-CLNC01_ses-M000) T1w filename;
         - Check FOV of T1w;
         - Create SUBJECTS_DIR for recon-all (otherwise, the command won't run);
         - Print begin execution message.

@@ -15,6 +15,8 @@ pipeline {
           environment {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda"
+            PATH = "$HOME/.local/bin:$PATH"
+            POETRY = "poetry"
           }
           stages {
             stage('Build environment') {
@@ -25,6 +27,13 @@ pipeline {
                   make env.conda
                   conda activate "${CONDA_ENV}"
                   conda info
+                  if ! command -v $POETRY &> /dev/null
+                  then
+                    echo "$POETRY could not be found"
+                    exit
+                  else
+                    echo "$($POETRY --version) installed at : $(which $POETRY)"
+                  fi
                 '''
               }
             }
@@ -110,6 +119,46 @@ pipeline {
                 }
               }
             }
+            stage('Non Regression Fast') {
+              environment {
+                PATH = "/usr/local/Modules/bin:$PATH"
+                WORK_DIR = "/mnt/data/ci/working_dir_linux"
+                INPUT_DATA_DIR = "/mnt/data_ci"
+                TMP_DIR = "/mnt/data/ci/tmp"
+              }
+              steps {
+                catchError(buildResult: 'FAILURE', stageResult: 'UNSTABLE') {
+                  sh '''
+                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+                  conda activate $CONDA_ENV
+                  mkdir -p $WORK_DIR
+                  source /usr/local/Modules/init/profile.sh
+                  module load clinica.all
+                  cd test
+                  poetry run pytest \
+                    --junitxml=./test-reports/nonregression_linux.xml \
+                    --verbose \
+                    --working_directory=$WORK_DIR \
+                    --input_data_directory=$INPUT_DATA_DIR \
+                    --basetemp=$TMP_DIR \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    -m "fast" \
+                    --dist loadgroup \
+                    ./nonregression
+                '''
+                }
+              }
+              post {
+                always {
+                  junit 'test/test-reports/*.xml'
+                }
+                success {
+                  sh 'rm -rf ${WORK_DIR}'
+                }
+              }
+            }
             stage('Test iotools') {
               environment {
                 PATH = "/usr/local/Modules/bin:$PATH"
@@ -162,13 +211,14 @@ pipeline {
           environment {
             CONDA_ENV = "$WORKSPACE/env"
             CONDA_HOME = "$HOME/miniconda3"
+            PATH = "$HOME/.local/bin:/usr/local/bin:/Users/ci-aramis-clinica/.brew/bin/:$PATH"
           }
           stages {
             stage('Build environment') {
               steps {
                 sh 'echo "Agent name is ${NODE_NAME}"'
                 sh '''
-                  source "${CONDA_HOME}/etc/profile.d/conda.sh"
+		  source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   make env.conda
                   conda activate "${CONDA_ENV}"
                   conda info
@@ -195,7 +245,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   module load clinica.all
                   cd test
                   poetry run pytest \
@@ -226,7 +276,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   module load clinica.all
                   cd test
                   poetry run pytest \
@@ -261,7 +311,7 @@ pipeline {
                 sh '''
                   source "${CONDA_HOME}/etc/profile.d/conda.sh"
                   conda activate "${CONDA_ENV}"
-                  source "${BREW_PREFIX}/opt/modules/init/bash"
+                  source "$(brew --prefix)/opt/modules/init/bash"
                   module load clinica.all
                   cd test
                   poetry run pytest \
@@ -292,60 +342,6 @@ pipeline {
               cleanWs()
             }
           }
-        }
-        stage('Build and publish docs') {
-          agent {
-            label 'ubuntu'
-          }
-          environment {
-            CONDA_ENV = "$WORKSPACE/env"
-            CONDA_HOME = "$HOME/miniconda"
-          }
-          steps {
-            sh '''
-              source "${CONDA_HOME}/etc/profile.d/conda.sh"
-              make env.doc
-              conda activate "${CONDA_ENV}"
-              make doc
-              mv site "${CHANGE_ID:-$BRANCH_NAME}"
-              scp -r "${CHANGE_ID:-$BRANCH_NAME}" aramislab:/srv/local/clinica/docs/public/
-            '''
-          }
-          post {
-            always {
-              cleanWs()
-            }
-          }
-        }
-      }
-    }
-    stage('Deploy') {
-      agent {
-        label 'ubuntu'
-      }
-      when {
-        buildingTag()
-      }
-      environment {
-        CONDA_ENV = "$WORKSPACE/env"
-        CONDA_HOME = "$HOME/miniconda"
-      }
-      steps {
-        withCredentials(
-          [
-            usernamePassword(
-              credentialsId: 'jenkins-token-for-pypi-clinica',
-              usernameVariable: 'USERNAME',
-              passwordVariable: 'PASSWORD'
-            )
-          ]
-        ) {
-          sh '''
-            source "${CONDA_HOME}/etc/profile.d/conda.sh"
-            make env.conda
-            conda activate "${CONDA_ENV}"
-            poetry publish --build -u "${USERNAME}" -p "${PASSWORD}"
-          '''
         }
       }
     }

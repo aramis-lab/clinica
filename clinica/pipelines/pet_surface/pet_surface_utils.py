@@ -2,7 +2,7 @@ def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
     """Extract SUBJECT_DIR.
 
     Extract path to FreeSurfer segmentation in CAPS folder and FreeSurfer ID
-    (e.g. sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18 or sub-CLNC01_ses-M00).
+    (e.g. sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018 or sub-CLNC01_ses-M000).
     """
     import os
 
@@ -48,7 +48,7 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     Args:
         (string) caps_dir : CAPS directory.
         (string) subject_id: The subject_id (something like sub-ADNI002S4213)
-        (string) session_id: The session id ( something like : ses-M12)
+        (string) session_id: The session id ( something like : ses-M012)
         (bool)   is_longitudinal: If longitudinal processing, subjects_dir must be put elsewhere
 
     Returns:
@@ -119,7 +119,7 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
 
 
 def remove_nan(volname):
-    """remove_nan is a method needed after a registration performed by spmregister : insted of filling space with 0, nan
+    """remove_nan is a method needed after a registration performed by spmregister : instead of filling space with 0, nan
     are used to extend the PET space. We propose to replace them with 0s.
 
     Args:
@@ -207,7 +207,7 @@ def make_label_conversion(gtmsegfile, csv):
     # Check that each label of original volume (old_label) has a matching transformation in the csv file
     for i in range(old_labels.size):
         index = numpy.argwhere(src_val == old_labels[i])
-        # Size 0 means no occurence found
+        # Size 0 means no occurrence found
         if index.size == 0:
             raise Exception(
                 f"Could not find label {old_labels[i]} on conversion table. Add it manually in CSV file to correct error"
@@ -215,7 +215,7 @@ def make_label_conversion(gtmsegfile, csv):
         # else:
         #     cprint(str(old_labels[i]) + " has been found on conversion table")
 
-    # Instanciation of final volume, with same dtype as original volume
+    # Instantiation of final volume, with same dtype as original volume
     new_volume = numpy.zeros(volume.shape, dtype=volume.dtype)
     # Computing the transformation
     for i in range(len(src)):
@@ -253,7 +253,7 @@ def runApplyInverseDeformationField_SPM_standalone(
 ):
     """
     This function does the exact same job as runApplyInverseDeformationField but with SPM standalone. We directly create
-    a batch file that SPM standalone can run. This function does not check wether SPM standalone must be used. Previous
+    a batch file that SPM standalone can run. This function does not check whether SPM standalone must be used. Previous
     check when building the pipeline ensures that all the env vars exists ($SPMSTANDALONE_HOME and $MCR_HOME)
     """
     import os
@@ -311,8 +311,8 @@ def runApplyInverseDeformationField_SPM_standalone(
             "Something went wrong while trying to run runApplyInverseDeformationField_SPM_standalone"
             + ". Output file not generated. Command launched :\n\t "
             + cmdline
-            + "\n. We strongly recommand that you use the supported version of Matlab MCR "
-            + " recommanded by the creators of SPM."
+            + "\n. We strongly recommend that you use the supported version of Matlab MCR "
+            + " recommended by the creators of SPM."
         )
     return output_file
 
@@ -381,7 +381,7 @@ def suvr_normalization(pet_path, mask):
     mask_size = sum(sum(sum(eroded_mask)))
     if mask_size == 0:
         raise Exception(
-            "Number of non-zero value of mask is 0. A problem occured when moving the eroded mask from MNI to gtmsegspace"
+            "Number of non-zero value of mask is 0. A problem occurred when moving the eroded mask from MNI to gtmsegspace"
         )
 
     # Mask unwanted values to determine mean uptake value
@@ -477,7 +477,7 @@ def surf2surf(
             details)
         (string) gtmsegfile : Path to the gtm segmentation file
         (string) subject_id : The subject_id (something like sub-ADNI002S4213)
-        (string) session_id : The session id ( something like : ses-M12)
+        (string) session_id : The session id ( something like : ses-M012)
         (string) caps_dir   : Path to the CAPS directory
         (bool)   is_longitudinal: longitudinal files
 
@@ -557,7 +557,7 @@ def vol2surf(
         (string) surface    : Path to surface file
         (string) gtmsegfile :l Path to the gtm segmentation file (provides information on space, labels are not used
         (string) subject_id : The subject_id (something like sub-ADNI002S4213)
-        (string) session_id : The session id ( something like : ses-M12)
+        (string) session_id : The session id ( something like : ses-M012)
         (string) caps_dir   : Path to the CAPS directory
 
     Returns:
@@ -704,7 +704,7 @@ def fsaverage_projection(
     Args:
         (string) projection : Path to the projected data onto native subject surface
         (string) subject_id : The subject id (something like sub-ADNI002S4213)
-        (string) session_id : The session id ( something like : ses-M12)
+        (string) session_id : The session id ( something like : ses-M012)
         (string) caps_dir   : Path to the CAPS directory
         (float) fwhm        : FWHM of the Gaussian filter used for smoothing on fsaverage surface (not volume !)
         (bool) is_longitudinal : longitudinal pipeline or not
@@ -808,7 +808,7 @@ def produce_tsv(pet, atlas_files):
 
         Args:
             (string) pet      : list of path to the PET projection (must be a MGH file) [left_hemisphere, right_hemisphere]
-            (string) atlas_files  : Dictionnary containing path to lh and rh annotation files for any number of atlases.
+            (string) atlas_files  : Dictionary containing path to lh and rh annotation files for any number of atlases.
 
         Returns:
             (string) tsv  : path to the tsv containing average PET values
@@ -928,35 +928,38 @@ def get_wf(
     """
     import os
 
-    import nibabel as nib
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
-    from nipype.algorithms.misc import Gunzip
     from nipype.interfaces.freesurfer import ApplyVolTransform, MRIConvert, Tkregister2
     from nipype.interfaces.fsl import Merge
     from nipype.interfaces.petpvc import PETPVC
     from nipype.interfaces.spm import Coregister, Normalize12
 
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
+    from clinica.utils.filemanip import get_subject_id, load_volume, unzip_nii
     from clinica.utils.pet import get_suvr_mask, read_psf_information
     from clinica.utils.spm import get_tpm
-    from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
 
-    # Check that the PET file is a 3D volume
-    img = nib.load(pet)
-    if len(img.shape) == 4:
-        error_msg = (
-            f"Clinica does not handle 4D volumes for {subject_id} | {session_id}"
+    image_id = get_subject_id(pet)
+    try:
+        load_volume(pet)
+    except ValueError as e:
+        raise ValueError(
+            f"Clinica could not load volumes for {image_id.replace('_', ' | ')}. {str(e)}"
         )
-        cprint(error_msg, lvl="error")
-        raise NotImplementedError(error_msg)
-
-    print_begin_image(subject_id + "_" + session_id)
+    print_begin_image(image_id)
 
     # Creation of workflow
-    unzip_pet = pe.Node(interface=Gunzip(), name="unzip_pet")
+    # 1 Creation of node
+    unzip_pet = pe.Node(
+        niu.Function(
+            input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+        ),
+        name="unzip_pet",
+    )
+
     unzip_orig_nu = unzip_pet.clone(name="unzip_orig_nu")
 
     unzip_mask = unzip_pet.clone(name="unzip_mask")

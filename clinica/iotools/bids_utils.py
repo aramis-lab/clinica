@@ -6,6 +6,16 @@ from typing import BinaryIO, List, Optional, Union
 
 from pandas import DataFrame
 
+SUPPORTED_DATASETS = {
+    "ADNI",
+    "CLINAD",
+    "PREVDEMALS",
+    "INSIGHT",
+    "OASIS",
+    "OASIS3",
+    "AIBL",
+}
+
 BIDS_VALIDATOR_CONFIG = {
     "ignore": [
         # Possibly dcm2nii(x) errors
@@ -182,7 +192,7 @@ def get_sessions_map_AIBL(bids_ids, bids_dir):
     """
 
     ses_dict = {}
-    ses_map = {"M00": "bl", "M18": "m18", "M36": "m36", "M54": "m54"}
+    ses_map = {"M000": "bl", "M018": "m18", "M036": "m36", "M054": "m54"}
 
     for id in bids_ids:
         ses_dict[id] = ses_map
@@ -349,9 +359,10 @@ def create_scans_dict(
     prev_file = ""
     prev_sheet = ""
 
-    if study_name not in get_supported_dataset():
-        raise Exception(
-            "Dataset not supported. Supported datasets are:", get_supported_dataset()
+    if study_name not in SUPPORTED_DATASETS:
+        raise ValueError(
+            f"Dataset {study_name} is not supported. "
+            f"Supported datasets are: {SUPPORTED_DATASETS}."
         )
 
     # Init the dictionary with the subject ids
@@ -401,8 +412,23 @@ def create_scans_dict(
                     glob.glob(file_to_read_path)[0], sheet_name=sheet
                 )
             elif file_ext == ".csv":
+                file_path = glob.glob(file_to_read_path)[0]
+
+                # Fix for malformed flutemeta file in AIBL (see #796).
+                # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
+                # contains a comma which adds an extra column and shifts the remaining values to the right. In this
+                # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
+                on_bad_lines = (
+                    lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]
+                    if "flutemeta" in file_path and study_name == "AIBL"
+                    else "error"
+                )
+
                 file_to_read = pd.read_csv(
-                    glob.glob(file_to_read_path)[0], sep=None, engine="python"
+                    file_path,
+                    sep=",",
+                    engine="python",
+                    on_bad_lines=on_bad_lines,
                 )
             prev_file = file_name
             prev_sheet = sheet
@@ -418,7 +444,7 @@ def create_scans_dict(
                             filter(
                                 None, file_to_read[name_column_ses].str.split("ses-")
                             )
-                        )[0]
+                        )[0][0]
                         == ses_dict[bids_id][
                             list(filter(None, session_name.split("ses-")))[0]
                         ]
@@ -467,15 +493,22 @@ def _write_bids_dataset_description(
         bids_desc.write(to=f)
 
 
-def _write_readme(bids_dir: Union[str, Path]) -> None:
-    """Write `README`file at the root of the BIDS directory."""
-    import clinica
+def _write_readme(
+    study_name: str,
+    data_dict: dict,
+    bids_dir: Union[str, Path],
+) -> None:
+    """Write `README` at the root of the BIDS directory."""
+    from clinica.iotools.bids_readme import BIDSReadme
+
+    bids_readme = BIDSReadme(
+        name=study_name,
+        link=data_dict["link"],
+        description=data_dict["desc"],
+    )
 
     with open(Path(bids_dir) / "README", "w") as f:
-        f.write(
-            f"This BIDS directory was generated with Clinica v{clinica.__version__}.\n"
-            f"More information on https://www.clinica.run\n"
-        )
+        bids_readme.write(to=f)
 
 
 def _write_bids_validator_config(bids_dir: Union[str, Path]) -> None:
@@ -496,6 +529,7 @@ def _write_bidsignore(bids_dir: Union[str, Path]) -> None:
 
 def write_modality_agnostic_files(
     study_name: str,
+    readme_data: dict,
     bids_dir: Union[str, Path],
     bids_version: Optional[str] = None,
 ) -> None:
@@ -505,157 +539,203 @@ def write_modality_agnostic_files(
 
     Args:
         study_name: name of the study (Ex ADNI)
+        readme_data: dictionary containing the data specific to the dataset to write in the readme
         bids_dir: path to the bids directory
         bids_version: BIDS version if different from the version supported by Clinica.
     """
     _write_bids_dataset_description(study_name, bids_dir, bids_version)
-    _write_readme(bids_dir)
+    _write_readme(study_name, readme_data, bids_dir)
     _write_bids_validator_config(bids_dir)
     _write_bidsignore(bids_dir)
 
 
-def write_sessions_tsv(bids_dir, sessions_dict):
+def write_sessions_tsv(bids_dir: str, sessions_dict: dict) -> None:
     """Create <participant_id>_sessions.tsv files.
 
-    Write the content of the function create scans dict in several TSV files
+    Basically writes the content of the function
+    `clinica.iotools.bids_utils.create_sessions_dict` in several TSV files
     following the BIDS specification.
 
-    Args:
-        bids_dir: path to the bids directory
-        sessions_dict: output of the function create_sessions_dict
+    Parameters
+    ----------
+    bids_dir : str
+        Path to the BIDS directory.
+
+    sessions_dict : dict
+        Dictionary containing sessions metadata.
+
+        .. note::
+            This is the output of the function
+            `clinica.iotools.bids_utils.create_sessions_dict`.
+
+    See also
+    --------
+    create_sessions_dict
+    write_scans_tsv
     """
-    import os
-    from glob import glob
-    from os import path
+    from pathlib import Path
 
     import pandas as pd
 
-    bids_paths = glob(path.join(bids_dir, "sub-*"))
+    bids_dir = Path(bids_dir)
 
-    for sp in bids_paths:
-        bids_id = sp.split(os.sep)[-1]
-
-        if bids_id in sessions_dict:
-            session_df = pd.DataFrame.from_dict(sessions_dict[bids_id], orient="index")
+    for subject_path in bids_dir.glob("sub-*"):
+        if subject_path.name in sessions_dict:
+            session_df = pd.DataFrame.from_dict(
+                sessions_dict[subject_path.name], orient="index"
+            )
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
         else:
-            print(f"No session data available for {sp}")
+            print(f"No session data available for {subject_path}")
             session_df = pd.DataFrame(columns=["session_id"])
-            session_df["session_id"] = pd.Series("M00")
-
+            session_df["session_id"] = pd.Series("M000")
         session_df = session_df.set_index("session_id").fillna("n/a")
         session_df.to_csv(
-            path.join(sp, bids_id + "_sessions.tsv"),
+            subject_path / f"{subject_path.name}_sessions.tsv",
             sep="\t",
             encoding="utf8",
         )
 
 
-def write_scans_tsv(bids_dir, bids_ids, scans_dict):
+def _get_pet_tracer_from_filename(filename: str) -> str:
+    """Return the PET tracer from the provided filename.
+
+    Parameters
+    ----------
+    filename : str
+        The filename from which to extract the PET tracer.
+
+    Returns
+    -------
+    tracer : str
+        The PET tracer.
+
+    Raises
+    ------
+    ValueError
+        If no tracer found in the filename.
+    """
+    import re
+
+    tracer = None
+    for entity in ("trc", "acq"):
+        m = re.search(rf"({entity}-[a-zA-Z0-9]+)", filename)
+        if m:
+            tracer = m.group(1)[4:].upper()
+    if tracer is None:
+        raise ValueError(
+            f"Could not extract the PET tracer from the following file name {filename}."
+        )
+
+    return tracer
+
+
+def write_scans_tsv(
+    bids_dir: str, participant_ids: List[str], scans_dict: dict
+) -> None:
     """Write the scans dict into TSV files.
 
-    Args:
-        bids_dir:  path to the BIDS directory
-        bids_ids: list of bids ids
-        scans_dict:  the output of the function create_scans_dict
+    Parameters
+    ----------
+    bids_dir : str
+        Path to the BIDS directory.
 
+    participant_ids : List[str]
+        List of participant ids for which to write the scans TSV files.
+
+    scans_dict : dict
+        Dictionary containing scans metadata.
+
+        .. note::
+            This is the output of the function
+            `clinica.iotools.bids_utils.create_scans_dict`.
+
+    See also
+    --------
+    write_sessions_tsv
     """
-    import os
-    from glob import glob
-    from os import path
+    from pathlib import Path
 
     import pandas as pd
 
-    for bids_id in bids_ids:
-        sessions_paths = glob(path.join(bids_dir, bids_id, "ses-*"))
-        for session_path in sessions_paths:
-            session_name = session_path.split(os.sep)[-1]
+    bids_dir = Path(bids_dir)
+    supported_modalities = ("anat", "dwi", "func", "pet")
+
+    for sub in participant_ids:
+        for session_path in (bids_dir / sub).glob("ses-*"):
             scans_df = pd.DataFrame()
-            tsv_name = bids_id + "_" + session_name + "_scans.tsv"
-            # If the file already exists, remove it
-            if os.path.exists(path.join(bids_dir, bids_id, session_name, tsv_name)):
-                os.remove(path.join(bids_dir, bids_id, session_name, tsv_name))
-
-            mod_available = glob(path.join(bids_dir, bids_id, session_name, "*"))
-            for mod in mod_available:
-                mod_name = os.path.basename(mod)
-                # Grab scan files excluding their sidecar JSON.
-                files = [
-                    file
-                    for file in glob(path.join(mod, "*"))
-                    if "json" not in os.path.splitext(file)[1]
-                ]
-                for file in files:
-                    file_name = os.path.basename(file)
-                    if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
-                        f_type = "T1/DWI/fMRI/FMAP"
-                    elif mod_name == "pet":
-                        description_dict = {
-                            carac.split("-")[0]: carac.split("-")[1]
-                            for carac in file_name.split("_")
-                            if "-" in carac
-                        }
-                        if "trc" in description_dict.keys():
-                            f_type = description_dict["trc"].upper()
-                        elif "acq" in description_dict.keys():
-                            f_type = description_dict["acq"].upper()
-                    elif mod_name == "swi":
-                        pass
-                    else:
-                        continue
-
-                    row_to_append = pd.DataFrame(
-                        scans_dict[bids_id][session_name][f_type], index=[0]
-                    )
-                    # Insert the column filename as first value
-                    row_to_append.insert(0, "filename", path.join(mod_name, file_name))
-                    scans_df = pd.concat([scans_df, row_to_append])
-
-            scans_df = scans_df.set_index("filename").fillna("n/a")
-            scans_df.to_csv(
-                path.join(bids_dir, bids_id, session_name, tsv_name),
-                sep="\t",
-                encoding="utf8",
+            tsv_file = (
+                bids_dir
+                / sub
+                / session_path.name
+                / f"{sub}_{session_path.name}_scans.tsv"
             )
+            tsv_file.unlink(missing_ok=True)
 
-
-# -- Other methods --
-def contain_dicom(folder_path):
-    """Check if a folder contains DICOM images.
-
-    Args:
-        folder_path: path to the folder
-
-    Returns:
-        True if DICOM files are found inside the folder, False otherwise
-    """
-    from glob import glob
-    from os import path
-
-    dcm_files = glob(path.join(folder_path, "*.dcm"))
-    if len(dcm_files) > 0:
-        return True
-
-    return False
-
-
-def get_supported_dataset():
-    """Return the list of supported datasets."""
-    return ["ADNI", "CLINAD", "PREVDEMALS", "INSIGHT", "OASIS", "OASIS3", "AIBL"]
+            for mod in (bids_dir / sub / session_path.name).glob("*"):
+                if mod.name in supported_modalities:
+                    for file in [
+                        file for file in mod.iterdir() if mod.suffix != ".json"
+                    ]:
+                        f_type = (
+                            "T1/DWI/fMRI/FMAP"
+                            if mod.name in ("anat", "dwi", "func")
+                            else _get_pet_tracer_from_filename(file.name)
+                        )
+                        row_to_append = pd.DataFrame(
+                            scans_dict[sub][session_path.name][f_type], index=[0]
+                        )
+                        row_to_append.insert(
+                            0, "filename", str(Path(mod.name) / Path(file.name))
+                        )
+                        scans_df = pd.concat([scans_df, row_to_append])
+            scans_df = scans_df.set_index("filename").fillna("n/a")
+            scans_df.to_csv(tsv_file, sep="\t", encoding="utf8")
 
 
 def get_bids_subjs_list(bids_path: str) -> List[str]:
-    """Given a BIDS compliant dataset, return the list of all the subjects available."""
+    """Given a BIDS compliant dataset, return the list of all the subjects available.
+
+    Parameters
+    ----------
+    bids_path : str
+        Path to the BIDS directory.
+
+    Returns
+    -------
+    List[str] :
+        List of subject IDs available in this BIDS dataset.
+
+    See also
+    --------
+    get_bids_sess_list
+    get_bids_subjs_paths
+    """
     from pathlib import Path
 
     return [str(d.name) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
 def get_bids_sess_list(subj_path: str) -> List[str]:
-    """
-    Given a subject path, return the list of sessions available
+    """Given a path to a subject's folder, this function returns the
+    list of sessions available.
+
+    Parameters
+    ----------
+    subj_path : str
+        Path to the subject folder for which to list the sessions.
+
+    Returns
+    -------
+    List[str] :
+        The list of session names for this subject.
+
+    See also
+    --------
+    get_bids_subjs_list
+    get_bids_subjs_paths
     """
     from pathlib import Path
 
@@ -663,89 +743,61 @@ def get_bids_sess_list(subj_path: str) -> List[str]:
 
 
 def get_bids_subjs_paths(bids_path: str) -> List[str]:
-    """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders."""
+    """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders.
+
+    Parameters
+    ----------
+    bids_path : str
+        Path to the BIDS directory.
+
+    Returns
+    -------
+    List[str] :
+        List of paths to the subjects folders.
+
+    See also
+    --------
+    get_bids_subjs_list
+    get_bids_sess_list
+    """
     from pathlib import Path
 
     return [str(d) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
 
 
-def compute_new_subjects(original_ids, bids_ids):
-    """Check for new subject to convert.
+def remove_space_and_symbols(data: Union[str, List[str]]) -> Union[str, List[str]]:
+    """Remove spaces, "-", and "_" characters from a string.
 
-    This function checks for news subjects to convert to the BIDS version i.e. subjects
-    contained in the unorganised version that are not available in the BIDS version.
+    If a list of strings is provided, this function will be called
+    on each item of the list.
 
-    Args:
-        original_ids: list of all the ids of the unorganized folder.
-        bids_ids: list of all the BIDS ids contained inside the BIDS converted version of the dataset
+    Parameters
+    ----------
+    data : str or List[str]
+        String or list of strings to be cleaned.
 
-    Returns:
-        a list containing the original_ids of the subjects that are not available in the BIDS converted version
-    """
-    to_return = []
-    original_ids = remove_space_and_symbols(original_ids)
-
-    for s in original_ids:
-        if not any(s in id for id in bids_ids):
-            to_return.append(s)
-
-    return to_return
-
-
-def remove_space_and_symbols(data):
-    """Remove spaces and  - _ from a list (or a single) of strings.
-
-    Args:
-        data: list of strings or a single string to clean
-
-    Returns:
-        data: list of strings or a string without space and symbols _ and -
+    Returns
+    -------
+    str or List[str] :
+        Cleaned string(s).
     """
     import re
 
-    if type(data) is list:
-        for i in range(0, len(data)):
-            data[i] = re.sub("[-_ ]", "", data[i])
-    else:
-        data = re.sub("[-_ ]", "", data)
-
-    return data
+    if isinstance(data, list):
+        return [remove_space_and_symbols(d) for d in data]
+    return re.sub("[-_ ]", "", data)
 
 
-def get_ext(file_path):
-    import os
+def json_from_dcm(dcm_dir: str, json_path: str) -> None:
+    """Writes descriptive JSON file from DICOM header.
 
-    root, ext = os.path.splitext(file_path)
-    if ext in ".gz":
-        file_ext = os.path.splitext(root)[1] + ext
-    else:
-        file_ext = ext
-    return file_ext
+    Parameters
+    ----------
+    dcm_dir : str
+        Path to the DICOM directory.
 
-
-def compress_nii(file_path):
-    """Compress nii files.
-
-    Args:
-        file_path (str): path to the file to convert
-    """
-    import gzip
-    import shutil
-    from os import remove
-
-    with open(file_path, "rb") as f_in:
-        with gzip.open(file_path + ".gz", "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
-    remove(file_path)
-
-
-def json_from_dcm(dcm_dir, json_path):
-    """
-    Writes descriptive JSON file from DICOM header
-
-    Args:
-        dcm_dir (str): Path to the DICOM directory
-        json_path (str): Path to the output JSON file
+    json_path : str
+        Path to the output JSON file.
     """
     import json
     from glob import glob
@@ -779,16 +831,30 @@ def json_from_dcm(dcm_dir, json_path):
     try:
         dcm_path = glob(path.join(dcm_dir, "*.dcm"))[0]
         ds = dcmread(dcm_path)
-        json_dict = dict()
-        for key, tag in fields_dict.items():
-            if tag in ds.keys():
-                json_dict[key] = ds.get(tag).value
-
+        json_dict = {
+            key: ds.get(tag).value for key, tag in fields_dict.items() if tag in ds
+        }
         json = json.dumps(json_dict, skipkeys=True, indent=4)
         with open(json_path, "w") as f:
             f.write(json)
     except IndexError:
         cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
+
+
+def _build_dcm2niix_command(
+    input_dir: str,
+    output_dir: str,
+    output_fmt: str,
+    compress: bool = False,
+    bids_sidecar: bool = True,
+) -> list:
+    """Generate the dcm2niix command from user inputs."""
+    command = ["dcm2niix", "-w", "0", "-f", output_fmt, "-o", output_dir]
+    command += ["-9", "-z", "y"] if compress else ["-z", "n"]
+    command += ["-b", "y", "-ba", "y"] if bids_sidecar else ["-b", "n"]
+    command += [input_dir]
+
+    return command
 
 
 def run_dcm2niix(
@@ -797,20 +863,42 @@ def run_dcm2niix(
     output_fmt: str,
     compress: bool = False,
     bids_sidecar: bool = True,
-) -> None:
-    """Runs the dcm2niix command using a subprocess.
+) -> bool:
+    """Runs the `dcm2niix` command using a subprocess.
 
-    Args: the dcm2niix command with the right arguments.
+    Parameters
+    ----------
+    input_dir : str
+        Input folder.
+
+    output_dir : str
+        Output folder. This will be passed to the
+        dcm2niix "-o" option.
+
+    output_fmt : str
+        Output format. This will be passed to the
+        dcm2niix "-f" option.
+
+    compress : bool, optional
+        Whether to compress or not.
+        Default=False.
+
+    bids_sidecar : bool, optional
+        Whether to generate a BIDS sidecar or not. Default=True.
+
+    Returns
+    -------
+    bool :
+        True if the conversion was successful, False otherwise.
     """
     import subprocess
 
     from clinica.utils.stream import cprint
 
-    command = ["dcm2niix", "-w", "0", "-f", output_fmt, "-o", output_dir]
-    command += ["-9", "-z", "y"] if compress else ["-z", "n"]
-    command += ["-b", "y", "-ba", "y"] if bids_sidecar else ["-b", "n"]
-    command += [input_dir]
-
+    cprint(f"Attempting to convert {output_fmt}.", lvl="info")
+    command = _build_dcm2niix_command(
+        input_dir, output_dir, output_fmt, compress, bids_sidecar
+    )
     completed_process = subprocess.run(command, capture_output=True)
 
     if completed_process.returncode != 0:
@@ -822,8 +910,95 @@ def run_dcm2niix(
             ),
             lvl="warning",
         )
+        return False
+    return True
 
 
-def write_to_tsv(dataframe: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
-    # Save dataframe as a BIDS-compliant TSV file.
-    dataframe.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")
+def identify_modality(filename: str) -> Optional[str]:
+    """Identifies the modality of a file given its name.
+
+    Parameters
+    ----------
+    filename: str
+        Input filename
+
+    Returns
+    -------
+    Optional[str]:
+        Modality or None if parsing uns
+    """
+    import numpy as np
+
+    filename = filename.lower()
+    if "dwi" in filename:
+        return "dwi"
+    if "t1" in filename:
+        return "T1"
+    if "t2" in filename:
+        return "T2w"
+    if "fieldmap" in filename:
+        return "fieldmap"
+    if "fmri" in filename:
+        return "rsfmri"
+    else:
+        return np.nan
+
+
+def parse_description(filepath: PathLike, start_line: int, end_line: int) -> str:
+    """Parse the description of the dataset from the readme in the documentation.
+
+    Parameters
+    ----------
+    filepath : PathLike
+        Path to the readme file from which to extract the description.
+
+    start_line : int
+        Line number where the description starts.
+
+    end_line : int
+        Line number where the description ends.
+
+    Returns
+    -------
+    str :
+        The description extracted from the readme file.
+    """
+    with open(filepath, "r") as fp:
+        txt = fp.readlines()
+    return "\n".join(txt[start_line:end_line])
+
+
+def parse_url(filepath: PathLike) -> List[str]:
+    """Parse the URLs from the readme in the documentation.
+
+    Parameters
+    ----------
+    filepath : PathLike
+        Path to the readme file from which to extract the URLs.
+
+    Returns
+    -------
+    List[str] :
+        The list of found URLs.
+    """
+    import re
+
+    with open(filepath, "r") as fp:
+        txt = fp.readlines()
+    txt = "".join(txt)
+    url_extract_pattern = "https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)"
+    return re.findall(url_extract_pattern, txt)
+
+
+def write_to_tsv(df: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
+    """Save dataframe as a BIDS-compliant TSV file.
+
+    Parameters
+    ----------
+    df : DataFrame
+        Pandas DataFrame to write to TSV file.
+
+    buffer : PathLike or BinaryIO
+        Either a file or a stream to write the DataFrame to.
+    """
+    df.to_csv(buffer, sep="\t", na_rep="n/a", date_format="%Y-%m-%d")

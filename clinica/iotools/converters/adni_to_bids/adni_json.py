@@ -34,7 +34,7 @@ def _read_xml_files(subj_ids: Optional[list] = None, xml_path: str = "") -> list
 
 
 def _check_xml_tag(el_tag: str, exp_tag: str):
-    """Check that the XML element tage matches the expected tag."""
+    """Check that the XML element tagged matches the expected tag."""
     if el_tag != exp_tag:
         raise ValueError(f"Bad tag: expected {exp_tag}, got {el_tag}")
 

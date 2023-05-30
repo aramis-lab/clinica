@@ -233,7 +233,7 @@ def test_parsing(tmp_path, template_id, expected_image_metadata):
 
     # _parse_series
     series = {k: _parse_series(study) for k, study in studies.items()}
-    assert all([isinstance(serie, ET.Element) for serie in series.values()])
+    assert all([isinstance(v, ET.Element) for v in series.values()])
     for length_series, length_study in zip([3, 4], [6, 7]):
         bad_study = ET.Element("study")
         bad_series = [ET.SubElement(bad_study, "series") for i in range(length_study)]
