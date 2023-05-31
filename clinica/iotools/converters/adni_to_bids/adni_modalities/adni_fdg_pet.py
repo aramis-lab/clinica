@@ -229,7 +229,9 @@ def _load_df_with_column_check(
 
 
 _get_pet_qc_df = partial(
-    _load_df_with_column_check, filename="PETQC.csv", required_columns={"PASS", "RID"}
+    _load_df_with_column_check,
+    filename="PETQC.csv",
+    required_columns={"PASS", "RID"},
 )
 _get_qc_adni_3_df = partial(
     _load_df_with_column_check,
@@ -248,39 +250,61 @@ def _get_images_pet_for_subject(
     csv_data: Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame],
     preprocessing_step: ADNIPreprocessingStep,
 ) -> list:
+    """Filter the PET images' QC dataframes for the given subject."""
     from clinica.iotools.converters.adni_to_bids.adni_utils import get_images_pet
 
     pet_qc_df, pet_qc_adni_3_df, pet_meta_list_df = csv_data
-    # PET images metadata for subject
-    subject_pet_meta = pet_meta_list_df[pet_meta_list_df["Subject"] == subject]
+    subject_pet_metadata = pet_meta_list_df[pet_meta_list_df["Subject"] == subject]
 
-    if subject_pet_meta.empty:
+    if subject_pet_metadata.empty:
         return []
 
-    # QC for FDG PET images for ADNI 1, GO and 2
-    pet_qc_1go2_subj = pet_qc_df[
-        (pet_qc_df.PASS == 1) & (pet_qc_df.RID == int(subject[-4:]))
-    ]
-
-    # QC for FDG PET images for ADNI 3
-    pet_qc3_subj = pet_qc_adni_3_df[
-        (pet_qc_adni_3_df.SCANQLTY == 1) & (pet_qc_adni_3_df.RID == int(subject[-4:]))
-    ]
-    pet_qc3_subj.insert(0, "EXAMDATE", pet_qc3_subj.SCANDATE.to_list())
-
-    # Concatenating visits in both QC files
-    pet_qc_subj = pd.concat(
-        [pet_qc_1go2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False
+    subject_pet_qc = _build_pet_qc_all_studies_for_subject(
+        subject, pet_qc_df, pet_qc_adni_3_df
     )
 
     return get_images_pet(
         subject,
-        pet_qc_subj,
-        subject_pet_meta,
+        subject_pet_qc,
+        subject_pet_metadata,
         _get_pet_fdg_columns(),
         "FDG-PET",
         [preprocessing_step.value],
     )
+
+
+def _build_pet_qc_all_studies_for_subject(
+    subject: str,
+    qc_df: pd.DataFrame,
+    qc_adni_3_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Filter QC for FDG PET images and for the given subject, for studies ADNI 1, GO, 2, and 3.
+    Merge everything in a single dataframe.
+    """
+    subject_rid = _convert_subject_to_rid(subject)
+    qc_1go2 = qc_df[(qc_df.PASS == 1) & (qc_df.RID == subject_rid)]
+    qc_3 = qc_adni_3_df[
+        (qc_adni_3_df.SCANQLTY == 1) & (qc_adni_3_df.RID == subject_rid)
+    ]
+    qc_3.insert(0, "EXAMDATE", qc_3.SCANDATE.to_list())
+    return pd.concat([qc_1go2, qc_3], axis=0, ignore_index=True, sort=False)
+
+
+def _convert_subject_to_rid(subject: str) -> int:
+    """Get the QC RID from the subject string identifier.
+
+    Examples
+    --------
+    >>> _convert_subject_to_rid("123_S_4567")
+    4567
+    """
+    try:
+        return int(subject[-4:])
+    except Exception:
+        raise ValueError(
+            f"Cannot convert the subject '{subject}' identifier into a RID "
+            "for PET QC filtering. The expected format for the subject is XXX_S_XXXX."
+        )
 
 
 def _remove_known_conversion_errors(df: pd.DataFrame) -> pd.DataFrame:

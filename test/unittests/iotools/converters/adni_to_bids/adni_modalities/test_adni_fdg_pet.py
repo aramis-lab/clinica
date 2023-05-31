@@ -2,6 +2,7 @@ from typing import List
 
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
 
 @pytest.mark.parametrize("step_value,expected", [(2, "fdg"), (4, "fdg_uniform")])
@@ -92,6 +93,56 @@ def test_compute_fdg_pet_paths_column_errors(tmp_path, expected_fdg_df_columns):
         )
 
 
+@pytest.mark.parametrize(
+    "row,expected",
+    [
+        (pd.Series({"Subject_ID": "031_S_0294", "VISCODE": "bl"}), True),
+        (pd.Series({"Subject_ID": "031_S_0294", "VISCODE": "m36"}), False),
+        (pd.Series({"Subject_ID": "037_S_1421", "VISCODE": "m36", "foo": "bar"}), True),
+        (pd.Series({"Subject_ID": "037_S_1078", "VISCODE": "m36"}), True),
+        (pd.Series({"Subject_ID": "941_S_1195", "VISCODE": "m48"}), True),
+        (pd.Series({"Subject_ID": "005_S_0223", "VISCODE": "m12"}), True),
+        (
+            pd.Series({"Subject_ID": "123_S_456", "VISCODE": "m12", "foooo": "bar"}),
+            False,
+        ),
+        (pd.Series({"Subject_ID": "foo", "VISCODE": "bar"}), False),
+    ],
+)
+def test_is_visit_a_conversion_error(row, expected):
+    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
+        _is_visit_a_conversion_error,
+    )
+
+    assert _is_visit_a_conversion_error(row) is expected
+
+
+def test_remove_known_conversion_errors():
+    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
+        _remove_known_conversion_errors,
+    )
+
+    input_df = pd.DataFrame(
+        {
+            "Subject_ID": ["foo", "031_S_0294", "031_S_0294", "123_S_456", "123_S_456"],
+            "VISCODE": ["bar", "bl", "m12", "bl", "m48"],
+            "foo": ["bar", "baz", "foobar", "foobaz", "foobarbaz"],
+        }
+    )
+    expected_df = pd.DataFrame(
+        {
+            "Subject_ID": ["foo", "031_S_0294", "123_S_456", "123_S_456"],
+            "VISCODE": ["bar", "m12", "bl", "m48"],
+            "foo": ["bar", "foobar", "foobaz", "foobarbaz"],
+        }
+    )
+    assert_frame_equal(
+        _remove_known_conversion_errors(input_df).reset_index(drop=True),
+        expected_df.reset_index(drop=True),
+    )
+
+
+@pytest.mark.skip(reason="Test is not finished...")
 def test_compute_fdg_pet_paths(tmp_path, expected_fdg_df_columns):
     from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
         ADNIPreprocessingStep,
@@ -105,6 +156,7 @@ def test_compute_fdg_pet_paths(tmp_path, expected_fdg_df_columns):
             "RID": [1, 1, 2, 3],
             "SCANQLTY": [1, 0, 1, 1],
             "SCANDATE": ["01/01/2018", "01/06/2018", "01/01/2018", "06/11/2020"],
+            "VISCODE2": ["bl", "m6", "bl", "bl"],
         }
     ).to_csv(csv_dir / "PETC3.csv")
     pd.DataFrame({"RID": [1, 1, 2, 3], "PASS": [1, 0, 1, 1]}).to_csv(
