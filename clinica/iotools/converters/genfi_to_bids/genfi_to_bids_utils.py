@@ -61,9 +61,16 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     ]
 
     df = df.drop_duplicates(subset=["source"])
+    # df = df.assign(
+    #     series_desc=lambda x: x.source_path.apply(
+    #         lambda y: pdcm.dcmread(y).SeriesDescription
+    #     ),
+    #     acq_date=lambda x: x.source_path.apply(lambda y: pdcm.dcmread(y).StudyDate),
+    #     manufacturer=lambda x: x.source_path.apply(lambda y: _handle_manufacturer(y)),
+    # )
     df = df.assign(
         series_desc=lambda x: x.source_path.apply(
-            lambda y: pdcm.dcmread(y).SeriesDescription
+            lambda y: _handle_series_description(y)
         ),
         acq_date=lambda x: x.source_path.apply(lambda y: pdcm.dcmread(y).StudyDate),
         manufacturer=lambda x: x.source_path.apply(lambda y: _handle_manufacturer(y)),
@@ -73,6 +80,20 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     for file_mod in to_filter:
         df = df[~df["series_desc"].str.contains(file_mod, case=False)]
     return df
+
+
+def _handle_series_description(x: str) -> str:
+    series_description = pdcm.dcmread(x).SeriesDescription
+    if any([modality in series_description for modality in ["t1", "t2", "T1", "T2"]]):
+        echo_time = pdcm.dcmread(x).EchoTime
+        repetition_time = pdcm.dcmread(x).RepetitionTime
+        if (
+            any([modality in series_description for modality in ["t2", "T2"]])
+            and echo_time < 60
+            and repetition_time < 2100
+        ):
+            return "t1"
+    return series_description
 
 
 def _handle_manufacturer(x: str) -> str:
