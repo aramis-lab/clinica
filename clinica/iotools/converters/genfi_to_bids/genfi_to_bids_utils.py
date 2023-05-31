@@ -770,16 +770,6 @@ def write_bids(
         with fs.open(str(sessions_filepath), "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
-    scans_columns_names = pd.DataFrame(
-        [
-            "modality",
-            "run_num",
-            "bids_filename",
-            "source_path",
-            "manufacturer",
-            "number_of_parts",
-        ]
-    )
     for bids_full_path, metadata in scans.iterrows():
         try:
             os.makedirs(to / (Path(bids_full_path).parent))
@@ -798,21 +788,9 @@ def write_bids(
                 / str(metadata.session_id)
                 / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
             )
-            if not scans_filepath.exists():
-                index_to_write = scans_columns_names.to_csv(
-                    index=False, header=False, lineterminator="\t"
-                )
-                with open(scans_filepath, "a") as scans_file:
-                    scans_file.write(f"{index_to_write}\n")
-
-            row_to_write = (
-                metadata.drop(["participant_id", "session_id"])
-                .to_csv(
-                    index=False,
-                    header=False,
-                    lineterminator="\t",
-                )
-                .rstrip("\t")
+            row_to_write = _serialize_row(
+                metadata.drop(["participant_id", "session_id"]),
+                write_column_names=not scans_filepath.exists(),
             )
             with open(scans_filepath, "a") as scans_file:
                 scans_file.write(f"{row_to_write}\n")
@@ -827,6 +805,20 @@ def write_bids(
                 )
     correct_fieldmaps_name(to)
     return
+
+
+def _serialize_row(row: pd.Series, write_column_names: bool) -> str:
+    row_dict = row.to_dict()
+    to_write = (
+        [row_dict.keys(), row_dict.values()]
+        if write_column_names
+        else [row_dict.values()]
+    )
+    return "\n".join([_serialize_list(list(_)) for _ in to_write])
+
+
+def _serialize_list(data: list, sep="\t") -> str:
+    return sep.join([str(value) for value in data])
 
 
 def correct_fieldmaps_name(to: PathLike) -> None:
