@@ -1,20 +1,38 @@
-# coding: utf-8
-
 """Module for converting Tau PET of ADNI."""
+from os import PathLike
+from typing import List, Optional
 
 
 def convert_adni_tau_pet(
-    source_dir, csv_dir, dest_dir, conversion_dir, subjs_list=None, mod_to_update=False
+    source_dir: PathLike,
+    csv_dir: PathLike,
+    destination_dir: PathLike,
+    conversion_dir: PathLike,
+    subjects: Optional[List[str]] = None,
+    mod_to_update: bool = False,
 ):
     """Convert Tau PET images of ADNI into BIDS format.
 
-    Args:
-        source_dir: path to the ADNI directory
-        csv_dir: path to the clinical data directory
-        dest_dir: path to the destination BIDS directory
-        conversion_dir: path to the TSV files including the paths to original images
-        subjs_list: subjects list
-        mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted again.
+    Parameters
+    ----------
+    source_dir : PathLike
+        Path to the ADNI directory.
+
+    csv_dir : PathLike
+        Path to the clinical data directory.
+
+    destination_dir : PathLike
+        Path to the destination BIDS directory.
+
+    conversion_dir : PathLike
+        Path to the TSV files including the paths to original images.
+
+    subjects : List of str, optional
+        List of subjects.
+
+    mod_to_update : bool
+        If True, pre-existing images in the BIDS directory
+        will be erased and extracted again.
     """
     from os import path
 
@@ -23,17 +41,17 @@ def convert_adni_tau_pet(
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
-    if not subjs_list:
+    if not subjects:
         adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
-        subjs_list = list(adni_merge.PTID.unique())
+        subjects = list(adni_merge.PTID.unique())
 
     cprint(
         f"Calculating paths of TAU PET images. Output will be stored in {conversion_dir}."
     )
-    images = compute_tau_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir)
+    images = compute_tau_pet_paths(source_dir, csv_dir, subjects, conversion_dir)
     cprint("Paths of TAU PET images found. Exporting images into BIDS ...")
-    paths_to_bids(images, dest_dir, "tau", mod_to_update=mod_to_update)
+    paths_to_bids(images, destination_dir, "tau", mod_to_update=mod_to_update)
     cprint(msg="TAU PET conversion done.", lvl="debug")
 
 

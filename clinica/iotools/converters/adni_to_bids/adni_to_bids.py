@@ -255,10 +255,10 @@ class AdniToBids(Converter):
                 raise Exception(f"{modality} is not a valid input modality")
             for converter in converters[modality]:
                 converter(
-                    source_dir,
-                    clinical_dir,
-                    dest_dir,
-                    conversion_dir,
-                    subjs_list,
-                    force_new_extraction,
+                    source_dir=source_dir,
+                    csv_dir=clinical_dir,
+                    destination_dir=dest_dir,
+                    conversion_dir=conversion_dir,
+                    subjects=subjs_list,
+                    mod_to_update=force_new_extraction,
                 )
