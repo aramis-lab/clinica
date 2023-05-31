@@ -798,7 +798,7 @@ def write_bids(
                 / str(metadata.session_id)
                 / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
             )
-            if not Path(scans_filepath).exists():
+            if not scans_filepath.exists():
                 index_to_write = scans_columns_names.to_csv(
                     index=False, header=False, lineterminator="\t"
                 )
