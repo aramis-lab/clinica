@@ -61,13 +61,6 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     ]
 
     df = df.drop_duplicates(subset=["source"])
-    # df = df.assign(
-    #     series_desc=lambda x: x.source_path.apply(
-    #         lambda y: pdcm.dcmread(y).SeriesDescription
-    #     ),
-    #     acq_date=lambda x: x.source_path.apply(lambda y: pdcm.dcmread(y).StudyDate),
-    #     manufacturer=lambda x: x.source_path.apply(lambda y: _handle_manufacturer(y)),
-    # )
     df = df.assign(
         series_desc=lambda x: x.source_path.apply(
             lambda y: _handle_series_description(y)
