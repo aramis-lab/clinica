@@ -746,6 +746,13 @@ def write_bids(
     to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
     # Ensure BIDS hierarchy is written first.
+
+    participants = (
+        participants.reset_index()
+        .drop(["session_id", "modality", "run_num", "bids_filename", "source"], axis=1)
+        .drop_duplicates()
+        .set_index("participant_id")
+    )
     with fs.transaction:
         with fs.open(
             str(to / "dataset_description.json"), "w"
@@ -756,14 +763,13 @@ def write_bids(
 
     for participant_id, data_frame in sessions.groupby(["participant_id"]):
         sessions = data_frame.droplevel(
-            ["participant_id", "modality", "bids_filename"]
+            ["participant_id", "modality", "bids_filename", "run_num"]
         ).drop_duplicates()
 
         sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
         with fs.open(str(sessions_filepath), "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
-
     for bids_full_path, metadata in scans.iterrows():
         try:
             os.makedirs(to / (Path(bids_full_path).parent))
@@ -775,19 +781,45 @@ def write_bids(
             metadata["bids_filename"],
             True,
         )
-        if (
-            "dwi" in metadata["bids_filename"]
-            and "Philips" in metadata.manufacturer
-            and dcm2niix_success
-        ):
-            merge_philips_diffusion(
-                to / Path(bids_full_path).with_suffix(".json"),
-                metadata.number_of_parts,
-                metadata.run_num,
+        if dcm2niix_success:
+            scans_filepath = (
+                to
+                / str(metadata.participant_id)
+                / str(metadata.session_id)
+                / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
             )
+            row_to_write = _serialize_row(
+                metadata.drop(["participant_id", "session_id"]),
+                write_column_names=not scans_filepath.exists(),
+            )
+            with open(scans_filepath, "a") as scans_file:
+                scans_file.write(f"{row_to_write}\n")
+            if (
+                "dwi" in metadata["bids_filename"]
+                and "Philips" in metadata.manufacturer
+            ):
+                merge_philips_diffusion(
+                    to / Path(bids_full_path).with_suffix(".json"),
+                    metadata.number_of_parts,
+                    metadata.run_num,
+                )
     correct_fieldmaps_name(to)
     delete_real_and_imaginary_files(to)
     return
+
+
+def _serialize_row(row: pd.Series, write_column_names: bool) -> str:
+    row_dict = row.to_dict()
+    to_write = (
+        [row_dict.keys(), row_dict.values()]
+        if write_column_names
+        else [row_dict.values()]
+    )
+    return "\n".join([_serialize_list(list(_)) for _ in to_write])
+
+
+def _serialize_list(data: list, sep="\t") -> str:
+    return sep.join([str(value) for value in data])
 
 
 def correct_fieldmaps_name(to: PathLike) -> None:
