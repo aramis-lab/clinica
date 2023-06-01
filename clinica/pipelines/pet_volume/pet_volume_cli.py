@@ -15,6 +15,7 @@ pipeline_name = "pet-volume"
 @cli_param.argument.group_label
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
+@cli_param.option.reconstruction_method
 @cli_param.option_group.pipeline_specific_options
 @cli_param.option.pvc_psf_tsv
 @cli_param.option_group.common_pipelines_options
@@ -61,6 +62,7 @@ def cli(
     group_label: str,
     acq_label: str,
     suvr_reference_region: Optional[str] = None,
+    reconstruction_method: Optional[str] = None,
     pvc_psf_tsv: Optional[str] = None,
     mask_tissues: List[int] = (1, 2, 3),
     mask_threshold: float = 0.3,
@@ -95,6 +97,7 @@ def cli(
         "group_label": group_label,
         "acq_label": acq_label,
         "suvr_reference_region": suvr_reference_region,
+        "reconstruction_method": reconstruction_method,
         "pvc_psf_tsv": pvc_psf_tsv,
         "mask_tissues": mask_tissues,
         "mask_threshold": mask_threshold,

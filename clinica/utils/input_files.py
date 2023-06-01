@@ -5,8 +5,11 @@ These dictionaries describe files to grab.
 
 import functools
 from collections.abc import Iterable
+from typing import Optional
 
 import numpy as np
+
+from clinica.utils.pet import ReconstructionMethod, Tracer
 
 # BIDS
 
@@ -558,21 +561,45 @@ DWI_PREPROC_BVAL = {
 # BIDS
 
 
-def bids_pet_nii(tracer: str, with_reconstruction: str = "default") -> dict:
+def bids_pet_nii(
+    tracer: Optional[Tracer] = None,
+    reconstruction: Optional[ReconstructionMethod] = None,
+) -> dict:
+    """Return the query dict required to capture PET scans.
+
+    Parameters
+    ----------
+    tracer : Tracer, optional
+        If specified, the query will only match PET scans acquired
+        with the requested tracer.
+        If None, the query will match all PET sans independently of
+        the tracer used.
+
+    reconstruction : ReconstructionMethod, optional
+        If specified, the query will only match PET scans reconstructed
+        with the specified method.
+        If None, the query will match all PET scans independently of the
+        reconstruction method used.
+
+    Returns
+    -------
+    dict :
+        The query dictionary to get PET scans.
+    """
     import os
 
-    if with_reconstruction == "default":
-        rec = "_rec-acstat"
-        description = f"PET data with {tracer} tracer"
-    elif with_reconstruction == "uniform":
-        rec = "_rec-uniform"
-        description = f"Uniform PET data with {tracer} tracer"
+    trc = "" if tracer is None else f"_trc-{tracer.value}"
+    rec = "" if reconstruction is None else f"_rec-{reconstruction.value}"
+    description = f"PET data"
+    if tracer:
+        description += f" with {tracer.value} tracer"
+    if reconstruction:
+        description += f" and reconstruction method {reconstruction.value}"
 
-    information = {
-        "pattern": os.path.join("pet", f"*_trc-{tracer}{rec}_pet.nii*"),
+    return {
+        "pattern": os.path.join("pet", f"*{trc}{rec}_pet.nii*"),
         "description": description,
     }
-    return information
 
 
 # PET-Volume

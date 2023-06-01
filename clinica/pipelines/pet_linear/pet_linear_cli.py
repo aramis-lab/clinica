@@ -1,4 +1,3 @@
-from email.policy import default
 from typing import Optional
 
 import click
@@ -15,13 +14,8 @@ pipeline_name = "pet-linear"
 @cli_param.argument.caps_directory
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
+@cli_param.option.reconstruction_method
 @cli_param.option_group.pipeline_specific_options
-@cli_param.option_group.option(
-    "--with_reconstruction",
-    type=click.Choice(["default", "uniform"]),
-    default="default",
-    help="Choose the reconstruction step of PET scans from ADNI",
-)
 @cli_param.option.option(
     "-ui",
     "--uncropped_image",
@@ -43,7 +37,7 @@ def cli(
     caps_directory: str,
     acq_label: str,
     suvr_reference_region: str,
-    with_reconstruction: str = default,
+    reconstruction_method: Optional[str] = None,
     uncropped_image: bool = False,
     save_pet_in_t1w_space: bool = False,
     random_seed: Optional[int] = None,
@@ -72,7 +66,7 @@ def cli(
     parameters = {
         "acq_label": acq_label,
         "suvr_reference_region": suvr_reference_region,
-        "with_reconstruction": with_reconstruction,
+        "reconstruction_method": reconstruction_method,
         "uncropped_image": uncropped_image,
         "save_PETinT1w": save_pet_in_t1w_space,
         "random_seed": random_seed,

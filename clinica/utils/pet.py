@@ -22,6 +22,21 @@ class Tracer(str, Enum):
     FMM = "18FFMM"
 
 
+class ReconstructionMethod(str, Enum):
+    """BIDS label for PET reconstruction methods.
+
+    Follows the convention proposed in the PET section of the BIDS specification.
+
+    See: https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/09-positron-emission-tomography.html#pet-recording-data
+    """
+
+    UNIFORM = "uniform"
+    STATIC = "nacstat"
+    DYNAMIC = "nacdyn"
+    STATIC_ATTENUATION_CORRECTION = "acstat"
+    DYNAMIC_ATTENUATION_CORRECTION = "acdyn"
+
+
 def read_psf_information(
     pvc_psf_tsv: os.PathLike,
     subject_ids: ty.List[str],

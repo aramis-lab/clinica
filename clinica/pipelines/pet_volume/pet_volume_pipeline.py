@@ -8,7 +8,7 @@ cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class PETVolume(cpe.Pipeline):
+class PETVolume(cpe.PETPipeline):
     """PETVolume - Volume-based processing of PET images using SPM.
 
     Returns:
@@ -20,10 +20,9 @@ class PETVolume(cpe.Pipeline):
         from clinica.utils.atlas import PET_VOLUME_ATLASES
         from clinica.utils.group import check_group_label
 
+        super().check_pipeline_parameters()
         self.parameters.setdefault("group_label", None)
         check_group_label(self.parameters["group_label"])
-        if "acq_label" not in self.parameters.keys():
-            raise KeyError("Missing compulsory acq_label key in pipeline parameter.")
 
         self.parameters.setdefault("pvc_psf_tsv", None)
         self.parameters.setdefault("mask_tissues", [1, 2, 3])
@@ -130,7 +129,7 @@ class PETVolume(cpe.Pipeline):
                 self.subjects,
                 self.sessions,
                 self.bids_directory,
-                bids_pet_nii(self.parameters["acq_label"]),
+                self._get_pet_scans_query(),
             )
         except ClinicaException as e:
             all_errors.append(e)

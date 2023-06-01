@@ -1154,7 +1154,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
     from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import ReconstructionMethod, Tracer
     from clinica.utils.stream import cprint
 
     modality_specific = {
@@ -1184,13 +1184,13 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
         "fdg": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG}_rec-acstat_pet",
+            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.STATIC_ATTENUATION_CORRECTION}_pet",
             "to_center": True,
             "json": "n",
         },
         "fdg_uniform": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG}_rec-uniform_pet",
+            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.UNIFORM}_pet",
             "to_center": True,
             "json": "n",
         },
