@@ -1,8 +1,23 @@
 from typing import List
 
+import numpy as np
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
+
+
+def assert_frame_equal(
+    df1, df2, check_index: bool = True, check_column_type: bool = True
+):
+    from pandas.testing import assert_frame_equal as _assert_frame_equal
+
+    if check_index:
+        _assert_frame_equal(df1, df2, check_dtype=check_column_type)
+    else:
+        _assert_frame_equal(
+            df1.reset_index(drop=True),
+            df2.reset_index(drop=True),
+            check_dtype=check_column_type,
+        )
 
 
 @pytest.mark.parametrize("step_value,expected", [(2, "fdg"), (4, "fdg_uniform")])
@@ -34,6 +49,48 @@ def test_get_modality_from_adni_preprocessing_step_error(step_value):
         _get_modality_from_adni_preprocessing_step(
             ADNIPreprocessingStep.from_step_value(step_value)
         )
+
+
+@pytest.fixture
+def input_df():
+    return pd.DataFrame(
+        {
+            "foo": ["foo1", "foo2", "foo3"],
+            "bar": [1, 2, 3],
+            "baz": [True, False, False],
+            "foobar": [4, 5, 6],
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    "required_columns",
+    [set(), {"bar"}, {"foo", "baz"}, {"foo", "baz", "bar", "foobar"}],
+)
+def test_load_df_with_column_check(tmp_path, input_df, required_columns):
+    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
+        _load_df_with_column_check,
+    )
+
+    input_df.to_csv(tmp_path / "data.csv", index=False)
+
+    assert_frame_equal(
+        _load_df_with_column_check(tmp_path, "data.csv", required_columns), input_df
+    )
+
+
+def test_load_df_with_column_check_errors(tmp_path, input_df):
+    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
+        _load_df_with_column_check,
+    )
+
+    input_df.to_csv(tmp_path / "data.csv", index=False)
+
+    with pytest.raises(
+        ValueError,
+        match="Missing",
+    ):
+        _load_df_with_column_check(tmp_path, "data.csv", {"foo", "foobaz"})
 
 
 @pytest.fixture
@@ -137,8 +194,84 @@ def test_remove_known_conversion_errors():
         }
     )
     assert_frame_equal(
-        _remove_known_conversion_errors(input_df).reset_index(drop=True),
-        expected_df.reset_index(drop=True),
+        _remove_known_conversion_errors(input_df), expected_df, check_index=False
+    )
+
+
+@pytest.mark.parametrize(
+    "subject,expected",
+    [
+        ("123_S_4567", 4567),
+        ("000foobar6699", 6699),
+        ("4567", 4567),
+        ("123", 123),
+    ],
+)
+def test_convert_subject_to_rid(subject, expected):
+    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
+        _convert_subject_to_rid,
+    )
+
+    assert _convert_subject_to_rid(subject) == expected
+
+
+@pytest.mark.parametrize("subject", ["", 6699, 13.7, "foo"])
+def test_convert_subject_to_rid(subject):
+    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
+        _convert_subject_to_rid,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Cannot convert the subject",
+    ):
+        _convert_subject_to_rid(subject)
+
+
+def test_build_pet_qc_all_studies_for_subject_empty_dataframes():
+    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
+        _build_pet_qc_all_studies_for_subject,
+    )
+
+    df1 = pd.DataFrame(columns=["PASS", "RID"])
+    df2 = pd.DataFrame(columns=["SCANQLTY", "RID", "SCANDATE"])
+    expected = pd.DataFrame(columns=["PASS", "RID", "EXAMDATE", "SCANQLTY", "SCANDATE"])
+
+    assert_frame_equal(
+        _build_pet_qc_all_studies_for_subject("1234", df1, df2),
+        expected,
+        check_index=False,
+        check_column_type=False,
+    )
+
+
+def test_build_pet_qc_all_studies_for_subject():
+    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
+        _build_pet_qc_all_studies_for_subject,
+    )
+
+    df1 = pd.DataFrame(
+        {"PASS": [0, 1, 1, 0, 0, 1], "RID": [1234, 1234, 1234, 2345, 2345, 3456]}
+    )
+    df2 = pd.DataFrame(
+        {
+            "SCANQLTY": [1, 0, 1, 1],
+            "RID": [1234, 1234, 1234, 6789],
+            "SCANDATE": ["01/01/2012", "01/06/2012", "01/12/2012", "01/01/2012"],
+        }
+    )
+    expected = pd.DataFrame(
+        {
+            "PASS": [1, 1, np.nan, np.nan],
+            "RID": [1234, 1234, 1234, 1234],
+            "EXAMDATE": [np.nan, np.nan, "01/01/2012", "01/12/2012"],
+            "SCANQLTY": [np.nan, np.nan, 1, 1],
+            "SCANDATE": [np.nan, np.nan, "01/01/2012", "01/12/2012"],
+        }
+    )
+
+    assert_frame_equal(
+        _build_pet_qc_all_studies_for_subject("1234", df1, df2), expected
     )
 
 
