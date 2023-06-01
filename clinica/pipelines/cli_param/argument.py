@@ -1,9 +1,12 @@
 """Common CLI arguments used by Clinica pipelines."""
 import click
 
-from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
+from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS, Tracer
 
-acq_label = click.argument("acq_label")
+acq_label = click.argument(
+    "acq_label",
+    type=click.Choice(Tracer),
+)
 
 bids_directory = click.argument(
     "bids_directory",

@@ -14,8 +14,8 @@ pipeline_name = "pet-linear"
 @cli_param.argument.caps_directory
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
-@cli_param.option.reconstruction_method
 @cli_param.option_group.pipeline_specific_options
+@cli_param.option.reconstruction_method
 @cli_param.option.option(
     "-ui",
     "--uncropped_image",

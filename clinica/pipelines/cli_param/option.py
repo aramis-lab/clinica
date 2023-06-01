@@ -12,8 +12,7 @@ acq_label = option(
     type=click.Choice(Tracer),
     help=(
         "Name of the label given to the PET acquisition, "
-        "specifying the tracer used (acq-<acq_label>). "
-        f"Supported values: {[tracer.value for tracer in Tracer]}.",
+        "specifying the tracer used (acq-<acq_label>)."
     ),
 )
 
@@ -94,7 +93,8 @@ reconstruction_method = option(
     type=click.Choice(ReconstructionMethod),
     help=(
         "Select the PET scans based on the reconstruction method. "
-        f"Supported values are: {[method.value for method in ReconstructionMethod]}."
+        "If unset, PET scans will be selected independently of the "
+        "reconstruction method."
     ),
 )
 

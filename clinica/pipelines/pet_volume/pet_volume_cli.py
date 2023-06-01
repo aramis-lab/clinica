@@ -15,10 +15,10 @@ pipeline_name = "pet-volume"
 @cli_param.argument.group_label
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
-@cli_param.option.reconstruction_method
 @cli_param.option_group.pipeline_specific_options
 @cli_param.option.pvc_psf_tsv
 @cli_param.option_group.common_pipelines_options
+@cli_param.option.reconstruction_method
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
