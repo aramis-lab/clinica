@@ -1,7 +1,8 @@
 from os import PathLike
-from typing import BinaryIO, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from pandas import DataFrame
+from pandas.api.types import is_string_dtype
 
 
 def find_clinical_data(clinical_data_directory: PathLike) -> Optional[DataFrame]:
@@ -244,13 +245,21 @@ def dataset_to_bids(
         participant_id=lambda df: df.subject.apply(
             lambda x: f"sub-NIFD{x.replace('_', '')}"
         ),
-        session_id=lambda df: df.visit.apply(lambda x: f"ses-M{(6 * (x - 1)):03d}"),
+        session_id=lambda df: df.visit.apply(
+            lambda x: (
+                "ses-M" + x.strip("M").zfill(3)
+                if is_string_dtype(x)
+                else f"ses-M{(6 * (x - 1)):03d}"
+            )
+        ),
         filename=lambda df: df.apply(
-            lambda x: f"{x.participant_id}/{x.session_id}/{x.datatype}/"
-            f"{x.participant_id}_{x.session_id}"
-            f"{'_trc-' + x.trc_label if x.trc_label else ''}"
-            f"{'_rec-' + x.rec_label if x.rec_label else ''}"
-            f"_{x.suffix}.nii.gz",
+            lambda x: (
+                f"{x.participant_id}/{x.session_id}/{x.datatype}/"
+                f"{x.participant_id}_{x.session_id}"
+                f"{'_trc-' + x.trc_label if x.trc_label else ''}"
+                f"{'_rec-' + x.rec_label if x.rec_label else ''}"
+                f"_{x.suffix}.nii.gz"
+            ),
             axis=1,
         ),
     )
