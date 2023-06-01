@@ -562,7 +562,7 @@ def bids_pet_nii(tracer: str, with_reconstruction: str = "default") -> dict:
     import os
 
     if with_reconstruction == "default":
-        rec = ""
+        rec = "_rec-acstat"
         description = f"PET data with {tracer} tracer"
     elif with_reconstruction == "uniform":
         rec = "_rec-uniform"

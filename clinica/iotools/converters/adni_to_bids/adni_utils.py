@@ -1184,7 +1184,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
         "fdg": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG}_pet",
+            "output_filename": f"_trc-{Tracer.FDG}_rec-acstat_pet",
             "to_center": True,
             "json": "n",
         },
