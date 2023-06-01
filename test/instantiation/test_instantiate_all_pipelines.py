@@ -198,6 +198,7 @@ def run_pet_volume(input_dir: Path) -> None:
         "acq_label": Tracer.FDG,
         "suvr_reference_region": "pons",
         "skip_question": True,
+        "reconstruction_method": None,
     }
     pipeline = PETVolume(
         bids_directory=fspath(root / "in" / "bids"),
@@ -218,7 +219,7 @@ def test_instantiate_pet_linear(cmdopt):
         "acq_label": Tracer.FDG,
         "suvr_reference_region": "cerebellumPons2",
         "skip_question": True,
-        "with_reconstruction": "default",
+        "reconstruction_method": None,
     }
     pipeline = PETLinear(
         bids_directory=fspath(root / "in" / "bids"),
@@ -263,6 +264,7 @@ def test_instantiate_pet_surface_cross_sectional(cmdopt):
         "pvc_psf_tsv": fspath(root / "in" / "subjects.tsv"),
         "longitudinal": False,
         "skip_question": True,
+        "reconstruction_method": None,
     }
     pipeline = PetSurface(
         bids_directory=fspath(root / "in" / "bids"),
@@ -285,6 +287,7 @@ def test_instantiate_pet_surface_longitudinal(cmdopt):
         "suvr_reference_region": "pons",
         "pvc_psf_tsv": fspath(root / "in" / "subjects.tsv"),
         "longitudinal": True,
+        "reconstruction_method": None,
     }
     pipeline = PetSurface(
         bids_directory=fspath(root / "in" / "bids"),
