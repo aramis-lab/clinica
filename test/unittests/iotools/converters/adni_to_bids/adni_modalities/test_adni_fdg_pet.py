@@ -93,25 +93,39 @@ def test_load_df_with_column_check_errors(tmp_path, input_df):
         _load_df_with_column_check(tmp_path, "data.csv", {"foo", "foobaz"})
 
 
+EXPECTED_FDG_DF_COLUMNS = [
+    "Phase",
+    "Subject_ID",
+    "VISCODE",
+    "Visit",
+    "Sequence",
+    "Scan_Date",
+    "Study_ID",
+    "Series_ID",
+    "Image_ID",
+    "Original",
+]
+
+
 @pytest.fixture
 def expected_fdg_df_columns() -> List[str]:
-    return [
-        "Phase",
-        "Subject_ID",
-        "VISCODE",
-        "Visit",
-        "Sequence",
-        "Scan_Date",
-        "Study_ID",
-        "Series_ID",
-        "Image_ID",
-        "Original",
-        "Is_Dicom",
-        "Path",
-    ]
+    return EXPECTED_FDG_DF_COLUMNS
 
 
-def test_compute_fdg_pet_paths_empty(tmp_path, expected_fdg_df_columns):
+@pytest.fixture
+def expected_images_df_columns() -> List[str]:
+    return EXPECTED_FDG_DF_COLUMNS + ["Is_Dicom", "Path"]
+
+
+def test_get_pet_fdg_columns(expected_fdg_df_columns):
+    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
+        _get_pet_fdg_columns,
+    )
+
+    assert _get_pet_fdg_columns() == expected_fdg_df_columns
+
+
+def test_compute_fdg_pet_paths_empty(tmp_path, expected_images_df_columns):
     """Checks that _compute_fdg_pet_paths returns an empty dataframe with the right
     columns when the provided list of subjects is empty.
     """
@@ -123,11 +137,12 @@ def test_compute_fdg_pet_paths_empty(tmp_path, expected_fdg_df_columns):
     images = _compute_fdg_pet_paths(
         tmp_path, tmp_path, [], tmp_path, ADNIPreprocessingStep.from_step_value(2)
     )
+
     assert len(images) == 0
-    assert images.columns.tolist() == expected_fdg_df_columns
+    assert images.columns.tolist() == expected_images_df_columns
 
 
-def test_compute_fdg_pet_paths_column_errors(tmp_path, expected_fdg_df_columns):
+def test_compute_fdg_pet_paths_column_errors(tmp_path):
     from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
         ADNIPreprocessingStep,
         _compute_fdg_pet_paths,
@@ -275,8 +290,7 @@ def test_build_pet_qc_all_studies_for_subject():
     )
 
 
-@pytest.mark.skip(reason="Test is not finished...")
-def test_compute_fdg_pet_paths(tmp_path, expected_fdg_df_columns):
+def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns):
     from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
         ADNIPreprocessingStep,
         _compute_fdg_pet_paths,
@@ -290,14 +304,26 @@ def test_compute_fdg_pet_paths(tmp_path, expected_fdg_df_columns):
             "SCANQLTY": [1, 0, 1, 1],
             "SCANDATE": ["01/01/2018", "01/06/2018", "01/01/2018", "06/11/2020"],
             "VISCODE2": ["bl", "m6", "bl", "bl"],
+            "LONIUID": ["I1234", "I1234", "I2345", "I3456"],
         }
     ).to_csv(csv_dir / "PETC3.csv")
-    pd.DataFrame({"RID": [1, 1, 2, 3], "PASS": [1, 0, 1, 1]}).to_csv(
-        csv_dir / "PETQC.csv"
-    )
-    pd.DataFrame({"Subject": ["sub-0001", "sub-0001", "sub-0002", "sub-0003"]}).to_csv(
-        csv_dir / "PET_META_LIST.csv"
-    )
+    pd.DataFrame(
+        {
+            "RID": [1, 1, 2, 3],
+            "PASS": [1, 0, 1, 1],
+            "LONIUID": ["I1234", "I1234", "I2345", "I3456"],
+        }
+    ).to_csv(csv_dir / "PETQC.csv")
+    pd.DataFrame(
+        {
+            "Subject": ["sub-0001", "sub-0001", "sub-0002", "sub-0003"],
+            "Orig/Proc": ["Original"] * 4,
+            "Image ID": [10, 11, 12, 13],
+            "Scan Date": ["01/01/2018", "01/06/2018", "01/01/2018", "06/11/2020"],
+            "Sequence": ["ADNI Brain PET: Raw"] * 4,
+        }
+    ).to_csv(csv_dir / "PET_META_LIST.csv")
+
     images = _compute_fdg_pet_paths(
         tmp_path,
         csv_dir,
@@ -305,5 +331,6 @@ def test_compute_fdg_pet_paths(tmp_path, expected_fdg_df_columns):
         tmp_path,
         ADNIPreprocessingStep.from_step_value(2),
     )
+
     assert len(images) == 0
-    assert images.columns.tolist() == expected_fdg_df_columns
+    assert images.columns.tolist() == expected_images_df_columns

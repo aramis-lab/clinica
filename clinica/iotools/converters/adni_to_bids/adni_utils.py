@@ -1027,6 +1027,8 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     """
     For each image, the path to an existing image file or folder is created from image metadata.
 
+    This function adds two columns to the input dataframe: 'Is_Dicom', and 'Path'.
+
     Args:
         images: List of images metadata
         source_dir: path to the ADNI directory
