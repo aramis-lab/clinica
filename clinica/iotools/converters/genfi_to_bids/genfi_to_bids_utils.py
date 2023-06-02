@@ -78,8 +78,8 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
 def _handle_series_description(x: str) -> str:
     """This function handles the series description used to identify the modality later on.
 
-    In the  case of T1 and T2, some dicoms are misnamed. Therefore we use the echo time and repetition time
-    which are supposed to be very different for a T1 and T2, to check the series description corresponds to what has been done.
+    In the case of T1 and T2, some dicoms are misnamed. The echo time and repetition time
+    are supposed to be very different between a T1 and T2. Therefore, we use this proxy to check that the series description is coherent.
     The values used are in milliseconds, and have been chosen arbitrarily.
     """
     MAX_ECHO_TIME_FOR_A_T1 = 60
