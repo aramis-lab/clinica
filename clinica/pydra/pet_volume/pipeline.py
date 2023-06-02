@@ -69,6 +69,8 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     wf : Workflow
         The core workflow.
     """
+    from pydra.tasks import petpvc
+
     from clinica.pydra.shared_workflows.smoothing import build_smoothing_workflow
     from clinica.pydra.utils import sanitize_fwhm
     from clinica.utils.pet import get_suvr_mask
@@ -274,18 +276,18 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         )
 
         # PET PVC
-        petpvc = Nipype1Task(
-            name="pvc",
-            interface=PETPVC(),
+        wf.add(
+            petpvc.PETPVC(
+                name="pvc",
+                pvc_method="RBV",
+                output_image=wf.pet_pvc_name.lzout.pet_pvc_path,
+                input_image=wf.coreg_pet_t1.lzout.coregistered_source,
+                mask_image=wf.pvc_mask.lzout.out_mask,
+                fwhm_x=wf.get_psf_task.lzout.psf_x,
+                fwhm_y=wf.get_psf_task.lzout.psf_y,
+                fwhm_z=wf.get_psf_task.lzout.psf_z,
+            )
         )
-        petpvc.inputs.pvc = "RBV"
-        petpvc.inputs.out_file = wf.pet_pvc_name.lzout.pet_pvc_path
-        petpvc.inputs.in_file = wf.coreg_pet_t1.lzout.coregistered_source
-        petpvc.inputs.mask_file = wf.pvc_mask.lzout.out_mask
-        petpvc.inputs.fwhm_x = wf.get_psf_task.lzout.psf_x
-        petpvc.inputs.fwhm_y = wf.get_psf_task.lzout.psf_y
-        petpvc.inputs.fwhm_z = wf.get_psf_task.lzout.psf_z
-        wf.add(petpvc)
 
         # Spatially normalize PET into MNI
         dartel_mni_reg_pvc = Nipype1Task(
@@ -298,7 +300,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         dartel_mni_reg_pvc.inputs.template_file = (
             wf.unzip_dartel_template.lzout.out_file
         )
-        dartel_mni_reg_pvc.inputs.apply_to_files = wf.pvc.lzout.out_file
+        dartel_mni_reg_pvc.inputs.apply_to_files = wf.pvc.lzout.output_image
         wf.add(dartel_mni_reg_pvc)
 
         # Reslice reference region mask into PET
@@ -367,7 +369,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 "pet_pvc_suvr_masked_smoothed",
                 wf.pvc_smoothing_workflow.lzout.smoothed_files,
             ),
-            ("pet_pvc", wf.pvc.lzout.out_file),
+            ("pet_pvc", wf.pvc.lzout.output_image),
             ("pet_pvc_mni", wf.dartel_mni_reg_pvc.lzout.normalized_files),
             ("pet_pvc_suvr", wf.norm_to_ref_pvc.lzout.suvr_pet_path),
             ("pet_pvc_suvr_masked", wf.apply_mask_pvc.lzout.masked_image_path),

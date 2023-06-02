@@ -2081,6 +2081,21 @@ dev = ["black", "pre-commit"]
 test = ["pytest (>=4.4.0)", "pytest-cov"]
 
 [[package]]
+name = "pydra-petpvc"
+version = "0.0.4"
+description = "Pydra tasks for PETPVC"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pydra_petpvc-0.0.4-py3-none-any.whl", hash = "sha256:81eb934c1a3e0f262d39e88f9bf26ffc0751c492575db0efd46be180a8d2d018"},
+    {file = "pydra_petpvc-0.0.4.tar.gz", hash = "sha256:ab081a0e67a0077f11215689c57c3f764537d4a3b6235cd91c9dd7f91d4fa6bd"},
+]
+
+[package.dependencies]
+attrs = ">=22.1"
+pydra = ">=0.22"
+
+[[package]]
 name = "pygments"
 version = "2.13.0"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -3384,4 +3399,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "56a1a2a129ee4523087e354e8acbf9cf61a74cb4884e54ccc398b261c1f10045"
+content-hash = "40b5aba489e91b37969ef34f8fbbe9ef522286c815fbbf3cfccfd7750e2d435b"
