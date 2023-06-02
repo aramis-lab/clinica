@@ -1,4 +1,8 @@
+import os
+
 import pytest
+
+from clinica.utils.pet import ReconstructionMethod, Tracer
 
 
 def test_aggregator():
@@ -33,3 +37,30 @@ def test_aggregator():
         match="Arguments must have the same length.",
     ):
         toy_func_3((1, 2, 3), z=(4, 5))
+
+
+def test_bids_pet_nii_empty():
+    from clinica.utils.input_files import bids_pet_nii
+
+    assert bids_pet_nii() == {
+        "pattern": os.path.join("pet", f"*_pet.nii*"),
+        "description": "PET data",
+    }
+
+
+@pytest.fixture
+def expected_bids_pet_query(tracer, reconstruction):
+    return {
+        "pattern": os.path.join(
+            "pet", f"*_trc-{tracer.value}_rec-{reconstruction.value}_pet.nii*"
+        ),
+        "description": f"PET data with {tracer.value} tracer and reconstruction method {reconstruction.value}",
+    }
+
+
+@pytest.mark.parametrize("tracer", Tracer)
+@pytest.mark.parametrize("reconstruction", ReconstructionMethod)
+def test_bids_pet_nii(tracer, reconstruction, expected_bids_pet_query):
+    from clinica.utils.input_files import bids_pet_nii
+
+    assert bids_pet_nii(tracer, reconstruction) == expected_bids_pet_query
