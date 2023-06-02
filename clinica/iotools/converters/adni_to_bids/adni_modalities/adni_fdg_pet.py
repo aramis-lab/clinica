@@ -249,7 +249,7 @@ def _get_images_pet_for_subject(
     subject: str,
     csv_data: Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame],
     preprocessing_step: ADNIPreprocessingStep,
-) -> list:
+) -> List[pd.DataFrame]:
     """Filter the PET images' QC dataframes for the given subject."""
     from clinica.iotools.converters.adni_to_bids.adni_utils import get_images_pet
 

@@ -982,6 +982,7 @@ class PETPipeline(Pipeline):
         """Check pipeline parameters."""
         if "acq_label" not in self.parameters.keys():
             raise KeyError("Missing compulsory acq_label key in pipeline parameter.")
+        self.parameters.setdefault("reconstruction_method", None)
 
     def _get_pet_scans_query(self) -> dict:
         """Return the query to retrieve PET scans."""
