@@ -205,10 +205,12 @@ def rename_into_caps(
 
 def _get_bids_entities_without_suffix(filename: str, suffix: str) -> str:
     """Return the BIDS entities without the suffix from a BIDS path."""
+    import os
+
     from nipype.utils.filemanip import split_filename
 
-    _, stem, _ = split_filename(filename)
-    return stem.rstrip(f"_{suffix}")
+    fpath, stem, _ = split_filename(filename)
+    return os.path.join(fpath, stem.rstrip(f"_{suffix}"))
 
 
 def _rename_pet_into_caps(
