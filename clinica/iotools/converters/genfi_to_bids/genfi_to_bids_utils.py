@@ -97,7 +97,7 @@ def _handle_series_description(x: str) -> str:
                 and repetition_time < MAX_REPETITION_TIME_FOR_A_T1
             ):
                 return "t1"
-        except:
+        except AttributeError:
             warnings.warn(
                 message=f"the subject from DICOM {Path(x).parent} has no Echo Time or Repetition Time, it might be wrongly converted"
             )
