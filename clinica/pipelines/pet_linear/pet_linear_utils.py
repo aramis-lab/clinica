@@ -134,7 +134,7 @@ def crop_nifti(input_img: str, ref_img: str) -> str:
 
 
 def rename_into_caps(
-    in_bids_pet: str,
+    pet_filename_bids: str,
     pet_filename_raw: str,
     transformation_filename_raw: str,
     suvr_reference_region: str,
@@ -152,8 +152,10 @@ def rename_into_caps(
 
     Parameters
     ----------
-    in_bids_pet : str
-        Input BIDS PET to extract the <source_file>.
+    pet_filename_bids : str
+        Input PET image file from the BIDS dataset.
+        This file is used to extract the entities from the source
+        file like subject, session, run, tracer...
 
     pet_filename_raw : str
         Preprocessed PET file as outputted by Nipype.
@@ -185,51 +187,56 @@ def rename_into_caps(
         Intermediate PET in T1w MRI space renamed to match CAPS conventions.
         If 'pet_filename_in_t1w_raw' is None, this will be None.
     """
-    from nipype.utils.filemanip import split_filename
-
-    _, source_file_pet, _ = split_filename(in_bids_pet)
-
+    bids_entities = _get_bids_entities_without_suffix(pet_filename_bids, suffix="pet")
     pet_filename_caps = _rename_pet_into_caps(
-        source_file_pet, pet_filename_raw, not uncropped_image, suvr_reference_region
+        bids_entities, pet_filename_raw, not uncropped_image, suvr_reference_region
     )
     transformation_filename_caps = _rename_transformation_into_caps(
-        source_file_pet, transformation_filename_raw
+        bids_entities, transformation_filename_raw
     )
     pet_filename_in_t1w_caps = None
     if pet_filename_in_t1w_raw is not None:
-        pet_filename_in_t1w_caps = _rename_intermediate_pet_in_t1w_space(
-            source_file_pet, pet_filename_in_t1w_raw
+        pet_filename_in_t1w_caps = _rename_intermediate_pet_in_t1w_space_into_caps(
+            bids_entities, pet_filename_in_t1w_raw
         )
 
     return pet_filename_caps, transformation_filename_caps, pet_filename_in_t1w_caps
 
 
+def _get_bids_entities_without_suffix(filename: str, suffix: str) -> str:
+    """Return the BIDS entities without the suffix from a BIDS path."""
+    from nipype.utils.filemanip import split_filename
+
+    _, stem, _ = split_filename(filename)
+    return stem.rstrip(f"_{suffix}")
+
+
 def _rename_pet_into_caps(
-    source_file: str, filename: str, cropped: bool, suvr_reference_region: str
+    entities: str, filename: str, cropped: bool, suvr_reference_region: str
 ) -> str:
     """Rename into CAPS PET."""
-    return _rename(
-        filename, source_file, _get_pet_suffix(cropped, suvr_reference_region)
-    )
+    return _rename(filename, entities, _get_pet_suffix(cropped, suvr_reference_region))
 
 
-def _rename_transformation_into_caps(source_file: str, filename: str) -> str:
+def _rename_transformation_into_caps(entities: str, filename: str) -> str:
     """Rename into CAPS transformation file."""
-    return _rename(filename, source_file, "_space-T1w_rigid.mat")
+    return _rename(filename, entities, "_space-T1w_rigid.mat")
 
 
-def _rename_intermediate_pet_in_t1w_space(source_file: str, filename: str) -> str:
+def _rename_intermediate_pet_in_t1w_space_into_caps(
+    entities: str, filename: str
+) -> str:
     """Rename intermediate PET in T1w MRI space."""
-    return _rename(filename, source_file, "_space-T1w_pet.nii.gz")
+    return _rename(filename, entities, "_space-T1w_pet.nii.gz")
 
 
-def _rename(filename: str, source_file: str, suffix: str):
-    """Rename 'filename' into '{source_file}{suffix}'."""
+def _rename(filename: str, entities: str, suffix: str):
+    """Rename 'filename' into '{entities}{suffix}'."""
     from nipype.interfaces.utility import Rename
 
     rename = Rename()
     rename.inputs.in_file = filename
-    rename.inputs.format_string = source_file + suffix
+    rename.inputs.format_string = entities + suffix
 
     return rename.run().outputs.out_file
 

@@ -28,12 +28,10 @@ def test_rename(tmp_path):
     source_file = tmp_path / "sub-01_ses-M000_run-01_pet.json"
     source_file.touch()
 
-    output_file = _rename(
-        str(file_to_rename), "sub-01_ses-M000_run-01_pet", "_pet.nii.gz"
-    )
+    output_file = _rename(str(file_to_rename), "sub-01_ses-M000_run-01", "_pet.nii.gz")
     assert file_to_rename.exists()
     assert source_file.exists()
-    assert Path(output_file).name == "sub-01_ses-M000_run-01_pet_pet.nii.gz"
+    assert Path(output_file).name == "sub-01_ses-M000_run-01_pet.nii.gz"
     assert Path(output_file).exists()
 
 
@@ -55,7 +53,7 @@ def test_rename_into_caps(tmp_path):
     )
     assert (
         Path(a).name
-        == "sub-01_ses-M000_run-01_pet_space-MNI152NLin2009cSym_res-1x1x1_suvr-suvrfoo_pet.nii.gz"
+        == "sub-01_ses-M000_run-01_space-MNI152NLin2009cSym_res-1x1x1_suvr-suvrfoo_pet.nii.gz"
     )
-    assert Path(b).name == "sub-01_ses-M000_run-01_pet_space-T1w_rigid.mat"
+    assert Path(b).name == "sub-01_ses-M000_run-01_space-T1w_rigid.mat"
     assert c is None
