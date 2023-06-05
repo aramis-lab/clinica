@@ -63,7 +63,7 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     df = df.drop_duplicates(subset=["source"])
     df = df.assign(
         series_desc=lambda x: x.source_path.apply(
-            lambda y: pdcm.dcmread(y).SeriesDescription
+            lambda y: _handle_series_description(y)
         ),
         acq_date=lambda x: x.source_path.apply(lambda y: pdcm.dcmread(y).StudyDate),
         manufacturer=lambda x: x.source_path.apply(lambda y: _handle_manufacturer(y)),
@@ -73,6 +73,28 @@ def filter_dicoms(df: DataFrame) -> DataFrame:
     for file_mod in to_filter:
         df = df[~df["series_desc"].str.contains(file_mod, case=False)]
     return df
+
+
+def _handle_series_description(x: str) -> str:
+    """This function handles the series description used to identify the modality later on.
+
+    In the case of T1 and T2, some dicoms are misnamed. The echo time and repetition time
+    are supposed to be very different between a T1 and T2. Therefore, we use this proxy to check that the series description is coherent.
+    The values used are in milliseconds, and have been chosen arbitrarily.
+    """
+    MAX_ECHO_TIME_FOR_A_T1 = 60
+    MAX_REPETITION_TIME_FOR_A_T1 = 2100
+    series_description = pdcm.dcmread(x).SeriesDescription
+    if any([modality in series_description.lower() for modality in ["t1", "t2"]]):
+        echo_time = pdcm.dcmread(x).EchoTime
+        repetition_time = pdcm.dcmread(x).RepetitionTime
+        if (
+            "t2" in series_description.lower()
+            and echo_time < MAX_ECHO_TIME_FOR_A_T1
+            and repetition_time < MAX_REPETITION_TIME_FOR_A_T1
+        ):
+            return "t1"
+    return series_description
 
 
 def _handle_manufacturer(x: str) -> str:
