@@ -82,18 +82,25 @@ def _handle_series_description(x: str) -> str:
     are supposed to be very different between a T1 and T2. Therefore, we use this proxy to check that the series description is coherent.
     The values used are in milliseconds, and have been chosen arbitrarily.
     """
+    import warnings
+
     MAX_ECHO_TIME_FOR_A_T1 = 60
     MAX_REPETITION_TIME_FOR_A_T1 = 2100
     series_description = pdcm.dcmread(x).SeriesDescription
     if any([modality in series_description.lower() for modality in ["t1", "t2"]]):
-        echo_time = pdcm.dcmread(x).EchoTime
-        repetition_time = pdcm.dcmread(x).RepetitionTime
-        if (
-            "t2" in series_description.lower()
-            and echo_time < MAX_ECHO_TIME_FOR_A_T1
-            and repetition_time < MAX_REPETITION_TIME_FOR_A_T1
-        ):
-            return "t1"
+        try:
+            echo_time = pdcm.dcmread(x).EchoTime
+            repetition_time = pdcm.dcmread(x).RepetitionTime
+            if (
+                "t2" in series_description.lower()
+                and echo_time < MAX_ECHO_TIME_FOR_A_T1
+                and repetition_time < MAX_REPETITION_TIME_FOR_A_T1
+            ):
+                return "t1"
+        except AttributeError:
+            warnings.warn(
+                message=f"The subject from DICOM {Path(x).parent} has no Echo Time or Repetition Time, it might be wrongly converted."
+            )
     return series_description
 
 
