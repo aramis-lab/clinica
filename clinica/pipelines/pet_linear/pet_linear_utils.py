@@ -187,6 +187,13 @@ def rename_into_caps(
         Intermediate PET in T1w MRI space renamed to match CAPS conventions.
         If 'pet_filename_in_t1w_raw' is None, this will be None.
     """
+    from clinica.pipelines.pet_linear.pet_linear_utils import (  # noqa
+        _get_bids_entities_without_suffix,
+        _rename_intermediate_pet_in_t1w_space_into_caps,
+        _rename_pet_into_caps,
+        _rename_transformation_into_caps,
+    )
+
     bids_entities = _get_bids_entities_without_suffix(pet_filename_bids, suffix="pet")
     pet_filename_caps = _rename_pet_into_caps(
         bids_entities, pet_filename_raw, not uncropped_image, suvr_reference_region
