@@ -6,6 +6,20 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.7.5
+
+### Enhanced
+
+- [Converters] Improvements to GENFI to BIDS converter (see PR #909)
+- [Converters] Improvements to Oasis3 to BIDS converter (see PR #911)
+- [Pipelines] Add the possibility to specify a random seed to be used with ANTs (see PR #916)
+
+### Fixed
+
+- [Converters] GENFI to BIDS various fixes (see PRs #912, #923, #927, #930, and #934)
+- [Converters] Fix ADNI to BIDS issue with unsupported visit code "uns1" (see PRs #914 and #920)
+- [MachineLearning] Fix bug in CLI of pipeline `machinelearning-prepare-spatial-svm` (see PR #910)
+
 ## Clinica 0.7.4
 
 ### Enhanced
