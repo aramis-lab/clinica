@@ -99,7 +99,7 @@ def _handle_series_description(x: str) -> str:
                 return "t1"
         except AttributeError:
             warnings.warn(
-                message=f"the subject from DICOM {Path(x).parent} has no Echo Time or Repetition Time, it might be wrongly converted"
+                message=f"The subject from DICOM {Path(x).parent} has no Echo Time or Repetition Time, it might be wrongly converted."
             )
     return series_description
 
