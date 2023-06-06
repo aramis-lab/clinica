@@ -2,6 +2,8 @@
 
 See CAPS specifications for details about groups.
 """
+from os import PathLike
+from typing import List
 
 
 def check_group_label(group_label: str) -> None:
@@ -28,15 +30,23 @@ def check_group_label(group_label: str) -> None:
         )
 
 
-def extract_group_ids(caps_directory: str) -> list:
+def _check_group_dir(group_directory: PathLike) -> None:
+    from pathlib import Path
+
+    group_directory = Path(group_directory)
+    if group_directory.name.startswith("group-"):
+        check_group_label(group_directory.name.lstrip("group-"))
+    else:
+        raise ValueError(f"Group directory {group_directory} is not valid.")
+
+
+def extract_group_ids(caps_directory: PathLike) -> List[str]:
     """Extract a list of group IDs from a CAPS folder.
 
     The function searches for sub-folders of `caps_directory/groups`.
     According to the CAPS specifications, these sub-folders should be named
     with their group IDs (e.g. ['group-AD', 'group-HC']).
 
-    If the provided CAPS folder does not contain a "groups" subfolder,
-    the function returns a list with an empty string.
 
     Parameters
     ----------
@@ -46,11 +56,25 @@ def extract_group_ids(caps_directory: str) -> list:
     Returns
     -------
     list of str :
-        The list of group IDs found inside the provided CAPS folder.
+        The sorted list of group IDs found inside the provided CAPS folder.
+
+    Raises
+    ------
+    ValueError :
+        If `caps_directory/groups` contains folders which do not
+        respect the CAPS naming specifications ("group-{groupID}").
     """
-    import os
+    from pathlib import Path
+
+    caps_directory = Path(caps_directory)
 
     try:
-        return os.listdir(os.path.join(caps_directory, "groups"))
+        groups = [
+            group for group in (caps_directory / "groups").iterdir() if group.is_dir()
+        ]
     except FileNotFoundError:
-        return [""]
+        return []
+    for group in groups:
+        _check_group_dir(group)
+
+    return sorted([group.name for group in groups])
