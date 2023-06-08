@@ -52,6 +52,7 @@ def test_rename_into_caps(tmp_path):
         str(transformation_file_to_rename),
         "suvrfoo",
         True,
+        output_dir=tmp_path,  # Force the writing to tmp_path instead of current folder...
     )
     assert (
         Path(a)

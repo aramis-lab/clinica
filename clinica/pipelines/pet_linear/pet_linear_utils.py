@@ -140,6 +140,7 @@ def rename_into_caps(
     suvr_reference_region: str,
     uncropped_image: bool,
     pet_filename_in_t1w_raw: str = None,
+    output_dir: str = None,
 ):
     """
     Rename the outputs of the pipelines into CAPS format.
@@ -175,6 +176,14 @@ def rename_into_caps(
         Intermediate PET in T1w MRI space.
         If not provided, no renaming will be done.
 
+    output_dir : str, optional
+        Specify the output folder where the renamed files should
+        be written. This is mostly used for testing purposes in order
+        to enable this function to write to Pytest's temporary folders.
+        When used in the pipeline, this is left as None as other nodes
+        are responsible for adding the missing pieces to the output paths
+        and writing the files to disk.
+
     Returns
     -------
     pet_filename_caps : str
@@ -187,6 +196,8 @@ def rename_into_caps(
         Intermediate PET in T1w MRI space renamed to match CAPS conventions.
         If 'pet_filename_in_t1w_raw' is None, this will be None.
     """
+    import os
+
     from clinica.pipelines.pet_linear.pet_linear_utils import (  # noqa
         _get_bids_entities_without_suffix,
         _rename_intermediate_pet_in_t1w_space_into_caps,
@@ -195,6 +206,8 @@ def rename_into_caps(
     )
 
     bids_entities = _get_bids_entities_without_suffix(pet_filename_bids, suffix="pet")
+    if output_dir:
+        bids_entities = os.path.join(output_dir, bids_entities)
     pet_filename_caps = _rename_pet_into_caps(
         bids_entities, pet_filename_raw, not uncropped_image, suvr_reference_region
     )
@@ -212,12 +225,10 @@ def rename_into_caps(
 
 def _get_bids_entities_without_suffix(filename: str, suffix: str) -> str:
     """Return the BIDS entities without the suffix from a BIDS path."""
-    import os
-
     from nipype.utils.filemanip import split_filename
 
-    fpath, stem, _ = split_filename(filename)
-    return os.path.join(fpath, stem.rstrip(f"_{suffix}"))
+    _, stem, _ = split_filename(filename)
+    return stem.rstrip(f"_{suffix}")
 
 
 def _rename_pet_into_caps(
