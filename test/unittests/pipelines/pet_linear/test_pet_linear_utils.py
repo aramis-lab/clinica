@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "cropped,suvr_reference_region,expected_suffix",
+    "cropped,suvr_reference_region,expected",
     [
         (False, "foo", "_space-MNI152NLin2009cSym_res-1x1x1_suvr-foo_pet.nii.gz"),
         (
@@ -14,10 +14,10 @@ import pytest
         ),
     ],
 )
-def test_get_pet_suffix(cropped, suvr_reference_region, expected_suffix):
-    from clinica.pipelines.pet_linear.pet_linear_utils import _get_pet_suffix
+def test_get_pet_bids_components(cropped, suvr_reference_region, expected):
+    from clinica.pipelines.pet_linear.pet_linear_utils import _get_pet_bids_components
 
-    assert _get_pet_suffix(cropped, suvr_reference_region) == expected_suffix
+    assert _get_pet_bids_components(cropped, suvr_reference_region) == expected
 
 
 def test_rename(tmp_path):

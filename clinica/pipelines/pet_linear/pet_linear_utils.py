@@ -235,7 +235,9 @@ def _rename_pet_into_caps(
     entities: str, filename: str, cropped: bool, suvr_reference_region: str
 ) -> str:
     """Rename into CAPS PET."""
-    return _rename(filename, entities, _get_pet_suffix(cropped, suvr_reference_region))
+    return _rename(
+        filename, entities, _get_pet_bids_components(cropped, suvr_reference_region)
+    )
 
 
 def _rename_transformation_into_caps(entities: str, filename: str) -> str:
@@ -261,7 +263,10 @@ def _rename(filename: str, entities: str, suffix: str):
     return rename.run().outputs.out_file
 
 
-def _get_pet_suffix(cropped: bool, suvr_reference_region: str) -> str:
+def _get_pet_bids_components(cropped: bool, suvr_reference_region: str) -> str:
+    """Return a string composed of the PET-specific entities (space, resolution,
+    desc, and suvr), suffix, and extension.
+    """
     space = "_space-MNI152NLin2009cSym"
     resolution = "_res-1x1x1"
     desc = "_desc-Crop" if cropped else ""
