@@ -194,7 +194,7 @@ class AnatLinear(cpe.Pipeline):
         get_ids = npe.Node(
             interface=nutil.Function(
                 input_names=["bids_file", "pipeline_name"],
-                output_names=["image_id_out", "subst_ls"],
+                output_names=["subst_ls"],
                 function=get_substitutions_datasink,
             ),
             name="GetIDs",
@@ -213,10 +213,9 @@ class AnatLinear(cpe.Pipeline):
         self.connect(
             [
                 (self.input_node, container_path, [("anat", "bids_or_caps_filename")]),
-                (self.output_node, get_ids, [("image_id", "bids_file")]),
                 (container_path, write_node, [(("container", fix_join, self.name.replace("-", "_")), "container")]),
                 (get_ids, write_node, [("subst_ls", "substitutions")]),
-                (get_ids, write_node, [("image_id_out", "@image_id")]),
+                (self.output_node, write_node, [("image_id", "@image_id")]),
                 (self.output_node, write_node, [("outfile_reg", "@outfile_reg")]),
                 (self.output_node, write_node, [("affine_mat", "@affine_mat")]),
             ]

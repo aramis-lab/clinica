@@ -1,10 +1,10 @@
-def get_substitutions_datasink(bids_file: str, pipeline_name: str) -> tuple:
+def get_substitutions_datasink(bids_image_id: str, pipeline_name: str) -> list:
     """Return file name substitutions for renaming.
 
     Parameters
     ----------
-    bids_file : str
-        This is the original BIDS file name without the extension.
+    bids_image_id : str
+        This is the original image BIDS file name without the extension.
         This will be used to get all the BIDS entities that shouldn't
         be modified (subject, session...).
 
@@ -13,28 +13,25 @@ def get_substitutions_datasink(bids_file: str, pipeline_name: str) -> tuple:
 
     Returns
     -------
-    bids_file : str
-        The input BIDS file. Why do we need to do this ????
-
-    substitutions : Tuple of str
-        Tuple of length 3 containing the substitutions to perform.
+    substitutions : List of tuples of str
+        List of length 3 containing the substitutions to perform.
     """
     suffix = "T1w" if pipeline_name == "t1-linear" else "FLAIR"
-    substitutions = [
+    bids_image_id_without_suffix = bids_image_id.rstrip(f"_{suffix}")
+    return [
         (
-            f"{bids_file}Warped_cropped.nii.gz",
-            f"{bids_file}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_{suffix}.nii.gz",
+            f"{bids_image_id}Warped_cropped.nii.gz",
+            f"{bids_image_id_without_suffix}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_{suffix}.nii.gz",
         ),
         (
-            f"{bids_file}0GenericAffine.mat",
-            f"{bids_file}_space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+            f"{bids_image_id}0GenericAffine.mat",
+            f"{bids_image_id_without_suffix}_space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
         ),
         (
-            f"{bids_file}Warped.nii.gz",
-            f"{bids_file}_space-MNI152NLin2009cSym_res-1x1x1_{suffix}.nii.gz",
+            f"{bids_image_id}Warped.nii.gz",
+            f"{bids_image_id_without_suffix}_space-MNI152NLin2009cSym_res-1x1x1_{suffix}.nii.gz",
         ),
     ]
-    return bids_file, substitutions
 
 
 # Function used by the nipype interface.
