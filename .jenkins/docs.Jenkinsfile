@@ -36,8 +36,15 @@ pipeline {
         echo 'Deploying in webserver...'
         sh 'echo "Agent name: ${NODE_NAME}"'
         sh 'echo "My branch name is ${BRANCH_NAME}"'
+        sh 'echo "My branch name is ${TAG_NAME}"'
         unstash(name: 'doc_html')
-        sh 'mv site "${BRANCH_NAME}"'
+        sh '''
+          if [[ -z "$TAG_NAME" ]]; then
+            mv site "${TAG_NAME}"
+          else
+            mv site "${BRANCH_NAME}"
+          fi
+        '''
         sshPublisher(
           publishers: [
             sshPublisherDesc(
