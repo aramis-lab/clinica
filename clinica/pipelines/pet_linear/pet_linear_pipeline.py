@@ -194,18 +194,22 @@ class PETLinear(cpe.Pipeline):
 
         # Other nodes
         rename_file_node_inputs = [
-            "in_bids_pet",
-            "fname_pet",
-            "fname_trans",
+            "pet_filename_bids",
+            "pet_filename_raw",
+            "transformation_filename_raw",
             "suvr_reference_region",
             "uncropped_image",
         ]
         if self.parameters.get("save_PETinT1w"):
-            rename_file_node_inputs.append("fname_pet_in_t1w")
+            rename_file_node_inputs.append("pet_filename_in_t1w_raw")
         rename_files = npe.Node(
             interface=nutil.Function(
                 input_names=rename_file_node_inputs,
-                output_names=["out_caps_pet", "out_caps_trans", "out_caps_pet_in_T1w"],
+                output_names=[
+                    "pet_filename_caps",
+                    "transformation_filename_caps",
+                    "pet_filename_in_t1w_caps",
+                ],
                 function=rename_into_caps,
             ),
             name="renameFileCAPS",
@@ -229,30 +233,30 @@ class PETLinear(cpe.Pipeline):
             [
                 (self.input_node, container_path, [("pet", "bids_or_caps_filename")]),
                 (container_path, write_node, [(("container", fix_join, "pet_linear"), "container")]),
-                (self.input_node, rename_files, [("pet", "in_bids_pet")]),
-                (self.output_node, rename_files, [("affine_mat", "fname_trans")]),
-                (rename_files, write_node, [("out_caps_trans", "@transform_mat")]),
+                (self.input_node, rename_files, [("pet", "pet_filename_bids")]),
+                (self.output_node, rename_files, [("affine_mat", "transformation_filename_raw")]),
+                (rename_files, write_node, [("transformation_filename_caps", "@transform_mat")]),
             ]
         )
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
-                    (self.output_node, rename_files, [("outfile_crop", "fname_pet")]),
-                    (rename_files, write_node, [("out_caps_pet", "@registered_pet")]),
+                    (self.output_node, rename_files, [("outfile_crop", "pet_filename_raw")]),
+                    (rename_files, write_node, [("pet_filename_caps", "@registered_pet")]),
                 ]
             )
         else:
             self.connect(
                 [
-                    (self.output_node, rename_files, [("suvr_pet", "fname_pet")]),
-                    (rename_files, write_node, [("out_caps_pet", "@registered_pet")]),
+                    (self.output_node, rename_files, [("suvr_pet", "pet_filename_raw")]),
+                    (rename_files, write_node, [("pet_filename_caps", "@registered_pet")]),
                 ]
             )
         if self.parameters.get("save_PETinT1w"):
             self.connect(
                 [
-                    (self.output_node, rename_files, [("PETinT1w", "fname_pet_in_t1w")]),
-                    (rename_files, write_node, [("out_caps_pet_in_T1w", "@registered_pet_in_t1w")]),
+                    (self.output_node, rename_files, [("PETinT1w", "pet_filename_in_t1w_raw")]),
+                    (rename_files, write_node, [("pet_filename_in_t1w_caps", "@registered_pet_in_t1w")]),
                 ]
             )
         # fmt: on
