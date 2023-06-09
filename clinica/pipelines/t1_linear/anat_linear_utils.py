@@ -1,5 +1,25 @@
-def get_substitutions_datasink(bids_file, pipeline_name):
-    suffix = "T1w" if pipeline_name == "t1-linear" else "flair"
+def get_substitutions_datasink(bids_file: str, pipeline_name: str) -> tuple:
+    """Return file name substitutions for renaming.
+
+    Parameters
+    ----------
+    bids_file : str
+        This is the original BIDS file name without the extension.
+        This will be used to get all the BIDS entities that shouldn't
+        be modified (subject, session...).
+
+    pipeline_name : str
+        The name of the pipeline.
+
+    Returns
+    -------
+    bids_file : str
+        The input BIDS file. Why do we need to do this ????
+
+    substitutions : Tuple of str
+        Tuple of length 3 containing the substitutions to perform.
+    """
+    suffix = "T1w" if pipeline_name == "t1-linear" else "FLAIR"
     substitutions = [
         (
             f"{bids_file}Warped_cropped.nii.gz",
