@@ -39,7 +39,7 @@ pipeline {
         sh 'echo "My branch name is ${TAG_NAME}"'
         unstash(name: 'doc_html')
         sh '''
-          if [[ ! -z "${TAG_NAME}" ]]
+          if [[ ! -z "${TAG_NAME}" ]];
           then
             BRANCH_NAME="${TAG_NAME}"
           fi
