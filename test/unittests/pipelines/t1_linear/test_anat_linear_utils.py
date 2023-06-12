@@ -1,14 +1,15 @@
 import pytest
 
 
-@pytest.mark.parametrize("pipeline_name", ["t1-linear", "flair-linear", "fooo"])
-def test_get_substitutions_datasink(pipeline_name):
-    from clinica.pipelines.t1_linear.anat_linear_utils import get_substitutions_datasink
+@pytest.mark.parametrize("suffix", ["T1w", "FLAIR", "fooo"])
+def test_get_substitutions_datasink(suffix):
+    from clinica.pipelines.t1_linear.anat_linear_utils import (
+        _get_substitutions_datasink,
+    )
 
-    suffix = "T1w" if pipeline_name == "t1-linear" else "FLAIR"
     bids_image_id = f"sub-ADNI022S0004_ses-M000_{suffix}"
 
-    substitutions = get_substitutions_datasink(bids_image_id, pipeline_name)
+    substitutions = _get_substitutions_datasink(bids_image_id, suffix)
 
     assert len(substitutions) == 3
     assert substitutions[0] == (

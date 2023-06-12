@@ -1,4 +1,20 @@
-def get_substitutions_datasink(bids_image_id: str, pipeline_name: str) -> list:
+def get_substitutions_datasink_flair(bids_image_id: str) -> list:
+    from clinica.pipelines.t1_linear.anat_linear_utils import (  # noqa
+        _get_substitutions_datasink,
+    )
+
+    return _get_substitutions_datasink(bids_image_id, "FLAIR")
+
+
+def get_substitutions_datasink_t1_linear(bids_image_id: str) -> list:
+    from clinica.pipelines.t1_linear.anat_linear_utils import (  # noqa
+        _get_substitutions_datasink,
+    )
+
+    return _get_substitutions_datasink(bids_image_id, "T1w")
+
+
+def _get_substitutions_datasink(bids_image_id: str, suffix: str) -> list:
     """Return file name substitutions for renaming.
 
     Parameters
@@ -8,15 +24,14 @@ def get_substitutions_datasink(bids_image_id: str, pipeline_name: str) -> list:
         This will be used to get all the BIDS entities that shouldn't
         be modified (subject, session...).
 
-    pipeline_name : str
-        The name of the pipeline.
+    suffix : str
+        The suffix to use for the new file.
 
     Returns
     -------
     substitutions : List of tuples of str
         List of length 3 containing the substitutions to perform.
     """
-    suffix = "T1w" if pipeline_name == "t1-linear" else "FLAIR"
     bids_image_id_without_suffix = bids_image_id.rstrip(f"_{suffix}")
     return [
         (
