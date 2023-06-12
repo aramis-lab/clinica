@@ -39,7 +39,7 @@ pipeline {
         sh 'echo "My branch name is ${TAG_NAME}"'
         unstash(name: 'doc_html')
         sh '''
-          [[ -z "${TAG_NAME}" ]] && DOCS_BRANCH=${BRANCH_NAME} || DOCS_BRANCH="${TAG_NAME}"
+          [[ -z "${TAG_NAME}" ]] && DOCS_BRANCH="${BRANCH_NAME}" || DOCS_BRANCH="${TAG_NAME}"
           mv site "${DOCS_BRANCH}"
         '''
         sshPublisher(
