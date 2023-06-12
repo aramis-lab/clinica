@@ -39,11 +39,8 @@ pipeline {
         sh 'echo "My branch name is ${TAG_NAME}"'
         unstash(name: 'doc_html')
         sh '''
-          if [[ -z "$TAG_NAME" ]]; then
-            mv site "${TAG_NAME}"
-          else
-            mv site "${BRANCH_NAME}"
-          fi
+          [[ -z "${TAG_NAME}" ]] && DOCS_BRANCH=${BRANCH_NAME} || DOCS_BRANCH="${TAG_NAME}"
+          mv site "${DOCS_BRANCH}"
         '''
         sshPublisher(
           publishers: [
@@ -62,7 +59,7 @@ pipeline {
                   remoteDirectory: 'clinica/docs/public/',
                   remoteDirectorySDF: false,
                   removePrefix: '',
-                  sourceFiles: "${BRANCH_NAME}/**"
+                  sourceFiles: "${DOCS_BRANCH}/**"
                 )
               ],
               usePromotionTimestamp: false,
