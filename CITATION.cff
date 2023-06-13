@@ -1,4 +1,4 @@
-cff-version: 1.2.0
+cff-version: 1.4.0
 message: If you use this software, please cite it as below.
 authors:
   - family-names: Routier
@@ -7,48 +7,24 @@ authors:
     given-names: Ninon
   - family-names: Diaz
     given-names: Mauricio
-  - family-names: Bacci
-    given-names: Michael
-  - family-names: Bottani
-    given-names: Simona
-  - family-names: El-Rifai
-    given-names: Omar
-  - family-names: Fontanella
-    given-names: Sabrina
-  - family-names: Gori
-    given-names: Pietro
-  - family-names: Guillon
-    given-names: Jérémy
-  - family-names: Guyot
-    given-names: Alexis
   - family-names: Hassanaly
     given-names: Ravi
-  - family-names: Jacquemont
-    given-names: Thomas
-  - family-names: Lu
-    given-names: Pascal
-  - family-names: Marcoux
-    given-names: Arnaud
-  - family-names: Moreau
-    given-names: Tristan
-  - family-names: Samper-Gonzalez
-    given-names: Jorge
-  - family-names: Teichmann
-    given-names: Marc
   - family-names: Thibeau-Sutre
     given-names: Elina
   - family-names: Vaillant
     given-names: Ghislain
   - family-names: Wen
     given-names: Junhao
-  - family-names: Wild
-    given-names: Adam
-  - family-names: Habert
-    given-names: Marie-Odile
-  - family-names: Durrleman
-    given-names: Stanley
   - family-names: Colliot
     given-names: Olivier
-title: "Clinica: An Open Source Software Platform for Reproducible Clinical Neuroscience Studies"
-doi: 10.3389/fninf.2021.689675
+  - family-names: Loizillon
+    given-names: Sophie
+  - family-names: Cassereau
+    given-names: Nathan
+  - family-names: Brianceau
+    given-name: Camille
+  - family-names: Gensollen
+    given-names: Nicolas
+title: "ClinicaDL: Framework for the reproducible processing of neuroimaging data with deep learning methods."
+doi: 10.1016/j.cmpb.2022.106818
 license: MIT
