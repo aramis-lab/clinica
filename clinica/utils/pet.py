@@ -28,13 +28,23 @@ class ReconstructionMethod(str, Enum):
     Follows the convention proposed in the PET section of the BIDS specification.
 
     See: https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/09-positron-emission-tomography.html#pet-recording-data
+
+    For ADNI specific reconstruction methods, see:
+
+    https://adni.loni.usc.edu/methods/pet-analysis-method/pet-analysis/
     """
 
-    UNIFORM = "uniform"
+    # Reconstruction methods defined in the BIDS specifications
     STATIC = "nacstat"
     DYNAMIC = "nacdyn"
     STATIC_ATTENUATION_CORRECTION = "acstat"
     DYNAMIC_ATTENUATION_CORRECTION = "acdyn"
+
+    # ADNI specific reconstruction methods
+    CO_REGISTERED_DYNAMIC = "step1"
+    CO_REGISTERED_AVERAGED = "step2"
+    CO_REGISTERED_AVERAGED_STANDARDIZED = "step3"
+    UNIFORM = "step4"
 
 
 def read_psf_information(

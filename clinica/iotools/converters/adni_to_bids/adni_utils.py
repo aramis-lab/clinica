@@ -1186,7 +1186,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
         "fdg": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.STATIC_ATTENUATION_CORRECTION}_pet",
+            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.CO_REGISTERED_AVERAGED}_pet",
             "to_center": True,
             "json": "n",
         },
