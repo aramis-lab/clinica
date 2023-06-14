@@ -181,7 +181,14 @@ class AnatLinear(cpe.Pipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .anat_linear_utils import get_substitutions_datasink
+        if self.name == "flair-linear":
+            from .anat_linear_utils import (
+                get_substitutions_datasink_flair as get_substitutions,
+            )
+        else:
+            from .anat_linear_utils import (
+                get_substitutions_datasink_t1_linear as get_substitutions,
+            )
 
         # Writing node
         write_node = npe.Node(name="WriteCaps", interface=DataSink())
@@ -193,13 +200,12 @@ class AnatLinear(cpe.Pipeline):
         # Get substitutions to rename files
         get_ids = npe.Node(
             interface=nutil.Function(
-                input_names=["bids_file", "pipeline_name"],
-                output_names=["image_id_out", "subst_ls"],
-                function=get_substitutions_datasink,
+                input_names=["bids_image_id"],
+                output_names=["substitutions"],
+                function=get_substitutions,
             ),
             name="GetIDs",
         )
-        get_ids.inputs.pipeline_name = self.name
         # Find container path from t1w filename
         container_path = npe.Node(
             nutil.Function(
@@ -213,10 +219,10 @@ class AnatLinear(cpe.Pipeline):
         self.connect(
             [
                 (self.input_node, container_path, [("anat", "bids_or_caps_filename")]),
-                (self.output_node, get_ids, [("image_id", "bids_file")]),
+                (self.output_node, get_ids, [("image_id", "bids_image_id")]),
                 (container_path, write_node, [(("container", fix_join, self.name.replace("-", "_")), "container")]),
-                (get_ids, write_node, [("subst_ls", "substitutions")]),
-                (get_ids, write_node, [("image_id_out", "@image_id")]),
+                (get_ids, write_node, [("substitutions", "substitutions")]),
+                (self.output_node, write_node, [("image_id", "@image_id")]),
                 (self.output_node, write_node, [("outfile_reg", "@outfile_reg")]),
                 (self.output_node, write_node, [("affine_mat", "@affine_mat")]),
             ]
