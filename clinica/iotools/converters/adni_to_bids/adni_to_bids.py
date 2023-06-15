@@ -236,7 +236,10 @@ class AdniToBids(Converter):
 
         converters = {
             "T1": [adni_t1.convert_adni_t1],
-            "PET_FDG": [adni_fdg.convert_adni_fdg_pet],
+            "PET_FDG": [
+                adni_fdg.convert_adni_fdg_pet,
+                adni_fdg.convert_adni_fdg_pet_uniform,
+            ],
             "PET_AMYLOID": [
                 adni_pib.convert_adni_pib_pet,
                 adni_av45_fbb.convert_adni_av45_fbb_pet,
@@ -252,10 +255,10 @@ class AdniToBids(Converter):
                 raise Exception(f"{modality} is not a valid input modality")
             for converter in converters[modality]:
                 converter(
-                    source_dir,
-                    clinical_dir,
-                    dest_dir,
-                    conversion_dir,
-                    subjs_list,
-                    force_new_extraction,
+                    source_dir=source_dir,
+                    csv_dir=clinical_dir,
+                    destination_dir=dest_dir,
+                    conversion_dir=conversion_dir,
+                    subjects=subjs_list,
+                    mod_to_update=force_new_extraction,
                 )

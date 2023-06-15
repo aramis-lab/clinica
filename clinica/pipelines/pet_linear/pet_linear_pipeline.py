@@ -8,7 +8,7 @@ cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class PETLinear(cpe.Pipeline):
+class PETLinear(cpe.PETPipeline):
     """PET Linear - Affine registration of PET images to standard space.
     This preprocessing pipeline uses T1w MRI transformation into standard
     space computed in clinica t1-linear pipeline.
@@ -61,12 +61,7 @@ class PETLinear(cpe.Pipeline):
             ClinicaCAPSError,
             ClinicaException,
         )
-        from clinica.utils.filemanip import extract_subjects_sessions_from_filename
-        from clinica.utils.input_files import (
-            T1W_NII,
-            T1W_TO_MNI_TRANSFORM,
-            bids_pet_nii,
-        )
+        from clinica.utils.input_files import T1W_NII, T1W_TO_MNI_TRANSFORM
         from clinica.utils.inputs import (
             RemoteFileStructure,
             clinica_file_reader,
@@ -76,7 +71,6 @@ class PETLinear(cpe.Pipeline):
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        # from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         # Import references files
         root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
         path_to_mask = join(root, "resources", "masks")
@@ -114,11 +108,12 @@ class PETLinear(cpe.Pipeline):
                 )
 
         # Inputs from BIDS directory
-        # pet file:
-        PET_NII = bids_pet_nii(self.parameters["acq_label"])
         try:
             pet_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, PET_NII
+                self.subjects,
+                self.sessions,
+                self.bids_directory,
+                self._get_pet_scans_query(),
             )
         except ClinicaException as e:
             err = (

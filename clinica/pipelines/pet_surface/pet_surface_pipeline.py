@@ -1,7 +1,7 @@
 import clinica.pipelines.engine as cpe
 
 
-class PetSurface(cpe.Pipeline):
+class PetSurface(cpe.PETPipeline):
     """PetSurface - Surface-based processing of PET images.
 
     Returns:
@@ -10,8 +10,7 @@ class PetSurface(cpe.Pipeline):
 
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
-        if "acq_label" not in self.parameters.keys():
-            raise KeyError("Missing compulsory acq_label key in pipeline parameter.")
+        super().check_pipeline_parameters()
         if "suvr_reference_region" not in self.parameters.keys():
             raise KeyError(
                 "Missing compulsory suvr_reference_region key in pipeline parameter."
@@ -95,7 +94,7 @@ class PetSurface(cpe.Pipeline):
                 self.subjects,
                 self.sessions,
                 self.bids_directory,
-                input_files.bids_pet_nii(self.parameters["acq_label"]),
+                self._get_pet_scans_query(),
             )
         except ClinicaException as e:
             all_errors.append(e)
@@ -233,7 +232,7 @@ class PetSurface(cpe.Pipeline):
                 self.subjects,
                 self.sessions,
                 self.bids_directory,
-                input_files.bids_pet_nii(self.parameters["acq_label"]),
+                self._get_pet_scans_query(),
             )
         except ClinicaException as e:
             all_errors.append(e)

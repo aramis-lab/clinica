@@ -16,6 +16,7 @@ pipeline_name = "pet-surface"
 @cli_param.argument.suvr_reference_region
 @cli_param.argument.pvc_psf_tsv
 @cli_param.option_group.common_pipelines_options
+@cli_param.option.reconstruction_method
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
@@ -26,6 +27,7 @@ def cli(
     acq_label: str,
     suvr_reference_region: str,
     pvc_psf_tsv: str,
+    reconstruction_method: Optional[str] = None,
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
@@ -54,6 +56,7 @@ def cli(
     parameters = {
         "acq_label": acq_label,
         "suvr_reference_region": suvr_reference_region,
+        "reconstruction_method": reconstruction_method,
         "pvc_psf_tsv": pvc_psf_tsv,
         "longitudinal": False,
         "skip_question": yes,

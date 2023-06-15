@@ -2,14 +2,18 @@
 
 import click
 
-from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
+from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS, ReconstructionMethod, Tracer
 
 from .option_group import option
 
 acq_label = option(
     "-acq",
     "--acq_label",
-    help="Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).",
+    type=click.Choice(Tracer),
+    help=(
+        "Name of the label given to the PET acquisition, "
+        "specifying the tracer used (acq-<acq_label>)."
+    ),
 )
 
 dartel_tissues = option(
@@ -81,6 +85,17 @@ random_seed = option(
     "--random_seed",
     type=int,
     help="Specify the random seed for algorithms that support it.",
+)
+
+reconstruction_method = option(
+    "-rec",
+    "--reconstruction",
+    type=click.Choice(ReconstructionMethod),
+    help=(
+        "Select the PET scans based on the reconstruction method. "
+        "If unset, PET scans will be selected independently of the "
+        "reconstruction method."
+    ),
 )
 
 save_warped_modulated = option(

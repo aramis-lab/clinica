@@ -22,6 +22,31 @@ class Tracer(str, Enum):
     FMM = "18FFMM"
 
 
+class ReconstructionMethod(str, Enum):
+    """BIDS label for PET reconstruction methods.
+
+    Follows the convention proposed in the PET section of the BIDS specification.
+
+    See: https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/09-positron-emission-tomography.html#pet-recording-data
+
+    For ADNI specific reconstruction methods, see:
+
+    https://adni.loni.usc.edu/methods/pet-analysis-method/pet-analysis/
+    """
+
+    # Reconstruction methods defined in the BIDS specifications
+    STATIC = "nacstat"
+    DYNAMIC = "nacdyn"
+    STATIC_ATTENUATION_CORRECTION = "acstat"
+    DYNAMIC_ATTENUATION_CORRECTION = "acdyn"
+
+    # ADNI specific reconstruction methods
+    CO_REGISTERED_DYNAMIC = "coregdyn"  # Corresponds to ADNI processing steps 1
+    CO_REGISTERED_AVERAGED = "coregavg"  # Corresponds to ADNI processing steps 2
+    CO_REGISTERED_STANDARDIZED = "coregstd"  # Corresponds to ADNI processing steps 3
+    COREGISTERED_ISOTROPIC = "coregiso"  # Corresponds to ADNI processing steps 4
+
+
 def read_psf_information(
     pvc_psf_tsv: os.PathLike,
     subject_ids: ty.List[str],

@@ -1027,6 +1027,8 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     """
     For each image, the path to an existing image file or folder is created from image metadata.
 
+    This function adds two columns to the input dataframe: 'Is_Dicom', and 'Path'.
+
     Args:
         images: List of images metadata
         source_dir: path to the ADNI directory
@@ -1104,6 +1106,7 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
         "flair",
         "fmri",
         "fdg",
+        "fdg_uniform",
         "pib",
         "av45_fbb",
         "tau",
@@ -1153,7 +1156,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
     from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import ReconstructionMethod, Tracer
     from clinica.utils.stream import cprint
 
     modality_specific = {
@@ -1183,7 +1186,13 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
         "fdg": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG}_pet",
+            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.CO_REGISTERED_AVERAGED}_pet",
+            "to_center": True,
+            "json": "n",
+        },
+        "fdg_uniform": {
+            "output_path": "pet",
+            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.COREGISTERED_ISOTROPIC}_pet",
             "to_center": True,
             "json": "n",
         },
