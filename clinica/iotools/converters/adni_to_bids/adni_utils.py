@@ -1192,7 +1192,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
         "fdg_uniform": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.UNIFORM}_pet",
+            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.COREGISTERED_ISOTROPIC}_pet",
             "to_center": True,
             "json": "n",
         },

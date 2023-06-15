@@ -43,9 +43,7 @@ class ReconstructionMethod(str, Enum):
     # ADNI specific reconstruction methods
     CO_REGISTERED_DYNAMIC = "coregdyn"  # Corresponds to ADNI processing steps 1
     CO_REGISTERED_AVERAGED = "coregavg"  # Corresponds to ADNI processing steps 2
-    CO_REGISTERED_STANDARDIZED = (
-        "coregstd"  # Corresponds to ADNI processing steps 3
-    )
+    CO_REGISTERED_STANDARDIZED = "coregstd"  # Corresponds to ADNI processing steps 3
     COREGISTERED_ISOTROPIC = "coregiso"  # Corresponds to ADNI processing steps 4
 
 

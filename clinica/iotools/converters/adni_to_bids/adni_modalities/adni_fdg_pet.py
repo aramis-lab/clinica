@@ -6,7 +6,7 @@ from enum import Enum
 from functools import partial
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Set, Tuple, Union
+from typing import List, Optional, Set, Tuple
 
 import pandas as pd
 
@@ -18,25 +18,25 @@ class ADNIPreprocessingStep(Enum):
     STEP1 = "Co-registered Dynamic"
     STEP2 = "Co-registered, Averaged"
     STEP3 = "Coreg, Avg, Standardized Image and Voxel Size"
-    STEP4_6MM = "Coreg, Avg, Std Img and Voxel Size, Uniform 6mm Res"
     STEP4_8MM = "Coreg, Avg, Std Img and Voxel Size, Uniform Resolution"
+    STEP4_6MM = "Coreg, Avg, Std Img and Voxel Size, Uniform 6mm Res"
 
     @classmethod
-    def from_step_value(cls, step_value: Union[int, str]):
-        """Accept step specification in raw integer (0, 1, ..., 5) and
-        string forms ("1", "3", "step2", "step_4"....).
-        """
+    def from_step_value(cls, step_value: int):
+        """Accept step specification in raw integer (0, 1, ..., 5)."""
         error_msg = (
             f"Step value {step_value} is not a valid ADNI preprocessing step value."
             f"Valid values are {list(ADNIPreprocessingStep)}."
         )
-        if isinstance(step_value, str) and step_value.startswith("step"):
-            step_value = step_value.lstrip("step").lstrip("_")
         try:
             step_value = int(step_value)
         except Exception:
             raise ValueError(error_msg)
         if 0 <= step_value <= 5:
+            if step_value == 4:
+                return cls.STEP4_8MM
+            if step_value == 5:
+                return cls.STEP4_6MM
             return cls[f"STEP{step_value}"]
         raise ValueError(error_msg)
 
@@ -104,12 +104,12 @@ def _convert_adni_fdg_pet(
 def _get_modality_from_adni_preprocessing_step(step: ADNIPreprocessingStep) -> str:
     if step == ADNIPreprocessingStep.STEP2:
         return "fdg"
-    if step == ADNIPreprocessingStep.STEP4:
+    if step == ADNIPreprocessingStep.STEP4_8MM:
         return "fdg_uniform"
     raise ValueError(
         f"The ADNI preprocessing step {step} is not (yet) supported by the converter."
         f"The converter only supports {ADNIPreprocessingStep.STEP2} and "
-        f"{ADNIPreprocessingStep.STEP4} for now."
+        f"{ADNIPreprocessingStep.STEP4_8MM} for now."
     )
 
 
@@ -117,7 +117,7 @@ convert_adni_fdg_pet = partial(
     _convert_adni_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP2
 )
 convert_adni_fdg_pet_uniform = partial(
-    _convert_adni_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP4
+    _convert_adni_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP4_8MM
 )
 
 
