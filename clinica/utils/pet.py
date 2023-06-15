@@ -41,10 +41,12 @@ class ReconstructionMethod(str, Enum):
     DYNAMIC_ATTENUATION_CORRECTION = "acdyn"
 
     # ADNI specific reconstruction methods
-    CO_REGISTERED_DYNAMIC = "step1"
-    CO_REGISTERED_AVERAGED = "step2"
-    CO_REGISTERED_AVERAGED_STANDARDIZED = "step3"
-    UNIFORM = "step4"
+    CO_REGISTERED_DYNAMIC = "coregdyn"  # Corresponds to ADNI processing steps 1
+    CO_REGISTERED_AVERAGED = "coregavg"  # Corresponds to ADNI processing steps 2
+    CO_REGISTERED_AVERAGED_STANDARDIZED = (
+        "coregstd"  # Corresponds to ADNI processing steps 3
+    )
+    UNIFORM = "coregiso"  # Corresponds to ADNI processing steps 4
 
 
 def read_psf_information(
