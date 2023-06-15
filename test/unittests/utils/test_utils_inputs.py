@@ -10,6 +10,60 @@ from clinica.utils.testing_utils import (
 )
 
 
+def test_get_parent_path(tmp_path):
+    from clinica.utils.inputs import _get_parent_path
+
+    assert _get_parent_path(tmp_path / "bids" / "foo.txt") == str(tmp_path / "bids")
+
+
+@pytest.mark.parametrize("extension", [".txt", ".tar.gz", ".nii.gz", ".foo.bar.baz"])
+def test_get_extension(tmp_path, extension):
+    from clinica.utils.inputs import _get_extension
+
+    assert _get_extension(tmp_path / "bids" / f"foo{extension}") == extension
+
+
+@pytest.mark.parametrize(
+    "filename,expected_suffix",
+    [
+        ("foo.nii.gz", "_foo"),
+        ("sub-01_bar.txt", "_bar"),
+        ("sub-01_ses-M000_T1w.nii", "_T1w"),
+        ("sub-01_ses-M000_run-123_pet.nii.gz", "_pet"),
+    ],
+)
+def test_get_suffix(tmp_path, filename, expected_suffix):
+    from clinica.utils.inputs import _get_suffix
+
+    assert _get_suffix(tmp_path / "bids" / filename) == expected_suffix
+
+
+@pytest.mark.parametrize(
+    "filename,expected_run_number",
+    [
+        ("foo_run-01.txt", "01"),
+        ("foo_run-00006_bar.txt.gz", "00006"),
+        ("sub-01_ses-M000_run-03_pet.nii.gz", "03"),
+    ],
+)
+def test_get_run_number(tmp_path, filename, expected_run_number):
+    from clinica.utils.inputs import _get_run_number
+
+    assert _get_run_number(str(tmp_path / "bids" / filename)) == expected_run_number
+
+
+def test_select_run(tmp_path):
+    from clinica.utils.inputs import _select_run
+
+    files = [
+        str(tmp_path / "bids" / "foo_run-01.txt"),
+        str(tmp_path / "_run-00"),
+        str(tmp_path / "bids" / "sub-01" / "sub-01_ses-M00_run-003_dwi.nii.gz"),
+    ]
+
+    assert _select_run(files) == files[-1]
+
+
 def test_insensitive_glob(tmp_path):
     from clinica.utils.inputs import insensitive_glob
 
