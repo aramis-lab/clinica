@@ -307,8 +307,8 @@ def _are_multiple_runs(files: List[str]) -> bool:
     from pathlib import Path
 
     files = [Path(_) for _ in files]
-    # Exit quickly if at least one file does not have the entity run
-    if any(["_run-" not in f.name for f in files]):
+    # Exit quickly if less than one file or if at least one file does not have the entity run
+    if len(files) < 2 or any(["_run-" not in f.name for f in files]):
         return False
     try:
         _check_common_parent_path(files)

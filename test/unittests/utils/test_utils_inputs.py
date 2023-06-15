@@ -64,6 +64,152 @@ def test_select_run(tmp_path):
     assert _select_run(files) == files[-1]
 
 
+def test_check_common_properties_of_files(tmp_path):
+    from clinica.utils.inputs import _check_common_properties_of_files
+
+    files = [
+        tmp_path / "bids" / "foo_bar_baz.foo.bar",
+        tmp_path / "bids" / "foo_pet.nii.gz",
+        tmp_path / "caps" / "foo_sub-01_ses-M000_T1w.json",
+        tmp_path / "foo" / "bar" / "foo_123.tar.gz",
+    ]
+
+    def first_entity_dummy_property_extractor(filename: Path) -> str:
+        """Dummy extractor for testing purposes."""
+        return filename.name.split("_")[0]
+
+    assert (
+        _check_common_properties_of_files(
+            files,
+            "first entity",
+            first_entity_dummy_property_extractor,
+        )
+        == "foo"
+    )
+
+
+def test_check_common_properties_of_files_error(tmp_path):
+    from clinica.utils.inputs import _check_common_properties_of_files
+
+    files = [
+        tmp_path / "bids" / "sub-01_ses-M000_pet.nii.gz",
+        tmp_path / "caps" / "sub-02_ses-M123_pet.nii",
+        tmp_path / "caps" / "foo.json",
+    ]
+
+    def first_letter_dummy_property_extractor(filename: Path) -> str:
+        """Dummy extractor for testing purposes."""
+        return filename.name[0]
+
+    with pytest.raises(
+        ValueError, match="The provided files do not share the same first letter."
+    ):
+        _check_common_properties_of_files(
+            files,
+            "first letter",
+            first_letter_dummy_property_extractor,
+        )
+
+
+def test_get_entities(tmp_path):
+    from clinica.utils.inputs import _get_entities
+
+    files = [
+        tmp_path / "bids" / "sub-01_ses-M000_run-01_pet.nii.gz",
+        tmp_path / "caps" / "sub-02_ses-M000_pet.nii.gz",
+        tmp_path / "foo" / "sub-01_ses-M000_run-02_pet.nii.gz",
+        tmp_path / "bids" / "sub-03_ses-M000_pet.json",
+    ]
+
+    assert _get_entities(files, "_pet") == {
+        "run": {"01", "02"},
+        "ses": {"M000"},
+        "sub": {"01", "02", "03"},
+    }
+
+
+@pytest.mark.parametrize(
+    "files",
+    [
+        [],
+        ["foo.txt"],
+        ["foo.txt", "bar.json", "baz.png"],
+        ["sub-01_ses-M000_run-01_pet.nii.gz"],
+        [
+            "sub-01_ses-M000_run-01_pet.nii.gz",
+            "sub-01_ses-M000_run-02_pet.nii.gz",
+            "sub-01_ses-M003_run-01_pet.nii.gz",
+        ],
+        [
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-01_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-02_pet.nii.gz",
+            "BIDS/sub-01/ses-M000/pet/sub-01_ses-M000_run-03_pet.nii.gz",
+        ],
+        [
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-01_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-02_pet.nii",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-03_pet.nii.gz",
+        ],
+        [
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-01_T1w.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-02_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-03_pet.nii.gz",
+        ],
+        [
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-01_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-02_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-01_pet.nii.gz",
+        ],
+        [
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-01_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M006_run-02_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-02_ses-M000_run-03_pet.nii.gz",
+        ],
+    ],
+    ids=(
+        "empty list of files",
+        "single file without run entity",
+        "no run entity anywhere",
+        "single file",
+        "one file has a different entity value",
+        "parent paths are different",
+        "extensions are different",
+        "suffixes are different",
+        "run numbers are not different",
+        "entities are different",
+    ),
+)
+def test_are_not_multiple_runs(files):
+    from clinica.utils.inputs import _are_multiple_runs
+
+    assert not _are_multiple_runs(files)
+
+
+@pytest.mark.parametrize(
+    "files",
+    [
+        [
+            "sub-01_run-01_T1w.txt",
+            "sub-01_run-02_T1w.txt",
+        ],
+        [
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-01_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-02_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-03_pet.nii.gz",
+        ],
+        [
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-01_pet.nii.gz",
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-02_desc-crop_pet.nii.gz",  # debatable that this works...
+            "bids/sub-01/ses-M000/pet/sub-01_ses-M000_run-03_pet.nii.gz",
+        ],
+    ],
+)
+def test_are_multiple_runs(files):
+    from clinica.utils.inputs import _are_multiple_runs
+
+    assert _are_multiple_runs(files)
+
+
 def test_insensitive_glob(tmp_path):
     from clinica.utils.inputs import insensitive_glob
 
@@ -178,44 +324,91 @@ def test_check_caps_folder(tmp_path):
         check_caps_folder(tmp_path)
 
 
-def test_find_sub_ses_pattern_path(tmp_path):
+def test_find_sub_ses_pattern_path_error_no_file(tmp_path):
     """Test function `find_sub_ses_pattern_path`."""
     from clinica.utils.inputs import find_sub_ses_pattern_path
 
-    (tmp_path / "sub-01").mkdir()
-    (tmp_path / "sub-01" / "ses-M00").mkdir()
-    (tmp_path / "sub-01" / "ses-M00" / "anat").mkdir()
-
+    (tmp_path / "sub-01" / "ses-M00" / "anat").mkdir(parents=True)
     errors, results = [], []
+
     find_sub_ses_pattern_path(
         tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
+
     assert len(results) == 0
     assert len(errors) == 1
     assert errors[0] == "\t* (sub-01 | ses-M00): No file found\n"
 
-    (tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_T1w.nii.gz").mkdir()
+
+def test_find_sub_ses_pattern_path_error_more_than_one_file(tmp_path):
+    """Test function `find_sub_ses_pattern_path`."""
+    from clinica.utils.inputs import find_sub_ses_pattern_path
 
     errors, results = [], []
+    (tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_T1w.nii.gz").mkdir(
+        parents=True
+    )
+    (
+        tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_foo-bar_T1w.nii.gz"
+    ).mkdir(parents=True)
+
     find_sub_ses_pattern_path(
         tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
+
+    assert len(results) == 0
+    assert len(errors) == 1
+    assert "\t*  (sub-01 | ses-M00): More than 1 file found:" in errors[0]
+
+
+def test_find_sub_ses_pattern_path(tmp_path):
+    """Test function `find_sub_ses_pattern_path`."""
+    from clinica.utils.inputs import find_sub_ses_pattern_path
+
+    (tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_T1w.nii.gz").mkdir(
+        parents=True
+    )
+    errors, results = [], []
+
+    find_sub_ses_pattern_path(
+        tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
+    )
+
     assert len(results) == 1
     assert len(errors) == 0
     assert Path(results[0]).relative_to(tmp_path) == Path(
         "sub-01/ses-M00/anat/sub-01_ses-M00_T1w.nii.gz"
     )
 
-    results = []
+
+def test_find_sub_ses_pattern_path_multiple_runs(tmp_path):
+    from clinica.utils.inputs import find_sub_ses_pattern_path
+
+    errors, results = [], []
     (
-        tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_foo-bar_T1w.nii.gz"
-    ).mkdir()
+        tmp_path
+        / "sub-01"
+        / "ses-M06"
+        / "anat"
+        / "sub-01_ses-M06_run-01_foo-bar_T1w.nii.gz"
+    ).mkdir(parents=True)
+    (
+        tmp_path
+        / "sub-01"
+        / "ses-M06"
+        / "anat"
+        / "sub-01_ses-M06_run-02_foo-bar_T1w.nii.gz"
+    ).mkdir(parents=True)
+
     find_sub_ses_pattern_path(
-        tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
+        tmp_path, "sub-01", "ses-M06", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
-    assert len(results) == 0
-    assert len(errors) == 1
-    assert "\t*  (sub-01 | ses-M00): More than 1 file found:" in errors[0]
+
+    assert len(results) == 1
+    assert len(errors) == 0
+    assert Path(results[0]).relative_to(tmp_path) == Path(
+        "sub-01/ses-M06/anat/sub-01_ses-M06_run-02_foo-bar_T1w.nii.gz"
+    )
 
 
 def test_check_information():
