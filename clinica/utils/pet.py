@@ -46,7 +46,7 @@ class ReconstructionMethod(str, Enum):
     CO_REGISTERED_STANDARDIZED = (
         "coregstd"  # Corresponds to ADNI processing steps 3
     )
-    UNIFORM = "coregiso"  # Corresponds to ADNI processing steps 4
+    COREGISTERED_ISOTROPIC = "coregiso"  # Corresponds to ADNI processing steps 4
 
 
 def read_psf_information(
