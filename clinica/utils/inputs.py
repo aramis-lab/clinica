@@ -449,8 +449,7 @@ def _get_run_number(filename: str) -> str:
     matches = re.match(r".*_run-(\d+).*", filename)
     if matches:
         return matches[1]
-    else:
-        raise ValueError(f"Filename {filename} should contain one and only one run entity.")
+    raise ValueError(f"Filename {filename} should contain one and only one run entity.")
 
 
 def _check_information(information: Dict) -> None:
