@@ -3,8 +3,9 @@
 import hashlib
 import os
 from collections import namedtuple
+from functools import partial
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "checksum"])
 
@@ -245,6 +246,8 @@ def find_sub_ses_pattern_path(
     pattern : str
         Define the pattern of the final file.
     """
+    from clinica.utils.stream import cprint
+
     input_directory = Path(input_directory)
     if is_bids:
         origin_pattern = input_directory / subject / session
@@ -253,17 +256,200 @@ def find_sub_ses_pattern_path(
 
     current_pattern = origin_pattern / "**" / pattern
     current_glob_found = insensitive_glob(str(current_pattern), recursive=True)
-    # Error handling if more than 1 file are found, or when no file is found
     if len(current_glob_found) > 1:
-        error_str = f"\t*  ({subject} | {session}): More than 1 file found:\n"
-        for found_file in current_glob_found:
-            error_str += f"\t\t{found_file}\n"
-        error_encountered.append(error_str)
+        # If we have more than one file at this point, there are two possibilities:
+        #   - there is a problem somewhere which made us catch too many files
+        #           --> In this case, we raise an error.
+        #   - we have captured multiple runs for the same subject and session
+        #           --> In this case, we need to select one of these runs to proceed.
+        #               Ideally, this should be done via QC but for now, we simply
+        #               select the latest run and warn the user about it.
+        if _are_multiple_runs(current_glob_found):
+            selected = _select_run(current_glob_found)
+            list_of_found_files_for_reporting = ""
+            for filename in current_glob_found:
+                list_of_found_files_for_reporting += f"- {filename}\n"
+            cprint(
+                f"More than one run were found for subject {subject} and session {session} : "
+                f"\n\n{list_of_found_files_for_reporting}\n"
+                f"Clinica will proceed with the latest run available, that is \n\n-{selected}.",
+                lvl="warning",
+            )
+            results.append(selected)
+        else:
+            error_str = f"\t*  ({subject} | {session}): More than 1 file found:\n"
+            for found_file in current_glob_found:
+                error_str += f"\t\t{found_file}\n"
+            error_encountered.append(error_str)
     elif len(current_glob_found) == 0:
         error_encountered.append(f"\t* ({subject} | {session}): No file found\n")
     # Otherwise the file found is added to the result
     else:
         results.append(current_glob_found[0])
+
+
+def _are_multiple_runs(files: List[str]) -> bool:
+    """Returns whether the files in the provided list only differ through their run number.
+
+    The provided files must have exactly the same parent paths, extensions, and BIDS entities
+    excepted for the 'run' entity which must be different.
+
+    Parameters
+    ----------
+    files : List of str
+        The files to analyze.
+
+    Returns
+    -------
+    bool :
+        True if the provided files only differ through their run number, False otherwise.
+    """
+    from pathlib import Path
+
+    files = [Path(_) for _ in files]
+    # Exit quickly if less than one file or if at least one file does not have the entity run
+    if len(files) < 2 or any(["_run-" not in f.name for f in files]):
+        return False
+    try:
+        _check_common_parent_path(files)
+        _check_common_extension(files)
+        common_suffix = _check_common_suffix(files)
+    except ValueError:
+        return False
+    found_entities = _get_entities(files, common_suffix)
+    for entity_name, entity_values in found_entities.items():
+        if entity_name != "run":
+            # All entities except run numbers should be the same
+            if len(entity_values) != 1:
+                return False
+        else:
+            # Run numbers should differ otherwise this is a BIDS violation at this point
+            if len(entity_values) != len(files):
+                return False
+    return True
+
+
+def _get_entities(files: List[Path], common_suffix: str) -> dict:
+    """Compute a dictionary where the keys are entity names and the values
+    are sets of all the corresponding entity values found while iterating over
+    the provided files.
+
+    Parameters
+    ----------
+    files : List of Path
+        List of paths to get entities of.
+
+    common_suffix : str
+        The suffix common to all the files. This suffix will be stripped
+        from the file names in order to only analyze BIDS entities.
+
+    Returns
+    -------
+    dict :
+        The entities dictionary.
+    """
+    from clinica.utils.filemanip import get_filename_no_ext
+
+    found_entities = dict()
+    for f in files:
+        entities = get_filename_no_ext(f.name).rstrip(common_suffix).split("_")
+        for entity in entities:
+            entity_name, entity_value = entity.split("-")
+            if entity_name in found_entities:
+                found_entities[entity_name].add(entity_value)
+            else:
+                found_entities[entity_name] = {entity_value}
+
+    return found_entities
+
+
+def _check_common_properties_of_files(
+    files: List[Path],
+    property_name: str,
+    property_extractor: Callable,
+) -> str:
+    """Verify that all provided files share the same property and return its value.
+
+    Parameters
+    ----------
+    files : List of Paths
+        List of file paths for which to verify common property.
+
+    property_name : str
+        The name of the property to verify.
+
+    property_extractor : Callable
+        The function which is responsible for the property extraction.
+        It must implement the interface `property_extractor(filename: Path) -> str`
+
+    Returns
+    -------
+    str :
+        The value of the common property.
+
+    Raises
+    ------
+    ValueError :
+        If the provided files do not have the same given property.
+    """
+    extracted_properties = {property_extractor(f) for f in files}
+    if len(extracted_properties) != 1:
+        raise ValueError(
+            f"The provided files do not share the same {property_name}."
+            f"The following {property_name}s were found: {extracted_properties}"
+        )
+    return extracted_properties.pop()
+
+
+def _get_parent_path(filename: Path) -> str:
+    return str(filename.parent)
+
+
+def _get_extension(filename: Path) -> str:
+    return "".join(filename.suffixes)
+
+
+def _get_suffix(filename: Path) -> str:
+    from clinica.utils.filemanip import get_filename_no_ext
+
+    return f"_{get_filename_no_ext(filename.name).split('_')[-1]}"
+
+
+_check_common_parent_path = partial(
+    _check_common_properties_of_files,
+    property_name="parent path",
+    property_extractor=_get_parent_path,
+)
+
+
+_check_common_extension = partial(
+    _check_common_properties_of_files,
+    property_name="extension",
+    property_extractor=_get_extension,
+)
+
+
+_check_common_suffix = partial(
+    _check_common_properties_of_files,
+    property_name="suffix",
+    property_extractor=_get_suffix,
+)
+
+
+def _select_run(files: List[str]) -> str:
+    import numpy as np
+
+    runs = [int(_get_run_number(f)) for f in files]
+    return files[np.argmax(runs)]
+
+
+def _get_run_number(filename: str) -> str:
+    import re
+
+    matches = re.match(r".*_run-(\d+).*", filename)
+    if matches:
+        return matches[1]
+    raise ValueError(f"Filename {filename} should contain one and only one run entity.")
 
 
 def _check_information(information: Dict) -> None:
