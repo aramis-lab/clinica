@@ -446,10 +446,11 @@ def _select_run(files: List[str]) -> str:
 def _get_run_number(filename: str) -> str:
     import re
 
-    matches = re.findall(r"_run-[0-9]*", filename)
-    if len(matches) == 1:
-        return matches[0].lstrip("_run-")
-    raise ValueError(f"Filename {filename} should contain one and only one run entity.")
+    matches = re.match(r".*_run-(\d+).*", filename)
+    if matches:
+        return matches[1]
+    else:
+        raise ValueError(f"Filename {filename} should contain one and only one run entity.")
 
 
 def _check_information(information: Dict) -> None:
