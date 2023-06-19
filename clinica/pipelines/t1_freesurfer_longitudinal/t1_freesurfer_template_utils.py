@@ -163,6 +163,7 @@ def save_to_caps(
     """
     import os
     import shutil
+    from pathlib import Path
 
     from clinica.utils.longitudinal import save_long_id
     from clinica.utils.stream import cprint
@@ -184,7 +185,9 @@ def save_to_caps(
         os.path.expanduser(caps_dir), "subjects", participant_id, long_id
     )
     if not os.path.isfile(os.path.join(sessions_tsv_path, f"{long_id}_sessions.tsv")):
-        save_long_id(list_session_ids, sessions_tsv_path, f"{long_id}_sessions.tsv")
+        save_long_id(
+            list_session_ids, Path(sessions_tsv_path), f"{long_id}_sessions.tsv"
+        )
 
     # Save FreeSurfer segmentation
     representative_file = os.path.join(image_id, "mri", "aparc+aseg.mgz")

@@ -2,6 +2,7 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
     """Initialize the pipeline."""
     import os
     import platform
+    from pathlib import Path
     from tempfile import mkdtemp
 
     from clinica.utils.longitudinal import read_sessions
@@ -29,7 +30,7 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
     os.makedirs(subjects_dir, exist_ok=True)
 
     # Create symbolic link containing cross-sectional segmentation(s) in SUBJECTS_DIR so that recon-all can run
-    for s_id in read_sessions(caps_dir, participant_id, long_id):
+    for s_id in read_sessions(Path(caps_dir), participant_id, long_id):
         cross_sectional_path = os.path.join(
             caps_dir,
             "subjects",
