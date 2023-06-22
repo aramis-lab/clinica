@@ -75,6 +75,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
+        from pathlib import Path
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -131,7 +132,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                     for p_id, s_id in zip(self.subjects, self.sessions)
                 ]
                 processed_sessions_per_participant = [
-                    read_sessions(self.caps_directory, p_id, l_id)
+                    read_sessions(Path(self.caps_directory), p_id, l_id)
                     for (p_id, l_id) in zip(
                         processed_participants, processed_long_sessions
                     )
