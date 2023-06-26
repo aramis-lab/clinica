@@ -25,23 +25,23 @@ def test_vox_to_world_space_method_1():
     )
 
 
-def test_check_output_tsv_path(tmp_path):
-    from clinica.iotools.utils.data_handling import _check_output_tsv_path
+def test_validate_output_tsv_path(tmp_path):
+    from clinica.iotools.utils.data_handling import _validate_output_tsv_path
 
     (tmp_path / "foo.tsv").touch()
 
-    assert _check_output_tsv_path(tmp_path) == tmp_path / "merge.tsv"
-    assert _check_output_tsv_path(tmp_path / "foo.tsv") == tmp_path / "foo.tsv"
+    assert _validate_output_tsv_path(tmp_path) == tmp_path / "merge.tsv"
+    assert _validate_output_tsv_path(tmp_path / "foo.tsv") == tmp_path / "foo.tsv"
     assert (
-        _check_output_tsv_path(tmp_path / "bids" / "foo.tsv")
+        _validate_output_tsv_path(tmp_path / "bids" / "foo.tsv")
         == tmp_path / "bids" / "foo.tsv"
     )
     assert (tmp_path / "bids").exists()
     assert not (tmp_path / "bids" / "foo.tsv").exists()
 
 
-def test_check_output_tsv_path_error(tmp_path):
-    from clinica.iotools.utils.data_handling import _check_output_tsv_path
+def test_validate_output_tsv_path_error(tmp_path):
+    from clinica.iotools.utils.data_handling import _validate_output_tsv_path
 
     (tmp_path / "bar.txt").touch()
 
@@ -49,4 +49,4 @@ def test_check_output_tsv_path_error(tmp_path):
         TypeError,
         match="Output path extension must be tsv.",
     ):
-        _check_output_tsv_path(tmp_path / "bar.txt")
+        _validate_output_tsv_path(tmp_path / "bar.txt")

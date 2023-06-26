@@ -9,7 +9,13 @@ from nibabel.nifti1 import Nifti1Header
 from numpy import ndarray
 
 
-def _check_output_tsv_path(out_path: Path) -> Path:
+def _validate_output_tsv_path(out_path: Path) -> Path:
+    """Validate that provided file path is a TSV file.
+
+    If folders do not exist, this function will create them.
+    If provided path is a directory, this function will return
+    a file named 'merge.tsv' within this directory.
+    """
     out_path = out_path.resolve()
     if out_path.is_dir():
         out_path = out_path / "merge.tsv"
@@ -47,6 +53,7 @@ def create_merge_file(
     import json
     import os
     from os import path
+    from pathlib import Path
 
     import numpy as np
     import pandas as pd
@@ -86,7 +93,7 @@ def create_merge_file(
         sub_ses_df = sub_ses_df.drop_duplicates(subset=["participant_id", "session_id"])
         sub_ses_df.set_index(["participant_id", "session_id"], inplace=True)
 
-    out_path = _check_output_tsv_path(out_tsv)
+    out_path = _validate_output_tsv_path(Path(out_tsv))
     merged_df = pd.DataFrame(columns=participants_df.columns.values)
 
     # BIDS part
