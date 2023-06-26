@@ -181,25 +181,6 @@ def create_participants_df(
     return participant_df
 
 
-def get_sessions_map_AIBL(bids_ids, bids_dir):
-    """Create a dictionary map between BIDs session IDs and AIBL session ids
-
-    Args:
-        bids_ids: ids of all the subjects to be included in dictionary
-        bids_dir: for later use if the sessions are to be retrieve automatically
-
-    Returns: a dictionary with the map for each subject id
-    """
-
-    ses_dict = {}
-    ses_map = {"M000": "bl", "M018": "m18", "M036": "m36", "M054": "m54"}
-
-    for id in bids_ids:
-        ses_dict[id] = ses_map
-
-    return ses_dict
-
-
 def create_sessions_dict_OASIS(
     clinical_data_dir,
     bids_dir,

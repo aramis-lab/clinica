@@ -902,11 +902,10 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
         path.basename(sub_path)
         for sub_path in glob.glob(path.join(input_path, "sub-AIBL*"))
     ]
-
-    # This dictionary should be automatically computed from the dataset
-    #
-    ses_dict = bids.get_sessions_map_AIBL(bids_ids, input_path)
-
+    ses_dict = {
+        bids_id: {"M000": "bl", "M018": "m18", "M036": "m36", "M054": "m54"}
+        for bids_id in bids_ids
+    }
     scans_dict = bids.create_scans_dict(
         clinical_data_dir,
         "AIBL",
