@@ -185,7 +185,6 @@ pipeline {
                     --basetemp=$TMP_DIR \
                     --disable-warnings \
                     --timeout=0 \
-                    -n 4 \
                     -m "not slow" \
                     ./nonregression/pipelines/test_run_pipelines_anat.py
                 '''
