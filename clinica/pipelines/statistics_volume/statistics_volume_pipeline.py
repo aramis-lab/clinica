@@ -293,6 +293,9 @@ class StatisticsVolume(cpe.Pipeline):
         )
         from clinica.utils.filemanip import unzip_nii
 
+        def _getter(files: list, idx: int) -> str:
+            return files[idx]
+
         # SPM cannot handle zipped files
         unzip_node = npe.Node(
             nutil.Function(
@@ -428,12 +431,9 @@ class StatisticsVolume(cpe.Pipeline):
                     "measure",
                 ],
                 output_names=[
-                    "spmT_0001",
-                    "spmT_0002",
+                    "spm_T_maps",
                     "spm_figures",
-                    "variance_of_error",
-                    "resels_per_voxels",
-                    "mask",
+                    "other_spm_files",
                     "regression_coeff",
                     "contrasts",
                 ],
@@ -466,12 +466,12 @@ class StatisticsVolume(cpe.Pipeline):
                 (run_spm_model_result_no_correction, read_output_node, [("spm_mat", "spm_mat")]),
                 (get_groups, read_output_node, [("class_names", "class_names")]),
                 (model_creation, read_output_node, [("covariates", "covariates")]),
-                (read_output_node, self.output_node, [("spmT_0001", "spmT_0001")]),
-                (read_output_node, self.output_node, [("spmT_0002", "spmT_0002")]),
+                (read_output_node, self.output_node, [(("spm_T_maps", _getter, 0), "spmT_0001")]),
+                (read_output_node, self.output_node, [(("spm_T_maps", _getter, 1), "spmT_0002")]),
                 (read_output_node, self.output_node, [("spm_figures", "spm_figures")]),
-                (read_output_node, self.output_node, [("variance_of_error", "variance_of_error")]),
-                (read_output_node, self.output_node, [("resels_per_voxels", "resels_per_voxels")]),
-                (read_output_node, self.output_node, [("mask", "mask")]),
+                (read_output_node, self.output_node, [(("other_spm_files", _getter, 0), "variance_of_error")]),
+                (read_output_node, self.output_node, [(("other_spm_files", _getter, 1), "resels_per_voxels")]),
+                (read_output_node, self.output_node, [(("other_spm_files", _getter, 2), "mask")]),
                 (read_output_node, self.output_node, [("regression_coeff", "regression_coeff")]),
                 (read_output_node, self.output_node, [("contrasts", "contrasts")]),
             ]

@@ -667,38 +667,45 @@ def copy_and_rename_spm_output_files(
     ----------
     spm_mat: str
         Path to the SPM.mat file of the SPM analysis
+
     class_names: list of str
         Corresponds to the 2 classes for the group comparison
+
     covariates: list of str
-        List of covariates
+        List of covariates.
+
     group_label: str
-        Name of the group label
+        Name of the group label.
+
     fwhm: int
-        Fwhm in mm used
+        Fwhm in mm used.
+
     measure: str
-        Measure used
+        Measure used.
+
     output_dir : str, optional
         Output folder where the copied figures should be written.
         Default to current folder.
 
     Returns
     -------
-    spmT_0001: str
-        Path to t maps for the first group comparison
-    spmT_0002: str
-        Path to t maps for the second group comparison
-    spm_figures: list
-        Path to figure files
-    variance_of_error: str
-        Path to variance of error
-    resels_per_voxels: str
-        Path to resels per voxel
-    mask: str
-        Path to mask of included voxels
-    regression_coeff: str list
-        Path to regression coefficients
-    contrasts: str list
-        Path to weighted parameter estimation for the 2 contrasts
+    spm_T_maps : list of str
+        List of two SPM T maps for first and second group comparison.
+
+    spm_figures : list of str
+        Path to figure files.
+
+    other_spm_files : list of str
+        List of three files produced by SPM:
+            - variance of error
+            - resels per voxels
+            - mask of included voxels
+
+    regression_coeff : list of str
+        Path to regression coefficients.
+
+    contrasts : list of str
+        Path to weighted parameter estimation for the 2 contrasts.
     """
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
         _check_spm_and_output_dir,
@@ -724,18 +731,16 @@ def copy_and_rename_spm_output_files(
         _rename_beta_files,
         _rename_spm_contrast_files,
     )
-    result = [
-        func(
-            spm_dir=spm_dir,
-            output_dir=output_dir,
-            parameters_for_new_filename_construction=parameters,
-        )
-        for func in rename_functions
-    ]
-    ### UGLY TEMP FIX
-    a, b = result.pop(0)
-    c, d, e = result.pop(1)
-    return tuple([a, b] + result[0:1] + [c, d, e] + result[1:])
+    return tuple(
+        [
+            func(
+                spm_dir=spm_dir,
+                output_dir=output_dir,
+                parameters_for_new_filename_construction=parameters,
+            )
+            for func in rename_functions
+        ]
+    )
 
 
 def _rename_spm_t_maps(
