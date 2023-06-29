@@ -701,6 +701,7 @@ def copy_and_rename_spm_output_files(
         Path to weighted parameter estimation for the 2 contrasts
     """
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
+        _check_spm_and_output_dir,
         _rename_beta_files,
         _rename_spm_contrast_files,
         _rename_spm_figures,
