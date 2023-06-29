@@ -703,6 +703,7 @@ def copy_and_rename_spm_output_files(
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
         _check_spm_and_output_dir,
         _rename_beta_files,
+        _rename_other_spm_files,
         _rename_spm_contrast_files,
         _rename_spm_figures,
         _rename_spm_t_maps,
