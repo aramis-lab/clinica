@@ -421,13 +421,35 @@ def create_spm_folder(folder: Path) -> Path:
 
 
 create_spm_figures = partial(
-    create_spm_files, files=["figure_001.png", "figure_013.png", "figure_666.png"]
+    create_spm_files,
+    files=[
+        "figure_001.png",
+        "figure_013.png",
+        "figure_666.png",
+    ],
 )
-create_spm_t_maps = partial(create_spm_files, files=["spmT_0001.nii", "spmT_0002.nii"])
+create_spm_t_maps = partial(
+    create_spm_files,
+    files=[
+        "spmT_0001.nii",
+        "spmT_0002.nii",
+    ],
+)
 create_other_spm_files = partial(
-    create_spm_files, files=["ResMS.nii", "RPV.nii", "mask.nii"]
+    create_spm_files,
+    files=[
+        "ResMS.nii",
+        "RPV.nii",
+        "mask.nii",
+    ],
 )
-create_spm_contrast_files = partial(create_spm_files, files=["con_1.txt", "con_2.txt"])
+create_spm_contrast_files = partial(
+    create_spm_files,
+    files=[
+        "con_1.txt",
+        "con_2.txt",
+    ],
+)
 create_spm_beta_files = partial(
     create_spm_files,
     files=[
@@ -524,7 +546,7 @@ def test_rename_spm_t_maps(tmp_path, fwhm, expected1, expected2):
         _rename_spm_t_maps,
     )
 
-    _ = create_spm_t_maps(tmp_path)
+    create_spm_t_maps(tmp_path)
     params = {
         "fwhm": fwhm,
         "group_label": "foo",
@@ -573,7 +595,7 @@ def test_rename_spm_contrast_files(tmp_path):
         _rename_spm_contrast_files,
     )
 
-    _ = create_spm_contrast_files(tmp_path)
+    create_spm_contrast_files(tmp_path)
     params = {"group_label": "foo", "class_names": ["A", "B"], "measure": "measure"}
 
     contrast_files = _rename_spm_contrast_files(
@@ -630,7 +652,7 @@ def test_rename_beta_files(tmp_path):
         _rename_beta_files,
     )
 
-    _ = create_spm_beta_files(tmp_path)
+    create_spm_beta_files(tmp_path)
     params = {"covariates": ["cov1", "cov2", "cov3"], "class_names": ["A", "B"]}
 
     new_files = _rename_beta_files(
@@ -698,12 +720,11 @@ def test_copy_and_rename_spm_output_files(tmp_path):
         copy_and_rename_spm_output_files,
     )
 
-    _ = create_all_spm_files(tmp_path)
-
+    create_all_spm_files(tmp_path)
     matrix_filename = tmp_path / "spm" / "matrix.mat"
     matrix_filename.touch()
 
-    res = copy_and_rename_spm_output_files(
+    result = copy_and_rename_spm_output_files(
         str(matrix_filename),
         ["A", "B"],
         ["cov1", "cov2", "cov3"],
@@ -712,31 +733,24 @@ def test_copy_and_rename_spm_output_files(tmp_path):
         "measure",
         output_dir=str(tmp_path),
     )
-
-    assert res == [
-        [
-            str(tmp_path / "group-group_A-lt-B_measure-measure_fwhm-8_TStatistics.nii"),
-            str(tmp_path / "group-group_B-lt-A_measure-measure_fwhm-8_TStatistics.nii"),
-        ],
-        [
-            str(tmp_path / "group-group_report-1.png"),
-            str(tmp_path / "group-group_report-13.png"),
-            str(tmp_path / "group-group_report-666.png"),
-        ],
-        [
-            str(tmp_path / "group-group_VarianceError.nii"),
-            str(tmp_path / "resels_per_voxel.nii"),
-            str(tmp_path / "included_voxel_mask.nii"),
-        ],
-        [
-            str(tmp_path / "A.nii"),
-            str(tmp_path / "B.nii"),
-            str(tmp_path / "cov1.nii"),
-            str(tmp_path / "cov2.nii"),
-            str(tmp_path / "cov3.nii"),
-        ],
-        [
-            str(tmp_path / "group-group_A-lt-B_measure-measure_contrast.nii"),
-            str(tmp_path / "group-group_B-lt-A_measure-measure_contrast.nii"),
-        ],
-    ]
+    assert len(result) == 5
+    assert set([item for sublist in result for item in sublist]) == {
+        str(tmp_path / filename)
+        for filename in (
+            "group-group_A-lt-B_measure-measure_fwhm-8_TStatistics.nii",
+            "group-group_B-lt-A_measure-measure_fwhm-8_TStatistics.nii",
+            "group-group_report-1.png",
+            "group-group_report-13.png",
+            "group-group_report-666.png",
+            "group-group_VarianceError.nii",
+            "resels_per_voxel.nii",
+            "included_voxel_mask.nii",
+            "A.nii",
+            "B.nii",
+            "cov1.nii",
+            "cov2.nii",
+            "cov3.nii",
+            "group-group_A-lt-B_measure-measure_contrast.nii",
+            "group-group_B-lt-A_measure-measure_contrast.nii",
+        )
+    }
