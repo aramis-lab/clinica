@@ -659,7 +659,7 @@ def copy_and_rename_spm_output_files(
     fwhm: int,
     measure: str,
     output_dir: str = ".",
-) -> list:
+) -> tuple:
     """Once analysis is done, copy and rename (according to class names)
     the different filenames in the provided output directory.
 
@@ -724,7 +724,7 @@ def copy_and_rename_spm_output_files(
         _rename_beta_files,
         _rename_spm_contrast_files,
     )
-    return [
+    result = [
         func(
             spm_dir=spm_dir,
             output_dir=output_dir,
@@ -732,6 +732,10 @@ def copy_and_rename_spm_output_files(
         )
         for func in rename_functions
     ]
+    ### UGLY TEMP FIX
+    a, b = result.pop(0)
+    c, d, e = result.pop(1)
+    return tuple([a, b] + result[0:1] + [c, d, e] + result[1:])
 
 
 def _rename_spm_t_maps(
@@ -1032,7 +1036,7 @@ def _get_spm_files(
             f"Expected{moderator} {expected_number_of_files}, got {len(spm_files)}."
         )
 
-    return spm_files
+    return sorted(spm_files)
 
 
 def _is_valid_filename(filename: str, pattern: str, grab_by_prefix: bool) -> bool:
