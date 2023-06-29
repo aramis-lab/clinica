@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -189,20 +189,30 @@ def _get_preferred_visit_name_adnigo(visit_code: str) -> str:
 def _get_closest_visit(
     image_acquisition_date: str,
     image_visit: str,
-    visits,
+    visits: List[pd.Series],
     subject: str,
 ) -> Optional[pd.Series]:
     """Choose the visit with the closest date to a given image acquisition date.
 
-    Args:
-        image: An image entry from MPRAGEMETA
-        pending_timepoints: List of visit entries from ADNIMERGE
-        subject: Subject identifier
-        visit_field:
-        scandate_field:
+    Parameters
+    ----------
+    image_acquisition_date : str
+        The date in string format when the image was acquired.
 
-    Returns:
-        [Returns]
+    image_visit : str
+        The string identifier of the visit.
+
+    visits : list of pd.Series
+        List of visit entries among which we have to find the closest one.
+
+    subject : str
+        Subject identifier.
+
+    Returns
+    -------
+    None or pd.Series
+        If the list of visits provided is empty, this function returns None.
+        Otherwise, it returns a pd.Series corresponding to the closest visit found.
     """
     from clinica.utils.stream import cprint
 
@@ -239,16 +249,22 @@ def _get_closest_visit(
 
 
 def _get_closest_visit_for_large_time_difference(
-    subject,
-    image_visit,
-    image_acquisition_date,
-    closest_visit,
-    second_closest_visit,
-    smallest_time_difference,
-    second_smallest_time_difference,
-):
-    from datetime import datetime
+    subject: str,
+    image_visit: str,
+    image_acquisition_date: str,
+    closest_visit: pd.Series,
+    second_closest_visit: pd.Series,
+    smallest_time_difference: int,
+    second_smallest_time_difference: int,
+) -> pd.Series:
+    """Special case when the closest visit found is more than 90 days
+    apart from the image acquisition date.
 
+    In this situation, if the image acquisition date is in between the
+    closest visit and the second-closest visit, and the second-closest
+    visit is close enough from the image acquisition date, then select
+    the second-closest visit instead of the closest one.
+    """
     from clinica.utils.stream import cprint
 
     cprint(
@@ -263,25 +279,46 @@ def _get_closest_visit_for_large_time_difference(
         ),
         lvl="debug",
     )
-    # If image is too close to the date between two visits we prefer the earlier visit
-    if (
-        datetime.strptime(closest_visit.EXAMDATE, "%Y-%m-%d")
-        > datetime.strptime(image_acquisition_date, "%Y-%m-%d")
-        > datetime.strptime(second_closest_visit.EXAMDATE, "%Y-%m-%d")
+    if _second_closest_visit_is_better(
+        closest_visit.EXAMDATE,
+        image_acquisition_date,
+        second_closest_visit.EXAMDATE,
     ):
-        dif = days_between(closest_visit.EXAMDATE, second_closest_visit.EXAMDATE)
-        if abs((dif / 2.0) - smallest_time_difference) < 30:
-            closest_visit = second_closest_visit
+        closest_visit = second_closest_visit
 
     cprint(msg=f"We prefer {closest_visit.VISCODE}", lvl="debug")
 
     return closest_visit
 
 
+def _second_closest_visit_is_better(
+    closest_visit_date: str,
+    image_acquisition_date: str,
+    second_closest_visit_date: str,
+) -> bool:
+    """If image is too close to the date between two visits we prefer the earlier visit."""
+    from datetime import datetime
+
+    date_format = "%Y-%m-%d"
+    if (
+        datetime.strptime(closest_visit_date, date_format)
+        > datetime.strptime(image_acquisition_date, date_format)
+        > datetime.strptime(second_closest_visit_date, date_format)
+    ):
+        diff = days_between(closest_visit_date, second_closest_visit_date)
+        smallest_time_difference = days_between(
+            image_acquisition_date, closest_visit_date
+        )
+        if abs((diff / 2.0) - smallest_time_difference) < 30:
+            return True
+    return False
+
+
 def _get_closest_and_second_closest_visits(
-    visits: List[pd.Series], reference_date: str
-) -> tuple:
-    """Return the closest and second closest visit from the reference date.
+    visits: List[pd.Series],
+    reference_date: str,
+) -> Tuple[pd.Series, pd.Series, int, int]:
+    """Return the closest and second-closest visit from the reference date.
 
     Parameters
     ----------
