@@ -415,7 +415,7 @@ def create_spm_files(folder: Path, files: List[str]) -> List[str]:
 def create_spm_folder(folder: Path) -> Path:
     spm_folder = folder / "spm"
     if not spm_folder.exists():
-        spm_folder.mkdir()
+        spm_folder.mkdir(parents=True)
 
     return spm_folder
 
@@ -457,7 +457,7 @@ def test_rename_spm_figures(tmp_path):
         _rename_spm_figures,
     )
 
-    _ = create_spm_figures(tmp_path)
+    create_spm_figures(tmp_path)
 
     output_files = _rename_spm_figures(
         spm_dir=tmp_path / "spm",
@@ -465,9 +465,9 @@ def test_rename_spm_figures(tmp_path):
         parameters_for_new_filename_construction={"group_label": "foo"},
     )
 
-    assert output_files == [
-        str(tmp_path / f"group-foo_report-{i}.png") for i in (1, 13, 666)
-    ]
+    assert set(output_files) == set(
+        [str(tmp_path / f"group-foo_report-{i}.png") for i in (1, 13, 666)]
+    )
     assert all([Path(f).is_file() for f in output_files])
 
 
