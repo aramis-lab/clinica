@@ -169,45 +169,54 @@ def test_get_closest_and_second_closest_visits_errors(visits, expected):
         _get_closest_and_second_closest_visits(visits, "2003-01-01")
 
 
-def test_get_closest_and_second_closest_visits():
+@pytest.fixture
+def visits() -> List[pd.Series]:
+    return [
+        pd.Series({"EXAMDATE": date})
+        for date in (
+            "2010-06-06",
+            "2015-10-23",
+            "2005-02-13",
+            "2018-02-16",
+            "2018-06-01",
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    (
+        "image_acquisition_date,"
+        "expected_closest_visit_date,"
+        "expected_second_closest_visit_date,"
+        "expected_difference_with_closest,"
+        "expected_difference_with_second_closest,"
+    ),
+    [
+        ("2003-01-01", "2005-02-13", "2010-06-06", 774, 2713),
+        ("2008-01-01", "2010-06-06", "2005-02-13", 887, 1052),
+        ("2015-10-23", "2015-10-23", "2018-02-16", 0, 847),
+    ],
+)
+def test_get_closest_and_second_closest_visits(
+    visits,
+    image_acquisition_date,
+    expected_closest_visit_date,
+    expected_second_closest_visit_date,
+    expected_difference_with_closest,
+    expected_difference_with_second_closest,
+):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         _get_closest_and_second_closest_visits,
     )
 
-    visits = [
-        pd.Series({"EXAMDATE": "2010-06-06"}),
-        pd.Series({"EXAMDATE": "2015-10-23"}),
-        pd.Series({"EXAMDATE": "2005-02-13"}),
-        pd.Series({"EXAMDATE": "2018-02-16"}),
-        pd.Series({"EXAMDATE": "2018-06-01"}),
-    ]
-
     closest, second, diff1, diff2 = _get_closest_and_second_closest_visits(
-        visits, "2003-01-01"
+        visits, image_acquisition_date
     )
 
-    assert closest.EXAMDATE == "2005-02-13"
-    assert second.EXAMDATE == "2010-06-06"
-    assert diff1 == 774
-    assert diff2 == 2713
-
-    closest, second, diff1, diff2 = _get_closest_and_second_closest_visits(
-        visits, "2008-01-01"
-    )
-
-    assert closest.EXAMDATE == "2010-06-06"
-    assert second.EXAMDATE == "2005-02-13"
-    assert diff1 == 887
-    assert diff2 == 1052
-
-    closest, second, diff1, diff2 = _get_closest_and_second_closest_visits(
-        visits, "2015-10-23"
-    )
-
-    assert closest.EXAMDATE == "2015-10-23"
-    assert second.EXAMDATE == "2018-02-16"
-    assert diff1 == 0
-    assert diff2 == 847
+    assert closest.EXAMDATE == expected_closest_visit_date
+    assert second.EXAMDATE == expected_second_closest_visit_date
+    assert diff1 == expected_difference_with_closest
+    assert diff2 == expected_difference_with_second_closest
 
 
 def test_get_smallest_time_difference_too_large_message():
