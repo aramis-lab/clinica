@@ -566,7 +566,7 @@ def perform_dwi_epi_correction(
         apply_transform_field.name,
         jacobian.name,
         jacmult.name,
-        thres.name,
+        threshold_negative.name,
         apply_transform_image.name,
     ]
 
