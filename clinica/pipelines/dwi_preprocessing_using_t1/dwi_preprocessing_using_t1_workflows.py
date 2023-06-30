@@ -194,6 +194,7 @@ def eddy_fsl_pipeline(
 def epi_pipeline(
     base_dir: str,
     delete_cache: bool = False,
+    output_dir=None,
     name="susceptibility_distortion_correction_using_t1",
 ) -> Workflow:
     """Perform EPI correction.
@@ -216,6 +217,11 @@ def epi_pipeline(
 
     delete_cache: bool
         If True, part of the temporary data is automatically deleted after usage.
+
+    output_dir: str, optional
+        Path to output directory.
+        If provided, the pipeline will write its output in this folder.
+        Default to None.
 
     name: str, optional
         Name of the pipeline.
@@ -259,7 +265,7 @@ def epi_pipeline(
         niu.IdentityInterface(fields=workflow_inputs),
         name="inputnode",
     )
-    ants_registration = perform_ants_registration()
+    ants_registration = perform_ants_registration(output_dir=output_dir)
     ants_registration_outputs = [
         "merged_transforms",
         "dwi_to_t1_co_registration_matrix",
@@ -272,6 +278,7 @@ def epi_pipeline(
     epi_correction = perform_dwi_epi_correction(
         base_dir=base_dir,
         delete_cache=delete_cache,
+        output_dir=output_dir,
     )
     epi_correction_outputs = ["epi_corrected_dwi_image"]
 
@@ -306,12 +313,12 @@ def epi_pipeline(
         (
             ants_registration,
             outputnode,
-            [(f"outputnode.{outpt}", outpt) for outpt in ants_registration_outputs],
+            [(f"outputnode.{output}", output) for output in ants_registration_outputs],
         ),
         (
             epi_correction,
             outputnode,
-            [(f"outputnode.{outpt}", outpt) for outpt in epi_correction_outputs],
+            [(f"outputnode.{output}", output) for output in epi_correction_outputs],
         ),
     ]
 
@@ -320,11 +327,29 @@ def epi_pipeline(
     return wf
 
 
-def perform_ants_registration(name="perform_ants_registration") -> Workflow:
-    """Step 1 of EPI pipeline."""
+def perform_ants_registration(
+    output_dir=None,
+    name: str = "perform_ants_registration",
+) -> Workflow:
+    """Step 1 of EPI pipeline.
+
+    This workflow takes as inputs:
+        - t1_filename : The path to the T1w input image.
+        - dwi_filename : The path to the DWI image.
+        - b_vectors_filename : The path to the B-vectors file.
+
+    The workflow produces as outputs:
+        - merged_transforms
+        - dwi_to_t1_co_registration_matrix
+        - epi_correction_deformation_field
+        - epi_correction_affine_transform
+        - epi_correction_image_warped
+        - rotated_b_vectors
+    """
     import nipype.interfaces.ants as ants
     import nipype.interfaces.c3 as c3
     import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
 
@@ -334,12 +359,17 @@ def perform_ants_registration(name="perform_ants_registration") -> Workflow:
         rotate_b_vectors,
     )
 
-    inputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=["t1_filename", "dwi_filename", "b_vectors_filename"]
-        ),
-        name="inputnode",
-    )
+    workflow_inputs = ["t1_filename", "dwi_filename", "b_vectors_filename"]
+    workflow_outputs = [
+        "merged_transforms",
+        "dwi_to_t1_co_registration_matrix",
+        "epi_correction_deformation_field",
+        "epi_correction_affine_transform",
+        "epi_correction_image_warped",
+        "rotated_b_vectors",
+    ]
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=workflow_inputs), name="inputnode")
     split_dwi_volumes = pe.Node(fsl.Split(dimension="t"), name="split_dwi_volumes")
     pick_reference_b0 = pe.Node(niu.Select(), name="pick_reference_b0")
     pick_reference_b0.inputs.index = [0]
@@ -394,18 +424,13 @@ def perform_ants_registration(name="perform_ants_registration") -> Workflow:
     merge_transforms = pe.Node(niu.Merge(3), name="merge_transforms")
 
     outputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=[
-                "merged_transforms",
-                "dwi_to_t1_co_registration_matrix",
-                "epi_correction_deformation_field",
-                "epi_correction_affine_transform",
-                "epi_correction_image_warped",
-                "rotated_b_vectors",
-            ]
-        ),
-        name="outputnode",
+        niu.IdentityInterface(fields=workflow_outputs), name="outputnode"
     )
+
+    if output_dir:
+        write_results = pe.Node(name="write_results", interface=nio.DataSink())
+        write_results.inputs.base_directory = output_dir
+        write_results.inputs.parameterization = False
 
     wf = pe.Workflow(name=name)
 
@@ -465,6 +490,15 @@ def perform_ants_registration(name="perform_ants_registration") -> Workflow:
         ),
     ]
 
+    if output_dir:
+        connections += [
+            (
+                outputnode,
+                write_results,
+                [(output, output) for output in workflow_outputs],
+            ),
+        ]
+
     wf.connect(connections)
 
     return wf
@@ -473,11 +507,22 @@ def perform_ants_registration(name="perform_ants_registration") -> Workflow:
 def perform_dwi_epi_correction(
     base_dir: str,
     delete_cache: bool = False,
+    output_dir=None,
     name="perform_dwi_epi_correction",
 ) -> Workflow:
-    """Step 2 of EPI pipeline."""
+    """Step 2 of EPI pipeline.
+
+    This workflow takes as inputs:
+        - t1_filename : The path to the T1w input image.
+        - dwi_filename : The path to the DWI image.
+        - merged_transforms : TBA
+
+    The workflow produces as outputs:
+        - epi_corrected_dwi_image
+    """
     import nipype.interfaces.ants as ants
     import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
 
@@ -486,12 +531,10 @@ def perform_dwi_epi_correction(
         delete_temp_dirs,
     )
 
-    inputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=["t1_filename", "dwi_filename", "merged_transforms"]
-        ),
-        name="inputnode",
-    )
+    workflow_inputs = ["t1_filename", "dwi_filename", "merged_transforms"]
+    workflow_outputs = ["epi_corrected_dwi_image"]
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=workflow_inputs), name="inputnode")
     split_dwi_volumes = pe.Node(fsl.Split(dimension="t"), name="split_dwi_volumes")
     # the nipype function is not used since the results it gives are not
     # as good as the ones we get by using the command directly.
@@ -571,9 +614,13 @@ def perform_dwi_epi_correction(
     ]
 
     outputnode = pe.Node(
-        niu.IdentityInterface(fields=["epi_corrected_dwi_image"]),
-        name="outputnode",
+        niu.IdentityInterface(fields=workflow_outputs), name="outputnode"
     )
+
+    if output_dir:
+        write_results = pe.Node(name="write_results", interface=nio.DataSink())
+        write_results.inputs.base_directory = output_dir
+        write_results.inputs.parameterization = False
 
     wf = pe.Workflow(name=name)
 
@@ -596,6 +643,15 @@ def perform_dwi_epi_correction(
     if delete_cache:
         connections += [
             (merge_dwi_volumes, delete_warp_field_tmp, [("merged_file", "checkpoint")])
+        ]
+
+    if output_dir:
+        connections += [
+            (
+                outputnode,
+                write_results,
+                [(output, output) for output in workflow_outputs],
+            ),
         ]
 
     wf.connect(connections)
