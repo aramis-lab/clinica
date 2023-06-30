@@ -282,8 +282,19 @@ class StatisticsVolume(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        import clinica.pipelines.statistics_volume.statistics_volume_utils as utils
+        from clinica.pipelines.statistics_volume.statistics_volume_utils import (
+            clean_spm_contrast_file,
+            clean_spm_result_file,
+            clean_template_file,
+            copy_and_rename_spm_output_files,
+            get_group_1_and_2,
+            run_m_script,
+            write_matlab_model,
+        )
         from clinica.utils.filemanip import unzip_nii
+
+        def _getter(files: list, idx: int) -> str:
+            return files[idx]
 
         # SPM cannot handle zipped files
         unzip_node = npe.Node(
@@ -300,7 +311,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["tsv", "contrast"],
                 output_names=["idx_group1", "idx_group2", "class_names"],
-                function=utils.get_group_1_and_2,
+                function=get_group_1_and_2,
             ),
             name="get_groups",
         )
@@ -313,7 +324,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["m_file"],
                 output_names=["spm_mat"],
-                function=utils.run_m_script,
+                function=run_m_script,
             ),
             name="run_spm_script_node",
         )
@@ -351,7 +362,7 @@ class StatisticsVolume(cpe.Pipeline):
                     "template_file",
                 ],
                 output_names=["script_file", "covariates"],
-                function=utils.write_matlab_model,
+                function=write_matlab_model,
             ),
             name="model_creation",
             overwrite=True,
@@ -367,7 +378,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["mat_file", "template_file"],
                 output_names=["script_file"],
-                function=utils.clean_template_file,
+                function=clean_template_file,
             ),
             name="model_estimation",
         )
@@ -380,7 +391,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["mat_file", "template_file", "covariates", "class_names"],
                 output_names=["script_file"],
-                function=utils.clean_spm_contrast_file,
+                function=clean_spm_contrast_file,
             ),
             name="model_contrast",
         )
@@ -393,7 +404,7 @@ class StatisticsVolume(cpe.Pipeline):
             nutil.Function(
                 input_names=["mat_file", "template_file", "method", "threshold"],
                 output_names=["script_file"],
-                function=utils.clean_spm_result_file,
+                function=clean_spm_result_file,
             ),
             name="model_result_no_correction",
         )
@@ -420,16 +431,13 @@ class StatisticsVolume(cpe.Pipeline):
                     "measure",
                 ],
                 output_names=[
-                    "spmT_0001",
-                    "spmT_0002",
+                    "spm_T_maps",
                     "spm_figures",
-                    "variance_of_error",
-                    "resels_per_voxels",
-                    "mask",
+                    "other_spm_files",
                     "regression_coeff",
                     "contrasts",
                 ],
-                function=utils.copy_and_rename_spm_output_files,
+                function=copy_and_rename_spm_output_files,
             ),
             name="read_output_node",
         )
@@ -458,12 +466,12 @@ class StatisticsVolume(cpe.Pipeline):
                 (run_spm_model_result_no_correction, read_output_node, [("spm_mat", "spm_mat")]),
                 (get_groups, read_output_node, [("class_names", "class_names")]),
                 (model_creation, read_output_node, [("covariates", "covariates")]),
-                (read_output_node, self.output_node, [("spmT_0001", "spmT_0001")]),
-                (read_output_node, self.output_node, [("spmT_0002", "spmT_0002")]),
+                (read_output_node, self.output_node, [(("spm_T_maps", _getter, 0), "spmT_0001")]),
+                (read_output_node, self.output_node, [(("spm_T_maps", _getter, 1), "spmT_0002")]),
                 (read_output_node, self.output_node, [("spm_figures", "spm_figures")]),
-                (read_output_node, self.output_node, [("variance_of_error", "variance_of_error")]),
-                (read_output_node, self.output_node, [("resels_per_voxels", "resels_per_voxels")]),
-                (read_output_node, self.output_node, [("mask", "mask")]),
+                (read_output_node, self.output_node, [(("other_spm_files", _getter, 0), "variance_of_error")]),
+                (read_output_node, self.output_node, [(("other_spm_files", _getter, 1), "resels_per_voxels")]),
+                (read_output_node, self.output_node, [(("other_spm_files", _getter, 2), "mask")]),
                 (read_output_node, self.output_node, [("regression_coeff", "regression_coeff")]),
                 (read_output_node, self.output_node, [("contrasts", "contrasts")]),
             ]
