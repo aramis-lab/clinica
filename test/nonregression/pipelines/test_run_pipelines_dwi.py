@@ -45,6 +45,59 @@ def test_dwi_b0_flirt(cmdopt, tmp_path):
 
 
 @pytest.mark.slow
+def test_dwi_perform_ants_registration(cmdopt, tmp_path):
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+        perform_ants_registration,
+    )
+
+    base_dir = Path(cmdopt["input"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWIANTSRegistration"
+    )
+    (tmp_path / "tmp").mkdir()
+    ants_registration = perform_ants_registration()
+    ants_registration.inputs.inputnode.t1_filename = str(
+        input_dir / "sub-01_ses-M000_T1w.nii.gz"
+    )
+    ants_registration.inputs.inputnode.dwi_filename = str(
+        input_dir / "sub-01_ses-M000_dwi.nii.gz"
+    )
+    ants_registration.inputs.inputnode.b_vectors_filename = str(
+        input_dir / "sub-01_ses-M000_dwi.bvec"
+    )
+
+    ants_registration.run()
+
+    out_file = fspath(
+        tmp_path / "tmp" / "epi_correction_deformation_field" / "transform1Warp.nii.gz"
+    )
+    ref_file = fspath(ref_dir / "transform1Warp.nii.gz")
+
+    assert similarity_measure(out_file, ref_file, 0.97)
+
+    out_file = fspath(
+        tmp_path / "tmp" / "epi_correction_image_warped" / "transformWarp.nii.gz"
+    )
+    ref_file = fspath(ref_dir / "transformWarp.nii.gz")
+
+    assert similarity_measure(out_file, ref_file, 0.97)
+
+    out_file = fspath(tmp_path / "tmp" / "merged_transforms" / "transform1Warp.nii.gz")
+    ref_file = fspath(ref_dir / "merged_transform.nii.gz")
+
+    assert similarity_measure(out_file, ref_file, 0.97)
+
+    out_file = fspath(
+        tmp_path / "tmp" / "rotated_b_vectors" / "sub-01_ses-M000_dwi_rotated.bvec"
+    )
+    ref_file = fspath(ref_dir / "sub-01_ses-M000_dwi_rotated.bvec")
+    out_bvecs = np.loadtxt(out_file)
+    ref_bvecs = np.loadtxt(ref_file)
+
+    assert_array_almost_equal(out_bvecs, ref_bvecs)
+
+
+@pytest.mark.slow
 def test_dwi_eddy_fsl(cmdopt, tmp_path):
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
         eddy_fsl_pipeline,
