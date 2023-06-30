@@ -1,6 +1,7 @@
 """Data handling scripts."""
 
 from os import PathLike
+from pathlib import Path
 from typing import Iterable, List
 
 import click
@@ -8,21 +9,24 @@ from nibabel.nifti1 import Nifti1Header
 from numpy import ndarray
 
 
-def compute_default_filename(out_path):
-    from os import path
+def _validate_output_tsv_path(out_path: Path) -> Path:
+    """Validate that provided file path is a TSV file.
 
-    abspath = path.abspath(out_path)
-    # If given path is a directory, append a filename
-    if path.isdir(abspath):
-        tsv_path = path.join(out_path, "merge.tsv")
-    elif "." not in path.basename(abspath):
-        tsv_path = f"{out_path}.tsv"
-    else:
-        if path.splitext(out_path)[1] != ".tsv":
-            raise TypeError("Output path extension must be tsv.")
-        tsv_path = out_path
-
-    return tsv_path
+    If folders do not exist, this function will create them.
+    If provided path is a directory, this function will return
+    a file named 'merge.tsv' within this directory.
+    """
+    out_path = out_path.resolve()
+    if out_path.is_dir():
+        out_path = out_path / "merge.tsv"
+    elif "." not in out_path.name:
+        out_path = out_path.with_suffix(".tsv")
+    elif out_path.suffix != ".tsv":
+        raise TypeError("Output path extension must be tsv.")
+    out_dir = out_path.parent
+    if not out_dir.exists():
+        out_dir.mkdir(parents=True)
+    return out_path
 
 
 def create_merge_file(
@@ -49,6 +53,7 @@ def create_merge_file(
     import json
     import os
     from os import path
+    from pathlib import Path
 
     import numpy as np
     import pandas as pd
@@ -88,11 +93,7 @@ def create_merge_file(
         sub_ses_df = sub_ses_df.drop_duplicates(subset=["participant_id", "session_id"])
         sub_ses_df.set_index(["participant_id", "session_id"], inplace=True)
 
-    out_path = compute_default_filename(out_tsv)
-    out_dir = path.dirname(out_path)
-    if len(out_dir) > 0:
-        os.makedirs(out_dir, exist_ok=True)
-
+    out_path = _validate_output_tsv_path(Path(out_tsv))
     merged_df = pd.DataFrame(columns=participants_df.columns.values)
 
     # BIDS part
@@ -247,7 +248,7 @@ def create_merge_file(
                 last_column_name
             )
 
-        summary_path = path.splitext(out_path)[0] + "_summary.tsv"
+        summary_path = path.splitext(str(out_path))[0] + "_summary.tsv"
         merged_summary_df.to_csv(summary_path, sep="\t", index=False)
 
         tmp = merged_df.select_dtypes(include=[np.number])
