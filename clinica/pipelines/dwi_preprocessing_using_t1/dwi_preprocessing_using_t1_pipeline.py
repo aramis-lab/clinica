@@ -306,6 +306,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             self.base_dir,
             self.parameters["delete_cache"],
             name="SusceptibilityDistortionCorrection",
+            ants_random_seed=self.parameters["random_seed"],
         )
 
         # Remove bias correction from (Jeurissen et al., 2014)

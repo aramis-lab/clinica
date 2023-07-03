@@ -196,6 +196,7 @@ def epi_pipeline(
     delete_cache: bool = False,
     output_dir=None,
     name="susceptibility_distortion_correction_using_t1",
+    ants_random_seed: int = None,
 ) -> Workflow:
     """Perform EPI correction.
 
@@ -225,6 +226,12 @@ def epi_pipeline(
 
     name: str, optional
         Name of the pipeline.
+
+    ants_random_seed : int, optional
+        The random seed to be used with ANTS nodes.
+        If None, no random seed will be used and results will
+        be stochastic.
+        Default=None.
 
     Returns
     -------
@@ -265,7 +272,10 @@ def epi_pipeline(
         niu.IdentityInterface(fields=workflow_inputs),
         name="inputnode",
     )
-    ants_registration = perform_ants_registration(output_dir=output_dir)
+    ants_registration = perform_ants_registration(
+        output_dir=output_dir,
+        ants_random_seed=ants_random_seed,
+    )
     ants_registration_outputs = [
         "merged_transforms",
         "dwi_to_t1_co_registration_matrix",
@@ -330,6 +340,7 @@ def epi_pipeline(
 def perform_ants_registration(
     output_dir=None,
     name: str = "perform_ants_registration",
+    ants_random_seed: int = None,
 ) -> Workflow:
     """Step 1 of EPI pipeline.
 
@@ -342,6 +353,12 @@ def perform_ants_registration(
 
     name: str, optional
         Name of the pipeline.
+
+    ants_random_seed : int, optional
+        The random seed to be used with ANTS nodes.
+        If None, no random seed will be used and results will
+        be stochastic.
+        Default=None.
 
     Returns
     -------
@@ -422,7 +439,8 @@ def perform_ants_registration(
         ),
         name="antsRegistrationSyNQuick",
     )
-    ants_registration.inputs.random_seed = 42
+    if ants_random_seed is not None:
+        ants_registration.inputs.random_seed = ants_random_seed
 
     c3d_flirt2ants = pe.Node(c3.C3dAffineTool(), name="fsl_reg_2_itk")
     c3d_flirt2ants.inputs.itk_transform = True
