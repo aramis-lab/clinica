@@ -63,6 +63,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         self.parameters.setdefault("use_cuda", False)
         self.parameters.setdefault("initrand", False)
         self.parameters.setdefault("delete_cache", False)
+        self.parameters.setdefault("random_seed", None)
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""

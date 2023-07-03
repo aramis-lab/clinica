@@ -131,6 +131,7 @@ def test_instantiate_dwi_preprocessing_using_t1(cmdopt):
         "low_bval": 5,
         "use_cuda": False,
         "delete_cache": True,
+        "random_seed": 42,
     }
     pipeline = DwiPreprocessingUsingT1(
         bids_directory=fspath(root / "in" / "bids"),
