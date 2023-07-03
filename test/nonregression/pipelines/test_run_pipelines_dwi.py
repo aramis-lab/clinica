@@ -56,7 +56,10 @@ def test_dwi_perform_ants_registration(cmdopt, tmp_path):
         base_dir, tmp_path, "DWIANTSRegistration"
     )
     (tmp_path / "tmp").mkdir()
-    ants_registration = perform_ants_registration(output_dir=str(tmp_path / "tmp"))
+    ants_registration = perform_ants_registration(
+        output_dir=str(tmp_path / "tmp"),
+        ants_random_seed=42,  # Set the random seed to avoid stochastic results (requires ants >= 2.3.0)
+    )
     ants_registration.inputs.inputnode.t1_filename = str(
         input_dir / "sub-01_ses-M000_T1w.nii.gz"
     )
@@ -78,7 +81,7 @@ def test_dwi_perform_ants_registration(cmdopt, tmp_path):
     ref_img = nib.load(ref_file)
 
     # assert similarity_measure(out_file, ref_file, 0.97)
-    # assert_array_almost_equal(out_img.get_fdata(), ref_img.get_fdata())
+    assert_array_almost_equal(out_img.get_fdata(), ref_img.get_fdata())
 
     out_file = fspath(
         tmp_path / "tmp" / "epi_correction_image_warped" / "transformWarp.nii.gz"
@@ -89,12 +92,16 @@ def test_dwi_perform_ants_registration(cmdopt, tmp_path):
     ref_img = nib.load(ref_file)
 
     # assert similarity_measure(out_file, ref_file, 0.97)
-    # assert_array_almost_equal(out_img.get_fdata(), ref_img.get_fdata())
+    assert_array_almost_equal(out_img.get_fdata(), ref_img.get_fdata())
 
     out_file = fspath(tmp_path / "tmp" / "merged_transforms" / "transform1Warp.nii.gz")
     ref_file = fspath(ref_dir / "merged_transform.nii.gz")
 
-    assert similarity_measure(out_file, ref_file, 0.97)
+    out_img = nib.load(out_file)
+    ref_img = nib.load(ref_file)
+
+    # assert similarity_measure(out_file, ref_file, 0.97)
+    assert_array_almost_equal(out_img.get_fdata(), ref_img.get_fdata())
 
     out_file = fspath(
         tmp_path / "tmp" / "rotated_b_vectors" / "sub-01_ses-M000_dwi_rotated.bvec"
