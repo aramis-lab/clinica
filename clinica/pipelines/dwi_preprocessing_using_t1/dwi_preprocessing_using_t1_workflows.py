@@ -333,18 +333,31 @@ def perform_ants_registration(
 ) -> Workflow:
     """Step 1 of EPI pipeline.
 
-    This workflow takes as inputs:
-        - t1_filename : The path to the T1w input image.
-        - dwi_filename : The path to the DWI image.
-        - b_vectors_filename : The path to the B-vectors file.
+    Parameters
+    ----------
+    output_dir: str, optional
+        Path to output directory.
+        If provided, the pipeline will write its output in this folder.
+        Default to None.
 
-    The workflow produces as outputs:
-        - merged_transforms
-        - dwi_to_t1_co_registration_matrix
-        - epi_correction_deformation_field
-        - epi_correction_affine_transform
-        - epi_correction_image_warped
-        - rotated_b_vectors
+    name: str, optional
+        Name of the pipeline.
+
+    Returns
+    -------
+    Workflow :
+        The Nipype workflow.
+        This workflow takes as inputs:
+            - t1_filename : The path to the T1w input image.
+            - dwi_filename : The path to the DWI image.
+            - b_vectors_filename : The path to the B-vectors file.
+        The workflow produces as outputs:
+            - merged_transforms
+            - dwi_to_t1_co_registration_matrix
+            - epi_correction_deformation_field
+            - epi_correction_affine_transform
+            - epi_correction_image_warped
+            - rotated_b_vectors
     """
     import nipype.interfaces.ants as ants
     import nipype.interfaces.c3 as c3
@@ -404,9 +417,12 @@ def perform_ants_registration(
         interface=ants.registration.RegistrationSynQuick(
             transform_type="br",
             dimension=3,
+            precision_type="double",
+            num_threads=1,
         ),
         name="antsRegistrationSyNQuick",
     )
+    ants_registration.inputs.random_seed = 42
 
     c3d_flirt2ants = pe.Node(c3.C3dAffineTool(), name="fsl_reg_2_itk")
     c3d_flirt2ants.inputs.itk_transform = True
@@ -512,13 +528,32 @@ def perform_dwi_epi_correction(
 ) -> Workflow:
     """Step 2 of EPI pipeline.
 
-    This workflow takes as inputs:
-        - t1_filename : The path to the T1w input image.
-        - dwi_filename : The path to the DWI image.
-        - merged_transforms : TBA
+    Parameters
+    ----------
+    base_dir: str
+        Working directory, which contains all of the intermediary data generated.
 
-    The workflow produces as outputs:
-        - epi_corrected_dwi_image
+    delete_cache: bool
+        If True, part of the temporary data is automatically deleted after usage.
+
+    output_dir: str, optional
+        Path to output directory.
+        If provided, the pipeline will write its output in this folder.
+        Default to None.
+
+    name: str, optional
+        Name of the pipeline.
+
+    Returns
+    -------
+    Workflow :
+        The Nipype workflow.
+        This workflow takes as inputs:
+            - t1_filename : The path to the T1w input image.
+            - dwi_filename : The path to the DWI image.
+            - merged_transforms : TBA
+        The workflow produces as outputs:
+            - epi_corrected_dwi_image
     """
     import nipype.interfaces.ants as ants
     import nipype.interfaces.fsl as fsl
