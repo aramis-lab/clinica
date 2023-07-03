@@ -84,9 +84,9 @@ def test_dwi_perform_ants_registration(cmdopt, tmp_path):
     assert_array_almost_equal(out_img.get_fdata(), ref_img.get_fdata())
 
     out_file = fspath(
-        tmp_path / "tmp" / "epi_correction_image_warped" / "transformWarp.nii.gz"
+        tmp_path / "tmp" / "epi_correction_image_warped" / "transformWarped.nii.gz"
     )
-    ref_file = fspath(ref_dir / "transformWarp.nii.gz")
+    ref_file = fspath(ref_dir / "transformWarped.nii.gz")
 
     out_img = nib.load(out_file)
     ref_img = nib.load(ref_file)
