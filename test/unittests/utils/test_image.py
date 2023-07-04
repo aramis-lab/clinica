@@ -143,3 +143,21 @@ def test_merge_nifti_images_in_time_dimension_3d_and_4d(
     assert_array_equal(out_img.affine, np.eye(4))
     expected_data = np.zeros(expected_shape)
     assert_array_equal(out_img.get_fdata(), expected_data)
+
+
+def test_remove_dummy_dimension_from_image(tmp_path):
+    from clinica.utils.image import remove_dummy_dimension_from_image
+
+    input_data = np.random.randint(low=0, high=10, size=(16, 10, 6, 3))
+    input_image = nib.Nifti1Image(input_data, affine=np.eye(4))
+    nib.save(input_image, tmp_path / "input_image.nii.gz")
+
+    result = remove_dummy_dimension_from_image(
+        str(tmp_path / "input_image.nii.gz"),
+        str(tmp_path / "output_image.nii.gz"),
+    )
+    result_image = nib.load(result)
+
+    assert result == str(tmp_path / "output_image.nii.gz")
+    assert_array_equal(result_image.affine, np.eye(4))
+    assert_array_equal(result_image.get_fdata(), input_data)
