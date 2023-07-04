@@ -573,6 +573,8 @@ def perform_dwi_epi_correction(
         The workflow produces as outputs:
             - epi_corrected_dwi_image
     """
+    import os
+
     import nipype.interfaces.ants as ants
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.io as nio
@@ -594,11 +596,14 @@ def perform_dwi_epi_correction(
 
     remove_dummy_dimension_from_transforms = pe.Node(
         niu.Function(
-            input_names=["image"],
+            input_names=["image", "output"],
             output_names=["output"],
             function=remove_dummy_dimension_from_image,
         ),
         name="remove_dummy_dimension_from_transforms",
+    )
+    remove_dummy_dimension_from_transforms.inputs.output = os.path.join(
+        output_dir, "merged_transforms_no_dummy.nii.gz"
     )
 
     split_transforms = pe.Node(fsl.Split(dimension="t"), name="split_transforms")
