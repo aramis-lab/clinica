@@ -549,7 +549,7 @@ def perform_dwi_epi_correction(
     Parameters
     ----------
     base_dir: str
-        Working directory, which contains all of the intermediary data generated.
+        Working directory, which contains all the intermediary data generated.
 
     delete_cache: bool
         If True, part of the temporary data is automatically deleted after usage.
@@ -589,6 +589,27 @@ def perform_dwi_epi_correction(
 
     inputnode = pe.Node(niu.IdentityInterface(fields=workflow_inputs), name="inputnode")
     split_dwi_volumes = pe.Node(fsl.Split(dimension="t"), name="split_dwi_volumes")
+
+    def remove_dummy_dimension(image: str, output: str) -> str:
+        import nibabel as nib
+        from nilearn.image import new_img_like
+
+        img = new_img_like(image, nib.load(image).get_fdata().squeeze())
+        nib.save(img, output)
+
+        return output
+
+    remove_dummy_dimension_from_transforms = pe.Node(
+        niu.Function(
+            input_names=["image"],
+            output_names=["output"],
+            function=remove_dummy_dimension,
+        ),
+        name="remove_dummy_dimension_from_transforms",
+    )
+
+    split_transforms = pe.Node(fsl.Split(dimension="t"), name="split_transforms")
+
     # the nipype function is not used since the results it gives are not
     # as good as the ones we get by using the command directly.
     apply_transform_image = pe.MapNode(
@@ -681,10 +702,20 @@ def perform_dwi_epi_correction(
         (inputnode, split_dwi_volumes, [("dwi_filename", "in_file")]),
         (inputnode, apply_transform_image, [("t1_filename", "fixed_image")]),
         (split_dwi_volumes, apply_transform_image, [("out_files", "moving_image")]),
-        (inputnode, apply_transform_image, [("merged_transforms", "transforms")]),
+        (
+            inputnode,
+            remove_dummy_dimension_from_transforms,
+            [("merged_transforms", "image")],
+        ),
+        (
+            remove_dummy_dimension_from_transforms,
+            split_transforms,
+            [("output", "in_file")],
+        ),
+        (split_transforms, apply_transform_image, [("out_files", "transforms")]),
         (inputnode, apply_transform_field, [("t1_filename", "fixed_image")]),
         (split_dwi_volumes, apply_transform_field, [("out_files", "moving_image")]),
-        (inputnode, apply_transform_field, [("merged_transforms", "transforms")]),
+        (split_transforms, apply_transform_field, [("out_files", "transforms")]),
         (apply_transform_field, jacobian, [("warped_image", "deformationField")]),
         (apply_transform_image, jacmult, [("warped_image", "operand_files")]),
         (jacobian, jacmult, [("jacobian_image", "in_file")]),
