@@ -579,6 +579,8 @@ def perform_dwi_epi_correction(
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
 
+    from clinica.utils.image import remove_dummy_dimension_from_image
+
     from .dwi_preprocessing_using_t1_utils import (
         ants_apply_transforms,
         delete_temp_dirs,
@@ -590,20 +592,11 @@ def perform_dwi_epi_correction(
     inputnode = pe.Node(niu.IdentityInterface(fields=workflow_inputs), name="inputnode")
     split_dwi_volumes = pe.Node(fsl.Split(dimension="t"), name="split_dwi_volumes")
 
-    def remove_dummy_dimension(image: str, output: str) -> str:
-        import nibabel as nib
-        from nilearn.image import new_img_like
-
-        img = new_img_like(image, nib.load(image).get_fdata().squeeze())
-        nib.save(img, output)
-
-        return output
-
     remove_dummy_dimension_from_transforms = pe.Node(
         niu.Function(
             input_names=["image"],
             output_names=["output"],
-            function=remove_dummy_dimension,
+            function=remove_dummy_dimension_from_image,
         ),
         name="remove_dummy_dimension_from_transforms",
     )
