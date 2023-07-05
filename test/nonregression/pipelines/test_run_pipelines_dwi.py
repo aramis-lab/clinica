@@ -127,6 +127,7 @@ def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
     epi_correction = perform_dwi_epi_correction(
         base_dir=str(base_dir),
         output_dir=str(tmp_path / "tmp"),
+        delete_cache=True,
     )
     epi_correction.inputs.inputnode.t1_filename = str(
         input_dir / "sub-01_ses-M000_T1w.nii.gz"
@@ -153,6 +154,8 @@ def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
 
     assert out_img.shape == ref_img.shape
     assert_array_almost_equal(out_img.affine, ref_img.affine)
+
+    assert similarity_measure(out_file, ref_file, 0.97)
 
 
 @pytest.mark.slow

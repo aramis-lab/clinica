@@ -481,14 +481,16 @@ def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str) -> None:
 
     Parameters
     ----------
-    checkpoint: str
-    Path to a file. Used to ensure, that the temporary directories we want to delete are not useful anymore, and to verify that the subject and session are right.
+    checkpoint : str
+        Path to a file. Used to ensure, that the temporary directories
+        we want to delete are not useful anymore, and to verify that
+        the subject and session are right.
 
-    dir_to_del: list
-    Names of the directories we want to delete.
+    dir_to_del : list of str
+        Names of the directories we want to delete.
 
-    base_dir: str
-    Path to the working directory.
+    base_dir : str
+        Path to the working directory.
     """
     import shutil
     from pathlib import Path
@@ -498,6 +500,6 @@ def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str) -> None:
     subject_session_folder_name = extract_sub_ses_folder_name(checkpoint)
     for a in dir_to_del:
         for z in Path(base_dir).rglob(f"*{a}*"):
-            if (Path(z).parent).name == subject_session_folder_name:
+            if Path(z).parent.name == subject_session_folder_name:
                 shutil.rmtree(z)
                 cprint(msg=f"Temporary folder {z} deleted", lvl="info")

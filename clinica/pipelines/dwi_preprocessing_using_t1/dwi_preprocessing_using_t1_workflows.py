@@ -1,3 +1,5 @@
+from typing import Optional
+
 from nipype.pipeline.engine import Workflow
 
 
@@ -194,9 +196,9 @@ def eddy_fsl_pipeline(
 def epi_pipeline(
     base_dir: str,
     delete_cache: bool = False,
-    output_dir=None,
-    name="susceptibility_distortion_correction_using_t1",
-    ants_random_seed: int = None,
+    output_dir: Optional[str] = None,
+    name: str = "susceptibility_distortion_correction_using_t1",
+    ants_random_seed: Optional[int] = None,
 ) -> Workflow:
     """Perform EPI correction.
 
@@ -338,20 +340,20 @@ def epi_pipeline(
 
 
 def perform_ants_registration(
-    output_dir=None,
+    output_dir: Optional[str] = None,
     name: str = "perform_ants_registration",
-    ants_random_seed: int = None,
+    ants_random_seed: Optional[int] = None,
 ) -> Workflow:
     """Step 1 of EPI pipeline.
 
     Parameters
     ----------
-    output_dir: str, optional
+    output_dir : str, optional
         Path to output directory.
         If provided, the pipeline will write its output in this folder.
         Default to None.
 
-    name: str, optional
+    name : str, optional
         Name of the pipeline.
 
     ants_random_seed : int, optional
@@ -541,9 +543,9 @@ def perform_ants_registration(
 def perform_dwi_epi_correction(
     base_dir: str,
     delete_cache: bool = False,
-    output_dir=None,
+    output_dir: Optional[str] = None,
     use_double_precision: bool = True,
-    name="perform_dwi_epi_correction",
+    name: str = "perform_dwi_epi_correction",
 ) -> Workflow:
     """Step 2 of EPI pipeline.
 
@@ -552,10 +554,10 @@ def perform_dwi_epi_correction(
     base_dir: str
         Working directory, which contains all the intermediary data generated.
 
-    delete_cache: bool
+    delete_cache : bool
         If True, part of the temporary data is automatically deleted after usage.
 
-    output_dir: str, optional
+    output_dir : str, optional
         Path to output directory.
         If provided, the pipeline will write its output in this folder.
         Default to None.
@@ -566,7 +568,7 @@ def perform_dwi_epi_correction(
         If False, computations will be made in float precision (i.e. 32 bits).
         Default=True.
 
-    name: str, optional
+    name : str, optional
         Name of the pipeline.
 
     Returns
@@ -671,21 +673,22 @@ def perform_dwi_epi_correction(
     merge_dwi_volumes = pe.Node(fsl.Merge(dimension="t"), name="merge_dwi_volumes")
 
     # Delete the temporary directory that takes too much place
-    delete_warp_field_tmp = pe.Node(
-        name="deletewarpfieldtmp",
-        interface=niu.Function(
-            inputs=["checkpoint", "dir_to_del", "base_dir"],
-            function=delete_temp_dirs,
-        ),
-    )
-    delete_warp_field_tmp.inputs.base_dir = base_dir
-    delete_warp_field_tmp.inputs.dir_to_del = [
-        apply_transform_field.name,
-        jacobian.name,
-        jacmult.name,
-        threshold_negative.name,
-        apply_transform_image.name,
-    ]
+    if delete_cache:
+        delete_warp_field_tmp = pe.Node(
+            name="deletewarpfieldtmp",
+            interface=niu.Function(
+                inputs=["checkpoint", "dir_to_del", "base_dir"],
+                function=delete_temp_dirs,
+            ),
+        )
+        delete_warp_field_tmp.inputs.base_dir = base_dir
+        delete_warp_field_tmp.inputs.dir_to_del = [
+            apply_transform_field.name,
+            jacobian.name,
+            jacmult.name,
+            threshold_negative.name,
+            apply_transform_image.name,
+        ]
 
     outputnode = pe.Node(
         niu.IdentityInterface(fields=workflow_outputs), name="outputnode"
