@@ -15,6 +15,11 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal
 
+from clinica.utils.testing_utils import (
+    assert_large_nifti_almost_equal,
+    assert_nifti_almost_equal,
+)
+
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
 
@@ -77,31 +82,19 @@ def test_dwi_perform_ants_registration(cmdopt, tmp_path):
     )
     ref_file = fspath(ref_dir / "transform1Warp.nii.gz")
 
-    out_img = nib.load(out_file)
-    ref_img = nib.load(ref_file)
-
-    # assert similarity_measure(out_file, ref_file, 0.97)
-    assert_array_almost_equal(out_img.get_fdata(), ref_img.get_fdata())
+    assert_nifti_almost_equal(out_file, ref_file)
 
     out_file = fspath(
         tmp_path / "tmp" / "epi_correction_image_warped" / "transformWarped.nii.gz"
     )
     ref_file = fspath(ref_dir / "transformWarped.nii.gz")
 
-    out_img = nib.load(out_file)
-    ref_img = nib.load(ref_file)
-
-    # assert similarity_measure(out_file, ref_file, 0.97)
-    assert_array_almost_equal(out_img.get_fdata(), ref_img.get_fdata())
+    assert_nifti_almost_equal(out_file, ref_file)
 
     out_file = fspath(tmp_path / "tmp" / "merged_transforms" / "transform1Warp.nii.gz")
     ref_file = fspath(ref_dir / "merged_transform.nii.gz")
 
-    out_img = nib.load(out_file)
-    ref_img = nib.load(ref_file)
-
-    # assert similarity_measure(out_file, ref_file, 0.97)
-    assert_array_almost_equal(out_img.get_fdata(), ref_img.get_fdata())
+    assert_nifti_almost_equal(out_file, ref_file)
 
     out_file = fspath(
         tmp_path / "tmp" / "rotated_b_vectors" / "sub-01_ses-M000_dwi_rotated.bvec"
@@ -149,13 +142,7 @@ def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
     )
     ref_file = fspath(ref_dir / "Jacobian_image_maths_thresh_merged.nii.gz")
 
-    out_img = nib.load(out_file)
-    ref_img = nib.load(ref_file)
-
-    assert out_img.shape == ref_img.shape
-    assert_array_almost_equal(out_img.affine, ref_img.affine)
-
-    assert similarity_measure(out_file, ref_file, 0.97)
+    assert_large_nifti_almost_equal(out_file, ref_file)
 
 
 @pytest.mark.slow

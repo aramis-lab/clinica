@@ -1,6 +1,11 @@
 import json
 import os
+from functools import partial
 from pathlib import Path
+from typing import Callable, Optional
+
+import nibabel as nib
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 
 def build_bids_directory(directory: os.PathLike, subjects_sessions: dict) -> None:
@@ -199,3 +204,103 @@ def rmtree(f: Path):
         for child in f.iterdir():
             rmtree(child)
         f.rmdir()
+
+
+def _assert_nifti_relation(
+    img1: Path,
+    img2: Path,
+    assertion_func_data: Callable,
+    assertion_func_affine: Optional[Callable] = None,
+) -> None:
+    """Assert that two nifti images satisfy some relationship.
+
+    Parameters
+    ----------
+    img1 : Path
+        Path to the first image.
+
+    img2 : Path
+        Path to the second image.
+
+    assertion_func_data : Callable
+        Assertion function for dataobj comparison.
+        The function should take two numpy arrays as input.
+
+    assertion_func_affine : Callable, optional
+        Assertion function for affine comparison.
+        The function should take two numpy arrays as input.
+        If not specified, `assertion_func_data` will be used to
+        check affine matrices.
+    """
+    assertion_func_affine = assertion_func_affine or assertion_func_data
+    img1 = nib.load(img1)
+    img2 = nib.load(img2)
+
+    assert img1.shape == img2.shape  # Fail fast
+    assertion_func_affine(img1, img2)
+    assertion_func_data(img1, img2)
+
+
+def _assert_affine_equal(img1: nib.Nifti1Image, img2: nib.Nifti1Image) -> None:
+    assert_array_equal(img1.affine, img2.affine)
+
+
+def _assert_dataobj_equal(img1: nib.Nifti1Image, img2: nib.Nifti1Image) -> None:
+    assert_array_equal(img1.get_fdata(), img2.get_fdata())
+
+
+def _assert_affine_almost_equal(
+    img1: nib.Nifti1Image, img2: nib.Nifti1Image, decimal: int = 6
+) -> None:
+    assert_array_almost_equal(img1.affine, img2.affine, decimal=decimal)
+
+
+def _assert_dataobj_almost_equal(
+    img1: nib.Nifti1Image, img2: nib.Nifti1Image, decimal: int = 6
+) -> None:
+    assert_array_almost_equal(img1.get_fdata(), img2.get_fdata(), decimal=decimal)
+
+
+def _assert_large_image_dataobj_almost_equal(
+    img1: nib.Nifti1Image,
+    img2: nib.Nifti1Image,
+    decimal: int = 6,
+    n_samples: Optional[int] = None,
+    verbose: bool = False,
+) -> None:
+    import random
+
+    import numpy as np
+
+    volumes = range(0, img1.shape[-1])
+    if n_samples:
+        volumes = random.sample(volumes, n_samples)
+    for volume in volumes:
+        if verbose:
+            print(f"--> Processing volume {volume}...")
+        assert_array_almost_equal(
+            np.asarray(img1.dataobj[..., volume]),
+            np.asarray(img2.dataobj[..., volume]),
+            decimal=decimal,
+        )
+
+
+assert_nifti_equal = partial(
+    _assert_nifti_relation,
+    assertion_func_data=_assert_dataobj_equal,
+    assertion_func_affine=_assert_affine_equal,
+)
+
+
+assert_nifti_almost_equal = partial(
+    _assert_nifti_relation,
+    assertion_func_data=_assert_dataobj_almost_equal,
+    assertion_func_affine=_assert_affine_almost_equal,
+)
+
+
+assert_large_nifti_almost_equal = partial(
+    _assert_nifti_relation,
+    assertion_func_data=_assert_large_image_dataobj_almost_equal,
+    assertion_func_affine=_assert_affine_almost_equal,
+)
