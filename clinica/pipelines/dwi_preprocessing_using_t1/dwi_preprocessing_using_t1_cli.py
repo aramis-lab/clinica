@@ -51,6 +51,7 @@ def cli(
         "initrand": initrand,
         "delete_cache": delete_cache,
         "random_seed": random_seed,
+        "double_precision": True,  # TODO: expose to user ?
     }
 
     pipeline = DwiPreprocessingUsingT1(

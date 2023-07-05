@@ -199,6 +199,7 @@ def epi_pipeline(
     output_dir: Optional[str] = None,
     name: str = "susceptibility_distortion_correction_using_t1",
     ants_random_seed: Optional[int] = None,
+    use_double_precision: bool = True,
 ) -> Workflow:
     """Perform EPI correction.
 
@@ -234,6 +235,12 @@ def epi_pipeline(
         If None, no random seed will be used and results will
         be stochastic.
         Default=None.
+
+    use_double_precision : bool, optional
+        This only affects tools supporting different precision settings.
+        If True, computations will be made in double precision (i.e. 64 bits).
+        If False, computations will be made in float precision (i.e. 32 bits).
+        Default=True.
 
     Returns
     -------
@@ -291,6 +298,7 @@ def epi_pipeline(
         base_dir=base_dir,
         delete_cache=delete_cache,
         output_dir=output_dir,
+        use_double_precision=use_double_precision,
     )
     epi_correction_outputs = ["epi_corrected_dwi_image"]
 

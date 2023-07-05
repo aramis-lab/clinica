@@ -64,6 +64,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         self.parameters.setdefault("initrand", False)
         self.parameters.setdefault("delete_cache", False)
         self.parameters.setdefault("random_seed", None)
+        self.parameters.setdefault("double_precision", True)
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -308,6 +309,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             self.parameters["delete_cache"],
             name="SusceptibilityDistortionCorrection",
             ants_random_seed=self.parameters["random_seed"],
+            use_double_precision=self.parameters["double_precision"],
         )
 
         # Remove bias correction from (Jeurissen et al., 2014)
