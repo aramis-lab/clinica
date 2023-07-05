@@ -495,6 +495,9 @@ def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str) -> None:
     import shutil
     from pathlib import Path
 
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (  # noqa
+        extract_sub_ses_folder_name,
+    )
     from clinica.utils.stream import cprint
 
     subject_session_folder_name = extract_sub_ses_folder_name(checkpoint)
