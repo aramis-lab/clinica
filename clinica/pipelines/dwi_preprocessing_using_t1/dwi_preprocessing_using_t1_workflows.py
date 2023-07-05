@@ -569,9 +569,20 @@ def perform_dwi_epi_correction(
         This workflow takes as inputs:
             - t1_filename : The path to the T1w input image.
             - dwi_filename : The path to the DWI image.
-            - merged_transforms : TBA
+            - merged_transforms : The three transformations computed in
+              the workflow `perform_ants_registration`. These are saved to
+              a 5D nifti image of shape `(size_x, size_y, size_z, 1, 3)`.
         The workflow produces as outputs:
             - epi_corrected_dwi_image
+
+    Warnings
+    --------
+    This workflow writes very heavy temporary files when calling AntsApplyTransforms.
+
+    Notes
+    -----
+    This workflow benefits a lot from parallelization as most operations are done on
+    single DWI direction.
     """
     import os
 
@@ -583,15 +594,13 @@ def perform_dwi_epi_correction(
 
     from clinica.utils.image import remove_dummy_dimension_from_image
 
-    from .dwi_preprocessing_using_t1_utils import (
-        ants_apply_transforms,
-        delete_temp_dirs,
-    )
+    from .dwi_preprocessing_using_t1_utils import delete_temp_dirs
 
     workflow_inputs = ["t1_filename", "dwi_filename", "merged_transforms"]
     workflow_outputs = ["epi_corrected_dwi_image"]
 
     inputnode = pe.Node(niu.IdentityInterface(fields=workflow_inputs), name="inputnode")
+
     split_dwi_volumes = pe.Node(fsl.Split(dimension="t"), name="split_dwi_volumes")
 
     remove_dummy_dimension_from_transforms = pe.Node(
@@ -608,43 +617,21 @@ def perform_dwi_epi_correction(
 
     split_transforms = pe.Node(fsl.Split(dimension="t"), name="split_transforms")
 
-    # the nipype function is not used since the results it gives are not
-    # as good as the ones we get by using the command directly.
     apply_transform_image = pe.MapNode(
-        interface=niu.Function(
-            input_names=[
-                "fixed_image",
-                "moving_image",
-                "transforms",
-                "warped_image",
-                "output_warped_image",
-            ],
-            output_names=["warped_image"],
-            function=ants_apply_transforms,
-        ),
-        iterfield=["moving_image"],
+        ants.ApplyTransforms(),
+        iterfield=["input_image"],
         name="warp_image",
     )
-    apply_transform_image.inputs.warped_image = "out_warped.nii.gz"
-    apply_transform_image.inputs.output_warped_image = True
+    apply_transform_image.inputs.output_image = "out_warped.nii.gz"
+    apply_transform_image.inputs.print_out_composite_warp_file = False
 
     apply_transform_field = pe.MapNode(
-        interface=niu.Function(
-            input_names=[
-                "fixed_image",
-                "moving_image",
-                "transforms",
-                "warped_image",
-                "output_warped_image",
-            ],
-            output_names=["warped_image"],
-            function=ants_apply_transforms,
-        ),
-        iterfield=["moving_image"],
+        ants.ApplyTransforms(),
+        iterfield=["input_image"],
         name="warp_field",
     )
-    apply_transform_field.inputs.warped_image = "out_warped_field.nii.gz"
-    apply_transform_field.inputs.output_warped_image = False
+    apply_transform_field.inputs.output_image = "out_warped_field.nii.gz"
+    apply_transform_field.inputs.print_out_composite_warp_file = True
 
     jacobian = pe.MapNode(
         interface=ants.CreateJacobianDeterminantImage(),
@@ -667,8 +654,8 @@ def perform_dwi_epi_correction(
     )
 
     merge_dwi_volumes = pe.Node(fsl.Merge(dimension="t"), name="merge_dwi_volumes")
-    # Delete the temporary directory that takes too much place
 
+    # Delete the temporary directory that takes too much place
     delete_warp_field_tmp = pe.Node(
         name="deletewarpfieldtmp",
         interface=niu.Function(
@@ -698,8 +685,8 @@ def perform_dwi_epi_correction(
 
     connections = [
         (inputnode, split_dwi_volumes, [("dwi_filename", "in_file")]),
-        (inputnode, apply_transform_image, [("t1_filename", "fixed_image")]),
-        (split_dwi_volumes, apply_transform_image, [("out_files", "moving_image")]),
+        (inputnode, apply_transform_image, [("t1_filename", "reference_image")]),
+        (split_dwi_volumes, apply_transform_image, [("out_files", "input_image")]),
         (
             inputnode,
             remove_dummy_dimension_from_transforms,
@@ -711,11 +698,11 @@ def perform_dwi_epi_correction(
             [("output", "in_file")],
         ),
         (split_transforms, apply_transform_image, [("out_files", "transforms")]),
-        (inputnode, apply_transform_field, [("t1_filename", "fixed_image")]),
-        (split_dwi_volumes, apply_transform_field, [("out_files", "moving_image")]),
+        (inputnode, apply_transform_field, [("t1_filename", "reference_image")]),
+        (split_dwi_volumes, apply_transform_field, [("out_files", "input_image")]),
         (split_transforms, apply_transform_field, [("out_files", "transforms")]),
-        (apply_transform_field, jacobian, [("warped_image", "deformationField")]),
-        (apply_transform_image, jacmult, [("warped_image", "operand_files")]),
+        (apply_transform_field, jacobian, [("output_image", "deformationField")]),
+        (apply_transform_image, jacmult, [("output_image", "operand_files")]),
         (jacobian, jacmult, [("jacobian_image", "in_file")]),
         (jacmult, threshold_negative, [("out_file", "in_file")]),
         (threshold_negative, merge_dwi_volumes, [("out_file", "in_files")]),
