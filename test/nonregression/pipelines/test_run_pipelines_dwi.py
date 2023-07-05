@@ -8,7 +8,7 @@ different functions available in Clinica
 import warnings
 from os import fspath
 from pathlib import Path
-from test.nonregression.testing_tools import *
+from test.nonregression.testing_tools import configure_paths, similarity_measure
 
 import nibabel as nib
 import numpy as np

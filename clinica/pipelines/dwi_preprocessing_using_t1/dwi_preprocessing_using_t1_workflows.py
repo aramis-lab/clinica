@@ -542,6 +542,7 @@ def perform_dwi_epi_correction(
     base_dir: str,
     delete_cache: bool = False,
     output_dir=None,
+    use_double_precision: bool = True,
     name="perform_dwi_epi_correction",
 ) -> Workflow:
     """Step 2 of EPI pipeline.
@@ -558,6 +559,12 @@ def perform_dwi_epi_correction(
         Path to output directory.
         If provided, the pipeline will write its output in this folder.
         Default to None.
+
+    use_double_precision : bool, optional
+        This only affects tools supporting different precision settings.
+        If True, computations will be made in double precision (i.e. 64 bits).
+        If False, computations will be made in float precision (i.e. 32 bits).
+        Default=True.
 
     name: str, optional
         Name of the pipeline.
@@ -624,6 +631,8 @@ def perform_dwi_epi_correction(
     )
     apply_transform_image.inputs.output_image = "out_warped.nii.gz"
     apply_transform_image.inputs.print_out_composite_warp_file = False
+    if not use_double_precision:
+        apply_transform_image.inputs.float = True
 
     apply_transform_field = pe.MapNode(
         ants.ApplyTransforms(),
@@ -632,6 +641,8 @@ def perform_dwi_epi_correction(
     )
     apply_transform_field.inputs.output_image = "out_warped_field.nii.gz"
     apply_transform_field.inputs.print_out_composite_warp_file = True
+    if not use_double_precision:
+        apply_transform_field.inputs.float = True
 
     jacobian = pe.MapNode(
         interface=ants.CreateJacobianDeterminantImage(),
@@ -646,12 +657,16 @@ def perform_dwi_epi_correction(
         iterfield=["in_file", "operand_files"],
         name="ModulateDWIs",
     )
+    if not use_double_precision:
+        jacmult.inputs.output_datatype = "float"
 
     threshold_negative = pe.MapNode(
         fsl.Threshold(thresh=0.0),
         iterfield=["in_file"],
         name="threshold_negative",
     )
+    if not use_double_precision:
+        threshold_negative.inputs.output_datatype = "float"
 
     merge_dwi_volumes = pe.Node(fsl.Merge(dimension="t"), name="merge_dwi_volumes")
 
