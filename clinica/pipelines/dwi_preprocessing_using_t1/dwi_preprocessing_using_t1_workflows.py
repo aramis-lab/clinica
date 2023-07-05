@@ -612,7 +612,7 @@ def perform_dwi_epi_correction(
         name="remove_dummy_dimension_from_transforms",
     )
     remove_dummy_dimension_from_transforms.inputs.output = os.path.join(
-        output_dir, "merged_transforms_no_dummy.nii.gz"
+        base_dir, "merged_transforms_no_dummy.nii.gz"
     )
 
     split_transforms = pe.Node(fsl.Split(dimension="t"), name="split_transforms")

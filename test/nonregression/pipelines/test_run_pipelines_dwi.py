@@ -114,6 +114,48 @@ def test_dwi_perform_ants_registration(cmdopt, tmp_path):
 
 
 @pytest.mark.slow
+def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+        perform_dwi_epi_correction,
+    )
+
+    base_dir = Path(cmdopt["input"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWIEPICorrection"
+    )
+    (tmp_path / "tmp").mkdir()
+    epi_correction = perform_dwi_epi_correction(
+        base_dir=str(base_dir),
+        output_dir=str(tmp_path / "tmp"),
+    )
+    epi_correction.inputs.inputnode.t1_filename = str(
+        input_dir / "sub-01_ses-M000_T1w.nii.gz"
+    )
+    epi_correction.inputs.inputnode.dwi_filename = str(
+        input_dir / "sub-01_ses-M000_dwi.nii.gz"
+    )
+    epi_correction.inputs.inputnode.merged_transforms = str(
+        input_dir / "merged_transforms.nii.gz"
+    )
+
+    epi_correction.run(plugin="MultiProc", plugin_args={"n_procs": 8})
+
+    out_file = fspath(
+        tmp_path
+        / "tmp"
+        / "epi_corrected_dwi_image"
+        / "Jacobian_image_maths_thresh_merged.nii.gz"
+    )
+    ref_file = fspath(ref_dir / "Jacobian_image_maths_thresh_merged.nii.gz")
+
+    out_img = nib.load(out_file)
+    ref_img = nib.load(ref_file)
+
+    assert out_img.shape == ref_img.shape
+    assert_array_almost_equal(out_img.affine, ref_img.affine)
+
+
+@pytest.mark.slow
 def test_dwi_eddy_fsl(cmdopt, tmp_path):
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
         eddy_fsl_pipeline,
