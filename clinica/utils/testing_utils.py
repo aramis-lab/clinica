@@ -231,6 +231,11 @@ def _assert_nifti_relation(
         The function should take two numpy arrays as input.
         If not specified, `assertion_func_data` will be used to
         check affine matrices.
+
+    See Also
+    --------
+    assert_nifti_equal : Check strict equality for two images.
+    assert_nifti_almost_equal : Check loose equality for two images.
     """
     assertion_func_affine = assertion_func_affine or assertion_func_data
     img1 = nib.load(img1)
@@ -268,6 +273,49 @@ def _assert_large_image_dataobj_almost_equal(
     n_samples: Optional[int] = None,
     verbose: bool = False,
 ) -> None:
+    """This alternative implementation can be used when dealing with large nifti images.
+
+    Memory issue:
+
+    `_assert_dataobj_almost_equal` loads both images data arrays in memory before running
+    the equality assertion test which can be problematic when these arrays are large.
+    This function will work over the last dimension (usually time, dwi directions...).
+    It loops over this dimension and loads in memory only the two data chunks to be compared.
+
+    CPU time issue:
+
+    Even without the previously described memory issue, the comparison can take a lot
+    of time for very large images. This function enables to sample volumes for equality
+    assertion through the `n_samples` argument.
+
+    TODO: Implement in parallel?
+
+    Parameters
+    ----------
+    img1 : Nifti1Image
+        The first image to be compared.
+
+    img2 : Nifti1Image
+        The second image to be compared.
+
+    decimal : int, optional
+        The number of decimal for which the loose equality should work.
+        Default=6.
+
+    n_samples : int, optional
+        If specified, the function will only compare a subset of the data.
+        If None, it will compare all data.
+        The number of samples specifies the number of "volumes" which will be compared.
+        Default=None.
+
+    verbose : bool, optional
+        If True, the function prints a message for each compared volume.
+        Default=False.
+
+    See Also
+    --------
+    assert_large_nifti_almost_equal : Check loose equality for two large images.
+    """
     import random
 
     import numpy as np
