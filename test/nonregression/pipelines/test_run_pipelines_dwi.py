@@ -121,6 +121,7 @@ def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
         base_dir=str(base_dir),
         output_dir=str(tmp_path / "tmp"),
         delete_cache=True,
+        use_double_precision=False,
     )
     epi_correction.inputs.inputnode.t1_filename = str(
         input_dir / "sub-01_ses-M000_T1w.nii.gz"
