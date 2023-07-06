@@ -498,11 +498,26 @@ def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str) -> None:
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (  # noqa
         extract_sub_ses_folder_name,
     )
+    from clinica.utils.filemanip import (
+        get_folder_size,
+        get_folder_size_human,
+        humanize_bytes,
+    )
     from clinica.utils.stream import cprint
 
     subject_session_folder_name = extract_sub_ses_folder_name(checkpoint)
+    total_size: int = 0
     for a in dir_to_del:
         for z in Path(base_dir).rglob(f"*{a}*"):
             if Path(z).parent.name == subject_session_folder_name:
+                total_size += get_folder_size(str(z))
+                size = get_folder_size_human(str(z))
                 shutil.rmtree(z)
-                cprint(msg=f"Temporary folder {z} deleted", lvl="info")
+                cprint(
+                    msg=f"Temporary folder {z} deleted. Freeing {size} of disk space...",
+                    lvl="info",
+                )
+    cprint(
+        msg=f"Was able to remove {humanize_bytes(total_size)} of temporary data.",
+        lvl="info",
+    )

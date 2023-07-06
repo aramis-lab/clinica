@@ -623,3 +623,77 @@ def get_parent(path: str, n: int = 1) -> Path:
     if n <= 0:
         return Path(path)
     return get_parent(Path(path).parent, n - 1)
+
+
+def get_folder_size(folder: str) -> int:
+    """Compute the size in bytes recursively of the given folder.
+
+    Parameters
+    ----------
+    folder : str
+        Path to the folder for which to compute size.
+
+    Returns
+    -------
+    int :
+        The size of the folder in bytes.
+
+    Examples
+    --------
+    >>> get_folder_size("./test/instantiation/")
+    52571
+    """
+    import os
+    from functools import partial
+
+    prepend = partial(os.path.join, folder)
+    return sum(
+        [
+            (os.path.getsize(f) if os.path.isfile(f) else get_folder_size(f))
+            for f in map(prepend, os.listdir(folder))
+        ]
+    )
+
+
+def get_folder_size_human(folder: str) -> str:
+    """Computes the size of the given folder in human-readable form.
+
+    Parameters
+    ----------
+    folder : str
+        Path to the folder for which to compute size.
+
+    Returns
+    -------
+    str :
+        The size in human-readable form.
+
+    Examples
+    --------
+    >>> get_folder_size_human("./test/instantiation/")
+    '51.3388671875 KB'
+    """
+    return humanize_bytes(get_folder_size(folder))
+
+
+def humanize_bytes(size: int) -> str:
+    """Convert a number of bytes in a human-readable form.
+
+    Parameters
+    ----------
+    size : int
+        The number of bytes to convert.
+
+    Returns
+    -------
+    str :
+        The number converted in the best unit for easy reading.
+    """
+    units = ("B", "KB", "MB", "GB", "TB")
+
+    for unit in units[:-1]:
+        if size < 1024.0:
+            return f"{size} {unit}"
+        size /= 1024.0
+
+    return f"{size} {units[-1]}"
