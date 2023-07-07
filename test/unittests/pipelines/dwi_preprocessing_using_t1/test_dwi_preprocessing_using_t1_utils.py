@@ -13,7 +13,9 @@ from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_uti
 def test_extract_sub_ses_folder_name():
     assert (
         extract_sub_ses_folder_name(
-            "/localdrive10TB/wd/dwi-preprocessing-using-t1/epi_pipeline/4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/MergeDWIs/Jacobian_image_maths_thresh_merged.nii.gz"
+            "/localdrive10TB/wd/dwi-preprocessing-using-t1/epi_pipeline/"
+            "4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/MergeDWIs/"
+            "Jacobian_image_maths_thresh_merged.nii.gz"
         )
         == "4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea"
     )

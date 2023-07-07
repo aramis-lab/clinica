@@ -401,3 +401,28 @@ def test_extract_metadata_from_json(tmp_path):
         "foo_val",
         "bar_val",
     ]
+
+
+def test_delete_directories(tmp_path):
+    from clinica.utils.filemanip import delete_directories
+
+    folders = ("folder1", "folder2", "folder3")
+    for folder in folders:
+        (tmp_path / folder).mkdir()
+        for sub_folder in ("sub_folder_1", "sub_folder_2"):
+            (tmp_path / folder / sub_folder).mkdir()
+            for filename in ("file1.txt", "file2.json"):
+                with open(tmp_path / folder / sub_folder / filename, "w") as fp:
+                    fp.write("foo bar baz\nfoo")
+
+    with pytest.warns(UserWarning) as record:
+        delete_directories([str(tmp_path / folder) for folder in folders])
+
+    assert len(record) == 4
+    for i in (1, 2, 3):
+        assert (
+            record[i - 1].message.args[0]
+            == f"Folder {tmp_path / f'folder{i}'} deleted. Freeing 60 B of disk space..."
+        )
+        assert not (tmp_path / f"folder{i}").exists()
+    assert record[3].message.args[0] == f"Was able to remove 180 B of data."

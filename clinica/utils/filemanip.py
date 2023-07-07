@@ -710,22 +710,26 @@ def delete_directories(directories: list) -> None:
     import shutil
 
     from clinica.utils.filemanip import (  # noqa
+        _print_and_warn,
         get_folder_size,
         get_folder_size_human,
         humanize_bytes,
     )
-    from clinica.utils.stream import cprint
 
     total_size: int = 0
     for directory in directories:
         total_size += get_folder_size(str(directory))
         size = get_folder_size_human(str(directory))
         shutil.rmtree(directory)
-        cprint(
-            msg=f"Folder {directory} deleted. Freeing {size} of disk space...",
-            lvl="info",
-        )
-    cprint(
-        msg=f"Was able to remove {humanize_bytes(total_size)} of data.",
-        lvl="info",
-    )
+        _print_and_warn(f"Folder {directory} deleted. Freeing {size} of disk space...")
+    _print_and_warn(f"Was able to remove {humanize_bytes(total_size)} of data.")
+
+
+def _print_and_warn(msg: str, lvl: str = "info") -> None:
+    """Print the given message with the given level and warns with the same message."""
+    import warnings
+
+    from clinica.utils.stream import cprint
+
+    cprint(msg=msg, lvl=lvl)
+    warnings.warn(msg)
