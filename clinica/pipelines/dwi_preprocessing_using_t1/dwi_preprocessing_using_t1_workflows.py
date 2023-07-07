@@ -609,9 +609,8 @@ def perform_dwi_epi_correction(
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
 
+    from clinica.utils.filemanip import delete_directories
     from clinica.utils.image import remove_dummy_dimension_from_image
-
-    from .dwi_preprocessing_using_t1_utils import delete_temp_dirs
 
     workflow_inputs = ["t1_filename", "dwi_filename", "merged_transforms"]
     workflow_outputs = ["epi_corrected_dwi_image"]
@@ -680,22 +679,20 @@ def perform_dwi_epi_correction(
 
     merge_dwi_volumes = pe.Node(fsl.Merge(dimension="t"), name="merge_dwi_volumes")
 
-    # Delete the temporary directory that takes too much place
     if delete_cache:
-        delete_warp_field_tmp = pe.Node(
-            name="deletewarpfieldtmp",
+        delete_cache_node = pe.Node(
+            name="delete_cache",
             interface=niu.Function(
-                inputs=["checkpoint", "dir_to_del", "base_dir"],
-                function=delete_temp_dirs,
+                inputs=["directories", "checkpoint"],
+                function=delete_directories,
             ),
         )
-        delete_warp_field_tmp.inputs.base_dir = base_dir
-        delete_warp_field_tmp.inputs.dir_to_del = [
-            apply_transform_field.name,
-            jacobian.name,
-            jacmult.name,
-            threshold_negative.name,
-            apply_transform_image.name,
+        delete_cache_node.inputs.directories = [
+            apply_transform_field.output_dir(),
+            jacobian.output_dir(),
+            jacmult.output_dir(),
+            threshold_negative.output_dir(),
+            apply_transform_image.output_dir(),
         ]
 
     outputnode = pe.Node(
@@ -737,7 +734,7 @@ def perform_dwi_epi_correction(
 
     if delete_cache:
         connections += [
-            (merge_dwi_volumes, delete_warp_field_tmp, [("merged_file", "checkpoint")])
+            (merge_dwi_volumes, delete_cache_node, [("merged_file", "checkpoint")])
         ]
 
     if output_dir:

@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
@@ -8,7 +5,6 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
     broadcast_matrix_filename_to_match_b_vector_length,
     change_itk_transform_type,
-    delete_temp_dirs,
     extract_sub_ses_folder_name,
     rotate_b_vectors,
 )
@@ -167,47 +163,6 @@ def test_rotate_b_vectors_wrong_content_in_vector_file(tmp_path):
 
     with pytest.raises(ValueError, match="could not convert string 'fooo' to float64"):
         rotate_b_vectors(b_vectors_file, ["mat1"])
-
-
-@pytest.mark.parametrize(
-    "checkpoint, dir_to_del, expected",
-    [
-        (
-            Path(
-                "ed42125b6abc244af649ff5eff1df41b/node_3_name/Jacobian_image_maths_thresh_merged.nii.gz"
-            ),
-            ["node_1_name"],
-            [True, True],
-        ),
-        (
-            Path(
-                "4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/node_3_name/Jacobian_image_maths_thresh_merged.nii.gz"
-            ),
-            ["node_1_name"],
-            [False, True],
-        ),
-        (
-            Path(
-                "4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/node_3_name/Jacobian_image_maths_thresh_merged.nii.gz"
-            ),
-            ["node_1_name", "node_2_name"],
-            [False, False],
-        ),
-    ],
-)
-def test_delete_temp_dirs(tmp_path, checkpoint, dir_to_del, expected):
-    checkpoint = tmp_path / checkpoint
-    base_dir = tmp_path / Path("wd")
-    dirs = [
-        tmp_path
-        / Path(f"wd/pipeline_name/4336d63c8556bb56d4e9d1abc617fb3eaa3c38ea/{name}")
-        for name in ["node_1_name", "node_2_name"]
-    ]
-    for dir in dirs:
-        if not dir.is_dir():
-            os.makedirs(dir)
-    delete_temp_dirs(checkpoint, dir_to_del, base_dir)
-    assert [dir.is_dir() for dir in dirs] == expected
 
 
 def test_configure_working_directory(tmp_path):

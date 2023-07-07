@@ -697,3 +697,35 @@ def humanize_bytes(size: int) -> str:
         size /= 1024.0
 
     return f"{size} {units[-1]}"
+
+
+def delete_directories(directories: list) -> None:
+    """This function deletes the directories of the given list".
+
+    Parameters
+    ----------
+    directories : list of str
+        Names of the directories we want to delete.
+    """
+    import shutil
+
+    from clinica.utils.filemanip import (  # noqa
+        get_folder_size,
+        get_folder_size_human,
+        humanize_bytes,
+    )
+    from clinica.utils.stream import cprint
+
+    total_size: int = 0
+    for directory in directories:
+        total_size += get_folder_size(str(directory))
+        size = get_folder_size_human(str(directory))
+        shutil.rmtree(directory)
+        cprint(
+            msg=f"Folder {directory} deleted. Freeing {size} of disk space...",
+            lvl="info",
+        )
+    cprint(
+        msg=f"Was able to remove {humanize_bytes(total_size)} of data.",
+        lvl="info",
+    )
