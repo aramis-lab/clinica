@@ -1,11 +1,15 @@
 """Utils to convert AIBL dataset in BIDS."""
+import warnings
+from dataclasses import dataclass
 from functools import partial
-from typing import List, Sequence
+from os import PathLike
+from pathlib import Path
+from typing import List, Optional, Sequence, Tuple
 
 import pandas as pd
 
 
-def listdir_nohidden(path: str) -> List[str]:
+def _listdir_nohidden(path: PathLike) -> List[str]:
     """List all the subdirectories of path except the hidden folders.
 
     Parameters
@@ -27,38 +31,40 @@ def listdir_nohidden(path: str) -> List[str]:
     ]
 
 
-def find_t1_in_paths(
+def _find_t1_in_paths(
     subdirectory: str,
-    path_to_T1_1: str,
+    path_to_t1_images: str,
     paths_to_convert: Sequence[str],
-) -> str:
+) -> Optional[str]:
     """Find the directory containing T1 images.
 
-    :param subdirectory: name of the folder
-    :type subdirectory: str
-    :param path_to_T1_1: path to T1 images
-    :type path_to_T1_1: str
-    :param paths_to_convert: paths to convert
-    :type paths_to_convert: Sequence[str]
-    :return: previous path to arrive to the T1 image
-    :rtype: str
+    Parameters
+    ----------
+    subdirectory : str
+        Name of the folder.
+
+    path_to_t1_images : str
+        Path to T1 images.
+
+    paths_to_convert : Sequence[str]
+        Sequence of paths to convert.
+
+    Return
+    ------
+    str or None:
+        Previous path to arrive to the T1 image.
+        Return None if no path found.
     """
     import os
 
-    path = None
-
-    for j in paths_to_convert:
-        # if conditions which checks if the subfolder contain a T1 image
-        if j == subdirectory:
-            path = os.path.join(path_to_T1_1, subdirectory)
-            return path
-
-    if not path:
-        return "NaN"  # there are no more folders which could contain T1 images
+    for folder in paths_to_convert:
+        if folder == subdirectory:
+            return os.path.join(path_to_t1_images, subdirectory)
+    return None
 
 
-find_T1_folder = partial(
-    find_t1_in_paths,
+_find_t1_folder = partial(
+    _find_t1_in_paths,
     paths_to_convert=[
         "MPRAGE_ADNI_confirmed",
         "MPRAGE",
@@ -71,8 +77,8 @@ find_T1_folder = partial(
 )
 
 
-find_T1_folder_nodata = partial(
-    find_t1_in_paths,
+_find_t1_folder_nodata = partial(
+    _find_t1_in_paths,
     paths_to_convert=[
         "MPRAGESAGISOp2ND",
         "MPRAGE_SAG_ISO_p2_ND",
@@ -81,32 +87,52 @@ find_T1_folder_nodata = partial(
 )
 
 
-def find_correspondence_index(subject_id: str, csv_file: pd.DataFrame) -> list:
+def _find_correspondence_index(subject_id: str, df: pd.DataFrame) -> List[str]:
     """Returns the index of the CSV file analysed for a given subject.
 
-    :param subject_id: Subject's identifier
-    :type subject_id: str
-    :param csv_file: CSV file where all the information are listed
-    :type csv_file: pd.DataFrame
-    :return: List of indexes for the subject
-    :rtype: list
+    Parameters
+    ----------
+    subject_id : str
+        The subject's identifier.
+
+    df : pd.DataFrame
+        The dataframe in which to look for subject data.
+
+    Return
+    ------
+    list of str :
+        List of indexes for the subject
+
+    Raises
+    ------
+    ValueError :
+        If no correspondence was found.
     """
-    for rid in csv_file.RID:
+    for rid in df.RID:
         if subject_id == str(rid):
-            return csv_file.RID[csv_file.RID == rid].index.tolist()
+            return df.RID[df.RID == rid].index.tolist()
+    raise ValueError(
+        f"Unable to find correspondence between the subject ID {subject_id} "
+        "and RID in provided dataframe."
+    )
 
 
-def find_correspondence_date(index: list, csv_file: pd.DataFrame) -> pd.Series:
+def _find_correspondence_date(index: list, df: pd.DataFrame) -> pd.Series:
     """Return the dates reported in the csv_file for a given index.
 
-    :param index: List of index
-    :type index: list
-    :param csv_file: CSV file where all the information are listed
-    :type csv_file: pd.DataFrame
-    :return: Exam dates at index
-    :rtype: pd.Series
+    Parameters
+    ----------
+    index : list
+        List of index.
+    df : pd.DataFrame
+        DataFrame where all the information are listed
+
+    Return
+    ------
+    pd.Series :
+        Exam dates at index.
     """
-    return csv_file.EXAMDATE[index]
+    return df.EXAMDATE[index]
 
 
 def match_data(exam_date: str, subject_id: str, csv_file: pd.DataFrame) -> str:
@@ -131,25 +157,24 @@ def match_data(exam_date: str, subject_id: str, csv_file: pd.DataFrame) -> str:
     import re
 
     session_id = None
-    index = find_correspondence_index(subject_id, csv_file)
-    csv_date = find_correspondence_date(index, csv_file)
-    for xx in index:
-        if str(csv_date[xx]) != "-4":
-            # check is the date is not '-4'
-            m = re.search(
-                "([0-9].*)-(.*)-(.*)_(.*)_(.*)_(.*)", exam_date
-            )  # string from image directory
-            p = re.search(
-                "(.*)/(.*)/(.*)", str(csv_date[xx])
-            )  # string from the date of the csv_file
-            if (
-                (p.group(1) == m.group(2))
-                & (p.group(2) == m.group(3))
-                & (p.group(3) == m.group(1))
-            ):
-                session_id = csv_file.VISCODE[xx]
-    session_id = session_id or "-4"
-    return session_id
+    indices = _find_correspondence_index(subject_id, csv_file)
+    csv_date = _find_correspondence_date(indices, csv_file)
+    for index in indices:
+        if str(csv_date[index]) == "-4":
+            continue
+        m = re.search(
+            "([0-9].*)-(.*)-(.*)_(.*)_(.*)_(.*)", exam_date
+        )  # string from image directory
+        p = re.search(
+            "(.*)/(.*)/(.*)", str(csv_date[index])
+        )  # string from the date of the csv_file
+        if (
+            (p.group(1) == m.group(2))
+            & (p.group(2) == m.group(3))
+            & (p.group(3) == m.group(1))
+        ):
+            session_id = csv_file.VISCODE[index]
+    return session_id or "-4"
 
 
 def list_of_paths():
@@ -204,7 +229,7 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
     return subdirectories
 
 
-def dicom_to_nii(subject, output_path, output_filename, image_path):
+def _dicom_to_nii(subject, output_path, output_filename, image_path):
     """Convert the DICOM images to NIfTI files using dcm2niix.
 
     :param subject:
@@ -242,7 +267,9 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
     return nifti_file
 
 
-def find_path_to_pet_modality(path_to_dataset, csv_file):
+def _find_path_to_pet_modality(
+    path_to_dataset: Path, csv_file: pd.DataFrame
+) -> pd.DataFrame:
     """Create a Dataframe which contains all the paths to the PET image of a modality (for example AV45 or PIB).
 
     :param path_to_dataset: path to AIBL dataset
@@ -252,239 +279,252 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
     single modality and subject_ID and session_ID are reported for each
     path
     """
-    import os
-
-    import pandas
-
-    # TODO
-    # exclude_subjects = get_exclude_subject(file.txt)
-
     no_pet = list_of_paths()
-    subjects_ID = listdir_nohidden(path_to_dataset)
-    # selection of the subjects_ID from the folder downloaded
-    # this subject must be discarded since it is only a sample and not a patient
-    if "0151083" in subjects_ID:
-        del subjects_ID[subjects_ID.index("0151083")]
-    sub_ID = []
-    ses_ID = []
-    path_pet = []
+    subjects_id = _listdir_nohidden(path_to_dataset)
 
-    # Iteration through all the subjects_ID
-    def is_int(x):
-        for i in x:
-            if int(i) in list(csv_file.RID):
-                yield i
+    if "0151083" in subjects_id:
+        del subjects_id[subjects_id.index("0151083")]
 
-    #    def append_path(image_ID):
+    scans = ScanCollection([], "pet")
 
-    for i in is_int(subjects_ID):
-        # check if the subject is present in the csv_file for the modality selected
-        subdirectories = []
-        path_to_pet_1 = os.path.join(path_to_dataset, str(i))
-        # subdirectory_all = os.listdir(path_to_pet_1)
-        subdirectory_all = listdir_nohidden(path_to_pet_1)
-        subdirectories = check_subdirectories_pet(
-            subdirectories, subdirectory_all, no_pet
-        )
-        # selection only of the folders which contain PET image
-        for j in range(len(subdirectories)):
-            path_to_pet_2 = os.path.join(path_to_pet_1, subdirectories[j])
-            exam_date = listdir_nohidden(path_to_pet_2)
-            # exam date of the image which is going to be converted
-            for x in range(len(exam_date)):
-                # selection of the session_ID matching the data in the csv_file with the one of the image
-                session_ID = match_data(str(exam_date[x]), i, csv_file)
-                if session_ID != "-4":
-                    path_to_pet_3 = os.path.join(path_to_pet_2, str(exam_date[x]))
-                    # For the RID 1607 there are two PET images of the flute modality, and we select the first
-                    if i == "1607":
-                        if subdirectories[j] == "Flute_256_1.6_Zoom_plain_4_x_4_Iter":
-                            image_ID = ["I442930"]
+    for subject_id in subjects_id:
+        if int(subject_id) in list(csv_file.RID):
+            # check if the subject is present in the csv_file for the modality selected
+            subdirectories = []
+            path_to_pet = path_to_dataset / str(subject_id)
+            subdirectory_all = _listdir_nohidden(path_to_pet)
+            subdirectories = check_subdirectories_pet(
+                subdirectories, subdirectory_all, no_pet
+            )
+            # selection only of the folders which contain PET image
+            for folder in subdirectories:
+                path_to_pet = path_to_pet / folder
+                exam_dates = _listdir_nohidden(path_to_pet)
+                # exam date of the image which is going to be converted
+                for exam_date in exam_dates:
+                    # selection of the session_ID matching the data in the csv_file with the one of the image
+                    session_id = match_data(str(exam_date), subject_id, csv_file)
+                    if session_id != "-4":
+                        path_to_pet = path_to_pet / str(exam_date)
+                        # For the RID 1607 there are two PET images of the flute modality, and we select the first
+                        if (
+                            subject_id == "1607"
+                            and folder == "Flute_256_1.6_Zoom_plain_4_x_4_Iter"
+                        ):
+                            image_ids = ["I442930"]
                         else:
-                            image_ID = listdir_nohidden(path_to_pet_3)
-                    else:
-                        image_ID = listdir_nohidden(path_to_pet_3)
-
-                    for y in range(len(image_ID)):
-                        # final path to find the image we want to convert
-                        path_to_pet = os.path.join(path_to_pet_3, image_ID[y])  #
-                        sub_ID.append(i)
-                        ses_ID.append(session_ID)
-                        path_pet.append(path_to_pet)
-
-    data = pandas.DataFrame(
-        {"Subjects_ID": sub_ID, "Session_ID": ses_ID, "Path_to_pet": path_pet}
-    )
-    # data=final dataframe
-
-    return data
+                            image_ids = _listdir_nohidden(path_to_pet)
+                        for image_id in image_ids:
+                            scans.add_scan(
+                                subject_id, session_id, path_to_pet / image_id
+                            )
+    return scans.to_df()
 
 
-def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
+@dataclass
+class Scan:
+    """Class for keeping track of the relationship between a subject ID,
+    a session ID, and a path to a modality scan.
     """
 
-    This method creates a Dataframe which contains all the paths to the T1
+    subject_id: str
+    session_id: str
+    path: Path
+
+
+@dataclass
+class ScanCollection:
+    """
+    Maintain coherence in the collection : it is impossible to add
+    a scan for an already existing subject session pair.
+    """
+
+    scans: List[Scan]
+    modality: str
+
+    def _is_new_scan_valid(self, new_scan: Scan) -> bool:
+        for scan in self.scans:
+            if (scan.subject_id, scan.session_id) == (
+                new_scan.subject_id,
+                new_scan.session_id,
+            ):
+                warnings.warn(
+                    f"Already a scan for {self.modality} in the collection for subject {scan.subject_id} "
+                    f"and session {scan.session_id} : {scan.path}. "
+                    f"Cannot add another scan {new_scan.path} for this subject session pair."
+                )
+                return False
+        return True
+
+    def add(self, scan: Scan):
+        if self._is_new_scan_valid(scan):
+            self.scans.append(scan)
+
+    def add_scan(self, subject_id: str, session_id: str, path: Path):
+        """Add a scan to the collection."""
+        self.add(Scan(subject_id, session_id, path))
+
+    def to_df(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "Subjects_ID": [scan.subject_id for scan in self.scans],
+                "Session_ID": [scan.session_id for scan in self.scans],
+                f"Path_to_{self.modality}": [str(scan.path) for scan in self.scans],
+            }
+        )
+
+
+def _find_path_to_t1_adni(
+    mri_files: Tuple[pd.DataFrame, pd.DataFrame],
+    subject_ids: List[str],
+    path_to_dataset: Path,
+) -> ScanCollection:
+    """Creates a Dataframe which contains all the paths to the T1
     images which are ADNI compliant (as explained in the AIBL website).
     These images differ from the others T1 of the dataset since the exam
     date is reported in the CSV file.
 
-    :param file_mri: in the clinical data there are two files which
-    describe the  parameters of the T1 images (MRI 1.5 T and MRI 3T)
-    :param subjects_ID: subjects_id in the downloaded dataset
-    :param path_to_dataset: path to AIBL dataset
+    Parameters
+    ----------
+    mri_files : tuple of 2 DataFrames
+        List of dataframes extracted from the clinical data.
+        Indeed, there are two files which describe the parameters of
+        the T1 images : MRI 1.5 T and MRI 3T.
 
-    :return: A dataframe which contains the path for T1 images and
-    subject_ID and session_ID are reported for each path
+    subjects_ids : list of str
+        List of subjects IDs in the downloaded dataset.
+
+    path_to_dataset : Path
+        Path to AIBL dataset.
+
+    Return
+    ------
+    ScanCollection :
+        The collected T1 scan paths.
     """
-    import os
+    scans = ScanCollection([], "T1")
 
-    sub_ID = []
-    ses_ID = []
-    path_T1 = []
-
-    for i in subjects_ID:
-        for jj in file_mri:
-            # it checks all the file_mri
-            if int(i) in list(jj.RID):
+    for subject_id in subject_ids:
+        for mri_file in mri_files:
+            if int(subject_id) in list(mri_file.RID):
                 # check if the information of the subject are present in the csv_file
-                path_to_T1_1 = os.path.join(path_to_dataset, str(i))
-                # subdirectories = os.listdir(path_to_T1_1)
-                subdirectories = listdir_nohidden(path_to_T1_1)
-                for j in range(len(subdirectories)):
-                    # check if the subdirectory can contain a T1 image
-                    path_to_T1_2 = find_T1_folder(subdirectories[j], path_to_T1_1)
-                    if path_to_T1_2 != "NaN":
-                        exame_date = listdir_nohidden(
-                            path_to_T1_2
-                        )  # this is the string I need to compare with the csv
-                        for x in range(len(exame_date)):
+                path_to_t1 = path_to_dataset / str(subject_id)
+                for folder in _listdir_nohidden(path_to_t1):
+                    if path_to_t1 := _find_t1_folder(folder, path_to_t1):
+                        for exam_date in _listdir_nohidden(path_to_t1):
                             # check if the corresponding session_ID can be found in the csv_file
-                            session_ID = match_data(exame_date[x], i, jj)
-                            if session_ID != "-4":
-                                path_to_T1_3 = os.path.join(
-                                    path_to_T1_2, str(exame_date[x])
-                                )
-                                image_ID = listdir_nohidden(path_to_T1_3)
-                                for y in range(len(image_ID)):
-                                    # compute the final path
-                                    path_to_T1 = os.path.join(path_to_T1_3, image_ID[y])
-                                    sub_ID.append(i)
-                                    ses_ID.append(session_ID)
-                                    path_T1.append(path_to_T1)
-
-    return [sub_ID, ses_ID, path_T1]
+                            session_id = match_data(exam_date, subject_id, mri_file)
+                            if session_id != "-4":
+                                path_to_t1 = path_to_t1 / str(exam_date)
+                                for image_id in _listdir_nohidden(path_to_t1):
+                                    scans.add_scan(
+                                        subject_id, session_id, path_to_t1 / image_id
+                                    )
+    return scans
 
 
-def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
+def _find_path_to_t1_sag(
+    subjects_id: List[str],
+    path_to_dataset: Path,
+    t1_scans: ScanCollection,
+) -> ScanCollection:
+    """Creates a ScanCollection which contains all the paths to the T1 images which are not
+    ADNI compliant, they contain the word "SAG" in their name.
+
+    Parameters
+    ----------
+    subjects_id : list of str
+        Subjects ID in the downloaded dataset.
+
+    path_to_dataset : Path
+        Path to AIBL dataset.
+
+    t1_scans : ScanCollection
+        The previously computed collection of T1 scan paths.
+        The function will potentially add new scan paths to this collection.
+
+    Return
+    ------
+    ScanCollection :
+        The collected T1 scan paths.
+
+    Notes
+    -----
+    This function completes the list of all the T1 paths including all the images where
+    we didn't find the exam data, but we can fix it with further analysis.
     """
-
-    This method creates a Dataframe which contains all the paths to the T1
-    images which are not ADNI compliant, they contain the word "SAG" in
-    their name
-
-    :param path_to_dataset: path to AIBL dataset
-    :param subjects_ID: subjects_id in the downloaded dataset
-    :param sub_ID: the previous list (from T1_ADNI) where new subjects ID
-    will be appended
-    :param ses_ID: the previous list (from T1_ADNI) where new session ID
-    will be appended
-    :param path_T1:the previous list (from T1_ADNI) where new paths will be
-    appended
-
-    :return: it completes the list of all the T1 paths including all the
-    images where we didn't find the exam data, but we can fix it with
-    further analysis
-    """
-    import os
-
-    for i in subjects_ID:
-        subdirectory_for_subject = []
-        path_to_T1_1 = os.path.join(path_to_dataset, str(i))
-        # subdirectories = os.listdir(path_to_T1_1)
-        subdirectories = listdir_nohidden(path_to_T1_1)
-        for j in range(len(subdirectories)):
-            # we convert only the images which are in this list,
-            # and we take only one of them for subject
-            if subdirectories[j] in [
-                "MPRAGESAGISOp2ND",
-                "MPRAGE_SAG_ISO_p2_ND",
-                "MPRAGE_SAG_ISO_p2",
-            ]:
-                subdirectory_for_subject.append(subdirectories[j])
+    for subject_id in subjects_id:
+        path_to_t1 = path_to_dataset / str(subject_id)
+        directories_to_analyze = (
+            "MPRAGESAGISOp2ND",
+            "MPRAGE_SAG_ISO_p2_ND",
+            "MPRAGE_SAG_ISO_p2",
+        )
+        subdirectory_for_subject = [
+            d for d in _listdir_nohidden(path_to_t1) if d in directories_to_analyze
+        ]
         if not subdirectory_for_subject:
-            pass
-        else:
-            path_to_T1_2 = os.path.join(path_to_T1_1, subdirectory_for_subject[0])
+            continue
+        path_to_t1 = path_to_t1 / subdirectory_for_subject[0]
+        exam_date = _listdir_nohidden(path_to_t1)
+        session_id = "M54" if subject_id in (342, 557) else "M00"
+        # if for a subject in the same session we have both this image
+        # and the "ADNI" compliant we are converting the second one
+        # since the exam date is more precise.
+        path_to_t1 = path_to_t1 / str(exam_date[0])
+        image_id = _listdir_nohidden(path_to_t1)
+        path_to_t1 = path_to_t1 / image_id[0]
+        t1_scans.add_scan(subject_id, session_id, path_to_t1)
 
-            exam_date = listdir_nohidden(path_to_T1_2)
-            if i in [342, 557]:
-                session_ID = "M54"
-            else:
-                session_ID = "M00"
-            if (i in sub_ID and session_ID != ses_ID[sub_ID.index(i)]) or (
-                i not in sub_ID
-            ):
-                # if for a subject in the same session we have both this image
-                # and the "ADNI" compliant we are converting the second one
-                # since the exam date is more precise.
-                path_to_T1_3 = os.path.join(path_to_T1_2, str(exam_date[0]))
-                image_ID = listdir_nohidden(path_to_T1_3)
-                path_to_T1 = os.path.join(path_to_T1_3, image_ID[0])
-                # we append the result to the list
-                sub_ID.append(i)
-                ses_ID.append(session_ID)
-                path_T1.append(path_to_T1)
-
-    return [sub_ID, ses_ID, path_T1]
+    return t1_scans
 
 
-def find_path_to_T1(path_to_dataset, path_to_csv):
-    """
-    This method creates a DataFrame for the T1 images, where for each of
-    them the subject ID, the session ID and the path to the image are
-    reported
+def _find_path_to_t1(path_to_dataset: Path, path_to_csv: str) -> pd.DataFrame:
+    """Creates a DataFrame for the T1 images.
+    For each image, the subject ID, the session ID and the path to the image are
+    reported.
 
-    :param path_to_dataset:  path to AIBL dataset
-    :param path_to_csv: path to the csv files downloaded
-    :return: pandas dataframe which contains all the paths for the T1
-    images, and the corresponding subject_ID and session_ID
+    Parameters
+    ----------
+    path_to_dataset : str
+        Path to AIBL dataset.
+
+    path_to_csv : str
+        Path to the folder with the CSV files downloaded.
+
+    Return
+    ------
+    pd.DataFrame :
+        Pandas dataframe which contains all the paths for the T1
+        images, and the corresponding subject ID, and session ID.
     """
     import glob
     import os
 
-    import pandas
+    import pandas as pd
 
     # two csv_files contain information regarding the T1w MRI images
-    mri_meta = pandas.read_csv(
+    mri_meta_df = pd.read_csv(
         glob.glob(os.path.join(path_to_csv, "aibl_mrimeta_*.csv"))[0]
     )
-    mri_3meta = pandas.read_csv(
+    mri_3meta_df = pd.read_csv(
         glob.glob(os.path.join(path_to_csv, "aibl_mri3meta_*.csv"))[0]
     )
-    file_mri = [mri_meta, mri_3meta]
-    subjects_ID = listdir_nohidden(path_to_dataset)
-    # list of all the folders which correspond to the subject_ID
+    mri_dfs = (mri_meta_df, mri_3meta_df)
+    subjects_id = _listdir_nohidden(path_to_dataset)
+    # list of all the folders which correspond to the subject ID
     # all the subjects downloaded are taken into account for the conversion, except this sample
-    if "0151083" in subjects_ID:
-        del subjects_ID[subjects_ID.index("0151083")]
-    [sub_ID, ses_ID, path_T1] = find_path_to_T1_ADNI(
-        file_mri, subjects_ID, path_to_dataset
-    )
-    [sub_ID, ses_ID, path_T1] = find_path_to_T1_SAG(
-        path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1
-    )
-
-    data = pandas.DataFrame(
-        {"Subjects_ID": sub_ID, "Session_ID": ses_ID, "Path_to_T1": path_T1}
-    )
-    # data= final dataframe
-    return data
+    if "0151083" in subjects_id:
+        del subjects_id[subjects_id.index("0151083")]
+    t1_scans = _find_path_to_t1_adni(mri_dfs, subjects_id, path_to_dataset)
+    t1_scans = _find_path_to_t1_sag(subjects_id, path_to_dataset, t1_scans)
+    return t1_scans.to_df()
 
 
 # Convert the AIBL PET images into the BIDS specification.
 # There are three pet modalities: av45, pib, flute. All of them are converted
 # in BIDS
-def create_file(image, modality, bids_dir, overwrite):
+def _create_file(image, modality, bids_dir, overwrite):
     from os import remove
     from os.path import exists, join
 
@@ -546,7 +586,7 @@ def create_file(image, modality, bids_dir, overwrite):
     else:
         if exists(join(output_path, output_filename + ".nii.gz")):
             remove(join(output_path, output_filename + ".nii.gz"))
-        output_image = dicom_to_nii(subject, output_path, output_filename, image_path)
+        output_image = _dicom_to_nii(subject, output_path, output_filename, image_path)
         json_from_dcm(image_path, join(output_path, output_filename + ".json"))
 
     # Center all images
@@ -574,8 +614,11 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
     from multiprocessing import Pool, cpu_count
     from os import makedirs
     from os.path import exists, join
+    from pathlib import Path
 
     import pandas as pds
+
+    path_to_dataset = Path(path_to_dataset)
 
     if modality.lower() not in ["t1", "av45", "flute", "pib"]:
         # This should never be reached
@@ -585,7 +628,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
 
     # it reads the DataFrame where subject_ID, session_ID and path are saved
     if modality == "t1":
-        images = find_path_to_T1(path_to_dataset, path_to_csv)
+        images = _find_path_to_t1(path_to_dataset, path_to_csv)
     else:
         path_to_csv_pet_modality = glob.glob(
             join(path_to_csv, "aibl_" + modality + "meta_*.csv")
@@ -603,7 +646,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
             usecols=list(range(0, 36)),
             engine="python",
         )
-        images = find_path_to_pet_modality(path_to_dataset, df_pet)
+        images = _find_path_to_pet_modality(path_to_dataset, df_pet)
 
     images.to_csv(
         join(bids_dir, "conversion_info", modality + "_paths.tsv"),
@@ -616,7 +659,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=Fa
 
     with Pool(processes=max(cpu_count() - 1, 1)) as pool:
         create_file_ = partial(
-            create_file,
+            _create_file,
             modality=modality,
             bids_dir=bids_dir,
             overwrite=overwrite,
