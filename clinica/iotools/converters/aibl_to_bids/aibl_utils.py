@@ -33,9 +33,9 @@ def _listdir_nohidden(path: PathLike) -> List[str]:
 
 def _find_t1_in_paths(
     subdirectory: str,
-    path_to_t1_images: str,
+    path_to_t1_images: Path,
     paths_to_convert: Sequence[str],
-) -> Optional[str]:
+) -> Optional[Path]:
     """Find the directory containing T1 images.
 
     Parameters
@@ -43,7 +43,7 @@ def _find_t1_in_paths(
     subdirectory : str
         Name of the folder.
 
-    path_to_t1_images : str
+    path_to_t1_images : Path
         Path to T1 images.
 
     paths_to_convert : Sequence[str]
@@ -55,11 +55,9 @@ def _find_t1_in_paths(
         Previous path to arrive to the T1 image.
         Return None if no path found.
     """
-    import os
-
     for folder in paths_to_convert:
         if folder == subdirectory:
-            return os.path.join(path_to_t1_images, subdirectory)
+            return path_to_t1_images / subdirectory
     return None
 
 
