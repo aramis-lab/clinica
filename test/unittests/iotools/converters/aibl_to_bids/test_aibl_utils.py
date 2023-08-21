@@ -1,5 +1,5 @@
 def test_listdir_nohidden(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.aibl_utils import _listdir_nohidden
+    from clinica.iotools.converters.aibl_to_bids.utils.bids import _listdir_nohidden
 
     (tmp_path / "file").touch()
     (tmp_path / ".hidden_file").touch()
