@@ -319,16 +319,6 @@ _find_t1_folder = partial(
 )
 
 
-# _find_t1_folder_nodata = partial(
-#    _find_t1_in_paths,
-#    paths_to_convert=[
-#        "MPRAGESAGISOp2ND",
-#        "MPRAGE_SAG_ISO_p2_ND",
-#        "MPRAGE_SAG_ISO_p2",
-#    ],
-# )
-
-
 def _find_patient_session_id(
     exam_date: str, subject_id: str, metadata_df: pd.DataFrame
 ) -> str:
