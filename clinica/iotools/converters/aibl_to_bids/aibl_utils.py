@@ -288,22 +288,21 @@ def _find_path_to_pet_modality(
     for subject_id in subjects_id:
         if int(subject_id) in list(csv_file.RID):
             # check if the subject is present in the csv_file for the modality selected
-            subdirectories = []
-            path_to_pet = path_to_dataset / str(subject_id)
-            subdirectory_all = _listdir_nohidden(path_to_pet)
-            subdirectories = check_subdirectories_pet(
-                subdirectories, subdirectory_all, no_pet
+            subject_subdirectories_pet = []
+            path_to_subject = path_to_dataset / str(subject_id)
+            subject_subdirectories = _listdir_nohidden(path_to_subject)
+            subject_subdirectories_pet = check_subdirectories_pet(
+                subject_subdirectories_pet, subject_subdirectories, no_pet
             )
-            # selection only of the folders which contain PET image
-            for folder in subdirectories:
-                path_to_pet = path_to_pet / folder
-                exam_dates = _listdir_nohidden(path_to_pet)
+            for folder in subject_subdirectories_pet:
+                path_to_pet_folder = path_to_subject / folder
+                exam_dates = _listdir_nohidden(path_to_pet_folder)
                 # exam date of the image which is going to be converted
                 for exam_date in exam_dates:
                     # selection of the session_ID matching the data in the csv_file with the one of the image
                     session_id = match_data(str(exam_date), subject_id, csv_file)
                     if session_id != "-4":
-                        path_to_pet = path_to_pet / str(exam_date)
+                        path_to_pet = path_to_pet_folder / str(exam_date)
                         # For the RID 1607 there are two PET images of the flute modality, and we select the first
                         if (
                             subject_id == "1607"
@@ -406,14 +405,14 @@ def _find_path_to_t1_adni(
         for mri_file in mri_files:
             if int(subject_id) in list(mri_file.RID):
                 # check if the information of the subject are present in the csv_file
-                path_to_t1 = path_to_dataset / str(subject_id)
-                for folder in _listdir_nohidden(path_to_t1):
-                    if path_to_t1 := _find_t1_folder(folder, path_to_t1):
-                        for exam_date in _listdir_nohidden(path_to_t1):
+                path_to_subject = path_to_dataset / str(subject_id)
+                for folder in _listdir_nohidden(path_to_subject):
+                    if path_to_t1_folder := _find_t1_folder(folder, path_to_subject):
+                        for exam_date in _listdir_nohidden(path_to_t1_folder):
                             # check if the corresponding session_ID can be found in the csv_file
                             session_id = match_data(exam_date, subject_id, mri_file)
                             if session_id != "-4":
-                                path_to_t1 = path_to_t1 / str(exam_date)
+                                path_to_t1 = path_to_t1_folder / str(exam_date)
                                 for image_id in _listdir_nohidden(path_to_t1):
                                     scans.add_scan(
                                         subject_id, session_id, path_to_t1 / image_id
