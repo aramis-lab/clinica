@@ -1,12 +1,98 @@
 """Utils to convert AIBL dataset in BIDS."""
 import warnings
 from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from os import PathLike
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
 import pandas as pd
+
+from clinica.utils.pet import Tracer
+
+
+class Modality(str, Enum):
+    T1 = "t1"
+    AV45 = "av45"
+    FLUTE = "flute"
+    PIB = "pib"
+
+    @property
+    def name_of_path(self) -> str:
+        return "Path_to_T1" if self == "t1" else "Path_to_pet"
+
+    @property
+    def tracer(self) -> Tracer:
+        if self == "t1":
+            raise ValueError("T1 modality does not have a tracer.")
+        if self == "flute":
+            return Tracer.FMM
+        if self == "pib":
+            return Tracer.PIB
+        if self == "av45":
+            return Tracer.AV45
+
+    @property
+    def bids_folder(self) -> str:
+        return "anat" if self == "t1" else "pet"
+
+    @property
+    def suffix(self) -> str:
+        return "T1w" if self == "t1" else f"trc-{self.tracer}_pet"
+
+
+@dataclass
+class Scan:
+    """Class for keeping track of the relationship between a subject ID,
+    a session ID, and a path to a modality scan.
+    """
+
+    subject_id: str
+    session_id: str
+    path: Path
+
+
+@dataclass
+class ScanCollection:
+    """
+    Maintain coherence in the collection : it is impossible to add
+    a scan for an already existing subject session pair.
+    """
+
+    scans: List[Scan]
+    modality: Modality
+
+    def _is_new_scan_valid(self, new_scan: Scan) -> bool:
+        for scan in self.scans:
+            if (scan.subject_id, scan.session_id) == (
+                new_scan.subject_id,
+                new_scan.session_id,
+            ):
+                warnings.warn(
+                    f"Already a scan for {self.modality} in the collection for subject {scan.subject_id} "
+                    f"and session {scan.session_id} : {scan.path}. "
+                    f"Cannot add another scan {new_scan.path} for this subject session pair."
+                )
+                return False
+        return True
+
+    def add(self, scan: Scan):
+        if self._is_new_scan_valid(scan):
+            self.scans.append(scan)
+
+    def add_scan(self, subject_id: str, session_id: str, path: Path):
+        """Add a scan to the collection."""
+        self.add(Scan(subject_id, session_id, path))
+
+    def to_df(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "Subjects_ID": [scan.subject_id for scan in self.scans],
+                "Session_ID": [scan.session_id for scan in self.scans],
+                self.modality.name_of_path: [str(scan.path) for scan in self.scans],
+            }
+        )
 
 
 def _listdir_nohidden(path: PathLike) -> List[str]:
@@ -115,48 +201,40 @@ def _find_correspondence_index(subject_id: str, df: pd.DataFrame) -> List[str]:
     )
 
 
-def _find_correspondence_date(index: list, df: pd.DataFrame) -> pd.Series:
-    """Return the dates reported in the csv_file for a given index.
+def _find_patient_session_id(
+    exam_date: str, subject_id: str, metadata_df: pd.DataFrame
+) -> str:
+    """Returns the session_ID for the requested subject.
+
+    It controls if the dates corresponding to the image (from the name of the subdirectory)
+    correspond to one of the dates listed from the csv_file for the subject analysed.
+    The session_ID is the corresponding session for that patient in that date.
+
+    It returns -4 if there are no information.
 
     Parameters
     ----------
-    index : list
-        List of index.
-    df : pd.DataFrame
-        DataFrame where all the information are listed
+    exam_date : str
+        Date where the image has been taken, it is saved from the name
+        of the corresponding subdirectory.
+
+    subject_id : str
+        The subject's identifier.
+
+    metadata_df : pd.DataFrame
+        DataFrame obtained from the CSV file where all the information are listed.
 
     Return
     ------
-    pd.Series :
-        Exam dates at index.
-    """
-    return df.EXAMDATE[index]
-
-
-def match_data(exam_date: str, subject_id: str, csv_file: pd.DataFrame) -> str:
-    """
-
-    This method returns the session_ID. It controls if the dates
-    corresponding to the image (from the name of the subdirectory)
-    correspond to one of the dates listed from the csv_file for the subject
-    analysed. The session_ID is the corresponding session for that patient
-    in that date.  It returns -4 if there are no information.
-
-    :param exam_date: date where the image has been taken, it is saved
-    from the name of the corresponding subdirector
-    :type exam_date: str
-    :param subject_id: Subject's identifier
-    :type subject_id: str
-    :param csv_file: csv file where all the information are listed
-    :type csv_file: pd.DataFrame
-    :return session_id of the patient
-    :rtype: str
+    str :
+        Session ID of the patient.
     """
     import re
 
     session_id = None
-    indices = _find_correspondence_index(subject_id, csv_file)
-    csv_date = _find_correspondence_date(indices, csv_file)
+    indices = _find_correspondence_index(subject_id, metadata_df)
+    csv_date = metadata_df.EXAMDATE[indices]
+
     for index in indices:
         if str(csv_date[index]) == "-4":
             continue
@@ -171,12 +249,13 @@ def match_data(exam_date: str, subject_id: str, csv_file: pd.DataFrame) -> str:
             & (p.group(2) == m.group(3))
             & (p.group(3) == m.group(1))
         ):
-            session_id = csv_file.VISCODE[index]
+            session_id = metadata_df.VISCODE[index]
+
     return session_id or "-4"
 
 
-def list_of_paths():
-    """List all the folders which not contain PET images."""
+def _list_folder_without_pet() -> List[str]:
+    """Return a list of all the folders which do not contain PET images."""
     return [
         ".DS_Store",
         "localizer",
@@ -207,92 +286,110 @@ def list_of_paths():
     ]
 
 
-def check_subdirectories_pet(subdirectories, sub, no_pet):
-    """
-    It returns the correct subdirectories for the PET images, they should
+def _check_subdirectories_pet(
+    subdirectories: List[str], no_pet: List[str]
+) -> List[str]:
+    """Returns the correct subdirectories for the PET images, they should
     belong to the list where there all the possible names of the PET images.
 
-    :param subdirectories:
-    :param sub: all the possible subdirectories which need to be checked
-    :param no_pet: list of names of folders which not contain PET images
+    Parameters
+    ----------
+    subdirectories : list of str
+        The possible subdirectories which need to be checked.
 
-    :return subdirectory which is containing a PET image which needs to be
-    converted
+    no_pet : list of str
+        List of folder names which do not contain PET images.
+
+    Return
+    ------
+    list of str :
+        List of subdirectories which contain a PET image which
+        needs to be converted.
     """
-
-    for j in range(len(sub)):
-        if (sub[j] not in no_pet) & (sub[j] != ".DS_Store"):
-            subdirectories.append(sub[j])
-    subdirectories = list(set(subdirectories))
-    return subdirectories
+    return list(
+        set([s for s in subdirectories if (s not in no_pet) & (s != ".DS_Store")])
+    )
 
 
-def _dicom_to_nii(subject, output_path, output_filename, image_path):
+def _dicom_to_nii(output_path: Path, image_path: str) -> Path:
     """Convert the DICOM images to NIfTI files using dcm2niix.
 
-    :param subject:
-    :param output_path: where NIfTI image is stored
-    :param output_filename: name of the NIfTI image
-    :param image_path: where DICOM files are stored
+    Parameters
+    ----------
+    output_path : Path
+     Path to the NIfTI image without the extension.
 
-    :return: Image in NIfTI format
+    image_path : str
+        Path to where the DICOM files are stored.
+
+    Return
+    ------
+    Path :
+        Path to the image in NIfTI format.
     """
-    import os
-    from os.path import exists
-
     from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.utils.stream import cprint
 
     try:
-        os.makedirs(output_path)
+        output_path.parent.mkdir()
     except OSError:
-        if not os.path.isdir(output_path):
+        if not output_path.parent.is_dir():
             raise
 
     # if image.Is_Dicom:
     run_dcm2niix(
         input_dir=image_path,
-        output_dir=output_path,
-        output_fmt=output_filename,
+        output_dir=str(output_path.parent),
+        output_fmt=output_path.name,
         compress=True,
         bids_sidecar=False,
     )
 
-    nifti_file = os.path.join(output_path, output_filename + ".nii.gz")
+    nifti_file = output_path.with_suffix(".nii.gz")
 
-    if not exists(nifti_file):
-        cprint(nifti_file + " should have been created but this did not happen")
+    if not nifti_file.exists():
+        cprint(f"{nifti_file} should have been created but this did not happen")
     return nifti_file
 
 
 def _find_path_to_pet_modality(
-    path_to_dataset: Path, csv_file: pd.DataFrame
+    path_to_dataset: Path,
+    path_to_csv: Path,
+    modality: Modality,
 ) -> pd.DataFrame:
-    """Create a Dataframe which contains all the paths to the PET image of a modality (for example AV45 or PIB).
+    """Create a Dataframe which contains all the paths to the PET
+    image of a modality (for example AV45 or PIB).
 
-    :param path_to_dataset: path to AIBL dataset
-    :param csv_file: file which correspond to the modality
+    Parameters
+    ----------
+    path_to_dataset : Path
+        Path to AIBL dataset.
 
-    :return: A dataframe which contains the path for PET images for a
-    single modality and subject_ID and session_ID are reported for each
-    path
+    path_to_csv : Path
+        Path to CSV file.
+
+    modality : Modality
+        The PET modality for which to find paths.
+
+    Return
+    ------
+    pd.DataFrame :
+        A dataframe which contains the path for PET images for a single
+        modality and subject_ID and session_ID are reported for each path.
     """
-    no_pet = list_of_paths()
+    df = _load_pet_csv(path_to_csv, modality)
     subjects_id = _listdir_nohidden(path_to_dataset)
+    scans = ScanCollection([], modality)
 
     if "0151083" in subjects_id:
         del subjects_id[subjects_id.index("0151083")]
 
-    scans = ScanCollection([], "pet")
-
     for subject_id in subjects_id:
-        if int(subject_id) in list(csv_file.RID):
-            # check if the subject is present in the csv_file for the modality selected
-            subject_subdirectories_pet = []
+        if int(subject_id) in list(df.RID):
             path_to_subject = path_to_dataset / str(subject_id)
-            subject_subdirectories = _listdir_nohidden(path_to_subject)
-            subject_subdirectories_pet = check_subdirectories_pet(
-                subject_subdirectories_pet, subject_subdirectories, no_pet
+            subject_subdirectories_pet = _check_subdirectories_pet(
+                _listdir_nohidden(path_to_subject),
+                _list_folder_without_pet(),
             )
             for folder in subject_subdirectories_pet:
                 path_to_pet_folder = path_to_subject / folder
@@ -300,7 +397,9 @@ def _find_path_to_pet_modality(
                 # exam date of the image which is going to be converted
                 for exam_date in exam_dates:
                     # selection of the session_ID matching the data in the csv_file with the one of the image
-                    session_id = match_data(str(exam_date), subject_id, csv_file)
+                    session_id = _find_patient_session_id(
+                        str(exam_date), subject_id, df
+                    )
                     if session_id != "-4":
                         path_to_pet = path_to_pet_folder / str(exam_date)
                         # For the RID 1607 there are two PET images of the flute modality, and we select the first
@@ -318,57 +417,26 @@ def _find_path_to_pet_modality(
     return scans.to_df()
 
 
-@dataclass
-class Scan:
-    """Class for keeping track of the relationship between a subject ID,
-    a session ID, and a path to a modality scan.
-    """
+def _load_pet_csv(path_to_csv: Path, modality: Modality) -> pd.DataFrame:
+    import pandas as pd
 
-    subject_id: str
-    session_id: str
-    path: Path
+    path_to_csv_pet_modality = _get_first_file_matching_pattern(
+        path_to_csv, f"aibl_{modality}meta_*.csv"
+    )
 
-
-@dataclass
-class ScanCollection:
-    """
-    Maintain coherence in the collection : it is impossible to add
-    a scan for an already existing subject session pair.
-    """
-
-    scans: List[Scan]
-    modality: str
-
-    def _is_new_scan_valid(self, new_scan: Scan) -> bool:
-        for scan in self.scans:
-            if (scan.subject_id, scan.session_id) == (
-                new_scan.subject_id,
-                new_scan.session_id,
-            ):
-                warnings.warn(
-                    f"Already a scan for {self.modality} in the collection for subject {scan.subject_id} "
-                    f"and session {scan.session_id} : {scan.path}. "
-                    f"Cannot add another scan {new_scan.path} for this subject session pair."
-                )
-                return False
-        return True
-
-    def add(self, scan: Scan):
-        if self._is_new_scan_valid(scan):
-            self.scans.append(scan)
-
-    def add_scan(self, subject_id: str, session_id: str, path: Path):
-        """Add a scan to the collection."""
-        self.add(Scan(subject_id, session_id, path))
-
-    def to_df(self) -> pd.DataFrame:
-        return pd.DataFrame(
-            {
-                "Subjects_ID": [scan.subject_id for scan in self.scans],
-                "Session_ID": [scan.session_id for scan in self.scans],
-                f"Path_to_{self.modality}": [str(scan.path) for scan in self.scans],
-            }
+    if not path_to_csv_pet_modality.exists():
+        raise FileNotFoundError(
+            f"{path_to_csv_pet_modality} file not found in clinical data folder."
         )
+    # Latest version of Flutemetamol CSV file (aibl_flutemeta_01-Jun-2018.csv)
+    # has an extra column for some rows. However, each CSV file (regarding PET tracers)
+    # contains the same columns. The usecols fixes this issue.
+    return pd.read_csv(
+        path_to_csv_pet_modality,
+        sep=",|;",
+        usecols=list(range(0, 36)),
+        engine="python",
+    )
 
 
 def _find_path_to_t1_adni(
@@ -388,7 +456,7 @@ def _find_path_to_t1_adni(
         Indeed, there are two files which describe the parameters of
         the T1 images : MRI 1.5 T and MRI 3T.
 
-    subjects_ids : list of str
+    subject_ids : list of str
         List of subjects IDs in the downloaded dataset.
 
     path_to_dataset : Path
@@ -399,18 +467,18 @@ def _find_path_to_t1_adni(
     ScanCollection :
         The collected T1 scan paths.
     """
-    scans = ScanCollection([], "T1")
+    scans = ScanCollection([], Modality.T1)
 
     for subject_id in subject_ids:
         for mri_file in mri_files:
             if int(subject_id) in list(mri_file.RID):
-                # check if the information of the subject are present in the csv_file
                 path_to_subject = path_to_dataset / str(subject_id)
                 for folder in _listdir_nohidden(path_to_subject):
                     if path_to_t1_folder := _find_t1_folder(folder, path_to_subject):
                         for exam_date in _listdir_nohidden(path_to_t1_folder):
-                            # check if the corresponding session_ID can be found in the csv_file
-                            session_id = match_data(exam_date, subject_id, mri_file)
+                            session_id = _find_patient_session_id(
+                                exam_date, subject_id, mri_file
+                            )
                             if session_id != "-4":
                                 path_to_t1 = path_to_t1_folder / str(exam_date)
                                 for image_id in _listdir_nohidden(path_to_t1):
@@ -476,17 +544,27 @@ def _find_path_to_t1_sag(
     return t1_scans
 
 
-def _find_path_to_t1(path_to_dataset: Path, path_to_csv: str) -> pd.DataFrame:
+def _get_first_file_matching_pattern(folder: Path, pattern: str) -> Path:
+    """Return the first file in given folder matching the provided pattern.
+    Raise a ValueError if no such file found.
+    """
+    try:
+        return list(folder.glob(pattern))[0]
+    except IndexError:
+        raise ValueError(f"No file matching pattern {folder}/{pattern}.")
+
+
+def _find_path_to_t1(path_to_dataset: Path, path_to_csv: Path) -> pd.DataFrame:
     """Creates a DataFrame for the T1 images.
     For each image, the subject ID, the session ID and the path to the image are
     reported.
 
     Parameters
     ----------
-    path_to_dataset : str
+    path_to_dataset : Path
         Path to AIBL dataset.
 
-    path_to_csv : str
+    path_to_csv : Path
         Path to the folder with the CSV files downloaded.
 
     Return
@@ -495,21 +573,16 @@ def _find_path_to_t1(path_to_dataset: Path, path_to_csv: str) -> pd.DataFrame:
         Pandas dataframe which contains all the paths for the T1
         images, and the corresponding subject ID, and session ID.
     """
-    import glob
-    import os
-
     import pandas as pd
 
     # two csv_files contain information regarding the T1w MRI images
-    mri_meta_df = pd.read_csv(
-        glob.glob(os.path.join(path_to_csv, "aibl_mrimeta_*.csv"))[0]
+    mri_dfs = tuple(
+        [
+            pd.read_csv(_get_first_file_matching_pattern(path_to_csv, pattern))
+            for pattern in ("aibl_mrimeta_*.csv", "aibl_mri3meta_*.csv")
+        ]
     )
-    mri_3meta_df = pd.read_csv(
-        glob.glob(os.path.join(path_to_csv, "aibl_mri3meta_*.csv"))[0]
-    )
-    mri_dfs = (mri_meta_df, mri_3meta_df)
     subjects_id = _listdir_nohidden(path_to_dataset)
-    # list of all the folders which correspond to the subject ID
     # all the subjects downloaded are taken into account for the conversion, except this sample
     if "0151083" in subjects_id:
         del subjects_id[subjects_id.index("0151083")]
@@ -518,37 +591,40 @@ def _find_path_to_t1(path_to_dataset: Path, path_to_csv: str) -> pd.DataFrame:
     return t1_scans.to_df()
 
 
-# Convert the AIBL PET images into the BIDS specification.
-# There are three pet modalities: av45, pib, flute. All of them are converted
-# in BIDS
-def _create_file(image, modality, bids_dir, overwrite):
-    from os import remove
-    from os.path import exists, join
+def _create_file(
+    image: pd.Series, modality: Modality, bids_dir: Path, overwrite: bool
+) -> Optional[str]:
+    """Convert the AIBL PET images into the BIDS specification.
 
+    There are three pet modalities: av45, pib, flute. All of them are converted in BIDS.
+
+    Parameters
+    ----------
+    image : pd.Series
+    modality : Modality
+    bids_dir : Path
+    overwrite : bool
+
+    Return
+    ------
+    str or None :
+        Path to file
+    """
     from numpy import nan
 
     from clinica.iotools.bids_utils import json_from_dcm
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
-    from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
 
-    subject = image.Subjects_ID
     participant_id = f"sub-AIBL{image.Subjects_ID}"
     session_id = image.Session_ID
-    name_of_path = {
-        "t1": "Path_to_T1",
-        "av45": "Path_to_pet",
-        "flute": "Path_to_pet",
-        "pib": "Path_to_pet",
-    }
-
-    image_path = image[name_of_path[modality]]
+    image_path = image[modality.name_of_path]
 
     if image_path == nan:
         cprint(
             msg=(
-                f"[{modality.upper()}] No path specified for {subject} "
+                f"[{modality.upper()}] No path specified for {image.Subjects_ID} "
                 f"in session {session_id}"
             ),
             lvl="info",
@@ -557,96 +633,84 @@ def _create_file(image, modality, bids_dir, overwrite):
     else:
         cprint(
             msg=(
-                f"[{modality.upper()}] Processing subject {subject} "
+                f"[{modality.upper()}] Processing subject {image.Subjects_ID} "
                 f"in session {session_id}"
             ),
             lvl="info",
         )
-
     session_id = viscode_to_session(session_id)
-
-    # creation of the path
-    if modality == "t1":
-        output_path = join(bids_dir, f"{participant_id}", f"{session_id}", "anat")
-        output_filename = f"{participant_id}_{session_id}_T1w"
-    elif modality in ["flute", "pib", "av45"]:
-        tracer = {"flute": Tracer.FMM, "pib": Tracer.PIB, "av45": Tracer.AV45}[modality]
-        output_path = join(bids_dir, f"{participant_id}", f"{session_id}", "pet")
-        output_filename = f"{participant_id}_{session_id}_trc-{tracer}_pet"
-    else:
-        return None
-
+    output_path = (
+        bids_dir
+        / f"{participant_id}"
+        / f"{session_id}"
+        / modality.bids_folder
+        / f"{participant_id}_{session_id}_{modality.suffix}"
+    )
     # image is saved following BIDS specifications
-    if exists(join(output_path, output_filename + ".nii.gz")) and not overwrite:
-        cprint(f"Subject {str(subject)} - session {session_id} already processed.")
-        output_image = join(output_path, output_filename + ".nii.gz")
+    if output_path.with_suffix(".nii.gz").exists() and not overwrite:
+        cprint(f"Subject {image.Subjects_ID} - session {session_id} already processed.")
+        output_image = output_path.with_suffix(".nii.gz")
     else:
-        if exists(join(output_path, output_filename + ".nii.gz")):
-            remove(join(output_path, output_filename + ".nii.gz"))
-        output_image = _dicom_to_nii(subject, output_path, output_filename, image_path)
-        json_from_dcm(image_path, join(output_path, output_filename + ".json"))
+        if output_path.with_suffix(".nii.gz").exists():
+            output_path.with_suffix(".nii.gz").unlink()
+        output_image = _dicom_to_nii(output_path, image_path)
+        json_from_dcm(image_path, str(output_path.with_suffix(".json")))
 
-    # Center all images
     center_nifti_origin(output_image, output_image)
 
-    return output_image
+    return str(output_image)
 
 
-def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality, overwrite=False):
+def paths_to_bids(
+    path_to_dataset: str,
+    path_to_csv: str,
+    bids_dir: str,
+    modality: str,
+    overwrite: bool = False,
+) -> List[str]:
     """Convert all the T1 images found in the AIBL dataset downloaded in BIDS.
 
-    Args:
-        path_to_dataset: path_to_dataset
-        path_to_csv: path to the csv file containing clinical data
-        bids_dir: path to save the AIBL-T1-dataset converted in a BIDS format
-        modality: string 't1', 'av45', 'flute' or 'pib'
-        overwrite: if True previous existing outputs will be erased
+    Parameters
+    ----------
+    path_to_dataset : str
+        Path to the AIBL dataset.
 
-    Returns:
-        list of all the images that are potentially converted in a BIDS format and saved in the bids_dir.
-        This does not guarantee existence.
+    path_to_csv : str
+        Path to the csv file containing clinical data.
+
+    bids_dir : str
+        Path to save the AIBL-T1-dataset converted in a BIDS format.
+
+    modality : str
+        Either 't1', 'av45', 'flute' or 'pib'.
+
+    overwrite : bool
+        If True previous existing outputs will be erased.
+
+    Return
+    ------
+    list of str :
+        list of all the images that are potentially converted in a BIDS format
+        and saved in the bids_dir. This does not guarantee existence.
     """
-    import glob
     from functools import partial
     from multiprocessing import Pool, cpu_count
-    from os import makedirs
-    from os.path import exists, join
     from pathlib import Path
 
-    import pandas as pds
-
     path_to_dataset = Path(path_to_dataset)
-
-    if modality.lower() not in ["t1", "av45", "flute", "pib"]:
-        # This should never be reached
-        raise RuntimeError(f"{modality.lower()} is not supported for conversion")
-
-    makedirs(join(bids_dir, "conversion_info"), exist_ok=True)
+    path_to_csv = Path(path_to_csv)
+    bids_dir = Path(bids_dir)
+    modality = Modality(modality.lower())
+    (bids_dir / "conversion_info").mkdir(exist_ok=True)
 
     # it reads the DataFrame where subject_ID, session_ID and path are saved
-    if modality == "t1":
+    if modality == Modality.T1:
         images = _find_path_to_t1(path_to_dataset, path_to_csv)
     else:
-        path_to_csv_pet_modality = glob.glob(
-            join(path_to_csv, "aibl_" + modality + "meta_*.csv")
-        )[0]
-        if not exists(path_to_csv_pet_modality):
-            raise FileNotFoundError(
-                path_to_csv_pet_modality + " file not found in clinical data folder"
-            )
-        # Latest version of Flutemetamol CSV file (aibl_flutemeta_01-Jun-2018.csv)
-        # has an extra column for some rows. However, each CSV file (regarding PET tracers)
-        # contains the same columns. The usecols fixes this issue.
-        df_pet = pds.read_csv(
-            path_to_csv_pet_modality,
-            sep=",|;",
-            usecols=list(range(0, 36)),
-            engine="python",
-        )
-        images = _find_path_to_pet_modality(path_to_dataset, df_pet)
+        images = _find_path_to_pet_modality(path_to_dataset, path_to_csv, modality)
 
     images.to_csv(
-        join(bids_dir, "conversion_info", modality + "_paths.tsv"),
+        bids_dir / "conversion_info" / f"{modality}_paths.tsv",
         index=False,
         sep="\t",
         encoding="utf-8",
