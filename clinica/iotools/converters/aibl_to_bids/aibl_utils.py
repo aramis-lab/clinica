@@ -331,7 +331,7 @@ def _dicom_to_nii(output_path: Path, image_path: str) -> Path:
     from clinica.utils.stream import cprint
 
     try:
-        output_path.parent.mkdir()
+        output_path.parent.mkdir(parents=True)
     except OSError:
         if not output_path.parent.is_dir():
             raise
@@ -701,7 +701,7 @@ def paths_to_bids(
     path_to_csv = Path(path_to_csv)
     bids_dir = Path(bids_dir)
     modality = Modality(modality.lower())
-    (bids_dir / "conversion_info").mkdir(exist_ok=True)
+    (bids_dir / "conversion_info").mkdir(parents=True, exist_ok=True)
 
     # it reads the DataFrame where subject_ID, session_ID and path are saved
     if modality == Modality.T1:
