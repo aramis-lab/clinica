@@ -3,43 +3,49 @@ Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 """
 
 
-def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
-
-    # Conversion of the entire dataset in BIDS
+def convert_images(
+    path_to_dataset: str, path_to_csv: str, bids_dir: str, overwrite: bool = False
+) -> None:
+    """Conversion of the entire dataset in BIDS."""
     from os.path import exists
+    from pathlib import Path
 
-    from clinica.iotools.converters.aibl_to_bids.aibl_utils import paths_to_bids
+    from clinica.iotools.converters.aibl_to_bids.utils import Modality, paths_to_bids
     from clinica.utils.stream import cprint
 
-    list_of_created_files = []
+    path_to_dataset = Path(path_to_dataset)
+    path_to_csv = Path(path_to_csv)
+    bids_dir = Path(bids_dir)
 
-    for modality in ["t1", "av45", "flute", "pib"]:
-        list_of_created_files.append(
-            paths_to_bids(
-                path_to_dataset, path_to_csv, bids_dir, modality, overwrite=overwrite
-            )
+    list_of_created_files = [
+        paths_to_bids(
+            path_to_dataset,
+            path_to_csv,
+            bids_dir,
+            modality,
+            overwrite=overwrite,
         )
-
-    error_string = ""
+        for modality in Modality
+    ]
+    missing_files = []
     for modality_list in list_of_created_files:
         for file in modality_list:
             if not exists(str(file)):
-                error_string = error_string + str(file) + "\n"
-    if error_string != "":
-        cprint(
-            msg=f"The following file were not converted: {error_string}", lvl="warning"
-        )
+                missing_files.append(file)
+    if missing_files:
+        msg = "The following file were not converted:\n" + "\n".join(missing_files)
+        cprint(msg=msg, lvl="warning")
 
 
-def convert_clinical_data(bids_dir, path_to_csv):
+def convert_clinical_data(bids_dir: str, path_to_csv: str) -> None:
     # clinical specifications in BIDS
     from os.path import join, realpath, split
 
     import clinica.iotools.bids_utils as bids
-    from clinica.iotools.converters.aibl_to_bids.aibl_utils import (
-        create_participants_df_AIBL,
-        create_scans_dict_AIBL,
-        create_sessions_dict_AIBL,
+    from clinica.iotools.converters.aibl_to_bids.utils import (
+        create_participants_tsv_file,
+        create_scans_tsv_file,
+        create_sessions_tsv_file,
     )
     from clinica.utils.stream import cprint
 
@@ -65,12 +71,12 @@ def convert_clinical_data(bids_dir, path_to_csv):
     )
 
     cprint("Creating participants.tsv...")
-    create_participants_df_AIBL(
+    create_participants_tsv_file(
         bids_dir, clinical_spec_path, path_to_csv, delete_non_bids_info=True
     )
 
     cprint("Creating sessions files...")
-    create_sessions_dict_AIBL(bids_dir, path_to_csv, clinical_spec_path)
+    create_sessions_tsv_file(bids_dir, path_to_csv, clinical_spec_path)
 
     cprint("Creating scans files...")
-    create_scans_dict_AIBL(bids_dir, path_to_csv, clinical_spec_path)
+    create_scans_tsv_file(bids_dir, path_to_csv, clinical_spec_path)
