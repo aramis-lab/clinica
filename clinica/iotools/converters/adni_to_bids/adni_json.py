@@ -102,31 +102,46 @@ def _get_text(xml_el: xml.etree.ElementTree.Element, cast=None) -> str:
     return xml_el.text
 
 
-def _check_derived_image_xml(derived: xml.etree.ElementTree.Element):
+def _check_xml_field(
+    xml_element: xml.etree.ElementTree.Element, field: str, expected_value: str
+) -> None:
+    """Check that the given field of the given XML element has the expected value."""
+    if (found_value := _check_xml_and_get_text(xml_element, field)) != expected_value:
+        raise ValueError(
+            f"The {field} for the derived image should be '{expected_value}'. "
+            f"{found_value} was found instead."
+        )
+
+
+def _check_derived_image_xml(derived: xml.etree.ElementTree.Element) -> None:
     """Perform sanity checks on derived images."""
-    assert len(derived) >= 9  # multiple <provenanceDetail> nodes possible
-    assert (
-        _check_xml_and_get_text(derived[2], "imageType") == "image volume"
-    ), "imageType"
-    assert _check_xml_and_get_text(derived[3], "tissue") == "All", "tissue"
-    assert _check_xml_and_get_text(derived[4], "hemisphere") == "Both", "hemis"
-    assert (
-        _check_xml_and_get_text(derived[5], "anatomicStructure") == "Brain"
-    ), "anat struct"
-    assert (
-        _check_xml_and_get_text(derived[6], "registration") == "native"
-    ), "registration not native"
-    # skip check relatedImage, original ID consistence + "derived from"...
-    # skip processing steps with names, versions, dates and so on
-    # 2 cases
-    if derived[-1].tag == "creationDate":
-        assert (
-            _check_xml_and_get_text(derived[-1], "creationDate") == "0000-00-00"
-        ), "creaDate"
-    else:
-        assert (
-            _check_xml_and_get_text(derived[-2], "creationDate") == "0000-00-00"
-        ), "creaDate"
+    if len(derived) < 9:
+        raise ValueError("derived image does not have enough field")
+    for idx, field, expected in zip(
+        [2, 3, 4, 5, 6],
+        ["imageType", "tissue", "hemisphere", "anatomicStructure", "registration"],
+        ["image volume", "All", "Both", "Brain", "native"],
+    ):
+        _check_xml_field(derived[idx], field, expected)
+    idx = -1 if derived[-1].tag == "creationDate" else -2
+    if (
+        image_create_date := _check_xml_and_get_text(derived[idx], "creationDate")
+    ) != "0000-00-00":
+        try:
+            _validate_date_iso_format(image_create_date)
+        except ValueError as e:
+            raise ValueError(
+                f"The creationDate for the derived image is not valid: {e}"
+            )
+
+
+def _validate_date_iso_format(date: str) -> None:
+    import datetime
+
+    try:
+        datetime.date.fromisoformat(date)
+    except ValueError:
+        raise ValueError(f"Incorrect data format {date}, should be YYYY-MM-DD")
 
 
 def _get_derived_image_metadata(derived: xml.etree.ElementTree.Element) -> dict:
