@@ -372,7 +372,7 @@ def _parse_xml_file(xml_path: str) -> dict:
     acquisition_date = pd.Timestamp(_check_xml_and_get_text(series[2], "dateAcquired"))
     scan_metadata = {
         "id": subject_id,
-        "acq_time": acquisition_date,
+        "acq_time": acquisition_date.isoformat(),
         **original_image_metadata,
         **derived_image_metadata,
     }
