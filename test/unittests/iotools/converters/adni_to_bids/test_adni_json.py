@@ -273,7 +273,7 @@ def test_parse_xml_file(template_id, tmp_path, expected_mprage):
     scan_metadata = _parse_xml_file(xml_file)
     expected_subject_id = template_id[5:]
     assert scan_metadata["id"] == expected_subject_id
-    assert scan_metadata["acq_time"] == pd.Timestamp(2017, 1, 1, 12)
+    assert scan_metadata["acq_time"] == "2017-01-01T12:00:00"
     assert scan_metadata["image_orig_id"] == 300
     assert scan_metadata["image_orig_seq"] == expected_mprage
     assert scan_metadata["MRAcquisitionType"] == "3D"
