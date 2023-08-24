@@ -102,17 +102,6 @@ def _get_text(xml_el: xml.etree.ElementTree.Element, cast=None) -> str:
     return xml_el.text
 
 
-def _check_xml_field(
-    xml_element: xml.etree.ElementTree.Element, field: str, expected_value: str
-) -> None:
-    """Check that the given field of the given XML element has the expected value."""
-    if (found_value := _check_xml_and_get_text(xml_element, field)) != expected_value:
-        raise ValueError(
-            f"The {field} for the derived image should be '{expected_value}'. "
-            f"{found_value} was found instead."
-        )
-
-
 def _check_derived_image_xml(derived: xml.etree.ElementTree.Element) -> None:
     """Perform sanity checks on derived images."""
     if len(derived) < 9:
@@ -133,6 +122,17 @@ def _check_derived_image_xml(derived: xml.etree.ElementTree.Element) -> None:
             raise ValueError(
                 f"The creationDate for the derived image is not valid: {e}"
             )
+
+
+def _check_xml_field(
+    xml_element: xml.etree.ElementTree.Element, field: str, expected_value: str
+) -> None:
+    """Check that the given field of the given XML element has the expected value."""
+    if (found_value := _check_xml_and_get_text(xml_element, field)) != expected_value:
+        raise ValueError(
+            f"The {field} for the derived image should be '{expected_value}'. "
+            f"{found_value} was found instead."
+        )
 
 
 def _validate_date_iso_format(date: str) -> None:
