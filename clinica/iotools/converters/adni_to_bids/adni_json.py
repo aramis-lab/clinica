@@ -372,7 +372,7 @@ def _parse_xml_file(xml_path: str) -> dict:
     acquisition_date = pd.Timestamp(_check_xml_and_get_text(series[2], "dateAcquired"))
     scan_metadata = {
         "id": subject_id,
-        "acq_time": acquisition_date,
+        "acq_time": acquisition_date.isoformat(),
         **original_image_metadata,
         **derived_image_metadata,
     }
@@ -526,7 +526,9 @@ def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> Non
                         scan_path = Path(subj_path) / sess / scan_row["filename"]
                         json_path = _get_json_filename_from_scan_filename(scan_path)
                         _add_json_scan_metadata(json_path, scan_row.to_json())
-                    df_merged[columns_to_keep].to_csv(scans_tsv_path, sep="\t")
+                    df_merged[columns_to_keep].to_csv(
+                        scans_tsv_path, sep="\t", index=False
+                    )
     return None
 
 
