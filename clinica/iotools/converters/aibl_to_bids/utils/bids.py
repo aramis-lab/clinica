@@ -198,6 +198,8 @@ def _get_first_file_matching_pattern(folder: Path, pattern: str) -> Path:
     """Return the first file in given folder matching the provided pattern.
     Raise a ValueError if no such file found.
     """
+    if pattern == "":
+        raise ValueError("Pattern is not valid.")
     try:
         return list(folder.glob(pattern))[0]
     except IndexError:
