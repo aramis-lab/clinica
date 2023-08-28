@@ -2088,6 +2088,21 @@ files = [
 pydra = ">=0.21"
 
 [[package]]
+name = "pydra-fsl"
+version = "0.0.20"
+description = "Pydra tasks for FSL"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pydra_fsl-0.0.20-py3-none-any.whl", hash = "sha256:3b204325bf907b013738abca28ec7249a7c67a7c80f351d36a41c96a9014c8fb"},
+    {file = "pydra_fsl-0.0.20.tar.gz", hash = "sha256:8ad3860d4cdd8d3b10a1dc06c92f1891adba98cad8317e743274322f618bfc3f"},
+]
+
+[package.dependencies]
+attrs = ">=22.1.0"
+pydra = ">=0.22"
+
+[[package]]
 name = "pydra-nipype1"
 version = "0.2.2"
 description = "Tools for importing nipype 1.x interfaces into Pydra"
