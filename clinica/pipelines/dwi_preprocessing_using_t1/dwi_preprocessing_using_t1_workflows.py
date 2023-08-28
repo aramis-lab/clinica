@@ -254,13 +254,14 @@ def epi_pipeline(
               This corresponds to the 'out_rotated_bvecs' output from the eddy_fsl pipeline.
 
         And the following outputs:
-            - "DWI_2_T1_Coregistration_matrix": ???
-            - "epi_correction_deformation_field": ???
-            - "epi_correction_affine_transform": ???
-            - "epi_correction_image_warped": ???
-            - "DWIs_epicorrected": ???
-            - "warp_epi": ???
-            - "out_bvec": ???
+            - merged_transforms
+            - dwi_to_t1_co_registration_matrix
+            - epi_correction_deformation_field
+            - epi_correction_affine_transform
+            - epi_correction_image_warped
+            - rotated_b_vectors
+            - epi_corrected_dwi_image
+
 
     Warnings
     --------
