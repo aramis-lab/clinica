@@ -1,7 +1,6 @@
-from pathlib import Path
+from typing import List
 
 from pydra import Workflow
-from pydra.specs import SpecInfo
 
 
 def build_eddy_fsl_workflow(
@@ -55,7 +54,7 @@ def build_eddy_fsl_workflow(
         "input_image": wf.lzin.dwi_filename,
         "encoding_file": wf.generate_acq_file_task.lzout.out_file,
         "index_file": wf.generate_index_file_task.lzout.out_file,
-        "brain_mask": wf.mask_reference_b0.brain_mask
+        "brain_mask": wf.mask_reference_b0.lzout.brain_mask
         if compute_mask
         else wf.lzin.in_mask,
     }
@@ -68,8 +67,8 @@ def build_eddy_fsl_workflow(
 
     wf.set_output(
         {
-            "parameters_file": wf.eddy_fsl.lzout.parameters_file,
             "corrected_image": wf.eddy_fsl.lzout.corrected_image,
+            "parameters_file": wf.eddy_fsl.lzout.parameters_file,
             "rotated_bvec_file": wf.eddy_fsl.lzout.rotated_bvec_file,
         }
     )
@@ -81,21 +80,20 @@ def _build_eddy_fsl_input_specs(
     image_id: bool,
     field: bool,
     compute_mask: bool,
-    name: str = "InputSpec",
-) -> SpecInfo:
+) -> List[str]:
+    """Returns the input specs for eddy_fsl workflow."""
     fields = [
-        ("dwi_filename", Path),
-        ("b_vectors_filename", Path),
-        ("b_values_filename", Path),
-        ("in_mask", Path),
-        ("total_readout_time", str),
-        ("phase_encoding_direction", str),
+        "dwi_filename",
+        "b_vectors_filename",
+        "b_values_filename",
+        "in_mask",
+        "total_readout_time",
+        "phase_encoding_direction",
     ]
     if image_id:
-        fields.append(("image_id", str))
+        fields.append("image_id")
     if field:
-        fields.append(("field", Path))
-    if compute_mask:
-        fields.append(("reference_b0", Path))
+        fields.append("field")
+    fields.append("reference_b0" if compute_mask else "in_mask")
 
-    return SpecInfo(name=name, fields=fields)
+    return fields
