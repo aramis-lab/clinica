@@ -134,7 +134,12 @@ def similarity_measure_arrays(
     array2 = np.squeeze(array2)
 
     similarity = structural_similarity(
-        array1, array2, gaussian_weights=True, sigma=1.5, use_sample_covariance=False
+        array1,
+        array2,
+        gaussian_weights=True,
+        sigma=1.5,
+        use_sample_covariance=False,
+        data_range=array1.max() - array1.min(),
     )
 
     return similarity > threshold
