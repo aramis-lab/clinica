@@ -116,7 +116,9 @@ def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
     return out_warp
 
 
-def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
+def rotate_b_vectors(
+    b_vectors_filename: str, matrix_filenames: list, output_dir: str = None
+) -> str:
     """Rotate the B-vectors contained in the input b_vectors_filename file
     according to the provided list of matrices.
 
@@ -127,6 +129,10 @@ def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
 
     matrix_filenames : list of str
         List of paths to rotation matrices to apply to the B-vectors.
+
+    output_dir : str, optional
+        If specified, the rotated B-vectors will be written in this folder
+        rather than in the same folder as the provided B-vectors.
 
     Returns
     -------
@@ -150,6 +156,8 @@ def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
         else b_vectors_filename.stem
     )
     rotated_b_vectors_filename = b_vectors_filename.with_name(f"{stem}_rotated.bvec")
+    if output_dir:
+        rotated_b_vectors_filename = Path(output_dir) / rotated_b_vectors_filename.name
     b_vectors = np.loadtxt(b_vectors_filename).T
 
     if len(b_vectors) != len(matrix_filenames):

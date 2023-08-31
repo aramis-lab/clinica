@@ -434,12 +434,13 @@ def perform_ants_registration(
 
     b_vectors_rotation = pe.Node(
         niu.Function(
-            input_names=["matrix_filenames", "b_vectors_filename"],
+            input_names=["matrix_filenames", "b_vectors_filename", "output_dir"],
             output_names=["rotated_b_vectors_filename"],
             function=rotate_b_vectors,
         ),
         name="b_vectors_rotation",
     )
+    b_vectors_rotation.inputs.output_dir = output_dir
 
     ants_registration = pe.Node(
         interface=ants.registration.RegistrationSynQuick(
@@ -629,7 +630,7 @@ def perform_dwi_epi_correction(
         name="remove_dummy_dimension_from_transforms",
     )
     remove_dummy_dimension_from_transforms.inputs.output = os.path.join(
-        base_dir, "merged_transforms_no_dummy.nii.gz"
+        output_dir or base_dir, "merged_transforms_no_dummy.nii.gz"
     )
 
     split_transforms = pe.Node(fsl.Split(dimension="t"), name="split_transforms")
