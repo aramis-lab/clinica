@@ -111,20 +111,30 @@ def similarity_measure(
     from os import fspath
 
     import nibabel
-    from skimage.metrics import structural_similarity
 
     image1 = nibabel.load(fspath(file1)).get_fdata()
     image2 = nibabel.load(fspath(file2)).get_fdata()
-    data_range = image1.max() - image1.min()
 
-    # See https://scikit-image.org/docs/stable/api/skimage.metrics.html#skimage.metrics.structural_similarity
+    return similarity_measure_arrays(image1, image2, threshold)
+
+
+def similarity_measure_arrays(
+    array1: np.ndarray,
+    array2: np.ndarray,
+    threshold: float,
+) -> bool:
+    """Returns True if structural similarity between two arrays is larger than threshold.
+
+    See https://scikit-image.org/docs/stable/api/skimage.metrics.html#skimage.metrics.structural_similarity
+    """
+    import numpy as np
+    from skimage.metrics import structural_similarity
+
+    array1 = np.squeeze(array1)
+    array2 = np.squeeze(array2)
+
     similarity = structural_similarity(
-        image1,
-        image2,
-        gaussian_weights=True,
-        sigma=1.5,
-        use_sample_covariance=False,
-        data_range=data_range,
+        array1, array2, gaussian_weights=True, sigma=1.5, use_sample_covariance=False
     )
 
     return similarity > threshold
