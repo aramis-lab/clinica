@@ -277,6 +277,7 @@ def epi_pipeline(
     import nipype.pipeline.engine as pe
 
     workflow_inputs = ["t1_filename", "dwi_filename", "b_vectors_filename"]
+    workflow_outputs = ["rotated_b_vectors", "epi_corrected_dwi_image"]
 
     inputnode = pe.Node(
         niu.IdentityInterface(fields=workflow_inputs),
@@ -287,14 +288,14 @@ def epi_pipeline(
         output_dir=output_dir,
         ants_random_seed=ants_random_seed,
     )
-    ants_registration_outputs = [
-        "merged_transforms",
-        "dwi_to_t1_co_registration_matrix",
-        "epi_correction_deformation_field",
-        "epi_correction_affine_transform",
-        "epi_correction_image_warped",
-        "rotated_b_vectors",
-    ]
+    # ants_registration_outputs = [
+    #    "merged_transforms",
+    #    "dwi_to_t1_co_registration_matrix",
+    #    "epi_correction_deformation_field",
+    #    "epi_correction_affine_transform",
+    #    "epi_correction_image_warped",
+    #    "rotated_b_vectors",
+    # ]
 
     epi_correction = perform_dwi_epi_correction(
         base_dir=base_dir,
@@ -302,11 +303,11 @@ def epi_pipeline(
         output_dir=output_dir,
         use_double_precision=use_double_precision,
     )
-    epi_correction_outputs = ["epi_corrected_dwi_image"]
+    # epi_correction_outputs = ["epi_corrected_dwi_image"]
 
     outputnode = pe.Node(
         niu.IdentityInterface(
-            fields=ants_registration_outputs + epi_correction_outputs,
+            fields=workflow_outputs  # ants_registration_outputs + epi_correction_outputs,
         ),
         name="outputnode",
     )
@@ -335,12 +336,14 @@ def epi_pipeline(
         (
             ants_registration,
             outputnode,
-            [(f"outputnode.{output}", output) for output in ants_registration_outputs],
+            # [(f"outputnode.{output}", output) for output in ants_registration_outputs],
+            [("outputnode.rotated_b_vectors", "rotated_b_vectors")],
         ),
         (
             epi_correction,
             outputnode,
-            [(f"outputnode.{output}", output) for output in epi_correction_outputs],
+            # [(f"outputnode.{output}", output) for output in epi_correction_outputs],
+            [("outputnode.epi_corrected_dwi_image", "epi_corrected_dwi_image")],
         ),
     ]
 
