@@ -51,6 +51,49 @@ def test_dwi_b0_flirt(cmdopt, tmp_path):
 
 
 @pytest.mark.slow
+def test_dwi_epi_pipeline(cmdopt, tmp_path):
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+        epi_pipeline,
+    )
+
+    base_dir = Path(cmdopt["input"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEPIPipeline")
+    (tmp_path / "tmp").mkdir()
+    epi = epi_pipeline(
+        output_dir=str(tmp_path / "tmp"),
+        ants_random_seed=42,
+        use_double_precision=False,
+        delete_cache=True,
+    )
+    epi.inputs.inputnode.t1_filename = str(input_dir / "sub-01_ses-M000_T1w.nii.gz")
+    epi.inputs.inputnode.dwi_filename = str(input_dir / "sub-01_ses-M000_dwi.nii.gz")
+    epi.inputs.inputnode.b_vectors_filename = str(
+        input_dir / "sub-01_ses-M000_dwi.bvec"
+    )
+
+    epi.run()
+
+    out_file = fspath(
+        tmp_path / "tmp" / "rotated_b_vectors" / "sub-01_ses-M000_dwi_rotated.bvec"
+    )
+    ref_file = fspath(ref_dir / "sub-01_ses-M000_dwi_rotated.bvec")
+    out_bvecs = np.loadtxt(out_file)
+    ref_bvecs = np.loadtxt(ref_file)
+
+    assert_array_almost_equal(out_bvecs, ref_bvecs, decimal=2)
+
+    out_file = fspath(
+        tmp_path
+        / "tmp"
+        / "epi_corrected_dwi_image"
+        / "Jacobian_image_maths_thresh_merged.nii.gz"
+    )
+    ref_file = fspath(ref_dir / "Jacobian_image_maths_thresh_merged.nii.gz")
+
+    assert_large_nifti_almost_equal(out_file, ref_file)
+
+
+@pytest.mark.slow
 def test_dwi_perform_ants_registration(cmdopt, tmp_path):
     from test.nonregression.testing_tools import similarity_measure
 
