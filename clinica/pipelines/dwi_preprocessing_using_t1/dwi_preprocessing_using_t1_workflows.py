@@ -283,6 +283,7 @@ def epi_pipeline(
         name="inputnode",
     )
     ants_registration = perform_ants_registration(
+        base_dir=base_dir,
         output_dir=output_dir,
         ants_random_seed=ants_random_seed,
     )
@@ -349,6 +350,7 @@ def epi_pipeline(
 
 
 def perform_ants_registration(
+    base_dir: str,
     output_dir: Optional[str] = None,
     name: str = "perform_ants_registration",
     ants_random_seed: Optional[int] = None,
@@ -357,6 +359,9 @@ def perform_ants_registration(
 
     Parameters
     ----------
+    base_dir: str
+        Working directory, which contains all the intermediary data generated.
+
     output_dir : str, optional
         Path to output directory.
         If provided, the pipeline will write its output in this folder.
@@ -440,7 +445,7 @@ def perform_ants_registration(
         ),
         name="b_vectors_rotation",
     )
-    b_vectors_rotation.inputs.output_dir = output_dir
+    b_vectors_rotation.inputs.output_dir = output_dir or base_dir
 
     ants_registration = pe.Node(
         interface=ants.registration.RegistrationSynQuick(

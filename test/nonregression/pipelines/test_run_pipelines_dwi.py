@@ -60,6 +60,7 @@ def test_dwi_epi_pipeline(cmdopt, tmp_path):
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEPIPipeline")
     (tmp_path / "tmp").mkdir()
     epi = epi_pipeline(
+        base_dir=str(base_dir),
         output_dir=str(tmp_path / "tmp"),
         ants_random_seed=42,
         use_double_precision=False,
@@ -109,6 +110,7 @@ def test_dwi_perform_ants_registration(cmdopt, tmp_path):
     )
     (tmp_path / "tmp").mkdir()
     ants_registration = perform_ants_registration(
+        base_dir=str(base_dir),
         output_dir=str(tmp_path / "tmp"),
         ants_random_seed=42,  # Set the random seed to avoid stochastic results (requires ants >= 2.3.0)
     )
