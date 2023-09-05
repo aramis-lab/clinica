@@ -34,7 +34,7 @@ def test_run_oasis_to_bids(cmdopt, tmp_path):
     oasis_to_bids.convert_images(input_dir / "unorganized", output_dir)
     oasis_to_bids.convert_clinical_data(clinical_data_directory, output_dir)
 
-    compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
+    compare_folders(output_dir, ref_dir / "bids", output_dir)
 
 
 def test_run_oasis3_to_bids(cmdopt, tmp_path):
