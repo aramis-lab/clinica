@@ -530,7 +530,7 @@ def write_modality_agnostic_files(
     _write_bidsignore(bids_dir)
 
 
-def write_sessions_tsv(bids_dir: str, sessions_dict: dict) -> None:
+def write_sessions_tsv(bids_dir: Union[str, Path], sessions_dict: dict) -> None:
     """Create <participant_id>_sessions.tsv files.
 
     Basically writes the content of the function
@@ -614,7 +614,7 @@ def _get_pet_tracer_from_filename(filename: str) -> str:
 
 
 def write_scans_tsv(
-    bids_dir: str, participant_ids: List[str], scans_dict: dict
+    bids_dir: Union[str, Path], participant_ids: List[str], scans_dict: dict
 ) -> None:
     """Write the scans dict into TSV files.
 
