@@ -8,7 +8,11 @@ different functions available in Clinica
 import warnings
 from os import fspath
 from pathlib import Path
-from test.nonregression.testing_tools import configure_paths, similarity_measure, similarity_measure_large_nifti
+from test.nonregression.testing_tools import (
+    configure_paths,
+    similarity_measure,
+    similarity_measure_large_nifti,
+)
 
 import nibabel as nib
 import numpy as np
@@ -465,7 +469,6 @@ def run_dwi_preprocessing_using_t1(
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import (
         DwiPreprocessingUsingT1,
     )
-
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "subjects.tsv"

@@ -133,10 +133,13 @@ def similarity_measure_large_nifti(
 
     volumes = range(image1.shape[-1])
     for volume in range(image1.shape[-1]):
-        if not similarity_measure_arrays(np.asarray(image1.dataobj[..., volume]), np.asarray(image2.dataobj[..., volume]), threshold):
+        if not similarity_measure_arrays(
+            np.asarray(image1.dataobj[..., volume]),
+            np.asarray(image2.dataobj[..., volume]),
+            threshold,
+        ):
             return False
     return True
-
 
 
 def similarity_measure_arrays(
