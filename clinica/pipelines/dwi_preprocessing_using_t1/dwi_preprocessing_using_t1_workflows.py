@@ -620,7 +620,6 @@ def perform_dwi_epi_correction(
     import nipype.pipeline.engine as pe
 
     from clinica.utils.filemanip import delete_directories
-    from clinica.utils.image import remove_dummy_dimension_from_image
 
     workflow_inputs = ["t1_filename", "dwi_filename", "merged_transforms"]
     workflow_outputs = ["epi_corrected_dwi_image"]
@@ -628,20 +627,6 @@ def perform_dwi_epi_correction(
     inputnode = pe.Node(niu.IdentityInterface(fields=workflow_inputs), name="inputnode")
 
     split_dwi_volumes = pe.Node(fsl.Split(dimension="t"), name="split_dwi_volumes")
-
-    remove_dummy_dimension_from_transforms = pe.Node(
-        niu.Function(
-            input_names=["image", "output"],
-            output_names=["output"],
-            function=remove_dummy_dimension_from_image,
-        ),
-        name="remove_dummy_dimension_from_transforms",
-    )
-    remove_dummy_dimension_from_transforms.inputs.output = os.path.join(
-        output_dir or base_dir, "merged_transforms_no_dummy.nii.gz"
-    )
-
-    split_transforms = pe.Node(fsl.Split(dimension="t"), name="split_transforms")
 
     apply_transform_image = pe.MapNode(
         ants.ApplyTransforms(),
@@ -722,18 +707,12 @@ def perform_dwi_epi_correction(
         (split_dwi_volumes, apply_transform_image, [("out_files", "input_image")]),
         (
             inputnode,
-            remove_dummy_dimension_from_transforms,
-            [("merged_transforms", "image")],
+            apply_transform_image,
+            [("merged_transforms", "transforms")],
         ),
-        (
-            remove_dummy_dimension_from_transforms,
-            split_transforms,
-            [("output", "in_file")],
-        ),
-        (split_transforms, apply_transform_image, [("out_files", "transforms")]),
         (inputnode, apply_transform_field, [("t1_filename", "reference_image")]),
         (split_dwi_volumes, apply_transform_field, [("out_files", "input_image")]),
-        (split_transforms, apply_transform_field, [("out_files", "transforms")]),
+        (inputnode, apply_transform_field, [("merged_transforms", "transforms")]),
         (apply_transform_field, jacobian, [("output_image", "deformationField")]),
         (apply_transform_image, jacmult, [("output_image", "operand_files")]),
         (jacobian, jacmult, [("jacobian_image", "in_file")]),
