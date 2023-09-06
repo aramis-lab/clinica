@@ -118,6 +118,27 @@ def similarity_measure(
     return similarity_measure_arrays(image1, image2, threshold)
 
 
+def similarity_measure_large_nifti(
+    file1: PathLike,
+    file2: PathLike,
+    threshold: float,
+) -> bool:
+    """TODO"""
+    from os import fspath
+
+    import nibabel
+
+    image1 = nibabel.load(fspath(file1))
+    image2 = nibabel.load(fspath(file2))
+
+    volumes = range(image1.shape[-1])
+    for volume in range(image1.shape[-1]):
+        if not similarity_measure_arrays(np.asarray(image1.dataobj[..., volume]), np.asarray(image2.dataobj[..., volume]), threshold):
+            return False
+    return True
+
+
+
 def similarity_measure_arrays(
     array1: np.ndarray,
     array2: np.ndarray,
