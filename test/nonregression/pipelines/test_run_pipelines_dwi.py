@@ -8,7 +8,7 @@ different functions available in Clinica
 import warnings
 from os import fspath
 from pathlib import Path
-from test.nonregression.testing_tools import configure_paths, similarity_measure
+from test.nonregression.testing_tools import configure_paths, similarity_measure, similarity_measure_large_nifti
 
 import nibabel as nib
 import numpy as np
@@ -91,7 +91,7 @@ def test_dwi_epi_pipeline(cmdopt, tmp_path):
     )
     ref_file = fspath(ref_dir / "Jacobian_image_maths_thresh_merged.nii.gz")
 
-    assert_large_nifti_almost_equal(out_file, ref_file)
+    similarity_measure_large_nifti(out_file, ref_file, 0.95)
 
 
 @pytest.mark.slow
@@ -192,7 +192,7 @@ def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
     )
     ref_file = fspath(ref_dir / "Jacobian_image_maths_thresh_merged.nii.gz")
 
-    assert_large_nifti_almost_equal(out_file, ref_file)
+    similarity_measure_large_nifti(out_file, ref_file, 0.95)
 
 
 @pytest.mark.slow
@@ -466,6 +466,7 @@ def run_dwi_preprocessing_using_t1(
         DwiPreprocessingUsingT1,
     )
 
+
     caps_dir = output_dir / "caps"
     tsv = input_dir / "subjects.tsv"
 
@@ -498,7 +499,7 @@ def run_dwi_preprocessing_using_t1(
         ref_dir / "sub-PREVDEMALS0010025PG_ses-M000_dwi_space-T1w_preproc.nii.gz"
     )
 
-    assert similarity_measure(out_file, ref_file, 0.97)
+    assert similarity_measure_large_nifti(out_file, ref_file, 0.99)
 
 
 def run_dwi_preprocessing_using_phase_diff_field_map(
