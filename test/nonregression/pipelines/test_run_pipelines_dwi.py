@@ -492,7 +492,7 @@ def run_dwi_preprocessing_using_t1(
         / "ses-M000"
         / "dwi"
         / "preprocessing"
-        / "sub-PREVDEMALS0010025PG-ses-M000_dwi_space-T1w_preproc.nii.gz"
+        / "sub-PREVDEMALS0010025PG_ses-M000_dwi_space-T1w_preproc.nii.gz"
     )
     ref_file = fspath(
         ref_dir / "sub-PREVDEMALS0010025PG_ses-M000_dwi_space-T1w_preproc.nii.gz"
