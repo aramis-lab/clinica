@@ -1,6 +1,6 @@
 import xml.etree.ElementTree
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import pandas as pd
 
@@ -13,19 +13,18 @@ METADATA_NAME_MAPPING = {
 }
 
 
-def _read_xml_files(subj_ids: Optional[list] = None, xml_path: str = "") -> list:
+def _read_xml_files(xml_path: Path, subj_ids: Optional[list] = None) -> list:
     """Return the XML files in the folder `xml_path` for the provided `subj_ids`.
     This function assumes that file are named "ADNI_{sub_ids}.xml".
     If no files were found, an `IndexError` is raised.
     """
     from glob import glob
-    from os import path
 
     if subj_ids:
         xml_files = []
-        xml_regex = [path.join(xml_path, ("ADNI_" + e + "*.xml")) for e in subj_ids]
+        xml_regex = [xml_path / f"ADNI_{e}*.xml" for e in subj_ids]
         for subj_files in xml_regex:
-            xml_files.extend(glob(subj_files))
+            xml_files.extend(glob(str(subj_files)))
     else:
         xml_files = glob("Clinica_processed_metadata/ADNI_*.xml")
     if len(xml_files) == 0:
@@ -208,16 +207,15 @@ def _check_processed_image_rating(
             )
 
 
-def _get_root_from_xml_path(xml_path: str) -> xml.etree.ElementTree.Element:
+def _get_root_from_xml_path(xml_path: Path) -> xml.etree.ElementTree.Element:
     """Return the root XML element from the XML file path."""
-    import os
     from xml.etree import ElementTree
 
     try:
         tree = ElementTree.parse(xml_path)
         root = tree.getroot()
     except Exception as e:
-        raise ValueError(os.path.basename(xml_path) + ": " + str(e))
+        raise ValueError(f"{xml_path.name}: {e}")
     return root
 
 
@@ -370,7 +368,7 @@ def _parse_images(
         return _parse_derived_images(series)
 
 
-def _parse_xml_file(xml_path: str) -> dict:
+def _parse_xml_file(xml_path: Path) -> dict:
     """Parse the given XML file and return the desired metadata as a dict."""
     root = _get_root_from_xml_path(xml_path)
     project = _parse_project(root)
@@ -408,7 +406,7 @@ class FuncWithException:
             return None, e
 
 
-def _run_parsers(xml_files: list) -> Tuple[list, dict]:
+def _run_parsers(xml_files: List[Path]) -> Tuple[list, dict]:
     """Run the parser `_parse_xml_file` on the list of files `xml_files`.
     Returns a tuple consisting if parsed images
     metadata and captured exceptions.
@@ -547,13 +545,15 @@ def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> Non
     return None
 
 
-def create_json_metadata(bids_subjs_paths: list, bids_ids: list, xml_path: str) -> None:
+def create_json_metadata(
+    bids_subjs_paths: list, bids_ids: list, xml_path: Path
+) -> None:
     """Create json metadata dictionary and add the metadata to the
     appropriate files in the BIDS hierarchy."""
     from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni
 
     loni_ids = [bids_id_to_loni(bids_id) for bids_id in bids_ids]
-    xml_files = _read_xml_files(loni_ids, xml_path)
+    xml_files = _read_xml_files(xml_path, loni_ids)
     imgs, exe = _run_parsers(xml_files)
     df_meta = _create_mri_meta_df(imgs)
     _add_metadata_to_scans(df_meta, bids_subjs_paths)
