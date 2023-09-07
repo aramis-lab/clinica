@@ -1,93 +1,105 @@
 """Convert the GENFI dataset into BIDS."""
 
 from os import PathLike
-from typing import Optional
+from pathlib import Path
+from typing import List, Optional
+
+from clinica.iotools.abstract_converter import Converter
 
 
-def convert_images(
-    path_to_dataset: PathLike,
-    bids_dir: PathLike,
-    path_to_clinical: Optional[PathLike],
-    gif: bool,
-) -> None:
-    """Convert the entire dataset to BIDS.
+class GenfiToBidsConverter(Converter):
+    """BIDS converter for Genfi dataset.
 
-    Scans available files in the path_to_dataset,
-    identifies the patients that have images described by the JSON file,
-    converts the image with the highest quality for each category.
-
-    Parameters
+    Attributes
     ----------
-    path_to_dataset: PathLike
-        Path to the raw images
-
-    bids_dir: PathLike
-        Path to directory where the bids will be written
-
-    path_to_clinical: PathLike, optional
-        Path to the clinical data associated with the dataset.
-        If None, the clinical data won't be converted.
-
     gif: bool
         If True, indicates the user wants to have the values of the gif parcellation
     """
-    import os
 
-    import clinica.iotools.bids_utils as bids
+    study_name: str = "GENFI"
 
-    from .genfi_to_bids_utils import (
-        complete_clinical_data,
-        dataset_to_bids,
-        find_clinical_data,
-        intersect_data,
-        merge_imaging_data,
-        read_imaging_data,
-        write_bids,
-    )
+    def __init__(
+        self,
+        source_dataset: PathLike,
+        destination_dataset: PathLike,
+        clinical_data_directory: PathLike,
+        clinical_data_only: bool = False,
+        gif: bool = False,
+        clinical_data: bool = True,
+    ):
+        super().__init__(
+            source_dataset,
+            destination_dataset,
+            clinical_data_directory,
+            clinical_data_only,
+        )
+        self.gif = gif
+        self.clinical_data = clinical_data
 
-    # read the clinical data files
-    if path_to_clinical:
-        df_demographics, df_imaging, df_clinical = find_clinical_data(path_to_clinical)
-    # makes a df of the imaging data
-    imaging_data = read_imaging_data(path_to_dataset)
+    @property
+    def readme_path(self) -> Path:
+        import os
 
-    # complete the data extracted
-    imaging_data = merge_imaging_data(imaging_data)
-    # complete clinical data
-    if path_to_clinical:
-        df_clinical_complete = complete_clinical_data(
-            df_demographics, df_imaging, df_clinical
+        return Path(
+            os.path.join(
+                os.path.dirname(
+                    os.path.dirname(
+                        os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+                    )
+                ),
+                "docs",
+                "Converters",
+                "GENFItoBIDS.md",
+            )
         )
 
-    # intersect the data
-    if path_to_clinical:
-        df_complete = intersect_data(imaging_data, df_clinical_complete)
-    else:
-        df_complete = imaging_data
-    # build the tsv
-    results = dataset_to_bids(df_complete, gif)
-    write_bids(
-        to=bids_dir,
-        participants=results["participants"],
-        sessions=results["sessions"],
-        scans=results["scans"],
-    )
-    # fetch data for readme from markdown
-    readme_path = os.path.join(
-        os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-        ),
-        "docs",
-        "Converters",
-        "GENFItoBIDS.md",
-    )
-    try:
-        readme_data = {
-            "link": bids.parse_url(readme_path)[0],
-            "desc": bids.parse_description(readme_path, 4, 5),
-        }
-    except IndexError:
-        raise ValueError("Could not parse information for dataset.")
-    bids.write_modality_agnostic_files(
-        study_name="GENFI", readme_data=readme_data, bids_dir=bids_dir
-    )
+    def convert_images(
+        self,
+        subjects_list_path: Optional[PathLike] = None,
+        modalities: Optional[List[str]] = None,
+    ) -> None:
+        """Convert the entire dataset to BIDS.
+
+        Scans available files in the path_to_dataset,
+        identifies the patients that have images described by the JSON file,
+        converts the image with the highest quality for each category.
+        """
+        from .genfi_to_bids_utils import (
+            complete_clinical_data,
+            dataset_to_bids,
+            find_clinical_data,
+            intersect_data,
+            merge_imaging_data,
+            read_imaging_data,
+            write_bids,
+        )
+
+        # read the clinical data files
+        if self.clinical_data:
+            df_demographics, df_imaging, df_clinical = find_clinical_data(
+                self.clinical_data_directory
+            )
+        # makes a df of the imaging data
+        imaging_data = read_imaging_data(self.source_dataset)
+
+        # complete the data extracted
+        imaging_data = merge_imaging_data(imaging_data)
+        # complete clinical data
+        if self.clinical_data:
+            df_clinical_complete = complete_clinical_data(
+                df_demographics, df_imaging, df_clinical
+            )
+
+        # intersect the data
+        if self.clinical_data:
+            df_complete = intersect_data(imaging_data, df_clinical_complete)
+        else:
+            df_complete = imaging_data
+        # build the tsv
+        results = dataset_to_bids(df_complete, self.gif)
+        write_bids(
+            to=self.destination_dataset,
+            participants=results["participants"],
+            sessions=results["sessions"],
+            scans=results["scans"],
+        )
