@@ -20,16 +20,14 @@ def cli(
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
     from clinica.iotools.bids_utils import _write_bidsignore
-    from clinica.iotools.converters.ukb_to_bids.ukb_to_bids import convert_images
-    from clinica.utils.check_dependency import check_dcm2niix
-    from clinica.utils.stream import cprint
+    from clinica.iotools.converters.ukb_to_bids.ukb_to_bids import UkbToBidsConverter
 
-    check_dcm2niix()
-
-    convert_images(dataset_directory, bids_directory, clinical_data_directory)
+    UkbToBidsConverter(
+        dataset_directory,
+        bids_directory,
+        clinical_data_directory,
+    ).convert()
     _write_bidsignore(str(bids_directory))
-
-    cprint("Conversion to BIDS succeeded.")
 
 
 if __name__ == "__main__":
