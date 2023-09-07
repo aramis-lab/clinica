@@ -23,61 +23,54 @@ def test_run_nifd_to_bids(cmdopt, tmp_path):
 
 
 def test_run_oasis_to_bids(cmdopt, tmp_path):
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
+    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import (
+        OasisToBidsConverter,
+    )
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "Oasis2Bids")
-    output_dir = tmp_path / "bids"
-    clinical_data_directory = input_dir / "clinical_data"
 
-    oasis_to_bids = OasisToBids()
-    oasis_to_bids.convert_images(input_dir / "unorganized", output_dir)
-    oasis_to_bids.convert_clinical_data(clinical_data_directory, output_dir)
+    OasisToBidsConverter(
+        input_dir / "unorganized",
+        tmp_path / "bids",
+        input_dir / "clinical_data",
+    ).convert()
 
-    compare_folders(output_dir, ref_dir / "bids", output_dir)
+    compare_folders(tmp_path / "bids", ref_dir / "bids", tmp_path / "bids")
 
 
 def test_run_oasis3_to_bids(cmdopt, tmp_path):
-    from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import convert_images
+    from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import (
+        Oasis3ToBidsConverter,
+    )
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "Oasis3ToBids")
     output_dir = tmp_path / "bids"
     clinical_data_directory = input_dir / "clinical_data"
 
-    convert_images(
-        input_dir / "unorganized", output_dir / "bids", clinical_data_directory
-    )
+    Oasis3ToBidsConverter(
+        input_dir / "unorganized",
+        output_dir / "bids",
+        clinical_data_directory,
+    ).convert()
 
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
 
 
 def test_run_adni_to_bids(cmdopt, tmp_path):
-    from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBidsConverter
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "Adni2Bids")
     output_dir = tmp_path / "bids"
-    clinical_data_directory = input_dir / "clinical_data"
-    xml_directory = input_dir / "xml_metadata"
-    dataset_directory = input_dir / "unorganized_data"
-    subjects_list = input_dir / "subjects.txt"
-    modalities = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
 
-    adni_to_bids = AdniToBids()
-    adni_to_bids.check_adni_dependencies()
-    adni_to_bids.convert_images(
-        dataset_directory,
-        clinical_data_directory,
+    AdniToBidsConverter(
+        input_dir / "unorganized_data",
         output_dir / "bids",
-        subjects_list,
-        modalities,
-    )
-    adni_to_bids.convert_clinical_data(
-        clinical_data_directory,
-        output_dir / "bids",
-        xml_path=xml_directory,
-    )
+        input_dir / "clinical_data",
+        input_dir / "xml_metadata",
+    ).convert(input_dir / "subjects.txt")
 
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
 
