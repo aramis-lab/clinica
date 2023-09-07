@@ -17,11 +17,15 @@ def cli(
     Convert the imaging and clinical data of OASIS (http://oasis-brains.org/), located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
+    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import (
+        OasisToBidsConverter,
+    )
 
-    oasis_to_bids = OasisToBids()
-    oasis_to_bids.convert_images(dataset_directory, bids_directory)
-    oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+    OasisToBidsConverter(
+        dataset_directory,
+        bids_directory,
+        clinical_data_directory,
+    ).convert()
 
 
 if __name__ == "__main__":
