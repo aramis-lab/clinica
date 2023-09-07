@@ -100,13 +100,19 @@ def test_rotate_b_vectors_size_error(tmp_path):
     np.savetxt(tmp_path / "vectors.bvec", np.random.rand(6, 10))
 
     with pytest.raises(RuntimeError, match="Number of b-vectors"):
-        rotate_b_vectors(str(tmp_path / "vectors.bvec"), ["mat1", "mat2", "mat3"])
+        rotate_b_vectors(
+            str(tmp_path / "vectors.bvec"),
+            ["mat1", "mat2", "mat3"],
+            output_dir=str(tmp_path),
+        )
 
 
 def test_rotate_b_vectors_missing_b_vectors_file(tmp_path):
     """Test that a FileNotFoundError is raised when the b-vectors file is missing."""
     with pytest.raises(FileNotFoundError):
-        rotate_b_vectors(str(tmp_path / "foo.bvec"), ["mat1", "mat2"])
+        rotate_b_vectors(
+            str(tmp_path / "foo.bvec"), ["mat1", "mat2"], output_dir=str(tmp_path)
+        )
 
 
 def test_rotate_b_vectors_missing_rotation_matrix_file(tmp_path):
@@ -121,6 +127,7 @@ def test_rotate_b_vectors_missing_rotation_matrix_file(tmp_path):
         rotate_b_vectors(
             str(tmp_path / "vectors.bvec"),
             [str(tmp_path / "mat1"), str(tmp_path / "mat2")],
+            output_dir=str(tmp_path),
         )
 
 
@@ -131,7 +138,9 @@ def test_rotate_b_vectors_all_zeros(tmp_path):
         np.savetxt(tmp_path / f"mat{i}", np.random.rand(3, 3))
 
     rotated_b_vectors_file = rotate_b_vectors(
-        str(tmp_path / "vectors.bvec"), [str(tmp_path / "mat1"), str(tmp_path / "mat2")]
+        str(tmp_path / "vectors.bvec"),
+        [str(tmp_path / "mat1"), str(tmp_path / "mat2")],
+        output_dir=str(tmp_path),
     )
 
     assert rotated_b_vectors_file == str(tmp_path / "vectors_rotated.bvec")
@@ -149,7 +158,9 @@ def test_rotate_b_vectors_with_identity(tmp_path):
         np.savetxt(tmp_path / f"mat{i}", np.eye(4))
 
     rotated_b_vectors_file = rotate_b_vectors(
-        str(tmp_path / "vectors.bvec"), [str(tmp_path / "mat1"), str(tmp_path / "mat2")]
+        str(tmp_path / "vectors.bvec"),
+        [str(tmp_path / "mat1"), str(tmp_path / "mat2")],
+        output_dir=str(tmp_path),
     )
 
     assert rotated_b_vectors_file == str(tmp_path / "vectors_rotated.bvec")
@@ -164,7 +175,7 @@ def test_rotate_b_vectors_wrong_content_in_vector_file(tmp_path):
     b_vectors_file.write_text("fooo\nbar")
 
     with pytest.raises(ValueError, match="could not convert string 'fooo' to float64"):
-        rotate_b_vectors(b_vectors_file, ["mat1"])
+        rotate_b_vectors(b_vectors_file, ["mat1"], output_dir=str(tmp_path))
 
 
 def test_configure_working_directory(tmp_path):
