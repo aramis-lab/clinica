@@ -145,8 +145,9 @@ def rotate_b_vectors(
     coordinates in the original image. Therefore, this matrix should be inverted first, as
     we want to know the target position of :math:`\\vec{r}`.
     """
-    from pathlib import Path
     import os
+    from pathlib import Path
+
     import numpy as np
 
     b_vectors_filename = Path(b_vectors_filename)

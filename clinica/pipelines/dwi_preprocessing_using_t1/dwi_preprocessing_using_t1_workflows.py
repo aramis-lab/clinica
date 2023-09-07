@@ -295,9 +295,7 @@ def epi_pipeline(
         use_double_precision=use_double_precision,
     )
     outputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=workflow_outputs
-        ),
+        niu.IdentityInterface(fields=workflow_outputs),
         name="outputnode",
     )
 
