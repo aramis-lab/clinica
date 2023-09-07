@@ -85,17 +85,18 @@ def test_run_adni_to_bids(cmdopt, tmp_path):
 def test_run_aibl_to_bids(cmdopt, tmp_path):
     from pathlib import Path
 
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import AiblToBidsConverter
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "Aibl2Bids")
-    output_dir = tmp_path / "bids"
-    clinical_data_directory = input_dir / "Data_extract_3.2.5"
-    dataset_directory = input_dir / "unorganized_data"
 
-    convert(dataset_directory, clinical_data_directory, output_dir)
+    AiblToBidsConverter(
+        input_dir / "unorganized_data",
+        tmp_path / "bids",
+        input_dir / "Data_extract_3.2.5",
+    ).convert()
 
-    compare_folders(output_dir, ref_dir / "bids", tmp_path)
+    compare_folders(tmp_path / "bids", ref_dir / "bids", tmp_path)
 
 
 def test_run_habs_to_bids(cmdopt, tmp_path):

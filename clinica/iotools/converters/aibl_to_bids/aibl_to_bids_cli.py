@@ -27,12 +27,12 @@ def cli(
     """
     from pathlib import Path
 
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import AiblToBidsConverter
 
-    convert(
+    AiblToBidsConverter(
         Path(dataset_directory),
-        Path(clinical_data_directory),
         Path(bids_directory),
-        overwrite,
+        Path(clinical_data_directory),
         clinical_data_only,
-    )
+        overwrite,
+    ).convert()

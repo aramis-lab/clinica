@@ -1,156 +1,102 @@
 """
 Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 """
-from pathlib import Path
+from os import PathLike
+from typing import List, Optional
+
+from clinica.iotools.abstract_converter import Converter
 
 
-def convert(
-    input_dataset: Path,
-    input_clinical_data: Path,
-    output_dataset: Path,
-    overwrite: bool = False,
-    clinical_data_only: bool = False,
-) -> None:
-    """Convert the AIBL dataset (https://www.aibl.csiro.au/) in a BIDS dataset.
+class AiblToBidsConverter(Converter):
+    study_name: str = "AIBL"
 
-    Parameters
-    ----------
-    input_dataset : Path
-        The path to the input AIBL dataset.
-
-    input_clinical_data : Path
-        The path to the clinical CSV files associated with the input dataset.
-
-    output_dataset : Path
-        The path to the BIDS directory in which to write the output.
-
-    overwrite : bool, optional
-        Overwrites previously written nifti and json files.
-        Default=False.
-
-    clinical_data_only : bool, optional
-        If True, only convert the clinical data without the imaging data.
-        If False, everything is converted.
-        Default=False.
-    """
-    from clinica.utils.check_dependency import check_dcm2niix
-
-    check_dcm2niix()
-
-    output_dataset.mkdir(parents=True, exist_ok=True)
-
-    if not clinical_data_only:
-        _convert_images(
-            input_dataset,
-            input_clinical_data,
-            output_dataset,
-            overwrite,
+    def __init__(
+        self,
+        source_dataset: PathLike,
+        destination_dataset: PathLike,
+        clinical_data_directory: PathLike,
+        clinical_data_only: bool = False,
+        overwrite: bool = False,
+    ):
+        super().__init__(
+            source_dataset,
+            destination_dataset,
+            clinical_data_directory,
+            clinical_data_only,
         )
+        self.overwrite = overwrite
 
-    _convert_clinical_data(input_clinical_data, output_dataset)
+    def convert_images(
+        self,
+        subjects_list_path: Optional[PathLike] = None,
+        modalities: Optional[List[str]] = None,
+    ) -> None:
+        """Conversion of the AIBL imaging data in BIDS.
 
+        overwrite : bool, optional
+            Overwrites previously written nifti and json files.
+            Default=False.
+        """
+        from os.path import exists
 
-def _convert_images(
-    input_dataset: Path,
-    input_clinical_data: Path,
-    output_dataset: Path,
-    overwrite: bool = False,
-) -> None:
-    """Conversion of the AIBL imaging data in BIDS.
-
-    Parameters
-    ----------
-    input_dataset : Path
-        The path to the input AIBL dataset.
-
-    input_clinical_data : Path
-        The path to the clinical CSV files associated with the input dataset.
-
-    output_dataset : Path
-        The path to the BIDS directory in which to write the output.
-
-    overwrite : bool, optional
-        Overwrites previously written nifti and json files.
-        Default=False.
-    """
-    from os.path import exists
-
-    from clinica.iotools.converters.aibl_to_bids.utils import Modality, paths_to_bids
-    from clinica.utils.stream import cprint
-
-    list_of_created_files = [
-        paths_to_bids(
-            input_dataset,
-            input_clinical_data,
-            output_dataset,
-            modality,
-            overwrite=overwrite,
+        from clinica.iotools.converters.aibl_to_bids.utils import (
+            Modality,
+            paths_to_bids,
         )
-        for modality in Modality
-    ]
-    missing_files = []
-    for modality_list in list_of_created_files:
-        for file in modality_list:
-            if not exists(str(file)):
-                missing_files.append(file)
-    if missing_files:
-        msg = "The following file were not converted:\n" + "\n".join(missing_files)
-        cprint(msg=msg, lvl="warning")
+        from clinica.utils.stream import cprint
 
+        list_of_created_files = [
+            paths_to_bids(
+                self.source_dataset,
+                self.clinical_data_directory,
+                self.destination_dataset,
+                modality,
+                overwrite=self.overwrite,
+            )
+            for modality in Modality
+        ]
+        missing_files = []
+        for modality_list in list_of_created_files:
+            for file in modality_list:
+                if not exists(str(file)):
+                    missing_files.append(file)
+        if missing_files:
+            msg = "The following file were not converted:\n" + "\n".join(missing_files)
+            cprint(msg=msg, lvl="warning")
 
-def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> None:
-    """Conversion of the AIBL clinical data in BIDS.
+    def convert_clinical_data(
+        self, subjects_list_path: Optional[PathLike] = None
+    ) -> None:
+        """Conversion of the AIBL clinical data in BIDS.
 
-    Parameters
-    ----------
-    input_clinical_data : Path
-        The path to the clinical CSV files associated with the input dataset.
+        Parameters
+        ----------
+        """
+        from os.path import join, realpath, split
 
-    output_dataset : Path
-        The path to the BIDS directory in which to write the output.
-    """
-    # clinical specifications in BIDS
-    from os.path import join, realpath, split
+        from clinica.iotools.converters.aibl_to_bids.utils import (
+            create_participants_tsv_file,
+            create_scans_tsv_file,
+            create_sessions_tsv_file,
+        )
+        from clinica.utils.stream import cprint
 
-    import clinica.iotools.bids_utils as bids
-    from clinica.iotools.converters.aibl_to_bids.utils import (
-        create_participants_tsv_file,
-        create_scans_tsv_file,
-        create_sessions_tsv_file,
-    )
-    from clinica.utils.stream import cprint
-
-    clinical_spec_path = join(
-        split(realpath(__file__))[0], "../../data/clinical_specifications"
-    )
-    # if not exists(clinical_spec_path):
-    #    raise FileNotFoundError(
-    #        f"{clinical_spec_path} file not found ! This is an internal file of Clinica."
-    #    )
-
-    cprint("Creating modality agnostic files...")
-    readme_data = {
-        "link": "http://adni.loni.usc.edu/study-design/collaborative-studies/aibl/",
-        "desc": (
-            "The Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing (AIBL) seeks to discover which "
-            "biomarkers, cognitive characteristics, and health and lifestyle factors determine the development of AD. "
-            "Although AIBL and ADNI have many of the same goals, there are differences between the two projects."
-        ),
-    }
-    bids.write_modality_agnostic_files(
-        study_name="AIBL", readme_data=readme_data, bids_dir=output_dataset
-    )
-
-    cprint("Creating participants.tsv...")
-    create_participants_tsv_file(
-        output_dataset,
-        clinical_spec_path,
-        input_clinical_data,
-        delete_non_bids_info=True,
-    )
-
-    cprint("Creating sessions files...")
-    create_sessions_tsv_file(output_dataset, input_clinical_data, clinical_spec_path)
-
-    cprint("Creating scans files...")
-    create_scans_tsv_file(output_dataset, input_clinical_data, clinical_spec_path)
+        clinical_spec_path = join(
+            split(realpath(__file__))[0], "../../data/clinical_specifications"
+        )
+        cprint("Creating participants.tsv...")
+        create_participants_tsv_file(
+            self.destination_dataset,
+            clinical_spec_path,
+            self.clinical_data_directory,
+            delete_non_bids_info=True,
+        )
+        cprint("Creating sessions files...")
+        create_sessions_tsv_file(
+            self.destination_dataset, self.clinical_data_directory, clinical_spec_path
+        )
+        cprint("Creating scans files...")
+        create_scans_tsv_file(
+            self.destination_dataset, self.clinical_data_directory, clinical_spec_path
+        )
+        super().convert_clinical_data(subjects_list_path)
