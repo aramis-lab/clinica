@@ -442,13 +442,12 @@ def perform_ants_registration(
 
     b_vectors_rotation = pe.Node(
         niu.Function(
-            input_names=["matrix_filenames", "b_vectors_filename", "output_dir"],
+            input_names=["matrix_filenames", "b_vectors_filename"],
             output_names=["rotated_b_vectors_filename"],
             function=rotate_b_vectors,
         ),
         name="b_vectors_rotation",
     )
-    b_vectors_rotation.inputs.output_dir = output_dir or base_dir
 
     ants_registration = pe.Node(
         interface=ants.registration.RegistrationSynQuick(

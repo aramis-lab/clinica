@@ -146,7 +146,7 @@ def rotate_b_vectors(
     we want to know the target position of :math:`\\vec{r}`.
     """
     from pathlib import Path
-
+    import os
     import numpy as np
 
     b_vectors_filename = Path(b_vectors_filename)
@@ -158,6 +158,9 @@ def rotate_b_vectors(
     rotated_b_vectors_filename = b_vectors_filename.with_name(f"{stem}_rotated.bvec")
     if output_dir:
         rotated_b_vectors_filename = Path(output_dir) / rotated_b_vectors_filename.name
+    else:
+        rotated_b_vectors_filename = os.path.abspath(rotated_b_vectors_filename.name)
+
     b_vectors = np.loadtxt(b_vectors_filename).T
 
     if len(b_vectors) != len(matrix_filenames):
