@@ -967,6 +967,9 @@ def create_adni_sessions_dict(
                     df_subj_session, df_filtered, df_sessions, location
                 )
             else:
+                cprint(
+                    f"Clinical dataframe extracted from {location} is empty after filtering."
+                )
                 dict_column_correspondence = dict(
                     zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
                 )
