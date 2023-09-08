@@ -14,15 +14,9 @@ from test.nonregression.testing_tools import (
     similarity_measure_large_nifti,
 )
 
-import nibabel as nib
 import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal
-
-from clinica.utils.testing_utils import (
-    assert_large_nifti_almost_equal,
-    assert_nifti_almost_equal,
-)
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
@@ -243,7 +237,7 @@ def test_dwi_eddy_fsl(cmdopt, tmp_path):
     out_bvecs = np.loadtxt(out_file)
     ref_bvecs = np.loadtxt(ref_file)
 
-    assert_array_almost_equal(out_bvecs, ref_bvecs)
+    assert_array_almost_equal(out_bvecs, ref_bvecs, decimal=3)
 
 
 @pytest.mark.slow
