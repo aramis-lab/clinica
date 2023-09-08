@@ -6,6 +6,21 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.7.6
+
+### Enhanced
+
+- [Pipelines] The clinica file reader now supports the `run` entity and picks the latest run available by default (see PR #943)
+- [ADNI2BIDS] The ADNI2BIDS converter now handles PET uniform data (see PR #703)
+- [PETLinear] Improve the BIDS compliance of the CAPS output (see PR #935)
+- [T1Linear & FLAIRLinear] Improve the BIDS compliance of the CAPS output (see PR #940)
+
+### Fixed
+
+- [DWI] Fix regression in pipeline DWIPreprocessingUsingT1 which was not generating bvec file since release `0.7.4` (see PR #967)
+- [ADNI2BIDS] Fix broken assertion in the metadata reader for derived images (see PR #957)
+- [ADNI2BIDS] Fix BIDS violations in converter's output (see PR #959)
+
 ## Clinica 0.7.5
 
 ### Enhanced
