@@ -43,7 +43,7 @@ def rename_into_caps(
         {
             fname_dwi: "_space-T1w_preproc.nii.gz",
             fname_bval: "_space-T1w_preproc.bval",
-            fname_bvec: "_space-T1w_preproc.bval",
+            fname_bvec: "_space-T1w_preproc.bvec",
             fname_brainmask: "_space-T1w_brainmask.nii.gz",
         },
     )
