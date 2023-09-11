@@ -22,6 +22,8 @@ jobs:
           make env.conda
           source ~/miniconda3/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
+          source "$(brew --prefix)/opt/modules/init/bash"
+          module load clinica.all
           make install
           cd test
           poetry run pytest --verbose \
@@ -44,6 +46,8 @@ jobs:
           make env.conda
           source /builds/miniconda/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
+          source /usr/local/Modules/init/profile.sh
+          module load clinica.all
           make install
           cd test
           poetry run pytest --verbose \
