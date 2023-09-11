@@ -42,7 +42,7 @@ jobs:
       - name: Run non-regression tests for converters
         run: |
           make env.conda
-          source ~/miniconda3/etc/profile.d/conda.sh
+          source /builds/miniconda/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
           make install
           cd test
