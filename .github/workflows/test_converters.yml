@@ -1,0 +1,26 @@
+name: Test Converters
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+permissions:
+  contents: read
+
+jobs:
+  test-converters:
+    runs-on:
+      - self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+      - name: Run non regression tests for converters
+        run: |
+          make env.conda
+          source ~/miniconda3/etc/profile.d/conda.sh
+          conda activate "${{ github.workspace }}"/env
+          make install
+          cd test
+          poetry run pytest --verbose --working_directory=/Volumes/data/working_dir_mac --input_data_dir=/Volumes/data_ci --basetemp=/Volumes/data/tmp --junitxml=./test-reports/run_converters_mac.xml --disable-warnings ./nonregression/iotools/test_run_converters.py
