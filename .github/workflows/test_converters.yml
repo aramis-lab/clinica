@@ -10,13 +10,14 @@ permissions:
   contents: read
 
 jobs:
-  test-converters:
+  test-converters-MacOS:
     runs-on:
       - self-hosted
+      - macOS
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
-      - name: Run non regression tests for converters
+      - name: Run non-regression tests for converters
         run: |
           make env.conda
           source ~/miniconda3/etc/profile.d/conda.sh
@@ -28,5 +29,27 @@ jobs:
           --input_data_directory=/Volumes/data_ci \
           --basetemp=/Volumes/data/tmp \
           --junitxml=./test-reports/run_converters_mac.xml \
+          --disable-warnings \
+          ./nonregression/iotools/test_run_converters.py
+  
+  test-converters-Linux:
+    runs-on:
+      - self-hosted
+      - Linux
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+      - name: Run non-regression tests for converters
+        run: |
+          make env.conda
+          source ~/miniconda3/etc/profile.d/conda.sh
+          conda activate "${{ github.workspace }}"/env
+          make install
+          cd test
+          poetry run pytest --verbose \
+          --working_directory=/mnt/data/ci/working_dir_linux \
+          --input_data_directory=/mnt/data_ci \
+          --basetemp=/mnt/data/ci/tmp \
+          --junitxml=./test-reports/run_converters_linux.xml \
           --disable-warnings \
           ./nonregression/iotools/test_run_converters.py
