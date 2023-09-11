@@ -1,4 +1,4 @@
-name: Test Converters
+name: Non Regression Tests - Converters
 
 on:
   push:
@@ -23,4 +23,10 @@ jobs:
           conda activate "${{ github.workspace }}"/env
           make install
           cd test
-          poetry run pytest --verbose --working_directory=/Volumes/data/working_dir_mac --input_data_directory=/Volumes/data_ci --basetemp=/Volumes/data/tmp --junitxml=./test-reports/run_converters_mac.xml --disable-warnings ./nonregression/iotools/test_run_converters.py
+          poetry run pytest --verbose \
+          --working_directory=/Volumes/data/working_dir_mac \
+          --input_data_directory=/Volumes/data_ci \
+          --basetemp=/Volumes/data/tmp \
+          --junitxml=./test-reports/run_converters_mac.xml \
+          --disable-warnings \
+          ./nonregression/iotools/test_run_converters.py
