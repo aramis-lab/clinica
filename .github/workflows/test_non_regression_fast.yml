@@ -1,0 +1,63 @@
+name: Fast Non Regression Tests
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+permissions:
+  contents: read
+
+jobs:
+  test-non-regression-fast-MacOS:
+    runs-on:
+      - self-hosted
+      - macOS
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+      - name: Run instantiation tests
+        run: |
+          make env.conda
+          source ~/miniconda3/etc/profile.d/conda.sh
+          conda activate "${{ github.workspace }}"/env
+          source "$(brew --prefix)/opt/modules/init/bash"
+          module load clinica.all
+          make install
+          cd test
+          poetry run pytest --verbose \
+          --working_directory=/Volumes/data/working_dir_mac \
+          --input_data_directory=/Volumes/data_ci \
+          --basetemp=/Volumes/data/tmp \
+          --junitxml=./test-reports/non_regression_fast_mac.xml \
+          --disable-warnings \
+          -n 4 \
+          -m "fast" \
+          ./nonregression/
+  
+  test-non-regression-fast-Linux:
+    runs-on:
+      - self-hosted
+      - Linux
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+      - name: Run instantiation tests
+        run: |
+          make env.conda
+          source /builds/miniconda/etc/profile.d/conda.sh
+          conda activate "${{ github.workspace }}"/env
+          source /usr/local/Modules/init/profile.sh
+          module load clinica.all
+          make install
+          cd test
+          poetry run pytest --verbose \
+          --working_directory=/mnt/data/ci/working_dir_linux \
+          --input_data_directory=/mnt/data_ci \
+          --basetemp=/mnt/data/ci/tmp \
+          --junitxml=./test-reports/non_regression_fast_linux.xml \
+          --disable-warnings \
+          -n 4 \
+          -m "fast" \
+          ./nonregression/
