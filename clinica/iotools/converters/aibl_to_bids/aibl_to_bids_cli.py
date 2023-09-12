@@ -25,24 +25,14 @@ def cli(
     Convert the imaging and clinical data of AIBL (https://aibl.csiro.au/adni/index.html), located in DATASET_DIRECTORY
     and CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from os import makedirs
+    from pathlib import Path
 
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import (
-        convert_clinical_data,
-        convert_images,
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert
+
+    convert(
+        Path(dataset_directory),
+        Path(clinical_data_directory),
+        Path(bids_directory),
+        overwrite,
+        clinical_data_only,
     )
-    from clinica.utils.check_dependency import check_dcm2niix
-
-    check_dcm2niix()
-
-    makedirs(bids_directory, exist_ok=True)
-
-    if not clinical_data_only:
-        convert_images(
-            dataset_directory,
-            clinical_data_directory,
-            bids_directory,
-            overwrite,
-        )
-
-    convert_clinical_data(bids_directory, clinical_data_directory)

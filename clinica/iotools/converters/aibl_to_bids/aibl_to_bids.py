@@ -1,45 +1,122 @@
 """
 Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 """
+from pathlib import Path
 
 
-def convert_images(path_to_dataset, path_to_csv, bids_dir, overwrite=False):
+def convert(
+    input_dataset: Path,
+    input_clinical_data: Path,
+    output_dataset: Path,
+    overwrite: bool = False,
+    clinical_data_only: bool = False,
+) -> None:
+    """Convert the AIBL dataset (https://www.aibl.csiro.au/) in a BIDS dataset.
 
-    # Conversion of the entire dataset in BIDS
-    from os.path import exists
+    Parameters
+    ----------
+    input_dataset : Path
+        The path to the input AIBL dataset.
 
-    from clinica.iotools.converters.aibl_to_bids.aibl_utils import paths_to_bids
-    from clinica.utils.stream import cprint
+    input_clinical_data : Path
+        The path to the clinical CSV files associated with the input dataset.
 
-    list_of_created_files = []
+    output_dataset : Path
+        The path to the BIDS directory in which to write the output.
 
-    for modality in ["t1", "av45", "flute", "pib"]:
-        list_of_created_files.append(
-            paths_to_bids(
-                path_to_dataset, path_to_csv, bids_dir, modality, overwrite=overwrite
-            )
+    overwrite : bool, optional
+        Overwrites previously written nifti and json files.
+        Default=False.
+
+    clinical_data_only : bool, optional
+        If True, only convert the clinical data without the imaging data.
+        If False, everything is converted.
+        Default=False.
+    """
+    from clinica.utils.check_dependency import check_dcm2niix
+
+    check_dcm2niix()
+
+    output_dataset.mkdir(parents=True, exist_ok=True)
+
+    if not clinical_data_only:
+        _convert_images(
+            input_dataset,
+            input_clinical_data,
+            output_dataset,
+            overwrite,
         )
 
-    error_string = ""
+    _convert_clinical_data(input_clinical_data, output_dataset)
+
+
+def _convert_images(
+    input_dataset: Path,
+    input_clinical_data: Path,
+    output_dataset: Path,
+    overwrite: bool = False,
+) -> None:
+    """Conversion of the AIBL imaging data in BIDS.
+
+    Parameters
+    ----------
+    input_dataset : Path
+        The path to the input AIBL dataset.
+
+    input_clinical_data : Path
+        The path to the clinical CSV files associated with the input dataset.
+
+    output_dataset : Path
+        The path to the BIDS directory in which to write the output.
+
+    overwrite : bool, optional
+        Overwrites previously written nifti and json files.
+        Default=False.
+    """
+    from os.path import exists
+
+    from clinica.iotools.converters.aibl_to_bids.utils import Modality, paths_to_bids
+    from clinica.utils.stream import cprint
+
+    list_of_created_files = [
+        paths_to_bids(
+            input_dataset,
+            input_clinical_data,
+            output_dataset,
+            modality,
+            overwrite=overwrite,
+        )
+        for modality in Modality
+    ]
+    missing_files = []
     for modality_list in list_of_created_files:
         for file in modality_list:
             if not exists(str(file)):
-                error_string = error_string + str(file) + "\n"
-    if error_string != "":
-        cprint(
-            msg=f"The following file were not converted: {error_string}", lvl="warning"
-        )
+                missing_files.append(file)
+    if missing_files:
+        msg = "The following file were not converted:\n" + "\n".join(missing_files)
+        cprint(msg=msg, lvl="warning")
 
 
-def convert_clinical_data(bids_dir, path_to_csv):
+def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> None:
+    """Conversion of the AIBL clinical data in BIDS.
+
+    Parameters
+    ----------
+    input_clinical_data : Path
+        The path to the clinical CSV files associated with the input dataset.
+
+    output_dataset : Path
+        The path to the BIDS directory in which to write the output.
+    """
     # clinical specifications in BIDS
     from os.path import join, realpath, split
 
     import clinica.iotools.bids_utils as bids
-    from clinica.iotools.converters.aibl_to_bids.aibl_utils import (
-        create_participants_df_AIBL,
-        create_scans_dict_AIBL,
-        create_sessions_dict_AIBL,
+    from clinica.iotools.converters.aibl_to_bids.utils import (
+        create_participants_tsv_file,
+        create_scans_tsv_file,
+        create_sessions_tsv_file,
     )
     from clinica.utils.stream import cprint
 
@@ -61,16 +138,19 @@ def convert_clinical_data(bids_dir, path_to_csv):
         ),
     }
     bids.write_modality_agnostic_files(
-        study_name="AIBL", readme_data=readme_data, bids_dir=bids_dir
+        study_name="AIBL", readme_data=readme_data, bids_dir=output_dataset
     )
 
     cprint("Creating participants.tsv...")
-    create_participants_df_AIBL(
-        bids_dir, clinical_spec_path, path_to_csv, delete_non_bids_info=True
+    create_participants_tsv_file(
+        output_dataset,
+        clinical_spec_path,
+        input_clinical_data,
+        delete_non_bids_info=True,
     )
 
     cprint("Creating sessions files...")
-    create_sessions_dict_AIBL(bids_dir, path_to_csv, clinical_spec_path)
+    create_sessions_tsv_file(output_dataset, input_clinical_data, clinical_spec_path)
 
     cprint("Creating scans files...")
-    create_scans_dict_AIBL(bids_dir, path_to_csv, clinical_spec_path)
+    create_scans_tsv_file(output_dataset, input_clinical_data, clinical_spec_path)
