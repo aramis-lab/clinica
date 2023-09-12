@@ -4,7 +4,6 @@ execution of the pipeline and the different functions available in Clinica.
 """
 
 
-from os import fspath
 from pathlib import Path
 
 import pytest
@@ -19,15 +18,11 @@ def test_create_subject_session(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     ref_dir = base_dir / "CreateSubjectSessionList" / "ref"
     input_dir = base_dir / "CreateSubjectSessionList" / "in"
-
     tsv_name = "subject_session_list.tsv"
 
     create_subs_sess_list(str(input_dir / "bids"), str(tmp_path), tsv_name)
 
-    out_tsv = fspath(tmp_path / tsv_name)
-    ref_tsv = fspath(ref_dir / tsv_name)
-
-    assert compare_subject_session_tsv(out_tsv, ref_tsv)
+    assert compare_subject_session_tsv(tmp_path / tsv_name, ref_dir / tsv_name)
 
 
 @pytest.mark.fast
@@ -57,7 +52,7 @@ def test_create_merge_file(cmdopt, tmp_path):
         group_selection=None,
     )
 
-    ref_tsv = fspath(ref_dir / "output_file.tsv")
+    ref_tsv = ref_dir / "output_file.tsv"
     out_df = pd.read_csv(out_tsv, sep="\t")
     ref_df = pd.read_csv(ref_tsv, sep="\t")
 
@@ -77,15 +72,10 @@ def test_compute_missing_modalities(cmdopt, tmp_path):
 
     compute_missing_mods(bids_dir, tmp_path, "missing_modalities")
 
-    filenames = (
-        "missing_modalities_ses-M000.tsv",
-        "missing_modalities_ses-M003.tsv",
-        "missing_modalities_ses-M006.tsv",
-        "missing_modalities_ses-M012.tsv",
-        "missing_modalities_ses-M024.tsv",
-        "missing_modalities_ses-M048.tsv",
-    )
-    for filename in filenames:
+    for filename in (
+        f"missing_modalities_ses-M0{i}.tsv"
+        for i in ("00", "03", "06", "12", "24", "48")
+    ):
         out_name = tmp_path / filename
         ref_name = ref_dir / filename
         if not out_name.exists():
@@ -106,18 +96,15 @@ def test_center_nifti(cmdopt, tmp_path):
     ref_dir = base_dir / "CenterNifti" / "ref"
 
     center_all_nifti(
-        fspath(base_dir / "CenterNifti" / "in" / "bids"),
-        fspath(output_dir),
+        str(base_dir / "CenterNifti" / "in" / "bids"),
+        output_dir,
         center_all_files=True,
     )
-    hashes_out = create_list_hashes(
-        fspath(output_dir),
-        extensions_to_keep=(".nii.gz", ".nii"),
-    )
+    hashes_out = create_list_hashes(output_dir, extensions_to_keep=(".nii.gz", ".nii"))
     hashes_ref = create_list_hashes(
-        fspath(ref_dir / "bids_centered"),
-        extensions_to_keep=(".nii.gz", ".nii"),
+        ref_dir / "bids_centered", extensions_to_keep=(".nii.gz", ".nii")
     )
+
     assert hashes_out == hashes_ref
 
     if hashes_out != hashes_ref:
