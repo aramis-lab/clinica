@@ -60,7 +60,7 @@ brainstat = "^0.3.6"
 pydra-bids = "^0.0.10"
 pydra-freesurfer = "^0.0.9"
 pydra-petpvc="^0.0.4"
-pydra-fsl = "^0.0.20"
+pydra-fsl = "^0.0.21"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"

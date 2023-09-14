@@ -1099,6 +1099,8 @@ files = [
     {file = "lxml-4.9.3-cp27-cp27m-macosx_11_0_x86_64.whl", hash = "sha256:b0a545b46b526d418eb91754565ba5b63b1c0b12f9bd2f808c852d9b4b2f9b5c"},
     {file = "lxml-4.9.3-cp27-cp27m-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:075b731ddd9e7f68ad24c635374211376aa05a281673ede86cbe1d1b3455279d"},
     {file = "lxml-4.9.3-cp27-cp27m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:1e224d5755dba2f4a9498e150c43792392ac9b5380aa1b845f98a1618c94eeef"},
+    {file = "lxml-4.9.3-cp27-cp27m-win32.whl", hash = "sha256:2c74524e179f2ad6d2a4f7caf70e2d96639c0954c943ad601a9e146c76408ed7"},
+    {file = "lxml-4.9.3-cp27-cp27m-win_amd64.whl", hash = "sha256:4f1026bc732b6a7f96369f7bfe1a4f2290fb34dce00d8644bc3036fb351a4ca1"},
     {file = "lxml-4.9.3-cp27-cp27mu-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:c0781a98ff5e6586926293e59480b64ddd46282953203c76ae15dbbbf302e8bb"},
     {file = "lxml-4.9.3-cp27-cp27mu-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:cef2502e7e8a96fe5ad686d60b49e1ab03e438bd9123987994528febd569868e"},
     {file = "lxml-4.9.3-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:b86164d2cff4d3aaa1f04a14685cbc072efd0b4f99ca5708b2ad1b9b5988a991"},
@@ -2089,13 +2091,13 @@ pydra = ">=0.21"
 
 [[package]]
 name = "pydra-fsl"
-version = "0.0.20"
+version = "0.0.21"
 description = "Pydra tasks for FSL"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pydra_fsl-0.0.20-py3-none-any.whl", hash = "sha256:3b204325bf907b013738abca28ec7249a7c67a7c80f351d36a41c96a9014c8fb"},
-    {file = "pydra_fsl-0.0.20.tar.gz", hash = "sha256:8ad3860d4cdd8d3b10a1dc06c92f1891adba98cad8317e743274322f618bfc3f"},
+    {file = "pydra_fsl-0.0.21-py3-none-any.whl", hash = "sha256:a357f0d9bf38bb0ce2a37c26c3ae0bf46a13752763b1a292d42c9326aa2f0cee"},
+    {file = "pydra_fsl-0.0.21.tar.gz", hash = "sha256:96e0423fbb13e47653c1b29c5aba08b7a6f1168a8ea64dae0063db799af7838f"},
 ]
 
 [package.dependencies]
@@ -3394,4 +3396,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "4f6117bc1d926d950925e2cd5a9f9f6205c978825ca90776507896046e715500"
+content-hash = "ffe97712d5567c6d849ec9dd5ff82abee72ceac6e2090f14865c766a5e812da2"
