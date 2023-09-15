@@ -2091,13 +2091,13 @@ pydra = ">=0.21"
 
 [[package]]
 name = "pydra-fsl"
-version = "0.0.21"
+version = "0.0.22"
 description = "Pydra tasks for FSL"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pydra_fsl-0.0.21-py3-none-any.whl", hash = "sha256:a357f0d9bf38bb0ce2a37c26c3ae0bf46a13752763b1a292d42c9326aa2f0cee"},
-    {file = "pydra_fsl-0.0.21.tar.gz", hash = "sha256:96e0423fbb13e47653c1b29c5aba08b7a6f1168a8ea64dae0063db799af7838f"},
+    {file = "pydra_fsl-0.0.22-py3-none-any.whl", hash = "sha256:6dd904443fcbdf90bc1eb06984ba938e8b2114d84dd0704f292a5ba9e863c252"},
+    {file = "pydra_fsl-0.0.22.tar.gz", hash = "sha256:3f5a562f90b22c67abbe94b3c742daa9f6b83887c7ca801dff30ebdf461bc16b"},
 ]
 
 [package.dependencies]
@@ -3396,4 +3396,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "ffe97712d5567c6d849ec9dd5ff82abee72ceac6e2090f14865c766a5e812da2"
+content-hash = "18a3a5935dd7a24d6b407221a014e44b3c2197f26853c356447a8c3f0c39c09b"
