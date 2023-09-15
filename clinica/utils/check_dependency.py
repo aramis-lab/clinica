@@ -153,7 +153,6 @@ check_ants = functools.partial(
     _check_software,
     name="ANTs",
     binaries=["N4BiasFieldCorrection", "antsRegistrationSyNQuick.sh"],
-    env=("ANTSPATH", "ANTs"),
 )
 
 check_convert3d = functools.partial(
