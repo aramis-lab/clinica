@@ -44,7 +44,7 @@ _*You only need to install ITK if you plan to perform partial volume correction 
 Depending on the architecture and OS of your system, setup of third party libraries can change.
 Please refer to each tool’s website for installation instructions:
 
-- [**ANTs v2.3.1**](http://stnava.github.io/ANTs/) Download [here](https://github.com/stnava/ANTs/releases) and follow the instructions on the ANTs [wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
+- [**ANTs v2.5.0**](http://stnava.github.io/ANTs/) Download [here](https://github.com/stnava/ANTs/releases) and follow the instructions on the ANTs [wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
 - [**Convert3D**](http://www.itksnap.org/pmwiki/pmwiki.php?n=Convert3D.Convert3D) Download [here](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
 - [**FreeSurfer**](http://surfer.nmr.mgh.harvard.edu/)
   - For Linux users, download and install FreeSurfer following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
@@ -79,10 +79,6 @@ export LANG=en_US.UTF-8
 # Miniconda
 source /path/to/your/Miniconda/etc/profile.d/conda.sh
 
-# ANTs
-export ANTSPATH="/path/to/your/ANTs/"
-export PATH=${ANTSPATH}:${PATH}
-
 # FreeSurfer
 export FREESURFER_HOME="/Applications/freesurfer"
 source ${FREESURFER_HOME}/SetUpFreeSurfer.sh &> /dev/null
@@ -102,6 +98,15 @@ export MATLABCMD="${MATLAB_HOME}/matlab"
 
 # SPM
 export SPM_HOME="/path/to/your/spm12"
+```
+
+We recommend installing `ANTS >= 2.5.0` from which no environment variable are needed.
+Nonetheless, if you are using an older version of ANTS, make sure to have the following environment variables defined:
+
+```bash
+# ANTs
+export ANTSPATH="/path/to/your/ANTs/"
+export PATH=${ANTSPATH}:${PATH}
 ```
 
 <!-- # Autocomplete system
