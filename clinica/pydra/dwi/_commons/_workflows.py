@@ -141,7 +141,6 @@ def _build_eddy_fsl_input_specs(
         "dwi_filename",
         "b_vectors_filename",
         "b_values_filename",
-        "in_mask",
         "total_readout_time",
         "phase_encoding_direction",
     ]
