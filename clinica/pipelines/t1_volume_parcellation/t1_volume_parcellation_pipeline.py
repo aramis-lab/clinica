@@ -36,6 +36,7 @@ class T1VolumeParcellation(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
+        return [""]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""

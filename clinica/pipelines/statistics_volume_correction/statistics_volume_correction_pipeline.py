@@ -25,7 +25,7 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-        return []
+        return [""]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""

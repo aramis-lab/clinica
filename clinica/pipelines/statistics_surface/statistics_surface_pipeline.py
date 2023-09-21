@@ -76,7 +76,7 @@ class StatisticsSurface(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-        return []
+        return [""]
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.

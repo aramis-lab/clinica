@@ -43,9 +43,9 @@ class PETLinear(cpe.PETPipeline):
             A list of (string) output fields name.
         """
         return [
-            "registered_pet",
-            "transform_mat",
-            "registered_pet_in_t1w",
+            "suvr_pet",
+            "affine_mat",
+            "PETinT1w",
         ]  # Fill here the list
 
     def build_input_node(self):

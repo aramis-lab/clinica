@@ -40,7 +40,7 @@ class PetSurface(cpe.PETPipeline):
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline."""
-        return []
+        return [""]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""

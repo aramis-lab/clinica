@@ -9,6 +9,8 @@ from typing import Tuple
 import click
 from nipype.pipeline.engine import Workflow
 
+import clinica.engine.provenance as prov
+
 
 def clinica_pipeline(func):
     """Turns a CLI implementation into a Clinica Pipeline.
@@ -275,6 +277,7 @@ class Pipeline(Workflow):
             return False
 
     @postset("is_built", True)
+    @prov.provenance
     def build(self):
         """Builds the core, input and output nodes of the Pipeline.
 
@@ -292,10 +295,10 @@ class Pipeline(Workflow):
             self.check_dependencies()
             self.check_pipeline_parameters()
             if not self.has_input_connections():
-                self.build_input_node()
+                self.input_files = self.build_input_node()
             self.build_core_nodes()
             if not self.has_output_connections():
-                self.build_output_node()
+                self.output_files = self.build_output_node()
         return self
 
     def run(self, plugin=None, plugin_args=None, update_hash=False, bypass_check=False):
