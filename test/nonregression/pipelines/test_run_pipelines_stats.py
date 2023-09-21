@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 
 
 @pytest.mark.fast
-@pytest.mark.skip(reason="This test is currently broken.")
+# @pytest.mark.skip(reason="This test is currently broken.")
 def test_statistics_surface(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
