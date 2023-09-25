@@ -13,7 +13,15 @@ TSV_FIRST_COLUMN = "participant_id"
 TSV_SECOND_COLUMN = "session_id"
 
 
-def _read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
+__all__ = [
+    "read_and_check_tsv_file",
+    "get_t1_freesurfer_custom_file_template",
+    "build_thickness_array",
+    "get_average_surface",
+]
+
+
+def read_and_check_tsv_file(tsv_file: PathLike) -> pd.DataFrame:
     """This function reads the TSV file provided and performs some basic checks.
 
     Parameters
@@ -44,7 +52,7 @@ T1_FREESURFER_TEMPLATE_PATH_FROM_CAPS_ROOT = (
 )
 
 
-def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> str:
+def get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> str:
     """Returns a Template for the path to the desired surface file.
 
     Parameters
@@ -60,8 +68,8 @@ def _get_t1_freesurfer_custom_file_template(base_dir: PathLike) -> str:
     return str(base_dir) + T1_FREESURFER_TEMPLATE_PATH_FROM_CAPS_ROOT
 
 
-def _build_thickness_array(
-    input_dir: PathLike,
+def build_thickness_array(
+    input_dir: Path,
     surface_file: str,
     df: pd.DataFrame,
     fwhm: float,
@@ -93,9 +101,9 @@ def _build_thickness_array(
     for idx, row in df.iterrows():
         subject, session = idx
         parts = []
-        for hemi in ["lh", "rh"]:
+        for hemi in ("lh", "rh"):
             query = {"subject": subject, "session": session, "fwhm": fwhm, "hemi": hemi}
-            surface_file_path = str(Path(input_dir) / Path(str(surface_file % query)))
+            surface_file_path = str(input_dir / (surface_file % query))
             parts.append(load(surface_file_path).get_fdata())
         combined = np.vstack(parts)
         thickness.append(combined.flatten())
@@ -108,7 +116,7 @@ def _build_thickness_array(
     return thickness
 
 
-def _get_average_surface(fsaverage_path: PathLike) -> Tuple[Dict, Mesh]:
+def get_average_surface(fsaverage_path: Path) -> Tuple[Dict, Mesh]:
     """This function extracts the average surface and the average mesh
     from the path to the fsaverage templates.
 
@@ -145,8 +153,7 @@ def _get_average_surface(fsaverage_path: PathLike) -> Tuple[Dict, Mesh]:
     from nilearn.surface import Mesh, load_surf_mesh
 
     meshes = [
-        load_surf_mesh(str(fsaverage_path / Path(f"{hemi}.pial")))
-        for hemi in ["lh", "rh"]
+        load_surf_mesh(str(fsaverage_path / f"{hemi}.pial")) for hemi in ("lh", "rh")
     ]
     coordinates = np.vstack([mesh.coordinates for mesh in meshes])
     faces = np.vstack(

@@ -97,14 +97,14 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
-    """Surface-based mass-univariate analysis with SurfStat.
+    """Surface-based mass-univariate analysis with BrainStat.
 
-    GROUP_LABEL is a user-defined identifier to target a specific group of
-    subjects.
+    GROUP_LABEL is a user-defined identifier to target a specific group of subjects.
 
-    The type of surface-based feature can be defined by using the third
-    argument: t1-freesurfer for cortical thickness, pet-surface for projected
-    PET data or custom-pipeline for you own data in CAPS directory.
+    The type of surface-based feature can be defined by using the third argument:
+        - "t1-freesurfer" for cortical thickness
+        - "pet-surface" for projected PET data
+        - "custom-pipeline" for you own data in CAPS directory
 
     The type of analysis of the model is defined by the argument
     'group_comparison' or 'correlation'.
@@ -124,41 +124,9 @@ def cli(
     """
     from networkx import Graph
 
-    from clinica.utils.exceptions import ClinicaException
     from clinica.utils.ux import print_end_pipeline
 
-    from .statistics_surface_pipeline import StatisticsSurface
-    from .statistics_surface_utils import (
-        get_pet_surface_custom_file,
-        get_t1_freesurfer_custom_file,
-    )
-
-    # PET-Surface pipeline
-    if orig_input_data == "pet-surface":
-        if not acq_label:
-            raise ClinicaException(
-                "You selected pet-surface pipeline without setting --acq_label flag. "
-                "Clinica will now exit."
-            )
-        if not suvr_reference_region:
-            raise ClinicaException(
-                "You selected pet-surface pipeline without setting --suvr_reference_region flag. "
-                "Clinica will now exit."
-            )
-
-    # FreeSurfer cortical thickness
-    if orig_input_data == "t1-freesurfer":
-        custom_file = get_t1_freesurfer_custom_file()
-        measure_label = "ct"
-    # PET cortical projection
-    elif orig_input_data == "pet-surface":
-        custom_file = get_pet_surface_custom_file(acq_label, suvr_reference_region)
-        measure_label = acq_label
-    else:
-        if not all([custom_file, measure_label]):
-            raise ClinicaException(
-                "You must set --measure_label and --custom_file flags."
-            )
+    from .pipeline import StatisticsSurface
 
     parameters = {
         # Clinica compulsory arguments
