@@ -53,7 +53,7 @@ Reference regions provided by Clinica come from the [Pick atlas](https://www.nit
 - `cerebellumPons2`: new in Clinica `v0.4`
 
 In Clinica `v0.4` two new versions of these masks have been introduced: `pons2` and `cerebellumPons2`.
-Indeed we wanted to improve the reference regions mask to better fit the [MNI152NLin2009cSym template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html#template-based-coordinate-systems) used in linear processing pipelines.
+Indeed, we wanted to improve the reference regions mask to better fit the [MNI152NLin2009cSym template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html#template-based-coordinate-systems) used in linear processing pipelines.
 The new masks still come from the [Pick atlas](https://www.nitrc.org/projects/wfu_pickatlas) but with a different processing: we decided to first truncate the mask using SPM12 tissue probability maps to remove voxels overlapping with regions outside the brain (bone, CSF, background...).
 Then, we eroded the mask using scipy [`binary_erosion`](https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.ndimage.morphology.binary_erosion.html) with 3 iterations.
 
@@ -76,7 +76,7 @@ It is possible to run the [`pet-surface`](../PET_Surface) and [`pet-volume`](../
     ```
 
     Simply define a new label that will be your new SUVR reference region.
-    `LIST_SUVR_REFERENCE_REGIONS` is used by all command-line interfaces so you do not need to modify the pipelines' CLI to make this new region appear.
+    `LIST_SUVR_REFERENCE_REGIONS` is used by all command-line interfaces, so you do not need to modify the pipelines' CLI to make this new region appear.
 
     - The path of the SUVR reference region that you will use:
 

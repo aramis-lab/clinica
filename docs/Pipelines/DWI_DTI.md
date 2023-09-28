@@ -57,13 +57,13 @@ The main output files are:
     [[Hua et al., 2008](https://doi.org/10.1016/j.neuroimage.2007.07.053);
     [Wakana et al., 2007](https://doi.org/10.1016/j.neuroimage.2007.02.049)]:
     This atlas contains 48 white matter tract labels that were created by manually segmenting a standard-space average of diffusion MRI tensor maps from 81 subjects.
-    - [JHUTracts[0|25|50](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases)
+    - [JHUTracts 0|25|50](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases)
     [[Mori et al., 2005](https://www.elsevier.com/books/mri-atlas-of-human-white-matter/mori/978-0-444-51741-8)].
     This atlas contains 20 white matter tract labels that were identified probabilistically by averaging the results of deterministic tractography run on 28 subjects.
     Several thresholds of these probabilistic tracts are proposed (0%, 25%, 50%).
 
 !!! note
-    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#dwi-dti-dti-based-processing-of-corrected-dwi-datasets).
+    The full list of output files can be found in [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#dwi-dti-dti-based-processing-of-corrected-dwi-datasets).
 
 ## Describing this pipeline in your paper
 

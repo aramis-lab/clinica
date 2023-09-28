@@ -62,7 +62,7 @@ More details regarding the `recon-all` output files can be found on the [FreeSur
 TSV files summarizing the regional statistics are also created for each subject.
 
 !!! note
-    The full list of features extracted from the FreeSurfer pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#t1-freesurfer-freesurfer-based-processing-of-t1-weighted-mr-images).
+    The full list of features extracted from the FreeSurfer pipeline can be found in [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#t1-freesurfer-freesurfer-based-processing-of-t1-weighted-mr-images).
 
 <!-- ## Visualization of the results
 

@@ -60,7 +60,7 @@ The connectivity matrix based on the Desikan or Destrieux parcellation.
     It was built on anatomical MRI of 24 healthy subjects from which 74 cortical ROIs were manually identified in each of the individual hemispheres.
 
 !!! note
-    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications).
+    The full list of output files can be found in [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications).
 
 <!--## Visualization of the results-->
 

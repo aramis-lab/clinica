@@ -56,7 +56,7 @@ SVM regularization that accounts for the spatial and anatomical structure of neu
 SVM regularization of PET data that accounts for the spatial and anatomical structure of neuroimaging data.
 
 !!! note
-    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#machinelearning-prepare-spatial-svm-prepare-input-data-for-spatially-regularized-svm).
+    The full list of output files can be found in [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#machinelearning-prepare-spatial-svm-prepare-input-data-for-spatially-regularized-svm).
 
 ## Going further
 
