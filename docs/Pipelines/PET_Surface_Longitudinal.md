@@ -121,7 +121,7 @@ surface at equal distance between the white matter/gray matter interface and the
 TSV files summarizing the regional statistics on the labelled atlases (Desikan and Destrieux).
 
 !!! note
-    The full list of output files from the `pet-surface-longitudinal` pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-surface-longitudinal-surface-based-longitudinal-processing-of-pet-images).
+    The full list of output files from the `pet-surface-longitudinal` pipeline can be found in [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-surface-longitudinal-surface-based-longitudinal-processing-of-pet-images).
 
 ## Describing this pipeline in your paper
 

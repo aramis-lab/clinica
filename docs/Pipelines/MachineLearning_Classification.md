@@ -123,7 +123,7 @@ If `image_type` is `PET`:
 
 ### Fine tune algorithm and validation parameters
 
-The `machinelearning-classification` command uses sensible default options (defined in `ml_workflows.py`) that were used for classfication of patients with Alzheimer’s disease [[Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
+The `machinelearning-classification` command uses sensible default options (defined in `ml_workflows.py`) that were used for classification of patients with Alzheimer’s disease [[Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
 
 No matter the combination of modules chosen, the algorithm and validation parameters are:
 
@@ -134,7 +134,7 @@ By default, PET data with no PVC are used.
 - `precomputed_kernel`: to load the precomputed kernel if it exists
 - `mask_zeros`: a flag to indicate if zero-valued voxels should be taken into account for the classification (`True`/`False`)
 - `n_iterations`: number of times a task is repeated
-- `grid_search_folds`: number of folds to use for the hyper-parameter grid search (e.g. 10)
+- `grid_search_folds`: number of folds to use for the hyperparameter grid search (e.g. 10)
 - `c_range`: range used to select the best value for the C parameter, in the logspace
 - `test_size`: percentage (between 0 and 1) representing the size of the test set for each shuffle split
 - `balanced`:  option to balance the weights according to the number of samples

@@ -35,7 +35,7 @@ where:
 
 - `CAPS_DIRECTORY` is the output folder containing  the results of the [`t1-volume`](../T1_Volume) or [`pet-volume`](../PET_Volume) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS/Introduction).
 - `GROUP_LABEL` defines the group name for the analysis.
-- The third posisional argument defines the type of volume-based feature: type `t1-volume` to use gray matter maps, `pet-volume` to use PET data or `custom-pipeline` to use your own data in CAPS directory (see [below](#advanced-specifying-what-volume-data-to-use) for details).
+- The third positional argument defines the type of volume-based feature: type `t1-volume` to use gray matter maps, `pet-volume` to use PET data or `custom-pipeline` to use your own data in CAPS directory (see [below](#advanced-specifying-what-volume-data-to-use) for details).
 - `SUBJECT_VISITS_WITH_COVARIATES_TSV` is a TSV file containing a list of subjects with their sessions and all the covariates and factors of the model (the content of the file is explained in the [Example](../Stats_Surface/#comparison-analysis) subsection of the `statistics-surface` pipeline).
 - `CONTRAST` is a string defining the contrast matrix or the variable of interest for the GLM, e.g. `group` or `age`.
 
@@ -96,7 +96,7 @@ Contains information necessary to use the `statistics-volume-correction` sub-pip
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measurement of `<group_1>` is lower than (`lt`) the measurement of `<group_2>`".
 The pipeline includes both contrasts so `*<group_2>-lt-<group_1>*` files are also saved.
 
-The full list of output files from the `statistics-volume-[correction]` pipeline can be found in the
+The full list of output files from the `statistics-volume-[correction]` pipeline can be found in
 [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#statistics-volume-volume-based-mass-univariate-analysis-with-spm).
 
 ## Describing this pipeline in your paper

@@ -50,7 +50,7 @@ where:
 
 Pipeline options:
 
-- `-c`, or `--covariates`: Covariates must be provided one at the time: `-c covariate_1 -c covariate_2`, or equivalentely `--covariates covariate_1  --covariates covariate_2`.
+- `-c`, or `--covariates`: Covariates must be provided one at the time: `-c covariate_1 -c covariate_2`, or equivalently `--covariates covariate_1  --covariates covariate_2`.
 Each covariate must match the name of the TSV file.
 By default, no covariate is considered.
 - `--full_width_at_half_maximum`: FWHM for the surface smoothing.
