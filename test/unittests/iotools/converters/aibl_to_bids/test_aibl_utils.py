@@ -22,7 +22,7 @@ def test_get_first_file_matching_pattern(tmp_path):
 
     assert (
         _get_first_file_matching_pattern(tmp_path, "foo*.nii*")
-        == tmp_path / "foo_bar_baz.nii"
+        == tmp_path / "foo_bar.nii.gz"
     )
 
 
