@@ -201,7 +201,7 @@ def _get_first_file_matching_pattern(folder: Path, pattern: str) -> Path:
     if pattern == "":
         raise ValueError("Pattern is not valid.")
     try:
-        return list(folder.glob(pattern))[0]
+        return sorted(list(folder.glob(pattern)))[0]
     except IndexError:
         raise ValueError(f"No file matching pattern {folder}/{pattern}.")
 
