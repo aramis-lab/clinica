@@ -17,7 +17,7 @@ The pipelines used by command line work only if you give as input a BIDS complia
 So, if your dataset doesn't follow this standard, you will need to convert to it.
 
 On BIDS website is possible to find some tools that can help you for the conversion like, for example, the [OpenfMRI to BIDS converter](https://github.com/INCF/openfmri2bids).
-A quick overwiev of the BIDS structure can be found on the [BIDS](BIDS) page.
+A quick overview of the BIDS structure can be found on the [BIDS](BIDS) page.
 For more details you can also check the documentation.
 
 > Note:
