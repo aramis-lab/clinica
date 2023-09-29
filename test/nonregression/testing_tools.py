@@ -123,15 +123,40 @@ def similarity_measure_large_nifti(
     file2: PathLike,
     threshold: float,
 ) -> bool:
-    """TODO"""
+    """Compare two NIfTI inputs using a similarity metric.
+
+    Both NIfTI inputs are considered equal if the computed similarity metric
+    is higher than the specified threshold.
+
+    The difference with the function `similarity_measure` is that the two
+    nifti images are compared slice by slice (taken in the last dimension).
+    This allows to compare large 4D volumes that wouldn't fit entirely in
+    memory for example.
+
+    Parameters
+    ----------
+    file1 : Path
+        The path to first nifti input.
+
+    file2 : Path
+        The path to second nifti to compare.
+
+    threshold : float
+        Threshold value to be used in the comparison.
+
+    Returns
+    -------
+    bool
+        True if file1 and file2 can be considered similar enough, i.e. the
+        similarity metric is higher than the threshold."""
     from os import fspath
 
     import nibabel
 
+    # Note that nibabel does lazy loading so image1 and 2 are only proxies here
     image1 = nibabel.load(fspath(file1))
     image2 = nibabel.load(fspath(file2))
 
-    volumes = range(image1.shape[-1])
     for volume in range(image1.shape[-1]):
         if not similarity_measure_arrays(
             np.asarray(image1.dataobj[..., volume]),
