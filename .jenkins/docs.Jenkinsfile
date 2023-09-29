@@ -51,7 +51,7 @@ pipeline {
               configName: 'web',
               transfers: [
                 sshTransfer(
-                  cleanRemote: false,
+                  cleanRemote: true,
                   excludes: '',
                   execCommand: '',
                   execTimeout: 120000,
@@ -59,7 +59,7 @@ pipeline {
                   makeEmptyDirs: false,
                   noDefaultExcludes: false,
                   patternSeparator: '[, ]+',
-                  remoteDirectory: 'clinica/docs/public/',
+                  remoteDirectory: 'clinica/docs/private/',
                   remoteDirectorySDF: false,
                   removePrefix: '',
                   sourceFiles: "${BRANCH_NAME}/**"
