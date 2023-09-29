@@ -59,7 +59,7 @@ pipeline {
                   makeEmptyDirs: false,
                   noDefaultExcludes: false,
                   patternSeparator: '[, ]+',
-                  remoteDirectory: 'clinica/docs/private/${BRANCH_NAME}/',
+                  remoteDirectory: 'clinica/docs/public/${BRANCH_NAME}/',
                   remoteDirectorySDF: false,
                   removePrefix: '${BRANCH_NAME}',
                   sourceFiles: "${BRANCH_NAME}/**"
