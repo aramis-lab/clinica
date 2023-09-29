@@ -61,7 +61,7 @@ pipeline {
                   patternSeparator: '[, ]+',
                   remoteDirectory: 'clinica/docs/private/${BRANCH_NAME}/',
                   remoteDirectorySDF: false,
-                  removePrefix: '',
+                  removePrefix: '${BRANCH_NAME}',
                   sourceFiles: "${BRANCH_NAME}/**"
                 )
               ],
