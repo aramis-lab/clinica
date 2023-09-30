@@ -3,7 +3,7 @@
 ## Load Clinica
 
 Clinica is available through Module system.
-After an `ssh` on the Cluster (`ssh login01` or `ssh login02`), you will arrive on your home.
+After an `ssh` on the Cluster (`ssh login01` or `ssh login02`), you will land in your home directory.
 Once done, type `module avail` to see all packages.
 Finally, type:
 

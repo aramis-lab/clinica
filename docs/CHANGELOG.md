@@ -121,7 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [PET*]   Use `trc`instead of `acq` for BIDS compliance
-- [Converters] Remove supperfluous use of `acq` entity in filenames for BIDS compliance
+- [Converters] Remove superfluous use of `acq` entity in filenames for BIDS compliance
 
 ### Added
 - [adni-to-bids] allow extraction of metadata from xml
@@ -242,8 +242,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Core] Improve Logging for Clinica
 - [Core] Improve CLI through using Click
 - [Core] Nibabel replace get_data() by get_fdata() method for dataobj_images (nibabel)
-- [`adni-to-bids`] Optimization of `adni-to-bids` clincal data extraction
-- [`adni-to-bids`] Replace xlsx by tsv files forclinical data specification
+- [`adni-to-bids`] Optimization of `adni-to-bids` clinical data extraction
+- [`adni-to-bids`] Replace xlsx by tsv files for clinical data specification
 
 ### Fixed
 
@@ -282,7 +282,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `pet-linear` pipeline: spatial normalization to the MNI space and intensity normalization of PET images
 - `pet-surface-longitudinal` pipeline: Surface-based longitudinal processing of PET images
-- `check-missing-processing` tool allows creating a TSV file containing information about the piplines executed into a specific CAPS folder
+- `check-missing-processing` tool allows creating a TSV file containing information about the pipelines executed into a specific CAPS folder
 - Conversion information is added once the converter is run to facilitate traceability.
 - Add new keywords available in ADNI3 to the `adni-to-bids` converter
 
