@@ -148,3 +148,28 @@ def merge_nifti_images_in_time_dimension_task(image1: str, image2: str) -> str:
     from clinica.utils.image import merge_nifti_images_in_time_dimension  # noqa
 
     return str(merge_nifti_images_in_time_dimension((image1, image2)))
+
+
+def remove_dummy_dimension_from_image(image: str, output: str) -> str:
+    """Remove all dummy dimensions (i.e. equal to 1) from an image.
+
+    Parameters
+    ----------
+    image : str
+        Path to the input image.
+
+    output : str
+        Path to the desired output image.
+
+    Returns
+    -------
+    str :
+        The path to the output image.
+    """
+    import nibabel as nib
+    from nilearn.image import new_img_like
+
+    img = new_img_like(image, nib.load(image).get_fdata().squeeze())
+    nib.save(img, output)
+
+    return output

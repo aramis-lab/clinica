@@ -111,20 +111,84 @@ def similarity_measure(
     from os import fspath
 
     import nibabel
-    from skimage.metrics import structural_similarity
 
     image1 = nibabel.load(fspath(file1)).get_fdata()
     image2 = nibabel.load(fspath(file2)).get_fdata()
-    data_range = image1.max() - image1.min()
 
-    # See https://scikit-image.org/docs/stable/api/skimage.metrics.html#skimage.metrics.structural_similarity
+    return similarity_measure_arrays(image1, image2, threshold)
+
+
+def similarity_measure_large_nifti(
+    file1: PathLike,
+    file2: PathLike,
+    threshold: float,
+) -> bool:
+    """Compare two NIfTI inputs using a similarity metric.
+
+    Both NIfTI inputs are considered equal if the computed similarity metric
+    is higher than the specified threshold.
+
+    The difference with the function `similarity_measure` is that the two
+    nifti images are compared slice by slice (taken in the last dimension).
+    This allows to compare large 4D volumes that wouldn't fit entirely in
+    memory for example.
+
+    Parameters
+    ----------
+    file1 : Path
+        The path to first nifti input.
+
+    file2 : Path
+        The path to second nifti to compare.
+
+    threshold : float
+        Threshold value to be used in the comparison.
+
+    Returns
+    -------
+    bool
+        True if file1 and file2 can be considered similar enough, i.e. the
+        similarity metric is higher than the threshold."""
+    from os import fspath
+
+    import nibabel
+
+    # Note that nibabel does lazy loading so image1 and 2 are only proxies here
+    image1 = nibabel.load(fspath(file1))
+    image2 = nibabel.load(fspath(file2))
+
+    for volume in range(image1.shape[-1]):
+        if not similarity_measure_arrays(
+            np.asarray(image1.dataobj[..., volume]),
+            np.asarray(image2.dataobj[..., volume]),
+            threshold,
+        ):
+            return False
+    return True
+
+
+def similarity_measure_arrays(
+    array1: np.ndarray,
+    array2: np.ndarray,
+    threshold: float,
+) -> bool:
+    """Returns True if structural similarity between two arrays is larger than threshold.
+
+    See https://scikit-image.org/docs/stable/api/skimage.metrics.html#skimage.metrics.structural_similarity
+    """
+    import numpy as np
+    from skimage.metrics import structural_similarity
+
+    array1 = np.squeeze(array1)
+    array2 = np.squeeze(array2)
+
     similarity = structural_similarity(
-        image1,
-        image2,
+        array1,
+        array2,
         gaussian_weights=True,
         sigma=1.5,
         use_sample_covariance=False,
-        data_range=data_range,
+        data_range=array1.max() - array1.min(),
     )
 
     return similarity > threshold

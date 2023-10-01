@@ -22,6 +22,7 @@ pipeline_name = "dwi-preprocessing-using-t1"
 @cli_param.option.use_cuda
 @cli_param.option.initrand
 @cli_param.option.delete_cache
+@cli_param.option.random_seed
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -32,6 +33,7 @@ def cli(
     use_cuda: bool = False,
     initrand: bool = False,
     delete_cache: bool = False,
+    random_seed: Optional[int] = None,
 ) -> None:
     """Preprocessing of raw DWI datasets using a T1w image.
 
@@ -48,6 +50,8 @@ def cli(
         "use_cuda": use_cuda,
         "initrand": initrand,
         "delete_cache": delete_cache,
+        "random_seed": random_seed,
+        "double_precision": True,  # TODO: expose to user ?
     }
 
     pipeline = DwiPreprocessingUsingT1(

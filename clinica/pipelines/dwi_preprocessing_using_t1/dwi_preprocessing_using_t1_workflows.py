@@ -1,3 +1,5 @@
+from typing import Optional
+
 from nipype.pipeline.engine import Workflow
 
 
@@ -194,8 +196,11 @@ def eddy_fsl_pipeline(
 def epi_pipeline(
     base_dir: str,
     delete_cache: bool = False,
-    name="susceptibility_distortion_correction_using_t1",
-):
+    output_dir: Optional[str] = None,
+    name: str = "susceptibility_distortion_correction_using_t1",
+    ants_random_seed: Optional[int] = None,
+    use_double_precision: bool = True,
+) -> Workflow:
     """Perform EPI correction.
 
     This workflow allows to correct for echo-planar induced susceptibility artifacts without fieldmap
@@ -203,6 +208,11 @@ def epi_pipeline(
     structural scans using an inverse consistent registration algorithm with a mutual information cost
     function (SyN algorithm). This workflow allows also a coregistration of DWIs with their respective
     baseline T1-weighted structural scans in order to latter combine tracks and cortex parcellation.
+
+    This pipeline needs:
+        - FSL
+        - ANTS
+        - c3d
 
     Parameters
     ----------
@@ -212,45 +222,199 @@ def epi_pipeline(
     delete_cache: bool
         If True, part of the temporary data is automatically deleted after usage.
 
+    output_dir: str, optional
+        Path to output directory.
+        If provided, the pipeline will write its output in this folder.
+        Default to None.
+
     name: str, optional
         Name of the pipeline.
 
+    ants_random_seed : int, optional
+        The random seed to be used with ANTS nodes.
+        If None, no random seed will be used and results will
+        be stochastic.
+        Default=None.
+
+    use_double_precision : bool, optional
+        This only affects tools supporting different precision settings.
+        If True, computations will be made in double precision (i.e. 64 bits).
+        If False, computations will be made in float precision (i.e. 32 bits).
+        Default=True.
+
+    Returns
+    -------
+    Workflow :
+        The Nipype workflow.
+        This workflow has the following inputs:
+            - "t1_filename": The path to the T1w image
+            - "dwi_filename": The path to the corrected DWI image
+              This corresponds to the 'out_corrected' output from the eddy_fsl pipeline.
+            - "b_vectors_filename": The path to the file holding the rotated B-vectors
+              This corresponds to the 'out_rotated_bvecs' output from the eddy_fsl pipeline.
+
+        And the following outputs:
+            - merged_transforms
+            - dwi_to_t1_co_registration_matrix
+            - epi_correction_deformation_field
+            - epi_correction_affine_transform
+            - epi_correction_image_warped
+            - rotated_b_vectors
+            - epi_corrected_dwi_image
+
+
     Warnings
     --------
-        This workflow rotates the b-vectors.
+    This workflow rotates the b-vectors.
 
     Notes
     -----
-        Nir et al. (2015): Connectivity network measures predict volumetric atrophy in mild cognitive impairment
-        Leow et al. (2007): Statistical Properties of Jacobian Maps and the Realization of
-        Unbiased Large Deformation Nonlinear Image Registration
+    Nir et al. (2015): Connectivity network measures predict volumetric atrophy in mild cognitive impairment
+    Leow et al. (2007): Statistical Properties of Jacobian Maps and the Realization of
+    Unbiased Large Deformation Nonlinear Image Registration
+    """
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as pe
+
+    workflow_inputs = ["t1_filename", "dwi_filename", "b_vectors_filename"]
+    workflow_outputs = ["rotated_b_vectors", "epi_corrected_dwi_image"]
+
+    inputnode = pe.Node(
+        niu.IdentityInterface(fields=workflow_inputs),
+        name="inputnode",
+    )
+    ants_registration = perform_ants_registration(
+        base_dir=base_dir,
+        output_dir=output_dir,
+        ants_random_seed=ants_random_seed,
+    )
+    epi_correction = perform_dwi_epi_correction(
+        base_dir=base_dir,
+        delete_cache=delete_cache,
+        output_dir=output_dir,
+        use_double_precision=use_double_precision,
+    )
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=workflow_outputs),
+        name="outputnode",
+    )
+
+    wf = pe.Workflow(name=name)
+
+    connections = [
+        (
+            inputnode,
+            ants_registration,
+            [(inpt, f"inputnode.{inpt}") for inpt in workflow_inputs],
+        ),
+        (
+            inputnode,
+            epi_correction,
+            [
+                ("dwi_filename", "inputnode.dwi_filename"),
+                ("t1_filename", "inputnode.t1_filename"),
+            ],
+        ),
+        (
+            ants_registration,
+            epi_correction,
+            [("outputnode.merged_transforms", "inputnode.merged_transforms")],
+        ),
+        (
+            ants_registration,
+            outputnode,
+            [("outputnode.rotated_b_vectors", "rotated_b_vectors")],
+        ),
+        (
+            epi_correction,
+            outputnode,
+            [("outputnode.epi_corrected_dwi_image", "epi_corrected_dwi_image")],
+        ),
+    ]
+
+    wf.connect(connections)
+
+    return wf
+
+
+def perform_ants_registration(
+    base_dir: str,
+    output_dir: Optional[str] = None,
+    name: str = "perform_ants_registration",
+    ants_random_seed: Optional[int] = None,
+) -> Workflow:
+    """Step 1 of EPI pipeline.
+
+    Parameters
+    ----------
+    base_dir: str
+        Working directory, which contains all the intermediary data generated.
+
+    output_dir : str, optional
+        Path to output directory.
+        If provided, the pipeline will write its output in this folder.
+        Default to None.
+
+    name : str, optional
+        Name of the pipeline.
+
+    ants_random_seed : int, optional
+        The random seed to be used with ANTS nodes.
+        If None, no random seed will be used and results will
+        be stochastic.
+        Default=None.
+
+    Returns
+    -------
+    Workflow :
+        The Nipype workflow.
+        This workflow takes as inputs:
+            - t1_filename : The path to the T1w input image.
+            - dwi_filename : The path to the DWI image.
+            - b_vectors_filename : The path to the B-vectors file.
+        The workflow produces as outputs:
+            - merged_transforms
+            - dwi_to_t1_co_registration_matrix
+            - epi_correction_deformation_field
+            - epi_correction_affine_transform
+            - epi_correction_image_warped
+            - rotated_b_vectors
     """
     import nipype.interfaces.ants as ants
     import nipype.interfaces.c3 as c3
     import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
 
     from .dwi_preprocessing_using_t1_utils import (
-        ants_apply_transforms,
         broadcast_matrix_filename_to_match_b_vector_length,
         change_itk_transform_type,
-        delete_temp_dirs,
         rotate_b_vectors,
     )
 
-    inputnode = pe.Node(
-        niu.IdentityInterface(fields=["T1", "DWI", "bvec"]), name="inputnode"
+    workflow_inputs = ["t1_filename", "dwi_filename", "b_vectors_filename"]
+    workflow_outputs = [
+        "merged_transforms",
+        "dwi_to_t1_co_registration_matrix",
+        "epi_correction_deformation_field",
+        "epi_correction_affine_transform",
+        "epi_correction_image_warped",
+        "rotated_b_vectors",
+    ]
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=workflow_inputs), name="inputnode")
+    split_dwi_volumes = pe.Node(fsl.Split(dimension="t"), name="split_dwi_volumes")
+    pick_reference_b0 = pe.Node(niu.Select(), name="pick_reference_b0")
+    pick_reference_b0.inputs.index = [0]
+
+    co_register_reference_b0_to_t1 = pe.Node(
+        interface=fsl.FLIRT(dof=6),
+        name="co_register_reference_b0_to_t1",
     )
-
-    split = pe.Node(fsl.Split(dimension="t"), name="SplitDWIs")
-    pick_ref = pe.Node(niu.Select(), name="Pick_b0")
-    pick_ref.inputs.index = [0]
-
-    flirt_b0_2_t1 = pe.Node(interface=fsl.FLIRT(dof=6), name="flirt_B0_2_T1")
-    flirt_b0_2_t1.inputs.interp = "spline"
-    flirt_b0_2_t1.inputs.cost = "normmi"
-    flirt_b0_2_t1.inputs.cost_func = "normmi"
+    co_register_reference_b0_to_t1.inputs.interp = "spline"
+    co_register_reference_b0_to_t1.inputs.cost = "normmi"
+    co_register_reference_b0_to_t1.inputs.cost_func = "normmi"
 
     expend_matrix = pe.Node(
         interface=niu.Function(
@@ -261,27 +425,32 @@ def epi_pipeline(
         name="expend_matrix",
     )
 
-    rot_bvec = pe.Node(
+    b_vectors_rotation = pe.Node(
         niu.Function(
             input_names=["matrix_filenames", "b_vectors_filename"],
-            output_names=["out_file"],
+            output_names=["rotated_b_vectors_filename"],
             function=rotate_b_vectors,
         ),
-        name="Rotate_Bvec",
+        name="b_vectors_rotation",
     )
 
     ants_registration = pe.Node(
         interface=ants.registration.RegistrationSynQuick(
-            transform_type="br", dimension=3
+            transform_type="br",
+            dimension=3,
+            precision_type="double",
+            num_threads=1,
         ),
         name="antsRegistrationSyNQuick",
     )
+    if ants_random_seed is not None:
+        ants_registration.inputs.random_seed = ants_random_seed
 
     c3d_flirt2ants = pe.Node(c3.C3dAffineTool(), name="fsl_reg_2_itk")
     c3d_flirt2ants.inputs.itk_transform = True
     c3d_flirt2ants.inputs.fsl2ras = True
 
-    change_transform = pe.Node(
+    change_transform_type = pe.Node(
         niu.Function(
             input_names=["input_affine_file"],
             output_names=["updated_affine_file"],
@@ -290,52 +459,184 @@ def epi_pipeline(
         name="change_transform_type",
     )
 
-    merge_transform = pe.Node(niu.Merge(3), name="MergeTransforms")
+    merge_transforms = pe.Node(niu.Merge(3), name="merge_transforms")
 
-    # the nipype function is not used since the results it gives are not
-    # as good as the ones we get by using the command directly.
-    apply_transform_image = pe.MapNode(
-        interface=niu.Function(
-            input_names=[
-                "fixed_image",
-                "moving_image",
-                "transforms",
-                "warped_image",
-                "output_warped_image",
-            ],
-            output_names=["warped_image"],
-            function=ants_apply_transforms,
+    outputnode = pe.Node(
+        niu.IdentityInterface(fields=workflow_outputs), name="outputnode"
+    )
+
+    if output_dir:
+        write_results = pe.Node(name="write_results", interface=nio.DataSink())
+        write_results.inputs.base_directory = output_dir
+        write_results.inputs.parameterization = False
+
+    wf = pe.Workflow(name=name)
+
+    connections = [
+        (inputnode, split_dwi_volumes, [("dwi_filename", "in_file")]),
+        (split_dwi_volumes, pick_reference_b0, [("out_files", "inlist")]),
+        (pick_reference_b0, co_register_reference_b0_to_t1, [("out", "in_file")]),
+        (inputnode, co_register_reference_b0_to_t1, [("t1_filename", "reference")]),
+        (inputnode, b_vectors_rotation, [("b_vectors_filename", "b_vectors_filename")]),
+        (
+            co_register_reference_b0_to_t1,
+            expend_matrix,
+            [("out_matrix_file", "matrix_filename")],
         ),
-        iterfield=["moving_image"],
+        (inputnode, expend_matrix, [("b_vectors_filename", "b_vectors_filename")]),
+        (expend_matrix, b_vectors_rotation, [("out_matrix_list", "matrix_filenames")]),
+        (inputnode, ants_registration, [("t1_filename", "fixed_image")]),
+        (
+            co_register_reference_b0_to_t1,
+            ants_registration,
+            [("out_file", "moving_image")],
+        ),
+        (inputnode, c3d_flirt2ants, [("t1_filename", "reference_file")]),
+        (pick_reference_b0, c3d_flirt2ants, [("out", "source_file")]),
+        (
+            co_register_reference_b0_to_t1,
+            c3d_flirt2ants,
+            [("out_matrix_file", "transform_file")],
+        ),
+        (
+            c3d_flirt2ants,
+            change_transform_type,
+            [("itk_transform", "input_affine_file")],
+        ),
+        (change_transform_type, merge_transforms, [("updated_affine_file", "in1")]),
+        (ants_registration, merge_transforms, [("out_matrix", "in2")]),
+        (ants_registration, merge_transforms, [("forward_warp_field", "in3")]),
+        (merge_transforms, outputnode, [("out", "merged_transforms")]),
+        (
+            co_register_reference_b0_to_t1,
+            outputnode,
+            [("out_matrix_file", "dwi_to_t1_co_registration_matrix")],
+        ),
+        (
+            ants_registration,
+            outputnode,
+            [
+                ("forward_warp_field", "epi_correction_deformation_field"),
+                ("out_matrix", "epi_correction_affine_transform"),
+                ("warped_image", "epi_correction_image_warped"),
+            ],
+        ),
+        (
+            b_vectors_rotation,
+            outputnode,
+            [("rotated_b_vectors_filename", "rotated_b_vectors")],
+        ),
+    ]
+
+    if output_dir:
+        connections += [
+            (
+                outputnode,
+                write_results,
+                [(output, output) for output in workflow_outputs],
+            ),
+        ]
+
+    wf.connect(connections)
+
+    return wf
+
+
+def perform_dwi_epi_correction(
+    base_dir: str,
+    delete_cache: bool = False,
+    output_dir: Optional[str] = None,
+    use_double_precision: bool = True,
+    name: str = "perform_dwi_epi_correction",
+) -> Workflow:
+    """Step 2 of EPI pipeline.
+
+    Parameters
+    ----------
+    base_dir: str
+        Working directory, which contains all the intermediary data generated.
+
+    delete_cache : bool
+        If True, part of the temporary data is automatically deleted after usage.
+
+    output_dir : str, optional
+        Path to output directory.
+        If provided, the pipeline will write its output in this folder.
+        Default to None.
+
+    use_double_precision : bool, optional
+        This only affects tools supporting different precision settings.
+        If True, computations will be made in double precision (i.e. 64 bits).
+        If False, computations will be made in float precision (i.e. 32 bits).
+        Default=True.
+
+    name : str, optional
+        Name of the pipeline.
+
+    Returns
+    -------
+    Workflow :
+        The Nipype workflow.
+        This workflow takes as inputs:
+            - t1_filename : The path to the T1w input image.
+            - dwi_filename : The path to the DWI image.
+            - merged_transforms : The three transformations computed in
+              the workflow `perform_ants_registration`. These are saved to
+              a 5D nifti image of shape `(size_x, size_y, size_z, 1, 3)`.
+        The workflow produces as outputs:
+            - epi_corrected_dwi_image
+
+    Warnings
+    --------
+    This workflow writes very heavy temporary files when calling AntsApplyTransforms.
+
+    Notes
+    -----
+    This workflow benefits a lot from parallelization as most operations are done on
+    single DWI direction.
+    """
+    import os
+
+    import nipype.interfaces.ants as ants
+    import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.io as nio
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as pe
+
+    from clinica.utils.filemanip import delete_directories
+
+    workflow_inputs = ["t1_filename", "dwi_filename", "merged_transforms"]
+    workflow_outputs = ["epi_corrected_dwi_image"]
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=workflow_inputs), name="inputnode")
+
+    split_dwi_volumes = pe.Node(fsl.Split(dimension="t"), name="split_dwi_volumes")
+
+    apply_transform_image = pe.MapNode(
+        ants.ApplyTransforms(),
+        iterfield=["input_image"],
         name="warp_image",
     )
-    apply_transform_image.inputs.warped_image = "out_warped.nii.gz"
-    apply_transform_image.inputs.output_warped_image = True
+    apply_transform_image.inputs.output_image = "out_warped.nii.gz"
+    apply_transform_image.inputs.print_out_composite_warp_file = False
+    if not use_double_precision:
+        apply_transform_image.inputs.float = True
 
     apply_transform_field = pe.MapNode(
-        interface=niu.Function(
-            input_names=[
-                "fixed_image",
-                "moving_image",
-                "transforms",
-                "warped_image",
-                "output_warped_image",
-            ],
-            output_names=["warped_image"],
-            function=ants_apply_transforms,
-        ),
-        iterfield=["moving_image"],
+        ants.ApplyTransforms(),
+        iterfield=["input_image"],
         name="warp_field",
     )
-    apply_transform_field.inputs.warped_image = "out_warped_field.nii.gz"
-    apply_transform_field.inputs.output_warped_image = False
+    apply_transform_field.inputs.output_image = "out_warped_field.nii.gz"
+    apply_transform_field.inputs.print_out_composite_warp_file = True
+    if not use_double_precision:
+        apply_transform_field.inputs.float = True
 
     jacobian = pe.MapNode(
         interface=ants.CreateJacobianDeterminantImage(),
         iterfield=["deformationField"],
         name="jacobian",
     )
-
     jacobian.inputs.imageDimension = 3
     jacobian.inputs.outputImage = "Jacobian_image.nii.gz"
 
@@ -344,99 +645,82 @@ def epi_pipeline(
         iterfield=["in_file", "operand_files"],
         name="ModulateDWIs",
     )
+    if not use_double_precision:
+        jacmult.inputs.output_datatype = "float"
 
-    thres = pe.MapNode(
-        fsl.Threshold(thresh=0.0), iterfield=["in_file"], name="RemoveNegative"
+    threshold_negative = pe.MapNode(
+        fsl.Threshold(thresh=0.0),
+        iterfield=["in_file"],
+        name="threshold_negative",
     )
+    if not use_double_precision:
+        threshold_negative.inputs.output_datatype = "float"
 
-    merge = pe.Node(fsl.Merge(dimension="t"), name="MergeDWIs")
-    # Delete the temporary directory that takes too much place
+    merge_dwi_volumes = pe.Node(fsl.Merge(dimension="t"), name="merge_dwi_volumes")
 
-    delete_warp_field_tmp = pe.Node(
-        name="deletewarpfieldtmp",
-        interface=niu.Function(
-            inputs=["checkpoint", "dir_to_del", "base_dir"],
-            function=delete_temp_dirs,
-        ),
-    )
-    delete_warp_field_tmp.inputs.base_dir = base_dir
-    delete_warp_field_tmp.inputs.dir_to_del = [
-        apply_transform_field.name,
-        jacobian.name,
-        jacmult.name,
-        thres.name,
-        apply_transform_image.name,
-    ]
+    if delete_cache:
+        delete_cache_node = pe.Node(
+            name="delete_cache",
+            interface=niu.Function(
+                inputs=["directories", "checkpoint"],
+                function=delete_directories,
+            ),
+        )
+        delete_cache_node.inputs.directories = [
+            apply_transform_field.output_dir(),
+            jacobian.output_dir(),
+            jacmult.output_dir(),
+            threshold_negative.output_dir(),
+            apply_transform_image.output_dir(),
+        ]
 
     outputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=[
-                "DWI_2_T1_Coregistration_matrix",
-                "epi_correction_deformation_field",
-                "epi_correction_affine_transform",
-                "epi_correction_image_warped",
-                "DWIs_epicorrected",
-                "warp_epi",
-                "out_bvec",
-            ]
+        niu.IdentityInterface(fields=workflow_outputs), name="outputnode"
+    )
+
+    if output_dir:
+        write_results = pe.Node(name="write_results", interface=nio.DataSink())
+        write_results.inputs.base_directory = output_dir
+        write_results.inputs.parameterization = False
+
+    wf = pe.Workflow(name=name)
+
+    connections = [
+        (inputnode, split_dwi_volumes, [("dwi_filename", "in_file")]),
+        (inputnode, apply_transform_image, [("t1_filename", "reference_image")]),
+        (split_dwi_volumes, apply_transform_image, [("out_files", "input_image")]),
+        (
+            inputnode,
+            apply_transform_image,
+            [("merged_transforms", "transforms")],
         ),
-        name="outputnode",
-    )
+        (inputnode, apply_transform_field, [("t1_filename", "reference_image")]),
+        (split_dwi_volumes, apply_transform_field, [("out_files", "input_image")]),
+        (inputnode, apply_transform_field, [("merged_transforms", "transforms")]),
+        (apply_transform_field, jacobian, [("output_image", "deformationField")]),
+        (apply_transform_image, jacmult, [("output_image", "operand_files")]),
+        (jacobian, jacmult, [("jacobian_image", "in_file")]),
+        (jacmult, threshold_negative, [("out_file", "in_file")]),
+        (threshold_negative, merge_dwi_volumes, [("out_file", "in_files")]),
+        (merge_dwi_volumes, outputnode, [("merged_file", "epi_corrected_dwi_image")]),
+    ]
 
-    wf = pe.Workflow(name="epi_pipeline")
-    # fmt: off
-    wf.connect(
-        [
-            (inputnode, split, [("DWI", "in_file")]),
-            (split, pick_ref, [("out_files", "inlist")]),
-            (pick_ref, flirt_b0_2_t1, [("out", "in_file")]),
-            (inputnode, flirt_b0_2_t1, [("T1", "reference")]),
-            (inputnode, rot_bvec, [("bvec", "b_vectors_filename")]),
-            (flirt_b0_2_t1, expend_matrix, [("out_matrix_file", "matrix_filename")]),
-            (inputnode, expend_matrix, [("bvec", "b_vectors_filename")]),
-            (expend_matrix, rot_bvec, [("out_matrix_list", "matrix_filenames")]),
-            (inputnode, ants_registration, [("T1", "fixed_image")]),
-            (flirt_b0_2_t1, ants_registration, [("out_file", "moving_image")]),
-            (inputnode, c3d_flirt2ants, [("T1", "reference_file")]),
-            (pick_ref, c3d_flirt2ants, [("out", "source_file")]),
-            (flirt_b0_2_t1, c3d_flirt2ants, [("out_matrix_file", "transform_file")]),
-            (c3d_flirt2ants, change_transform, [("itk_transform", "input_affine_file")]),
-            (change_transform, merge_transform, [("updated_affine_file", "in1")]),
-            (ants_registration, merge_transform, [("out_matrix", "in2")]),
-            (ants_registration, merge_transform, [("forward_warp_field", "in3")]),
-            (inputnode, apply_transform_image, [("T1", "fixed_image")]),
-            (split, apply_transform_image, [("out_files", "moving_image")]),
-            (merge_transform, apply_transform_image, [("out", "transforms")]),
-
-            (inputnode, apply_transform_field, [("T1", "fixed_image")]),
-            (split, apply_transform_field, [("out_files", "moving_image")]),
-            (merge_transform, apply_transform_field, [("out", "transforms")]),
-
-            (apply_transform_field, jacobian, [("warped_image", "deformationField")]),
-            (apply_transform_image, jacmult, [("warped_image", "operand_files")]),
-            (jacobian, jacmult, [("jacobian_image", "in_file")]),
-            (jacmult, thres, [("out_file", "in_file")]),
-            (thres, merge, [("out_file", "in_files")]),
-
-            (merge, outputnode, [("merged_file", "DWIs_epicorrected")]),
-            (flirt_b0_2_t1, outputnode, [("out_matrix_file", "DWI_2_T1_Coregistration_matrix")]),
-            (ants_registration, outputnode, [("forward_warp_field", "epi_correction_deformation_field"),
-                                             ("out_matrix", "epi_correction_affine_transform"),
-                                             ("warped_image", "epi_correction_image_warped")]),
-            (merge_transform, outputnode, [("out", "warp_epi")]),
-            (rot_bvec, outputnode, [("out_file", "out_bvec")]),
-
-
-
-        ]
-    )
     if delete_cache:
-        wf.connect(
-            [
-                (merge, delete_warp_field_tmp, [("merged_file", "checkpoint")])
-            ]
-        )
-    # fmt: on
+        connections += [
+            (merge_dwi_volumes, delete_cache_node, [("merged_file", "checkpoint")])
+        ]
+
+    if output_dir:
+        connections += [
+            (
+                outputnode,
+                write_results,
+                [(output, output) for output in workflow_outputs],
+            ),
+        ]
+
+    wf.connect(connections)
+
     return wf
 
 

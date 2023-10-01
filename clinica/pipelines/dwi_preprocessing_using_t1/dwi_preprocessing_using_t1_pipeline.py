@@ -63,6 +63,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         self.parameters.setdefault("use_cuda", False)
         self.parameters.setdefault("initrand", False)
         self.parameters.setdefault("delete_cache", False)
+        self.parameters.setdefault("random_seed", None)
+        self.parameters.setdefault("double_precision", True)
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -306,6 +308,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             self.base_dir,
             self.parameters["delete_cache"],
             name="SusceptibilityDistortionCorrection",
+            ants_random_seed=self.parameters["random_seed"],
+            use_double_precision=self.parameters["double_precision"],
         )
 
         # Remove bias correction from (Jeurissen et al., 2014)
@@ -361,13 +365,13 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                                         ("out_updated_bvec", "inputnode.b_vectors_filename"),
                                         ("out_reference_b0", "inputnode.reference_b0")]),
                 # Magnetic susceptibility correction
-                (init_node, sdc, [("t1w", "inputnode.T1")]),
-                (eddy_fsl, sdc, [("outputnode.out_corrected", "inputnode.DWI")]),
-                (eddy_fsl, sdc, [("outputnode.out_rotated_bvecs", "inputnode.bvec")]),
+                (init_node, sdc, [("t1w", "inputnode.t1_filename")]),
+                (eddy_fsl, sdc, [("outputnode.out_corrected", "inputnode.dwi_filename")]),
+                (eddy_fsl, sdc, [("outputnode.out_rotated_bvecs", "inputnode.b_vectors_filename")]),
                 # Bias correction
                 (prepare_b0, bias, [("out_updated_bval", "in_bval")]),
-                (sdc, bias, [("outputnode.DWIs_epicorrected", "in_file"),
-                             ("outputnode.out_bvec", "in_bvec")]),
+                (sdc, bias, [("outputnode.epi_corrected_dwi_image", "in_file"),
+                             ("outputnode.rotated_b_vectors", "in_bvec")]),
                 # Compute average b0 on corrected dataset (for brain mask extraction)
                 (prepare_b0, compute_avg_b0, [("out_updated_bval", "b_value_filename")]),
                 (bias, compute_avg_b0, [("out_file", "dwi_filename")]),
@@ -378,7 +382,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 (mask_avg_b0, print_end_message, [("mask_file", "final_file")]),
                 # Output node
                 (bias, self.output_node, [("out_file", "preproc_dwi")]),
-                (sdc, self.output_node, [("outputnode.out_bvec", "preproc_bvec")]),
+                (sdc, self.output_node, [("outputnode.rotated_b_vectors", "preproc_bvec")]),
                 (prepare_b0, self.output_node, [("out_updated_bval", "preproc_bval")]),
                 (mask_avg_b0, self.output_node, [("mask_file", "b0_mask")]),
             ]

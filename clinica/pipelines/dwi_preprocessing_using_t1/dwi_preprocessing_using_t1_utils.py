@@ -116,7 +116,9 @@ def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
     return out_warp
 
 
-def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
+def rotate_b_vectors(
+    b_vectors_filename: str, matrix_filenames: list, output_dir: str = None
+) -> str:
     """Rotate the B-vectors contained in the input b_vectors_filename file
     according to the provided list of matrices.
 
@@ -127,6 +129,10 @@ def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
 
     matrix_filenames : list of str
         List of paths to rotation matrices to apply to the B-vectors.
+
+    output_dir : str, optional
+        If specified, the rotated B-vectors will be written in this folder
+        rather than in the same folder as the provided B-vectors.
 
     Returns
     -------
@@ -139,6 +145,7 @@ def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
     coordinates in the original image. Therefore, this matrix should be inverted first, as
     we want to know the target position of :math:`\\vec{r}`.
     """
+    import os
     from pathlib import Path
 
     import numpy as np
@@ -150,6 +157,11 @@ def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
         else b_vectors_filename.stem
     )
     rotated_b_vectors_filename = b_vectors_filename.with_name(f"{stem}_rotated.bvec")
+    if output_dir:
+        rotated_b_vectors_filename = Path(output_dir) / rotated_b_vectors_filename.name
+    else:
+        rotated_b_vectors_filename = os.path.abspath(rotated_b_vectors_filename.name)
+
     b_vectors = np.loadtxt(b_vectors_filename).T
 
     if len(b_vectors) != len(matrix_filenames):
@@ -169,30 +181,6 @@ def rotate_b_vectors(b_vectors_filename: str, matrix_filenames: list) -> str:
     np.savetxt(rotated_b_vectors_filename, np.array(rotated_b_vectors).T, fmt="%0.15f")
 
     return str(rotated_b_vectors_filename)
-
-
-def ants_apply_transforms(
-    fixed_image, moving_image, transforms, warped_image, output_warped_image=True
-) -> None:
-    import os
-    import subprocess
-
-    # Convert to absolute path.
-    warped_image = os.path.abspath(warped_image)
-
-    # Whether we want the warped image or transformation field as output.
-    output = f"{warped_image}" if output_warped_image else f"[{warped_image}, 1]"
-
-    # Common template for the command.
-    cmd = (
-        f"antsApplyTransforms -o {output} -i {moving_image} -r {fixed_image} "
-        f"-t {transforms[0]} -t {transforms[1]} -t {transforms[2]}"
-    )
-
-    # Perform the actual call.
-    subprocess.run(cmd, shell=True)
-
-    return warped_image
 
 
 def init_input_node(t1w, dwi, bvec, bval, dwi_json):
@@ -498,30 +486,3 @@ def extract_sub_ses_folder_name(file_path: str) -> str:
     from pathlib import Path
 
     return (Path(Path(file_path).parent).parent).name
-
-
-def delete_temp_dirs(checkpoint: str, dir_to_del: list, base_dir: str) -> None:
-    """This function deletes the directories of the given list".
-
-    Parameters
-    ----------
-    checkpoint: str
-    Path to a file. Used to ensure, that the temporary directories we want to delete are not useful anymore, and to verify that the subject and session are right.
-
-    dir_to_del: list
-    Names of the directories we want to delete.
-
-    base_dir: str
-    Path to the working directory.
-    """
-    import shutil
-    from pathlib import Path
-
-    from clinica.utils.stream import cprint
-
-    subject_session_folder_name = extract_sub_ses_folder_name(checkpoint)
-    for a in dir_to_del:
-        for z in Path(base_dir).rglob(f"*{a}*"):
-            if (Path(z).parent).name == subject_session_folder_name:
-                shutil.rmtree(z)
-                cprint(msg=f"Temporary folder {z} deleted", lvl="info")
