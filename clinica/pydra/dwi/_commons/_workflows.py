@@ -74,16 +74,16 @@ def build_eddy_fsl_workflow(
         name, input_spec=_build_eddy_fsl_input_specs(image_id, field, compute_mask)
     )
 
-    bet_config = {
-        "name": "mask_reference_b0",
-        "fractional_intensity_threshold": 0.3,
-        "save_brain_mask": True,
-        "with_robust_brain_center_estimation": True,
-    }
     if compute_mask:
-        bet_config["input_image"] = wf.lzin.reference_b0
-
-    wf.add(fsl.BET(**bet_config))
+        wf.add(
+            fsl.BET(
+                name="mask_reference_b0",
+                fractional_intensity_threshold=0.3,
+                save_brain_mask=True,
+                with_robust_brain_center_estimation=True,
+                input_image=wf.lzin.reference_b0,
+        )
+    )
 
     wf.add(
         generate_acq_file_task(
