@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydra import Workflow
 
@@ -7,7 +7,7 @@ def build_eddy_fsl_workflow(
     compute_mask: bool = True,
     image_id: bool = False,
     field: bool = False,
-    output_dir=None,
+    output_dir: Optional[str] = None,
     name: str = "eddy_fsl",
 ) -> Workflow:
     """Build a FSL-based pipeline for head motion correction and eddy current distortion correction.
@@ -47,7 +47,7 @@ def build_eddy_fsl_workflow(
     Returns
     -------
     Workflow :
-        The Nipype workflow.
+        The Pydra workflow.
         This workflow has the following inputs:
             - "dwi_filename": The path to the DWI image
             - "b_vectors_filename": The path to the associated B-vectors file
