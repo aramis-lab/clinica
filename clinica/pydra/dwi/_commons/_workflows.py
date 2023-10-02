@@ -82,8 +82,8 @@ def build_eddy_fsl_workflow(
                 save_brain_mask=True,
                 with_robust_brain_center_estimation=True,
                 input_image=wf.lzin.reference_b0,
+            )
         )
-    )
 
     wf.add(
         generate_acq_file_task(
@@ -101,24 +101,23 @@ def build_eddy_fsl_workflow(
         )
     )
 
-    eddy_config = {
-        "name": "eddy_fsl",
-        "replace_outliers": True,
-        "bvec_file": wf.lzin.b_vectors_filename,
-        "bval_file": wf.lzin.b_values_filename,
-        "input_image": wf.lzin.dwi_filename,
-        "encoding_file": wf.generate_acq_file_task.lzout.out_file,
-        "index_file": wf.generate_index_file_task.lzout.out_file,
-        "brain_mask": wf.mask_reference_b0.lzout.brain_mask
-        if compute_mask
-        else wf.lzin.in_mask,
-    }
-    if image_id:
-        eddy_config["output_basename"] = wf.lzin.image_id
+    wf.add(
+        fsl.Eddy(
+            name="eddy_fsl",
+            replace_outliers=True,
+            bvec_file=wf.lzin.b_vectors_filename,
+            bval_file=wf.lzin.b_values_filename,
+            input_image=wf.lzin.dwi_filename,
+            encoding_file=wf.generate_acq_file_task.lzout.out_file,
+            index_file=wf.generate_index_file_task.lzout.out_file,
+            brain_mask=wf.mask_reference_b0.lzout.brain_mask
+            if compute_mask
+            else wf.lzin.in_mask,
+            output_basename=wf.lzin.image_id if image_id else "eddy",
+        )
+    )
     if field:
-        eddy_config["fieldmap_image"] = wf.lzin.field
-
-    wf.add(fsl.Eddy(**eddy_config))
+        wf.eddy_fsl.inputs.fieldmap_image = wf.lzin.field
 
     wf.set_output(
         {
