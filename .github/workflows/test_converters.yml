@@ -20,6 +20,10 @@ jobs:
       - macOS
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: poetry
       - uses: snok/install-poetry@v1
       - name: Run non-regression tests for converters
         run: |
@@ -35,13 +39,17 @@ jobs:
           --junitxml=./test-reports/run_converters_mac.xml \
           --disable-warnings \
           ./nonregression/iotools/test_run_converters.py
-  
+
   test-converters-Linux:
     runs-on:
       - self-hosted
       - Linux
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: poetry
       - uses: snok/install-poetry@v1
       - name: Run non-regression tests for converters
         run: |
