@@ -1,4 +1,4 @@
-name: Test
+name: Unit Tests
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Test on ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    name: Run unit tests on ${{ matrix.os }} with Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
