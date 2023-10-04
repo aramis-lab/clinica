@@ -20,11 +20,14 @@ jobs:
       - macOS
     steps:
       - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+        with:
+          version: '1.6.1'
+          virtualenvs-create: false
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           cache: poetry
-      - uses: snok/install-poetry@v1
       - name: Run instantiation tests
         run: |
           make env.conda
@@ -50,11 +53,14 @@ jobs:
       - Linux
     steps:
       - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+        with:
+          version: '1.6.1'
+          virtualenvs-create: false
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           cache: poetry
-      - uses: snok/install-poetry@v1
       - name: Run instantiation tests
         run: |
           make env.conda
