@@ -186,7 +186,7 @@ pipeline {
                     --disable-warnings \
                     --timeout=0 \
                     -m "not slow" \
-                    ./nonregression/pipelines/test_run_pipelines_anat.py
+                    ./nonregression/pipelines/anat
                 '''
               }
               post {
@@ -415,7 +415,7 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     -m "not slow" \
-                    ./nonregression/pipelines/test_run_pipelines_anat.py
+                    ./nonregression/pipelines/anat
                 '''
               }
               post {
