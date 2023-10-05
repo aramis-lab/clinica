@@ -1,23 +1,18 @@
 name: Anat Pipelines Tests
 
 on:
-  push:
-    branches: [dev]
-  pull_request:
-    branches: [dev]
+  schedule:
+    - cron: 0 20 * * 4 # every thursday at 8pm
 
 permissions:
   contents: read
-
-concurrency:
-  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
-  cancel-in-progress: true
 
 jobs:
   test-pipelines-anat-MacOS:
     runs-on:
       - self-hosted
       - macOS
+    timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
@@ -42,6 +37,7 @@ jobs:
     runs-on:
       - self-hosted
       - Linux
+    timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
