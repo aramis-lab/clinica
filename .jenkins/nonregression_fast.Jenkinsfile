@@ -223,7 +223,7 @@ pipeline {
                    --timeout=0 \
                    -n 4 \
                    -m "not slow" \
-                   ./nonregression/pipelines/test_run_pipelines_dwi.py
+                   ./nonregression/pipelines/dwi
                  '''
               }
               post {

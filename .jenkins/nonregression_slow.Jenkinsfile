@@ -232,7 +232,7 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     -m "slow" \
-                    ./nonregression/pipelines/test_run_pipelines_dwi.py
+                    ./nonregression/pipelines/dwi
                 '''
                 }
               }
@@ -460,7 +460,7 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     -m "slow" \
-                    ./nonregression/pipelines/test_run_pipelines_dwi.py
+                    ./nonregression/pipelines/dwi
                 '''
               }
               post {
