@@ -28,10 +28,6 @@ jobs:
         with:
           version: ${{ env.POETRY_VERSION }}
           virtualenvs-create: false
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: poetry
       - name: Run non-regression tests for converters
         run: |
           make env.conda
