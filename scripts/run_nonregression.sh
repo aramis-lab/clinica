@@ -2,6 +2,8 @@
 
 OS=$(uname -s)
 
+echo $(pwd)
+
 make env.conda
 
 if [ "$OS" == "Darwin" ]
