@@ -1,0 +1,49 @@
+name: DWI Pipelines Tests
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  test-pipelines-dwi-MacOS:
+    runs-on:
+      - self-hosted
+      - macOS
+    defaults:
+      run:
+        working-directory: ./scripts
+    timeout-minutes: 720
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+      - name: Run tests for dwi pipelines
+        run: run_nonregression.sh
+        env:
+          MODALITY: dwi
+          WORKSPACE: ${{ github.workspace }}
+
+  test-pipelines-dwi-Linux:
+    runs-on:
+      - self-hosted
+      - Linux
+    defaults:
+      run:
+        working-directory: ./scripts
+    timeout-minutes: 720
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+      - name: Run tests for dwi pipelines
+        run: run_nonregression.sh
+        env:
+          MODALITY: dwi
+          WORKSPACE: ${{ github.workspace }}
