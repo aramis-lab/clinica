@@ -13,6 +13,10 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+env:
+  POETRY_VERSION: '1.6.1'
+  PYTHON_VERSION: '3.10'
+
 jobs:
   test-converters-MacOS:
     runs-on:
@@ -21,6 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: false
       - name: Run non-regression tests for converters
         run: |
           make env.conda
@@ -35,7 +42,7 @@ jobs:
           --junitxml=./test-reports/run_converters_mac.xml \
           --disable-warnings \
           ./nonregression/iotools/test_run_converters.py
-  
+
   test-converters-Linux:
     runs-on:
       - self-hosted
@@ -43,6 +50,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: false
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
       - name: Run non-regression tests for converters
         run: |
           make env.conda

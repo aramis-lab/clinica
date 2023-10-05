@@ -13,6 +13,10 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+env:
+  POETRY_VERSION: '1.6.1'
+  PYTHON_VERSION: '3.10'
+
 jobs:
   test-instantiation-MacOS:
     runs-on:
@@ -21,6 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: false
       - name: Run instantiation tests
         run: |
           make env.conda
@@ -37,7 +44,7 @@ jobs:
           --junitxml=./test-reports/instantiation_mac.xml \
           --disable-warnings \
           ./instantiation/
-  
+
   test-instantiation-Linux:
     runs-on:
       - self-hosted
@@ -45,6 +52,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: false
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
       - name: Run instantiation tests
         run: |
           make env.conda
