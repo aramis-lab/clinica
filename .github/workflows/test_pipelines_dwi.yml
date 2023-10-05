@@ -18,15 +18,12 @@ jobs:
     runs-on:
       - self-hosted
       - macOS
-    defaults:
-      run:
-        working-directory: ./scripts
     timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
       - name: Run tests for dwi pipelines
-        run: ./run_nonregression.sh
+        run: ./scripts/run_nonregression.sh
         env:
           MODALITY: dwi
           WORKSPACE: ${{ github.workspace }}
@@ -35,15 +32,12 @@ jobs:
     runs-on:
       - self-hosted
       - Linux
-    defaults:
-      run:
-        working-directory: ./scripts
     timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
       - name: Run tests for dwi pipelines
-        run: ./run_nonregression.sh
+        run: ./scripts/run_nonregression.sh
         env:
           MODALITY: dwi
           WORKSPACE: ${{ github.workspace }}
