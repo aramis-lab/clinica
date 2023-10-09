@@ -1,0 +1,65 @@
+import shutil
+from os import fspath
+from pathlib import Path
+from test.nonregression.testing_tools import configure_paths, likeliness_measure
+
+from clinica.utils.pet import Tracer
+
+
+def test_pet_volume(cmdopt, tmp_path):
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETVolume")
+    run_pet_volume(input_dir, tmp_dir, ref_dir, working_dir)
+
+
+def run_pet_volume(
+    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+) -> None:
+    from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
+
+    shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
+
+    tracer = Tracer.FDG
+
+    parameters = {
+        "group_label": "UnitTest",
+        "acq_label": tracer,
+        "suvr_reference_region": "pons",
+        "skip_question": False,
+    }
+    pipeline = PETVolume(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(output_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters=parameters,
+    )
+    pipeline.build()
+    pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
+
+    for sub in (
+        "sub-ADNI011S4105",
+        "sub-ADNI023S4020",
+        "sub-ADNI035S4082",
+        "sub-ADNI128S4832",
+    ):
+        output_folder = (
+            output_dir
+            / "caps"
+            / "subjects"
+            / sub
+            / "ses-M000/pet/preprocessing/group-UnitTest"
+        )
+        assert likeliness_measure(
+            fspath(
+                output_folder
+                / f"{sub}_ses-M000_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+            ),
+            fspath(
+                ref_dir
+                / f"{sub}_ses-M000_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
+            ),
+            (1e-2, 0.25),
+            (1e-1, 0.001),
+        )

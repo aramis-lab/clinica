@@ -76,7 +76,7 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     -m "slow" \
-                    ./nonregression/pipelines/test_run_pipelines_pet.py
+                    ./nonregression/pipelines/pet
                 '''
                 }
               }
@@ -316,7 +316,7 @@ pipeline {
                      --timeout=0 \
                      -n 4 \
                      -m "slow" \
-                     ./nonregression/pipelines/test_run_pipelines_pet.py
+                     ./nonregression/pipelines/pet
                  '''
               }
               post {
