@@ -231,10 +231,8 @@ def test_instantiate_pet_linear(cmdopt):
     pipeline.build()
 
 
-def test_instantiate_statistics_surface(cmdopt):
-    from clinica.pipelines.statistics_surface.statistics_surface_pipeline import (
-        StatisticsSurface,
-    )
+def test_instantiate_statistics_surface(cmdopt, tmp_path):
+    from clinica.pipelines.statistics_surface.pipeline import StatisticsSurface
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "StatisticsSurface"
@@ -246,8 +244,9 @@ def test_instantiate_statistics_surface(cmdopt):
         "covariates": "age sex",
     }
     pipeline = StatisticsSurface(
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
+        caps_directory=root / "in" / "caps",
+        base_dir=tmp_path,
+        tsv_file=root / "in" / "subjects.tsv",
         parameters=parameters,
     )
     pipeline.build()

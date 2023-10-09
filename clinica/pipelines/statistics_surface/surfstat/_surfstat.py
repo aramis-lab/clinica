@@ -1,27 +1,18 @@
-from os import PathLike
 from pathlib import Path
-from typing import Dict, Optional
-
-from ._inputs import (
-    _build_thickness_array,
-    _get_average_surface,
-    _get_t1_freesurfer_custom_file_template,
-    _read_and_check_tsv_file,
-)
-from ._model import create_glm_model
+from typing import Optional
 
 
 def clinica_surfstat(
-    input_dir: PathLike,
-    output_dir: PathLike,
-    tsv_file: PathLike,
+    input_dir: Path,
+    output_dir: Path,
+    tsv_file: Path,
     design_matrix: str,
     contrast: str,
     glm_type: str,
     group_label: str,
-    freesurfer_home: PathLike,
-    surface_file: Optional[PathLike],
+    freesurfer_home: Path,
     feature_label: str,
+    surface_file: Optional[str] = None,
     fwhm: Optional[int] = 20,
     threshold_uncorrected_pvalue: Optional[float] = 0.001,
     threshold_corrected_pvalue: Optional[float] = 0.05,
@@ -73,14 +64,14 @@ def clinica_surfstat(
 
     Parameters
     ----------
-    input_dir : PathLike
-        Path to the input folder.
+    input_dir : Path
+        The path to the input folder.
 
-    output_dir : PathLike
-        Path to the output folder for storing results.
+    output_dir : Path
+        The path to the output folder for storing results.
 
-    tsv_file : PathLike
-        Path to the TSV file `subjects.tsv` which contains the
+    tsv_file : Path
+        The path to the TSV file `subjects.tsv` which contains the
         necessary metadata to run the statistical analysis.
 
         .. warning::
@@ -108,11 +99,11 @@ def clinica_surfstat(
         The label for the group. This is used in the output file names
         (see main description of the function).
 
-    freesurfer_home : PathLike
+    freesurfer_home : Path
         The path to the home folder of Freesurfer.
         This is required to get the fsaverage templates.
 
-    surface_file : PathLike, optional
+    surface_file : str, optional
         The path to the surface file to analyze.
         Typically the cortical thickness.
         If `None`, the surface file will be the t1 freesurfer template.
@@ -134,19 +125,28 @@ def clinica_surfstat(
     cluster_threshold : float, optional
         The threshold to be used to declare clusters as significant. Default=0.05.
     """
-    # Load subjects data
-    df_subjects = _read_and_check_tsv_file(tsv_file)
-    if surface_file is None:
-        surface_file = _get_t1_freesurfer_custom_file_template(input_dir)
-    thickness = _build_thickness_array(input_dir, surface_file, df_subjects, fwhm)
+    from ._utils import (
+        build_thickness_array,
+        get_average_surface,
+        get_t1_freesurfer_custom_file_template,
+        read_and_check_tsv_file,
+    )
+    from .models import GLMModelType, create_glm_model
+
+    df_subjects = read_and_check_tsv_file(tsv_file)
+    surface_file: str = surface_file or get_t1_freesurfer_custom_file_template(
+        input_dir
+    )
+    thickness = build_thickness_array(input_dir, surface_file, df_subjects, fwhm)
 
     # Load average surface template
-    fsaverage_path = freesurfer_home / Path("subjects/fsaverage/surf")
-    average_surface, average_mesh = _get_average_surface(fsaverage_path)
+    average_surface, average_mesh = get_average_surface(
+        freesurfer_home / "subjects" / "fsaverage" / "surf"
+    )
 
     # Build and run GLM model
     glm_model = create_glm_model(
-        glm_type,
+        GLMModelType(glm_type),
         design_matrix,
         df_subjects,
         contrast,

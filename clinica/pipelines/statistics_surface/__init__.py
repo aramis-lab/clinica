@@ -1,1 +1,1 @@
-from . import statistics_surface_cli
+from . import cli

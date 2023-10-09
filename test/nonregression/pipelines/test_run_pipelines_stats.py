@@ -7,7 +7,6 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
-from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -17,7 +16,6 @@ warnings.filterwarnings("ignore")
 
 
 @pytest.mark.fast
-@pytest.mark.skip(reason="This test is currently broken.")
 def test_statistics_surface(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
@@ -77,9 +75,7 @@ def run_statistics_surface(
     import numpy as np
     from scipy.io import loadmat
 
-    from clinica.pipelines.statistics_surface.statistics_surface_pipeline import (
-        StatisticsSurface,
-    )
+    from clinica.pipelines.statistics_surface.pipeline import StatisticsSurface
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "subjects.tsv"
@@ -88,25 +84,23 @@ def run_statistics_surface(
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
     parameters = {
-        # Clinica compulsory parameters
         "group_label": "UnitTest",
         "orig_input_data": "t1-freesurfer",
         "glm_type": "group_comparison",
         "contrast": "group",
-        # Optional parameters
         "covariates": ["age", "sex"],
     }
     pipeline = StatisticsSurface(
-        caps_directory=fspath(caps_dir),
-        tsv_file=fspath(tsv),
-        base_dir=fspath(working_dir),
+        caps_directory=caps_dir,
+        tsv_file=tsv,
+        base_dir=working_dir,
         parameters=parameters,
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 1}, bypass_check=True)
 
     # Check files
-    for contrast in ["AD-lt-CN", "CN-lt-AD"]:
+    for contrast in ("AD-lt-CN", "CN-lt-AD"):
         for suffix, struct in zip(
             ["coefficients", "uncorrectedPValue", "FDR", "correctedPValue"],
             ["coef", "uncorrectedpvaluesstruct", "FDR", "correctedpvaluesstruct"],
@@ -121,15 +115,17 @@ def run_statistics_surface(
                 / filename
             )
             ref_file = ref_dir / filename
-            out_file_mat = loadmat(fspath(out_file))[struct]
-            ref_file_mat = loadmat(fspath(ref_file))[struct]
+            out_file_mat = loadmat(out_file)[struct]
+            ref_file_mat = loadmat(ref_file)[struct]
             if suffix in ["coefficients", "FDR"]:
                 assert np.allclose(
                     out_file_mat, ref_file_mat, rtol=1e-8, equal_nan=True
                 )
             else:
-                length = 4 if suffix == "correctedPValue" else 3
-                for i in range(length):
+                keys_to_compare = ["P", "mask", "thresh"]
+                if suffix == "correctedPValue":
+                    keys_to_compare.append("C")
+                for i in keys_to_compare:
                     assert np.allclose(
                         out_file_mat[0][0][i],
                         ref_file_mat[0][0][i],
