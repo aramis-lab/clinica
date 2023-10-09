@@ -193,7 +193,7 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     -m "slow" \
-                    ./nonregression/pipelines/test_run_pipelines_anat.py
+                    ./nonregression/pipelines/anat
                 '''
                 }
               }
@@ -424,7 +424,7 @@ pipeline {
                     --timeout=0 \
                     -n 4 \
                     -m "slow" \
-                    ./nonregression/pipelines/test_run_pipelines_anat.py
+                    ./nonregression/pipelines/anat
                 '''
               }
               post {
