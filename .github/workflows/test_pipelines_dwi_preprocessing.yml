@@ -22,6 +22,7 @@ jobs:
     runs-on:
       - self-hosted
       - macOS
+      - aramis
     timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
