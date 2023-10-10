@@ -316,6 +316,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         )
 
         reference_b0 = compute_reference_b0(
+            self.base_dir,
             b_value_threshold=self.parameters["low_bval"],
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
@@ -325,6 +326,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         # Step 3: Run FSL eddy
         # ====================
         eddy = eddy_fsl_pipeline(
+            self.base_dir,
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
             image_id=True,

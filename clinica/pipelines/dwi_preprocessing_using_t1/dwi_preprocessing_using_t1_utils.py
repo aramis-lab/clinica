@@ -486,3 +486,45 @@ def extract_sub_ses_folder_name(file_path: str) -> str:
     from pathlib import Path
 
     return (Path(Path(file_path).parent).parent).name
+
+
+def generate_index_file_task(
+    b_values_filename: str,
+    image_id=None,
+    output_dir=None,
+) -> str:
+    """Wrapper for Nipype."""
+    from pathlib import Path
+
+    from clinica.utils.dwi import generate_index_file
+
+    return str(
+        generate_index_file(
+            Path(b_values_filename),
+            image_id,
+            Path(output_dir) if output_dir else None,
+        )
+    )
+
+
+def generate_acq_file_task(
+    dwi_filename: str,
+    fsl_phase_encoding_direction: str,
+    total_readout_time: str,
+    image_id=None,
+    output_dir=None,
+) -> str:
+    """Wrapper for Nipype."""
+    from pathlib import Path
+
+    from clinica.utils.dwi import generate_acq_file
+
+    return str(
+        generate_acq_file(
+            Path(dwi_filename),
+            fsl_phase_encoding_direction,
+            total_readout_time,
+            image_id,
+            Path(output_dir) if output_dir else None,
+        )
+    )

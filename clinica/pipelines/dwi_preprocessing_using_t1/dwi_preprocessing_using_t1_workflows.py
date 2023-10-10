@@ -4,6 +4,7 @@ from nipype.pipeline.engine import Workflow
 
 
 def eddy_fsl_pipeline(
+    base_dir: str,
     use_cuda: bool,
     initrand: bool,
     compute_mask: bool = True,
@@ -18,6 +19,9 @@ def eddy_fsl_pipeline(
 
     Parameters
     ----------
+    base_dir : str
+        The base directory.
+
     use_cuda : bool
         Boolean to indicate whether cuda should be used or not.
 
@@ -79,7 +83,10 @@ def eddy_fsl_pipeline(
     from nipype.interfaces.fsl import BET
     from nipype.interfaces.fsl.epi import Eddy
 
-    from clinica.utils.dwi import generate_acq_file, generate_index_file
+    from .dwi_preprocessing_using_t1_utils import (
+        generate_acq_file_task,
+        generate_index_file_task,
+    )
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -109,21 +116,24 @@ def eddy_fsl_pipeline(
                 "fsl_phase_encoding_direction",
                 "total_readout_time",
                 "image_id",
+                "output_dir",
             ],
             output_names=["out_file"],
-            function=generate_acq_file,
+            function=generate_acq_file_task,
         ),
         name="generate_acq",
     )
+    generate_acq.inputs.output_dir = base_dir
 
     generate_index = pe.Node(
         niu.Function(
-            input_names=["b_values_filename"],
+            input_names=["b_values_filename", "output_dir"],
             output_names=["out_file"],
-            function=generate_index_file,
+            function=generate_index_file_task,
         ),
         name="generate_index",
     )
+    generate_index.inputs.output_dir = base_dir
 
     eddy = pe.Node(interface=Eddy(), name="eddy_fsl")
     eddy.inputs.repol = True

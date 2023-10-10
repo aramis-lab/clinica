@@ -198,6 +198,7 @@ def test_dwi_eddy_fsl(cmdopt, tmp_path):
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEddyFSL")
     (tmp_path / "tmp").mkdir()
     eddy_fsl = eddy_fsl_pipeline(
+        base_dir=str(base_dir),
         use_cuda=False,
         initrand=True,
         compute_mask=True,

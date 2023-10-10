@@ -159,6 +159,7 @@ def prepare_phasediff_fmap(
 
 
 def compute_reference_b0(
+    base_dir: str,
     b_value_threshold: float,
     use_cuda: bool,
     initrand: bool,
@@ -175,6 +176,9 @@ def compute_reference_b0(
 
     Parameters
     ----------
+    base_dir : str
+        The base directory.
+
     b_value_threshold: float
         Threshold value to determine the B0 volumes in the DWI image
 
@@ -249,6 +253,7 @@ def compute_reference_b0(
 
     # Run eddy without calibrated fmap
     pre_eddy = eddy_fsl_pipeline(
+        base_dir,
         use_cuda=use_cuda,
         initrand=initrand,
         image_id=True,
