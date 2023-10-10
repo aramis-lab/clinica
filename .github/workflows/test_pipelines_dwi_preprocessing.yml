@@ -1,4 +1,4 @@
-name: DWI Pipelines Tests
+name: DWI Preprocessing Pipelines Tests
 
 on:
   push:
@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-pipelines-dwi-MacOS:
+  test-pipelines-dwi-preprocessing-MacOS:
     runs-on:
       - self-hosted
       - macOS
@@ -22,14 +22,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
-      - name: Run tests for dwi pipelines
+      - name: Run tests for dwi preprocessing pipelines
         run: ./scripts/run_nonregression.sh
         env:
-          TEST: dwi/test_pipelines.py
-          MODALITY: dwi_pipelines
+          TEST: dwi/preprocessing
+          MODALITY: dwi_preprocessing
           WORKSPACE: ${{ github.workspace }}
 
-  test-pipelines-dwi-Linux:
+  test-pipelines-dwi-preprocessing-Linux:
     runs-on:
       - self-hosted
       - Linux
@@ -37,9 +37,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
-      - name: Run tests for dwi pipelines
+      - name: Run tests for dwi preprocessing pipelines
         run: ./scripts/run_nonregression.sh
         env:
-          TEST: dwi/test_pipelines.py
-          MODALITY: dwi_pipelines
+          TEST: dwi/preprocessing
+          MODALITY: dwi_preprocessing
           WORKSPACE: ${{ github.workspace }}

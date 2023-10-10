@@ -49,5 +49,5 @@ poetry run pytest --verbose \
     --basetemp=$TMP_DIRECTORY \
     --junitxml=./test-reports/non_regression_$MODALITY_mac.xml \
     --disable-warnings \
-    ./nonregression/pipelines/$MODALITY
+    ./nonregression/pipelines/$TEST
 
