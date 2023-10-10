@@ -578,12 +578,12 @@ def bids_dir_to_fsl_dir(bids_dir):
     return fsl_dir.replace("i", "x").replace("j", "y").replace("k", "z")
 
 
-def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
+def extract_bids_identifier_from_filename(caps_dwi_filename: str) -> str:
     """Extract BIDS identifier from CAPS filename.
 
     Parameters
     ----------
-    dwi_filename : str
+    caps_dwi_filename : str
         DWI file name for which to extract the bids identifier.
 
     Returns
@@ -602,10 +602,10 @@ def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
     """
     import re
 
-    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi", dwi_filename)
+    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi", caps_dwi_filename)
     if not m:
         raise ValueError(
-            f"Could not extract the BIDS identifier from the DWI input filename {dwi_filename}."
+            f"Could not extract the BIDS identifier from the DWI input filename {caps_dwi_filename}."
         )
 
     return m.group(0)
