@@ -57,6 +57,7 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
     phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
 
     wf = compute_reference_b0(
+        str(base_dir),
         b_value_threshold=5.0,
         use_cuda=False,
         initrand=False,

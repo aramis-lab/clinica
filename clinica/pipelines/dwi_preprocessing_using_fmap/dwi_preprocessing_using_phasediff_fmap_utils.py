@@ -1,40 +1,40 @@
 def rename_into_caps(
-    in_bids_dwi: str,
-    fname_dwi: str,
-    fname_bval: str,
-    fname_bvec: str,
-    fname_brainmask: str,
-    fname_magnitude: str,
-    fname_fmap: str,
-    fname_smoothed_fmap: str,
+    dwi_filename: str,
+    dwi_preproc_filename: str,
+    b_values_preproc_filename: str,
+    b_vectors_preproc_filename: str,
+    b0_brain_mask_filename: str,
+    calibrated_magnitude_image_filename: str,
+    calibrated_field_map_image_filename: str,
+    calibrated_smoothed_field_map_image_filename: str,
 ) -> tuple:
     """Rename the outputs of the pipelines into CAPS.
 
     Parameters
     ----------
-    in_bids_dwi : str
-        Path to input BIDS DWI to extract the <source_file>
+    dwi_filename : str
+        The path to input BIDS DWI to extract the <source_file>.
 
-    fname_dwi : str
-        Name of preprocessed DWI file.
+    dwi_preproc_filename : str
+        The path to the preprocessed DWI file.
 
-    fname_bval : str
-        Name of preprocessed bval file.
+    b_values_preproc_filename : str
+        The path to the preprocessed b-values file.
 
-    fname_bvec : str
-        Name of preprocessed bvec file.
+    b_vectors_preproc_filename : str
+        The path to the preprocessed b-vectors file.
 
-    fname_brainmask : str
-        Name of B0 mask file.
+    b0_brain_mask_filename : str
+        The path to the B0 mask file.
 
-    fname_smoothed_fmap : str
-        Name of smoothed (calibrated) fmap file on b0 space.
+    calibrated_magnitude_image_filename : str
+        The path to the magnitude image file on b0 space.
 
-    fname_fmap : str
-        Name of calibrated fmap file on b0 space.
+    calibrated_field_map_image_filename : str
+        The path to the calibrated fmap file on b0 space.
 
-    fname_magnitude : str
-        Name of magnitude image file on b0 space.
+    calibrated_smoothed_field_map_image_filename : str
+        The path to the smoothed (calibrated) fmap file on b0 space.
 
     Returns
     -------
@@ -44,15 +44,15 @@ def rename_into_caps(
     from clinica.utils.dwi import rename_files
 
     return rename_files(
-        in_bids_dwi,
+        dwi_filename,
         {
-            fname_dwi: "_space-b0_preproc.nii.gz",
-            fname_bval: "_space-b0_preproc.bval",
-            fname_bvec: "_space-b0_preproc.bval",
-            fname_brainmask: "_space-b0_brainmask.nii.gz",
-            fname_magnitude: "_space-b0_magnitude1.nii.gz",
-            fname_fmap: "_space-b0_fmap.nii.gz",
-            fname_smoothed_fmap: "_space-b0_fwhm-4_fmap.nii.gz",
+            dwi_preproc_filename: "_space-b0_preproc.nii.gz",
+            b_values_preproc_filename: "_space-b0_preproc.bval",
+            b_vectors_preproc_filename: "_space-b0_preproc.bval",
+            b0_brain_mask_filename: "_space-b0_brainmask.nii.gz",
+            calibrated_magnitude_image_filename: "_space-b0_magnitude1.nii.gz",
+            calibrated_field_map_image_filename: "_space-b0_fmap.nii.gz",
+            calibrated_smoothed_field_map_image_filename: "_space-b0_fwhm-4_fmap.nii.gz",
         },
     )
 
@@ -62,14 +62,75 @@ def get_grad_fsl(b_vectors_filename: str, b_values_filename) -> tuple:
 
 
 def init_input_node(
-    dwi, bvec, bval, dwi_json, fmap_magnitude, fmap_phasediff, fmap_phasediff_json
-):
-    """Initialize pipeline (read JSON, check files and print begin message)."""
+    dwi_filename: str,
+    b_vectors_filename: str,
+    b_values_filename: str,
+    dwi_json_filename: str,
+    fmap_magnitude_filename: str,
+    fmap_phasediff_filename: str,
+    fmap_phasediff_json_filename: str,
+) -> tuple:
+    """Initialize pipeline (read JSON, check files and print begin message).
+
+    Parameters
+    ----------
+    dwi_filename : str
+        The path to the DWI image.
+
+    b_vectors_filename : str
+        The path to the b-vectors file.
+
+    b_values_filename : str
+        The path to the b-values file.
+
+    dwi_json_filename : str
+        Path to the JSON metadata file for the DWI image.
+
+    fmap_magnitude_filename : str
+        The path to the (1st) magnitude image in BIDS format.
+
+    fmap_phasediff_filename : str
+        The path of the phase difference image in BIDS format.
+
+    fmap_phasediff_json_filename : str
+        The path of the phase difference JSON file in BIDS format
+        and containing EchoTime1 & EchoTime2 metadata (see BIDS specifications).
+
+    Returns
+    -------
+    image_id : str
+        The subject ID extracted from the dwi image path.
+
+    dwi_filename : str
+        The path to the DWI image.
+
+    b_vectors_filename : str
+        The path to the b-vectors file.
+
+    b_values_filename : str
+        The path to the b-values file.
+
+    total_readout_time : str
+        The total readout time extracted from the dwi JSON file.
+
+    phase_encoding_direction : str
+        The phase encoding direction for the dwi image, extracted
+        from the dwi JSON file.
+
+    fmap_magnitude_filename : str
+        The path to the (1st) magnitude image in BIDS format.
+
+    fmap_phasediff_filename : str
+        The path of the phase difference image in BIDS format.
+
+    delta_echo_time : str
+        The path to the JSON metadata file for the field map image.
+    """
     import datetime
 
     import nibabel as nib
 
-    from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
+    from clinica.utils.dwi import DWIDataset, bids_dir_to_fsl_dir, check_dwi_volume
     from clinica.utils.filemanip import (
         extract_metadata_from_json,
         get_subject_id,
@@ -78,12 +139,12 @@ def init_input_node(
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
 
-    # Extract image ID
-    image_id = get_subject_id(dwi)
+    image_id = get_subject_id(dwi_filename)
 
-    # Check that the number of DWI, bvec & bval are the same
     try:
-        check_dwi_volume(dwi, bvec, bval)
+        check_dwi_volume(
+            DWIDataset(dwi_filename, b_values_filename, b_vectors_filename)
+        )
     except ValueError as e:
         now = datetime.datetime.now().strftime("%H:%M:%S")
         error_msg = f"[{now}] Error: Number of DWIs, b-vals and b-vecs mismatch for {image_id.replace('_', ' | ')}"
@@ -92,8 +153,8 @@ def init_input_node(
 
     # Check that PhaseDiff and magnitude1 have the same header
     # Otherwise, FSL in FugueExtrapolationFromMask will crash
-    img_phasediff = nib.load(fmap_phasediff)
-    img_magnitude = nib.load(fmap_magnitude)
+    img_phasediff = nib.load(fmap_phasediff_filename)
+    img_magnitude = nib.load(fmap_magnitude_filename)
     if img_phasediff.shape != img_magnitude.shape:
         now = datetime.datetime.now().strftime("%H:%M:%S")
         error_msg = (
@@ -103,9 +164,8 @@ def init_input_node(
         cprint(error_msg, lvl="error")
         raise NotImplementedError(error_msg)
 
-    # Read metadata from DWI JSON file:
     [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
-        dwi_json,
+        dwi_json_filename,
         [
             "TotalReadoutTime",
             "PhaseEncodingDirection",
@@ -114,13 +174,11 @@ def init_input_node(
     )
     phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
 
-    # Read metadata from PhaseDiff JSON file:
     [echo_time1, echo_time2] = extract_metadata_from_json(
-        fmap_phasediff_json, ["EchoTime1", "EchoTime2"]
+        fmap_phasediff_json_filename, ["EchoTime1", "EchoTime2"]
     )
     delta_echo_time = abs(echo_time2 - echo_time1)
 
-    # Print begin message
     print_begin_image(
         image_id,
         ["TotalReadoutTime", "PhaseEncodingDirection", "DeltaEchoTime"],
@@ -129,13 +187,13 @@ def init_input_node(
 
     return (
         image_id,
-        dwi,
-        bvec,
-        bval,
+        dwi_filename,
+        b_vectors_filename,
+        b_values_filename,
         total_readout_time,
         phase_encoding_direction,
-        fmap_magnitude,
-        fmap_phasediff,
+        fmap_magnitude_filename,
+        fmap_phasediff_filename,
         delta_echo_time,
     )
 
