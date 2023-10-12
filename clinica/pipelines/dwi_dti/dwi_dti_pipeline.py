@@ -20,7 +20,7 @@ class DwiDti(Pipeline):
 
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        pass
+        self.parameters.setdefault("random_seed", None)
 
     def _check_custom_dependencies(self) -> None:
         pass
@@ -242,6 +242,7 @@ class DwiDti(Pipeline):
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import os
+        from pathlib import Path
 
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix as mrtrix
@@ -299,10 +300,10 @@ class DwiDti(Pipeline):
         dti_to_metrics = npe.Node(interface=TensorMetrics(), name="2-DTI-based_Metrics")
 
         register_fa = npe.Node(interface=RegistrationSynQuick(), name="3a-Register_FA")
-        fsl_dir = check_environment_variable("FSLDIR", "FSL")
-        fa_map = os.path.join(
-            fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-FA-1mm.nii.gz"
-        )
+        if self.parameters["random_seed"] is not None:
+            register_fa.inputs.random_seed = self.parameters["random_seed"]
+        fsl_dir = Path(check_environment_variable("FSLDIR", "FSL"))
+        fa_map = str(fsl_dir / "data" / "atlases" / "JHU" / "JHU-ICBM-FA-1mm.nii.gz")
         register_fa.inputs.fixed_image = fa_map
 
         ants_transforms = npe.Node(
