@@ -130,12 +130,12 @@ def init_input_node(
 
     import nibabel as nib
 
-    from clinica.utils.dwi import DWIDataset, bids_dir_to_fsl_dir, check_dwi_volume
-    from clinica.utils.filemanip import (
-        extract_metadata_from_json,
-        get_subject_id,
-        handle_missing_keys_dwi,
+    from clinica.utils.dwi import (
+        DWIDataset,
+        check_dwi_volume,
+        get_readout_time_and_phase_encoding_direction,
     )
+    from clinica.utils.filemanip import extract_metadata_from_json, get_subject_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
 
@@ -163,17 +163,10 @@ def init_input_node(
         )
         cprint(error_msg, lvl="error")
         raise NotImplementedError(error_msg)
-
-    [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
-        dwi_json_filename,
-        [
-            "TotalReadoutTime",
-            "PhaseEncodingDirection",
-        ],
-        handle_missing_keys=handle_missing_keys_dwi,
-    )
-    phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
-
+    (
+        total_readout_time,
+        phase_encoding_direction,
+    ) = get_readout_time_and_phase_encoding_direction(dwi_json_filename)
     [echo_time1, echo_time2] = extract_metadata_from_json(
         fmap_phasediff_json_filename, ["EchoTime1", "EchoTime2"]
     )

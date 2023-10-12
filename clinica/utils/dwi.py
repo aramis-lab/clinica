@@ -10,6 +10,28 @@ import numpy as np
 DWIDataset = namedtuple("DWIDataset", "dwi b_values b_vectors")
 
 
+def get_readout_time_and_phase_encoding_direction(
+    dwi_json_filename: str,
+) -> Tuple[str, str]:
+    """Extract the readout time and phase encoding direction from the DWI JSON file."""
+    from clinica.utils.filemanip import (
+        extract_metadata_from_json,
+        handle_missing_keys_dwi,
+    )
+
+    [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
+        dwi_json_filename,
+        [
+            "TotalReadoutTime",
+            "PhaseEncodingDirection",
+        ],
+        handle_missing_keys=handle_missing_keys_dwi,
+    )
+    phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
+
+    return total_readout_time, phase_encoding_direction
+
+
 def count_b0s(b_value_filename: PathLike, b_value_threshold: float = 5.0) -> int:
     """Counts the number of volumes where b<=low_bval.
 
@@ -223,6 +245,7 @@ def add_suffix_to_filename(filename: Path, suffix: str) -> Path:
 def split_dwi_dataset_with_b_values(
     dwi_dataset: DWIDataset,
     b_value_threshold: float = 5.0,
+    working_directory: Optional[Path] = None,
 ) -> Tuple[DWIDataset, DWIDataset]:
     """Splits the DWI dataset in two through the B-values.
 
@@ -241,6 +264,11 @@ def split_dwi_dataset_with_b_values(
     b_value_threshold : float, optional
         Defines the b0 volumes as all volumes b-value <= b_value_threshold.
         Defaults to 5.0.
+
+    working_directory : Path, optional
+        An optional working directory in which to write the small and large
+        DWI datasets. If not provided, they will be written in the same
+        directory as the provided DWI dataset.
 
     Returns
     -------
@@ -266,8 +294,12 @@ def split_dwi_dataset_with_b_values(
     )
 
     return (
-        _build_dwi_dataset_from_filter(dwi_dataset, "small_b", small_b_filter),
-        _build_dwi_dataset_from_filter(dwi_dataset, "large_b", large_b_filter),
+        _build_dwi_dataset_from_filter(
+            dwi_dataset, "small_b", small_b_filter, working_directory=working_directory
+        ),
+        _build_dwi_dataset_from_filter(
+            dwi_dataset, "large_b", large_b_filter, working_directory=working_directory
+        ),
     )
 
 
@@ -290,7 +322,10 @@ def _check_b_values_and_b_vectors(
 
 
 def _build_dwi_dataset_from_filter(
-    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
 ) -> DWIDataset:
     """Builds a new DWI dataset from a given DWI dataset and a filter.
 
@@ -306,6 +341,11 @@ def _build_dwi_dataset_from_filter(
     filter_array : np.ndarray
         1D array of indices to filter the DWI dataset.
 
+    working_directory : Path, optional
+        An optional working directory in which to write the filtered
+        DWI dataset. If not provided, it will be written in the same
+        directory as the provided DWI dataset.
+
     Returns
     -------
     DWIDataset :
@@ -313,20 +353,40 @@ def _build_dwi_dataset_from_filter(
     """
     return check_dwi_dataset(
         DWIDataset(
-            dwi=_filter_dwi(dwi_dataset, filter_name, filter_array),
-            b_values=_filter_b_values(dwi_dataset, filter_name, filter_array),
-            b_vectors=_filter_b_vectors(dwi_dataset, filter_name, filter_array),
+            dwi=_filter_dwi(
+                dwi_dataset,
+                filter_name,
+                filter_array,
+                working_directory=working_directory,
+            ),
+            b_values=_filter_b_values(
+                dwi_dataset,
+                filter_name,
+                filter_array,
+                working_directory=working_directory,
+            ),
+            b_vectors=_filter_b_vectors(
+                dwi_dataset,
+                filter_name,
+                filter_array,
+                working_directory=working_directory,
+            ),
         )
     )
 
 
 def _filter_dwi(
-    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
 ) -> Path:
     """Filters the dwi component of the provided DWI dataset."""
     from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
     dwi_filename = add_suffix_to_filename(dwi_dataset.dwi, filter_name)
+    if working_directory:
+        dwi_filename = working_directory / dwi_filename.name
     data = compute_aggregated_volume(
         dwi_dataset.dwi, aggregator=None, volumes_to_keep=filter_array
     )
@@ -337,22 +397,32 @@ def _filter_dwi(
 
 
 def _filter_b_values(
-    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
 ) -> Path:
     """Filters the b-values component of the provided DWI dataset."""
     b_values, _ = _check_b_values_and_b_vectors(dwi_dataset)
     b_values_filename = add_suffix_to_filename(dwi_dataset.b_values, filter_name)
+    if working_directory:
+        b_values_filename = working_directory / b_values_filename.name
     _write_b_values(b_values_filename, b_values[filter_array])
 
     return b_values_filename
 
 
 def _filter_b_vectors(
-    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
 ) -> Path:
     """Filters the b-vectors component of the provided DWI dataset."""
     _, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
     b_vectors_filename = add_suffix_to_filename(dwi_dataset.b_vectors, filter_name)
+    if working_directory:
+        b_vectors_filename = working_directory / b_vectors_filename.name
     _write_b_vectors(b_vectors_filename, np.array([b[filter_array] for b in b_vectors]))
 
     return b_vectors_filename

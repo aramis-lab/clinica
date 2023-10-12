@@ -734,7 +734,7 @@ def perform_dwi_epi_correction(
     return wf
 
 
-def b0_flirt_pipeline(num_b0s, name="b0_coregistration"):
+def b0_flirt_pipeline(num_b0s: int, name: str = "b0_coregistration"):
     """Rigid registration of the B0 dataset onto the first volume.
 
     Rigid registration is achieved using FLIRT and the normalized correlation.
