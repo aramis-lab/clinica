@@ -15,11 +15,13 @@ pipeline_name = "dwi-dti"
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
 @cli_param.option.n_procs
+@cli_param.option.random_seed
 def cli(
     caps_directory: str,
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    random_seed: Optional[int] = None,
 ) -> None:
     """DTI-based processing of DWI datasets.
 
@@ -36,6 +38,7 @@ def cli(
         tsv_file=subjects_sessions_tsv,
         base_dir=working_directory,
         name=pipeline_name,
+        parameters={"random_seed": random_seed},
     )
 
     exec_pipeline = (

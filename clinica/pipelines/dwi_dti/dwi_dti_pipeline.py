@@ -18,6 +18,7 @@ class DwiDti(cpe.Pipeline):
 
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
+        self.parameters.setdefault("random_seed", None)
 
     def check_custom_dependencies(self):
         pass
@@ -264,6 +265,8 @@ class DwiDti(cpe.Pipeline):
         dti_to_metrics = npe.Node(interface=TensorMetrics(), name="2-DTI-based_Metrics")
 
         register_fa = npe.Node(interface=RegistrationSynQuick(), name="3a-Register_FA")
+        if self.parameters["random_seed"] is not None:
+            register_fa.inputs.random_seed = self.parameters["random_seed"]
         fsl_dir = check_environment_variable("FSLDIR", "FSL")
         fa_map = os.path.join(
             fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-FA-1mm.nii.gz"
