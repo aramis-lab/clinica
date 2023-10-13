@@ -1,8 +1,8 @@
-name: Anat Pipelines Tests
+name: Freesurfer Anat Pipelines Tests
 
 on:
   schedule:
-    - cron: 0 20 * * 4 # every thursday at 8pm
+    - cron: 0 20 * * 2 # every tuesday at 8pm
 
 permissions:
   contents: read
@@ -12,7 +12,7 @@ env:
   PYTHON_VERSION: '3.10'
 
 jobs:
-  test-pipelines-anat-MacOS:
+  test-pipelines-anat-freesurfer-MacOS:
     runs-on:
       - self-hosted
       - macOS
@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
-      - name: Run tests for anat t1 linear pipelines
+      - name: Run tests for anat pipelines using freesurfer
         run: |
           make env.conda
           source ~/miniconda3/etc/profile.d/conda.sh
@@ -33,20 +33,11 @@ jobs:
           --working_directory=/Volumes/data/working_dir_mac \
           --input_data_directory=/Volumes/data_ci \
           --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_anat_t1_linear_mac.xml \
+          --junitxml=./test-reports/non_regression_anat_t1_freesurfer_mac.xml \
           --disable-warnings \
-          ./nonregression/pipelines/anat/test_t1_linear.py
-      - name: Run tests for anat t1 volume pipelines
-        run: |
-          poetry run pytest --verbose \
-          --working_directory=/Volumes/data/working_dir_mac \
-          --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_anat_t1_volume_mac.xml \
-          --disable-warnings \
-          ./nonregression/pipelines/anat/test_t1_volume.py
+          ./nonregression/pipelines/anat/test_t1_freesurfer.py
 
-  test-pipelines-anat-Linux:
+  test-pipelines-anat-freesurfer-Linux:
     runs-on:
       - self-hosted
       - Linux
@@ -61,7 +52,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: poetry
-      - name: Run tests for anat t1 linear pipelines
+      - name: Run tests for anat pipelines using freesurfer
         run: |
           make env.conda
           source /builds/miniconda/etc/profile.d/conda.sh
@@ -74,15 +65,6 @@ jobs:
           --working_directory=/mnt/data/ci/working_dir_linux \
           --input_data_directory=/mnt/data_ci \
           --basetemp=/mnt/data/ci/tmp \
-          --junitxml=./test-reports/non_regression_anat_t1_linear_linux.xml \
+          --junitxml=./test-reports/non_regression_anat_t1_freesurfer_linux.xml \
           --disable-warnings \
-          ./nonregression/pipelines/anat/test_t1_linear.py
-      - name: Run tests for anat t1 volume pipelines
-        run: |
-          poetry run pytest --verbose \
-          --working_directory=/mnt/data/ci/working_dir_linux \
-          --input_data_directory=/mnt/data_ci \
-          --basetemp=/mnt/data/ci/tmp \
-          --junitxml=./test-reports/non_regression_anat_t1_volume_linux.xml \
-          --disable-warnings \
-          ./nonregression/pipelines/anat/test_t1_volume.py
+          ./nonregression/pipelines/anat/test_t1_freesurfer.py
