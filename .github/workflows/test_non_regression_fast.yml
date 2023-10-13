@@ -45,6 +45,7 @@ jobs:
           --disable-warnings \
           -n 4 \
           -m "fast" \
+          --dist loadgroup \
           ./nonregression/
 
   test-non-regression-fast-Linux:
@@ -78,4 +79,5 @@ jobs:
           --disable-warnings \
           -n 4 \
           -m "fast" \
+          --dist loadgroup \
           ./nonregression/
