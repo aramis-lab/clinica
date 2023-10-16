@@ -1,4 +1,4 @@
-name: DWI Preprocessing Using T1 Pipelines Tests
+name: DWI Preprocessing Using Phase Diff Pipelines Tests
 
 on:
   push:
@@ -18,7 +18,7 @@ env:
   PYTHON_VERSION: '3.10'
 
 jobs:
-  test-pipelines-dwi-preprocessing-using-t1-MacOS:
+  test-pipelines-dwi-preprocessing-using-phase-diff-MacOS:
     runs-on:
       - self-hosted
       - macOS
@@ -27,14 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
-      - name: Run tests for dwi preprocessing using t1 pipeline
+      - name: Run tests for dwi preprocessing using phase diff pipeline
         run: ./scripts/run_nonregression.sh
         env:
-          TEST: dwi/preprocessing/using_t1
-          MODALITY: dwi_preprocessing_using_t1
+          TEST: dwi/preprocessing/using_phase_diff
+          MODALITY: dwi_preprocessing_using_phase_diff
           WORKSPACE: ${{ github.workspace }}
 
-  test-pipelines-dwi-preprocessing-using-t1-Linux:
+  test-pipelines-dwi-preprocessing-using-phase-diff-Linux:
     runs-on:
       - self-hosted
       - Linux
@@ -49,9 +49,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: poetry
-      - name: Run tests for dwi preprocessing using t1 pipeline
+      - name: Run tests for dwi preprocessing using phase diff pipeline
         run: ./scripts/run_nonregression.sh
         env:
-          TEST: dwi/preprocessing/using_t1
-          MODALITY: dwi_preprocessing_using_t1
+          TEST: dwi/preprocessing/using_phase_diff
+          MODALITY: dwi_preprocessing_using_phase_diff
           WORKSPACE: ${{ github.workspace }}
