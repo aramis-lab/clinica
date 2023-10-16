@@ -41,6 +41,7 @@ def run_dwi_dti(
         caps_directory=str(caps_dir),
         tsv_file=str(input_dir / "subjects.tsv"),
         base_dir=str(working_dir),
+        parameters={"random_seed": 42},
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)

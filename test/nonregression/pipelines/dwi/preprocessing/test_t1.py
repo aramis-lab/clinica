@@ -247,6 +247,7 @@ def run_dwi_preprocessing_using_t1(
         "initrand": True,
         "low_bval": 5,
         "use_cuda": False,
+        "random_seed": 42,
     }
     pipeline = DwiPreprocessingUsingT1(
         bids_directory=str(input_dir / "bids"),
