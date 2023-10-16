@@ -23,7 +23,7 @@ def test_dwi_preprocessing_using_t1(cmdopt, tmp_path):
 def run_dwi_preprocessing_using_t1(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import (
+    from clinica.pipelines.dwi_preprocessing_using_t1.pipeline import (
         DwiPreprocessingUsingT1,
     )
 

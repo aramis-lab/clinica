@@ -83,10 +83,7 @@ def eddy_fsl_pipeline(
     from nipype.interfaces.fsl import BET
     from nipype.interfaces.fsl.epi import Eddy
 
-    from .dwi_preprocessing_using_t1_utils import (
-        generate_acq_file_task,
-        generate_index_file_task,
-    )
+    from .utils import generate_acq_file_task, generate_index_file_task
 
     inputnode = pe.Node(
         niu.IdentityInterface(
@@ -397,7 +394,7 @@ def perform_ants_registration(
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
 
-    from .dwi_preprocessing_using_t1_utils import (
+    from .utils import (
         broadcast_matrix_filename_to_match_b_vector_length,
         change_itk_transform_type,
         rotate_b_vectors,
@@ -605,8 +602,6 @@ def perform_dwi_epi_correction(
     This workflow benefits a lot from parallelization as most operations are done on
     single DWI direction.
     """
-    import os
-
     import nipype.interfaces.ants as ants
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.io as nio

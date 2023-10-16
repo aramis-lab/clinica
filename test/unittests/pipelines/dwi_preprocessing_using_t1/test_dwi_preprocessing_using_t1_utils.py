@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
+from clinica.pipelines.dwi_preprocessing_using_t1.utils import (
     broadcast_matrix_filename_to_match_b_vector_length,
     change_itk_transform_type,
     extract_sub_ses_folder_name,
@@ -181,7 +181,7 @@ def test_rotate_b_vectors_wrong_content_in_vector_file(tmp_path):
 def test_configure_working_directory(tmp_path):
     import hashlib
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
+    from clinica.pipelines.dwi_preprocessing_using_t1.utils import (
         configure_working_directory,
     )
 
@@ -199,9 +199,7 @@ def test_configure_working_directory(tmp_path):
 def test_compute_reference_b0_errors(tmp_path):
     import numpy as np
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
-        compute_reference_b0,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.utils import compute_reference_b0
 
     (tmp_path / "b0.nii.gz").touch()
     np.savetxt(tmp_path / "foo.bval", [1000] * 9)
@@ -221,9 +219,7 @@ def test_compute_reference_b0_with_single_b0(tmp_path):
     import numpy as np
     from numpy.testing import assert_array_equal
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
-        compute_reference_b0,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.utils import compute_reference_b0
 
     b0_data = 4.0 * np.ones((5, 5, 5, 1))
     b0_img = nib.Nifti1Image(b0_data, affine=np.eye(4))
@@ -258,9 +254,7 @@ def test_compute_reference_b0_with_multiple_b0(tmp_path, mocker, clean_working_d
     import numpy as np
     from numpy.testing import assert_array_equal
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
-        compute_reference_b0,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.utils import compute_reference_b0
 
     working_directory = tmp_path / "tmp"
     working_directory.mkdir()
@@ -273,7 +267,7 @@ def test_compute_reference_b0_with_multiple_b0(tmp_path, mocker, clean_working_d
     assert not mocked_output.exists()
     mocked_output.parent.mkdir(parents=True)
     mocker.patch(
-        "clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils.register_b0",
+        "clinica.pipelines.dwi_preprocessing_using_t1.utils.register_b0",
         return_value=mocked_output,
     )
     # Build a dataset with 3 B0 volumes
@@ -325,14 +319,12 @@ def test_prepare_reference_b0(tmp_path, mocker):
     import numpy as np
     from numpy.testing import assert_array_equal
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (
-        prepare_reference_b0,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.utils import prepare_reference_b0
     from clinica.utils.dwi import DWIDataset
 
     mocked_output = tmp_path / "reference_b0_volume.nii.gz"
     mocker.patch(
-        "clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils.compute_reference_b0",
+        "clinica.pipelines.dwi_preprocessing_using_t1.utils.compute_reference_b0",
         return_value=mocked_output,
     )
     ref_b0_data = 5.0 * np.ones((5, 5, 5, 1))

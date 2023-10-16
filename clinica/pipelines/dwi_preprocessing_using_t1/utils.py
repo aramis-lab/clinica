@@ -88,7 +88,7 @@ def broadcast_matrix_filename_to_match_b_vector_length(
     """Return a list of the matrix filename repeated as many times as there are B-vectors."""
     import numpy as np
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (  # noqa
+    from clinica.pipelines.dwi_preprocessing_using_t1.utils import (  # noqa
         broadcast_filename_into_list,
     )
 
@@ -287,7 +287,7 @@ def prepare_reference_b0_task(
     """Task called be Nipype to execute prepare_reference_b0."""
     from pathlib import Path
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (  # noqa
+    from clinica.pipelines.dwi_preprocessing_using_t1.utils import (  # noqa
         prepare_reference_b0,
     )
     from clinica.utils.dwi import DWIDataset
@@ -496,9 +496,7 @@ def register_b0(
         If the pipeline ran successfully, this file should be located in :
         working_directory / b0_coregistration / concat_ref_moving / merged_files.nii.gz
     """
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
-        b0_flirt_pipeline,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import b0_flirt_pipeline
 
     b0_flirt = b0_flirt_pipeline(num_b0s=nb_b0s)
     b0_flirt.inputs.inputnode.in_file = str(extracted_b0_filename)

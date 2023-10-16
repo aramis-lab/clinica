@@ -120,7 +120,7 @@ def test_instantiate_t1_volume_parcellation(cmdopt):
 
 
 def test_instantiate_dwi_preprocessing_using_t1(cmdopt):
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import (
+    from clinica.pipelines.dwi_preprocessing_using_t1.pipeline import (
         DwiPreprocessingUsingT1,
     )
 

@@ -291,7 +291,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
 
-        from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+        from clinica.pipelines.dwi_preprocessing_using_t1.workflows import (
             eddy_fsl_pipeline,
         )
         from clinica.utils.dwi import compute_average_b0_task
