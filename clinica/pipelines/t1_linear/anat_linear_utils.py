@@ -32,6 +32,7 @@ def _get_substitutions_datasink(bids_image_id: str, suffix: str) -> list:
     substitutions : List of tuples of str
         List of length 3 containing the substitutions to perform.
     """
+    # TODO: Use str.removesuffix once Python 3.8 compatibility is dropped.
     if bids_image_id.endswith(f"_{suffix}"):
         bids_image_id_without_suffix = bids_image_id[: -(len(suffix) + 1)]
     else:
