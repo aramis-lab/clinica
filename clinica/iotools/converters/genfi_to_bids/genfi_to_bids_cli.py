@@ -14,25 +14,17 @@ clinical_data_directory = click.option(
 )
 
 gif = click.option("-gif", is_flag=True, help="Add values from gif to session.tsv")
-clinical_data_tsv = click.option(
-    "-cdt",
-    "--clinical-data-tsv",
-    "clinical_data_tsv",
-    type=click.Path(exists=True, file_okay=True, resolve_path=True),
-    help="Path to a tsv containing additionnal clinical data you want to have in the BIDS",
-)
+
 
 @click.command(name="genfi-to-bids")
 @cli_param.dataset_directory
 @cli_param.bids_directory
 @clinical_data_directory
 @gif
-@clinical_data_tsv
 def cli(
     dataset_directory: PathLike,
     bids_directory: PathLike,
     clinical_data_directory: Optional[PathLike] = None,
-    clinical_data_tsv: Optional[PathLike] = None,
     gif: bool = False,
 ) -> None:
     """GENFI to BIDS converter.
@@ -47,7 +39,7 @@ def cli(
 
     check_dcm2niix()
 
-    convert_images(dataset_directory, bids_directory, clinical_data_directory, gif, clinical_data_tsv)
+    convert_images(dataset_directory, bids_directory, clinical_data_directory, gif)
     _write_bidsignore(str(bids_directory))
 
     cprint("Conversion to BIDS succeeded.")
