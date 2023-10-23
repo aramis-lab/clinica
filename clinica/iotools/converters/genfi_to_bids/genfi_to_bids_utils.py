@@ -7,12 +7,14 @@ import pandas as pd
 import pydicom as pdcm
 from pandas import DataFrame
 
+
 def check_clinical_path(path_to_clinical_data: PathLike) -> None:
     if path_to_clinical_data:
         return
     else:
         raise ValueError("Missing a clinical_data_path.")
-    
+
+
 def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathLike]]:
     """Find the dicoms in the given directory.
 
@@ -175,7 +177,11 @@ def _read_file(data_file: PathLike) -> pd.DataFrame:
 
 
 def complete_clinical_data(
-    df_demographics: DataFrame, df_imaging: DataFrame, df_clinical: DataFrame, df_biosamples: DataFrame, df_neuropsych: DataFrame
+    df_demographics: DataFrame,
+    df_imaging: DataFrame,
+    df_clinical: DataFrame,
+    df_biosamples: DataFrame,
+    df_neuropsych: DataFrame,
 ) -> DataFrame:
     """Merges the different clincal dataframes into one.
 
@@ -199,13 +205,19 @@ def complete_clinical_data(
     df_clinical_complete = df_imaging.merge(
         df_demographics, how="inner", on=merge_key
     ).drop(columns="diagnosis")
-    df_clinical_complete = df_clinical_complete.merge(df_biosamples, how="inner", on=merge_key)
-    df_clinical_complete = df_clinical_complete.merge(df_neuropsych, how="inner", on=merge_key)
+    df_clinical_complete = df_clinical_complete.merge(
+        df_biosamples, how="inner", on=merge_key
+    )
+    df_clinical_complete = df_clinical_complete.merge(
+        df_neuropsych, how="inner", on=merge_key
+    )
     df_clinical = df_clinical.dropna(subset=merge_key)
     return df_clinical_complete.merge(df_clinical, how="inner", on=merge_key)
 
 
-def dataset_to_bids(complete_data_df: DataFrame, gif: bool, path_to_clinical_tsv: PathLike) -> Dict[str, DataFrame]:
+def dataset_to_bids(
+    complete_data_df: DataFrame, gif: bool, path_to_clinical_tsv: PathLike
+) -> Dict[str, DataFrame]:
     """Selects the data needed to write the participants, sessions, and scans tsvs.
 
     Parameters
@@ -237,17 +249,25 @@ def dataset_to_bids(complete_data_df: DataFrame, gif: bool, path_to_clinical_tsv
         "genfi_ref.csv",
     )
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
-    #add additionnal data through csv
+    # add additionnal data through csv
     additionnal_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
-    
-    #hard written path soon to be changed
-    map_to_level_df = pd.read_csv("/Users/matthieu.joulot/Desktop/clinical_data_dest.tsv", sep="\t")
+
+    # hard written path soon to be changed
+    map_to_level_df = pd.read_csv(
+        "/Users/matthieu.joulot/Desktop/clinical_data_dest.tsv", sep="\t"
+    )
     pre_addi_df = map_to_level_df.merge(additionnal_data_df, how="inner", on="data")
-    session_addi_list = pre_addi_df["data"][pre_addi_df["dest"]=="sessions"].values.tolist()
-    participants_addi_list = pre_addi_df["data"][pre_addi_df["dest"]=="participants"].values.tolist()
-    scan_addi_list = pre_addi_df["data"][pre_addi_df["dest"]=="scans"].values.tolist()
-    
-    addi_df=pd.DataFrame([participants_addi_list,session_addi_list, scan_addi_list]).transpose()
+    session_addi_list = pre_addi_df["data"][
+        pre_addi_df["dest"] == "sessions"
+    ].values.tolist()
+    participants_addi_list = pre_addi_df["data"][
+        pre_addi_df["dest"] == "participants"
+    ].values.tolist()
+    scan_addi_list = pre_addi_df["data"][pre_addi_df["dest"] == "scans"].values.tolist()
+
+    addi_df = pd.DataFrame(
+        [participants_addi_list, session_addi_list, scan_addi_list]
+    ).transpose()
     addi_df.columns = ["participants", "sessions", "scans"]
     if not gif:
         df_ref = df_ref.head(8)

@@ -22,6 +22,7 @@ clinical_data_tsv = click.option(
     help="Path to a tsv containing additionnal clinical data you want to have in the BIDS",
 )
 
+
 @click.command(name="genfi-to-bids")
 @cli_param.dataset_directory
 @cli_param.bids_directory
@@ -47,7 +48,13 @@ def cli(
 
     check_dcm2niix()
 
-    convert_images(dataset_directory, bids_directory, clinical_data_directory, gif, clinical_data_tsv)
+    convert_images(
+        dataset_directory,
+        bids_directory,
+        clinical_data_directory,
+        gif,
+        clinical_data_tsv,
+    )
     _write_bidsignore(str(bids_directory))
 
     cprint("Conversion to BIDS succeeded.")

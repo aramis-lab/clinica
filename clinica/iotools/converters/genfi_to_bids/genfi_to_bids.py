@@ -41,6 +41,7 @@ def convert_images(
     import clinica.iotools.bids_utils as bids
 
     from .genfi_to_bids_utils import (
+        check_clinical_path,
         complete_clinical_data,
         dataset_to_bids,
         find_clinical_data,
@@ -48,19 +49,24 @@ def convert_images(
         merge_imaging_data,
         read_imaging_data,
         write_bids,
-        check_clinical_path,
     )
 
-    #check that if a clinical tsv is given, a path to the clinical data is given as well
+    # check that if a clinical tsv is given, a path to the clinical data is given as well
     if path_to_clinical_tsv:
         check_clinical_path(path_to_clinical)
     # read the clinical data files
     if path_to_clinical:
-        df_demographics, df_imaging, df_clinical, df_biosamples, df_neuropsych = find_clinical_data(path_to_clinical)
+        (
+            df_demographics,
+            df_imaging,
+            df_clinical,
+            df_biosamples,
+            df_neuropsych,
+        ) = find_clinical_data(path_to_clinical)
 
     # makes a df of the imaging data
     imaging_data = read_imaging_data(path_to_dataset)
-    
+
     # complete the data extracted
     imaging_data = merge_imaging_data(imaging_data)
     # complete clinical data
