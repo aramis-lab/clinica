@@ -33,8 +33,8 @@ def convert_images(
         If True, indicates the user wants to have the values of the gif parcellation
 
     path_to_clinical_tsv: PathLike, optional
-        Path to a tsv containing the data the additionnal data the user wants to have in the BIDS
-        If None, no additionnal data will be added.
+        Path to a tsv containing the data the additional data the user wants to have in the BIDS
+        If None, no additional data will be added.
     """
     import os
 

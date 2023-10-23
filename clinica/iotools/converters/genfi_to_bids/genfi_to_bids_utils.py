@@ -251,9 +251,9 @@ def dataset_to_bids(
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
     if not gif:
         df_ref = df_ref.head(8)
-    # add additionnal data through csv
+    # add additional data through csv
     if path_to_clinical_tsv:
-        additionnal_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
+        additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
 
         # hard written path soon to be changed
         path_to_mapping_tsv = path_to_ref_csv = os.path.join(
@@ -262,7 +262,7 @@ def dataset_to_bids(
             "genfi_data_mapping.tsv",
         )
         map_to_level_df = pd.read_csv(path_to_mapping_tsv, sep="\t")
-        pre_addi_df = map_to_level_df.merge(additionnal_data_df, how="inner", on="data")
+        pre_addi_df = map_to_level_df.merge(additional_data_df, how="inner", on="data")
         session_addi_list = pre_addi_df["data"][
             pre_addi_df["dest"] == "sessions"
         ].values.tolist()
