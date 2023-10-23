@@ -256,9 +256,12 @@ def dataset_to_bids(
         additionnal_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
 
         # hard written path soon to be changed
-        map_to_level_df = pd.read_csv(
-            "/Users/matthieu.joulot/Desktop/clinical_data_dest.tsv", sep="\t"
+        path_to_mapping_tsv = path_to_ref_csv = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "data",
+            "genfi_data_mapping.tsv",
         )
+        map_to_level_df = pd.read_csv(path_to_mapping_tsv, sep="\t")
         pre_addi_df = map_to_level_df.merge(additionnal_data_df, how="inner", on="data")
         session_addi_list = pre_addi_df["data"][
             pre_addi_df["dest"] == "sessions"
@@ -266,7 +269,9 @@ def dataset_to_bids(
         participants_addi_list = pre_addi_df["data"][
             pre_addi_df["dest"] == "participants"
         ].values.tolist()
-        scan_addi_list = pre_addi_df["data"][pre_addi_df["dest"] == "scans"].values.tolist()
+        scan_addi_list = pre_addi_df["data"][
+            pre_addi_df["dest"] == "scans"
+        ].values.tolist()
 
         addi_df = pd.DataFrame(
             [participants_addi_list, session_addi_list, scan_addi_list]
@@ -274,7 +279,7 @@ def dataset_to_bids(
         addi_df.columns = ["participants", "sessions", "scans"]
         df_to_write = pd.concat([df_ref, addi_df])
     else:
-        df_to_write=df_ref
+        df_to_write = df_ref
     return {
         col: complete_data_df.filter(items=list(df_to_write[col]))
         for col in ["participants", "sessions", "scans"]
