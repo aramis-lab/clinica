@@ -89,7 +89,7 @@ random_seed = option(
 
 reconstruction_method = option(
     "-rec",
-    "--reconstruction",
+    "--reconstruction_method",
     type=click.Choice(ReconstructionMethod),
     help=(
         "Select the PET scans based on the reconstruction method. "
