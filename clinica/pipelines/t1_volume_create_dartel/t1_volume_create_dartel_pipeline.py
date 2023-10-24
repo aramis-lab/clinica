@@ -143,14 +143,12 @@ class T1VolumeCreateDartel(Pipeline):
 
         from clinica.utils.filemanip import zip_nii
 
-        # Writing flowfields into CAPS
-        # ============================
         write_flowfields_node = npe.MapNode(
             name="write_flowfields_node",
             iterfield=["container", "flow_fields"],
             interface=nio.DataSink(infields=["flow_fields"]),
         )
-        write_flowfields_node.inputs.base_directory = self.caps_directory
+        write_flowfields_node.inputs.base_directory = str(self.caps_directory)
         write_flowfields_node.inputs.parameterization = False
         write_flowfields_node.inputs.container = [
             "subjects/"
@@ -180,11 +178,9 @@ class T1VolumeCreateDartel(Pipeline):
             (r"trait_added", r""),
         ]
 
-        # Writing templates into CAPS
-        # ===========================
         write_template_node = npe.Node(nio.DataSink(), name="write_template_node")
         write_template_node.inputs.parameterization = False
-        write_template_node.inputs.base_directory = self.caps_directory
+        write_template_node.inputs.base_directory = str(self.caps_directory)
         write_template_node.inputs.container = op.join(
             "groups", f"group-{self.parameters['group_label']}", "t1"
         )
@@ -233,8 +229,6 @@ class T1VolumeCreateDartel(Pipeline):
         if spm_standalone_is_available():
             use_spm_standalone()
 
-        # Unzipping
-        # =========
         unzip_node = npe.MapNode(
             nutil.Function(
                 input_names=["in_file"], output_names=["out_file"], function=unzip_nii
@@ -243,8 +237,6 @@ class T1VolumeCreateDartel(Pipeline):
             iterfield=["in_file"],
         )
 
-        # DARTEL template
-        # ===============
         dartel_template = npe.Node(spm.DARTEL(), name="dartel_template")
 
         self.connect(
