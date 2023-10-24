@@ -127,7 +127,7 @@ class T1FreeSurferAtlas(Pipeline):
         """
         return ["image_id"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -155,10 +155,10 @@ class T1FreeSurferAtlas(Pipeline):
             ]
         )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         return super().build_output_node()
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 

@@ -966,7 +966,7 @@ class Pipeline(Workflow):
                 )
 
     @abc.abstractmethod
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Builds the Pipeline's core nodes.
 
         This method should use and connect to the `Pipeline.input_node` one
@@ -975,7 +975,7 @@ class Pipeline(Workflow):
         """
 
     @abc.abstractmethod
-    def build_input_node(self):
+    def _build_input_node(self):
         """Builds the Pipeline's input data stream node.
 
         Warnings:
@@ -984,7 +984,7 @@ class Pipeline(Workflow):
         """
 
     @abc.abstractmethod
-    def build_output_node(self):
+    def _build_output_node(self):
         """Builds the Pipeline's output data stream node.
 
         Warnings:

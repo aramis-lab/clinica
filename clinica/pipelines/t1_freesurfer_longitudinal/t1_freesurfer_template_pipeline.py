@@ -84,7 +84,7 @@ class T1FreeSurferTemplate(Pipeline):
         """
         return ["image_id"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -223,7 +223,7 @@ class T1FreeSurferTemplate(Pipeline):
             ]
         )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -259,7 +259,7 @@ class T1FreeSurferTemplate(Pipeline):
             ]
         )
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -311,18 +311,25 @@ class T1FreeSurferTemplate(Pipeline):
         )
         move_subjects_dir.inputs.source_dir = self.base_dir / self.name / "ReconAll"
 
-        # Connections
-        # ===========
-        # fmt: off
         self.connect(
             [
                 # Initialize the pipeline
                 (self.input_node, init_input, [("participant_id", "participant_id")]),
-                (self.input_node, init_input, [("list_session_ids", "list_session_ids")]),
+                (
+                    self.input_node,
+                    init_input,
+                    [("list_session_ids", "list_session_ids")],
+                ),
                 # Run recon-all command
-                (init_input, recon_all, [("subjects_dir", "subjects_dir"),
-                                         ("image_id", "subject_id"),
-                                         ("flags", "flags")]),
+                (
+                    init_input,
+                    recon_all,
+                    [
+                        ("subjects_dir", "subjects_dir"),
+                        ("image_id", "subject_id"),
+                        ("flags", "flags"),
+                    ],
+                ),
                 # Move $SUBJECT_DIR to source_dir (1 time point case)
                 (init_input, move_subjects_dir, [("subjects_dir", "subjects_dir")]),
                 (recon_all, move_subjects_dir, [("subject_id", "subject_id")]),
@@ -330,4 +337,3 @@ class T1FreeSurferTemplate(Pipeline):
                 (move_subjects_dir, self.output_node, [("subject_id", "image_id")]),
             ]
         )
-        # fmt: on

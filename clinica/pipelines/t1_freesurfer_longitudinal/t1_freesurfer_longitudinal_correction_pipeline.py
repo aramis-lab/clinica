@@ -51,10 +51,8 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
         """
         return ["subject_id"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -187,7 +185,7 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
             ]
         )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -212,7 +210,7 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
             ]
         )
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe

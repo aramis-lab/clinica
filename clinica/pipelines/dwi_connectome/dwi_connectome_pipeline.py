@@ -54,7 +54,7 @@ class DwiConnectome(Pipeline):
         """
         return ["response", "fod", "tracts", "nodes", "connectomes"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import re
 
@@ -182,7 +182,7 @@ class DwiConnectome(Pipeline):
                 "Bad preprocessed DWI space. Please check your CAPS folder."
             )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
@@ -232,7 +232,7 @@ class DwiConnectome(Pipeline):
         )
         # fmt: on
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
 
         Notes:

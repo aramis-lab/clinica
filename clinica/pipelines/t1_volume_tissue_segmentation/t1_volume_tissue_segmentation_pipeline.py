@@ -63,7 +63,7 @@ class T1VolumeTissueSegmentation(Pipeline):
             "t1_mni",
         ]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline.
 
         Raise:
@@ -116,11 +116,11 @@ class T1VolumeTissueSegmentation(Pipeline):
             ]
         )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         pass
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.io as nio
         import nipype.interfaces.spm as spm

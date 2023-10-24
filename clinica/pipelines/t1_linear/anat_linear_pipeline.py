@@ -68,7 +68,7 @@ class AnatLinear(Pipeline):
         """
         return ["image_id"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from os import pardir
         from os.path import abspath, dirname, exists, join
@@ -185,7 +185,7 @@ class AnatLinear(Pipeline):
             ]
         )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -227,12 +227,20 @@ class AnatLinear(Pipeline):
             ),
             name="ContainerPath",
         )
-        # fmt: off
         self.connect(
             [
                 (self.input_node, container_path, [("anat", "bids_or_caps_filename")]),
                 (self.output_node, get_ids, [("image_id", "bids_image_id")]),
-                (container_path, write_node, [(("container", fix_join, self.name.replace("-", "_")), "container")]),
+                (
+                    container_path,
+                    write_node,
+                    [
+                        (
+                            ("container", fix_join, self.name.replace("-", "_")),
+                            "container",
+                        )
+                    ],
+                ),
                 (get_ids, write_node, [("substitutions", "substitutions")]),
                 (self.output_node, write_node, [("image_id", "@image_id")]),
                 (self.output_node, write_node, [("outfile_reg", "@outfile_reg")]),
@@ -246,9 +254,8 @@ class AnatLinear(Pipeline):
                     (self.output_node, write_node, [("outfile_crop", "@outfile_crop")]),
                 ]
             )
-        # fmt: on
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -311,27 +318,43 @@ class AnatLinear(Pipeline):
             ),
             name="WriteEndMessage",
         )
-
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
                 (self.input_node, image_id_node, [("anat", "filename")]),
                 (self.input_node, n4biascorrection, [("anat", "input_image")]),
-                (n4biascorrection, ants_registration_node, [("output_image", "moving_image")]),
-                (image_id_node, ants_registration_node, [("image_id", "output_prefix")]),
+                (
+                    n4biascorrection,
+                    ants_registration_node,
+                    [("output_image", "moving_image")],
+                ),
+                (
+                    image_id_node,
+                    ants_registration_node,
+                    [("image_id", "output_prefix")],
+                ),
                 # Connect to DataSink
                 (image_id_node, self.output_node, [("image_id", "image_id")]),
-                (ants_registration_node, self.output_node, [("out_matrix", "affine_mat")]),
-                (ants_registration_node, self.output_node, [("warped_image", "outfile_reg")]),
+                (
+                    ants_registration_node,
+                    self.output_node,
+                    [("out_matrix", "affine_mat")],
+                ),
+                (
+                    ants_registration_node,
+                    self.output_node,
+                    [("warped_image", "outfile_reg")],
+                ),
                 (self.input_node, print_end_message, [("anat", "anat")]),
             ]
         )
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
-                    (ants_registration_node, cropnifti, [("warped_image", "input_img")]),
+                    (
+                        ants_registration_node,
+                        cropnifti,
+                        [("warped_image", "input_img")],
+                    ),
                     (cropnifti, self.output_node, [("output_img", "outfile_crop")]),
                     (cropnifti, print_end_message, [("output_img", "final_file")]),
                 ]
@@ -339,7 +362,10 @@ class AnatLinear(Pipeline):
         else:
             self.connect(
                 [
-                    (ants_registration_node, print_end_message, [("warped_image", "final_file")]),
+                    (
+                        ants_registration_node,
+                        print_end_message,
+                        [("warped_image", "final_file")],
+                    ),
                 ]
             )
-        # fmt: on

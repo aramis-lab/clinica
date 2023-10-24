@@ -38,7 +38,7 @@ class StatisticsVolumeCorrection(Pipeline):
         """
         return []
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -64,11 +64,11 @@ class StatisticsVolumeCorrection(Pipeline):
 
         self.connect([(read_parameters_node, self.input_node, [("t_map", "t_map")])])
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         pass
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         from os.path import abspath, dirname, exists, join, pardir
 

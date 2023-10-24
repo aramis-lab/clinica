@@ -78,7 +78,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         """
         return ["preproc_dwi", "preproc_bvec", "preproc_bval", "b0_mask"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -140,7 +140,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         )
         # fmt: on
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
@@ -205,7 +205,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         )
         # fmt: on
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix3 as mrtrix3

@@ -43,7 +43,7 @@ class T1VolumeCreateDartel(Pipeline):
         """
         return ["final_template_file", "template_files", "dartel_flow_fields"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import sys
 
@@ -133,7 +133,7 @@ class T1VolumeCreateDartel(Pipeline):
             ]
         )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import os.path as op
         import re
@@ -221,7 +221,7 @@ class T1VolumeCreateDartel(Pipeline):
             ]
         )
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.spm as spm
         import nipype.interfaces.utility as nutil

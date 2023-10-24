@@ -46,16 +46,16 @@ class PetSurface(PETPipeline):
         """Specify the list of possible outputs of this pipeline."""
         return []
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
         if self.parameters["longitudinal"]:
-            self.build_input_node_longitudinal()
+            self._build_input_node_longitudinal()
         else:
-            self.build_input_node_cross_sectional()
+            self._build_input_node_cross_sectional()
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = self.base_dir / self.name
@@ -68,7 +68,7 @@ class PetSurface(PETPipeline):
             cprint(f"List available in {folder_participants_tsv / 'participants.tsv'}")
             cprint("The pipeline will last approximately a few hours per image.")
 
-    def build_input_node_longitudinal(self):
+    def _build_input_node_longitudinal(self):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -205,7 +205,7 @@ class PetSurface(PETPipeline):
         )
         # fmt: on
 
-    def build_input_node_cross_sectional(self):
+    def _build_input_node_cross_sectional(self):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -336,10 +336,10 @@ class PetSurface(PETPipeline):
         )
         # fmt: on
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
 
         The function get_wf constructs a pipeline for one subject (in pet_surface_utils.py) and runs it.
