@@ -645,7 +645,7 @@ class Pipeline(Workflow):
             self._check_pipeline_parameters()
             if not self.has_input_connections():
                 self._build_input_node()
-            self.build_core_nodes()
+            self._build_core_nodes()
             if not self.has_output_connections():
                 self._build_output_node()
         return self
