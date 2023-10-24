@@ -204,7 +204,7 @@ class AnatLinear(Pipeline):
 
         # Writing node
         write_node = npe.Node(name="WriteCaps", interface=DataSink())
-        write_node.inputs.base_directory = self.caps_directory
+        write_node.inputs.base_directory = str(self.caps_directory)
         write_node.inputs.parameterization = False
 
         # Other nodes

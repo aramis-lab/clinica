@@ -432,10 +432,14 @@ class Pipeline(Workflow):
 
         self._is_built: bool = False
         self._overwrite_caps: bool = overwrite_caps
-        self._bids_directory: Path = Path(bids_directory).absolute()
-        self._caps_directory: Path = Path(caps_directory).absolute()
+        self._bids_directory: Optional[Path] = (
+            Path(bids_directory).absolute() if bids_directory else None
+        )
+        self._caps_directory: Optional[Path] = (
+            Path(caps_directory).absolute() if caps_directory else None
+        )
         self._verbosity: str = "debug"
-        self._tsv_file = Path(tsv_file).absolute()
+        self._tsv_file: Optional[Path] = Path(tsv_file).absolute() if tsv_file else None
         self._info_file: Path = (
             Path(os.path.dirname(os.path.abspath(inspect.getfile(self.__class__))))
             / "info.json"
@@ -521,11 +525,11 @@ class Pipeline(Workflow):
         return self._output_node
 
     @property
-    def bids_directory(self) -> Path:
+    def bids_directory(self) -> Optional[Path]:
         return self._bids_directory
 
     @property
-    def caps_directory(self) -> Path:
+    def caps_directory(self) -> Optional[Path]:
         return self._caps_directory
 
     @property
@@ -547,7 +551,7 @@ class Pipeline(Workflow):
         self.is_built = False
 
     @property
-    def tsv_file(self) -> Path:
+    def tsv_file(self) -> Optional[Path]:
         return self._tsv_file
 
     @property
