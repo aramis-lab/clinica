@@ -165,46 +165,79 @@ class DwiDti(Pipeline):
             name="rename_into_caps",
         )
 
-        # Writing results into CAPS
         write_results = npe.Node(name="write_results", interface=nio.DataSink())
-        write_results.inputs.base_directory = self.caps_directory
+        write_results.inputs.base_directory = str(self.caps_directory)
         write_results.inputs.parameterization = False
 
-        # fmt: off
         self.connect(
             [
-                (self.input_node, container_path, [("preproc_dwi", "bids_or_caps_filename")]),
-
-                (container_path, write_results, [(("container", fix_join, "dwi", "dti_based_processing"), "container")]),
+                (
+                    self.input_node,
+                    container_path,
+                    [("preproc_dwi", "bids_or_caps_filename")],
+                ),
+                (
+                    container_path,
+                    write_results,
+                    [
+                        (
+                            ("container", fix_join, "dwi", "dti_based_processing"),
+                            "container",
+                        )
+                    ],
+                ),
                 (self.output_node, write_results, [("dti", "native_space.@dti")]),
-                (self.output_node, write_results, [("fa", "native_space.@fa"),
-                                                   ("md", "native_space.@md"),
-                                                   ("ad", "native_space.@ad"),
-                                                   ("rd", "native_space.@rd"),
-                                                   ("decfa", "native_space.@decfa")]),
-
+                (
+                    self.output_node,
+                    write_results,
+                    [
+                        ("fa", "native_space.@fa"),
+                        ("md", "native_space.@md"),
+                        ("ad", "native_space.@ad"),
+                        ("rd", "native_space.@rd"),
+                        ("decfa", "native_space.@decfa"),
+                    ],
+                ),
                 (self.input_node, rename_into_caps, [("preproc_dwi", "in_caps_dwi")]),
-                (self.output_node, rename_into_caps, [("registered_fa", "in_norm_fa"),
-                                                      ("registered_md", "in_norm_md"),
-                                                      ("registered_ad", "in_norm_ad"),
-                                                      ("registered_rd", "in_norm_rd"),
-                                                      ("affine_matrix", "in_affine_matrix"),
-                                                      ("b_spline_transform", "in_b_spline_transform")]),
-
-                (rename_into_caps, write_results, [("out_caps_fa", "normalized_space.@registered_fa"),
-                                                   ("out_caps_md", "normalized_space.@registered_md"),
-                                                   ("out_caps_ad", "normalized_space.@registered_ad"),
-                                                   ("out_caps_rd", "normalized_space.@registered_rd"),
-                                                   ("out_caps_affine_matrix", "normalized_space.@affine_matrix"),
-                                                   ("out_caps_b_spline_transform", "normalized_space.@b_spline_transform")]),
-
-                (self.output_node, write_results, [("statistics_fa", "atlas_statistics.@statistics_fa"),
-                                                   ("statistics_md", "atlas_statistics.@statistics_md"),
-                                                   ("statistics_ad", "atlas_statistics.@statistics_ad"),
-                                                   ("statistics_rd", "atlas_statistics.@statistics_rd")])
+                (
+                    self.output_node,
+                    rename_into_caps,
+                    [
+                        ("registered_fa", "in_norm_fa"),
+                        ("registered_md", "in_norm_md"),
+                        ("registered_ad", "in_norm_ad"),
+                        ("registered_rd", "in_norm_rd"),
+                        ("affine_matrix", "in_affine_matrix"),
+                        ("b_spline_transform", "in_b_spline_transform"),
+                    ],
+                ),
+                (
+                    rename_into_caps,
+                    write_results,
+                    [
+                        ("out_caps_fa", "normalized_space.@registered_fa"),
+                        ("out_caps_md", "normalized_space.@registered_md"),
+                        ("out_caps_ad", "normalized_space.@registered_ad"),
+                        ("out_caps_rd", "normalized_space.@registered_rd"),
+                        ("out_caps_affine_matrix", "normalized_space.@affine_matrix"),
+                        (
+                            "out_caps_b_spline_transform",
+                            "normalized_space.@b_spline_transform",
+                        ),
+                    ],
+                ),
+                (
+                    self.output_node,
+                    write_results,
+                    [
+                        ("statistics_fa", "atlas_statistics.@statistics_fa"),
+                        ("statistics_md", "atlas_statistics.@statistics_md"),
+                        ("statistics_ad", "atlas_statistics.@statistics_ad"),
+                        ("statistics_rd", "atlas_statistics.@statistics_rd"),
+                    ],
+                ),
             ]
         )
-        # fmt: on
 
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
@@ -347,22 +380,37 @@ class DwiDti(Pipeline):
             name="Write-End_Message",
         )
 
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
-                (self.input_node, get_caps_filenames, [("preproc_dwi", "caps_dwi_filename")]),
+                (
+                    self.input_node,
+                    get_caps_filenames,
+                    [("preproc_dwi", "caps_dwi_filename")],
+                ),
                 # Print begin message
-                (self.input_node, print_begin_message, [("preproc_dwi", "in_bids_or_caps_file")]),
+                (
+                    self.input_node,
+                    print_begin_message,
+                    [("preproc_dwi", "in_bids_or_caps_file")],
+                ),
                 # Get BIDS/CAPS identifier from filename
-                (self.input_node, get_bids_identifier, [("preproc_dwi", "dwi_filename")]),
+                (
+                    self.input_node,
+                    get_bids_identifier,
+                    [("preproc_dwi", "caps_dwi_filename")],
+                ),
                 # Convert FSL gradient files (bval/bvec) to MRtrix format
-                (self.input_node, convert_gradients, [("preproc_bval", "bval_file"),
-                                                      ("preproc_bvec", "bvec_file")]),
+                (
+                    self.input_node,
+                    convert_gradients,
+                    [("preproc_bval", "bval_file"), ("preproc_bvec", "bvec_file")],
+                ),
                 # Computation of the DTI model
-                (self.input_node, dwi_to_dti, [("b0_mask", "mask"),
-                                               ("preproc_dwi", "in_file")]),
+                (
+                    self.input_node,
+                    dwi_to_dti,
+                    [("b0_mask", "mask"), ("preproc_dwi", "in_file")],
+                ),
                 (convert_gradients, dwi_to_dti, [("encoding_file", "encoding_file")]),
                 (get_caps_filenames, dwi_to_dti, [("out_dti", "out_filename")]),
                 # Computation of the different metrics from the DTI
@@ -376,44 +424,113 @@ class DwiDti(Pipeline):
                 # Registration of FA-map onto the atlas:
                 (dti_to_metrics, register_fa, [("out_fa", "moving_image")]),
                 # Apply deformation field on MD, AD & RD:
-                (register_fa, ants_transforms, [("out_matrix", "in_affine_transformation")]),
-                (register_fa, ants_transforms, [("forward_warp_field", "in_bspline_transformation")]),
-
-                (dti_to_metrics, apply_ants_registration_for_md, [("out_adc", "input_image")]),
-                (ants_transforms, apply_ants_registration_for_md, [("transforms", "transforms")]),
-
-                (dti_to_metrics, apply_ants_registration_for_ad, [("out_ad", "input_image")]),
-                (ants_transforms, apply_ants_registration_for_ad, [("transforms", "transforms")]),
-
-                (dti_to_metrics, apply_ants_registration_for_rd, [("out_rd", "input_image")]),
-                (ants_transforms, apply_ants_registration_for_rd, [("transforms", "transforms")]),
+                (
+                    register_fa,
+                    ants_transforms,
+                    [("out_matrix", "in_affine_transformation")],
+                ),
+                (
+                    register_fa,
+                    ants_transforms,
+                    [("forward_warp_field", "in_bspline_transformation")],
+                ),
+                (
+                    dti_to_metrics,
+                    apply_ants_registration_for_md,
+                    [("out_adc", "input_image")],
+                ),
+                (
+                    ants_transforms,
+                    apply_ants_registration_for_md,
+                    [("transforms", "transforms")],
+                ),
+                (
+                    dti_to_metrics,
+                    apply_ants_registration_for_ad,
+                    [("out_ad", "input_image")],
+                ),
+                (
+                    ants_transforms,
+                    apply_ants_registration_for_ad,
+                    [("transforms", "transforms")],
+                ),
+                (
+                    dti_to_metrics,
+                    apply_ants_registration_for_rd,
+                    [("out_rd", "input_image")],
+                ),
+                (
+                    ants_transforms,
+                    apply_ants_registration_for_rd,
+                    [("transforms", "transforms")],
+                ),
                 # Remove negative values from the DTI maps:
                 (register_fa, thres_norm_fa, [("warped_image", "in_file")]),
-                (apply_ants_registration_for_md, thres_norm_md, [("output_image", "in_file")]),
-                (apply_ants_registration_for_rd, thres_norm_rd, [("output_image", "in_file")]),
-                (apply_ants_registration_for_ad, thres_norm_ad, [("output_image", "in_file")]),
+                (
+                    apply_ants_registration_for_md,
+                    thres_norm_md,
+                    [("output_image", "in_file")],
+                ),
+                (
+                    apply_ants_registration_for_rd,
+                    thres_norm_rd,
+                    [("output_image", "in_file")],
+                ),
+                (
+                    apply_ants_registration_for_ad,
+                    thres_norm_ad,
+                    [("output_image", "in_file")],
+                ),
                 # Generate regional TSV files
-                (get_bids_identifier, scalar_analysis_fa, [("bids_identifier", "prefix_file")]),
-                (thres_norm_fa, scalar_analysis_fa, [("out_file", "in_registered_map")]),
-                (get_bids_identifier, scalar_analysis_md, [("bids_identifier", "prefix_file")]),
-                (thres_norm_md, scalar_analysis_md, [("out_file", "in_registered_map")]),
-                (get_bids_identifier, scalar_analysis_ad, [("bids_identifier", "prefix_file")]),
-                (thres_norm_ad, scalar_analysis_ad, [("out_file", "in_registered_map")]),
-                (get_bids_identifier, scalar_analysis_rd, [("bids_identifier", "prefix_file")]),
-                (thres_norm_rd, scalar_analysis_rd, [("out_file", "in_registered_map")]),
+                (
+                    get_bids_identifier,
+                    scalar_analysis_fa,
+                    [("bids_identifier", "prefix_file")],
+                ),
+                (
+                    thres_norm_fa,
+                    scalar_analysis_fa,
+                    [("out_file", "in_registered_map")],
+                ),
+                (
+                    get_bids_identifier,
+                    scalar_analysis_md,
+                    [("bids_identifier", "prefix_file")],
+                ),
+                (
+                    thres_norm_md,
+                    scalar_analysis_md,
+                    [("out_file", "in_registered_map")],
+                ),
+                (
+                    get_bids_identifier,
+                    scalar_analysis_ad,
+                    [("bids_identifier", "prefix_file")],
+                ),
+                (
+                    thres_norm_ad,
+                    scalar_analysis_ad,
+                    [("out_file", "in_registered_map")],
+                ),
+                (
+                    get_bids_identifier,
+                    scalar_analysis_rd,
+                    [("bids_identifier", "prefix_file")],
+                ),
+                (
+                    thres_norm_rd,
+                    scalar_analysis_rd,
+                    [("out_file", "in_registered_map")],
+                ),
                 # Remove negative values from the DTI maps:
                 (get_caps_filenames, thres_fa, [("out_fa", "out_file")]),
                 (dti_to_metrics, thres_fa, [("out_fa", "in_file")]),
-
                 (get_caps_filenames, thres_md, [("out_md", "out_file")]),
                 (dti_to_metrics, thres_md, [("out_adc", "in_file")]),
-
                 (get_caps_filenames, thres_ad, [("out_ad", "out_file")]),
                 (dti_to_metrics, thres_ad, [("out_ad", "in_file")]),
-
                 (get_caps_filenames, thres_rd, [("out_rd", "out_file")]),
                 (dti_to_metrics, thres_rd, [("out_rd", "in_file")]),
-
                 # Outputnode
                 (dwi_to_dti, self.output_node, [("tensor", "dti")]),
                 (thres_fa, self.output_node, [("out_file", "fa")]),
@@ -421,23 +538,47 @@ class DwiDti(Pipeline):
                 (thres_ad, self.output_node, [("out_file", "ad")]),
                 (thres_rd, self.output_node, [("out_file", "rd")]),
                 (dti_to_metrics, self.output_node, [("out_evec", "decfa")]),
-
                 (register_fa, self.output_node, [("out_matrix", "affine_matrix")]),
-                (register_fa, self.output_node, [("forward_warp_field", "b_spline_transform")]),
-
+                (
+                    register_fa,
+                    self.output_node,
+                    [("forward_warp_field", "b_spline_transform")],
+                ),
                 (thres_norm_fa, self.output_node, [("out_file", "registered_fa")]),
                 (thres_norm_md, self.output_node, [("out_file", "registered_md")]),
                 (thres_norm_ad, self.output_node, [("out_file", "registered_ad")]),
                 (thres_norm_rd, self.output_node, [("out_file", "registered_rd")]),
-
-                (scalar_analysis_fa, self.output_node, [("atlas_statistics_list", "statistics_fa")]),
-                (scalar_analysis_md, self.output_node, [("atlas_statistics_list", "statistics_md")]),
-                (scalar_analysis_ad, self.output_node, [("atlas_statistics_list", "statistics_ad")]),
-                (scalar_analysis_rd, self.output_node, [("atlas_statistics_list", "statistics_rd")]),
+                (
+                    scalar_analysis_fa,
+                    self.output_node,
+                    [("atlas_statistics_list", "statistics_fa")],
+                ),
+                (
+                    scalar_analysis_md,
+                    self.output_node,
+                    [("atlas_statistics_list", "statistics_md")],
+                ),
+                (
+                    scalar_analysis_ad,
+                    self.output_node,
+                    [("atlas_statistics_list", "statistics_ad")],
+                ),
+                (
+                    scalar_analysis_rd,
+                    self.output_node,
+                    [("atlas_statistics_list", "statistics_rd")],
+                ),
                 # Print end message
-                (self.input_node, print_end_message, [("preproc_dwi", "in_bids_or_caps_file")]),
+                (
+                    self.input_node,
+                    print_end_message,
+                    [("preproc_dwi", "in_bids_or_caps_file")],
+                ),
                 (thres_rd, print_end_message, [("out_file", "final_file_1")]),
-                (scalar_analysis_rd, print_end_message, [("atlas_statistics_list", "final_file_2")]),
+                (
+                    scalar_analysis_rd,
+                    print_end_message,
+                    [("atlas_statistics_list", "final_file_2")],
+                ),
             ]
         )
-        # fmt: on

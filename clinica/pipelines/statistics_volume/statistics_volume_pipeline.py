@@ -193,7 +193,7 @@ class StatisticsVolume(Pipeline):
         )
 
         datasink = npe.Node(nio.DataSink(), name="sinker")
-        datasink.inputs.base_directory = base_dir
+        datasink.inputs.base_directory = str(base_dir)
 
         datasink.inputs.parameterization = True
         if self.parameters["full_width_at_half_maximum"]:
@@ -248,22 +248,32 @@ class StatisticsVolume(Pipeline):
                 ),
             ]
 
-        datasink.inputs.tsv_file = self.tsv_file
+        datasink.inputs.tsv_file = str(self.tsv_file)
 
-        # fmt: off
         self.connect(
             [
                 (self.output_node, datasink, [("spmT_0001", "spm_results_analysis_1")]),
                 (self.output_node, datasink, [("spmT_0002", "spm_results_analysis_2")]),
                 (self.output_node, datasink, [("spm_figures", "figures")]),
-                (self.output_node, datasink, [("variance_of_error", "variance_of_error")]),
-                (self.output_node, datasink, [("resels_per_voxels", "resels_per_voxels")]),
+                (
+                    self.output_node,
+                    datasink,
+                    [("variance_of_error", "variance_of_error")],
+                ),
+                (
+                    self.output_node,
+                    datasink,
+                    [("resels_per_voxels", "resels_per_voxels")],
+                ),
                 (self.output_node, datasink, [("mask", "mask")]),
-                (self.output_node, datasink, [("regression_coeff", "regression_coeff")]),
+                (
+                    self.output_node,
+                    datasink,
+                    [("regression_coeff", "regression_coeff")],
+                ),
                 (self.output_node, datasink, [("contrasts", "contrasts")]),
             ]
         )
-        # fmt: on
 
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""

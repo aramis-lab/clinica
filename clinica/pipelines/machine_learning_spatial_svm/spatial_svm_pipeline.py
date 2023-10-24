@@ -146,14 +146,20 @@ class SpatialSVM(Pipeline):
         read_parameters_node.inputs.dartel_input = dartel_input
         read_parameters_node.inputs.input_image = input_image
 
-        # fmt: off
         self.connect(
             [
-                (read_parameters_node, self.input_node, [("dartel_input", "dartel_input")]),
-                (read_parameters_node, self.input_node, [("input_image", "input_image")]),
+                (
+                    read_parameters_node,
+                    self.input_node,
+                    [("dartel_input", "dartel_input")],
+                ),
+                (
+                    read_parameters_node,
+                    self.input_node,
+                    [("input_image", "input_image")],
+                ),
             ]
         )
-        # fmt: on
 
     def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
@@ -199,7 +205,7 @@ class SpatialSVM(Pipeline):
         heat_solver_equation.inputs.FWHM = self.parameters["fwhm"]
 
         datasink = npe.Node(nio.DataSink(), name="sinker")
-        datasink.inputs.base_directory = self.caps_directory
+        datasink.inputs.base_directory = str(self.caps_directory)
         datasink.inputs.parameterization = True
         if self.parameters["orig_input_data_ml"] == "t1-volume":
             datasink.inputs.regexp_substitutions = [
@@ -252,21 +258,49 @@ class SpatialSVM(Pipeline):
                     + r"_space-Ixi549Space_gram.npy",
                 ),
             ]
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
-                (self.input_node, fisher_tensor_generation, [("dartel_input", "dartel_input")]),
-                (fisher_tensor_generation, time_step_generation, [("fisher_tensor", "g")]),
-                (self.input_node, time_step_generation, [("dartel_input", "dartel_input")]),
-                (self.input_node, heat_solver_equation, [("input_image", "input_image")]),
-                (fisher_tensor_generation, heat_solver_equation, [("fisher_tensor", "g")]),
+                (
+                    self.input_node,
+                    fisher_tensor_generation,
+                    [("dartel_input", "dartel_input")],
+                ),
+                (
+                    fisher_tensor_generation,
+                    time_step_generation,
+                    [("fisher_tensor", "g")],
+                ),
+                (
+                    self.input_node,
+                    time_step_generation,
+                    [("dartel_input", "dartel_input")],
+                ),
+                (
+                    self.input_node,
+                    heat_solver_equation,
+                    [("input_image", "input_image")],
+                ),
+                (
+                    fisher_tensor_generation,
+                    heat_solver_equation,
+                    [("fisher_tensor", "g")],
+                ),
                 (time_step_generation, heat_solver_equation, [("t_step", "t_step")]),
-                (self.input_node, heat_solver_equation, [("dartel_input", "dartel_input")]),
-                (fisher_tensor_generation, datasink, [("fisher_tensor_path", "fisher_tensor_path")]),
+                (
+                    self.input_node,
+                    heat_solver_equation,
+                    [("dartel_input", "dartel_input")],
+                ),
+                (
+                    fisher_tensor_generation,
+                    datasink,
+                    [("fisher_tensor_path", "fisher_tensor_path")],
+                ),
                 (time_step_generation, datasink, [("json_file", "json_file")]),
-                (heat_solver_equation, datasink, [("regularized_image", "regularized_image")]),
+                (
+                    heat_solver_equation,
+                    datasink,
+                    [("regularized_image", "regularized_image")],
+                ),
             ]
         )
-        # fmt: on

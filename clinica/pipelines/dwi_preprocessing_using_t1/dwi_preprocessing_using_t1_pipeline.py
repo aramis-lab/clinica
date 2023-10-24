@@ -150,8 +150,6 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
 
         from .dwi_preprocessing_using_t1_utils import rename_into_caps
 
-        # Find container path from DWI filename
-        # =====================================
         container_path = npe.Node(
             nutil.Function(
                 input_names=["bids_or_caps_filename"],
@@ -181,10 +179,8 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             name="rename_into_caps",
         )
 
-        # Writing results into CAPS
-        # =========================
         write_results = npe.Node(name="write_results", interface=nio.DataSink())
-        write_results.inputs.base_directory = self.caps_directory
+        write_results.inputs.base_directory = str(self.caps_directory)
         write_results.inputs.parameterization = False
 
         # fmt: off
@@ -265,7 +261,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             ),
         )
         prepare_b0.inputs.b_value_threshold = self.parameters["low_bval"]
-        prepare_b0.inputs.working_directory = self.base_dir
+        prepare_b0.inputs.working_directory = str(self.base_dir)
 
         # Head-motion correction + Eddy-currents correction
         eddy_fsl = eddy_fsl_pipeline(
@@ -275,7 +271,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         )
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(
-            self.base_dir,
+            str(self.base_dir),
             self.parameters["delete_cache"],
             name="SusceptibilityDistortionCorrection",
             ants_random_seed=self.parameters["random_seed"],

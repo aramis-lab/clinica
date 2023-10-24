@@ -134,7 +134,7 @@ class T1VolumeParcellation(Pipeline):
 
         datasink = npe.Node(nio.DataSink(), name="datasink")
 
-        datasink.inputs.base_directory = self.caps_directory
+        datasink.inputs.base_directory = str(self.caps_directory)
         datasink.inputs.parameterization = True
         datasink.inputs.regexp_substitutions = [
             (

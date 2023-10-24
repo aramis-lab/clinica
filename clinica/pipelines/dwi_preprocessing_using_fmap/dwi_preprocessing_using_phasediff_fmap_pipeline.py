@@ -123,12 +123,9 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
             ],
             raise_exception=True,
         )
-
-        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         save_participants_sessions(
             self.subjects, self.sessions, self.base_dir / self.name
         )
-
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint(
@@ -152,19 +149,23 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-        # fmt: off
         self.connect(
             [
-                (read_node, self.input_node, [("dwi", "dwi"),
-                                              ("bvec", "bvec"),
-                                              ("bval", "bval"),
-                                              ("dwi_json", "dwi_json"),
-                                              ("fmap_magnitude", "fmap_magnitude"),
-                                              ("fmap_phasediff", "fmap_phasediff"),
-                                              ("fmap_phasediff_json", "fmap_phasediff_json")]),
+                (
+                    read_node,
+                    self.input_node,
+                    [
+                        ("dwi", "dwi"),
+                        ("bvec", "bvec"),
+                        ("bval", "bval"),
+                        ("dwi_json", "dwi_json"),
+                        ("fmap_magnitude", "fmap_magnitude"),
+                        ("fmap_phasediff", "fmap_phasediff"),
+                        ("fmap_phasediff_json", "fmap_phasediff_json"),
+                    ],
+                ),
             ]
         )
-        # fmt: on
 
     def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
@@ -176,8 +177,6 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
 
         from .dwi_preprocessing_using_phasediff_fmap_utils import rename_into_caps
 
-        # Find container path from DWI filename
-        # =====================================
         container_path = npe.Node(
             nutil.Function(
                 input_names=["bids_or_caps_filename"],
@@ -213,35 +212,47 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
             name="rename_into_caps",
         )
 
-        # Writing results into CAPS
-        # =========================
         write_results = npe.Node(name="write_results", interface=nio.DataSink())
-        write_results.inputs.base_directory = self.caps_directory
+        write_results.inputs.base_directory = str(self.caps_directory)
         write_results.inputs.parameterization = False
 
-        # fmt: off
         self.connect(
             [
                 (self.input_node, container_path, [("dwi", "bids_or_caps_filename")]),
                 (self.input_node, rename_into_caps, [("dwi", "in_bids_dwi")]),
-                (self.output_node, rename_into_caps, [("preproc_dwi", "fname_dwi"),
-                                                      ("preproc_bval", "fname_bval"),
-                                                      ("preproc_bvec", "fname_bvec"),
-                                                      ("b0_mask", "fname_brainmask"),
-                                                      ("magnitude_on_b0", "fname_magnitude"),
-                                                      ("calibrated_fmap_on_b0", "fname_fmap"),
-                                                      ("smoothed_fmap_on_b0", "fname_smoothed_fmap")]),
-                (container_path, write_results, [(("container", fix_join, "dwi"), "container")]),
-                (rename_into_caps, write_results, [("out_caps_dwi", "preprocessing.@preproc_dwi"),
-                                                   ("out_caps_bval", "preprocessing.@preproc_bval"),
-                                                   ("out_caps_bvec", "preprocessing.@preproc_bvec"),
-                                                   ("out_caps_brainmask", "preprocessing.@b0_mask"),
-                                                   ("out_caps_magnitude", "preprocessing.@magnitude"),
-                                                   ("out_caps_fmap", "preprocessing.@fmap"),
-                                                   ("out_caps_smoothed_fmap", "preprocessing.@smoothed_fmap")]),
+                (
+                    self.output_node,
+                    rename_into_caps,
+                    [
+                        ("preproc_dwi", "fname_dwi"),
+                        ("preproc_bval", "fname_bval"),
+                        ("preproc_bvec", "fname_bvec"),
+                        ("b0_mask", "fname_brainmask"),
+                        ("magnitude_on_b0", "fname_magnitude"),
+                        ("calibrated_fmap_on_b0", "fname_fmap"),
+                        ("smoothed_fmap_on_b0", "fname_smoothed_fmap"),
+                    ],
+                ),
+                (
+                    container_path,
+                    write_results,
+                    [(("container", fix_join, "dwi"), "container")],
+                ),
+                (
+                    rename_into_caps,
+                    write_results,
+                    [
+                        ("out_caps_dwi", "preprocessing.@preproc_dwi"),
+                        ("out_caps_bval", "preprocessing.@preproc_bval"),
+                        ("out_caps_bvec", "preprocessing.@preproc_bvec"),
+                        ("out_caps_brainmask", "preprocessing.@b0_mask"),
+                        ("out_caps_magnitude", "preprocessing.@magnitude"),
+                        ("out_caps_fmap", "preprocessing.@fmap"),
+                        ("out_caps_smoothed_fmap", "preprocessing.@smoothed_fmap"),
+                    ],
+                ),
             ]
         )
-        # fmt: on
 
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""

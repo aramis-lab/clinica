@@ -154,8 +154,6 @@ class T1VolumeTissueSegmentation(Pipeline):
             name="0-InitNode",
         )
 
-        # Unzipping
-        # =========
         unzip_node = npe.Node(
             nutil.Function(
                 input_names=["in_file"], output_names=["out_file"], function=unzip_nii
@@ -234,7 +232,7 @@ class T1VolumeTissueSegmentation(Pipeline):
         # Writing CAPS
         # ============
         write_node = npe.Node(name="WriteCAPS", interface=nio.DataSink())
-        write_node.inputs.base_directory = self.caps_directory
+        write_node.inputs.base_directory = str(self.caps_directory)
         write_node.inputs.parameterization = False
         write_node.inputs.regexp_substitutions = [
             (r"(.*)c1(sub-.*)(\.nii(\.gz)?)$", r"\1\2_segm-graymatter\3"),
