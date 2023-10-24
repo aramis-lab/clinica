@@ -132,14 +132,12 @@ class T1VolumeRegisterDartel(Pipeline):
 
         from clinica.utils.filemanip import zip_nii
 
-        # Writing flowfields into CAPS
-        # ============================
         write_flowfields_node = npe.MapNode(
             name="write_flowfields_node",
             iterfield=["container", "flow_fields"],
             interface=nio.DataSink(infields=["flow_fields"]),
         )
-        write_flowfields_node.inputs.base_directory = self.caps_directory
+        write_flowfields_node.inputs.base_directory = str(self.caps_directory)
         write_flowfields_node.inputs.parameterization = False
         write_flowfields_node.inputs.container = [
             "subjects/"
@@ -187,8 +185,6 @@ class T1VolumeRegisterDartel(Pipeline):
         import clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_utils as utils
         from clinica.utils.filemanip import unzip_nii
 
-        # Unzipping
-        # =========
         unzip_dartel_input_node = npe.MapNode(
             nutil.Function(
                 input_names=["in_file"], output_names=["out_file"], function=unzip_nii

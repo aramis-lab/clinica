@@ -157,8 +157,6 @@ class T1VolumeDartel2MNI(Pipeline):
 
         from clinica.utils.filemanip import zip_nii
 
-        # Writing normalized images (and smoothed) into CAPS
-        # ==================================================
         write_normalized_node = npe.MapNode(
             name="write_normalized_node",
             iterfield=["container", "normalized_files", "smoothed_normalized_files"],
@@ -166,7 +164,7 @@ class T1VolumeDartel2MNI(Pipeline):
                 infields=["normalized_files", "smoothed_normalized_files"]
             ),
         )
-        write_normalized_node.inputs.base_directory = self.caps_directory
+        write_normalized_node.inputs.base_directory = str(self.caps_directory)
         write_normalized_node.inputs.parameterization = False
         write_normalized_node.inputs.container = [
             "subjects/"
@@ -232,8 +230,6 @@ class T1VolumeDartel2MNI(Pipeline):
         if spm_standalone_is_available():
             use_spm_standalone()
 
-        # Unzipping
-        # =========
         unzip_tissues_node = npe.MapNode(
             nutil.Function(
                 input_names=["in_file"], output_names=["out_file"], function=unzip_nii
@@ -267,8 +263,6 @@ class T1VolumeDartel2MNI(Pipeline):
         dartel2mni_node.inputs.modulate = self.parameters["modulate"]
         dartel2mni_node.inputs.fwhm = 0
 
-        # Smoothing
-        # =========
         if self.parameters["smooth"] is not None and len(self.parameters["smooth"]) > 0:
             smoothing_node = npe.MapNode(
                 spm.Smooth(), name="smoothing_node", iterfield=["in_files"]
