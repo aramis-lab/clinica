@@ -1,49 +1,52 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class SpatialSVM(cpe.Pipeline):
+class SpatialSVM(Pipeline):
     """SpatialSVM - Prepare input data for SVM with spatial and anatomical regularization.
 
     Returns:
         A clinica pipeline object containing the SpatialSVM pipeline.
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
 
-        # Clinica compulsory parameters
         self.parameters.setdefault("group_label", None)
         check_group_label(self.parameters["group_label"])
-
         if "orig_input_data_ml" not in self.parameters.keys():
             raise KeyError(
                 "Missing compulsory orig_input_data key in pipeline parameter."
             )
-
         # Optional parameters for inputs from pet-volume pipeline
         self.parameters.setdefault("acq_label", None)
         self.parameters.setdefault("suvr_reference_region", None)
         self.parameters.setdefault("use_pvc_data", False)
-
         # Advanced parameters
         self.parameters.setdefault("fwhm", 4)
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["dartel_input", "input_image"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list fo str :
             A list of (string) output fields name.
         """
         return ["regularized_image"]
@@ -63,12 +66,9 @@ class SpatialSVM(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.ux import print_groups_in_caps_directory
 
-        # Check that group already exists
-        if not os.path.exists(
-            os.path.join(
-                self.caps_directory, "groups", "group-" + self.parameters["group_label"]
-            )
-        ):
+        if not (
+            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
+        ).exists():
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
                 f"Group {self.parameters['group_label']} does not exist. "
@@ -157,6 +157,7 @@ class SpatialSVM(cpe.Pipeline):
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
+        pass
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""

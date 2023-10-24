@@ -1,38 +1,44 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class T1VolumeRegisterDartel(cpe.Pipeline):
+class T1VolumeRegisterDartel(Pipeline):
     """T1VolumeExistingDartel - Reuse existing Dartel template.
 
     Returns:
         A clinica pipeline object containing the T1VolumeExistingDartel pipeline.
     """
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
 
         if "group_label" not in self.parameters.keys():
             raise KeyError("Missing compulsory group_label key in pipeline parameter.")
         self.parameters.setdefault("tissues", [1, 2, 3])
-
         check_group_label(self.parameters["group_label"])
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["dartel_input_images", "dartel_iteration_templates"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return ["dartel_flow_fields"]
@@ -102,14 +108,20 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
 
-        # fmt: off
         self.connect(
             [
-                (read_input_node, self.input_node, [("dartel_input_images", "dartel_input_images")]),
-                (read_input_node, self.input_node, [("dartel_iteration_templates", "dartel_iteration_templates")]),
+                (
+                    read_input_node,
+                    self.input_node,
+                    [("dartel_input_images", "dartel_input_images")],
+                ),
+                (
+                    read_input_node,
+                    self.input_node,
+                    [("dartel_iteration_templates", "dartel_iteration_templates")],
+                ),
             ]
         )
-        # fmt: on
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
@@ -157,13 +169,15 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
             (r"trait_added", r""),
         ]
 
-        # fmt: off
         self.connect(
             [
-                (self.output_node, write_flowfields_node, [(("dartel_flow_fields", zip_nii, True), "flow_fields")])
+                (
+                    self.output_node,
+                    write_flowfields_node,
+                    [(("dartel_flow_fields", zip_nii, True), "flow_fields")],
+                )
             ]
         )
-        # fmt: on
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
@@ -196,16 +210,37 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
             iterfield=["image_files"],
         )
 
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
-                (self.input_node, unzip_dartel_input_node, [("dartel_input_images", "in_file")]),
-                (self.input_node, unzip_templates_node, [("dartel_iteration_templates", "in_file")]),
-                (unzip_dartel_input_node, dartel_existing_template, [(("out_file", utils.prepare_dartel_input_images), "image_files")]),
-                (unzip_templates_node, dartel_existing_template, [(("out_file", utils.create_iteration_parameters, None), "iteration_parameters")]),
-                (dartel_existing_template, self.output_node, [("dartel_flow_fields", "dartel_flow_fields")]),
+                (
+                    self.input_node,
+                    unzip_dartel_input_node,
+                    [("dartel_input_images", "in_file")],
+                ),
+                (
+                    self.input_node,
+                    unzip_templates_node,
+                    [("dartel_iteration_templates", "in_file")],
+                ),
+                (
+                    unzip_dartel_input_node,
+                    dartel_existing_template,
+                    [(("out_file", utils.prepare_dartel_input_images), "image_files")],
+                ),
+                (
+                    unzip_templates_node,
+                    dartel_existing_template,
+                    [
+                        (
+                            ("out_file", utils.create_iteration_parameters, None),
+                            "iteration_parameters",
+                        )
+                    ],
+                ),
+                (
+                    dartel_existing_template,
+                    self.output_node,
+                    [("dartel_flow_fields", "dartel_flow_fields")],
+                ),
             ]
         )
-        # fmt: on

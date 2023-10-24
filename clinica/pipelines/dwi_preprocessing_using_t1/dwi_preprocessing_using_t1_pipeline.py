@@ -1,14 +1,15 @@
+from pathlib import Path
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import DWIPreprocessingPipeline
 
-# Use hash instead of parameters for iterables folder names
-# Otherwise path will be too long and generate OSError
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class DwiPreprocessingUsingT1(cpe.Pipeline):
+class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
     """DWI Preprocessing using T1 image for susceptibility distortion step.
 
     Ideas for improvement:
@@ -29,56 +30,29 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     """
 
     @staticmethod
-    def get_processed_images(caps_directory, subjects, sessions):
-        import os
-
+    def get_processed_images(
+        caps_directory: Path, subjects: List[str], sessions: List[str]
+    ) -> List[str]:
         from clinica.utils.filemanip import extract_image_ids
         from clinica.utils.input_files import DWI_PREPROC_NII
         from clinica.utils.inputs import clinica_file_reader
 
-        image_ids = []
-        if os.path.isdir(caps_directory):
+        image_ids: List[str] = []
+        if caps_directory.is_dir():
             preproc_files, _ = clinica_file_reader(
                 subjects, sessions, caps_directory, DWI_PREPROC_NII, False
             )
             image_ids = extract_image_ids(preproc_files)
         return image_ids
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.stream import cprint
-
-        self.parameters.setdefault("low_bval", 5)
-        low_bval = self.parameters["low_bval"]
-        if low_bval < 0:
-            raise ValueError(
-                f"The low_bval is negative ({low_bval}): it should be zero or close to zero."
-            )
-        if self.parameters["low_bval"] > 100:
-            cprint(
-                f"The low_bval parameter is {low_bval}: it should be close to zero.",
-                lvl="warning",
-            )
-
-        self.parameters.setdefault("use_cuda", False)
-        self.parameters.setdefault("initrand", False)
+        super()._check_pipeline_parameters()
         self.parameters.setdefault("delete_cache", False)
         self.parameters.setdefault("random_seed", None)
         self.parameters.setdefault("double_precision", True)
 
-    def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file."""
-        from clinica.utils.check_dependency import is_binary_present
-        from clinica.utils.exceptions import ClinicaMissingDependencyError
-
-        if self.parameters["use_cuda"]:
-            if not is_binary_present("eddy_cuda"):
-                raise ClinicaMissingDependencyError(
-                    "[Error] FSL eddy with CUDA was set but Clinica could not find eddy_cuda in your PATH environment. "
-                    "Check that  https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#The_eddy_executables is correctly set."
-                )
-
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
         Returns:
@@ -92,7 +66,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         """
         return ["t1w", "dwi", "dwi_json", "bvec", "bval"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
         Returns:
@@ -106,8 +80,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -131,16 +103,14 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             raise_exception=True,
         )
 
-        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_participants_sessions(
-            self.subjects, self.sessions, folder_participants_tsv
+            self.subjects, self.sessions, self.base_dir / self.name
         )
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint(
-                f"List available in {os.path.join(folder_participants_tsv, 'participants.tsv')}"
+                f"List available in {self.base_dir / self.name / 'participants.tsv'}"
             )
             cprint(
                 "Computational time will depend of the number of volumes in your DWI dataset and the use of CUDA."

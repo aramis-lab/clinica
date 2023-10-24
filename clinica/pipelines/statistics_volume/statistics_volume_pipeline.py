@@ -1,14 +1,16 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class StatisticsVolume(cpe.Pipeline):
+class StatisticsVolume(Pipeline):
     """StatisticsVolume - Volume-based mass-univariate analysis with SPM.
 
     Returns:
         A clinica pipeline object containing the StatisticsVolume pipeline.
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.group import check_group_label
@@ -16,12 +18,10 @@ class StatisticsVolume(cpe.Pipeline):
         # Clinica compulsory parameters
         self.parameters.setdefault("group_label", None)
         check_group_label(self.parameters["group_label"])
-
         if "orig_input_data_volume" not in self.parameters.keys():
             raise KeyError(
                 "Missing compulsory orig_input_data_volume key in pipeline parameter."
             )
-
         if "contrast" not in self.parameters.keys():
             raise KeyError("Missing compulsory contrast key in pipeline parameter.")
 
@@ -50,21 +50,26 @@ class StatisticsVolume(cpe.Pipeline):
                 "(given value: %s)." % self.parameters["cluster_threshold"]
             )
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["input_files"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return [
@@ -174,87 +179,72 @@ class StatisticsVolume(cpe.Pipeline):
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        from os.path import join, pardir
+        from os.path import pardir
 
         import nipype.interfaces.io as nio
         import nipype.pipeline.engine as npe
 
-        relative_path = join(
-            "groups",
-            "group-" + self.parameters["group_label"],
-            "statistics_volume",
-            "group_comparison_measure-" + self.parameters["measure_label"],
+        base_dir = (
+            self.caps_directory
+            / "groups"
+            / f"group-{self.parameters['group_label']}"
+            / "statistics_volume"
+            / f"group_comparison_measure-{self.parameters['measure_label']}"
         )
 
         datasink = npe.Node(nio.DataSink(), name="sinker")
-        datasink.inputs.base_directory = join(self.caps_directory, relative_path)
+        datasink.inputs.base_directory = base_dir
 
         datasink.inputs.parameterization = True
         if self.parameters["full_width_at_half_maximum"]:
             datasink.inputs.regexp_substitutions = [
                 # t-stat map
                 (
-                    join(self.caps_directory, relative_path)
-                    + r"/spm_results_analysis_./(.*)",
-                    join(self.caps_directory, relative_path) + r"/\1",
+                    str(base_dir) + r"/spm_results_analysis_./(.*)",
+                    str(base_dir) + r"/\1",
                 ),
                 # contrasts
                 (
-                    join(self.caps_directory, relative_path) + r"/contrasts/(.*)",
-                    join(self.caps_directory, relative_path) + r"/\1",
+                    str(base_dir) + r"/contrasts/(.*)",
+                    str(base_dir) + r"/\1",
                 ),
                 # resels per voxels
                 (
-                    join(self.caps_directory, relative_path)
-                    + "/resels_per_voxels/resels_per_voxel.nii",
-                    join(self.caps_directory, relative_path)
-                    + "/group-"
-                    + self.parameters["group_label"]
-                    + "_RPV.nii",
+                    str(base_dir / "resels_per_voxels" / "resels_per_voxel.nii"),
+                    str(base_dir / f"group-{self.parameters['group_label']}_RPV.nii"),
                 ),
                 # mask
                 (
-                    join(self.caps_directory, relative_path)
-                    + "/mask/included_voxel_mask.nii",
-                    join(self.caps_directory, relative_path)
-                    + "/group-"
-                    + self.parameters["group_label"]
-                    + "_mask.nii",
+                    str(base_dir / "mask " / "included_voxel_mask.nii"),
+                    str(base_dir / f"group-{self.parameters['group_label']}_mask.nii"),
                 ),
                 # variance of error
                 (
-                    join(self.caps_directory, relative_path)
-                    + "/variance_of_error/(.*)",
-                    join(self.caps_directory, relative_path) + r"/\1",
+                    str(base_dir / "variance_of_error") + r"/(.*)",
+                    str(base_dir) + r"/\1",
                 ),
                 # tsv file
                 (
-                    join(self.caps_directory, relative_path) + r"/tsv_file/.*",
-                    join(self.caps_directory, relative_path)
-                    + "/"
-                    + pardir
-                    + "/group-"
-                    + self.parameters["group_label"]
-                    + "_participants.tsv",
+                    str(base_dir / "tsv_file") + r"/.*",
+                    str(
+                        base_dir
+                        / pardir
+                        / f"group-{self.parameters['group_label']}_participants.tsv"
+                    ),
                 ),
                 # report (figures)
                 (
-                    join(self.caps_directory, relative_path) + r"/figures/(.*)",
-                    join(self.caps_directory, relative_path) + r"/\1",
+                    str(base_dir / "figures") + r"/(.*)",
+                    str(base_dir) + r"/\1",
                 ),
                 # regression coefficient
                 (
-                    join(self.caps_directory, relative_path)
-                    + r"/regression_coeff/(.*).nii",
-                    join(self.caps_directory, relative_path)
-                    + "/group-"
-                    + self.parameters["group_label"]
-                    + r"_covariate-\1"
-                    + "_measure-"
-                    + self.parameters["measure_label"]
-                    + "_fwhm-"
-                    + str(self.parameters["full_width_at_half_maximum"])
-                    + "_regressionCoefficient.nii",
+                    str(base_dir / "regression_coeff") + r"/(.*).nii",
+                    (
+                        str(base_dir / f"group-{self.parameters['group_label']}")
+                        + r"_covariate-\1"
+                        + f"_measure-{self.parameters['measure_label']}_fwhm-{self.parameters['full_width_at_half_maximum']}_regressionCoefficient.nii"
+                    ),
                 ),
             ]
 

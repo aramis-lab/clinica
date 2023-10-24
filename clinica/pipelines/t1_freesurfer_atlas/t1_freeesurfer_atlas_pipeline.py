@@ -1,25 +1,15 @@
-# coding: utf8
-
-# Use hash instead of parameters for iterables folder names
-# Otherwise path will be too long and generate OSError
-from typing import Optional
+from pathlib import Path
+from typing import List, Optional
 
 from nipype import config
 
-import clinica.pipelines.engine as cpe
-from clinica.pipelines import t1_freesurfer_longitudinal
-from clinica.pipelines.t1_freesurfer_longitudinal import (
-    t1_freesurfer_longitudinal_correction_utils,
-)
-from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils import (
-    get_processed_images,
-)
+from clinica.pipelines.engine import Pipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class T1FreeSurferAtlas(cpe.Pipeline):
+class T1FreeSurferAtlas(Pipeline):
     """Projection of the results of t1-freesurfer on another atlass
 
     Returns:
@@ -31,18 +21,25 @@ class T1FreeSurferAtlas(cpe.Pipeline):
         caps_directory: str,
         atlas_path: Optional[str] = None,
     ):
-        self.atlas_path = atlas_path
-        super().__init__(
-            caps_directory=caps_directory,
-        )
+        self.atlas_path = Path(atlas_path)
+        super().__init__(caps_directory=caps_directory)
+
+    def _check_custom_dependencies(self) -> None:
+        """Check dependencies provided by the developer."""
+        pass
+
+    def _check_pipeline_parameters(self) -> None:
+        """Check pipeline parameters."""
+        pass
 
     @staticmethod
     def get_to_process_with_atlases(
-        caps_directory: str, subjects: list, sessions: list, atlas_dir_path: str
-    ) -> list:
+        caps_directory: Path,
+        subjects: List[str],
+        sessions: List[str],
+        atlas_dir_path: Path,
+    ) -> List[str]:
         import itertools
-        import os
-        from pathlib import Path
 
         from clinica.pipelines.t1_freesurfer_longitudinal.longitudinal_utils import (
             grab_image_ids_from_caps_directory,
@@ -60,18 +57,16 @@ class T1FreeSurferAtlas(cpe.Pipeline):
 
         initial_list_to_process = []
         atlas_list = []
-        for path in Path(atlas_dir_path).rglob("*rh*6p0.gcs"):
+        for path in atlas_dir_path.rglob("*rh*6p0.gcs"):
             atlas_name = path.name.split(".")[1].split("_")[0]
             atlas_list.append(atlas_name)
 
-        if os.path.isdir(caps_directory):
+        if caps_directory.is_dir():
             for atlas in atlas_list:
                 atlas_info = dict(
                     {
-                        "pattern": "t1/freesurfer_cross_sectional/sub-*_ses-*/stats/rh."
-                        + atlas
-                        + ".stats",
-                        "description": atlas + "-based segmentation",
+                        "pattern": f"t1/freesurfer_cross_sectional/sub-*_ses-*/stats/rh.{atlas}.stats",
+                        "description": f"{atlas}-based segmentation",
                         "needed_pipeline": "t1-freesurfer",
                     }
                 )
@@ -102,26 +97,32 @@ class T1FreeSurferAtlas(cpe.Pipeline):
                 list_to_process = list_to_process + list(itertools.product(i[0], i[1]))
         return list_to_process
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Note:
-            The list of inputs of the T1FreeSurferAtlas pipeline is:
-                * to_process_with_atlases (str): list of the tuples (atlas, sub-ses) to process
+        Notes
+        -----
+        The list of inputs of the T1FreeSurferAtlas pipeline is:
+            * to_process_with_atlases (str): list of the tuples (atlas, sub-ses) to process
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["to_process_with_atlases"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Note:
-            The list of outputs of the T1FreeSurfer pipeline is:
-                * image_id (str): Image ID (e.g. sub-CLNC01_ses-M000)
+        Notes
+        -----
+        The list of outputs of the T1FreeSurfer pipeline is:
+            * image_id (str): Image ID (e.g. sub-CLNC01_ses-M000)
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return ["image_id"]
@@ -144,11 +145,15 @@ class T1FreeSurferAtlas(cpe.Pipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-        # fmt: off
         self.connect(
-            [(read_node, self.input_node, [("to_process_with_atlases", "to_process_with_atlases")])]
+            [
+                (
+                    read_node,
+                    self.input_node,
+                    [("to_process_with_atlases", "to_process_with_atlases")],
+                )
+            ]
         )
-        # fmt: on
 
     def build_output_node(self):
         return super().build_output_node()

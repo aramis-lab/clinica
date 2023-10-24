@@ -1,14 +1,16 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import PETPipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class PETLinear(cpe.PETPipeline):
+class PETLinear(PETPipeline):
     """PET Linear - Affine registration of PET images to standard space.
     This preprocessing pipeline uses T1w MRI transformation into standard
     space computed in clinica t1-linear pipeline.
@@ -24,29 +26,33 @@ class PETLinear(cpe.PETPipeline):
         A clinica pipeline object containing the pet_linear pipeline.
     """
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["pet", "t1w", "t1w_to_mni"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return [
             "registered_pet",
             "transform_mat",
             "registered_pet_in_t1w",
-        ]  # Fill here the list
+        ]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
@@ -173,7 +179,6 @@ class PETLinear(cpe.PETPipeline):
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.io import DataSink
@@ -258,7 +263,6 @@ class PETLinear(cpe.PETPipeline):
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants

@@ -1,6 +1,8 @@
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import Pipeline
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -8,7 +10,7 @@ cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class DwiDti(cpe.Pipeline):
+class DwiDti(Pipeline):
     """DTI-based processing of DWI datasets.
 
     Returns:
@@ -16,27 +18,32 @@ class DwiDti(cpe.Pipeline):
 
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-
-    def check_custom_dependencies(self):
         pass
 
-    def get_input_fields(self):
+    def _check_custom_dependencies(self) -> None:
+        pass
+
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipelines.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["preproc_dwi", "preproc_bvec", "preproc_bval", "b0_mask"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipelines.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
-        output_list_dti = [
+        return [
             "dti",
             "fa",
             "md",
@@ -55,12 +62,8 @@ class DwiDti(cpe.Pipeline):
             "affine_matrix",
         ]
 
-        return output_list_dti
-
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -84,15 +87,14 @@ class DwiDti(cpe.Pipeline):
         )
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_participants_sessions(
-            self.subjects, self.sessions, folder_participants_tsv
+            self.subjects, self.sessions, self.base_dir / self.name
         )
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint(
-                f"List available in {os.path.join(folder_participants_tsv, 'participants.tsv')}"
+                f"List available in {self.base_dir / self.name / 'participants.tsv'}"
             )
             cprint("The pipeline will last approximately 20 minutes per image.")
 

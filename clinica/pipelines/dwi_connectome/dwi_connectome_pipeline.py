@@ -1,37 +1,40 @@
 # Use hash instead of parameters for iterables folder names
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import Pipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class DwiConnectome(cpe.Pipeline):
+class DwiConnectome(Pipeline):
     """Connectome-based processing of corrected DWI datasets.
 
     Returns:
         A clinica pipeline object containing the DwiConnectome pipeline.
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         if self.parameters["n_tracks"] < 0:
             raise ValueError(
                 f"The n_tracks parameter ({self.parameters['n_tracks']}) should be positive."
             )
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
-
         return [
             "t1_brain_file",
             "wm_mask_file",
@@ -41,18 +44,18 @@ class DwiConnectome(cpe.Pipeline):
             "atlas_files",
         ]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
-
         return ["response", "fod", "tracts", "nodes", "connectomes"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
         import re
 
         import nipype.interfaces.utility as nutil
@@ -111,9 +114,8 @@ class DwiConnectome(cpe.Pipeline):
         ]
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_participants_sessions(
-            self.subjects, self.sessions, folder_participants_tsv
+            self.subjects, self.sessions, self.base_dir / self.name
         )
 
         if len(self.subjects):

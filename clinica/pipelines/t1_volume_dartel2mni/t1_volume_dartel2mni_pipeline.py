@@ -1,42 +1,47 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class T1VolumeDartel2MNI(cpe.Pipeline):
+class T1VolumeDartel2MNI(Pipeline):
     """T1VolumeDartel2MNI - Dartel template to MNI.
 
     Returns:
         A clinica pipeline object containing the T1VolumeDartel2MNI pipeline.
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
 
         if "group_label" not in self.parameters.keys():
             raise KeyError("Missing compulsory group_label key in pipeline parameter.")
-
         self.parameters.setdefault("tissues", [1, 2, 3])
         self.parameters.setdefault("voxel_size", None)
         self.parameters.setdefault("modulate", True)
         self.parameters.setdefault("smooth", [8])
-
         check_group_label(self.parameters["group_label"])
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["native_segmentations", "flowfield_files", "template_file"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return ["normalized_files", "smoothed_normalized_files", "atlas_statistics"]
@@ -61,12 +66,9 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             print_images_to_process,
         )
 
-        # Check that group already exists
-        if not os.path.exists(
-            os.path.join(
-                self.caps_directory, "groups", "group-" + self.parameters["group_label"]
-            )
-        ):
+        if not (
+            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
+        ).exists():
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
                 f"Group {self.parameters['group_label']} does not exist. "
@@ -136,15 +138,19 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             print_images_to_process(self.subjects, self.sessions)
             cprint("The pipeline will last a few minutes per image.")
 
-        # fmt: off
         self.connect(
             [
-                (read_input_node, self.input_node, [("native_segmentations", "native_segmentations"),
-                                                    ("flowfield_files", "flowfield_files"),
-                                                    ("template_file", "template_file")]),
+                (
+                    read_input_node,
+                    self.input_node,
+                    [
+                        ("native_segmentations", "native_segmentations"),
+                        ("flowfield_files", "flowfield_files"),
+                        ("template_file", "template_file"),
+                    ],
+                ),
             ]
         )
-        # fmt: on
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
@@ -196,7 +202,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             (r"trait_added", r""),
         ]
 
-        # fmt: off
         self.connect(
             [
                 (
@@ -204,12 +209,14 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                     write_normalized_node,
                     [
                         (("normalized_files", zip_nii, True), "normalized_files"),
-                        (("smoothed_normalized_files", zip_nii, True), "smoothed_normalized_files"),
+                        (
+                            ("smoothed_normalized_files", zip_nii, True),
+                            "smoothed_normalized_files",
+                        ),
                     ],
                 )
             ]
         )
-        # fmt: on
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
@@ -288,31 +295,61 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                 joinfield="smoothed_normalized_files",
                 name="join_smoothing_node",
             )
-            # fmt: off
             self.connect(
                 [
-                    (dartel2mni_node, smoothing_node, [("normalized_files", "in_files")]),
-                    (smoothing_node, join_smoothing_node, [("smoothed_files", "smoothed_normalized_files")]),
-                    (join_smoothing_node, self.output_node, [("smoothed_normalized_files", "smoothed_normalized_files")]),
+                    (
+                        dartel2mni_node,
+                        smoothing_node,
+                        [("normalized_files", "in_files")],
+                    ),
+                    (
+                        smoothing_node,
+                        join_smoothing_node,
+                        [("smoothed_files", "smoothed_normalized_files")],
+                    ),
+                    (
+                        join_smoothing_node,
+                        self.output_node,
+                        [("smoothed_normalized_files", "smoothed_normalized_files")],
+                    ),
                 ]
             )
-            # fmt: on
         else:
             self.output_node.inputs.smoothed_normalized_files = []
 
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
-                (self.input_node, unzip_tissues_node, [("native_segmentations", "in_file")]),
-                (self.input_node, unzip_flowfields_node, [("flowfield_files", "in_file")]),
+                (
+                    self.input_node,
+                    unzip_tissues_node,
+                    [("native_segmentations", "in_file")],
+                ),
+                (
+                    self.input_node,
+                    unzip_flowfields_node,
+                    [("flowfield_files", "in_file")],
+                ),
                 (self.input_node, unzip_template_node, [("template_file", "in_file")]),
                 (unzip_tissues_node, dartel2mni_node, [("out_file", "apply_to_files")]),
-                (unzip_flowfields_node, dartel2mni_node, [
-                    (("out_file", dartel2mni_utils.prepare_flowfields, self.parameters["tissues"]), "flowfield_files")]),
+                (
+                    unzip_flowfields_node,
+                    dartel2mni_node,
+                    [
+                        (
+                            (
+                                "out_file",
+                                dartel2mni_utils.prepare_flowfields,
+                                self.parameters["tissues"],
+                            ),
+                            "flowfield_files",
+                        )
+                    ],
+                ),
                 (unzip_template_node, dartel2mni_node, [("out_file", "template_file")]),
-                (dartel2mni_node, self.output_node, [("normalized_files", "normalized_files")]),
+                (
+                    dartel2mni_node,
+                    self.output_node,
+                    [("normalized_files", "normalized_files")],
+                ),
             ]
         )
-        # fmt: on

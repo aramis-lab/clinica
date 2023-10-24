@@ -1,7 +1,9 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class StatisticsSurface(cpe.Pipeline):
+class StatisticsSurface(Pipeline):
     """StatisticsSurface - Surface-based mass-univariate analysis with BrainStat.
 
     See documentation at https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
@@ -14,7 +16,7 @@ class StatisticsSurface(cpe.Pipeline):
     Pipeline parameters are explained in StatisticsSurfaceCLI.define_options()
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.group import check_group_label
@@ -85,21 +87,26 @@ class StatisticsSurface(cpe.Pipeline):
                     "and a custom file (use the --custom_file option)."
                 )
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return []
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return ["output_dir"]

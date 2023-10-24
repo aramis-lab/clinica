@@ -1,14 +1,17 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
+from pathlib import Path
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import Pipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class AnatLinear(cpe.Pipeline):
+class AnatLinear(Pipeline):
     """Anat Linear - Affine registration of anat (t1w or flair) images to standard space.
 
     This preprocessing pipeline includes globally three steps:
@@ -22,36 +25,45 @@ class AnatLinear(cpe.Pipeline):
     """
 
     @staticmethod
-    def get_processed_images(caps_directory, subjects, sessions):
-        import os
-
+    def get_processed_images(
+        caps_directory: Path, subjects: List[str], sessions: List[str]
+    ) -> List[str]:
         from clinica.utils.filemanip import extract_image_ids
         from clinica.utils.input_files import T1W_LINEAR_CROPPED
         from clinica.utils.inputs import clinica_file_reader
 
-        image_ids = []
-        if os.path.isdir(caps_directory):
+        image_ids: List[str] = []
+        if caps_directory.is_dir():
             cropped_files, _ = clinica_file_reader(
                 subjects, sessions, caps_directory, T1W_LINEAR_CROPPED, False
             )
             image_ids = extract_image_ids(cropped_files)
         return image_ids
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def _check_pipeline_parameters(self) -> None:
+        """Check pipeline parameters."""
+        pass
+
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["anat"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str:
             A list of (string) output fields name.
         """
         return ["image_id"]
@@ -133,7 +145,7 @@ class AnatLinear(cpe.Pipeline):
                 cprint(msg=f"{image_id.replace('_', ' | ')}", lvl="warning")
             cprint(msg=f"Image(s) will be ignored by Clinica.", lvl="warning")
             input_ids = [
-                p_id + "_" + s_id for p_id, s_id in zip(self.subjects, self.sessions)
+                f"{p_id}_{s_id}" for p_id, s_id in zip(self.subjects, self.sessions)
             ]
             to_process_ids = list(set(input_ids) - set(processed_ids))
             self.subjects, self.sessions = extract_subjects_sessions_from_filename(

@@ -1,46 +1,51 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class T1VolumeParcellation(cpe.Pipeline):
+class T1VolumeParcellation(Pipeline):
     """T1VolumeParcellation - Computation of mean GM concentration for a set of regions.
 
     Returns:
         A clinica pipeline object containing the T1VolumeParcellation pipeline.
     """
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.atlas import T1_VOLUME_ATLASES
         from clinica.utils.group import check_group_label
 
         self.parameters.setdefault("group_label", None)
         check_group_label(self.parameters["group_label"])
-
         self.parameters.setdefault("atlases", T1_VOLUME_ATLASES)
         self.parameters.setdefault("modulate", True)
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["file_list", "atlas_list"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
+        return []
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -53,12 +58,9 @@ class T1VolumeParcellation(cpe.Pipeline):
             print_images_to_process,
         )
 
-        # Check that group already exists
-        if not os.path.exists(
-            os.path.join(
-                self.caps_directory, "groups", f"group-{self.parameters['group_label']}"
-            )
-        ):
+        if not (
+            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
+        ).exists():
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
                 f"Group {self.parameters['group_label']} does not exist. "
@@ -103,6 +105,7 @@ class T1VolumeParcellation(cpe.Pipeline):
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
+        pass
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
@@ -141,16 +144,15 @@ class T1VolumeParcellation(cpe.Pipeline):
                 + r"/\2/\3",
             )
         ]
-
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
                 (self.input_node, atlas_stats_node, [("file_list", "in_image")]),
                 (self.input_node, atlas_stats_node, [("atlas_list", "atlas_list")]),
-                (atlas_stats_node, outputnode, [("atlas_statistics", "atlas_statistics")]),
+                (
+                    atlas_stats_node,
+                    outputnode,
+                    [("atlas_statistics", "atlas_statistics")],
+                ),
                 (outputnode, datasink, [("atlas_statistics", "atlas_statistics")]),
             ]
         )
-        # fmt: on

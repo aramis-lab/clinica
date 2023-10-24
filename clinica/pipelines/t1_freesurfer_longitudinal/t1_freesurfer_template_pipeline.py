@@ -1,7 +1,10 @@
-import clinica.pipelines.engine as cpe
+from pathlib import Path
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class T1FreeSurferTemplate(cpe.Pipeline):
+class T1FreeSurferTemplate(Pipeline):
     """FreeSurfer Longitudinal template class.
 
     Returns:
@@ -9,8 +12,9 @@ class T1FreeSurferTemplate(cpe.Pipeline):
     """
 
     @staticmethod
-    def get_processed_images(caps_directory, subjects, sessions):
-        import os
+    def get_processed_images(
+        caps_directory: Path, subjects: List[str], sessions: List[str]
+    ) -> List[str]:
         import re
 
         from clinica.utils.input_files import T1_FS_T_DESTRIEUX
@@ -25,8 +29,8 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             get_long_id(list_session_ids) for list_session_ids in list_list_session_ids
         ]
 
-        image_ids = []
-        if os.path.isdir(caps_directory):
+        image_ids: List[str] = []
+        if caps_directory.is_dir():
             t1_freesurfer_files, _ = clinica_file_reader(
                 list_participant_id,
                 list_long_id,
@@ -40,43 +44,48 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             ]
         return image_ids
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
+        pass
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that cannot be listed in `info.json`."""
+        pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Note:
-            The list of inputs of the T1FreeSurferTemplate pipeline is:
-                * participant_id (str): Participant ID (e.g. "sub-CLNC01")
-                * list_session_ids (List[str]: List of session IDs associated to `participant_id`
-                    (e.g. ["ses-M000"] or ["ses-M000", "ses-M018", "ses-M036"])
+        Notes
+        -----
+        The list of inputs of the T1FreeSurferTemplate pipeline is:
+            * participant_id (str): Participant ID (e.g. "sub-CLNC01")
+            * list_session_ids (List[str]: List of session IDs associated to `participant_id`
+                (e.g. ["ses-M000"] or ["ses-M000", "ses-M018", "ses-M036"])
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["participant_id", "list_session_ids"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Note:
-            The list of inputs of the T1FreeSurferTemplate pipeline is:
-                * image_id (str): Image ID (e.g. "sub-CLNC01_long-M000M018")
+        Notes
+        -----
+        The list of inputs of the T1FreeSurferTemplate pipeline is:
+            * image_id (str): Image ID (e.g. "sub-CLNC01_long-M000M018")
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return ["image_id"]
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-        from pathlib import Path
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -128,11 +137,10 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             else:
                 cprint("Participant(s) will be ignored by Clinica.", lvl="warning")
                 input_ids = [
-                    p_id + "_" + s_id
-                    for p_id, s_id in zip(self.subjects, self.sessions)
+                    f"{p_id}_{s_id}" for p_id, s_id in zip(self.subjects, self.sessions)
                 ]
                 processed_sessions_per_participant = [
-                    read_sessions(Path(self.caps_directory), p_id, l_id)
+                    read_sessions(self.caps_directory, p_id, l_id)
                     for (p_id, l_id) in zip(
                         processed_participants, processed_long_sessions
                     )
@@ -141,7 +149,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                     processed_participants, processed_sessions_per_participant
                 )
                 processed_ids = [
-                    p_id + "_" + s_id for p_id, s_id in zip(participants, sessions)
+                    f"{p_id}_{s_id}" for p_id, s_id in zip(participants, sessions)
                 ]
                 to_process_ids = list(set(input_ids) - set(processed_ids))
                 self.subjects, self.sessions = extract_subjects_sessions_from_filename(
@@ -160,13 +168,10 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             )
             raise ClinicaCAPSError(err_msg)
 
-        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.name)
         long_ids = get_participants_long_id(self.subjects, self.sessions)
         save_part_sess_long_ids_to_tsv(
-            self.subjects, self.sessions, long_ids, folder_participants_tsv
+            self.subjects, self.sessions, long_ids, self.base_dir / self.name
         )
-
         [list_participant_id, list_list_session_ids] = get_unique_subjects(
             self.subjects, self.sessions
         )
@@ -175,7 +180,9 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         ]
 
         def print_images_to_process(
-            unique_part_list, per_part_session_list, list_part_long_id
+            unique_part_list: List[str],
+            per_part_session_list: List[str],
+            list_part_long_id: List[str],
         ):
             cprint(
                 f"The pipeline will be run on the following {len(unique_part_list)} participant(s):"
@@ -192,8 +199,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                 list_participant_id, list_list_session_ids, list_long_id
             )
             cprint(
-                "List available in %s"
-                % os.path.join(folder_participants_tsv, "participants.tsv")
+                f"List available in {self.base_dir / self.name / 'participants.tsv'}"
             )
             cprint("The pipeline will last approximately 10 hours per participant.")
 
@@ -206,19 +212,19 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-        # fmt: off
         self.connect(
             [
                 (read_node, self.input_node, [("participant_id", "participant_id")]),
-                (read_node, self.input_node, [("list_session_ids", "list_session_ids")]),
+                (
+                    read_node,
+                    self.input_node,
+                    [("list_session_ids", "list_session_ids")],
+                ),
             ]
         )
-        # fmt: on
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -238,25 +244,23 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             ),
             name="SaveToCaps",
         )
-        save_to_caps.inputs.source_dir = os.path.join(
-            self.base_dir, self.name, "ReconAll"
-        )
+        save_to_caps.inputs.source_dir = self.base_dir / self.name / "ReconAll"
         save_to_caps.inputs.caps_dir = self.caps_directory
         save_to_caps.inputs.overwrite_caps = False
 
-        # fmt: off
         self.connect(
             [
-                (self.input_node, save_to_caps, [("list_session_ids", "list_session_ids")]),
+                (
+                    self.input_node,
+                    save_to_caps,
+                    [("list_session_ids", "list_session_ids")],
+                ),
                 (self.output_node, save_to_caps, [("image_id", "image_id")]),
             ]
         )
-        # fmt: on
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -283,9 +287,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             name="0-InitPipeline",
         )
         init_input.inputs.caps_dir = self.caps_directory
-        init_input.inputs.output_dir = os.path.join(
-            self.base_dir, self.name, "ReconAll"
-        )
+        init_input.inputs.output_dir = self.base_dir / self.name / "ReconAll"
 
         # Run recon-all command
         recon_all = npe.Node(
@@ -307,9 +309,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             ),
             name="2-MoveSubjectsDir",
         )
-        move_subjects_dir.inputs.source_dir = os.path.join(
-            self.base_dir, self.name, "ReconAll"
-        )
+        move_subjects_dir.inputs.source_dir = self.base_dir / self.name / "ReconAll"
 
         # Connections
         # ===========
