@@ -9,7 +9,7 @@ def convert_images(
     bids_dir: PathLike,
     path_to_clinical: Optional[PathLike],
     gif: bool,
-    path_to_clinical_tsv: Optional[PathLike],
+    path_to_clinical_tsv: Optional[PathLike] = None,
 ) -> None:
     """Convert the entire dataset to BIDS.
 
@@ -33,7 +33,7 @@ def convert_images(
         If True, indicates the user wants to have the values of the gif parcellation
 
     path_to_clinical_tsv: PathLike, optional
-        Path to a tsv containing the data the additional data the user wants to have in the BIDS
+        Path to a TSV file containing the additional data the user wants to have in the BIDS output.
         If None, no additional data will be added.
     """
     import os

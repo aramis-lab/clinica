@@ -255,7 +255,6 @@ def dataset_to_bids(
     if path_to_clinical_tsv:
         additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
 
-        # hard written path soon to be changed
         path_to_mapping_tsv = path_to_ref_csv = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "data",
@@ -274,7 +273,7 @@ def dataset_to_bids(
         ].values.tolist()
 
         addi_df = pd.DataFrame(
-            [participants_addi_list, session_addi_list, scan_addi_list]
+            [pre_addi_df["data"][pre_addi_df["dest"] == x].values.tolist() for x in ("participants", "sessions", "scans")]
         ).transpose()
         addi_df.columns = ["participants", "sessions", "scans"]
         df_to_write = pd.concat([df_ref, addi_df])

@@ -64,7 +64,7 @@ where:
 
 - `OPTIONS`:
     - `--clinical-data-dir/-cdd` is the path to the clinical data directory.
-    - `--clinical-data-tsv/-cdt` is a tsv containing the additional fields the user wants. The available data can be retrieved inside the installation of clincia at this location `your/path/to/clinica/clinica/iotools/data/genfi_data.tsv`.
+    - `--clinical-data-tsv/-cdt` is a tsv file containing the additional fields the user wants. The available data can be retrieved inside the installation of clincia at this location `your_path_to_clinica/clinica/iotools/data/genfi_data.tsv`.
     - `-gif` Allows the user to add the value from gif to the session.tsv.
 
 !!! note

@@ -19,7 +19,7 @@ clinical_data_tsv = click.option(
     "--clinical-data-tsv",
     "clinical_data_tsv",
     type=click.Path(exists=True, file_okay=True, resolve_path=True),
-    help="Path to a tsv containing additional clinical data you want to have in the BIDS",
+    help="Path to a tsv file containing additional clinical data you want to have in the BIDS output.",
 )
 
 
