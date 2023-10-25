@@ -236,6 +236,7 @@ def dataset_to_bids(
         Dictionary containing as key participants, sessions and scans, and the values wanted for each tsv
     """
     import os
+    from clinica.utils.filemanip import get_parent
 
     # generates participants, sessions and scans tsv
     complete_data_df = complete_data_df.drop_duplicates(
@@ -245,11 +246,8 @@ def dataset_to_bids(
         verify_integrity=True,
     )
     # open the reference for building the tsvs:
-    path_to_ref_csv = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "data",
-        "genfi_ref.csv",
-    )
+    genfi_data_folder = get_parent(__file__, 3) / "data"
+    path_to_ref_csv = genfi_data_folder / "genfi_ref.csv"
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
     if not gif:
         df_ref = df_ref.head(8)
@@ -257,11 +255,7 @@ def dataset_to_bids(
     if path_to_clinical_tsv:
         additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
 
-        path_to_mapping_tsv = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "data",
-            "genfi_data_mapping.tsv",
-        )
+        path_to_mapping_tsv = genfi_data_folder / "genfi_data_mapping.tsv"
         map_to_level_df = pd.read_csv(path_to_mapping_tsv, sep="\t")
         pre_addi_df = map_to_level_df.merge(additional_data_df, how="inner", on="data")
 

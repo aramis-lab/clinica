@@ -7,8 +7,8 @@ from typing import Optional
 def convert_images(
     path_to_dataset: PathLike,
     bids_dir: PathLike,
-    path_to_clinical: Optional[PathLike],
-    gif: bool,
+    path_to_clinical: Optional[PathLike] = None,
+    gif: Optional[bool] = False,
     path_to_clinical_tsv: Optional[PathLike] = None,
 ) -> None:
     """Convert the entire dataset to BIDS.
@@ -52,7 +52,13 @@ def convert_images(
 
     # check that if a clinical tsv is given, a path to the clinical data is given as well
     if path_to_clinical_tsv and not path_to_clinical:
-        raise ValueError("Missing a clinical_data_path.")
+        raise ValueError(
+            "The Genfi2BIDS converter is unable to convert the clinical data because "
+            "the path to these data was not provided while a TSV file with additional "
+            f"data was given ({path_to_clinical_tsv}). You can either use the appropriate "
+            "option from the clinica command line interface to provide the missing path, "
+            "or chose to not convert clinical data at all."
+        )
     # read the clinical data files
     if path_to_clinical:
         (
