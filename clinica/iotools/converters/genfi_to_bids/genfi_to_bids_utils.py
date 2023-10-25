@@ -236,6 +236,7 @@ def dataset_to_bids(
         Dictionary containing as key participants, sessions and scans, and the values wanted for each tsv
     """
     import os
+
     from clinica.utils.filemanip import get_parent
 
     # generates participants, sessions and scans tsv
