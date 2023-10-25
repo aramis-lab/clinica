@@ -8,13 +8,6 @@ import pydicom as pdcm
 from pandas import DataFrame
 
 
-def check_clinical_path(path_to_clinical_data: PathLike) -> None:
-    if path_to_clinical_data:
-        return
-    else:
-        raise ValueError("Missing a clinical_data_path.")
-
-
 def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathLike]]:
     """Find the dicoms in the given directory.
 
@@ -196,6 +189,12 @@ def complete_clinical_data(
     df_clinical: DataFrame
         Dataframe containing the clinical data
 
+    df_biosamples: DataFrame
+        Dataframe containing the biosample data
+
+    df_neuropsych: DataFrame
+        Dataframe containing the neuropsych data
+
     Returns
     -------
     df_clinical_complete: DataFrame
@@ -228,6 +227,9 @@ def dataset_to_bids(
     gif: bool
         If True, indicates the user wants to have the values of the gif parcellation
 
+    path_to_clinical_tsv: PathLike
+        TSV file containing the data fields the user wishes to have from the excel spreadsheets
+
     Returns
     -------
     Dict[str, DataFrame]
@@ -255,25 +257,19 @@ def dataset_to_bids(
     if path_to_clinical_tsv:
         additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
 
-        path_to_mapping_tsv = path_to_ref_csv = os.path.join(
+        path_to_mapping_tsv = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "data",
             "genfi_data_mapping.tsv",
         )
         map_to_level_df = pd.read_csv(path_to_mapping_tsv, sep="\t")
         pre_addi_df = map_to_level_df.merge(additional_data_df, how="inner", on="data")
-        session_addi_list = pre_addi_df["data"][
-            pre_addi_df["dest"] == "sessions"
-        ].values.tolist()
-        participants_addi_list = pre_addi_df["data"][
-            pre_addi_df["dest"] == "participants"
-        ].values.tolist()
-        scan_addi_list = pre_addi_df["data"][
-            pre_addi_df["dest"] == "scans"
-        ].values.tolist()
 
         addi_df = pd.DataFrame(
-            [pre_addi_df["data"][pre_addi_df["dest"] == x].values.tolist() for x in ("participants", "sessions", "scans")]
+            [
+                pre_addi_df["data"][pre_addi_df["dest"] == x].values.tolist()
+                for x in ("participants", "sessions", "scans")
+            ]
         ).transpose()
         addi_df.columns = ["participants", "sessions", "scans"]
         df_to_write = pd.concat([df_ref, addi_df])

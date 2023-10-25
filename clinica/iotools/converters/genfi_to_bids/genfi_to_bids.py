@@ -41,7 +41,6 @@ def convert_images(
     import clinica.iotools.bids_utils as bids
 
     from .genfi_to_bids_utils import (
-        check_clinical_path,
         complete_clinical_data,
         dataset_to_bids,
         find_clinical_data,
@@ -52,8 +51,8 @@ def convert_images(
     )
 
     # check that if a clinical tsv is given, a path to the clinical data is given as well
-    if path_to_clinical_tsv:
-        check_clinical_path(path_to_clinical)
+    if path_to_clinical_tsv and not path_to_clinical:
+        raise ValueError("Missing a clinical_data_path.")
     # read the clinical data files
     if path_to_clinical:
         (
