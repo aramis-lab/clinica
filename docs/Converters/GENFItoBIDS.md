@@ -30,7 +30,7 @@ To download GENFI in a way that you can convert it, you need to make sure of two
 The converter can be run with the following command line:
 
 ```Text
-clinica convert genfi-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY 
+clinica convert genfi-to-bids [OPTIONS] DATASET_DIRECTORY BIDS_DIRECTORY 
 ```
 
 where:
@@ -60,9 +60,12 @@ where:
         └── 9
     ```
 
-- `CLINICAL_DATA_DIRECTORY` is the path to the directory containing the clinical excel files.
-
 - `BIDS_DIRECTORY` is the path to the output directory where the BIDS-converted version of GENFI will be stored.
+
+- `OPTIONS`:
+    - `--clinical-data-dir/-cdd` is the path to the clinical data directory.
+    - `--clinical-data-tsv/-cdt` is a tsv file containing the additional fields the user wants. The available data can be retrieved inside the installation of clincia at this location `your_path_to_clinica/clinica/iotools/data/genfi_data.tsv`.
+    - `-gif` Allows the user to add the value from gif to the session.tsv.
 
 !!! note
     In order to improve the readability, the BIDS subject ID is the genetic group concatenated with the original GENFI ID and is defined as follows:
