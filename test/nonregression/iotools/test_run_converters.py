@@ -145,6 +145,7 @@ def test_run_genfi_to_bids(cmdopt, tmp_path):
         output_dir,
         path_to_clinical=None,
         gif=False,
+        path_to_clinical_tsv=None,
     )
 
     compare_folders(output_dir, ref_dir / "bids", output_dir)

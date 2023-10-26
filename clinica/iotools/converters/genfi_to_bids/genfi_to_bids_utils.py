@@ -150,6 +150,8 @@ def find_clinical_data(
             "FINAL*DEMOGRAPHICS*.xlsx",
             "FINAL*IMAGING*.xlsx",
             "FINAL*CLINICAL*.xlsx",
+            "FINAL*BIOSAMPLES*.xlsx",
+            "FINAL*NEUROPSYCH*.xlsx",
         )
     )
 
@@ -168,7 +170,11 @@ def _read_file(data_file: PathLike) -> pd.DataFrame:
 
 
 def complete_clinical_data(
-    df_demographics: DataFrame, df_imaging: DataFrame, df_clinical: DataFrame
+    df_demographics: DataFrame,
+    df_imaging: DataFrame,
+    df_clinical: DataFrame,
+    df_biosamples: DataFrame,
+    df_neuropsych: DataFrame,
 ) -> DataFrame:
     """Merges the different clincal dataframes into one.
 
@@ -183,6 +189,12 @@ def complete_clinical_data(
     df_clinical: DataFrame
         Dataframe containing the clinical data
 
+    df_biosamples: DataFrame
+        Dataframe containing the biosample data
+
+    df_neuropsych: DataFrame
+        Dataframe containing the neuropsych data
+
     Returns
     -------
     df_clinical_complete: DataFrame
@@ -192,24 +204,19 @@ def complete_clinical_data(
     df_clinical_complete = df_imaging.merge(
         df_demographics, how="inner", on=merge_key
     ).drop(columns="diagnosis")
-    df_clinical = df_clinical.dropna(subset=merge_key)
-    return df_clinical_complete.merge(
-        df_clinical[
-            [
-                "blinded_code",
-                "blinded_site",
-                "visit",
-                "diagnosis",
-                "ftld-cdr-global",
-                "cdr-sob",
-            ]
-        ],
-        how="inner",
-        on=merge_key,
+    df_clinical_complete = df_clinical_complete.merge(
+        df_biosamples, how="inner", on=merge_key
     )
+    df_clinical_complete = df_clinical_complete.merge(
+        df_neuropsych, how="inner", on=merge_key
+    )
+    df_clinical = df_clinical.dropna(subset=merge_key)
+    return df_clinical_complete.merge(df_clinical, how="inner", on=merge_key)
 
 
-def dataset_to_bids(complete_data_df: DataFrame, gif: bool) -> Dict[str, DataFrame]:
+def dataset_to_bids(
+    complete_data_df: DataFrame, gif: bool, path_to_clinical_tsv: PathLike
+) -> Dict[str, DataFrame]:
     """Selects the data needed to write the participants, sessions, and scans tsvs.
 
     Parameters
@@ -220,12 +227,17 @@ def dataset_to_bids(complete_data_df: DataFrame, gif: bool) -> Dict[str, DataFra
     gif: bool
         If True, indicates the user wants to have the values of the gif parcellation
 
+    path_to_clinical_tsv: PathLike
+        TSV file containing the data fields the user wishes to have from the excel spreadsheets
+
     Returns
     -------
     Dict[str, DataFrame]
         Dictionary containing as key participants, sessions and scans, and the values wanted for each tsv
     """
     import os
+
+    from clinica.utils.filemanip import get_parent
 
     # generates participants, sessions and scans tsv
     complete_data_df = complete_data_df.drop_duplicates(
@@ -235,17 +247,31 @@ def dataset_to_bids(complete_data_df: DataFrame, gif: bool) -> Dict[str, DataFra
         verify_integrity=True,
     )
     # open the reference for building the tsvs:
-    path_to_ref_csv = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "data",
-        "genfi_ref.csv",
-    )
+    genfi_data_folder = get_parent(__file__, 3) / "data"
+    path_to_ref_csv = genfi_data_folder / "genfi_ref.csv"
     df_ref = pd.read_csv(path_to_ref_csv, sep=";")
-
     if not gif:
         df_ref = df_ref.head(8)
+    # add additional data through csv
+    if path_to_clinical_tsv:
+        additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
+
+        path_to_mapping_tsv = genfi_data_folder / "genfi_data_mapping.tsv"
+        map_to_level_df = pd.read_csv(path_to_mapping_tsv, sep="\t")
+        pre_addi_df = map_to_level_df.merge(additional_data_df, how="inner", on="data")
+
+        addi_df = pd.DataFrame(
+            [
+                pre_addi_df["data"][pre_addi_df["dest"] == x].values.tolist()
+                for x in ("participants", "sessions", "scans")
+            ]
+        ).transpose()
+        addi_df.columns = ["participants", "sessions", "scans"]
+        df_to_write = pd.concat([df_ref, addi_df])
+    else:
+        df_to_write = df_ref
     return {
-        col: complete_data_df.filter(items=list(df_ref[col]))
+        col: complete_data_df.filter(items=list(df_to_write[col]))
         for col in ["participants", "sessions", "scans"]
     }
 
