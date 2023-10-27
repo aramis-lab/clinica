@@ -2,6 +2,7 @@
 Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 """
 from pathlib import Path
+from typing import Optional
 
 
 def convert(
@@ -10,6 +11,7 @@ def convert(
     output_dataset: Path,
     overwrite: bool = False,
     clinical_data_only: bool = False,
+    n_procs: Optional[int] = None,
 ) -> None:
     """Convert the AIBL dataset (https://www.aibl.csiro.au/) in a BIDS dataset.
 
@@ -32,6 +34,11 @@ def convert(
         If True, only convert the clinical data without the imaging data.
         If False, everything is converted.
         Default=False.
+
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        By default, all CPU minus one will be used.
     """
     from clinica.utils.check_dependency import check_dcm2niix
 
@@ -45,6 +52,7 @@ def convert(
             input_clinical_data,
             output_dataset,
             overwrite,
+            n_procs=n_procs,
         )
 
     _convert_clinical_data(input_clinical_data, output_dataset)
@@ -55,6 +63,7 @@ def _convert_images(
     input_clinical_data: Path,
     output_dataset: Path,
     overwrite: bool = False,
+    n_procs: Optional[int] = None,
 ) -> None:
     """Conversion of the AIBL imaging data in BIDS.
 
@@ -72,6 +81,11 @@ def _convert_images(
     overwrite : bool, optional
         Overwrites previously written nifti and json files.
         Default=False.
+
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        By default, all CPU minus one will be used.
     """
     from os.path import exists
 
@@ -85,6 +99,7 @@ def _convert_images(
             output_dataset,
             modality,
             overwrite=overwrite,
+            n_procs=n_procs,
         )
         for modality in Modality
     ]
