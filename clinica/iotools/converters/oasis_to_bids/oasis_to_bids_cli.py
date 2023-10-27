@@ -1,3 +1,5 @@
+from typing import Optional
+
 import click
 
 from clinica.iotools.converters import cli_param
@@ -7,10 +9,14 @@ from clinica.iotools.converters import cli_param
 @cli_param.dataset_directory
 @cli_param.clinical_data_directory
 @cli_param.bids_directory
+@click.option(
+    "-np", "--n_procs", type=int, help="Number of cores used to run in parallel."
+)
 def cli(
     dataset_directory: str,
     clinical_data_directory: str,
     bids_directory: str,
+    n_procs: Optional[int] = None,
 ) -> None:
     """OASIS to BIDS converter.
 
@@ -20,7 +26,7 @@ def cli(
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
 
     oasis_to_bids = OasisToBids()
-    oasis_to_bids.convert_images(dataset_directory, bids_directory)
+    oasis_to_bids.convert_images(dataset_directory, bids_directory, n_procs=n_procs)
     oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
 
 
