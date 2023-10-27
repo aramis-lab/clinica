@@ -10,6 +10,7 @@ def convert_adni_tau_pet(
     conversion_dir: PathLike,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
+    n_procs: Optional[int] = None,
 ):
     """Convert Tau PET images of ADNI into BIDS format.
 
@@ -33,6 +34,11 @@ def convert_adni_tau_pet(
     mod_to_update : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
+
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        By default, all CPU minus one will be used.
     """
     from os import path
 
@@ -51,7 +57,9 @@ def convert_adni_tau_pet(
     )
     images = compute_tau_pet_paths(source_dir, csv_dir, subjects, conversion_dir)
     cprint("Paths of TAU PET images found. Exporting images into BIDS ...")
-    paths_to_bids(images, destination_dir, "tau", mod_to_update=mod_to_update)
+    paths_to_bids(
+        images, destination_dir, "tau", mod_to_update=mod_to_update, n_procs=n_procs
+    )
     cprint(msg="TAU PET conversion done.", lvl="debug")
 
 

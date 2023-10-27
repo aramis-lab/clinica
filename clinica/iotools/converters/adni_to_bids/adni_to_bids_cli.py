@@ -35,6 +35,9 @@ ALL_MODALITIES = ("T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fM
 @click.option(
     "-xml", "--xml_path", help="Path to the root directory containing the xml metadata."
 )
+@click.option(
+    "-np", "--n_procs", type=int, help="Number of cores used to run in parallel."
+)
 def cli(
     dataset_directory: str,
     clinical_data_directory: str,
@@ -44,6 +47,7 @@ def cli(
     clinical_data_only: bool = False,
     force_new_extraction: bool = False,
     modalities: List[str] = ALL_MODALITIES,
+    n_procs: Optional[int] = None,
 ) -> None:
     """ADNI to BIDS converter.
 
@@ -69,6 +73,7 @@ def cli(
             subjects_list,
             modalities,
             force_new_extraction,
+            n_procs=n_procs,
         )
 
     adni_to_bids.convert_clinical_data(
