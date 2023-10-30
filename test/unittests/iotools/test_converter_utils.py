@@ -220,20 +220,3 @@ def test_compute_longitudinal_analysis(tmp_path):
         "--------------------------------\nfoo\t1\t| "
         "0\nbar\t0\t| 1\nbaz\t1\t| 1\n\n\n"
     )
-
-
-@pytest.mark.parametrize("n_procs", [-100, -1, 0, 300])
-def test_get_n_procs_errors(n_procs):
-    from clinica.iotools.converter_utils import get_n_procs
-
-    with pytest.raises(ValueError, match="The number of processes should be between 1"):
-        get_n_procs(n_procs)
-
-
-def test_get_n_procs():
-    from multiprocessing import cpu_count
-
-    from clinica.iotools.converter_utils import get_n_procs
-
-    assert get_n_procs(1) == 1
-    assert get_n_procs() == max(cpu_count() - 1, 1)
