@@ -49,7 +49,7 @@ def _convert_adni_fdg_pet(
     preprocessing_step: ADNIPreprocessingStep,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
-    n_procs: Optional[int] = None,
+    n_procs: Optional[int] = 1,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -80,7 +80,7 @@ def _convert_adni_fdg_pet(
     n_procs : int, optional
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
-        By default, all CPU minus one will be used.
+        Default=1.
     """
     from pathlib import Path
 

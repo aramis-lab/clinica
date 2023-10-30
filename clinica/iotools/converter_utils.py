@@ -373,39 +373,3 @@ def viscode_to_session(viscode: str, baseline_identifiers: Optional[set] = None)
         "Expected a session identifier of the form 'MXXX', "
         f"or a baseline identifier among {baseline_identifiers}."
     )
-
-
-def get_n_procs(n_procs: Optional[int] = None) -> int:
-    """Return the number of processes that can be used.
-
-    Parameters
-    ----------
-    n_procs : int, optional
-        The requested number of processes.
-        If specified, it should be between 1 and the number of available CPUs.
-        By default, all CPU minus one will be used.
-
-    Returns
-    -------
-    int :
-        The number of processes to be used.
-    """
-    from multiprocessing import cpu_count
-
-    from clinica.utils.stream import cprint
-
-    n_cpu_available = cpu_count()
-    # Kept for backward compatibility but this is a very greedy strategy...
-    default_number = max(n_cpu_available - 1, 1)
-    if n_procs is None:
-        n_procs = default_number
-    if n_procs > n_cpu_available or n_procs <= 0:
-        msg = (
-            f"The number of processes should be between 1 and {n_cpu_available}. "
-            f"Instead, {n_procs} was provided."
-        )
-        cprint(msg, lvl="error")
-        raise ValueError(msg)
-    cprint(f"Using {n_procs} processes.", lvl="info")
-
-    return n_procs

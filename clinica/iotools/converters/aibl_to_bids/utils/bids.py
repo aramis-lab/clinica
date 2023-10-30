@@ -100,7 +100,7 @@ def paths_to_bids(
     bids_dir: Path,
     modality: Modality,
     overwrite: bool = False,
-    n_procs: Optional[int] = None,
+    n_procs: Optional[int] = 1,
 ) -> List[str]:
     """Convert all the T1 images found in the AIBL dataset downloaded in BIDS.
 
@@ -124,7 +124,7 @@ def paths_to_bids(
     n_procs : int, optional
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
-        By default, all CPU minus one will be used.
+        Default=1.
 
     Return
     ------
@@ -133,9 +133,7 @@ def paths_to_bids(
         and saved in the bids_dir. This does not guarantee existence.
     """
     from functools import partial
-    from multiprocessing import Pool, cpu_count
-
-    from clinica.iotools.converter_utils import get_n_procs
+    from multiprocessing import Pool
 
     (bids_dir / "conversion_info").mkdir(parents=True, exist_ok=True)
 
@@ -153,7 +151,7 @@ def paths_to_bids(
 
     images_list = list([data for _, data in images.iterrows()])
 
-    with Pool(processes=get_n_procs(n_procs)) as pool:
+    with Pool(processes=n_procs) as pool:
         create_file_ = partial(
             _create_file,
             modality=modality,

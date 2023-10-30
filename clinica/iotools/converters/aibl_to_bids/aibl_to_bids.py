@@ -11,7 +11,7 @@ def convert(
     output_dataset: Path,
     overwrite: bool = False,
     clinical_data_only: bool = False,
-    n_procs: Optional[int] = None,
+    n_procs: Optional[int] = 1,
 ) -> None:
     """Convert the AIBL dataset (https://www.aibl.csiro.au/) in a BIDS dataset.
 
@@ -38,7 +38,7 @@ def convert(
     n_procs : int, optional
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
-        By default, all CPU minus one will be used.
+        Default=1.
     """
     from clinica.utils.check_dependency import check_dcm2niix
 
@@ -63,7 +63,7 @@ def _convert_images(
     input_clinical_data: Path,
     output_dataset: Path,
     overwrite: bool = False,
-    n_procs: Optional[int] = None,
+    n_procs: Optional[int] = 1,
 ) -> None:
     """Conversion of the AIBL imaging data in BIDS.
 
@@ -85,7 +85,7 @@ def _convert_images(
     n_procs : int, optional
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
-        By default, all CPU minus one will be used.
+        Default=1.
     """
     from os.path import exists
 

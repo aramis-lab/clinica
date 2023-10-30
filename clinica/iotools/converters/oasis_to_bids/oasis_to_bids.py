@@ -163,7 +163,7 @@ class OasisToBids(Converter):
 
         nb.save(img_with_good_dimension, output_path)
 
-    def convert_images(self, source_dir, dest_dir, n_procs: Optional[int] = None):
+    def convert_images(self, source_dir, dest_dir, n_procs: Optional[int] = 1):
         """Convert T1w images to BIDS.
 
         Parameters
@@ -175,7 +175,7 @@ class OasisToBids(Converter):
         n_procs : int, optional
             The requested number of processes.
             If specified, it should be between 1 and the number of available CPUs.
-            By default, all CPU minus one will be used.
+            Default=1.
 
         Note:
             Previous version of this method used mri_convert from FreeSurfer to convert
@@ -183,10 +183,8 @@ class OasisToBids(Converter):
         """
         import os
         from functools import partial
-        from multiprocessing import Pool, cpu_count
+        from multiprocessing import Pool
         from pathlib import Path
-
-        from clinica.iotools.converter_utils import get_n_procs
 
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)
@@ -197,6 +195,6 @@ class OasisToBids(Converter):
             if path.is_dir() and path.name.endswith("_MR1")
         ]
 
-        with Pool(processes=get_n_procs(n_procs)) as pool:
+        with Pool(processes=n_procs) as pool:
             func = partial(self.convert_single_subject, dest_dir=dest_dir)
             pool.map(func, subjs_folders)

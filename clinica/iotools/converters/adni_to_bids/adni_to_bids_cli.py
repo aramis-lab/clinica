@@ -2,6 +2,7 @@ from typing import List, Optional
 
 import click
 
+from clinica import option
 from clinica.iotools.converters import cli_param
 
 ALL_MODALITIES = ("T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI")
@@ -35,9 +36,8 @@ ALL_MODALITIES = ("T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fM
 @click.option(
     "-xml", "--xml_path", help="Path to the root directory containing the xml metadata."
 )
-@click.option(
-    "-np", "--n_procs", type=int, help="Number of cores used to run in parallel."
-)
+@option.global_option_group
+@option.n_procs
 def cli(
     dataset_directory: str,
     clinical_data_directory: str,

@@ -4,6 +4,7 @@ import click
 
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.statistics_volume_correction.pipeline as pydra_statistics_volume_correction
+from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
@@ -29,7 +30,8 @@ pipeline_name = "pydra-statistics-volume-correction"
 )
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.working_directory
-@cli_param.option.n_procs
+@option.global_option_group
+@option.n_procs
 def cli(
     caps_directory: str,
     t_map: str,

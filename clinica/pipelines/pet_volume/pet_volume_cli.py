@@ -2,6 +2,7 @@ from typing import List, Optional, Tuple
 
 import click
 
+from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
@@ -21,8 +22,9 @@ pipeline_name = "pet-volume"
 @cli_param.option.reconstruction_method
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
-@cli_param.option.n_procs
 @cli_param.option.yes
+@option.global_option_group
+@option.n_procs
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option_group.option(
     "-mask",

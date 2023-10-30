@@ -4,6 +4,7 @@ import click
 
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.pet_volume.pipeline as pydra_pet_volume
+from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
@@ -52,7 +53,8 @@ pipeline_name = "pydra-pet-volume"
     ),
 )
 @cli_param.option.smooth
-@cli_param.option.n_procs
+@option.global_option_group
+@option.n_procs
 def cli(
     bids_directory: str,
     caps_directory: str,
