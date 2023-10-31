@@ -10,7 +10,7 @@ def convert_adni_av45_fbb_pet(
     conversion_dir: PathLike,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ):
     """Convert AV-45 and Florbetaben PET images of ADNI into BIDS format.
 
@@ -35,7 +35,7 @@ def convert_adni_av45_fbb_pet(
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
 
-    n_procs : int, optional
+    n_procs : int, default=1
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
