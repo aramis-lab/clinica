@@ -1,5 +1,8 @@
+from typing import Optional
+
 import click
 
+from clinica import option
 from clinica.iotools.converters import cli_param
 
 
@@ -13,12 +16,15 @@ from clinica.iotools.converters import cli_param
     is_flag=True,
     help="Overwrites previously written nifti and json files.",
 )
+@option.global_option_group
+@option.n_procs
 def cli(
     dataset_directory: str,
     clinical_data_directory: str,
     bids_directory: str,
     clinical_data_only: bool = False,
     overwrite: bool = False,
+    n_procs: Optional[int] = None,
 ) -> None:
     """AIBL to BIDS converter.
 
@@ -35,4 +41,5 @@ def cli(
         Path(bids_directory),
         overwrite,
         clinical_data_only,
+        n_procs=n_procs,
     )

@@ -10,6 +10,7 @@ def convert_adni_flair(
     conversion_dir: PathLike,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
+    n_procs: Optional[int] = 1,
 ):
     """Convert FLAIR images of ADNI into BIDS format.
 
@@ -33,6 +34,11 @@ def convert_adni_flair(
     mod_to_update : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
+
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        Default=1.
     """
     from os import path
 
@@ -52,7 +58,9 @@ def convert_adni_flair(
     images = compute_flair_paths(source_dir, csv_dir, subjects, conversion_dir)
     cprint("Paths of FLAIR images found. Exporting images into BIDS ...")
     # flair_paths_to_bids(images, dest_dir)
-    paths_to_bids(images, destination_dir, "flair", mod_to_update=mod_to_update)
+    paths_to_bids(
+        images, destination_dir, "flair", mod_to_update=mod_to_update, n_procs=n_procs
+    )
     cprint(msg="FLAIR conversion done.", lvl="debug")
 
 

@@ -173,6 +173,7 @@ class AdniToBids(Converter):
         subjs_list_path=None,
         modalities=None,
         force_new_extraction=False,
+        n_procs: Optional[int] = 1,
     ):
         """Convert the images of ADNI.
 
@@ -261,4 +262,5 @@ class AdniToBids(Converter):
                     conversion_dir=conversion_dir,
                     subjects=subjs_list,
                     mod_to_update=force_new_extraction,
+                    n_procs=n_procs,
                 )

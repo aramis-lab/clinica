@@ -1226,7 +1226,9 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     return images
 
 
-def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
+def paths_to_bids(
+    images, bids_dir, modality, mod_to_update=False, n_procs: Optional[int] = 1
+):
     """Images in the list are converted and copied to directory in BIDS format.
 
     Args:
@@ -1234,9 +1236,10 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
         bids_dir: Path to the output BIDS directory
         modality: Imaging modality
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted agai n.
+        n_procs: int, optional. The number of processes to use for conversion. Default=1.
     """
     from functools import partial
-    from multiprocessing import Pool, cpu_count
+    from multiprocessing import Pool
 
     if modality.lower() not in [
         "t1",
@@ -1256,7 +1259,7 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
 
     images_list = list([data for _, data in images.iterrows()])
 
-    with Pool(processes=max(cpu_count() - 1, 1)) as pool:
+    with Pool(processes=n_procs) as pool:
         create_file_ = partial(
             create_file,
             modality=modality,

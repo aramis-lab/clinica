@@ -4,6 +4,7 @@ import click
 
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.pet_linear.pipeline as pydra_pet_linear
+from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
@@ -31,7 +32,8 @@ pipeline_name = "pydra-pet-linear"
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
-@cli_param.option.n_procs
+@option.global_option_group
+@option.n_procs
 def cli(
     bids_directory: str,
     caps_directory: str,

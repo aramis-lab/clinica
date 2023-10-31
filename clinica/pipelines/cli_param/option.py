@@ -56,12 +56,6 @@ modulate = option(
     help="Modulate output images, no modulation preserves concentrations.",
 )
 
-n_procs = option(
-    "-np",
-    "--n_procs",
-    type=int,
-    help="Number of cores used to run in parallel.",
-)
 
 overwrite_outputs = option(
     "-overwrite",

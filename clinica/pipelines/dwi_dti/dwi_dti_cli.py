@@ -2,6 +2,7 @@ from typing import Optional
 
 import click
 
+from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
@@ -14,7 +15,8 @@ pipeline_name = "dwi-dti"
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
-@cli_param.option.n_procs
+@option.global_option_group
+@option.n_procs
 def cli(
     caps_directory: str,
     subjects_sessions_tsv: Optional[str] = None,
