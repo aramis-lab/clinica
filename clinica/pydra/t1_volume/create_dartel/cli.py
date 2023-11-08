@@ -5,6 +5,7 @@ import click
 
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.t1_volume.create_dartel.pipeline as pydra_create_dartel
+from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
@@ -19,7 +20,8 @@ pipeline_name = "pydra-t1-volume-create-dartel"
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
-@cli_param.option.n_procs
+@option.global_option_group
+@option.n_procs
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.dartel_tissues
 def cli(

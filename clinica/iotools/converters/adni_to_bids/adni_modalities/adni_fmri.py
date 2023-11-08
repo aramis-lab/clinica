@@ -10,6 +10,7 @@ def convert_adni_fmri(
     conversion_dir: PathLike,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
+    n_procs: Optional[int] = 1,
 ):
     """Convert fMR images of ADNI into BIDS format.
 
@@ -33,6 +34,11 @@ def convert_adni_fmri(
     mod_to_update : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
+
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        Default=1.
     """
     from os import path
 
@@ -52,7 +58,9 @@ def convert_adni_fmri(
     images = compute_fmri_path(source_dir, csv_dir, subjects, conversion_dir)
     cprint("Paths of fMRI images found. Exporting images into BIDS ...")
     # fmri_paths_to_bids(dest_dir, images)
-    paths_to_bids(images, destination_dir, "fmri", mod_to_update=mod_to_update)
+    paths_to_bids(
+        images, destination_dir, "fmri", mod_to_update=mod_to_update, n_procs=n_procs
+    )
     cprint(msg="fMRI conversion done.", lvl="debug")
 
 

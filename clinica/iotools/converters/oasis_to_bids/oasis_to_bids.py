@@ -1,4 +1,5 @@
 """Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS."""
+from typing import Optional
 
 from clinica.iotools.abstract_converter import Converter
 
@@ -162,12 +163,19 @@ class OasisToBids(Converter):
 
         nb.save(img_with_good_dimension, output_path)
 
-    def convert_images(self, source_dir, dest_dir):
+    def convert_images(self, source_dir, dest_dir, n_procs: Optional[int] = 1):
         """Convert T1w images to BIDS.
 
-        Args:
-            source_dir: path to the OASIS dataset
-            dest_dir: path to the BIDS directory
+        Parameters
+        ----------
+        source_dir: path to the OASIS dataset
+
+        dest_dir: path to the BIDS directory
+
+        n_procs : int, optional
+            The requested number of processes.
+            If specified, it should be between 1 and the number of available CPUs.
+            Default=1.
 
         Note:
             Previous version of this method used mri_convert from FreeSurfer to convert
@@ -175,7 +183,7 @@ class OasisToBids(Converter):
         """
         import os
         from functools import partial
-        from multiprocessing import Pool, cpu_count
+        from multiprocessing import Pool
         from pathlib import Path
 
         if not os.path.isdir(dest_dir):
@@ -187,6 +195,6 @@ class OasisToBids(Converter):
             if path.is_dir() and path.name.endswith("_MR1")
         ]
 
-        with Pool(processes=max(cpu_count() - 1, 1)) as pool:
+        with Pool(processes=n_procs) as pool:
             func = partial(self.convert_single_subject, dest_dir=dest_dir)
             pool.map(func, subjs_folders)

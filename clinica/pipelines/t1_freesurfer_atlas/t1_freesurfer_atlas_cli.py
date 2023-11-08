@@ -2,6 +2,7 @@ from typing import Optional
 
 import click
 
+from clinica import option
 from clinica.pipelines import cli_param
 
 pipeline_name = "compute-atlas"
@@ -10,7 +11,8 @@ pipeline_name = "compute-atlas"
 @click.command(name=pipeline_name)
 @cli_param.argument.caps_directory
 @cli_param.option.atlas_path
-@cli_param.option.n_procs
+@option.global_option_group
+@option.n_procs
 def cli(
     caps_directory: str,
     atlas_path: Optional[str] = None,

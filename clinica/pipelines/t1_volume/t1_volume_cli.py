@@ -2,6 +2,7 @@ from typing import List, Optional, Tuple
 
 import click
 
+from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
@@ -18,7 +19,6 @@ pipeline_name = "t1-volume"
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
-@cli_param.option.n_procs
 @cli_param.option.yes
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.tissue_classes
@@ -29,6 +29,8 @@ pipeline_name = "t1-volume"
 @cli_param.option.tissues
 @cli_param.option.modulate
 @cli_param.option.voxel_size
+@option.global_option_group
+@option.n_procs
 @click.pass_context
 def cli(
     ctx: click.Context,

@@ -4,6 +4,7 @@ import click
 
 import clinica.pydra.engine_utils as pydra_utils
 import clinica.pydra.t1_volume.dartel2mni.pipeline as pydra_t1_vol_dartel2mni
+from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
@@ -21,7 +22,8 @@ pipeline_name = "pydra-t1-volume-dartel2mni"
 @cli_param.option.tissues
 @cli_param.option.modulate
 @cli_param.option.voxel_size
-@cli_param.option.n_procs
+@option.global_option_group
+@option.n_procs
 def cli(
     bids_directory: str,
     caps_directory: str,

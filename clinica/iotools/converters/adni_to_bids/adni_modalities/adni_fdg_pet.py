@@ -49,6 +49,7 @@ def _convert_adni_fdg_pet(
     preprocessing_step: ADNIPreprocessingStep,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
+    n_procs: Optional[int] = 1,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -75,6 +76,11 @@ def _convert_adni_fdg_pet(
     mod_to_update : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
+
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        Default=1.
     """
     from pathlib import Path
 
@@ -97,7 +103,9 @@ def _convert_adni_fdg_pet(
     )
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
     modality = _get_modality_from_adni_preprocessing_step(preprocessing_step)
-    paths_to_bids(images, destination_dir, modality, mod_to_update=mod_to_update)
+    paths_to_bids(
+        images, destination_dir, modality, mod_to_update=mod_to_update, n_procs=n_procs
+    )
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
