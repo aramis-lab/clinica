@@ -85,14 +85,14 @@ def create_merge_file(
     participants_df, sub_ses_df = _get_participants_and_subjects_sessions_df(
         bids_dir, tsv_file, ignore_sessions_files
     )
-    merged_df = _create_bids_merge_file(
+    merged_df = _create_merge_file_from_bids(
         bids_dir, sub_ses_df, participants_df, ignore_scan_files, ignore_sessions_files
     )
     merged_df.to_csv(out_path, sep="\t", index=False)
     cprint("End of BIDS information merge.", lvl="debug")
     merged_df.reset_index(drop=True, inplace=True)
     if caps_dir is not None:
-        merged_df, merged_summary_df = _create_caps_merge_file(
+        merged_df, merged_summary_df = _add_data_to_merge_file_from_caps(
             caps_dir, merged_df, pipelines, **kwargs
         )
         summary_path = path.splitext(str(out_path))[0] + "_summary.tsv"
@@ -142,7 +142,7 @@ def _get_participants_and_subjects_sessions_df(
     return participants_df, sub_ses_df
 
 
-def _create_bids_merge_file(
+def _create_merge_file_from_bids(
     bids_dir: Path,
     sub_ses_df: pd.DataFrame,
     participants_df: pd.DataFrame,
@@ -150,8 +150,6 @@ def _create_bids_merge_file(
     ignore_sessions_files: bool = False,
 ) -> pd.DataFrame:
     import json
-
-    import numpy as np
 
     from clinica.utils.stream import cprint
 
@@ -225,8 +223,14 @@ def _create_bids_merge_file(
                 row_df = row_df.loc[:, ~row_df.columns.duplicated(keep="last")]
                 merged_df = pd.concat([merged_df, row_df])
 
-    # Put participant_id and session_id first
+    return _post_process_merge_file_from_bids(merged_df)
+
+
+def _post_process_merge_file_from_bids(merged_df: pd.DataFrame) -> pd.DataFrame:
+    import numpy as np
+
     col_list = merged_df.columns.values.tolist()
+    # Put participant_id and session_id first
     col_list.insert(0, col_list.pop(col_list.index("participant_id")))
     col_list.insert(1, col_list.pop(col_list.index("session_id")))
     merged_df = merged_df[col_list]
@@ -236,14 +240,12 @@ def _create_bids_merge_file(
     return merged_df
 
 
-def _create_caps_merge_file(
+def _add_data_to_merge_file_from_caps(
     caps_dir: Path,
     merged_df: pd.DataFrame,
     pipelines: Optional[List[str]] = None,
     **kwargs,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    import numpy as np
-
     from clinica.utils.stream import cprint
 
     from .pipeline_handling import (
@@ -275,6 +277,15 @@ def _create_caps_merge_file(
                 caps_dir, merged_df, **kwargs
             )
             merged_summary_df = pd.concat([merged_summary_df, summary_df])
+
+    return _post_process_merged_df_from_caps(merged_df, merged_summary_df)
+
+
+def _post_process_merged_df_from_caps(
+    merged_df: pd.DataFrame,
+    merged_summary_df: pd.DataFrame,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    import numpy as np
 
     if len(merged_summary_df) == 0:
         raise FileNotFoundError(
