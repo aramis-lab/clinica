@@ -2,7 +2,7 @@
 
 from os import PathLike
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import click
 from nibabel.nifti1 import Nifti1Header
@@ -30,28 +30,41 @@ def _validate_output_tsv_path(out_path: Path) -> Path:
 
 
 def create_merge_file(
-    bids_dir,
-    out_tsv,
-    caps_dir=None,
-    tsv_file=None,
-    pipelines=None,
-    ignore_scan_files=False,
-    ignore_sessions_files=False,
+    bids_dir: PathLike,
+    out_tsv: PathLike,
+    caps_dir: Optional[PathLike] = None,
+    tsv_file: Optional[PathLike] = None,
+    pipelines: Optional[List[str]] = None,
+    ignore_scan_files: bool = False,
+    ignore_sessions_files: bool = False,
     **kwargs,
 ):
     """Merge all the TSV files containing clinical data of a BIDS compliant dataset and store the result inside a TSV file.
 
-    Args:
-        bids_dir: path to the BIDS folder
-        out_tsv: path to the output tsv file
-        caps_dir: path to the CAPS folder (optional)
-        tsv_file: TSV file containing the subjects with their sessions (optional)
-        ignore_scan_files: If True the information related to scans is not read (optional)
-        ignore_sessions_files: If True the information related to sessions and scans is not read (optional)
-        pipelines: when adding CAPS information, indicates the pipelines that will be merged (optional)
+    Parameters
+    ----------
+    bids_dir : PathLike
+        Path to the BIDS folder.
+
+    out_tsv : PathLike
+        Path to the output tsv file.
+
+    caps_dir : PathLike, optional
+        Path to the CAPS folder.
+
+    tsv_file : PathLike, optional
+        Path to a TSV file containing the subjects with their sessions.
+
+    pipelines : list of str, optional
+        When adding CAPS information, indicates the pipelines that will be merged.
+
+    ignore_scan_files : bool, optional
+        If True the information related to scans is not read.
+
+    ignore_sessions_files : bool, optional
+        If True the information related to sessions and scans is not read.
     """
     import json
-    import os
     from os import path
     from pathlib import Path
 
@@ -64,17 +77,18 @@ def create_merge_file(
     from .pipeline_handling import DatasetError
 
     if caps_dir is not None:
-        if not path.isdir(caps_dir):
+        caps_dir = Path(caps_dir)
+        if not caps_dir.is_dir():
             raise IOError("The path to the CAPS directory is wrong")
 
+    bids_dir = Path(bids_dir)
     sessions, subjects = get_subject_session_list(
         bids_dir, ss_file=tsv_file, use_session_tsv=(not ignore_sessions_files)
     )
-
-    if not os.path.isfile(path.join(bids_dir, "participants.tsv")):
-        participants_df = pd.DataFrame(list(set(subjects)), columns=["participant_id"])
+    if (bids_dir / "participants.tsv").is_file():
+        participants_df = pd.read_csv(bids_dir / "participants.tsv", sep="\t")
     else:
-        participants_df = pd.read_csv(path.join(bids_dir, "participants.tsv"), sep="\t")
+        participants_df = pd.DataFrame(list(set(subjects)), columns=["participant_id"])
 
     sub_ses_df = pd.DataFrame(
         [[subject, session] for subject, session in zip(subjects, sessions)],
@@ -98,7 +112,7 @@ def create_merge_file(
 
     # BIDS part
     for subject, subject_df in sub_ses_df.groupby(level=0):
-        sub_path = path.join(bids_dir, subject)
+        sub_path = bids_dir / subject
         row_participant_df = participants_df[
             participants_df["participant_id"] == subject
         ]
@@ -113,14 +127,10 @@ def create_merge_file(
         if ignore_sessions_files:
             for _, session in subject_df.index.values:
                 row_session_df = pd.DataFrame([[session]], columns=["session_id"])
-
                 row_df = pd.concat([row_participant_df, row_session_df], axis=1)
                 merged_df = pd.concat([merged_df, row_df])
-
         else:
-            sessions_df = pd.read_csv(
-                path.join(sub_path, f"{subject}_sessions.tsv"), sep="\t"
-            )
+            sessions_df = pd.read_csv(sub_path / f"{subject}_sessions.tsv", sep="\t")
 
             for _, session in subject_df.index.values:
                 row_session_df = sessions_df[sessions_df.session_id == session]
@@ -129,15 +139,11 @@ def create_merge_file(
                     raise DatasetError(
                         sessions_df.loc[0, "session_id"] + " / " + session
                     )
-
                 # Read scans TSV files
-                scan_path = path.join(
-                    bids_dir,
-                    subject,
-                    session,
-                    f"{subject}_{session}_scans.tsv",
+                scan_path = (
+                    bids_dir / subject / session / f"{subject}_{session}_scans.tsv"
                 )
-                if path.isfile(scan_path) and not ignore_scan_files:
+                if scan_path.is_file() and not ignore_scan_files:
                     scans_dict = dict()
                     scans_df = pd.read_csv(scan_path, sep="\t")
                     for idx in scans_df.index.values:
@@ -152,13 +158,11 @@ def create_merge_file(
                                     value = scans_df.loc[idx, col]
                                     new_col_name = f"{modality}_{col}"
                                     scans_dict.update({new_col_name: value})
-                            json_path = path.join(
-                                bids_dir,
-                                subject,
-                                session,
-                                filepath.split(".")[0] + ".json",
+                            json_path = (
+                                bids_dir / subject / session / filepath.split(".")[0]
+                                + ".json"
                             )
-                            if path.exists(json_path):
+                            if json_path.exists():
                                 with open(json_path, "r") as f:
                                     json_dict = json.load(f)
                                 for key, value in json_dict.items():
@@ -174,10 +178,8 @@ def create_merge_file(
                 row_df = pd.concat(
                     [row_participant_df, row_session_df, row_scans_df], axis=1
                 )
-
                 # remove duplicated columns
                 row_df = row_df.loc[:, ~row_df.columns.duplicated(keep="last")]
-
                 merged_df = pd.concat([merged_df, row_df])
 
     # Put participant_id and session_id first
