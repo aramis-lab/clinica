@@ -263,7 +263,7 @@ def merge_tsv(
         group_selection = None
     if pet_tracers_selection == ():
         pet_tracers_selection = None
-    
+
     create_merge_file(
         bids_directory,
         output_tsv,
