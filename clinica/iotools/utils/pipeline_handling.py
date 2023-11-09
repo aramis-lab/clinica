@@ -203,13 +203,13 @@ def _extract_metrics_from_pipeline(
     for participant_id, session_id in df.index.values:
         ses_path = subjects_dir / participant_id / session_id
         mod_path = _get_mod_path(ses_path, pipeline)
+        records.append({"participant_id": participant_id, "session_id": session_id})
         if mod_path is None:
             cprint(
                 f"Could not find a longitudinal dataset for participant {participant_id} {session_id}",
                 lvl="warning",
             )
             continue
-        records.append({"participant_id": participant_id, "session_id": session_id})
         if mod_path.exists():
             for group in group_selection:
                 group_path = mod_path / group
@@ -257,6 +257,7 @@ def _extract_metrics_from_pipeline(
     summary_df = generate_summary(pipeline_df, pipeline, ignore_groups=ignore_groups)
     final_df = pd.concat([df, pipeline_df], axis=1)
     final_df.reset_index(inplace=True)
+
     return final_df, summary_df
 
 
