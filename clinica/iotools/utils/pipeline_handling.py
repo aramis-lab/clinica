@@ -19,7 +19,7 @@ def _get_atlas_name(atlas_path: Path, pipeline: str) -> str:
     else:
         raise ValueError(f"Not supported pipeline {pipeline}.")
     try:
-        atlas_name = atlas_path.stem.split(splitter)[1].split("_")[0]
+        atlas_name = atlas_path.stem.split(splitter)[-1].split("_")[0]
     except Exception:
         raise ValueError(
             f"Unable to infer the atlas name from {atlas_path} for pipeline {pipeline}."
@@ -179,6 +179,7 @@ def _extract_metrics_from_pipeline(
     """
     from clinica.utils.stream import cprint
 
+    caps_dir = Path(caps_dir)
     if df.index.names != ["participant_id", "session_id"]:
         try:
             df.set_index(
@@ -189,15 +190,15 @@ def _extract_metrics_from_pipeline(
 
     if group_selection is None:
         try:
-            group_selection = os.listdir(caps_dir / "groups")
+            group_selection = [f.name for f in (caps_dir / "groups").iterdir()]
         except FileNotFoundError:
             return df, None
     else:
         group_selection = [f"group-{group}" for group in group_selection]
     ignore_groups = group_selection == [""]
 
-    subjects_dir = Path(caps_dir) / "subjects"
     pipeline_df = pd.DataFrame()
+    subjects_dir = caps_dir / "subjects"
     for participant_id, session_id in df.index.values:
         ses_path = subjects_dir / participant_id / session_id
         mod_path = _get_mod_path(ses_path, pipeline)
