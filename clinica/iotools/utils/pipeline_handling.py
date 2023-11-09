@@ -18,13 +18,14 @@ def _get_atlas_name(atlas_path: Path, pipeline: str) -> str:
         splitter = "_space-"
     else:
         raise ValueError(f"Not supported pipeline {pipeline}.")
-    try:
-        atlas_name = atlas_path.stem.split(splitter)[-1].split("_")[0]
-    except Exception:
-        raise ValueError(
-            f"Unable to infer the atlas name from {atlas_path} for pipeline {pipeline}."
-        )
-    return atlas_name
+    if splitter in atlas_path.stem:
+        try:
+            return atlas_path.stem.split(splitter)[-1].split("_")[0]
+        except Exception:
+            pass
+    raise ValueError(
+        f"Unable to infer the atlas name from {atlas_path} for pipeline {pipeline}."
+    )
 
 
 def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
