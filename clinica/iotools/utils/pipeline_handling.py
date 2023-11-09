@@ -198,8 +198,8 @@ def _extract_metrics_from_pipeline(
         group_selection = [f"group-{group}" for group in group_selection]
     ignore_groups = group_selection == [""]
 
-    pipeline_df = pd.DataFrame()
     subjects_dir = caps_dir / "subjects"
+    records = []
     for participant_id, session_id in df.index.values:
         ses_path = subjects_dir / participant_id / session_id
         mod_path = _get_mod_path(ses_path, pipeline)
@@ -209,10 +209,7 @@ def _extract_metrics_from_pipeline(
                 lvl="warning",
             )
             continue
-        ses_df = pd.DataFrame(
-            [[participant_id, session_id]], columns=["participant_id", "session_id"]
-        )
-        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
+        records.append({"participant_id": participant_id, "session_id": session_id})
         if mod_path.exists():
             for group in group_selection:
                 group_path = mod_path / group
@@ -251,8 +248,12 @@ def _extract_metrics_from_pipeline(
                                             if "freesurfer" in pipeline
                                             else "mean_scalar"
                                         )
-                                        ses_df[label_list] = atlas_df[key].to_numpy()
-        pipeline_df = pd.concat([pipeline_df, ses_df])
+                                        values = atlas_df[key].to_numpy()
+                                        for label, value in zip(label_list, values):
+                                            records[-1][label] = value
+    pipeline_df = pd.DataFrame.from_records(
+        records, index=["participant_id", "session_id"]
+    )
     summary_df = generate_summary(pipeline_df, pipeline, ignore_groups=ignore_groups)
     final_df = pd.concat([df, pipeline_df], axis=1)
     final_df.reset_index(inplace=True)
