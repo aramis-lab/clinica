@@ -197,8 +197,8 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
-        from clinica.utils.stream import cprint
         from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+        from clinica.utils.stream import cprint
 
         modalities = modalities or self.get_modalities_supported()
 

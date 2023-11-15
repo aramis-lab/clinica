@@ -44,7 +44,10 @@ def convert_adni_fmri(
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids, load_clinical_csv
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        load_clinical_csv,
+        paths_to_bids,
+    )
     from clinica.utils.stream import cprint
 
     if not subjects:
@@ -81,8 +84,8 @@ def compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir):
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
-        visits_to_timepoints,
         load_clinical_csv,
+        visits_to_timepoints,
     )
 
     fmri_col = [
@@ -103,7 +106,7 @@ def compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir):
     adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
 
     mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15")
-    
+
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "fMRI"]
     mayo_mri_qc.columns = [x.upper() for x in mayo_mri_qc.columns]
 
@@ -129,7 +132,6 @@ def compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir):
 
     # We will convert the images for each subject in the subject list
     for subj in subjs_list:
-
         # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")

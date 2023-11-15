@@ -44,7 +44,10 @@ def convert_adni_t1(
 
     from pandas.io import parsers
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids, load_clinical_csv
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        load_clinical_csv,
+        paths_to_bids,
+    )
     from clinica.utils.stream import cprint
 
     if not subjects:
@@ -80,8 +83,8 @@ def compute_t1_paths(source_dir, csv_dir, subjs_list, conversion_dir):
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
+        load_clinical_csv,
         visits_to_timepoints,
-        load_clinical_csv
     )
     from clinica.utils.stream import cprint
 
@@ -105,13 +108,12 @@ def compute_t1_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     mprage_meta = load_clinical_csv(csv_dir, "MPRAGEMETA")
     mri_quality = load_clinical_csv(csv_dir, "MRIQUALITY")
     mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15")
-    
+
     # Keep only T1 scans
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "T1"]
 
     # We will convert the images for each subject in the subject list
     for subj in subjs_list:
-
         # Filter ADNIMERGE, MPRAGE METADATA and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")
@@ -486,7 +488,6 @@ def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
         not_preferred_scan = None
 
     if scans_meta.MagStrength.unique()[0] == 3.0:
-
         id_list = scans_meta.ImageUID.unique()
         image_ids = ["I" + str(imageuid) for imageuid in id_list]
         int_ids = [int(imageuid) for imageuid in id_list]
@@ -504,7 +505,6 @@ def select_scan_from_qc(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
                 images_not_rejected = images_qc[images_qc.series_quality < 4]
 
                 if images_not_rejected.empty:
-
                     # There are no images that passed the qc,
                     # so we'll try to see if there are other images without qc.
                     # Otherwise, return None.
@@ -593,7 +593,6 @@ def check_qc(scan, subject_id, visit_str, mri_quality_subj):
 
     # If QC exists and failed we keep the other scan (in case 2 scans were performed)
     if not qc.empty and qc.iloc[0].PASS != 1:
-
         cprint("QC found but NOT passed")
         cprint(
             f"Subject {subject_id} for visit {visit_str} "

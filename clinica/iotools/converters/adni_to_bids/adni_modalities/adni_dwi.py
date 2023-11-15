@@ -44,7 +44,10 @@ def convert_adni_dwi(
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids, load_clinical_csv
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        load_clinical_csv,
+        paths_to_bids,
+    )
     from clinica.utils.stream import cprint
 
     if not subjects:
@@ -81,8 +84,8 @@ def compute_dwi_paths(source_dir, csv_dir, subjs_list, conversion_dir):
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
-        visits_to_timepoints,
         load_clinical_csv,
+        visits_to_timepoints,
     )
 
     dwi_col_df = [
@@ -116,7 +119,6 @@ def compute_dwi_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     ]
 
     for subj in subjs_list:
-
         # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")

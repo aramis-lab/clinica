@@ -81,7 +81,6 @@ def visits_to_timepoints(
 
     # Then for images.Visit non matching the expected labels we find the closest date in visits list
     for visit in unique_visits:
-
         image = (mri_list_subj[mri_list_subj[visit_field] == visit]).iloc[0]
 
         closest_visit = _get_closest_visit(
@@ -436,7 +435,6 @@ def select_image_qc(id_list, mri_qc_subj):
         images_not_rejected = images_qc[images_qc.series_quality < 4]
 
         if images_not_rejected.empty:
-
             # There are no images that passed the qc,
             # so we'll try to see if there are other images without qc.
             # Otherwise, return None.
@@ -632,7 +630,9 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     from clinica.utils.stream import cprint
 
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
-    dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL").set_index(["PTID", "VISCODE2"])
+    dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL").set_index(
+        ["PTID", "VISCODE2"]
+    )
     missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
@@ -941,10 +941,8 @@ def create_adni_sessions_dict(
     # Iterate over the metadata files
 
     for location in files:
-
         location = location.split("/")[0]
         if path.exists(path.join(clinical_data_dir, location)):
-
             file_to_read_path = path.join(clinical_data_dir, location)
             cprint(f"\tReading clinical data file: {location}")
 
@@ -1416,7 +1414,6 @@ def create_file(image, modality, bids_dir, mod_to_update):
             os.remove(im)
 
     if mod_to_update or not len(existing_im) > 0:
-
         try:
             os.makedirs(output_path)
         except OSError:
@@ -1554,7 +1551,6 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     dicom_list = glob(path.join(dicom_path, "*.dcm"))
     image_list = glob(path.join(dicom_path, f"*{image_uid}.dcm"))
     if len(dicom_list) != len(image_list):
-
         # Remove the precedent tmp_dcm_folder if present.
         if os.path.exists(dest_path):
             shutil.rmtree(dest_path)
@@ -1581,15 +1577,16 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
     if exists(tmp_dcm_folder_path):
         rmtree(tmp_dcm_folder_path)
 
-def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
-    from pathlib import Path
-    import re
 
-    pattern = filename + '(_\d{1,2}[A-Za-z]{3}\d{4})?.csv'
+def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
+    import re
+    from pathlib import Path
+
+    pattern = filename + "(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
     for z in Path(clinical_dir).rglob("*.csv"):
         if re.search(pattern, (z.name)):
             adni_merge_path = z
     try:
-        return pd.read_csv(adni_merge_path)
+        return pd.read_csv(adni_merge_path, sep=",", low_memory=False)
     except:
         raise ValueError(f"{filename}.csv was not found. Please check your data.")

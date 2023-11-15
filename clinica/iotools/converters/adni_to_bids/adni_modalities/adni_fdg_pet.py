@@ -86,12 +86,15 @@ def _convert_adni_fdg_pet(
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids, load_clinical_csv
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        load_clinical_csv,
+        paths_to_bids,
+    )
     from clinica.utils.stream import cprint
 
     if subjects is None:
         adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
-        
+
         subjects = list(adni_merge.PTID.unique())
     cprint(
         "Calculating paths of FDG PET images. "
@@ -226,7 +229,8 @@ def _load_df_with_column_check(
     csv_dir: Path, filename: str, required_columns: Set[str]
 ) -> pd.DataFrame:
     """Load the requested CSV file in a dataframe and check that the requested columns are present."""
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv    
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+
     df = load_clinical_csv(csv_dir, filename)
     if not required_columns.issubset(set(df.columns)):
         raise ValueError(

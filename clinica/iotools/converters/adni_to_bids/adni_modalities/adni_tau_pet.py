@@ -44,11 +44,14 @@ def convert_adni_tau_pet(
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids, load_clinical_csv
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        load_clinical_csv,
+        paths_to_bids,
+    )
     from clinica.utils.stream import cprint
 
     if not subjects:
-        adni_merge =load_clinical_csv(csv_dir, "ADNIMERGE")
+        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
         subjects = list(adni_merge.PTID.unique())
 
     cprint(
@@ -80,7 +83,7 @@ def compute_tau_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
         get_images_pet,
-        load_clinical_csv
+        load_clinical_csv,
     )
     from clinica.utils.pet import Tracer
 
@@ -105,7 +108,6 @@ def compute_tau_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
 
     for subj in subjs_list:
-
         # PET images metadata for subject
         subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subj]
 
