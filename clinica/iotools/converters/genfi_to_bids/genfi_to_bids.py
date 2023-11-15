@@ -36,8 +36,6 @@ def convert_images(
         Path to a TSV file containing the additional data the user wants to have in the BIDS output.
         If None, no additional data will be added.
     """
-    import os
-
     import clinica.iotools.bids_utils as bids
 
     from .genfi_to_bids_utils import (
@@ -92,22 +90,39 @@ def convert_images(
         sessions=results["sessions"],
         scans=results["scans"],
     )
-    # fetch data for readme from markdown
-    readme_path = os.path.join(
-        os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-        ),
-        "docs",
-        "Converters",
-        "GENFItoBIDS.md",
-    )
-    try:
-        readme_data = {
-            "link": bids.parse_url(readme_path)[0],
-            "desc": bids.parse_description(readme_path, 4, 5),
-        }
-    except IndexError:
-        raise ValueError("Could not parse information for dataset.")
     bids.write_modality_agnostic_files(
-        study_name="GENFI", readme_data=readme_data, bids_dir=bids_dir
+        study_name="GENFI",
+        readme_data={
+            "link": _get_link(),
+            "desc": _get_description(),
+        },
+        bids_dir=bids_dir,
+    )
+
+
+def _get_link() -> str:
+    return "https://www.genfi.org"
+
+
+def _get_description() -> str:
+    return (
+        "The Genetic Frontotemporal dementia Initiative (GENFI) is a group of research "
+        "centres across Europe and Canada with expertise in familial FTD, and is "
+        "co-ordinated by Professor Jonathan Rohrer at University College London. "
+        "GENFI is the largest genetic FTD consortium to date and currently consists "
+        "of sites across the UK, Netherlands, Belgium, France, Spain, Portugal, Italy, "
+        "Germany, Sweden, Denmark, Finland and Canada. The aim of the study is to "
+        "understand more about genetic FTD, particularly in those who have mutations "
+        "in the progranulin (GRN), microtubule-associated protein tau (MAPT) and "
+        "chromosome 9 open reading frame 72 (C9orf72) genes. GENFI investigates both "
+        "people who have developed symptoms and also people who have a risk of developing "
+        "symptoms in the future because they carry an abnormal genetic mutation. "
+        "By studying these individuals who are destined to develop the disease later in "
+        "life we can understand the development from the very earliest changes. "
+        "The key objectives of GENFI are therefore to develop markers which help identify "
+        "the disease at its earliest stage as well as markers that allow the progression of "
+        "the disease to be tracked. We are now collaborating closely with other similar "
+        "studies around the world through the FTD Prevention Initiative. "
+        "Through this worldwide initiative we are working with pharmaceutical companies to "
+        "help design clinical trials for genetic FTD."
     )
