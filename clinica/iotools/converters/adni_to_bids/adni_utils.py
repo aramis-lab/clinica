@@ -632,9 +632,7 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     from clinica.utils.stream import cprint
 
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
-    dxsum_df = pd.read_csv(
-        path.join(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL.csv")
-    ).set_index(["PTID", "VISCODE2"])
+    dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL").set_index(["PTID", "VISCODE2"])
     missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
@@ -1582,3 +1580,16 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
     tmp_dcm_folder_path = join(bids_dir, f"tmp_dcm_folder_{str(image_id).strip(' ')}")
     if exists(tmp_dcm_folder_path):
         rmtree(tmp_dcm_folder_path)
+
+def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
+    from pathlib import Path
+    import re
+
+    pattern = filename + '(_\d{1,2}[A-Za-z]{3}\d{4})?.csv'
+    for z in Path(clinical_dir).rglob("*.csv"):
+        if re.search(pattern, (z.name)):
+            adni_merge_path = z
+    try:
+        return pd.read_csv(adni_merge_path)
+    except:
+        raise ValueError(f"{filename}.csv was not found. Please check your data.")

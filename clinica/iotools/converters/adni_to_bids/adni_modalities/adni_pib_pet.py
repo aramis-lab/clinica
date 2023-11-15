@@ -44,12 +44,11 @@ def convert_adni_pib_pet(
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids, load_clinical_csv
     from clinica.utils.stream import cprint
 
     if not subjects:
-        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
+        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
         subjects = list(adni_merge.PTID.unique())
 
     cprint(
@@ -82,6 +81,7 @@ def compute_pib_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
         get_images_pet,
+        load_clinical_csv,
     )
     from clinica.utils.pet import Tracer
 
@@ -101,10 +101,8 @@ def compute_pib_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     pet_pib_dfs_list = []
 
     # Loading needed .csv files
-    pibqc = pd.read_csv(path.join(csv_dir, "PIBQC.csv"), sep=",", low_memory=False)
-    pet_meta_list = pd.read_csv(
-        path.join(csv_dir, "PET_META_LIST.csv"), sep=",", low_memory=False
-    )
+    pibqc = load_clinical_csv(csv_dir, "PIBQC")
+    pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
 
     for subj in subjs_list:
 

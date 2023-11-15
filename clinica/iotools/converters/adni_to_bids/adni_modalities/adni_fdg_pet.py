@@ -86,13 +86,12 @@ def _convert_adni_fdg_pet(
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids, load_clinical_csv
     from clinica.utils.stream import cprint
 
     if subjects is None:
-        adni_merge = pd.read_csv(
-            Path(csv_dir) / "ADNIMERGE.csv", sep=",", low_memory=False
-        )
+        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
+        
         subjects = list(adni_merge.PTID.unique())
     cprint(
         "Calculating paths of FDG PET images. "
@@ -227,7 +226,8 @@ def _load_df_with_column_check(
     csv_dir: Path, filename: str, required_columns: Set[str]
 ) -> pd.DataFrame:
     """Load the requested CSV file in a dataframe and check that the requested columns are present."""
-    df = pd.read_csv(csv_dir / filename, sep=",", low_memory=False)
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv    
+    df = load_clinical_csv(csv_dir, filename)
     if not required_columns.issubset(set(df.columns)):
         raise ValueError(
             f"Missing column(s) from {filename} file."
@@ -238,17 +238,17 @@ def _load_df_with_column_check(
 
 _get_pet_qc_df = partial(
     _load_df_with_column_check,
-    filename="PETQC.csv",
+    filename="PETQC",
     required_columns={"PASS", "RID"},
 )
 _get_qc_adni_3_df = partial(
     _load_df_with_column_check,
-    filename="PETC3.csv",
+    filename="PETC3",
     required_columns={"SCANQLTY", "RID", "SCANDATE"},
 )
 _get_meta_list_df = partial(
     _load_df_with_column_check,
-    filename="PET_META_LIST.csv",
+    filename="PET_META_LIST",
     required_columns={"Subject"},
 )
 

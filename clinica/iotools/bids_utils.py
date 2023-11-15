@@ -69,6 +69,8 @@ def create_participants_df(
     import pandas as pd
 
     from clinica.utils.stream import cprint
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+
 
     fields_bids = ["participant_id"]
     prev_location = ""
@@ -111,7 +113,7 @@ def create_participants_df(
                 if file_ext == ".xlsx":
                     file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
                 elif file_ext == ".csv":
-                    file_to_read = pd.read_csv(file_to_read_path)
+                    file_to_read = load_clinical_csv(clinical_data_dir, location.split(".")[0])
                 prev_location = location
                 prev_sheet = sheet
 

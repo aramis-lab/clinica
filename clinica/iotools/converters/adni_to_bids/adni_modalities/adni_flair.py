@@ -44,12 +44,11 @@ def convert_adni_flair(
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids, load_clinical_csv
     from clinica.utils.stream import cprint
 
     if not subjects:
-        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path, sep=",", low_memory=False)
+        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
         subjects = list(adni_merge.PTID.unique())
 
     cprint(
@@ -83,6 +82,7 @@ def compute_flair_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
         visits_to_timepoints,
+        load_clinical_csv,
     )
 
     flair_col_df = [
@@ -101,19 +101,11 @@ def compute_flair_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     flair_dfs_list = []
 
     # Loading needed .csv files
-    adni_merge = pd.read_csv(
-        path.join(csv_dir, "ADNIMERGE.csv"), sep=",", low_memory=False
-    )
-
-    mayo_mri_qc = pd.read_csv(
-        path.join(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15.csv"),
-        sep=",",
-        low_memory=False,
-    )
+    adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
+    mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15")
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "AFL"]
-
-    mri_list = pd.read_csv(path.join(csv_dir, "MRILIST.csv"), sep=",", low_memory=False)
-
+    mri_list = load_clinical_csv(csv_dir, "MRILIST")
+    
     # Selecting FLAIR DTI images that are not MPR
     mri_list = mri_list[mri_list.SEQUENCE.str.contains("flair", case=False, na=False)]
     unwanted_sequences = ["_MPR_"]
