@@ -924,7 +924,9 @@ def create_adni_sessions_dict(
         bids_subjs_paths: a list with the path to all the BIDS subjects
     """
 
+    import re
     from os import path
+    from pathlib import Path
 
     import pandas as pd
 
@@ -942,38 +944,40 @@ def create_adni_sessions_dict(
 
     for location in files:
         location = location.split("/")[0]
-        if path.exists(path.join(clinical_data_dir, location)):
-            file_to_read_path = path.join(clinical_data_dir, location)
-            cprint(f"\tReading clinical data file: {location}")
+        pattern = location.split(".")[0] + "(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
+        for z in Path(clinical_data_dir).rglob("*.csv"):
+            if re.search(pattern, z.name):
+                file_to_read_path = z
+                cprint(f"\tReading clinical data file: {location}")
 
-            df_file = pd.read_csv(file_to_read_path, dtype=str)
-            df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
+                df_file = pd.read_csv(file_to_read_path, dtype=str)
+                df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
 
-            if not df_filtered.empty:
-                df_filtered = _compute_session_id(df_filtered, location)
+                if not df_filtered.empty:
+                    df_filtered = _compute_session_id(df_filtered, location)
 
-                # Filter rows with invalid session IDs.
-                df_filtered.dropna(subset="session_id", inplace=True)
+                    # Filter rows with invalid session IDs.
+                    df_filtered.dropna(subset="session_id", inplace=True)
 
-                if location == "ADNIMERGE.csv":
-                    df_filtered["AGE"] = df_filtered.apply(
-                        lambda x: update_age(x), axis=1
+                    if location == "ADNIMERGE.csv":
+                        df_filtered["AGE"] = df_filtered.apply(
+                            lambda x: update_age(x), axis=1
+                        )
+                    df_subj_session = update_sessions_df(
+                        df_subj_session, df_filtered, df_sessions, location
                     )
-                df_subj_session = update_sessions_df(
-                    df_subj_session, df_filtered, df_sessions, location
-                )
-            else:
-                cprint(
-                    f"Clinical dataframe extracted from {location} is empty after filtering."
-                )
-                dict_column_correspondence = dict(
-                    zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
-                )
-                df_filtered.rename(columns=dict_column_correspondence, inplace=True)
-                df_filtered = df_filtered.loc[
-                    :, (~df_filtered.columns.isin(df_subj_session.columns))
-                ]
-                df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
+                else:
+                    cprint(
+                        f"Clinical dataframe extracted from {location} is empty after filtering."
+                    )
+                    dict_column_correspondence = dict(
+                        zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
+                    )
+                    df_filtered.rename(columns=dict_column_correspondence, inplace=True)
+                    df_filtered = df_filtered.loc[
+                        :, (~df_filtered.columns.isin(df_subj_session.columns))
+                    ]
+                    df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
 
     if df_subj_session.empty:
         raise ValueError("Empty dataset detected. Clinical data cannot be extracted.")
