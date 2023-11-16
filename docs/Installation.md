@@ -10,8 +10,9 @@ if you encounter any issues.
 ## Prepare your Python environment
 
 You will need a Python environment to run Clinica.
+
 We advise you to use [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
-Miniconda allows you to install, run, and update Python packages and their dependencies.
+[Miniconda](https://docs.conda.io/en/latest/miniconda.html) allows you to install, run, and update Python packages and their dependencies.
 It can also create environments to isolate your libraries.
 To install Miniconda, open a new terminal and type the following commands:
 
@@ -29,10 +30,10 @@ curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o /
 bash /tmp/miniconda-installer.sh
 ```
 
-Miniconda will ask you where to install it.
+[Miniconda](https://docs.conda.io/en/latest/miniconda.html) will ask you where to install it.
 Do not forget to copy the `export PATH` given at the end of the installation.
 If everything went fine, open a new terminal and type `conda info`, it will verify if
-Conda is installed, check the version and show your Miniconda path.
+Conda is installed, check the version and show your [Miniconda](https://docs.conda.io/en/latest/miniconda.html) path.
 
 ## Install Clinica
 
@@ -40,7 +41,7 @@ The latest release of Clinica can be installed by using the conventional
 [PyPI package manager](https://pypi.org/project/clinica/) as follows:
 
 ```shell
-conda create --name clinicaEnv python=3.8
+conda create --name clinicaEnv python=3.10
 conda activate clinicaEnv
 pip install clinica
 ```
@@ -56,8 +57,7 @@ pip install clinica
 Depending on the pipeline that you want to use, you need to install
 **pipeline-specific interfaces**.
 Not all the dependencies are necessary to run Clinica.
-Please refer to [this section](../Third-party) to determine which third-party
-libraries you need to install.
+Please refer to [this section](../Third-party) to determine which third-party libraries you need to install.
 
 ## Shell completion (optional)
 
@@ -130,9 +130,8 @@ conda deactivate
 
 This section is intended for users who plan to contribute to Clinica or test the current development version.
 
-Clinica uses [Poetry](https://python-poetry.org) to manage its development environment. Please follow
-these [installation instructions](https://python-poetry.org/docs/#installation) and verify the `poetry` command is
-correctly setup.
+Clinica uses [Poetry](https://python-poetry.org) to manage its development environment.
+Please follow these [installation instructions](https://python-poetry.org/docs/#installation) and verify the `poetry` command is correctly setup.
 
 Clone the development branch of Clinica:
 
