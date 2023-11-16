@@ -339,3 +339,14 @@ def test_get_closest_visit(closest_visit_timepoints, image_acquisition_date, exp
         ),
         closest_visit_timepoints[expected],
     )
+
+
+@pytest.mark.parametrize(
+    "csv_name,csv_to_look_for",
+    [("adnimerge.csv", "adnimerge"), ("adnimerge_20Oct2023.csv", "adnimerge")],
+)
+def test_load_clinical_csv(tmp_path, input_df, csv_name, csv_to_look_for):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+
+    input_df.to_csv(tmp_path / csv_name)
+    assert_frame_equal(load_clinical_csv(tmp_path, csv_to_look_for), input_df)
