@@ -924,11 +924,6 @@ def create_adni_sessions_dict(
         bids_subjs_paths: a list with the path to all the BIDS subjects
     """
 
-    import re
-    import warnings
-    from os import path
-    from pathlib import Path
-
     import pandas as pd
 
     from clinica.utils.stream import cprint
@@ -946,8 +941,7 @@ def create_adni_sessions_dict(
         location = location.split("/")[0]
         try:
             df_file = load_clinical_csv(clinical_data_dir, location.split(".")[0])
-        except IOError as e:
-            warnings.warn(e)
+        except IOError:
             continue
         df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
         if not df_filtered.empty:
@@ -1588,7 +1582,7 @@ def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
         raise IOError(
             f"Expecting to find exactly one file in folder {clinical_dir} "
             f"matching pattern {pattern}. {len(files_matching_pattern)} "
-            f"files were found instead : \n{'- '.join(files_matching_pattern)}"
+            f"files were found instead : \n{'- '.join(str(files_matching_pattern))}"
         )
     try:
         return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
