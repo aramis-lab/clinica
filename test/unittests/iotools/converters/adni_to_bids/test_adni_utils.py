@@ -341,6 +341,18 @@ def test_get_closest_visit(closest_visit_timepoints, image_acquisition_date, exp
     )
 
 
+@pytest.fixture
+def input_df():
+    return pd.DataFrame(
+        {
+            "foo": ["foo1", "foo2", "foo3"],
+            "bar": [1, 2, 3],
+            "baz": [True, False, False],
+            "foobar": [4, 5, 6],
+        }
+    )
+
+
 @pytest.mark.parametrize(
     "csv_name,csv_to_look_for",
     [("adnimerge.csv", "adnimerge"), ("adnimerge_20Oct2023.csv", "adnimerge")],
