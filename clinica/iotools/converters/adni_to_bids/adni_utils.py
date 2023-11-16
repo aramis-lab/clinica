@@ -1571,6 +1571,23 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
 
 
 def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
+    """Load the clinical csv from ADNI. This function is able to find the csv in the
+    different known format available, the old format with just the name, and the new
+    format with the name and the date of download.
+
+    Parameters
+    ----------
+    clinical_dir: str
+        Directory containing the csv.
+
+    filename: str
+        name of the file without the suffix.
+
+    Returns
+    -------
+    pd.DataFrame:
+        Dataframe corresponding to the filename.
+    """
     import re
     from pathlib import Path
 
