@@ -1587,10 +1587,20 @@ def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
     from pathlib import Path
 
     pattern = filename + "(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
-    for z in Path(clinical_dir).rglob("*.csv"):
-        if re.search(pattern, (z.name)):
-            adni_merge_path = z
+    # for z in Path(clinical_dir).rglob("*.csv"):
+    files_matching_pattern = [
+        f for f in Path(clinical_dir).rglob("*.csv") if re.search(pattern, (f.name))
+    ]
+    if len(files_matching_pattern) != 1:
+        raise IOError(
+            f"Expecting to find exactly one file in folder {clinical_dir} "
+            f"matching pattern {pattern}. {len(files_matching_pattern)} "
+            f"files were found instead : \n{'- '.join(files_matching_pattern)}"
+        )
     try:
-        return pd.read_csv(adni_merge_path, sep=",", low_memory=False)
+        return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
     except:
-        raise ValueError(f"{filename}.csv was not found. Please check your data.")
+        raise ValueError(
+            f"File {files_matching_pattern} was found but could not "
+            "be loaded as a DataFrame. Please check your data."
+        )
