@@ -203,7 +203,10 @@ def _create_merge_file_from_bids(
                                     new_col_name = f"{modality}_{col}"
                                     scans_dict.update({new_col_name: value})
                             json_path = (
-                                bids_dir / subject / session / f"{filename}.json"
+                                bids_dir
+                                / subject
+                                / session
+                                / f"{filepath.split('.')[0]}.json"
                             )
                             if json_path.exists():
                                 with open(json_path, "r") as f:
