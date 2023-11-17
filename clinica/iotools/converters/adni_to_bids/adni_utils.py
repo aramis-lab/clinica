@@ -1605,6 +1605,6 @@ def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
         return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
     except:
         raise ValueError(
-            f"File {files_matching_pattern} was found but could not "
+            f"File {str(files_matching_pattern[0])} was found but could not "
             "be loaded as a DataFrame. Please check your data."
         )
