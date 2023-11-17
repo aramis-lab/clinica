@@ -363,7 +363,10 @@ def test_load_clinical_csv(tmp_path, input_df, csv_name, csv_to_look_for):
     input_df.to_csv(tmp_path / csv_name, index=False)
     assert_frame_equal(load_clinical_csv(tmp_path, csv_to_look_for), input_df)
 
-def test_load_clinical_csv_error(tmp_path, ):
+
+def test_load_clinical_csv_error(
+    tmp_path,
+):
     import re
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
