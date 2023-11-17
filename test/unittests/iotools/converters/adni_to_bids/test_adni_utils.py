@@ -363,12 +363,7 @@ def test_load_clinical_csv(tmp_path, input_df, csv_name, csv_to_look_for):
     input_df.to_csv(tmp_path / csv_name, index=False)
     assert_frame_equal(load_clinical_csv(tmp_path, csv_to_look_for), input_df)
 
-
-@pytest.mark.parametrize(
-    "csv_to_look_for",
-    [("adnimerge")],
-)
-def test_load_clinical_csv_error(tmp_path, csv_to_look_for):
+def test_load_clinical_csv_error(tmp_path, ):
     import re
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
@@ -378,18 +373,14 @@ def test_load_clinical_csv_error(tmp_path, csv_to_look_for):
         IOError,
         match=re.escape(
             f"Expecting to find exactly one file in folder {tmp_path} "
-            f"matching pattern {csv_to_look_for}{pattern}. 0 "
+            f"matching pattern adnimerge{pattern}. 0 "
             f"files were found instead : \n[- ]"
         ),
     ):
-        load_clinical_csv(tmp_path, csv_to_look_for)
+        load_clinical_csv(tmp_path, "adnimerge")
 
 
-@pytest.mark.parametrize(
-    "csv_to_look_for",
-    [("adnimerge")],
-)
-def test_load_clinical_csv_value_error(tmp_path, csv_to_look_for):
+def test_load_clinical_csv_value_error(tmp_path):
     import re
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
@@ -397,10 +388,9 @@ def test_load_clinical_csv_value_error(tmp_path, csv_to_look_for):
     with open(tmp_path / "adnimerge.csv", "w") as fp:
         fp.write("col1,col2,col3\n1,2,3\n1,2,3,4")
 
-    # input_df.to_csv(tmp_path / csv_name, sep="\t", index=False)
     with pytest.raises(
         ValueError,
-        match=f"File {tmp_path}/{csv_to_look_for}.csv was found but could not "
+        match=f"File {tmp_path}/adnimerge.csv was found but could not "
         "be loaded as a DataFrame. Please check your data.",
     ):
-        load_clinical_csv(tmp_path, csv_to_look_for)
+        load_clinical_csv(tmp_path, "adnimerge")
