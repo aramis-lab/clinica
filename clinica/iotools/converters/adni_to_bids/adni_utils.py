@@ -81,7 +81,6 @@ def visits_to_timepoints(
 
     # Then for images.Visit non matching the expected labels we find the closest date in visits list
     for visit in unique_visits:
-
         image = (mri_list_subj[mri_list_subj[visit_field] == visit]).iloc[0]
 
         closest_visit = _get_closest_visit(
@@ -436,7 +435,6 @@ def select_image_qc(id_list, mri_qc_subj):
         images_not_rejected = images_qc[images_qc.series_quality < 4]
 
         if images_not_rejected.empty:
-
             # There are no images that passed the qc,
             # so we'll try to see if there are other images without qc.
             # Otherwise, return None.
@@ -632,9 +630,9 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     from clinica.utils.stream import cprint
 
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
-    dxsum_df = pd.read_csv(
-        path.join(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL.csv")
-    ).set_index(["PTID", "VISCODE2"])
+    dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL").set_index(
+        ["PTID", "VISCODE2"]
+    )
     missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
@@ -926,8 +924,6 @@ def create_adni_sessions_dict(
         bids_subjs_paths: a list with the path to all the BIDS subjects
     """
 
-    from os import path
-
     import pandas as pd
 
     from clinica.utils.stream import cprint
@@ -941,44 +937,36 @@ def create_adni_sessions_dict(
     # write line to get field_bids = sessions['BIDS CLINICA'] without the null values
 
     # Iterate over the metadata files
-
     for location in files:
-
         location = location.split("/")[0]
-        if path.exists(path.join(clinical_data_dir, location)):
+        try:
+            df_file = load_clinical_csv(clinical_data_dir, location.split(".")[0])
+        except IOError:
+            continue
+        df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
+        if not df_filtered.empty:
+            df_filtered = _compute_session_id(df_filtered, location)
 
-            file_to_read_path = path.join(clinical_data_dir, location)
-            cprint(f"\tReading clinical data file: {location}")
+            # Filter rows with invalid session IDs.
+            df_filtered.dropna(subset="session_id", inplace=True)
 
-            df_file = pd.read_csv(file_to_read_path, dtype=str)
-            df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
-
-            if not df_filtered.empty:
-                df_filtered = _compute_session_id(df_filtered, location)
-
-                # Filter rows with invalid session IDs.
-                df_filtered.dropna(subset="session_id", inplace=True)
-
-                if location == "ADNIMERGE.csv":
-                    df_filtered["AGE"] = df_filtered.apply(
-                        lambda x: update_age(x), axis=1
-                    )
-                df_subj_session = update_sessions_df(
-                    df_subj_session, df_filtered, df_sessions, location
-                )
-            else:
-                cprint(
-                    f"Clinical dataframe extracted from {location} is empty after filtering."
-                )
-                dict_column_correspondence = dict(
-                    zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
-                )
-                df_filtered.rename(columns=dict_column_correspondence, inplace=True)
-                df_filtered = df_filtered.loc[
-                    :, (~df_filtered.columns.isin(df_subj_session.columns))
-                ]
-                df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
-
+            if location == "ADNIMERGE.csv":
+                df_filtered["AGE"] = df_filtered.apply(lambda x: update_age(x), axis=1)
+            df_subj_session = update_sessions_df(
+                df_subj_session, df_filtered, df_sessions, location
+            )
+        else:
+            cprint(
+                f"Clinical dataframe extracted from {location} is empty after filtering."
+            )
+            dict_column_correspondence = dict(
+                zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
+            )
+            df_filtered.rename(columns=dict_column_correspondence, inplace=True)
+            df_filtered = df_filtered.loc[
+                :, (~df_filtered.columns.isin(df_subj_session.columns))
+            ]
+            df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
     if df_subj_session.empty:
         raise ValueError("Empty dataset detected. Clinical data cannot be extracted.")
 
@@ -1418,7 +1406,6 @@ def create_file(image, modality, bids_dir, mod_to_update):
             os.remove(im)
 
     if mod_to_update or not len(existing_im) > 0:
-
         try:
             os.makedirs(output_path)
         except OSError:
@@ -1556,7 +1543,6 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     dicom_list = glob(path.join(dicom_path, "*.dcm"))
     image_list = glob(path.join(dicom_path, f"*{image_uid}.dcm"))
     if len(dicom_list) != len(image_list):
-
         # Remove the precedent tmp_dcm_folder if present.
         if os.path.exists(dest_path):
             shutil.rmtree(dest_path)
@@ -1582,3 +1568,43 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
     tmp_dcm_folder_path = join(bids_dir, f"tmp_dcm_folder_{str(image_id).strip(' ')}")
     if exists(tmp_dcm_folder_path):
         rmtree(tmp_dcm_folder_path)
+
+
+def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
+    """Load the clinical csv from ADNI. This function is able to find the csv in the
+    different known format available, the old format with just the name, and the new
+    format with the name and the date of download.
+
+    Parameters
+    ----------
+    clinical_dir: str
+        Directory containing the csv.
+
+    filename: str
+        name of the file without the suffix.
+
+    Returns
+    -------
+    pd.DataFrame:
+        Dataframe corresponding to the filename.
+    """
+    import re
+    from pathlib import Path
+
+    pattern = filename + "(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
+    files_matching_pattern = [
+        f for f in Path(clinical_dir).rglob("*.csv") if re.search(pattern, (f.name))
+    ]
+    if len(files_matching_pattern) != 1:
+        raise IOError(
+            f"Expecting to find exactly one file in folder {clinical_dir} "
+            f"matching pattern {pattern}. {len(files_matching_pattern)} "
+            f"files were found instead : \n{'- '.join(str(files_matching_pattern))}"
+        )
+    try:
+        return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
+    except:
+        raise ValueError(
+            f"File {str(files_matching_pattern[0])} was found but could not "
+            "be loaded as a DataFrame. Please check your data."
+        )

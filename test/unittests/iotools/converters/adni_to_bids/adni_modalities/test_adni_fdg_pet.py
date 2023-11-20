@@ -75,7 +75,7 @@ def test_load_df_with_column_check(tmp_path, input_df, required_columns):
     input_df.to_csv(tmp_path / "data.csv", index=False)
 
     assert_frame_equal(
-        _load_df_with_column_check(tmp_path, "data.csv", required_columns), input_df
+        _load_df_with_column_check(tmp_path, "data", required_columns), input_df
     )
 
 
@@ -90,7 +90,7 @@ def test_load_df_with_column_check_errors(tmp_path, input_df):
         ValueError,
         match="Missing",
     ):
-        _load_df_with_column_check(tmp_path, "data.csv", {"foo", "foobaz"})
+        _load_df_with_column_check(tmp_path, "data", {"foo", "foobaz"})
 
 
 EXPECTED_FDG_DF_COLUMNS = [
