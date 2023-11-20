@@ -10,7 +10,7 @@ If your dataset does not follow this standard, you will need to convert it:
 
 If your data are in [DICOM format](https://www.dicomstandard.org), you can use one of the converters referenced on the [BIDS website](https://bids.neuroimaging.io/benefits.html#converters).
 
-Otherwise, Clinica includes [converters for public datasets](../index#Datasets_converters):
+Otherwise, Clinica includes [converters for public datasets](../#dataset-converters-clinica-convert):
 
 - `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](../Converters/ADNI2BIDS)
 - `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](../Converters/AIBL2BIDS)
@@ -88,7 +88,7 @@ If you execute `clinica run --help`, you can see the list of `modality-pipeline`
 
 These tools allow you to convert unorganized datasets from publicly available neuroimaging studies into a [BIDS](http://bids.neuroimaging.io/) hierarchy.
 
-Clinica currently includes some [converters for public datasets](../index#Datasets_converters):
+Clinica currently includes some [converters for public datasets](../#dataset-converters-clinica-convert):
 
 - `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](../Converters/ADNI2BIDS)
 - `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](../Converters/AIBL2BIDS)
