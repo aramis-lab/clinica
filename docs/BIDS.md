@@ -4,9 +4,9 @@
 ## Introduction
 
 [**BIDS**](http://bids.neuroimaging.io/) (Brain Imaging Data Structure) is the standard adopted for the organisation of the datasets used by Clinica pipelines through the command line.
-[BIDS](http://bids.neuroimaging.io/) provides a unified structure for organising and describing neuroimaging and behavioural data.
-The use of a standard like [BIDS](http://bids.neuroimaging.io/) makes easier developing and distributing code that uses neuroimaging datasets.
-For this reason, when using Clinica pipelines from the command line, the input format of the dataset is required to be [BIDS](http://bids.neuroimaging.io/)-compliant.
+BIDS provides a unified structure for organising and describing neuroimaging and behavioural data.
+The use of a standard like BIDS makes easier developing and distributing code that uses neuroimaging datasets.
+For this reason, when using Clinica pipelines from the command line, the input format of the dataset is required to be BIDS-compliant.
 
 ## An overview of the BIDS structure
 

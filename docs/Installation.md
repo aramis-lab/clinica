@@ -12,7 +12,7 @@ if you encounter any issues.
 You will need a Python environment to run Clinica.
 
 We advise you to use [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
-[Miniconda](https://docs.conda.io/en/latest/miniconda.html) allows you to install, run, and update Python packages and their dependencies.
+Miniconda allows you to install, run, and update Python packages and their dependencies.
 It can also create environments to isolate your libraries.
 To install Miniconda, open a new terminal and type the following commands:
 
@@ -33,7 +33,7 @@ bash /tmp/miniconda-installer.sh
 [Miniconda](https://docs.conda.io/en/latest/miniconda.html) will ask you where to install it.
 Do not forget to copy the `export PATH` given at the end of the installation.
 If everything went fine, open a new terminal and type `conda info`, it will verify if
-Conda is installed, check the version and show your [Miniconda](https://docs.conda.io/en/latest/miniconda.html) path.
+Conda is installed, check the version and show your Miniconda path.
 
 ## Install Clinica
 
@@ -54,14 +54,14 @@ pip install clinica
 
 ## Installation of the third-party software packages
 
-Depending on the pipeline that you want to use, you need to install
-**pipeline-specific interfaces**.
+Depending on the pipeline that you want to use, you need to install **pipeline-specific interfaces**.
 Not all the dependencies are necessary to run Clinica.
 Please refer to [this section](../Third-party) to determine which third-party libraries you need to install.
 
 ## Shell completion (optional)
 
-Shell completion for Clinica is available for Bash, Fish and Zsh.
+Shell completion for Clinica is available for [Bash](https://www.gnu.org/software/bash/),
+[Fish](https://fishshell.com/docs/current/), and [Zsh](https://zsh.sourceforge.io/Doc/).
 
 For Bash, add this to `~/.bashrc`:
 
