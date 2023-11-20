@@ -10,16 +10,7 @@ If your dataset does not follow this standard, you will need to convert it:
 
 If your data are in [DICOM format](https://www.dicomstandard.org), you can use one of the converters referenced on the [BIDS website](https://bids.neuroimaging.io/benefits.html#converters).
 
-Otherwise, Clinica includes [converters for public datasets](../#dataset-converters-clinica-convert):
-
-- `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](../Converters/ADNI2BIDS)
-- `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](../Converters/AIBL2BIDS)
-- `genfi-to-bids` - [GENFI:Genetic Frontotemporal dementia Initiative](../Converters/GENFItoBIDS)
-- `habs-to-bids` - [HABS: Harvard Aging Brain Study](../Converters/HABS2BIDS)
-- `nifd-to-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](../Converters/NIFD2BIDS)
-- `oasis-to-bids` - [OASIS: Open Access Series of Imaging Studies](../Converters/OASIS2BIDS)
-- `oasis3-to-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](../Converters/OASIS3TOBIDS)
-- `ukb-to-bids` - [UK Biobank: Large-scale biomedical database and research resource in the United Kingdom](../Converter/UKBtoBIDS)
+Otherwise, Clinica includes [converters for public datasets](../#dataset-converters-clinica-convert).
 
 !!! note "Regarding cross-sectional BIDS datasets"
     If you run Clinica with a dataset containing no timepoints e.g.:
@@ -88,16 +79,7 @@ If you execute `clinica run --help`, you can see the list of `modality-pipeline`
 
 These tools allow you to convert unorganized datasets from publicly available neuroimaging studies into a [BIDS](http://bids.neuroimaging.io/) hierarchy.
 
-Clinica currently includes some [converters for public datasets](../#dataset-converters-clinica-convert):
-
-- `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](../Converters/ADNI2BIDS)
-- `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](../Converters/AIBL2BIDS)
-- `genfi-to-bids` - [GENFI:Genetic Frontotemporal dementia Initiative](../Converters/GENFItoBIDS)
-- `habs-to-bids` - [HABS: Harvard Aging Brain Study](../Converters/HABS2BIDS)
-- `nifd-to-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](../Converters/NIFD2BIDS)
-- `oasis-to-bids` - [OASIS: Open Access Series of Imaging Studies](../Converters/OASIS2BIDS)
-- `oasis3-to-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](../Converters/OASIS3TOBIDS)
-- `ukb-to-bids` - [UK Biobank: Large-scale biomedical database and research resource in the United Kingdom](../Converter/UKBtoBIDS)
+Clinica currently includes some [converters for public datasets](../#dataset-converters-clinica-convert).
 
 ### `clinica iotools`
 
