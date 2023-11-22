@@ -41,9 +41,18 @@ class AdniToBids(Converter):
         """Return a list of modalities supported.
 
         Returns: a list containing the modalities supported by the converter
-        (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
+        (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI, fMRIMB)
         """
-        return ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
+        return [
+            "T1",
+            "PET_FDG",
+            "PET_AMYLOID",
+            "PET_TAU",
+            "DWI",
+            "FLAIR",
+            "fMRI",
+            "fMRIMB",
+        ]
 
     @classmethod
     def check_adni_dependencies(cls) -> None:
@@ -187,8 +196,6 @@ class AdniToBids(Converter):
         from copy import copy
         from os import path
 
-        import pandas as pd
-
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
@@ -248,6 +255,8 @@ class AdniToBids(Converter):
             "FLAIR": [adni_flair.convert_adni_flair],
             "fMRI": [adni_fmri.convert_adni_fmri],
         }
+        if "fMRI" in modalities and "fMRIMB" in modalities:
+            converters["fMRI"] = [adni_fmri.convert_adni_fmri_all]
 
         for modality in modalities:
             if modality not in converters:
