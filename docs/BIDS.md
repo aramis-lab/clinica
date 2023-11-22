@@ -69,16 +69,7 @@ BIDS_Dataset/
 
 Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to [BIDS](http://bids.neuroimaging.io/).
 
-Datasets currently supported are:
-
-- [ADNI](../Converters/ADNI2BIDS/)
-- [AIBL](../Converters/AIBL2BIDS/)
-- [GENFI](../Converters/GENFItoBIDS/)
-- [HABS](../Converters/HABS2BIDS/)
-- [NIFD](../Converters/NIFD2BIDS/)
-- [OASIS](../Converters/OASIS2BIDS/)
-- [OASIS-3](../Converters/OASIS3TOBIDS/)
-- [UKB](../Converters/UKBtoBIDS/)
+Datasets currently supported can be found [here](../#dataset-converters-clinica-convert).
 
 We decided to ignore several warnings and errors detected by the validator.
 These are listed in the `.bids-validator-config.json` and `.bidsignore` files at the root of each [BIDS](http://bids.neuroimaging.io/) folder.
