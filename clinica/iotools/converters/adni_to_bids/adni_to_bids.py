@@ -260,7 +260,14 @@ class AdniToBids(Converter):
 
         for modality in modalities:
             if modality not in converters:
-                raise Exception(f"{modality} is not a valid input modality")
+                if modality == "fMRIMB":
+                    cprint(
+                        "The converter will also convert fMRI multiband scans.",
+                        lvl="info",
+                    )
+                    continue
+                else:
+                    raise Exception(f"{modality} is not a valid input modality")
             for converter in converters[modality]:
                 converter(
                     source_dir=source_dir,
