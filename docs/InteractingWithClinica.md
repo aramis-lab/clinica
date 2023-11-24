@@ -4,13 +4,13 @@
 ## Preparing your data
 
 The easiest way to use Clinica is to have your data organized using the [BIDS standard](http://bids.neuroimaging.io/).
-[BIDS](http://bids.neuroimaging.io/) is currently becoming the standard for data organization in the brain imaging community and we strongly recommend to use it.
+BIDS is currently becoming the standard for data organization in the brain imaging community and we strongly recommend to use it.
 
 If your dataset does not follow this standard, you will need to convert it:
 
-- If your data are in DICOM format, you can use one of the converters referenced on the [BIDS website](https://bids.neuroimaging.io/benefits.html#converters).
-- Otherwise, Clinica includes converters for public datasets such as [ADNI](http://adni.loni.usc.edu/), [AIBL](https://aibl.csiro.au), [NIFD](http://4rtni-ftldni.ini.usc.edu/) and [OASIS](http://www.oasis-brains.org).
-See [here](../DatabasesToBIDS) for more details.
+If your data are in [DICOM format](https://www.dicomstandard.org), you can use one of the converters referenced on the [BIDS website](https://bids.neuroimaging.io/benefits.html#converters).
+
+Otherwise, Clinica includes [converters for public datasets](../#dataset-converters-clinica-convert).
 
 !!! note "Regarding cross-sectional BIDS datasets"
     If you run Clinica with a dataset containing no timepoints e.g.:
@@ -38,7 +38,7 @@ See [here](../DatabasesToBIDS) for more details.
     ```
 
 !!! tip
-     If you need to create BIDS compliant datasets or need tutorials on BIDS, you can look at this [BIDS Starter Kit](https://github.com/INCF/bids-starter-kit/).
+     If you need to create [BIDS](http://bids.neuroimaging.io/) compliant datasets or need tutorials on [BIDS](http://bids.neuroimaging.io/), you can look at this [BIDS Starter Kit](https://github.com/INCF/bids-starter-kit/).
 
 ## Clinica command-line interface
 
@@ -53,7 +53,9 @@ clinica category_of_command command argument options
 
 where the arguments are usually your input/output folders, and where the options look like `--flag_1 option_1 --flag_2 option_2`.
 
-Please note that the ordering of options on the command-line is not important, whereas arguments must be given in the exact order specified in the documentation (or in the command line helper).
+!!! note 
+    Please note that the ordering of options on the command-line is not important,
+    whereas arguments must be given in the exact order specified in the documentation (or in the command line helper).
 
 ## Categories of command line
 
@@ -75,9 +77,9 @@ If you execute `clinica run --help`, you can see the list of `modality-pipeline`
 
 ### `clinica convert`
 
-These tools allow you to convert unorganized datasets from publicly available neuroimaging studies into a BIDS hierarchy.
-Clinica currently includes converters for [ADNI](http://adni.loni.usc.edu/), [AIBL](https://aibl.csiro.au) and [OASIS](http://www.oasis-brains.org).
-See [here](../DatabasesToBIDS) for more details.
+These tools allow you to convert unorganized datasets from publicly available neuroimaging studies into a [BIDS](http://bids.neuroimaging.io/) hierarchy.
+
+Clinica currently includes some [converters for public datasets](../#dataset-converters-clinica-convert).
 
 ### `clinica iotools`
 
@@ -108,7 +110,7 @@ It can be also the input folder containing the dataset in a [CAPS](../CAPS/Intro
 
 You will see the `GROUP_LABEL` argument when working on any group-wise analysis (e.g. template creation from a list of subjects, statistical analysis).
 This is simply a label name that will define the  group of subjects used for this analysis.
-It will be written in your output CAPS folder, for possible future reuses.
+It will be written in your output [CAPS](../CAPS/Introduction) folder, for possible future reuses.
 For example, an `AD` group ID label could be used when creating a template for a group of Alzheimer’s disease patients.
 Any time you would like to use this `AD` template you will need to provide the group ID used to identify the pipeline output obtained from this group.
 You might also use `CNvsAD`, for instance, as group ID for a statistical group comparison between patients with Alzheimer's disease (`AD`) and cognitively normal (`CN`) subjects.
@@ -143,20 +145,21 @@ sub-CLNC0003    ses-M000
 In every pipeline, a working directory can be specified.
 This directory gathers all the inputs and outputs of the different steps of the pipeline.
 It is then very useful for the debugging process.
-It is specially useful in the case where your pipeline execution crashes and you relaunch it with the exact same parameters, allowing you to continue from the last successfully executed node. <!--If you do not specify any working directory, a temporary one will be created, then deleted at the end if everything went well.--> For the pipelines that generate many files, such as `dwi-preprocessing` (especially if you run it on multiple subjects), a specific drive/partition with enough space can be used to store the working directory.
+It is specially useful in the case where your pipeline execution crashes and you relaunch it with the exact same parameters, allowing you to continue from the last successfully executed node.
+<!--If you do not specify any working directory, a temporary one will be created, then deleted at the end if everything went well.-->
+For the pipelines that generate many files, such as `dwi-preprocessing` (especially if you run it on multiple subjects), a specific drive/partition with enough space can be used to store the working directory.
 
 ### `-np` / `--n_procs`
 
 The `--n_procs` flag allows you to exploit several cores of your machine to run pipelines in parallel, which is very useful when dealing with numerous subjects and multiple sessions.
-Thanks to Nipype, even for a single subject, a pipeline can be run in parallel by exploiting the cores available to process simultaneously independent sub-parts.
+Thanks to [Nipype](https://nipype.readthedocs.io/en/latest/), even for a single subject, a pipeline can be run in parallel by exploiting the cores available to process simultaneously independent sub-parts.
 
 If you do not specify `-np` / `--n_procs` flag, Clinica will detect the number of threads to run in parallel and propose the adequate number of threads to the user.
 
 ## :warning: Known issues
 
-Matlab and SPM12 (whose implementation is based on Matlab) can sometimes randomly crash, causing a rather unreadable error in the console.
-Those events are unpredictable.
-In case it occurs to you, please do the following:
+[Matlab](https://www.mathworks.com/products/matlab.html) and [SPM12](https://www.fil.ion.ucl.ac.uk/spm/software/spm12/) (whose implementation is based on Matlab) can sometimes randomly crash, causing a rather unreadable error in the console.
+Those events are unpredictable. In case it occurs to you, please do the following:
 
 - Check that you have a valid Matlab license.
 - Before relaunching the command line, be sure to remove the content of the working directory (if you specified one).
