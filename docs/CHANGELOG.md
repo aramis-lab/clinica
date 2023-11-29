@@ -6,6 +6,22 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.7.7
+
+### Enhanced
+
+- [ADNI2BIDS] Enable converter to read CSV files with new naming convention from ADNI (see PR #1016)
+- [Converters] Expose `n_procs` option to converters using multiprocessing (see PR #1009)
+- [GENFI2BIDS] Enable converter to extract more clinical data (see PR #1005)
+
+### Fixed
+
+- [IOTools] Fix regression in `merge-tsv` command (see PR #1013 and #1019)
+- [GENFI2BIDS] Fix issue with link and readme data not found by the converter (see PR #1015)
+- [PETLinear] Fix the CLI of PETLinear due to previously added option (see PR #1004)
+- [T1Linear] Fix bad session labels in output file names (see PR #1000)
+- [StatisticsSurface] Some fixes to the pipeline (see PR #840)
+
 ## Clinica 0.7.6
 
 ### Enhanced
