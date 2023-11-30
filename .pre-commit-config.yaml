@@ -17,6 +17,10 @@ repos:
       - id: codespell
         additional_dependencies:
           - tomli
+  - repo: https://github.com/python-poetry/poetry
+    rev: '1.7.1'
+    hooks:
+      - id: poetry-check
 
 default_language_version:
   python: python3
