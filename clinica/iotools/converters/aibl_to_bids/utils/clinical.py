@@ -184,7 +184,6 @@ def create_sessions_tsv_file(
             visit_code = df.loc[(df["RID"] == rid), "VISCODE"]
 
             for field in sessions_fields_to_read:
-
                 if field in list(df.columns.values) and field == "MMSCORE":
                     mm_score = df.loc[(df["RID"] == rid), field]
                     mm_score[mm_score == -4] = "n/a"

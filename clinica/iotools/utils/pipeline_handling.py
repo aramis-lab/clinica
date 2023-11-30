@@ -299,7 +299,6 @@ pet_volume_pipeline = functools.partial(
 def generate_summary(
     pipeline_df: pd.DataFrame, pipeline_name: str, ignore_groups: bool = False
 ):
-
     columns = [
         "pipeline_name",
         "group_id",

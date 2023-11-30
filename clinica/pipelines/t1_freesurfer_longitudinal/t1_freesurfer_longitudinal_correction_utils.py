@@ -279,7 +279,7 @@ def get_processed_images(caps_directory, part_ids, sess_ids, long_ids, atlas=Fal
 
     image_ids = []
     if os.path.isdir(caps_directory):
-        for (participant_id, session_id, long_id) in zip(part_ids, sess_ids, long_ids):
+        for participant_id, session_id, long_id in zip(part_ids, sess_ids, long_ids):
             output_file_pre = os.path.join(
                 os.path.expanduser(caps_directory),
                 "subjects",

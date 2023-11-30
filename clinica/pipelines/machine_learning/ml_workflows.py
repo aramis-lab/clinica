@@ -26,7 +26,6 @@ class VoxelBasedKFoldDualSVM(base.MLWorkflow):
         c_range=np.logspace(-6, 2, 17),
         splits_indices=None,
     ):
-
         super(VoxelBasedKFoldDualSVM, self).__init__(
             input.CAPSVoxelBasedInput,
             validation.KFoldCV,
@@ -60,7 +59,6 @@ class VoxelBasedRepKFoldDualSVM(base.MLWorkflow):
         c_range=np.logspace(-6, 2, 17),
         splits_indices=None,
     ):
-
         super(VoxelBasedRepKFoldDualSVM, self).__init__(
             input.CAPSVoxelBasedInput,
             validation.RepeatedKFoldCV,
@@ -94,7 +92,6 @@ class VoxelBasedRepHoldOutDualSVM(base.MLWorkflow):
         c_range=np.logspace(-6, 2, 17),
         splits_indices=None,
     ):
-
         super().__init__(
             input.CAPSVoxelBasedInput,
             validation.RepeatedHoldOut,
@@ -125,7 +122,6 @@ class VertexBasedRepHoldOutDualSVM(base.MLWorkflow):
         c_range=np.logspace(-10, 2, 1000),
         splits_indices=None,
     ):
-
         super(VertexBasedRepHoldOutDualSVM, self).__init__(
             input.CAPSVertexBasedInput,
             validation.RepeatedHoldOut,
@@ -156,7 +152,6 @@ class RegionBasedRepHoldOutDualSVM(base.MLWorkflow):
         c_range=np.logspace(-6, 2, 17),
         splits_indices=None,
     ):
-
         super(RegionBasedRepHoldOutDualSVM, self).__init__(
             input.CAPSRegionBasedInput,
             validation.RepeatedHoldOut,
@@ -187,7 +182,6 @@ class RegionBasedRepHoldOutLogisticRegression(base.MLWorkflow):
         c_range=np.logspace(-6, 2, 17),
         splits_indices=None,
     ):
-
         super(RegionBasedRepHoldOutLogisticRegression, self).__init__(
             input.CAPSRegionBasedInput,
             validation.RepeatedHoldOut,
@@ -221,7 +215,6 @@ class RegionBasedRepHoldOutRandomForest(base.MLWorkflow):
         max_features_range=("auto", 0.25, 0.5),
         splits_indices=None,
     ):
-
         super(RegionBasedRepHoldOutRandomForest, self).__init__(
             input.CAPSRegionBasedInput,
             validation.RepeatedHoldOut,
@@ -253,7 +246,6 @@ class RegionBasedLearningCurveRepHoldOutDualSVM(base.MLWorkflow):
         balanced=True,
         c_range=np.logspace(-6, 2, 17),
     ):
-
         super(RegionBasedLearningCurveRepHoldOutDualSVM, self).__init__(
             input.CAPSRegionBasedInput,
             validation.LearningCurveRepeatedHoldOut,
@@ -287,7 +279,6 @@ class VoxelBasedLearningCurveRepHoldOutDualSVM(base.MLWorkflow):
         balanced=True,
         c_range=np.logspace(-6, 2, 17),
     ):
-
         super(VoxelBasedLearningCurveRepHoldOutDualSVM, self).__init__(
             input.CAPSVoxelBasedInput,
             validation.LearningCurveRepeatedHoldOut,
@@ -319,7 +310,6 @@ class RegionBasedRepKFoldDualSVM(base.MLWorkflow):
         c_range=np.logspace(-6, 2, 17),
         splits_indices=None,
     ):
-
         super(RegionBasedRepKFoldDualSVM, self).__init__(
             input.CAPSRegionBasedInput,
             validation.RepeatedKFoldCV,
@@ -351,7 +341,6 @@ class CAPSTsvRepHoldOutDualSVM(base.MLWorkflow):
         c_range=np.logspace(-6, 2, 17),
         splits_indices=None,
     ):
-
         super(CAPSTsvRepHoldOutDualSVM, self).__init__(
             input.CAPSTSVBasedInput,
             validation.RepeatedHoldOut,
@@ -386,7 +375,6 @@ class CAPSTsvRepHoldOutRandomForest(base.MLWorkflow):
         max_features_range=("auto", 0.25, 0.5),
         splits_indices=None,
     ):
-
         super(CAPSTsvRepHoldOutRandomForest, self).__init__(
             input.CAPSTSVBasedInput,
             validation.RepeatedHoldOut,
@@ -424,7 +412,6 @@ class VoxelBasedREGRepKFoldDualSVM(base.MLWorkflow):
         c_range=np.logspace(-6, 2, 17),
         splits_indices=None,
     ):
-
         super(VoxelBasedREGRepKFoldDualSVM, self).__init__(
             input.CAPSTSVBasedInput,
             validation.RepeatedKFoldCV,
@@ -455,7 +442,6 @@ class TsvRepHoldOutRandomForest(base.MLWorkflow):
         splits_indices=None,
         inner_cv=False,
     ):
-
         super(TsvRepHoldOutRandomForest, self).__init__(
             input.TsvInput,
             validation.RepeatedHoldOut,

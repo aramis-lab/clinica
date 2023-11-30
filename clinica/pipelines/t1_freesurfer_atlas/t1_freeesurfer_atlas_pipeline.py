@@ -66,7 +66,6 @@ class T1FreeSurferAtlas(cpe.Pipeline):
 
         if os.path.isdir(caps_directory):
             for atlas in atlas_list:
-
                 atlas_info = dict(
                     {
                         "pattern": "t1/freesurfer_cross_sectional/sub-*_ses-*/stats/rh."

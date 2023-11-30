@@ -445,7 +445,6 @@ def _delete_last_line(filename: Path) -> None:
     import os
 
     with open(filename, "r+", encoding="utf-8") as file:
-
         # Move the pointer (similar to a cursor in a text editor) to the end of the file
         file.seek(0, os.SEEK_END)
 

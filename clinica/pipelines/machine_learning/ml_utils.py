@@ -7,7 +7,6 @@ from sklearn.metrics import (
 
 
 def evaluate_prediction(y, y_hat):
-
     true_positive = 0.0
     true_negative = 0.0
     false_positive = 0.0
@@ -83,7 +82,6 @@ def gram_matrix_linear(data):
 
 
 def evaluate_prediction_multiclass(y, y_hat):
-
     balanced_accuracy = balanced_accuracy_score(y, y_hat)
     accuracy = accuracy_score(y, y_hat)
 

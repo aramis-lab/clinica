@@ -646,7 +646,6 @@ def compute_missing_mods(
                 for mod in mods_avail:
                     row_to_append_df[mod] = pd.Series("0")
             else:
-
                 ses_path = ses_path_avail[0]
                 mods_paths_folders = glob(path.join(ses_path, "*/"))
 

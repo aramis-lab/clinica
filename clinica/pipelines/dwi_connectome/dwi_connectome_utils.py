@@ -16,7 +16,6 @@ def get_luts():
 
 
 def get_conversion_luts_offline():
-
     # TODO: use this function if no internet connect found in client (need to upload files to clinica repository)
     return
 

@@ -362,5 +362,4 @@ def write_bids(
 
 
 def extract_suffix_from_filename(filename: str) -> str:
-
     return filename.split("_")[-1].split(".")[0]

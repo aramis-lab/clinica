@@ -99,7 +99,6 @@ def get_tissue_tuples(
 
 
 class ApplySegmentationDeformationInput(SPMCommandInputSpec):
-
     deformation_field = File(
         exists=True,
         mandatory=True,
