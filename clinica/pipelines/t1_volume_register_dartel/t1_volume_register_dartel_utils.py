@@ -124,7 +124,6 @@ def prepare_dartel_input_images_pydra(dartel_input_images):
 
 
 def create_iteration_parameters(dartel_templates, iteration_parameters):
-
     if len(dartel_templates) != 6:
         raise ValueError(
             "Wrong number of templates. 6 templates were expected, one for each DARTEL iteration."

@@ -180,7 +180,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             cprint(
                 f"The pipeline will be run on the following {len(unique_part_list)} participant(s):"
             )
-            for (part_id, list_sess_id, list_id) in zip(
+            for part_id, list_sess_id, list_id in zip(
                 unique_part_list, per_part_session_list, list_part_long_id
             ):
                 sessions_participant = ", ".join(s_id for s_id in list_sess_id)

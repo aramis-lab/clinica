@@ -183,7 +183,6 @@ def tensor_determinant(g):
         # if the tensor is 3*3
 
         for i in range(s[0]):
-
             if np.mod(i, 2) == 0:
                 epsilon = 1
             else:
@@ -366,7 +365,7 @@ def tensor_transpose(g):
     """
 
     :param g: tensor
-    :return: tranpose of the tensor
+    :return: transpose of the tensor
     """
     import numpy as np
 
@@ -906,7 +905,7 @@ def heat_solver_tensor_2D_P1_grad_conj(
 
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
-    # intiialisation
+    # initialisation
     h = h or 1
     CL_value = CL_value or np.zeros(f.shape)
 
@@ -962,7 +961,6 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     atlas = utils.atlas_decomposition(dartel_input)
 
     for i in atlas:
-
         image = utils.rescaleImage(i, [min_proba, max_proba])
 
         xxx.append(image)

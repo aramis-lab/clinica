@@ -146,7 +146,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             cprint(
                 f"The pipeline will be run on the following {len(list_participant_id)} image(s):"
             )
-            for (p_id, s_id, l_id) in zip(
+            for p_id, s_id, l_id in zip(
                 list_participant_id, list_session_id, list_longitudinal_id
             ):
                 cprint(f"\t{p_id} | {s_id} | {l_id}")

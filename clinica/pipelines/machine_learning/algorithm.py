@@ -19,7 +19,6 @@ from clinica.pipelines.machine_learning import base
 
 class DualSVMAlgorithm(base.MLAlgorithm):
     def _launch_svc(self, kernel_train, x_test, y_train, y_test, c):
-
         if self._algorithm_params["balanced"]:
             svc = SVC(
                 C=c,
@@ -40,14 +39,12 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         return svc, y_hat, auc, y_hat_train
 
     def _grid_search(self, kernel_train, x_test, y_train, y_test, c):
-
         _, y_hat, _, _ = self._launch_svc(kernel_train, x_test, y_train, y_test, c)
         res = utils.evaluate_prediction(y_test, y_hat)
 
         return res["balanced_accuracy"]
 
     def _select_best_parameter(self, async_result):
-
         c_values = []
         accuracies = []
         for fold in async_result.keys():
@@ -55,7 +52,6 @@ class DualSVMAlgorithm(base.MLAlgorithm):
             best_acc = -1
 
             for c, async_acc in async_result[fold].items():
-
                 acc = async_acc.get()
                 if acc > best_acc:
                     best_c = c
@@ -69,7 +65,6 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         return {"c": best_c, "balanced_accuracy": best_acc}
 
     def evaluate(self, train_index, test_index):
-
         inner_pool = ThreadPool(self._algorithm_params["n_threads"])
         async_result = {}
         for i in range(self._algorithm_params["grid_search_folds"]):
@@ -124,7 +119,6 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         return result
 
     def apply_best_parameters(self, results_list):
-
         best_c_list = []
         bal_acc_list = []
 
@@ -153,7 +147,6 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         return svc, {"c": best_c, "balanced_accuracy": mean_bal_acc}
 
     def save_classifier(self, classifier, output_dir):
-
         np.savetxt(
             path.join(output_dir, "dual_coefficients.txt"), classifier.dual_coef_
         )
@@ -163,7 +156,6 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         np.savetxt(path.join(output_dir, "intersect.txt"), classifier.intercept_)
 
     def save_weights(self, classifier, x, output_dir):
-
         dual_coefficients = classifier.dual_coef_
         sv_indices = classifier.support_
 
@@ -184,7 +176,6 @@ class DualSVMAlgorithm(base.MLAlgorithm):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {
             "balanced": True,
             "grid_search_folds": 10,
@@ -197,7 +188,6 @@ class DualSVMAlgorithm(base.MLAlgorithm):
 
 class LogisticReg(base.MLAlgorithm):
     def _launch_logistic_reg(self, x_train, x_test, y_train, y_test, c):
-
         if self._algorithm_params["balanced"]:
             classifier = LogisticRegression(
                 penalty=self._algorithm_params["penalty"],
@@ -219,14 +209,12 @@ class LogisticReg(base.MLAlgorithm):
         return classifier, y_hat, auc, y_hat_train
 
     def _grid_search(self, x_train, x_test, y_train, y_test, c):
-
         _, y_hat, _, _ = self._launch_logistic_reg(x_train, x_test, y_train, y_test, c)
         res = utils.evaluate_prediction(y_test, y_hat)
 
         return res["balanced_accuracy"]
 
     def _select_best_parameter(self, async_result):
-
         c_values = []
         accuracies = []
         for fold in async_result.keys():
@@ -234,7 +222,6 @@ class LogisticReg(base.MLAlgorithm):
             best_acc = -1
 
             for c, async_acc in async_result[fold].items():
-
                 acc = async_acc.get()
                 if acc > best_acc:
                     best_c = c
@@ -248,7 +235,6 @@ class LogisticReg(base.MLAlgorithm):
         return {"c": best_c, "balanced_accuracy": best_acc}
 
     def evaluate(self, train_index, test_index):
-
         inner_pool = ThreadPool(self._algorithm_params["n_threads"])
         async_result = {}
         for i in range(self._algorithm_params["grid_search_folds"]):
@@ -301,7 +287,6 @@ class LogisticReg(base.MLAlgorithm):
         return result
 
     def apply_best_parameters(self, results_list):
-
         best_c_list = []
         bal_acc_list = []
 
@@ -331,17 +316,14 @@ class LogisticReg(base.MLAlgorithm):
         return classifier, {"c": best_c, "balanced_accuracy": mean_bal_acc}
 
     def save_classifier(self, classifier, output_dir):
-
         np.savetxt(path.join(output_dir, "weights.txt"), classifier.coef_.transpose())
         np.savetxt(path.join(output_dir, "intercept.txt"), classifier.intercept_)
 
     def save_weights(self, classifier, x, output_dir):
-
         np.savetxt(path.join(output_dir, "weights.txt"), classifier.coef_.transpose())
         return classifier.coef_.transpose()
 
     def save_parameters(self, parameters_dict, output_dir):
-
         with open(path.join(output_dir, "best_parameters.json"), "w") as f:
             json.dump(parameters_dict, f)
 
@@ -382,7 +364,6 @@ class RandomForest(base.MLAlgorithm):
         min_samples_split,
         max_features,
     ):
-
         if self._algorithm_params["balanced"]:
             classifier = RandomForestClassifier(
                 n_estimators=n_estimators,
@@ -420,7 +401,6 @@ class RandomForest(base.MLAlgorithm):
         min_samples_split,
         max_features,
     ):
-
         _, y_hat, _, _ = self._launch_random_forest(
             x_train,
             x_test,
@@ -436,7 +416,6 @@ class RandomForest(base.MLAlgorithm):
         return res["balanced_accuracy"]
 
     def _select_best_parameter(self, async_result):
-
         params_list = []
         accuracies = []
 
@@ -500,7 +479,6 @@ class RandomForest(base.MLAlgorithm):
         }
 
     def evaluate(self, train_index, test_index):
-
         inner_pool = ThreadPool(self._algorithm_params["n_threads"])
         async_result = {}
         for i in range(self._algorithm_params["grid_search_folds"]):
@@ -577,7 +555,6 @@ class RandomForest(base.MLAlgorithm):
         return result
 
     def evaluate_no_cv(self, train_index, test_index):
-
         x_train = self._x[train_index]
         y_train = self._y[train_index]
         x_test = self._x[test_index]
@@ -617,7 +594,6 @@ class RandomForest(base.MLAlgorithm):
         return result
 
     def apply_best_parameters(self, results_list):
-
         mean_bal_acc = np.mean(
             [result["best_parameter"]["balanced_accuracy"] for result in results_list]
         )
@@ -712,14 +688,12 @@ class RandomForest(base.MLAlgorithm):
         # np.savetxt(path.join(output_dir, 'estimators.txt'), str(classifier.estimators_))
 
     def save_weights(self, classifier, x, output_dir):
-
         np.savetxt(
             path.join(output_dir, "weights.txt"), classifier.feature_importances_
         )
         return classifier.feature_importances_
 
     def save_parameters(self, parameters_dict, output_dir):
-
         with open(path.join(output_dir, "best_parameters.json"), "w") as f:
             json.dump(parameters_dict, f)
 
@@ -729,7 +703,6 @@ class RandomForest(base.MLAlgorithm):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {
             "balanced": False,
             "grid_search_folds": 10,
@@ -755,7 +728,6 @@ class XGBoost(base.MLAlgorithm):
         n_estimators,
         colsample_bytree,
     ):
-
         if self._algorithm_params["balanced"]:
             # set scale_pos_weight
             # http://xgboost.readthedocs.io/en/latest//how_to/param_tuning.html
@@ -800,7 +772,6 @@ class XGBoost(base.MLAlgorithm):
         n_estimators,
         colsample_bytree,
     ):
-
         _, y_hat, _, _ = self._launch_xgboost(
             x_train,
             x_test,
@@ -816,7 +787,6 @@ class XGBoost(base.MLAlgorithm):
         return res["balanced_accuracy"]
 
     def _select_best_parameter(self, async_result):
-
         params_list = []
         accuracies = []
 
@@ -866,7 +836,6 @@ class XGBoost(base.MLAlgorithm):
         }
 
     def evaluate(self, train_index, test_index):
-
         inner_pool = ThreadPool(self._algorithm_params["n_threads"])
         async_result = {}
         for i in range(self._algorithm_params["grid_search_folds"]):
@@ -943,7 +912,6 @@ class XGBoost(base.MLAlgorithm):
         return result
 
     def evaluate_no_cv(self, train_index, test_index):
-
         x_train = self._x[train_index]
         y_train = self._y[train_index]
         x_test = self._x[test_index]
@@ -983,7 +951,6 @@ class XGBoost(base.MLAlgorithm):
         return result
 
     def apply_best_parameters(self, results_list):
-
         mean_bal_acc = np.mean(
             [result["best_parameter"]["balanced_accuracy"] for result in results_list]
         )
@@ -1055,14 +1022,12 @@ class XGBoost(base.MLAlgorithm):
         # np.savetxt(path.join(output_dir, 'estimators.txt'), str(classifier.estimators_))
 
     def save_weights(self, classifier, x, output_dir):
-
         np.savetxt(
             path.join(output_dir, "weights.txt"), classifier.feature_importances_
         )
         return classifier.feature_importances_
 
     def save_parameters(self, parameters_dict, output_dir):
-
         with open(path.join(output_dir, "best_parameters.json"), "w") as f:
             json.dump(parameters_dict, f)
 
@@ -1089,7 +1054,6 @@ class XGBoost(base.MLAlgorithm):
 
 class OneVsOneSVM(base.MLAlgorithm):
     def _launch_svc(self, kernel_train, x_test, y_train, y_test, c):
-
         if self._algorithm_params["balanced"]:
             svc = OneVsOneClassifier(
                 SVC(
@@ -1121,7 +1085,6 @@ class OneVsOneSVM(base.MLAlgorithm):
         return res["balanced_accuracy"]
 
     def _select_best_parameter(self, async_result):
-
         c_values = []
         accuracies = []
         for fold in async_result.keys():
@@ -1129,7 +1092,6 @@ class OneVsOneSVM(base.MLAlgorithm):
             best_acc = -1
 
             for c, async_acc in async_result[fold].items():
-
                 acc = async_acc.get()
                 if acc > best_acc:
                     best_c = c
@@ -1143,7 +1105,6 @@ class OneVsOneSVM(base.MLAlgorithm):
         return {"c": best_c, "balanced_accuracy": best_acc}
 
     def evaluate(self, train_index, test_index):
-
         inner_pool = ThreadPool(self._algorithm_params["n_threads"])
         async_result = {}
         for i in range(self._algorithm_params["grid_search_folds"]):
@@ -1199,7 +1160,6 @@ class OneVsOneSVM(base.MLAlgorithm):
         return result
 
     def apply_best_parameters(self, results_list):
-
         best_c_list = []
         bal_acc_list = []
 
@@ -1232,14 +1192,12 @@ class OneVsOneSVM(base.MLAlgorithm):
         return svc, {"c": best_c, "balanced_accuracy": mean_bal_acc}
 
     def save_classifier(self, classifier, output_dir):
-
         np.savetxt(
             path.join(output_dir, "support_vectors_indices.txt"), classifier.support_
         )
         np.savetxt(path.join(output_dir, "intersect.txt"), classifier.intercept_)
 
     def save_weights(self, classifier, x, output_dir):
-
         dual_coefficients = classifier.dual_coef_
         sv_indices = classifier.support_
 
@@ -1260,7 +1218,6 @@ class OneVsOneSVM(base.MLAlgorithm):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {
             "balanced": True,
             "grid_search_folds": 10,
@@ -1273,7 +1230,6 @@ class OneVsOneSVM(base.MLAlgorithm):
 
 class OneVsRestSVM(base.MLAlgorithm):
     def _launch_svc(self, kernel_train, x_test, y_train, y_test, c):
-
         if self._algorithm_params["balanced"]:
             svc = OneVsRestClassifier(
                 SVC(
@@ -1305,7 +1261,6 @@ class OneVsRestSVM(base.MLAlgorithm):
         return res["balanced_accuracy"]
 
     def _select_best_parameter(self, async_result):
-
         c_values = []
         accuracies = []
         for fold in async_result.keys():
@@ -1313,7 +1268,6 @@ class OneVsRestSVM(base.MLAlgorithm):
             best_acc = -1
 
             for c, async_acc in async_result[fold].items():
-
                 acc = async_acc.get()
                 if acc > best_acc:
                     best_c = c
@@ -1327,7 +1281,6 @@ class OneVsRestSVM(base.MLAlgorithm):
         return {"c": best_c, "balanced_accuracy": best_acc}
 
     def evaluate(self, train_index, test_index):
-
         inner_pool = ThreadPool(self._algorithm_params["n_threads"])
         async_result = {}
         for i in range(self._algorithm_params["grid_search_folds"]):
@@ -1383,7 +1336,6 @@ class OneVsRestSVM(base.MLAlgorithm):
         return result
 
     def apply_best_parameters(self, results_list):
-
         best_c_list = []
         bal_acc_list = []
 
@@ -1416,14 +1368,12 @@ class OneVsRestSVM(base.MLAlgorithm):
         return svc, {"c": best_c, "balanced_accuracy": mean_bal_acc}
 
     def save_classifier(self, classifier, output_dir):
-
         np.savetxt(
             path.join(output_dir, "support_vectors_indices.txt"), classifier.support_
         )
         np.savetxt(path.join(output_dir, "intersect.txt"), classifier.intercept_)
 
     def save_weights(self, classifier, x, output_dir):
-
         dual_coefficients = classifier.dual_coef_
         sv_indices = classifier.support_
 
@@ -1444,7 +1394,6 @@ class OneVsRestSVM(base.MLAlgorithm):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {
             "balanced": True,
             "grid_search_folds": 10,

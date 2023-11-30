@@ -227,7 +227,6 @@ class PetSurface(cpe.PETPipeline):
 
         all_errors = []
         try:
-
             read_parameters_node.inputs.pet, _ = clinica_file_reader(
                 self.subjects,
                 self.sessions,

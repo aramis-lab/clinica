@@ -59,7 +59,6 @@ def revert_mask(weights, mask, shape):
 
 
 def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mask=None):
-
     if len(sv_indices) != len(dual_coefficients):
         print("Length dual coefficients: " + str(len(dual_coefficients)))
         print("Length indices: " + str(len(sv_indices)))

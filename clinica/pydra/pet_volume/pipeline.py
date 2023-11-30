@@ -233,7 +233,6 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
 
     # PVC
     if parameters["apply_pvc"]:
-
         # Unzipping
         wf.add(
             Nipype1Task(
