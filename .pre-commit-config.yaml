@@ -11,6 +11,12 @@ repos:
     rev: '5.12.0'
     hooks:
       - id: isort
+  - repo: https://github.com/PyCQA/flake8
+    rev: '6.1.0'
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-pyproject
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
     hooks:
