@@ -638,7 +638,7 @@ class Pipeline(Workflow):
             cprint(
                 msg=(
                     f"Computation time can be shorten as you have {n_cpu} CPUs on this computer. "
-                    f"We recommend using {n_cpu-1} threads."
+                    f"We recommend using {n_cpu - 1} threads."
                 ),
                 lvl="warning",
             )

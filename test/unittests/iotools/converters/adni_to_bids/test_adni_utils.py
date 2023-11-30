@@ -371,7 +371,7 @@ def test_load_clinical_csv_error(
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
 
-    pattern = "(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
+    pattern = r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
     with pytest.raises(
         IOError,
         match=re.escape(

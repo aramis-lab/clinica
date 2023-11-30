@@ -199,7 +199,9 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         # fmt: off
         self.connect(
             [
-                (self.output_node, write_normalized_node,
+                (
+                    self.output_node,
+                    write_normalized_node,
                     [
                         (("normalized_files", zip_nii, True), "normalized_files"),
                         (("smoothed_normalized_files", zip_nii, True), "smoothed_normalized_files"),

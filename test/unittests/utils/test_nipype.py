@@ -33,7 +33,7 @@ def test_container_from_filename(input_path, expected_container):
 
 
 @pytest.mark.parametrize(
-    "input_path", ["foo", "sub-01", "ses-M000", "sub-01\ses-M000", "100"]
+    "input_path", ["foo", "sub-01", "ses-M000", "sub-01\\ses-M000", "100"]
 )
 def test_container_from_filename_errors(input_path):
     from clinica.utils.nipype import container_from_filename
