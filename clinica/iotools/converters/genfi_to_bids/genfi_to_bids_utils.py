@@ -107,7 +107,7 @@ def _handle_series_description(x: str) -> str:
 def _handle_manufacturer(x: str) -> str:
     try:
         return pdcm.dcmread(x).Manufacturer
-    except:
+    except Exception:
         return "Unknown"
 
 

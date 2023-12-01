@@ -318,8 +318,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             [
                 # Initialize the pipeline
                 (self.input_node, init_input, [("participant_id", "participant_id")]),
-                (self.input_node, init_input, [("list_session_ids", "list_session_ids")],
-                ),
+                (self.input_node, init_input, [("list_session_ids", "list_session_ids")]),
                 # Run recon-all command
                 (init_input, recon_all, [("subjects_dir", "subjects_dir"),
                                          ("image_id", "subject_id"),

@@ -69,7 +69,7 @@ def source_filename_to_bids(dataframe: DataFrame) -> Series:
     return dataframe[cols].apply(
         lambda row: (
             f"{row.datatype}/{row.participant_id}_{row.session_id}"
-            f"{'_trc-'+row.trc_label if notna(row.trc_label) else ''}"
+            f"{'_trc-' + row.trc_label if notna(row.trc_label) else ''}"
             f"_{row.modality}.nii.gz"
         ),
         axis=1,
@@ -242,7 +242,7 @@ def write_bids(
                 filename=lambda df: df.apply(
                     lambda row: (
                         f"{row.datatype}/{bids_prefix}"
-                        f"{'_trc-'+row.trc_label if notna(row.trc_label) else ''}"
+                        f"{'_trc-' + row.trc_label if notna(row.trc_label) else ''}"
                         f"_{row.modality}.nii.gz"
                     ),
                     axis="columns",

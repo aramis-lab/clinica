@@ -67,7 +67,7 @@ def _read_stats_file(stats_filename: PurePath, column_type: ColumnType) -> pd.Da
             names=columns,
             comment="#",
             header=None,
-            delimiter="\s+",
+            delimiter=r"\s+",
             dtype=str,
         )
     except FileNotFoundError:

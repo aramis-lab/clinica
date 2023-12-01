@@ -1591,7 +1591,7 @@ def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
     import re
     from pathlib import Path
 
-    pattern = filename + "(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
+    pattern = filename + r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
     files_matching_pattern = [
         f for f in Path(clinical_dir).rglob("*.csv") if re.search(pattern, (f.name))
     ]
@@ -1603,7 +1603,7 @@ def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
         )
     try:
         return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
-    except:
+    except Exception:
         raise ValueError(
             f"File {str(files_matching_pattern[0])} was found but could not "
             "be loaded as a DataFrame. Please check your data."

@@ -39,7 +39,7 @@ class CAPSInput(base.MLInput):
             )
 
         if self._input_params["precomputed_kernel"] is not None:
-            if type(self._input_params["precomputed_kernel"]) == np.ndarray:
+            if isinstance(self._input_params["precomputed_kernel"], np.ndarray):
                 if self._input_params["precomputed_kernel"].shape == (
                     len(self._subjects),
                     len(self._subjects),

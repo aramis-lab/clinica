@@ -118,6 +118,11 @@ force-exclude = '''
 [tool.isort]
 profile = "black"
 
+[tool.flake8]
+max-line-length = 88
+select = ["E", "W"]
+extend-ignore = ["E203", "E501", "W503"]
+
 [tool.codespell]
 summary = ''
 skip = ".git,LICENSE.txt,*.m"
