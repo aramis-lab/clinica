@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
@@ -71,7 +72,8 @@ def visits_to_timepoints(
                 visits[key_preferred_visit] = preferred_visit_name
             elif visits[key_preferred_visit] != preferred_visit_name:
                 cprint(
-                    f"[{modality}] Subject {subject} has multiple visits for one timepoint."
+                    f"[{modality}] Subject {subject} has multiple visits for one timepoint.",
+                    lvl="info",
                 )
 
             unique_visits.remove(preferred_visit_name)
@@ -90,7 +92,7 @@ def visits_to_timepoints(
             subject,
         )
         if closest_visit is None:
-            cprint(image, lvl="debug")
+            cprint(f"No closest visit found for image {image}", lvl="debug")
             continue
         key_min_visit = (
             closest_visit.VISCODE,
@@ -102,7 +104,8 @@ def visits_to_timepoints(
             visits[key_min_visit] = image[visit_field]
         elif visits[key_min_visit] != image[visit_field]:
             cprint(
-                f"[{modality}] Subject {subject} has multiple visits for one timepoint."
+                f"[{modality}] Subject {subject} has multiple visits for one timepoint.",
+                lvl="debug",
             )
 
     return visits
@@ -218,7 +221,8 @@ def _get_closest_visit(
     if len(visits) == 0:
         cprint(
             "No corresponding timepoint in ADNIMERGE for "
-            f"subject {subject} in visit {image_visit}"
+            f"subject {subject} in visit {image_visit}",
+            lvl="info",
         )
         return None
 
@@ -527,7 +531,8 @@ def get_images_pet(
 
         if original_pet_meta.empty:
             cprint(
-                f"No {modality} images metadata for subject {subject} and visit {qc_visit[viscode_field]}"
+                f"No {modality} images metadata for subject {subject} and visit {qc_visit[viscode_field]}",
+                lvl="info",
             )
             continue
 
@@ -623,10 +628,6 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     Returns:
         Corrected participants_df.
     """
-    from os import path
-
-    import pandas as pd
-
     from clinica.utils.stream import cprint
 
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
@@ -643,7 +644,7 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
             participants_df.loc[alternative_id, "diagnosis_sc"] = diagnosis_sc
         except KeyError:
             cprint(
-                msg=(f"Unknown screening diagnosis for subject {alternative_id}."),
+                msg=f"Unknown screening diagnosis for subject {alternative_id}.",
                 lvl="warning",
             )
             participants_df.loc[alternative_id, "diagnosis_sc"] = "n/a"
@@ -957,7 +958,8 @@ def create_adni_sessions_dict(
             )
         else:
             cprint(
-                f"Clinical dataframe extracted from {location} is empty after filtering."
+                f"Clinical dataframe extracted from {location} is empty after filtering.",
+                lvl="debug",
             )
             dict_column_correspondence = dict(
                 zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
