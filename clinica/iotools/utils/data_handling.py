@@ -528,6 +528,12 @@ def compute_missing_processing(bids_dir, caps_dir, out_file):
             else:
                 row_df.loc[0, "t1-linear"] = "0"
 
+            # Check flair-linear outputs
+            if path.exists(path.join(session_path, "flair_linear")):
+                row_df.loc[0, "flair-linear"] = "1"
+            else:
+                row_df.loc[0, "flair-linear"] = "0"
+
             # Check t1-freesurfer outputs
             if path.exists(path.join(session_path, "t1", "freesurfer_cross_sectional")):
                 row_df.loc[0, "t1-freesurfer"] = "1"
