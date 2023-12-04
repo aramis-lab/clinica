@@ -134,7 +134,6 @@ def test_extract_metadata_from_json_dwi_errors(
         error_type,
         match=error_log,
     ):
-
         extract_metadata_from_json(
             tmp_path / "metadata.json",
             input_list,

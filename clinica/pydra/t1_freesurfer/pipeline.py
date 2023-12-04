@@ -86,7 +86,6 @@ def build_workflow(
     atlas_path: os.PathLike,
     name: str = "t1_freesurfer",
 ) -> pydra.Workflow:
-
     workflow = pydra.Workflow(
         name=name,
         input_spec=["bids_dir", "caps_dir"],

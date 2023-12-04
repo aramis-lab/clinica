@@ -134,7 +134,6 @@ def run_workflows_ml(
 def run_spatial_svm(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-
     import shutil
     from os import fspath
 

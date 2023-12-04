@@ -119,7 +119,8 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
 def find_dicom_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
     """
     This function finds the paths to the dicoms, only for fMRI, since we use the niftis for the other modalities.
-    More information here: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md"""
+    More information here: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md
+    """
     from pathlib import Path
 
     for z in Path(path_to_source_data).rglob("*.zip"):
@@ -282,7 +283,6 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
 
 
 def dataset_to_bids(df_clinical: DataFrame) -> Dict[str, DataFrame]:
-
     import os
 
     import pandas as pd

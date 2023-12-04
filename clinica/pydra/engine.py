@@ -15,7 +15,6 @@ def clinica_io(func):
     def run_wrapper(
         name: str, parameters: dict, input_dir: PathLike, output_dir: PathLike
     ) -> Workflow:
-
         core_workflow = func(parameters=parameters)
 
         pipeline = Workflow(

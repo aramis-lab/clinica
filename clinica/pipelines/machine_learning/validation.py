@@ -11,7 +11,6 @@ from clinica.pipelines.machine_learning import base
 
 class KFoldCV(base.MLValidation):
     def validate(self, y):
-
         if not self._validation_params["splits_indices"]:
             skf = StratifiedKFold(
                 n_splits=self._validation_params["n_folds"], shuffle=True
@@ -24,7 +23,6 @@ class KFoldCV(base.MLValidation):
         async_result = {}
 
         for i in range(self._validation_params["n_folds"]):
-
             train_index, test_index = self._validation_params["splits_indices"][i]
             async_result[i] = async_pool.apply_async(
                 self._ml_algorithm.evaluate, (train_index, test_index)
@@ -140,7 +138,6 @@ class KFoldCV(base.MLValidation):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {
             "n_folds": 10,
             "n_threads": 15,
@@ -153,7 +150,6 @@ class KFoldCV(base.MLValidation):
 
 class RepeatedKFoldCV(base.MLValidation):
     def validate(self, y):
-
         if not self._validation_params["splits_indices"]:
             self._validation_params["splits_indices"] = []
 
@@ -169,19 +165,16 @@ class RepeatedKFoldCV(base.MLValidation):
         async_result = {}
 
         for i in range(self._validation_params["n_iterations"]):
-
             train_index, test_index = self._validation_params["splits_indices"][i]
             async_result[i] = async_pool.apply_async(
                 self._ml_algorithm.evaluate, (train_index, test_index)
             )
 
         for r in range(self._validation_params["n_iterations"]):
-
             async_result[r] = {}
             self._validation_results.append([])
 
             for i in range(self._validation_params["n_folds"]):
-
                 train_index, test_index = self._validation_params["splits_indices"][r][
                     i
                 ]
@@ -213,7 +206,6 @@ class RepeatedKFoldCV(base.MLValidation):
         all_subjects_list = []
 
         for iteration in range(len(self._validation_results)):
-
             iteration_dir = path.join(output_dir, "iteration-" + str(iteration))
             os.makedirs(iteration_dir, exist_ok=True)
 
@@ -345,7 +337,6 @@ class RepeatedKFoldCV(base.MLValidation):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {
             "n_iterations": 100,
             "n_folds": 10,
@@ -359,7 +350,6 @@ class RepeatedKFoldCV(base.MLValidation):
 
 class RepeatedHoldOut(base.MLValidation):
     def validate(self, y):
-
         if not self._validation_params["splits_indices"]:
             splits = StratifiedShuffleSplit(
                 n_splits=self._validation_params["n_iterations"],
@@ -373,7 +363,6 @@ class RepeatedHoldOut(base.MLValidation):
         async_result = {}
 
         for i in range(self._validation_params["n_iterations"]):
-
             train_index, test_index = self._validation_params["splits_indices"][i]
             if self._validation_params["inner_cv"]:
                 async_result[i] = async_pool.apply_async(
@@ -406,7 +395,6 @@ class RepeatedHoldOut(base.MLValidation):
         all_test_subjects_list = []
 
         for iteration in range(len(self._validation_results)):
-
             iteration_dir = path.join(output_dir, "iteration-" + str(iteration))
             os.makedirs(iteration_dir, exist_ok=True)
             iteration_train_subjects_df = pd.DataFrame(
@@ -528,7 +516,6 @@ class RepeatedHoldOut(base.MLValidation):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {
             "n_iterations": 100,
             "test_size": 0.2,
@@ -542,7 +529,6 @@ class RepeatedHoldOut(base.MLValidation):
 
 class LearningCurveRepeatedHoldOut(base.MLValidation):
     def validate(self, y):
-
         if not self._validation_params["splits_indices"]:
             splits = StratifiedShuffleSplit(
                 n_splits=self._validation_params["n_iterations"],
@@ -603,7 +589,6 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
             )
 
         for learning_point in range(self._validation_params["n_learning_points"]):
-
             all_results_list = []
             all_subjects_list = []
 
@@ -612,7 +597,6 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
             )
 
             for iteration in range(self._validation_params["n_iterations"]):
-
                 iteration_dir = path.join(
                     learning_point_dir, "iteration-" + str(iteration)
                 )
@@ -711,7 +695,6 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {
             "n_iterations": 100,
             "test_size": 0.2,
@@ -733,7 +716,6 @@ class RepeatedKFoldCV_Multiclass(base.MLValidation):
         self._cv = None
 
     def validate(self, y, n_iterations=100, n_folds=10, n_threads=15):
-
         async_pool = ThreadPool(self._validation_params["n_threads"])
         async_result = {}
         self._cv = []
@@ -745,7 +727,6 @@ class RepeatedKFoldCV_Multiclass(base.MLValidation):
             self._repeated_validation_results.append([])
 
             for i in range(n_folds):
-
                 train_index, test_index = self._cv[r][i]
                 async_result[r][i] = async_pool.apply_async(
                     self._ml_algorithm.evaluate, (train_index, test_index)
@@ -777,7 +758,6 @@ class RepeatedKFoldCV_Multiclass(base.MLValidation):
         all_subjects_list = []
 
         for iteration in range(len(self._repeated_validation_results)):
-
             iteration_dir = path.join(output_dir, "iteration-" + str(iteration))
             os.makedirs(iteration_dir, exist_ok=True)
 

@@ -18,13 +18,14 @@ def _get_atlas_name(atlas_path: Path, pipeline: str) -> str:
         splitter = "_space-"
     else:
         raise ValueError(f"Not supported pipeline {pipeline}.")
-    try:
-        atlas_name = atlas_path.stem.split(splitter)[1].split("_")[0]
-    except Exception:
-        raise ValueError(
-            f"Unable to infer the atlas name from {atlas_path} for pipeline {pipeline}."
-        )
-    return atlas_name
+    if splitter in atlas_path.stem:
+        try:
+            return atlas_path.stem.split(splitter)[-1].split("_")[0]
+        except Exception:
+            pass
+    raise ValueError(
+        f"Unable to infer the atlas name from {atlas_path} for pipeline {pipeline}."
+    )
 
 
 def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
@@ -179,6 +180,7 @@ def _extract_metrics_from_pipeline(
     """
     from clinica.utils.stream import cprint
 
+    caps_dir = Path(caps_dir)
     if df.index.names != ["participant_id", "session_id"]:
         try:
             df.set_index(
@@ -189,28 +191,25 @@ def _extract_metrics_from_pipeline(
 
     if group_selection is None:
         try:
-            group_selection = os.listdir(caps_dir / "groups")
+            group_selection = [f.name for f in (caps_dir / "groups").iterdir()]
         except FileNotFoundError:
             return df, None
     else:
         group_selection = [f"group-{group}" for group in group_selection]
     ignore_groups = group_selection == [""]
 
-    subjects_dir = Path(caps_dir) / "subjects"
-    pipeline_df = pd.DataFrame()
+    subjects_dir = caps_dir / "subjects"
+    records = []
     for participant_id, session_id in df.index.values:
         ses_path = subjects_dir / participant_id / session_id
         mod_path = _get_mod_path(ses_path, pipeline)
+        records.append({"participant_id": participant_id, "session_id": session_id})
         if mod_path is None:
             cprint(
                 f"Could not find a longitudinal dataset for participant {participant_id} {session_id}",
                 lvl="warning",
             )
             continue
-        ses_df = pd.DataFrame(
-            [[participant_id, session_id]], columns=["participant_id", "session_id"]
-        )
-        ses_df.set_index(["participant_id", "session_id"], inplace=True, drop=True)
         if mod_path.exists():
             for group in group_selection:
                 group_path = mod_path / group
@@ -249,11 +248,16 @@ def _extract_metrics_from_pipeline(
                                             if "freesurfer" in pipeline
                                             else "mean_scalar"
                                         )
-                                        ses_df[label_list] = atlas_df[key].to_numpy()
-        pipeline_df = pd.concat([pipeline_df, ses_df])
+                                        values = atlas_df[key].to_numpy()
+                                        for label, value in zip(label_list, values):
+                                            records[-1][label] = value
+    pipeline_df = pd.DataFrame.from_records(
+        records, index=["participant_id", "session_id"]
+    )
     summary_df = generate_summary(pipeline_df, pipeline, ignore_groups=ignore_groups)
     final_df = pd.concat([df, pipeline_df], axis=1)
     final_df.reset_index(inplace=True)
+
     return final_df, summary_df
 
 
@@ -295,7 +299,6 @@ pet_volume_pipeline = functools.partial(
 def generate_summary(
     pipeline_df: pd.DataFrame, pipeline_name: str, ignore_groups: bool = False
 ):
-
     columns = [
         "pipeline_name",
         "group_id",

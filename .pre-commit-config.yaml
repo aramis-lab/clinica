@@ -3,17 +3,30 @@ repos:
     rev: v4.4.0
     hooks:
       - id: check-yaml
-  - repo: https://github.com/psf/black
-    rev: '22.10.0'
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: '23.11.0'
     hooks:
       - id: black
-  - repo: https://github.com/pycqa/isort
-    rev: '5.10.1'
+  - repo: https://github.com/PyCQA/isort
+    rev: '5.12.0'
     hooks:
       - id: isort
+  - repo: https://github.com/PyCQA/flake8
+    rev: '6.1.0'
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-pyproject
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.2
+    rev: v2.2.6
     hooks:
       - id: codespell
         additional_dependencies:
           - tomli
+  - repo: https://github.com/python-poetry/poetry
+    rev: '1.7.1'
+    hooks:
+      - id: poetry-check
+
+default_language_version:
+  python: python3

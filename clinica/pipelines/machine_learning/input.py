@@ -15,7 +15,6 @@ from clinica.utils.stream import cprint
 
 class CAPSInput(base.MLInput):
     def __init__(self, input_params):
-
         super().__init__(input_params)
 
         self._images = None
@@ -40,7 +39,7 @@ class CAPSInput(base.MLInput):
             )
 
         if self._input_params["precomputed_kernel"] is not None:
-            if type(self._input_params["precomputed_kernel"]) == np.ndarray:
+            if isinstance(self._input_params["precomputed_kernel"], np.ndarray):
                 if self._input_params["precomputed_kernel"].shape == (
                     len(self._subjects),
                     len(self._subjects),
@@ -124,7 +123,6 @@ class CAPSInput(base.MLInput):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {}
         parameters_dict.setdefault("caps_directory", None)
         parameters_dict.setdefault("subjects_visits_tsv", None)
@@ -138,7 +136,6 @@ class CAPSInput(base.MLInput):
 
 class CAPSVoxelBasedInput(CAPSInput):
     def __init__(self, input_params):
-
         super().__init__(input_params)
 
         self._orig_shape = None
@@ -223,7 +220,6 @@ class CAPSVoxelBasedInput(CAPSInput):
         return self._x
 
     def save_weights_as_nifti(self, weights, output_dir):
-
         if self._images is None:
             self.get_images()
 
@@ -233,7 +229,6 @@ class CAPSVoxelBasedInput(CAPSInput):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = super(
             CAPSVoxelBasedInput, CAPSVoxelBasedInput
         ).get_default_parameters()
@@ -369,12 +364,11 @@ class CAPSRegionBasedInput(CAPSInput):
 
 class CAPSVertexBasedInput(CAPSInput):
     def __init__(self, input_params):
-
         super().__init__(input_params)
 
     def get_images(self):
         """
-        returns list of filnames
+        returns list of filenames
         """
         import os
 
@@ -534,7 +528,6 @@ class CAPSTSVBasedInput(CAPSInput):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = super(
             CAPSTSVBasedInput, CAPSTSVBasedInput
         ).get_default_parameters()
@@ -611,7 +604,6 @@ class CAPSVoxelBasedInputREGSVM(CAPSVoxelBasedInput):
 
 class TsvInput(base.MLInput):
     def __init__(self, input_params):
-
         super().__init__(input_params)
 
         import pandas as pd
@@ -650,7 +642,6 @@ class TsvInput(base.MLInput):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = {}
         parameters_dict.setdefault("data_tsv", None)
         parameters_dict.setdefault("columns", None)

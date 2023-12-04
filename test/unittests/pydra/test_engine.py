@@ -13,7 +13,6 @@ CURRENT_DIR = path.dirname(path.realpath(__file__))
 @task
 @annotate({"return": {"smoothed_image": PurePath}})
 def smooth_image(input_image: PathLike) -> PurePath:
-
     from nilearn.image import smooth_img
 
     smoothed_image = smooth_img(input_image, fwhm=3)

@@ -200,8 +200,13 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         self.connect(
             [
                 (self.output_node, write_flowfields_node, [(("dartel_flow_fields", zip_nii, True), "flow_fields")]),
-                (self.output_node, write_template_node, [(("final_template_file", zip_nii, True), "final_template_file"),
-                                                         (("template_files", zip_nii, True), "template_files")],
+                (
+                    self.output_node,
+                    write_template_node,
+                    [
+                        (("final_template_file", zip_nii, True), "final_template_file"),
+                        (("template_files", zip_nii, True), "template_files"),
+                    ],
                 ),
             ]
         )

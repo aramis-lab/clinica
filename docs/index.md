@@ -70,7 +70,7 @@ Installation instructions are available [here](./ICMClusterInstallation).
 
 ### Dataset converters (`clinica convert`)
 
-Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to BIDS namely:
+Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to [BIDS](BIDS) namely:
 
 - `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](Converters/ADNI2BIDS)
 - `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](Converters/AIBL2BIDS)

@@ -15,7 +15,7 @@ pipeline_name = "pydra-t1-volume-register-dartel"
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.argument.group_label
-@cli_param.option_group.common_pipelines_options
+# @cli_param.option_group.common_pipelines_options
 # @cli_param.option.subjects_sessions_tsv
 # @cli_param.option.working_directory
 @option.global_option_group

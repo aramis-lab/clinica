@@ -114,7 +114,7 @@ def identify_modality(source_path: str) -> str:
 
     try:
         return (Path(source_path).name).split(".")[0].split("_")[-1]
-    except:
+    except Exception:
         return "nan"
 
 
@@ -123,7 +123,7 @@ def identify_runs(source_path: str) -> str:
 
     try:
         return re.search(r"run-\d+", source_path)[0]
-    except:
+    except Exception:
         return "run-01"
 
 
@@ -168,7 +168,7 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
 
     df_source = df_source.assign(
         ses=lambda df: df.session.apply(
-            lambda x: f"ses-M{ (5-(len(str(x)))) * '0' + str(int(x))}"
+            lambda x: f"ses-M{(5 - (len(str(x)))) * '0' + str(int(x))}"
         )
     )
 
@@ -194,7 +194,7 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
             filename=lambda df: df.apply(
                 lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
                 f"{x.participant_id}_{x.ses}"
-                f"{'_trc-'+x.trc_label if pd.notna(x.trc_label) else ''}"
+                f"{'_trc-' + x.trc_label if pd.notna(x.trc_label) else ''}"
                 f"_{x.run_number}_{x.suffix}.nii.gz",
                 axis=1,
             )
@@ -362,5 +362,4 @@ def write_bids(
 
 
 def extract_suffix_from_filename(filename: str) -> str:
-
     return filename.split("_")[-1].split(".")[0]

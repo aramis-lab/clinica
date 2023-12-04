@@ -1,10 +1,10 @@
 [tool.poetry]
 name = "clinica"
-version = "0.7.6"
+version = "0.7.7"
 description = "Software platform for clinical neuroimaging studies"
 license = "MIT"
 authors = ["ARAMIS Lab"]
-maintainers = ["Clinica developers <clinica-user@inria.fr>"]
+maintainers = ["Clinica developers <clinica.run@gmail.com>"]
 readme = "README.md"
 homepage = "https://www.clinica.run"
 repository = "https://github.com/aramis-lab/clinica.git"
@@ -118,8 +118,13 @@ force-exclude = '''
 [tool.isort]
 profile = "black"
 
+[tool.flake8]
+max-line-length = 88
+select = ["E", "W"]
+extend-ignore = ["E203", "E501", "W503"]
+
 [tool.codespell]
 summary = ''
 skip = ".git,LICENSE.txt,*.m"
 quiet-level = 3
-ignore-words-list = "nd,fwe,commun,fo,te"
+ignore-words-list = "nd,fwe,commun,fo,te,artic"

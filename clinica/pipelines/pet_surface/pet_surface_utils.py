@@ -318,7 +318,6 @@ def runApplyInverseDeformationField_SPM_standalone(
 
 
 def runApplyInverseDeformationField(target, deformation_field, img, matscript_folder):
-
     import os
     import sys
 
@@ -636,7 +635,7 @@ def vol2surf(
             os.path.basename(surface),
         )
     )
-    # TODO carreful here...
+    # TODO careful here...
     # Removing gtmseg.mgz may lead to problems as other vol2surf are using it
     os.remove(
         os.path.join(
@@ -827,7 +826,6 @@ def produce_tsv(pet, atlas_files):
 
     filename_tsv = []
     for atlas in atlas_files:
-
         annot_atlas_left = nib.freesurfer.io.read_annot(
             atlas_files[atlas]["lh"], orig_ids=False
         )

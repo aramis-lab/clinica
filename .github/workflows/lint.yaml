@@ -9,30 +9,12 @@ on:
 permissions:
   contents: read
 
-env:
-  DEFAULT_PYTHON_VERSION: '3.10'
-
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
-          cache: poetry
-      - name: Lint code
-        run: make lint
-
-  spellcheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON_VERSION }}
-          cache: poetry
-      - name: Check spelling
-        run: make spellcheck
+          python-version: '3.x'
+      - uses: pre-commit/action@v3.0.0

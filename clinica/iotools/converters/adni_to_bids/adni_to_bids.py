@@ -10,7 +10,7 @@ def get_bids_subjs_info(
 ):
     from os import path
 
-    from pandas import read_csv
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
 
     # Read optional list of participants.
     subjects_list = (
@@ -20,10 +20,8 @@ def get_bids_subjs_info(
     )
 
     # Load all participants from ADNIMERGE.
-    adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
-    participants = set(
-        read_csv(adni_merge_path, sep=",", usecols=["PTID"], squeeze=True).unique()
-    )
+    adni_merge = load_clinical_csv(clinical_data_dir, "ADNIMERGE")
+    participants = adni_merge["PTID"].unique()
 
     # Filter participants if requested.
     participants = sorted(
@@ -199,12 +197,12 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
+        from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
         from clinica.utils.stream import cprint
 
         modalities = modalities or self.get_modalities_supported()
 
-        adni_merge_path = path.join(clinical_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path)
+        adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
 
         # Load a file with subjects list or compute all the subjects
         if subjs_list_path is not None:

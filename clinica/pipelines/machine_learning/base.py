@@ -5,7 +5,6 @@ class MLWorkflow(ABC):
     def __init__(
         self, input_class, validation_class, algorithm_class, all_params, output_dir
     ):
-
         self._input_class = input_class
         self._validation_class = validation_class
         self._algorithm_class = algorithm_class
@@ -25,7 +24,6 @@ class MLWorkflow(ABC):
         self._algorithm = None
 
     def run(self):
-
         from os import makedirs, path
 
         # Instantiating input class
@@ -64,7 +62,6 @@ class MLWorkflow(ABC):
 
     @staticmethod
     def create_parameters_dict(locals_dictionary, component_class):
-
         default_parameters = component_class.get_default_parameters()
         for key in locals_dictionary:
             if key in default_parameters:
@@ -74,7 +71,6 @@ class MLWorkflow(ABC):
 
 class MLInput(ABC):
     def __init__(self, input_params):
-
         self._input_params = self.get_default_parameters()
         self._input_params.update(input_params)
 
@@ -98,7 +94,6 @@ class MLInput(ABC):
 
 class MLValidation(ABC):
     def __init__(self, ml_algorithm, validation_params):
-
         self._ml_algorithm = ml_algorithm
 
         self._validation_params = self.get_default_parameters()
@@ -120,7 +115,6 @@ class MLValidation(ABC):
 
 class MLAlgorithm(ABC):
     def __init__(self, input_data, y, algorithm_params):
-
         self._algorithm_params = self.get_default_parameters()
         self._algorithm_params.update(algorithm_params)
 

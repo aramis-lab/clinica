@@ -254,6 +254,16 @@ def merge_tsv(
 
     check_bids_folder(bids_directory)
 
+    atlas_selection = []
+    if volume_atlas_selection is not None:
+        atlas_selection += volume_atlas_selection
+    if freesurfer_atlas_selection is not None:
+        atlas_selection += freesurfer_atlas_selection
+    if group_selection == ():
+        group_selection = None
+    if pet_tracers_selection == ():
+        pet_tracers_selection = None
+
     create_merge_file(
         bids_directory,
         output_tsv,
@@ -261,8 +271,7 @@ def merge_tsv(
         pipelines=pipelines,
         ignore_scan_files=ignore_scan_files,
         ignore_sessions_files=ignore_session_scan_files,
-        volume_atlas_selection=volume_atlas_selection,
-        freesurfer_atlas_selection=freesurfer_atlas_selection,
+        atlas_selection=atlas_selection,
         pvc_restriction=pvc_restriction,
         tsv_file=subjects_sessions_tsv,
         group_selection=group_selection,

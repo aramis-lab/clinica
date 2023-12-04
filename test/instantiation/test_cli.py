@@ -5,6 +5,7 @@ from clinica.cmdline import cli
 
 # Test to ensure that the help string at the command line is invoked without errors
 
+
 # Test for the first level at the command line
 @pytest.fixture(
     params=[
