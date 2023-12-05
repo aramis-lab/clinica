@@ -75,7 +75,7 @@ def _list_subjects_sub_folders(
     subjects_sub_folders = [
         sub
         for sub in folder_content
-        if (sub.name.startswith("sub-") and (root_dir / sub).is_dir())
+        if (sub.name.startswith("sub-") and sub.is_dir())
     ]
     if len(subjects_sub_folders) == 0 and not groups_dir.is_dir():
         cprint(msg=warning_msg, lvl="warning")
