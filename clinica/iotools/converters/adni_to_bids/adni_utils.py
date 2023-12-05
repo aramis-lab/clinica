@@ -1285,7 +1285,7 @@ def paths_to_bids(
 
 
 def create_file(
-    image, modality: str, bids_dir: Path, mod_to_update: bool
+    image: pd.Series, modality: str, bids_dir: Path, mod_to_update: bool
 ) -> Optional[Path]:
     """Creates an image file at the corresponding output folder.
 
@@ -1294,7 +1294,8 @@ def create_file(
 
     Parameters
     ----------
-    image: Image metadata
+    image : pd.Series
+        The image metadata.
 
     modality : str
         Imaging modality.
