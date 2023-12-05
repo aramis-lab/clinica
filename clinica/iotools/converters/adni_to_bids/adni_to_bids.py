@@ -10,7 +10,7 @@ def get_bids_subjs_info(
 ):
     from os import path
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+    from pandas import read_csv
 
     # Read optional list of participants.
     subjects_list = (
@@ -20,8 +20,10 @@ def get_bids_subjs_info(
     )
 
     # Load all participants from ADNIMERGE.
-    adni_merge = load_clinical_csv(clinical_data_dir, "ADNIMERGE")
-    participants = adni_merge["PTID"].unique()
+    adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
+    participants = set(
+        read_csv(adni_merge_path, sep=",", usecols=["PTID"], squeeze=True).unique()
+    )
 
     # Filter participants if requested.
     participants = sorted(
@@ -37,7 +39,7 @@ def get_bids_subjs_info(
 
 class AdniToBids(Converter):
     @classmethod
-    def get_modalities_supported(cls) -> List[str]:
+    def get_modalities_supported(cls) -> List[str]: 
         """Return a list of modalities supported.
 
         Returns: a list containing the modalities supported by the converter
@@ -171,7 +173,6 @@ class AdniToBids(Converter):
         subjs_list_path=None,
         modalities=None,
         force_new_extraction=False,
-        n_procs: Optional[int] = 1,
     ):
         """Convert the images of ADNI.
 
@@ -197,22 +198,24 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
-        from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
         from clinica.utils.stream import cprint
 
         modalities = modalities or self.get_modalities_supported()
 
-        adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
+        adni_merge_path = path.join(clinical_dir, "ADNIMERGE.csv")
+        adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
+        adni_merge.columns = adni_merge.columns.str.strip('"')
 
         # Load a file with subjects list or compute all the subjects
         if subjs_list_path is not None:
             cprint("Loading a subjects lists provided by the user...")
             subjs_list = [line.rstrip("\n") for line in open(subjs_list_path)]
             subjs_list_copy = copy(subjs_list)
-
+            
             # Check that there are no errors in subjs_list given by the user
             for subj in subjs_list_copy:
-                adnimerge_subj = adni_merge[adni_merge.PTID == subj]
+                adnimerge_subj = adni_merge[adni_merge['PTID'] == subj]
+
                 if len(adnimerge_subj) == 0:
                     cprint(
                         msg=f"Subject with PTID {subj} does not exist. Please check your subjects list.",
@@ -260,5 +263,4 @@ class AdniToBids(Converter):
                     conversion_dir=conversion_dir,
                     subjects=subjs_list,
                     mod_to_update=force_new_extraction,
-                    n_procs=n_procs,
                 )

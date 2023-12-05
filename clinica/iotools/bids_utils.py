@@ -68,7 +68,6 @@ def create_participants_df(
     import numpy as np
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
     from clinica.utils.stream import cprint
 
     fields_bids = ["participant_id"]
@@ -92,8 +91,9 @@ def create_participants_df(
     participant_df = pd.DataFrame(columns=fields_bids)
 
     for i in range(0, len(participant_fields_db)):
+        pfdbi = participant_fields_db[i]
         # If a field not empty is found
-        if not pd.isnull(participant_fields_db[i]):
+        if not pd.isnull(pfdbi):
             # Extract the file location of the field and read the value from the file
             tmp = field_location[i].split("/")
             location = tmp[0]
@@ -112,9 +112,7 @@ def create_participants_df(
                 if file_ext == ".xlsx":
                     file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
                 elif file_ext == ".csv":
-                    file_to_read = load_clinical_csv(
-                        clinical_data_dir, location.split(".")[0]
-                    )
+                    file_to_read = pd.read_csv(file_to_read_path)
                 prev_location = location
                 prev_sheet = sheet
 
@@ -122,18 +120,18 @@ def create_participants_df(
             # For each field in fields_dataset extract all the column values
             for j in range(0, len(file_to_read)):
                 # Convert the alternative_id_1 to string if is an integer/float
-                value_to_read = file_to_read[participant_fields_db[i]]
+                value_to_read = file_to_read[pfdbi]
                 if participant_fields_bids[i] == "alternative_id_1" and (
                     value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64
                 ):
-                    if not pd.isnull(file_to_read.at[j, participant_fields_db[i]]):
+                    if not pd.isnull(file_to_read.at[j, pfdbi]):
                         value_to_append = str(
-                            file_to_read.at[j, participant_fields_db[i]]
+                            file_to_read.at[j, pfdbi]
                         ).rstrip(".0")
                     else:
                         value_to_append = np.NaN
                 else:
-                    value_to_append = file_to_read.at[j, participant_fields_db[i]]
+                    value_to_append = file_to_read.at[j, pfdbi]
                 field_col_values.append(value_to_append)
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
@@ -533,7 +531,7 @@ def write_modality_agnostic_files(
     _write_bidsignore(bids_dir)
 
 
-def write_sessions_tsv(bids_dir: Union[str, Path], sessions_dict: dict) -> None:
+def write_sessions_tsv(bids_dir: str, sessions_dict: dict) -> None:
     """Create <participant_id>_sessions.tsv files.
 
     Basically writes the content of the function
@@ -617,7 +615,7 @@ def _get_pet_tracer_from_filename(filename: str) -> str:
 
 
 def write_scans_tsv(
-    bids_dir: Union[str, Path], participant_ids: List[str], scans_dict: dict
+    bids_dir: str, participant_ids: List[str], scans_dict: dict
 ) -> None:
     """Write the scans dict into TSV files.
 

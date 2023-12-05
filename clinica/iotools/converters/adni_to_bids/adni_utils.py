@@ -2,7 +2,7 @@ from enum import Enum, auto
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
-
+import time
 
 class ADNIStudy(Enum):
     """Possible versions of ADNI studies."""
@@ -62,7 +62,9 @@ def visits_to_timepoints(
     # We try to obtain the corresponding image Visit for a given VISCODE
     for adni_row in adnimerge_subj.iterrows():
         visit = adni_row[1]
-        study = ADNIStudy.from_string(visit.ORIGPROT)
+        study = visit.ORIGPROT
+        study = study.replace('"','')
+        study = ADNIStudy.from_string(study)
         preferred_visit_name = _get_preferred_visit_name(study, visit.VISCODE)
 
         if preferred_visit_name in unique_visits:
@@ -80,7 +82,9 @@ def visits_to_timepoints(
         pending_timepoints.append(visit)
 
     # Then for images.Visit non matching the expected labels we find the closest date in visits list
+
     for visit in unique_visits:
+
         image = (mri_list_subj[mri_list_subj[visit_field] == visit]).iloc[0]
 
         closest_visit = _get_closest_visit(
@@ -152,7 +156,50 @@ def _parse_month_from_visit_code(visit_code: str) -> int:
     Assumes a visit code of the form 'mXXX'.
     """
     try:
-        return int(visit_code[1:])
+        svisit = visit_code[1:]
+        svisit = svisit.replace('"','')
+        svisit = svisit.replace('bl','0')
+        svisit = svisit.replace('m0','0')
+        svisit = svisit.replace('m03','3')
+        svisit = svisit.replace('m06','6')
+        svisit = svisit.replace('m12','12')
+        svisit = svisit.replace('m18','18')
+        svisit = svisit.replace('m24','24')
+        svisit = svisit.replace('m30','30')
+        svisit = svisit.replace('m36','36')
+        svisit = svisit.replace('m42','42')
+        svisit = svisit.replace('m48','48')
+        svisit = svisit.replace('m54','54')
+        svisit = svisit.replace('m60','60')
+        svisit = svisit.replace('m66','66')
+        svisit = svisit.replace('m72','72')
+        svisit = svisit.replace('m78','78')
+        svisit = svisit.replace('m84','84')
+        svisit = svisit.replace('m90','90')
+        svisit = svisit.replace('m96','96')
+        svisit = svisit.replace('m102','102')
+        svisit = svisit.replace('m106','106')
+        svisit = svisit.replace('m108','108')
+        svisit = svisit.replace('m114','114')
+        svisit = svisit.replace('m110','110')
+        svisit = svisit.replace('m126','126')
+        svisit = svisit.replace('m132','132')
+        svisit = svisit.replace('m138','138')
+        svisit = svisit.replace('m120','120')
+        svisit = svisit.replace('m204','204')
+        svisit = svisit.replace('m216','216')
+        svisit = svisit.replace('m222','222')
+        svisit = svisit.replace('m144','144')
+        svisit = svisit.replace('m150','150')
+        svisit = svisit.replace('m156','156')
+        svisit = svisit.replace('m192','192')
+        svisit = svisit.replace('m198','198')
+        svisit = svisit.replace('m186','186')
+        svisit = svisit.replace('m180','180')
+        svisit = svisit.replace('m168','168')
+        svisit = svisit.replace('m162','162')
+        svisit = svisit.replace('m174','174')
+        return int(svisit)
     except Exception:
         raise ValueError(
             f"Cannot extract month from visit code {visit_code}."
@@ -297,7 +344,11 @@ def _second_closest_visit_is_better(
 ) -> bool:
     """If image is too close to the date between two visits we prefer the earlier visit."""
     from datetime import datetime
-
+    
+    closest_visit_date = closest_visit_date.replace('"','')
+    image_acquisition_date = image_acquisition_date.replace('"','')
+    second_closest_visit_date = second_closest_visit_date.replace('"','')
+    
     date_format = "%Y-%m-%d"
     if (
         datetime.strptime(closest_visit_date, date_format)
@@ -401,6 +452,8 @@ def days_between(d1, d2):
     """
     from datetime import datetime
 
+    d1 = d1.replace('"','')
+    d2 = d2.replace('"','')
     d1 = datetime.strptime(d1, "%Y-%m-%d")
     d2 = datetime.strptime(d2, "%Y-%m-%d")
     return abs((d2 - d1).days)
@@ -435,6 +488,7 @@ def select_image_qc(id_list, mri_qc_subj):
         images_not_rejected = images_qc[images_qc.series_quality < 4]
 
         if images_not_rejected.empty:
+
             # There are no images that passed the qc,
             # so we'll try to see if there are other images without qc.
             # Otherwise, return None.
@@ -630,9 +684,9 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     from clinica.utils.stream import cprint
 
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
-    dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL").set_index(
-        ["PTID", "VISCODE2"]
-    )
+    dxsum_df = pd.read_csv(
+        path.join(clinical_data_dir, "DXSUM_PDXCONV_ADNIALL.csv")
+    ).set_index(["PTID", "VISCODE2"])
     missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
@@ -924,6 +978,8 @@ def create_adni_sessions_dict(
         bids_subjs_paths: a list with the path to all the BIDS subjects
     """
 
+    from os import path
+
     import pandas as pd
 
     from clinica.utils.stream import cprint
@@ -937,36 +993,41 @@ def create_adni_sessions_dict(
     # write line to get field_bids = sessions['BIDS CLINICA'] without the null values
 
     # Iterate over the metadata files
+
     for location in files:
+
         location = location.split("/")[0]
-        try:
-            df_file = load_clinical_csv(clinical_data_dir, location.split(".")[0])
-        except IOError:
-            continue
-        df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
-        if not df_filtered.empty:
-            df_filtered = _compute_session_id(df_filtered, location)
+        if path.exists(path.join(clinical_data_dir, location)):
 
-            # Filter rows with invalid session IDs.
-            df_filtered.dropna(subset="session_id", inplace=True)
+            file_to_read_path = path.join(clinical_data_dir, location)
+            cprint(f"\tReading clinical data file: {location}")
 
-            if location == "ADNIMERGE.csv":
-                df_filtered["AGE"] = df_filtered.apply(lambda x: update_age(x), axis=1)
-            df_subj_session = update_sessions_df(
-                df_subj_session, df_filtered, df_sessions, location
-            )
-        else:
-            cprint(
-                f"Clinical dataframe extracted from {location} is empty after filtering."
-            )
-            dict_column_correspondence = dict(
-                zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
-            )
-            df_filtered.rename(columns=dict_column_correspondence, inplace=True)
-            df_filtered = df_filtered.loc[
-                :, (~df_filtered.columns.isin(df_subj_session.columns))
-            ]
-            df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
+            df_file = pd.read_csv(file_to_read_path, dtype=str)
+            df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
+
+            if not df_filtered.empty:
+                df_filtered = _compute_session_id(df_filtered, location)
+
+                # Filter rows with invalid session IDs.
+                df_filtered.dropna(subset="session_id", inplace=True)
+
+                if location == "ADNIMERGE.csv":
+                    df_filtered["AGE"] = df_filtered.apply(
+                        lambda x: update_age(x), axis=1
+                    )
+                df_subj_session = update_sessions_df(
+                    df_subj_session, df_filtered, df_sessions, location
+                )
+            else:
+                dict_column_correspondence = dict(
+                    zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
+                )
+                df_filtered.rename(columns=dict_column_correspondence, inplace=True)
+                df_filtered = df_filtered.loc[
+                    :, (~df_filtered.columns.isin(df_subj_session.columns))
+                ]
+                df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
+
     if df_subj_session.empty:
         raise ValueError("Empty dataset detected. Clinical data cannot be extracted.")
 
@@ -1169,11 +1230,15 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     import pandas as pd
 
     from clinica.utils.stream import cprint
+    cprint("In find_image_path()...")
 
     is_dicom = []
     image_folders = []
 
     for _, image in images.iterrows():
+        print(image)
+        image.Subject_ID = image.Subject_ID.replace('"','')
+        image.VISCODE = image.VISCODE.replace('"','')
         # Base directory where to look for image files.
         seq_path = Path(source_dir) / str(image["Subject_ID"])
 
@@ -1214,9 +1279,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
     return images
 
 
-def paths_to_bids(
-    images, bids_dir, modality, mod_to_update=False, n_procs: Optional[int] = 1
-):
+def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
     """Images in the list are converted and copied to directory in BIDS format.
 
     Args:
@@ -1224,10 +1287,9 @@ def paths_to_bids(
         bids_dir: Path to the output BIDS directory
         modality: Imaging modality
         mod_to_update: If True, pre-existing images in the BIDS directory will be erased and extracted agai n.
-        n_procs: int, optional. The number of processes to use for conversion. Default=1.
     """
     from functools import partial
-    from multiprocessing import Pool
+    from multiprocessing import Pool, cpu_count
 
     if modality.lower() not in [
         "t1",
@@ -1246,8 +1308,11 @@ def paths_to_bids(
         )
 
     images_list = list([data for _, data in images.iterrows()])
+    #print("Path to bids images:")
+    #print(images)
+    #print("-------------------------")
 
-    with Pool(processes=n_procs) as pool:
+    with Pool(processes=max(cpu_count() - 1, 1)) as pool:
         create_file_ = partial(
             create_file,
             modality=modality,
@@ -1351,8 +1416,8 @@ def create_file(image, modality, bids_dir, mod_to_update):
         },
     }
 
-    subject = image.Subject_ID
-    viscode = image.VISCODE
+    subject = image.Subject_ID.replace('"','')
+    viscode = image.VISCODE.replace('"','')
 
     if modality == "av45_fbb":
         modality = image.Tracer.lower()
@@ -1406,6 +1471,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
             os.remove(im)
 
     if mod_to_update or not len(existing_im) > 0:
+
         try:
             os.makedirs(output_path)
         except OSError:
@@ -1543,6 +1609,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     dicom_list = glob(path.join(dicom_path, "*.dcm"))
     image_list = glob(path.join(dicom_path, f"*{image_uid}.dcm"))
     if len(dicom_list) != len(image_list):
+
         # Remove the precedent tmp_dcm_folder if present.
         if os.path.exists(dest_path):
             shutil.rmtree(dest_path)
@@ -1568,43 +1635,3 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
     tmp_dcm_folder_path = join(bids_dir, f"tmp_dcm_folder_{str(image_id).strip(' ')}")
     if exists(tmp_dcm_folder_path):
         rmtree(tmp_dcm_folder_path)
-
-
-def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
-    """Load the clinical csv from ADNI. This function is able to find the csv in the
-    different known format available, the old format with just the name, and the new
-    format with the name and the date of download.
-
-    Parameters
-    ----------
-    clinical_dir: str
-        Directory containing the csv.
-
-    filename: str
-        name of the file without the suffix.
-
-    Returns
-    -------
-    pd.DataFrame:
-        Dataframe corresponding to the filename.
-    """
-    import re
-    from pathlib import Path
-
-    pattern = filename + r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
-    files_matching_pattern = [
-        f for f in Path(clinical_dir).rglob("*.csv") if re.search(pattern, (f.name))
-    ]
-    if len(files_matching_pattern) != 1:
-        raise IOError(
-            f"Expecting to find exactly one file in folder {clinical_dir} "
-            f"matching pattern {pattern}. {len(files_matching_pattern)} "
-            f"files were found instead : \n{'- '.join(str(files_matching_pattern))}"
-        )
-    try:
-        return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
-    except Exception:
-        raise ValueError(
-            f"File {str(files_matching_pattern[0])} was found but could not "
-            "be loaded as a DataFrame. Please check your data."
-        )

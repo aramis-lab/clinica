@@ -49,7 +49,6 @@ def _convert_adni_fdg_pet(
     preprocessing_step: ADNIPreprocessingStep,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -76,25 +75,17 @@ def _convert_adni_fdg_pet(
     mod_to_update : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
-
-    n_procs : int, optional
-        The requested number of processes.
-        If specified, it should be between 1 and the number of available CPUs.
-        Default=1.
     """
     from pathlib import Path
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        load_clinical_csv,
-        paths_to_bids,
-    )
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
     if subjects is None:
-        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
-
+        adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
+        adni_merge.columns = adni_merge.columns.str.strip('"')
         subjects = list(adni_merge.PTID.unique())
     cprint(
         "Calculating paths of FDG PET images. "
@@ -103,11 +94,10 @@ def _convert_adni_fdg_pet(
     images = _compute_fdg_pet_paths(
         source_dir, csv_dir, subjects, conversion_dir, preprocessing_step
     )
+
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
     modality = _get_modality_from_adni_preprocessing_step(preprocessing_step)
-    paths_to_bids(
-        images, destination_dir, modality, mod_to_update=mod_to_update, n_procs=n_procs
-    )
+    paths_to_bids(images, destination_dir, modality, mod_to_update=mod_to_update)
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
@@ -172,6 +162,7 @@ def _compute_fdg_pet_paths(
     from clinica.utils.pet import Tracer
 
     pet_fdg_df = _get_pet_fdg_df(Path(csv_dir), subjects, preprocessing_step)
+
     images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
     images.to_csv(
         Path(conversion_dir) / f"{Tracer.FDG}_pet_paths.tsv", sep="\t", index=False
@@ -188,6 +179,8 @@ def _get_pet_fdg_df(
 
     dfs = []
     for subject in subjects:
+        subject = subject.replace('"','')
+
         dfs.extend(
             _get_images_pet_for_subject(
                 subject,
@@ -229,9 +222,7 @@ def _load_df_with_column_check(
     csv_dir: Path, filename: str, required_columns: Set[str]
 ) -> pd.DataFrame:
     """Load the requested CSV file in a dataframe and check that the requested columns are present."""
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
-
-    df = load_clinical_csv(csv_dir, filename)
+    df = pd.read_csv(csv_dir / filename, sep=",", low_memory=False)
     if not required_columns.issubset(set(df.columns)):
         raise ValueError(
             f"Missing column(s) from {filename} file."
@@ -242,17 +233,17 @@ def _load_df_with_column_check(
 
 _get_pet_qc_df = partial(
     _load_df_with_column_check,
-    filename="PETQC",
+    filename="PETQC.csv",
     required_columns={"PASS", "RID"},
 )
 _get_qc_adni_3_df = partial(
     _load_df_with_column_check,
-    filename="PETC3",
+    filename="PETC3.csv",
     required_columns={"SCANQLTY", "RID", "SCANDATE"},
 )
 _get_meta_list_df = partial(
     _load_df_with_column_check,
-    filename="PET_META_LIST",
+    filename="PET_META_LIST.csv",
     required_columns={"Subject"},
 )
 
