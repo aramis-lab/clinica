@@ -73,9 +73,7 @@ def _list_subjects_sub_folders(
     )
     folder_content = [f for f in root_dir.iterdir()]
     subjects_sub_folders = [
-        sub
-        for sub in folder_content
-        if (sub.name.startswith("sub-") and sub.is_dir())
+        sub for sub in folder_content if (sub.name.startswith("sub-") and sub.is_dir())
     ]
     if len(subjects_sub_folders) == 0 and not groups_dir.is_dir():
         cprint(msg=warning_msg, lvl="warning")
