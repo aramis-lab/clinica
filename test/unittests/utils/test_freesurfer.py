@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from clinica.utils.freesurfer import _get_prefix  # noqa
 from clinica.utils.freesurfer import (
     ColumnType,
     InfoType,
+    _get_prefix,  # noqa
     extract_image_id_from_longitudinal_segmentation,
 )
 

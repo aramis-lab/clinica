@@ -245,11 +245,11 @@ class DwiConnectome(cpe.Pipeline):
         import nipype.interfaces.mrtrix3 as mrtrix3
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
+        from nipype.interfaces.mrtrix.preprocess import MRTransform
         from nipype.interfaces.mrtrix3 import (
             ConstrainedSphericalDeconvolution,
             Tractography,
         )
-        from nipype.interfaces.mrtrix.preprocess import MRTransform
 
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
         from clinica.utils.exceptions import ClinicaCAPSError

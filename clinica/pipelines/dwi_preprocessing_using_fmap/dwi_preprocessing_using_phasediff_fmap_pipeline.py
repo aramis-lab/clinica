@@ -278,8 +278,8 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix3 as mrtrix3
-        import nipype.interfaces.utility as nutil
         import nipype.interfaces.utility as niu
+        import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (

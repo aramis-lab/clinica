@@ -262,8 +262,8 @@ def roots_poly(C):
             ]
         )
         # two roots
-        rts1 = (-C[1, :] + delta) * (1 / ((2 * C[0, :])))
-        rts2 = (-C[1, :] - delta) * (1 / ((2 * C[0, :])))
+        rts1 = (-C[1, :] + delta) * (1 / (2 * C[0, :]))
+        rts2 = (-C[1, :] - delta) * (1 / (2 * C[0, :]))
         rts = np.array([rts1, rts2])
 
     elif C.shape[0] < 5:
