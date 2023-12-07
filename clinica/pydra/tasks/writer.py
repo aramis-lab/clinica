@@ -14,7 +14,7 @@ def write_bids_file(
     datatype: str,
     suffix: str,
     entities: dict,
-) -> None:
+) -> Path:
     source_file = Path(input_file)
     source_ext = source_file.name.split(sep=".", maxsplit=1)
 
@@ -40,6 +40,8 @@ def write_bids_file(
     # Write source file to target directory.
     target_file.write_bytes(source_file.read_bytes())
 
+    return target_file
+
 
 @task
 def write_caps_file(
@@ -50,7 +52,7 @@ def write_caps_file(
     datatype: str,
     caps_pattern: str,
     entities: dict,
-) -> None:
+) -> Path:
     source_file = Path(input_file)
     source_ext = source_file.name.split(sep=".", maxsplit=1)
 
@@ -75,6 +77,8 @@ def write_caps_file(
     # Write source file to target directory.
     target_file.write_bytes(source_file.read_bytes())
 
+    return target_file
+
 
 @task
 def write_freesurfer_dir(
@@ -84,5 +88,5 @@ def write_freesurfer_dir(
     session_id: str,
     patterns: dict,
     entities: dict,
-) -> None:
+) -> Path:
     ...
