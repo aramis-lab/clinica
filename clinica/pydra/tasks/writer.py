@@ -48,7 +48,7 @@ def write_caps_file(
     input_file: PathLike,
     dataset_path: PathLike,
     participant_id: str,
-    session_id: str,
+    session_id: Optional[str],
     datatype: str,
     caps_pattern: str,
     entities: dict,
@@ -85,7 +85,7 @@ def write_freesurfer_dir(
     input_file: PathLike,
     dataset_path: PathLike,
     participant_id: str,
-    session_id: str,
+    session_id: Optional[str],
     patterns: dict,
     entities: dict,
 ) -> Path:
