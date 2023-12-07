@@ -2,35 +2,15 @@ from os import PathLike
 from pathlib import Path
 from typing import Optional
 
-from pydra.engine.specs import BaseSpec, SpecInfo
-from pydra.engine.tasks import FunctionTask
+from pydra.mark import task
 
 
-def bids_data_writer(input_files: dict, **kwargs) -> FunctionTask:
-    def inner_func():
-        ...
-
-    input_spec = SpecInfo(
-        name="Inputs",
-        fields=(
-            [
-                ("dataset_path", str),
-                ("participant_id", str),
-                ("session_id", Optional[str]),
-            ]
-            + [(key, str) for key in input_files.keys()]
-        ),
-        bases=(BaseSpec,),
-    )
-
-    return FunctionTask(func=inner_func, input_spec=input_spec, **kwargs)
-
-
+@task
 def write_bids_file(
     input_file: PathLike,
     dataset_path: PathLike,
     participant_id: str,
-    session_id: str,
+    session_id: Optional[str],
     datatype: str,
     suffix: str,
     entities: dict,
@@ -61,6 +41,7 @@ def write_bids_file(
     target_file.write_bytes(source_file.read_bytes())
 
 
+@task
 def write_caps_file(
     input_file: PathLike,
     dataset_path: PathLike,
@@ -95,6 +76,7 @@ def write_caps_file(
     target_file.write_bytes(source_file.read_bytes())
 
 
+@task
 def write_freesurfer_dir(
     input_file: PathLike,
     dataset_path: PathLike,
