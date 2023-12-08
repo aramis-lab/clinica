@@ -8,7 +8,13 @@ from pydra import Workflow
 from pydra.mark import annotate, task
 
 from clinica.pydra.engine import clinica_io
-from clinica.pydra.tasks import download_mni_template_2009c, download_ref_template
+from clinica.pydra.tasks import (
+    download_mni_template_2009c,
+    download_ref_template,
+    parse_bids_file,
+    write_bids_file,
+    write_caps_file,
+)
 
 n4_bias_field_correction = N4BiasFieldCorrection(bspline_fitting_distance=300)
 registration_syn_quick = RegistrationSynQuick(transform_type="a")
@@ -52,18 +58,25 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         bases=(pydra.specs.BaseSpec,),
     )
 
+    # FIXME: Turn to workflow parameter.
+    from pathlib import Path  # noqa
+
+    dataset_path = Path.cwd() / "caps"
+
     wf = Workflow(name, input_spec=input_spec)
 
     wf.add(download_mni_template_2009c(name="download_mni_template"))
 
     wf.add(download_ref_template(name="download_ref_template"))
 
+    wf.add(parse_bids_file(name="parse_t1w", bids_file=wf.lzin.T1w).split("bids_file"))
+
     wf.add(
         Nipype1Task(
             name="n4_bias_field_correction",
             interface=n4_bias_field_correction,
-            input_image=wf.lzin.T1w,
-        ).split("input_image")
+            input_image=wf.parse_t1w.lzout.bids_file,
+        )
     )
 
     wf.add(
@@ -81,6 +94,58 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
             interface=crop_image,
             input_image=wf.registration_syn_quick.lzout.warped_image,
             template_image=wf.download_ref_template.lzout.ref_template_file,
+        )
+    )
+
+    wf.add(
+        write_bids_file(
+            name="write_bias_corrected_t1w_file",
+            input_file=wf.n4_bias_field_correction.lzout.output_image,
+            dataset_path=dataset_path,
+            participant_id=wf.parse_t1w.lzout.participant_id,
+            session_id=wf.parse_t1w.lzout.session_id,
+            datatype="anat",
+            suffix="T1w",
+            entities={"desc": "bfc"},
+        )
+    )
+
+    wf.add(
+        write_bids_file(
+            name="write_registered_t1w_file",
+            input_file=wf.registration_syn_quick.lzout.warped_image,
+            dataset_path=dataset_path,
+            participant_id=wf.parse_t1w.lzout.participant_id,
+            session_id=wf.parse_t1w.lzout.session_id,
+            datatype="anat",
+            suffix="T1w",
+            entities={"space": "MNI152NLin2009cSym", "res": "1x1x1", "desc": "nocrop"},
+        )
+    )
+
+    wf.add(
+        write_bids_file(
+            name="write_cropped_t1w_file",
+            input_file=wf.crop_image.lzout.cropped_image,
+            dataset_path=dataset_path,
+            participant_id=wf.parse_t1w.lzout.participant_id,
+            session_id=wf.parse_t1w.lzout.session_id,
+            datatype="anat",
+            suffix="T1w",
+            entities={"space": "MNI152NLin2009cSym", "res": "1x1x1", "desc": "cropped"},
+        )
+    )
+
+    wf.add(
+        write_caps_file(
+            name="write_xfm_file",
+            input_file=wf.registration_syn_quick.lzout.out_matrix,
+            dataset_path=dataset_path,
+            participant_id=wf.parse_t1w.lzout.participant_id,
+            session_id=wf.parse_t1w.lzout.session_id,
+            datatype="t1linear",
+            suffix="xfm_space-{space}_affine",
+            entities={"space": "MNI152NLin2009cSym"},
         )
     )
 
