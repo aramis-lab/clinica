@@ -17,7 +17,7 @@ def write_bids_file(
 ) -> Path:
     """Task to write a file to a BIDS dataset."""
     source_file = Path(input_file)
-    source_ext = source_file.name.split(sep=".", maxsplit=1)
+    source_ext = source_file.name.split(sep=".", maxsplit=1)[-1]
 
     target_dir = (
         Path(dataset_path)
@@ -56,7 +56,7 @@ def write_caps_file(
 ) -> Path:
     """Task to write a file a CAPS dataset."""
     source_file = Path(input_file)
-    source_ext = source_file.name.split(sep=".", maxsplit=1)
+    source_ext = source_file.name.split(sep=".", maxsplit=1)[-1]
 
     target_dir = (
         Path(dataset_path)
