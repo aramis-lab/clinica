@@ -50,7 +50,7 @@ def write_caps_file(
     participant_id: str,
     session_id: Optional[str],
     datatype: str,
-    caps_pattern: str,
+    suffix: str,
     entities: dict,
 ) -> Path:
     source_file = Path(input_file)
@@ -66,7 +66,7 @@ def write_caps_file(
     caps_stem = "_".join(
         [f"sub-{participant_id}"]
         + ([f"ses-{session_id}"] if session_id else [])
-        + [caps_pattern.format(**entities)]
+        + [suffix.format(**entities)]
     )
 
     target_file = target_dir / ".".join([caps_stem, source_ext])
