@@ -833,10 +833,10 @@ def _build_dcm2niix_command(
     bids_sidecar: bool = True,
 ) -> list:
     """Generate the dcm2niix command from user inputs."""
-    command = ["dcm2niix", "-w", "0", "-f", output_fmt, "-o", output_dir]
+    command = ["dcm2niix", "-w", "0", "-f", output_fmt, "-o", str(output_dir)]
     command += ["-9", "-z", "y"] if compress else ["-z", "n"]
     command += ["-b", "y", "-ba", "y"] if bids_sidecar else ["-b", "n"]
-    command += [input_dir]
+    command += [str(input_dir)]
 
     return command
 
@@ -889,12 +889,16 @@ def run_dcm2niix(
         cprint(
             msg=(
                 "DICOM to BIDS conversion with dcm2niix failed:\n"
-                f"command: {command}\n"
+                f"command: {' '.join(command)}\n"
                 f"{completed_process.stdout.decode('utf-8')}"
             ),
             lvl="warning",
         )
         return False
+    cprint(
+        f"DICOM to BIDS conversion with dcm2niix failed:\ncommand: {' '.join(command)}\n",
+        lvl="debug",
+    )
     return True
 
 
