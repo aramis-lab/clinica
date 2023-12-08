@@ -15,6 +15,7 @@ def write_bids_file(
     suffix: str,
     entities: dict,
 ) -> Path:
+    """Task to write a file to a BIDS dataset."""
     source_file = Path(input_file)
     source_ext = source_file.name.split(sep=".", maxsplit=1)
 
@@ -53,6 +54,7 @@ def write_caps_file(
     suffix: str,
     entities: dict,
 ) -> Path:
+    """Task to write a file a CAPS dataset."""
     source_file = Path(input_file)
     source_ext = source_file.name.split(sep=".", maxsplit=1)
 
