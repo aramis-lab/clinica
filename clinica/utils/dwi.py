@@ -575,7 +575,9 @@ def bids_dir_to_fsl_dir(bids_dir):
             f"Unknown PhaseEncodingDirection {fsl_dir}: it should be a value in (i, j, k, i-, j-, k-)"
         )
 
-    return fsl_dir.replace("i", "x").replace("j", "y").replace("k", "z")
+    return (
+        fsl_dir.replace("i", "x").replace("j", "y").replace("k", "z").replace("+", "")
+    )
 
 
 def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
