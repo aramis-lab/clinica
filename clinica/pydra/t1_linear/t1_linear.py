@@ -6,6 +6,7 @@ import pydra
 from nipype.interfaces.ants import N4BiasFieldCorrection, RegistrationSynQuick
 from pydra import Workflow
 from pydra.mark import annotate, task
+from pydra.tasks.bids import read_bids_dataset
 
 from clinica.pydra.engine import clinica_io
 from clinica.pydra.tasks import (
@@ -36,8 +37,8 @@ def crop_image(input_image: PathLike, template_image: PathLike) -> PurePath:
     return cropped_image
 
 
-@clinica_io
-def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
+# @clinica_io
+def build_core_workflow(name: str = "core", **kwargs) -> Workflow:
     """Core workflow for the T1 linear pipeline.
 
     Parameters
@@ -54,22 +55,28 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
 
     input_spec = pydra.specs.SpecInfo(
         name="Input",
-        fields=[("T1w", str, {"mandatory": True})],
+        fields=[
+            ("input_dir", str, {"mandatory": True}),
+            ("output_dir", str, {"mandatory": True}),
+        ],
         bases=(pydra.specs.BaseSpec,),
     )
 
-    # FIXME: Turn to workflow parameter.
-    from pathlib import Path  # noqa
-
-    dataset_path = Path.cwd() / "caps"
-
-    wf = Workflow(name, input_spec=input_spec)
+    wf = Workflow(name=name, input_spec=input_spec, **kwargs)
 
     wf.add(download_mni_template_2009c(name="download_mni_template"))
 
     wf.add(download_ref_template(name="download_ref_template"))
 
-    wf.add(parse_bids_file(name="parse_t1w", bids_file=wf.lzin.T1w).split("bids_file"))
+    wf.add(
+        read_bids_dataset(
+            name="read_t1w",
+            dataset_path=wf.lzin.input_dir,
+            output_queries={"t1w_file": {"suffix": "T1w", "extension": ["nii", "nii.gz"]}},
+        )
+    )
+
+    wf.add(parse_bids_file(name="parse_t1w", bids_file=wf.read_t1w.lzout.t1w_file).split("bids_file"))
 
     wf.add(
         Nipype1Task(
@@ -101,7 +108,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         write_bids_file(
             name="write_bias_corrected_t1w_file",
             input_file=wf.n4_bias_field_correction.lzout.output_image,
-            dataset_path=dataset_path,
+            dataset_path=wf.lzin.output_dir,
             participant_id=wf.parse_t1w.lzout.participant_id,
             session_id=wf.parse_t1w.lzout.session_id,
             datatype="anat",
@@ -114,7 +121,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         write_bids_file(
             name="write_registered_t1w_file",
             input_file=wf.registration_syn_quick.lzout.warped_image,
-            dataset_path=dataset_path,
+            dataset_path=wf.lzin.output_dir,
             participant_id=wf.parse_t1w.lzout.participant_id,
             session_id=wf.parse_t1w.lzout.session_id,
             datatype="anat",
@@ -127,7 +134,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         write_bids_file(
             name="write_cropped_t1w_file",
             input_file=wf.crop_image.lzout.cropped_image,
-            dataset_path=dataset_path,
+            dataset_path=wf.lzin.output_dir,
             participant_id=wf.parse_t1w.lzout.participant_id,
             session_id=wf.parse_t1w.lzout.session_id,
             datatype="anat",
@@ -140,7 +147,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
         write_caps_file(
             name="write_xfm_file",
             input_file=wf.registration_syn_quick.lzout.out_matrix,
-            dataset_path=dataset_path,
+            dataset_path=wf.lzin.output_dir,
             participant_id=wf.parse_t1w.lzout.participant_id,
             session_id=wf.parse_t1w.lzout.session_id,
             datatype="t1linear",
