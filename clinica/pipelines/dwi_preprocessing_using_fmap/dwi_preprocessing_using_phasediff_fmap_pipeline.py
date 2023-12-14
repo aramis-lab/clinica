@@ -278,7 +278,6 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix3 as mrtrix3
-        import nipype.interfaces.utility as niu
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -341,7 +340,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         # =======================
         # Compute average b0 on corrected dataset (for brain mask extraction)
         compute_avg_b0 = npe.Node(
-            niu.Function(
+            nutil.Function(
                 input_names=["in_dwi", "in_bval"],
                 output_names=["out_b0_average"],
                 function=compute_average_b0,
