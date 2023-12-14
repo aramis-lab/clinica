@@ -2,6 +2,8 @@
 from os import PathLike
 from typing import List, Optional
 
+import pandas as pd
+
 
 def convert_adni_fmri(
     source_dir: PathLike,
@@ -11,6 +13,7 @@ def convert_adni_fmri(
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
     n_procs: Optional[int] = 1,
+    convert_multiband: bool = True,
 ):
     """Convert fMR images of ADNI into BIDS format.
 
@@ -39,11 +42,12 @@ def convert_adni_fmri(
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
+
+    convert_multiband : bool, optional
+        If True, the converter will also convert multiband fmri scans.
+        Otherwise, they will be ignored.
+        Default=True.
     """
-    from os import path
-
-    import pandas as pd
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         load_clinical_csv,
         paths_to_bids,
@@ -57,7 +61,9 @@ def convert_adni_fmri(
     cprint(
         f"Calculating paths of fMRI images. Output will be stored in {conversion_dir}."
     )
-    images = compute_fmri_path(source_dir, csv_dir, subjects, conversion_dir)
+    images = _compute_fmri_path(
+        source_dir, csv_dir, subjects, conversion_dir, convert_multiband
+    )
     cprint("Paths of fMRI images found. Exporting images into BIDS ...")
     # fmri_paths_to_bids(dest_dir, images)
     paths_to_bids(
@@ -66,17 +72,38 @@ def convert_adni_fmri(
     cprint(msg="fMRI conversion done.", lvl="debug")
 
 
-def compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir):
+def _compute_fmri_path(
+    source_dir: PathLike,
+    csv_dir: PathLike,
+    subjs_list: List[str],
+    conversion_dir: PathLike,
+    convert_multiband: bool,
+) -> pd.DataFrame:
     """Compute the paths to fMR images.
 
-    Args:
-        source_dir: path to the ADNI directory
-        csv_dir: path to the clinical data directory
-        subjs_list: subjects list
-        conversion_dir: path to the TSV files including the paths to original images
+    Parameters
+    ----------
+    source_dir : PathLike
+        Path to the ADNI directory.
 
-    Returns:
-        pandas Dataframe containing the path for each fmri
+    csv_dir : PathLike
+        Path to the clinical data directory
+
+    subjs_list : list of str
+        The list of subjects.
+
+    conversion_dir : PathLike
+        The path to the TSV files including the paths to original images.
+
+    convert_multiband : bool, optional
+        If True, the converter will also convert multiband fmri scans.
+        Otherwise, they will be ignored.
+        Default=True.
+
+    Returns
+    -------
+    images : pd.DataFrame
+        Pandas Dataframe containing the path for each fmri.
     """
     from os import path
 
@@ -119,11 +146,9 @@ def compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir):
     )
     mri_list = load_clinical_csv(csv_dir, "MRILIST")
 
-    # Selecting only fMRI images that are not Multiband
-    mri_list = mri_list[
-        mri_list.SEQUENCE.str.contains("MRI")
-    ]  # 'MRI' includes all fMRI and fMRI scans, but not others
-    unwanted_sequences = ["MB"]
+    # Selecting fMRI images
+    mri_list = mri_list[mri_list.SEQUENCE.str.contains("MRI")]
+    unwanted_sequences = [] if convert_multiband else ["MB"]
     mri_list = mri_list[
         mri_list.SEQUENCE.map(
             lambda x: not any(subs in x for subs in unwanted_sequences)

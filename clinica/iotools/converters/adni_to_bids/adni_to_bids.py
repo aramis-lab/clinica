@@ -187,8 +187,6 @@ class AdniToBids(Converter):
         from copy import copy
         from os import path
 
-        import pandas as pd
-
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
