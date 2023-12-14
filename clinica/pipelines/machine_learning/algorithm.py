@@ -457,9 +457,9 @@ class RandomForest(base.MLAlgorithm):
         best_min_samples_split = int(round(np.mean([x[2] for x in params_list])))
 
         def max_feature_to_float(m):
-            if type(m) is float:
+            if isinstance(m, float):
                 return m
-            if type(m) is int:
+            if isinstance(m, int):
                 return float(m) / float(self._x.shape[1])
             if m == "auto" or m == "sqrt":
                 return np.sqrt(self._x.shape[1]) / float(self._x.shape[1])
