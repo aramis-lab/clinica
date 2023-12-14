@@ -2236,6 +2236,21 @@ test = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (>
 tests = ["pydra[test]"]
 
 [[package]]
+name = "pydra-ants"
+version = "0.0.5"
+description = "Pydra tasks for ANTs"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pydra_ants-0.0.5-py3-none-any.whl", hash = "sha256:59ef8121626225ce857e9402b2cac63fa294da7f99ab2acac542275b569be740"},
+    {file = "pydra_ants-0.0.5.tar.gz", hash = "sha256:9e3999ab66935fc83f030291ed7002842d4d7f70d726762992dfb2656c3b43e0"},
+]
+
+[package.dependencies]
+attrs = ">=22.1.0"
+pydra = ">=0.22"
+
+[[package]]
 name = "pydra-bids"
 version = "0.0.10"
 description = "Pydra tasks for BIDS I/O"
@@ -3588,4 +3603,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "47a8970d02f39d7c61ca142979c5a274fd747df1fce30b13c5fff06938292f5c"
+content-hash = "602ed0ab5b34c5752e86da1c7e20ae2c826dd50391d8998d16faa910bd4a30b2"
