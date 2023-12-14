@@ -44,6 +44,7 @@ jobs:
           --junitxml=./test-reports/non_regression_fast_mac.xml \
           --disable-warnings \
           -n 4 \
+          --dist loadgroup \
           -m "fast" \
           ./nonregression/
 
@@ -77,5 +78,6 @@ jobs:
           --junitxml=./test-reports/non_regression_fast_linux.xml \
           --disable-warnings \
           -n 4 \
+          --dist loadgroup \
           -m "fast" \
           ./nonregression/
