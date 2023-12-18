@@ -1590,13 +1590,13 @@ tests = ["codecov", "coverage", "coveralls", "flake8", "pytest", "pytest-cov"]
 
 [[package]]
 name = "nipype"
-version = "1.8.2"
+version = "1.8.3"
 description = "Neuroimaging in Python: Pipelines and Interfaces"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "nipype-1.8.2-py3-none-any.whl", hash = "sha256:00106a707083687da5a9687bf4f41a86170b0b05af803bda73f2260073302daa"},
-    {file = "nipype-1.8.2.tar.gz", hash = "sha256:c5465ddd9ceba762037cff8d21308b52cd080257fcb13d3f8d677bd1429b222b"},
+    {file = "nipype-1.8.3-py3-none-any.whl", hash = "sha256:8258495c234e38a990862039437ce6dc45e61f446c56fde5d6f1c2e7f1b5133a"},
+    {file = "nipype-1.8.3.tar.gz", hash = "sha256:67fa9ad0da2dc56173c1e147466fcc6c92268af57c01997af32890d6336f7004"},
 ]
 
 [package.dependencies]
@@ -3394,4 +3394,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "ae1af6dc28cb149c19a7f6482f9089324f46b1a237951f60bea21a69c5ce015c"
+content-hash = "e54d1e8b670c79106155918736a20bc99014a85c7c2f2e7cd35f09adb075a542"
