@@ -830,7 +830,7 @@ def center_nifti_origin(input_image, output_image):
 
     import nibabel as nib
     import numpy as np
-    from nibabel.spatialimages import ImageFileError
+    from nibabel.filebasedimages import ImageFileError
 
     error_str = None
     try:
