@@ -815,31 +815,42 @@ def create_subs_sess_list(
     subjs_sess_tsv.close()
 
 
-def center_nifti_origin(input_image, output_image):
+def center_nifti_origin(
+    input_image: PathLike, output_image: PathLike
+) -> Tuple[PathLike, Optional[str]]:
     """Put the origin of the coordinate system at the center of the image.
 
-    Args:
-        input_image: path to the input image
-        output_image: path to the output image (where the result will be stored)
+    Parameters
+    ----------
+    input_image : PathLike
+        Path to the input image.
 
-    Returns:
-        path of the output image created
+    output_image : PathLike
+        Path to the output image (where the result will be stored).
+
+    Returns
+    -------
+    PathLike :
+        The path of the output image created.
+
+    str, optional :
+        The error message if the function failed. None if the function call was successful.
     """
-    import os
-    from os.path import isfile
+    from pathlib import Path
 
     import nibabel as nib
     import numpy as np
     from nibabel.filebasedimages import ImageFileError
 
     error_str = None
+    input_image = Path(input_image)
+    output_image = Path(output_image)
     try:
         img = nib.load(input_image)
     except FileNotFoundError:
         error_str = f"No such file {input_image}"
     except ImageFileError:
         error_str = f"File {input_image} could not be read"
-
     except Exception as e:
         error_str = f"File {input_image} could not be loaded with nibabel: {e}"
 
@@ -847,7 +858,6 @@ def center_nifti_origin(input_image, output_image):
         try:
             canonical_img = nib.as_closest_canonical(img)
             hd = canonical_img.header
-
             qform = np.zeros((4, 4))
             for i in range(1, 4):
                 qform[i - 1, i - 1] = hd["pixdim"][i]
@@ -855,24 +865,17 @@ def center_nifti_origin(input_image, output_image):
             new_img = nib.Nifti1Image(
                 canonical_img.get_data(caching="unchanged"), affine=qform, header=hd
             )
-
             # Without deleting already-existing file, nib.save causes a severe bug on Linux system
-            if isfile(output_image):
-                os.remove(output_image)
-
+            if output_image.is_file():
+                output_image.unlink()
             nib.save(new_img, output_image)
-            if not isfile(output_image):
+            if not output_image.is_file():
                 error_str = (
                     f"NIfTI file created but Clinica could not save it to {output_image}. "
                     "Please check that the output folder has the correct permissions."
                 )
         except Exception as e:
-            error_str = (
-                "File "
-                + input_image
-                + " could not be processed with nibabel: "
-                + str(e)
-            )
+            error_str = f"File {input_image} could not be processed with nibabel: {e}"
 
     return output_image, error_str
 
