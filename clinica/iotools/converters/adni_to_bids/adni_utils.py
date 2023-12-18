@@ -1506,22 +1506,27 @@ def create_file(
             )
 
         if modality_specific[modality]["to_center"]:
-            center_nifti_origin(
+            output_image, error_msg = center_nifti_origin(
                 file_without_extension.with_suffix(".nii"), output_image
             )
+            if error_msg:
+                cprint(msg=error_msg, lvl="error")
+                raise ValueError(error_msg)
             file_without_extension.with_suffix(".nii").unlink()
 
     else:
         if modality_specific[modality]["to_center"]:
-            center_nifti_origin(image_path, output_image)
-            if not output_image:
+            output_image, error_msg = center_nifti_origin(image_path, output_image)
+            if error_msg:
                 cprint(
                     msg=(
                         f"For subject {subject} in session {session}, "
                         f"an error occurred whilst recentering Nifti image: {image_path}"
+                        f"The error is: {error_msg}"
                     ),
                     lvl="error",
                 )
+                raise ValueError(error_msg)
         else:
             shutil.copy(image_path, output_image)
 
