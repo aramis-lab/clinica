@@ -863,7 +863,7 @@ def center_nifti_origin(
                 qform[i - 1, i - 1] = hd["pixdim"][i]
                 qform[i - 1, 3] = -1.0 * hd["pixdim"][i] * hd["dim"][i] / 2.0
             new_img = nib.Nifti1Image(
-                canonical_img.get_data(caching="unchanged"), affine=qform, header=hd
+                canonical_img.get_fdata(caching="unchanged"), affine=qform, header=hd
             )
             # Without deleting already-existing file, nib.save causes a severe bug on Linux system
             if output_image.is_file():
