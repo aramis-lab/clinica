@@ -3,6 +3,61 @@ from typing import Optional
 from nipype.pipeline.engine import Workflow
 
 
+def cleanup_edge_pipeline(name: str = "Cleanup") -> Workflow:
+    """Perform some de-spiking filtering to clean up the edge of the fieldmap (copied from fsl_prepare_fieldmap).
+
+    This workflow was taken from: https://github.com/niflows/nipype1-workflows/
+    """
+    import nipype.pipeline.engine as npe
+    from nipype.interfaces import fsl
+    from nipype.interfaces import utility as niu
+
+    inputnode = npe.Node(
+        niu.IdentityInterface(fields=["in_file", "in_mask"]), name="inputnode"
+    )
+    outputnode = npe.Node(niu.IdentityInterface(fields=["out_file"]), name="outputnode")
+    fugue = npe.Node(
+        fsl.FUGUE(
+            save_fmap=True,
+            despike_2dfilter=True,
+            despike_threshold=2.1,
+        ),
+        name="Despike",
+    )
+    erode = npe.Node(
+        fsl.maths.MathsCommand(nan2zeros=True, args="-kernel 2D -ero"),
+        name="MskErode",
+    )
+    new_mask = npe.Node(
+        fsl.MultiImageMaths(op_string="-sub %s -thr 0.5 -bin"), name="NewMask"
+    )
+    apply_mask = npe.Node(fsl.ApplyMask(nan2zeros=True), name="ApplyMask")
+    join = npe.Node(niu.Merge(2), name="Merge")
+    add_edge = npe.Node(
+        fsl.MultiImageMaths(op_string="-mas %s -add %s"), name="AddEdge"
+    )
+
+    wf = npe.Workflow(name=name)
+
+    connections = [
+        (inputnode, fugue, [("in_file", "fmap_in_file"), ("in_mask", "mask_file")]),
+        (inputnode, erode, [("in_mask", "in_file")]),
+        (inputnode, new_mask, [("in_mask", "in_file")]),
+        (erode, new_mask, [("out_file", "operand_files")]),
+        (fugue, apply_mask, [("fmap_out_file", "in_file")]),
+        (new_mask, apply_mask, [("out_file", "mask_file")]),
+        (erode, join, [("out_file", "in1")]),
+        (apply_mask, join, [("out_file", "in2")]),
+        (inputnode, add_edge, [("in_file", "in_file")]),
+        (join, add_edge, [("out", "operand_files")]),
+        (add_edge, outputnode, [("out_file", "out_file")]),
+    ]
+
+    wf.connect(connections)
+
+    return wf
+
+
 def prepare_phasediff_fmap(
     output_dir: Optional[str] = None,
     name: Optional[str] = "prepare_phasediff_fmap",
@@ -54,13 +109,16 @@ def prepare_phasediff_fmap(
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as nutil
     import nipype.pipeline.engine as npe
-    from niflow.nipype1.workflows.dmri.fsl.utils import (
+
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
         cleanup_edge_pipeline,
-        demean_image,
-        siemens2rads,
     )
 
-    from .dwi_preprocessing_using_phasediff_fmap_utils import rads2hz
+    from .dwi_preprocessing_using_phasediff_fmap_utils import (
+        demean_image,
+        rads2hz,
+        siemens2rads,
+    )
 
     input_node = npe.Node(
         nutil.IdentityInterface(
