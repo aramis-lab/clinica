@@ -1526,7 +1526,6 @@ def create_file(
                     ),
                     lvl="error",
                 )
-                raise ValueError(error_msg)
         else:
             shutil.copy(image_path, output_image)
 
