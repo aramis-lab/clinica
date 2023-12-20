@@ -220,3 +220,26 @@ def test_compute_longitudinal_analysis(tmp_path):
         "--------------------------------\nfoo\t1\t| "
         "0\nbar\t0\t| 1\nbaz\t1\t| 1\n\n\n"
     )
+
+
+def test_write_list_of_files_errors(tmp_path):
+    from clinica.iotools.utils.data_handling import write_list_of_files
+
+    with pytest.raises(TypeError, match="argument must be a list of paths."):
+        write_list_of_files(12, tmp_path / "out.txt")
+
+    (tmp_path / "out.txt").touch()
+    with pytest.raises(
+        IOError, match=f"Output file {tmp_path / 'out.txt'} already exists"
+    ):
+        write_list_of_files([], tmp_path / "out.txt")
+
+
+@pytest.mark.parametrize("input_list", [[], ["foo"], ["foo", "bar", "baz"]])
+def test_write_list_of_files_errors(tmp_path, input_list):
+    from clinica.iotools.utils.data_handling import write_list_of_files
+
+    out_file = write_list_of_files(input_list, tmp_path / "out.txt")
+    with open(out_file, "r") as fp:
+        lines = fp.readlines()
+    assert lines == input_list

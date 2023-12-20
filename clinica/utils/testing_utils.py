@@ -2,7 +2,7 @@ import json
 import os
 from functools import partial
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional, Set
 
 import nibabel as nib
 import numpy as np
@@ -11,7 +11,11 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from clinica.pipelines.dwi.utils import DWIDataset
 
 
-def build_bids_directory(directory: os.PathLike, subjects_sessions: dict) -> None:
+def build_bids_directory(
+    directory: os.PathLike,
+    subjects_sessions: dict,
+    modalities: Optional[Dict[str, Set[str]]] = None,
+) -> None:
     """Build a fake BIDS dataset at the specified location following the
     specified structure.
 
@@ -23,30 +27,32 @@ def build_bids_directory(directory: os.PathLike, subjects_sessions: dict) -> Non
     subjects_sessions : Dict
         Dictionary containing the subjects and their associated sessions.
 
+    modalities : dict
+        Modalities to be created.
+
     Notes
     -----
     This function is a simple prototype for creating fake datasets for testing.
     It only adds (for now...) T1W nifti images for all subjects and sessions.
     """
     directory = Path(directory)
-    data_types = {"anat"}
-    suffixes = {"T1w", "flair"}
-    extensions = {"nii.gz"}
+    modalities = modalities or {"anat": {"T1w", "flair"}}
+    extensions = {"nii.gz", "json"}
     with open(directory / "dataset_description.json", "w") as fp:
         json.dump({"Name": "Example dataset", "BIDSVersion": "1.0.2"}, fp)
     for sub, sessions in subjects_sessions.items():
         (directory / sub).mkdir()
         for ses in sessions:
             (directory / sub / ses).mkdir()
-            for data_type in data_types:
-                (directory / sub / ses / data_type).mkdir()
+            for modality, suffixes in modalities.items():
+                (directory / sub / ses / modality).mkdir()
                 for suffix in suffixes:
                     for extension in extensions:
                         (
                             directory
                             / sub
                             / ses
-                            / data_type
+                            / modality
                             / f"{sub}_{ses}_{suffix}.{extension}"
                         ).touch()
 
