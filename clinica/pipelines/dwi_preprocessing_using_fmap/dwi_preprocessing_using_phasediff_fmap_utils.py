@@ -69,7 +69,7 @@ def init_input_node(
 
     import nibabel as nib
 
-    from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
+    from clinica.utils.dwi import DWIDataset, bids_dir_to_fsl_dir, check_dwi_volume
     from clinica.utils.filemanip import (
         extract_metadata_from_json,
         get_subject_id,
@@ -83,7 +83,7 @@ def init_input_node(
 
     # Check that the number of DWI, bvec & bval are the same
     try:
-        check_dwi_volume(dwi, bvec, bval)
+        check_dwi_volume(DWIDataset(dwi=dwi, b_values=bval, b_vectors=bvec))
     except ValueError as e:
         now = datetime.datetime.now().strftime("%H:%M:%S")
         error_msg = f"[{now}] Error: Number of DWIs, b-vals and b-vecs mismatch for {image_id.replace('_', ' | ')}"
