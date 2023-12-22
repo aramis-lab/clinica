@@ -15,6 +15,7 @@ def build_bids_directory(
     directory: os.PathLike,
     subjects_sessions: dict,
     modalities: Optional[Dict[str, Set[str]]] = None,
+    write_tsv_files: bool = False,
 ) -> None:
     """Build a fake BIDS dataset at the specified location following the
     specified structure.
@@ -42,6 +43,10 @@ def build_bids_directory(
         json.dump({"Name": "Example dataset", "BIDSVersion": "1.0.2"}, fp)
     for sub, sessions in subjects_sessions.items():
         (directory / sub).mkdir()
+        if write_tsv_files:
+            (directory / sub / f"{sub}_sessions.tsv").write_text(
+                "\n".join(["session_id"] + sessions)
+            )
         for ses in sessions:
             (directory / sub / ses).mkdir()
             for modality, suffixes in modalities.items():
