@@ -6,8 +6,8 @@ import pandas as pd
 
 
 def create_subs_sess_list(
-    input_dir: str,
-    output_dir: str,
+    input_dir: PathLike,
+    output_dir: PathLike,
     file_name: Optional[str] = None,
     is_bids_dir: bool = True,
     use_session_tsv: bool = False,
@@ -15,57 +15,68 @@ def create_subs_sess_list(
     """Create the file subject_session_list.tsv that contains the list of the
     visits for each subject for a BIDS or CAPS compliant dataset.
 
-    Args:
-        input_dir (str): Path to the BIDS or CAPS directory.
-        output_dir (str): Path to the output directory
-        file_name: name of the output file
-        is_bids_dir (boolean): Specify if input_dir is a BIDS directory or
-            not (i.e. a CAPS directory)
-        use_session_tsv (boolean): Specify if the list uses the sessions listed in the sessions.tsv files
+    Parameters
+    ----------
+    input_dir : PathLike
+        Path to the BIDS or CAPS directory.
+
+    output_dir : PathLike
+        Path to the output directory.
+
+    file_name : str, optional
+        The name of the output file.
+
+    is_bids_dir : bool, optional
+        Specify if input_dir is a BIDS directory or not (i.e. a CAPS directory).
+        Default=True.
+
+    use_session_tsv : bool
+        Specify if the list uses the sessions listed in the sessions.tsv files.
+        Default=False.
     """
-    import os
-    from glob import glob
-    from os import path
+    input_dir = Path(input_dir)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(exist_ok=True)
+    path_to_search = input_dir if is_bids_dir else input_dir / "subjects"
+    txt = _create_subs_sess_list_as_text(path_to_search, use_session_tsv)
+    file_name = file_name or "subjects_sessions_list.tsv"
+    (output_dir / file_name).write_text(txt)
 
-    os.makedirs(output_dir, exist_ok=True)
 
-    if not file_name:
-        file_name = "subjects_sessions_list.tsv"
-    subjs_sess_tsv = open(path.join(output_dir, file_name), "w")
-    subjs_sess_tsv.write("participant_id" + "\t" + "session_id" + "\n")
-
-    if is_bids_dir:
-        path_to_search = input_dir
-    else:
-        path_to_search = path.join(input_dir, "subjects")
-    subjects_paths = glob(path.join(path_to_search, "*sub-*"))
-
-    # Sort the subjects list
+def _create_subs_sess_list_as_text(path_to_search: Path, use_session_tsv: bool) -> str:
+    txt = "participant_id\tsession_id\n"
+    subjects_paths = [f for f in path_to_search.glob("*sub-*")]
     subjects_paths.sort()
-
     if len(subjects_paths) == 0:
         raise IOError("Dataset empty or not BIDS/CAPS compliant.")
-
-    for sub_path in subjects_paths:
-        subj_id = sub_path.split(os.sep)[-1]
-
+    for subject_path in subjects_paths:
         if use_session_tsv:
-            session_df = pd.read_csv(
-                path.join(sub_path, subj_id + "_sessions.tsv"), sep="\t"
-            )
-            session_df.dropna(how="all", inplace=True)
-            session_list = list(session_df["session_id"].to_numpy())
-            for session in session_list:
-                subjs_sess_tsv.write(subj_id + "\t" + session + "\n")
-
+            txt += _create_session_list_for_subject_from_tsv(subject_path)
         else:
-            sess_list = glob(path.join(sub_path, "*ses-*"))
+            sessions = [f for f in subject_path.glob("*ses-*")]
+            sessions.sort()
+            for ses_path in sessions:
+                txt += f"{subject_path.name}\t{ses_path.name}\n"
+    return txt
 
-            for ses_path in sess_list:
-                session_name = ses_path.split(os.sep)[-1]
-                subjs_sess_tsv.write(subj_id + "\t" + session_name + "\n")
 
-    subjs_sess_tsv.close()
+def _create_session_list_for_subject_from_tsv(subject_path: Path) -> str:
+    if not (subject_path / f"{subject_path.name}_sessions.tsv").exists():
+        raise ValueError(
+            f"In dataset located at {subject_path.parent}, there is no session "
+            f"TSV file for subject {subject_path.name}. Consider setting the "
+            "argument `use_session_tsv` to False in order to rely on folder "
+            "names parsing."
+        )
+    session_df = pd.read_csv(
+        subject_path / f"{subject_path.name}_sessions.tsv", sep="\t"
+    )
+    session_df.dropna(how="all", inplace=True)
+    session_list = list(session_df["session_id"].to_numpy())
+    return (
+        "\n".join([f"{subject_path.name}\t{session}" for session in session_list])
+        + "\n"
+    )
 
 
 def write_list_of_files(file_list: List[PathLike], output_file: PathLike) -> Path:

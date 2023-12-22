@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -167,22 +169,128 @@ def test_get_groups(tmp_path):
     assert sorted(_get_groups(tmp_path)) == ["bar", "baz", "foo"]
 
 
-def test_find_mods_and_sess(tmp_path):
-    from clinica.iotools.utils.data_handling._missing import _find_mods_and_sess
+def create_bids_dataset(folder: Path, write_tsv_files: bool = False) -> None:
     from clinica.utils.testing_utils import build_bids_directory
 
-    bids_dir = tmp_path / "bids"
-    bids_dir.mkdir()
+    folder.mkdir()
     build_bids_directory(
-        bids_dir,
-        {"sub-01": ["ses-M000", "ses-M006"], "sub-02": ["ses-M000"]},
+        folder,
+        {
+            "sub-01": ["ses-M000", "ses-M006"],
+            "sub-02": ["ses-M000"],
+            "sub-03": ["ses-M000", "ses-M012", "ses-M024"],
+        },
         modalities={
             "anat": {"T1w", "flair"},
             "pet": {"trc-18FFDG_pet"},
         },
+        write_tsv_files=write_tsv_files,
     )
-    ses_mod = _find_mods_and_sess(bids_dir)
+
+
+def test_find_mods_and_sess(tmp_path):
+    from clinica.iotools.utils.data_handling._missing import _find_mods_and_sess
+
+    create_bids_dataset(tmp_path / "bids")
+    ses_mod = _find_mods_and_sess(tmp_path / "bids")
     assert len(ses_mod) == 3
-    assert ses_mod["sessions"] == {"ses-M000", "ses-M006"}
+    assert ses_mod["sessions"] == {"ses-M000", "ses-M006", "ses-M012", "ses-M024"}
     assert ses_mod["anat"] == {"t1w", "flair"}
     assert ses_mod["pet"] == {"pet_trc-18FFDG"}
+
+
+@pytest.fixture
+def expected_tsv_content() -> str:
+    return (
+        "participant_id\tsession_id\n"
+        "sub-01\tses-M000\n"
+        "sub-01\tses-M006\n"
+        "sub-02\tses-M000\n"
+        "sub-03\tses-M000\n"
+        "sub-03\tses-M012\n"
+        "sub-03\tses-M024\n"
+    )
+
+
+def test_create_subs_sess_list_as_text(tmp_path, expected_tsv_content):
+    from clinica.iotools.utils.data_handling._files import (
+        _create_subs_sess_list_as_text,
+    )
+
+    create_bids_dataset(tmp_path / "bids")
+    assert (
+        _create_subs_sess_list_as_text(tmp_path / "bids", use_session_tsv=False)
+        == expected_tsv_content
+    )
+
+
+def test_create_subs_sess_list_as_text_using_tsv(tmp_path, expected_tsv_content):
+    from clinica.iotools.utils.data_handling._files import (
+        _create_subs_sess_list_as_text,
+    )
+
+    create_bids_dataset(tmp_path / "bids", write_tsv_files=True)
+    assert (
+        _create_subs_sess_list_as_text(tmp_path / "bids", use_session_tsv=True)
+        == expected_tsv_content
+    )
+
+
+def test_create_subs_sess_list_as_text_errors(tmp_path):
+    from clinica.iotools.utils.data_handling._files import (
+        _create_subs_sess_list_as_text,
+    )
+
+    with pytest.raises(IOError, match="Dataset empty or not BIDS/CAPS compliant."):
+        _create_subs_sess_list_as_text(tmp_path, use_session_tsv=False)
+    create_bids_dataset(tmp_path / "bids")
+    with pytest.raises(
+        ValueError, match="there is no session TSV file for subject sub-01"
+    ):
+        _create_subs_sess_list_as_text(tmp_path / "bids", use_session_tsv=True)
+
+
+@pytest.mark.parametrize("use_tsv", [True, False])
+def test_create_subs_sess_list(tmp_path, use_tsv, expected_tsv_content):
+    from clinica.iotools.utils.data_handling import create_subs_sess_list
+
+    create_bids_dataset(tmp_path / "bids", write_tsv_files=True)
+    create_subs_sess_list(
+        tmp_path / "bids",
+        tmp_path / "output",
+        file_name="foo.tsv",
+        use_session_tsv=use_tsv,
+    )
+    assert (tmp_path / "output" / "foo.tsv").exists()
+    assert (tmp_path / "output" / "foo.tsv").read_text() == expected_tsv_content
+
+
+def test_write_list_of_files_errors(tmp_path):
+    from clinica.iotools.utils.data_handling import write_list_of_files
+
+    with pytest.raises(
+        TypeError,
+        match="`file_list` argument must be a list of paths. Instead <class 'int'> was provided.",
+    ):
+        write_list_of_files(10, tmp_path / "foo.txt")
+    (tmp_path / "foo.txt").touch()
+    with pytest.raises(
+        IOError,
+        match=f"Output file {tmp_path / 'foo.txt'} already exists.",
+    ):
+        write_list_of_files([], tmp_path / "foo.txt")
+
+
+def test_write_list_of_files(tmp_path):
+    from clinica.iotools.utils.data_handling import write_list_of_files
+
+    file_list = [
+        tmp_path / "foo.csv",
+        tmp_path / "bar" / "baz.jpg",
+        tmp_path / "boo.nii",
+    ]
+    write_list_of_files(file_list, tmp_path / "foo.txt")
+    assert (tmp_path / "foo.txt").exists()
+    assert (tmp_path / "foo.txt").read_text() == "\n".join(
+        [str(f) for f in file_list]
+    ) + "\n"
