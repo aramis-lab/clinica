@@ -1,8 +1,10 @@
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from pandas.testing import assert_frame_equal
 
 
 def test_scale_coordinates_by_pixdim():
@@ -294,3 +296,18 @@ def test_write_list_of_files(tmp_path):
     assert (tmp_path / "foo.txt").read_text() == "\n".join(
         [str(f) for f in file_list]
     ) + "\n"
+
+
+def test_get_participants_and_subjects_sessions_df(tmp_path):
+    from clinica.iotools.utils.data_handling._merging import (
+        _get_participants_and_subjects_sessions_df,
+    )
+
+    create_bids_dataset(tmp_path / "bids", write_tsv_files=True)
+    participants, sessions = _get_participants_and_subjects_sessions_df(
+        tmp_path / "bids"
+    )
+    assert_frame_equal(
+        participants, pd.DataFrame({"participant_id": ["sub-01", "sub-02", "sub-03"]})
+    )
+    assert len(sessions) == 6
