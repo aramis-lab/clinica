@@ -323,13 +323,65 @@ def test_create_merge_file_from_bids(tmp_path):
     participants, sessions = _get_participants_and_subjects_sessions_df(
         tmp_path / "bids"
     )
-    assert (
-        _create_merge_file_from_bids(
-            tmp_path / "bids",
-            sessions,
-            participants,
-            ignore_sessions_files=True,
-            ignore_scan_files=True,
-        )
-        == 0
+    df = _create_merge_file_from_bids(
+        tmp_path / "bids",
+        sessions,
+        participants,
+        ignore_sessions_files=True,
+        ignore_scan_files=True,
     )
+    expected = pd.DataFrame(
+        {
+            "participant_id": [
+                "sub-01",
+                "sub-01",
+                "sub-02",
+                "sub-03",
+                "sub-03",
+                "sub-03",
+            ],
+            "session_id": [
+                "ses-M000",
+                "ses-M006",
+                "ses-M000",
+                "ses-M000",
+                "ses-M012",
+                "ses-M024",
+            ],
+        }
+    )
+    assert_frame_equal(df.reset_index(drop=True), expected.reset_index(drop=True))
+
+
+def test_post_process_merge_file_from_bids_column_reordering():
+    from clinica.iotools.utils.data_handling._merging import (
+        _post_process_merge_file_from_bids,
+    )
+
+    df = pd.DataFrame(columns=["foo", "session_id", "bar", "participant_id", "baz"])
+    assert_frame_equal(
+        _post_process_merge_file_from_bids(df),
+        pd.DataFrame(columns=["participant_id", "session_id", "foo", "bar", "baz"]),
+    )
+
+
+def test_post_process_merge_file_from_bids_number_rounding():
+    from clinica.iotools.utils.data_handling._merging import (
+        _post_process_merge_file_from_bids,
+    )
+
+    df = pd.DataFrame(
+        {
+            "session_id": ["ses-M000", "ses-M006"],
+            "participant_id": ["sub-01", "sub-01"],
+            "foo": [1.0123456789, 100.987654321],
+        }
+    )
+    expected = pd.DataFrame(
+        {
+            "participant_id": ["sub-01", "sub-01"],
+            "session_id": ["ses-M000", "ses-M006"],
+            "foo": [1.012346, 100.987654],
+        }
+    )
+    assert_frame_equal(_post_process_merge_file_from_bids(df), expected)

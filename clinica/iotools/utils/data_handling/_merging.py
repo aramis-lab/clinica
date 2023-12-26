@@ -149,58 +149,63 @@ def _create_merge_file_from_bids(
     ignore_sessions_files: bool = False,
 ) -> pd.DataFrame:
     """Create a merge pandas dataframe for a given BIDS dataset."""
-    merged_df = pd.DataFrame(columns=participants_df.columns.values)
+    df = pd.DataFrame(columns=participants_df.columns.values)
     for subject, subject_df in sub_ses_df.groupby(level=0):
-        row_participant_df = _get_row_participant_df(participants_df, subject)
+        row_subject_data_only = _get_row_data_from_participant_df(
+            participants_df, subject
+        )
         if ignore_sessions_files:
-            row_session_df = _compute_row_session_for_subject_without_session_files(
-                subject_df
+            rows_session_data_only = (
+                _compute_session_rows_for_subject_without_session_files(subject_df)
             )
         else:
-            row_session_df = _compute_row_session_for_subject_with_session_files(
-                bids_dir, subject, subject_df, ignore_scan_files
+            rows_session_data_only = (
+                _compute_session_rows_for_subject_with_session_files(
+                    bids_dir, subject, subject_df, ignore_scan_files
+                )
             )
-        row_df = pd.concat([row_participant_df, row_session_df], axis=1)
-        merged_df = pd.concat([merged_df, row_df], axis=0)
-    return _post_process_merge_file_from_bids(merged_df)
+        for row_session_data_only in rows_session_data_only:
+            full_row = pd.concat([row_subject_data_only, row_session_data_only], axis=1)
+            df = pd.concat([df, full_row], axis=0)
+    return _post_process_merge_file_from_bids(df)
 
 
-def _get_row_participant_df(
+def _get_row_data_from_participant_df(
     participants_df: pd.DataFrame, subject: str
 ) -> pd.DataFrame:
-    """Return the row of the participants df for the given subject."""
+    """Return, for a given subject, part of a merged dataframe row.
+    This part of the full row only contains information found in the participants dataframe.
+    In order to make a full row entry, it will be concatenated with information from the sessions and scans.
+    """
     from clinica.utils.stream import cprint
 
-    row_participant_df = participants_df[participants_df["participant_id"] == subject]
-    row_participant_df.reset_index(inplace=True, drop=True)
-    if len(row_participant_df) == 0:
+    row_subject_data = participants_df[participants_df["participant_id"] == subject]
+    row_subject_data.reset_index(inplace=True, drop=True)
+    if len(row_subject_data) == 0:
         cprint(
             msg=f"Participant {subject} does not exist in participants.tsv",
             lvl="warning",
         )
-        row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
+        row_subject_data = pd.DataFrame([[subject]], columns=["participant_id"])
 
-    return row_participant_df
+    return row_subject_data
 
 
-def _compute_row_session_for_subject_without_session_files(
+def _compute_session_rows_for_subject_without_session_files(
     subject_df: pd.DataFrame,
-) -> pd.DataFrame:
-    return pd.concat(
-        [
-            pd.DataFrame([[session]], columns=["session_id"])
-            for _, session in subject_df.index.values
-        ],
-        axis=1,
-    )
+) -> List[pd.DataFrame]:
+    return [
+        pd.DataFrame([[session]], columns=["session_id"])
+        for _, session in subject_df.index.values
+    ]
 
 
-def _compute_row_session_for_subject_with_session_files(
+def _compute_session_rows_for_subject_with_session_files(
     bids_dir: Path,
     subject: str,
     subject_df: pd.DataFrame,
     ignore_scan_files: bool,
-) -> pd.DataFrame:
+) -> List[pd.DataFrame]:
     from ..pipeline_handling import DatasetError
 
     rows = []
@@ -251,8 +256,8 @@ def _get_row_scan_df(scan_path: Path, ignore_scan_files: bool) -> pd.DataFrame:
 
 
 def _post_process_merge_file_from_bids(merged_df: pd.DataFrame) -> pd.DataFrame:
+    """Put participant_id and session_id first, and round numbers."""
     col_list = merged_df.columns.values.tolist()
-    # Put participant_id and session_id first
     col_list.insert(0, col_list.pop(col_list.index("participant_id")))
     col_list.insert(1, col_list.pop(col_list.index("session_id")))
     merged_df = merged_df[col_list]
