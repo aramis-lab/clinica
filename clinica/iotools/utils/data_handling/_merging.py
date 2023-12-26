@@ -121,7 +121,9 @@ def _get_participants_and_subjects_sessions_df(
     if (bids_dir / "participants.tsv").is_file():
         participants_df = pd.read_csv(bids_dir / "participants.tsv", sep="\t")
     else:
-        participants_df = pd.DataFrame(list(set(subjects)), columns=["participant_id"])
+        participants_df = pd.DataFrame(
+            sorted(list(set(subjects))), columns=["participant_id"]
+        )
     sub_ses_df = pd.DataFrame(
         [[subject, session] for subject, session in zip(subjects, sessions)],
         columns=index_cols,
@@ -146,84 +148,106 @@ def _create_merge_file_from_bids(
     ignore_scan_files: bool = False,
     ignore_sessions_files: bool = False,
 ) -> pd.DataFrame:
-    import json
-
-    from clinica.utils.stream import cprint
-
-    from ..pipeline_handling import DatasetError
-
+    """Create a merge pandas dataframe for a given BIDS dataset."""
     merged_df = pd.DataFrame(columns=participants_df.columns.values)
     for subject, subject_df in sub_ses_df.groupby(level=0):
-        sub_path = bids_dir / subject
-        row_participant_df = participants_df[
-            participants_df["participant_id"] == subject
-        ]
-        row_participant_df.reset_index(inplace=True, drop=True)
-        if len(row_participant_df) == 0:
-            cprint(
-                msg=f"Participant {subject} does not exist in participants.tsv",
-                lvl="warning",
-            )
-            row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
-
+        row_participant_df = _get_row_participant_df(participants_df, subject)
         if ignore_sessions_files:
-            for _, session in subject_df.index.values:
-                row_session_df = pd.DataFrame([[session]], columns=["session_id"])
-                row_df = pd.concat([row_participant_df, row_session_df], axis=1)
-                merged_df = pd.concat([merged_df, row_df])
+            row_session_df = _compute_row_session_for_subject_without_session_files(
+                subject_df
+            )
         else:
-            sessions_df = pd.read_csv(sub_path / f"{subject}_sessions.tsv", sep="\t")
-
-            for _, session in subject_df.index.values:
-                row_session_df = sessions_df[sessions_df.session_id == session]
-                row_session_df.reset_index(inplace=True, drop=True)
-                if len(row_session_df) == 0:
-                    raise DatasetError(
-                        sessions_df.loc[0, "session_id"] + " / " + session
-                    )
-                # Read scans TSV files
-                scan_path = (
-                    bids_dir / subject / session / f"{subject}_{session}_scans.tsv"
-                )
-                row_scans_df = pd.DataFrame()
-                if scan_path.is_file() and not ignore_scan_files:
-                    scans_dict = dict()
-                    scans_df = pd.read_csv(scan_path, sep="\t")
-                    for idx in scans_df.index.values:
-                        filepath = scans_df.loc[idx, "filename"]
-                        if filepath.endswith(".nii.gz"):
-                            filename = Path(filepath).name.split(".")[0]
-                            modality = "_".join(filename.split("_")[2::])
-                            for col in scans_df.columns.values:
-                                if col != "filename":
-                                    value = scans_df.loc[idx, col]
-                                    new_col_name = f"{modality}_{col}"
-                                    scans_dict.update({new_col_name: value})
-                            json_path = (
-                                bids_dir
-                                / subject
-                                / session
-                                / f"{filepath.split('.')[0]}.json"
-                            )
-                            if json_path.exists():
-                                with open(json_path, "r") as f:
-                                    json_dict = json.load(f)
-                                for key, value in json_dict.items():
-                                    new_col_name = f"{modality}_{key}"
-                                    scans_dict.update({new_col_name: value})
-                    scans_dict = {
-                        str(key): str(value) for key, value in scans_dict.items()
-                    }
-                    row_scans_df = pd.DataFrame(scans_dict, index=[0])
-
-                row_df = pd.concat(
-                    [row_participant_df, row_session_df, row_scans_df], axis=1
-                )
-                # remove duplicated columns
-                row_df = row_df.loc[:, ~row_df.columns.duplicated(keep="last")]
-                merged_df = pd.concat([merged_df, row_df])
-
+            row_session_df = _compute_row_session_for_subject_with_session_files(
+                bids_dir, subject, subject_df, ignore_scan_files
+            )
+        row_df = pd.concat([row_participant_df, row_session_df], axis=1)
+        merged_df = pd.concat([merged_df, row_df], axis=0)
     return _post_process_merge_file_from_bids(merged_df)
+
+
+def _get_row_participant_df(
+    participants_df: pd.DataFrame, subject: str
+) -> pd.DataFrame:
+    """Return the row of the participants df for the given subject."""
+    from clinica.utils.stream import cprint
+
+    row_participant_df = participants_df[participants_df["participant_id"] == subject]
+    row_participant_df.reset_index(inplace=True, drop=True)
+    if len(row_participant_df) == 0:
+        cprint(
+            msg=f"Participant {subject} does not exist in participants.tsv",
+            lvl="warning",
+        )
+        row_participant_df = pd.DataFrame([[subject]], columns=["participant_id"])
+
+    return row_participant_df
+
+
+def _compute_row_session_for_subject_without_session_files(
+    subject_df: pd.DataFrame,
+) -> pd.DataFrame:
+    return pd.concat(
+        [
+            pd.DataFrame([[session]], columns=["session_id"])
+            for _, session in subject_df.index.values
+        ],
+        axis=1,
+    )
+
+
+def _compute_row_session_for_subject_with_session_files(
+    bids_dir: Path,
+    subject: str,
+    subject_df: pd.DataFrame,
+    ignore_scan_files: bool,
+) -> pd.DataFrame:
+    from ..pipeline_handling import DatasetError
+
+    rows = []
+    sub_path = bids_dir / subject
+    sessions_df = pd.read_csv(sub_path / f"{subject}_sessions.tsv", sep="\t")
+    for _, session in subject_df.index.values:
+        row_session_df = sessions_df[sessions_df.session_id == session]
+        row_session_df.reset_index(inplace=True, drop=True)
+        if len(row_session_df) == 0:
+            raise DatasetError(sessions_df.loc[0, "session_id"] + " / " + session)
+        scan_path = bids_dir / subject / session / f"{subject}_{session}_scans.tsv"
+        row_scans_df = _get_row_scan_df(scan_path, ignore_scan_files)
+        row_df = pd.concat([row_session_df, row_scans_df], axis=1)
+        rows.append(row_df.loc[:, ~row_df.columns.duplicated(keep="last")])
+    return rows
+
+
+def _get_row_scan_df(scan_path: Path, ignore_scan_files: bool) -> pd.DataFrame:
+    import json
+
+    row_scans_df = pd.DataFrame()
+    if ignore_scan_files or not scan_path.is_file():
+        return row_scans_df
+    scans_dict = dict()
+    scans_df = pd.read_csv(scan_path, sep="\t")
+    for idx in scans_df.index.values:
+        filepath = scans_df.loc[idx, "filename"]
+        if not filepath.endswith(".nii.gz"):
+            continue
+        filename = Path(filepath).name.split(".")[0]
+        modality = "_".join(filename.split("_")[2::])
+        for col in scans_df.columns.values:
+            if col != "filename":
+                value = scans_df.loc[idx, col]
+                new_col_name = f"{modality}_{col}"
+                scans_dict.update({new_col_name: value})
+        json_path = scan_path.parent / f"{filepath.split('.')[0]}.json"
+        if json_path.exists():
+            with open(json_path, "r") as f:
+                json_dict = json.load(f)
+            for key, value in json_dict.items():
+                new_col_name = f"{modality}_{key}"
+                scans_dict.update({new_col_name: value})
+    scans_dict = {str(key): str(value) for key, value in scans_dict.items()}
+    row_scans_df = pd.DataFrame(scans_dict, index=[0])
+
+    return row_scans_df
 
 
 def _post_process_merge_file_from_bids(merged_df: pd.DataFrame) -> pd.DataFrame:
