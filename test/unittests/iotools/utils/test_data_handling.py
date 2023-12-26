@@ -183,8 +183,8 @@ def create_bids_dataset(folder: Path, write_tsv_files: bool = False) -> None:
             "sub-03": ["ses-M000", "ses-M012", "ses-M024"],
         },
         modalities={
-            "anat": {"T1w", "flair"},
-            "pet": {"trc-18FFDG_pet"},
+            "anat": ("T1w", "flair"),
+            "pet": ("trc-18FFDG_pet",),
         },
         write_tsv_files=write_tsv_files,
     )
@@ -313,7 +313,10 @@ def test_get_participants_and_subjects_sessions_df(tmp_path):
     assert len(sessions) == 6
 
 
-def test_create_merge_file_from_bids(tmp_path):
+@pytest.mark.parametrize("ignore_sessions", (True, False))
+def test_create_merge_file_from_bids_ignore_sessions_and_scans(
+    tmp_path, ignore_sessions
+):
     from clinica.iotools.utils.data_handling._merging import (
         _create_merge_file_from_bids,
         _get_participants_and_subjects_sessions_df,
@@ -327,7 +330,7 @@ def test_create_merge_file_from_bids(tmp_path):
         tmp_path / "bids",
         sessions,
         participants,
-        ignore_sessions_files=True,
+        ignore_sessions_files=ignore_sessions,
         ignore_scan_files=True,
     )
     expected = pd.DataFrame(
@@ -351,6 +354,68 @@ def test_create_merge_file_from_bids(tmp_path):
         }
     )
     assert_frame_equal(df.reset_index(drop=True), expected.reset_index(drop=True))
+
+
+def test_create_merge_file_from_bids(tmp_path):
+    from clinica.iotools.utils.data_handling._merging import (
+        _create_merge_file_from_bids,
+        _get_participants_and_subjects_sessions_df,
+    )
+
+    create_bids_dataset(tmp_path / "bids", write_tsv_files=True)
+    participants, sessions = _get_participants_and_subjects_sessions_df(
+        tmp_path / "bids"
+    )
+    df = _create_merge_file_from_bids(
+        tmp_path / "bids",
+        sessions,
+        participants,
+        ignore_sessions_files=False,
+        ignore_scan_files=False,
+    )
+    expected = pd.DataFrame(
+        {
+            "participant_id": [
+                "sub-01",
+                "sub-01",
+                "sub-02",
+                "sub-03",
+                "sub-03",
+                "sub-03",
+            ],
+            "session_id": [
+                "ses-M000",
+                "ses-M006",
+                "ses-M000",
+                "ses-M000",
+                "ses-M012",
+                "ses-M024",
+            ],
+            "T1w_scan_id": ["670488", "777573", "234054", "107474", "935519", "619177"],
+            "flair_scan_id": [
+                "116740",
+                "288390",
+                "146317",
+                "709571",
+                "571859",
+                "442418",
+            ],
+            "trc-18FFDG_pet_scan_id": [
+                "26226",
+                "256788",
+                "772247",
+                "776647",
+                "91162",
+                "33327",
+            ],
+        }
+    )
+    assert_frame_equal(
+        df.reset_index(drop=True),
+        expected.reset_index(drop=True),
+        check_dtype=False,
+        check_column_type=False,
+    )
 
 
 def test_post_process_merge_file_from_bids_column_reordering():
