@@ -311,3 +311,25 @@ def test_get_participants_and_subjects_sessions_df(tmp_path):
         participants, pd.DataFrame({"participant_id": ["sub-01", "sub-02", "sub-03"]})
     )
     assert len(sessions) == 6
+
+
+def test_create_merge_file_from_bids(tmp_path):
+    from clinica.iotools.utils.data_handling._merging import (
+        _create_merge_file_from_bids,
+        _get_participants_and_subjects_sessions_df,
+    )
+
+    create_bids_dataset(tmp_path / "bids", write_tsv_files=True)
+    participants, sessions = _get_participants_and_subjects_sessions_df(
+        tmp_path / "bids"
+    )
+    assert (
+        _create_merge_file_from_bids(
+            tmp_path / "bids",
+            sessions,
+            participants,
+            ignore_sessions_files=True,
+            ignore_scan_files=True,
+        )
+        == 0
+    )
