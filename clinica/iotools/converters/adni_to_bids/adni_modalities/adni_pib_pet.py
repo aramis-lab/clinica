@@ -148,7 +148,9 @@ def compute_pib_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
 
     images = find_image_path(pet_pib_df, source_dir, "PIB", "I", "Image_ID")
     images.to_csv(
-        path.join(conversion_dir, f"{Tracer.PIB}_pet_paths.tsv"), sep="\t", index=False
+        path.join(conversion_dir, f"{Tracer.PIB.value}_pet_paths.tsv"),
+        sep="\t",
+        index=False,
     )
 
     return images

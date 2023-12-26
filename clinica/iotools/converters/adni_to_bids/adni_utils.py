@@ -1350,37 +1350,37 @@ def create_file(
         },
         "fdg": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.CO_REGISTERED_AVERAGED}_pet",
+            "output_filename": f"_trc-{Tracer.FDG.value}_rec-{ReconstructionMethod.CO_REGISTERED_AVERAGED.value}_pet",
             "to_center": True,
             "json": "n",
         },
         "fdg_uniform": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.COREGISTERED_ISOTROPIC}_pet",
+            "output_filename": f"_trc-{Tracer.FDG.value}_rec-{ReconstructionMethod.COREGISTERED_ISOTROPIC.value}_pet",
             "to_center": True,
             "json": "n",
         },
         "pib": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.PIB}_pet",
+            "output_filename": f"_trc-{Tracer.PIB.value}_pet",
             "to_center": True,
             "json": "n",
         },
         "av45": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.AV45}_pet",
+            "output_filename": f"_trc-{Tracer.AV45.value}_pet",
             "to_center": True,
             "json": "n",
         },
         "fbb": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FBB}_pet",
+            "output_filename": f"_trc-{Tracer.FBB.value}_pet",
             "to_center": True,
             "json": "n",
         },
         "tau": {
             "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.AV1451}_pet",
+            "output_filename": f"_trc-{Tracer.AV1451.value}_pet",
             "to_center": True,
             "json": "n",
         },
@@ -1506,19 +1506,23 @@ def create_file(
             )
 
         if modality_specific[modality]["to_center"]:
-            center_nifti_origin(
+            output_image, error_msg = center_nifti_origin(
                 file_without_extension.with_suffix(".nii"), output_image
             )
+            if error_msg:
+                cprint(msg=error_msg, lvl="error")
+                raise ValueError(error_msg)
             file_without_extension.with_suffix(".nii").unlink()
 
     else:
         if modality_specific[modality]["to_center"]:
-            center_nifti_origin(image_path, output_image)
-            if not output_image:
+            output_image, error_msg = center_nifti_origin(image_path, output_image)
+            if error_msg:
                 cprint(
                     msg=(
                         f"For subject {subject} in session {session}, "
                         f"an error occurred whilst recentering Nifti image: {image_path}"
+                        f"The error is: {error_msg}"
                     ),
                     lvl="error",
                 )

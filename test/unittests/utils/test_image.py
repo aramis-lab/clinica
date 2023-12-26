@@ -149,7 +149,7 @@ def test_remove_dummy_dimension_from_image(tmp_path):
     from clinica.utils.image import remove_dummy_dimension_from_image
 
     input_data = np.random.randint(low=0, high=10, size=(16, 10, 6, 3))
-    input_image = nib.Nifti1Image(input_data, affine=np.eye(4))
+    input_image = nib.Nifti1Image(input_data.astype(np.int32), affine=np.eye(4))
     nib.save(input_image, tmp_path / "input_image.nii.gz")
 
     result = remove_dummy_dimension_from_image(
