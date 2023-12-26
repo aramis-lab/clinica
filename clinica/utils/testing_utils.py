@@ -1,8 +1,9 @@
 import json
 import os
+import random
 from functools import partial
 from pathlib import Path
-from typing import Callable, Dict, Optional, Set
+from typing import Callable, Dict, Optional, Tuple
 
 import nibabel as nib
 import numpy as np
@@ -14,8 +15,9 @@ from clinica.pipelines.dwi.utils import DWIDataset
 def build_bids_directory(
     directory: os.PathLike,
     subjects_sessions: dict,
-    modalities: Optional[Dict[str, Set[str]]] = None,
+    modalities: Optional[Dict[str, Tuple[str, ...]]] = None,
     write_tsv_files: bool = False,
+    random_seed: int = 42,
 ) -> None:
     """Build a fake BIDS dataset at the specified location following the
     specified structure.
@@ -36,9 +38,10 @@ def build_bids_directory(
     This function is a simple prototype for creating fake datasets for testing.
     It only adds (for now...) T1W nifti images for all subjects and sessions.
     """
+    random.seed(random_seed)
     directory = Path(directory)
-    modalities = modalities or {"anat": {"T1w", "flair"}}
-    extensions = {"nii.gz", "json"}
+    modalities = modalities or {"anat": ("T1w", "flair")}
+    extensions = ("nii.gz", "json")
     with open(directory / "dataset_description.json", "w") as fp:
         json.dump({"Name": "Example dataset", "BIDSVersion": "1.0.2"}, fp)
     for sub, sessions in subjects_sessions.items():
@@ -48,18 +51,23 @@ def build_bids_directory(
                 "\n".join(["session_id"] + sessions)
             )
         for ses in sessions:
-            (directory / sub / ses).mkdir()
+            session_path = directory / sub / ses
+            session_path.mkdir()
+            scans_tsv_text = "filename\tscan_id\n"
             for modality, suffixes in modalities.items():
-                (directory / sub / ses / modality).mkdir()
+                (session_path / modality).mkdir()
                 for suffix in suffixes:
                     for extension in extensions:
-                        (
-                            directory
-                            / sub
-                            / ses
+                        scan_path = (
+                            session_path
                             / modality
                             / f"{sub}_{ses}_{suffix}.{extension}"
-                        ).touch()
+                        )
+                        scan_path.touch()
+                        if write_tsv_files and "nii" in extension:
+                            scans_tsv_text += f"{scan_path.relative_to(session_path)}\t{random.randint(1, 1000000)}\n"
+            if write_tsv_files and len(scans_tsv_text) > 0:
+                (session_path / f"{sub}_{ses}_scans.tsv").write_text(scans_tsv_text)
 
 
 def build_caps_directory(directory: os.PathLike, configuration: dict) -> None:

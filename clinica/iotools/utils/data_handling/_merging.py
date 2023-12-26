@@ -194,6 +194,11 @@ def _get_row_data_from_participant_df(
 def _compute_session_rows_for_subject_without_session_files(
     subject_df: pd.DataFrame,
 ) -> List[pd.DataFrame]:
+    """Compute all rows with session information for a given subject.
+    This will be concatenated with information from the participants TSV file
+    to build a full dataframe row with all relevant information.
+    This is a default implementation when sessions and scans are ignored.
+    """
     return [
         pd.DataFrame([[session]], columns=["session_id"])
         for _, session in subject_df.index.values
@@ -206,6 +211,12 @@ def _compute_session_rows_for_subject_with_session_files(
     subject_df: pd.DataFrame,
     ignore_scan_files: bool,
 ) -> List[pd.DataFrame]:
+    """Compute all rows with session information for a given subject.
+    This will be concatenated with information from the participants TSV file
+    to build a full dataframe row with all relevant information.
+    This function will try to incorporate data from the sessions and scans
+    if available.
+    """
     from ..pipeline_handling import DatasetError
 
     rows = []
@@ -220,12 +231,15 @@ def _compute_session_rows_for_subject_with_session_files(
         row_scans_df = _get_row_scan_df(scan_path, ignore_scan_files)
         row_df = pd.concat([row_session_df, row_scans_df], axis=1)
         rows.append(row_df.loc[:, ~row_df.columns.duplicated(keep="last")])
+
     return rows
 
 
 def _get_row_scan_df(scan_path: Path, ignore_scan_files: bool) -> pd.DataFrame:
-    import json
-
+    """Return a dataframe for all scans associated with a given subject and session.
+    The scan data come from the scan TSV file. If it doesn't exist, an empty dataframe
+    is returned.
+    """
     row_scans_df = pd.DataFrame()
     if ignore_scan_files or not scan_path.is_file():
         return row_scans_df
@@ -243,16 +257,31 @@ def _get_row_scan_df(scan_path: Path, ignore_scan_files: bool) -> pd.DataFrame:
                 new_col_name = f"{modality}_{col}"
                 scans_dict.update({new_col_name: value})
         json_path = scan_path.parent / f"{filepath.split('.')[0]}.json"
-        if json_path.exists():
-            with open(json_path, "r") as f:
-                json_dict = json.load(f)
-            for key, value in json_dict.items():
-                new_col_name = f"{modality}_{key}"
-                scans_dict.update({new_col_name: value})
+        scans_dict = _add_metadata_from_json(json_path, scans_dict, modality)
     scans_dict = {str(key): str(value) for key, value in scans_dict.items()}
     row_scans_df = pd.DataFrame(scans_dict, index=[0])
 
     return row_scans_df
+
+
+def _add_metadata_from_json(json_path: Path, scans_dict: dict, modality: str) -> dict:
+    """Add metadata from the provided JSON sidecar file to the scan dictionary."""
+    import json
+    import warnings
+
+    if json_path.exists():
+        try:
+            with open(json_path, "r") as f:
+                json_dict = json.load(f)
+        except json.JSONDecodeError as e:
+            warnings.warn(
+                f"Couldn't parse the JSON file {json_path}. Ignoring metadata.\nJson error is:\n{e}"
+            )
+            json_dict = {}
+        for key, value in json_dict.items():
+            new_col_name = f"{modality}_{key}"
+            scans_dict.update({new_col_name: value})
+    return scans_dict
 
 
 def _post_process_merge_file_from_bids(merged_df: pd.DataFrame) -> pd.DataFrame:
