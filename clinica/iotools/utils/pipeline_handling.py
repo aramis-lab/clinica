@@ -1,41 +1,54 @@
 """Methods to find information in the different pipelines of Clinica."""
 import functools
-import os
+from enum import Enum
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 import pandas as pd
 
 
-def _get_atlas_name(atlas_path: Path, pipeline: str) -> str:
-    """Helper function for _extract_metrics_from_pipeline."""
-    if pipeline == "dwi_dti":
-        splitter = "_dwi_space-"
-    elif pipeline in ("t1_freesurfer_longitudinal", "t1-freesurfer"):
-        splitter = "_parcellation-"
-    elif pipeline in ("t1-volume", "pet-volume"):
-        splitter = "_space-"
-    else:
-        raise ValueError(f"Not supported pipeline {pipeline}.")
-    if splitter in atlas_path.stem:
-        try:
-            return atlas_path.stem.split(splitter)[-1].split("_")[0]
-        except Exception:
-            pass
-    raise ValueError(
-        f"Unable to infer the atlas name from {atlas_path} for pipeline {pipeline}."
-    )
+class PipelineNameForMetricExtraction(str, Enum):
+    """Pipelines for which a metric extractor has been implemented."""
+
+    T1_VOLUME = "t1-volume"
+    PET_VOLUME = "pet-volume"
+    T1_FREESURFER = "t1-freesurfer"
+    T1_FREESURFER_LONGI = "t1-freesurfer-longitudinal"
+    DWI_DTI = "dwi-dti"
 
 
-def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
-    """Helper function for _extract_metrics_from_pipeline.
-    Returns the path to the modality of interest depending
-    on the pipeline considered.
-    """
-    if pipeline == "dwi_dti":
+def _get_atlas_name(atlas_path: Path, pipeline: PipelineNameForMetricExtraction) -> str:
+    """Return the atlas name, inferred from the atlas_path, for a given pipeline."""
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
+        return _infer_atlas_name("_dwi_space-", atlas_path)
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_FREESURFER_LONGI,
+        PipelineNameForMetricExtraction.T1_FREESURFER,
+    ):
+        return _infer_atlas_name("_parcellation-", atlas_path)
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ):
+        return _infer_atlas_name("_space-", atlas_path)
+
+
+def _infer_atlas_name(splitter: str, atlas_path: Path) -> str:
+    try:
+        assert splitter in atlas_path.stem
+        return atlas_path.stem.split(splitter)[-1].split("_")[0]
+    except Exception:
+        raise ValueError(f"Unable to infer the atlas name from {atlas_path}.")
+
+
+def _get_mod_path(
+    ses_path: Path, pipeline: PipelineNameForMetricExtraction
+) -> Optional[Path]:
+    """Returns the path to the modality of interest depending on the pipeline considered."""
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
         return ses_path / "dwi" / "dti_based_processing" / "atlas_statistics"
-    if pipeline == "t1_freesurfer_longitudinal":
+    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER_LONGI:
         mod_path = ses_path / "t1"
         long_ids = list(mod_path.glob("long*"))
         if len(long_ids) == 0:
@@ -46,32 +59,33 @@ def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
             / "freesurfer_longitudinal"
             / "regional_measures"
         )
-    if pipeline == "t1-freesurfer":
+    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER:
         return ses_path / "t1" / "freesurfer_cross_sectional" / "regional_measures"
-    if pipeline == "t1-volume":
+    if pipeline == PipelineNameForMetricExtraction.T1_VOLUME:
         return ses_path / "t1" / "spm" / "dartel"
-    if pipeline == "pet-volume":
+    if pipeline == PipelineNameForMetricExtraction.PET_VOLUME:
         return ses_path / "pet" / "preprocessing"
-    raise ValueError(f"Not supported pipeline {pipeline}.")
 
 
 def _get_label_list(
-    atlas_path: Path, metric: str, pipeline: str, group: str
+    atlas_path: Path, metric: str, pipeline: PipelineNameForMetricExtraction, group: str
 ) -> List[str]:
-    """Helper function for _extract_metrics_from_pipeline.
-    Returns the list of labels to use in the session df depending on the
+    """Returns the list of labels to use in the session df depending on the
     pipeline, the atlas, and the metric considered.
     """
     from clinica.iotools.converter_utils import replace_sequence_chars
 
     atlas_name = _get_atlas_name(atlas_path, pipeline)
     atlas_df = pd.read_csv(atlas_path, sep="\t")
-    if pipeline == "t1-freesurfer":
+    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER:
         return [
             f"t1-freesurfer_atlas-{atlas_name}_ROI-{replace_sequence_chars(roi_name)}_thickness"
             for roi_name in atlas_df.label_name.values
         ]
-    if pipeline in ("t1-volume", "pet-volume"):
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ):
         additional_desc = ""
         if "trc" in str(atlas_path):
             tracer = str(atlas_path).split("_trc-")[1].split("_")[0]
@@ -82,13 +96,11 @@ def _get_label_list(
             f"{pipeline}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
             for roi_name in atlas_df.label_name.values
         ]
-    if pipeline == "dwi_dti":
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
         prefix = "dwi-dti_"
         metric = metric.rstrip("_statistics")
-    elif pipeline == "t1-freesurfer_longitudinal":
-        prefix = "t1-fs-long_"
     else:
-        raise ValueError(f"Not supported pipeline {pipeline}.")
+        prefix = "t1-fs-long_"
     return [
         prefix + metric + "_atlas-" + atlas_name + "_" + x
         for x in atlas_df.label_name.values
@@ -97,17 +109,17 @@ def _get_label_list(
 
 def _skip_atlas(
     atlas_path: Path,
-    pipeline: str,
+    pipeline: PipelineNameForMetricExtraction,
     pvc_restriction: Optional[bool] = None,
     tracers_selection: Optional[List[str]] = None,
 ) -> bool:
-    """Helper function for _extract_metrics_from_pipeline.
-    Returns whether the atlas provided through its path should be
-    skipped for the provided pipeline.
-    """
-    if pipeline == "t1-freesurfer_longitudinal":
+    """Returns whether the atlas provided through its path should be skipped for the provided pipeline."""
+    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER_LONGI:
         return "-wm_" in str(atlas_path) or "-ba_" in str(atlas_path.stem)
-    if pipeline in ("t1-volume", "pet-volume"):
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ):
         skip = []
         if pvc_restriction is not None:
             if pvc_restriction:
@@ -126,7 +138,7 @@ def _extract_metrics_from_pipeline(
     caps_dir: PathLike,
     df: pd.DataFrame,
     metrics: List[str],
-    pipeline: str,
+    pipeline: PipelineNameForMetricExtraction,
     atlas_selection: Optional[List[str]] = None,
     group_selection: Optional[List[str]] = None,
     pvc_restriction: Optional[bool] = None,
@@ -147,7 +159,7 @@ def _extract_metrics_from_pipeline(
     metrics : list of str
         List of metrics to extract from the pipeline's caps folder.
 
-    pipeline : str
+    pipeline : PipelineNameForMetricExtraction
         Name of the pipeline for which to extract information.
 
     atlas_selection : list of str, optional
@@ -273,39 +285,57 @@ def _extract_metrics_from_pipeline(
     return final_df, summary_df
 
 
-dwi_dti_pipeline = functools.partial(
+extract_metrics_from_dwi_dti = functools.partial(
     _extract_metrics_from_pipeline,
     metrics=["FA_statistics", "MD_statistics", "RD_statistics", "AD_statistics"],
-    pipeline="dwi_dti",
+    pipeline=PipelineNameForMetricExtraction.DWI_DTI,
     group_selection=[""],
 )
 
 
-t1_freesurfer_longitudinal_pipeline = functools.partial(
+extract_metrics_from_t1_freesurfer_longitudinal = functools.partial(
     _extract_metrics_from_pipeline,
     metrics=["volume", "thickness", "segmentationVolumes"],
-    pipeline="t1_freesurfer_longitudinal",
+    pipeline=PipelineNameForMetricExtraction.T1_FREESURFER_LONGI,
     group_selection=[""],
 )
 
-t1_freesurfer_pipeline = functools.partial(
+extract_metrics_from_t1_freesurfer = functools.partial(
     _extract_metrics_from_pipeline,
     metrics=["thickness", "segmentationVolumes"],
-    pipeline="t1-freesurfer",
+    pipeline=PipelineNameForMetricExtraction.T1_FREESURFER,
     group_selection=[""],
 )
 
-t1_volume_pipeline = functools.partial(
+extract_metrics_from_t1_volume = functools.partial(
     _extract_metrics_from_pipeline,
     metrics=["statistics"],
-    pipeline="t1-volume",
+    pipeline=PipelineNameForMetricExtraction.T1_VOLUME,
 )
 
-pet_volume_pipeline = functools.partial(
+extract_metrics_from_pet_volume = functools.partial(
     _extract_metrics_from_pipeline,
     metrics=["statistics"],
-    pipeline="pet-volume",
+    pipeline=PipelineNameForMetricExtraction.PET_VOLUME,
 )
+
+
+def pipeline_metric_extractor_factory(
+    name: Union[str, PipelineNameForMetricExtraction],
+) -> Callable:
+    """Factory returning a metric extractor given its name."""
+    if isinstance(name, str):
+        name = PipelineNameForMetricExtraction(name)
+    if name == PipelineNameForMetricExtraction.T1_VOLUME:
+        return extract_metrics_from_t1_volume
+    if name == PipelineNameForMetricExtraction.PET_VOLUME:
+        return extract_metrics_from_pet_volume
+    if name == PipelineNameForMetricExtraction.T1_FREESURFER:
+        return extract_metrics_from_t1_freesurfer
+    if name == PipelineNameForMetricExtraction.T1_FREESURFER_LONGI:
+        return extract_metrics_from_t1_freesurfer_longitudinal
+    if name == PipelineNameForMetricExtraction.DWI_DTI:
+        return extract_metrics_from_dwi_dti
 
 
 def generate_summary(

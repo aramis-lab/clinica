@@ -305,37 +305,22 @@ def _add_data_to_merge_file_from_caps(
     from clinica.utils.stream import cprint
 
     from ..pipeline_handling import (
-        dwi_dti_pipeline,
-        pet_volume_pipeline,
-        t1_freesurfer_longitudinal_pipeline,
-        t1_freesurfer_pipeline,
-        t1_volume_pipeline,
+        PipelineNameForMetricExtraction,
+        pipeline_metric_extractor_factory,
     )
 
-    pipeline_options = {
-        "t1-volume": t1_volume_pipeline,
-        "pet-volume": pet_volume_pipeline,
-        "t1-freesurfer": t1_freesurfer_pipeline,
-        "t1-freesurfer-longitudinal": t1_freesurfer_longitudinal_pipeline,
-        "dwi-dti": dwi_dti_pipeline,
-    }
     merged_summary_df = pd.DataFrame()
     if "group_selection" in kwargs and kwargs["group_selection"] is None:
         kwargs.pop("group_selection")
-    if not pipelines:
-        for pipeline_name, pipeline_fn in pipeline_options.items():
-            cprint(f"Extracting from CAPS pipeline output: {pipeline_name}...")
-            merged_df, summary_df = pipeline_fn(caps_dir, merged_df, **kwargs)
-            if summary_df is not None and not summary_df.empty:
-                merged_summary_df = pd.concat([merged_summary_df, summary_df])
-            if summary_df is None or summary_df.empty:
-                cprint(f"{pipeline_name} outputs were not found in the CAPS folder.")
-    else:
-        for pipeline in pipelines:
-            merged_df, summary_df = pipeline_options[pipeline](
-                caps_dir, merged_df, **kwargs
-            )
+    pipelines = pipelines or PipelineNameForMetricExtraction
+    for pipeline in pipelines:
+        metric_extractor = pipeline_metric_extractor_factory(pipeline)
+        cprint(f"Extracting from CAPS pipeline output: {pipeline}...", lvl="info")
+        merged_df, summary_df = metric_extractor(caps_dir, merged_df, **kwargs)
+        if summary_df is not None and not summary_df.empty:
             merged_summary_df = pd.concat([merged_summary_df, summary_df])
+        if summary_df is None or summary_df.empty:
+            cprint(f"{pipeline} outputs were not found in the CAPS folder.", lvl="info")
 
     return _post_process_merged_df_from_caps(merged_df, merged_summary_df)
 

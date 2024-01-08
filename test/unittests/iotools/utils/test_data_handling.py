@@ -450,3 +450,45 @@ def test_post_process_merge_file_from_bids_number_rounding():
         }
     )
     assert_frame_equal(_post_process_merge_file_from_bids(df), expected)
+
+
+def test_add_data_to_merge_file_from_caps_wrong_handler(tmp_path):
+    from clinica.iotools.utils.data_handling._merging import (
+        _add_data_to_merge_file_from_caps,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="'foo' is not a valid PipelineNameForMetricExtraction",
+    ):
+        _add_data_to_merge_file_from_caps(tmp_path, pd.DataFrame(), pipelines=["foo"])
+
+
+def test_add_data_to_merge_file_from_caps_empty_pipeline(tmp_path):
+    from clinica.iotools.utils.data_handling._merging import (
+        _add_data_to_merge_file_from_caps,
+    )
+
+    df = pd.DataFrame(
+        {
+            "participant_id": [
+                "sub-01",
+                "sub-01",
+                "sub-02",
+            ],
+            "session_id": [
+                "ses-M000",
+                "ses-M006",
+                "ses-M000",
+            ],
+        }
+    )
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=(
+            "No outputs were found for any pipeline in the CAPS folder. "
+            "The output only contains BIDS information."
+        ),
+    ):
+        _add_data_to_merge_file_from_caps(tmp_path, df, pipelines=[])
