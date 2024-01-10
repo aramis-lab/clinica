@@ -1,7 +1,7 @@
 # Project information
 site_name: Clinica Documentation
 site_author: Clinica contributors
-site_url: https://aramislab.paris.inria.fr/clinica/docs/public
+site_url: https://aramislab.paris.inria.fr/clinica/docs/public/dev/
 site_description: >-
   Software platform for clinical neuroimaging studies
 
