@@ -11,22 +11,80 @@ not_truth = operator.not_
 
 
 @pytest.fixture
-def atlas_path(tmp_path) -> Path:
-    filename = "sub-01_ses-M000_T1w_space-AAL2_map-graymatter_statistics.tsv"
-    return (
-        tmp_path / "t1" / "spm" / "dartel" / "group-foo" / "atlas_statistics" / filename
-    )
+def atlas_path(tmp_path, pipeline: PipelineNameForMetricExtraction) -> Path:
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ):
+        filename = "sub-01_ses-M000_T1w_space-AAL2_map-graymatter_statistics.tsv"
+        return (
+            tmp_path
+            / "t1"
+            / "spm"
+            / "dartel"
+            / "group-foo"
+            / "atlas_statistics"
+            / filename
+        )
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
+        filename = "sub-01_ses-M000_dwi_space-foobar.tsv"
+        return tmp_path / "dwi" / filename
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_FREESURFER_LONGI,
+        PipelineNameForMetricExtraction.T1_FREESURFER,
+    ):
+        filename = "sub-01_ses-M000_parcellation-foobaz.tsv"
+        return tmp_path / "freesurfer" / filename
 
 
-def test_get_atlas_name(atlas_path):
+@pytest.mark.parametrize(
+    "pipeline,name",
+    [
+        (PipelineNameForMetricExtraction.T1_VOLUME, "AAL2"),
+        (PipelineNameForMetricExtraction.PET_VOLUME, "AAL2"),
+        (PipelineNameForMetricExtraction.DWI_DTI, "foobar"),
+        (PipelineNameForMetricExtraction.T1_FREESURFER_LONGI, "foobaz"),
+        (PipelineNameForMetricExtraction.T1_FREESURFER, "foobaz"),
+    ],
+)
+def test_get_atlas_name(atlas_path, pipeline, name):
     from clinica.iotools.utils.pipeline_handling import _get_atlas_name
 
-    assert (
-        _get_atlas_name(atlas_path, PipelineNameForMetricExtraction.T1_VOLUME) == "AAL2"
-    )
+    assert _get_atlas_name(atlas_path, pipeline) == name
 
 
-def test_get_atlas_name_error(atlas_path):
+@pytest.fixture
+def wrong_atlas_path(tmp_path, pipeline: PipelineNameForMetricExtraction) -> Path:
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ):
+        filename = (
+            "sub-01_ses-M000_T1w_spaaaacccceee-AAL2_map-graymatter_statistics.tsv"
+        )
+        return (
+            tmp_path
+            / "t1"
+            / "spm"
+            / "dartel"
+            / "group-foo"
+            / "atlas_statistics"
+            / filename
+        )
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
+        filename = "sub-01_ses-M000_dwiii_space-foobar.tsv"
+        return tmp_path / "dwi" / filename
+
+
+@pytest.mark.parametrize(
+    "pipeline",
+    [
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+        PipelineNameForMetricExtraction.DWI_DTI,
+    ],
+)
+def test_get_atlas_name_error(wrong_atlas_path, pipeline):
     from clinica.iotools.utils.pipeline_handling import _get_atlas_name
 
     with pytest.raises(
@@ -51,43 +109,41 @@ def test_get_atlas_name_error(atlas_path):
         (PipelineNameForMetricExtraction.PET_VOLUME, ["pet", "preprocessing"]),
     ],
 )
-def test_get_mod_path(tmp_path, pipeline, expected_path):
+def test_get_modality_path(tmp_path, pipeline, expected_path):
     from functools import reduce
 
-    from clinica.iotools.utils.pipeline_handling import _get_mod_path
+    from clinica.iotools.utils.pipeline_handling import _get_modality_path
 
-    assert _get_mod_path(tmp_path, pipeline) == reduce(
+    assert _get_modality_path(tmp_path, pipeline) == reduce(
         lambda x, y: x / y, [tmp_path] + expected_path
     )
 
 
-def test_get_mod_longitudinal(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _get_mod_path
+def test_get_modality_path_longitudinal(tmp_path):
+    from clinica.iotools.utils.pipeline_handling import _get_modality_path
 
     assert (
-        _get_mod_path(tmp_path, PipelineNameForMetricExtraction.T1_FREESURFER_LONGI)
+        _get_modality_path(
+            tmp_path, PipelineNameForMetricExtraction.T1_FREESURFER_LONGI
+        )
         is None
     )
     (tmp_path / "t1").mkdir()
     (tmp_path / "t1" / "longfoo").mkdir()
     assert (
-        _get_mod_path(tmp_path, PipelineNameForMetricExtraction.T1_FREESURFER_LONGI)
+        _get_modality_path(
+            tmp_path, PipelineNameForMetricExtraction.T1_FREESURFER_LONGI
+        )
         == tmp_path / "t1" / "longfoo" / "freesurfer_longitudinal" / "regional_measures"
     )
 
 
-@pytest.mark.parametrize(
-    "pipeline",
-    [
-        PipelineNameForMetricExtraction.T1_FREESURFER_LONGI,
-        PipelineNameForMetricExtraction.T1_VOLUME,
-        PipelineNameForMetricExtraction.PET_VOLUME,
-    ],
-)
-def test_skip_atlas_default(tmp_path, pipeline):
+@pytest.mark.parametrize("pipeline", PipelineNameForMetricExtraction)
+def test_skip_atlas_non_existing_file(tmp_path, pipeline):
     from clinica.iotools.utils.pipeline_handling import _skip_atlas
 
-    assert not _skip_atlas(tmp_path, pipeline)
+    # assert _skip_atlas(tmp_path, pipeline)
+    assert _skip_atlas(tmp_path / "foo.tsv", pipeline)
 
 
 @pytest.mark.parametrize("txt", ["-wm_", "-ba_"])
@@ -103,7 +159,7 @@ def test_skip_atlas_longitudinal(tmp_path, txt):
 
 @pytest.fixture
 def expected_operator_pvc(atlas_path, pvc_restriction):
-    if atlas_path == "stats.tsv":
+    if atlas_path == "sub-01_ses-M000_space-foobar_stats.tsv":
         if pvc_restriction:
             return truth
         return not_truth
@@ -119,13 +175,17 @@ def expected_operator_pvc(atlas_path, pvc_restriction):
         PipelineNameForMetricExtraction.PET_VOLUME,
     ],
 )
-@pytest.mark.parametrize("atlas_path", ["stats.tsv", "pvc-rbv_stats.tsv"])
+@pytest.mark.parametrize(
+    "atlas_path",
+    ["sub-01_ses-M000_space-foobar_stats.tsv", "pvc-rbv_space-foo_stats.tsv"],
+)
 @pytest.mark.parametrize("pvc_restriction", [True, False])
 def test_skip_atlas_volume_pvc(
     tmp_path, pipeline, atlas_path, pvc_restriction, expected_operator_pvc
 ):
     from clinica.iotools.utils.pipeline_handling import _skip_atlas
 
+    (tmp_path / atlas_path).touch()
     assert expected_operator_pvc(
         _skip_atlas(tmp_path / atlas_path, pipeline, pvc_restriction=pvc_restriction)
     )
@@ -150,10 +210,13 @@ def test_skip_atlas_volume_tracers(tmp_path, pipeline, tracers):
 @pytest.fixture
 def expected_operator_volume(atlas_path, pvc_restriction):
     if pvc_restriction:
-        if atlas_path == "trc-fdg_stats.tsv":
+        if atlas_path == "sub-01_ses-M000_space-bar_trc-fdg_stats.tsv":
             return truth
         return not_truth
-    if pvc_restriction is False and atlas_path == "trc-fdg_pvc-rbv_stats.tsv":
+    if (
+        pvc_restriction is False
+        and atlas_path == "sub-01_ses-M000_space-foo_trc-fdg_pvc-rbv_stats.tsv"
+    ):
         return truth
     return not_truth
 
@@ -166,7 +229,11 @@ def expected_operator_volume(atlas_path, pvc_restriction):
     ],
 )
 @pytest.mark.parametrize(
-    "atlas_path", ["trc-fdg_pvc-rbv_stats.tsv", "trc-fdg_stats.tsv"]
+    "atlas_path",
+    [
+        "sub-01_ses-M000_space-foo_trc-fdg_pvc-rbv_stats.tsv",
+        "sub-01_ses-M000_space-bar_trc-fdg_stats.tsv",
+    ],
 )
 @pytest.mark.parametrize("tracers", [["fdg"], ["trc2", "fdg"]])
 @pytest.mark.parametrize("pvc_restriction", [None, True, False])
@@ -175,6 +242,7 @@ def test_skip_atlas_volume(
 ):
     from clinica.iotools.utils.pipeline_handling import _skip_atlas
 
+    (tmp_path / atlas_path).touch()
     assert expected_operator_volume(
         _skip_atlas(
             tmp_path / atlas_path,
