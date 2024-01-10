@@ -1,7 +1,7 @@
 # Project information
 site_name: Clinica Documentation
 site_author: Clinica contributors
-site_url: https://aramislab.paris.inria.fr/clinica/docs/public
+site_url: https://aramislab.paris.inria.fr/clinica/docs/public/dev/
 site_description: >-
   Software platform for clinical neuroimaging studies
 
@@ -11,7 +11,7 @@ repo_url: https://github.com/aramis-lab/clinica
 #edit_uri: master/edit/doc
 
 # Copyright
-copyright: Copyright &copy; 2016-2021 Clinica contributors
+copyright: Copyright &copy; 2016-2024 Clinica contributors
 
 # Configuration
 theme:
@@ -26,7 +26,7 @@ theme:
 # Version panel
 extra_javascript:
   - 'https://code.jquery.com/jquery-3.3.1.min.js'
-      
+
 # Customization
 extra_css:
   - css/clinica.css
@@ -113,6 +113,7 @@ nav:
     - merge-tsv: IO#merge-tsv-gather-bids-and-caps-data-into-a-single-tsv-file
     - center-nifti: IO#center-nifti-center-the-nifti-files-of-a-bids-directory
   - Presentations & demos:
+    - NOW 2023: ClinicaConferences#neuro-openscience-workshop-2023
     - NOW 2019: ClinicaConferences#neuro-openscience-workshop-2019
     - OHBM 2018: ClinicaConferences#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018
   - What's new: CHANGELOG.md
