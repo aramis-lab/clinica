@@ -1,6 +1,6 @@
 """Methods to find information in the different pipelines of Clinica."""
-import functools
 from enum import Enum
+from functools import partial, reduce
 from os import PathLike
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple, Union
@@ -16,122 +16,6 @@ class PipelineNameForMetricExtraction(str, Enum):
     T1_FREESURFER = "t1-freesurfer"
     T1_FREESURFER_LONGI = "t1-freesurfer-longitudinal"
     DWI_DTI = "dwi-dti"
-
-
-def _get_atlas_name(atlas_path: Path, pipeline: PipelineNameForMetricExtraction) -> str:
-    """Return the atlas name, inferred from the atlas_path, for a given pipeline."""
-    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
-        return _infer_atlas_name("_dwi_space-", atlas_path)
-    if pipeline in (
-        PipelineNameForMetricExtraction.T1_FREESURFER_LONGI,
-        PipelineNameForMetricExtraction.T1_FREESURFER,
-    ):
-        return _infer_atlas_name("_parcellation-", atlas_path)
-    if pipeline in (
-        PipelineNameForMetricExtraction.T1_VOLUME,
-        PipelineNameForMetricExtraction.PET_VOLUME,
-    ):
-        return _infer_atlas_name("_space-", atlas_path)
-
-
-def _infer_atlas_name(splitter: str, atlas_path: Path) -> str:
-    try:
-        assert splitter in atlas_path.stem
-        return atlas_path.stem.split(splitter)[-1].split("_")[0]
-    except Exception:
-        raise ValueError(f"Unable to infer the atlas name from {atlas_path}.")
-
-
-def _get_mod_path(
-    ses_path: Path, pipeline: PipelineNameForMetricExtraction
-) -> Optional[Path]:
-    """Returns the path to the modality of interest depending on the pipeline considered."""
-    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
-        return ses_path / "dwi" / "dti_based_processing" / "atlas_statistics"
-    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER_LONGI:
-        mod_path = ses_path / "t1"
-        long_ids = list(mod_path.glob("long*"))
-        if len(long_ids) == 0:
-            return None
-        return (
-            mod_path
-            / long_ids[0].name
-            / "freesurfer_longitudinal"
-            / "regional_measures"
-        )
-    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER:
-        return ses_path / "t1" / "freesurfer_cross_sectional" / "regional_measures"
-    if pipeline == PipelineNameForMetricExtraction.T1_VOLUME:
-        return ses_path / "t1" / "spm" / "dartel"
-    if pipeline == PipelineNameForMetricExtraction.PET_VOLUME:
-        return ses_path / "pet" / "preprocessing"
-
-
-def _get_label_list(
-    atlas_path: Path, metric: str, pipeline: PipelineNameForMetricExtraction, group: str
-) -> List[str]:
-    """Returns the list of labels to use in the session df depending on the
-    pipeline, the atlas, and the metric considered.
-    """
-    from clinica.iotools.converter_utils import replace_sequence_chars
-
-    atlas_name = _get_atlas_name(atlas_path, pipeline)
-    atlas_df = pd.read_csv(atlas_path, sep="\t")
-    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER:
-        return [
-            f"t1-freesurfer_atlas-{atlas_name}_ROI-{replace_sequence_chars(roi_name)}_thickness"
-            for roi_name in atlas_df.label_name.values
-        ]
-    if pipeline in (
-        PipelineNameForMetricExtraction.T1_VOLUME,
-        PipelineNameForMetricExtraction.PET_VOLUME,
-    ):
-        additional_desc = ""
-        if "trc" in str(atlas_path):
-            tracer = str(atlas_path).split("_trc-")[1].split("_")[0]
-            additional_desc += f"_trc-{tracer}"
-        if "pvc-rbv" in str(atlas_path):
-            additional_desc += f"_pvc-rbv"
-        return [
-            f"{pipeline}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
-            for roi_name in atlas_df.label_name.values
-        ]
-    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
-        prefix = "dwi-dti_"
-        metric = metric.rstrip("_statistics")
-    else:
-        prefix = "t1-fs-long_"
-    return [
-        prefix + metric + "_atlas-" + atlas_name + "_" + x
-        for x in atlas_df.label_name.values
-    ]
-
-
-def _skip_atlas(
-    atlas_path: Path,
-    pipeline: PipelineNameForMetricExtraction,
-    pvc_restriction: Optional[bool] = None,
-    tracers_selection: Optional[List[str]] = None,
-) -> bool:
-    """Returns whether the atlas provided through its path should be skipped for the provided pipeline."""
-    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER_LONGI:
-        return "-wm_" in str(atlas_path) or "-ba_" in str(atlas_path.stem)
-    if pipeline in (
-        PipelineNameForMetricExtraction.T1_VOLUME,
-        PipelineNameForMetricExtraction.PET_VOLUME,
-    ):
-        skip = []
-        if pvc_restriction is not None:
-            if pvc_restriction:
-                skip.append("pvc-rbv" not in str(atlas_path))
-            else:
-                skip.append("pvc-rbv" in str(atlas_path))
-        if tracers_selection:
-            skip.append(
-                all([tracer not in str(atlas_path) for tracer in tracers_selection])
-            )
-        return any(skip)
-    return False
 
 
 def _extract_metrics_from_pipeline(
@@ -188,8 +72,6 @@ def _extract_metrics_from_pipeline(
     summary_df : pd.DataFrame
         Summary DataFrame generated by function `generate_summary`.
     """
-    from clinica.utils.stream import cprint
-
     caps_dir = Path(caps_dir)
     if df.index.names != ["participant_id", "session_id"]:
         try:
@@ -198,94 +80,30 @@ def _extract_metrics_from_pipeline(
             )
         except KeyError:
             raise KeyError("Fields `participant_id` and `session_id` are required.")
-
-    ignore_groups = group_selection == [""]
-    if not ignore_groups:
-        if group_selection is None:
-            try:
-                group_selection = [f.name for f in (caps_dir / "groups").iterdir()]
-            except FileNotFoundError:
-                return df, None
-        else:
-            group_selection = [f"group-{group}" for group in group_selection]
-    subjects_dir = caps_dir / "subjects"
-    records = []
-    for participant_id, session_id in df.index.values:
-        ses_path = subjects_dir / participant_id / session_id
-        mod_path = _get_mod_path(ses_path, pipeline)
-        records.append({"participant_id": participant_id, "session_id": session_id})
-        if mod_path is None:
-            cprint(
-                f"Could not find a longitudinal dataset for participant {participant_id} {session_id}",
-                lvl="warning",
-            )
-            continue
-        if mod_path.exists():
-            for group in group_selection:
-                group_path = mod_path / group
-                if group_path.exists():
-                    for metric in metrics:
-                        atlas_paths = sorted(
-                            group_path.glob(
-                                f"{participant_id}_{session_id}_*{metric}.tsv"
-                            )
-                        )
-                        if len(atlas_paths) == 0:
-                            atlas_paths = sorted(
-                                (group_path / "atlas_statistics").glob(
-                                    f"{participant_id}_{session_id}_*{metric}.tsv"
-                                )
-                            )
-                        for atlas_path in atlas_paths:
-                            if metric == "segmentationVolumes":
-                                from clinica.iotools.converter_utils import (
-                                    replace_sequence_chars,
-                                )
-
-                                atlas_df = pd.read_csv(atlas_path, sep="\t")
-                                label_list = [
-                                    f"t1-freesurfer_segmentation-volumes_ROI-{replace_sequence_chars(roi_name)}_volume"
-                                    for roi_name in atlas_df.label_name.values
-                                ]
-                                values = atlas_df["label_value"].to_numpy()
-                                for label, value in zip(label_list, values):
-                                    records[-1][label] = value
-                                continue
-                            if not _skip_atlas(
-                                atlas_path, pipeline, pvc_restriction, tracers_selection
-                            ):
-                                atlas_name = _get_atlas_name(atlas_path, pipeline)
-                                if atlas_path.exists():
-                                    if not (
-                                        atlas_selection
-                                        or (
-                                            atlas_selection
-                                            and atlas_name in atlas_selection
-                                        )
-                                    ):
-                                        atlas_df = pd.read_csv(atlas_path, sep="\t")
-                                        label_list = _get_label_list(
-                                            atlas_path, metric, pipeline, group
-                                        )
-                                        key = (
-                                            "label_value"
-                                            if "freesurfer" in pipeline
-                                            else "mean_scalar"
-                                        )
-                                        values = atlas_df[key].to_numpy()
-                                        for label, value in zip(label_list, values):
-                                            records[-1][label] = value
+    group_selection = _check_group_selection(caps_dir, group_selection)
+    records = _get_records(
+        caps_dir,
+        df,
+        pipeline,
+        metrics,
+        group_selection,
+        atlas_selection,
+        pvc_restriction,
+        tracers_selection,
+    )
     pipeline_df = pd.DataFrame.from_records(
         records, index=["participant_id", "session_id"]
     )
-    summary_df = generate_summary(pipeline_df, pipeline, ignore_groups=ignore_groups)
+    summary_df = _generate_summary(
+        pipeline_df, pipeline, ignore_groups=group_selection == [""]
+    )
     final_df = pd.concat([df, pipeline_df], axis=1)
     final_df.reset_index(inplace=True)
 
     return final_df, summary_df
 
 
-extract_metrics_from_dwi_dti = functools.partial(
+extract_metrics_from_dwi_dti = partial(
     _extract_metrics_from_pipeline,
     metrics=["FA_statistics", "MD_statistics", "RD_statistics", "AD_statistics"],
     pipeline=PipelineNameForMetricExtraction.DWI_DTI,
@@ -293,27 +111,27 @@ extract_metrics_from_dwi_dti = functools.partial(
 )
 
 
-extract_metrics_from_t1_freesurfer_longitudinal = functools.partial(
+extract_metrics_from_t1_freesurfer_longitudinal = partial(
     _extract_metrics_from_pipeline,
     metrics=["volume", "thickness", "segmentationVolumes"],
     pipeline=PipelineNameForMetricExtraction.T1_FREESURFER_LONGI,
     group_selection=[""],
 )
 
-extract_metrics_from_t1_freesurfer = functools.partial(
+extract_metrics_from_t1_freesurfer = partial(
     _extract_metrics_from_pipeline,
     metrics=["thickness", "segmentationVolumes"],
     pipeline=PipelineNameForMetricExtraction.T1_FREESURFER,
     group_selection=[""],
 )
 
-extract_metrics_from_t1_volume = functools.partial(
+extract_metrics_from_t1_volume = partial(
     _extract_metrics_from_pipeline,
     metrics=["statistics"],
     pipeline=PipelineNameForMetricExtraction.T1_VOLUME,
 )
 
-extract_metrics_from_pet_volume = functools.partial(
+extract_metrics_from_pet_volume = partial(
     _extract_metrics_from_pipeline,
     metrics=["statistics"],
     pipeline=PipelineNameForMetricExtraction.PET_VOLUME,
@@ -338,7 +156,276 @@ def pipeline_metric_extractor_factory(
         return extract_metrics_from_dwi_dti
 
 
-def generate_summary(
+def _check_group_selection(
+    caps_dir: Path, group_selection: Optional[List[str]] = None
+) -> List[str]:
+    if group_selection is None:
+        return [f.name for f in (caps_dir / "groups").iterdir()]
+    return [f"group-{group}" for group in group_selection]
+
+
+def _get_records(
+    caps_dir: Path,
+    df: pd.DataFrame,
+    pipeline: PipelineNameForMetricExtraction,
+    metrics: List[str],
+    group_selection: List[str],
+    atlas_selection: Optional[List[str]] = None,
+    pvc_restriction: Optional[bool] = None,
+    tracers_selection: Optional[List[str]] = None,
+) -> List[dict]:
+    """Returns a list of dictionaries corresponding to the dataframe rows of the pipeline dataframe."""
+    from clinica.utils.stream import cprint
+
+    subjects_dir = caps_dir / "subjects"
+    records = []
+    for participant_id, session_id in df.index.values:
+        mod_path = _get_modality_path(
+            subjects_dir / participant_id / session_id, pipeline
+        )
+        if mod_path is None:
+            cprint(
+                f"Could not find a longitudinal dataset for participant {participant_id} {session_id}",
+                lvl="warning",
+            )
+            continue
+        if not mod_path.exists():
+            continue
+        group_paths = [
+            mod_path / group for group in group_selection if (mod_path / group).exists()
+        ]
+        for group_path in group_paths:
+            for metric in metrics:
+                records.append(
+                    _get_single_record(
+                        group_path,
+                        metric,
+                        participant_id,
+                        session_id,
+                        pipeline,
+                        atlas_selection,
+                        pvc_restriction,
+                        tracers_selection,
+                    )
+                )
+    return records
+
+
+def _get_modality_path(
+    ses_path: Path, pipeline: PipelineNameForMetricExtraction
+) -> Optional[Path]:
+    """Returns the path to the modality of interest depending on the pipeline considered."""
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
+        return ses_path / "dwi" / "dti_based_processing" / "atlas_statistics"
+    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER_LONGI:
+        mod_path = ses_path / "t1"
+        long_ids = list(mod_path.glob("long*"))
+        if len(long_ids) == 0:
+            return None
+        return (
+            mod_path
+            / long_ids[0].name
+            / "freesurfer_longitudinal"
+            / "regional_measures"
+        )
+    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER:
+        return ses_path / "t1" / "freesurfer_cross_sectional" / "regional_measures"
+    if pipeline == PipelineNameForMetricExtraction.T1_VOLUME:
+        return ses_path / "t1" / "spm" / "dartel"
+    if pipeline == PipelineNameForMetricExtraction.PET_VOLUME:
+        return ses_path / "pet" / "preprocessing"
+
+
+def _get_single_record(
+    group_path: Path,
+    metric: str,
+    participant_id: str,
+    session_id: str,
+    pipeline: PipelineNameForMetricExtraction,
+    atlas_selection: Optional[List[str]] = None,
+    pvc_restriction: Optional[bool] = None,
+    tracers_selection: Optional[List[str]] = None,
+) -> dict:
+    """Get a single record (dataframe row) for a given participant, session, group, and metric."""
+    atlas_paths = _get_atlas_paths(group_path, participant_id, session_id, metric)
+    atlases = [
+        atlas_path
+        for atlas_path in atlas_paths
+        if not _skip_atlas(
+            atlas_path, pipeline, pvc_restriction, tracers_selection, atlas_selection
+        )
+    ]
+    return {
+        **{"participant_id": participant_id, "session_id": session_id},
+        **reduce(
+            lambda a, b: {**a, **b},
+            [
+                _get_records_for_atlas(atlas, pipeline, metric, group_path.name)
+                for atlas in atlases
+            ],
+        ),
+    }
+
+
+def _get_atlas_paths(
+    group_path: Path, participant_id: str, session_id: str, metric: str
+) -> List[Path]:
+    """Returns a list of paths to atlases within the provided group folder and
+    matching the provided participant, session, and metric.
+    """
+    if (
+        len(
+            paths := sorted(
+                group_path.glob(f"{participant_id}_{session_id}_*{metric}.tsv")
+            )
+        )
+        != 0
+    ):
+        return paths
+    return sorted(
+        (group_path / "atlas_statistics").glob(
+            f"{participant_id}_{session_id}_*{metric}.tsv"
+        )
+    )
+
+
+def _skip_atlas(
+    atlas_path: Path,
+    pipeline: PipelineNameForMetricExtraction,
+    pvc_restriction: Optional[bool] = None,
+    tracers_selection: Optional[List[str]] = None,
+    atlas_selection: Optional[List[str]] = None,
+) -> bool:
+    """Returns whether the atlas provided through its path should be skipped or not."""
+    if not atlas_path.exists():
+        return True
+    if _skip_atlas_based_on_pipeline(
+        atlas_path, pipeline, pvc_restriction, tracers_selection
+    ):
+        return True
+    return _skip_atlas_based_on_selection(atlas_path, pipeline, atlas_selection)
+
+
+def _skip_atlas_based_on_pipeline(
+    atlas_path: Path,
+    pipeline: PipelineNameForMetricExtraction,
+    pvc_restriction: Optional[bool] = None,
+    tracers_selection: Optional[List[str]] = None,
+) -> bool:
+    """Returns True if the atlas provided through its path should be skipped based on the pipeline name."""
+    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER_LONGI:
+        return "-wm_" in str(atlas_path) or "-ba_" in str(atlas_path.stem)
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ):
+        skip = []
+        if pvc_restriction is not None:
+            if pvc_restriction:
+                skip.append("pvc-rbv" not in str(atlas_path))
+            else:
+                skip.append("pvc-rbv" in str(atlas_path))
+        if tracers_selection:
+            skip.append(
+                all([tracer not in str(atlas_path) for tracer in tracers_selection])
+            )
+        return any(skip)
+    return False
+
+
+def _skip_atlas_based_on_selection(
+    atlas_path: Path,
+    pipeline: PipelineNameForMetricExtraction,
+    atlas_selection: Optional[List[str]] = None,
+) -> bool:
+    """Returns True if the atlas provided through its path should be skipped based on the user-provided selection."""
+    # try:
+    atlas_name = _get_atlas_name(atlas_path, pipeline)
+    # except ValueError:
+    #    return True
+    return atlas_selection is not None and atlas_name not in atlas_selection
+
+
+def _get_records_for_atlas(
+    atlas_path: Path,
+    pipeline: PipelineNameForMetricExtraction,
+    metric: str,
+    group: str,
+) -> dict:
+    atlas_df = pd.read_csv(atlas_path, sep="\t")
+    label_list = _get_label_list(atlas_path, metric, pipeline, group)
+    key = "label_value" if "freesurfer" in pipeline else "mean_scalar"
+    values = atlas_df[key].to_numpy()
+    return {label: value for label, value in zip(label_list, values)}
+
+
+def _get_label_list(
+    atlas_path: Path, metric: str, pipeline: PipelineNameForMetricExtraction, group: str
+) -> List[str]:
+    """Returns the list of labels to use in the session df depending on the
+    pipeline, the atlas, and the metric considered.
+    """
+    from clinica.iotools.converter_utils import (
+        replace_sequence_chars,
+    )
+
+    atlas_name = _get_atlas_name(atlas_path, pipeline)
+    atlas_df = pd.read_csv(atlas_path, sep="\t")
+    if pipeline == PipelineNameForMetricExtraction.T1_FREESURFER:
+        return [
+            f"t1-freesurfer_atlas-{atlas_name}_ROI-{replace_sequence_chars(roi_name)}_thickness"
+            for roi_name in atlas_df.label_name.values
+        ]
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ):
+        additional_desc = ""
+        if "trc" in str(atlas_path):
+            tracer = str(atlas_path).split("_trc-")[1].split("_")[0]
+            additional_desc += f"_trc-{tracer}"
+        if "pvc-rbv" in str(atlas_path):
+            additional_desc += f"_pvc-rbv"
+        return [
+            f"{pipeline}_{group}_atlas-{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
+            for roi_name in atlas_df.label_name.values
+        ]
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
+        prefix = "dwi-dti_"
+        metric = metric.rstrip("_statistics")
+    else:
+        prefix = "t1-fs-long_"
+    return [
+        prefix + metric + "_atlas-" + atlas_name + "_" + x
+        for x in atlas_df.label_name.values
+    ]
+
+
+def _get_atlas_name(atlas_path: Path, pipeline: PipelineNameForMetricExtraction) -> str:
+    """Return the atlas name, inferred from the atlas_path, for a given pipeline."""
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
+        return _infer_atlas_name("_dwi_space-", atlas_path)
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_FREESURFER_LONGI,
+        PipelineNameForMetricExtraction.T1_FREESURFER,
+    ):
+        return _infer_atlas_name("_parcellation-", atlas_path)
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ):
+        return _infer_atlas_name("_space-", atlas_path)
+
+
+def _infer_atlas_name(splitter: str, atlas_path: Path) -> str:
+    try:
+        assert splitter in atlas_path.stem
+        return atlas_path.stem.split(splitter)[-1].split("_")[0]
+    except Exception:
+        raise ValueError(f"Unable to infer the atlas name from {atlas_path}.")
+
+
+def _generate_summary(
     pipeline_df: pd.DataFrame, pipeline_name: str, ignore_groups: bool = False
 ):
     columns = [
