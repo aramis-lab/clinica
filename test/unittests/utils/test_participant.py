@@ -84,7 +84,7 @@ def test_get_subject_session_list_error(tmp_path):
         ({"sub-01": ["ses-M000"], "sub-03": []}, (["sub-01"], ["ses-M000"])),
         (
             {"sub-01": ["ses-M000"], "sub-03": ["ses-M000", "ses-M006"]},
-            (["sub-01", "sub-03", "sub-03"], ["ses-M000", "ses-M006", "ses-M000"]),
+            (["sub-01", "sub-03", "sub-03"], ["ses-M000", "ses-M000", "ses-M006"]),
         ),
     ],
 )
@@ -92,6 +92,10 @@ def test_get_subject_session_list(tmp_path, config, expected):
     from clinica.utils.participant import get_subject_session_list
     from clinica.utils.testing_utils import build_bids_directory
 
-    build_bids_directory(tmp_path, config)
-
-    assert get_subject_session_list(tmp_path) == expected
+    (tmp_path / "bids").mkdir()
+    build_bids_directory(tmp_path / "bids", config)
+    (tmp_path / "tsv").mkdir()
+    assert (
+        get_subject_session_list(tmp_path / "bids", tsv_dir=tmp_path / "tsv")
+        == expected
+    )

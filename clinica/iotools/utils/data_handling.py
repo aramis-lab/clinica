@@ -801,14 +801,14 @@ def create_subs_sess_list(
                 path.join(sub_path, subj_id + "_sessions.tsv"), sep="\t"
             )
             session_df.dropna(how="all", inplace=True)
-            session_list = list(session_df["session_id"].to_numpy())
+            session_list = sorted(list(session_df["session_id"].to_numpy()))
             for session in session_list:
                 subjs_sess_tsv.write(subj_id + "\t" + session + "\n")
 
         else:
             sess_list = glob(path.join(sub_path, "*ses-*"))
 
-            for ses_path in sess_list:
+            for ses_path in sorted(sess_list):
                 session_name = ses_path.split(os.sep)[-1]
                 subjs_sess_tsv.write(subj_id + "\t" + session_name + "\n")
 

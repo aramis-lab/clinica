@@ -5,8 +5,6 @@ See CAPS specifications for details about long ID.
 from os import PathLike
 from typing import List, Optional, Tuple
 
-from clinica.utils.filemanip import read_participant_tsv
-
 
 def get_unique_subjects(
     subjects: List[str], sessions: List[str]
@@ -165,6 +163,7 @@ def get_subject_session_list(
     from time import localtime, strftime, time
 
     from clinica.iotools.utils.data_handling import create_subs_sess_list
+    from clinica.utils.filemanip import read_participant_tsv
 
     if not subject_session_file:
         output_dir = Path(tsv_dir) if tsv_dir else Path(tempfile.mkdtemp())
