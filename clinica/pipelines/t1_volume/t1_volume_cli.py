@@ -82,7 +82,7 @@ def cli(
     )
 
     if not subjects_sessions_tsv:
-        session_ids, participant_ids = get_subject_session_list(
+        participant_ids, session_ids = get_subject_session_list(
             bids_directory, None, True, False
         )
         now = datetime.datetime.now().strftime("%H%M%S")

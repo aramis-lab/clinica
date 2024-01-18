@@ -198,7 +198,7 @@ class Pipeline(Workflow):
             check_bids_folder(self._bids_directory)
             input_dir = self._bids_directory
             is_bids_dir = True
-        self._sessions, self._subjects = get_subject_session_list(
+        self._subjects, self._sessions = get_subject_session_list(
             input_dir, tsv_file, is_bids_dir, False, base_dir
         )
 

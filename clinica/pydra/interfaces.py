@@ -41,7 +41,7 @@ class CAPSDataGrabber(IOBase):
     def _list_outputs(self):
         from clinica.utils.participant import get_subject_session_list
 
-        sessions, subjects = get_subject_session_list(
+        subjects, sessions = get_subject_session_list(
             self.inputs.base_dir,
             is_bids_dir=False,
         )

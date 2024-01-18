@@ -50,7 +50,7 @@ def cli(
     )
 
     if not subjects_sessions_tsv:
-        l_sess, l_part = get_subject_session_list(caps_directory, None, False, False)
+        l_part, l_sess = get_subject_session_list(caps_directory, None, False, False)
         l_long = get_participants_long_id(l_part, l_sess)
         now = datetime.datetime.now().strftime("%H%M%S")
         subjects_sessions_tsv = now + "_participants.tsv"
