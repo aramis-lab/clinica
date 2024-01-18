@@ -1,34 +1,26 @@
-name: Fast Non Regression Tests
+name: Freesurfer Anat Pipelines Tests
 
 on:
-  push:
-    branches: [dev]
-  pull_request:
-    branches: [dev]
+  schedule:
+    - cron: 0 20 * * 2 # every tuesday at 8pm
 
 permissions:
   contents: read
-
-concurrency:
-  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
-  cancel-in-progress: true
 
 env:
   POETRY_VERSION: '1.6.1'
   PYTHON_VERSION: '3.10'
 
 jobs:
-  test-non-regression-fast-MacOS:
+  test-pipelines-anat-freesurfer-MacOS:
     runs-on:
       - self-hosted
       - macOS
+    timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: false
-      - name: Run fast non regression tests
+      - name: Run tests for anat pipelines using freesurfer
         run: |
           make env.conda
           source ~/miniconda3/etc/profile.d/conda.sh
@@ -41,29 +33,26 @@ jobs:
           --working_directory=/Volumes/data/working_dir_mac \
           --input_data_directory=/Volumes/data_ci \
           --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_fast_mac.xml \
+          --junitxml=./test-reports/non_regression_anat_t1_freesurfer_mac.xml \
           --disable-warnings \
-          -n 4 \
-          --dist loadgroup \
-          -m "fast" \
-          --dist loadgroup \
-          ./nonregression/
+          ./nonregression/pipelines/anat/test_t1_freesurfer.py
 
-  test-non-regression-fast-Linux:
+  test-pipelines-anat-freesurfer-Linux:
     runs-on:
       - self-hosted
       - Linux
+    timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
         with:
           version: ${{ env.POETRY_VERSION }}
           virtualenvs-create: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: poetry
-      - name: Run fast non regression tests
+      - name: Run tests for anat pipelines using freesurfer
         run: |
           make env.conda
           source /builds/miniconda/etc/profile.d/conda.sh
@@ -76,10 +65,6 @@ jobs:
           --working_directory=/mnt/data/ci/working_dir_linux \
           --input_data_directory=/mnt/data_ci \
           --basetemp=/mnt/data/ci/tmp \
-          --junitxml=./test-reports/non_regression_fast_linux.xml \
+          --junitxml=./test-reports/non_regression_anat_t1_freesurfer_linux.xml \
           --disable-warnings \
-          -n 4 \
-          --dist loadgroup \
-          -m "fast" \
-          --dist loadgroup \
-          ./nonregression/
+          ./nonregression/pipelines/anat/test_t1_freesurfer.py

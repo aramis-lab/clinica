@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+env:
+  POETRY_VERSION: '1.6.1'
+  PYTHON_VERSION: '3.10'
+
 jobs:
   test-pipelines-anat-MacOS:
     runs-on:
@@ -16,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
-      - name: Run tests for anat pipelines
+      - name: Run tests for anat t1 linear pipelines
         run: |
           make env.conda
           source ~/miniconda3/etc/profile.d/conda.sh
@@ -29,9 +33,18 @@ jobs:
           --working_directory=/Volumes/data/working_dir_mac \
           --input_data_directory=/Volumes/data_ci \
           --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_anat_mac.xml \
+          --junitxml=./test-reports/non_regression_anat_t1_linear_mac.xml \
           --disable-warnings \
-          ./nonregression/pipelines/anat
+          ./nonregression/pipelines/anat/test_t1_linear.py
+      - name: Run tests for anat t1 volume pipelines
+        run: |
+          poetry run pytest --verbose \
+          --working_directory=/Volumes/data/working_dir_mac \
+          --input_data_directory=/Volumes/data_ci \
+          --basetemp=/Volumes/data/tmp \
+          --junitxml=./test-reports/non_regression_anat_t1_volume_mac.xml \
+          --disable-warnings \
+          ./nonregression/pipelines/anat/test_t1_volume.py
 
   test-pipelines-anat-Linux:
     runs-on:
@@ -41,7 +54,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
-      - name: Run tests for anat pipelines
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: false
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
+      - name: Run tests for anat t1 linear pipelines
         run: |
           make env.conda
           source /builds/miniconda/etc/profile.d/conda.sh
@@ -54,6 +74,15 @@ jobs:
           --working_directory=/mnt/data/ci/working_dir_linux \
           --input_data_directory=/mnt/data_ci \
           --basetemp=/mnt/data/ci/tmp \
-          --junitxml=./test-reports/non_regression_anat_linux.xml \
+          --junitxml=./test-reports/non_regression_anat_t1_linear_linux.xml \
           --disable-warnings \
-          ./nonregression/pipelines/anat
+          ./nonregression/pipelines/anat/test_t1_linear.py
+      - name: Run tests for anat t1 volume pipelines
+        run: |
+          poetry run pytest --verbose \
+          --working_directory=/mnt/data/ci/working_dir_linux \
+          --input_data_directory=/mnt/data_ci \
+          --basetemp=/mnt/data/ci/tmp \
+          --junitxml=./test-reports/non_regression_anat_t1_volume_linux.xml \
+          --disable-warnings \
+          ./nonregression/pipelines/anat/test_t1_volume.py
