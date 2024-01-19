@@ -72,6 +72,7 @@ def compute_flair_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     from os import path
 
     import pandas as pd
+    from clinica.utils.stream import cprint
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
@@ -94,9 +95,16 @@ def compute_flair_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     flair_dfs_list = []
 
     # Loading needed .csv files
-    adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-    adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-    adni_merge.columns = adni_merge.columns.str.strip('"')
+    # adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
+    # adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
+    # adni_merge.columns = adni_merge.columns.str.strip('"')
+    adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE2.csv"), sep=",", engine='python')
+    import time
+    cprint(
+        f"{adni_merge}."
+    )
+    print(adni_merge)
+    print('-----------FLAIR---------')
 
     mayo_mri_qc = pd.read_csv(
         path.join(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15.csv"),

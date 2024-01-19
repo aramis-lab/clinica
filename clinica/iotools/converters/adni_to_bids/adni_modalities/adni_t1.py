@@ -1,7 +1,7 @@
 """Module for converting T1 of ADNI."""
 from os import PathLike
 from typing import List, Optional
-
+import time
 
 def convert_adni_t1(
     source_dir: PathLike,
@@ -51,8 +51,15 @@ def convert_adni_t1(
     cprint(
         f"Calculating paths of T1 images. Output will be stored in {conversion_dir}."
     )
+    print("Source dir is :" + source_dir)
+    print("CSV dir is :" + csv_dir)
+    print("Subjects are:")
+    print(subjects)
+    print("Conversion dir is: conversion_dir")
     images = compute_t1_paths(source_dir, csv_dir, subjects, conversion_dir)
     cprint("Paths of T1 images found. Exporting images into BIDS ...")
+    print(images)
+    print(destination_dir)
     paths_to_bids(images, destination_dir, "t1", mod_to_update=mod_to_update)
     cprint(msg="T1 conversion done.", lvl="debug")
 
@@ -95,8 +102,9 @@ def compute_t1_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     t1_dfs_list = []
 
     # Loading needed .csv files
-    adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE.csv"), delimiter='","')
-    adni_merge.columns = adni_merge.columns.str.strip('"')
+    # adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE.csv"), delimiter='","')
+    adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE2.csv"), sep=",", engine='python')
+    # adni_merge.columns = adni_merge.columns.str.strip('"')
 
     mprage_meta = pd.read_csv(
         path.join(csv_dir, "MPRAGEMETA.csv"), sep=",", low_memory=False

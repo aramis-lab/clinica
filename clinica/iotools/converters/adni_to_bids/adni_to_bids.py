@@ -1,5 +1,5 @@
 from typing import List, Optional
-
+import time
 from clinica.iotools.abstract_converter import Converter
 
 
@@ -22,7 +22,7 @@ def get_bids_subjs_info(
     # Load all participants from ADNIMERGE.
     adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
     participants = set(
-        read_csv(adni_merge_path, sep=",", usecols=["PTID"], squeeze=True).unique()
+        read_csv(adni_merge_path, sep=",", usecols=['"PTID"'], squeeze=True).unique()
     )
 
     # Filter participants if requested.
@@ -121,32 +121,32 @@ class AdniToBids(Converter):
         )
 
         # -- Creation of participant.tsv --
-        cprint("Creating participants.tsv...")
-        participants_df = bids.create_participants_df(
-            "ADNI", clinic_specs_path, clinical_data_dir, bids_ids
-        )
+        # cprint("Creating participants.tsv...")
+        # participants_df = bids.create_participants_df(
+        #     "ADNI", clinic_specs_path, clinical_data_dir, bids_ids
+        # )
 
-        # Replace the original values with the standard defined by the AramisTeam
-        participants_df["sex"] = participants_df["sex"].replace("Male", "M")
-        participants_df["sex"] = participants_df["sex"].replace("Female", "F")
+        # # Replace the original values with the standard defined by the AramisTeam
+        # participants_df["sex"] = participants_df["sex"].replace("Male", "M")
+        # participants_df["sex"] = participants_df["sex"].replace("Female", "F")
 
-        # Correction of diagnosis_sc for ADNI3 participants
-        participants_df = adni_utils.correct_diagnosis_sc_adni3(
-            clinical_data_dir, participants_df
-        )
+        # # Correction of diagnosis_sc for ADNI3 participants
+        # participants_df = adni_utils.correct_diagnosis_sc_adni3(
+        #     clinical_data_dir, participants_df
+        # )
 
-        participants_df.to_csv(
-            path.join(out_path, "participants.tsv"),
-            sep="\t",
-            index=False,
-            encoding="utf-8",
-        )
+        # participants_df.to_csv(
+        #     path.join(out_path, "participants.tsv"),
+        #     sep="\t",
+        #     index=False,
+        #     encoding="utf-8",
+        # )
 
-        # -- Creation of sessions.tsv --
-        cprint("Creating sessions files...")
-        adni_utils.create_adni_sessions_dict(
-            bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths
-        )
+        # # -- Creation of sessions.tsv --
+        # cprint("Creating sessions files...")
+        # adni_utils.create_adni_sessions_dict(
+        #     bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths
+        # )
 
         # -- Creation of scans files --
         if os.path.exists(conversion_path):
@@ -202,9 +202,10 @@ class AdniToBids(Converter):
 
         modalities = modalities or self.get_modalities_supported()
 
-        adni_merge_path = path.join(clinical_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-        adni_merge.columns = adni_merge.columns.str.strip('"')
+        adni_merge_path = path.join(clinical_dir, "ADNIMERGE2.csv")
+        adni_merge = pd.read_csv(adni_merge_path, delimiter=',', engine='python', quotechar='"')
+        adni_merge.columns = adni_merge.columns.str.replace('"', '')
+        adni_merge.columns = adni_merge.columns.str.replace('”', '')
 
         # Load a file with subjects list or compute all the subjects
         if subjs_list_path is not None:
@@ -226,7 +227,7 @@ class AdniToBids(Converter):
 
         else:
             cprint("Using all the subjects contained into the ADNIMERGE.csv file...")
-            subjs_list = list(adni_merge["PTID"].unique())
+            subjs_list = adni_merge.loc[:, 'PTID'].unique().tolist()
 
         # Create the output folder if is not already existing
         os.makedirs(dest_dir, exist_ok=True)
@@ -264,3 +265,4 @@ class AdniToBids(Converter):
                     subjects=subjs_list,
                     mod_to_update=force_new_extraction,
                 )
+

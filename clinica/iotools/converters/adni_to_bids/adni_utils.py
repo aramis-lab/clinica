@@ -263,10 +263,10 @@ def _get_closest_visit(
     from clinica.utils.stream import cprint
 
     if len(visits) == 0:
-        cprint(
-            "No corresponding timepoint in ADNIMERGE for "
-            f"subject {subject} in visit {image_visit}"
-        )
+        # cprint(
+        #     "No corresponding timepoint in ADNIMERGE for "
+        #     f"subject {subject} in visit {image_visit}"
+        # )
         return None
 
     if len(visits) == 1:
@@ -1308,10 +1308,6 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
         )
 
     images_list = list([data for _, data in images.iterrows()])
-    #print("Path to bids images:")
-    #print(images)
-    #print("-------------------------")
-
     with Pool(processes=max(cpu_count() - 1, 1)) as pool:
         create_file_ = partial(
             create_file,
@@ -1344,6 +1340,7 @@ def create_file(image, modality, bids_dir, mod_to_update):
     import shutil
     from glob import glob
     from os import path
+    import time
 
     from numpy import nan
 

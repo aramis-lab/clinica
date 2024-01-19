@@ -93,9 +93,10 @@ def compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir):
     fmri_dfs_list = []
 
     # Loading needed .csv files
-    adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-    adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-    adni_merge.columns = adni_merge.columns.str.strip('"')
+    # adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
+    # adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
+    # adni_merge.columns = adni_merge.columns.str.strip('"')
+    adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE2.csv"), sep=",", engine='python')
 
     mayo_mri_qc = pd.read_csv(
         path.join(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15.csv"),
@@ -116,6 +117,9 @@ def compute_fmri_path(source_dir, csv_dir, subjs_list, conversion_dir):
     )
 
     mri_list = pd.read_csv(path.join(csv_dir, "MRILIST.csv"), sep=",", low_memory=False)
+
+
+    from clinica.utils.stream import cprint
 
     # Selecting only fMRI images that are not Multiband
     mri_list = mri_list[

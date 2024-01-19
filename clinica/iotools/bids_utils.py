@@ -244,6 +244,15 @@ def create_sessions_dict_OASIS(
                 file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
             elif file_ext == ".csv":
                 file_to_read = pd.read_csv(file_to_read_path)
+            # if file_ext == ".xlsx":
+            #     file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
+            # if file_ext == ".csv":
+            #     file_to_read = pd.read_csv(file_to_read_path)
+            #     with open('/home/tharpm@ads.iu.edu/Desktop/Code/participant/debug_column_names.txt', 'w') as f:
+            #         f.write(f"Columns in {file_to_read_path}: \n")
+            #         for col in file_to_read.columns:
+            #             f.write(f"{col}\n")
+            #     file_to_read.columns = file_to_read.columns.str.replace('"', '')
 
             for r in range(0, len(file_to_read.values)):
                 # Extracts the subject ids columns from the dataframe
@@ -831,7 +840,7 @@ def _build_dcm2niix_command(
     bids_sidecar: bool = True,
 ) -> list:
     """Generate the dcm2niix command from user inputs."""
-    command = ["dcm2niix", "-w", "0", "-f", output_fmt, "-o", output_dir]
+    command = ["sudo", "dcm2niix", "-w", "0", "-f", output_fmt, "-o", output_dir]
     command += ["-9", "-z", "y"] if compress else ["-z", "n"]
     command += ["-b", "y", "-ba", "y"] if bids_sidecar else ["-b", "n"]
     command += [input_dir]
@@ -881,14 +890,14 @@ def run_dcm2niix(
     command = _build_dcm2niix_command(
         input_dir, output_dir, output_fmt, compress, bids_sidecar
     )
-    completed_process = subprocess.run(command, capture_output=True)
+    completed_process = subprocess.run(command)
 
     if completed_process.returncode != 0:
         cprint(
             msg=(
                 "DICOM to BIDS conversion with dcm2niix failed:\n"
                 f"command: {command}\n"
-                f"{completed_process.stdout.decode('utf-8')}"
+                #f"{completed_process.stdout.decode('utf-8')}"
             ),
             lvl="warning",
         )
