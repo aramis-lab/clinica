@@ -577,7 +577,7 @@ def dwi_dti(measure: Union[str, DTIBasedMeasure], space: Optional[str] = None) -
     space = space or "*"
 
     return {
-        "pattern": f"dwi/dti_based_processing/*_space-{space}_{measure.value}.nii.gz",
+        "pattern": f"dwi/dti_based_processing/*/*_space-{space}_{measure.value}.nii.gz",
         "description": f"DTI-based {measure.value} in space {space}.",
         "needed_pipeline": "dwi_dti",
     }

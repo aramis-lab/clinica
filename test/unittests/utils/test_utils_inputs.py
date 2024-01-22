@@ -664,7 +664,13 @@ def test_clinica_file_reader_dwi_dti(tmp_path):
     from clinica.utils.inputs import clinica_file_reader, clinica_list_of_files_reader
 
     dti_folder = (
-        tmp_path / "subjects" / "sub-01" / "ses-M000" / "dwi" / "dti_based_processing"
+        tmp_path
+        / "subjects"
+        / "sub-01"
+        / "ses-M000"
+        / "dwi"
+        / "dti_based_processing"
+        / "native_space"
     )
     dti_folder.mkdir(parents=True)
     for measure in DTIBasedMeasure:

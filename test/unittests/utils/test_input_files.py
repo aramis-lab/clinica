@@ -74,7 +74,7 @@ def test_dwi_dti_query(dti_measure, space):
 
     space = space or "*"
     assert dwi_dti(dti_measure, space=space) == {
-        "pattern": f"dwi/dti_based_processing/*_space-{space}_{dti_measure.value}.nii.gz",
+        "pattern": f"dwi/dti_based_processing/*/*_space-{space}_{dti_measure.value}.nii.gz",
         "description": f"DTI-based {dti_measure.value} in space {space}.",
         "needed_pipeline": "dwi_dti",
     }
