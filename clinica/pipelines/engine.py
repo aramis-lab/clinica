@@ -199,7 +199,11 @@ class Pipeline(Workflow):
             input_dir = self._bids_directory
             is_bids_dir = True
         self._subjects, self._sessions = get_subject_session_list(
-            input_dir, tsv_file, is_bids_dir, False, base_dir
+            input_dir,
+            subject_session_file=tsv_file,
+            is_bids_dir=is_bids_dir,
+            use_session_tsv=False,
+            tsv_dir=base_dir,
         )
 
         self.init_nodes()
