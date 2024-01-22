@@ -591,7 +591,7 @@ def bids_dir_to_fsl_dir(bids_dir):
 
 
 def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
-    """Extract BIDS identifier from CAPS filename.
+    """Extract BIDS identifier from a DWI CAPS filename.
 
     Parameters
     ----------
@@ -606,11 +606,13 @@ def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
     Examples
     --------
     >>> extract_bids_identifier_from_filename("sub-01_ses-M000_dwi_space-b0_preproc.bval")
-    'sub-01_ses-M000_dwi'
+    'sub-01_ses-M000'
     >>> extract_bids_identifier_from_filename("sub-01_ses-M000_dwi.bvec")
-    'sub-01_ses-M000_dwi'
+    'sub-01_ses-M000'
     >>> extract_bids_identifier_from_filename("foo/bar/sub-01_ses-M000_dwi_baz.foo.bar")
-    'sub-01_ses-M000_dwi'
+    'sub-01_ses-M000'
+    >>> extract_bids_identifier_from_filename("foo/bar/sub-01_ses-M000_space-b0_desc-preproc_dwi.bval")
+    'sub-01_ses-M000_space-b0_desc-preproc'
     """
     import re
 
@@ -619,8 +621,7 @@ def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
         raise ValueError(
             f"Could not extract the BIDS identifier from the DWI input filename {dwi_filename}."
         )
-
-    return m.group(0)
+    return m.group(0).rstrip("_dwi")
 
 
 def rename_files(in_caps_dwi: str, mapping: dict) -> tuple:
@@ -644,18 +645,16 @@ def rename_files(in_caps_dwi: str, mapping: dict) -> tuple:
     tuple :
         New file names.
     """
-    import os
-
     from nipype.interfaces.utility import Rename
-    from nipype.utils.filemanip import split_filename
 
     bids_id = extract_bids_identifier_from_filename(in_caps_dwi)
     renamed_files = []
     for original_file, suffix in mapping.items():
-        base_dir, _, _ = split_filename(original_file)
         rename = Rename()
         rename.inputs.in_file = original_file
-        rename.inputs.format_string = os.path.join(base_dir, f"{bids_id}{suffix}")
+        rename.inputs.format_string = str(
+            Path(original_file).parent / f"{bids_id}{suffix}"
+        )
         renamed_files.append(rename.run().outputs.out_file)
 
     return tuple(renamed_files)
