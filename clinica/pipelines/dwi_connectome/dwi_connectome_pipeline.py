@@ -87,7 +87,9 @@ class DwiConnectome(cpe.Pipeline):
 
         # Check space of DWI dataset
         dwi_file_spaces = [
-            re.search(".*_space-(.*)_preproc.nii.*", file, re.IGNORECASE).group(1)
+            re.search(
+                ".*_space-(.*)_desc-preproc_dwi.nii.*", file, re.IGNORECASE
+            ).group(1)
             for file in list_caps_files[4]
         ]
 
