@@ -635,9 +635,7 @@ def test_clinica_file_reader_caps_directory(tmp_path):
         "\t*  (sub-01 | ses-M00): More than 1 file found:\n"
     )
     assert expected_msg in error_msg
-    with pytest.raises(
-        ClinicaCAPSError,
-    ):
+    with pytest.raises(ClinicaCAPSError):
         clinica_file_reader(
             ["sub-01"],
             ["ses-M00"],
@@ -646,6 +644,48 @@ def test_clinica_file_reader_caps_directory(tmp_path):
             raise_exception=True,
             n_procs=1,
         )
+
+
+def test_clinica_file_reader_dwi_dti_error(tmp_path):
+    from clinica.utils.exceptions import ClinicaCAPSError
+    from clinica.utils.input_files import dwi_dti
+    from clinica.utils.inputs import clinica_file_reader
+
+    query = dwi_dti("FA", space="T1w")
+    with pytest.raises(ClinicaCAPSError):
+        clinica_file_reader(
+            ["sub-01"], ["ses-M000"], tmp_path, query, raise_exception=True
+        )
+
+
+def test_clinica_file_reader_dwi_dti(tmp_path):
+    from clinica.utils.dwi import DTIBasedMeasure
+    from clinica.utils.input_files import dwi_dti
+    from clinica.utils.inputs import clinica_file_reader, clinica_list_of_files_reader
+
+    dti_folder = (
+        tmp_path / "subjects" / "sub-01" / "ses-M000" / "dwi" / "dti_based_processing"
+    )
+    dti_folder.mkdir(parents=True)
+    for measure in DTIBasedMeasure:
+        (dti_folder / f"sub-01_ses-M000_space-T1w_{measure.value}.nii.gz").touch()
+    query = dwi_dti("FA", space="T1w")
+    found_files, errors = clinica_file_reader(
+        ["sub-01"], ["ses-M000"], tmp_path, query, raise_exception=True
+    )
+    assert found_files == [str(dti_folder / "sub-01_ses-M000_space-T1w_FA.nii.gz")]
+
+    queries = [dwi_dti(measure) for measure in DTIBasedMeasure]
+    found_files = clinica_list_of_files_reader(
+        ["sub-01"], ["ses-M000"], tmp_path, queries, raise_exception=True
+    )
+    assert found_files == [
+        [str(x)]
+        for x in (
+            dti_folder / f"sub-01_ses-M000_space-T1w_{m.value}.nii.gz"
+            for m in DTIBasedMeasure
+        )
+    ]
 
 
 def test_clinica_list_of_files_reader(tmp_path):

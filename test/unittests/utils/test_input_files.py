@@ -2,6 +2,7 @@ import os
 
 import pytest
 
+from clinica.utils.dwi import DTIBasedMeasure
 from clinica.utils.pet import ReconstructionMethod, Tracer
 
 
@@ -64,3 +65,26 @@ def test_bids_pet_nii(tracer, reconstruction, expected_bids_pet_query):
     from clinica.utils.input_files import bids_pet_nii
 
     assert bids_pet_nii(tracer, reconstruction) == expected_bids_pet_query
+
+
+@pytest.mark.parametrize("dti_measure", DTIBasedMeasure)
+@pytest.mark.parametrize("space", [None, "*", "T1w"])
+def test_dwi_dti_query(dti_measure, space):
+    from clinica.utils.input_files import dwi_dti
+
+    space = space or "*"
+    assert dwi_dti(dti_measure, space=space) == {
+        "pattern": f"dwi/dti_based_processing/*_space-{space}_{dti_measure.value}.nii.gz",
+        "description": f"DTI-based {dti_measure.value} in space {space}.",
+        "needed_pipeline": "dwi_dti",
+    }
+
+
+def test_dwi_dti_query_error():
+    from clinica.utils.input_files import dwi_dti
+
+    with pytest.raises(
+        ValueError,
+        match="'foo' is not a valid DTIBasedMeasure",
+    ):
+        dwi_dti("foo")
