@@ -1,6 +1,7 @@
 """This module contains utilities for DWI handling."""
 import functools
 from collections import namedtuple
+from enum import Enum
 from os import PathLike
 from pathlib import Path
 from typing import Optional, Tuple, Union
@@ -8,6 +9,15 @@ from typing import Optional, Tuple, Union
 import numpy as np
 
 DWIDataset = namedtuple("DWIDataset", "dwi b_values b_vectors")
+
+
+class DTIBasedMeasure(str, Enum):
+    """Possible DTI measures."""
+
+    FRACTIONAL_ANISOTROPY = "FA"
+    MEAN_DIFFUSIVITY = "MD"
+    AXIAL_DIFFUSIVITY = "AD"
+    RADIAL_DIFFUSIVITY = "RD"
 
 
 def count_b0s(b_value_filename: PathLike, b_value_threshold: float = 5.0) -> int:

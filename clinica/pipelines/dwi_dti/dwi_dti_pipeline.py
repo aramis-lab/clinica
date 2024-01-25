@@ -231,7 +231,7 @@ class DwiDti(cpe.Pipeline):
         # ==============
         get_bids_identifier = npe.Node(
             interface=nutil.Function(
-                input_names=["caps_dwi_filename"],
+                input_names=["dwi_filename"],
                 output_names=["bids_identifier"],
                 function=extract_bids_identifier_from_filename,
             ),
@@ -354,7 +354,7 @@ class DwiDti(cpe.Pipeline):
                 # Print begin message
                 (self.input_node, print_begin_message, [("preproc_dwi", "in_bids_or_caps_file")]),
                 # Get BIDS/CAPS identifier from filename
-                (self.input_node, get_bids_identifier, [("preproc_dwi", "caps_dwi_filename")]),
+                (self.input_node, get_bids_identifier, [("preproc_dwi", "dwi_filename")]),
                 # Convert FSL gradient files (bval/bvec) to MRtrix format
                 (self.input_node, convert_gradients, [("preproc_bval", "bval_file"),
                                                       ("preproc_bvec", "bvec_file")]),

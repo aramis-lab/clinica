@@ -5,10 +5,9 @@ These dictionaries describe files to grab.
 
 import functools
 from collections.abc import Iterable
-from typing import Optional
+from typing import Optional, Union
 
-import numpy as np
-
+from clinica.utils.dwi import DTIBasedMeasure
 from clinica.utils.pet import ReconstructionMethod, Tracer
 
 # BIDS
@@ -555,6 +554,34 @@ DWI_PREPROC_BVAL = {
     "description": "preprocessed bval",
     "needed_pipeline": "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
 }
+
+
+def dwi_dti(measure: Union[str, DTIBasedMeasure], space: Optional[str] = None) -> dict:
+    """Return the query dict required to capture DWI DTI images.
+
+    Parameters
+    ----------
+    measure : DTIBasedMeasure or str
+        The DTI based measure to consider.
+
+    space : str, optional
+        The space to consider.
+        By default, all spaces are considered (i.e. '*' is used in regexp).
+
+    Returns
+    -------
+    dict :
+        The query dictionary to get DWI DTI images.
+    """
+    measure = DTIBasedMeasure(measure)
+    space = space or "*"
+
+    return {
+        "pattern": f"dwi/dti_based_processing/*/*_space-{space}_{measure.value}.nii.gz",
+        "description": f"DTI-based {measure.value} in space {space}.",
+        "needed_pipeline": "dwi_dti",
+    }
+
 
 """ PET """
 
