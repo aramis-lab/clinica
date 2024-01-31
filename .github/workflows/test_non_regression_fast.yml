@@ -46,8 +46,10 @@ jobs:
           -n 4 \
           --dist loadgroup \
           -m "fast" \
-          --dist loadgroup \
           ./nonregression/
+      - name: Clean
+        run: |
+          rm -rf /Volumes/data/tmp
 
   test-non-regression-fast-Linux:
     runs-on:
@@ -81,5 +83,7 @@ jobs:
           -n 4 \
           --dist loadgroup \
           -m "fast" \
-          --dist loadgroup \
           ./nonregression/
+      - name: Clean
+        run: |
+          rm -rf /mnt/data/ci/tmp
