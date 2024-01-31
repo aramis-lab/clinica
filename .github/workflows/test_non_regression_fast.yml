@@ -3,8 +3,6 @@ name: Fast Non Regression Tests
 on:
   push:
     branches: [dev]
-  pull_request:
-    branches: [dev]
 
 permissions:
   contents: read
@@ -48,6 +46,7 @@ jobs:
       - name: Clean
         run: |
           rm -rf /Volumes/data/tmp
+          rm -rf /Volumes/data/working_dir_mac
 
   test-non-regression-fast-Linux:
     runs-on:
@@ -83,3 +82,4 @@ jobs:
       - name: Clean
         run: |
           rm -rf /mnt/data/ci/tmp
+          rm -rf /mnt/data/ci/working_dir_linux

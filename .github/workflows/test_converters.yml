@@ -42,6 +42,10 @@ jobs:
           --junitxml=./test-reports/run_converters_mac.xml \
           --disable-warnings \
           ./nonregression/iotools/test_run_converters.py
+      - name: Clean
+        run: |
+          rm -rf /Volumes/data/tmp
+          rm -rf /Volumes/data/working_dir_mac
 
   test-converters-Linux:
     runs-on:
@@ -71,3 +75,7 @@ jobs:
           --junitxml=./test-reports/run_converters_linux.xml \
           --disable-warnings \
           ./nonregression/iotools/test_run_converters.py
+      - name: Clean
+        run: |
+          rm -rf /mnt/data/ci/tmp
+          rm -rf /mnt/data/ci/working_dir_linux
