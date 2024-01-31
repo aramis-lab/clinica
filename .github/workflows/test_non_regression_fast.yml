@@ -43,8 +43,6 @@ jobs:
           --basetemp=/Volumes/data/tmp \
           --junitxml=./test-reports/non_regression_fast_mac.xml \
           --disable-warnings \
-          -n 4 \
-          --dist loadgroup \
           -m "fast" \
           ./nonregression/
       - name: Clean
@@ -80,8 +78,6 @@ jobs:
           --basetemp=/mnt/data/ci/tmp \
           --junitxml=./test-reports/non_regression_fast_linux.xml \
           --disable-warnings \
-          -n 4 \
-          --dist loadgroup \
           -m "fast" \
           ./nonregression/
       - name: Clean
