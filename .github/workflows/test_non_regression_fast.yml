@@ -43,11 +43,11 @@ jobs:
           --basetemp=/Volumes/data/tmp \
           --junitxml=./test-reports/non_regression_fast_mac.xml \
           --disable-warnings \
-          -n 4 \
-          --dist loadgroup \
           -m "fast" \
-          --dist loadgroup \
           ./nonregression/
+      - name: Clean
+        run: |
+          rm -rf /Volumes/data/tmp
 
   test-non-regression-fast-Linux:
     runs-on:
@@ -78,8 +78,8 @@ jobs:
           --basetemp=/mnt/data/ci/tmp \
           --junitxml=./test-reports/non_regression_fast_linux.xml \
           --disable-warnings \
-          -n 4 \
-          --dist loadgroup \
           -m "fast" \
-          --dist loadgroup \
           ./nonregression/
+      - name: Clean
+        run: |
+          rm -rf /mnt/data/ci/tmp
