@@ -621,7 +621,7 @@ def compute_missing_mods(
 
     out_dir = Path(out_dir)
     bids_dir = Path(bids_dir)
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     # Find all the modalities and sessions available for the input dataset
     mods_and_sess = find_mods_and_sess(bids_dir)
