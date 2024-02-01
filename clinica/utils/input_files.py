@@ -532,7 +532,7 @@ FMAP_MAGNITUDE1_NII = {
 # CAPS
 
 DWI_PREPROC_NII = {
-    "pattern": "dwi/preprocessing/sub-*_ses-*_dwi_space-*_preproc.nii*",
+    "pattern": "dwi/preprocessing/sub-*_ses-*_space-*_desc-preproc_dwi.nii*",
     "description": "preprocessed DWI",
     "needed_pipeline": "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
 }
@@ -544,13 +544,13 @@ DWI_PREPROC_BRAINMASK = {
 }
 
 DWI_PREPROC_BVEC = {
-    "pattern": "dwi/preprocessing/sub-*_ses-*_dwi_space-*_preproc.bvec",
+    "pattern": "dwi/preprocessing/sub-*_ses-*_space-*_desc-preproc_dwi.bvec",
     "description": "preprocessed bvec",
     "needed_pipeline": "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
 }
 
 DWI_PREPROC_BVAL = {
-    "pattern": "dwi/preprocessing/*_dwi_space-*_preproc.bval",
+    "pattern": "dwi/preprocessing/*_space-*_desc-preproc_dwi.bval",
     "description": "preprocessed bval",
     "needed_pipeline": "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
 }

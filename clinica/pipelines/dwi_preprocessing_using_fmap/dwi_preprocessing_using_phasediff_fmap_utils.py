@@ -46,9 +46,9 @@ def rename_into_caps(
     return rename_files(
         in_bids_dwi,
         {
-            fname_dwi: "_space-b0_preproc.nii.gz",
-            fname_bval: "_space-b0_preproc.bval",
-            fname_bvec: "_space-b0_preproc.bval",
+            fname_dwi: "_space-b0_desc-preproc_dwi.nii.gz",
+            fname_bval: "_space-b0_desc-preproc_dwi.bval",
+            fname_bvec: "_space-b0_desc-preproc_dwi.bvec",
             fname_brainmask: "_space-b0_brainmask.nii.gz",
             fname_magnitude: "_space-b0_magnitude1.nii.gz",
             fname_fmap: "_space-b0_fmap.nii.gz",
