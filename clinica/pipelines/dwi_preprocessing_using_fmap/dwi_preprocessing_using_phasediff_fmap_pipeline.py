@@ -1,6 +1,9 @@
+from pathlib import Path
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import DWIPreprocessingPipeline
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -8,7 +11,7 @@ cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
+class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
     """DWI Preprocessing using phase difference fieldmap.
 
     Ideas for improvement:
@@ -23,53 +26,22 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
     """
 
     @staticmethod
-    def get_processed_images(caps_directory, subjects, sessions):
-        import os
-
+    def get_processed_images(
+        caps_directory: Path, subjects: List[str], sessions: List[str]
+    ) -> List[str]:
         from clinica.utils.filemanip import extract_image_ids
         from clinica.utils.input_files import DWI_PREPROC_NII
         from clinica.utils.inputs import clinica_file_reader
 
-        image_ids = []
-        if os.path.isdir(caps_directory):
+        image_ids: List[str] = []
+        if caps_directory.is_dir():
             preproc_files, _ = clinica_file_reader(
                 subjects, sessions, caps_directory, DWI_PREPROC_NII, False
             )
             image_ids = extract_image_ids(preproc_files)
         return image_ids
 
-    def check_pipeline_parameters(self):
-        """Check pipeline parameters."""
-        from clinica.utils.stream import cprint
-
-        self.parameters.setdefault("low_bval", 5)
-        low_bval = self.parameters["low_bval"]
-        if low_bval < 0:
-            raise ValueError(
-                f"The low_bval is negative ({low_bval}): it should be zero or close to zero."
-            )
-        if self.parameters["low_bval"] > 100:
-            cprint(
-                f"The low_bval parameter is {low_bval}: it should be close to zero.",
-                lvl="warning",
-            )
-
-        self.parameters.setdefault("use_cuda", False)
-        self.parameters.setdefault("initrand", False)
-
-    def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file."""
-        from clinica.utils.check_dependency import is_binary_present
-        from clinica.utils.exceptions import ClinicaMissingDependencyError
-
-        if self.parameters["use_cuda"]:
-            if not is_binary_present("eddy_cuda"):
-                raise ClinicaMissingDependencyError(
-                    "[Error] FSL eddy with CUDA was set but Clinica could not find eddy_cuda in your PATH environment. "
-                    "Check that  https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#The_eddy_executables is correctly set."
-                )
-
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
         Returns:
@@ -94,7 +66,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             "fmap_phasediff_json",
         ]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
         Returns:
@@ -117,10 +89,8 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             "smoothed_fmap_on_b0",
         ]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -153,17 +123,13 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             ],
             raise_exception=True,
         )
-
-        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_participants_sessions(
-            self.subjects, self.sessions, folder_participants_tsv
+            self.subjects, self.sessions, self.base_dir / self.name
         )
-
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint(
-                f"List available in {os.path.join(folder_participants_tsv, 'participants.tsv')}"
+                f"List available in {self.base_dir / self.name / 'participants.tsv'}"
             )
             cprint(
                 "Computational time will depend of the number of volumes in your DWI dataset and the use of CUDA."
@@ -183,21 +149,25 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-        # fmt: off
         self.connect(
             [
-                (read_node, self.input_node, [("dwi", "dwi"),
-                                              ("bvec", "bvec"),
-                                              ("bval", "bval"),
-                                              ("dwi_json", "dwi_json"),
-                                              ("fmap_magnitude", "fmap_magnitude"),
-                                              ("fmap_phasediff", "fmap_phasediff"),
-                                              ("fmap_phasediff_json", "fmap_phasediff_json")]),
+                (
+                    read_node,
+                    self.input_node,
+                    [
+                        ("dwi", "dwi"),
+                        ("bvec", "bvec"),
+                        ("bval", "bval"),
+                        ("dwi_json", "dwi_json"),
+                        ("fmap_magnitude", "fmap_magnitude"),
+                        ("fmap_phasediff", "fmap_phasediff"),
+                        ("fmap_phasediff_json", "fmap_phasediff_json"),
+                    ],
+                ),
             ]
         )
-        # fmt: on
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
@@ -207,8 +177,6 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
 
         from .dwi_preprocessing_using_phasediff_fmap_utils import rename_into_caps
 
-        # Find container path from DWI filename
-        # =====================================
         container_path = npe.Node(
             nutil.Function(
                 input_names=["bids_or_caps_filename"],
@@ -244,37 +212,49 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             name="rename_into_caps",
         )
 
-        # Writing results into CAPS
-        # =========================
         write_results = npe.Node(name="write_results", interface=nio.DataSink())
-        write_results.inputs.base_directory = self.caps_directory
+        write_results.inputs.base_directory = str(self.caps_directory)
         write_results.inputs.parameterization = False
 
-        # fmt: off
         self.connect(
             [
                 (self.input_node, container_path, [("dwi", "bids_or_caps_filename")]),
                 (self.input_node, rename_into_caps, [("dwi", "in_bids_dwi")]),
-                (self.output_node, rename_into_caps, [("preproc_dwi", "fname_dwi"),
-                                                      ("preproc_bval", "fname_bval"),
-                                                      ("preproc_bvec", "fname_bvec"),
-                                                      ("b0_mask", "fname_brainmask"),
-                                                      ("magnitude_on_b0", "fname_magnitude"),
-                                                      ("calibrated_fmap_on_b0", "fname_fmap"),
-                                                      ("smoothed_fmap_on_b0", "fname_smoothed_fmap")]),
-                (container_path, write_results, [(("container", fix_join, "dwi"), "container")]),
-                (rename_into_caps, write_results, [("out_caps_dwi", "preprocessing.@preproc_dwi"),
-                                                   ("out_caps_bval", "preprocessing.@preproc_bval"),
-                                                   ("out_caps_bvec", "preprocessing.@preproc_bvec"),
-                                                   ("out_caps_brainmask", "preprocessing.@b0_mask"),
-                                                   ("out_caps_magnitude", "preprocessing.@magnitude"),
-                                                   ("out_caps_fmap", "preprocessing.@fmap"),
-                                                   ("out_caps_smoothed_fmap", "preprocessing.@smoothed_fmap")]),
+                (
+                    self.output_node,
+                    rename_into_caps,
+                    [
+                        ("preproc_dwi", "fname_dwi"),
+                        ("preproc_bval", "fname_bval"),
+                        ("preproc_bvec", "fname_bvec"),
+                        ("b0_mask", "fname_brainmask"),
+                        ("magnitude_on_b0", "fname_magnitude"),
+                        ("calibrated_fmap_on_b0", "fname_fmap"),
+                        ("smoothed_fmap_on_b0", "fname_smoothed_fmap"),
+                    ],
+                ),
+                (
+                    container_path,
+                    write_results,
+                    [(("container", fix_join, "dwi"), "container")],
+                ),
+                (
+                    rename_into_caps,
+                    write_results,
+                    [
+                        ("out_caps_dwi", "preprocessing.@preproc_dwi"),
+                        ("out_caps_bval", "preprocessing.@preproc_bval"),
+                        ("out_caps_bvec", "preprocessing.@preproc_bvec"),
+                        ("out_caps_brainmask", "preprocessing.@b0_mask"),
+                        ("out_caps_magnitude", "preprocessing.@magnitude"),
+                        ("out_caps_fmap", "preprocessing.@fmap"),
+                        ("out_caps_smoothed_fmap", "preprocessing.@smoothed_fmap"),
+                    ],
+                ),
             ]
         )
-        # fmt: on
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix3 as mrtrix3

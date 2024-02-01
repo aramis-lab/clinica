@@ -1,14 +1,17 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
+from pathlib import Path
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import Pipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class AnatLinear(cpe.Pipeline):
+class AnatLinear(Pipeline):
     """Anat Linear - Affine registration of anat (t1w or flair) images to standard space.
 
     This preprocessing pipeline includes globally three steps:
@@ -22,41 +25,50 @@ class AnatLinear(cpe.Pipeline):
     """
 
     @staticmethod
-    def get_processed_images(caps_directory, subjects, sessions):
-        import os
-
+    def get_processed_images(
+        caps_directory: Path, subjects: List[str], sessions: List[str]
+    ) -> List[str]:
         from clinica.utils.filemanip import extract_image_ids
         from clinica.utils.input_files import T1W_LINEAR_CROPPED
         from clinica.utils.inputs import clinica_file_reader
 
-        image_ids = []
-        if os.path.isdir(caps_directory):
+        image_ids: List[str] = []
+        if caps_directory.is_dir():
             cropped_files, _ = clinica_file_reader(
                 subjects, sessions, caps_directory, T1W_LINEAR_CROPPED, False
             )
             image_ids = extract_image_ids(cropped_files)
         return image_ids
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def _check_pipeline_parameters(self) -> None:
+        """Check pipeline parameters."""
+        pass
+
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["anat"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str:
             A list of (string) output fields name.
         """
         return ["image_id"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from os import pardir
         from os.path import abspath, dirname, exists, join
@@ -133,7 +145,7 @@ class AnatLinear(cpe.Pipeline):
                 cprint(msg=f"{image_id.replace('_', ' | ')}", lvl="warning")
             cprint(msg=f"Image(s) will be ignored by Clinica.", lvl="warning")
             input_ids = [
-                p_id + "_" + s_id for p_id, s_id in zip(self.subjects, self.sessions)
+                f"{p_id}_{s_id}" for p_id, s_id in zip(self.subjects, self.sessions)
             ]
             to_process_ids = list(set(input_ids) - set(processed_ids))
             self.subjects, self.sessions = extract_subjects_sessions_from_filename(
@@ -173,7 +185,7 @@ class AnatLinear(cpe.Pipeline):
             ]
         )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -192,7 +204,7 @@ class AnatLinear(cpe.Pipeline):
 
         # Writing node
         write_node = npe.Node(name="WriteCaps", interface=DataSink())
-        write_node.inputs.base_directory = self.caps_directory
+        write_node.inputs.base_directory = str(self.caps_directory)
         write_node.inputs.parameterization = False
 
         # Other nodes
@@ -215,12 +227,20 @@ class AnatLinear(cpe.Pipeline):
             ),
             name="ContainerPath",
         )
-        # fmt: off
         self.connect(
             [
                 (self.input_node, container_path, [("anat", "bids_or_caps_filename")]),
                 (self.output_node, get_ids, [("image_id", "bids_image_id")]),
-                (container_path, write_node, [(("container", fix_join, self.name.replace("-", "_")), "container")]),
+                (
+                    container_path,
+                    write_node,
+                    [
+                        (
+                            ("container", fix_join, self.name.replace("-", "_")),
+                            "container",
+                        )
+                    ],
+                ),
                 (get_ids, write_node, [("substitutions", "substitutions")]),
                 (self.output_node, write_node, [("image_id", "@image_id")]),
                 (self.output_node, write_node, [("outfile_reg", "@outfile_reg")]),
@@ -234,9 +254,8 @@ class AnatLinear(cpe.Pipeline):
                     (self.output_node, write_node, [("outfile_crop", "@outfile_crop")]),
                 ]
             )
-        # fmt: on
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -299,27 +318,43 @@ class AnatLinear(cpe.Pipeline):
             ),
             name="WriteEndMessage",
         )
-
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
                 (self.input_node, image_id_node, [("anat", "filename")]),
                 (self.input_node, n4biascorrection, [("anat", "input_image")]),
-                (n4biascorrection, ants_registration_node, [("output_image", "moving_image")]),
-                (image_id_node, ants_registration_node, [("image_id", "output_prefix")]),
+                (
+                    n4biascorrection,
+                    ants_registration_node,
+                    [("output_image", "moving_image")],
+                ),
+                (
+                    image_id_node,
+                    ants_registration_node,
+                    [("image_id", "output_prefix")],
+                ),
                 # Connect to DataSink
                 (image_id_node, self.output_node, [("image_id", "image_id")]),
-                (ants_registration_node, self.output_node, [("out_matrix", "affine_mat")]),
-                (ants_registration_node, self.output_node, [("warped_image", "outfile_reg")]),
+                (
+                    ants_registration_node,
+                    self.output_node,
+                    [("out_matrix", "affine_mat")],
+                ),
+                (
+                    ants_registration_node,
+                    self.output_node,
+                    [("warped_image", "outfile_reg")],
+                ),
                 (self.input_node, print_end_message, [("anat", "anat")]),
             ]
         )
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
-                    (ants_registration_node, cropnifti, [("warped_image", "input_img")]),
+                    (
+                        ants_registration_node,
+                        cropnifti,
+                        [("warped_image", "input_img")],
+                    ),
                     (cropnifti, self.output_node, [("output_img", "outfile_crop")]),
                     (cropnifti, print_end_message, [("output_img", "final_file")]),
                 ]
@@ -327,7 +362,10 @@ class AnatLinear(cpe.Pipeline):
         else:
             self.connect(
                 [
-                    (ants_registration_node, print_end_message, [("warped_image", "final_file")]),
+                    (
+                        ants_registration_node,
+                        print_end_message,
+                        [("warped_image", "final_file")],
+                    ),
                 ]
             )
-        # fmt: on

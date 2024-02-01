@@ -1,37 +1,40 @@
 # Use hash instead of parameters for iterables folder names
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import Pipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class DwiConnectome(cpe.Pipeline):
+class DwiConnectome(Pipeline):
     """Connectome-based processing of corrected DWI datasets.
 
     Returns:
         A clinica pipeline object containing the DwiConnectome pipeline.
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         if self.parameters["n_tracks"] < 0:
             raise ValueError(
                 f"The n_tracks parameter ({self.parameters['n_tracks']}) should be positive."
             )
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
-
         return [
             "t1_brain_file",
             "wm_mask_file",
@@ -41,25 +44,25 @@ class DwiConnectome(cpe.Pipeline):
             "atlas_files",
         ]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
-
         return ["response", "fod", "tracts", "nodes", "connectomes"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
         import re
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         import clinica.utils.input_files as input_files
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
@@ -111,9 +114,8 @@ class DwiConnectome(cpe.Pipeline):
         ]
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_participants_sessions(
-            self.subjects, self.sessions, folder_participants_tsv
+            self.subjects, self.sessions, self.base_dir / self.name
         )
 
         if len(self.subjects):
@@ -138,18 +140,20 @@ class DwiConnectome(cpe.Pipeline):
                 synchronize=True,
                 interface=nutil.IdentityInterface(fields=self.get_input_fields()),
             )
-            # fmt: off
             self.connect(
                 [
                     (read_node, self.input_node, [("t1_brain_file", "t1_brain_file")]),
                     (read_node, self.input_node, [("wm_mask_file", "wm_mask_file")]),
                     (read_node, self.input_node, [("dwi_file", "dwi_file")]),
-                    (read_node, self.input_node, [("dwi_brainmask_file", "dwi_brainmask_file")]),
+                    (
+                        read_node,
+                        self.input_node,
+                        [("dwi_brainmask_file", "dwi_brainmask_file")],
+                    ),
                     (read_node, self.input_node, [("grad_fsl", "grad_fsl")]),
                     (read_node, self.input_node, [("atlas_files", "atlas_files")]),
                 ]
             )
-            # fmt: on
         elif dwi_file_spaces[0] == "T1w":
             self.parameters["dwi_space"] = "T1w"
             read_node = npe.Node(
@@ -164,23 +168,25 @@ class DwiConnectome(cpe.Pipeline):
                 synchronize=True,
                 interface=nutil.IdentityInterface(fields=self.get_input_fields()),
             )
-            # fmt: off
             self.connect(
                 [
                     (read_node, self.input_node, [("wm_mask_file", "wm_mask_file")]),
                     (read_node, self.input_node, [("dwi_file", "dwi_file")]),
-                    (read_node, self.input_node, [("dwi_brainmask_file", "dwi_brainmask_file")]),
+                    (
+                        read_node,
+                        self.input_node,
+                        [("dwi_brainmask_file", "dwi_brainmask_file")],
+                    ),
                     (read_node, self.input_node, [("grad_fsl", "grad_fsl")]),
                     (read_node, self.input_node, [("atlas_files", "atlas_files")]),
                 ]
             )
-            # fmt: on
         else:
             raise ClinicaCAPSError(
                 "Bad preprocessed DWI space. Please check your CAPS folder."
             )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
@@ -188,8 +194,6 @@ class DwiConnectome(cpe.Pipeline):
 
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
 
-        # Writing CAPS
-        # ============
         join_node = npe.JoinNode(
             name="JoinOutputs",
             joinsource="ReadingFiles",
@@ -207,12 +211,11 @@ class DwiConnectome(cpe.Pipeline):
                 ]
             ),
         )
-        write_node.inputs.base_directory = self.caps_directory
+        write_node.inputs.base_directory = str(self.caps_directory)
         write_node.inputs.container = utils.get_containers(self.subjects, self.sessions)
         write_node.inputs.substitutions = [("trait_added", "")]
         write_node.inputs.parameterization = False
 
-        # fmt: off
         self.connect(
             [
                 # Writing CAPS
@@ -221,16 +224,31 @@ class DwiConnectome(cpe.Pipeline):
                 (self.output_node, join_node, [("tracts", "tracts")]),
                 (self.output_node, join_node, [("nodes", "nodes")]),
                 (self.output_node, join_node, [("connectomes", "connectomes")]),
-                (join_node, write_node, [("response", "connectome_based_processing.@response")]),
+                (
+                    join_node,
+                    write_node,
+                    [("response", "connectome_based_processing.@response")],
+                ),
                 (join_node, write_node, [("fod", "connectome_based_processing.@fod")]),
-                (join_node, write_node, [("tracts", "connectome_based_processing.@tracts")]),
-                (join_node, write_node, [("nodes", "connectome_based_processing.@nodes")]),
-                (join_node, write_node, [("connectomes", "connectome_based_processing.@connectomes")]),
+                (
+                    join_node,
+                    write_node,
+                    [("tracts", "connectome_based_processing.@tracts")],
+                ),
+                (
+                    join_node,
+                    write_node,
+                    [("nodes", "connectome_based_processing.@nodes")],
+                ),
+                (
+                    join_node,
+                    write_node,
+                    [("connectomes", "connectome_based_processing.@connectomes")],
+                ),
             ]
         )
-        # fmt: on
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
 
         Notes:
@@ -400,33 +418,79 @@ class DwiConnectome(cpe.Pipeline):
                 function=utils.get_caps_filenames,
             ),
         )
-
-        # Connections
-        # ===========
-        # Computation of the diffusion model, tractography & connectome
-        # -------------------------------------------------------------
-        # fmt: off
         self.connect(
             [
-                (self.input_node, print_begin_message, [("dwi_file", "in_bids_or_caps_file")]),
+                (
+                    self.input_node,
+                    print_begin_message,
+                    [("dwi_file", "in_bids_or_caps_file")],
+                ),
                 (self.input_node, caps_filenames_node, [("dwi_file", "dwi_file")]),
                 # Response Estimation
-                (self.input_node, resp_estim_node, [("dwi_file", "in_file")]),  # Preproc. DWI
-                (self.input_node, resp_estim_node, [("dwi_brainmask_file", "in_mask")]),  # B0 brain mask
-                (self.input_node, resp_estim_node, [("grad_fsl", "grad_fsl")]),  # bvecs and bvals
-                (caps_filenames_node, resp_estim_node, [("response", "wm_file")]),  # output response filename
+                (
+                    self.input_node,
+                    resp_estim_node,
+                    [("dwi_file", "in_file")],
+                ),  # Preproc. DWI
+                (
+                    self.input_node,
+                    resp_estim_node,
+                    [("dwi_brainmask_file", "in_mask")],
+                ),  # B0 brain mask
+                (
+                    self.input_node,
+                    resp_estim_node,
+                    [("grad_fsl", "grad_fsl")],
+                ),  # bvecs and bvals
+                (
+                    caps_filenames_node,
+                    resp_estim_node,
+                    [("response", "wm_file")],
+                ),  # output response filename
                 # FOD Estimation
-                (self.input_node, fod_estim_node, [("dwi_file", "in_file")]),  # Preproc. DWI
-                (resp_estim_node, fod_estim_node, [("wm_file", "wm_txt")]),  # Response (txt file)
-                (self.input_node, fod_estim_node, [("dwi_brainmask_file", "mask_file")]),  # B0 brain mask
-                (self.input_node, fod_estim_node, [("grad_fsl", "grad_fsl")]),  # T1-to-B0 matrix file
-                (caps_filenames_node, fod_estim_node, [("fod", "wm_odf")]),  # output odf filename
+                (
+                    self.input_node,
+                    fod_estim_node,
+                    [("dwi_file", "in_file")],
+                ),  # Preproc. DWI
+                (
+                    resp_estim_node,
+                    fod_estim_node,
+                    [("wm_file", "wm_txt")],
+                ),  # Response (txt file)
+                (
+                    self.input_node,
+                    fod_estim_node,
+                    [("dwi_brainmask_file", "mask_file")],
+                ),  # B0 brain mask
+                (
+                    self.input_node,
+                    fod_estim_node,
+                    [("grad_fsl", "grad_fsl")],
+                ),  # T1-to-B0 matrix file
+                (
+                    caps_filenames_node,
+                    fod_estim_node,
+                    [("fod", "wm_odf")],
+                ),  # output odf filename
                 # Tracts Generation
                 (fod_estim_node, tck_gen_node, [("wm_odf", "in_file")]),  # ODF file
-                (caps_filenames_node, tck_gen_node, [("tracts", "out_file")]),  # output tck filename
+                (
+                    caps_filenames_node,
+                    tck_gen_node,
+                    [("tracts", "out_file")],
+                ),  # output tck filename
                 # Label Conversion
-                (self.input_node, label_convert_node, [("atlas_files", "in_file")]),  # atlas image files
-                (caps_filenames_node, label_convert_node, [("nodes", "out_file")]),  # converted atlas image filenames
+                (
+                    self.input_node,
+                    label_convert_node,
+                    [("atlas_files", "in_file")],
+                ),  # atlas image files
+                (
+                    caps_filenames_node,
+                    label_convert_node,
+                    [("nodes", "out_file")],
+                ),  # converted atlas image filenames
                 # Connectomes Generation
                 (tck_gen_node, conn_gen_node, [("out_file", "in_file")]),
                 (caps_filenames_node, conn_gen_node, [("connectomes", "out_file")]),
@@ -438,29 +502,81 @@ class DwiConnectome(cpe.Pipeline):
             self.connect(
                 [
                     # MGZ Files Conversion
-                    (self.input_node, t1_brain_conv_node, [("t1_brain_file", "in_file")]),
+                    (
+                        self.input_node,
+                        t1_brain_conv_node,
+                        [("t1_brain_file", "in_file")],
+                    ),
                     (self.input_node, wm_mask_conv_node, [("wm_mask_file", "in_file")]),
                     # B0 Extraction
                     (self.input_node, split_node, [("dwi_file", "in_file")]),
                     (split_node, select_node, [("out_files", "inlist")]),
                     # Masking
                     (select_node, mask_node, [("out", "in_file")]),  # B0
-                    (self.input_node, mask_node, [("dwi_brainmask_file", "mask_file")]),  # Brain mask
+                    (
+                        self.input_node,
+                        mask_node,
+                        [("dwi_brainmask_file", "mask_file")],
+                    ),  # Brain mask
                     # T1-to-B0 Registration
-                    (t1_brain_conv_node, t12b0_reg_node, [("out_file", "in_file")]),  # Brain
-                    (mask_node, t12b0_reg_node, [("out_file", "reference")]),  # B0 brain-masked
+                    (
+                        t1_brain_conv_node,
+                        t12b0_reg_node,
+                        [("out_file", "in_file")],
+                    ),  # Brain
+                    (
+                        mask_node,
+                        t12b0_reg_node,
+                        [("out_file", "reference")],
+                    ),  # B0 brain-masked
                     # WM Transformation
-                    (wm_mask_conv_node, wm_transform_node, [("out_file", "in_file")]),  # Brain mask
-                    (mask_node, wm_transform_node, [("out_file", "reference")]),  # BO brain-masked
-                    (t12b0_reg_node, wm_transform_node, [("out_matrix_file", "in_matrix_file")]),  # T1-to-B0 matrix file
+                    (
+                        wm_mask_conv_node,
+                        wm_transform_node,
+                        [("out_file", "in_file")],
+                    ),  # Brain mask
+                    (
+                        mask_node,
+                        wm_transform_node,
+                        [("out_file", "reference")],
+                    ),  # BO brain-masked
+                    (
+                        t12b0_reg_node,
+                        wm_transform_node,
+                        [("out_matrix_file", "in_matrix_file")],
+                    ),  # T1-to-B0 matrix file
                     # FSL flirt matrix to MRtrix matrix Conversion
-                    (t1_brain_conv_node, fsl2mrtrix_conv_node, [("out_file", "in_source_image")]),
-                    (mask_node, fsl2mrtrix_conv_node, [("out_file", "in_reference_image")]),
-                    (t12b0_reg_node, fsl2mrtrix_conv_node, [("out_matrix_file", "in_flirt_matrix")]),
+                    (
+                        t1_brain_conv_node,
+                        fsl2mrtrix_conv_node,
+                        [("out_file", "in_source_image")],
+                    ),
+                    (
+                        mask_node,
+                        fsl2mrtrix_conv_node,
+                        [("out_file", "in_reference_image")],
+                    ),
+                    (
+                        t12b0_reg_node,
+                        fsl2mrtrix_conv_node,
+                        [("out_matrix_file", "in_flirt_matrix")],
+                    ),
                     # Apply registration without resampling on parcellations
-                    (label_convert_node, parc_transform_node, [("out_file", "in_files")]),
-                    (fsl2mrtrix_conv_node, parc_transform_node, [("out_mrtrix_matrix", "linear_transform")]),
-                    (caps_filenames_node, parc_transform_node, [("nodes", "out_filename")]),
+                    (
+                        label_convert_node,
+                        parc_transform_node,
+                        [("out_file", "in_files")],
+                    ),
+                    (
+                        fsl2mrtrix_conv_node,
+                        parc_transform_node,
+                        [("out_mrtrix_matrix", "linear_transform")],
+                    ),
+                    (
+                        caps_filenames_node,
+                        parc_transform_node,
+                        [("nodes", "out_filename")],
+                    ),
                 ]
             )
         # Special care for Parcellation & WM mask
@@ -485,16 +601,17 @@ class DwiConnectome(cpe.Pipeline):
             raise ClinicaCAPSError(
                 "Bad preprocessed DWI space. Please check your CAPS folder."
             )
-        # Outputs
-        # -------
         self.connect(
             [
                 (resp_estim_node, self.output_node, [("wm_file", "response")]),
                 (fod_estim_node, self.output_node, [("wm_odf", "fod")]),
                 (tck_gen_node, self.output_node, [("out_file", "tracts")]),
                 (conn_gen_node, self.output_node, [("out_file", "connectomes")]),
-                (self.input_node, print_end_message, [("dwi_file", "in_bids_or_caps_file")]),
+                (
+                    self.input_node,
+                    print_end_message,
+                    [("dwi_file", "in_bids_or_caps_file")],
+                ),
                 (conn_gen_node, print_end_message, [("out_file", "final_file")]),
             ]
         )
-        # fmt: off

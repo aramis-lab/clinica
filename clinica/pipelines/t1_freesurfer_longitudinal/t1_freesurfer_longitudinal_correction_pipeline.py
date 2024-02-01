@@ -1,50 +1,58 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
+class T1FreeSurferLongitudinalCorrection(Pipeline):
     """FreeSurfer Longitudinal correction class.
 
     Returns:
         A clinica pipeline object containing the T1FreeSurferLongitudinalCorrection pipeline
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
+        pass
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that cannot be listed in `info.json`."""
+        pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Note:
-            The list of inputs of the T1FreeSurferLongitudinalCorrection pipeline is:
-                * participant_id (str): Participant ID (e.g. "sub-CLNC01")
-                * session_id (str): Session ID associated to `participant_id` (e.g. "ses-M000")
-                * long_id (str): Longitudinal ID associated to `participant_id` (e.g. "long-M000" or "long-M000M018")
+        Notes
+        -----
+        The list of inputs of the T1FreeSurferLongitudinalCorrection pipeline is:
+            * participant_id (str): Participant ID (e.g. "sub-CLNC01")
+            * session_id (str): Session ID associated to `participant_id` (e.g. "ses-M000")
+            * long_id (str): Longitudinal ID associated to `participant_id` (e.g. "long-M000" or "long-M000M018")
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["participant_id", "session_id", "long_id"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Note:
-            The list of inputs of the T1FreeSurferLongitudinalCorrection pipeline is:
-                * subject_id (str): FreeSurfer ID
-                    (e.g. "sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018")
+        Notes
+        -----
+        The list of inputs of the T1FreeSurferLongitudinalCorrection pipeline is:
+            * subject_id (str): FreeSurfer ID
+                (e.g. "sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018")
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return ["subject_id"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -97,7 +105,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             else:
                 cprint("Image(s) will be ignored by Clinica.", lvl="warning")
                 input_ids = [
-                    p_id + "_" + s_id + "_" + l_id
+                    f"{p_id}_{s_id}_{l_id}"
                     for p_id, s_id, l_id in zip(
                         self.subjects, self.sessions, list_long_id
                     )
@@ -134,14 +142,14 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                 error_message += str(msg)
             raise ClinicaException(error_message)
 
-        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_part_sess_long_ids_to_tsv(
-            self.subjects, self.sessions, list_long_id, folder_participants_tsv
+            self.subjects, self.sessions, list_long_id, self.base_dir / self.name
         )
 
         def print_images_to_process(
-            list_participant_id, list_session_id, list_longitudinal_id
+            list_participant_id: List[str],
+            list_session_id: List[str],
+            list_longitudinal_id: List[str],
         ):
             cprint(
                 f"The pipeline will be run on the following {len(list_participant_id)} image(s):"
@@ -155,8 +163,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             # TODO: Generalize long IDs to the message display
             print_images_to_process(self.subjects, self.sessions, list_long_id)
             cprint(
-                "List available in %s"
-                % os.path.join(folder_participants_tsv, "participants.tsv")
+                f"List available in {self.base_dir / self.name / 'participants.tsv'}"
             )
             cprint("The pipeline will last approximately 10 hours per participant.")
 
@@ -178,10 +185,8 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             ]
         )
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -195,9 +200,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             ),
             name="SaveToCaps",
         )
-        save_to_caps.inputs.source_dir = os.path.join(
-            self.base_dir, self.name, "ReconAll"
-        )
+        save_to_caps.inputs.source_dir = self.base_dir / self.name / "ReconAll"
         save_to_caps.inputs.caps_dir = self.caps_directory
         save_to_caps.inputs.overwrite_caps = self.overwrite_caps
 
@@ -207,10 +210,8 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             ]
         )
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -239,9 +240,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             name="0-InitPipeline",
         )
         init_input.inputs.caps_dir = self.caps_directory
-        init_input.inputs.output_dir = os.path.join(
-            self.base_dir, self.name, "ReconAll"
-        )
+        init_input.inputs.output_dir = self.base_dir / self.name / "ReconAll"
 
         # Run recon-all command
         recon_all = npe.Node(
@@ -279,9 +278,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             ),
             name="3-MoveSubjectsDir",
         )
-        move_subjects_dir.inputs.source_dir = os.path.join(
-            self.base_dir, self.name, "ReconAll"
-        )
+        move_subjects_dir.inputs.source_dir = self.base_dir / self.name / "ReconAll"
 
         # Connections
         # ===========

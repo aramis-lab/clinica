@@ -1,33 +1,44 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class StatisticsVolumeCorrection(cpe.Pipeline):
+class StatisticsVolumeCorrection(Pipeline):
     """StatisticsVolumeCorrection - Statistical correction of StatisticsVolume pipeline.
 
     Returns:
         A clinica pipeline object containing the StatisticsVolumeCorrection pipeline.
     """
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def _check_pipeline_parameters(self) -> None:
+        """Check pipeline parameters."""
+        pass
+
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["t_map"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return []
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -53,10 +64,11 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
 
         self.connect([(read_parameters_node, self.input_node, [("t_map", "t_map")])])
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
+        pass
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         from os.path import abspath, dirname, exists, join, pardir
 
