@@ -134,3 +134,21 @@ def test_get_caps_filenames(tmp_path):
             "sub-01_ses-M000_model-CSD_atlas-destrieux_connectivity.tsv",
         ],
     )
+
+
+@pytest.mark.parametrize(
+    "subjects,sessions,expected",
+    [
+        ([], [], []),
+        (["foo"], ["bar"], ["subjects/foo/bar/dwi"]),
+        (
+            ["sub-01", "sub-02"],
+            ["ses-M000", "ses-M006"],
+            ["subjects/sub-01/ses-M000/dwi", "subjects/sub-02/ses-M006/dwi"],
+        ),
+    ],
+)
+def test_get_containers(subjects, sessions, expected):
+    from clinica.pipelines.dwi_connectome.dwi_connectome_utils import get_containers
+
+    assert get_containers(subjects, sessions) == expected

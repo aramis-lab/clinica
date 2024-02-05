@@ -92,12 +92,10 @@ def get_caps_filenames(dwi_file: str) -> tuple:
         f"{source_file_caps}_atlas-{atlas}_parcellation.nii.gz"
         for atlas in ("desikan", "destrieux")
     ]
-    # TODO: Add custom Lausanne2008 node files here.
     connectomes = [
         f"{source_file_bids}_model-CSD_atlas-{atlas}_connectivity.tsv"
         for atlas in ("desikan", "destrieux")
     ]
-    # TODO: Add custom Lausanne2008 connectome files here.
 
     return response, fod, tracts, nodes, connectomes
 
