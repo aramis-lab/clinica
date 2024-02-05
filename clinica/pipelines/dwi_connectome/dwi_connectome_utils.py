@@ -1,16 +1,12 @@
-from typing import List, Tuple
+from pathlib import Path
 
 
 def get_luts() -> list:
-    import os
     from pathlib import Path
 
-    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.check_dependency import check_environment_variable
 
-    try:
-        freesurfer_home = Path(os.environ["FREESURFER_HOME"])
-    except KeyError:
-        raise ClinicaException("Could not find FREESURFER_HOME environment variable.")
+    freesurfer_home = Path(check_environment_variable("FREESURFER_HOME", "Freesurfer"))
 
     return [
         str(freesurfer_home / "FreeSurferColorLUT.txt"),
@@ -18,52 +14,46 @@ def get_luts() -> list:
     ]
 
 
-def get_conversion_luts_offline():
-    # TODO: use this function if no internet connect found in client (need to upload files to clinica repository)
-    return
-
-
 def get_conversion_luts() -> list:
     from pathlib import Path
-
-    from clinica.utils.inputs import RemoteFileStructure, fetch_file
-    from clinica.utils.stream import cprint
 
     path_to_mappings = (
         Path(__file__).resolve().parent.parent.parent / "resources" / "mappings"
     )
-    url_mrtrix = "https://raw.githubusercontent.com/MRtrix3/mrtrix3/master/share/mrtrix3/labelconvert/"
-    fs_default = RemoteFileStructure(
-        filename="fs_default.txt",
-        url=url_mrtrix,
-        checksum="6ee07088915fdbcf52b05147ddae86e5fcaf3efc63db5b0ba8f361637dfa11ef",
-    )
-    fs_a2009s = RemoteFileStructure(
-        filename="fs_a2009s.txt",
-        url=url_mrtrix,
-        checksum="b472f09cfe92ac0b6694fb6b00a87baf15dd269566e4a92b8a151ff1080bf170",
-    )
-    ref_fs_default = path_to_mappings / fs_default.filename
-    ref_fs_a2009 = path_to_mappings / fs_a2009s.filename
+    resulting_paths = []
+    for filename in ("fs_default.txt", "fs_a2009s.txt"):
+        file_path = path_to_mappings / filename
+        if not file_path.is_file():
+            file_path = _download_mrtrix3_file(filename, path_to_mappings)
+        resulting_paths.append(str(file_path))
+    return resulting_paths
 
-    if not ref_fs_default.is_file():
-        try:
-            ref_fs_default = fetch_file(fs_default, path_to_mappings)
-        except IOError as err:
-            cprint(
-                msg=f"Unable to download required MRTRIX mapping (fs_default.txt) for processing: {err}",
-                lvl="error",
-            )
-    if not ref_fs_a2009.is_file():
-        try:
-            ref_fs_a2009 = fetch_file(fs_a2009s, path_to_mappings)
-        except IOError as err:
-            cprint(
-                msg=f"Unable to download required MRTRIX mapping (fs_a2009s.txt) for processing: {err}",
-                lvl="error",
-            )
 
-    return [ref_fs_default, ref_fs_a2009]
+def _download_mrtrix3_file(filename: str, path_to_mappings: Path) -> str:
+    from clinica.utils.inputs import RemoteFileStructure, fetch_file
+    from clinica.utils.stream import cprint
+
+    try:
+        return fetch_file(
+            RemoteFileStructure(
+                filename=filename,
+                url="https://raw.githubusercontent.com/MRtrix3/mrtrix3/master/share/mrtrix3/labelconvert/",
+                checksum=_get_checksum_for_filename(filename),
+            ),
+            str(path_to_mappings),
+        )
+    except IOError as err:
+        error_msg = f"Unable to download required MRTRIX mapping ({filename}) for processing: {err}"
+        cprint(msg=error_msg, lvl="error")
+        raise IOError(error_msg)
+
+
+def _get_checksum_for_filename(filename: str) -> str:
+    if filename == "fs_default.txt":
+        return "a8d561694887a1ca8d9df223aa5ef861b6c79d43ce9ed93835b9ce8aadc331b1"
+    if filename == "fs_a2009s.txt":
+        return "40b0d4d77bde7e1d265439347af5b30cc973748c1a88d203d7044cb35b3863e1"
+    raise ValueError(f"File name {filename} is not supported.")
 
 
 def get_containers(subjects: list, sessions: list) -> list:
