@@ -120,7 +120,7 @@ def test_instantiate_t1_volume_parcellation(cmdopt):
 
 
 def test_instantiate_dwi_preprocessing_using_t1(cmdopt):
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import (
+    from clinica.pipelines.dwi_preprocessing_using_t1.pipeline import (
         DwiPreprocessingUsingT1,
     )
 
@@ -143,7 +143,7 @@ def test_instantiate_dwi_preprocessing_using_t1(cmdopt):
 
 
 def test_instantiate_dwi_preprocessing_using_phase_diff_field_map(cmdopt):
-    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_pipeline import (
+    from clinica.pipelines.dwi_preprocessing_using_fmap.pipeline import (
         DwiPreprocessingUsingPhaseDiffFMap,
     )
 
@@ -164,7 +164,7 @@ def test_instantiate_dwi_preprocessing_using_phase_diff_field_map(cmdopt):
 
 
 def test_instantiate_dwi_dti(cmdopt):
-    from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
+    from clinica.pipelines.dwi_dti.pipeline import DwiDti
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "DWIDTI"
@@ -176,7 +176,7 @@ def test_instantiate_dwi_dti(cmdopt):
 
 
 def test_instantiate_dwi_connectome(cmdopt):
-    from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
+    from clinica.pipelines.dwi_connectome.pipeline import DwiConnectome
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "DWIConnectome"
@@ -370,10 +370,9 @@ def test_instantiate_workflows_ml(cmdopt):
     for inputs in voxel_input + region_input + vertex_input:
         for file in inputs.get_images():
             if isinstance(file, str):
-                assert exists(file)
+                assert Path(file).exists()
             elif isinstance(file, list) and len(file) == 2:
-                assert exists(file[0])
-                assert exists(file[1])
+                assert all([Path(p).exists() for p in file])
             else:
                 raise ValueError("An error occurred...")
 

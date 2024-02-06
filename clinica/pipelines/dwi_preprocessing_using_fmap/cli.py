@@ -41,9 +41,7 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
-    from .dwi_preprocessing_using_phasediff_fmap_pipeline import (
-        DwiPreprocessingUsingPhaseDiffFMap,
-    )
+    from .pipeline import DwiPreprocessingUsingPhaseDiffFMap
 
     parameters = {
         "low_bval": low_bval,

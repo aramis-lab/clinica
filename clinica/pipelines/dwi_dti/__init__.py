@@ -1,1 +1,1 @@
-from . import dwi_dti_cli
+from . import cli

@@ -170,22 +170,27 @@ def rads2hz(in_file: str, delta_te: float, out_file: str = None) -> str:
         Path to output file.
     """
     import math
-    import os
 
     import nibabel as nb
     import numpy as np
 
-    if out_file is None:
-        fname, fext = os.path.splitext(os.path.basename(in_file))
-        if fext == ".gz":
-            fname, _ = os.path.splitext(fname)
-        out_file = os.path.abspath(f"./{fname}_radsec.nii.gz")
-
     im = nb.load(in_file)
+    out_file = out_file or _get_output_file(in_file, "radsec")
     data = im.get_fdata().astype(np.float32) * (1.0 / (float(delta_te) * 2 * math.pi))
     nb.Nifti1Image(data, im.affine, im.header).to_filename(out_file)
 
     return out_file
+
+
+def _get_output_file(input_file: str, suffix: str) -> str:
+    from pathlib import Path
+
+    input_file = Path(input_file)
+    filename = input_file.name
+    if input_file.suffix == ".gz":
+        filename = Path(filename).name
+
+    return str(Path(f"./{filename}_{suffix}.nii.gz").resolve())
 
 
 def demean_image(in_file: str, in_mask: str = None, out_file: str = None) -> str:
@@ -193,18 +198,11 @@ def demean_image(in_file: str, in_mask: str = None, out_file: str = None) -> str
 
     This function was taken from: https://github.com/niflows/nipype1-workflows/
     """
-    import os.path as op
-
     import nibabel as nb
     import numpy as np
 
-    if out_file is None:
-        fname, fext = op.splitext(op.basename(in_file))
-        if fext == ".gz":
-            fname, _ = op.splitext(fname)
-        out_file = op.abspath("./%s_demean.nii.gz" % fname)
-
     im = nb.load(in_file)
+    out_file = out_file or _get_output_file(in_file, "demean")
     data = im.get_fdata().astype(np.float32)
     mask = np.ones_like(data)
 
@@ -216,6 +214,7 @@ def demean_image(in_file: str, in_mask: str = None, out_file: str = None) -> str
     mean = np.median(data[mask == 1].reshape(-1))
     data[mask == 1] = data[mask == 1] - mean
     nb.Nifti1Image(data, im.affine, im.header).to_filename(out_file)
+
     return out_file
 
 
@@ -225,17 +224,11 @@ def siemens2rads(in_file: str, out_file: str = None):
     This function was taken from: https://github.com/niflows/nipype1-workflows/
     """
     import math
-    import os.path as op
 
     import nibabel as nb
     import numpy as np
 
-    if out_file is None:
-        fname, fext = op.splitext(op.basename(in_file))
-        if fext == ".gz":
-            fname, _ = op.splitext(fname)
-        out_file = op.abspath("./%s_rads.nii.gz" % fname)
-
+    out_file = out_file or _get_output_file(in_file, "rads")
     in_file = np.atleast_1d(in_file).tolist()
     im = nb.load(in_file[0])
     data = im.get_fdata().astype(np.float32)

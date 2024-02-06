@@ -129,7 +129,7 @@ class DwiDti(Pipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .dwi_dti_utils import rename_into_caps
+        from .utils import rename_into_caps
 
         # Find container path from filename
         container_path = npe.Node(
@@ -241,7 +241,6 @@ class DwiDti(Pipeline):
 
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        import os
         from pathlib import Path
 
         import nipype.interfaces.fsl as fsl
@@ -255,7 +254,7 @@ class DwiDti(Pipeline):
         from clinica.utils.check_dependency import check_environment_variable
         from clinica.utils.dwi import extract_bids_identifier_from_filename
 
-        from .dwi_dti_utils import (
+        from .utils import (
             get_ants_transforms,
             get_caps_filenames,
             print_begin_pipeline,

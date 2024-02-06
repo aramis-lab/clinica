@@ -13,9 +13,7 @@ from numpy.testing import assert_array_almost_equal
 
 @pytest.mark.fast
 def test_dwi_b0_flirt(cmdopt, tmp_path):
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
-        b0_flirt_pipeline,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import b0_flirt_pipeline
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIB0Flirt")
@@ -39,9 +37,7 @@ def test_dwi_b0_flirt(cmdopt, tmp_path):
 
 @pytest.mark.slow
 def test_dwi_epi_pipeline(cmdopt, tmp_path):
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
-        epi_pipeline,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import epi_pipeline
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEPIPipeline")
@@ -83,7 +79,7 @@ def test_dwi_epi_pipeline(cmdopt, tmp_path):
 
 @pytest.mark.slow
 def test_dwi_perform_ants_registration(cmdopt, tmp_path):
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import (
         perform_ants_registration,
     )
 
@@ -140,7 +136,7 @@ def test_dwi_perform_ants_registration(cmdopt, tmp_path):
 
 @pytest.mark.slow
 def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import (
         perform_dwi_epi_correction,
     )
 
@@ -180,9 +176,7 @@ def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
 
 @pytest.mark.slow
 def test_dwi_eddy_fsl(cmdopt, tmp_path):
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
-        eddy_fsl_pipeline,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import eddy_fsl_pipeline
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEddyFSL")
@@ -238,7 +232,7 @@ def test_dwi_preprocessing_using_t1(cmdopt, tmp_path):
 def run_dwi_preprocessing_using_t1(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import (
+    from clinica.pipelines.dwi_preprocessing_using_t1.pipeline import (
         DwiPreprocessingUsingT1,
     )
 

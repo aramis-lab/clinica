@@ -88,8 +88,8 @@ def broadcast_matrix_filename_to_match_b_vector_length(
     """Return a list of the matrix filename repeated as many times as there are B-vectors."""
     import numpy as np
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (  # noqa
-        broadcast_filename_into_list,
+    from clinica.pipelines.dwi_preprocessing_using_t1.utils import (
+        broadcast_filename_into_list,  # noqa
     )
 
     b_vectors = np.loadtxt(b_vectors_filename).T
@@ -102,10 +102,11 @@ def broadcast_filename_into_list(filename: str, desired_length: int) -> list:
     return [filename] * desired_length
 
 
-def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
+def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine) -> str:
     import os
+    from pathlib import Path
 
-    out_warp = os.path.abspath("warped_epi.nii.gz")
+    out_warp = Path("warped_epi.nii.gz").resolve()
 
     cmd = (
         f"WarpImageMultiTransform 3 {moving_image} {out_warp} -R {fix_image} "
@@ -113,7 +114,7 @@ def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
     )
     os.system(cmd)
 
-    return out_warp
+    return str(out_warp)
 
 
 def rotate_b_vectors(
@@ -145,7 +146,6 @@ def rotate_b_vectors(
     coordinates in the original image. Therefore, this matrix should be inverted first, as
     we want to know the target position of :math:`\\vec{r}`.
     """
-    import os
     from pathlib import Path
 
     import numpy as np
@@ -160,7 +160,7 @@ def rotate_b_vectors(
     if output_dir:
         rotated_b_vectors_filename = Path(output_dir) / rotated_b_vectors_filename.name
     else:
-        rotated_b_vectors_filename = os.path.abspath(rotated_b_vectors_filename.name)
+        rotated_b_vectors_filename = Path(rotated_b_vectors_filename.name).resolve()
 
     b_vectors = np.loadtxt(b_vectors_filename).T
 
@@ -241,8 +241,8 @@ def prepare_reference_b0_task(
     """Task called be Nipype to execute prepare_reference_b0."""
     from pathlib import Path
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import (  # noqa
-        prepare_reference_b0,
+    from clinica.pipelines.dwi_preprocessing_using_t1.utils import (
+        prepare_reference_b0,  # noqa
     )
     from clinica.utils.dwi import DWIDataset
 
@@ -448,9 +448,7 @@ def register_b0(
         If the pipeline ran successfully, this file should be located in :
         working_directory / b0_coregistration / concat_ref_moving / merged_files.nii.gz
     """
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
-        b0_flirt_pipeline,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import b0_flirt_pipeline
 
     b0_flirt = b0_flirt_pipeline(num_b0s=nb_b0s)
     b0_flirt.inputs.inputnode.in_file = str(extracted_b0_filename)

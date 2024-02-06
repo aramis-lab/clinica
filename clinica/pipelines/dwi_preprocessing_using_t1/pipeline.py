@@ -148,7 +148,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .dwi_preprocessing_using_t1_utils import rename_into_caps
+        from .utils import rename_into_caps
 
         container_path = npe.Node(
             nutil.Function(
@@ -210,15 +210,12 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
 
         from clinica.utils.dwi import compute_average_b0_task
 
-        from .dwi_preprocessing_using_t1_utils import (
+        from .utils import (
             init_input_node,
             prepare_reference_b0_task,
             print_end_pipeline,
         )
-        from .dwi_preprocessing_using_t1_workflows import (
-            eddy_fsl_pipeline,
-            epi_pipeline,
-        )
+        from .workflows import eddy_fsl_pipeline, epi_pipeline
 
         # Nodes creation
         # ==============

@@ -36,7 +36,7 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
         - The reference B0 volume
         - The brain mask computed on the B0 volume
     """
-    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
+    from clinica.pipelines.dwi_preprocessing_using_fmap.workflows import (
         compute_reference_b0,
     )
     from clinica.utils.dwi import bids_dir_to_fsl_dir
@@ -91,7 +91,7 @@ def test_prepare_phasediff_fmap(cmdopt, tmp_path):
 
     This is a fast test which should run in less than a minute.
     """
-    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
+    from clinica.pipelines.dwi_preprocessing_using_fmap.workflows import (
         prepare_phasediff_fmap,
     )
     from clinica.utils.filemanip import extract_metadata_from_json
@@ -136,7 +136,7 @@ def test_dwi_calibrate_and_register_fmap(cmdopt, tmp_path):
 
     This is a fast test which should run in about 1 minute.
     """
-    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
+    from clinica.pipelines.dwi_preprocessing_using_fmap.workflows import (
         calibrate_and_register_fmap,
     )
     from clinica.utils.filemanip import extract_metadata_from_json
@@ -201,7 +201,7 @@ def test_dwi_preprocessing_using_phase_diff_field_map(cmdopt, tmp_path):
 def run_dwi_preprocessing_using_phase_diff_field_map(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_pipeline import (
+    from clinica.pipelines.dwi_preprocessing_using_fmap.pipeline import (
         DwiPreprocessingUsingPhaseDiffFMap,
     )
 

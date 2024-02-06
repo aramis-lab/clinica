@@ -1,1 +1,1 @@
-from . import dwi_connectome_cli
+from . import cli
