@@ -41,7 +41,7 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
-    from .dwi_connectome_pipeline import DwiConnectome
+    from .pipeline import DwiConnectome
 
     parameters = {"n_tracks": n_tracks}
 

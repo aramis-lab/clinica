@@ -110,15 +110,11 @@ def prepare_phasediff_fmap(
     import nipype.interfaces.utility as nutil
     import nipype.pipeline.engine as npe
 
-    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_phasediff_fmap_workflows import (
-        cleanup_edge_pipeline,
+    from clinica.pipelines.dwi_preprocessing_using_fmap.workflows import (
+        cleanup_edge_pipeline,  # noqa
     )
 
-    from .dwi_preprocessing_using_phasediff_fmap_utils import (
-        demean_image,
-        rads2hz,
-        siemens2rads,
-    )
+    from .utils import demean_image, rads2hz, siemens2rads
 
     input_node = npe.Node(
         nutil.IdentityInterface(
@@ -271,12 +267,10 @@ def compute_reference_b0(
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as npe
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
-        eddy_fsl_pipeline,
-    )
+    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import eddy_fsl_pipeline
     from clinica.utils.dwi import compute_average_b0
 
-    from .dwi_preprocessing_using_phasediff_fmap_utils import get_grad_fsl
+    from .utils import get_grad_fsl
 
     inputnode = npe.Node(
         niu.IdentityInterface(

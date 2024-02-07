@@ -192,7 +192,7 @@ class DwiConnectome(Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
+        from .utils import get_containers
 
         join_node = npe.JoinNode(
             name="JoinOutputs",
@@ -212,7 +212,7 @@ class DwiConnectome(Pipeline):
             ),
         )
         write_node.inputs.base_directory = str(self.caps_directory)
-        write_node.inputs.container = utils.get_containers(self.subjects, self.sessions)
+        write_node.inputs.container = get_containers(self.subjects, self.sessions)
         write_node.inputs.substitutions = [("trait_added", "")]
         write_node.inputs.parameterization = False
 
@@ -271,10 +271,17 @@ class DwiConnectome(Pipeline):
             Tractography,
         )
 
-        import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
         from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.mri_registration import (
             convert_flirt_transformation_to_mrtrix_transformation,
+        )
+
+        from .utils import (
+            get_caps_filenames,
+            get_conversion_luts,
+            get_luts,
+            print_begin_pipeline,
+            print_end_pipeline,
         )
 
         # Nodes
@@ -328,8 +335,8 @@ class DwiConnectome(Pipeline):
             iterfield=["in_file", "in_config", "in_lut", "out_file"],
             interface=mrtrix3.LabelConvert(),
         )
-        label_convert_node.inputs.in_config = utils.get_conversion_luts()
-        label_convert_node.inputs.in_lut = utils.get_luts()
+        label_convert_node.inputs.in_config = get_conversion_luts()
+        label_convert_node.inputs.in_lut = get_luts()
 
         # FSL flirt matrix to MRtrix matrix Conversion (only if space=b0)
         # --------------------------------------------
@@ -391,7 +398,7 @@ class DwiConnectome(Pipeline):
         print_begin_message = npe.MapNode(
             interface=niu.Function(
                 input_names=["in_bids_or_caps_file"],
-                function=utils.print_begin_pipeline,
+                function=print_begin_pipeline,
             ),
             iterfield="in_bids_or_caps_file",
             name="WriteBeginMessage",
@@ -402,7 +409,7 @@ class DwiConnectome(Pipeline):
         print_end_message = npe.MapNode(
             interface=niu.Function(
                 input_names=["in_bids_or_caps_file", "final_file"],
-                function=utils.print_end_pipeline,
+                function=print_end_pipeline,
             ),
             iterfield=["in_bids_or_caps_file"],
             name="WriteEndMessage",
@@ -415,7 +422,7 @@ class DwiConnectome(Pipeline):
             interface=niu.Function(
                 input_names="dwi_file",
                 output_names=self.get_output_fields(),
-                function=utils.get_caps_filenames,
+                function=get_caps_filenames,
             ),
         )
         self.connect(

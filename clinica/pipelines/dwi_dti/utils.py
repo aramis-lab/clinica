@@ -10,7 +10,7 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     Returns:
         List of paths leading to the statistics TSV files.
     """
-    import os
+    from pathlib import Path
 
     from nipype.utils.filemanip import split_filename
 
@@ -41,8 +41,7 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
                 f"_res-{atlas.get_spatial_resolution()}_map-{name_map}_statistics.tsv"
             )
 
-        out_atlas_statistics = os.path.abspath(os.path.join(os.getcwd(), filename))
-
+        out_atlas_statistics = str((Path.cwd() / filename).resolve())
         statistics_on_atlas(in_registered_map, atlas, out_atlas_statistics)
         atlas_statistics_list.append(out_atlas_statistics)
 

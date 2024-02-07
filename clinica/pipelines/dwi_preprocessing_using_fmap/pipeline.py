@@ -175,7 +175,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .dwi_preprocessing_using_phasediff_fmap_utils import rename_into_caps
+        from .utils import rename_into_caps
 
         container_path = npe.Node(
             nutil.Function(
@@ -261,19 +261,13 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import (
+        from clinica.pipelines.dwi_preprocessing_using_t1.workflows import (
             eddy_fsl_pipeline,
         )
         from clinica.utils.dwi import compute_average_b0
 
-        from .dwi_preprocessing_using_phasediff_fmap_utils import (
-            init_input_node,
-            print_end_pipeline,
-        )
-        from .dwi_preprocessing_using_phasediff_fmap_workflows import (
-            calibrate_and_register_fmap,
-            compute_reference_b0,
-        )
+        from .utils import init_input_node, print_end_pipeline
+        from .workflows import calibrate_and_register_fmap, compute_reference_b0
 
         init_node = npe.Node(
             interface=nutil.Function(
