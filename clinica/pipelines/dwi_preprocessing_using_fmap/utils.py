@@ -174,6 +174,10 @@ def rads2hz(in_file: str, delta_te: float, out_file: str = None) -> str:
     import nibabel as nb
     import numpy as np
 
+    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
+        _get_output_file,  # noqa
+    )
+
     im = nb.load(in_file)
     out_file = out_file or _get_output_file(in_file, "radsec")
     data = im.get_fdata().astype(np.float32) * (1.0 / (float(delta_te) * 2 * math.pi))
@@ -201,6 +205,10 @@ def demean_image(in_file: str, in_mask: str = None, out_file: str = None) -> str
     import nibabel as nb
     import numpy as np
 
+    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
+        _get_output_file,  # noqa
+    )
+
     im = nb.load(in_file)
     out_file = out_file or _get_output_file(in_file, "demean")
     data = im.get_fdata().astype(np.float32)
@@ -227,6 +235,10 @@ def siemens2rads(in_file: str, out_file: str = None):
 
     import nibabel as nb
     import numpy as np
+
+    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
+        _get_output_file,  # noqa
+    )
 
     out_file = out_file or _get_output_file(in_file, "rads")
     in_file = np.atleast_1d(in_file).tolist()
