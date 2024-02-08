@@ -285,7 +285,7 @@ def compute_reference_b0(
     import nipype.pipeline.engine as npe
 
     from clinica.pipelines.dwi_preprocessing_using_t1.workflows import eddy_fsl_pipeline
-    from clinica.utils.dwi import compute_average_b0
+    from clinica.utils.dwi import compute_average_b0_task
 
     from .utils import get_grad_fsl
 
@@ -328,13 +328,13 @@ def compute_reference_b0(
     # Compute the reference b0
     reference_b0 = npe.Node(
         niu.Function(
-            input_names=["in_dwi", "in_bval"],
+            input_names=["dwi_filename", "b_value_filename"],
             output_names=["out_b0_average"],
-            function=compute_average_b0,
+            function=compute_average_b0_task,
         ),
         name="reference_b0",
     )
-    reference_b0.inputs.low_bval = b_value_threshold
+    reference_b0.inputs.b_value_threshold = b_value_threshold
 
     # Compute brain mask from reference b0
     masked_reference_b0 = npe.Node(
@@ -377,8 +377,8 @@ def compute_reference_b0(
             ],
         ),
         (brain_mask, pre_eddy, [("out_file", "inputnode.in_mask")]),
-        (inputnode, reference_b0, [("b_values_filename", "in_bval")]),
-        (pre_eddy, reference_b0, [("outputnode.out_corrected", "in_dwi")]),
+        (inputnode, reference_b0, [("b_values_filename", "b_value_filename")]),
+        (pre_eddy, reference_b0, [("outputnode.out_corrected", "dwi_filename")]),
         (reference_b0, masked_reference_b0, [("out_b0_average", "in_file")]),
         (masked_reference_b0, outputnode, [("out_file", "reference_b0")]),
         (brain_mask, outputnode, [("out_file", "brainmask")]),
