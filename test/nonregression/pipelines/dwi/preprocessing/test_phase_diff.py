@@ -107,7 +107,7 @@ def test_prepare_phasediff_fmap(cmdopt, tmp_path):
     )
     delta_echo_time = abs(echo_time2 - echo_time1)
 
-    wf = prepare_phasediff_fmap(output_dir=str(tmp_path / "tmp"))
+    wf = prepare_phasediff_fmap(base_dir=str(tmp_dir), output_dir=str(tmp_path / "tmp"))
     wf.inputs.input_node.fmap_mask = str(
         input_dir / "sub-01_ses-M000_magnitude1_corrected_brain_mask.nii.gz"
     )
@@ -152,7 +152,9 @@ def test_dwi_calibrate_and_register_fmap(cmdopt, tmp_path):
     )
     delta_echo_time = abs(echo_time2 - echo_time1)
 
-    wf = calibrate_and_register_fmap(output_dir=str(tmp_path / "tmp"))
+    wf = calibrate_and_register_fmap(
+        base_dir=str(tmp_dir), output_dir=str(tmp_path / "tmp")
+    )
     wf.inputs.inputnode.reference_b0 = str(
         input_dir / "sub-01_ses-M000_avg_b0_brain.nii.gz"
     )
