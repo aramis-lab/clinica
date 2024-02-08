@@ -1,3 +1,11 @@
+import math
+from pathlib import Path
+from typing import Optional
+
+import nibabel as nib
+import numpy as np
+
+
 def rename_into_caps(
     in_bids_dwi: str,
     fname_dwi: str,
@@ -147,117 +155,189 @@ def print_end_pipeline(image_id, final_file):
     print_end_image(image_id)
 
 
-def rads2hz(in_file: str, delta_te: float, out_file: str = None) -> str:
+def convert_phase_difference_to_hertz(
+    phase_diff_filename: Path,
+    delta_echo_time: float,
+    working_dir: Optional[Path] = None,
+) -> Path:
     """Convert input phase difference map to Hz.
 
     Parameters
     ----------
-    in_file : str
-        Path to the phase difference map image.
+    phase_diff_filename : Path
+        The path to the phase difference map image.
 
-    delta_te : float
+    delta_echo_time : float
         The DeltaEchoTime from BIDS specifications.
 
-    out_file : str, optional
-        Path to output file. If None, the output image
+    working_dir : Path, optional
+        The path to the working directory. If None, the output image
         will be written in current folder. The file name
         will have the same base name as in_file, but with
         the "_radsec.nii.gz" suffix.
 
     Returns
     -------
-    out_file : str
-        Path to output file.
+    out_file : Path
+        The path to output file.
     """
-    import math
-
-    import nibabel as nb
-    import numpy as np
-
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
-        _get_output_file,  # noqa
+    im = nib.load(phase_diff_filename)
+    working_dir = working_dir or Path.cwd()
+    out_file = working_dir / _get_output_file(phase_diff_filename, "radsec")
+    data = im.get_fdata().astype(np.float32) * (
+        1.0 / (float(delta_echo_time) * 2 * math.pi)
     )
-
-    im = nb.load(in_file)
-    out_file = out_file or _get_output_file(in_file, "radsec")
-    data = im.get_fdata().astype(np.float32) * (1.0 / (float(delta_te) * 2 * math.pi))
-    nb.Nifti1Image(data, im.affine, im.header).to_filename(out_file)
+    nib.Nifti1Image(data, im.affine, im.header).to_filename(out_file)
 
     return out_file
 
 
-def _get_output_file(input_file: str, suffix: str) -> str:
+def _get_output_file(input_file: Path, suffix: str) -> str:
+    filename = input_file.stem
+    if input_file.suffix == ".gz":
+        filename = Path(filename).stem
+
+    return f"{filename}_{suffix}.nii.gz"
+
+
+def convert_phase_difference_to_hertz_task(
+    phase_diff_filename: str,
+    delta_echo_time: float,
+    working_dir: str = None,
+) -> str:
+    """Wrapper for Nipype."""
     from pathlib import Path
 
-    input_file = Path(input_file)
-    filename = input_file.name
-    if input_file.suffix == ".gz":
-        filename = Path(filename).name
+    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
+        convert_phase_difference_to_hertz,  # noqa
+    )
 
-    return str(Path(f"./{filename}_{suffix}.nii.gz").resolve())
+    if working_dir:
+        working_dir = Path(working_dir)
+    return str(
+        convert_phase_difference_to_hertz(
+            Path(phase_diff_filename), delta_echo_time, working_dir
+        )
+    )
 
 
-def demean_image(in_file: str, in_mask: str = None, out_file: str = None) -> str:
+def demean_image(
+    input_image: Path, mask: Optional[Path] = None, working_dir: Optional[Path] = None
+) -> Path:
     """Demean image data inside mask.
 
     This function was taken from: https://github.com/niflows/nipype1-workflows/
+
+    Parameters
+    ----------
+    input_image : Path
+        The image to demean.
+
+    mask : Path, optional
+        If provided, will be used to mask the image.
+
+    working_dir : Path, optional
+        The path to the working directory. If None, the output image
+        will be written in current folder. The file name
+        will have the same base name as in_file, but with
+        the "_demean.nii.gz" suffix.
+
+    Returns
+    -------
+    out_file : Path
+        The path to output file.
     """
-    import nibabel as nb
-    import numpy as np
-
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
-        _get_output_file,  # noqa
-    )
-
-    im = nb.load(in_file)
-    out_file = out_file or _get_output_file(in_file, "demean")
-    data = im.get_fdata().astype(np.float32)
-    mask = np.ones_like(data)
-
-    if in_mask is not None:
-        mask = nb.load(in_mask).get_fdata().astype(np.float32)
+    image = nib.load(input_image)
+    working_dir = working_dir or Path.cwd()
+    out_file = working_dir / _get_output_file(input_image, "demean")
+    data = image.get_fdata().astype(np.float32)
+    if mask:
+        mask = nib.load(mask).get_fdata().astype(np.float32)
         mask[mask > 0] = 1.0
         mask[mask < 1] = 0.0
-
-    mean = np.median(data[mask == 1].reshape(-1))
-    data[mask == 1] = data[mask == 1] - mean
-    nb.Nifti1Image(data, im.affine, im.header).to_filename(out_file)
+    else:
+        mask = np.ones_like(data)
+    mean_image = np.median(data[mask == 1].reshape(-1))
+    data[mask == 1] = data[mask == 1] - mean_image
+    nib.Nifti1Image(data, image.affine, image.header).to_filename(out_file)
 
     return out_file
 
 
-def siemens2rads(in_file: str, out_file: str = None):
+def demean_image_task(
+    input_image: str, mask: str = None, working_dir: str = None
+) -> str:
+    """Wrapper for Nipype."""
+    from pathlib import Path
+
+    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
+        demean_image,  # noqa
+    )
+
+    if working_dir:
+        working_dir = Path(working_dir)
+    if mask:
+        mask = Path(mask)
+    return str(demean_image(Path(input_image), mask, working_dir))
+
+
+def convert_phase_difference_to_rads(
+    phase_diff_filename: Path, working_dir: Optional[Path] = None
+) -> Path:
     """Converts input phase difference map to rads.
 
     This function was taken from: https://github.com/niflows/nipype1-workflows/
+
+    Parameters
+    ----------
+    phase_diff_filename : Path
+        The path to the phase difference map image.
+
+    working_dir : Path, optional
+        The path to the working directory. If None, the output image
+        will be written in current folder. The file name
+        will have the same base name as in_file, but with
+        the "_rads.nii.gz" suffix.
+
+    Returns
+    -------
+    out_file : Path
+        The path to output file.
     """
-    import math
-
-    import nibabel as nb
-    import numpy as np
-
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
-        _get_output_file,  # noqa
-    )
-
-    out_file = out_file or _get_output_file(in_file, "rads")
-    in_file = np.atleast_1d(in_file).tolist()
-    im = nb.load(in_file[0])
-    data = im.get_fdata().astype(np.float32)
-    hdr = im.header.copy()
+    working_dir = working_dir or Path.cwd()
+    out_file = working_dir / _get_output_file(phase_diff_filename, "rads")
+    in_file = np.atleast_1d(phase_diff_filename).tolist()
+    image = nib.load(in_file[0])
+    data = image.get_fdata().astype(np.float32)
+    header = image.header.copy()
 
     if len(in_file) == 2:
-        data = nb.load(in_file[1]).get_fdata().astype(np.float32) - data
+        data = nib.load(in_file[1]).get_fdata().astype(np.float32) - data
     elif (data.ndim == 4) and (data.shape[-1] == 2):
         data = np.squeeze(data[..., 1] - data[..., 0])
-        hdr.set_data_shape(data.shape[:3])
+        header.set_data_shape(data.shape[:3])
 
-    imin = data.min()
-    imax = data.max()
-    data = (2.0 * math.pi * (data - imin) / (imax - imin)) - math.pi
-    hdr.set_data_dtype(np.float32)
-    hdr.set_xyzt_units("mm")
-    hdr["datatype"] = 16
-    nb.Nifti1Image(data, im.affine, hdr).to_filename(out_file)
+    data_min = data.min()
+    data_max = data.max()
+    data = (2.0 * math.pi * (data - data_min) / (data_max - data_min)) - math.pi
+    header.set_data_dtype(np.float32)
+    header.set_xyzt_units("mm")
+    header["datatype"] = 16
+    nib.Nifti1Image(data, image.affine, header).to_filename(out_file)
 
     return out_file
+
+
+def convert_phase_difference_to_rads_task(
+    phase_diff_filename: str, working_dir: str = None
+) -> str:
+    """Wrapper for Nipype."""
+    from pathlib import Path
+
+    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
+        convert_phase_difference_to_rads,  # noqa
+    )
+
+    if working_dir:
+        working_dir = Path(working_dir)
+    return str(convert_phase_difference_to_rads(Path(phase_diff_filename), working_dir))

@@ -59,6 +59,7 @@ def cleanup_edge_pipeline(name: str = "Cleanup") -> Workflow:
 
 
 def prepare_phasediff_fmap(
+    base_dir: str,
     output_dir: Optional[str] = None,
     name: Optional[str] = "prepare_phasediff_fmap",
 ) -> Workflow:
@@ -79,6 +80,9 @@ def prepare_phasediff_fmap(
 
     Parameters
     ----------
+    base_dir : str
+        The base directory.
+
     output_dir: str, optional
          Path to output directory.
          If provided, the pipeline will write its output in this folder.
@@ -114,7 +118,11 @@ def prepare_phasediff_fmap(
         cleanup_edge_pipeline,  # noqa
     )
 
-    from .utils import demean_image, rads2hz, siemens2rads
+    from .utils import (
+        convert_phase_difference_to_hertz_task,
+        convert_phase_difference_to_rads_task,
+        demean_image_task,
+    )
 
     input_node = npe.Node(
         nutil.IdentityInterface(
@@ -130,10 +138,13 @@ def prepare_phasediff_fmap(
 
     convert_fmap_to_rads = npe.Node(
         nutil.Function(
-            input_names=["in_file"], output_names=["out_file"], function=siemens2rads
+            input_names=["phase_diff_filename"],
+            output_names=["out_file"],
+            function=convert_phase_difference_to_rads_task,
         ),
         name="convert_fmap_to_rads",
     )
+    convert_fmap_to_rads.inputs.working_dir = base_dir
 
     unwrap_fmap_with_prelude = npe.Node(
         fsl.PRELUDE(process3d=True), name="unwrap_fmap_with_prelude"
@@ -141,12 +152,13 @@ def prepare_phasediff_fmap(
 
     convert_fmap_to_hz = npe.Node(
         nutil.Function(
-            input_names=["in_file", "delta_te"],
+            input_names=["phase_diff_filename", "delta_echo_time"],
             output_names=["out_file"],
-            function=rads2hz,
+            function=convert_phase_difference_to_hertz_task,
         ),
         name="convert_fmap_to_hz",
     )
+    convert_fmap_to_hz.inputs.working_dir = base_dir
 
     fugue_extrapolation_from_mask = npe.Node(
         fsl.FUGUE(save_fmap=True), name="fugue_extrapolation_from_mask"
@@ -154,12 +166,13 @@ def prepare_phasediff_fmap(
 
     demean_fmap = npe.Node(
         nutil.Function(
-            input_names=["in_file", "in_mask"],
+            input_names=["input_image", "mask"],
             output_names=["out_file"],
-            function=demean_image,
+            function=demean_image_task,
         ),
         name="demean_fmap",
     )
+    demean_fmap.inputs.working_dir = base_dir
 
     cleanup_edge_voxels = cleanup_edge_pipeline(name="cleanup_edge_voxels")
 
@@ -176,24 +189,28 @@ def prepare_phasediff_fmap(
     wf = npe.Workflow(name=name)
 
     connections = [
-        (input_node, convert_fmap_to_rads, [("fmap_phasediff", "in_file")]),
+        (input_node, convert_fmap_to_rads, [("fmap_phasediff", "phase_diff_filename")]),
         (convert_fmap_to_rads, unwrap_fmap_with_prelude, [("out_file", "phase_file")]),
         (input_node, unwrap_fmap_with_prelude, [("fmap_magnitude", "magnitude_file")]),
         (input_node, unwrap_fmap_with_prelude, [("fmap_mask", "mask_file")]),
         (
             unwrap_fmap_with_prelude,
             convert_fmap_to_hz,
-            [("unwrapped_phase_file", "in_file")],
+            [("unwrapped_phase_file", "phase_diff_filename")],
         ),
-        (input_node, convert_fmap_to_hz, [("delta_echo_time", "delta_te")]),
+        (input_node, convert_fmap_to_hz, [("delta_echo_time", "delta_echo_time")]),
         (
             convert_fmap_to_hz,
             fugue_extrapolation_from_mask,
             [("out_file", "fmap_in_file")],
         ),
         (input_node, fugue_extrapolation_from_mask, [("fmap_mask", "mask_file")]),
-        (fugue_extrapolation_from_mask, demean_fmap, [("fmap_out_file", "in_file")]),
-        (input_node, demean_fmap, [("fmap_mask", "in_mask")]),
+        (
+            fugue_extrapolation_from_mask,
+            demean_fmap,
+            [("fmap_out_file", "input_image")],
+        ),
+        (input_node, demean_fmap, [("fmap_mask", "mask")]),
         (demean_fmap, cleanup_edge_voxels, [("out_file", "inputnode.in_file")]),
         (input_node, cleanup_edge_voxels, [("fmap_mask", "inputnode.in_mask")]),
         (
@@ -378,6 +395,7 @@ def compute_reference_b0(
 
 
 def calibrate_and_register_fmap(
+    base_dir: str,
     output_dir: Optional[str] = None,
     name: str = "calibrate_and_register_fmap",
 ) -> Workflow:
@@ -391,6 +409,9 @@ def calibrate_and_register_fmap(
 
     Parameters
     ----------
+    base_dir : str
+        The base directory.
+
     output_dir: str, optional
         Path to output directory.
         If provided, the pipeline will write its output in this folder.
@@ -445,7 +466,7 @@ def calibrate_and_register_fmap(
     )
 
     # Calibrate FMap
-    calibrate_fmap = prepare_phasediff_fmap(name="calibrate_fmap")
+    calibrate_fmap = prepare_phasediff_fmap(base_dir=base_dir, name="calibrate_fmap")
 
     # Register the BET magnitude fmap onto the BET b0
     register_bet_magnitude_fmap_onto_b0 = npe.Node(
