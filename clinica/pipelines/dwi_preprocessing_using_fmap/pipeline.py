@@ -293,7 +293,9 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
         )
-        fmap_calibration_and_registration = calibrate_and_register_fmap()
+        fmap_calibration_and_registration = calibrate_and_register_fmap(
+            base_dir=self.base_dir
+        )
 
         # Step 3: Run FSL eddy
         # ====================
