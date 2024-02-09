@@ -115,7 +115,7 @@ def _get_participants_and_subjects_sessions_df(
     from clinica.utils.stream import cprint
 
     index_cols = ["participant_id", "session_id"]
-    sessions, subjects = get_subject_session_list(
+    subjects, sessions = get_subject_session_list(
         bids_dir, ss_file=tsv_file, use_session_tsv=(not ignore_sessions_files)
     )
     if (bids_dir / "participants.tsv").is_file():
