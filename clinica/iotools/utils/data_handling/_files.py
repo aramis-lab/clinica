@@ -55,7 +55,7 @@ def _create_subs_sess_list_as_text(path_to_search: Path, use_session_tsv: bool) 
         else:
             sessions = [f for f in subject_path.glob("*ses-*")]
             sessions.sort()
-            for ses_path in sessions:
+            for ses_path in sorted(sessions):
                 txt += f"{subject_path.name}\t{ses_path.name}\n"
     return txt
 
@@ -72,7 +72,7 @@ def _create_session_list_for_subject_from_tsv(subject_path: Path) -> str:
         subject_path / f"{subject_path.name}_sessions.tsv", sep="\t"
     )
     session_df.dropna(how="all", inplace=True)
-    session_list = list(session_df["session_id"].to_numpy())
+    session_list = sorted(list(session_df["session_id"].to_numpy()))
     return (
         "\n".join([f"{subject_path.name}\t{session}" for session in session_list])
         + "\n"
