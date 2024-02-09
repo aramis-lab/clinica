@@ -116,7 +116,9 @@ def _get_participants_and_subjects_sessions_df(
 
     index_cols = ["participant_id", "session_id"]
     subjects, sessions = get_subject_session_list(
-        bids_dir, ss_file=tsv_file, use_session_tsv=(not ignore_sessions_files)
+        bids_dir,
+        subject_session_file=tsv_file,
+        use_session_tsv=(not ignore_sessions_files),
     )
     if (bids_dir / "participants.tsv").is_file():
         participants_df = pd.read_csv(bids_dir / "participants.tsv", sep="\t")
