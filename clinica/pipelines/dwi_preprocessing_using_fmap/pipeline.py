@@ -264,7 +264,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
         from clinica.pipelines.dwi_preprocessing_using_t1.workflows import (
             eddy_fsl_pipeline,
         )
-        from clinica.utils.dwi import compute_average_b0
+        from clinica.utils.dwi import compute_average_b0_task
 
         from .utils import init_input_node, print_end_pipeline
         from .workflows import calibrate_and_register_fmap, compute_reference_b0
@@ -317,13 +317,13 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
         # Compute average b0 on corrected dataset (for brain mask extraction)
         compute_avg_b0 = npe.Node(
             nutil.Function(
-                input_names=["in_dwi", "in_bval"],
+                input_names=["dwi_filename", "b_value_filename"],
                 output_names=["out_b0_average"],
-                function=compute_average_b0,
+                function=compute_average_b0_task,
             ),
             name="5a-ComputeB0Average",
         )
-        compute_avg_b0.inputs.low_bval = self.parameters["low_bval"]
+        compute_avg_b0.inputs.b_value_threshold = self.parameters["low_bval"]
 
         # Compute b0 mask on corrected avg b0
         mask_avg_b0 = npe.Node(fsl.BET(mask=True, robust=True), name="5b-MaskB0")
@@ -406,8 +406,8 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
             # Step 5: Final brainmask
             # =======================
             # Compute average b0 on corrected dataset (for brain mask extraction)
-            (init_node, compute_avg_b0, [("bval", "in_bval")]),
-            (bias, compute_avg_b0, [("out_file", "in_dwi")]),
+            (init_node, compute_avg_b0, [("bval", "b_value_filename")]),
+            (bias, compute_avg_b0, [("out_file", "dwi_filename")]),
             # Compute b0 mask on corrected avg b0
             (compute_avg_b0, mask_avg_b0, [("reference_b0", "in_file")]),
             # Print end message
