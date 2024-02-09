@@ -50,7 +50,7 @@ xlrd = "*"
 openpyxl = "*"
 fsspec = "*"
 pydra-nipype1 = "^0.2"
-pydra = "^0.22"
+pydra = { git = "https://github.com/nipype/pydra.git", rev = "07a048a" }
 pybids = "^0.16"
 joblib = "^1.2.0"
 attrs = ">=20.1.0"

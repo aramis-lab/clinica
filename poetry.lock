@@ -645,6 +645,25 @@ files = [
 testing = ["hatch", "pre-commit", "pytest", "tox"]
 
 [[package]]
+name = "fileformats"
+version = "0.10.11"
+description = "Classes for representing different file formats in Python classes for use in type hinting in data workflows"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "fileformats-0.10.11-py3-none-any.whl", hash = "sha256:23ea5a9c02fd5f5b2ff8b3d37559d9b9d4c204fcb24108f013c10f348b272246"},
+    {file = "fileformats-0.10.11.tar.gz", hash = "sha256:471998d70c500e40c616e0b375c499c28dddd9eb264bda21c681a6cfb7f51353"},
+]
+
+[package.dependencies]
+typing-extensions = {version = ">=4.6.3", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["black", "codespell", "fileformats[test]", "flake8", "flake8-pyproject", "pre-commit"]
+docs = ["docutils (>=0.10)", "furo (>=2022.2.14.1)", "mock (>1.0)", "numpydoc (>=0.6.0)", "packaging", "sphinx (>=2.1.2)", "sphinx-argparse (>=0.2.0)", "sphinx-click (>=3.1)"]
+test = ["pydra (>=0.23.0a0)", "pytest (>=6.2.5)", "pytest-cov (>=2.12.1)", "pytest-env (>=0.6.2)"]
+
+[[package]]
 name = "filelock"
 version = "3.13.1"
 description = "A platform independent file lock."
@@ -2211,29 +2230,38 @@ tests = ["black", "chardet", "tox"]
 
 [[package]]
 name = "pydra"
-version = "0.22"
+version = "0.23.0a1.dev174+g07a048a"
 description = "Pydra dataflow engine"
 optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "pydra-0.22-py3-none-any.whl", hash = "sha256:b764b147f80e19ca900ab15bbccc2e16529d353019b6d26285a1ba0bd2c2efde"},
-    {file = "pydra-0.22.tar.gz", hash = "sha256:8e37e621f61c76e54b82dfbb1b53fe46dd117c76872d9e2ac2b4c7b95fb89d4c"},
-]
+python-versions = ">=3.8"
+files = []
+develop = false
 
 [package.dependencies]
 attrs = ">=19.1.0"
 cloudpickle = ">=2.0.0"
 etelemetry = ">=0.2.2"
+fileformats = ">=0.8"
 filelock = ">=3.0.0"
+importlib_resources = {version = ">=5.7", markers = "python_version < \"3.11\""}
+typing_extensions = {version = ">=4.6.3", markers = "python_version < \"3.10\""}
+typing_utils = {version = ">=0.1.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
 all = ["pydra[dev,doc]"]
 dask = ["dask", "distributed"]
 dev = ["black", "pre-commit", "pydra[test]"]
-doc = ["packaging", "sphinx (>=2.1.2)", "sphinx_rtd_theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-versioning"]
+doc = ["packaging", "sphinx (==6.2.1)", "sphinx_rtd_theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-versioning"]
 docs = ["pydra[doc]"]
+psij = ["psij-python"]
 test = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "tornado"]
 tests = ["pydra[test]"]
+
+[package.source]
+type = "git"
+url = "https://github.com/nipype/pydra.git"
+reference = "07a048a"
+resolved_reference = "07a048a386acf51f2b57264b68eecec217997667"
 
 [[package]]
 name = "pydra-ants"
@@ -3357,6 +3385,20 @@ files = [
 ]
 
 [[package]]
+name = "typing-utils"
+version = "0.1.0"
+description = "utils to inspect Python type annotations"
+optional = false
+python-versions = ">=3.6.1"
+files = [
+    {file = "typing_utils-0.1.0-py3-none-any.whl", hash = "sha256:6bd26f3d38a5dd526ca3a59f0a451ccb59bcee9dc829c872dd6c0aae4ec8bbef"},
+    {file = "typing_utils-0.1.0.tar.gz", hash = "sha256:8ff6b6705414b82575ad5ae0925ac414a9650fb8c5718289b1327dec61252f65"},
+]
+
+[package.extras]
+test = ["pytest"]
+
+[[package]]
 name = "urllib3"
 version = "2.2.0"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -3603,4 +3645,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "602ed0ab5b34c5752e86da1c7e20ae2c826dd50391d8998d16faa910bd4a30b2"
+content-hash = "2d684d242a2ba59fdb02a71e98d7f49201da4d0234da1afd8dacf983c3cb496d"
