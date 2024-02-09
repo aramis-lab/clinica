@@ -6,30 +6,30 @@ from clinica.utils.dwi import DWIDataset
 
 
 def rename_into_caps(
-    in_bids_dwi: str,
-    fname_dwi: str,
-    fname_bval: str,
-    fname_bvec: str,
-    fname_brainmask: str,
-):
+    dwi_filename: str,
+    dwi_preproc_filename: str,
+    b_values_preproc_filename: str,
+    b_vectors_preproc_filename: str,
+    b0_brain_mask_filename: str,
+) -> tuple:
     """Rename the outputs of the pipelines into CAPS.
 
     Parameters
     ----------
-    in_bids_dwi : str
-        Path to input BIDS DWI to extract the <source_file>
+    dwi_filename : str
+        The path to the input BIDS DWI to extract the <source_file>.
 
-    fname_dwi : str
-        Name of preprocessed DWI file.
+    dwi_preproc_filename : str
+        The path to the preprocessed DWI file.
 
-    fname_bval : str
-        Name of preprocessed bval file.
+    dwi_preproc_filename : str
+        The path to the preprocessed DWI file.
 
-    fname_bvec : str
-        Name of preprocessed bvec file.
+    b_vectors_preproc_filename : str
+        The path to the preprocessed b-vectors file.
 
-    fname_brainmask : str
-        Name of B0 mask file.
+    b0_brain_mask_filename : str
+        The path to the B0 mask file.
 
     Returns
     -------
@@ -39,12 +39,12 @@ def rename_into_caps(
     from clinica.utils.dwi import rename_files
 
     return rename_files(
-        in_bids_dwi,
+        dwi_filename,
         {
-            fname_dwi: "_space-T1w_desc-preproc_dwi.nii.gz",
-            fname_bval: "_space-T1w_desc-preproc_dwi.bval",
-            fname_bvec: "_space-T1w_desc-preproc_dwi.bvec",
-            fname_brainmask: "_space-T1w_brainmask.nii.gz",
+            dwi_preproc_filename: "_space-T1w_desc-preproc_dwi.nii.gz",
+            b_values_preproc_filename: "_space-T1w_desc-preproc_dwi.bval",
+            b_vectors_preproc_filename: "_space-T1w_desc-preproc_dwi.bvec",
+            b0_brain_mask_filename: "_space-T1w_brainmask.nii.gz",
         },
     )
 
@@ -183,30 +183,78 @@ def rotate_b_vectors(
     return str(rotated_b_vectors_filename)
 
 
-def init_input_node(t1w, dwi, bvec, bval, dwi_json):
-    """Initialize the pipeline."""
-    from clinica.utils.dwi import DWIDataset, bids_dir_to_fsl_dir, check_dwi_volume
-    from clinica.utils.filemanip import (
-        extract_metadata_from_json,
-        get_subject_id,
-        handle_missing_keys_dwi,
+def init_input_node(
+    t1w_filename: str,
+    dwi_filename: str,
+    dwi_json_filename: str,
+    b_vectors_filename: str,
+    b_values_filename: str,
+) -> tuple:
+    """Initialize the pipeline.
+
+    Parameters
+    ----------
+    t1w_filename : str
+        The path to the T1w image in BIDS format.
+
+    dwi_filename : str
+        The path to the diffusion weighted image in BIDS format.
+
+    dwi_json_filename : str
+        The path to the DWI JSON file in BIDS format and containing
+        'TotalReadoutTime' and 'PhaseEncodingDirection' metadata
+        (see BIDS specifications).
+
+    b_vectors_filename : str
+        The path to the b-vectors file in BIDS format.
+
+    b_values_filename : str
+        The path of the b-values file in BIDS format.
+
+    Returns
+    -------
+    image_id : str
+        The subject ID extracted from the t1w image path.
+
+    t1w_filename : str
+        The path to the T1w image in BIDS format.
+
+    dwi_filename : str
+        The path to the diffusion weighted image in BIDS format.
+
+    b_vectors_filename : str
+        The path to the b-vectors file in BIDS format.
+
+    b_values_filename : str
+        The path of the b-values file in BIDS format.
+
+    total_readout_time : str
+        The total readout time extracted from the dwi JSON file.
+
+    phase_encoding_direction : str
+        The phase encoding direction for the dwi image, extracted
+        from the dwi JSON file.
+    """
+    from clinica.utils.dwi import (
+        DWIDataset,
+        check_dwi_volume,
+        get_readout_time_and_phase_encoding_direction,
     )
+    from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
 
-    image_id = get_subject_id(t1w)
-    check_dwi_volume(DWIDataset(dwi=dwi, b_values=bval, b_vectors=bvec))
-
-    [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
-        dwi_json,
-        [
-            "TotalReadoutTime",
-            "PhaseEncodingDirection",
-        ],
-        handle_missing_keys=handle_missing_keys_dwi,
+    image_id = get_subject_id(t1w_filename)
+    check_dwi_volume(
+        DWIDataset(
+            dwi=dwi_filename,
+            b_values=b_values_filename,
+            b_vectors=b_vectors_filename,
+        )
     )
-    phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
-
-    # Print begin message
+    (
+        total_readout_time,
+        phase_encoding_direction,
+    ) = get_readout_time_and_phase_encoding_direction(dwi_json_filename)
     print_begin_image(
         image_id,
         ["TotalReadoutTime", "PhaseEncodingDirection"],
@@ -215,10 +263,10 @@ def init_input_node(t1w, dwi, bvec, bval, dwi_json):
 
     return (
         image_id,
-        t1w,
-        dwi,
-        bvec,
-        bval,
+        t1w_filename,
+        dwi_filename,
+        b_vectors_filename,
+        b_values_filename,
         total_readout_time,
         phase_encoding_direction,
     )
@@ -237,7 +285,7 @@ def prepare_reference_b0_task(
     b_vectors_filename: str,
     b_value_threshold: float = 5.0,
     working_directory=None,
-):
+) -> tuple:
     """Task called be Nipype to execute prepare_reference_b0."""
     from pathlib import Path
 
@@ -305,7 +353,9 @@ def prepare_reference_b0(
     dwi_dataset = check_dwi_dataset(dwi_dataset)
     working_directory = configure_working_directory(dwi_dataset.dwi, working_directory)
     small_b_dataset, large_b_dataset = split_dwi_dataset_with_b_values(
-        dwi_dataset, b_value_threshold=b_value_threshold
+        dwi_dataset,
+        b_value_threshold=b_value_threshold,
+        working_directory=working_directory,
     )
     reference_b0 = compute_reference_b0(
         small_b_dataset.dwi, dwi_dataset.b_values, b_value_threshold, working_directory
@@ -317,10 +367,10 @@ def prepare_reference_b0(
 
 def compute_reference_b0(
     extracted_b0: Path,
-    b_value_filename: Path,
+    b_values_filename: Path,
     b_value_threshold: float,
     working_directory: Path,
-    clean_working_dir: bool = True,
+    clean_working_dir: bool = False,
 ) -> Path:
     """Compute the reference B0.
 
@@ -334,10 +384,10 @@ def compute_reference_b0(
     Parameters
     ----------
     extracted_b0 : Path
-        Path to the image of the extracted B0 volume.
+        The path to the image of the extracted B0 volume.
 
-    b_value_filename : Path
-        Path to the b-values file.
+    b_values_filename : Path
+        The path to the b-values file.
 
     b_value_threshold : float
         Threshold on b-values to decide whether a DWI volume is
@@ -349,7 +399,7 @@ def compute_reference_b0(
     clean_working_dir : bool, optional
         If True, the working directory will be cleaned at the end of
         the execution.
-        Default=True.
+        Default=False.
 
     Returns
     -------
@@ -364,11 +414,11 @@ def compute_reference_b0(
     from clinica.utils.dwi import compute_average_b0, count_b0s
 
     nb_b0s = count_b0s(
-        b_value_filename=b_value_filename, b_value_threshold=b_value_threshold
+        b_value_filename=b_values_filename, b_value_threshold=b_value_threshold
     )
     if nb_b0s <= 0:
         raise ValueError(
-            f"The number of b0s should be strictly positive (b-val file: {b_value_filename})."
+            f"The number of b0s should be strictly positive (b-val file: {b_values_filename})."
         )
     if nb_b0s == 1:
         return extracted_b0
@@ -396,7 +446,7 @@ def configure_working_directory(
     Parameters
     ----------
     dwi_filename : Path
-        Path to DWI file. This is used to create the name of the folder.
+        The path to the DWI image file. This is used to create the name of the folder.
 
     working_directory : Path, optional
         The folder to be used if provided by the user.
@@ -404,18 +454,18 @@ def configure_working_directory(
 
     Returns
     -------
-    str:
-        The configured working directory.
+    Path:
+        The path to the configured working directory.
     """
     import hashlib
     import tempfile
     from pathlib import Path
 
-    working_directory = working_directory or tempfile.mkdtemp()
+    working_directory = working_directory or Path(tempfile.mkdtemp())
     working_directory = (
-        Path(working_directory) / hashlib.md5(str(dwi_filename).encode()).hexdigest()
+        working_directory / hashlib.md5(str(dwi_filename).encode()).hexdigest()
     )
-    working_directory.mkdir(parents=True)
+    working_directory.mkdir(parents=True, exist_ok=True)
 
     return working_directory
 
@@ -484,3 +534,45 @@ def extract_sub_ses_folder_name(file_path: str) -> str:
     from pathlib import Path
 
     return (Path(Path(file_path).parent).parent).name
+
+
+def generate_index_file_task(
+    b_values_filename: str,
+    image_id=None,
+    output_dir=None,
+) -> str:
+    """Wrapper for Nipype."""
+    from pathlib import Path
+
+    from clinica.utils.dwi import generate_index_file
+
+    return str(
+        generate_index_file(
+            Path(b_values_filename),
+            image_id,
+            Path(output_dir) if output_dir else None,
+        )
+    )
+
+
+def generate_acq_file_task(
+    dwi_filename: str,
+    fsl_phase_encoding_direction: str,
+    total_readout_time: str,
+    image_id=None,
+    output_dir=None,
+) -> str:
+    """Wrapper for Nipype."""
+    from pathlib import Path
+
+    from clinica.utils.dwi import generate_acq_file
+
+    return str(
+        generate_acq_file(
+            Path(dwi_filename),
+            fsl_phase_encoding_direction,
+            total_readout_time,
+            image_id,
+            Path(output_dir) if output_dir else None,
+        )
+    )

@@ -88,12 +88,10 @@ def test_generate_acq_file(tmp_path, image_id, phase, expected):
     acq_file = generate_acq_file(
         tmp_path / "dwi.nii.gz", phase, "16", image_id=image_id
     )
-    if image_id:
-        assert acq_file == str(tmp_path / f"{image_id}_acq.txt")
-    else:
-        assert acq_file == str(tmp_path / "acq.txt")
-    with open(acq_file, "r") as fp:
-        lines = fp.readlines()
+    filename = f"{image_id}_acq.txt" if image_id else "acq.txt"
+    assert acq_file == tmp_path / filename
+    with acq_file.open() as f:
+        lines = f.readlines()
     assert lines == expected
 
 
@@ -104,7 +102,7 @@ def test_generate_index_file_bvalue_file_error(tmp_path):
         FileNotFoundError,
         match="Unable to find b-values file",
     ):
-        generate_index_file(str(tmp_path / "foo.txt"))
+        generate_index_file(tmp_path / "foo.txt")
 
 
 @pytest.mark.parametrize("image_id", [None, "foo", "foo_bar"])
@@ -112,11 +110,11 @@ def test_generate_index_file(tmp_path, image_id):
     from clinica.utils.dwi import generate_index_file
 
     np.savetxt(tmp_path / "foo.bval", [0] + [1000] * 7)
-    index_file = generate_index_file(str(tmp_path / "foo.bval"), image_id=image_id)
+    index_file = generate_index_file(tmp_path / "foo.bval", image_id=image_id)
     if image_id:
-        assert index_file == str(tmp_path / f"{image_id}_index.txt")
+        assert index_file == tmp_path / f"{image_id}_index.txt"
     else:
-        assert index_file == str(tmp_path / "index.txt")
+        assert index_file == tmp_path / "index.txt"
     index = np.loadtxt(index_file)
     assert_array_equal(index, np.ones(8))
 

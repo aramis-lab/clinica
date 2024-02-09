@@ -20,6 +20,28 @@ class DTIBasedMeasure(str, Enum):
     RADIAL_DIFFUSIVITY = "RD"
 
 
+def get_readout_time_and_phase_encoding_direction(
+    dwi_json_filename: str,
+) -> Tuple[str, str]:
+    """Extract the readout time and phase encoding direction from the DWI JSON file."""
+    from clinica.utils.filemanip import (
+        extract_metadata_from_json,
+        handle_missing_keys_dwi,
+    )
+
+    [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
+        dwi_json_filename,
+        [
+            "TotalReadoutTime",
+            "PhaseEncodingDirection",
+        ],
+        handle_missing_keys=handle_missing_keys_dwi,
+    )
+    phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
+
+    return total_readout_time, phase_encoding_direction
+
+
 def count_b0s(b_value_filename: PathLike, b_value_threshold: float = 5.0) -> int:
     """Counts the number of volumes where b<=low_bval.
 
@@ -233,6 +255,7 @@ def add_suffix_to_filename(filename: Path, suffix: str) -> Path:
 def split_dwi_dataset_with_b_values(
     dwi_dataset: DWIDataset,
     b_value_threshold: float = 5.0,
+    working_directory: Optional[Path] = None,
 ) -> Tuple[DWIDataset, DWIDataset]:
     """Splits the DWI dataset in two through the B-values.
 
@@ -251,6 +274,11 @@ def split_dwi_dataset_with_b_values(
     b_value_threshold : float, optional
         Defines the b0 volumes as all volumes b-value <= b_value_threshold.
         Defaults to 5.0.
+
+    working_directory : Path, optional
+        An optional working directory in which to write the small and large
+        DWI datasets. If not provided, they will be written in the same
+        directory as the provided DWI dataset.
 
     Returns
     -------
@@ -276,8 +304,18 @@ def split_dwi_dataset_with_b_values(
     )
 
     return (
-        _build_dwi_dataset_from_filter(dwi_dataset, "small_b", small_b_filter),
-        _build_dwi_dataset_from_filter(dwi_dataset, "large_b", large_b_filter),
+        _build_dwi_dataset_from_filter(
+            dwi_dataset,
+            "small_b",
+            small_b_filter,
+            working_directory=working_directory,
+        ),
+        _build_dwi_dataset_from_filter(
+            dwi_dataset,
+            "large_b",
+            large_b_filter,
+            working_directory=working_directory,
+        ),
     )
 
 
@@ -300,7 +338,10 @@ def _check_b_values_and_b_vectors(
 
 
 def _build_dwi_dataset_from_filter(
-    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
 ) -> DWIDataset:
     """Builds a new DWI dataset from a given DWI dataset and a filter.
 
@@ -316,6 +357,11 @@ def _build_dwi_dataset_from_filter(
     filter_array : np.ndarray
         1D array of indices to filter the DWI dataset.
 
+    working_directory : Path, optional
+        An optional working directory in which to write the filtered
+        DWI dataset. If not provided, it will be written in the same
+        directory as the provided DWI dataset.
+
     Returns
     -------
     DWIDataset :
@@ -323,20 +369,40 @@ def _build_dwi_dataset_from_filter(
     """
     return check_dwi_dataset(
         DWIDataset(
-            dwi=_filter_dwi(dwi_dataset, filter_name, filter_array),
-            b_values=_filter_b_values(dwi_dataset, filter_name, filter_array),
-            b_vectors=_filter_b_vectors(dwi_dataset, filter_name, filter_array),
+            dwi=_filter_dwi(
+                dwi_dataset,
+                filter_name,
+                filter_array,
+                working_directory=working_directory,
+            ),
+            b_values=_filter_b_values(
+                dwi_dataset,
+                filter_name,
+                filter_array,
+                working_directory=working_directory,
+            ),
+            b_vectors=_filter_b_vectors(
+                dwi_dataset,
+                filter_name,
+                filter_array,
+                working_directory=working_directory,
+            ),
         )
     )
 
 
 def _filter_dwi(
-    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
 ) -> Path:
     """Filters the dwi component of the provided DWI dataset."""
     from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
     dwi_filename = add_suffix_to_filename(dwi_dataset.dwi, filter_name)
+    if working_directory:
+        dwi_filename = working_directory / dwi_filename.name
     data = compute_aggregated_volume(
         dwi_dataset.dwi, aggregator=None, volumes_to_keep=filter_array
     )
@@ -347,22 +413,32 @@ def _filter_dwi(
 
 
 def _filter_b_values(
-    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
 ) -> Path:
     """Filters the b-values component of the provided DWI dataset."""
     b_values, _ = _check_b_values_and_b_vectors(dwi_dataset)
     b_values_filename = add_suffix_to_filename(dwi_dataset.b_values, filter_name)
+    if working_directory:
+        b_values_filename = working_directory / b_values_filename.name
     _write_b_values(b_values_filename, b_values[filter_array])
 
     return b_values_filename
 
 
 def _filter_b_vectors(
-    dwi_dataset: DWIDataset, filter_name: str, filter_array: np.ndarray
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
 ) -> Path:
     """Filters the b-vectors component of the provided DWI dataset."""
     _, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
     b_vectors_filename = add_suffix_to_filename(dwi_dataset.b_vectors, filter_name)
+    if working_directory:
+        b_vectors_filename = working_directory / b_vectors_filename.name
     _write_b_vectors(b_vectors_filename, np.array([b[filter_array] for b in b_vectors]))
 
     return b_vectors_filename
@@ -480,7 +556,11 @@ def check_dwi_volume(dwi_dataset: DWIDataset) -> None:
         )
 
 
-def generate_index_file(b_values_filename: str, image_id: str = None) -> str:
+def generate_index_file(
+    b_values_filename: Path,
+    image_id: Optional[str] = None,
+    output_dir: Optional[Path] = None,
+) -> Path:
     """Generate [`image_id`]_index.txt file for FSL eddy command.
 
     At the moment, all volumes are assumed to be acquired with the
@@ -490,40 +570,44 @@ def generate_index_file(b_values_filename: str, image_id: str = None) -> str:
 
     Parameters
     ----------
-    b_values_filename : str
-        Path to the b-values file.
+    b_values_filename : Path
+        The path to the b-values file.
 
     image_id : str, optional
-        Optional prefix for the output file name.
+        An optional prefix for the output file name.
         Defaults to None.
+
+    output_dir : Path, optional
+        The path to the directory in which the index file
+        should be written. If not provided, it will be written
+        in the same folder as the provided b values filename.
 
     Returns
     -------
-    index_filename: str
-        Path to output index file. [`image_id`]_index.txt or index.txt file.
+    index_filename: Path
+        The path to output index file. [`image_id`]_index.txt or index.txt file.
     """
-    from pathlib import Path
-
     import numpy as np
 
-    b_values_filename = Path(b_values_filename)
     if not b_values_filename.is_file():
         raise FileNotFoundError(f"Unable to find b-values file: {b_values_filename}.")
 
     b_values = np.loadtxt(b_values_filename)
     index_filename = f"{image_id}_index.txt" if image_id else "index.txt"
-    index_filename = b_values_filename.parent / index_filename
+    output_dir = output_dir or b_values_filename.parent
+    index_filename = output_dir / index_filename
     np.savetxt(index_filename, np.ones(len(b_values)).T)
 
-    return str(index_filename)
+    return index_filename
 
 
 def generate_acq_file(
-    dwi_filename: str,
+    dwi_filename: Path,
     fsl_phase_encoding_direction: str,
     total_readout_time: str,
-    image_id=None,
-) -> str:
+    image_id: Optional[str] = None,
+    output_dir: Optional[Path] = None,
+) -> Path:
     """Generate [`image_id`]_acq.txt file for FSL eddy command.
 
     Parameters
@@ -539,32 +623,33 @@ def generate_acq_file(
         Total readout time from BIDS specifications.
 
     image_id : str, optional
-        Optional prefix for the output file. Defaults to None.
+        The prefix for the output file. Defaults to None.
+
+    output_dir : Path, optional
+        The path to the directory in which the acquisition file
+        should be written. If not provided, it will be written
+        in the same folder as the provided dwi filename.
 
     Returns
     -------
-    acq_filename : str
-        Path to the acq.txt file.
+    acq_filename : Path
+        The path to the acquisition file.
     """
-    from pathlib import Path
-
     import numpy as np
-
-    from clinica.utils.dwi import _get_phase_basis_vector  # noqa
 
     if fsl_phase_encoding_direction not in ("x", "y", "z", "x-", "y-", "z-"):
         raise RuntimeError(
             f"FSL PhaseEncodingDirection (found value: {fsl_phase_encoding_direction}) "
             f"is unknown, it should be a value in (x, y, z, x-, y-, z-)"
         )
-    dwi_filename = Path(dwi_filename)
     acq_filename = f"{image_id}_acq.txt" if image_id else "acq.txt"
-    acq_filename = dwi_filename.parent / acq_filename
+    output_dir = output_dir or dwi_filename.parent
+    acq_filename = output_dir / acq_filename
     basis_vector = _get_phase_basis_vector(fsl_phase_encoding_direction)
     basis_vector.append(float(total_readout_time))
     np.savetxt(acq_filename, np.array([basis_vector]), fmt="%d " * 3 + "%f")
 
-    return str(acq_filename)
+    return acq_filename
 
 
 def _get_phase_basis_vector(phase: str) -> list:
@@ -590,12 +675,12 @@ def bids_dir_to_fsl_dir(bids_dir):
     )
 
 
-def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
+def extract_bids_identifier_from_filename(caps_dwi_filename: str) -> str:
     """Extract BIDS identifier from a DWI CAPS filename.
 
     Parameters
     ----------
-    dwi_filename : str
+    caps_dwi_filename : str
         DWI file name for which to extract the bids identifier.
 
     Returns
@@ -616,10 +701,10 @@ def extract_bids_identifier_from_filename(dwi_filename: str) -> str:
     """
     import re
 
-    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi", dwi_filename)
+    m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi", caps_dwi_filename)
     if not m:
         raise ValueError(
-            f"Could not extract the BIDS identifier from the DWI input filename {dwi_filename}."
+            f"Could not extract the BIDS identifier from the DWI input filename {caps_dwi_filename}."
         )
     return m.group(0).rstrip("_dwi")
 

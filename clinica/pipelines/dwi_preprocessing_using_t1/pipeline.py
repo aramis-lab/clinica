@@ -55,16 +55,24 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
     def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
-            List[str]: The list of inputs for the DwiPreprocessingUsingT1 pipeline namely:
-                * t1w: Path of the T1w image in BIDS format
-                * dwi: Path of the diffusion weighted image in BIDS format
-                * dwi_json: Path of the DWI JSON file in BIDS format and containing
-                    TotalReadoutTime and PhaseEncodingDirection metadata (see BIDS specifications)
-                * bvec: Path of the bvec file in BIDS format
-                * bval: Path of the bval file in BIDS format
+        Returns
+        -------
+        List[str] :
+            The list of inputs for the DwiPreprocessingUsingT1 pipeline namely:
+                - "t1w_filename" : Path of the T1w image in BIDS format.
+                - "dwi_filename": Path of the diffusion weighted image in BIDS format.
+                - "dwi_json_filename" : Path of the DWI JSON file in BIDS format and containing
+                  'TotalReadoutTime' and 'PhaseEncodingDirection' metadata (see BIDS specifications).
+                - "b_vectors_filename" : Path of the b-vectors file in BIDS format.
+                - "b_values_filename" : Path of the b-values file in BIDS format.
         """
-        return ["t1w", "dwi", "dwi_json", "bvec", "bval"]
+        return [
+            "t1w_filename",
+            "dwi_filename",
+            "dwi_json_filename",
+            "b_vectors_filename",
+            "b_values_filename",
+        ]
 
     def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
@@ -99,7 +107,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             self.subjects,
             self.sessions,
             self.bids_directory,
-            [T1W_NII, DWI_JSON, DWI_NII, DWI_BVEC, DWI_BVAL],
+            [T1W_NII, DWI_NII, DWI_JSON, DWI_BVEC, DWI_BVAL],
             raise_exception=True,
         )
 
@@ -119,26 +127,16 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         read_node = npe.Node(
             name="ReadingFiles",
             iterables=[
-                ("t1w", list_bids_files[0]),
-                ("dwi_json", list_bids_files[1]),
-                ("dwi", list_bids_files[2]),
-                ("bvec", list_bids_files[3]),
-                ("bval", list_bids_files[4]),
+                (x, y) for x, y in zip(self.get_input_fields(), list_bids_files)
             ],
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-        # fmt: off
         self.connect(
             [
-                (read_node, self.input_node, [("t1w", "t1w"),
-                                              ("dwi", "dwi"),
-                                              ("dwi_json", "dwi_json"),
-                                              ("bvec", "bvec"),
-                                              ("bval", "bval")]),
+                (read_node, self.input_node, [(x, x) for x in self.get_input_fields()]),
             ]
         )
-        # fmt: on
 
     def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
@@ -158,22 +156,18 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             ),
             name="container_path",
         )
+        files_to_write_in_caps = [
+            "dwi_filename",
+            "dwi_preproc_filename",
+            "b_values_preproc_filename",
+            "b_vectors_preproc_filename",
+            "b0_brain_mask_filename",
+        ]
 
         rename_into_caps = npe.Node(
             nutil.Function(
-                input_names=[
-                    "in_bids_dwi",
-                    "fname_dwi",
-                    "fname_bval",
-                    "fname_bvec",
-                    "fname_brainmask",
-                ],
-                output_names=[
-                    "out_caps_dwi",
-                    "out_caps_bval",
-                    "out_caps_bvec",
-                    "out_caps_brainmask",
-                ],
+                input_names=files_to_write_in_caps,
+                output_names=[f"{x}_caps" for x in files_to_write_in_caps],
                 function=rename_into_caps,
             ),
             name="rename_into_caps",
@@ -183,23 +177,47 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         write_results.inputs.base_directory = str(self.caps_directory)
         write_results.inputs.parameterization = False
 
-        # fmt: off
         self.connect(
             [
-                (self.input_node, container_path, [("dwi", "bids_or_caps_filename")]),
-                (self.input_node, rename_into_caps, [("dwi", "in_bids_dwi")]),
-                (self.output_node, rename_into_caps, [("preproc_dwi", "fname_dwi"),
-                                                      ("preproc_bval", "fname_bval"),
-                                                      ("preproc_bvec", "fname_bvec"),
-                                                      ("b0_mask", "fname_brainmask")]),
-                (container_path, write_results, [(("container", fix_join, "dwi"), "container")]),
-                (rename_into_caps, write_results, [("out_caps_dwi", "preprocessing.@preproc_dwi"),
-                                                   ("out_caps_bval", "preprocessing.@preproc_bval"),
-                                                   ("out_caps_bvec", "preprocessing.@preproc_bvec"),
-                                                   ("out_caps_brainmask", "preprocessing.@b0_mask")])
+                (
+                    self.input_node,
+                    container_path,
+                    [("dwi_filename", "bids_or_caps_filename")],
+                ),
+                (self.input_node, rename_into_caps, [("dwi_filename", "dwi_filename")]),
+                (
+                    self.output_node,
+                    rename_into_caps,
+                    [
+                        ("preproc_dwi", "dwi_preproc_filename"),
+                        ("preproc_bval", "b_values_preproc_filename"),
+                        ("preproc_bvec", "b_vectors_preproc_filename"),
+                        ("b0_mask", "b0_brain_mask_filename"),
+                    ],
+                ),
+                (
+                    container_path,
+                    write_results,
+                    [(("container", fix_join, "dwi"), "container")],
+                ),
+                (
+                    rename_into_caps,
+                    write_results,
+                    [
+                        ("dwi_preproc_filename_caps", "preprocessing.@preproc_dwi"),
+                        (
+                            "b_values_preproc_filename_caps",
+                            "preprocessing.@preproc_bval",
+                        ),
+                        (
+                            "b_vectors_preproc_filename_caps",
+                            "preprocessing.@preproc_bvec",
+                        ),
+                        ("b0_brain_mask_filename_caps", "preprocessing.@b0_mask"),
+                    ],
+                ),
             ]
         )
-        # fmt: on
 
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
@@ -217,18 +235,15 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         )
         from .workflows import eddy_fsl_pipeline, epi_pipeline
 
-        # Nodes creation
-        # ==============
-        # Initialize input parameters and print begin message
         init_node = npe.Node(
             interface=nutil.Function(
                 input_names=self.get_input_fields(),
                 output_names=[
                     "image_id",
-                    "t1w",
-                    "dwi",
-                    "bvec",
-                    "bval",
+                    "t1w_filename",
+                    "dwi_filename",
+                    "b_vectors_filename",
+                    "b_values_filename",
                     "total_readout_time",
                     "phase_encoding_direction",
                 ],
@@ -262,6 +277,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
 
         # Head-motion correction + Eddy-currents correction
         eddy_fsl = eddy_fsl_pipeline(
+            base_dir=self.base_dir,
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
             compute_mask=True,
@@ -297,7 +313,6 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         # Compute brain mask from reference b0
         mask_avg_b0 = npe.Node(fsl.BET(mask=True, robust=True), name="MaskB0")
 
-        # Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
                 input_names=["image_id", "final_file"], function=print_end_pipeline
@@ -305,38 +320,67 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             name="WriteEndMessage",
         )
 
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
-                # Initialize input parameters and print begin message
-                (self.input_node, init_node, [("t1w", "t1w"),
-                                              ("dwi", "dwi"),
-                                              ("bvec", "bvec"),
-                                              ("bval", "bval"),
-                                              ("dwi_json", "dwi_json")]),
-                # Preliminary step (possible computation of a mean b0):
-                (init_node, prepare_b0, [("dwi", "dwi_filename"),
-                                         ("bval", "b_values_filename"),
-                                         ("bvec", "b_vectors_filename")]),
-                # Head-motion correction + eddy current correction
-                (init_node, eddy_fsl, [("total_readout_time", "inputnode.total_readout_time"),
-                                       ("phase_encoding_direction", "inputnode.phase_encoding_direction")]),
-                (prepare_b0, eddy_fsl, [("out_b0_dwi_merge", "inputnode.dwi_filename"),
-                                        ("out_updated_bval", "inputnode.b_values_filename"),
-                                        ("out_updated_bvec", "inputnode.b_vectors_filename"),
-                                        ("out_reference_b0", "inputnode.reference_b0")]),
+                (self.input_node, init_node, [(x, x) for x in self.get_input_fields()]),
+                (
+                    init_node,
+                    prepare_b0,
+                    [
+                        (x, x)
+                        for x in (
+                            "dwi_filename",
+                            "b_values_filename",
+                            "b_vectors_filename",
+                        )
+                    ],
+                ),
+                (
+                    init_node,
+                    eddy_fsl,
+                    [
+                        (x, f"inputnode.{x}")
+                        for x in ("total_readout_time", "phase_encoding_direction")
+                    ],
+                ),
+                (
+                    prepare_b0,
+                    eddy_fsl,
+                    [
+                        ("out_b0_dwi_merge", "inputnode.dwi_filename"),
+                        ("out_updated_bval", "inputnode.b_values_filename"),
+                        ("out_updated_bvec", "inputnode.b_vectors_filename"),
+                        ("out_reference_b0", "inputnode.reference_b0"),
+                    ],
+                ),
                 # Magnetic susceptibility correction
-                (init_node, sdc, [("t1w", "inputnode.t1_filename")]),
-                (eddy_fsl, sdc, [("outputnode.out_corrected", "inputnode.dwi_filename")]),
-                (eddy_fsl, sdc, [("outputnode.out_rotated_bvecs", "inputnode.b_vectors_filename")]),
+                (init_node, sdc, [("t1w_filename", "inputnode.t1_filename")]),
+                (
+                    eddy_fsl,
+                    sdc,
+                    [("outputnode.out_corrected", "inputnode.dwi_filename")],
+                ),
+                (
+                    eddy_fsl,
+                    sdc,
+                    [("outputnode.out_rotated_bvecs", "inputnode.b_vectors_filename")],
+                ),
                 # Bias correction
                 (prepare_b0, bias, [("out_updated_bval", "in_bval")]),
-                (sdc, bias, [("outputnode.epi_corrected_dwi_image", "in_file"),
-                             ("outputnode.rotated_b_vectors", "in_bvec")]),
+                (
+                    sdc,
+                    bias,
+                    [
+                        ("outputnode.epi_corrected_dwi_image", "in_file"),
+                        ("outputnode.rotated_b_vectors", "in_bvec"),
+                    ],
+                ),
                 # Compute average b0 on corrected dataset (for brain mask extraction)
-                (prepare_b0, compute_avg_b0, [("out_updated_bval", "b_value_filename")]),
+                (
+                    prepare_b0,
+                    compute_avg_b0,
+                    [("out_updated_bval", "b_value_filename")],
+                ),
                 (bias, compute_avg_b0, [("out_file", "dwi_filename")]),
                 # Compute b0 mask on corrected avg b0
                 (compute_avg_b0, mask_avg_b0, [("out_b0_average", "in_file")]),
@@ -345,9 +389,12 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
                 (mask_avg_b0, print_end_message, [("mask_file", "final_file")]),
                 # Output node
                 (bias, self.output_node, [("out_file", "preproc_dwi")]),
-                (sdc, self.output_node, [("outputnode.rotated_b_vectors", "preproc_bvec")]),
+                (
+                    sdc,
+                    self.output_node,
+                    [("outputnode.rotated_b_vectors", "preproc_bvec")],
+                ),
                 (prepare_b0, self.output_node, [("out_updated_bval", "preproc_bval")]),
                 (mask_avg_b0, self.output_node, [("mask_file", "b0_mask")]),
             ]
         )
-        # fmt: on
