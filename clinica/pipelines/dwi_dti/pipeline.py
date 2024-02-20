@@ -330,7 +330,7 @@ class DwiDti(Pipeline):
 
         scalar_analysis = npe.Node(
             interface=nutil.Function(
-                input_names=["in_registered_map", "name_map", "prefix_file"],
+                input_names=["in_registered_map", "name_map", "dwi_preprocessed_file"],
                 output_names=["atlas_statistics_list"],
                 function=statistics_on_atlases,
             ),
@@ -467,7 +467,7 @@ class DwiDti(Pipeline):
                 (
                     self.input_node,
                     scalar_analysis_fa,
-                    [("preproc_dwi", "prefix_file")],
+                    [("preproc_dwi", "dwi_preprocessed_file")],
                 ),
                 (
                     thres_norm_fa,
@@ -477,7 +477,7 @@ class DwiDti(Pipeline):
                 (
                     self.input_node,
                     scalar_analysis_md,
-                    [("preproc_dwi", "prefix_file")],
+                    [("preproc_dwi", "dwi_preprocessed_file")],
                 ),
                 (
                     thres_norm_md,
@@ -487,7 +487,7 @@ class DwiDti(Pipeline):
                 (
                     self.input_node,
                     scalar_analysis_ad,
-                    [("preproc_dwi", "prefix_file")],
+                    [("preproc_dwi", "dwi_preprocessed_file")],
                 ),
                 (
                     thres_norm_ad,
@@ -497,7 +497,7 @@ class DwiDti(Pipeline):
                 (
                     self.input_node,
                     scalar_analysis_rd,
-                    [("preproc_dwi", "prefix_file")],
+                    [("preproc_dwi", "dwi_preprocessed_file")],
                 ),
                 (
                     thres_norm_rd,

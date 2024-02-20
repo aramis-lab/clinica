@@ -1,5 +1,5 @@
 def statistics_on_atlases(
-    in_registered_map: str, name_map: str, prefix_file: str = None
+    in_registered_map: str, name_map: str, dwi_preprocessed_file: str
 ) -> list:
     """Computes a list of statistics files for each atlas.
 
@@ -11,8 +11,9 @@ def statistics_on_atlases(
     name_map : str
         Name of the registered map in CAPS format.
 
-    prefix_file : str, optional
-        <prefix_file>_space-<atlas_name>_map-<name_map>_statistics.tsv
+    dwi_preprocessed_file : str
+        The preprocessed DWI file name which contains the entities to be
+        used for building the statistics file names.
 
     Returns
     -------
@@ -21,10 +22,7 @@ def statistics_on_atlases(
     """
     from pathlib import Path
 
-    from nipype.utils.filemanip import split_filename
-
     from clinica.utils.atlas import (
-        AtlasAbstract,
         JHUDTI811mm,
         JHUTracts01mm,
         JHUTracts251mm,
@@ -32,30 +30,15 @@ def statistics_on_atlases(
     from clinica.utils.bids import BIDSFileName
     from clinica.utils.statistics import statistics_on_atlas
 
-    in_atlas_list = [JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()]
-
     atlas_statistics_list = []
-    test = BIDSFileName.from_name(in_registered_map)
-    for atlas in in_atlas_list:
-        if not isinstance(atlas, AtlasAbstract):
-            raise TypeError("Atlas element must be an AtlasAbstract type")
-
-        if prefix_file:
-            prefix_file = BIDSFileName.from_name(prefix_file)
-            prefix_file.update_entity("space", atlas.get_name_atlas())
-            prefix_file.update_entity("res", atlas.get_spatial_resolution())
-            prefix_file.update_entity("map", name_map)
-            prefix_file.suffix = "statistics"
-            prefix_file.extension = ".tsv"
-            filename = prefix_file.name
-        else:
-            _, base, _ = split_filename(in_registered_map)
-            filename = (
-                f"{base}_space-{atlas.get_name_atlas()}"
-                f"_res-{atlas.get_spatial_resolution()}_map-{name_map}_statistics.tsv"
-            )
-
-        out_atlas_statistics = str((Path.cwd() / filename).resolve())
+    for atlas in (JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()):
+        source = BIDSFileName.from_name(dwi_preprocessed_file)
+        source.update_entity("space", atlas.get_name_atlas())
+        source.update_entity("res", atlas.get_spatial_resolution())
+        source.update_entity("map", name_map)
+        source.suffix = "statistics"
+        source.extension = ".tsv"
+        out_atlas_statistics = str((Path.cwd() / source.name).resolve())
         statistics_on_atlas(in_registered_map, atlas, out_atlas_statistics)
         atlas_statistics_list.append(out_atlas_statistics)
 
