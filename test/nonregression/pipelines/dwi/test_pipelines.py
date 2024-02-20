@@ -8,6 +8,7 @@ from test.nonregression.testing_tools import (
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_almost_equal
 
 
 @pytest.mark.slow
@@ -30,6 +31,7 @@ def run_dwi_dti(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     from clinica.pipelines.dwi_dti.pipeline import DwiDti
+    from clinica.utils.bids import BIDSFileName
     from clinica.utils.dwi import DTIBasedMeasure
 
     caps_dir = output_dir / "caps"
@@ -46,31 +48,24 @@ def run_dwi_dti(
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
-    subject_id = "sub-PREVDEMALS0010025PG"
-    entities = "ses-M000_space-JHUDTI81_desc-preproc_res-1x1x1"
+    filename = BIDSFileName.from_name(
+        "sub-PREVDEMALS0010025PG_ses-M000_space-JHUDTI81_desc-preproc_res-1x1x1_statistics.tsv"
+    )
     output = (
         caps_dir
         / "subjects"
-        / subject_id
+        / "sub-PREVDEMALS0010025PG"
         / "ses-M000"
         / "dwi"
         / "dti_based_processing"
         / "atlas_statistics"
     )
     for measure in DTIBasedMeasure:
-        out_csv = pd.read_csv(
-            output / f"{subject_id}_{entities}_map-{measure.value}_statistics.tsv",
-            sep="\t",
-        )
-        ref_csv = pd.read_csv(
-            ref_dir / f"{subject_id}_{entities}_map-{measure.value}_statistics.tsv",
-            sep="\t",
-        )
-        assert np.allclose(
-            np.array(out_csv.mean_scalar),
-            np.array(ref_csv.mean_scalar),
-            rtol=0.035,
-            equal_nan=True,
+        filename.update_entity("map", measure.value)
+        out_csv = pd.read_csv(output / filename.name, sep="\t")
+        ref_csv = pd.read_csv(ref_dir / filename.name, sep="\t")
+        assert_array_almost_equal(
+            np.array(out_csv.mean_scalar), np.array(ref_csv.mean_scalar), decimal=3
         )
 
 
