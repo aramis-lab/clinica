@@ -32,6 +32,7 @@ class Suffix(str, Enum):
     MAGNITUDE1 = "magnitude1"
     BRAINMASK = "brainmask"
     STATISTICS = "statistics"
+    DIFFMODEL = "diffmodel"
 
 
 class BIDSLabel(str):
