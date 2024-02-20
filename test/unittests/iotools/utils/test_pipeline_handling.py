@@ -271,6 +271,7 @@ def test_extract_metrics_from_pipeline_errors(tmp_path):
 def test_extract_metrics_from_pipeline(tmp_path):
     from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline
 
+    (tmp_path / "groups").mkdir()
     df = pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
     assert _extract_metrics_from_pipeline(
         tmp_path, df, ["metrics"], PipelineNameForMetricExtraction.T1_VOLUME
@@ -278,7 +279,6 @@ def test_extract_metrics_from_pipeline(tmp_path):
         df,
         None,
     )
-    (tmp_path / "groups").mkdir()
     (tmp_path / "groups" / "UnitTest").mkdir()
     x, y = _extract_metrics_from_pipeline(
         tmp_path, df, ["metrics"], PipelineNameForMetricExtraction.T1_VOLUME
