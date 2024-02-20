@@ -47,7 +47,7 @@ def run_dwi_dti(
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     subject_id = "sub-PREVDEMALS0010025PG"
-    entities = "ses-M000_dwi_space-JHUDTI81_res-1x1x1"
+    entities = "ses-M000_space-JHUDTI81_desc-preproc_res-1x1x1"
     output = (
         caps_dir
         / "subjects"
