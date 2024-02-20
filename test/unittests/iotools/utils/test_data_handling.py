@@ -483,7 +483,7 @@ def test_add_data_to_merge_file_from_caps_empty_pipeline(tmp_path):
             ],
         }
     )
-
+    (tmp_path / "groups").mkdir()
     with pytest.raises(
         FileNotFoundError,
         match=(

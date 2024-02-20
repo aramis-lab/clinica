@@ -91,9 +91,17 @@ def _extract_metrics_from_pipeline(
         pvc_restriction,
         tracers_selection,
     )
-    pipeline_df = pd.DataFrame.from_records(
-        records, index=["participant_id", "session_id"]
-    )
+    if records:
+        pipeline_df = pd.DataFrame.from_records(
+            records, index=["participant_id", "session_id"]
+        )
+    else:
+        pipeline_df = pd.DataFrame.from_records(
+            records, columns=["participant_id", "session_id"]
+        )
+        pipeline_df.set_index(
+            ["participant_id", "session_id"], inplace=True, verify_integrity=True
+        )
     summary_df = _generate_summary(
         pipeline_df, pipeline, ignore_groups=group_selection == [""]
     )
