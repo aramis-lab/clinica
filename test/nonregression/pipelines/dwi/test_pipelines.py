@@ -49,12 +49,12 @@ def run_dwi_dti(
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     filename = BIDSFileName.from_name(
-        "sub-PREVDEMALS0010025PG_ses-M000_space-JHUDTI81_desc-preproc_res-1x1x1_statistics.tsv"
+        "sub-01_ses-M000_space-JHUDTI81_desc-preproc_res-1x1x1_statistics.tsv"
     )
     output = (
         caps_dir
         / "subjects"
-        / "sub-PREVDEMALS0010025PG"
+        / "sub-01"
         / "ses-M000"
         / "dwi"
         / "dti_based_processing"
@@ -73,6 +73,7 @@ def run_dwi_connectome(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     from clinica.pipelines.dwi_connectome.pipeline import DwiConnectome
+    from clinica.utils.bids import BIDSFileName
 
     caps_dir = output_dir / "caps"
 
@@ -89,27 +90,28 @@ def run_dwi_connectome(
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
-    session_id = "ses-M000"
-    subject_id = "sub-PREVDEMALS0010025PG"
-    suffix = "dwi_space-b0_model-CSD_diffmodel.nii.gz"
+    filename = BIDSFileName.from_name(
+        "sub-01_ses-M000_space-b0_model-CSD_diffmodel.nii.gz"
+    )
     output_folder = (
         caps_dir
         / "subjects"
-        / subject_id
-        / session_id
+        / "sub-01"
+        / "ses-M000"
         / "dwi"
         / "connectome_based_processing"
     )
-    out_fod_file = output_folder / f"{subject_id}_{session_id}_{suffix}"
-    ref_fod_file = ref_dir / f"{subject_id}_{session_id}_{suffix}"
+    out_fod_file = output_folder / filename.name
+    ref_fod_file = ref_dir / filename.name
 
     assert similarity_measure(out_fod_file, ref_fod_file, 0.97)
 
     for atlas in ("desikan", "destrieux"):
+        filename.update_entity("atlas", atlas)
+        filename.delete_entity("model")
+        filename.suffix = "parcellation"
         assert similarity_measure(
-            output_folder
-            / f"{subject_id}_{session_id}_dwi_space-b0_atlas-{atlas}_parcellation.nii.gz",
-            ref_dir
-            / f"{subject_id}_{session_id}_dwi_space-b0_atlas-{atlas}_parcellation.nii.gz",
+            output_folder / filename.name,
+            ref_dir / filename.name,
             0.955,
         )

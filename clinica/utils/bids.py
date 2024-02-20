@@ -127,6 +127,11 @@ class BIDSFileName:
     def update_entity(self, entity_name: str, entity_value: str):
         self.entities[BIDSLabel(entity_name)] = BIDSLabel(entity_value)
 
+    def delete_entity(self, entity_name: str):
+        entity_name = BIDSLabel(entity_name)
+        if entity_name in self.entities:
+            self.entities.pop(entity_name)
+
 
 def _tokenize_filename_no_ext(
     filename_without_extension: str,
