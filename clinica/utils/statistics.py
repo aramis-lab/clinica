@@ -38,7 +38,7 @@ def statistics_on_atlas(
     """
     import nibabel as nib
     import numpy as np
-    import pandas
+    import pandas as pd
 
     from clinica.utils.stream import cprint
 
@@ -57,7 +57,7 @@ def statistics_on_atlas(
     img = nib.load(in_normalized_map)
     img_data = img.get_fdata(dtype="float32")
 
-    atlas_correspondence = pandas.read_csv(in_atlas.get_tsv_roi(), sep="\t")
+    atlas_correspondence = pd.read_csv(in_atlas.get_tsv_roi(), sep="\t")
     label_name = list(atlas_correspondence.roi_name)
     label_value = list(
         atlas_correspondence.roi_value
@@ -71,7 +71,7 @@ def statistics_on_atlas(
         mean_signal_value.append(np.sum(masked_data) / np.sum(current_mask_label))
 
     try:
-        data = pandas.DataFrame(
+        data = pd.DataFrame(
             {"label_name": label_name, "mean_scalar": mean_signal_value}
         )
         data.to_csv(out_file, sep="\t", index=True, encoding="utf-8")

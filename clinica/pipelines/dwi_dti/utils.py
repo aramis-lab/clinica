@@ -35,6 +35,7 @@ def statistics_on_atlases(
     in_atlas_list = [JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()]
 
     atlas_statistics_list = []
+    test = BIDSFileName.from_name(in_registered_map)
     for atlas in in_atlas_list:
         if not isinstance(atlas, AtlasAbstract):
             raise TypeError("Atlas element must be an AtlasAbstract type")
@@ -45,7 +46,7 @@ def statistics_on_atlases(
             prefix_file.update_entity("res", atlas.get_spatial_resolution())
             prefix_file.update_entity("map", name_map)
             prefix_file.suffix = "statistics"
-            prefix_file.extension = "tsv"
+            prefix_file.extension = ".tsv"
             filename = prefix_file.name
         else:
             _, base, _ = split_filename(in_registered_map)
