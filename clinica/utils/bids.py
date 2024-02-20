@@ -143,8 +143,15 @@ def _tokenize_filename_no_ext(
         )
     suffix = tokens.pop()
     if "-" in suffix:
-        raise ValueError("The suffix found should not contain a '-'.")
-    assert all(["-" in token for token in tokens])
+        raise ValueError(
+            f"When tokenizing the filename {filename_without_extension}, the suffix "
+            f"found was '{suffix}'. It is invalid because it should not contain a '-' symbol."
+        )
+    if not all(["-" in token for token in tokens]):
+        raise ValueError(
+            "The BIDS entities should be key-value pairs separated by a '-' symbol."
+            f"The entities found are: {tokens}."
+        )
     entities = {k: v for k, v in [s.split("-") for s in tokens]}
     return entities, suffix
 
