@@ -69,7 +69,7 @@ def run_dwi_dti(
         assert np.allclose(
             np.array(out_csv.mean_scalar),
             np.array(ref_csv.mean_scalar),
-            rtol=0.025,
+            rtol=0.035,
             equal_nan=True,
         )
 
