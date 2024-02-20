@@ -262,11 +262,9 @@ class DwiDti(Pipeline):
             statistics_on_atlases,
         )
 
-        # Nodes creation
-        # ==============
         get_bids_identifier = npe.Node(
             interface=nutil.Function(
-                input_names=["dwi_filename"],
+                input_names=["caps_dwi_filename"],
                 output_names=["bids_identifier"],
                 function=extract_bids_identifier_from_filename,
             ),

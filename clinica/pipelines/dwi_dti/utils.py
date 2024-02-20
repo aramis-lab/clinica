@@ -1,13 +1,22 @@
-def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
+def statistics_on_atlases(
+    in_registered_map: str, name_map: str, prefix_file: str = None
+) -> list:
     """Computes a list of statistics files for each atlas.
 
-    Args:
-        in_registered_map (str): Map already registered on atlases.
-        name_map (str): Name of the registered map in CAPS format.
-        prefix_file (Opt[str]):
-            <prefix_file>_space-<atlas_name>_map-<name_map>_statistics.tsv
+    Parameters
+    ----------
+    in_registered_map : str
+        Map already registered on atlases.
 
-    Returns:
+    name_map : str
+        Name of the registered map in CAPS format.
+
+    prefix_file : str, optional
+        <prefix_file>_space-<atlas_name>_map-<name_map>_statistics.tsv
+
+    Returns
+    -------
+    list of str :
         List of paths leading to the statistics TSV files.
     """
     from pathlib import Path
@@ -20,6 +29,7 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
         JHUTracts01mm,
         JHUTracts251mm,
     )
+    from clinica.utils.bids import BIDSFileName
     from clinica.utils.statistics import statistics_on_atlas
 
     in_atlas_list = [JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()]
@@ -30,10 +40,13 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
             raise TypeError("Atlas element must be an AtlasAbstract type")
 
         if prefix_file:
-            filename = (
-                f"{prefix_file}_space-{atlas.get_name_atlas()}"
-                f"_res-{atlas.get_spatial_resolution()}_map-{name_map}_statistics.tsv"
-            )
+            prefix_file = BIDSFileName.from_name(prefix_file)
+            prefix_file.update_entity("space", atlas.get_name_atlas())
+            prefix_file.update_entity("res", atlas.get_spatial_resolution())
+            prefix_file.update_entity("map", name_map)
+            prefix_file.suffix = "statistics"
+            prefix_file.extension = "tsv"
+            filename = prefix_file.name
         else:
             _, base, _ = split_filename(in_registered_map)
             filename = (
@@ -53,7 +66,7 @@ def get_caps_filenames(caps_dwi_filename: str):
     import re
 
     m = re.search(
-        r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi_space-[a-zA-Z0-9]+",
+        r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_space-[a-zA-Z0-9]+_desc-preproc",
         caps_dwi_filename,
     )
     if not m:
@@ -62,7 +75,7 @@ def get_caps_filenames(caps_dwi_filename: str):
         )
 
     caps_prefix = m.group(0)
-    bids_source = f"{m.group(1)}_{m.group(2)}_dwi"
+    bids_source = f"{m.group(1)}_{m.group(2)}"
 
     out_dti = f"{caps_prefix}_model-DTI_diffmodel.nii.gz"
     out_fa = f"{caps_prefix}_FA.nii.gz"
@@ -115,20 +128,22 @@ def rename_into_caps(
     )
 
 
-def print_begin_pipeline(in_bids_or_caps_file):
+def print_begin_pipeline(in_bids_or_caps_file: str):
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
 
     print_begin_image(get_subject_id(in_bids_or_caps_file))
 
 
-def print_end_pipeline(in_bids_or_caps_file, final_file_1, final_file_2):
+def print_end_pipeline(in_bids_or_caps_file: str, final_file_1: str, final_file_2: str):
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_end_image
 
     print_end_image(get_subject_id(in_bids_or_caps_file))
 
 
-def get_ants_transforms(in_affine_transformation, in_bspline_transformation):
+def get_ants_transforms(
+    in_affine_transformation: str, in_bspline_transformation: str
+) -> list:
     """Combine transformations for antsApplyTransforms interface."""
     return [in_bspline_transformation, in_affine_transformation]

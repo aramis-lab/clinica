@@ -2,42 +2,54 @@
 
 Currently, it contains one function to generate TSV file containing mean map based on a parcellation.
 """
+from os import PathLike
+from pathlib import Path
+from typing import Optional, Union
+
+from clinica.utils.atlas import AtlasAbstract
 
 
-def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
+def statistics_on_atlas(
+    in_normalized_map: Union[str, PathLike],
+    in_atlas: AtlasAbstract,
+    out_file: Optional[Union[str, PathLike]] = None,
+) -> str:
     """Compute statistics of a map on an atlas.
 
     Given an atlas image with a set of ROIs, this function computes the mean of
     a normalized map (e.g. GM segmentation, FA map from DTI, etc.) on each ROI.
 
-    Args:
-        in_normalized_map (str): File containing a scalar image registered
-            on the atlas.
-        in_atlas (:obj: AbstractClass): An atlas with a set of ROI. These ROI
-            are used to compute statistics.
-        out_file (Optional[str]): Name of the output file.
+    Parameters
+    ----------
+    in_normalized_map : str
+        File containing a scalar image registered on the atlas.
 
-    Returns:
-        out_file (str): TSV file containing the statistics (content of the
-            columns: label, mean scalar, std of the scalar', number of voxels).
+    in_atlas : AbstractClass
+        An atlas with a set of ROI. These ROI are used to compute statistics.
+
+    out_file : str, optional
+        Name of the output file.
+
+    Returns
+    -------
+    out_file : str
+        TSV file containing the statistics (content of the columns: label,
+        mean scalar, std of the scalar', number of voxels).
     """
-    import os.path as op
-
     import nibabel as nib
     import numpy as np
     import pandas
 
-    from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.stream import cprint
 
-    if not isinstance(in_atlas, AtlasAbstract):
-        raise Exception("Atlas element must be an AtlasAbstract type")
-
+    in_normalized_map = Path(in_normalized_map)
     if not out_file:
-        fname, ext = op.splitext(op.basename(in_normalized_map))
+        filename, ext = in_normalized_map.stem, in_normalized_map.suffix
         if ext == ".gz":
-            fname, _ = op.splitext(fname)
-        out_file = op.abspath(f"{fname}_statistics_{in_atlas.get_name_atlas()}.tsv")
+            filename = Path(filename).stem
+        out_file = Path(
+            f"{filename}_statistics_{in_atlas.get_name_atlas()}.tsv"
+        ).resolve()
 
     atlas_labels = nib.load(in_atlas.get_atlas_labels())
     atlas_labels_data = atlas_labels.get_fdata(dtype="float32")
