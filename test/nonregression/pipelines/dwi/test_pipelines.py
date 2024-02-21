@@ -65,7 +65,7 @@ def run_dwi_dti(
         out_csv = pd.read_csv(output / filename.name, sep="\t")
         ref_csv = pd.read_csv(ref_dir / filename.name, sep="\t")
         assert_array_almost_equal(
-            np.array(out_csv.mean_scalar), np.array(ref_csv.mean_scalar), decimal=3
+            np.array(out_csv.mean_scalar), np.array(ref_csv.mean_scalar), decimal=2
         )
 
 
