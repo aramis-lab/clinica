@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 
@@ -44,7 +45,7 @@ def test_bids_pet_nii_empty():
     from clinica.utils.input_files import bids_pet_nii
 
     assert bids_pet_nii() == {
-        "pattern": os.path.join("pet", f"*_pet.nii*"),
+        "pattern": Path("pet") / "*_pet.nii*",
         "description": "PET data",
     }
 
@@ -52,9 +53,8 @@ def test_bids_pet_nii_empty():
 @pytest.fixture
 def expected_bids_pet_query(tracer, reconstruction):
     return {
-        "pattern": os.path.join(
-            "pet", f"*_trc-{tracer.value}_rec-{reconstruction.value}_pet.nii*"
-        ),
+        "pattern": Path("pet")
+        / f"*_trc-{tracer.value}_rec-{reconstruction.value}_pet.nii*",
         "description": f"PET data with {tracer.value} tracer and reconstruction method {reconstruction.value}",
     }
 

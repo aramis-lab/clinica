@@ -5,7 +5,7 @@ import os
 from collections import namedtuple
 from functools import partial
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "checksum"])
 
@@ -80,36 +80,53 @@ def _list_subjects_sub_folders(
     return subjects_sub_folders
 
 
-def _common_checks(directory: os.PathLike, folder_type: str) -> None:
+def _validate_folder_existence(
+    directory: Union[str, os.PathLike], folder_type: str
+) -> Path:
     """Utility function which performs checks common to BIDS and CAPS folder structures.
 
     Parameters
     ----------
-    directory : PathLike
+    directory : PathLike or str
         Directory to check.
 
     folder_type : {"BIDS", "CAPS"}
         The type of directory.
+
+    Returns
+    -------
+    Path :
+        The directory as a Path.
     """
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 
-    if not isinstance(directory, (os.PathLike, str)):
-        raise ValueError(
-            f"Argument you provided to check_{folder_type.lower()}_folder() is not a string."
+    try:
+        directory = Path(directory)
+    except TypeError:
+        raise TypeError(
+            f"Argument you provided to check_{folder_type.lower()}_folder() is not a valid folder name."
         )
 
-    error = ClinicaBIDSError if folder_type == "BIDS" else ClinicaCAPSError
-
-    if not os.path.isdir(directory):
-        raise error(
+    if not directory.is_dir():
+        raise (ClinicaBIDSError if folder_type == "BIDS" else ClinicaCAPSError)(
             f"The {folder_type} directory you gave is not a folder.\n"
             "Error explanations:\n"
             f"\t- Clinica expected the following path to be a folder: {directory}\n"
             "\t- If you gave relative path, did you run Clinica on the good folder?"
         )
 
+    return directory
 
-def check_bids_folder(bids_directory: os.PathLike) -> None:
+
+_validate_bids_folder_existence = partial(
+    _validate_folder_existence, folder_type="BIDS"
+)
+_validate_caps_folder_existence = partial(
+    _validate_folder_existence, folder_type="CAPS"
+)
+
+
+def check_bids_folder(bids_directory: Union[str, os.PathLike]) -> None:
     """Check if provided `bids_directory` is a BIDS folder.
 
     Parameters
@@ -133,8 +150,7 @@ def check_bids_folder(bids_directory: os.PathLike) -> None:
     """
     from clinica.utils.exceptions import ClinicaBIDSError
 
-    bids_directory = Path(bids_directory)
-    _common_checks(bids_directory, "BIDS")
+    bids_directory = _validate_bids_folder_existence(bids_directory)
 
     if (bids_directory / "subjects").is_dir():
         raise ClinicaBIDSError(
@@ -155,7 +171,7 @@ def check_bids_folder(bids_directory: os.PathLike) -> None:
         )
 
 
-def check_caps_folder(caps_directory: os.PathLike) -> None:
+def check_caps_folder(caps_directory: Union[str, os.PathLike]) -> None:
     """Check if provided `caps_directory`is a CAPS folder.
 
     Parameters
@@ -181,8 +197,7 @@ def check_caps_folder(caps_directory: os.PathLike) -> None:
     """
     from clinica.utils.exceptions import ClinicaCAPSError
 
-    caps_directory = Path(caps_directory)
-    _common_checks(caps_directory, "CAPS")
+    caps_directory = _validate_caps_folder_existence(caps_directory)
 
     sub_folders = [f for f in caps_directory.iterdir() if f.name.startswith("sub-")]
     if len(sub_folders) > 0:
@@ -471,7 +486,7 @@ def _check_information(information: Dict) -> None:
                     "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
                 )
 
-            if item["pattern"][0] == "/":
+            if isinstance(item["pattern"], str) and item["pattern"][0] == "/":
                 raise ValueError(
                     "pattern argument cannot start with char: / (does not work in os.path.join function). "
                     "If you want to indicate the exact name of the file, use the format "
@@ -491,7 +506,7 @@ def _check_information(information: Dict) -> None:
                 "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
             )
 
-        if information["pattern"][0] == "/":
+        if isinstance(information["pattern"], str) and information["pattern"][0] == "/":
             raise ValueError(
                 "pattern argument cannot start with char: / (does not work in os.path.join function). "
                 "If you want to indicate the exact name of the file, use the format "
@@ -884,11 +899,11 @@ def _format_and_raise_group_reader_errors(
     raise ClinicaCAPSError(error_string)
 
 
-def _sha256(path):
+def _compute_sha256_hash(file_path: Path) -> str:
     """Calculate the sha256 hash of the file at path."""
     sha256hash = hashlib.sha256()
     chunk_size = 8192
-    with open(path, "rb") as f:
+    with open(file_path, "rb") as f:
         while True:
             buffer = f.read(chunk_size)
             if not buffer:
@@ -897,7 +912,9 @@ def _sha256(path):
     return sha256hash.hexdigest()
 
 
-def fetch_file(remote: RemoteFileStructure, dirname: Optional[str]) -> str:
+def fetch_file(
+    remote: RemoteFileStructure, output_folder: Union[str, os.PathLike]
+) -> Path:
     """Download a specific file and save it into the resources folder of the package.
 
     Parameters
@@ -905,15 +922,15 @@ def fetch_file(remote: RemoteFileStructure, dirname: Optional[str]) -> str:
     remote : RemoteFileStructure
         Structure containing url, filename and checksum.
 
-    dirname : str
+    output_folder : str or PathLike
         Absolute path where the file will be downloaded.
+        The name of the file will be the same as the downloaded file.
 
     Returns
     -------
-    file_path : str
-        Absolute file path.
+    file_path : Path
+        The path to the downloaded file.
     """
-    import os.path
     import shutil
     import ssl
     from urllib.error import URLError
@@ -921,11 +938,14 @@ def fetch_file(remote: RemoteFileStructure, dirname: Optional[str]) -> str:
 
     from clinica.utils.stream import cprint
 
-    if not os.path.exists(dirname):
-        cprint(msg="Path to the file does not exist", lvl="warning")
+    output_folder = Path(output_folder)
+    if not output_folder.exists():
+        cprint(
+            msg=f"The path {output_folder} to store the downloaded file does not exist",
+            lvl="warning",
+        )
         cprint(msg="Stop Clinica and handle this error", lvl="warning")
-
-    file_path = os.path.join(dirname, remote.filename)
+    file_path = output_folder / remote.filename
     # Download the file from `url` and save it locally under `file_name`:
     gcontext = ssl.SSLContext()
     req = Request(remote.url + remote.filename)
@@ -946,8 +966,7 @@ def fetch_file(remote: RemoteFileStructure, dirname: Optional[str]) -> str:
         except OSError as err:
             cprint(msg="OS error: {0}".format(err), lvl="error")
 
-    checksum = _sha256(file_path)
-    if remote.checksum != checksum:
+    if (checksum := _compute_sha256_hash(file_path)) != remote.checksum:
         raise IOError(
             f"{file_path} has an SHA256 checksum ({checksum}) from expected "
             f"({remote.checksum}), file may be corrupted."
@@ -958,7 +977,7 @@ def fetch_file(remote: RemoteFileStructure, dirname: Optional[str]) -> str:
 def get_file_from_server(
     remote_file: RemoteFileStructure,
     cache_path: Optional[str] = None,
-) -> str:
+) -> Path:
     """Download file from server.
 
     Parameters
@@ -972,25 +991,20 @@ def get_file_from_server(
 
     Returns
     -------
-    local_file : str
-        Path to the downloaded file.
+    local_file : Path
+        The path to the downloaded file.
     """
-    import os
-    from pathlib import Path
-
     from clinica.utils.stream import cprint
 
-    home = str(Path.home())
     if cache_path:
-        cache_clinica = os.path.join(home, ".cache", cache_path)
+        cache_clinica = Path.home() / ".cache" / cache_path
     else:
-        cache_clinica = os.path.join(home, ".cache", "clinica", "data")
+        cache_clinica = Path.home() / ".cache" / "clinica" / "data"
 
-    os.makedirs(cache_clinica, exist_ok=True)
+    cache_clinica.mkdir(exist_ok=True, parents=True)
+    local_file = cache_clinica / remote_file.filename
 
-    local_file = os.path.join(cache_clinica, remote_file.filename)
-
-    if not (os.path.exists(local_file)):
+    if not local_file.exists():
         try:
             local_file = fetch_file(remote_file, cache_clinica)
         except IOError as err:
