@@ -12,6 +12,7 @@ Either a refactoring of this module or the use of an external API
 """
 
 import abc
+from enum import Enum
 from pathlib import Path
 from typing import Union
 
@@ -19,29 +20,25 @@ import nibabel as nib
 import numpy as np
 from nibabel import Nifti1Header
 
-T1_VOLUME_ATLASES = [
-    "AAL2",
-    "AICHA",
-    "Hammers",
-    "LPBA40",
-    "Neuromorphometrics",
-]
 
-PET_VOLUME_ATLASES = [
-    "AAL2",
-    "AICHA",
-    "Hammers",
-    "LPBA40",
-    "Neuromorphometrics",
-]
+class T1AndPetVolumeAtlases(str, Enum):
+    AAL2 = "AAL2"
+    AICHA = "AICHA"
+    HAMMERS = "Hammers"
+    LPBA40 = "LPBA40"
+    NEUROMORPHOMETRICS = "Neuromorphometrics"
 
-DWI_DTI_ATLASES = [
-    "JHUDTI81",
-    "JHUTract0",
-    "JHUTract25",
-]
 
-VOLUME_ATLASES = list(set(T1_VOLUME_ATLASES + PET_VOLUME_ATLASES + DWI_DTI_ATLASES))
+class Atlases(str, Enum):
+    AAL2 = "AAL2"
+    AICHA = "AICHA"
+    HAMMERS = "Hammers"
+    LPBA40 = "LPBA40"
+    NEUROMORPHOMETRICS = "Neuromorphometrics"
+    JHUDTI81 = "JHUDTI81"
+    JHUTract0 = "JHUTract0"
+    JHUTract25 = "JHUTract25"
+    JHUTracts50 = "JHUTracts50"
 
 
 def _get_resolution_along_axis(label_image_header: Nifti1Header, axis: int) -> str:
@@ -52,11 +49,7 @@ def _get_resolution_along_axis(label_image_header: Nifti1Header, axis: int) -> s
 
 
 class BaseAtlas:
-    """Base class for Atlas handling.
-
-    Naming convention for children classes of AtlasAbstract:
-    <name_atlas>[<resolution>][<map>]
-    """
+    """Base class for Atlas handling."""
 
     __metaclass__ = abc.ABCMeta
 
@@ -101,6 +94,8 @@ class BaseAtlas:
 
 
 class FSLAtlas(BaseAtlas):
+    """FSL atlases look for the labels in the FSL folder (requires FSL)."""
+
     def __init__(self, name: str, roi_filename: str, atlas_filename: str):
         from .check_dependency import check_environment_variable
 
@@ -179,6 +174,8 @@ class JHUTracts501mm(FSLAtlas):
 
 
 class LocalAtlas(BaseAtlas):
+    """Local atlases will look for labels in the local 'resources' folder."""
+
     def __init__(self, name: str, roi_filename: str, atlas_filename: str):
         super().__init__(name, roi_filename)
         self.atlas_filename = atlas_filename
@@ -206,6 +203,8 @@ class AICHA(LocalAtlas):
 
 
 class RemoteAtlas(BaseAtlas):
+    """Remote atlases will download the labels from the aramislab server."""
+
     def __init__(self, name: str, roi_filename: str, atlas_filename: str):
         super().__init__(name, roi_filename)
         self.atlas_filename = atlas_filename
@@ -261,23 +260,39 @@ class Neuromorphometrics(RemoteAtlas):
         return "19a50136cd2f8a14357a19ad8a1dc4a2ecb6beb3fc16cb5441f4f2ebaf64a9a5"
 
 
-def atlas_factory(atlas_name: Union[str, BaseAtlas]) -> BaseAtlas:
+def atlas_factory(atlas_name: Union[str, Atlases, BaseAtlas]) -> BaseAtlas:
+    """Factory method for atlases.
+
+    Parameters
+    ----------
+    atlas_name : str or Atlases or atlas instance
+        If an atlas instance, the instance is returned.
+        If a string, the corresponding atlas will be returned.
+
+    Returns
+    -------
+    BaseAtlas :
+        The atlas class corresponding to the provided name.
+    """
     if isinstance(atlas_name, BaseAtlas):
         return atlas_name
-    if atlas_name == "AAL2":
+    if isinstance(atlas_name, str):
+        atlas_name = Atlases(atlas_name)
+    if atlas_name == Atlases.AAL2:
         return AAL2
-    if atlas_name == "AICHA":
+    if atlas_name == Atlases.AICHA:
         return AICHA
-    if atlas_name == "Hammers":
+    if atlas_name == Atlases.HAMMERS:
         return Hammers
-    if atlas_name == "LPBA40":
+    if atlas_name == Atlases.LPBA40:
         return LPBA40
-    if atlas_name == "Neuromorphometrics":
+    if atlas_name == Atlases.NEUROMORPHOMETRICS:
         return Neuromorphometrics
-    if atlas_name == "JHUDTI81":
+    if atlas_name == Atlases.JHUDTI81:
         return JHUDTI811mm
-    if atlas_name == "JHUTract0":
+    if atlas_name == Atlases.JHUTract0:
         return JHUTracts01mm
-    if atlas_name == "JHUTract25":
+    if atlas_name == Atlases.JHUTract25:
         return JHUTracts251mm
-    raise ValueError(f"The atlas name provided {atlas_name} is not valid.")
+    if atlas_name == Atlases.JHUTracts50:
+        return JHUTracts501mm

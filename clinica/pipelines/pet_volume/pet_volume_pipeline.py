@@ -19,7 +19,7 @@ class PETVolume(PETPipeline):
 
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.atlas import PET_VOLUME_ATLASES
+        from clinica.utils.atlas import T1AndPetVolumeAtlases
         from clinica.utils.group import check_group_label
 
         super()._check_pipeline_parameters()
@@ -30,7 +30,7 @@ class PETVolume(PETPipeline):
         self.parameters.setdefault("mask_threshold", 0.3)
         self.parameters.setdefault("pvc_mask_tissues", [1, 2, 3])
         self.parameters.setdefault("smooth", [8])
-        self.parameters.setdefault("atlases", PET_VOLUME_ATLASES)
+        self.parameters.setdefault("atlases", T1AndPetVolumeAtlases)
 
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""

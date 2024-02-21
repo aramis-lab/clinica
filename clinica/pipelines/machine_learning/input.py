@@ -248,15 +248,10 @@ class CAPSVoxelBasedInput(CAPSInput):
 
 class CAPSRegionBasedInput(CAPSInput):
     def __init__(self, input_params):
-        from clinica.utils.atlas import VOLUME_ATLASES
+        from clinica.utils.atlas import Atlases
 
         super().__init__(input_params)
-
-        if self._input_params["atlas"] not in VOLUME_ATLASES:
-            raise ValueError(
-                f"Incorrect atlas name (given value: {self._input_params['atlas']}). "
-                f"It must be one of {VOLUME_ATLASES}"
-            )
+        Atlases(self._input_params["atlas"])
 
     def get_images(self):
         """
