@@ -657,8 +657,7 @@ def pet_volume_normalized_suvr_pet(
         "pattern": Path("pet")
         / "preprocessing"
         / f"group-{group_label}"
-        / f"*_trc-{acq_label}_pet"
-        / f"_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
+        / f"*_trc-{acq_label}_pet_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
         "description": (
             f"{mask_description} SUVR map (using {suvr_reference_region} region) of {acq_label}-PET "
             f"{pvc_description} and {fwhm_description} in Ixi549Space space based on {group_label} DARTEL template"
