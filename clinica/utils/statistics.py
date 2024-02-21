@@ -6,12 +6,12 @@ from os import PathLike
 from pathlib import Path
 from typing import Optional, Union
 
-from clinica.utils.atlas import AtlasAbstract
+from clinica.utils.atlas import BaseAtlas
 
 
 def statistics_on_atlas(
     in_normalized_map: Union[str, PathLike],
-    in_atlas: AtlasAbstract,
+    atlas: Union[str, BaseAtlas],
     out_file: Optional[Union[str, PathLike]] = None,
 ) -> str:
     """Compute statistics of a map on an atlas.
@@ -24,8 +24,9 @@ def statistics_on_atlas(
     in_normalized_map : str
         File containing a scalar image registered on the atlas.
 
-    in_atlas : AbstractClass
+    atlas : BaseAtlas or str
         An atlas with a set of ROI. These ROI are used to compute statistics.
+        If a string is given, it is assumed to be the name of the atlas to be used.
 
     out_file : str, optional
         Name of the output file.
@@ -42,22 +43,23 @@ def statistics_on_atlas(
 
     from clinica.utils.stream import cprint
 
+    from .atlas import atlas_factory
+
+    atlas = atlas_factory(atlas)
     in_normalized_map = Path(in_normalized_map)
     if not out_file:
         filename, ext = in_normalized_map.stem, in_normalized_map.suffix
         if ext == ".gz":
             filename = Path(filename).stem
-        out_file = Path(
-            f"{filename}_statistics_{in_atlas.get_name_atlas()}.tsv"
-        ).resolve()
+        out_file = Path(f"{filename}_statistics_{atlas.name}.tsv").resolve()
 
-    atlas_labels = nib.load(in_atlas.get_atlas_labels())
+    atlas_labels = nib.load(atlas.get_atlas_labels())
     atlas_labels_data = atlas_labels.get_fdata(dtype="float32")
 
     img = nib.load(in_normalized_map)
     img_data = img.get_fdata(dtype="float32")
 
-    atlas_correspondence = pd.read_csv(in_atlas.get_tsv_roi(), sep="\t")
+    atlas_correspondence = pd.read_csv(atlas.tsv_roi, sep="\t")
     label_name = list(atlas_correspondence.roi_name)
     label_value = list(
         atlas_correspondence.roi_value

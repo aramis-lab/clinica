@@ -68,7 +68,7 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
     return weights
 
 
-def weights_to_nifti(weights, atlas, output_filename):
+def weights_to_nifti(weights, atlas: str, output_filename: str):
     """
 
     Args:
@@ -79,18 +79,10 @@ def weights_to_nifti(weights, atlas, output_filename):
     Returns:
 
     """
-    from clinica.utils.atlas import AtlasAbstract
+    from clinica.utils.atlas import atlas_factory
 
-    atlas_path = None
-    atlas_classes = AtlasAbstract.__subclasses__()
-    for atlas_class in atlas_classes:
-        if atlas_class.get_name_atlas() == atlas:
-            atlas_path = atlas_class.get_atlas_labels()
-
-    if not atlas_path:
-        raise ValueError("Atlas path not found for atlas name " + atlas)
-
-    atlas_image = nib.load(atlas_path)
+    atlas_class = atlas_factory(atlas)
+    atlas_image = nib.load(atlas_class.get_atlas_labels())
     atlas_data = atlas_image.get_fdata(dtype="float32")
     labels = list(set(atlas_data.ravel()))
     output_image_weights = np.array(atlas_data, dtype="f")

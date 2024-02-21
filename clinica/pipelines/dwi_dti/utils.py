@@ -33,7 +33,7 @@ def statistics_on_atlases(
     atlas_statistics_list = []
     for atlas in (JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()):
         source = BIDSFileName.from_name(dwi_preprocessed_file)
-        source.update_entity("space", atlas.get_name_atlas())
+        source.update_entity("space", atlas.name)
         source.update_entity("res", atlas.get_spatial_resolution())
         source.update_entity("map", name_map)
         source.suffix = "statistics"

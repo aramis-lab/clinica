@@ -899,8 +899,9 @@ def _format_and_raise_group_reader_errors(
     raise ClinicaCAPSError(error_string)
 
 
-def _compute_sha256_hash(file_path: Path) -> str:
+def compute_sha256_hash(file_path: Path) -> str:
     """Calculate the sha256 hash of the file at path."""
+
     sha256hash = hashlib.sha256()
     chunk_size = 8192
     with open(file_path, "rb") as f:
@@ -966,7 +967,7 @@ def fetch_file(
         except OSError as err:
             cprint(msg="OS error: {0}".format(err), lvl="error")
 
-    if (checksum := _compute_sha256_hash(file_path)) != remote.checksum:
+    if (checksum := compute_sha256_hash(file_path)) != remote.checksum:
         raise IOError(
             f"{file_path} has an SHA256 checksum ({checksum}) from expected "
             f"({remote.checksum}), file may be corrupted."
