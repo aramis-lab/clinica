@@ -91,7 +91,7 @@ def run_dwi_connectome(
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     filename = BIDSFileName.from_name(
-        "sub-01_ses-M000_space-b0_model-CSD_diffmodel.nii.gz"
+        "sub-01_ses-M000_space-b0_desc-preproc_model-CSD_diffmodel.nii.gz"
     )
     output_folder = (
         caps_dir
