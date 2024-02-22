@@ -77,7 +77,7 @@ class BaseAtlas:
     @property
     def spatial_resolution(self) -> str:
         """Return the spatial resolution of the atlas (in format "XxXxX" e.g. 1.5x1.5x1.5)."""
-        img_labels = nib.load(self.get_atlas_labels())
+        img_labels = nib.load(self.labels)
         return "x".join(
             _get_resolution_along_axis(img_labels.header, axis=axis)
             for axis in range(3)
