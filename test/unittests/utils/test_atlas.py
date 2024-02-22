@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -36,8 +37,8 @@ def test_atlas_factory_error():
         ("LPBA40", LPBA40),
         ("Neuromorphometrics", Neuromorphometrics),
         ("JHUDTI81", JHUDTI811mm),
-        ("JHUTract0", JHUTracts01mm),
-        ("JHUTract25", JHUTracts251mm),
+        ("JHUTracts0", JHUTracts01mm),
+        ("JHUTracts25", JHUTracts251mm),
         ("JHUTracts50", JHUTracts501mm),
     ],
 )
@@ -48,13 +49,11 @@ def test_atlas_factory(tmp_path, monkeypatch, atlas_name, atlas):
     assert isinstance(atlas_factory(atlas_name), atlas)
 
 
-@pytest.fixture
-def mock_env_fsl(tmp_path, monkeypatch):
-    monkeypatch.setenv("FSLDIR", str(tmp_path))
-
-
 @pytest.mark.parametrize(
-    "atlas,expected_name,expected_checksum,expected_atlas_filename,expected_roi_filename,expected_resolution,expected_size",
+    (
+        "atlas,expected_name,expected_checksum,expected_atlas_filename,"
+        "expected_roi_filename,expected_resolution,expected_size"
+    ),
     [
         (
             Neuromorphometrics(),
@@ -101,8 +100,46 @@ def mock_env_fsl(tmp_path, monkeypatch):
             "1.5x1.5x1.5",
             121,
         ),
+    ],
+    ids=(
+        "Neuromorphometrics",
+        "LPBA40",
+        "Hammers",
+        "AICHA",
+        "AAL2",
+    ),
+)
+def test_atlases(
+    atlas,
+    expected_name,
+    expected_checksum,
+    expected_atlas_filename,
+    expected_roi_filename,
+    expected_resolution,
+    expected_size,
+):
+    assert atlas.name == expected_name
+    assert atlas.expected_checksum == expected_checksum
+    assert atlas.atlas_filename == expected_atlas_filename
+    assert atlas.roi_filename == expected_roi_filename
+    assert atlas.tsv_roi.exists()
+    assert atlas.spatial_resolution == expected_resolution
+    assert atlas.atlas_folder.exists()
+    assert_array_equal(atlas.get_index(), np.arange(expected_size))
+
+
+@pytest.fixture
+def atlas(expected_name, tmp_path, monkeypatch):
+    from clinica.utils.atlas import atlas_factory
+
+    monkeypatch.setenv("FSLDIR", str(tmp_path))
+    return atlas_factory(expected_name)
+
+
+@pytest.mark.parametrize(
+    "expected_name,expected_checksum,expected_atlas_filename,expected_roi_filename,expected_resolution,expected_size",
+    [
         (
-            JHUTracts501mm(),
             "JHUTracts50",
             "20ff0216d770686838de26393c0bdac38c8104760631a1a2b5f518bc0bbb470a",
             "JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz",
@@ -111,7 +148,6 @@ def mock_env_fsl(tmp_path, monkeypatch):
             18,
         ),
         (
-            JHUTracts251mm(),
             "JHUTracts25",
             "7cd85fa2be1918fc83173e9bc0746031fd4c08d70d6c81b7b9224b5d3da6d8a6",
             "JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz",
@@ -120,7 +156,6 @@ def mock_env_fsl(tmp_path, monkeypatch):
             21,
         ),
         (
-            JHUTracts01mm(),
             "JHUTracts0",
             "eb1de9413a46b02d2b5c7b77852097c6f42c8a5d55a5dbdef949c2e63b95354e",
             "JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz",
@@ -129,7 +164,6 @@ def mock_env_fsl(tmp_path, monkeypatch):
             21,
         ),
         (
-            JHUDTI811mm(),
             "JHUDTI81",
             "3c3f5d2f1250a3df60982acff35a75b99fd549a05d5f8124a63f78221aa0ec16",
             "JHU-ICBM-labels-1mm.nii.gz",
@@ -138,21 +172,10 @@ def mock_env_fsl(tmp_path, monkeypatch):
             51,
         ),
     ],
-    ids=(
-        "Neuromorphometrics",
-        "LPBA40",
-        "Hammers",
-        "AICHA",
-        "AAL2",
-        "JHUTracts50",
-        "JHUTracts25",
-        "JHUTracts0",
-        "JHUDTI81",
-    ),
+    ids=("JHUTracts50", "JHUTracts25", "JHUTracts0", "JHUDTI81"),
 )
-def test_atlases(
+def test_atlases_fsl(
     tmp_path,
-    mock_env_fsl,
     atlas,
     expected_name,
     expected_checksum,
@@ -172,9 +195,7 @@ def test_atlases(
     assert atlas.atlas_filename == expected_atlas_filename
     assert atlas.roi_filename == expected_roi_filename
     assert atlas.tsv_roi.exists()
-    assert atlas.spatial_resolution == expected_resolution
     assert atlas.atlas_folder.exists()
-    assert_array_equal(atlas.get_index(), np.arange(expected_size))
 
 
 @pytest.mark.parametrize(

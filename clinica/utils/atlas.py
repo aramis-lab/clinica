@@ -40,8 +40,8 @@ class AtlasName(str, Enum):
     LPBA40 = "LPBA40"
     NEUROMORPHOMETRICS = "Neuromorphometrics"
     JHUDTI81 = "JHUDTI81"
-    JHUTract0 = "JHUTract0"
-    JHUTract25 = "JHUTract25"
+    JHUTract0 = "JHUTracts0"
+    JHUTract25 = "JHUTracts25"
     JHUTracts50 = "JHUTracts50"
 
 
