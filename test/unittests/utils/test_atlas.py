@@ -41,4 +41,4 @@ def test_atlas_factory(tmp_path, monkeypatch, atlas_name, atlas):
     from clinica.utils.atlas import atlas_factory
 
     monkeypatch.setenv("FSLDIR", str(tmp_path))
-    assert isinstance(atlas_factory(atlas_name)(), atlas)
+    assert isinstance(atlas_factory(atlas_name), atlas)

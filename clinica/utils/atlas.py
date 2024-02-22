@@ -288,20 +288,20 @@ def atlas_factory(atlas_name: Union[str, AtlasName, BaseAtlas]) -> BaseAtlas:
     if isinstance(atlas_name, str):
         atlas_name = AtlasName(atlas_name)
     if atlas_name == AtlasName.AAL2:
-        return AAL2
+        return AAL2()
     if atlas_name == AtlasName.AICHA:
-        return AICHA
+        return AICHA()
     if atlas_name == AtlasName.HAMMERS:
-        return Hammers
+        return Hammers()
     if atlas_name == AtlasName.LPBA40:
-        return LPBA40
+        return LPBA40()
     if atlas_name == AtlasName.NEUROMORPHOMETRICS:
-        return Neuromorphometrics
+        return Neuromorphometrics()
     if atlas_name == AtlasName.JHUDTI81:
-        return JHUDTI811mm
+        return JHUDTI811mm()
     if atlas_name == AtlasName.JHUTract0:
-        return JHUTracts01mm
+        return JHUTracts01mm()
     if atlas_name == AtlasName.JHUTract25:
-        return JHUTracts251mm
+        return JHUTracts251mm()
     if atlas_name == AtlasName.JHUTracts50:
-        return JHUTracts501mm
+        return JHUTracts501mm()
