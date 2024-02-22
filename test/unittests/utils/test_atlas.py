@@ -48,6 +48,11 @@ def test_atlas_factory(tmp_path, monkeypatch, atlas_name, atlas):
     assert isinstance(atlas_factory(atlas_name), atlas)
 
 
+@pytest.fixture
+def mock_env_fsl(tmp_path, monkeypatch):
+    monkeypatch.setenv("FSLDIR", str(tmp_path))
+
+
 @pytest.mark.parametrize(
     "atlas,expected_name,expected_checksum,expected_atlas_filename,expected_roi_filename,expected_resolution,expected_size",
     [
@@ -147,6 +152,7 @@ def test_atlas_factory(tmp_path, monkeypatch, atlas_name, atlas):
 )
 def test_atlases(
     tmp_path,
+    mock_env_fsl,
     atlas,
     expected_name,
     expected_checksum,
@@ -155,10 +161,8 @@ def test_atlases(
     expected_resolution,
     expected_size,
     mocker,
-    monkeypatch,
 ):
     mocker.patch("nipype.interfaces.fsl.Info.version", return_value="6.0.5")
-    monkeypatch.setenv("FSLDIR", str(tmp_path))
     mocked_fsl_dir = tmp_path / "data" / "atlases" / "JHU"
     mocked_fsl_dir.mkdir(parents=True)
     (mocked_fsl_dir / expected_atlas_filename).touch()
@@ -186,6 +190,7 @@ def test_atlases(
     ids=["AAL2", "JHUDTI81", "JHUTracts0", "JHUTracts25", "JHUTracts50", "AICHA"],
 )
 def test_atlas_checksum_error(atlas, mocker):
+    mocker.patch("nipype.interfaces.fsl.Info.version", return_value="6.0.5")
     mocker.patch("clinica.utils.inputs.compute_sha256_hash", return_value="123")
 
     with pytest.raises(
