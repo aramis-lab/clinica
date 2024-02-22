@@ -27,7 +27,7 @@ def statistics_on_atlases(
     from clinica.utils.statistics import statistics_on_atlas
 
     atlas_statistics_list = []
-    for atlas_name in ("JHUDTI81", "JHUTract0", "JHUTract25"):
+    for atlas_name in ("JHUDTI81", "JHUTracts0", "JHUTracts25"):
         atlas = atlas_factory(atlas_name)
         source = BIDSFileName.from_name(dwi_preprocessed_file)
         source.update_entity("space", atlas.name)
