@@ -1,6 +1,6 @@
 import re
-from pathlib import Path
 
+import nibabel as nib
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -219,3 +219,33 @@ def test_atlas_checksum_error(atlas, expected_name, mocker):
         match=re.escape("has an SHA256 checksum (123) differing from expected"),
     ):
         atlas.labels
+
+
+@pytest.fixture
+def test_image() -> nib.Nifti1Image:
+    rng = np.random.RandomState(42)
+    affine = np.zeros((4, 4), float)
+    np.fill_diagonal(affine, [1, 3, 2.33, 1])
+    return nib.Nifti1Image(rng.random((2, 2, 2)), affine=affine)
+
+
+@pytest.mark.parametrize("axis,expected_resolution", [(0, "1"), (1, "3"), (2, "2.33")])
+def test_get_resolution_along_axis(test_image, axis, expected_resolution):
+    from clinica.utils.atlas import _get_resolution_along_axis
+
+    assert (
+        _get_resolution_along_axis(test_image.header, axis=axis) == expected_resolution
+    )
+
+
+def test_get_resolution_along_axis_error(test_image):
+    from clinica.utils.atlas import _get_resolution_along_axis
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "The label image has dimension 3 and axis 3 is therefore not valid. "
+            "Please use a value between 0 and 2."
+        ),
+    ):
+        _get_resolution_along_axis(test_image.header, axis=3)

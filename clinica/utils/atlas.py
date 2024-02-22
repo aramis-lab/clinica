@@ -47,6 +47,12 @@ class AtlasName(str, Enum):
 
 def _get_resolution_along_axis(label_image_header: Nifti1Header, axis: int) -> str:
     voxels_labels = label_image_header.get_zooms()
+    if not 0 <= axis < len(voxels_labels):
+        raise ValueError(
+            f"The label image has dimension {len(voxels_labels)} and "
+            f"axis {axis} is therefore not valid. Please use a value "
+            f"between 0 and {len(voxels_labels) - 1}."
+        )
     if int(voxels_labels[axis]) == voxels_labels[axis]:
         return str(int(voxels_labels[axis]))
     return str(voxels_labels[axis])
@@ -74,6 +80,16 @@ class BaseAtlas:
 
     @property
     def tsv_roi(self) -> Path:
+        """Path to the parcellation TSV file.
+
+        The TSV file must contain the `roi_value` and `roi_name` columns:
+
+        roi_value   roi_name
+        0   Background
+        2001    Precentral_L
+        [...]   [...]
+        9170    Vermis_10
+        """
         return self.atlas_folder / self.roi_filename
 
     @property
@@ -87,6 +103,14 @@ class BaseAtlas:
 
     @property
     def labels(self) -> Path:
+        """Path to the parcellation in NIfTI format.
+
+        Raises
+        ------
+        IOError :
+            If the checksum of the parcellation found is different from
+            the expected checksum.
+        """
         from .inputs import compute_sha256_hash
 
         atlas_labels = self.atlas_dir / self.atlas_filename
@@ -121,6 +145,17 @@ class FSLAtlas(BaseAtlas):
 
 
 class JHUDTI811mm(FSLAtlas):
+    """JHUDTI811mm atlas.
+
+    This atlas contains 48 white matter tract labels that were created by manually
+    segmenting a standard-space average of diffusion MRI tensor maps from 81 subjects.
+
+    References
+    ----------
+    https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases
+    https://www.sciencedirect.com/science/article/abs/pii/S105381190700688X?via%3Dihub
+    """
+
     def __init__(self):
         super().__init__(
             name="JHUDTI81",
@@ -138,6 +173,18 @@ class JHUDTI811mm(FSLAtlas):
 
 
 class JHUTracts01mm(FSLAtlas):
+    """JHUTracts01mm atlas.
+
+    This atlas contains 20 white matter tract labels that were identified probabilistically
+    by averaging the results of deterministic tractography run on 28 subjects.
+    Threshold used is 0%.
+
+    References
+    ----------
+    https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases
+    https://shop.elsevier.com/books/mri-atlas-of-human-white-matter/mori/978-0-444-51741-8
+    """
+
     def __init__(self):
         super().__init__(
             name="JHUTracts0",
@@ -151,6 +198,18 @@ class JHUTracts01mm(FSLAtlas):
 
 
 class JHUTracts251mm(FSLAtlas):
+    """JHUTracts251mm atlas.
+
+    This atlas contains 20 white matter tract labels that were identified probabilistically
+    by averaging the results of deterministic tractography run on 28 subjects.
+    Threshold used is 25%.
+
+    References
+    ----------
+    https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases
+    https://shop.elsevier.com/books/mri-atlas-of-human-white-matter/mori/978-0-444-51741-8
+    """
+
     def __init__(self):
         super().__init__(
             name="JHUTracts25",
@@ -164,6 +223,18 @@ class JHUTracts251mm(FSLAtlas):
 
 
 class JHUTracts501mm(FSLAtlas):
+    """JHUTracts501mm atlas.
+
+    This atlas contains 20 white matter tract labels that were identified probabilistically
+    by averaging the results of deterministic tractography run on 28 subjects.
+    Threshold used is 50%.
+
+    References
+    ----------
+    https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases
+    https://shop.elsevier.com/books/mri-atlas-of-human-white-matter/mori/978-0-444-51741-8
+    """
+
     def __init__(self):
         super().__init__(
             name="JHUTracts50",
@@ -177,7 +248,11 @@ class JHUTracts501mm(FSLAtlas):
 
 
 class LocalAtlas(BaseAtlas):
-    """Local atlases will look for labels in the local 'resources' folder."""
+    """Local atlases will look for labels in the local 'resources' folder.
+
+    More precisely, the labels and TSV files associated with the atlas
+    are located in the folder `<clinica>/resources/atlases/`.
+    """
 
     def __init__(self, name: str, roi_filename: str, atlas_filename: str):
         super().__init__(name, roi_filename)
@@ -186,6 +261,20 @@ class LocalAtlas(BaseAtlas):
 
 
 class AAL2(LocalAtlas):
+    """AAL2 atlas.
+
+    Anatomical atlas based on a single subject. It is the updated version of AAL, which is
+    probably the most widely used cortical parcellation map in the neuroimaging literature.
+    It was built using manual tracing on the spatially normalized single-subject high-resolution
+    T1 volume in MNI space. It is composed of 120 regions covering the whole cortex as well as
+    the main subcortical structures.
+
+    References
+    ----------
+    https://www.gin.cnrs.fr/en/tools/aal/
+    https://www.sciencedirect.com/science/article/abs/pii/S1053811901909784?via%3Dihub
+    """
+
     def __init__(self):
         super().__init__(
             name="AAL2",
@@ -199,6 +288,18 @@ class AAL2(LocalAtlas):
 
 
 class AICHA(LocalAtlas):
+    """AICHA atlas.
+
+    Functional atlas based on multiple subjects. It was built using parcellation of group-level
+    functional connectivity profiles computed from resting-state fMRI data of 281 healthy subjects.
+    It is composed of 384 regions covering the whole cortex as well as the main subcortical structures.
+
+    References
+    ----------
+    https://www.gin.cnrs.fr/en/tools/aicha/
+    https://www.sciencedirect.com/science/article/abs/pii/S0165027015002678?via%3Dihub
+    """
+
     def __init__(self):
         super().__init__(
             name="AICHA",
@@ -232,6 +333,20 @@ class RemoteAtlas(BaseAtlas):
 
 
 class Hammers(RemoteAtlas):
+    """Hammers atlas.
+
+    Anatomical atlas based on multiple subjects. It was built using manual tracing on anatomical
+    MRI from 30 healthy subjects. The individual subjects parcellations were then registered to MNI
+    space to generate a probabilistic atlas as well as a maximum probability map. The latter was
+    used in the present work. It is composed of 69 regions covering the whole cortex as well
+    as he main subcortical structures.
+
+    References
+    ----------
+    https://neuro-jena.github.io/cat//index.html#DOWNLOAD
+    https://onlinelibrary.wiley.com/doi/epdf/10.1002/hbm.10123
+    """
+
     def __init__(self):
         super().__init__(
             name="Hammers",
@@ -245,6 +360,19 @@ class Hammers(RemoteAtlas):
 
 
 class LPBA40(RemoteAtlas):
+    """LPBA40 atlas.
+
+    Anatomical atlas based on multiple subjects. It was built using manual tracing on anatomical
+    MRI from 40 healthy subjects. The individual subjects parcellations were then registered to MNI
+    space to generate a maximum probability map. It is composed of 56 regions covering the whole
+    cortex as well as the main subcortical structures.
+
+    References
+    ----------
+    https://neuro-jena.github.io/cat//index.html#DOWNLOAD
+    https://www.sciencedirect.com/science/article/abs/pii/S1053811907008099?via%3Dihub
+    """
+
     def __init__(self):
         super().__init__(
             name="LPBA40",
@@ -258,6 +386,20 @@ class LPBA40(RemoteAtlas):
 
 
 class Neuromorphometrics(RemoteAtlas):
+    """Neuromorphometrics atlas.
+
+    Anatomical atlas based on multiple subjects. It was built using manual tracing on anatomical
+    MRI from 30 healthy subjects. The individual subjects parcellations were then registered to
+    MNI space to generate a maximum probability map. It is composed of 140 regions covering the
+    whole cortex as well as the main subcortical structures. Data were made available for the
+    “MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling”.
+
+    References
+    ----------
+    https://neuro-jena.github.io/cat//index.html#DOWNLOAD
+    http://masiweb.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details
+    """
+
     def __init__(self):
         super().__init__(
             name="Neuromorphometrics",
