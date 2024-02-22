@@ -199,18 +199,18 @@ def test_atlases_fsl(
 
 
 @pytest.mark.parametrize(
-    "atlas",
+    "expected_name",
     [
-        AAL2(),
-        JHUDTI811mm(),
-        JHUTracts01mm(),
-        JHUTracts251mm(),
-        JHUTracts501mm(),
-        AICHA(),
+        "AAL2",
+        "JHUDTI81",
+        "JHUTracts0",
+        "JHUTracts25",
+        "JHUTracts50",
+        "AICHA",
     ],
     ids=["AAL2", "JHUDTI81", "JHUTracts0", "JHUTracts25", "JHUTracts50", "AICHA"],
 )
-def test_atlas_checksum_error(atlas, mocker):
+def test_atlas_checksum_error(atlas, expected_name, mocker):
     mocker.patch("nipype.interfaces.fsl.Info.version", return_value="6.0.5")
     mocker.patch("clinica.utils.inputs.compute_sha256_hash", return_value="123")
 
