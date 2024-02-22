@@ -146,6 +146,7 @@ def test_atlas_factory(tmp_path, monkeypatch, atlas_name, atlas):
     ),
 )
 def test_atlases(
+    tmp_path,
     atlas,
     expected_name,
     expected_checksum,
@@ -154,8 +155,14 @@ def test_atlases(
     expected_resolution,
     expected_size,
     mocker,
+    monkeypatch,
 ):
     mocker.patch("nipype.interfaces.fsl.Info.version", return_value="6.0.5")
+    monkeypatch.setenv("FSLDIR", str(tmp_path))
+    mocked_fsl_dir = tmp_path / "data" / "atlases" / "JHU"
+    mocked_fsl_dir.mkdir(parents=True)
+    (mocked_fsl_dir / expected_atlas_filename).touch()
+
     assert atlas.name == expected_name
     assert atlas.expected_checksum == expected_checksum
     assert atlas.atlas_filename == expected_atlas_filename
