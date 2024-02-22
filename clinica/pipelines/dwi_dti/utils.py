@@ -22,19 +22,16 @@ def statistics_on_atlases(
     """
     from pathlib import Path
 
-    from clinica.utils.atlas import (
-        JHUDTI811mm,
-        JHUTracts01mm,
-        JHUTracts251mm,
-    )
+    from clinica.utils.atlas import atlas_factory
     from clinica.utils.bids import BIDSFileName
     from clinica.utils.statistics import statistics_on_atlas
 
     atlas_statistics_list = []
-    for atlas in (JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()):
+    for atlas_name in ("JHUDTI81", "JHUTract0", "JHUTract25"):
+        atlas = atlas_factory(atlas_name)
         source = BIDSFileName.from_name(dwi_preprocessed_file)
         source.update_entity("space", atlas.name)
-        source.update_entity("res", atlas.get_spatial_resolution())
+        source.update_entity("res", atlas.spatial_resolution)
         source.update_entity("map", name_map)
         source.suffix = "statistics"
         source.extension = ".tsv"

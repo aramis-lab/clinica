@@ -6,12 +6,12 @@ from os import PathLike
 from pathlib import Path
 from typing import Optional, Union
 
-from clinica.utils.atlas import BaseAtlas
+from clinica.utils.atlas import AtlasName, BaseAtlas
 
 
 def statistics_on_atlas(
     in_normalized_map: Union[str, PathLike],
-    atlas: Union[str, BaseAtlas],
+    atlas: Union[str, AtlasName, BaseAtlas],
     out_file: Optional[Union[str, PathLike]] = None,
 ) -> str:
     """Compute statistics of a map on an atlas.
@@ -24,7 +24,7 @@ def statistics_on_atlas(
     in_normalized_map : str
         File containing a scalar image registered on the atlas.
 
-    atlas : BaseAtlas or str
+    atlas : BaseAtlas or AtlasName or str
         An atlas with a set of ROI. These ROI are used to compute statistics.
         If a string is given, it is assumed to be the name of the atlas to be used.
 
@@ -53,7 +53,7 @@ def statistics_on_atlas(
             filename = Path(filename).stem
         out_file = Path(f"{filename}_statistics_{atlas.name}.tsv").resolve()
 
-    atlas_labels = nib.load(atlas.get_atlas_labels())
+    atlas_labels = nib.load(atlas.labels)
     atlas_labels_data = atlas_labels.get_fdata(dtype="float32")
 
     img = nib.load(in_normalized_map)
@@ -61,9 +61,8 @@ def statistics_on_atlas(
 
     atlas_correspondence = pd.read_csv(atlas.tsv_roi, sep="\t")
     label_name = list(atlas_correspondence.roi_name)
-    label_value = list(
-        atlas_correspondence.roi_value
-    )  # TODO create roi_value column in lut_*.txt and remove irrelevant RGB information
+    # TODO create roi_value column in lut_*.txt and remove irrelevant RGB information
+    label_value = list(atlas_correspondence.roi_value)
 
     mean_signal_value = []
     for label in label_value:

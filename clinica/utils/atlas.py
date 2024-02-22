@@ -21,7 +21,9 @@ import numpy as np
 from nibabel import Nifti1Header
 
 
-class T1AndPetVolumeAtlases(str, Enum):
+class T1AndPetVolumeAtlasName(str, Enum):
+    """Possible names for T1 / PET atlases."""
+
     AAL2 = "AAL2"
     AICHA = "AICHA"
     HAMMERS = "Hammers"
@@ -29,7 +31,9 @@ class T1AndPetVolumeAtlases(str, Enum):
     NEUROMORPHOMETRICS = "Neuromorphometrics"
 
 
-class Atlases(str, Enum):
+class AtlasName(str, Enum):
+    """Possible names for atlases."""
+
     AAL2 = "AAL2"
     AICHA = "AICHA"
     HAMMERS = "Hammers"
@@ -64,13 +68,14 @@ class BaseAtlas:
 
     @property
     def atlas_folder(self) -> Path:
-        return Path(__file__).parent / "resources" / "atlases"
+        return Path(__file__).parent.parent / "resources" / "atlases"
 
     @property
     def tsv_roi(self) -> Path:
         return self.atlas_folder / self.roi_filename
 
-    def get_spatial_resolution(self) -> str:
+    @property
+    def spatial_resolution(self) -> str:
         """Return the spatial resolution of the atlas (in format "XxXxX" e.g. 1.5x1.5x1.5)."""
         img_labels = nib.load(self.get_atlas_labels())
         return "x".join(
@@ -78,13 +83,14 @@ class BaseAtlas:
             for axis in range(3)
         )
 
+    @property
     @abc.abstractmethod
-    def get_atlas_labels(self) -> Path:
+    def labels(self) -> Path:
         """Return the image with the different labels/ROIs."""
         raise NotImplementedError
 
     def get_index(self) -> np.ndarray:
-        img_labels = nib.load(self.get_atlas_labels())
+        img_labels = nib.load(self.labels)
         img_labels = img_labels.get_fdata(dtype="float32")
         labels = list(set(img_labels.ravel()))
         index_vector = np.zeros(len(labels))
@@ -104,7 +110,8 @@ class FSLAtlas(BaseAtlas):
         fsl_dir = Path(check_environment_variable("FSLDIR", "FSL"))
         self.fsl_atlas_dir = fsl_dir / "data" / "atlases" / "JHU"
 
-    def get_atlas_labels(self) -> Path:
+    @property
+    def labels(self) -> Path:
         from .inputs import compute_sha256_hash
 
         atlas_labels = self.fsl_atlas_dir / self.atlas_filename
@@ -180,7 +187,8 @@ class LocalAtlas(BaseAtlas):
         super().__init__(name, roi_filename)
         self.atlas_filename = atlas_filename
 
-    def get_atlas_labels(self) -> Path:
+    @property
+    def labels(self) -> Path:
         return Path(__file__).parent / "resources" / "atlases" / self.atlas_filename
 
 
@@ -209,7 +217,8 @@ class RemoteAtlas(BaseAtlas):
         super().__init__(name, roi_filename)
         self.atlas_filename = atlas_filename
 
-    def get_atlas_labels(self) -> Path:
+    @property
+    def labels(self) -> Path:
         from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
 
         return get_file_from_server(
@@ -260,12 +269,12 @@ class Neuromorphometrics(RemoteAtlas):
         return "19a50136cd2f8a14357a19ad8a1dc4a2ecb6beb3fc16cb5441f4f2ebaf64a9a5"
 
 
-def atlas_factory(atlas_name: Union[str, Atlases, BaseAtlas]) -> BaseAtlas:
+def atlas_factory(atlas_name: Union[str, AtlasName, BaseAtlas]) -> BaseAtlas:
     """Factory method for atlases.
 
     Parameters
     ----------
-    atlas_name : str or Atlases or atlas instance
+    atlas_name : str or AtlasName or atlas instance
         If an atlas instance, the instance is returned.
         If a string, the corresponding atlas will be returned.
 
@@ -277,22 +286,22 @@ def atlas_factory(atlas_name: Union[str, Atlases, BaseAtlas]) -> BaseAtlas:
     if isinstance(atlas_name, BaseAtlas):
         return atlas_name
     if isinstance(atlas_name, str):
-        atlas_name = Atlases(atlas_name)
-    if atlas_name == Atlases.AAL2:
+        atlas_name = AtlasName(atlas_name)
+    if atlas_name == AtlasName.AAL2:
         return AAL2
-    if atlas_name == Atlases.AICHA:
+    if atlas_name == AtlasName.AICHA:
         return AICHA
-    if atlas_name == Atlases.HAMMERS:
+    if atlas_name == AtlasName.HAMMERS:
         return Hammers
-    if atlas_name == Atlases.LPBA40:
+    if atlas_name == AtlasName.LPBA40:
         return LPBA40
-    if atlas_name == Atlases.NEUROMORPHOMETRICS:
+    if atlas_name == AtlasName.NEUROMORPHOMETRICS:
         return Neuromorphometrics
-    if atlas_name == Atlases.JHUDTI81:
+    if atlas_name == AtlasName.JHUDTI81:
         return JHUDTI811mm
-    if atlas_name == Atlases.JHUTract0:
+    if atlas_name == AtlasName.JHUTract0:
         return JHUTracts01mm
-    if atlas_name == Atlases.JHUTract25:
+    if atlas_name == AtlasName.JHUTract25:
         return JHUTracts251mm
-    if atlas_name == Atlases.JHUTracts50:
+    if atlas_name == AtlasName.JHUTracts50:
         return JHUTracts501mm

@@ -707,7 +707,6 @@ def extract_bids_identifier_from_filename(caps_dwi_filename: str) -> str:
             f"Could not extract the BIDS identifier from the DWI input filename {caps_dwi_filename}."
         )
     identifier = m.group(0).rstrip("_dwi")
-    assert "dwi" not in identifier
 
     return identifier
 

@@ -16,12 +16,12 @@ class T1VolumeParcellation(Pipeline):
 
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.atlas import T1AndPetVolumeAtlases
+        from clinica.utils.atlas import T1AndPetVolumeAtlasName
         from clinica.utils.group import check_group_label
 
         self.parameters.setdefault("group_label", None)
         check_group_label(self.parameters["group_label"])
-        self.parameters.setdefault("atlases", T1AndPetVolumeAtlases)
+        self.parameters.setdefault("atlases", T1AndPetVolumeAtlasName)
         self.parameters.setdefault("modulate", True)
 
     def get_input_fields(self) -> List[str]:

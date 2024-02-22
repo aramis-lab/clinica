@@ -33,7 +33,7 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
     dict :
         Cleaned dictionary of parameters.
     """
-    from clinica.utils.atlas import T1AndPetVolumeAtlases
+    from clinica.utils.atlas import T1AndPetVolumeAtlasName
     from clinica.utils.group import check_group_label
 
     parameters.setdefault("group_label", None)
@@ -46,7 +46,7 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
     parameters.setdefault("mask_threshold", 0.3)
     parameters.setdefault("pvc_mask_tissues", [1, 2, 3])
     parameters.setdefault("smooth", 8.0)
-    parameters.setdefault("atlases", T1AndPetVolumeAtlases)
+    parameters.setdefault("atlases", T1AndPetVolumeAtlasName)
     return parameters
 
 

@@ -81,8 +81,8 @@ def weights_to_nifti(weights, atlas: str, output_filename: str):
     """
     from clinica.utils.atlas import atlas_factory
 
-    atlas_class = atlas_factory(atlas)
-    atlas_image = nib.load(atlas_class.get_atlas_labels())
+    atlas = atlas_factory(atlas)
+    atlas_image = nib.load(atlas.labels)
     atlas_data = atlas_image.get_fdata(dtype="float32")
     labels = list(set(atlas_data.ravel()))
     output_image_weights = np.array(atlas_data, dtype="f")

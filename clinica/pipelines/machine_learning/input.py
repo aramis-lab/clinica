@@ -248,10 +248,10 @@ class CAPSVoxelBasedInput(CAPSInput):
 
 class CAPSRegionBasedInput(CAPSInput):
     def __init__(self, input_params):
-        from clinica.utils.atlas import Atlases
+        from clinica.utils.atlas import AtlasName
 
         super().__init__(input_params)
-        Atlases(self._input_params["atlas"])
+        AtlasName(self._input_params["atlas"])
 
     def get_images(self):
         """
