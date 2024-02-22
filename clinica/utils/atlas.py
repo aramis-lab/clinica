@@ -60,6 +60,8 @@ class BaseAtlas:
     def __init__(self, name: str, roi_filename: str):
         self.name = name
         self.roi_filename = roi_filename
+        self.atlas_dir = None
+        self.atlas_filename = None
 
     @property
     @abc.abstractmethod
@@ -84,10 +86,17 @@ class BaseAtlas:
         )
 
     @property
-    @abc.abstractmethod
     def labels(self) -> Path:
-        """Return the image with the different labels/ROIs."""
-        raise NotImplementedError
+        from .inputs import compute_sha256_hash
+
+        atlas_labels = self.atlas_dir / self.atlas_filename
+        if (checksum := compute_sha256_hash(atlas_labels)) != self.expected_checksum:
+            raise IOError(
+                f"{atlas_labels} has an SHA256 checksum ({checksum}) "
+                f"differing from expected ({self.expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
+            )
+        return atlas_labels
 
     def get_index(self) -> np.ndarray:
         img_labels = nib.load(self.labels)
@@ -108,20 +117,7 @@ class FSLAtlas(BaseAtlas):
         super().__init__(name, roi_filename)
         self.atlas_filename = atlas_filename
         fsl_dir = Path(check_environment_variable("FSLDIR", "FSL"))
-        self.fsl_atlas_dir = fsl_dir / "data" / "atlases" / "JHU"
-
-    @property
-    def labels(self) -> Path:
-        from .inputs import compute_sha256_hash
-
-        atlas_labels = self.fsl_atlas_dir / self.atlas_filename
-        if (checksum := compute_sha256_hash(atlas_labels)) != self.expected_checksum:
-            raise IOError(
-                f"{atlas_labels} has an SHA256 checksum ({checksum}) "
-                f"differing from expected ({self.expected_checksum}), "
-                f"file may be corrupted and changed with newer version of FSL."
-            )
-        return atlas_labels
+        self.atlas_dir = fsl_dir / "data" / "atlases" / "JHU"
 
 
 class JHUDTI811mm(FSLAtlas):
@@ -186,10 +182,7 @@ class LocalAtlas(BaseAtlas):
     def __init__(self, name: str, roi_filename: str, atlas_filename: str):
         super().__init__(name, roi_filename)
         self.atlas_filename = atlas_filename
-
-    @property
-    def labels(self) -> Path:
-        return Path(__file__).parent / "resources" / "atlases" / self.atlas_filename
+        self.atlas_dir = Path(__file__).parent.parent / "resources" / "atlases"
 
 
 class AAL2(LocalAtlas):
@@ -200,6 +193,10 @@ class AAL2(LocalAtlas):
             atlas_filename="atlas-AAL2_dseg.nii.gz",
         )
 
+    @property
+    def expected_checksum(self) -> str:
+        return "f6bc698f778a4b383abd3ce355bfd4505c4aa14708e4a7848f8ee928c2b56b37"
+
 
 class AICHA(LocalAtlas):
     def __init__(self):
@@ -208,6 +205,10 @@ class AICHA(LocalAtlas):
             roi_filename="atlas-AICHA_dseg.tsv",
             atlas_filename="atlas-AICHA_dseg.nii.gz",
         )
+
+    @property
+    def expected_checksum(self) -> str:
+        return "cab554d5f546720e60f61f536f82c3d355b31fadb5a4d3ce6a050a606d7ef761"
 
 
 class RemoteAtlas(BaseAtlas):
