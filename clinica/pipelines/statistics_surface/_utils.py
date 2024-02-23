@@ -146,7 +146,7 @@ def _convert_dtype_to_str_format(dtype) -> str:
         return "%d"
     if dtype == np.float64:
         return "%f"
-    if dtype == np.object:
+    if dtype == np.object_:
         return "%s"
     raise ValueError(f"Unknown dtype (given: {dtype})")
 
