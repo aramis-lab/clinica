@@ -1623,30 +1623,29 @@ tests = ["pytest (>=4.6)"]
 
 [[package]]
 name = "netneurotools"
-version = "0.2.3"
-description = "Commonly used tools in the Network Neuroscience Lab"
+version = "0.2.4"
+description = "A toolbox for network neuroscience"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "netneurotools-0.2.3-py2.py3-none-any.whl", hash = "sha256:253dbb5e43aeeb359d2b00d9a220cf704407b0faac6d5a4a1b357df442e7d2be"},
-    {file = "netneurotools-0.2.3.tar.gz", hash = "sha256:3f5ec8a1fcbbe105db1dd6a1e402158bf639bb8fa3fd2e26b6d5a054a80b9ba0"},
+    {file = "netneurotools-0.2.4-py3-none-any.whl", hash = "sha256:e0b85011c7c6d2bd22cb95371ddd715aa9b8aeb3409bee3a9fd34c4500bcc681"},
+    {file = "netneurotools-0.2.4.tar.gz", hash = "sha256:d878b0893632ce73716334718a45dda5613d6adcf512c32b0d10442aeb0726a8"},
 ]
 
 [package.dependencies]
 bctpy = "*"
 matplotlib = "*"
-nibabel = "*"
+nibabel = ">=3.0.0"
 nilearn = "*"
 numpy = ">=1.16"
 scikit-learn = "*"
 scipy = ">=1.4.0"
 
 [package.extras]
-all = ["coverage", "flake8", "mayavi", "numba", "pysurfer", "pytest (>=3.6)", "pytest-cov", "sphinx (>=2.0)", "sphinx-gallery", "sphinx-rtd-theme"]
-doc = ["sphinx (>=2.0)", "sphinx-gallery", "sphinx-rtd-theme"]
+doc = ["sphinx (>=2.0,<7.0.0)", "sphinx-gallery", "sphinx-rtd-theme"]
 numba = ["numba"]
 plotting = ["mayavi", "pysurfer"]
-style = ["flake8"]
+style = ["flake8", "ruff"]
 test = ["coverage", "pytest (>=3.6)", "pytest-cov"]
 
 [[package]]
