@@ -3,6 +3,7 @@ name: Fast Non Regression Tests
 on:
   push:
     branches: [dev]
+  workflow_dispatch:
 
 permissions:
   contents: read
