@@ -364,6 +364,8 @@ class RandomForest(base.MLAlgorithm):
         min_samples_split,
         max_features,
     ):
+        assert max_features != "auto"
+
         if self._algorithm_params["balanced"]:
             classifier = RandomForestClassifier(
                 n_estimators=n_estimators,
