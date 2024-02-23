@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
 from clinica.iotools.utils.pipeline_handling import PipelineNameForMetricExtraction
 
@@ -268,18 +269,25 @@ def test_extract_metrics_from_pipeline_errors(tmp_path):
         )
 
 
-def test_extract_metrics_from_pipeline(tmp_path):
+def test_extract_metrics_from_pipeline_empty(tmp_path):
     from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline
 
     (tmp_path / "groups").mkdir()
     df = pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
-    assert _extract_metrics_from_pipeline(
+    x, y = _extract_metrics_from_pipeline(
         tmp_path, df, ["metrics"], PipelineNameForMetricExtraction.T1_VOLUME
-    ) == (
-        df,
-        None,
     )
-    (tmp_path / "groups" / "UnitTest").mkdir()
+    assert_frame_equal(
+        x, pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
+    )
+    assert y.empty
+
+
+def test_extract_metrics_from_pipeline(tmp_path):
+    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline
+
+    (tmp_path / "groups" / "UnitTest").mkdir(parents=True)
+    df = pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
     x, y = _extract_metrics_from_pipeline(
         tmp_path, df, ["metrics"], PipelineNameForMetricExtraction.T1_VOLUME
     )
