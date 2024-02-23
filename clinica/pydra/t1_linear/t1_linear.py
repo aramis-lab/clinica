@@ -57,11 +57,17 @@ def build_core_workflow(name: str = "core", **kwargs) -> Workflow:
         read_bids_dataset(
             name="read_t1w",
             dataset_path=wf.lzin.input_dir,
-            output_queries={"t1w_file": {"suffix": "T1w", "extension": ["nii", "nii.gz"]}},
+            output_queries={
+                "t1w_file": {"suffix": "T1w", "extension": ["nii", "nii.gz"]}
+            },
         )
     )
 
-    wf.add(parse_bids_file(name="parse_t1w", bids_file=wf.read_t1w.lzout.t1w_file).split("bids_file"))
+    wf.add(
+        parse_bids_file(name="parse_t1w", bids_file=wf.read_t1w.lzout.t1w_file).split(
+            "bids_file"
+        )
+    )
 
     wf.add(
         ants.N4BiasFieldCorrection(
