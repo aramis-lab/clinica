@@ -927,7 +927,8 @@ def fetch_file(remote: RemoteFileStructure, dirname: Optional[str]) -> str:
 
     file_path = os.path.join(dirname, remote.filename)
     # Download the file from `url` and save it locally under `file_name`:
-    gcontext = ssl.SSLContext()
+    gcontext = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
+    gcontext.load_default_certs()
     req = Request(remote.url + remote.filename)
     try:
         response = urlopen(req, context=gcontext)
