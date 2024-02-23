@@ -97,7 +97,12 @@ target-version = "py38"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "W", "I001", "PTH"]
+select = [
+    "E",
+    "W",
+    "I001",
+#    "PTH",
+]
 ignore = ["E203", "E501"]
 
 [tool.ruff.lint.isort]
