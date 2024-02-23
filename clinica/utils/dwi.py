@@ -706,7 +706,9 @@ def extract_bids_identifier_from_filename(caps_dwi_filename: str) -> str:
         raise ValueError(
             f"Could not extract the BIDS identifier from the DWI input filename {caps_dwi_filename}."
         )
-    return m.group(0).rstrip("_dwi")
+    identifier = m.group(0).rstrip("_dwi")
+
+    return identifier
 
 
 def rename_files(in_caps_dwi: str, mapping: dict) -> tuple:

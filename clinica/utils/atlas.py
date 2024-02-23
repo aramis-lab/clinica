@@ -12,83 +12,118 @@ Either a refactoring of this module or the use of an external API
 """
 
 import abc
+from enum import Enum
+from pathlib import Path
+from typing import Union
 
-T1_VOLUME_ATLASES = [
-    "AAL2",
-    "AICHA",
-    "Hammers",
-    "LPBA40",
-    "Neuromorphometrics",
-]
-
-PET_VOLUME_ATLASES = [
-    "AAL2",
-    "AICHA",
-    "Hammers",
-    "LPBA40",
-    "Neuromorphometrics",
-]
-
-DWI_DTI_ATLASES = [
-    "JHUDTI81",
-    "JHUTract0",
-    "JHUTract25",
-]
-
-VOLUME_ATLASES = list(set(T1_VOLUME_ATLASES + PET_VOLUME_ATLASES + DWI_DTI_ATLASES))
+import nibabel as nib
+import numpy as np
+from nibabel import Nifti1Header
 
 
-class AtlasAbstract:
-    """Abstract class for Atlas handling.
+class T1AndPetVolumeAtlasName(str, Enum):
+    """Possible names for T1 / PET atlases."""
 
-    Naming convention for children classes of AtlasAbstract:
-    <name_atlas>[<resolution>][<map>]
-    """
+    AAL2 = "AAL2"
+    AICHA = "AICHA"
+    HAMMERS = "Hammers"
+    LPBA40 = "LPBA40"
+    NEUROMORPHOMETRICS = "Neuromorphometrics"
+
+
+class AtlasName(str, Enum):
+    """Possible names for atlases."""
+
+    AAL2 = "AAL2"
+    AICHA = "AICHA"
+    HAMMERS = "Hammers"
+    LPBA40 = "LPBA40"
+    NEUROMORPHOMETRICS = "Neuromorphometrics"
+    JHUDTI81 = "JHUDTI81"
+    JHUTract0 = "JHUTracts0"
+    JHUTract25 = "JHUTracts25"
+    JHUTracts50 = "JHUTracts50"
+
+
+def _get_resolution_along_axis(label_image_header: Nifti1Header, axis: int) -> str:
+    voxels_labels = label_image_header.get_zooms()
+    if not 0 <= axis < len(voxels_labels):
+        raise ValueError(
+            f"The label image has dimension {len(voxels_labels)} and "
+            f"axis {axis} is therefore not valid. Please use a value "
+            f"between 0 and {len(voxels_labels) - 1}."
+        )
+    if int(voxels_labels[axis]) == voxels_labels[axis]:
+        return str(int(voxels_labels[axis]))
+    return str(voxels_labels[axis])
+
+
+class BaseAtlas:
+    """Base class for Atlas handling."""
 
     __metaclass__ = abc.ABCMeta
 
-    @staticmethod
-    @abc.abstractmethod
-    def get_name_atlas():
-        """Return the name of the atlas (as defined in BIDS/CAPS specifications)."""
+    def __init__(self, name: str, roi_filename: str):
+        self.name = name
+        self.roi_filename = roi_filename
+        self.atlas_dir = None
+        self.atlas_filename = None
 
-    def get_spatial_resolution(self):
+    @property
+    @abc.abstractmethod
+    def expected_checksum(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def atlas_folder(self) -> Path:
+        return Path(__file__).parent.parent / "resources" / "atlases"
+
+    @property
+    def tsv_roi(self) -> Path:
+        """Path to the parcellation TSV file.
+
+        The TSV file must contain the `roi_value` and `roi_name` columns:
+
+        roi_value   roi_name
+        0   Background
+        2001    Precentral_L
+        [...]   [...]
+        9170    Vermis_10
+        """
+        return self.atlas_folder / self.roi_filename
+
+    @property
+    def spatial_resolution(self) -> str:
         """Return the spatial resolution of the atlas (in format "XxXxX" e.g. 1.5x1.5x1.5)."""
-        import nibabel as nib
+        img_labels = nib.load(self.labels)
+        return "x".join(
+            _get_resolution_along_axis(img_labels.header, axis=axis)
+            for axis in range(3)
+        )
 
-        img_labels = nib.load(self.get_atlas_labels())
-        voxels_labels = img_labels.header.get_zooms()
-        # Will display integers without decimals
-        if int(voxels_labels[0]) == voxels_labels[0]:
-            s_x = str(int(voxels_labels[0]))
-        else:
-            s_x = str(voxels_labels[0])
-        if int(voxels_labels[1]) == voxels_labels[1]:
-            s_y = str(int(voxels_labels[1]))
-        else:
-            s_y = str(voxels_labels[1])
-        if int(voxels_labels[2]) == voxels_labels[2]:
-            s_z = str(int(voxels_labels[2]))
-        else:
-            s_z = str(voxels_labels[2])
+    @property
+    def labels(self) -> Path:
+        """Path to the parcellation in NIfTI format.
 
-        return f"{s_x}x{s_y}x{s_z}"
+        Raises
+        ------
+        IOError :
+            If the checksum of the parcellation found is different from
+            the expected checksum.
+        """
+        from .inputs import compute_sha256_hash
 
-    @staticmethod
-    @abc.abstractmethod
-    def get_atlas_labels():
-        """Return the image with the different labels/ROIs."""
+        atlas_labels = self.atlas_dir / self.atlas_filename
+        if (checksum := compute_sha256_hash(atlas_labels)) != self.expected_checksum:
+            raise IOError(
+                f"{atlas_labels} has an SHA256 checksum ({checksum}) "
+                f"differing from expected ({self.expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
+            )
+        return atlas_labels
 
-    @staticmethod
-    @abc.abstractmethod
-    def get_tsv_roi():
-        """Return the TSV file containing the ROI (regions of interest) of the atlas."""
-
-    def get_index(self):
-        import nibabel as nib
-        import numpy as np
-
-        img_labels = nib.load(self.get_atlas_labels())
+    def get_index(self) -> np.ndarray:
+        img_labels = nib.load(self.labels)
         img_labels = img_labels.get_fdata(dtype="float32")
         labels = list(set(img_labels.ravel()))
         index_vector = np.zeros(len(labels))
@@ -97,354 +132,319 @@ class AtlasAbstract:
         return index_vector
 
 
-class JHUDTI811mm(AtlasAbstract):
+class FSLAtlas(BaseAtlas):
+    """FSL atlases look for the labels in the FSL folder (requires FSL)."""
+
+    def __init__(self, name: str, roi_filename: str, atlas_filename: str):
+        from .check_dependency import check_environment_variable
+
+        super().__init__(name, roi_filename)
+        self.atlas_filename = atlas_filename
+        fsl_dir = Path(check_environment_variable("FSLDIR", "FSL"))
+        self.atlas_dir = fsl_dir / "data" / "atlases" / "JHU"
+
+
+class JHUDTI811mm(FSLAtlas):
+    """JHUDTI811mm atlas.
+
+    This atlas contains 48 white matter tract labels that were created by manually
+    segmenting a standard-space average of diffusion MRI tensor maps from 81 subjects.
+
+    References
+    ----------
+    https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases
+    https://www.sciencedirect.com/science/article/abs/pii/S105381190700688X?via%3Dihub
+    """
+
     def __init__(self):
-        AtlasAbstract.__init__(self)
+        super().__init__(
+            name="JHUDTI81",
+            roi_filename="atlas-JHUDTI81_dseg.tsv",
+            atlas_filename="JHU-ICBM-labels-1mm.nii.gz",
+        )
 
-    @staticmethod
-    def get_name_atlas():
-        return "JHUDTI81"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-
+    @property
+    def expected_checksum(self) -> str:
         import nipype.interfaces.fsl as fsl
 
-        from .check_dependency import check_environment_variable
-        from .inputs import _sha256
-
-        fsl_dir = check_environment_variable("FSLDIR", "FSL")
-        atlas_labels = os.path.join(
-            fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-labels-1mm.nii.gz"
-        )
-
-        # Adding checksum for updated file with version 6.0.5 of fsl
-        fsl_atlas_checksums = {
-            "old": "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69",
-            "new": "3c3f5d2f1250a3df60982acff35a75b99fd549a05d5f8124a63f78221aa0ec16",
-        }
-
         if ["5", "0", "5"] <= fsl.Info.version().split(".") < ["6", "0", "5"]:
-            expected_checksum = fsl_atlas_checksums["old"]
-        else:
-            expected_checksum = fsl_atlas_checksums["new"]
-
-        if _sha256(atlas_labels) != expected_checksum:
-            raise IOError(
-                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
-                f"differing from expected ({expected_checksum}), "
-                f"file may be corrupted and changed with newer version of FSL."
-            )
-        return atlas_labels
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-JHUDTI81_dseg.tsv",
-        )
+            return "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69"
+        return "3c3f5d2f1250a3df60982acff35a75b99fd549a05d5f8124a63f78221aa0ec16"
 
 
-class JHUTracts01mm(AtlasAbstract):
+class JHUTracts01mm(FSLAtlas):
+    """JHUTracts01mm atlas.
+
+    This atlas contains 20 white matter tract labels that were identified probabilistically
+    by averaging the results of deterministic tractography run on 28 subjects.
+    Threshold used is 0%.
+
+    References
+    ----------
+    https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases
+    https://shop.elsevier.com/books/mri-atlas-of-human-white-matter/mori/978-0-444-51741-8
+    """
+
     def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas():
-        return "JHUTracts0"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-
-        from .check_dependency import check_environment_variable
-        from .inputs import _sha256
-
-        fsl_dir = check_environment_variable("FSLDIR", "FSL")
-        atlas_labels = os.path.join(
-            fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz"
-        )
-        expected_checksum = (
-            "eb1de9413a46b02d2b5c7b77852097c6f42c8a5d55a5dbdef949c2e63b95354e"
-        )
-        if _sha256(atlas_labels) != expected_checksum:
-            raise IOError(
-                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
-                f"differing from expected ({expected_checksum}), "
-                f"file may be corrupted and changed with newer version of FSL."
-            )
-        return atlas_labels
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-JHUTract_dseg.tsv",
+        super().__init__(
+            name="JHUTracts0",
+            roi_filename="atlas-JHUTract_dseg.tsv",
+            atlas_filename="JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz",
         )
 
+    @property
+    def expected_checksum(self) -> str:
+        return "eb1de9413a46b02d2b5c7b77852097c6f42c8a5d55a5dbdef949c2e63b95354e"
 
-class JHUTracts251mm(AtlasAbstract):
+
+class JHUTracts251mm(FSLAtlas):
+    """JHUTracts251mm atlas.
+
+    This atlas contains 20 white matter tract labels that were identified probabilistically
+    by averaging the results of deterministic tractography run on 28 subjects.
+    Threshold used is 25%.
+
+    References
+    ----------
+    https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases
+    https://shop.elsevier.com/books/mri-atlas-of-human-white-matter/mori/978-0-444-51741-8
+    """
+
     def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas():
-        return "JHUTracts25"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-
-        from .check_dependency import check_environment_variable
-        from .inputs import _sha256
-
-        fsl_dir = check_environment_variable("FSLDIR", "FSL")
-        atlas_labels = os.path.join(
-            fsl_dir,
-            "data",
-            "atlases",
-            "JHU",
-            "JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz",
-        )
-        expected_checksum = (
-            "7cd85fa2be1918fc83173e9bc0746031fd4c08d70d6c81b7b9224b5d3da6d8a6"
-        )
-        if _sha256(atlas_labels) != expected_checksum:
-            raise IOError(
-                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
-                f"differing from expected ({expected_checksum}), "
-                f"file may be corrupted and changed with newer version of FSL."
-            )
-        return atlas_labels
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-JHUTract_dseg.tsv",
+        super().__init__(
+            name="JHUTracts25",
+            roi_filename="atlas-JHUTract_dseg.tsv",
+            atlas_filename="JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz",
         )
 
+    @property
+    def expected_checksum(self) -> str:
+        return "7cd85fa2be1918fc83173e9bc0746031fd4c08d70d6c81b7b9224b5d3da6d8a6"
 
-class JHUTracts501mm(AtlasAbstract):
+
+class JHUTracts501mm(FSLAtlas):
+    """JHUTracts501mm atlas.
+
+    This atlas contains 20 white matter tract labels that were identified probabilistically
+    by averaging the results of deterministic tractography run on 28 subjects.
+    Threshold used is 50%.
+
+    References
+    ----------
+    https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases
+    https://shop.elsevier.com/books/mri-atlas-of-human-white-matter/mori/978-0-444-51741-8
+    """
+
     def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas():
-        return "JHUTracts50"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-
-        from .check_dependency import check_environment_variable
-        from .inputs import _sha256
-
-        fsl_dir = check_environment_variable("FSLDIR", "FSL")
-        atlas_labels = os.path.join(
-            fsl_dir,
-            "data",
-            "atlases",
-            "JHU",
-            "JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz",
-        )
-        expected_checksum = (
-            "20ff0216d770686838de26393c0bdac38c8104760631a1a2b5f518bc0bbb470a"
-        )
-        if _sha256(atlas_labels) != expected_checksum:
-            raise IOError(
-                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
-                f"differing from expected ({expected_checksum}), "
-                f"file may be corrupted and changed with newer version of FSL."
-            )
-        return atlas_labels
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-JHUTract_dseg.tsv",
+        super().__init__(
+            name="JHUTracts50",
+            roi_filename="atlas-JHUTract_dseg.tsv",
+            atlas_filename="JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz",
         )
 
+    @property
+    def expected_checksum(self) -> str:
+        return "20ff0216d770686838de26393c0bdac38c8104760631a1a2b5f518bc0bbb470a"
 
-class AAL2(AtlasAbstract):
+
+class LocalAtlas(BaseAtlas):
+    """Local atlases will look for labels in the local 'resources' folder.
+
+    More precisely, the labels and TSV files associated with the atlas
+    are located in the folder `<clinica>/resources/atlases/`.
+    """
+
+    def __init__(self, name: str, roi_filename: str, atlas_filename: str):
+        super().__init__(name, roi_filename)
+        self.atlas_filename = atlas_filename
+        self.atlas_dir = Path(__file__).parent.parent / "resources" / "atlases"
+
+
+class AAL2(LocalAtlas):
+    """AAL2 atlas.
+
+    Anatomical atlas based on a single subject. It is the updated version of AAL, which is
+    probably the most widely used cortical parcellation map in the neuroimaging literature.
+    It was built using manual tracing on the spatially normalized single-subject high-resolution
+    T1 volume in MNI space. It is composed of 120 regions covering the whole cortex as well as
+    the main subcortical structures.
+
+    References
+    ----------
+    https://www.gin.cnrs.fr/en/tools/aal/
+    https://www.sciencedirect.com/science/article/abs/pii/S1053811901909784?via%3Dihub
+    """
+
     def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas():
-        return "AAL2"
-
-    @staticmethod
-    def get_atlas_labels():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-AAL2_dseg.nii.gz",
+        super().__init__(
+            name="AAL2",
+            roi_filename="atlas-AAL2_dseg.tsv",
+            atlas_filename="atlas-AAL2_dseg.nii.gz",
         )
 
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-AAL2_dseg.tsv",
-        )
+    @property
+    def expected_checksum(self) -> str:
+        return "f6bc698f778a4b383abd3ce355bfd4505c4aa14708e4a7848f8ee928c2b56b37"
 
 
-class Hammers(AtlasAbstract):
+class AICHA(LocalAtlas):
+    """AICHA atlas.
+
+    Functional atlas based on multiple subjects. It was built using parcellation of group-level
+    functional connectivity profiles computed from resting-state fMRI data of 281 healthy subjects.
+    It is composed of 384 regions covering the whole cortex as well as the main subcortical structures.
+
+    References
+    ----------
+    https://www.gin.cnrs.fr/en/tools/aicha/
+    https://www.sciencedirect.com/science/article/abs/pii/S0165027015002678?via%3Dihub
+    """
+
     def __init__(self):
-        AtlasAbstract.__init__(self)
+        super().__init__(
+            name="AICHA",
+            roi_filename="atlas-AICHA_dseg.tsv",
+            atlas_filename="atlas-AICHA_dseg.nii.gz",
+        )
 
-    @staticmethod
-    def get_name_atlas():
-        return "Hammers"
+    @property
+    def expected_checksum(self) -> str:
+        return "cab554d5f546720e60f61f536f82c3d355b31fadb5a4d3ce6a050a606d7ef761"
 
-    @staticmethod
-    def get_atlas_labels():
+
+class RemoteAtlas(BaseAtlas):
+    """Remote atlases will download the labels from the aramislab server."""
+
+    def __init__(self, name: str, roi_filename: str, atlas_filename: str):
+        super().__init__(name, roi_filename)
+        self.atlas_filename = atlas_filename
+
+    @property
+    def labels(self) -> Path:
         from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
 
-        hammers_parc = RemoteFileStructure(
-            filename="atlas-Hammers_dseg.nii.gz",
-            url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
-            checksum="c034a7bce2dcab390a0b72f4e7d04769eb3fe5b990d0e18d89b0ce73339a5376",
-        )
-        return get_file_from_server(hammers_parc)
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-Hammers_dseg.tsv",
+        return get_file_from_server(
+            RemoteFileStructure(
+                filename=self.atlas_filename,
+                url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
+                checksum=self.expected_checksum,
+            )
         )
 
 
-class LPBA40(AtlasAbstract):
+class Hammers(RemoteAtlas):
+    """Hammers atlas.
+
+    Anatomical atlas based on multiple subjects. It was built using manual tracing on anatomical
+    MRI from 30 healthy subjects. The individual subjects parcellations were then registered to MNI
+    space to generate a probabilistic atlas as well as a maximum probability map. The latter was
+    used in the present work. It is composed of 69 regions covering the whole cortex as well
+    as he main subcortical structures.
+
+    References
+    ----------
+    https://neuro-jena.github.io/cat//index.html#DOWNLOAD
+    https://onlinelibrary.wiley.com/doi/epdf/10.1002/hbm.10123
+    """
+
     def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas():
-        return "LPBA40"
-
-    @staticmethod
-    def get_atlas_labels():
-        from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
-
-        lpba40_parc = RemoteFileStructure(
-            filename="atlas-LPBA40_dseg.nii.gz",
-            url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
-            checksum="20826b572bbbdbcdbf28bbd3801dc0c2fed28d1e54bc4fd5027e64ccc6d50374",
-        )
-        return get_file_from_server(lpba40_parc)
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-LPBA40_dseg.tsv",
+        super().__init__(
+            name="Hammers",
+            roi_filename="atlas-Hammers_dseg.tsv",
+            atlas_filename="atlas-Hammers_dseg.nii.gz",
         )
 
+    @property
+    def expected_checksum(self) -> str:
+        return "c034a7bce2dcab390a0b72f4e7d04769eb3fe5b990d0e18d89b0ce73339a5376"
 
-class AICHA(AtlasAbstract):
+
+class LPBA40(RemoteAtlas):
+    """LPBA40 atlas.
+
+    Anatomical atlas based on multiple subjects. It was built using manual tracing on anatomical
+    MRI from 40 healthy subjects. The individual subjects parcellations were then registered to MNI
+    space to generate a maximum probability map. It is composed of 56 regions covering the whole
+    cortex as well as the main subcortical structures.
+
+    References
+    ----------
+    https://neuro-jena.github.io/cat//index.html#DOWNLOAD
+    https://www.sciencedirect.com/science/article/abs/pii/S1053811907008099?via%3Dihub
+    """
+
     def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas():
-        return "AICHA"
-
-    @staticmethod
-    def get_atlas_labels():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-AICHA_dseg.nii.gz",
+        super().__init__(
+            name="LPBA40",
+            roi_filename="atlas-LPBA40_dseg.tsv",
+            atlas_filename="atlas-LPBA40_dseg.nii.gz",
         )
 
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, realpath, split
-
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-AICHA_dseg.tsv",
-        )
+    @property
+    def expected_checksum(self) -> str:
+        return "20826b572bbbdbcdbf28bbd3801dc0c2fed28d1e54bc4fd5027e64ccc6d50374"
 
 
-class Neuromorphometrics(AtlasAbstract):
+class Neuromorphometrics(RemoteAtlas):
+    """Neuromorphometrics atlas.
+
+    Anatomical atlas based on multiple subjects. It was built using manual tracing on anatomical
+    MRI from 30 healthy subjects. The individual subjects parcellations were then registered to
+    MNI space to generate a maximum probability map. It is composed of 140 regions covering the
+    whole cortex as well as the main subcortical structures. Data were made available for the
+    “MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling”.
+
+    References
+    ----------
+    https://neuro-jena.github.io/cat//index.html#DOWNLOAD
+    http://masiweb.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details
+    """
+
     def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas():
-        return "Neuromorphometrics"
-
-    @staticmethod
-    def get_atlas_labels():
-        from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
-
-        neuromorphometrics_parc = RemoteFileStructure(
-            filename="atlas-Neuromorphometrics_dseg.nii.gz",
-            url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
-            checksum="19a50136cd2f8a14357a19ad8a1dc4a2ecb6beb3fc16cb5441f4f2ebaf64a9a5",
+        super().__init__(
+            name="Neuromorphometrics",
+            roi_filename="atlas-Neuromorphometrics_dseg.tsv",
+            atlas_filename="atlas-Neuromorphometrics_dseg.nii.gz",
         )
-        return get_file_from_server(neuromorphometrics_parc)
 
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, realpath, split
+    @property
+    def expected_checksum(self) -> str:
+        return "19a50136cd2f8a14357a19ad8a1dc4a2ecb6beb3fc16cb5441f4f2ebaf64a9a5"
 
-        return join(
-            split(realpath(__file__))[0],
-            "..",
-            "resources",
-            "atlases",
-            "atlas-Neuromorphometrics_dseg.tsv",
-        )
+
+def atlas_factory(atlas_name: Union[str, AtlasName, BaseAtlas]) -> BaseAtlas:
+    """Factory method for atlases.
+
+    Parameters
+    ----------
+    atlas_name : str or AtlasName or atlas instance
+        If an atlas instance, the instance is returned.
+        If a string, the corresponding atlas will be returned.
+
+    Returns
+    -------
+    BaseAtlas :
+        The atlas class corresponding to the provided name.
+    """
+    if isinstance(atlas_name, BaseAtlas):
+        return atlas_name
+    if isinstance(atlas_name, str):
+        atlas_name = AtlasName(atlas_name)
+    if atlas_name == AtlasName.AAL2:
+        return AAL2()
+    if atlas_name == AtlasName.AICHA:
+        return AICHA()
+    if atlas_name == AtlasName.HAMMERS:
+        return Hammers()
+    if atlas_name == AtlasName.LPBA40:
+        return LPBA40()
+    if atlas_name == AtlasName.NEUROMORPHOMETRICS:
+        return Neuromorphometrics()
+    if atlas_name == AtlasName.JHUDTI81:
+        return JHUDTI811mm()
+    if atlas_name == AtlasName.JHUTract0:
+        return JHUTracts01mm()
+    if atlas_name == AtlasName.JHUTract25:
+        return JHUTracts251mm()
+    if atlas_name == AtlasName.JHUTracts50:
+        return JHUTracts501mm()

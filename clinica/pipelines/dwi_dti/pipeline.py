@@ -252,7 +252,6 @@ class DwiDti(Pipeline):
         from nipype.interfaces.mrtrix3 import TensorMetrics
 
         from clinica.utils.check_dependency import check_environment_variable
-        from clinica.utils.dwi import extract_bids_identifier_from_filename
 
         from .utils import (
             get_ants_transforms,
@@ -260,17 +259,6 @@ class DwiDti(Pipeline):
             print_begin_pipeline,
             print_end_pipeline,
             statistics_on_atlases,
-        )
-
-        # Nodes creation
-        # ==============
-        get_bids_identifier = npe.Node(
-            interface=nutil.Function(
-                input_names=["dwi_filename"],
-                output_names=["bids_identifier"],
-                function=extract_bids_identifier_from_filename,
-            ),
-            name="0-Get_BIDS_Identifier",
         )
 
         get_caps_filenames = npe.Node(
@@ -342,7 +330,7 @@ class DwiDti(Pipeline):
 
         scalar_analysis = npe.Node(
             interface=nutil.Function(
-                input_names=["in_registered_map", "name_map", "prefix_file"],
+                input_names=["in_registered_map", "name_map", "dwi_preprocessed_file"],
                 output_names=["atlas_statistics_list"],
                 function=statistics_on_atlases,
             ),
@@ -392,12 +380,6 @@ class DwiDti(Pipeline):
                     self.input_node,
                     print_begin_message,
                     [("preproc_dwi", "in_bids_or_caps_file")],
-                ),
-                # Get BIDS/CAPS identifier from filename
-                (
-                    self.input_node,
-                    get_bids_identifier,
-                    [("preproc_dwi", "caps_dwi_filename")],
                 ),
                 # Convert FSL gradient files (bval/bvec) to MRtrix format
                 (
@@ -483,9 +465,9 @@ class DwiDti(Pipeline):
                 ),
                 # Generate regional TSV files
                 (
-                    get_bids_identifier,
+                    self.input_node,
                     scalar_analysis_fa,
-                    [("bids_identifier", "prefix_file")],
+                    [("preproc_dwi", "dwi_preprocessed_file")],
                 ),
                 (
                     thres_norm_fa,
@@ -493,9 +475,9 @@ class DwiDti(Pipeline):
                     [("out_file", "in_registered_map")],
                 ),
                 (
-                    get_bids_identifier,
+                    self.input_node,
                     scalar_analysis_md,
-                    [("bids_identifier", "prefix_file")],
+                    [("preproc_dwi", "dwi_preprocessed_file")],
                 ),
                 (
                     thres_norm_md,
@@ -503,9 +485,9 @@ class DwiDti(Pipeline):
                     [("out_file", "in_registered_map")],
                 ),
                 (
-                    get_bids_identifier,
+                    self.input_node,
                     scalar_analysis_ad,
-                    [("bids_identifier", "prefix_file")],
+                    [("preproc_dwi", "dwi_preprocessed_file")],
                 ),
                 (
                     thres_norm_ad,
@@ -513,9 +495,9 @@ class DwiDti(Pipeline):
                     [("out_file", "in_registered_map")],
                 ),
                 (
-                    get_bids_identifier,
+                    self.input_node,
                     scalar_analysis_rd,
-                    [("bids_identifier", "prefix_file")],
+                    [("preproc_dwi", "dwi_preprocessed_file")],
                 ),
                 (
                     thres_norm_rd,

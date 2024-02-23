@@ -261,23 +261,21 @@ def test_determine_caps_or_bids(tmp_path):
 
 
 @pytest.mark.parametrize("folder_type", ["BIDS", "CAPS"])
-def test_common_checks(folder_type):
+def test_validate_folder_existence(folder_type):
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
-    from clinica.utils.inputs import _common_checks
+    from clinica.utils.inputs import _validate_folder_existence
 
     with pytest.raises(
-        ValueError,
+        TypeError,
         match="Argument you provided to ",
     ):
-        _common_checks(1, folder_type)  # noqa
-
-    error = ClinicaBIDSError if folder_type == "BIDS" else ClinicaCAPSError
+        _validate_folder_existence(1, folder_type)  # noqa
 
     with pytest.raises(
-        error,
+        ClinicaBIDSError if folder_type == "BIDS" else ClinicaCAPSError,
         match=f"The {folder_type} directory you gave is not a folder.",
     ):
-        _common_checks(Path("fooooo"), folder_type)
+        _validate_folder_existence(Path("fooooo"), folder_type)
 
 
 def test_check_bids_folder(tmp_path):

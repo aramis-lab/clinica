@@ -26,7 +26,9 @@ jobs:
           source ~/miniconda3/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
           source "$(brew --prefix)/opt/modules/init/bash"
-          module load clinica.all
+          module load clinica/fsl/6.0.5
+          module load clinica/ants/2.4.4
+          module load clinica/freesurfer/6.0.0
           make install
           cd test
           poetry run pytest --verbose \
@@ -58,7 +60,9 @@ jobs:
           source /builds/miniconda/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
           source /usr/local/Modules/init/profile.sh
-          module load clinica.all
+          module load clinica/fsl/6.0.5
+          module load clinica/ants/2.4.4
+          module load clinica/freesurfer/6.0.0
           make install
           cd test
           poetry run pytest --verbose \
