@@ -1084,7 +1084,7 @@ def _check_spm_and_output_dir(
             raise RuntimeError(f"[Error] output folder {spm_dir} does not exist.")
         raise RuntimeError(f"[Error] SPM matrix {spm_mat} does not exist.")
 
-    output_dir = Path(output_dir) if output_dir else Path(".")
+    output_dir = Path(output_dir) if output_dir else Path.cwd()
 
     return spm_dir.resolve(), output_dir.resolve()
 
