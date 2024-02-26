@@ -13,7 +13,7 @@ def generate_index_file_task(
     """Wrapper around 'generate_index_file' for Nipype."""
     from pathlib import Path
 
-    from .utils import generate_index_file
+    from clinica.pipelines.dwi.preprocessing.utils import generate_index_file
 
     return str(
         generate_index_file(
@@ -34,7 +34,7 @@ def generate_acq_file_task(
     """Wrapper around 'generate_acq_file' for Nipype."""
     from pathlib import Path
 
-    from .utils import generate_acq_file
+    from clinica.pipelines.dwi.preprocessing.utils import generate_acq_file
 
     return str(
         generate_acq_file(
@@ -55,7 +55,7 @@ def compute_average_b0_task(
     out_file: str = None,
 ) -> str:
     """Nipype task for 'compute_average_b0'."""
-    from .utils import check_file, compute_average_b0
+    from clinica.pipelines.dwi.preprocessing.utils import check_file, compute_average_b0
 
     return str(
         compute_average_b0(

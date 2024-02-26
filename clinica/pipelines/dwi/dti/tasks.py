@@ -10,7 +10,7 @@ def compute_statistics_on_atlases_task(
 ) -> list:
     from pathlib import Path
 
-    from .utils import compute_statistics_on_atlases
+    from clinica.pipelines.dwi.dti.utils import compute_statistics_on_atlases
 
     return compute_statistics_on_atlases(
         Path(registered_map),
@@ -22,7 +22,7 @@ def compute_statistics_on_atlases_task(
 def get_caps_filenames_task(caps_dwi_filename: str) -> tuple:
     from pathlib import Path
 
-    from .utils import get_caps_filenames
+    from clinica.pipelines.dwi.dti.utils import get_caps_filenames
 
     names = get_caps_filenames(Path(caps_dwi_filename))
 
@@ -48,7 +48,7 @@ def rename_into_caps_task(
 ) -> tuple:
     from pathlib import Path
 
-    from .utils import rename_into_caps
+    from clinica.pipelines.dwi.dti.utils import rename_into_caps
 
     return rename_into_caps(
         Path(in_caps_dwi),

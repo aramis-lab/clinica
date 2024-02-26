@@ -17,7 +17,7 @@ def rename_into_caps_task(
 ) -> tuple:
     from pathlib import Path
 
-    from .utils import rename_into_caps
+    from clinica.pipelines.dwi.preprocessing.fmap.utils import rename_into_caps
 
     return rename_into_caps(
         Path(dwi_filename),
@@ -39,7 +39,9 @@ def convert_phase_difference_to_hertz_task(
     """Wrapper for 'convert_phase_difference_to_hertz' to be used by Nipype."""
     from pathlib import Path
 
-    from .utils import convert_phase_difference_to_hertz
+    from clinica.pipelines.dwi.preprocessing.fmap.utils import (
+        convert_phase_difference_to_hertz,
+    )
 
     if working_dir:
         working_dir = Path(working_dir)
@@ -56,7 +58,7 @@ def demean_image_task(
     """Wrapper for 'demean_image' to be used by Nipype."""
     from pathlib import Path
 
-    from .utils import demean_image
+    from clinica.pipelines.dwi.preprocessing.fmap.utils import demean_image
 
     if working_dir:
         working_dir = Path(working_dir)
@@ -71,7 +73,9 @@ def convert_phase_difference_to_rads_task(
     """Wrapper for 'convert_phase_difference_to_rads' to be used by Nipype."""
     from pathlib import Path
 
-    from .utils import convert_phase_difference_to_rads
+    from clinica.pipelines.dwi.preprocessing.fmap.utils import (
+        convert_phase_difference_to_rads,
+    )
 
     if working_dir:
         working_dir = Path(working_dir)

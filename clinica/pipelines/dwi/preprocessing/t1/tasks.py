@@ -15,9 +15,8 @@ def prepare_reference_b0_task(
     """Task called be Nipype to execute 'prepare_reference_b0'."""
     from pathlib import Path
 
+    from clinica.pipelines.dwi.preprocessing.t1.utils import prepare_reference_b0
     from clinica.pipelines.dwi.utils import DWIDataset
-
-    from .utils import prepare_reference_b0
 
     if working_directory:
         working_directory = Path(working_directory)
@@ -39,7 +38,7 @@ def change_itk_transform_type_task(input_affine_file: str) -> str:
     """Task called be Nipype to execute 'change_itk_transform_type'."""
     from pathlib import Path
 
-    from .utils import change_itk_transform_type
+    from clinica.pipelines.dwi.preprocessing.t1.utils import change_itk_transform_type
 
     return str(change_itk_transform_type(Path(input_affine_file)))
 
@@ -52,7 +51,7 @@ def rotate_b_vectors_task(
     """Task called be Nipype to execute 'change_itk_transform_type'."""
     from pathlib import Path
 
-    from .utils import rotate_b_vectors
+    from clinica.pipelines.dwi.preprocessing.t1.utils import rotate_b_vectors
 
     return str(
         rotate_b_vectors(
@@ -69,7 +68,9 @@ def broadcast_matrix_filename_to_match_b_vector_length_task(
     """Task called be Nipype to execute 'broadcast_matrix_filename_to_match_b_vector_length'."""
     from pathlib import Path
 
-    from .utils import broadcast_matrix_filename_to_match_b_vector_length
+    from clinica.pipelines.dwi.preprocessing.t1.utils import (
+        broadcast_matrix_filename_to_match_b_vector_length,
+    )
 
     return [
         str(file_path)
@@ -89,7 +90,7 @@ def rename_into_caps_task(
     """Task called be Nipype to execute 'rename_into_caps'."""
     from pathlib import Path
 
-    from .utils import rename_into_caps
+    from clinica.pipelines.dwi.preprocessing.t1.utils import rename_into_caps
 
     return rename_into_caps(
         Path(dwi_filename),
