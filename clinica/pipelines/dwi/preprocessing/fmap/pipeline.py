@@ -3,7 +3,7 @@ from typing import List
 
 from nipype import config
 
-from clinica.pipelines.engine import DWIPreprocessingPipeline
+from clinica.pipelines.dwi.preprocessing.engine import DWIPreprocessingPipeline
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -160,7 +160,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .utils import rename_into_caps
+        from .tasks import rename_into_caps_task
 
         container_path = npe.Node(
             nutil.Function(
@@ -192,7 +192,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
                     "out_caps_fmap",
                     "out_caps_smoothed_fmap",
                 ],
-                function=rename_into_caps,
+                function=rename_into_caps_task,
             ),
             name="rename_into_caps",
         )
@@ -256,10 +256,8 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.pipelines.dwi_preprocessing_using_t1.workflows import (
-            eddy_fsl_pipeline,
-        )
-        from clinica.utils.dwi import compute_average_b0_task
+        from clinica.pipelines.dwi.preprocessing.tasks import compute_average_b0_task
+        from clinica.pipelines.dwi.preprocessing.workflows import eddy_fsl_pipeline
 
         from .utils import init_input_node, print_end_pipeline
         from .workflows import calibrate_and_register_fmap, compute_reference_b0

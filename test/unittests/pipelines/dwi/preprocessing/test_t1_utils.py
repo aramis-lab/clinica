@@ -1,16 +1,15 @@
+import hashlib
+from pathlib import Path
+
+import nibabel as nib
 import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from clinica.pipelines.dwi_preprocessing_using_t1.utils import (
-    broadcast_matrix_filename_to_match_b_vector_length,
-    change_itk_transform_type,
-    extract_sub_ses_folder_name,
-    rotate_b_vectors,
-)
-
 
 def test_extract_sub_ses_folder_name():
+    from clinica.pipelines.dwi.preprocessing.t1.utils import extract_sub_ses_folder_name
+
     assert (
         extract_sub_ses_folder_name(
             "/localdrive10TB/wd/dwi-preprocessing-using-t1/epi_pipeline/"
@@ -22,33 +21,39 @@ def test_extract_sub_ses_folder_name():
 
 
 def test_change_itk_transform_type_error(tmp_path):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import change_itk_transform_type
+
     with pytest.raises(FileNotFoundError):
-        change_itk_transform_type(str(tmp_path / "affine.txt"))
+        change_itk_transform_type(tmp_path / "affine.txt")
 
 
 def test_change_itk_transform_type_empty_file(tmp_path):
-    (tmp_path / "affine.txt").touch()
+    from clinica.pipelines.dwi.preprocessing.t1.utils import change_itk_transform_type
 
-    assert change_itk_transform_type(str(tmp_path / "affine.txt")) == str(
-        tmp_path / "updated_affine.txt"
+    (tmp_path / "affine.txt").touch()
+    assert (
+        change_itk_transform_type(tmp_path / "affine.txt")
+        == tmp_path / "updated_affine.txt"
     )
     assert (tmp_path / "updated_affine.txt").read_text() == ""
 
 
 def test_change_itk_transform_type_no_transform_line(tmp_path):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import change_itk_transform_type
+
     origin_affine = tmp_path / "affine.txt"
     origin_content = (
         "fooo\nbar \n bazzzz\n transform\nTransform: AffineTransform_double_3_3"
     )
     origin_affine.write_text(origin_content)
 
-    assert change_itk_transform_type(str(origin_affine)) == str(
-        tmp_path / "updated_affine.txt"
-    )
+    assert change_itk_transform_type(origin_affine) == tmp_path / "updated_affine.txt"
     assert (tmp_path / "updated_affine.txt").read_text() == origin_content
 
 
 def test_change_itk_transform_type(tmp_path):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import change_itk_transform_type
+
     origin_affine = tmp_path / "affine.txt"
     origin_content = "fooo\nbar \n bazzzz\n transform\nTransform: MatrixOffsetTransformBase_double_3_3"
     expected_content = (
@@ -56,22 +61,28 @@ def test_change_itk_transform_type(tmp_path):
     )
     origin_affine.write_text(origin_content)
 
-    assert change_itk_transform_type(str(origin_affine)) == str(
-        tmp_path / "updated_affine.txt"
-    )
+    assert change_itk_transform_type(origin_affine) == tmp_path / "updated_affine.txt"
     assert (tmp_path / "updated_affine.txt").read_text() == expected_content
 
 
 def test_broadcast_matrix_filename_to_match_b_vector_length_file_not_found_error(
     tmp_path,
 ):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import (
+        broadcast_matrix_filename_to_match_b_vector_length,
+    )
+
     with pytest.raises(FileNotFoundError):
         broadcast_matrix_filename_to_match_b_vector_length(
-            "matrix.mat", str(tmp_path / "foo.txt")
+            Path("matrix.mat"), tmp_path / "foo.txt"
         )
 
 
 def test_broadcast_matrix_filename_to_match_b_vector_length_file_format_error(tmp_path):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import (
+        broadcast_matrix_filename_to_match_b_vector_length,
+    )
+
     filename = tmp_path / "vectors.bvec"
     filename.write_text("foooo\nbarrrr\nbazzzz")
 
@@ -79,17 +90,21 @@ def test_broadcast_matrix_filename_to_match_b_vector_length_file_format_error(tm
         ValueError,
         match="could not convert string 'foooo' to float64",
     ):
-        broadcast_matrix_filename_to_match_b_vector_length("matrix.mat", str(filename))
+        broadcast_matrix_filename_to_match_b_vector_length(Path("matrix.mat"), filename)
 
 
 def test_broadcast_matrix_filename_to_match_b_vector_length(tmp_path):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import (
+        broadcast_matrix_filename_to_match_b_vector_length,
+    )
+
     np.savetxt(tmp_path / "vectors.bvec", np.random.rand(6, 10))
 
     assert (
         broadcast_matrix_filename_to_match_b_vector_length(
-            "matrix.mat", str(tmp_path / "vectors.bvec")
+            Path("matrix.mat"), tmp_path / "vectors.bvec"
         )
-        == ["matrix.mat"] * 10
+        == [Path("matrix.mat")] * 10
     )
 
 
@@ -97,26 +112,30 @@ def test_rotate_b_vectors_size_error(tmp_path):
     """Test that a RuntimeError is raised when the number of b-vectors
     is different from the number of matrices in the list.
     """
+    from clinica.pipelines.dwi.preprocessing.t1.utils import rotate_b_vectors
+
     np.savetxt(tmp_path / "vectors.bvec", np.random.rand(6, 10))
 
     with pytest.raises(RuntimeError, match="Number of b-vectors"):
         rotate_b_vectors(
-            str(tmp_path / "vectors.bvec"),
+            tmp_path / "vectors.bvec",
             ["mat1", "mat2", "mat3"],
-            output_dir=str(tmp_path),
+            output_dir=tmp_path,
         )
 
 
 def test_rotate_b_vectors_missing_b_vectors_file(tmp_path):
     """Test that a FileNotFoundError is raised when the b-vectors file is missing."""
+    from clinica.pipelines.dwi.preprocessing.t1.utils import rotate_b_vectors
+
     with pytest.raises(FileNotFoundError):
-        rotate_b_vectors(
-            str(tmp_path / "foo.bvec"), ["mat1", "mat2"], output_dir=str(tmp_path)
-        )
+        rotate_b_vectors(tmp_path / "foo.bvec", ["mat1", "mat2"], output_dir=tmp_path)
 
 
 def test_rotate_b_vectors_missing_rotation_matrix_file(tmp_path):
     """Test that a FileNotFoundError is raised when one of the matrix file is missing."""
+    from clinica.pipelines.dwi.preprocessing.t1.utils import rotate_b_vectors
+
     np.savetxt(tmp_path / "vectors.bvec", np.random.rand(3, 2))
     np.savetxt(tmp_path / "mat1", np.eye(4))
 
@@ -125,30 +144,34 @@ def test_rotate_b_vectors_missing_rotation_matrix_file(tmp_path):
         match="mat2 not found",
     ):
         rotate_b_vectors(
-            str(tmp_path / "vectors.bvec"),
+            tmp_path / "vectors.bvec",
             [str(tmp_path / "mat1"), str(tmp_path / "mat2")],
-            output_dir=str(tmp_path),
+            output_dir=tmp_path,
         )
 
 
 def test_rotate_b_vectors_all_zeros(tmp_path):
     """Test that B-vectors composed only of zeros aren't rotated."""
+    from clinica.pipelines.dwi.preprocessing.t1.utils import rotate_b_vectors
+
     np.savetxt(tmp_path / "vectors.bvec", np.zeros((3, 2)))
     for i in range(1, 3):
         np.savetxt(tmp_path / f"mat{i}", np.random.rand(3, 3))
 
     rotated_b_vectors_file = rotate_b_vectors(
-        str(tmp_path / "vectors.bvec"),
+        tmp_path / "vectors.bvec",
         [str(tmp_path / "mat1"), str(tmp_path / "mat2")],
-        output_dir=str(tmp_path),
+        output_dir=tmp_path,
     )
 
-    assert rotated_b_vectors_file == str(tmp_path / "vectors_rotated.bvec")
+    assert rotated_b_vectors_file == tmp_path / "vectors_rotated.bvec"
     assert_array_equal(np.loadtxt(rotated_b_vectors_file), np.zeros((3, 2)))
 
 
 def test_rotate_b_vectors_with_identity(tmp_path):
     """Test that b-vectors rotated with identity matrix are identical."""
+    from clinica.pipelines.dwi.preprocessing.t1.utils import rotate_b_vectors
+
     origin_b_vectors = np.random.rand(3, 2)
     normalized_origin_b_vectors = np.array(
         [b / np.linalg.norm(b) for b in origin_b_vectors.T]
@@ -158,12 +181,12 @@ def test_rotate_b_vectors_with_identity(tmp_path):
         np.savetxt(tmp_path / f"mat{i}", np.eye(4))
 
     rotated_b_vectors_file = rotate_b_vectors(
-        str(tmp_path / "vectors.bvec"),
+        tmp_path / "vectors.bvec",
         [str(tmp_path / "mat1"), str(tmp_path / "mat2")],
-        output_dir=str(tmp_path),
+        output_dir=tmp_path,
     )
 
-    assert rotated_b_vectors_file == str(tmp_path / "vectors_rotated.bvec")
+    assert rotated_b_vectors_file == tmp_path / "vectors_rotated.bvec"
     assert_array_almost_equal(
         np.loadtxt(rotated_b_vectors_file), normalized_origin_b_vectors
     )
@@ -171,19 +194,17 @@ def test_rotate_b_vectors_with_identity(tmp_path):
 
 def test_rotate_b_vectors_wrong_content_in_vector_file(tmp_path):
     """Test that a ValueError is raised when vector file isn't valid."""
+    from clinica.pipelines.dwi.preprocessing.t1.utils import rotate_b_vectors
+
     b_vectors_file = tmp_path / "foo.bvec"
     b_vectors_file.write_text("fooo\nbar")
 
     with pytest.raises(ValueError, match="could not convert string 'fooo' to float64"):
-        rotate_b_vectors(b_vectors_file, ["mat1"], output_dir=str(tmp_path))
+        rotate_b_vectors(b_vectors_file, ["mat1"], output_dir=tmp_path)
 
 
 def test_configure_working_directory(tmp_path):
-    import hashlib
-
-    from clinica.pipelines.dwi_preprocessing_using_t1.utils import (
-        configure_working_directory,
-    )
+    from clinica.pipelines.dwi.preprocessing.t1.utils import configure_working_directory
 
     dwi_file = tmp_path / "sub-foo_ses-bar_dwi.nii.gz"
     file_hash = hashlib.md5(str(dwi_file).encode()).hexdigest()
@@ -197,9 +218,7 @@ def test_configure_working_directory(tmp_path):
 
 
 def test_compute_reference_b0_errors(tmp_path):
-    import numpy as np
-
-    from clinica.pipelines.dwi_preprocessing_using_t1.utils import compute_reference_b0
+    from clinica.pipelines.dwi.preprocessing.t1.utils import compute_reference_b0
 
     (tmp_path / "b0.nii.gz").touch()
     np.savetxt(tmp_path / "foo.bval", [1000] * 9)
@@ -215,11 +234,7 @@ def test_compute_reference_b0_with_single_b0(tmp_path):
 
     In this case, compute_reference_b0 simply return the provided image.
     """
-    import nibabel as nib
-    import numpy as np
-    from numpy.testing import assert_array_equal
-
-    from clinica.pipelines.dwi_preprocessing_using_t1.utils import compute_reference_b0
+    from clinica.pipelines.dwi.preprocessing.t1.utils import compute_reference_b0
 
     b0_data = 4.0 * np.ones((5, 5, 5, 1))
     b0_img = nib.Nifti1Image(b0_data, affine=np.eye(4))
@@ -250,11 +265,7 @@ def test_compute_reference_b0_with_multiple_b0(tmp_path, mocker, clean_working_d
     and should not depend on the installation of a third party software or on specific
     testing data. For these reasons we mock the `register_b0 function`.
     """
-    import nibabel as nib
-    import numpy as np
-    from numpy.testing import assert_array_equal
-
-    from clinica.pipelines.dwi_preprocessing_using_t1.utils import compute_reference_b0
+    from clinica.pipelines.dwi.preprocessing.t1.utils import compute_reference_b0
 
     working_directory = tmp_path / "tmp"
     working_directory.mkdir()
@@ -267,7 +278,7 @@ def test_compute_reference_b0_with_multiple_b0(tmp_path, mocker, clean_working_d
     assert not mocked_output.exists()
     mocked_output.parent.mkdir(parents=True)
     mocker.patch(
-        "clinica.pipelines.dwi_preprocessing_using_t1.utils.register_b0",
+        "clinica.pipelines.dwi.preprocessing.t1.utils.register_b0",
         return_value=mocked_output,
     )
     # Build a dataset with 3 B0 volumes
@@ -313,20 +324,14 @@ def test_compute_reference_b0_with_multiple_b0(tmp_path, mocker, clean_working_d
 
 
 def test_prepare_reference_b0(tmp_path, mocker):
-    import hashlib
-
-    import nibabel as nib
-    import numpy as np
-    from numpy.testing import assert_array_equal
-
-    from clinica.pipelines.dwi_preprocessing_using_t1.utils import prepare_reference_b0
-    from clinica.utils.dwi import DWIDataset
+    from clinica.pipelines.dwi.preprocessing.t1.utils import prepare_reference_b0
+    from clinica.pipelines.dwi.utils import DWIDataset
 
     working_dir = tmp_path / "working_dir"
     working_dir.mkdir()
     mocked_output = working_dir / "reference_b0_volume.nii.gz"
     mocker.patch(
-        "clinica.pipelines.dwi_preprocessing_using_t1.utils.compute_reference_b0",
+        "clinica.pipelines.dwi.preprocessing.t1.utils.compute_reference_b0",
         return_value=mocked_output,
     )
     bids_folder = tmp_path / "bids"
@@ -430,3 +435,110 @@ def test_prepare_reference_b0(tmp_path, mocker):
         working_dir / dwi_filename_hash / "sub-foo_ses-bar_dwi_merged.bvec"
     )
     assert merged_b_vectors.shape == (3, 7)
+
+
+@pytest.mark.parametrize(
+    "threshold,expected", [(None, 4), (-1, 0), (500, 4), (1000, 8), (1001, 8)]
+)
+def test_count_b0s(tmp_path, threshold, expected):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import _count_b0s  # noqa
+
+    np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
+    kwargs = {"b_value_threshold": threshold} if threshold else {}
+    assert _count_b0s(tmp_path / "foo.bval", **kwargs) == expected
+
+
+@pytest.fixture
+def dwi_dataset(tmp_path):
+    from clinica.pipelines.dwi.utils import DWIDataset
+
+    return DWIDataset(
+        dwi=str(tmp_path / "foo.nii.gz"),
+        b_values=tmp_path / "foo.bval",
+        b_vectors=tmp_path / "foo.bvec",
+    )
+
+
+def test_split_dwi_dataset_with_b_values_errors(tmp_path, dwi_dataset):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import (
+        split_dwi_dataset_with_b_values,
+    )
+
+    for filename in ("foo.nii.gz", "foo.bval", "foo.bvec"):
+        (tmp_path / filename).touch()
+
+    with pytest.raises(
+        ValueError,
+        match="b_value_threshold should be >=0. You provided -1.",
+    ):
+        split_dwi_dataset_with_b_values(dwi_dataset, b_value_threshold=-1)
+
+
+@pytest.mark.parametrize("extension", ["nii", "nii.gz"])
+def test_split_dwi_dataset_with_b_values(tmp_path, extension):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import (
+        split_dwi_dataset_with_b_values,
+    )
+    from clinica.pipelines.dwi.utils import DWIDataset
+
+    b_vectors_data = np.random.random((3, 8))
+    np.savetxt(tmp_path / "foo.bval", [1000, 1000, 0, 0, 0, 1000, 1000, 0])
+    np.savetxt(tmp_path / "foo.bvec", b_vectors_data)
+    img_data = np.zeros((5, 5, 5, 8))
+    img_data[2:4, 2:4, 2:4, 0:4] = 1.0
+    img_data[2:4, 2:4, 2:4, 4:8] = 2.0
+    img = nib.Nifti1Image(img_data, affine=np.eye(4))
+    nib.save(img, tmp_path / f"foo.{extension}")
+
+    dwi_dataset = DWIDataset(
+        dwi=tmp_path / f"foo.{extension}",
+        b_values=tmp_path / "foo.bval",
+        b_vectors=tmp_path / "foo.bvec",
+    )
+    small_b_dataset, large_b_dataset = split_dwi_dataset_with_b_values(dwi_dataset)
+    assert small_b_dataset.dwi == tmp_path / f"foo_small_b.{extension}"
+    assert small_b_dataset.b_values == tmp_path / "foo_small_b.bval"
+    assert small_b_dataset.b_vectors == tmp_path / "foo_small_b.bvec"
+    assert large_b_dataset.dwi == tmp_path / f"foo_large_b.{extension}"
+    assert large_b_dataset.b_values == tmp_path / "foo_large_b.bval"
+    assert large_b_dataset.b_vectors == tmp_path / "foo_large_b.bvec"
+    b0_img = nib.load(small_b_dataset.dwi)
+    expected = np.zeros((5, 5, 5, 4))
+    expected[2:4, 2:4, 2:4, 0:2] = 1.0
+    expected[2:4, 2:4, 2:4, 2:4] = 2.0
+    assert_array_equal(b0_img.get_fdata(), expected)
+    dwi = nib.load(large_b_dataset.dwi)
+    assert_array_equal(dwi.get_fdata(), expected)
+    b_values = np.loadtxt(large_b_dataset.b_values)
+    assert_array_equal(b_values, np.array([1000] * 4))
+    b_vectors = np.loadtxt(large_b_dataset.b_vectors)
+    assert_array_almost_equal(
+        b_vectors, b_vectors_data[:, np.array([0, 1, 5, 6])], decimal=5
+    )
+
+
+def test_insert_b0_into_dwi(tmp_path):
+    from clinica.pipelines.dwi.preprocessing.t1.utils import insert_b0_into_dwi
+    from clinica.utils.testing_utils import build_dwi_dataset
+
+    b0_data = 6.0 * np.ones((5, 5, 5, 1))
+    b0_img = nib.Nifti1Image(b0_data, affine=np.eye(4))
+    nib.save(b0_img, tmp_path / "b0.nii.gz")
+    dwi_dataset = build_dwi_dataset(tmp_path, 9, 9, 9)
+
+    out_dataset = insert_b0_into_dwi(tmp_path / "b0.nii.gz", dwi_dataset)
+    assert out_dataset.dwi == tmp_path / "foo_merged.nii.gz"
+    assert out_dataset.b_values == tmp_path / "foo_merged.bval"
+    assert out_dataset.b_vectors == tmp_path / "foo_merged.bvec"
+    dwi = nib.load(out_dataset.dwi)
+    dwi_img = nib.load(tmp_path / "foo.nii.gz")
+    assert_array_equal(dwi.affine, dwi_img.affine)
+    expected = 4.0 * np.ones((5, 5, 5, 10))
+    expected[..., 0] += 2.0
+    assert_array_equal(dwi.get_fdata(), expected)
+    bvals = np.loadtxt(out_dataset.b_values)
+    assert_array_equal(bvals, np.array([0] + [1000] * 9))
+    bvecs = np.loadtxt(out_dataset.b_vectors)
+    bvecs_data = np.loadtxt(tmp_path / "foo.bvec")
+    expected = np.insert(bvecs_data, 0, 0.0, axis=1)
+    assert_array_almost_equal(bvecs, expected, decimal=5)

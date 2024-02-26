@@ -657,7 +657,7 @@ def test_clinica_file_reader_dwi_dti_error(tmp_path):
 
 
 def test_clinica_file_reader_dwi_dti(tmp_path):
-    from clinica.utils.dwi import DTIBasedMeasure
+    from clinica.pipelines.dwi.dti.utils import DTIBasedMeasure
     from clinica.utils.input_files import dwi_dti
     from clinica.utils.inputs import clinica_file_reader, clinica_list_of_files_reader
 

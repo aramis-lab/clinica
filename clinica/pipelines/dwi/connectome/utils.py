@@ -1,7 +1,19 @@
+"""This module contains utilities used by the DWIConnectome pipeline."""
+
 from pathlib import Path
+from typing import List
+
+__all__ = [
+    "get_luts",
+    "get_conversion_luts",
+    "get_containers",
+    "get_caps_filenames",
+    "print_begin_pipeline",
+    "print_end_pipeline",
+]
 
 
-def get_luts() -> list:
+def get_luts() -> List[str]:
     from pathlib import Path
 
     from clinica.utils.check_dependency import check_environment_variable
@@ -14,11 +26,11 @@ def get_luts() -> list:
     ]
 
 
-def get_conversion_luts() -> list:
+def get_conversion_luts() -> List[str]:
     from pathlib import Path
 
     path_to_mappings = (
-        Path(__file__).resolve().parent.parent.parent / "resources" / "mappings"
+        Path(__file__).resolve().parent.parent.parent.parent / "resources" / "mappings"
     )
     resulting_paths = []
     for filename in ("fs_default.txt", "fs_a2009s.txt"):
@@ -29,7 +41,7 @@ def get_conversion_luts() -> list:
     return resulting_paths
 
 
-def _download_mrtrix3_file(filename: str, path_to_mappings: Path) -> str:
+def _download_mrtrix3_file(filename: str, path_to_mappings: Path) -> Path:
     from clinica.utils.inputs import RemoteFileStructure, fetch_file
     from clinica.utils.stream import cprint
 
@@ -40,7 +52,7 @@ def _download_mrtrix3_file(filename: str, path_to_mappings: Path) -> str:
                 url="https://raw.githubusercontent.com/MRtrix3/mrtrix3/master/share/mrtrix3/labelconvert/",
                 checksum=_get_checksum_for_filename(filename),
             ),
-            str(path_to_mappings),
+            path_to_mappings,
         )
     except IOError as err:
         error_msg = f"Unable to download required MRTRIX mapping ({filename}) for processing: {err}"
@@ -56,7 +68,7 @@ def _get_checksum_for_filename(filename: str) -> str:
     raise ValueError(f"File name {filename} is not supported.")
 
 
-def get_containers(subjects: list, sessions: list) -> list:
+def get_containers(subjects: List[str], sessions: List[str]) -> List[str]:
     from pathlib import Path
 
     return [

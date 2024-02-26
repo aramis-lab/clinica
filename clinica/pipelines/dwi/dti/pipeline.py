@@ -129,7 +129,7 @@ class DwiDti(Pipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .utils import rename_into_caps
+        from .tasks import rename_into_caps_task
 
         # Find container path from filename
         container_path = npe.Node(
@@ -160,7 +160,7 @@ class DwiDti(Pipeline):
                     "out_caps_b_spline_transform",
                     "out_caps_affine_matrix",
                 ],
-                function=rename_into_caps,
+                function=rename_into_caps_task,
             ),
             name="rename_into_caps",
         )
@@ -253,12 +253,11 @@ class DwiDti(Pipeline):
 
         from clinica.utils.check_dependency import check_environment_variable
 
+        from .tasks import compute_statistics_on_atlases_task, get_caps_filenames_task
         from .utils import (
             get_ants_transforms,
-            get_caps_filenames,
             print_begin_pipeline,
             print_end_pipeline,
-            statistics_on_atlases,
         )
 
         get_caps_filenames = npe.Node(
@@ -273,7 +272,7 @@ class DwiDti(Pipeline):
                     "out_rd",
                     "out_evec",
                 ],
-                function=get_caps_filenames,
+                function=get_caps_filenames_task,
             ),
             name="0-CAPS_Filenames",
         )
@@ -330,9 +329,9 @@ class DwiDti(Pipeline):
 
         scalar_analysis = npe.Node(
             interface=nutil.Function(
-                input_names=["in_registered_map", "name_map", "dwi_preprocessed_file"],
+                input_names=["registered_map", "name_map", "dwi_preprocessed_file"],
                 output_names=["atlas_statistics_list"],
-                function=statistics_on_atlases,
+                function=compute_statistics_on_atlases_task,
             ),
             name="4-Scalar_Analysis",
         )
@@ -472,7 +471,7 @@ class DwiDti(Pipeline):
                 (
                     thres_norm_fa,
                     scalar_analysis_fa,
-                    [("out_file", "in_registered_map")],
+                    [("out_file", "registered_map")],
                 ),
                 (
                     self.input_node,
@@ -482,7 +481,7 @@ class DwiDti(Pipeline):
                 (
                     thres_norm_md,
                     scalar_analysis_md,
-                    [("out_file", "in_registered_map")],
+                    [("out_file", "registered_map")],
                 ),
                 (
                     self.input_node,
@@ -492,7 +491,7 @@ class DwiDti(Pipeline):
                 (
                     thres_norm_ad,
                     scalar_analysis_ad,
-                    [("out_file", "in_registered_map")],
+                    [("out_file", "registered_map")],
                 ),
                 (
                     self.input_node,
@@ -502,7 +501,7 @@ class DwiDti(Pipeline):
                 (
                     thres_norm_rd,
                     scalar_analysis_rd,
-                    [("out_file", "in_registered_map")],
+                    [("out_file", "registered_map")],
                 ),
                 # Remove negative values from the DTI maps:
                 (get_caps_filenames, thres_fa, [("out_fa", "out_file")]),

@@ -1,9 +1,13 @@
+"""This module contains workflows used by the DWIPreprocessingUsingPhaseDiff pipeline."""
+
 from typing import Optional
 
 from nipype.pipeline.engine import Workflow
 
+__all__ = ["compute_reference_b0", "calibrate_and_register_fmap"]
 
-def cleanup_edge_pipeline(name: str = "Cleanup") -> Workflow:
+
+def _cleanup_edge_pipeline(name: str = "Cleanup") -> Workflow:
     """Perform some de-spiking filtering to clean up the edge of the fieldmap (copied from fsl_prepare_fieldmap).
 
     This workflow was taken from: https://github.com/niflows/nipype1-workflows/
@@ -58,7 +62,7 @@ def cleanup_edge_pipeline(name: str = "Cleanup") -> Workflow:
     return wf
 
 
-def prepare_phasediff_fmap(
+def _prepare_phasediff_fmap(
     base_dir: str,
     output_dir: Optional[str] = None,
     name: Optional[str] = "prepare_phasediff_fmap",
@@ -114,11 +118,11 @@ def prepare_phasediff_fmap(
     import nipype.interfaces.utility as nutil
     import nipype.pipeline.engine as npe
 
-    from clinica.pipelines.dwi_preprocessing_using_fmap.workflows import (
-        cleanup_edge_pipeline,  # noqa
+    from clinica.pipelines.dwi.preprocessing.fmap.workflows import (
+        _cleanup_edge_pipeline,  # noqa
     )
 
-    from .utils import (
+    from .tasks import (
         convert_phase_difference_to_hertz_task,
         convert_phase_difference_to_rads_task,
         demean_image_task,
@@ -174,7 +178,7 @@ def prepare_phasediff_fmap(
     )
     demean_fmap.inputs.working_dir = base_dir
 
-    cleanup_edge_voxels = cleanup_edge_pipeline(name="cleanup_edge_voxels")
+    cleanup_edge_voxels = _cleanup_edge_pipeline(name="cleanup_edge_voxels")
 
     output_node = npe.Node(
         nutil.IdentityInterface(fields=["calibrated_fmap"]),
@@ -288,8 +292,8 @@ def compute_reference_b0(
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as npe
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import eddy_fsl_pipeline
-    from clinica.utils.dwi import compute_average_b0_task
+    from clinica.pipelines.dwi.preprocessing.tasks import compute_average_b0_task
+    from clinica.pipelines.dwi.preprocessing.workflows import eddy_fsl_pipeline
 
     from .utils import get_grad_fsl
 
@@ -446,6 +450,10 @@ def calibrate_and_register_fmap(
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as npe
 
+    from clinica.pipelines.dwi.preprocessing.fmap.workflows import (
+        _prepare_phasediff_fmap,  # noqa
+    )
+
     inputnode = npe.Node(
         niu.IdentityInterface(
             fields=[
@@ -471,7 +479,7 @@ def calibrate_and_register_fmap(
     )
 
     # Calibrate FMap
-    calibrate_fmap = prepare_phasediff_fmap(base_dir=base_dir, name="calibrate_fmap")
+    calibrate_fmap = _prepare_phasediff_fmap(base_dir=base_dir, name="calibrate_fmap")
 
     # Register the BET magnitude fmap onto the BET b0
     register_bet_magnitude_fmap_onto_b0 = npe.Node(
