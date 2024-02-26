@@ -36,10 +36,10 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
         - The reference B0 volume
         - The brain mask computed on the B0 volume
     """
-    from clinica.pipelines.dwi_preprocessing_using_fmap.workflows import (
+    from clinica.pipelines.dwi.preprocessing.fmap.workflows import (
         compute_reference_b0,
     )
-    from clinica.utils.dwi import bids_dir_to_fsl_dir
+    from clinica.pipelines.dwi.preprocessing.utils import _bids_dir_to_fsl_dir  # noqa
     from clinica.utils.filemanip import (
         extract_metadata_from_json,
         handle_missing_keys_dwi,
@@ -56,7 +56,7 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
         ["TotalReadoutTime", "PhaseEncodingDirection"],
         handle_missing_keys=handle_missing_keys_dwi,
     )
-    phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
+    phase_encoding_direction = _bids_dir_to_fsl_dir(phase_encoding_direction)
 
     wf = compute_reference_b0(
         base_dir=str(tmp_dir),
@@ -92,8 +92,8 @@ def test_prepare_phasediff_fmap(cmdopt, tmp_path):
 
     This is a fast test which should run in less than a minute.
     """
-    from clinica.pipelines.dwi_preprocessing_using_fmap.workflows import (
-        prepare_phasediff_fmap,
+    from clinica.pipelines.dwi.preprocessing.fmap.workflows import (
+        _prepare_phasediff_fmap,  # noqa
     )
     from clinica.utils.filemanip import extract_metadata_from_json
 
@@ -108,7 +108,9 @@ def test_prepare_phasediff_fmap(cmdopt, tmp_path):
     )
     delta_echo_time = abs(echo_time2 - echo_time1)
 
-    wf = prepare_phasediff_fmap(base_dir=str(tmp_dir), output_dir=str(tmp_path / "tmp"))
+    wf = _prepare_phasediff_fmap(
+        base_dir=str(tmp_dir), output_dir=str(tmp_path / "tmp")
+    )
     wf.inputs.input_node.fmap_mask = str(
         input_dir / "sub-01_ses-M000_magnitude1_corrected_brain_mask.nii.gz"
     )
@@ -137,7 +139,7 @@ def test_dwi_calibrate_and_register_fmap(cmdopt, tmp_path):
 
     This is a fast test which should run in about 1 minute.
     """
-    from clinica.pipelines.dwi_preprocessing_using_fmap.workflows import (
+    from clinica.pipelines.dwi.preprocessing.fmap.workflows import (
         calibrate_and_register_fmap,
     )
     from clinica.utils.filemanip import extract_metadata_from_json
@@ -204,7 +206,7 @@ def test_dwi_preprocessing_using_phase_diff_field_map(cmdopt, tmp_path):
 def run_dwi_preprocessing_using_phase_diff_field_map(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.dwi_preprocessing_using_fmap.pipeline import (
+    from clinica.pipelines.dwi.preprocessing.fmap.pipeline import (
         DwiPreprocessingUsingPhaseDiffFMap,
     )
 
