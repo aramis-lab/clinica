@@ -1,3 +1,4 @@
+from os import PathLike
 from pathlib import Path
 from typing import Callable, List, Optional, Union
 
@@ -290,12 +291,12 @@ def get_subject_id(bids_or_caps_file: Union[str, Path]) -> str:
     return subject_id
 
 
-def get_filename_no_ext(filename: str) -> str:
+def get_filename_no_ext(filename: Union[str, PathLike]) -> str:
     """Get the filename without the extension.
 
     Parameters
     ----------
-    filename: str
+    filename: str or PathLike
         The full filename from which to extract the extension out.
 
     Returns
