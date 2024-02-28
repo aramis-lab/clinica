@@ -372,6 +372,8 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
                         "b_values_filename",
                         "b_vectors_filename",
                         "image_id",
+                        "total_readout_time",
+                        "phase_encoding_direction",
                     )
                 ],
             ),

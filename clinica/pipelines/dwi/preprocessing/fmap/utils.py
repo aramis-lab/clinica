@@ -150,12 +150,14 @@ def init_input_node(
 
     import nibabel as nib
 
+    from clinica.pipelines.dwi.preprocessing.utils import (
+        check_dwi_volume,
+        get_readout_time_and_phase_encoding_direction,
+    )
     from clinica.pipelines.dwi.utils import DWIDataset
     from clinica.utils.filemanip import extract_metadata_from_json, get_subject_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
-
-    from ..utils import check_dwi_volume, get_readout_time_and_phase_encoding_direction
 
     image_id = get_subject_id(dwi_filename)
     try:

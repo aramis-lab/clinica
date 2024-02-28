@@ -251,11 +251,13 @@ def init_input_node(
         The phase encoding direction for the dwi image, extracted
         from the dwi JSON file.
     """
+    from clinica.pipelines.dwi.preprocessing.utils import (
+        check_dwi_volume,
+        get_readout_time_and_phase_encoding_direction,
+    )
     from clinica.pipelines.dwi.utils import DWIDataset
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
-
-    from ..utils import check_dwi_volume, get_readout_time_and_phase_encoding_direction
 
     image_id = get_subject_id(t1w_filename)
     check_dwi_volume(
