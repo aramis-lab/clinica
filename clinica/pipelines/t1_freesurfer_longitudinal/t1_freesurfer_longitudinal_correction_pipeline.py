@@ -127,7 +127,6 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
             )
         except ClinicaException as e:
             all_errors.append(e)
-
         try:
             # Check that t1-freesurfer-template has run on the CAPS directory
             clinica_file_reader(
@@ -135,7 +134,6 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
             )
         except ClinicaException as e:
             all_errors.append(e)
-
         if len(all_errors) > 0:
             error_message = "Clinica faced errors while trying to read files in your CAPS directory.\n"
             for msg in all_errors:
@@ -200,8 +198,8 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
             ),
             name="SaveToCaps",
         )
-        save_to_caps.inputs.source_dir = self.base_dir / self.name / "ReconAll"
-        save_to_caps.inputs.caps_dir = self.caps_directory
+        save_to_caps.inputs.source_dir = str(self.base_dir / self.name / "ReconAll")
+        save_to_caps.inputs.caps_dir = str(self.caps_directory)
         save_to_caps.inputs.overwrite_caps = self.overwrite_caps
 
         self.connect(
@@ -222,9 +220,6 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
             write_tsv_files,
         )
 
-        # Nodes declaration
-        # =================
-        # Initialize the pipeline
         init_input = npe.Node(
             interface=nutil.Function(
                 input_names=[
@@ -239,10 +234,9 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
             ),
             name="0-InitPipeline",
         )
-        init_input.inputs.caps_dir = self.caps_directory
-        init_input.inputs.output_dir = self.base_dir / self.name / "ReconAll"
+        init_input.inputs.caps_dir = str(self.caps_directory)
+        init_input.inputs.output_dir = str(self.base_dir / self.name / "ReconAll")
 
-        # Run recon-all command
         recon_all = npe.Node(
             interface=nutil.Function(
                 input_names=[
@@ -278,29 +272,34 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
             ),
             name="3-MoveSubjectsDir",
         )
-        move_subjects_dir.inputs.source_dir = self.base_dir / self.name / "ReconAll"
-
-        # Connections
-        # ===========
-        # fmt: off
-        self.connect(
-            [
-                # Initialize the pipeline
-                (self.input_node, init_input, [("participant_id", "participant_id"),
-                                               ("session_id", "session_id"),
-                                               ("long_id", "long_id")]),
-                # Run recon-all command
-                (init_input, recon_all, [("subjects_dir", "subjects_dir")]),
-                (self.input_node, recon_all, [("participant_id", "participant_id"),
-                                              ("session_id", "session_id"),
-                                              ("long_id", "long_id")]),
-                # Generate TSV files
-                (init_input, create_tsv, [("subjects_dir", "subjects_dir")]),
-                (recon_all, create_tsv, [("subject_id", "subject_id")]),
-                # Move $SUBJECT_DIR to source_dir (macOS case)
-                (init_input, move_subjects_dir, [("subjects_dir", "subjects_dir")]),
-                (create_tsv, move_subjects_dir, [("subject_id", "subject_id")]),
-                # Output node
-                (move_subjects_dir, self.output_node, [("subject_id", "subject_id")]),
-            ]
+        move_subjects_dir.inputs.source_dir = str(
+            self.base_dir / self.name / "ReconAll"
         )
+
+        connections = [
+            (
+                self.input_node,
+                init_input,
+                [
+                    ("participant_id", "participant_id"),
+                    ("session_id", "session_id"),
+                    ("long_id", "long_id"),
+                ],
+            ),
+            (init_input, recon_all, [("subjects_dir", "subjects_dir")]),
+            (
+                self.input_node,
+                recon_all,
+                [
+                    ("participant_id", "participant_id"),
+                    ("session_id", "session_id"),
+                    ("long_id", "long_id"),
+                ],
+            ),
+            (init_input, create_tsv, [("subjects_dir", "subjects_dir")]),
+            (recon_all, create_tsv, [("subject_id", "subject_id")]),
+            (init_input, move_subjects_dir, [("subjects_dir", "subjects_dir")]),
+            (create_tsv, move_subjects_dir, [("subject_id", "subject_id")]),
+            (move_subjects_dir, self.output_node, [("subject_id", "subject_id")]),
+        ]
+        self.connect(connections)

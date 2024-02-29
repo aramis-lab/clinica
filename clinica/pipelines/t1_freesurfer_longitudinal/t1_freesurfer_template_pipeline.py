@@ -244,8 +244,8 @@ class T1FreeSurferTemplate(Pipeline):
             ),
             name="SaveToCaps",
         )
-        save_to_caps.inputs.source_dir = self.base_dir / self.name / "ReconAll"
-        save_to_caps.inputs.caps_dir = self.caps_directory
+        save_to_caps.inputs.source_dir = str(self.base_dir / self.name / "ReconAll")
+        save_to_caps.inputs.caps_dir = str(self.caps_directory)
         save_to_caps.inputs.overwrite_caps = False
 
         self.connect(
@@ -270,9 +270,6 @@ class T1FreeSurferTemplate(Pipeline):
             run_recon_all_base,
         )
 
-        # Nodes declaration
-        # =================
-        # Initialize the pipeline
         init_input = npe.Node(
             interface=nutil.Function(
                 input_names=[
@@ -286,10 +283,9 @@ class T1FreeSurferTemplate(Pipeline):
             ),
             name="0-InitPipeline",
         )
-        init_input.inputs.caps_dir = self.caps_directory
-        init_input.inputs.output_dir = self.base_dir / self.name / "ReconAll"
+        init_input.inputs.caps_dir = str(self.caps_directory)
+        init_input.inputs.output_dir = str(self.base_dir / self.name / "ReconAll")
 
-        # Run recon-all command
         recon_all = npe.Node(
             interface=nutil.Function(
                 input_names=["subjects_dir", "subject_id", "flags", "directive"],
@@ -309,31 +305,28 @@ class T1FreeSurferTemplate(Pipeline):
             ),
             name="2-MoveSubjectsDir",
         )
-        move_subjects_dir.inputs.source_dir = self.base_dir / self.name / "ReconAll"
-
-        self.connect(
-            [
-                # Initialize the pipeline
-                (self.input_node, init_input, [("participant_id", "participant_id")]),
-                (
-                    self.input_node,
-                    init_input,
-                    [("list_session_ids", "list_session_ids")],
-                ),
-                # Run recon-all command
-                (
-                    init_input,
-                    recon_all,
-                    [
-                        ("subjects_dir", "subjects_dir"),
-                        ("image_id", "subject_id"),
-                        ("flags", "flags"),
-                    ],
-                ),
-                # Move $SUBJECT_DIR to source_dir (1 time point case)
-                (init_input, move_subjects_dir, [("subjects_dir", "subjects_dir")]),
-                (recon_all, move_subjects_dir, [("subject_id", "subject_id")]),
-                # Output node
-                (move_subjects_dir, self.output_node, [("subject_id", "image_id")]),
-            ]
+        move_subjects_dir.inputs.source_dir = str(
+            self.base_dir / self.name / "ReconAll"
         )
+
+        connections = [
+            (self.input_node, init_input, [("participant_id", "participant_id")]),
+            (
+                self.input_node,
+                init_input,
+                [("list_session_ids", "list_session_ids")],
+            ),
+            (
+                init_input,
+                recon_all,
+                [
+                    ("subjects_dir", "subjects_dir"),
+                    ("image_id", "subject_id"),
+                    ("flags", "flags"),
+                ],
+            ),
+            (init_input, move_subjects_dir, [("subjects_dir", "subjects_dir")]),
+            (recon_all, move_subjects_dir, [("subject_id", "subject_id")]),
+            (move_subjects_dir, self.output_node, [("subject_id", "image_id")]),
+        ]
+        self.connect(connections)
