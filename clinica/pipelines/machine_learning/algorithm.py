@@ -386,7 +386,7 @@ class RandomForest(base.MLAlgorithm):
             min_samples_split=min_samples_split,
             max_features="sqrt" if max_features == "auto" else max_features,
             class_weight="balanced" if self._algorithm_params["balanced"] else None,
-            n_jobs=self._algorithm_params["n_threads"]
+            n_jobs=self._algorithm_params["n_threads"],
         )
         classifier.fit(x_train, y_train)
         y_hat_train = classifier.predict(x_train)
