@@ -15,7 +15,29 @@ def write_bids_file(
     suffix: str,
     entities: dict,
 ) -> Path:
-    """Task to write a file to a BIDS dataset."""
+    """Task to write a file to a BIDS dataset.
+
+    Examples
+    --------
+    >>> from shutil import rmtree
+    >>> from tempfile import mkdtemp, mkstemp
+    >>> test_input_file = Path(mkstemp(suffix=".nii.gz")[1])
+    >>> test_output_dir = Path(mkdtemp())
+    >>> task = write_bids_file(
+    ...     input_file=test_input_file,
+    ...     dataset_path=test_output_dir,
+    ...     participant_id="P01",
+    ...     session_id="M00",
+    ...     datatype="anat",
+    ...     suffix="T1w",
+    ...     entities={"desc": "copy"},
+    ... )
+    >>> result = task()
+    >>> str(next(test_output_dir.rglob("*.nii.gz")).relative_to(test_output_dir))
+    'sub-P01/ses-M00/anat/sub-P01_ses-M00_desc-copy_T1w.nii.gz'
+    >>> test_input_file.unlink()
+    >>> rmtree(test_output_dir)
+    """
     source_file = Path(input_file)
     source_ext = source_file.name.split(sep=".", maxsplit=1)[-1]
 
@@ -54,7 +76,29 @@ def write_caps_file(
     suffix: str,
     entities: dict,
 ) -> Path:
-    """Task to write a file a CAPS dataset."""
+    """Task to write a file a CAPS dataset.
+
+    Examples
+    --------
+    >>> from shutil import rmtree
+    >>> from tempfile import mkdtemp, mkstemp
+    >>> test_input_file = Path(mkstemp(suffix=".mat")[1])
+    >>> test_output_dir = Path(mkdtemp())
+    >>> task = write_caps_file(
+    ...     input_file=test_input_file,
+    ...     dataset_path=test_output_dir,
+    ...     participant_id="P01",
+    ...     session_id="M00",
+    ...     datatype="anat",
+    ...     suffix="space-{space}_res-{res}_affine",
+    ...     entities={"space": "MNI152", "res": "1x1x1"},
+    ... )
+    >>> result = task()
+    >>> str(next(test_output_dir.rglob("*.mat")).relative_to(test_output_dir))
+    'sub-P01/ses-M00/anat/sub-P01_ses-M00_space-MNI152_res-1x1x1_affine.mat'
+    >>> test_input_file.unlink()
+    >>> rmtree(test_output_dir)
+    """
     source_file = Path(input_file)
     source_ext = source_file.name.split(sep=".", maxsplit=1)[-1]
 
