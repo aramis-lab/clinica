@@ -1,10 +1,7 @@
 from .. import pydra  # noqa
 from . import (
     deeplearning_prepare_data,
-    dwi_connectome,
-    dwi_dti,
-    dwi_preprocessing_using_fmap,
-    dwi_preprocessing_using_t1,
+    dwi,
     machine_learning,
     machine_learning_spatial_svm,
     pet_linear,

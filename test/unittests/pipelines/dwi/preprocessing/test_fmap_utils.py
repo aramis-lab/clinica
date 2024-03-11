@@ -7,7 +7,7 @@ from numpy.testing import assert_array_almost_equal
 
 
 def test_get_output_file(tmp_path):
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import _get_output_file
+    from clinica.pipelines.dwi.preprocessing.fmap.utils import _get_output_file  # noqa
 
     assert _get_output_file(tmp_path / "tmp" / "foo.nii.gz", "bar") == "foo_bar.nii.gz"
 
@@ -20,7 +20,7 @@ def write_input_image(output_dir: Path, filename: str = "foo.nii.gz"):
 
 
 def test_convert_phase_difference_to_hertz(tmp_path):
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
+    from clinica.pipelines.dwi.preprocessing.fmap.utils import (
         convert_phase_difference_to_hertz,
     )
 
@@ -43,7 +43,7 @@ def test_convert_phase_difference_to_hertz(tmp_path):
 
 
 def test_demean_image(tmp_path):
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import demean_image
+    from clinica.pipelines.dwi.preprocessing.fmap.utils import demean_image
 
     (tmp_path / "tmp").mkdir()
     write_input_image(tmp_path)
@@ -62,7 +62,7 @@ def test_demean_image(tmp_path):
 
 
 def test_convert_phase_difference_to_rads(tmp_path):
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
+    from clinica.pipelines.dwi.preprocessing.fmap.utils import (
         convert_phase_difference_to_rads,
     )
 

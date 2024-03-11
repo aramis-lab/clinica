@@ -1,47 +1,59 @@
+"""This module contains utilities used by the DWIPreprocessingUsingPhaseDiff pipeline."""
+
 import math
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 import nibabel as nib
 import numpy as np
 
+__all__ = [
+    "rename_into_caps",
+    "get_grad_fsl",
+    "init_input_node",
+    "print_end_pipeline",
+    "convert_phase_difference_to_hertz",
+    "demean_image",
+    "convert_phase_difference_to_rads",
+]
+
 
 def rename_into_caps(
-    dwi_filename: str,
-    dwi_preproc_filename: str,
-    b_values_preproc_filename: str,
-    b_vectors_preproc_filename: str,
-    b0_brain_mask_filename: str,
-    calibrated_magnitude_image_filename: str,
-    calibrated_field_map_image_filename: str,
-    calibrated_smoothed_field_map_image_filename: str,
-) -> tuple:
+    dwi_filename: Path,
+    dwi_preproc_filename: Path,
+    b_values_preproc_filename: Path,
+    b_vectors_preproc_filename: Path,
+    b0_brain_mask_filename: Path,
+    calibrated_magnitude_image_filename: Path,
+    calibrated_field_map_image_filename: Path,
+    calibrated_smoothed_field_map_image_filename: Path,
+) -> Tuple[str, ...]:
     """Rename the outputs of the pipelines into CAPS.
 
     Parameters
     ----------
-    dwi_filename : str
+    dwi_filename : Path
         The path to input BIDS DWI to extract the <source_file>.
 
-    dwi_preproc_filename : str
+    dwi_preproc_filename : Path
         The path to the preprocessed DWI file.
 
-    b_values_preproc_filename : str
+    b_values_preproc_filename : Path
         The path to the preprocessed b-values file.
 
-    b_vectors_preproc_filename : str
+    b_vectors_preproc_filename : Path
         The path to the preprocessed b-vectors file.
 
-    b0_brain_mask_filename : str
+    b0_brain_mask_filename : Path
         The path to the B0 mask file.
 
-    calibrated_magnitude_image_filename : str
+    calibrated_magnitude_image_filename : Path
         The path to the magnitude image file on b0 space.
 
-    calibrated_field_map_image_filename : str
+    calibrated_field_map_image_filename : Path
         The path to the calibrated fmap file on b0 space.
 
-    calibrated_smoothed_field_map_image_filename : str
+    calibrated_smoothed_field_map_image_filename : Path
         The path to the smoothed (calibrated) fmap file on b0 space.
 
     Returns
@@ -49,7 +61,7 @@ def rename_into_caps(
     Tuple[str, str, str, str, str, str, str] :
         The different outputs in CAPS format.
     """
-    from clinica.utils.dwi import rename_files
+    from clinica.pipelines.dwi.utils import rename_files
 
     return rename_files(
         dwi_filename,
@@ -65,7 +77,7 @@ def rename_into_caps(
     )
 
 
-def get_grad_fsl(b_vectors_filename: str, b_values_filename) -> tuple:
+def get_grad_fsl(b_vectors_filename: str, b_values_filename: str) -> tuple:
     return b_vectors_filename, b_values_filename
 
 
@@ -138,11 +150,11 @@ def init_input_node(
 
     import nibabel as nib
 
-    from clinica.utils.dwi import (
-        DWIDataset,
+    from clinica.pipelines.dwi.preprocessing.utils import (
         check_dwi_volume,
         get_readout_time_and_phase_encoding_direction,
     )
+    from clinica.pipelines.dwi.utils import DWIDataset
     from clinica.utils.filemanip import extract_metadata_from_json, get_subject_id
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
@@ -256,27 +268,6 @@ def _get_output_file(input_file: Path, suffix: str) -> str:
     return f"{filename}_{suffix}.nii.gz"
 
 
-def convert_phase_difference_to_hertz_task(
-    phase_diff_filename: str,
-    delta_echo_time: float,
-    working_dir: str = None,
-) -> str:
-    """Wrapper for Nipype."""
-    from pathlib import Path
-
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
-        convert_phase_difference_to_hertz,  # noqa
-    )
-
-    if working_dir:
-        working_dir = Path(working_dir)
-    return str(
-        convert_phase_difference_to_hertz(
-            Path(phase_diff_filename), delta_echo_time, working_dir
-        )
-    )
-
-
 def demean_image(
     input_image: Path, mask: Optional[Path] = None, working_dir: Optional[Path] = None
 ) -> Path:
@@ -318,23 +309,6 @@ def demean_image(
     nib.Nifti1Image(data, image.affine, image.header).to_filename(out_file)
 
     return out_file
-
-
-def demean_image_task(
-    input_image: str, mask: str = None, working_dir: str = None
-) -> str:
-    """Wrapper for Nipype."""
-    from pathlib import Path
-
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
-        demean_image,  # noqa
-    )
-
-    if working_dir:
-        working_dir = Path(working_dir)
-    if mask:
-        mask = Path(mask)
-    return str(demean_image(Path(input_image), mask, working_dir))
 
 
 def convert_phase_difference_to_rads(
@@ -382,18 +356,3 @@ def convert_phase_difference_to_rads(
     nib.Nifti1Image(data, image.affine, header).to_filename(out_file)
 
     return out_file
-
-
-def convert_phase_difference_to_rads_task(
-    phase_diff_filename: str, working_dir: str = None
-) -> str:
-    """Wrapper for Nipype."""
-    from pathlib import Path
-
-    from clinica.pipelines.dwi_preprocessing_using_fmap.utils import (
-        convert_phase_difference_to_rads,  # noqa
-    )
-
-    if working_dir:
-        working_dir = Path(working_dir)
-    return str(convert_phase_difference_to_rads(Path(phase_diff_filename), working_dir))

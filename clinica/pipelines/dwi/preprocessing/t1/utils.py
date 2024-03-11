@@ -1,17 +1,40 @@
-import shutil
-from pathlib import Path
-from typing import Optional, Tuple
+"""This module contains utilities used by the DWIPreprocessingUsingT1 pipeline."""
 
-from clinica.utils.dwi import DWIDataset
+import functools
+import shutil
+from os import PathLike
+from pathlib import Path
+from typing import List, Optional, Tuple
+
+import numpy as np
+
+from clinica.pipelines.dwi.utils import DWIDataset
+
+__all__ = [
+    "rename_into_caps",
+    "change_itk_transform_type",
+    "broadcast_matrix_filename_to_match_b_vector_length",
+    "ants_warp_image_multi_transform",
+    "rotate_b_vectors",
+    "init_input_node",
+    "print_end_pipeline",
+    "prepare_reference_b0",
+    "insert_b0_into_dwi",
+    "compute_reference_b0",
+    "configure_working_directory",
+    "register_b0",
+    "extract_sub_ses_folder_name",
+    "split_dwi_dataset_with_b_values",
+]
 
 
 def rename_into_caps(
-    dwi_filename: str,
-    dwi_preproc_filename: str,
-    b_values_preproc_filename: str,
-    b_vectors_preproc_filename: str,
-    b0_brain_mask_filename: str,
-) -> tuple:
+    dwi_filename: Path,
+    dwi_preproc_filename: Path,
+    b_values_preproc_filename: Path,
+    b_vectors_preproc_filename: Path,
+    b0_brain_mask_filename: Path,
+) -> Tuple[str, ...]:
     """Rename the outputs of the pipelines into CAPS.
 
     Parameters
@@ -25,6 +48,9 @@ def rename_into_caps(
     dwi_preproc_filename : str
         The path to the preprocessed DWI file.
 
+    b_values_preproc_filename : str
+        The path to the preprocessed b-values file.
+
     b_vectors_preproc_filename : str
         The path to the preprocessed b-vectors file.
 
@@ -36,7 +62,7 @@ def rename_into_caps(
     Tuple[str, str, str, str]
         The different outputs in CAPS format.
     """
-    from clinica.utils.dwi import rename_files
+    from clinica.pipelines.dwi.utils import rename_files
 
     return rename_files(
         dwi_filename,
@@ -49,7 +75,7 @@ def rename_into_caps(
     )
 
 
-def change_itk_transform_type(input_affine_file: str) -> str:
+def change_itk_transform_type(input_affine_file: Path) -> Path:
     """Change ITK transform type.
 
     This function takes in the affine.txt produced by the c3d_affine_tool (which converted
@@ -59,17 +85,14 @@ def change_itk_transform_type(input_affine_file: str) -> str:
 
     Parameters
     ----------
-    input_affine_file : str
-        Path to the input affine that should be changed.
+    input_affine_file : Path
+        The path to the input affine that should be changed.
 
     Returns
     -------
-    update_affine_file : str
-        Path to the updated affine.
+    update_affine_file : Path
+        The path to the updated affine.
     """
-    from pathlib import Path
-
-    input_affine_file = Path(input_affine_file)
     original_content = input_affine_file.read_text()
     updated_affine_file = input_affine_file.with_name("updated_affine.txt")
     updated_affine_file.write_text(
@@ -79,25 +102,19 @@ def change_itk_transform_type(input_affine_file: str) -> str:
         )
     )
 
-    return str(updated_affine_file)
+    return updated_affine_file
 
 
 def broadcast_matrix_filename_to_match_b_vector_length(
-    matrix_filename: str, b_vectors_filename: str
-) -> list:
+    matrix_filename: Path, b_vectors_filename: Path
+) -> List[Path]:
     """Return a list of the matrix filename repeated as many times as there are B-vectors."""
-    import numpy as np
-
-    from clinica.pipelines.dwi_preprocessing_using_t1.utils import (
-        broadcast_filename_into_list,  # noqa
-    )
-
     b_vectors = np.loadtxt(b_vectors_filename).T
 
-    return broadcast_filename_into_list(matrix_filename, len(b_vectors))
+    return _broadcast_filename_into_list(matrix_filename, len(b_vectors))
 
 
-def broadcast_filename_into_list(filename: str, desired_length: int) -> list:
+def _broadcast_filename_into_list(filename: Path, desired_length: int) -> List[Path]:
     """Return a list of provided filename repeated to match the desired length."""
     return [filename] * desired_length
 
@@ -118,8 +135,10 @@ def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine) -
 
 
 def rotate_b_vectors(
-    b_vectors_filename: str, matrix_filenames: list, output_dir: str = None
-) -> str:
+    b_vectors_filename: Path,
+    matrix_filenames: List[str],
+    output_dir: Optional[Path] = None,
+) -> Path:
     """Rotate the B-vectors contained in the input b_vectors_filename file
     according to the provided list of matrices.
 
@@ -148,9 +167,6 @@ def rotate_b_vectors(
     """
     from pathlib import Path
 
-    import numpy as np
-
-    b_vectors_filename = Path(b_vectors_filename)
     stem = (
         Path(b_vectors_filename.stem).stem
         if b_vectors_filename.suffix == ".gz"
@@ -158,7 +174,7 @@ def rotate_b_vectors(
     )
     rotated_b_vectors_filename = b_vectors_filename.with_name(f"{stem}_rotated.bvec")
     if output_dir:
-        rotated_b_vectors_filename = Path(output_dir) / rotated_b_vectors_filename.name
+        rotated_b_vectors_filename = output_dir / rotated_b_vectors_filename.name
     else:
         rotated_b_vectors_filename = Path(rotated_b_vectors_filename.name).resolve()
 
@@ -180,7 +196,7 @@ def rotate_b_vectors(
 
     np.savetxt(rotated_b_vectors_filename, np.array(rotated_b_vectors).T, fmt="%0.15f")
 
-    return str(rotated_b_vectors_filename)
+    return rotated_b_vectors_filename
 
 
 def init_input_node(
@@ -235,11 +251,11 @@ def init_input_node(
         The phase encoding direction for the dwi image, extracted
         from the dwi JSON file.
     """
-    from clinica.utils.dwi import (
-        DWIDataset,
+    from clinica.pipelines.dwi.preprocessing.utils import (
         check_dwi_volume,
         get_readout_time_and_phase_encoding_direction,
     )
+    from clinica.pipelines.dwi.utils import DWIDataset
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
 
@@ -279,37 +295,6 @@ def print_end_pipeline(image_id, final_file):
     print_end_image(image_id)
 
 
-def prepare_reference_b0_task(
-    dwi_filename: str,
-    b_values_filename: str,
-    b_vectors_filename: str,
-    b_value_threshold: float = 5.0,
-    working_directory=None,
-) -> tuple:
-    """Task called be Nipype to execute prepare_reference_b0."""
-    from pathlib import Path
-
-    from clinica.pipelines.dwi_preprocessing_using_t1.utils import (
-        prepare_reference_b0,  # noqa
-    )
-    from clinica.utils.dwi import DWIDataset
-
-    if working_directory:
-        working_directory = Path(working_directory)
-
-    b0_reference_filename, reference_dwi_dataset = prepare_reference_b0(
-        DWIDataset(
-            dwi=dwi_filename,
-            b_values=b_values_filename,
-            b_vectors=b_vectors_filename,
-        ),
-        b_value_threshold,
-        working_directory,
-    )
-
-    return str(b0_reference_filename), *(str(_) for _ in reference_dwi_dataset)
-
-
 def prepare_reference_b0(
     dwi_dataset: DWIDataset,
     b_value_threshold: float = 5.0,
@@ -344,11 +329,7 @@ def prepare_reference_b0(
     reference_dataset : DWIDataset
         DWI dataset containing the B0 images merged and inserted at index 0.
     """
-    from clinica.utils.dwi import (
-        check_dwi_dataset,
-        insert_b0_into_dwi,
-        split_dwi_dataset_with_b_values,
-    )
+    from ..utils import check_dwi_dataset
 
     dwi_dataset = check_dwi_dataset(dwi_dataset)
     working_directory = configure_working_directory(dwi_dataset.dwi, working_directory)
@@ -363,6 +344,112 @@ def prepare_reference_b0(
     reference_dataset = insert_b0_into_dwi(reference_b0, large_b_dataset)
 
     return reference_b0, reference_dataset
+
+
+def insert_b0_into_dwi(b0_filename: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
+    """Inserts a b0 volume into the DWI dataset as the first volume.
+
+    Also updates the b-values and b-vectors files accordingly.
+
+    Parameters
+    ----------
+    b0_filename : PathLike
+        Path to image file containing one b=0 volume (could be the average of a b0 dataset).
+
+    dwi_dataset : DWIDataset
+        DWI dataset in which to insert the b0 volume.
+
+    Returns
+    -------
+    DWIDataset :
+        The diffusion dataset : b0 volume + dwi volumes.
+    """
+    from ..utils import check_dwi_dataset, check_file
+
+    dwi_dataset = check_dwi_dataset(dwi_dataset)
+    b0_filename = check_file(b0_filename)
+
+    return DWIDataset(
+        dwi=_insert_b0_into_dwi_image(dwi_dataset.dwi, b0_filename),
+        b_values=_insert_b0_into_b_values(dwi_dataset.b_values),
+        b_vectors=_insert_b0_into_b_vectors(dwi_dataset.b_vectors),
+    )
+
+
+def _insert_b0_into_dwi_image(dwi_filename: Path, b0_filename: Path) -> Path:
+    """Insert the provided B0 volume into the DWI image.
+
+    This insertion is done at index 0 along the 4th / time dimension.
+    """
+    from clinica.utils.image import merge_nifti_images_in_time_dimension
+
+    from ..utils import add_suffix_to_filename
+
+    output_dwi_filename = merge_nifti_images_in_time_dimension(
+        (b0_filename, dwi_filename),
+        out_file=add_suffix_to_filename(
+            _remove_entity_from_filename(dwi_filename, "large_b"),
+            "merged",
+        ),
+    )
+
+    return output_dwi_filename
+
+
+def _remove_entity_from_filename(filename: Path, entity: str) -> Path:
+    """Removes the provided entity from the given file name.
+
+    Parameters
+    ----------
+    filename : Path
+        The path object on which to operate removal of entity.
+
+    entity : str
+        The entity which should be removed.
+
+    Returns
+    -------
+    Path :
+        The new Path object without the entity.
+    """
+    return Path(filename.parent / filename.name.replace(f"_{entity}", ""))
+
+
+def _insert_b0_into_b_values(b_values_filename: Path) -> Path:
+    """Insert a 0 value at index 0 into the b-values file."""
+    from ..utils import add_suffix_to_filename
+
+    b_values = np.loadtxt(b_values_filename)
+    b_values = np.insert(b_values, 0, 0)
+    output_b_values_filename = add_suffix_to_filename(
+        _remove_entity_from_filename(b_values_filename, "large_b"), "merged"
+    )
+    _write_b_values(output_b_values_filename, b_values)
+
+    return output_b_values_filename
+
+
+def _write_numpy(filename: Path, data: np.ndarray, fmt: str, delimiter: str) -> None:
+    """Writes the provided array to the provided filename using the provided formatting."""
+    np.savetxt(filename, data, fmt=fmt, delimiter=delimiter)
+
+
+_write_b_vectors = functools.partial(_write_numpy, fmt="%10.5f", delimiter=" ")
+_write_b_values = functools.partial(_write_numpy, fmt="%d", delimiter=" ")
+
+
+def _insert_b0_into_b_vectors(b_vectors_filename: Path) -> Path:
+    """Insert a 0 vector into the b-vectors file."""
+    from ..utils import add_suffix_to_filename
+
+    b_vectors = np.loadtxt(b_vectors_filename)
+    b_vectors = np.insert(b_vectors, 0, 0.0, axis=1)
+    output_b_vectors_filename = add_suffix_to_filename(
+        _remove_entity_from_filename(b_vectors_filename, "large_b"), "merged"
+    )
+    _write_b_vectors(output_b_vectors_filename, b_vectors)
+
+    return output_b_vectors_filename
 
 
 def compute_reference_b0(
@@ -411,12 +498,13 @@ def compute_reference_b0(
     ValueError :
         If the number of B0 volumes is <= 0.
     """
-    from clinica.utils.dwi import compute_average_b0, count_b0s
+    from ..utils import compute_average_b0
 
-    nb_b0s = count_b0s(
-        b_value_filename=b_values_filename, b_value_threshold=b_value_threshold
-    )
-    if nb_b0s <= 0:
+    if (
+        nb_b0s := _count_b0s(
+            b_value_filename=b_values_filename, b_value_threshold=b_value_threshold
+        )
+    ) <= 0:
         raise ValueError(
             f"The number of b0s should be strictly positive (b-val file: {b_values_filename})."
         )
@@ -498,7 +586,7 @@ def register_b0(
         If the pipeline ran successfully, this file should be located in :
         working_directory / b0_coregistration / concat_ref_moving / merged_files.nii.gz
     """
-    from clinica.pipelines.dwi_preprocessing_using_t1.workflows import b0_flirt_pipeline
+    from .workflows import b0_flirt_pipeline
 
     b0_flirt = b0_flirt_pipeline(num_b0s=nb_b0s)
     b0_flirt.inputs.inputnode.in_file = str(extracted_b0_filename)
@@ -536,43 +624,226 @@ def extract_sub_ses_folder_name(file_path: str) -> str:
     return (Path(Path(file_path).parent).parent).name
 
 
-def generate_index_file_task(
-    b_values_filename: str,
-    image_id=None,
-    output_dir=None,
-) -> str:
-    """Wrapper for Nipype."""
-    from pathlib import Path
+def split_dwi_dataset_with_b_values(
+    dwi_dataset: DWIDataset,
+    b_value_threshold: float = 5.0,
+    working_directory: Optional[Path] = None,
+) -> Tuple[DWIDataset, DWIDataset]:
+    """Splits the DWI dataset in two through the B-values.
 
-    from clinica.utils.dwi import generate_index_file
+    Splits the DWI volumes into two datasets :
+     - the first dataset is relative to volumes having a b-value <= b_value_threshold.
+     - the second dataset is relative to volumes having a b-value > b_value_threshold.
 
-    return str(
-        generate_index_file(
-            Path(b_values_filename),
-            image_id,
-            Path(output_dir) if output_dir else None,
+    The function writes 6 files (3 files for each dataset), and returns a
+    length 2 tuple containing the two DWI datasets.
+
+    Parameters
+    ----------
+    dwi_dataset : DWIDataset
+        DWI image dataset to split.
+
+    b_value_threshold : float, optional
+        Defines the b0 volumes as all volumes b-value <= b_value_threshold.
+        Defaults to 5.0.
+
+    working_directory : Path, optional
+        An optional working directory in which to write the small and large
+        DWI datasets. If not provided, they will be written in the same
+        directory as the provided DWI dataset.
+
+    Returns
+    -------
+    small_b_dataset : DWIDataset
+        DWI dataset for volumes for which b-value <= b_value_threshold.
+
+    large_b_dataset : DWIDataset
+        DWI dataset for volumes for which b-value > b_value_threshold.
+
+    Raises
+    ------
+    ValueError:
+        If b_value_threshold < 0.
+    """
+    from ..utils import check_b_value_threshold, check_dwi_dataset, get_b0_filter
+
+    check_b_value_threshold(b_value_threshold)
+    dwi_dataset = check_dwi_dataset(dwi_dataset)
+    b_values, _ = _check_b_values_and_b_vectors(dwi_dataset)
+    small_b_filter = get_b0_filter(
+        dwi_dataset.b_values, b_value_threshold=b_value_threshold
+    )
+    large_b_filter = np.array(
+        [i for i in range(len(b_values)) if i not in small_b_filter]
+    )
+
+    return (
+        _build_dwi_dataset_from_filter(
+            dwi_dataset,
+            "small_b",
+            small_b_filter,
+            working_directory=working_directory,
+        ),
+        _build_dwi_dataset_from_filter(
+            dwi_dataset,
+            "large_b",
+            large_b_filter,
+            working_directory=working_directory,
+        ),
+    )
+
+
+def _check_b_values_and_b_vectors(
+    dwi_dataset: DWIDataset,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Opens the b-values and b-vectors files and transpose the b-vectors if needed."""
+    import warnings
+
+    b_values = np.loadtxt(dwi_dataset.b_values)
+    b_vectors = np.loadtxt(dwi_dataset.b_vectors)
+    if b_values.shape[0] == b_vectors.shape[0]:
+        warnings.warn(
+            "Warning: The b-vectors file should be column-wise. The b-vectors will be transposed",
+            UserWarning,
+        )
+        b_vectors = b_vectors.T
+
+    return b_values, b_vectors
+
+
+def _build_dwi_dataset_from_filter(
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
+) -> DWIDataset:
+    """Builds a new DWI dataset from a given DWI dataset and a filter.
+
+    Parameters
+    ----------
+    dwi_dataset : DWIDataset
+        The DWI dataset to filter.
+
+    filter_name : str
+        The name of the filter. This will be used to build the
+        file names associated with the new dataset.
+
+    filter_array : np.ndarray
+        1D array of indices to filter the DWI dataset.
+
+    working_directory : Path, optional
+        An optional working directory in which to write the filtered
+        DWI dataset. If not provided, it will be written in the same
+        directory as the provided DWI dataset.
+
+    Returns
+    -------
+    DWIDataset :
+        The new filtered DWI dataset.
+    """
+    from ..utils import check_dwi_dataset
+
+    return check_dwi_dataset(
+        DWIDataset(
+            dwi=_filter_dwi(
+                dwi_dataset,
+                filter_name,
+                filter_array,
+                working_directory=working_directory,
+            ),
+            b_values=_filter_b_values(
+                dwi_dataset,
+                filter_name,
+                filter_array,
+                working_directory=working_directory,
+            ),
+            b_vectors=_filter_b_vectors(
+                dwi_dataset,
+                filter_name,
+                filter_array,
+                working_directory=working_directory,
+            ),
         )
     )
 
 
-def generate_acq_file_task(
-    dwi_filename: str,
-    fsl_phase_encoding_direction: str,
-    total_readout_time: str,
-    image_id=None,
-    output_dir=None,
-) -> str:
-    """Wrapper for Nipype."""
-    from pathlib import Path
+def _filter_dwi(
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
+) -> Path:
+    """Filters the dwi component of the provided DWI dataset."""
+    from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
-    from clinica.utils.dwi import generate_acq_file
+    from ..utils import add_suffix_to_filename
 
-    return str(
-        generate_acq_file(
-            Path(dwi_filename),
-            fsl_phase_encoding_direction,
-            total_readout_time,
-            image_id,
-            Path(output_dir) if output_dir else None,
-        )
+    dwi_filename = add_suffix_to_filename(dwi_dataset.dwi, filter_name)
+    if working_directory:
+        dwi_filename = working_directory / dwi_filename.name
+    data = compute_aggregated_volume(
+        dwi_dataset.dwi, aggregator=None, volumes_to_keep=filter_array
     )
+    img = get_new_image_like(dwi_dataset.dwi, data)
+    img.to_filename(dwi_filename)
+
+    return dwi_filename
+
+
+def _filter_b_values(
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
+) -> Path:
+    """Filters the b-values component of the provided DWI dataset."""
+    from ..utils import add_suffix_to_filename
+
+    b_values, _ = _check_b_values_and_b_vectors(dwi_dataset)
+    b_values_filename = add_suffix_to_filename(dwi_dataset.b_values, filter_name)
+    if working_directory:
+        b_values_filename = working_directory / b_values_filename.name
+    _write_b_values(b_values_filename, b_values[filter_array])
+
+    return b_values_filename
+
+
+def _filter_b_vectors(
+    dwi_dataset: DWIDataset,
+    filter_name: str,
+    filter_array: np.ndarray,
+    working_directory: Optional[Path] = None,
+) -> Path:
+    """Filters the b-vectors component of the provided DWI dataset."""
+    from ..utils import add_suffix_to_filename
+
+    _, b_vectors = _check_b_values_and_b_vectors(dwi_dataset)
+    b_vectors_filename = add_suffix_to_filename(dwi_dataset.b_vectors, filter_name)
+    if working_directory:
+        b_vectors_filename = working_directory / b_vectors_filename.name
+    _write_b_vectors(b_vectors_filename, np.array([b[filter_array] for b in b_vectors]))
+
+    return b_vectors_filename
+
+
+def _count_b0s(b_value_filename: PathLike, b_value_threshold: float = 5.0) -> int:
+    """Counts the number of volumes where b<=low_bval.
+
+    Parameters
+    ----------
+    b_value_filename : PathLike
+        Path to the b-value file.
+
+    b_value_threshold : float, optional
+        Defines the threshold for the b0 volumes as all volumes which
+        satisfy b-value <= b_value_threshold.
+        Defaults to 5.0.
+
+    Returns
+    -------
+    num_b0s : int
+        Number of b0 volumes.
+    """
+    from ..utils import get_b0_filter
+
+    return len(get_b0_filter(b_value_filename, b_value_threshold=b_value_threshold))

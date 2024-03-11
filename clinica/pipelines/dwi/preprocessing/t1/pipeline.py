@@ -3,7 +3,7 @@ from typing import List
 
 from nipype import config
 
-from clinica.pipelines.engine import DWIPreprocessingPipeline
+from clinica.pipelines.dwi.preprocessing.engine import DWIPreprocessingPipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -146,7 +146,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .utils import rename_into_caps
+        from .tasks import rename_into_caps_task
 
         container_path = npe.Node(
             nutil.Function(
@@ -168,7 +168,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             nutil.Function(
                 input_names=files_to_write_in_caps,
                 output_names=[f"{x}_caps" for x in files_to_write_in_caps],
-                function=rename_into_caps,
+                function=rename_into_caps_task,
             ),
             name="rename_into_caps",
         )
@@ -226,14 +226,12 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.dwi import compute_average_b0_task
+        from clinica.pipelines.dwi.preprocessing.tasks import compute_average_b0_task
+        from clinica.pipelines.dwi.preprocessing.workflows import eddy_fsl_pipeline
 
-        from .utils import (
-            init_input_node,
-            prepare_reference_b0_task,
-            print_end_pipeline,
-        )
-        from .workflows import eddy_fsl_pipeline, epi_pipeline
+        from .tasks import prepare_reference_b0_task
+        from .utils import init_input_node, print_end_pipeline
+        from .workflows import epi_pipeline
 
         init_node = npe.Node(
             interface=nutil.Function(

@@ -1,17 +1,43 @@
-def statistics_on_atlases(
-    in_registered_map: str, name_map: str, dwi_preprocessed_file: str
-) -> list:
+"""This module contains utilities used by the DWIDTI pipeline."""
+
+from enum import Enum
+from pathlib import Path
+from typing import Dict, List, Tuple
+
+__all__ = [
+    "DTIBasedMeasure",
+    "compute_statistics_on_atlases",
+    "get_caps_filenames",
+    "rename_into_caps",
+    "print_begin_pipeline",
+    "print_end_pipeline",
+    "get_ants_transforms",
+]
+
+
+class DTIBasedMeasure(str, Enum):
+    """Possible DTI measures."""
+
+    FRACTIONAL_ANISOTROPY = "FA"
+    MEAN_DIFFUSIVITY = "MD"
+    AXIAL_DIFFUSIVITY = "AD"
+    RADIAL_DIFFUSIVITY = "RD"
+
+
+def compute_statistics_on_atlases(
+    registered_map: Path, name_map: str, dwi_preprocessed_file: Path
+) -> List[Path]:
     """Computes a list of statistics files for each atlas.
 
     Parameters
     ----------
-    in_registered_map : str
+    registered_map : Path
         Map already registered on atlases.
 
     name_map : str
         Name of the registered map in CAPS format.
 
-    dwi_preprocessed_file : str
+    dwi_preprocessed_file : Path
         The preprocessed DWI file name which contains the entities to be
         used for building the statistics file names.
 
@@ -35,20 +61,20 @@ def statistics_on_atlases(
         source.update_entity("map", name_map)
         source.suffix = "statistics"
         source.extension = ".tsv"
-        out_atlas_statistics = str((Path.cwd() / source.name).resolve())
-        statistics_on_atlas(in_registered_map, atlas, out_atlas_statistics)
+        out_atlas_statistics = (Path.cwd() / source.name).resolve()
+        statistics_on_atlas(registered_map, atlas, out_atlas_statistics)
         atlas_statistics_list.append(out_atlas_statistics)
 
     return atlas_statistics_list
 
 
-def get_caps_filenames(caps_dwi_filename: str):
+def get_caps_filenames(caps_dwi_filename: Path) -> Dict[str, str]:
     """Prepare some filenames with CAPS naming convention."""
     import re
 
     m = re.search(
         r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_space-[a-zA-Z0-9]+_desc-preproc",
-        caps_dwi_filename,
+        str(caps_dwi_filename),
     )
     if not m:
         raise ValueError(
@@ -56,45 +82,48 @@ def get_caps_filenames(caps_dwi_filename: str):
         )
 
     caps_prefix = m.group(0)
-    bids_source = f"{m.group(1)}_{m.group(2)}"
+    results = {
+        "bids_source": f"{m.group(1)}_{m.group(2)}",
+        "diffmodel": f"{caps_prefix}_model-DTI_diffmodel.nii.gz",
+    }
+    results.update(
+        {
+            measure.value: f"{caps_prefix}_{measure.value}.nii.gz"
+            for measure in DTIBasedMeasure
+        }
+    )
+    results["DECFA"] = f"{caps_prefix}_DECFA.nii.gz"
 
-    out_dti = f"{caps_prefix}_model-DTI_diffmodel.nii.gz"
-    out_fa = f"{caps_prefix}_FA.nii.gz"
-    out_md = f"{caps_prefix}_MD.nii.gz"
-    out_ad = f"{caps_prefix}_AD.nii.gz"
-    out_rd = f"{caps_prefix}_RD.nii.gz"
-    out_evec = f"{caps_prefix}_DECFA.nii.gz"
-
-    return bids_source, out_dti, out_fa, out_md, out_ad, out_rd, out_evec
+    return results
 
 
 def rename_into_caps(
-    in_caps_dwi: str,
-    in_norm_fa: str,
-    in_norm_md: str,
-    in_norm_ad: str,
-    in_norm_rd: str,
-    in_b_spline_transform: str,
-    in_affine_matrix: str,
-) -> tuple:
+    in_caps_dwi: Path,
+    in_norm_fa: Path,
+    in_norm_md: Path,
+    in_norm_ad: Path,
+    in_norm_rd: Path,
+    in_b_spline_transform: Path,
+    in_affine_matrix: Path,
+) -> Tuple[str, ...]:
     """Rename different outputs of the pipelines into CAPS format.
 
     Parameters
     ----------
-    in_caps_dwi : str
-    in_norm_fa : str
-    in_norm_md : str
-    in_norm_ad : str
-    in_norm_rd : str
-    in_b_spline_transform : str
-    in_affine_matrix : str
+    in_caps_dwi : Path
+    in_norm_fa : Path
+    in_norm_md : Path
+    in_norm_ad : Path
+    in_norm_rd : Path
+    in_b_spline_transform : Path
+    in_affine_matrix : Path
 
     Returns
     -------
-    tuple :
+    tuple of str :
         The different outputs with CAPS naming convention
     """
-    from clinica.utils.dwi import rename_files
+    from clinica.pipelines.dwi.utils import rename_files
 
     return rename_files(
         in_caps_dwi,

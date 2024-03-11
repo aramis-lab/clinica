@@ -30,9 +30,9 @@ def test_dwi_connectome(cmdopt, tmp_path):
 def run_dwi_dti(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.dwi_dti.pipeline import DwiDti
+    from clinica.pipelines.dwi.dti.pipeline import DwiDti
+    from clinica.pipelines.dwi.dti.utils import DTIBasedMeasure
     from clinica.utils.bids import BIDSFileName
-    from clinica.utils.dwi import DTIBasedMeasure
 
     caps_dir = output_dir / "caps"
 
@@ -72,7 +72,7 @@ def run_dwi_dti(
 def run_dwi_connectome(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.dwi_connectome.pipeline import DwiConnectome
+    from clinica.pipelines.dwi.connectome.pipeline import DwiConnectome
     from clinica.utils.bids import BIDSFileName
 
     caps_dir = output_dir / "caps"

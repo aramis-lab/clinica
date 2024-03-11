@@ -2,7 +2,7 @@ import pytest
 
 
 def test_get_luts(mocker):
-    from clinica.pipelines.dwi_connectome.utils import get_luts
+    from clinica.pipelines.dwi.connectome.utils import get_luts
 
     mocked_freesurfer_home = "/Applications/freesurfer/7.2.0"
     mocker.patch(
@@ -26,13 +26,13 @@ def test_get_luts(mocker):
     ],
 )
 def test_get_checksum_for_filename(filename, expected_checksum):
-    from clinica.pipelines.dwi_connectome.utils import _get_checksum_for_filename
+    from clinica.pipelines.dwi.connectome.utils import _get_checksum_for_filename  # noqa
 
     assert _get_checksum_for_filename(filename) == expected_checksum
 
 
 def test_get_checksum_for_filename_error():
-    from clinica.pipelines.dwi_connectome.utils import _get_checksum_for_filename
+    from clinica.pipelines.dwi.connectome.utils import _get_checksum_for_filename  # noqa
 
     with pytest.raises(ValueError, match="File name foo.txt is not supported."):
         _get_checksum_for_filename("foo.txt")
@@ -46,7 +46,7 @@ def test_download_mrtrix3_file(tmp_path, filename, expected_length):
 
     TODO: Use mocking in the fetch_file function to remove this necessity.
     """
-    from clinica.pipelines.dwi_connectome.utils import _download_mrtrix3_file
+    from clinica.pipelines.dwi.connectome.utils import _download_mrtrix3_file  # noqa
 
     _download_mrtrix3_file(filename, tmp_path)
 
@@ -57,10 +57,10 @@ def test_download_mrtrix3_file(tmp_path, filename, expected_length):
 def test_download_mrtrix3_file_error(tmp_path, mocker):
     import re
 
-    from clinica.pipelines.dwi_connectome.utils import _download_mrtrix3_file
+    from clinica.pipelines.dwi.connectome.utils import _download_mrtrix3_file  # noqa
 
     mocker.patch(
-        "clinica.pipelines.dwi_connectome.utils._get_checksum_for_filename",
+        "clinica.pipelines.dwi.connectome.utils._get_checksum_for_filename",
         return_value="foo",
     )
     mocker.patch("clinica.utils.inputs.fetch_file", side_effect=IOError)
@@ -77,7 +77,7 @@ def test_download_mrtrix3_file_error(tmp_path, mocker):
 def test_get_conversion_luts():
     from pathlib import Path
 
-    from clinica.pipelines.dwi_connectome.utils import get_conversion_luts
+    from clinica.pipelines.dwi.connectome.utils import get_conversion_luts
 
     luts = [Path(_) for _ in get_conversion_luts()]
 
@@ -97,14 +97,14 @@ def test_get_conversion_luts():
     ],
 )
 def test_get_caps_filenames_error(tmp_path, filename):
-    from clinica.pipelines.dwi_connectome.utils import get_caps_filenames
+    from clinica.pipelines.dwi.connectome.utils import get_caps_filenames
 
     with pytest.raises(ValueError, match="is not in a CAPS compliant format."):
         get_caps_filenames(str(tmp_path / filename))
 
 
 def test_get_caps_filenames(tmp_path):
-    from clinica.pipelines.dwi_connectome.utils import get_caps_filenames
+    from clinica.pipelines.dwi.connectome.utils import get_caps_filenames
 
     dwi_caps = tmp_path / "dwi" / "preprocessing"
     dwi_caps.mkdir(parents=True)
@@ -139,6 +139,6 @@ def test_get_caps_filenames(tmp_path):
     ],
 )
 def test_get_containers(subjects, sessions, expected):
-    from clinica.pipelines.dwi_connectome.utils import get_containers
+    from clinica.pipelines.dwi.connectome.utils import get_containers
 
     assert get_containers(subjects, sessions) == expected

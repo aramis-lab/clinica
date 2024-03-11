@@ -5,7 +5,10 @@ from pathlib import Path
 from typing import Callable, Optional
 
 import nibabel as nib
+import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
+
+from clinica.pipelines.dwi.utils import DWIDataset
 
 
 def build_bids_directory(directory: os.PathLike, subjects_sessions: dict) -> None:
@@ -352,3 +355,20 @@ assert_large_nifti_almost_equal = partial(
     assertion_func_data=_assert_large_image_dataobj_almost_equal,
     assertion_func_affine=_assert_affine_almost_equal,
 )
+
+
+def build_dwi_dataset(
+    folder: Path, nb_dwi_volumes: int, nb_b_values: int, nb_b_vectors: int
+) -> DWIDataset:
+    dwi_data = 4.0 * np.ones((5, 5, 5, nb_dwi_volumes))
+    dwi_img = nib.Nifti1Image(dwi_data, affine=np.eye(4))
+    nib.save(dwi_img, folder / "foo.nii.gz")
+    np.savetxt(folder / "foo.bval", [1000] * nb_b_values)
+    b_vectors_data = np.random.random((3, nb_b_vectors))
+    np.savetxt(folder / "foo.bvec", b_vectors_data)
+
+    return DWIDataset(
+        dwi=folder / "foo.nii.gz",
+        b_values=folder / "foo.bval",
+        b_vectors=folder / "foo.bvec",
+    )
