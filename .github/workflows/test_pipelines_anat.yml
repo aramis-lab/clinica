@@ -51,7 +51,7 @@ jobs:
           source ~/miniconda3/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
           source "$(brew --prefix)/opt/modules/init/bash"
-          module load clinica/matlab/2017a
+          module load clinica/matlab/2019b
           module load clinica/spm12/r7771
           make install
           cd test
