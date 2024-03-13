@@ -1,8 +1,7 @@
 <!-- markdownlint-disable MD007 MD033 -->
 # `t1-volume` – Volume-based processing of T1-weighted MR images with SPM
 
-This pipeline performs four main processing steps on T1-weighted MR images using the
-[SPM](http://www.fil.ion.ucl.ac.uk/spm/) software:
+This pipeline performs four main processing steps on T1-weighted MR images using the [SPM](http://www.fil.ion.ucl.ac.uk/spm/) software:
 
 - **Tissue segmentation, bias correction and spatial normalization to MNI space**
 This corresponds to the `Segmentation` procedure of SPM that simultaneously performs tissue segmentation, bias correction and spatial normalization, a procedure also known as "Unified segmentation" [[Ashburner and Friston, 2005](http://dx.doi.org/10.1016/j.neuroimage.2005.02.018)].
@@ -25,9 +24,9 @@ The average gray matter density (also in MNI space) is then computed in each of 
 ## Dependencies
 <!---If you installed the docker image of Clinica, nothing is required.-->
 
-If you only installed the core of Clinica, this pipeline needs the installation of
-**SPM12**.
-You can find how to install these software packages on the [third-party](../../Third-party) page.
+If you only installed the core of Clinica, this pipeline needs the installation of **SPM12**.
+
+You can either install [SPM12](../Third-party.md#spm12) and [Matlab](../Third-party.md#matlab), or install the [SPM standalone](../Third-party.md#spm12-standalone).
 
 ## Running the pipeline
 
