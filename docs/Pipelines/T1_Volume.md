@@ -22,15 +22,12 @@ A set of anatomical regions is obtained from different atlases in MNI space (lis
 The average gray matter density (also in MNI space) is then computed in each of the regions.
 
 ## Dependencies
-<!---If you installed the docker image of Clinica, nothing is required.-->
 
-If you only installed the core of Clinica, this pipeline needs the installation of **SPM12**.
-
-You can either install [SPM12](../Third-party.md#spm12) and [Matlab](../Third-party.md#matlab), or install the [SPM standalone](../Third-party.md#spm12-standalone).
+If you only installed the core of Clinica, this pipeline needs the installation of either [SPM12](../Third-party.md#spm12) and [Matlab](../Third-party.md#matlab), or [SPM standalone](../Third-party.md#spm12-standalone) on your computer.
 
 ## Running the pipeline
 
- The pipeline `t1-volume` can be run with the following command line:
+The pipeline `t1-volume` can be run with the following command line:
 
 ```Text
 clinica run t1-volume [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY GROUP_LABEL

@@ -15,9 +15,7 @@ cropping of the registered images to remove the background.
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of
-**ANTs** on your computer.
-You can find how to install this software package on the [third-party](../../Third-party) page.
+If you only installed the core of Clinica, this pipeline needs the installation of [ANTs](../Third-party.md#ants) on your computer.
 
 ## Running the pipeline
 

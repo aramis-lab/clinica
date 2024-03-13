@@ -19,14 +19,10 @@ The list of available atlases can be found [here](../../Atlases).
 You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-weighted MR images.
 
 ## Dependencies
-<!--- If you installed the docker image of Clinica, nothing is required.-->
 
-- If you only installed the core of Clinica, this pipeline needs the installation of **SPM12**.
-You can find how to install this software package on the [third-party](../../Third-party) page.
+If you only installed the core of Clinica, this pipeline needs the installation of either [SPM12](../Third-party.md#spm12) and [Matlab](../Third-party.md#matlab), or [spm standalone](../Third-party.md#spm12-standalone).
 
-- If you want to apply partial volume correction (PVC) on your PET data, you will need to install
-**PETPVC 1.2.4**, which depends on **ITK 4**.
-More information on the [third-party](../../Third-party) page.
+In addition, if you want to apply partial volume correction (PVC) on your PET data, you will need to install [PETPVC 1.2.4](../Third-party.md#petpvc), which depends on [ITK 4](../Third-party.md#itk).
 
 ## Running the pipeline
 
