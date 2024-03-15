@@ -2,32 +2,29 @@
 # `statistics-surface` - Surface-based mass-univariate analysis with SurfStat
 
 This command performs statistical analysis (e.g. group comparison, correlation) on surface-based features using the general linear model (GLM).
-To that aim, the pipeline relies on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/) designed for statistical analyses of univariate and multivariate surface and volumetric data using the GLM [[Worsley et al., 2009](http://dx.doi.org/10.1016/S1053-8119(09)70882-1)].
+
+!!! warning
+    Prior to release `0.7.3` of Clinica, this pipeline was relying on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/)
+    designed for statistical analyses of univariate and multivariate surface and volumetric data using the GLM [[Worsley et al., 2009](http://dx.doi.org/10.1016/S1053-8119(09)70882-1)].
+    However, SurfStat was not maintained anymore and was requiring a valid Matlab installation.
+    For these reason, the pipeline was completely rewritten to rely on [Brainstat](https://brainstat.readthedocs.io/en/master/)
+    which is a pure Python implementation of SurfStat, offering a very similar API.
+    Please be aware that this pipeline has not been extensively tested with the new implementation.
+    Do not hesitate to open a new issue on [GitHub](https://github.com/aramis-lab/clinica/issues) to report bugs you might encounter. 
 
 Surface-based measurements are analyzed on the FsAverage surface template (from FreeSurfer).
 
-Currently, this pipeline can handle cortical thickness measurements from T1 images [`t1-freesurfer` pipeline](../T1_FreeSurfer) or map of activity from PET data using [`pet-surface` pipeline](../PET_Surface).
-
-!!! note
-    We are aware that the [SurfStat](http://www.math.mcgill.ca/keith/surfstat/) toolbox is not maintained anymore.
-    The reasons why we rely on it are: 1) its great flexibility; 2) our profound admiration for the late Keith Worsley.
+Currently, this pipeline can handle cortical thickness measurements from T1 images [`t1-freesurfer` pipeline](./T1_FreeSurfer.md) or map of activity from PET data using [`pet-surface` pipeline](./PET_Surface.md).
 
 ## Prerequisites
 
-You need to process your data with the [`t1-freesurfer` pipeline](../T1_FreeSurfer) for measurements of cortical thickness measurements from T1 images or [`pet-surface` pipeline](../PET_Surface) for measurements of activity map from PET.
+You need to process your data with the [`t1-freesurfer` pipeline](./T1_FreeSurfer.md) for measurements of cortical thickness measurements from T1 images or [`pet-surface` pipeline](./PET_Surface.md) for measurements of activity map from PET.
 
 Do not hesitate to have a look at the paragraph **[Specifying what surface data to use](#advanced-specifying-what-surface-data-to-use)** if you want to use your own surface feature.
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of **Matlab** and **FreeSurfer 6.0** on your computer.
-You can find how to install these software packages on the [third-party](../../Third-party) page.
-Note that the Matlab `Statistics and Machine Learning Toolbox` is required.
-
-!!! bug "Compatibility issue with Matlab R2019 / R2020"
-    It has been reported that newer versions of Matlab (see details on [GitHub](https://github.com/aramis-lab/clinica/issues/90)) were not compatible with this pipeline.
-    For the moment, we advise you to use at most the R2018b version.
-    Matlab versions between 2015 and 2018 are known to work.
+If you only installed the core of Clinica, this pipeline needs the installation of **FreeSurfer 6.0** on your computer.
 
 ## Running the pipeline
 
@@ -40,35 +37,34 @@ clinica run statistics-surface [OPTIONS] CAPS_DIRECTORY GROUP_LABEL {t1-freesurf
 
 where:
 
-- `CAPS_DIRECTORY` is the folder containing the results of the [`t1-freesurfer`](../T1_FreeSurfer) or [`pet-surface`](../PET_Surface) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS/Introduction).
+- `CAPS_DIRECTORY` is the folder containing the results of the [`t1-freesurfer`](./T1_FreeSurfer.md) or [`pet-surface`](./PET_Surface.md) pipeline and the output of the present command, both in a [CAPS hierarchy](../CAPS/Introduction.md).
 - `GROUP_LABEL` is a string defining the group label for the current analysis, which helps you keep track of different analyses.
-- The third positional argument defines the type of surface-based feature: it can be `t1-freesurfer` for cortical thickness, `pet-surface` for projected PET data or `custom-pipeline` for you own data in CAPS directory (see below for details).
-- The fourth positional argument is a string defining the type of analysis of your model, choose one between `group_comparison` and `correlation`.
-- `SUBJECT_VISITS_WITH_COVARIATES_TSV` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained in the [Example](../Stats_Surface/#comparison-analysis) subsection).
-- `CONTRAST` is a string defining the contrast matrix or the variable of interest for the GLM, e.g. `group` or `age`.
+- The third positional argument defines the type of surface-based feature. It can be:
+  - `t1-freesurfer` for cortical thickness
+  - `pet-surface` for projected PET data
+  - `custom-pipeline` for you own data in CAPS directory (see below for details)
+- The fourth positional argument is a string defining the type of analysis of your model. It can be either `group_comparison` or `correlation`.
+- `SUBJECT_VISITS_WITH_COVARIATES_TSV` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained in the [Example](#comparison-analysis) subsection).
+- `CONTRAST` is a string defining the contrast matrix or the variable of interest for the GLM. For example `group`, `sex`, or `age`.
 
 Pipeline options:
 
-- `-c`, or `--covariates`: Covariates must be provided one at the time: `-c covariate_1 -c covariate_2`, or equivalently `--covariates covariate_1  --covariates covariate_2`.
-Each covariate must match the name of the TSV file.
-By default, no covariate is considered.
-- `--full_width_at_half_maximum`: FWHM for the surface smoothing.
-Default value is `20`.
+- `-c`, or `--covariates`: Covariates must be provided one at the time: `-c covariate_1 -c covariate_2`, or equivalently `--covariates covariate_1  --covariates covariate_2`. Each covariate must match the name of the TSV file. By default, no covariate is considered.
+- `--full_width_at_half_maximum`: FWHM for the surface smoothing. The default value is `20`.
 
 Pipeline options if you use inputs from the `pet-surface` pipeline:
 
 - `--acq_label`: Name of the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
-- `--suvr_reference_region`: Reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
-It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
+- `--suvr_reference_region`: Reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map. It can be either `cerebellumPons` (used for amyloid tracers), or `pons` (used for FDG).
 
 !!! tip
-    Check the [Example](../Stats_Surface/#comparison-analysis) subsection for further clarification.
+    Check the [Example](#comparison-analysis) subsection for further clarification.
 
 ## Outputs
 
 ### Group comparison analysis
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#group-comparison): `groups/<group_id>/statistics/surfstat_group_comparison/`.
+Results are stored in the following folder of the [CAPS hierarchy](../CAPS/Specifications.md#group-comparison): `groups/<group_id>/statistics/surfstat_group_comparison/`.
 
 The main outputs for the group comparison are:
 
@@ -89,9 +85,7 @@ Analysis with cortical thickness (respectively PET data) will be saved under the
 
 ### Correlations analysis
 
-Results are stored in the following folder of the
-[CAPS hierarchy](../../CAPS/Specifications/#correlation-analysis):
-`groups/<group_id>/statistics/surfstat_correlation/`.
+Results are stored in the following folder of the [CAPS hierarchy](../CAPS/Specifications.md#correlation-analysis): `groups/<group_id>/statistics/surfstat_correlation/`.
 
 The main outputs for the correlation are:
 
@@ -103,15 +97,13 @@ The main outputs for the correlation are:
 - `<group_id>_glm.json` is a JSON file summarizing the parameters of the analysis (i.e. what you wrote on the command line).
 
 The `correlation-<label>` describes the factor of the model, which can be for example `age`.
+
 The `contrast-<label>` is the sign of your factor which can be `negative` or `positive`.
 
 Analysis with cortical thickness (respectively PET data) will be saved under the `_measure-ct` keyword (respectively the `_measure-<acq_label>` keyword).
 
 !!! note
-    The full list of output files can be found in the [ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#statistics-surface-surface-based-mass-univariate-analysis-with-surfstat).
-
-<!--### GLM-->
-<!--@TODO-->
+    The full list of output files can be found in the [ClinicA Processed Structure (CAPS) specifications](../CAPS/Specifications.md#statistics-surface---surface-based-mass-univariate-analysis-with-surfstat).
 
 ## Example
 
@@ -139,6 +131,7 @@ Note that to make the display clearer, the rows contain successive tabs, which s
 We call this file `ADvsHC_participants.tsv`.
 
 For this group comparison, we will use `age` and `sex` as covariates.
+
 As a result, the command line will be:
 
 ```Text
@@ -223,7 +216,6 @@ Note that `--custom_file` and `--feature_type` cannot be combined.
 
 ## Appendix
 
-- For more information about **SurfStat**, please check [here](http://www.math.mcgill.ca/keith/surfstat/).
+- For more information about **Brainstat**, please check [here](https://brainstat.readthedocs.io/en/master/).
 - For more information about the **GLM**, please check [here](https://en.wikipedia.org/wiki/Generalized_linear_model).
-- The cortical thickness map is obtained from the FreeSurfer segmentation.
-More precisely, it corresponds to the subject’s map normalized onto FSAverage and smoothed using a Gaussian kernel FWHM of `<fwhm>` mm (the `surf/?h.thickness.fwhm<fwhm>.fsaverage.mgh` files).
+- The cortical thickness map is obtained from the FreeSurfer segmentation. More precisely, it corresponds to the subject’s map normalized onto FSAverage and smoothed using a Gaussian kernel FWHM of `<fwhm>` mm (the `surf/?h.thickness.fwhm<fwhm>.fsaverage.mgh` files).
