@@ -3,8 +3,7 @@
 
 ## Converters
 
-Some converters require a recent version of [dcm2niix](https://github.com/rordenlab/dcm2niix) to transform DICOM files
-into NIfTI:
+Some converters require a recent version of [dcm2niix](https://github.com/rordenlab/dcm2niix) to transform DICOM files into NIfTI:
 
 |                   | dcm2niix |
 |:------------------|:--------:|
@@ -44,70 +43,269 @@ _*You only need to install ITK if you plan to perform partial volume correction 
 Depending on the architecture and OS of your system, setup of third party libraries can change.
 Please refer to each tool’s website for installation instructions:
 
-- [**ANTs v2.5.0**](http://stnava.github.io/ANTs/) Download [here](https://github.com/stnava/ANTs/releases) and follow the instructions on the ANTs [wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
-- [**Convert3D**](http://www.itksnap.org/pmwiki/pmwiki.php?n=Convert3D.Convert3D) Download [here](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
-- [**FreeSurfer**](http://surfer.nmr.mgh.harvard.edu/)
-  - For Linux users, download and install FreeSurfer following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
-  Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` ( a `sudo apt-get install tcsh libjpeg62` should do the job).
-  - For Mac users, download [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the FreeSurfer [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
-- [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/) Download [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the FSL wiki (this [page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/Linux) for Linux users and this [page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/MacOsX) for Mac users).
-- [**ITK**](https://itk.org/) Follow the instructions on the ITK blog (this [page](https://blog.kitware.com/itk-packages-in-linux-distributions/) for Linux users and this [page](https://blog.kitware.com/kitware-packages-on-os-x-with-homebrew/) for Mac users).
-- [**MRtrix3**](http://www.mrtrix.org) Follow the instructions on the MRtrix [website](https://www.mrtrix.org/download/)
-  - For Linux users: use the official package for [Anaconda](https://www.mrtrix.org/download/linux-anaconda/) or follow this set of [instructions](https://mrtrix.readthedocs.io/en/latest/installation/build_from_source.html#linux) to build it from source.
-  - For Mac users: use the official package for [Anaconda](https://www.mrtrix.org/download/macos-anaconda/) or the official [installer](https://www.mrtrix.org/download/macos-application/). There is also this [Homebrew formula](https://github.com/MRtrix3/homebrew-mrtrix3), although large dependencies such as XCode and Qt5 are required.
-- [**Matlab**](https://fr.mathworks.com/products/matlab/)
-- [**PETPVC 1.2.4**](https://github.com/UCL/PETPVC) Follow the instructions [here](https://github.com/UCL/PETPVC).
-Do not forget to compile in RELEASE mode, otherwise, partial volume correction will be very slow.
-- [**SPM12**](http://www.fil.ion.ucl.ac.uk/spm/) Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the SPM wiki (this [page](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux) for Linux users and this [page](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)) for Mac users).
-  - For systems running on MacOS Big Sur, a development version of SPM12 (check [here](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) for updates) as well as a more recent release of the MCR (minimum 2019a) are required.
+### Environment variables setup
 
-Do not forget to check the installations following each tool’s guidelines.
+When installing some of the third party software, environment variables might be needed in order to configure some installations.
 
-## Environment variables setup
+If you simply run the `export` and `source` commands in your terminal, these environment variables will be defined only for the duration of your session, and will be lost if you re-launch your terminal.
 
-Edit the configuration file associated to your shell.
-If you are using `bash`, it can be `~/.bashrc` or `~/.bash_profile`, if you are using `zsh`, it must be `~/.zshrc`.
-Your file must look like as below.
-Please be careful if you copy/paste this, some adjustments are needed.
-You must specify on the corresponding lines the path to your different installations.
+In order to define these variables permanently, you need to manually edit the configuration file associated to your shell.
 
-```bash
-# System language setting:
-export LC_ALL=en_US.UTF-8
-export LANG=en_US.UTF-8
+If you are using `bash`, it can be `~/.bashrc` or `~/.bash_profile`, if you are using `zsh`, it should be `~/.zshrc`.
 
-# Miniconda
-source /path/to/your/Miniconda/etc/profile.d/conda.sh
+!!! note "test before"
+    Please do not copy/paste the provided commands without adapting them to your system and without testing them.
+    Most paths provided here require to be adapted to your system, and also depends on how you installed the software.
+    A good approach is to verify that the different paths you want to assign to a variable exist first.
+    If they do, then try running the `export` and `source` commands in your terminal, and verify that the software run as expected.
+    You can also verify that the pipeline you want to use is also running as expected.
+    If this works, then consider modifying your shell configuration file to have these variables automatically defined on every session.
 
-# FreeSurfer
-export FREESURFER_HOME="/Applications/freesurfer"
-source ${FREESURFER_HOME}/SetUpFreeSurfer.sh &> /dev/null
 
-# FSL
-# Uncomment the line below if you are on Mac:
-#export FSLDIR="/usr/local/fsl"
-# Uncomment the line below if you are on Linux:
-#export FSLDIR="/usr/share/fsl/6.0"
-export PATH="${FSLDIR}/bin":${PATH}
-source ${FSLDIR}/etc/fslconf/fsl.sh
+### ANTs
 
-# Matlab
-export MATLAB_HOME="/path/to/your/matlab/bin/"
-export PATH=${MATLAB_HOME}:${PATH}
-export MATLABCMD="${MATLAB_HOME}/matlab"
+#### Installation
 
-# SPM
-export SPM_HOME="/path/to/your/spm12"
-```
+To install `ANTs`, download it from [here](https://github.com/stnava/ANTs/releases) and follow the instructions on the `ANTs` [wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
 
-We recommend installing `ANTS >= 2.5.0` from which no environment variable are needed.
-Nonetheless, if you are using an older version of ANTS, make sure to have the following environment variables defined:
+#### Configuration
+
+We strongly recommend installing `ANTs >= 2.5.0` from which **no environment variable are needed**.
+
+Nonetheless, if you are using an older version of `ANTs`, make sure to have the following environment variables defined:
 
 ```bash
-# ANTs
 export ANTSPATH="/path/to/your/ANTs/"
 export PATH=${ANTSPATH}:${PATH}
 ```
+
+### Convert3D
+
+You can find more details about `Convert3D` [here](http://www.itksnap.org/pmwiki/pmwiki.php?n=Convert3D.Convert3D).
+
+#### Installation
+
+You have two options to install `Convert3D`:
+
+- [Use pre-built binaries](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
+- [Use the official conda package](https://anaconda.org/conda-forge/convert3d).
+
+### Freesurfer
+
+You can find more details about `Freesurfer` [here](http://surfer.nmr.mgh.harvard.edu/).
+
+#### Installation
+
+##### On Linux
+
+Download and install `FreeSurfer` following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
+
+!!! note
+    Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` ( a `sudo apt-get install tcsh libjpeg62` should do the job).
+
+##### On MacOS
+
+Download it from [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the `FreeSurfer` [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
+
+#### Configuration
+
+Make sure to have the following environment variables defined:
+
+```bash
+export FREESURFER_HOME="/Applications/freesurfer"
+source ${FREESURFER_HOME}/SetUpFreeSurfer.sh &> /dev/null
+```
+
+### FSL
+
+We recommend installing [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/).
+
+#### Installation
+
+##### On Linux
+
+Download it from [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the [FSL wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/Linux).
+
+##### On MacOS
+
+Download it from [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the [FSL wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/MacOsX).
+
+#### Configuration
+
+##### On Linux
+
+Make sure to have the following environment variables defined:
+
+```bash
+export FSLDIR="/usr/share/fsl/6.0"
+export PATH="${FSLDIR}/bin":${PATH}
+source ${FSLDIR}/etc/fslconf/fsl.sh
+```
+
+##### On MacOS
+
+Make sure to have the following environment variables defined:
+
+```bash
+export FSLDIR="/usr/local/fsl"
+export PATH="${FSLDIR}/bin":${PATH}
+source ${FSLDIR}/etc/fslconf/fsl.sh
+```
+
+### ITK
+
+You can find more details about `ITK` [here](https://itk.org/).
+
+#### Installation
+
+##### On Linux
+
+Follow the instructions on the [ITK blog](https://blog.kitware.com/itk-packages-in-linux-distributions/).
+
+##### On MacOS
+
+Follow the instructions on the [ITK blog](https://blog.kitware.com/kitware-packages-on-os-x-with-homebrew/).
+
+### MRtrix3
+
+You can find more details about `MRtrix3` [here](http://www.mrtrix.org).
+
+#### Installation
+
+You can find the official instructions on the `MRtrix` [website](https://www.mrtrix.org/download/).
+
+##### On Linux
+
+You have basically two options:
+
+- [Use the official conda package](https://www.mrtrix.org/download/linux-anaconda/).
+- [Build MRtrix3 from source](https://mrtrix.readthedocs.io/en/latest/installation/build_from_source.html#linux).
+
+!!! note
+    Note that using the conda package should be easier in most cases.
+
+##### On MacOS
+
+- [Use the official conda package](https://www.mrtrix.org/download/macos-anaconda/).
+- [Use the MacOS pre-compiled application package installer](https://www.mrtrix.org/download/macos-application/).
+- [Use the Homebrew formula](https://github.com/MRtrix3/homebrew-mrtrix3) (although large dependencies such as `XCode` and `Qt5` are required).
+
+!!! note
+    As for Linux, note that using the conda package should be easier in most cases.
+
+### Matlab
+
+You can find more details about `Matlab` [here](https://fr.mathworks.com/products/matlab/).
+
+!!! note
+    Note that using `Matlab` requires having a valid license which might be available through your university or institution.
+
+#### Configuration
+
+Make sure to have the following environment variables defined:
+
+```bash
+export MATLAB_HOME="/path/to/your/matlab/bin/"
+export PATH=${MATLAB_HOME}:${PATH}
+export MATLABCMD="${MATLAB_HOME}/matlab"
+```
+
+### PETPVC
+
+You can find more details about `PETPVC` [here](https://github.com/UCL/PETPVC).
+
+#### Installation
+
+You can find the official instructions in the README of [this page](https://github.com/UCL/PETPVC).
+
+You have basically three options:
+
+- Use pre-built binaries, available [here](https://github.com/UCL/PETPVC/releases).
+- [Use the official conda package](https://anaconda.org/conda-forge/petpvc).
+- [Build from source](https://github.com/UCL/PETPVC?tab=readme-ov-file#installation-from-source-instructions).
+
+!!! note
+    If building from source, do not forget to compile in RELEASE mode, otherwise, partial volume correction will be very slow.
+
+### SPM12
+
+You can find more details about `SPM12` [here](http://www.fil.ion.ucl.ac.uk/spm/).
+
+Note that `SPM12` works with [Matlab](#matlab) such that clinica pipelines which require `SPM12`, will also need a `Matlab` installation.
+
+If you cannot install `Matlab`, you can install [SPM standalone](#spm12-standalone).
+
+#### Installation
+
+##### On Linux
+
+Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux).
+
+##### On MacOS
+
+Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)).
+
+!!! note
+    For systems running on MacOS Big Sur, a [development version of SPM12](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) as well as a more recent release of the MCR (minimum 2019a) are required.
+
+#### Configuration
+
+Make sure to have the following environment variable defined:
+
+```bash
+export SPM_HOME="/path/to/your/spm12"
+```
+
+You must also add `SPM` to the `MATLAB` path variable if you installed it as a toolbox.
+
+To do so, add the following line to your `startup.m` file located in your *initial working folder*, by default `~/Documents/MATLAB` (see [here](https://fr.mathworks.com/help/matlab/ref/startup.html) for more details).
+
+If the file does not exist, you can create it and type inside:
+
+```matlab
+addpath('/path/to/your/spm12');
+```
+
+You can also replace the previous line by the following, assuming the `$SPM_HOME` environment variable is set in your `~/.bashrc` file.
+
+```matlab
+[~, spmhome] = system('source ~/.bashrc > /dev/null; echo $SPM_HOME;');
+spmhome = strsplit(spmhome,'\n');
+addpath(spmhome{end-1});
+```
+
+!!! Note
+    `zsh` shell users will have to replace `~/.bashrc` by `~/.zshrc`.
+
+### SPM12 standalone
+
+If you want to install `SPM12` without installing [Matlab](#matlab), you will need to install two things:
+
+- The Matlab runtime (often abbreviated into MCR), for which no license is required.
+- The SPM standalone itself.
+
+#### Installation
+
+You can find details on how to install these on [this page](https://www.fil.ion.ucl.ac.uk/spm/docs/installation/standalone/).
+
+#### Configuration
+
+!!! note
+    If you followed the installation instructions, you should have set the environment variable `$LD_LIBRARY_PATH`.
+
+In addition, you need to define the following environment variables:
+
+```bash
+export MCR_HOME="/path/to/your/MCR/"
+export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
+export SPM_HOME="/path/to/your/spmstandalone/home/"
+```
+
+!!! note
+    You still need to define `$SPM_HOME` even if using `spm standalone`, otherwise you will get a Clinica error.
+    Clinica will still use spm standalone if these variables are set correctly.
+
+## Autocompletion
 
 <!-- # Autocomplete system
 eval "$(register-python-argcomplete clinica)" -->
@@ -121,21 +319,3 @@ eval "$(register-python-argcomplete clinica)" -->
     source ~/.bash_completion.d/python-argcomplete.sh
     ```
 
-You must also add SPM to the MATLAB path variable if you installed it as a toolbox.
-To do so, add the following line to your `startup.m` file located in your *initial working folder*, by default `~/Documents/MATLAB` (see [here](https://fr.mathworks.com/help/matlab/ref/startup.html) for more details).
-If the file does not exist, you can create it and type inside:
-
-```matlab
-addpath('/path/to/your/spm12');
-```
-
-You can also replace the previous line by the following, assuming the `SPM_HOME` environment variable is set in your `~/.bashrc` file.
-
-```matlab
-[~, spmhome] = system('source ~/.bashrc > /dev/null; echo $SPM_HOME;');
-spmhome = strsplit(spmhome,'\n');
-addpath(spmhome{end-1});
-```
-
-!!! Note
-    `zsh` shell users will have to replace `~/.bashrc` by `~/.zshrc`.

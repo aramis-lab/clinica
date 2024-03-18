@@ -19,7 +19,6 @@ You need to process your data with the [`t1-freesurfer` pipeline](../T1_FreeSurf
 Do not hesitate to have a look at the paragraph **[Specifying what surface data to use](#advanced-specifying-what-surface-data-to-use)** if you want to use your own surface feature.
 
 ## Dependencies
-<!--If you installed the docker image of Clinica, nothing is required.-->
 
 If you only installed the core of Clinica, this pipeline needs the installation of **Matlab** and **FreeSurfer 6.0** on your computer.
 You can find how to install these software packages on the [third-party](../../Third-party) page.

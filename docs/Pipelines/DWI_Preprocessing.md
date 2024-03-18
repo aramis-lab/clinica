@@ -22,11 +22,9 @@ computing a single multiplicative bias field from the corrected b0 image(s) as i
 
 ## Dependencies
 
-<!--If you installed the docker image of Clinica, nothing is required.-->
+If you only installed the core of Clinica, the `dwi-preprocessing-*` pipeline needs the installation of [ANTs](../Third-party.md#ants), [FSL](../Third-party.md#fsl), and [MRtrix3](../Third-party.md#mrtrix3) on your computer.
 
-If you only installed the core of Clinica, the `dwi-preprocessing-*` pipeline needs the installation of **ANTs**, **FSL**, and **MRtrix3** on your computer.
-Extra installation of **Convert3D** will be needed for the `dwi-preprocessing-using-t1` pipeline.
-You can find how to install these software packages on the [third-party](../../Third-party) page.
+Extra installation of [Convert3D](../Third-party.md#convert3d) will be needed for the `dwi-preprocessing-using-t1` pipeline.
 
 ## Running the pipeline
 
