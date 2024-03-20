@@ -1,3 +1,4 @@
+import warnings
 from os import PathLike
 
 """This module contains SPM utilities."""
@@ -77,50 +78,51 @@ def get_tpm() -> PathLike:
     return tpm_file_glob[0]
 
 
-def spm_standalone_is_available():
-    """Tell if SPM standalone can be used.
+def use_spm_standalone_if_available() -> bool:
+    """Use SPM Standalone with MATLAB Common Runtime if it can be used on the user system.
 
-    Returns:
-        True if SPM standalone is detected, False otherwise. Note that it does not guarantee that SPM (classical) is
-        up and running in the system.
+    Returns
+    -------
+    bool :
+        True if spm standalone was found and successfully configured.
+        False otherwise.
+
+    Raises
+    ------
+    FileNotFoundError :
+        If the environment variables are set to non-existent folders.
     """
     import os
-    from os.path import expandvars, isdir
-
-    use_spm_stand = False
-    if all(elem in os.environ.keys() for elem in ["SPMSTANDALONE_HOME", "MCR_HOME"]):
-        if isdir(expandvars("$SPMSTANDALONE_HOME")) and isdir(expandvars("$MCR_HOME")):
-            use_spm_stand = True
-        else:
-            raise FileNotFoundError(
-                "[Error] $SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder"
-            )
-    return use_spm_stand
-
-
-def use_spm_standalone():
-    """Use SPM Standalone with MATLAB Common Runtime."""
-    import os
-
-    from nipype.interfaces import spm
+    import warnings
 
     from clinica.utils.stream import cprint
 
-    # This section of code determines whether to use SPM standalone or not
-    if all(elem in os.environ.keys() for elem in ["SPMSTANDALONE_HOME", "MCR_HOME"]):
-        spm_standalone_home = os.getenv("SPMSTANDALONE_HOME")
-        mcr_home = os.getenv("MCR_HOME")
-        if os.path.exists(spm_standalone_home) and os.path.exists(mcr_home):
-            cprint("SPM standalone has been found and will be used in this pipeline")
+    if all(elem in os.environ.keys() for elem in ("SPMSTANDALONE_HOME", "MCR_HOME")):
+        if os.path.isdir(os.path.expandvars("$SPMSTANDALONE_HOME")) and os.path.isdir(
+            os.path.expandvars("$MCR_HOME")
+        ):
+            spm_standalone_home = os.getenv("SPMSTANDALONE_HOME")
+            mcr_home = os.getenv("MCR_HOME")
+            cprint(
+                f"SPM standalone has been found at {spm_standalone_home}, "
+                f"with an MCR at {mcr_home} and will be used in this pipeline"
+            )
             matlab_command = _get_platform_dependant_matlab_command(
                 spm_standalone_home, mcr_home
             )
-            spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_command, use_mcr=True)
-            cprint(f"Using SPM standalone version {spm.SPMCommand().version}")
-        else:
-            raise FileNotFoundError(
-                "$SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder "
-            )
+            _configure_spm_nipype_interface(matlab_command)
+            return True
+        raise FileNotFoundError(
+            "[Error] $SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder"
+        )
+    warnings.warn(
+        "SPM standalone is not available on this system. "
+        "The pipeline will try to use SPM and Matlab instead. "
+        "If you want to rely on spm standalone, please make sure "
+        "to set the following environment variables: "
+        "$SPMSTANDALONE_HOME, $MCR_HOME, and $SPM_HOME."
+    )
+    return False
 
 
 def _get_platform_dependant_matlab_command(
@@ -137,3 +139,12 @@ def _get_platform_dependant_matlab_command(
     raise SystemError(
         f"Clinica only support macOS and Linux. Your system is {user_system}."
     )
+
+
+def _configure_spm_nipype_interface(matlab_command: str) -> str:
+    from nipype.interfaces import spm
+
+    from clinica.utils.stream import cprint
+
+    spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_command, use_mcr=True)
+    cprint(f"Using SPM standalone version {spm.SPMCommand().version}")

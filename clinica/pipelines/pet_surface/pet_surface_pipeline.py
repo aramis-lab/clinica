@@ -356,7 +356,6 @@ class PetSurface(PETPipeline):
         import nipype.pipeline.engine as npe
 
         import clinica.pipelines.pet_surface.pet_surface_utils as utils
-        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         full_pipe = npe.MapNode(
             niu.Function(
@@ -378,7 +377,6 @@ class PetSurface(PETPipeline):
                     "desikan_right",
                     "destrieux_left",
                     "destrieux_right",
-                    "spm_standalone_is_available",
                     "is_longitudinal",
                 ],
                 output_names=[],
@@ -423,13 +421,6 @@ class PetSurface(PETPipeline):
             os.path.dirname(os.path.realpath(__file__))
         )
         full_pipe.inputs.is_longitudinal = self.parameters["longitudinal"]
-
-        # This section of code determines whether to use SPM standalone or not
-        if spm_standalone_is_available():
-            use_spm_standalone()
-            full_pipe.inputs.spm_standalone_is_available = True
-        else:
-            full_pipe.inputs.spm_standalone_is_available = False
 
         # Connection
         # ==========

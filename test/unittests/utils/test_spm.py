@@ -6,36 +6,23 @@ import pytest
 
 
 def test_spm_standalone_is_available_no_env_variable():
-    from clinica.utils.spm import spm_standalone_is_available
+    from clinica.utils.spm import use_spm_standalone_if_available
 
-    assert not spm_standalone_is_available()
-
-
-def test_spm_standalone_is_available_error(tmp_path):
-    from clinica.utils.spm import spm_standalone_is_available
-
-    not_a_folder = tmp_path / "file.txt"
-    not_a_folder.touch()
-
-    with mock.patch.dict(
-        os.environ,
-        {
-            "SPMSTANDALONE_HOME": str(not_a_folder),
-            "MCR_HOME": str(not_a_folder),
-        },
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "SPM standalone is not available on this system. The pipeline will try to use SPM and Matlab instead. "
+            "If you want to rely on spm standalone, please make sure to set the following environment variables: "
+            "$SPMSTANDALONE_HOME, $MCR_HOME, and $SPM_HOME."
+        ),
     ):
-        with pytest.raises(
-            FileNotFoundError,
-            match=re.escape(
-                "[Error] $SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder"
-            ),
-        ):
-            spm_standalone_is_available()
+        assert not use_spm_standalone_if_available()
 
 
-def test_spm_standalone_is_available(tmp_path):
-    from clinica.utils.spm import spm_standalone_is_available
+def test_spm_standalone_is_available(tmp_path, mocker):
+    from clinica.utils.spm import use_spm_standalone_if_available
 
+    mocker.patch("clinica.utils.spm._configure_spm_nipype_interface", return_value=None)
     with mock.patch.dict(
         os.environ,
         {
@@ -43,11 +30,11 @@ def test_spm_standalone_is_available(tmp_path):
             "MCR_HOME": str(tmp_path),
         },
     ):
-        assert spm_standalone_is_available()
+        assert use_spm_standalone_if_available()
 
 
-def test_use_spm_standalone(tmp_path):
-    from clinica.utils.spm import use_spm_standalone
+def test_use_spm_standalone_if_available_error(tmp_path):
+    from clinica.utils.spm import use_spm_standalone_if_available
 
     non_existent_folder = tmp_path / "foo"
 
@@ -61,10 +48,10 @@ def test_use_spm_standalone(tmp_path):
         with pytest.raises(
             FileNotFoundError,
             match=re.escape(
-                "$SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder"
+                "[Error] $SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder"
             ),
         ):
-            use_spm_standalone()
+            use_spm_standalone_if_available()
 
 
 @pytest.mark.parametrize(

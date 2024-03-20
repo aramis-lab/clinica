@@ -129,7 +129,7 @@ class T1VolumeTissueSegmentation(Pipeline):
 
         from clinica.utils.filemanip import unzip_nii, zip_nii
         from clinica.utils.nipype import container_from_filename, fix_join
-        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+        from clinica.utils.spm import use_spm_standalone_if_available
 
         from .t1_volume_tissue_segmentation_utils import (
             ApplySegmentationDeformation,
@@ -139,8 +139,7 @@ class T1VolumeTissueSegmentation(Pipeline):
             zip_list_files,
         )
 
-        if spm_standalone_is_available():
-            use_spm_standalone()
+        use_spm_standalone_if_available()
 
         # Get <subject_id> (e.g. sub-CLNC01_ses-M000) from input_node
         # and print begin message

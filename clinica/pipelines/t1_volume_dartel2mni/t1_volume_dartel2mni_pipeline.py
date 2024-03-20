@@ -221,14 +221,13 @@ class T1VolumeDartel2MNI(Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import unzip_nii
-        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+        from clinica.utils.spm import use_spm_standalone_if_available
 
         from ..t1_volume_dartel2mni import (
             t1_volume_dartel2mni_utils as dartel2mni_utils,
         )
 
-        if spm_standalone_is_available():
-            use_spm_standalone()
+        use_spm_standalone_if_available()
 
         unzip_tissues_node = npe.MapNode(
             nutil.Function(
