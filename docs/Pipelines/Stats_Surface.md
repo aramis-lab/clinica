@@ -74,6 +74,7 @@ The main outputs for the group comparison are:
 - `<group_id>_glm.json` is a JSON file containing all the model information of the analysis (i.e. what you wrote on the command line).
 
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measurement of `<group_1>` is lower than (`lt`) the measurement of `<group_2>`".
+
 The pipeline includes both contrasts so `*<group_2>-lt-<group_1>*` files are also saved.
 
 The FWHM value corresponds to the size in mm of the kernel used to smooth the surface and can be 5, 10, 15, 20.
@@ -126,7 +127,8 @@ sub-CLNC0007      ses-M000       Male      AD       78.3
 sub-CLNC0008      ses-M000       Female    AD       73.2
 ```
 
-Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file.
+!!! note
+    Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file.
 
 We call this file `ADvsHC_participants.tsv`.
 
@@ -138,17 +140,6 @@ As a result, the command line will be:
 clinica run statistics-surface caps_directory ADvsHC t1-freesurfer group_comparison ADvsHC_participants.tsv group -c age -c sex
 ```
 
-The parameters of the command line are stored in the `group-ADvsHC_glm.json` file:
-
-```javascript
-{
-"DesignMatrix": "1 + age + sex + group"
-"StringFormatTSV": "%s %f %f"
-"Contrast": "group"
-"ClusterThreshold": 0.001
-}
-```
-
 The results of the group comparison between AD and HC are given by the `group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_correctedPValue.jpg` file and is illustrated as follows:
 ![Corrected p-value map](../img/StatsSurfStat_images/ContrastNegative-CorrectedPValue.jpg)
 *<center>Visualization of corrected p-value map.</center>*
@@ -158,9 +149,8 @@ The blue area corresponds to the vertex-based corrected p-value and the yellow a
 ### Correlation analysis
 
 Let's now assume that you are interested in knowing whether cortical thickness is correlated with age using the same population as above, namely `ADvsHC_participants.tsv`.
-The contrast will become `age` and we will choose `correlation` instead of `group_comparison`.
 
-The command line is simply:
+The contrast will become `age` and we will choose `correlation` instead of `group_comparison`. The command line is:
 
 ```Text
 clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation ADvsHC_participants.tsv age -c group -c sex
@@ -170,7 +160,7 @@ clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation A
 
 !!! cite "Example of paragraph (group comparison):"
     These results have been obtained using the `statistics-surface` command of Clinica [[Routier et al., 2021](https://doi.org/10.3389/fninf.2021.689675)].
-    More precisely, a point-wise, vertex-to-vertex model based on the Matlab SurfStat toolbox (<http://www.math.mcgill.ca/keith/surfstat/>) was used to conduct a group comparison of whole brain cortical thickness.
+    More precisely, a point-wise, vertex-to-vertex model based on the Brainstat Python library (<https://brainstat.readthedocs.io/en/master/>) was used to conduct a group comparison of whole brain cortical thickness.
     The data were smoothed using a Gaussian kernel with a full width at half maximum (FWHM) set to `<FWHM>` mm.
     The general linear model was used to control for the effect of `<covariate_1>`, ... and `<covariate_N>`.
     Statistics were corrected for multiple comparisons using the random field theory for non-isotropic images [[Worsley et al., 1999](http://dx.doi.org/10.1002/(SICI)1097-0193(1999)8:2/3<98::AID-HBM5>3.0.CO;2-F)].
