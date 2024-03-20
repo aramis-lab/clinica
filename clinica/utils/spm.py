@@ -101,7 +101,6 @@ def spm_standalone_is_available():
 def use_spm_standalone():
     """Use SPM Standalone with MATLAB Common Runtime."""
     import os
-    import platform
 
     from nipype.interfaces import spm
 
@@ -113,17 +112,28 @@ def use_spm_standalone():
         mcr_home = os.getenv("MCR_HOME")
         if os.path.exists(spm_standalone_home) and os.path.exists(mcr_home):
             cprint("SPM standalone has been found and will be used in this pipeline")
-            if platform.system().lower().startswith("darwin"):
-                matlab_cmd = (
-                    f"cd {spm_standalone_home} && ./run_spm12.sh {mcr_home} script"
-                )
-            elif platform.system().lower().startswith("linux"):
-                matlab_cmd = f"{os.path.join(spm_standalone_home, 'run_spm12.sh')} {mcr_home} script"
-            else:
-                raise SystemError("Clinica only support macOS and Linux")
-            spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+            matlab_command = _get_platform_dependant_matlab_command(
+                spm_standalone_home, mcr_home
+            )
+            spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_command, use_mcr=True)
             cprint(f"Using SPM standalone version {spm.SPMCommand().version}")
         else:
             raise FileNotFoundError(
                 "$SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder "
             )
+
+
+def _get_platform_dependant_matlab_command(
+    spm_standalone_home: str, mcr_home: str
+) -> str:
+    import os
+    import platform
+
+    user_system = platform.system().lower()
+    if user_system.startswith("darwin"):
+        return f"cd {spm_standalone_home} && ./run_spm12.sh {mcr_home} script"
+    if user_system.startswith("linux"):
+        return f"{os.path.join(spm_standalone_home, 'run_spm12.sh')} {mcr_home} script"
+    raise SystemError(
+        f"Clinica only support macOS and Linux. Your system is {user_system}."
+    )
