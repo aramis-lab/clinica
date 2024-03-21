@@ -74,10 +74,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     from clinica.pydra.shared_workflows.smoothing import build_smoothing_workflow
     from clinica.pydra.utils import sanitize_fwhm
     from clinica.utils.pet import get_suvr_mask
-    from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+    from clinica.utils.spm import use_spm_standalone_if_available
 
-    if spm_standalone_is_available():
-        use_spm_standalone()
+    use_spm_standalone_if_available()
 
     parameters = _check_pipeline_parameters(parameters)
 

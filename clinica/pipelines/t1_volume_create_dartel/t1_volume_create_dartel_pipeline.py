@@ -224,10 +224,9 @@ class T1VolumeCreateDartel(Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import unzip_nii
-        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+        from clinica.utils.spm import use_spm_standalone_if_available
 
-        if spm_standalone_is_available():
-            use_spm_standalone()
+        use_spm_standalone_if_available()
 
         unzip_node = npe.MapNode(
             nutil.Function(

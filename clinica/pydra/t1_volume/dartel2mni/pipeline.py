@@ -26,10 +26,9 @@ def build_core_workflow(
     from clinica.pydra.shared_workflows.smoothing import build_smoothing_workflow
     from clinica.pydra.t1_volume.dartel2mni.tasks import prepare_flowfields_task
     from clinica.pydra.utils import sanitize_fwhm
-    from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+    from clinica.utils.spm import use_spm_standalone_if_available
 
-    if spm_standalone_is_available():
-        use_spm_standalone()
+    use_spm_standalone_if_available()
 
     input_spec = pydra.specs.SpecInfo(
         name="Input",

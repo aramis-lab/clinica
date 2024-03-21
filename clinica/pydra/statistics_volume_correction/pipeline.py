@@ -23,17 +23,15 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     wf : Workflow
         The core workflow.
     """
-    from os.path import abspath, dirname, exists, join, pardir
     from typing import Any
 
     import numpy as np
 
     import clinica.pydra.statistics_volume_correction.task as utils
     from clinica.pydra.tasks import download_mni_template_2009a
-    from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+    from clinica.utils.spm import use_spm_standalone_if_available
 
-    if spm_standalone_is_available():
-        use_spm_standalone()
+    use_spm_standalone_if_available()
 
     query = {"pattern": parameters["t_map"] + "*", "description": "statistics t map"}
 

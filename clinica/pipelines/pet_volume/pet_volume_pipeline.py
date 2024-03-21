@@ -418,7 +418,7 @@ class PETVolume(PETPipeline):
         from nipype.interfaces.petpvc import PETPVC
 
         from clinica.utils.filemanip import unzip_nii
-        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+        from clinica.utils.spm import use_spm_standalone_if_available
 
         from .pet_volume_utils import (
             apply_binary_mask,
@@ -431,8 +431,7 @@ class PETVolume(PETPipeline):
             pet_pvc_name,
         )
 
-        if spm_standalone_is_available():
-            use_spm_standalone()
+        use_spm_standalone_if_available()
 
         # Initialize pipeline
         # ===================
