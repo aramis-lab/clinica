@@ -207,7 +207,7 @@ def test_check_spm_alone_error_matlab_not_installed(tmp_path):
         with pytest.raises(
             ClinicaMissingDependencyError,
             match=re.escape(
-                "[Error] Clinica could not find SPM software: the matlab "
+                "[Error] Clinica could not find spm software: the matlab "
                 "command is not present in your PATH environment."
             ),
         ):

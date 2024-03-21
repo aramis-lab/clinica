@@ -37,8 +37,8 @@ class ThirdPartySoftware(str, Enum):
     MCR = "MCR"
     MRTRIX = "mrtrix"
     PETPVC = "petpvc"
-    SPM = "SPM"
-    SPMSTANDALONE = "SPM Standalone"
+    SPM = "spm"
+    SPMSTANDALONE = "spm standalone"
 
 
 class SoftwareEnvironmentVariable:
