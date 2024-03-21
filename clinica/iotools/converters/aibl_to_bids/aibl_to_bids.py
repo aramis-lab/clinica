@@ -40,12 +40,10 @@ def convert(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from clinica.utils.check_dependency import check_dcm2niix
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
 
-    check_dcm2niix()
-
+    check_software(ThirdPartySoftware.DCM2NIIX)
     output_dataset.mkdir(parents=True, exist_ok=True)
-
     if not clinical_data_only:
         _convert_images(
             input_dataset,
@@ -54,7 +52,6 @@ def convert(
             overwrite,
             n_procs=n_procs,
         )
-
     _convert_clinical_data(input_clinical_data, output_dataset)
 
 

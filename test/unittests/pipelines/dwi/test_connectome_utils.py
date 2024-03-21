@@ -1,12 +1,14 @@
+from pathlib import Path
+
 import pytest
 
 
 def test_get_luts(mocker):
     from clinica.pipelines.dwi.connectome.utils import get_luts
 
-    mocked_freesurfer_home = "/Applications/freesurfer/7.2.0"
+    mocked_freesurfer_home = Path("/Applications/freesurfer/7.2.0")
     mocker.patch(
-        "clinica.utils.check_dependency.check_environment_variable",
+        "clinica.utils.check_dependency.get_freesurfer_home",
         return_value=mocked_freesurfer_home,
     )
     assert get_luts() == [f"{mocked_freesurfer_home}/FreeSurferColorLUT.txt"] * 2

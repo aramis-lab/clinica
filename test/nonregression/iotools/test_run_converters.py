@@ -116,30 +116,29 @@ def test_run_habs_to_bids(cmdopt, tmp_path):
 
 def test_run_ukb_to_bids(cmdopt, tmp_path):
     from clinica.iotools.converters.ukb_to_bids.ukb_to_bids import convert_images
-    from clinica.utils.check_dependency import check_dcm2niix
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "UkbToBids")
     output_dir = tmp_path / "bids"
     clinical_data_directory = input_dir / "clinical_data"
 
-    check_dcm2niix()
+    check_software(ThirdPartySoftware.DCM2NIIX)
     convert_images(
         input_dir / "unorganized", output_dir / "bids", clinical_data_directory
     )
-
     compare_folders(output_dir / "bids", ref_dir / "bids", output_dir)
 
 
 def test_run_genfi_to_bids(cmdopt, tmp_path):
     from clinica.iotools.converters.genfi_to_bids.genfi_to_bids import convert_images
-    from clinica.utils.check_dependency import check_dcm2niix
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "GenfiToBids")
     output_dir = tmp_path / "bids"
 
-    check_dcm2niix()
+    check_software(ThirdPartySoftware.DCM2NIIX)
     convert_images(
         input_dir / "unorganized",
         output_dir,
@@ -147,5 +146,4 @@ def test_run_genfi_to_bids(cmdopt, tmp_path):
         gif=False,
         path_to_clinical_tsv=None,
     )
-
     compare_folders(output_dir, ref_dir / "bids", output_dir)

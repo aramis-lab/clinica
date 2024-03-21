@@ -1,5 +1,6 @@
 import os
 import re
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -13,7 +14,7 @@ def test_spm_standalone_is_available_no_env_variable():
         match=re.escape(
             "SPM standalone is not available on this system. The pipeline will try to use SPM and Matlab instead. "
             "If you want to rely on spm standalone, please make sure to set the following environment variables: "
-            "$SPMSTANDALONE_HOME, $MCR_HOME, and $SPM_HOME."
+            "$SPMSTANDALONE_HOME, and $MCR_HOME"
         ),
     ):
         assert not use_spm_standalone_if_available()
@@ -34,9 +35,11 @@ def test_spm_standalone_is_available(tmp_path, mocker):
 
 
 def test_use_spm_standalone_if_available_error(tmp_path):
+    from clinica.utils.exceptions import ClinicaEnvironmentVariableError
     from clinica.utils.spm import use_spm_standalone_if_available
 
     non_existent_folder = tmp_path / "foo"
+    non_existent_folder.touch()
 
     with mock.patch.dict(
         os.environ,
@@ -46,9 +49,9 @@ def test_use_spm_standalone_if_available_error(tmp_path):
         },
     ):
         with pytest.raises(
-            FileNotFoundError,
+            ClinicaEnvironmentVariableError,
             match=re.escape(
-                "[Error] $SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder"
+                "The SPMSTANDALONE_HOME environment variable you gave is not a folder"
             ),
         ):
             use_spm_standalone_if_available()
@@ -62,18 +65,18 @@ def test_use_spm_standalone_if_available_error(tmp_path):
     ],
 )
 def test_get_platform_dependant_matlab_command(mocker, platform, expected_command):
-    from clinica.utils.spm import _get_platform_dependant_matlab_command
+    from clinica.utils.spm import _get_platform_dependant_matlab_command  # noqa
 
     mocker.patch("platform.system", return_value=platform)
 
     assert (
-        _get_platform_dependant_matlab_command("/foo/bar", "/foo/bar/baz")
+        _get_platform_dependant_matlab_command(Path("/foo/bar"), Path("/foo/bar/baz"))
         == expected_command
     )
 
 
 def test_get_platform_dependant_matlab_command_error(mocker):
-    from clinica.utils.spm import _get_platform_dependant_matlab_command
+    from clinica.utils.spm import _get_platform_dependant_matlab_command  # noqa
 
     mocker.patch("platform.system", return_value="foo")
 
@@ -81,4 +84,4 @@ def test_get_platform_dependant_matlab_command_error(mocker):
         SystemError,
         match="Clinica only support macOS and Linux. Your system is foo.",
     ):
-        _get_platform_dependant_matlab_command("/foo/bar", "/foo/bar/baz")
+        _get_platform_dependant_matlab_command(Path("/foo/bar"), Path("/foo/bar/baz"))
