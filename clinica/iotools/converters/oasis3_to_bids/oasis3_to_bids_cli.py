@@ -20,7 +20,6 @@ def cli(
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
     from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import convert_images
-    from clinica.utils.check_dependency import check_dcm2niix
     from clinica.utils.stream import cprint
 
     convert_images(dataset_directory, bids_directory, clinical_data_directory)

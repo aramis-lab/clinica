@@ -14,15 +14,11 @@ __all__ = [
 
 
 def get_luts() -> List[str]:
-    from pathlib import Path
-
-    from clinica.utils.check_dependency import check_environment_variable
-
-    freesurfer_home = Path(check_environment_variable("FREESURFER_HOME", "Freesurfer"))
+    from clinica.utils.check_dependency import get_freesurfer_home
 
     return [
-        str(freesurfer_home / "FreeSurferColorLUT.txt"),
-        str(freesurfer_home / "FreeSurferColorLUT.txt"),
+        str(get_freesurfer_home() / "FreeSurferColorLUT.txt"),
+        str(get_freesurfer_home() / "FreeSurferColorLUT.txt"),
     ]
 
 

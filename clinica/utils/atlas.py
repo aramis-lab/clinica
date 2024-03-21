@@ -136,12 +136,11 @@ class FSLAtlas(BaseAtlas):
     """FSL atlases look for the labels in the FSL folder (requires FSL)."""
 
     def __init__(self, name: str, roi_filename: str, atlas_filename: str):
-        from .check_dependency import check_environment_variable
+        from .check_dependency import get_fsl_home
 
         super().__init__(name, roi_filename)
         self.atlas_filename = atlas_filename
-        fsl_dir = Path(check_environment_variable("FSLDIR", "FSL"))
-        self.atlas_dir = fsl_dir / "data" / "atlases" / "JHU"
+        self.atlas_dir = get_fsl_home() / "data" / "atlases" / "JHU"
 
 
 class JHUDTI811mm(FSLAtlas):

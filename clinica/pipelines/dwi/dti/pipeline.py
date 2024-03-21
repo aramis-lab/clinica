@@ -241,8 +241,6 @@ class DwiDti(Pipeline):
 
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        from pathlib import Path
-
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix as mrtrix
         import nipype.interfaces.utility as nutil
@@ -251,7 +249,7 @@ class DwiDti(Pipeline):
         from nipype.interfaces.mrtrix.preprocess import DWI2Tensor
         from nipype.interfaces.mrtrix3 import TensorMetrics
 
-        from clinica.utils.check_dependency import check_environment_variable
+        from clinica.utils.check_dependency import get_fsl_home
 
         from .tasks import compute_statistics_on_atlases_task, get_caps_filenames_task
         from .utils import (
@@ -288,8 +286,9 @@ class DwiDti(Pipeline):
         register_fa = npe.Node(interface=RegistrationSynQuick(), name="3a-Register_FA")
         if self.parameters["random_seed"] is not None:
             register_fa.inputs.random_seed = self.parameters["random_seed"]
-        fsl_dir = Path(check_environment_variable("FSLDIR", "FSL"))
-        fa_map = str(fsl_dir / "data" / "atlases" / "JHU" / "JHU-ICBM-FA-1mm.nii.gz")
+        fa_map = str(
+            get_fsl_home() / "data" / "atlases" / "JHU" / "JHU-ICBM-FA-1mm.nii.gz"
+        )
         register_fa.inputs.fixed_image = fa_map
 
         ants_transforms = npe.Node(

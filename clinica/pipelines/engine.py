@@ -763,32 +763,13 @@ class Pipeline(Workflow):
         Returns:
             self: A Pipeline object.
         """
-        import clinica.utils.check_dependency as chk
+        from clinica.utils.check_dependency import check_binary, check_software
 
-        # Checking functions preparation
-        check_software = {
-            # 'matlab': chk.check_matlab,
-            "ants": chk.check_ants,
-            "convert3d": chk.check_convert3d,
-            "spm": chk.check_spm,
-            "freesurfer": chk.check_freesurfer,
-            "fsl": chk.check_fsl,
-            "mrtrix": chk.check_mrtrix,
-            "matlab": chk.check_matlab,
-            "petpvc": chk.check_petpvc,
-        }
-        check_binary = chk.is_binary_present
-        # check_toolbox = chk.is_toolbox_present
-        # check_pipeline = chk.is_pipeline_present
-
-        # Load the info.json file
         if not self.info:
             self._load_info()
-
-        # Dependencies checking
         for d in self.info["dependencies"]:
             if d["type"] == "software":
-                check_software[d["name"]]()
+                check_software(d["name"])
             elif d["type"] == "binary":
                 check_binary(d["name"])
             elif d["type"] == "toolbox":
@@ -799,7 +780,6 @@ class Pipeline(Workflow):
                 raise Exception(
                     f"Pipeline.check_dependencies() Unknown dependency type: '{d['type']}'."
                 )
-
         self._check_custom_dependencies()
 
         return self

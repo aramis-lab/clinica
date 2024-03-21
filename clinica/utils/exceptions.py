@@ -9,6 +9,10 @@ class ClinicaMissingDependencyError(ClinicaException):
     """Base class for Clinica dependencies errors."""
 
 
+class ClinicaEnvironmentVariableError(ClinicaException):
+    """Something is wrong with an environment variable managed by Clinica."""
+
+
 class ClinicaBIDSError(ClinicaException):
     """Base class for BIDS errors."""
 

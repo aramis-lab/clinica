@@ -3,17 +3,104 @@
 These functions can check binaries, software (e.g. FreeSurfer) or toolboxes (e.g. SPM).
 """
 import functools
-from typing import List, Optional, Tuple
+import os
+from enum import Enum
+from pathlib import Path
+from typing import Optional, Tuple, Union
 
 from clinica.utils.exceptions import ClinicaMissingDependencyError
 
+__all__ = [
+    "ThirdPartySoftware",
+    "SoftwareEnvironmentVariable",
+    "get_fsl_home",
+    "get_freesurfer_home",
+    "get_mcr_home",
+    "get_spm_standalone_home",
+    "get_spm_home",
+    "is_binary_present",
+    "check_binary",
+    "check_environment_variable",
+    "check_software",
+]
 
-def is_binary_present(binary: str) -> bool:
+
+class ThirdPartySoftware(str, Enum):
+    """Possible third party software that clinica depends on."""
+
+    ANTS = "ants"
+    CONVERT3D = "convert3d"
+    DCM2NIIX = "dcm2niix"
+    FREESURFER = "freesurfer"
+    FSL = "fsl"
+    MATLAB = "matlab"
+    MCR = "MCR"
+    MRTRIX = "mrtrix"
+    PETPVC = "petpvc"
+    SPM = "spm"
+    SPMSTANDALONE = "spm standalone"
+
+
+class SoftwareEnvironmentVariable:
+    """Represents an environment variable name linked to a specific software.
+
+    Attributes
+    ----------
+    name : str
+        The name of the environment variable.
+
+    software : ThirdPartySoftware
+        The name of the software related to the environment variable.
+    """
+
+    def __init__(self, name: str, software: Union[str, ThirdPartySoftware]):
+        self.name = name
+        self.software = ThirdPartySoftware(software)
+
+
+def get_fsl_home() -> Path:
+    """Return the path to the home directory of FSL."""
+    return check_environment_variable(
+        SoftwareEnvironmentVariable("FSLDIR", ThirdPartySoftware.FSL)
+    )
+
+
+def get_freesurfer_home() -> Path:
+    """Return the path to the home directory of Freesurfer."""
+    return check_environment_variable(
+        SoftwareEnvironmentVariable("FREESURFER_HOME", ThirdPartySoftware.FREESURFER)
+    )
+
+
+def get_mcr_home() -> Path:
+    """Return the path to the home directory of Matlab MCR."""
+    return check_environment_variable(
+        SoftwareEnvironmentVariable("MCR_HOME", ThirdPartySoftware.MCR)
+    )
+
+
+def get_spm_standalone_home() -> Path:
+    """Return the path to the home directory of SPM standalone"""
+    return check_environment_variable(
+        SoftwareEnvironmentVariable(
+            "SPMSTANDALONE_HOME", ThirdPartySoftware.SPMSTANDALONE
+        )
+    )
+
+
+def get_spm_home() -> Path:
+    """Return the path to the home directory of SPM."""
+    return check_environment_variable(
+        SoftwareEnvironmentVariable("SPM_HOME", ThirdPartySoftware.SPM)
+    )
+
+
+def is_binary_present(name: str) -> bool:
     """Check if a binary is present.
 
     Parameters
     ----------
-    binary : str
+    name : str
         The name of the program.
 
     Returns
@@ -43,77 +130,82 @@ def is_binary_present(binary: str) -> bool:
 
     try:
         devnull = open(os.devnull)
-        subprocess.Popen([binary], stdout=devnull, stderr=devnull).communicate()
+        subprocess.Popen([name], stdout=devnull, stderr=devnull).communicate()
     except OSError as e:
         if e.errno == errno.ENOENT:
             return False
     return True
 
 
-def check_environment_variable(environment_variable: str, software_name: str) -> str:
+def check_binary(name: str):
+    if not is_binary_present(name):
+        raise ClinicaMissingDependencyError(
+            f"Command {name} is unknown on your system. "
+            "Please verify that you have correctly installed the corresponding software."
+        )
+
+
+def check_environment_variable(variable: SoftwareEnvironmentVariable) -> Path:
     """Check if the provided environment variable is set and returns its value.
 
     Parameters
     ----------
-    environment_variable : str
-        The name of the environment variable to check.
-
-    software_name : str
-        The name of the software related to the environment variable.
+    variable : SoftwareEnvironmentVariable
+        The software environment variable to check.
 
     Returns
     -------
-    str :
-        The value associated to the environment variable.
+    Path :
+        The path value associated to the environment variable.
 
     Raises
     ------
-    ClinicaMissingDependencyError
+    ClinicaMissingDependencyError :
         If the variable is not set.
+
+    ClinicaEnvironmentVariableError :
         If the variable associated value is not a directory.
 
     Examples
     --------
-    >>> check_environment_variable("ANTSPATH", "ANTs")
+    >>> check_environment_variable(SoftwareEnvironmentVariable("ANTSPATH", ThirdPartySoftware.ANTS))
     '/opt/ANTs/bin/'
     """
-    import os
+    from .exceptions import ClinicaEnvironmentVariableError
 
-    content_var = os.environ.get(environment_variable, "")
-    if not content_var:
+    if not (content_var := os.environ.get(variable.name, "")):
         raise ClinicaMissingDependencyError(
-            f"Clinica could not find {software_name} software: "
-            f"the {environment_variable} variable is not set."
+            f"Clinica could not find {variable.software.value} software: "
+            f"the {variable.name} variable is not set."
         )
     if not os.path.isdir(content_var):
-        raise ClinicaMissingDependencyError(
-            f"The {environment_variable} environment variable "
+        raise ClinicaEnvironmentVariableError(
+            f"The {variable.name} environment variable "
             f"you gave is not a folder (content: {content_var})."
         )
-    return content_var
+    return Path(content_var)
 
 
 def _check_software(
-    name: str,
-    binaries: Optional[List[str]] = None,
-    env: Optional[Tuple[str, str]] = None,
+    name: ThirdPartySoftware,
+    binaries: Optional[Tuple[str]] = None,
+    environment_variables: Optional[Tuple[SoftwareEnvironmentVariable]] = None,
     complementary_info: Optional[str] = None,
 ) -> None:
     """Check if the software is available.
 
     Parameters
     ----------
-    name : str
+    name : ThirdPartySoftware
         Name of the software.
 
-    binaries : list of str, optional
-        List of associated binaries to check.
+    binaries : tuple of str, optional
+        Tuple of associated binaries to check.
         If None, nothing is checked.
 
-    env : (str, str), optional
-        Tuple (environment variable, software name).
-        This environment variable will be checked, meaning
-        that it should be set and point to an existing folder.
+    environment_variables : tuple of SoftwareEnvironmentVariable, optional
+        These environment variables will be checked, meaning
+        that they should be set and point to existing folders.
         If None, nothing is checked.
 
     complementary_info : str, optional
@@ -126,62 +218,65 @@ def _check_software(
     ClinicaMissingDependencyError
         If the software checks fail.
     """
-    if env:
-        check_environment_variable(*env)
-    binaries = binaries or []
+    if environment_variables:
+        for variable in environment_variables:
+            check_environment_variable(variable)
+    binaries = binaries or ()
     complementary_info = complementary_info or ""
     for binary in binaries:
         if not is_binary_present(binary):
             raise ClinicaMissingDependencyError(
-                f"[Error] Clinica could not find {name} software: "
+                f"[Error] Clinica could not find {name.value} software: "
                 f"the {binary} command is not present in your PATH "
                 f"environment. {complementary_info}"
             )
 
 
-check_dcm2niix = functools.partial(
+_check_dcm2niix = functools.partial(
     _check_software,
-    name="dcm2niix",
-    binaries=["dcm2niix"],
+    name=ThirdPartySoftware.DCM2NIIX,
+    binaries=("dcm2niix",),
     complementary_info=(
         "This software can be downloaded and installed "
         "from https://github.com/rordenlab/dcm2niix."
     ),
 )
 
-check_ants = functools.partial(
+_check_ants = functools.partial(
     _check_software,
-    name="ANTs",
-    binaries=["N4BiasFieldCorrection", "antsRegistrationSyNQuick.sh"],
+    name=ThirdPartySoftware.ANTS,
+    binaries=("N4BiasFieldCorrection", "antsRegistrationSyNQuick.sh"),
 )
 
-check_convert3d = functools.partial(
+_check_convert3d = functools.partial(
     _check_software,
-    name="Convert3D",
-    binaries=["c3d_affine_tool", "c3d"],
+    name=ThirdPartySoftware.CONVERT3D,
+    binaries=("c3d_affine_tool", "c3d"),
 )
 
 _check_freesurfer = functools.partial(
     _check_software,
-    name="FreeSurfer",
-    binaries=["mri_convert", "recon-all"],
-    env=("FREESURFER_HOME", "FreeSurfer"),
+    name=ThirdPartySoftware.FREESURFER,
+    binaries=("mri_convert", "recon-all"),
+    environment_variables=(
+        SoftwareEnvironmentVariable("FREESURFER_HOME", ThirdPartySoftware.FREESURFER),
+    ),
     complementary_info=(
         "Do you have the line `source $FREESURFER_HOME/SetUpFreeSurfer.sh` "
         "in your configuration file?"
     ),
 )
 
-check_mrtrix = functools.partial(
+_check_mrtrix = functools.partial(
     _check_software,
-    name="MRtrix",
-    binaries=["transformconvert", "mrtransform", "dwi2response", "tckgen"],
+    name=ThirdPartySoftware.MRTRIX,
+    binaries=("transformconvert", "mrtransform", "dwi2response", "tckgen"),
 )
 
-check_petpvc = functools.partial(
+_check_petpvc = functools.partial(
     _check_software,
-    name="PETPVC",
-    binaries=[
+    name=ThirdPartySoftware.PETPVC,
+    binaries=(
         "petpvc",
         "pvc_diy",
         "pvc_gtm",
@@ -196,30 +291,63 @@ check_petpvc = functools.partial(
         "pvc_simulate",
         "pvc_stc",
         "pvc_vc",
-    ],
+    ),
 )
 
-check_spm = functools.partial(
+
+def _check_spm():
+    """Check that SPM is installed, either regular with Matlab or as a standalone."""
+    try:
+        _check_spm_standalone()
+    except ClinicaMissingDependencyError as e1:
+        try:
+            _check_spm_alone()
+        except ClinicaMissingDependencyError as e2:
+            raise ClinicaMissingDependencyError(
+                "Clinica could not find the SPM software (regular or standalone).\n"
+                "Please make sure you have installed SPM in one of these two ways "
+                "and have set the required environment variables.\n"
+                f"Full list of errors: \n- {e1}\n- {e2}"
+            )
+
+
+_check_spm_standalone = functools.partial(
     _check_software,
-    name="SPM",
-    env=("SPM_HOME", "SPM"),
+    name=ThirdPartySoftware.SPMSTANDALONE,
+    environment_variables=(
+        SoftwareEnvironmentVariable(
+            "SPMSTANDALONE_HOME", ThirdPartySoftware.SPMSTANDALONE
+        ),
+        SoftwareEnvironmentVariable("MCR_HOME", ThirdPartySoftware.MCR),
+    ),
 )
 
-check_matlab = functools.partial(
+_check_spm_alone = functools.partial(
     _check_software,
-    name="Matlab",
-    binaries=["matlab"],
+    name=ThirdPartySoftware.SPM,
+    environment_variables=(
+        SoftwareEnvironmentVariable("SPM_HOME", ThirdPartySoftware.SPM),
+    ),
+    binaries=("matlab",),
+)
+
+_check_matlab = functools.partial(
+    _check_software,
+    name=ThirdPartySoftware.MATLAB,
+    binaries=("matlab",),
 )
 
 _check_fsl = functools.partial(
     _check_software,
-    name="FSL",
-    binaries=["bet", "flirt", "fast", "first"],
-    env=("FSLDIR", "FSL"),
+    name=ThirdPartySoftware.FSL,
+    binaries=("bet", "flirt", "fast", "first"),
+    environment_variables=(
+        SoftwareEnvironmentVariable("FSLDIR", ThirdPartySoftware.FSL),
+    ),
 )
 
 
-def check_fsl() -> None:
+def _check_fsl_above_version_five() -> None:
     """Check FSL software."""
     import nipype.interfaces.fsl as fsl
 
@@ -235,8 +363,8 @@ def check_fsl() -> None:
         cprint(msg=str(e), lvl="error")
 
 
-def check_freesurfer() -> None:
-    """Check FreeSurfer software."""
+def _check_freesurfer_above_version_six() -> None:
+    """Check FreeSurfer software >= 6.0.0."""
     import nipype.interfaces.freesurfer as freesurfer
 
     from clinica.utils.stream import cprint
@@ -249,3 +377,29 @@ def check_freesurfer() -> None:
             )
     except Exception as e:
         cprint(msg=str(e), lvl="error")
+
+
+def check_software(software: Union[str, ThirdPartySoftware]):
+    software = ThirdPartySoftware(software)
+    if software == ThirdPartySoftware.ANTS:
+        return _check_ants()
+    if software == ThirdPartySoftware.FSL:
+        return _check_fsl_above_version_five()
+    if software == ThirdPartySoftware.FREESURFER:
+        return _check_freesurfer_above_version_six()
+    if (
+        software == ThirdPartySoftware.SPM
+        or software == ThirdPartySoftware.SPMSTANDALONE
+        or software == ThirdPartySoftware.MCR
+    ):
+        return _check_spm()
+    if software == ThirdPartySoftware.MATLAB:
+        return _check_matlab()
+    if software == ThirdPartySoftware.DCM2NIIX:
+        return _check_dcm2niix()
+    if software == ThirdPartySoftware.PETPVC:
+        return _check_petpvc()
+    if software == ThirdPartySoftware.MRTRIX:
+        return _check_mrtrix()
+    if software == ThirdPartySoftware.CONVERT3D:
+        return _check_convert3d()

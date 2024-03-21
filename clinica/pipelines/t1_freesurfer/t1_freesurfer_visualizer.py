@@ -31,11 +31,10 @@ class T1FreeSurferVisualizer(ce.CmdParser):
         import os
         import subprocess
 
-        from clinica.utils.check_dependency import check_freesurfer
+        from clinica.utils.check_dependency import ThirdPartySoftware, check_software
         from clinica.utils.stream import cprint
 
-        check_freesurfer()
-
+        check_software(ThirdPartySoftware.FREESURFER)
         participant_id = args.participant_id
         session_id = args.session_id
         subject_id = participant_id + "_" + session_id

@@ -43,11 +43,10 @@ def cli(
     """
     from clinica.iotools.bids_utils import _write_bidsignore
     from clinica.iotools.converters.genfi_to_bids.genfi_to_bids import convert_images
-    from clinica.utils.check_dependency import check_dcm2niix
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
     from clinica.utils.stream import cprint
 
-    check_dcm2niix()
-
+    check_software(ThirdPartySoftware.DCM2NIIX)
     convert_images(
         dataset_directory,
         bids_directory,
@@ -56,7 +55,6 @@ def cli(
         clinical_data_tsv,
     )
     _write_bidsignore(str(bids_directory))
-
     cprint("Conversion to BIDS succeeded.")
 
 
