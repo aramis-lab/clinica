@@ -298,12 +298,7 @@ In addition, you need to define the following environment variables:
 ```bash
 export MCR_HOME="/path/to/your/MCR/"
 export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
-export SPM_HOME="/path/to/your/spmstandalone/home/"
 ```
-
-!!! note
-    You still need to define `$SPM_HOME` even if using `spm standalone`, otherwise you will get a Clinica error.
-    Clinica will still use spm standalone if these variables are set correctly.
 
 ## Autocompletion
 
