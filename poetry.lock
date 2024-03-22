@@ -126,28 +126,23 @@ optional = false
 python-versions = ">=3.8"
 files = [
     {file = "biopython-1.83-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e2cc737906d8de47eedbc4476f711b960c16a65daa8cdd021875398c81999a09"},
-    {file = "biopython-1.83-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:741abad84165e4caf0c80e485054135f51c21177e50ac6fcc502a45a6e8f7311"},
     {file = "biopython-1.83-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2df408be9816dd98c28fe181ea93fb6e0d375bf1763ad9ed503ac30bb2df5b1a"},
     {file = "biopython-1.83-cp310-cp310-win32.whl", hash = "sha256:a0c1c70789c7e2a26563db5ba533fb9fea0cc1f2c7bc7ad240146cb223ba44a3"},
     {file = "biopython-1.83-cp310-cp310-win_amd64.whl", hash = "sha256:56f03f43c183acb88c082bc31e5f047fcc6d0aceb5270fbd29c31ab769795b86"},
     {file = "biopython-1.83-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:a01dfdad7210f2fd5c4f36606278f91dbfdda6dac02347206d13cc618e79fe32"},
-    {file = "biopython-1.83-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:3686ff61df3f24ecf6f23826e4fe5172c5e5f745099bc8fbb176f5304582f88f"},
     {file = "biopython-1.83-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c756c0b81702c705141c87c2805203df01c6d4cf290e8cefd48cbc61a3c85b82"},
     {file = "biopython-1.83-cp311-cp311-win32.whl", hash = "sha256:0496f2a6e6e060d8ff0f34784ad15ed342b10cfe282020efe168286f0c14c479"},
     {file = "biopython-1.83-cp311-cp311-win_amd64.whl", hash = "sha256:8552cc467429b555c604b84fc174c33923bf7e4c735774eda505f1d5a9c2feab"},
     {file = "biopython-1.83-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:0d5ce14755a6b49dea4743cf6929570afe5becb66ad222194984c7bf04218f86"},
-    {file = "biopython-1.83-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:29708772651d930e808cd24c519fd4f39b2e719668944c0aa1eaf0b1deef9f48"},
     {file = "biopython-1.83-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0b35aa095de0fa8339b70664797d0e83322a1a9d512e2fd52d4e872df5189f56"},
     {file = "biopython-1.83-cp312-cp312-win32.whl", hash = "sha256:118425a210cb3d184c7a78154c5646089366faf124cd46c6056ca7f9302b94ad"},
     {file = "biopython-1.83-cp312-cp312-win_amd64.whl", hash = "sha256:ca94e8ea8907de841a515af55acb1922a9de99b3144c738a193f2a75e4726078"},
     {file = "biopython-1.83-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:e37884fe39e4560bf5934a4ec4ba7f7fe0e7c091053d03d05b20a70557167717"},
-    {file = "biopython-1.83-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:4cc011346bc8af264e3d3ea98c665b6ebe20e503f1dd50ee7e0bc913941b4c6e"},
     {file = "biopython-1.83-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fd9bc6fef3f6a10043635a75e1a77c9dce877375140e81059c67c73d4ce65c4c"},
     {file = "biopython-1.83-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:2c3584122a5daca25b3914a32c52785b051c11518cd5e111e9e89ee04a6234fe"},
     {file = "biopython-1.83-cp38-cp38-win32.whl", hash = "sha256:641c1a860705d6740eb16c6147b2b730b05a8f5974db804c14d5faa8a1446085"},
     {file = "biopython-1.83-cp38-cp38-win_amd64.whl", hash = "sha256:94b68e550619e1b6e3784ed8cecb62f201d70d8b87d3a90365291f065ab42bd9"},
     {file = "biopython-1.83-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:81d1e2515b380e1876720ba79dbf50f8ef3a38cc38ba5953ef61ec20d0934ee2"},
-    {file = "biopython-1.83-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:30fa323694ee640978888d0c8c4f61f951d119ccec52b1dd5fe0668cfffb6648"},
     {file = "biopython-1.83-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ec82350c24cdcf34a8d4a5f189d0ff7dc025658098a60e6f0e681d24b6a1414e"},
     {file = "biopython-1.83-cp39-cp39-win32.whl", hash = "sha256:e914f7161b3831d7c58db33cc5c7ca64b42c9877c5a776a8313e7a5fd494f8de"},
     {file = "biopython-1.83-cp39-cp39-win_amd64.whl", hash = "sha256:aae1b156a76907c2abfe9d141776b0aead65695ea914eaecdf12bd1e8991f869"},
@@ -648,6 +643,25 @@ files = [
 
 [package.extras]
 testing = ["hatch", "pre-commit", "pytest", "tox"]
+
+[[package]]
+name = "fileformats"
+version = "0.11.1"
+description = "Classes for representing different file formats in Python classes for use in type hinting in data workflows"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "fileformats-0.11.1-py3-none-any.whl", hash = "sha256:cc2d0bdffe983b8066225ed7a8740d6b6ffaa7fd00b0df4c1fac86a95d99d289"},
+    {file = "fileformats-0.11.1.tar.gz", hash = "sha256:62b02f5cfc69ab07d73727cba262f0d9a292e6a285425e149ee79ff6e13930e3"},
+]
+
+[package.dependencies]
+typing-extensions = {version = ">=4.6.3", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["black", "codespell", "fileformats[test]", "flake8", "flake8-pyproject", "pre-commit"]
+docs = ["docutils (>=0.10)", "furo (>=2022.2.14.1)", "mock (>1.0)", "numpydoc (>=0.6.0)", "packaging", "sphinx (>=2.1.2)", "sphinx-argparse (>=0.2.0)", "sphinx-click (>=3.1)"]
+test = ["pydra (>=0.23.0a0)", "pytest (>=6.2.5)", "pytest-cov (>=2.12.1)", "pytest-env (>=0.6.2)"]
 
 [[package]]
 name = "filelock"
@@ -2217,27 +2231,33 @@ tests = ["black", "chardet", "tox"]
 
 [[package]]
 name = "pydra"
-version = "0.22"
+version = "0.23"
 description = "Pydra dataflow engine"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pydra-0.22-py3-none-any.whl", hash = "sha256:b764b147f80e19ca900ab15bbccc2e16529d353019b6d26285a1ba0bd2c2efde"},
-    {file = "pydra-0.22.tar.gz", hash = "sha256:8e37e621f61c76e54b82dfbb1b53fe46dd117c76872d9e2ac2b4c7b95fb89d4c"},
+    {file = "pydra-0.23-py3-none-any.whl", hash = "sha256:d8ba780575a95cf3886fa70cc54d20d4b62043bfeb8a4aa71a784b8e55b2d8cd"},
+    {file = "pydra-0.23.tar.gz", hash = "sha256:1965741230ab2684812b3e2a65b2b0ce0dfff11ae7afc32edec41c5c4618d05a"},
 ]
 
 [package.dependencies]
 attrs = ">=19.1.0"
 cloudpickle = ">=2.0.0"
 etelemetry = ">=0.2.2"
+fileformats = ">=0.8"
 filelock = ">=3.0.0"
+importlib_resources = {version = ">=5.7", markers = "python_version < \"3.11\""}
+platformdirs = ">=2"
+typing_extensions = {version = ">=4.6.3", markers = "python_version < \"3.10\""}
+typing_utils = {version = ">=0.1.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
 all = ["pydra[dev,doc]"]
 dask = ["dask", "distributed"]
 dev = ["black", "pre-commit", "pydra[test]"]
-doc = ["packaging", "sphinx (>=2.1.2)", "sphinx_rtd_theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-versioning"]
+doc = ["packaging", "sphinx (==6.2.1)", "sphinx_rtd_theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-versioning"]
 docs = ["pydra[doc]"]
+psij = ["psij-python"]
 test = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "tornado"]
 tests = ["pydra[test]"]
 
@@ -3348,6 +3368,20 @@ files = [
 ]
 
 [[package]]
+name = "typing-utils"
+version = "0.1.0"
+description = "utils to inspect Python type annotations"
+optional = false
+python-versions = ">=3.6.1"
+files = [
+    {file = "typing_utils-0.1.0-py3-none-any.whl", hash = "sha256:6bd26f3d38a5dd526ca3a59f0a451ccb59bcee9dc829c872dd6c0aae4ec8bbef"},
+    {file = "typing_utils-0.1.0.tar.gz", hash = "sha256:8ff6b6705414b82575ad5ae0925ac414a9650fb8c5718289b1327dec61252f65"},
+]
+
+[package.extras]
+test = ["pytest"]
+
+[[package]]
 name = "urllib3"
 version = "2.2.0"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -3594,4 +3628,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "70a9b8279f22f54c4a48d98856919365c39a46cd48cc562aa3aa14bb52cc7979"
+content-hash = "875037ad56e2a7b407025acaa06a4787e135b01c274be5acbaaec800c3c4acff"
