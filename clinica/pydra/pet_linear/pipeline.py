@@ -39,7 +39,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
         name="Input",
         fields=[
             ("_graph_checksums", ty.Any),
-            ("T1w", str, {"mandatory": True}),
+            ("T1w", str, {"help_string": "T1w", "mandatory": True}),
             ("pet", dict, {"tracer": parameters["acq_label"]}, {"mandatory": True}),
             ("t1w_to_mni", dict, {}, {"mandatory": True}),
         ],
