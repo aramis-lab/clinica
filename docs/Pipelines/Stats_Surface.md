@@ -6,15 +6,19 @@ This command performs statistical analysis (e.g. group comparison, correlation) 
 !!! warning
     Prior to release `0.7.3` of Clinica, this pipeline was relying on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/)
     designed for statistical analyses of univariate and multivariate surface and volumetric data using the GLM [[Worsley et al., 2009](http://dx.doi.org/10.1016/S1053-8119(09)70882-1)].
-    However, SurfStat was not maintained anymore and was requiring a valid Matlab installation.
+    However, SurfStat was not maintained anymore and was requiring a valid Matlab license.
     For these reason, the pipeline was completely rewritten to rely on [Brainstat](https://brainstat.readthedocs.io/en/master/)
     which is a pure Python implementation of SurfStat, offering a very similar API.
+    The different images produced by the pipeline are generated using [Nilearn](https://nilearn.github.io/stable/index.html), also a pure Python library.
     Please be aware that this pipeline has not been extensively tested with the new implementation.
     Do not hesitate to open a new issue on [GitHub](https://github.com/aramis-lab/clinica/issues) to report bugs you might encounter. 
 
 Surface-based measurements are analyzed on the FsAverage surface template (from FreeSurfer).
 
-Currently, this pipeline can handle cortical thickness measurements from T1 images [`t1-freesurfer` pipeline](./T1_FreeSurfer.md) or map of activity from PET data using [`pet-surface` pipeline](./PET_Surface.md).
+Currently, this pipeline can handle:
+
+- cortical thickness measurements from T1 images [`t1-freesurfer` pipeline](./T1_FreeSurfer.md)
+- map of activity from PET data using [`pet-surface` pipeline](./PET_Surface.md)
 
 ## Prerequisites
 
@@ -24,7 +28,7 @@ Do not hesitate to have a look at the paragraph **[Specifying what surface data 
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of **FreeSurfer 6.0** on your computer.
+If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer](../Third-party.md#freesurfer) on your computer.
 
 ## Running the pipeline
 
@@ -70,8 +74,6 @@ The main outputs for the group comparison are:
 
 - `<group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<label>_correctedPValue.jpg`: contains both the cluster level and the vertex level corrected p-value maps, based on the random field theory.
 - `<group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<label>_FDR.jpg`: contains corrected p-value maps, based on the false discovery rate (FDR).
-- `<group_id>_participants.tsv` is a copy of the `subject_visits_with_covariates_tsv` parameter file.
-- `<group_id>_glm.json` is a JSON file containing all the model information of the analysis (i.e. what you wrote on the command line).
 
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measurement of `<group_1>` is lower than (`lt`) the measurement of `<group_2>`".
 
@@ -80,9 +82,6 @@ The pipeline includes both contrasts so `*<group_2>-lt-<group_1>*` files are als
 The FWHM value corresponds to the size in mm of the kernel used to smooth the surface and can be 5, 10, 15, 20.
 
 Analysis with cortical thickness (respectively PET data) will be saved under the `_measure-ct` keyword (respectively the `_measure-<acq_label>` keyword).
-
-!!! tip
-    See the Example subsection for further clarification.
 
 ### Correlations analysis
 
@@ -94,8 +93,6 @@ The main outputs for the correlation are:
 - `<group_id>_correlation-<label>_contrast-<label>_measure-<label>_fwhm-<label>_FDR.jpg`: contains corrected p-value maps, based on the false discovery rate (FDR).
 - `<group_id>_correlation-<label>_contrast-<label>_measure-<label>_fwhm-<label>_T-statistics.jpg`: contains the maps of T statistics.
 - `<group_id>_correlation-<label>_contrast-<label>_measure-<label>_fwhm-<label>_Uncorrected p-value.jpg`: contains the maps of uncorrected p-values.
-- `<group_id>_participants.tsv` is a copy of the `subject_visits_with_covariates_tsv` parameter file.
-- `<group_id>_glm.json` is a JSON file summarizing the parameters of the analysis (i.e. what you wrote on the command line).
 
 The `correlation-<label>` describes the factor of the model, which can be for example `age`.
 
@@ -110,7 +107,7 @@ Analysis with cortical thickness (respectively PET data) will be saved under the
 
 ### Comparison analysis
 
-Let's assume that you want to perform a group comparison of cortical thickness between patients with Alzheimer’s disease (`group_1` will be called `AD`) and healthy subjects (`group_2` will be called `HC`).
+Let's assume that you want to perform a **group comparison** of cortical thickness between patients with Alzheimer’s disease (`group_1` will be called `AD`) and healthy subjects (`group_2` will be called `HC`).
 `ADvsHC` will define the `group_label`.
 
 The TSV file containing the participants and covariates will look like this:
@@ -127,9 +124,6 @@ sub-CLNC0007      ses-M000       Male      AD       78.3
 sub-CLNC0008      ses-M000       Female    AD       73.2
 ```
 
-!!! note
-    Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file.
-
 We call this file `ADvsHC_participants.tsv`.
 
 For this group comparison, we will use `age` and `sex` as covariates.
@@ -140,15 +134,11 @@ As a result, the command line will be:
 clinica run statistics-surface caps_directory ADvsHC t1-freesurfer group_comparison ADvsHC_participants.tsv group -c age -c sex
 ```
 
-The results of the group comparison between AD and HC are given by the `group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_correctedPValue.jpg` file and is illustrated as follows:
-![Corrected p-value map](../img/StatsSurfStat_images/ContrastNegative-CorrectedPValue.jpg)
-*<center>Visualization of corrected p-value map.</center>*
-
-The blue area corresponds to the vertex-based corrected p-value and the yellow area represents the cluster-based corrected p-value.
+The results of the group comparison between AD and HC are given by the `group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_correctedPValue.jpg` file.
 
 ### Correlation analysis
 
-Let's now assume that you are interested in knowing whether cortical thickness is correlated with age using the same population as above, namely `ADvsHC_participants.tsv`.
+Let's now assume that you are interested in knowing whether cortical thickness **is correlated with** age using the same population as above, namely `ADvsHC_participants.tsv`.
 
 The contrast will become `age` and we will choose `correlation` instead of `group_comparison`. The command line is:
 
@@ -177,14 +167,12 @@ clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation A
 
 ## (Advanced) Specifying what surface data to use
 
-If you run the help command line `clinica run statistics-surface -h`, you will find two optional flags:
+The optional flag `--custom_file CUSTOM_FILE` allows you to specify yourself what file should be taken in the `CAPS/subjects` directory.
 
-- `--feature_type FEATURE_TYPE` allows you to decide what feature type to take for your analysis.
-If it is `cortical_thickness` (default value), the thickness file for each hemisphere and each subject and session of the tsv file will be used.
-Keep in mind that those thickness files are generated using the `t1-freesurfer` pipeline, so be sure to have run it before using it! Other directly-implemented solutions are present but they are not yet released.
-- The other flag `--custom_file CUSTOM_FILE` allows you to specify yourself what file should be taken in the `CAPS/subjects` directory.
 `CUSTOM_FILE` is a string describing the folder hierarchy to find the file.
+
 For instance, let's say we want to manually indicate to use the cortical thickness.
+
 Here is the generic link to the surface data files:
 
     `CAPS/subjects/sub-*/ses-M*/t1/freesurfer_cross_sectional/sub-*_ses-M*/surf/*h.thickness.fwhm*.fsaverage.mgh`
@@ -200,9 +188,8 @@ Here is the generic link to the surface data files:
     As a result, we will get for `CUSTOM_FILE` of cortical thickness:
     `@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh`
 
-    You will finally need to define the name your surface feature `--feature_label FEATURE_LABEL`. It will appear in the `_measure-<FEATURE_LABEL>` of the output files once the pipeline has run.
-
-Note that `--custom_file` and `--feature_type` cannot be combined.
+    You will finally need to define the name your surface feature `--feature_label FEATURE_LABEL`.
+    It will appear in the `_measure-<FEATURE_LABEL>` of the output files once the pipeline has run.
 
 ## Appendix
 
