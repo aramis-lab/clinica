@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033-->
 # `statistics-surface` - Surface-based mass-univariate analysis with SurfStat
 
 This command performs statistical analysis (e.g. group comparison, correlation) on surface-based features using the general linear model (GLM).
@@ -6,11 +5,12 @@ This command performs statistical analysis (e.g. group comparison, correlation) 
 !!! warning
     Prior to release `0.7.3` of Clinica, this pipeline was relying on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/)
     designed for statistical analyses of univariate and multivariate surface and volumetric data using the GLM [[Worsley et al., 2009](http://dx.doi.org/10.1016/S1053-8119(09)70882-1)].
-    However, SurfStat was not maintained anymore and was requiring a valid Matlab license.
-    For these reason, the pipeline was completely rewritten to rely on [Brainstat](https://brainstat.readthedocs.io/en/master/)
+    SurfStat, as a Matlab toolbox, necessitates a valid Matlab license to be executed, which could be a heavy dependency for users.
+    Moreover, the maintenance of SurfStat ceased a few years ago which posed some issues, especially with newer versions of Matlab.
+    For these reasons, the pipeline was completely rewritten to rely on [Brainstat](https://brainstat.readthedocs.io/en/master/)
     which is a pure Python implementation of SurfStat, offering a very similar API.
     The different images produced by the pipeline are generated using [Nilearn](https://nilearn.github.io/stable/index.html), also a pure Python library.
-    Please be aware that this pipeline has not been extensively tested with the new implementation.
+    Although the dependencies have been reduced, please be aware that this pipeline has not been extensively tested with the new implementation.
     Do not hesitate to open a new issue on [GitHub](https://github.com/aramis-lab/clinica/issues) to report bugs you might encounter. 
 
 Surface-based measurements are analyzed on the FsAverage surface template (from FreeSurfer).
@@ -175,21 +175,24 @@ For instance, let's say we want to manually indicate to use the cortical thickne
 
 Here is the generic link to the surface data files:
 
-    `CAPS/subjects/sub-*/ses-M*/t1/freesurfer_cross_sectional/sub-*_ses-M*/surf/*h.thickness.fwhm*.fsaverage.mgh`
+`CAPS/subjects/sub-*/ses-M*/t1/freesurfer_cross_sectional/sub-*_ses-M*/surf/*h.thickness.fwhm*.fsaverage.mgh`
 
-    Example: `CAPS/subjects/sub-ADNI011S4075/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4075_ses-M000/surf/lh.thickness.fwhm15.fsaverage.mgh`
+Example: `CAPS/subjects/sub-ADNI011S4075/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4075_ses-M000/surf/lh.thickness.fwhm15.fsaverage.mgh`
 
-    Note that the file must be in the `CAPS/subjects` directory.
-    So my `CUSTOM_STRING` must only describe the path starting after the `subjects` folder.
-    So now, we just need to replace the `*` by the correct keywords, in order for the pipeline to catch the correct filenames.
-    `@subject` is the subject, `@session` the session, `@hemi` the hemisphere, `@fwhm` the full width at half maximum.
-    All those variables are already known, you just need to indicate where they are in the filename!
+Note that the file must be in the `CAPS/subjects` directory.
 
-    As a result, we will get for `CUSTOM_FILE` of cortical thickness:
-    `@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh`
+So my `CUSTOM_STRING` must only describe the path starting after the `subjects` folder. We need to replace the `*` by the correct keywords, in order for the pipeline to catch the correct filenames:
 
-    You will finally need to define the name your surface feature `--feature_label FEATURE_LABEL`.
-    It will appear in the `_measure-<FEATURE_LABEL>` of the output files once the pipeline has run.
+- `@subject` is the subject
+- `@session` is the session
+- `@hemi` is the hemisphere
+- `@fwhm` is the full width at half maximum
+
+All those variables are already known, you just need to indicate where they are in the filename! As a result, we will get for `CUSTOM_FILE` of cortical thickness:
+    
+`@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh`
+
+You will finally need to define the name your surface feature `--feature_label FEATURE_LABEL`. It will appear in the `_measure-<FEATURE_LABEL>` of the output files once the pipeline has run.
 
 ## Appendix
 
