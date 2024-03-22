@@ -63,9 +63,7 @@ Default value: `--modulate`.
 
 ### Tissue segmentation, bias correction and spatial normalization
 
-Results are stored in the following folder of the
-[CAPS hierarchy](../../CAPS/Specifications/#segmentation):
-`subjects/<participant_id>/<session_id>/t1/spm/segmentation`.
+Results are stored in the following folder of the [CAPS hierarchy](../CAPS/Specifications.md#segmentation): `subjects/<participant_id>/<session_id>/t1/spm/segmentation`.
 
 The main output files are:
 
@@ -81,9 +79,7 @@ The main output files are:
 
 ### Inter-subject registration using Dartel
 
-The final estimation of the gray matter template is stored under the following folder of the
-[CAPS hierarchy](../../CAPS/Specifications/#dartel):
-`groups/group-<group_label>/t1/group-<group_label>_template.nii.gz`
+The final estimation of the gray matter template is stored under the following folder of the [CAPS hierarchy](../CAPS/Specifications.md#dartel): `groups/group-<group_label>/t1/group-<group_label>_template.nii.gz`
 
 <center>![](../img/T1_Volume/ex_Dartel_template_GM.png)</center>
 *<center><small>Example of a group template calculated using DARTEL. Only the gray matter class is shown.</small></center>*
@@ -95,9 +91,7 @@ under the filename
 
 ### Dartel template to MNI
 
-Results are stored in the following folder of the
-[CAPS hierarchy](../../CAPS/Specifications/#dartel-to-mni):
-`subjects/<participant_id>/<session_id>/t1/spm/dartel/group-<group_label>`.
+Results are stored in the following folder of the [CAPS hierarchy](../CAPS/Specifications.md#dartel-to-mni): `subjects/<participant_id>/<session_id>/t1/spm/dartel/group-<group_label>`.
 
 The main output files are:
 
@@ -109,16 +103,14 @@ The different tissue maps that have been registered to the MNI space and modulat
 
 ### Atlas statistics
 
-Results are stored in the following folder of the
-[CAPS hierarchy](../../CAPS/Specifications/#atlas-statistics):
-`subjects/<participant_id>/<session_id>/t1/spm/dartel/group-<group_label>/atlas_statistics/`.
+Results are stored in the following folder of the [CAPS hierarchy](../CAPS/Specifications.md#atlas-statistics): `subjects/<participant_id>/<session_id>/t1/spm/dartel/group-<group_label>/atlas_statistics/`.
 
 The main output file is:
 
 - `<source_file>_space-<space>_map-graymatter_statistics.tsv`: TSV files summarizing the regional statistics on the labelled atlas `<space>`.
 
 !!! note
-    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#t1-volume-pipeline-volume-based-processing-of-t1-weighted-mr-images).
+    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../CAPS/Specifications.md#t1-volume-pipeline---volume-based-processing-of-t1-weighted-mr-images).
 
 ## Going further
 

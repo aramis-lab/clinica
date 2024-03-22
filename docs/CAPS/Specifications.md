@@ -103,7 +103,7 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
 
 ### `t1-freesurfer` - FreeSurfer-based processing of T1-weighted MR images
 
-The outputs of the `t1-freesurfer` pipeline are split into two subfolders, the first one containing the FreeSurfer outputs and a second with additional outputs specific to Clinica.
+The outputs of the `t1-freesurfer` pipeline are split into two sub-folders, the first one containing the FreeSurfer outputs and a second with additional outputs specific to Clinica.
 
 FreeSurfer outputs:
 
@@ -152,7 +152,7 @@ The TSV files for Brodmann areas contain a selection of regions, see this link f
 The details of the white matter parcellation of FreeSurfer can be found here: [https://surfer.nmr.mgh.harvard.edu/pub/articles/salat_2008.pdf](https://surfer.nmr.mgh.harvard.edu/pub/articles/salat_2008.pdf).
 
 !!! Example "Example - Content of the TSV files"
-    Content of `sub-CLNC01_ses­-M00_T1w_segmentationVolumes.tsv`:
+    Content of `sub-CLNC01_ses­-M000_T1w_segmentationVolumes.tsv`:
 
     ```Text
     Measure:volume	Left-Lateral-Ventricle	Left-Inf-Lat-Vent	...
@@ -161,7 +161,7 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
 
     This file contains the volume of the different subcortical structures after segmentation.
 
-    Content of `sub-CLNC01_ses­-M00_T1w_parcellation-wm_volume.tsv`:
+    Content of `sub-CLNC01_ses­-M000_T1w_parcellation-wm_volume.tsv`:
     ```Text
     Measure:volume	wm-lh-bankssts	wm-lh-caudalanteriorcingulate ...
     /path/to/freesurfer/wm parcellation/ 2474.6	1863.7 ...
@@ -169,7 +169,7 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
     This file contains the volume of the different white matter regions after parcellation.
 
 
-    Content of `sub-CLNC01_ses­-M00_hemi-left_parcellation-desikan_thickness.tsv`:
+    Content of `sub-CLNC01_ses­-M000_hemi-left_parcellation-desikan_thickness.tsv`:
     ```Text
     lh.aparc.thickness	lh_bankssts_thickness	lh_caudalanteriorcingulate_thickness …
     /path/to/freesurfer/cortical thickness/parcellation 2.048 2.892 …
@@ -195,7 +195,7 @@ subjects/
 
 ### FreeSurfer longitudinal outputs
 
-The outputs are split into two subfolders, the first containing the FreeSurfer longitudinal outputs and a second with additional outputs specific to Clinica.
+The outputs are split into two sub-folders, the first containing the FreeSurfer longitudinal outputs and a second with additional outputs specific to Clinica.
 
 ```Text
 subjects/
@@ -227,7 +227,7 @@ subjects/
                   └─ <participant_id>_<session_id>_<long_id>_hemi-{left|right}_parcellation-<parcellation>_thickness.tsv
 ```
 
-where each file is explained in the `t1-freesurfer` sub-section.
+where each file is explained in the `t1-freesurfer` subsection.
 
 !!! Note
     The naming convention `<subject_name>.long.<template_name>` is imposed by FreeSurfer.
@@ -242,14 +242,19 @@ subjects/
    └─ <session_id>/
       └─ dwi/
          └─ preprocessing/
-            ├─ <source_file>_space-<space>_preproc.bval
-            ├─ <source_file>_space-<space>_preproc.bvec
-            ├─ <source_file>_space-<space>_preproc.nii.gz
+            ├─ <source_file>_space-<space>_desc-preproc_dwi.bval
+            ├─ <source_file>_space-<space>_desc-preproc_dwi.bvec
+            ├─ <source_file>_space-<space>_desc-preproc_dwi.nii.gz
             └─ <source_file>_space-<space>_brainmask.nii.gz
 ```
 
 The resulting DWI file after preprocessing.
-According to the subtype of pipeline run, `<space>` can be `T1w` ([`dwi-preprocessing-using-t1` pipeline](../../Pipelines/DWI_Preprocessing)) or `b0` ([`dwi-preprocessing-using-fieldmap` pipeline](../../Pipelines/DWI_Preprocessing)).
+
+According to the subtype of pipeline run, `<space>` can be:
+
+- `T1w` ([`dwi-preprocessing-using-t1` pipeline](../Pipelines/DWI_Preprocessing.md))
+- `b0` ([`dwi-preprocessing-using-fieldmap` pipeline](../Pipelines/DWI_Preprocessing.md))
+
 A brain mask of the preprocessed file is provided.
 
 ### `dwi-dti` - DTI-based processing of corrected DWI datasets
@@ -273,7 +278,14 @@ subjects/
 ```
 
 The DTI is saved under the `*_model-DTI_diffmodel.nii.gz` filename.
-The different maps based on the DTI are the fractional anisotropy (`FA`), mean diffusivity (`MD`), axial diffusivity (`AD`) and radial diffusivity (`RD`) parametric maps, as well as the directionally-encoded colour (DEC) FA (`DECFA`) map.
+
+The different maps based on the DTI are:
+
+- `FA`: fractional anisotropy.
+- `MD`: mean diffusivity.
+- `AD`: axial diffusivity.
+- `RD`: radial diffusivity.
+- `DECFA`: directionally-encoded colour (DEC) FA.
 
 Current atlases used for statistics are the 1mm version of `JHUDTI81`, `JHUTract0` and `JHUTract25` (see [Atlases page](../../Atlases) for further details).
 
