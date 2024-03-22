@@ -48,7 +48,7 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
 
     input_spec = pydra.specs.SpecInfo(
         name="Input",
-        fields=[("T1w", str, {"mandatory": True})],
+        fields=[("T1w", str, {"help_string": "T1w", "mandatory": True})],
         bases=(pydra.specs.BaseSpec,),
     )
 
