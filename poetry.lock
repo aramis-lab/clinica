@@ -2307,13 +2307,13 @@ pydra = ">=0.22"
 
 [[package]]
 name = "pydra-nipype1"
-version = "0.2.2"
+version = "0.3.0"
 description = "Tools for importing nipype 1.x interfaces into Pydra"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pydra-nipype1-0.2.2.tar.gz", hash = "sha256:404160298b788aa542b8a7a6b736f8ffe1dc441321547bd016c8e0fafda7cfb4"},
-    {file = "pydra_nipype1-0.2.2-py3-none-any.whl", hash = "sha256:3d3e292b871ff3cf10fb295a8525bd983dba54f42023e67a38371aab3bd86533"},
+    {file = "pydra_nipype1-0.3.0-py3-none-any.whl", hash = "sha256:884714184bbb13438c2ffda7b04b6ecc48deccddef9a5faf7cf2b770226ca0e0"},
+    {file = "pydra_nipype1-0.3.0.tar.gz", hash = "sha256:d2dd658c1eb82600bc831534e4590bc49c7645cba41671a24e0d06e943276051"},
 ]
 
 [package.dependencies]
@@ -3628,4 +3628,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "875037ad56e2a7b407025acaa06a4787e135b01c274be5acbaaec800c3c4acff"
+content-hash = "54250f4728652630a95eb3d33716a6de76bc936963c5b36e0e78e59706761eee"
