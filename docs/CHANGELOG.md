@@ -6,6 +6,30 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.8.0
+
+### Added
+
+- Python 3.12 is officially supported (see PR [#1065](https://github.com/aramis-lab/clinica/pull/1065))
+
+### Breaking changes
+
+- [DWI] Improve BIDS compliance for DWI preprocessing pipelines (see PR [#1050](https://github.com/aramis-lab/clinica/pull/1050))
+- Python 3.8 is not supported anymore (see PR [#1065](https://github.com/aramis-lab/clinica/pull/1065))
+
+### Enhanced
+
+- [ADNI2BIDS] The converter now takes fmri multiband into account (see PR [#1041](https://github.com/aramis-lab/clinica/pull/1041))
+- [DWI] Set the random seed in pipelines using ANTs (requires having ANTs >= 2.5) (see PR [#1071](https://github.com/aramis-lab/clinica/pull/1071))
+- [Pipelines] Using SPM standalone only requires to set `$SPMSTANDALONE_HOME` and `$MCR_HOME` (see PR [#1105](https://github.com/aramis-lab/clinica/pull/1105))
+- [DOC] The Third-party documentation page has been improved (see PR [#1099](https://github.com/aramis-lab/clinica/pull/1099))
+- [DOC] The documentation page for `StatisticsSurface` has been updated (see PR [#1100](https://github.com/aramis-lab/clinica/pull/1100))
+
+### Fixed
+
+- [ADNI2BIDS] Ignore real and imaginary scans outputted by dcm2niix (see PR [#1029](https://github.com/aramis-lab/clinica/pull/1029))
+- [ADNI2BIDS] Ignore ADC DWI images outputted by dcm2niix (see PR [#1061](https://github.com/aramis-lab/clinica/pull/1061))
+
 ## Clinica 0.7.7
 
 ### Enhanced
