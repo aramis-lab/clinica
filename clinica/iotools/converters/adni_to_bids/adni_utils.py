@@ -159,46 +159,7 @@ def _parse_month_from_visit_code(visit_code: str) -> int:
         svisit = visit_code[1:]
         svisit = svisit.replace('"','')
         svisit = svisit.replace('bl','0')
-        svisit = svisit.replace('m0','0')
-        svisit = svisit.replace('m03','3')
-        svisit = svisit.replace('m06','6')
-        svisit = svisit.replace('m12','12')
-        svisit = svisit.replace('m18','18')
-        svisit = svisit.replace('m24','24')
-        svisit = svisit.replace('m30','30')
-        svisit = svisit.replace('m36','36')
-        svisit = svisit.replace('m42','42')
-        svisit = svisit.replace('m48','48')
-        svisit = svisit.replace('m54','54')
-        svisit = svisit.replace('m60','60')
-        svisit = svisit.replace('m66','66')
-        svisit = svisit.replace('m72','72')
-        svisit = svisit.replace('m78','78')
-        svisit = svisit.replace('m84','84')
-        svisit = svisit.replace('m90','90')
-        svisit = svisit.replace('m96','96')
-        svisit = svisit.replace('m102','102')
-        svisit = svisit.replace('m106','106')
-        svisit = svisit.replace('m108','108')
-        svisit = svisit.replace('m114','114')
-        svisit = svisit.replace('m110','110')
-        svisit = svisit.replace('m126','126')
-        svisit = svisit.replace('m132','132')
-        svisit = svisit.replace('m138','138')
-        svisit = svisit.replace('m120','120')
-        svisit = svisit.replace('m204','204')
-        svisit = svisit.replace('m216','216')
-        svisit = svisit.replace('m222','222')
-        svisit = svisit.replace('m144','144')
-        svisit = svisit.replace('m150','150')
-        svisit = svisit.replace('m156','156')
-        svisit = svisit.replace('m192','192')
-        svisit = svisit.replace('m198','198')
-        svisit = svisit.replace('m186','186')
-        svisit = svisit.replace('m180','180')
-        svisit = svisit.replace('m168','168')
-        svisit = svisit.replace('m162','162')
-        svisit = svisit.replace('m174','174')
+        svisit = svisit.replace('m','') # Remove the 'm' prefix for month codes - MT 03-27-24
         return int(svisit)
     except Exception:
         raise ValueError(
@@ -1167,8 +1128,8 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                     file_name = os.path.basename(file)
                     scans_df["filename"] = path.join(mod_name, file_name)
                     converted_mod = find_conversion_mod(file_name)
-                    conversion_df = converted_dict[converted_mod]
-                    try:
+                    try: # Moved try from line 1171 to 1170 to catch KeyError: '18FFDG_pet' - MT 03-27-24
+                        conversion_df = converted_dict[converted_mod] 
                         scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
                         scans_df["scan_id"] = scan_id
                         if "Field_Strength" in conversion_df.columns.values:
@@ -1192,6 +1153,7 @@ def find_conversion_mod(file_name):
     from clinica.utils.pet import Tracer
 
     suffix = file_name.split("_")[-1].split(".")[0]
+
     if suffix == "T1w":
         return "t1"
     elif suffix == "FLAIR":
@@ -1200,6 +1162,14 @@ def find_conversion_mod(file_name):
         return "dwi"
     elif suffix == "bold":
         return "fmri"
+    elif suffix == "fmap":
+        return "fmap"
+    elif suffix == "ph":
+        return "fmap"
+    elif suffix == "e1":
+        return "fmap"
+    elif suffix == "e2":
+        return "fmap"
     elif suffix == "pet":
         tracer = file_name.split("trc-")[1].split("_")[0]
         if tracer in (Tracer.AV45, Tracer.FBB):
@@ -1207,7 +1177,7 @@ def find_conversion_mod(file_name):
         else:
             return f"{tracer}_pet"
     else:
-        raise ValueError(f"Conversion modality could not be found for file {file_name}")
+        print(f"Conversion modality could not be found for file {file_name}")
 
 
 def find_image_path(images, source_dir, modality, prefix, id_field):
@@ -1241,6 +1211,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
         image.VISCODE = image.VISCODE.replace('"','')
         # Base directory where to look for image files.
         seq_path = Path(source_dir) / str(image["Subject_ID"])
+        cprint(seq_path)
 
         # Generator finding files containing the image ID.
         find_file = filter(
@@ -1296,6 +1267,7 @@ def paths_to_bids(images, bids_dir, modality, mod_to_update=False):
         "dwi",
         "flair",
         "fmri",
+        "fmap",
         "fdg",
         "fdg_uniform",
         "pib",
@@ -1375,6 +1347,12 @@ def create_file(image, modality, bids_dir, mod_to_update):
             "to_center": False,
             "json": "y",
         },
+        "fmap": {
+            "output_path": "fmap",
+            "output_filename": "_fmap",
+            "to_center": False,
+            "json": "y",
+        },
         "fdg": {
             "output_path": "pet",
             "output_filename": f"_trc-{Tracer.FDG}_rec-{ReconstructionMethod.CO_REGISTERED_AVERAGED}_pet",
@@ -1420,19 +1398,20 @@ def create_file(image, modality, bids_dir, mod_to_update):
         modality = image.Tracer.lower()
 
     if not image.Path:
-        cprint(
-            msg=(
-                f"[{modality.upper()}] No path specified for {subject} "
-                f"in session {viscode}"
-            ),
-            lvl="info",
-        )
+        # Removed this, it clutters the output making it difficult to see what is converted - MT 03/29/24
+        # cprint(
+        #     msg=(
+        #         f"[{modality.upper()}] No path specified for {subject} "
+        #         f"in session {viscode}"
+        #     ),
+        #     lvl="info",
+        # )
         return nan
     else:
         cprint(
             msg=(
                 f"[{modality.upper()}] Processing subject {subject}"
-                f"in session {viscode}"
+                f" in session {viscode}"
             ),
             lvl="info",
         )
@@ -1441,6 +1420,55 @@ def create_file(image, modality, bids_dir, mod_to_update):
 
     image_path = image.Path
     image_id = image.Image_ID
+    fmap_flag = 0
+
+    if modality == "fmap":
+        fmap_path = image_path
+        replacements = {
+            "Axial_rsfMRI__Eyes_Open_": "ADNI_gre_field_mapping",
+            "Extended_Resting_State_fMRI": "ADNI_gre_field_mapping",
+            "Axial_fcMRI__EYES_OPEN_": "ADNI_gre_field_mapping",
+            "Axial_fcMRI__Eyes_Open_": "ADNI_gre_field_mapping",
+            "Resting_State_fMRI": "ADNI_gre_field_mapping",
+            "Axial_fcMRI": "ADNI_gre_field_mapping",
+            "Axial_rsfMRI__Eyes_Open_": "ADNI_gre_field_mapping",
+            "Axial_rsfMRI__EYES_OPEN_": "ADNI_gre_field_mapping",
+            "Axial_rsfMRI__Eyes_Open__-phase_P_to_A": "ADNI_gre_field_mapping",
+            "ADNI_gre_field_mapping_-phase_P_to_A": "ADNI_gre_field_mapping",
+            "ADNI_gre_field_mapping_0_angle__EYES_OPEN_": "ADNI_gre_field_mapping",
+            "Axial_fcMRI__EYES_OPEN_": "ADNI_gre_field_mapping"
+        }
+        fmap_path = image_path
+        for original, replacement in replacements.items():
+            fmap_path = fmap_path.replace(original, replacement)
+        fmap_path = fmap_path[:-9] # Remove the image identifier just check if the visit exists
+        if os.path.exists(fmap_path):
+            cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+            fmap_flag = 1
+        else:
+            fmap_path = fmap_path.replace("ADNI_gre_field_mapping", "Field_mapping")
+            if os.path.exists(fmap_path):
+                cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+                fmap_flag = 1
+            else:
+                fmap_path = fmap_path.replace("Field_mapping", "Field_Mapping")
+                if os.path.exists(fmap_path):
+                    cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+                    fmap_flag = 1
+                else:
+                    fmap_path = fmap_path.replace("Field_Mapping", "Field_Mapping_phase_R-L")
+                    if os.path.exists(fmap_path):
+                        cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+                        fmap_flag = 1
+                    else:
+                        fmap_path = fmap_path.replace("Field_Mapping_phase_R-L", "Axial_Field_Mapping")
+                        if os.path.exists(fmap_path):
+                            cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+                            fmap_flag = 1
+                        else:
+                            fmap_path = image_path
+                            fmap_flag = 0
+
     # If the original image is a DICOM, check if contains two DICOM
     # inside the same folder
     if image.Is_Dicom:
@@ -1480,79 +1508,101 @@ def create_file(image, modality, bids_dir, mod_to_update):
             zip_image = "n"
         else:
             zip_image = "y"
-
-        if image.Is_Dicom:
-            run_dcm2niix(
-                input_dir=image_path,
-                output_dir=output_path,
-                output_fmt=output_filename,
-                compress=True if zip_image == "y" else False,
-                bids_sidecar=True if generate_json == "y" else False,
-            )
-
-            # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
-            exception_t = glob(path.join(output_path, output_filename + "_t[0-9]*"))
-            for trigger_time in exception_t:
-                res = re.search(r"_t\d+\.", trigger_time)
-                no_trigger_time = trigger_time.replace(
-                    trigger_time[res.start() : res.end()], "."
+        
+        print(image_path)
+        print(output_path)
+        print(output_filename)
+        if modality == "fmap" and fmap_flag == 1:
+            fmap_image_ids = os.listdir(fmap_path)
+            for id in fmap_image_ids:
+                fmap_image_path = os.path.join(fmap_path, id)
+                run_dcm2niix(
+                    input_dir=fmap_image_path,
+                    output_dir=output_path,
+                    output_fmt=output_filename,
+                    compress=True if zip_image == "y" else False,
+                    bids_sidecar=True if generate_json == "y" else False,
                 )
-                os.rename(trigger_time, no_trigger_time)
-
-            # Removing ADC images if one is generated
-            adc_image = path.join(output_path, output_filename + "_ADC.nii.gz")
-            if os.path.exists(adc_image):
-                os.remove(adc_image)
-
-            nifti_file = path.join(output_path, output_filename + ".nii")
-            output_image = nifti_file + ".gz"
-
-            # Conditions to check if output NIFTI files exists,
-            # and, if DWI, if .bvec and .bval files are also present
-            nifti_exists = path.isfile(nifti_file) or path.isfile(output_image)
-            dwi_bvec_and_bval_exist = not (modality == "dwi") or (
-                path.isfile(path.join(output_path, output_filename + ".bvec"))
-                and path.isfile(path.join(output_path, output_filename + ".bval"))
-            )
-
-            # Check if conversion worked (output files exist)
-            if not nifti_exists or not dwi_bvec_and_bval_exist:
-                cprint(
-                    msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
-                    lvl="warning",
-                )
-                return nan
-
-            # Case when JSON file was expected, but not generated by dcm2niix
-            elif generate_json == "y" and not os.path.exists(
-                path.join(output_path, output_filename + ".json")
-            ):
-                cprint(
-                    msg=f"JSON file not generated by dcm2niix for subject {subject} and session {session}",
-                    lvl="warning",
-                )
-
-            if modality_specific[modality]["to_center"]:
-                center_nifti_origin(nifti_file, output_image)
-                os.remove(nifti_file)
-
+        elif modality == "fmap" and fmap_flag == 0:
+            do_nothing = 0
         else:
-            output_image = path.join(output_path, output_filename + ".nii.gz")
-            if modality_specific[modality]["to_center"]:
-                center_nifti_origin(image_path, output_image)
-                if not output_image:
-                    cprint(
-                        msg=(
-                            f"For subject {subject} in session {session}, "
-                            f"an error occurred whilst recentering Nifti image: {image_path}"
-                        ),
-                        lvl="error",
+            if image.Is_Dicom:
+                run_dcm2niix(
+                    input_dir=image_path,
+                    output_dir=output_path,
+                    output_fmt=output_filename,
+                    compress=True if zip_image == "y" else False,
+                    bids_sidecar=True if generate_json == "y" else False,
+                )
+
+                # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
+                exception_t = glob(path.join(output_path, output_filename + "_t[0-9]*"))
+                for trigger_time in exception_t:
+                    res = re.search(r"_t\d+\.", trigger_time)
+                    no_trigger_time = trigger_time.replace(
+                        trigger_time[res.start() : res.end()], "."
                     )
+                    os.rename(trigger_time, no_trigger_time)
+
+                # Removing ADC images if one is generated
+                adc_image = path.join(output_path, output_filename + "_ADC.nii.gz")
+                if os.path.exists(adc_image):
+                    os.remove(adc_image)
+
+                nifti_file = path.join(output_path, output_filename + ".nii")
+                output_image = nifti_file + ".gz"
+
+                # Conditions to check if output NIFTI files exists,
+                # and, if DWI, if .bvec and .bval files are also present
+                nifti_exists = path.isfile(nifti_file) or path.isfile(output_image)
+                dwi_bvec_and_bval_exist = not (modality == "dwi") or (
+                    path.isfile(path.join(output_path, output_filename + ".bvec"))
+                    and path.isfile(path.join(output_path, output_filename + ".bval"))
+                )
+
+                # Check if conversion worked (output files exist)
+                if not nifti_exists or not dwi_bvec_and_bval_exist:
+                    cprint(
+                        msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
+                        lvl="warning",
+                    )
+                    return nan
+
+                # Case when JSON file was expected, but not generated by dcm2niix
+                elif generate_json == "y" and not os.path.exists(
+                    path.join(output_path, output_filename + ".json")
+                ):
+                    cprint(
+                        msg=f"JSON file not generated by dcm2niix for subject {subject} and session {session}",
+                        lvl="warning",
+                    )
+
+                if modality_specific[modality]["to_center"]:
+                    center_nifti_origin(nifti_file, output_image)
+                    os.remove(nifti_file)
+
             else:
-                shutil.copy(image_path, output_image)
+                output_image = path.join(output_path, output_filename + ".nii.gz")
+                if modality_specific[modality]["to_center"]:
+                    center_nifti_origin(image_path, output_image)
+                    if not output_image:
+                        cprint(
+                            msg=(
+                                f"For subject {subject} in session {session}, "
+                                f"an error occurred whilst recentering Nifti image: {image_path}"
+                            ),
+                            lvl="error",
+                        )
+                else:
+                    shutil.copy(image_path, output_image)
 
         # Check if there is still the folder tmp_dcm_folder and remove it
         remove_tmp_dmc_folder(bids_dir, image_id)
+        try:
+            print(output_image)
+        except UnboundLocalError:
+            output_image = ""
+            print(output_image)
         return output_image
 
     else:

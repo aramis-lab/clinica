@@ -62,7 +62,7 @@ def test_run_adni_to_bids(cmdopt, tmp_path):
     xml_directory = input_dir / "xml_metadata"
     dataset_directory = input_dir / "unorganized_data"
     subjects_list = input_dir / "subjects.txt"
-    modalities = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
+    modalities = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI", "FMAP"]
 
     adni_to_bids = AdniToBids()
     adni_to_bids.check_adni_dependencies()

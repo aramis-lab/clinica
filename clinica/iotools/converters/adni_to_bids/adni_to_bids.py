@@ -43,9 +43,9 @@ class AdniToBids(Converter):
         """Return a list of modalities supported.
 
         Returns: a list containing the modalities supported by the converter
-        (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
+        (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI, FMAP)
         """
-        return ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
+        return ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI", "FMAP"]
 
     @classmethod
     def check_adni_dependencies(cls) -> None:
@@ -195,6 +195,7 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_flair as adni_flair
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmap as adni_fmap
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
@@ -212,7 +213,7 @@ class AdniToBids(Converter):
             cprint("Loading a subjects lists provided by the user...")
             subjs_list = [line.rstrip("\n") for line in open(subjs_list_path)]
             subjs_list_copy = copy(subjs_list)
-            
+
             # Check that there are no errors in subjs_list given by the user
             for subj in subjs_list_copy:
                 adnimerge_subj = adni_merge[adni_merge['PTID'] == subj]
@@ -251,6 +252,7 @@ class AdniToBids(Converter):
             "DWI": [adni_dwi.convert_adni_dwi],
             "FLAIR": [adni_flair.convert_adni_flair],
             "fMRI": [adni_fmri.convert_adni_fmri],
+            "FMAP": [adni_fmap.convert_adni_fmap],
         }
 
         for modality in modalities:
