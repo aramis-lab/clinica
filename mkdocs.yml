@@ -63,7 +63,6 @@ nav:
   - Installation:
     - Installation: Installation.md
     - Third-party: Third-party.md
-    # - Before your install: BeforeYouInstall
     # - ICM cluster installation: ICMClusterInstallation
   # - Quick start:
   - Clinica environment:
