@@ -23,9 +23,7 @@ The pipeline requires a prior run of the cross-sectional [`t1-freesurfer`](../T1
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of
-**FreeSurfer 6.0** on your computer.
-You can find how to install this software on the [third-party](../../Third-party) page.
+If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer 6.0](../Third-party.md#freesurfer) on your computer.
 
 ## Running the pipeline
 

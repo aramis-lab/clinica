@@ -5,10 +5,8 @@ This pipeline performs cortical surface extraction, segmentation of subcortical 
 Additionally, from the FreeSurfer outputs, we generate TSV files containing a summary of the regional statistics (e.g. regional volume, mean cortical thickness) to ease subsequent statistical analysis.
 
 ## Dependencies
-<!-- If you installed the docker image of Clinica, nothing is required. -->
-If you only installed the core of Clinica, this pipeline needs the installation of
-**FreeSurfer 6.0** on your computer.
-You can find how to install this software on the [third-party](../../Third-party) page.
+
+If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer 6.0](../Third-party.md#freesurfer) on your computer.
 
 ## Running the pipeline
 

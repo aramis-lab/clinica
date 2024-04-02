@@ -14,7 +14,7 @@ Future versions will include more extensive support of genotyping data and clini
 - Neuroimaging data analysis
   - Anatomical MRI
   - Diffusion MRI
-  - PET
+  - [PET](glossary.md#pet)
 - Statistical analysis
 - Machine learning
 - Data management made easy:

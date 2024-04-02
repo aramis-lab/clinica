@@ -2,54 +2,67 @@
 
 Currently, it contains one function to generate TSV file containing mean map based on a parcellation.
 """
+from os import PathLike
+from pathlib import Path
+from typing import Optional, Union
+
+from clinica.utils.atlas import AtlasName, BaseAtlas
 
 
-def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
+def statistics_on_atlas(
+    in_normalized_map: Union[str, PathLike],
+    atlas: Union[str, AtlasName, BaseAtlas],
+    out_file: Optional[Union[str, PathLike]] = None,
+) -> str:
     """Compute statistics of a map on an atlas.
 
     Given an atlas image with a set of ROIs, this function computes the mean of
     a normalized map (e.g. GM segmentation, FA map from DTI, etc.) on each ROI.
 
-    Args:
-        in_normalized_map (str): File containing a scalar image registered
-            on the atlas.
-        in_atlas (:obj: AbstractClass): An atlas with a set of ROI. These ROI
-            are used to compute statistics.
-        out_file (Optional[str]): Name of the output file.
+    Parameters
+    ----------
+    in_normalized_map : str
+        File containing a scalar image registered on the atlas.
 
-    Returns:
-        out_file (str): TSV file containing the statistics (content of the
-            columns: label, mean scalar, std of the scalar', number of voxels).
+    atlas : BaseAtlas or AtlasName or str
+        An atlas with a set of ROI. These ROI are used to compute statistics.
+        If a string is given, it is assumed to be the name of the atlas to be used.
+
+    out_file : str, optional
+        Name of the output file.
+
+    Returns
+    -------
+    out_file : str
+        TSV file containing the statistics (content of the columns: label,
+        mean scalar, std of the scalar', number of voxels).
     """
-    import os.path as op
-
     import nibabel as nib
     import numpy as np
-    import pandas
+    import pandas as pd
 
-    from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.stream import cprint
 
-    if not isinstance(in_atlas, AtlasAbstract):
-        raise Exception("Atlas element must be an AtlasAbstract type")
+    from .atlas import atlas_factory
 
+    atlas = atlas_factory(atlas)
+    in_normalized_map = Path(in_normalized_map)
     if not out_file:
-        fname, ext = op.splitext(op.basename(in_normalized_map))
+        filename, ext = in_normalized_map.stem, in_normalized_map.suffix
         if ext == ".gz":
-            fname, _ = op.splitext(fname)
-        out_file = op.abspath(f"{fname}_statistics_{in_atlas.get_name_atlas()}.tsv")
+            filename = Path(filename).stem
+        out_file = Path(f"{filename}_statistics_{atlas.name}.tsv").resolve()
 
-    atlas_labels = nib.load(in_atlas.get_atlas_labels())
+    atlas_labels = nib.load(atlas.labels)
     atlas_labels_data = atlas_labels.get_fdata(dtype="float32")
 
     img = nib.load(in_normalized_map)
     img_data = img.get_fdata(dtype="float32")
 
-    atlas_correspondence = pandas.read_csv(in_atlas.get_tsv_roi(), sep="\t")
+    atlas_correspondence = pd.read_csv(atlas.tsv_roi, sep="\t")
     label_name = list(atlas_correspondence.roi_name)
-    label_value = list(
-        atlas_correspondence.roi_value
-    )  # TODO create roi_value column in lut_*.txt and remove irrelevant RGB information
+    # TODO create roi_value column in lut_*.txt and remove irrelevant RGB information
+    label_value = list(atlas_correspondence.roi_value)
 
     mean_signal_value = []
     for label in label_value:
@@ -59,7 +72,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         mean_signal_value.append(np.sum(masked_data) / np.sum(current_mask_label))
 
     try:
-        data = pandas.DataFrame(
+        data = pd.DataFrame(
             {"label_name": label_name, "mean_scalar": mean_signal_value}
         )
         data.to_csv(out_file, sep="\t", index=True, encoding="utf-8")

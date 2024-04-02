@@ -82,9 +82,7 @@ def cli(
     )
 
     if not subjects_sessions_tsv:
-        session_ids, participant_ids = get_subject_session_list(
-            bids_directory, None, True, False
-        )
+        participant_ids, session_ids = get_subject_session_list(bids_directory)
         now = datetime.datetime.now().strftime("%H%M%S")
         subjects_sessions_tsv = now + "_participants.tsv"
         save_participants_sessions(

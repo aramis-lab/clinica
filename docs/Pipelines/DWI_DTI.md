@@ -12,11 +12,7 @@ To that aim, it mainly relies on the **MRtrix3** [[Tournier et al., 2019](https:
 You need [preprocessed DWI data](../DWI_Preprocessing) prior to running any of these pipelines.
 
 ## Dependencies
-<!-- If you installed the docker image of Clinica, nothing is required.-->
-
-If you only installed the core of Clinica, this pipeline needs the installation of
-**ANTs v2.3.1**, **FSL 6.0** and **MRtrix3** on your computer.
-You can find how to install these software packages on the [third-party](../../Third-party) page.
+If you only installed the core of Clinica, this pipeline needs the installation of [ANTs v2.5.0](../Third-party.md#ants), [FSL 6.0](../Third-party.md#fsl), and [MRtrix3](../Third-party.md#mrtrix3) on your computer.
 
 ## Running the pipeline
 

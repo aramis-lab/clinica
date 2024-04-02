@@ -146,7 +146,7 @@ def _convert_dtype_to_str_format(dtype) -> str:
         return "%d"
     if dtype == np.float64:
         return "%f"
-    if dtype == np.object:
+    if dtype == np.object_:
         return "%s"
     raise ValueError(f"Unknown dtype (given: {dtype})")
 
@@ -211,13 +211,9 @@ def run_clinica_surfstat(
     output_dir : Path
         The path to the output directory.
     """
-    from pathlib import Path
-
     from clinica.pipelines.statistics_surface._utils import build_design_matrix
     from clinica.pipelines.statistics_surface.surfstat import clinica_surfstat
-    from clinica.utils.check_dependency import check_environment_variable
-
-    freesurfer_home = Path(check_environment_variable("FREESURFER_HOME", "FreeSurfer"))
+    from clinica.utils.check_dependency import get_freesurfer_home
 
     clinica_surfstat(
         caps_dir / "subjects",
@@ -229,7 +225,7 @@ def run_clinica_surfstat(
         pipeline_parameters["contrast"],
         pipeline_parameters["glm_type"],
         pipeline_parameters["group_label"],
-        freesurfer_home,
+        get_freesurfer_home(),
         pipeline_parameters["measure_label"],
         surface_file=pipeline_parameters["custom_file"],
         fwhm=pipeline_parameters["full_width_at_half_maximum"],

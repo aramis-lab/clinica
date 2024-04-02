@@ -50,9 +50,9 @@ class AdniToBids(Converter):
     @classmethod
     def check_adni_dependencies(cls) -> None:
         """Check the dependencies of ADNI converter."""
-        from clinica.utils.check_dependency import check_dcm2niix
+        from clinica.utils.check_dependency import ThirdPartySoftware, check_software
 
-        check_dcm2niix()
+        check_software(ThirdPartySoftware.DCM2NIIX)
 
     def convert_clinical_data(
         self,
@@ -187,8 +187,6 @@ class AdniToBids(Converter):
         import os
         from copy import copy
         from os import path
-
-        import pandas as pd
 
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi

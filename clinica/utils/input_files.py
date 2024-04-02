@@ -5,10 +5,9 @@ These dictionaries describe files to grab.
 
 import functools
 from collections.abc import Iterable
-from typing import Optional
+from typing import Optional, Union
 
-import numpy as np
-
+from clinica.pipelines.dwi.dti.utils import DTIBasedMeasure
 from clinica.utils.pet import ReconstructionMethod, Tracer
 
 # BIDS
@@ -343,18 +342,16 @@ def aggregator(func):
 
 @aggregator
 def t1_volume_native_tpm(tissue_number):
-    import os
+    from pathlib import Path
 
     from .spm import INDEX_TISSUE_MAP
 
     return {
-        "pattern": os.path.join(
-            "t1",
-            "spm",
-            "segmentation",
-            "native_space",
-            f"*_*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_probability.nii*",
-        ),
+        "pattern": Path("t1")
+        / "spm"
+        / "segmentation"
+        / "native_space"
+        / f"*_*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_probability.nii*",
         "description": f"Tissue probability map {INDEX_TISSUE_MAP[tissue_number]} in native space",
         "needed_pipeline": "t1-volume-tissue-segmentation",
     }
@@ -362,18 +359,16 @@ def t1_volume_native_tpm(tissue_number):
 
 @aggregator
 def t1_volume_dartel_input_tissue(tissue_number):
-    import os
+    from pathlib import Path
 
     from .spm import INDEX_TISSUE_MAP
 
     return {
-        "pattern": os.path.join(
-            "t1",
-            "spm",
-            "segmentation",
-            "dartel_input",
-            f"*_*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_dartelinput.nii*",
-        ),
+        "pattern": Path("t1")
+        / "spm"
+        / "segmentation"
+        / "dartel_input"
+        / f"*_*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_dartelinput.nii*",
         "description": f"Dartel input for tissue probability map {INDEX_TISSUE_MAP[tissue_number]} from T1w MRI",
         "needed_pipeline": "t1-volume-tissue-segmentation",
     }
@@ -381,7 +376,7 @@ def t1_volume_dartel_input_tissue(tissue_number):
 
 @aggregator
 def t1_volume_native_tpm_in_mni(tissue_number, modulation):
-    import os
+    from pathlib import Path
 
     from .spm import INDEX_TISSUE_MAP
 
@@ -389,13 +384,11 @@ def t1_volume_native_tpm_in_mni(tissue_number, modulation):
     description_modulation = "with" if modulation else "without"
 
     return {
-        "pattern": os.path.join(
-            "t1",
-            "spm",
-            "segmentation",
-            "normalized_space",
-            f"*_*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_space-Ixi549Space_modulated-{pattern_modulation}_probability.nii*",
-        ),
+        "pattern": Path("t1")
+        / "spm"
+        / "segmentation"
+        / "normalized_space"
+        / f"*_*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_space-Ixi549Space_modulated-{pattern_modulation}_probability.nii*",
         "description": (
             f"Tissue probability map {INDEX_TISSUE_MAP[tissue_number]} based on "
             f"native MRI in MNI space (Ixi549) {description_modulation} modulation."
@@ -427,7 +420,7 @@ def t1_volume_template_tpm_in_mni(group_label, tissue_number, modulation, fwhm=N
     dict :
         Information dict to be passed to clinica_file_reader.
     """
-    import os
+    from pathlib import Path
 
     from .spm import INDEX_TISSUE_MAP
 
@@ -437,13 +430,11 @@ def t1_volume_template_tpm_in_mni(group_label, tissue_number, modulation, fwhm=N
     fwhm_description = f"with {fwhm}mm smoothing" if fwhm else "with no smoothing"
 
     return {
-        "pattern": os.path.join(
-            "t1",
-            "spm",
-            "dartel",
-            f"group-{group_label}",
-            f"*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_space-Ixi549Space_modulated-{pattern_modulation}{fwhm_key_value}_probability.nii*",
-        ),
+        "pattern": Path("t1")
+        / "spm"
+        / "dartel"
+        / f"group-{group_label}"
+        / f"*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_space-Ixi549Space_modulated-{pattern_modulation}{fwhm_key_value}_probability.nii*",
         "description": (
             f"Tissue probability map {INDEX_TISSUE_MAP[tissue_number]} based "
             f"on {group_label} template in MNI space (Ixi549) {description_modulation} modulation and {fwhm_description}."
@@ -453,16 +444,14 @@ def t1_volume_template_tpm_in_mni(group_label, tissue_number, modulation, fwhm=N
 
 
 def t1_volume_deformation_to_template(group_label):
-    import os
+    from pathlib import Path
 
     information = {
-        "pattern": os.path.join(
-            "t1",
-            "spm",
-            "dartel",
-            f"group-{group_label}",
-            f"sub-*_ses-*_T1w_target-{group_label}_transformation-forward_deformation.nii*",
-        ),
+        "pattern": Path("t1")
+        / "spm"
+        / "dartel"
+        / f"group-{group_label}"
+        / f"sub-*_ses-*_T1w_target-{group_label}_transformation-forward_deformation.nii*",
         "description": f"Deformation from native space to group template {group_label} space.",
         "needed_pipeline": "t1-volume-create-dartel",
     }
@@ -471,14 +460,12 @@ def t1_volume_deformation_to_template(group_label):
 
 @aggregator
 def t1_volume_i_th_iteration_group_template(group_label, i):
-    import os
+    from pathlib import Path
 
     information = {
-        "pattern": os.path.join(
-            f"group-{group_label}",
-            "t1",
-            f"group-{group_label}_iteration-{i}_template.nii*",
-        ),
+        "pattern": Path(f"group-{group_label}")
+        / "t1"
+        / f"group-{group_label}_iteration-{i}_template.nii*",
         "description": f"Iteration #{i} of Dartel template {group_label}",
         "needed_pipeline": "t1-volume or t1-volume-create-dartel",
     }
@@ -486,12 +473,12 @@ def t1_volume_i_th_iteration_group_template(group_label, i):
 
 
 def t1_volume_final_group_template(group_label):
-    import os
+    from pathlib import Path
 
     information = {
-        "pattern": os.path.join(
-            f"group-{group_label}", "t1", f"group-{group_label}_template.nii*"
-        ),
+        "pattern": Path(f"group-{group_label}")
+        / "t1"
+        / f"group-{group_label}_template.nii*",
         "description": f"T1w template file of group {group_label}",
         "needed_pipeline": "t1-volume or t1-volume-create-dartel",
     }
@@ -533,28 +520,56 @@ FMAP_MAGNITUDE1_NII = {
 # CAPS
 
 DWI_PREPROC_NII = {
-    "pattern": "dwi/preprocessing/sub-*_ses-*_dwi_space-*_preproc.nii*",
+    "pattern": "dwi/preprocessing/sub-*_ses-*_space-*_desc-preproc_dwi.nii*",
     "description": "preprocessed DWI",
     "needed_pipeline": "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
 }
 
 DWI_PREPROC_BRAINMASK = {
-    "pattern": "dwi/preprocessing/sub-*_ses-*_dwi_space-*_brainmask.nii*",
+    "pattern": "dwi/preprocessing/sub-*_ses-*_space-*_brainmask.nii*",
     "description": "b0 brainmask",
     "needed_pipeline": "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
 }
 
 DWI_PREPROC_BVEC = {
-    "pattern": "dwi/preprocessing/sub-*_ses-*_dwi_space-*_preproc.bvec",
+    "pattern": "dwi/preprocessing/sub-*_ses-*_space-*_desc-preproc_dwi.bvec",
     "description": "preprocessed bvec",
     "needed_pipeline": "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
 }
 
 DWI_PREPROC_BVAL = {
-    "pattern": "dwi/preprocessing/*_dwi_space-*_preproc.bval",
+    "pattern": "dwi/preprocessing/*_space-*_desc-preproc_dwi.bval",
     "description": "preprocessed bval",
     "needed_pipeline": "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
 }
+
+
+def dwi_dti(measure: Union[str, DTIBasedMeasure], space: Optional[str] = None) -> dict:
+    """Return the query dict required to capture DWI DTI images.
+
+    Parameters
+    ----------
+    measure : DTIBasedMeasure or str
+        The DTI based measure to consider.
+
+    space : str, optional
+        The space to consider.
+        By default, all spaces are considered (i.e. '*' is used in regexp).
+
+    Returns
+    -------
+    dict :
+        The query dictionary to get DWI DTI images.
+    """
+    measure = DTIBasedMeasure(measure)
+    space = space or "*"
+
+    return {
+        "pattern": f"dwi/dti_based_processing/*/*_space-{space}_{measure.value}.nii.gz",
+        "description": f"DTI-based {measure.value} in space {space}.",
+        "needed_pipeline": "dwi_dti",
+    }
+
 
 """ PET """
 
@@ -586,7 +601,7 @@ def bids_pet_nii(
     dict :
         The query dictionary to get PET scans.
     """
-    import os
+    from pathlib import Path
 
     trc = "" if tracer is None else f"_trc-{tracer.value}"
     rec = "" if reconstruction is None else f"_rec-{reconstruction.value}"
@@ -597,7 +612,7 @@ def bids_pet_nii(
         description += f" and reconstruction method {reconstruction.value}"
 
     return {
-        "pattern": os.path.join("pet", f"*{trc}{rec}_pet.nii*"),
+        "pattern": Path("pet") / f"*{trc}{rec}_pet.nii*",
         "description": description,
     }
 
@@ -613,7 +628,7 @@ def pet_volume_normalized_suvr_pet(
     use_pvc_data,
     fwhm=0,
 ):
-    import os
+    from pathlib import Path
 
     if use_brainmasked_image:
         mask_key_value = "_mask-brain"
@@ -639,13 +654,10 @@ def pet_volume_normalized_suvr_pet(
     suvr_key_value = f"_suvr-{suvr_reference_region}"
 
     information = {
-        "pattern": os.path.join(
-            "pet",
-            "preprocessing",
-            f"group-{group_label}",
-            f"*_trc-{acq_label}_pet"
-            f"_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
-        ),
+        "pattern": Path("pet")
+        / "preprocessing"
+        / f"group-{group_label}"
+        / f"*_trc-{acq_label}_pet_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
         "description": (
             f"{mask_description} SUVR map (using {suvr_reference_region} region) of {acq_label}-PET "
             f"{pvc_description} and {fwhm_description} in Ixi549Space space based on {group_label} DARTEL template"
@@ -659,7 +671,7 @@ def pet_volume_normalized_suvr_pet(
 
 
 def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
-    import os
+    from pathlib import Path
 
     if uncropped_image:
         description = ""
@@ -667,10 +679,8 @@ def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
         description = "_desc-Crop"
 
     information = {
-        "pattern": os.path.join(
-            "pet_linear",
-            f"*_trc-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz",
-        ),
+        "pattern": Path("pet_linear")
+        / f"*_trc-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz",
         "description": "",
         "needed_pipeline": "pet-linear",
     }

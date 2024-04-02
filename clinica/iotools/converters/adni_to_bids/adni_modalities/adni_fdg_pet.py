@@ -165,7 +165,9 @@ def _compute_fdg_pet_paths(
 
     images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
     images.to_csv(
-        Path(conversion_dir) / f"{Tracer.FDG}_pet_paths.tsv", sep="\t", index=False
+        Path(conversion_dir) / f"{Tracer.FDG.value}_pet_paths.tsv",
+        sep="\t",
+        index=False,
     )
 
     return images

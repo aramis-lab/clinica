@@ -1,14 +1,16 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import PETPipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class PETLinear(cpe.PETPipeline):
+class PETLinear(PETPipeline):
     """PET Linear - Affine registration of PET images to standard space.
     This preprocessing pipeline uses T1w MRI transformation into standard
     space computed in clinica t1-linear pipeline.
@@ -24,31 +26,35 @@ class PETLinear(cpe.PETPipeline):
         A clinica pipeline object containing the pet_linear pipeline.
     """
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["pet", "t1w", "t1w_to_mni"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return [
             "registered_pet",
             "transform_mat",
             "registered_pet_in_t1w",
-        ]  # Fill here the list
+        ]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from os import pardir
         from os.path import abspath, dirname, exists, join
@@ -161,7 +167,6 @@ class PETLinear(cpe.PETPipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-        # fmt: off
         self.connect(
             [
                 (read_input_node, self.input_node, [("t1w", "t1w")]),
@@ -169,11 +174,9 @@ class PETLinear(cpe.PETPipeline):
                 (read_input_node, self.input_node, [("t1w_to_mni", "t1w_to_mni")]),
             ]
         )
-        # fmt: on
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.io import DataSink
@@ -182,12 +185,10 @@ class PETLinear(cpe.PETPipeline):
 
         from .pet_linear_utils import rename_into_caps
 
-        # Writing node
         write_node = npe.Node(name="WriteCaps", interface=DataSink())
-        write_node.inputs.base_directory = self.caps_directory
+        write_node.inputs.base_directory = str(self.caps_directory)
         write_node.inputs.parameterization = False
 
-        # Other nodes
         rename_file_node_inputs = [
             "pet_filename_bids",
             "pet_filename_raw",
@@ -223,42 +224,75 @@ class PETLinear(cpe.PETPipeline):
             ),
             name="containerPath",
         )
-        # fmt: off
         self.connect(
             [
                 (self.input_node, container_path, [("pet", "bids_or_caps_filename")]),
-                (container_path, write_node, [(("container", fix_join, "pet_linear"), "container")]),
+                (
+                    container_path,
+                    write_node,
+                    [(("container", fix_join, "pet_linear"), "container")],
+                ),
                 (self.input_node, rename_files, [("pet", "pet_filename_bids")]),
-                (self.output_node, rename_files, [("affine_mat", "transformation_filename_raw")]),
-                (rename_files, write_node, [("transformation_filename_caps", "@transform_mat")]),
+                (
+                    self.output_node,
+                    rename_files,
+                    [("affine_mat", "transformation_filename_raw")],
+                ),
+                (
+                    rename_files,
+                    write_node,
+                    [("transformation_filename_caps", "@transform_mat")],
+                ),
             ]
         )
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
-                    (self.output_node, rename_files, [("outfile_crop", "pet_filename_raw")]),
-                    (rename_files, write_node, [("pet_filename_caps", "@registered_pet")]),
+                    (
+                        self.output_node,
+                        rename_files,
+                        [("outfile_crop", "pet_filename_raw")],
+                    ),
+                    (
+                        rename_files,
+                        write_node,
+                        [("pet_filename_caps", "@registered_pet")],
+                    ),
                 ]
             )
         else:
             self.connect(
                 [
-                    (self.output_node, rename_files, [("suvr_pet", "pet_filename_raw")]),
-                    (rename_files, write_node, [("pet_filename_caps", "@registered_pet")]),
+                    (
+                        self.output_node,
+                        rename_files,
+                        [("suvr_pet", "pet_filename_raw")],
+                    ),
+                    (
+                        rename_files,
+                        write_node,
+                        [("pet_filename_caps", "@registered_pet")],
+                    ),
                 ]
             )
         if self.parameters.get("save_PETinT1w"):
             self.connect(
                 [
-                    (self.output_node, rename_files, [("PETinT1w", "pet_filename_in_t1w_raw")]),
-                    (rename_files, write_node, [("pet_filename_in_t1w_caps", "@registered_pet_in_t1w")]),
+                    (
+                        self.output_node,
+                        rename_files,
+                        [("PETinT1w", "pet_filename_in_t1w_raw")],
+                    ),
+                    (
+                        rename_files,
+                        write_node,
+                        [("pet_filename_in_t1w_caps", "@registered_pet_in_t1w")],
+                    ),
                 ]
             )
-        # fmt: on
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
@@ -366,9 +400,6 @@ class PETLinear(cpe.PETPipeline):
         )
         ants_applytransform_optional_node.inputs.dimension = 3
 
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
                 (self.input_node, init_node, [("pet", "pet")]),
@@ -376,20 +407,59 @@ class PETLinear(cpe.PETPipeline):
                 (self.input_node, ants_registration_node, [("t1w", "fixed_image")]),
                 (init_node, ants_registration_node, [("pet", "moving_image")]),
                 # STEP 2
-                (ants_registration_node, concatenate_node, [("out_matrix", "pet_to_t1w_transform")]),
-                (self.input_node, concatenate_node, [("t1w_to_mni", "t1w_to_mni_transform")]),
+                (
+                    ants_registration_node,
+                    concatenate_node,
+                    [("out_matrix", "pet_to_t1w_transform")],
+                ),
+                (
+                    self.input_node,
+                    concatenate_node,
+                    [("t1w_to_mni", "t1w_to_mni_transform")],
+                ),
                 (self.input_node, ants_applytransform_node, [("pet", "input_image")]),
-                (concatenate_node, ants_applytransform_node, [("transforms_list", "transforms")]),
+                (
+                    concatenate_node,
+                    ants_applytransform_node,
+                    [("transforms_list", "transforms")],
+                ),
                 # STEP 3
-                (self.input_node, ants_registration_nonlinear_node, [("t1w", "moving_image")]),
-                (ants_registration_nonlinear_node, ants_applytransform_nonlinear_node,
-                 [("reverse_forward_transforms", "transforms")]),
-                (ants_applytransform_node, ants_applytransform_nonlinear_node, [("output_image", "input_image")]),
-                (ants_applytransform_node, normalize_intensity_node, [("output_image", "input_img")]),
-                (ants_applytransform_nonlinear_node, normalize_intensity_node, [("output_image", "norm_img")]),
+                (
+                    self.input_node,
+                    ants_registration_nonlinear_node,
+                    [("t1w", "moving_image")],
+                ),
+                (
+                    ants_registration_nonlinear_node,
+                    ants_applytransform_nonlinear_node,
+                    [("reverse_forward_transforms", "transforms")],
+                ),
+                (
+                    ants_applytransform_node,
+                    ants_applytransform_nonlinear_node,
+                    [("output_image", "input_image")],
+                ),
+                (
+                    ants_applytransform_node,
+                    normalize_intensity_node,
+                    [("output_image", "input_img")],
+                ),
+                (
+                    ants_applytransform_nonlinear_node,
+                    normalize_intensity_node,
+                    [("output_image", "norm_img")],
+                ),
                 # Connect to DataSink
-                (ants_registration_node, self.output_node, [("out_matrix", "affine_mat")]),
-                (normalize_intensity_node, self.output_node, [("output_img", "suvr_pet")]),
+                (
+                    ants_registration_node,
+                    self.output_node,
+                    [("out_matrix", "affine_mat")],
+                ),
+                (
+                    normalize_intensity_node,
+                    self.output_node,
+                    [("output_img", "suvr_pet")],
+                ),
                 (self.input_node, print_end_message, [("pet", "pet")]),
             ]
         )
@@ -397,25 +467,51 @@ class PETLinear(cpe.PETPipeline):
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
-                    (normalize_intensity_node, crop_nifti_node, [("output_img", "input_img")]),
-                    (crop_nifti_node, self.output_node, [("output_img", "outfile_crop")]),
-                    (crop_nifti_node, print_end_message, [("output_img", "final_file")]),
+                    (
+                        normalize_intensity_node,
+                        crop_nifti_node,
+                        [("output_img", "input_img")],
+                    ),
+                    (
+                        crop_nifti_node,
+                        self.output_node,
+                        [("output_img", "outfile_crop")],
+                    ),
+                    (
+                        crop_nifti_node,
+                        print_end_message,
+                        [("output_img", "final_file")],
+                    ),
                 ]
             )
         else:
             self.connect(
                 [
-                    (normalize_intensity_node, print_end_message, [("output_img", "final_file")]),
+                    (
+                        normalize_intensity_node,
+                        print_end_message,
+                        [("output_img", "final_file")],
+                    ),
                 ]
             )
         # STEP 6: Optional argument
         if self.parameters.get("save_PETinT1w"):
             self.connect(
                 [
-                    (self.input_node, ants_applytransform_optional_node, [("pet", "input_image"),
-                                                                          ("t1w", "reference_image")]),
-                    (ants_registration_node, ants_applytransform_optional_node, [("out_matrix", "transforms")]),
-                    (ants_applytransform_optional_node, self.output_node, [("output_image", "PETinT1w")]),
+                    (
+                        self.input_node,
+                        ants_applytransform_optional_node,
+                        [("pet", "input_image"), ("t1w", "reference_image")],
+                    ),
+                    (
+                        ants_registration_node,
+                        ants_applytransform_optional_node,
+                        [("out_matrix", "transforms")],
+                    ),
+                    (
+                        ants_applytransform_optional_node,
+                        self.output_node,
+                        [("output_image", "PETinT1w")],
+                    ),
                 ]
             )
-        # fmt: on

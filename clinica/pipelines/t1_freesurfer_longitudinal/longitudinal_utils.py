@@ -5,6 +5,8 @@ where we need to manipulate longitudinal IDs.
 
 When a new longitudinal pipeline will be developed into Clinica, refactoring will be needed.
 """
+from pathlib import Path
+from typing import List, Tuple
 
 
 def extract_subject_session_longitudinal_ids_from_filename(bids_or_caps_files):
@@ -30,27 +32,27 @@ def extract_subject_session_longitudinal_ids_from_filename(bids_or_caps_files):
     return part_ids, sess_ids, long_ids
 
 
-def read_part_sess_long_ids_from_tsv(tsv_file):
+def read_part_sess_long_ids_from_tsv(
+    tsv_file: Path,
+) -> Tuple[List[str], List[str], List[str]]:
     """Extract participant, session and longitudinal from TSV file.
 
     TODO: Find a way to merge with utils/filemanip.py::read_participant_tsv into one util
     """
-    import os
-
-    import pandas
+    import pandas as pd
 
     from clinica.utils.exceptions import ClinicaException
 
-    if not os.path.isfile(tsv_file):
+    if not tsv_file.is_file():
         raise ClinicaException(
             "The TSV file you gave is not a file.\n"
             "Error explanations:\n"
             f" - Clinica expected the following path to be a file: {tsv_file}\n"
             " - If you gave relative path, did you run Clinica on the good folder?"
         )
-    df = pandas.read_csv(tsv_file, sep="\t")
+    df = pd.read_csv(tsv_file, sep="\t")
 
-    def check_key_in_data_frame(file, data_frame, key):
+    def check_key_in_data_frame(file: Path, data_frame: pd.DataFrame, key: str) -> None:
         if key not in list(data_frame.columns.values):
             raise ClinicaException(
                 f"The TSV file does not contain {key} column (path: {file})"
@@ -120,7 +122,9 @@ def extract_participant_long_ids_from_filename(caps_files):
     return part_ids, long_ids
 
 
-def grab_image_ids_from_caps_directory(caps_dir):
+def grab_image_ids_from_caps_directory(
+    caps_dir: Path,
+) -> Tuple[List[str], List[str], List[str]]:
     """Parse CAPS directory to extract participants, sessions and longitudinal IDs.
 
     Note:
@@ -151,7 +155,7 @@ def grab_image_ids_from_caps_directory(caps_dir):
     import os
     from glob import glob
 
-    participants_paths = glob(os.path.join(caps_dir, "subjects", "*sub-*"))
+    participants_paths = glob(str(caps_dir / "subjects" / "*sub-*"))
 
     participants_paths.sort()
     if len(participants_paths) == 0:

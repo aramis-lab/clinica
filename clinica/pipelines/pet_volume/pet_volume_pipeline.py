@@ -1,6 +1,8 @@
+from typing import List
+
 from nipype import config
 
-import clinica.pipelines.engine as cpe
+from clinica.pipelines.engine import PETPipeline
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -8,36 +10,38 @@ cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class PETVolume(cpe.PETPipeline):
+class PETVolume(PETPipeline):
     """PETVolume - Volume-based processing of PET images using SPM.
 
     Returns:
         A clinica pipeline object containing the PETVolume pipeline.
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.atlas import PET_VOLUME_ATLASES
+        from clinica.utils.atlas import T1AndPetVolumeAtlasName
         from clinica.utils.group import check_group_label
 
-        super().check_pipeline_parameters()
+        super()._check_pipeline_parameters()
         self.parameters.setdefault("group_label", None)
         check_group_label(self.parameters["group_label"])
-
         self.parameters.setdefault("pvc_psf_tsv", None)
         self.parameters.setdefault("mask_tissues", [1, 2, 3])
         self.parameters.setdefault("mask_threshold", 0.3)
         self.parameters.setdefault("pvc_mask_tissues", [1, 2, 3])
         self.parameters.setdefault("smooth", [8])
-        self.parameters.setdefault("atlases", PET_VOLUME_ATLASES)
+        self.parameters.setdefault("atlases", T1AndPetVolumeAtlasName)
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return [
@@ -51,10 +55,12 @@ class PETVolume(cpe.PETPipeline):
             "reference_mask",
         ]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return [
@@ -73,11 +79,8 @@ class PETVolume(cpe.PETPipeline):
             "pvc_atlas_statistics",
         ]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-        from os.path import exists, join
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -88,7 +91,6 @@ class PETVolume(cpe.PETPipeline):
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.input_files import (
             T1W_NII,
-            bids_pet_nii,
             t1_volume_deformation_to_template,
             t1_volume_final_group_template,
             t1_volume_native_tpm,
@@ -103,11 +105,9 @@ class PETVolume(cpe.PETPipeline):
         )
 
         # Check that group already exists
-        if not exists(
-            join(
-                self.caps_directory, "groups", f"group-{self.parameters['group_label']}"
-            )
-        ):
+        if not (
+            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
+        ).exists():
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
                 f"Group {self.parameters['group_label']} does not exist. "
@@ -235,16 +235,14 @@ class PETVolume(cpe.PETPipeline):
         )
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_participants_sessions(
-            self.subjects, self.sessions, folder_participants_tsv
+            self.subjects, self.sessions, self.base_dir / self.name
         )
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint(
-                "List available in %s"
-                % os.path.join(folder_participants_tsv, "participants.tsv")
+                f"List available in {self.base_dir / self.name / 'participants.tsv'}"
             )
             cprint("The pipeline will last approximately 10 minutes per image.")
 
@@ -282,7 +280,7 @@ class PETVolume(cpe.PETPipeline):
         )
         # fmt: on
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import re
 
@@ -411,7 +409,7 @@ class PETVolume(cpe.PETPipeline):
         )
         # fmt: on
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect an output node to the pipeline."""
         import nipype.interfaces.spm as spm
         import nipype.interfaces.spm.utils as spmutils
@@ -420,7 +418,7 @@ class PETVolume(cpe.PETPipeline):
         from nipype.interfaces.petpvc import PETPVC
 
         from clinica.utils.filemanip import unzip_nii
-        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+        from clinica.utils.spm import use_spm_standalone_if_available
 
         from .pet_volume_utils import (
             apply_binary_mask,
@@ -433,8 +431,7 @@ class PETVolume(cpe.PETPipeline):
             pet_pvc_name,
         )
 
-        if spm_standalone_is_available():
-            use_spm_standalone()
+        use_spm_standalone_if_available()
 
         # Initialize pipeline
         # ===================

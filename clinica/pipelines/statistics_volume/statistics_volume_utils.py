@@ -411,7 +411,7 @@ def run_m_script(m_file: str) -> str:
         _run_matlab_script_with_matlab,
         _run_matlab_script_with_spm_standalone,
     )
-    from clinica.utils.spm import spm_standalone_is_available
+    from clinica.utils.spm import use_spm_standalone_if_available
 
     m_file = Path(m_file)
     if not m_file.exists():
@@ -420,7 +420,7 @@ def run_m_script(m_file: str) -> str:
         raise ValueError(
             f"[Error] {m_file} is not a Matlab file (extension must be .m)"
         )
-    if spm_standalone_is_available():
+    if use_spm_standalone_if_available():
         _delete_last_line(m_file)
         _run_matlab_script_with_spm_standalone(m_file)
     else:
@@ -1084,7 +1084,7 @@ def _check_spm_and_output_dir(
             raise RuntimeError(f"[Error] output folder {spm_dir} does not exist.")
         raise RuntimeError(f"[Error] SPM matrix {spm_mat} does not exist.")
 
-    output_dir = Path(output_dir) if output_dir else Path(".")
+    output_dir = Path(output_dir) if output_dir else Path.cwd()
 
     return spm_dir.resolve(), output_dir.resolve()
 

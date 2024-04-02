@@ -3,8 +3,7 @@ name: Fast Non Regression Tests
 on:
   push:
     branches: [dev]
-  pull_request:
-    branches: [dev]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -43,9 +42,12 @@ jobs:
           --basetemp=/Volumes/data/tmp \
           --junitxml=./test-reports/non_regression_fast_mac.xml \
           --disable-warnings \
-          -n 4 \
           -m "fast" \
           ./nonregression/
+      - name: Clean
+        run: |
+          rm -rf /Volumes/data/tmp
+          rm -rf /Volumes/data/working_dir_mac
 
   test-non-regression-fast-Linux:
     runs-on:
@@ -57,7 +59,7 @@ jobs:
         with:
           version: ${{ env.POETRY_VERSION }}
           virtualenvs-create: false
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: poetry
@@ -76,6 +78,9 @@ jobs:
           --basetemp=/mnt/data/ci/tmp \
           --junitxml=./test-reports/non_regression_fast_linux.xml \
           --disable-warnings \
-          -n 4 \
           -m "fast" \
           ./nonregression/
+      - name: Clean
+        run: |
+          rm -rf /mnt/data/ci/tmp
+          rm -rf /mnt/data/ci/working_dir_linux

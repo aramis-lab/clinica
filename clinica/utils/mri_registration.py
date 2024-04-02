@@ -28,9 +28,9 @@ def convert_flirt_transformation_to_mrtrix_transformation(
     """
     import os
 
-    from clinica.utils.check_dependency import check_mrtrix
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
 
-    check_mrtrix()
+    check_software(ThirdPartySoftware.MRTRIX)
 
     assert os.path.isfile(in_source_image)
     assert os.path.isfile(in_reference_image)

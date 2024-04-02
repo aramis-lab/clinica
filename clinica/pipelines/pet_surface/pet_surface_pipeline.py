@@ -1,30 +1,34 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import PETPipeline
 
 
-class PetSurface(cpe.PETPipeline):
+class PetSurface(PETPipeline):
     """PetSurface - Surface-based processing of PET images.
 
     Returns:
         A clinica pipeline object containing the PetSurface pipeline.
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        super().check_pipeline_parameters()
-        if "suvr_reference_region" not in self.parameters.keys():
-            raise KeyError(
-                "Missing compulsory suvr_reference_region key in pipeline parameter."
-            )
-        if "pvc_psf_tsv" not in self.parameters.keys():
-            raise KeyError("Missing compulsory pvc_psf_tsv key in pipeline parameter.")
+        super()._check_pipeline_parameters()
+        for mandatory in ("suvr_reference_region", "pvc_psf_tsv"):
+            if mandatory not in self.parameters:
+                raise KeyError(
+                    f"Missing compulsory {mandatory} key in pipeline parameter."
+                )
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return [
@@ -38,38 +42,33 @@ class PetSurface(cpe.PETPipeline):
             "desikan_right",
         ]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline."""
         return []
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
         if self.parameters["longitudinal"]:
-            self.build_input_node_longitudinal()
+            self._build_input_node_longitudinal()
         else:
-            self.build_input_node_cross_sectional()
+            self._build_input_node_cross_sectional()
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.name)
+        folder_participants_tsv = self.base_dir / self.name
         save_participants_sessions(
             self.subjects, self.sessions, folder_participants_tsv
         )
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
-            cprint(
-                "List available in %s"
-                % os.path.join(folder_participants_tsv, "participants.tsv")
-            )
+            cprint(f"List available in {folder_participants_tsv / 'participants.tsv'}")
             cprint("The pipeline will last approximately a few hours per image.")
 
-    def build_input_node_longitudinal(self):
+    def _build_input_node_longitudinal(self):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -206,7 +205,7 @@ class PetSurface(cpe.PETPipeline):
         )
         # fmt: on
 
-    def build_input_node_cross_sectional(self):
+    def _build_input_node_cross_sectional(self):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -337,10 +336,10 @@ class PetSurface(cpe.PETPipeline):
         )
         # fmt: on
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
 
         The function get_wf constructs a pipeline for one subject (in pet_surface_utils.py) and runs it.
@@ -357,7 +356,6 @@ class PetSurface(cpe.PETPipeline):
         import nipype.pipeline.engine as npe
 
         import clinica.pipelines.pet_surface.pet_surface_utils as utils
-        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         full_pipe = npe.MapNode(
             niu.Function(
@@ -379,7 +377,6 @@ class PetSurface(cpe.PETPipeline):
                     "desikan_right",
                     "destrieux_left",
                     "destrieux_right",
-                    "spm_standalone_is_available",
                     "is_longitudinal",
                 ],
                 output_names=[],
@@ -424,13 +421,6 @@ class PetSurface(cpe.PETPipeline):
             os.path.dirname(os.path.realpath(__file__))
         )
         full_pipe.inputs.is_longitudinal = self.parameters["longitudinal"]
-
-        # This section of code determines whether to use SPM standalone or not
-        if spm_standalone_is_available():
-            use_spm_standalone()
-            full_pipe.inputs.spm_standalone_is_available = True
-        else:
-            full_pipe.inputs.spm_standalone_is_available = False
 
         # Connection
         # ==========

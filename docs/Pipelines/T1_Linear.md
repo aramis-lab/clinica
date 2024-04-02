@@ -20,9 +20,7 @@ deep learning classification algorithms presented in
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of
-**ANTs** on your computer.
-You can find how to install this software package on the [third-party](../../Third-party) page.
+If you only installed the core of Clinica, this pipeline needs the installation of [ANTs](../Third-party.md#ants) on your computer.
 
 ## Running the pipeline
 
@@ -34,31 +32,27 @@ clinica run t1-linear [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY
 
 where:
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a
-[BIDS](../../BIDS) hierarchy.
-- `CAPS_DIRECTORY` is the output folder containing the results in a
-[CAPS](../../CAPS/Introduction) hierarchy.
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
+- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
 
 On default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are
 generated to reduce the computing power required when training deep learning models.
 Use the option `--uncropped_image` if you do not want to crop the image.
 
 It is also possible to obtain a deterministic result by setting the value of the random
-seed used by ANTs with the option `--random_seed`. Default will lead to a non-determinstic result. This option requires ANTs version `2.3.0` onwards.
+seed used by ANTs with the option `--random_seed`. Default will lead to a non-deterministic result.
+This option requires ANTs version `2.3.0` onwards.
 
 !!! note
     The arguments common to all Clinica pipelines are described in
     [Interacting with clinica](../../InteractingWithClinica).
 
 !!! tip
-    Do not hesitate to type `clinica run t1-linear --help` to see the full
-    list of parameters.
+    Do not hesitate to type `clinica run t1-linear --help` to see the full list of parameters.
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS
-hierarchy](../../CAPS/Specifications/#t1-linear-affine-registration-of-t1w-images-to-the-mni-standard-space):
-`subjects/<participant_id>/<session_id>/t1_linear` with the following outputs:
+Results are stored in the following folder of the [CAPS hierarchy](../CAPS/Specifications.md#t1-linear---affine-registration-of-t1w-images-to-the-mni-standard-space): `subjects/<participant_id>/<session_id>/t1_linear` with the following outputs:
 
 - `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz`:
 T1w image affinely registered to the

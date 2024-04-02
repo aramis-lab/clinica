@@ -16,7 +16,7 @@ def test_detect_cross_sectional_and_longitudinal_subjects(
     tmp_path, subs, directory_content, expected
 ):
     from clinica.pipelines.engine import (
-        detect_cross_sectional_and_longitudinal_subjects,
+        _detect_cross_sectional_and_longitudinal_subjects,
     )
 
     bids_dir = tmp_path / Path("bids")
@@ -27,4 +27,4 @@ def test_detect_cross_sectional_and_longitudinal_subjects(
     for dir in dirs:
         if not dir.is_dir():
             os.makedirs(dir)
-    assert detect_cross_sectional_and_longitudinal_subjects(subs, bids_dir) == expected
+    assert _detect_cross_sectional_and_longitudinal_subjects(subs, bids_dir) == expected

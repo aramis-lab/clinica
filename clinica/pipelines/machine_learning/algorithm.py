@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import itertools
 import json
 from multiprocessing.pool import ThreadPool
@@ -353,6 +355,20 @@ class LogisticReg(base.MLAlgorithm):
 
 
 class RandomForest(base.MLAlgorithm):
+    def _max_feature_to_float(self, max_feature: str | int | float) -> float:
+        """Utility function which transforms the max_feature parameter into a suitable
+        value for the random forest classifier.
+        """
+        if isinstance(max_feature, float):
+            return max_feature
+        if isinstance(max_feature, int):
+            return max_feature / self._x.shape[1]
+        if max_feature in ["auto", "sqrt"]:
+            return np.sqrt(self._x.shape[1]) / self._x.shape[1]
+        if max_feature == "log2":
+            return np.log2(self._x.shape[1]) / self._x.shape[1]
+        raise ValueError("Not valid value for max_feature: %s" % max_feature)
+
     def _launch_random_forest(
         self,
         x_train,
@@ -364,24 +380,14 @@ class RandomForest(base.MLAlgorithm):
         min_samples_split,
         max_features,
     ):
-        if self._algorithm_params["balanced"]:
-            classifier = RandomForestClassifier(
-                n_estimators=n_estimators,
-                max_depth=max_depth,
-                min_samples_split=min_samples_split,
-                max_features=max_features,
-                class_weight="balanced",
-                n_jobs=self._algorithm_params["n_threads"],
-            )
-        else:
-            classifier = RandomForestClassifier(
-                n_estimators=n_estimators,
-                max_depth=max_depth,
-                min_samples_split=min_samples_split,
-                max_features=max_features,
-                n_jobs=self._algorithm_params["n_threads"],
-            )
-
+        classifier = RandomForestClassifier(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            max_features="sqrt" if max_features == "auto" else max_features,
+            class_weight="balanced" if self._algorithm_params["balanced"] else None,
+            n_jobs=self._algorithm_params["n_threads"],
+        )
         classifier.fit(x_train, y_train)
         y_hat_train = classifier.predict(x_train)
         y_hat = classifier.predict(x_test)
@@ -456,18 +462,7 @@ class RandomForest(base.MLAlgorithm):
         )
         best_min_samples_split = int(round(np.mean([x[2] for x in params_list])))
 
-        def max_feature_to_float(m):
-            if type(m) is float:
-                return m
-            if type(m) is int:
-                return float(m) / float(self._x.shape[1])
-            if m == "auto" or m == "sqrt":
-                return np.sqrt(self._x.shape[1]) / float(self._x.shape[1])
-            if m == "log2":
-                return np.log2(self._x.shape[1]) / float(self._x.shape[1])
-            raise ValueError("Not valid value for max_feature: %s" % m)
-
-        float_max_feat = [max_feature_to_float(x[3]) for x in params_list]
+        float_max_feat = [self._max_feature_to_float(x[3]) for x in params_list]
         best_max_features = np.mean(float_max_feat)
 
         return {
@@ -512,16 +507,18 @@ class RandomForest(base.MLAlgorithm):
             for parameters in parameters_combinations:
                 async_result[i][parameters] = inner_pool.apply_async(
                     self._grid_search,
-                    (
+                    args=(
                         x_train_inner,
                         x_test_inner,
                         y_train_inner,
                         y_test_inner,
-                        parameters[0],
-                        parameters[1],
-                        parameters[2],
-                        parameters[3],
                     ),
+                    kwds={
+                        "n_estimators": parameters[0],
+                        "max_depth": parameters[1],
+                        "min_samples_split": parameters[2],
+                        "max_features": parameters[3],
+                    },
                 )
         inner_pool.close()
         inner_pool.join()

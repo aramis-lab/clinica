@@ -8,10 +8,8 @@ Volume-based measurements are analyzed in the [IXI549Space](https://bids-specifi
 Currently, this pipeline mainly handles gray matter maps obtained from T1-weighted MR images using the [`t1-volume` pipeline](../T1_Volume) and standardized uptake value ratio (SUVR) maps obtained from PET data using the [`pet-volume` pipeline](../PET_Volume).
 
 ## Dependencies
-<!--If you installed the docker image of Clinica, nothing is required.-->
 
-If you only installed the core of Clinica, this pipeline needs the installation of **Matlab** and **SPM**, or of **SPM standalone**, on your computer.
-You can find how to install these software packages on the [third-party](../../Third-party) page.
+If you only installed the core of Clinica, this pipeline needs the installation of [Matlab](../Third-party.md#matlab) and [SPM12](../Third-party.md#spm12), or of [SPM standalone](../Third-party.md#spm12-standalone), on your computer.
 
 ## Running the pipeline
 

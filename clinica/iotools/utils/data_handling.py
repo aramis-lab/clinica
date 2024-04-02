@@ -118,8 +118,10 @@ def _get_participants_and_subjects_sessions_df(
     from clinica.utils.stream import cprint
 
     index_cols = ["participant_id", "session_id"]
-    sessions, subjects = get_subject_session_list(
-        bids_dir, ss_file=tsv_file, use_session_tsv=(not ignore_sessions_files)
+    subjects, sessions = get_subject_session_list(
+        bids_dir,
+        subject_session_file=tsv_file,
+        use_session_tsv=(not ignore_sessions_files),
     )
     if (bids_dir / "participants.tsv").is_file():
         participants_df = pd.read_csv(bids_dir / "participants.tsv", sep="\t")
@@ -619,7 +621,7 @@ def compute_missing_mods(
 
     out_dir = Path(out_dir)
     bids_dir = Path(bids_dir)
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     # Find all the modalities and sessions available for the input dataset
     mods_and_sess = find_mods_and_sess(bids_dir)
@@ -801,45 +803,56 @@ def create_subs_sess_list(
                 path.join(sub_path, subj_id + "_sessions.tsv"), sep="\t"
             )
             session_df.dropna(how="all", inplace=True)
-            session_list = list(session_df["session_id"].to_numpy())
+            session_list = sorted(list(session_df["session_id"].to_numpy()))
             for session in session_list:
                 subjs_sess_tsv.write(subj_id + "\t" + session + "\n")
 
         else:
             sess_list = glob(path.join(sub_path, "*ses-*"))
 
-            for ses_path in sess_list:
+            for ses_path in sorted(sess_list):
                 session_name = ses_path.split(os.sep)[-1]
                 subjs_sess_tsv.write(subj_id + "\t" + session_name + "\n")
 
     subjs_sess_tsv.close()
 
 
-def center_nifti_origin(input_image, output_image):
+def center_nifti_origin(
+    input_image: PathLike, output_image: PathLike
+) -> Tuple[PathLike, Optional[str]]:
     """Put the origin of the coordinate system at the center of the image.
 
-    Args:
-        input_image: path to the input image
-        output_image: path to the output image (where the result will be stored)
+    Parameters
+    ----------
+    input_image : PathLike
+        Path to the input image.
 
-    Returns:
-        path of the output image created
+    output_image : PathLike
+        Path to the output image (where the result will be stored).
+
+    Returns
+    -------
+    PathLike :
+        The path of the output image created.
+
+    str, optional :
+        The error message if the function failed. None if the function call was successful.
     """
-    import os
-    from os.path import isfile
+    from pathlib import Path
 
     import nibabel as nib
     import numpy as np
-    from nibabel.spatialimages import ImageFileError
+    from nibabel.filebasedimages import ImageFileError
 
     error_str = None
+    input_image = Path(input_image)
+    output_image = Path(output_image)
     try:
         img = nib.load(input_image)
     except FileNotFoundError:
         error_str = f"No such file {input_image}"
     except ImageFileError:
         error_str = f"File {input_image} could not be read"
-
     except Exception as e:
         error_str = f"File {input_image} could not be loaded with nibabel: {e}"
 
@@ -847,32 +860,24 @@ def center_nifti_origin(input_image, output_image):
         try:
             canonical_img = nib.as_closest_canonical(img)
             hd = canonical_img.header
-
             qform = np.zeros((4, 4))
             for i in range(1, 4):
                 qform[i - 1, i - 1] = hd["pixdim"][i]
                 qform[i - 1, 3] = -1.0 * hd["pixdim"][i] * hd["dim"][i] / 2.0
             new_img = nib.Nifti1Image(
-                canonical_img.get_data(caching="unchanged"), affine=qform, header=hd
+                canonical_img.get_fdata(caching="unchanged"), affine=qform, header=hd
             )
-
             # Without deleting already-existing file, nib.save causes a severe bug on Linux system
-            if isfile(output_image):
-                os.remove(output_image)
-
+            if output_image.is_file():
+                output_image.unlink()
             nib.save(new_img, output_image)
-            if not isfile(output_image):
+            if not output_image.is_file():
                 error_str = (
                     f"NIfTI file created but Clinica could not save it to {output_image}. "
                     "Please check that the output folder has the correct permissions."
                 )
         except Exception as e:
-            error_str = (
-                "File "
-                + input_image
-                + " could not be processed with nibabel: "
-                + str(e)
-            )
+            error_str = f"File {input_image} could not be processed with nibabel: {e}"
 
     return output_image, error_str
 

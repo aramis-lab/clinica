@@ -1,45 +1,50 @@
-import clinica.pipelines.engine as cpe
+from typing import List
+
+from clinica.pipelines.engine import Pipeline
 
 
-class T1VolumeCreateDartel(cpe.Pipeline):
+class T1VolumeCreateDartel(Pipeline):
     """T1VolumeCreateDartel - Create new Dartel template.
 
     Returns:
         A clinica pipeline object containing the T1VolumeCreateDartel pipeline.
     """
 
-    def check_pipeline_parameters(self):
+    def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
 
         if "group_label" not in self.parameters.keys():
             raise KeyError("Missing compulsory group_label key in pipeline parameter.")
         self.parameters.setdefault("dartel_tissues", [1, 2, 3])
-
         check_group_label(self.parameters["group_label"])
 
-    def check_custom_dependencies(self):
+    def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
+        pass
 
-    def get_input_fields(self):
+    def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) input fields name.
         """
         return ["dartel_inputs"]
 
-    def get_output_fields(self):
+    def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
 
-        Returns:
+        Returns
+        -------
+        list of str :
             A list of (string) output fields name.
         """
         return ["final_template_file", "template_files", "dartel_flow_fields"]
 
-    def build_input_node(self):
+    def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
         import sys
 
         import nipype.interfaces.utility as nutil
@@ -55,14 +60,14 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             print_images_to_process,
         )
 
-        representative_output = os.path.join(
-            self.caps_directory,
-            "groups",
-            f"group-{self.parameters['group_label']}",
-            "t1",
-            f"group-{self.parameters['group_label']}_template.nii.gz",
+        representative_output = (
+            self.caps_directory
+            / "groups"
+            / f"group-{self.parameters['group_label']}"
+            / "t1"
+            / f"group-{self.parameters['group_label']}_template.nii.gz"
         )
-        if os.path.exists(representative_output):
+        if representative_output.exists():
             cprint(
                 msg=(
                     f"DARTEL template for {self.parameters['group_label']} already exists. "
@@ -118,15 +123,17 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             )
             print_begin_image(f"group-{self.parameters['group_label']}")
 
-        # fmt: off
         self.connect(
             [
-                (read_parameters_node, self.input_node, [("dartel_inputs", "dartel_input_images")])
+                (
+                    read_parameters_node,
+                    self.input_node,
+                    [("dartel_inputs", "dartel_input_images")],
+                )
             ]
         )
-        # fmt: on
 
-    def build_output_node(self):
+    def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
         import os.path as op
         import re
@@ -136,14 +143,12 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         from clinica.utils.filemanip import zip_nii
 
-        # Writing flowfields into CAPS
-        # ============================
         write_flowfields_node = npe.MapNode(
             name="write_flowfields_node",
             iterfield=["container", "flow_fields"],
             interface=nio.DataSink(infields=["flow_fields"]),
         )
-        write_flowfields_node.inputs.base_directory = self.caps_directory
+        write_flowfields_node.inputs.base_directory = str(self.caps_directory)
         write_flowfields_node.inputs.parameterization = False
         write_flowfields_node.inputs.container = [
             "subjects/"
@@ -173,11 +178,9 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             (r"trait_added", r""),
         ]
 
-        # Writing templates into CAPS
-        # ===========================
         write_template_node = npe.Node(nio.DataSink(), name="write_template_node")
         write_template_node.inputs.parameterization = False
-        write_template_node.inputs.base_directory = self.caps_directory
+        write_template_node.inputs.base_directory = str(self.caps_directory)
         write_template_node.inputs.container = op.join(
             "groups", f"group-{self.parameters['group_label']}", "t1"
         )
@@ -196,10 +199,13 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             ),
         ]
 
-        # fmt: off
         self.connect(
             [
-                (self.output_node, write_flowfields_node, [(("dartel_flow_fields", zip_nii, True), "flow_fields")]),
+                (
+                    self.output_node,
+                    write_flowfields_node,
+                    [(("dartel_flow_fields", zip_nii, True), "flow_fields")],
+                ),
                 (
                     self.output_node,
                     write_template_node,
@@ -210,22 +216,18 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                 ),
             ]
         )
-        # fmt: on
 
-    def build_core_nodes(self):
+    def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.spm as spm
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import unzip_nii
-        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+        from clinica.utils.spm import use_spm_standalone_if_available
 
-        if spm_standalone_is_available():
-            use_spm_standalone()
+        use_spm_standalone_if_available()
 
-        # Unzipping
-        # =========
         unzip_node = npe.MapNode(
             nutil.Function(
                 input_names=["in_file"], output_names=["out_file"], function=unzip_nii
@@ -234,20 +236,20 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             iterfield=["in_file"],
         )
 
-        # DARTEL template
-        # ===============
         dartel_template = npe.Node(spm.DARTEL(), name="dartel_template")
 
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
                 (self.input_node, unzip_node, [("dartel_input_images", "in_file")]),
                 (unzip_node, dartel_template, [("out_file", "image_files")]),
-                (dartel_template, self.output_node, [("dartel_flow_fields", "dartel_flow_fields"),
-                                                     ("final_template_file", "final_template_file"),
-                                                     ("template_files", "template_files")]),
+                (
+                    dartel_template,
+                    self.output_node,
+                    [
+                        ("dartel_flow_fields", "dartel_flow_fields"),
+                        ("final_template_file", "final_template_file"),
+                        ("template_files", "template_files"),
+                    ],
+                ),
             ]
         )
-        # fmt: on

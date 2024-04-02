@@ -257,26 +257,19 @@ def atlas_statistics(in_image: str, in_atlas_list: list) -> list:
     atlas_statistics : List
         List of paths to TSV files.
     """
-    from os import getcwd
-    from os.path import abspath, join
+    from pathlib import Path
 
     from nipype.utils.filemanip import split_filename
 
-    from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.statistics import statistics_on_atlas
 
     orig_dir, base, ext = split_filename(str(in_image))
-    atlas_classes = AtlasAbstract.__subclasses__()
     atlas_statistics_list = []
     for atlas in in_atlas_list:
-        for atlas_class in atlas_classes:
-            if atlas_class.get_name_atlas() == atlas:
-                out_atlas_statistics = abspath(
-                    join(getcwd(), base + "_space-" + atlas + "_statistics.tsv")
-                )
-                statistics_on_atlas(str(in_image), atlas_class(), out_atlas_statistics)
-                atlas_statistics_list.append(out_atlas_statistics)
-                break
+        out_atlas_statistics = Path.cwd() / f"{base}_space-{atlas}_statistics.tsv"
+        statistics_on_atlas(in_image, atlas, out_atlas_statistics)
+        atlas_statistics_list.append(out_atlas_statistics)
+        break
     return atlas_statistics_list
 
 

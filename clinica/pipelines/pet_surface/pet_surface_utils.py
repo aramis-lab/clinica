@@ -895,7 +895,6 @@ def get_wf(
     destrieux_right,
     desikan_left,
     desikan_right,
-    spm_standalone_is_available,
     is_longitudinal,
 ):
     """get_wf create a full workflow for only one subject, and then executes it
@@ -918,7 +917,6 @@ def get_wf(
         destrieux_right (string):
         desikan_left (string):
         desikan_right (string):
-        spm_standalone_is_available (string):
         is_longitudinal (string):
 
     Returns:
@@ -937,8 +935,10 @@ def get_wf(
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
     from clinica.utils.filemanip import get_subject_id, load_volume, unzip_nii
     from clinica.utils.pet import get_suvr_mask, read_psf_information
-    from clinica.utils.spm import get_tpm
+    from clinica.utils.spm import get_tpm, use_spm_standalone_if_available
     from clinica.utils.ux import print_begin_image
+
+    using_spm_standalone = use_spm_standalone_if_available()
 
     image_id = get_subject_id(pet)
     try:
@@ -1031,7 +1031,7 @@ def get_wf(
         name="normalize_to_MNI",
     )
 
-    if spm_standalone_is_available:
+    if using_spm_standalone:
         fun_apply_inverse_deformation = (
             utils.runApplyInverseDeformationField_SPM_standalone
         )

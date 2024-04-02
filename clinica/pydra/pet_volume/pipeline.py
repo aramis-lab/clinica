@@ -33,7 +33,7 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
     dict :
         Cleaned dictionary of parameters.
     """
-    from clinica.utils.atlas import PET_VOLUME_ATLASES
+    from clinica.utils.atlas import T1AndPetVolumeAtlasName
     from clinica.utils.group import check_group_label
 
     parameters.setdefault("group_label", None)
@@ -46,7 +46,7 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
     parameters.setdefault("mask_threshold", 0.3)
     parameters.setdefault("pvc_mask_tissues", [1, 2, 3])
     parameters.setdefault("smooth", 8.0)
-    parameters.setdefault("atlases", PET_VOLUME_ATLASES)
+    parameters.setdefault("atlases", T1AndPetVolumeAtlasName)
     return parameters
 
 
@@ -74,10 +74,9 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     from clinica.pydra.shared_workflows.smoothing import build_smoothing_workflow
     from clinica.pydra.utils import sanitize_fwhm
     from clinica.utils.pet import get_suvr_mask
-    from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+    from clinica.utils.spm import use_spm_standalone_if_available
 
-    if spm_standalone_is_available():
-        use_spm_standalone()
+    use_spm_standalone_if_available()
 
     parameters = _check_pipeline_parameters(parameters)
 

@@ -1,7 +1,7 @@
 
 # Introduction
 
-The outputs of the Clinica pipelines are stored following a specific structure called **CAPS** (ClinicA Processed Structure), which is inspired from the BIDS structure and the upcoming BIDS Derivatives.
+The outputs of the Clinica pipelines are stored following a specific structure called **CAPS** (ClinicA Processed Structure), which is inspired from the [BIDS](../BIDS.md) structure and the upcoming BIDS Derivatives.
 The CAPS specifications are described in detail [here](../Specifications).
 
 ## Motivation
