@@ -11,7 +11,6 @@ def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
     from pathlib import Path
 
     from nipype.utils.filemanip import split_filename
-    from traits.trait_base import _Undefined
 
     try:
         # Assuming in_file is path-like.
@@ -196,7 +195,6 @@ def save_participants_sessions(
         If provided `participant_ids` and `session_ids` do not have
         the same length.
     """
-    import os
     from pathlib import Path
 
     import pandas as pd
@@ -413,12 +411,12 @@ def extract_crash_files_from_log_file(filename: str) -> List[str]:
     return crash_files
 
 
-def read_participant_tsv(tsv_file: str) -> Tuple[List[str], List[str]]:
+def read_participant_tsv(tsv_file: str | Path) -> Tuple[List[str], List[str]]:
     """Extract participant IDs and session IDs from TSV file.
 
     Parameters
     ----------
-    tsv_file: str
+    tsv_file: str or Path
         Participant TSV file from which to extract the participant and session IDs.
 
     Returns
@@ -471,7 +469,7 @@ def read_participant_tsv(tsv_file: str) -> Tuple[List[str], List[str]]:
 
 
 def extract_metadata_from_json(
-    json_file: str,
+    json_file: str | Path,
     list_keys: List[str],
     handle_missing_keys: Optional[Callable] = None,
 ) -> List[str]:
@@ -479,7 +477,7 @@ def extract_metadata_from_json(
 
     Parameters
     ----------
-    json_file: str
+    json_file: str or Path
         Path to a json file containing metadata needed for the pipeline.
 
     list_keys: list of str
@@ -513,91 +511,6 @@ def extract_metadata_from_json(
         patch = handle_missing_keys(data, missing_keys)
         data.update(patch)
     return [data[k] for k in list_keys]
-
-
-def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
-    """Find alternative fields from the bids/sub-X/ses-Y/dwi/sub-X_ses-Y_dwi.json
-    file to replace those which were not found in this very json.
-
-
-    Parameters
-    ----------
-    data: dict
-        Dictionary containing the json data.
-
-    missing_keys: set
-        Set of keys that are required and were not found in the json.
-
-    Returns
-    -------
-    dict:
-        Contains the values for the requested fields.
-    """
-    handlers = {
-        "TotalReadoutTime": _handle_missing_total_readout_time,
-        "PhaseEncodingDirection": _handle_missing_phase_encoding_direction,
-    }
-    try:
-        return {k: handlers[k](data, missing_keys) for k in missing_keys}
-    except KeyError:
-        raise ValueError(
-            f"Could not recover the missing keys {missing_keys} from JSON file."
-        )
-
-
-def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
-    """Find an alternative field in the json to replace the TotalReadoutTime.
-
-    Parameters
-    ----------
-    data: dict
-        Dictionary containing the json data.
-
-    missing_keys: set
-        Set of keys that are required and were not found in the json.
-
-    Returns
-    -------
-    float:
-        Value for TotalReadoutTime.
-    """
-    from clinica.utils.exceptions import ClinicaException
-
-    if "EstimatedTotalReadoutTime" in data:
-        return data["EstimatedTotalReadoutTime"]
-    if "PhaseEncodingSteps" in data and "PixelBandwidth" in data:
-        if data["PixelBandwidth"] != 0:
-            return data["PhaseEncodingSteps"] / data["PixelBandwidth"]
-        raise ValueError("Pixel Bandwidth value is not valid.")
-    raise ClinicaException("Could not recover the TotalReadoutTime from JSON file.")
-
-
-def _handle_missing_phase_encoding_direction(
-    data: dict,
-    missing_keys: set,
-) -> float:
-    """Find an alternative field in the json to replace the PhaseEncodingDirection.
-
-    Parameters
-    ----------
-    data: dict
-        Dictionary containing the json data.
-
-    missing_keys: set
-        Set of keys that are required and were not found in the json.
-
-    Returns
-    -------
-    float:
-        Value for PhaseEncodingDirection.
-    """
-    from clinica.utils.exceptions import ClinicaException
-
-    if "PhaseEncodingAxis" in data:
-        return data["PhaseEncodingAxis"] + "+"
-    raise ClinicaException(
-        "Could not recover the PhaseEncodingDirection from JSON file."
-    )
 
 
 def get_parent(path: str, n: int = 1) -> Path:
