@@ -1,8 +1,7 @@
 <!-- markdownlint-disable MD033 MD046-->
 # `pet-linear` - Linear processing of PET images
 
-This pipeline performs spatial normalization to the MNI space and intensity
-normalization of PET images.
+This pipeline performs spatial normalization to the MNI space and intensity normalization of [PET](../glossary.md#pet) images.
 Its steps include:
 
 - affine registration to the [MNI152NLin2009cSym](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html#template-based-coordinate-systems)
@@ -11,7 +10,7 @@ template [Fonov et al., [2011](https://doi.org/10.1016/j.neuroimage.2010.07.033)
 SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)]
 from the [ANTs](http://stnava.github.io/ANTs/) software package
 [[Avants et al., 2014](https://doi.org/10.3389/fninf.2014.00044)];
-- intensity normalization using the average PET uptake in reference regions
+- intensity normalization using the average [PET](../glossary.md#pet) uptake in reference regions
 resulting in a standardized uptake value ratio (SUVR) map;
 - cropping of the registered images to remove the background.
 
@@ -21,8 +20,7 @@ resulting in a standardized uptake value ratio (SUVR) map;
 
 ## Prerequisites
 
-You need to have performed the [`t1-linear`](../T1_Linear) pipeline on your
-T1-weighted MR images.
+You need to have performed the [`t1-linear`](../T1_Linear) pipeline on your T1-weighted MR images.
 
 ## Dependencies
 
@@ -57,39 +55,29 @@ By default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) ar
 generated to reduce the computing power required when training deep learning
 models. Use the `--uncropped_image` option if you do not want to crop the image.
 
-The pipeline also offers the possibility to save the PET image in the T1w space
+The pipeline also offers the possibility to save the [PET](../glossary.md#pet) image in the T1w space
 after rigid transformation using the `--save_pet_in_t1w_space` option.
 
 !!! note
-    The arguments common to all Clinica pipelines are described in
-    [Interacting with Clinica](../../InteractingWithClinica).
+    The arguments common to all Clinica pipelines are described in [Interacting with Clinica](../../InteractingWithClinica).
 
 !!! tip
-    Do not hesitate to type `clinica run pet-linear --help` to see the full
-    list of parameters.
+    Do not hesitate to type `clinica run pet-linear --help` to see the full list of parameters.
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#pet-imaging-data):
-`subjects/<participant_id>/<session_id>/pet_linear`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#pet-imaging-data): `subjects/<participant_id>/<session_id>/pet_linear`.
 
 The main output files are:
 
-- `<source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-<label>_pet.nii.gz`:
-PET SUVR image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html)
-and cropped.
-- `<source_file>_space-T1w_rigid.mat`: rigid transformation between the PET and
-T1w images estimated with [ANTs](https://stnava.github.io/ANTs/).
-- (optional) `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_pet.nii.gz`:
-PET SUVR image affinely registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html)
-(i.e. not cropped).
-- (optional) `<source_file>_space-T1w_pet.nii.gz`: PET image affinely registered
-to the associated T1w image.
+- `<source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-<label>_pet.nii.gz`: [PET](../glossary.md#pet) SUVR image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and cropped.
+- `<source_file>_space-T1w_rigid.mat`: rigid transformation between the [PET](../glossary.md#pet) and T1w images estimated with [ANTs](https://stnava.github.io/ANTs/).
+- (optional) `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_pet.nii.gz`: [PET](../glossary.md#pet) SUVR image affinely registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) (i.e. not cropped).
+- (optional) `<source_file>_space-T1w_pet.nii.gz`: [PET](../glossary.md#pet) image affinely registered to the associated T1w image.
 
 ## Going further
 
-You can now use the [ClinicaDL framework](https://clinicadl.readthedocs.io/) presented in [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)]
-for classification based on deep learning methods.
+You can now use the [ClinicaDL framework](https://clinicadl.readthedocs.io/) presented in [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)] for classification based on deep learning methods.
 
 ## Describing this pipeline in your paper
 

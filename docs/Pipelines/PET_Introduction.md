@@ -21,9 +21,9 @@ sub-CLNC0002      ses-M000        18FFDG        5        5        6
 sub-CLNC0003      ses-M000        18FFDG        7        7        7
 ```
 
-Since the PSF depends on the PET tracer and scanner, the `participant_id`, `session_id`, `acq_label`, `psf_x`, `psf_y` and `psf_z` columns are compulsory.
+Since the PSF depends on the [PET](../glossary.md#pet) tracer and scanner, the `participant_id`, `session_id`, `acq_label`, `psf_x`, `psf_y` and `psf_z` columns are compulsory.
 
-The values in the column `acq_label` should match the value associated to the `trc` key in the BIDS dataset.
+The values in the column `acq_label` should match the value associated to the `trc` key in the [BIDS](../glossary.md#bids) dataset.
 For example in the following BIDS layout the values associated would be `18FFDG` and `18FAV45`:
 
 ```text
@@ -36,7 +36,7 @@ bids
 
 ## Reference regions used for intensity normalization
 
-In neurology, an approach widely used to allow inter- and intra-subject comparison of PET images is to compute standardized uptake value ratio (SUVR) maps.
+In neurology, an approach widely used to allow inter- and intra-subject comparison of [PET](../glossary.md#pet) images is to compute standardized uptake value ratio (SUVR) maps.
 The images are intensity normalized by dividing each voxel of the image by the average uptake in a reference region.
 This region is chosen according to the tracer and disease studied as it must be unaffected by the disease.
 
