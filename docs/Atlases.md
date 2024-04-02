@@ -7,7 +7,7 @@ This page describes the different atlases used in the pipelines of Clinica.
 
 ### Processing of T1-weighted MRI & PET images
 
-These atlases, all defined in MNI space, are mainly used when performing volumetric processing of T1 and PET images, as done in the  [`t1-volume-*`](../Pipelines/T1_Volume) and  [`pet-volume`](../Pipelines/PET_Volume) pipelines.
+These atlases, all defined in MNI space, are mainly used when performing volumetric processing of T1 and [PET](glossary.md#pet) images, as done in the  [`t1-volume-*`](../Pipelines/T1_Volume) and  [`pet-volume`](../Pipelines/PET_Volume) pipelines.
 
 - [AAL2](http://www.gin.cnrs.fr/en/tools/aal-aal2/)
 [Tzourio-Mazoyer et al., [2002](http://dx.doi.org/10.1006/nimg.2001.0978),
@@ -59,7 +59,7 @@ Several thresholds of these probabilistic tracts are proposed (0%, 25%, 50%).
 
 ## Surface atlases
 
-These atlases are mainly used when processing T1-weighted images with the [`t1-freesurfer`](../Pipelines/T1_FreeSurfer) pipeline and PET images with the [`pet-surface`](../Pipelines/PET_Surface) pipeline.
+These atlases are mainly used when processing T1-weighted images with the [`t1-freesurfer`](../Pipelines/T1_FreeSurfer) pipeline and [PET](glossary.md#pet) images with the [`pet-surface`](../Pipelines/PET_Surface) pipeline.
 
 - [Desikan](https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation)
 [[Desikan et al., 2006]](https://doi.org/10.1016/j.neuroimage.2006.01.021):
