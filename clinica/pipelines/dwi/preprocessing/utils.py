@@ -248,7 +248,7 @@ def check_b_value_threshold(b_value_threshold: float) -> None:
 
 
 def get_readout_time_and_phase_encoding_direction(
-    dwi_json_filename: str | Path,
+    dwi_json_filename: Union[str, Path],
 ) -> tuple[str, str]:
     """Extract the readout time and phase encoding direction from the DWI JSON file."""
     from clinica.utils.filemanip import extract_metadata_from_json

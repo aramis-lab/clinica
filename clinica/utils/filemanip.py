@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 
 def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
@@ -411,7 +411,7 @@ def extract_crash_files_from_log_file(filename: str) -> List[str]:
     return crash_files
 
 
-def read_participant_tsv(tsv_file: str | Path) -> Tuple[List[str], List[str]]:
+def read_participant_tsv(tsv_file: Union[str, Path]) -> Tuple[List[str], List[str]]:
     """Extract participant IDs and session IDs from TSV file.
 
     Parameters
@@ -469,10 +469,10 @@ def read_participant_tsv(tsv_file: str | Path) -> Tuple[List[str], List[str]]:
 
 
 def extract_metadata_from_json(
-    json_file: str | Path,
-    list_keys: List[str],
+    json_file: Union[str, Path],
+    list_keys: list[str],
     handle_missing_keys: Optional[Callable] = None,
-) -> List[str]:
+) -> list[str]:
     """Extract fields from JSON file.
 
     Parameters
@@ -488,7 +488,7 @@ def extract_metadata_from_json(
 
     Returns
     -------
-    list:
+    list of str:
         Contains the values for the requested fields.
     """
     import json
