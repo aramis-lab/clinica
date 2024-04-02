@@ -1,6 +1,6 @@
 # `statistics-surface` - Surface-based mass-univariate analysis with SurfStat
 
-This command performs statistical analysis (e.g. group comparison, correlation) on surface-based features using the general linear model (GLM).
+This command performs statistical analysis (e.g. group comparison, correlation) on surface-based features using the [GLM](../glossary.md#glm).
 
 !!! warning
     Prior to release `0.7.3` of Clinica, this pipeline was relying on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/)
@@ -49,7 +49,7 @@ where:
   - `custom-pipeline` for you own data in CAPS directory (see below for details)
 - The fourth positional argument is a string defining the type of analysis of your model. It can be either `group_comparison` or `correlation`.
 - `SUBJECT_VISITS_WITH_COVARIATES_TSV` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained in the [Example](#comparison-analysis) subsection).
-- `CONTRAST` is a string defining the contrast matrix or the variable of interest for the GLM. For example `group`, `sex`, or `age`.
+- `CONTRAST` is a string defining the contrast matrix or the variable of interest for the [GLM](../glossary.md#glm). For example `group`, `sex`, or `age`.
 
 Pipeline options:
 

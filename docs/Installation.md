@@ -2,10 +2,8 @@
 # Installation
 
 You will find below the steps for installing Clinica on Linux or Mac.
-Please do not hesitate to contact us on the
-[forum](https://groups.google.com/forum/#!forum/clinica-user) or
-[GitHub](https://github.com/aramis-lab/clinica/issues)
-if you encounter any issues.
+
+Please do not hesitate to contact us on the [forum](https://groups.google.com/forum/#!forum/clinica-user) or [GitHub](https://github.com/aramis-lab/clinica/issues) if you encounter any issues.
 
 ## Prepare your Python environment
 
@@ -32,8 +30,7 @@ bash /tmp/miniconda-installer.sh
 
 [Miniconda](https://docs.conda.io/en/latest/miniconda.html) will ask you where to install it.
 Do not forget to copy the `export PATH` given at the end of the installation.
-If everything went fine, open a new terminal and type `conda info`, it will verify if
-Conda is installed, check the version and show your Miniconda path.
+If everything went fine, open a new terminal and type `conda info`, it will verify if Conda is installed, check the version and show your Miniconda path.
 
 ## Install Clinica
 
@@ -60,8 +57,7 @@ Please refer to [this section](../Third-party) to determine which third-party li
 
 ## Shell completion (optional)
 
-Shell completion for Clinica is available for [Bash](https://www.gnu.org/software/bash/),
-[Fish](https://fishshell.com/docs/current/), and [Zsh](https://zsh.sourceforge.io/Doc/).
+Shell completion for Clinica is available for [Bash](https://www.gnu.org/software/bash/), [Fish](https://fishshell.com/docs/current/), and [Zsh](https://zsh.sourceforge.io/Doc/).
 
 For Bash, add this to `~/.bashrc`:
 
@@ -113,8 +109,7 @@ conda activate clinicaEnv
       run       Run pipelines on BIDS and CAPS datasets.
     ```
 
-If you have successfully installed the third-party software packages, you are
-ready to run any of the pipelines proposed by Clinica.
+If you have successfully installed the third-party software packages, you are ready to run any of the pipelines proposed by Clinica.
 
 You can now learn how to [interact with Clinica](../InteractingWithClinica).
 

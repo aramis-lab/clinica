@@ -7,11 +7,11 @@ In order to use Clinica pipelines by command line, you will need to give as inpu
 1. A dataset that follows the [BIDS standard](http://bids.neuroimaging.io/).
 2. A file (named by default ``subject_sessions_list.tsv``) with the list of all the available sessions for each subject.
 
-This page explains how to obtain a BIDS compliant dataset and the file `subject_sessions_list.tsv`.
+This page explains how to obtain a [BIDS](glossary.md#bids) compliant dataset and the file `subject_sessions_list.tsv`.
 
 ## Dataset BIDS compliant
 
-[BIDS](http://bids.neuroimaging.io/) is a standard for organizing neuroimaging data and it has been also adopted by the Aramis team.
+[BIDS](http://bids.neuroimaging.io/) is a standard for organizing neuroimaging data, and it has been also adopted by the Aramis team.
 
 The pipelines used by command line work only if you give as input a BIDS compliant dataset.
 So, if your dataset doesn't follow this standard, you will need to convert to it.
