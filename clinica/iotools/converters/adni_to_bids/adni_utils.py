@@ -1422,52 +1422,52 @@ def create_file(image, modality, bids_dir, mod_to_update):
     image_id = image.Image_ID
     fmap_flag = 0
 
-    if modality == "fmap":
-        fmap_path = image_path
-        replacements = {
-            "Axial_rsfMRI__Eyes_Open_": "ADNI_gre_field_mapping",
-            "Extended_Resting_State_fMRI": "ADNI_gre_field_mapping",
-            "Axial_fcMRI__EYES_OPEN_": "ADNI_gre_field_mapping",
-            "Axial_fcMRI__Eyes_Open_": "ADNI_gre_field_mapping",
-            "Resting_State_fMRI": "ADNI_gre_field_mapping",
-            "Axial_fcMRI": "ADNI_gre_field_mapping",
-            "Axial_rsfMRI__Eyes_Open_": "ADNI_gre_field_mapping",
-            "Axial_rsfMRI__EYES_OPEN_": "ADNI_gre_field_mapping",
-            "Axial_rsfMRI__Eyes_Open__-phase_P_to_A": "ADNI_gre_field_mapping",
-            "ADNI_gre_field_mapping_-phase_P_to_A": "ADNI_gre_field_mapping",
-            "ADNI_gre_field_mapping_0_angle__EYES_OPEN_": "ADNI_gre_field_mapping",
-            "Axial_fcMRI__EYES_OPEN_": "ADNI_gre_field_mapping"
-        }
-        fmap_path = image_path
-        for original, replacement in replacements.items():
-            fmap_path = fmap_path.replace(original, replacement)
-        fmap_path = fmap_path[:-9] # Remove the image identifier just check if the visit exists
-        if os.path.exists(fmap_path):
-            cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
-            fmap_flag = 1
-        else:
-            fmap_path = fmap_path.replace("ADNI_gre_field_mapping", "Field_mapping")
-            if os.path.exists(fmap_path):
-                cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
-                fmap_flag = 1
-            else:
-                fmap_path = fmap_path.replace("Field_mapping", "Field_Mapping")
-                if os.path.exists(fmap_path):
-                    cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
-                    fmap_flag = 1
-                else:
-                    fmap_path = fmap_path.replace("Field_Mapping", "Field_Mapping_phase_R-L")
-                    if os.path.exists(fmap_path):
-                        cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
-                        fmap_flag = 1
-                    else:
-                        fmap_path = fmap_path.replace("Field_Mapping_phase_R-L", "Axial_Field_Mapping")
-                        if os.path.exists(fmap_path):
-                            cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
-                            fmap_flag = 1
-                        else:
-                            fmap_path = image_path
-                            fmap_flag = 0
+    # if modality == "fmap":
+    #     fmap_path = image_path
+    #     replacements = {
+    #         "Axial_rsfMRI__Eyes_Open_": "ADNI_gre_field_mapping",
+    #         "Extended_Resting_State_fMRI": "ADNI_gre_field_mapping",
+    #         "Axial_fcMRI__EYES_OPEN_": "ADNI_gre_field_mapping",
+    #         "Axial_fcMRI__Eyes_Open_": "ADNI_gre_field_mapping",
+    #         "Resting_State_fMRI": "ADNI_gre_field_mapping",
+    #         "Axial_fcMRI": "ADNI_gre_field_mapping",
+    #         "Axial_rsfMRI__Eyes_Open_": "ADNI_gre_field_mapping",
+    #         "Axial_rsfMRI__EYES_OPEN_": "ADNI_gre_field_mapping",
+    #         "Axial_rsfMRI__Eyes_Open__-phase_P_to_A": "ADNI_gre_field_mapping",
+    #         "ADNI_gre_field_mapping_-phase_P_to_A": "ADNI_gre_field_mapping",
+    #         "ADNI_gre_field_mapping_0_angle__EYES_OPEN_": "ADNI_gre_field_mapping",
+    #         "Axial_fcMRI__EYES_OPEN_": "ADNI_gre_field_mapping"
+    #     }
+    #     fmap_path = image_path
+    #     for original, replacement in replacements.items():
+    #         fmap_path = fmap_path.replace(original, replacement)
+    #     fmap_path = fmap_path[:-9] # Remove the image identifier just check if the visit exists
+    #     if os.path.exists(fmap_path):
+    #         cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+    #         fmap_flag = 1
+    #     else:
+    #         fmap_path = fmap_path.replace("ADNI_gre_field_mapping", "Field_mapping")
+    #         if os.path.exists(fmap_path):
+    #             cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+    #             fmap_flag = 1
+    #         else:
+    #             fmap_path = fmap_path.replace("Field_mapping", "Field_Mapping")
+    #             if os.path.exists(fmap_path):
+    #                 cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+    #                 fmap_flag = 1
+    #             else:
+    #                 fmap_path = fmap_path.replace("Field_Mapping", "Field_Mapping_phase_R-L")
+    #                 if os.path.exists(fmap_path):
+    #                     cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+    #                     fmap_flag = 1
+    #                 else:
+    #                     fmap_path = fmap_path.replace("Field_Mapping_phase_R-L", "Axial_Field_Mapping")
+    #                     if os.path.exists(fmap_path):
+    #                         cprint("[FMAP] Found corresponding field maps for " + subject + " at " + fmap_path)
+    #                         fmap_flag = 1
+    #                     else:
+    #                         fmap_path = image_path
+    #                         fmap_flag = 0
 
     # If the original image is a DICOM, check if contains two DICOM
     # inside the same folder
@@ -1509,10 +1509,8 @@ def create_file(image, modality, bids_dir, mod_to_update):
         else:
             zip_image = "y"
         
-        print(image_path)
-        print(output_path)
-        print(output_filename)
-        if modality == "fmap" and fmap_flag == 1:
+        fmap_path = image_path[:-9] # Remove the image ID, all images in the visit will be converted
+        if modality == "fmap":
             fmap_image_ids = os.listdir(fmap_path)
             for id in fmap_image_ids:
                 fmap_image_path = os.path.join(fmap_path, id)
@@ -1523,8 +1521,6 @@ def create_file(image, modality, bids_dir, mod_to_update):
                     compress=True if zip_image == "y" else False,
                     bids_sidecar=True if generate_json == "y" else False,
                 )
-        elif modality == "fmap" and fmap_flag == 0:
-            do_nothing = 0
         else:
             if image.Is_Dicom:
                 run_dcm2niix(

@@ -91,7 +91,7 @@ def create_participants_df(
     participant_df = pd.DataFrame(columns=fields_bids)
 
     for i in range(0, len(participant_fields_db)):
-        pfdbi = participant_fields_db[i]
+        pfdbi = f'"{participant_fields_db[i]}"'
         # If a field not empty is found
         if not pd.isnull(pfdbi):
             # Extract the file location of the field and read the value from the file
@@ -120,6 +120,7 @@ def create_participants_df(
             # For each field in fields_dataset extract all the column values
             for j in range(0, len(file_to_read)):
                 # Convert the alternative_id_1 to string if is an integer/float
+                import time
                 value_to_read = file_to_read[pfdbi]
                 if participant_fields_bids[i] == "alternative_id_1" and (
                     value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64

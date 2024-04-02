@@ -120,7 +120,7 @@ class AdniToBids(Converter):
             study_name="ADNI", readme_data=readme_data, bids_dir=out_path
         )
 
-        # -- Creation of participant.tsv --
+        # # -- Creation of participant.tsv --
         # cprint("Creating participants.tsv...")
         # participants_df = bids.create_participants_df(
         #     "ADNI", clinic_specs_path, clinical_data_dir, bids_ids

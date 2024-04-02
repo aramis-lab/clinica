@@ -1,7 +1,6 @@
 """Module for converting field maps of ADNI."""
 from os import PathLike
 from typing import List, Optional
-import time
 
 def convert_adni_fmap(
     source_dir: PathLike,
@@ -38,7 +37,6 @@ def convert_adni_fmap(
     from os import path
 
     import pandas as pd
-    import json
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
@@ -54,12 +52,17 @@ def convert_adni_fmap(
     )
 
     images = compute_fmap_path(source_dir, csv_dir, subjects, conversion_dir)
+    # import pickle
+    # # with open('images.pkl', 'wb') as f:
+    # #     pickle.dump(images, f)
+    # with open('images.pkl', 'rb') as f:
+    #     images = pickle.load(f)
     
-    cprint("Paths of fMRI field maps found. Exporting images into BIDS ...")
-    print(destination_dir)
+    cprint("Paths of field maps found. Exporting images into BIDS ...")
 
     paths_to_bids(images, destination_dir, "fmap", mod_to_update=mod_to_update)
     rename_fmaps(destination_dir)
+
     cprint(msg="Field maps conversion done.", lvl="debug")
 
 def compute_fmap_path(source_dir, csv_dir, subjs_list, conversion_dir):
@@ -120,14 +123,8 @@ def compute_fmap_path(source_dir, csv_dir, subjs_list, conversion_dir):
 
     # Selecting only fMRI images that are not Multiband
     mri_list = mri_list[
-        mri_list.SEQUENCE.str.contains("MRI")
-    ]  # 'MRI' includes all fMRI and fMRI scans, but not others
-    unwanted_sequences = ["MB"]
-    mri_list = mri_list[
-        mri_list.SEQUENCE.map(
-            lambda x: not any(subs in x for subs in unwanted_sequences)
-        )
-    ]
+        mri_list.SEQUENCE.str.contains("apping")
+    ]  # 'apping' includes all field map scans, but not others
 
     for subj in subjs_list:
         ssubj = subj.replace('"','')
@@ -196,7 +193,7 @@ def compute_fmap_path(source_dir, csv_dir, subjs_list, conversion_dir):
 
     # Checking for images paths in filesystem
     images = find_image_path(fmap_df, source_dir, "FMAP", "S", "Series_ID")
-    # images.to_csv(path.join(conversion_dir, "fmap_paths.tsv"), sep="\t", index=False) Do not save a tsv for FMAPs, if you have the fMRI tsv you can infer field map locations
+    images.to_csv(path.join(conversion_dir, "fmap_paths.tsv"), sep="\t", index=False)
 
     return images
 
@@ -244,8 +241,7 @@ def fmap_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
 def rename_fmaps(destination_dir):
     import os
     import shutil
-    import nibabel as nib
-    import numpy as np
+    import json
 
     dir_name = destination_dir
     for root, dirs, _ in os.walk(destination_dir):
@@ -261,18 +257,82 @@ def rename_fmaps(destination_dir):
                     for filename in filenames:
                         fmap_filename = os.path.join(subroot, filename)
                         if filename[-11:] == "fmap.nii.gz" and os.path.exists(fmap_filename):
-                            os.remove(fmap_filename)
+                            mag_filename = os.path.join(subroot, filename[:-11] + "magnitude1.nii.gz")
+                            os.rename(fmap_filename, mag_filename)
+                        if filename[-14:] == "fmap_e2.nii.gz" and os.path.exists(fmap_filename):
+                            mag_filename = os.path.join(subroot, filename[:-14] + "magnitude2.nii.gz")
+                            os.rename(fmap_filename, mag_filename)
                         if filename[-9:] == "fmap.json" and os.path.exists(fmap_filename):
-                            print(fmap_filename)
                             os.remove(fmap_filename)
                         if filename[-12:] == "fmap_e2.json" and os.path.exists(fmap_filename):
                             os.remove(fmap_filename)
-                        if filename[-14:] == "fmap_e2.nii.gz" and os.path.exists(fmap_filename):
-                            mag_filename = os.path.join(subroot, filename[:-14] + "magnitude1.nii.gz")
-                            os.rename(fmap_filename, mag_filename)
-                        if filename[-17:] == "fmap_e2_ph.nii.gz" and os.path.exists(fmap_filename):
-                            phase_filename = os.path.join(subroot, filename[:-17] + "phasediff.nii.gz")
-                            os.rename(fmap_filename, phase_filename)
+                        if filename[-12:] == "fmap_ph.json" and os.path.exists(fmap_filename):
+                            check_json(fmap_filename, filename, subroot)
                         if filename[-15:] == "fmap_e2_ph.json" and os.path.exists(fmap_filename):
-                            phase_json = os.path.join(subroot, filename[:-15] + "phasediff.json")
-                            os.rename(fmap_filename, phase_json)
+                            check_json(fmap_filename, filename, subroot)               
+                        if filename[-14:] == "fmap_ph.nii.gz":
+                            if os.path.exists(fmap_filename[:-14] + "phase1.json"):
+                                os.rename(fmap_filename, fmap_filename[:-14] + "phase1.nii.gz")
+                            elif os.path.exists(fmap_filename[:-14] + "fmap_ph.json"):
+                                json_filepath = fmap_filename[:-14] + "fmap_ph.json"
+                                with open(json_filepath, 'r') as file:
+                                    fmap_data = json.load(file)
+                                    if "EchoTime1" in fmap_data and "EchoTime2" in fmap_data:
+                                        os.rename(fmap_filename, fmap_filename[:-14] + "phasediff.nii.gz")
+                                        os.rename(json_filepath, json_filepath[:-12] + "phasediff.json")
+                                    else:
+                                        os.rename(fmap_filename, fmap_filename[:-14] + "phase1.nii.gz")
+                                        os.rename(json_filepath, json_filepath[:-12] + "phase1.json")
+                            elif os.path.exists(fmap_filename[:-17] + "phasediff.json"):
+                                json_filepath = fmap_filename[:-17] + "phasediff.json"
+                                with open(json_filepath, 'r') as file:
+                                    fmap_data = json.load(file)
+                                    if "EchoTime1" in fmap_data and "EchoTime2" in fmap_data:
+                                        os.rename(fmap_filename, fmap_filename[:-17] + "phasediff.nii.gz")
+                        if filename[-17:] == "fmap_e2_ph.nii.gz":
+                            if os.path.exists(fmap_filename[:-17] + "phase2.json"):
+                                os.rename(fmap_filename, fmap_filename[:-17] + "phase2.nii.gz")
+                            elif os.path.exists(fmap_filename[:-17] + "fmap_e2_ph.json"):
+                                json_filepath = fmap_filename[:-17] + "fmap_e2_ph.json"
+                                with open(json_filepath, 'r') as file:
+                                    fmap_data = json.load(file)
+                                    if "EchoTime1" in fmap_data and "EchoTime2" in fmap_data:
+                                        os.rename(fmap_filename, fmap_filename[:-17] + "phasediff.nii.gz")
+                                        os.rename(json_filepath, json_filepath[:-15] + "phasediff.json")
+                                    else:
+                                        os.rename(fmap_filename, fmap_filename[:-17] + "phase2.nii.gz")
+                                        os.rename(json_filepath, json_filepath[:-15] + "phase2.json")
+                            elif os.path.exists(fmap_filename[:-17] + "phasediff.json"):
+                                json_filepath = fmap_filename[:-17] + "phasediff.json"
+                                with open(json_filepath, 'r') as file:
+                                    fmap_data = json.load(file)
+                                    if "EchoTime1" in fmap_data and "EchoTime2" in fmap_data:
+                                        os.rename(fmap_filename, fmap_filename[:-17] + "phasediff.nii.gz")
+
+def check_json(fmap_filename, filename, subroot):
+    import os
+    import json
+
+    nifti_file = fmap_filename[:-5] + "nii.gz"
+    with open(fmap_filename, 'r') as file:
+        fmap_data = json.load(file)
+        if "EchoTime1" in fmap_data and "EchoTime2" in fmap_data:
+            phase_json = os.path.join(subroot, filename[:-15] + "phasediff.json")
+            os.rename(fmap_filename, phase_json)
+            if os.path.exists(nifti_file):
+                phase_nifti = os.path.join(subroot, filename[:-15] + "_phasediff.nii.gz")
+                os.rename(nifti_file, phase_nifti)
+        else:
+            if filename[:-12] == "fmap_ph.json":
+                phase_json = os.path.join(subroot, filename[:-12] + "phase1.json")
+                os.rename(fmap_filename, phase_json)
+                if os.path.exists(nifti_file):
+                    phase_nifti = os.path.join(subroot, filename[:-12] + "phase1.nii.gz")
+                    os.rename(nifti_file, phase_nifti)
+            if filename[:-15] == "fmap_e2_ph.json":
+                phase_json = os.path.join(subroot, filename[:-15] + "phase2.json")
+                os.rename(fmap_filename, phase_json)
+                if os.path.exists(nifti_file):
+                    phase_nifti = os.path.join(subroot, filename[:-15] + "phase2.nii.gz")
+                    os.rename(nifti_file, phase_nifti)            
+            
