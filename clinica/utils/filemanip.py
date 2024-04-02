@@ -1,46 +1,22 @@
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Union
 
-
-def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
-    import gzip
-    import operator
-    import shutil
-    from os import getcwd
-    from os.path import abspath, join
-    from pathlib import Path
-
-    from nipype.utils.filemanip import split_filename
-
-    try:
-        # Assuming in_file is path-like.
-        in_file = Path(in_file)
-    except TypeError:
-        try:
-            # Assuming in_file is a sequence type.
-            return [_zip_unzip_nii(f, same_dir, compress) for f in in_file]
-        except TypeError:
-            # All other cases.
-            return None
-
-    op = operator.eq if compress else operator.ne
-    if op(in_file.suffix, ".gz"):
-        return str(in_file)
-
-    if not in_file.exists():
-        raise FileNotFoundError(f"File {in_file} does not exist.")
-
-    orig_dir, base, ext = split_filename(str(in_file))
-    new_ext = ext + ".gz" if compress else ext[:-3]
-    out_file = abspath(join(orig_dir if same_dir else getcwd(), base + new_ext))
-
-    outer = open if compress else gzip.open
-    inner = gzip.open if compress else open
-    with outer(in_file, "rb") as f_in:
-        with inner(out_file, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
-
-    return out_file
+__all__ = [
+    "delete_directories",
+    "delete_directories_task",
+    "extract_crash_files_from_log_file",
+    "extract_image_ids",
+    "extract_metadata_from_json",
+    "extract_subjects_sessions_from_filename",
+    "get_filename_no_ext",
+    "get_parent",
+    "get_subject_id",
+    "load_volume",
+    "read_participant_tsv",
+    "save_participants_sessions",
+    "unzip_nii",
+    "zip_nii",
+]
 
 
 def zip_nii(in_file: str, same_dir: bool = False) -> str:
@@ -130,6 +106,47 @@ def unzip_nii(
     return _zip_unzip_nii(in_file, same_dir, compress=False)
 
 
+def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
+    import gzip
+    import operator
+    import shutil
+    from os import getcwd
+    from os.path import abspath, join
+    from pathlib import Path
+
+    from nipype.utils.filemanip import split_filename
+
+    try:
+        # Assuming in_file is path-like.
+        in_file = Path(in_file)
+    except TypeError:
+        try:
+            # Assuming in_file is a sequence type.
+            return [_zip_unzip_nii(f, same_dir, compress) for f in in_file]
+        except TypeError:
+            # All other cases.
+            return None
+
+    op = operator.eq if compress else operator.ne
+    if op(in_file.suffix, ".gz"):
+        return str(in_file)
+
+    if not in_file.exists():
+        raise FileNotFoundError(f"File {in_file} does not exist.")
+
+    orig_dir, base, ext = split_filename(str(in_file))
+    new_ext = ext + ".gz" if compress else ext[:-3]
+    out_file = abspath(join(orig_dir if same_dir else getcwd(), base + new_ext))
+
+    outer = open if compress else gzip.open
+    inner = gzip.open if compress else open
+    with outer(in_file, "rb") as f_in:
+        with inner(out_file, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    return out_file
+
+
 def load_volume(image_path: str):
     """Load a 3D nifti image from its path.
 
@@ -168,8 +185,8 @@ def load_volume(image_path: str):
 
 
 def save_participants_sessions(
-    participant_ids: List[str],
-    session_ids: List[str],
+    participant_ids: list[str],
+    session_ids: list[str],
     out_folder: str,
     out_file: Optional[str] = "participants.tsv",
 ) -> None:
@@ -303,7 +320,7 @@ def get_filename_no_ext(filename: str) -> str:
     return stem
 
 
-def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
+def extract_image_ids(bids_or_caps_files: list[str]) -> list[str]:
     """Extract the image IDs from a list of BIDS or CAPS files.
 
     .. warning::
@@ -345,8 +362,8 @@ def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
 
 
 def extract_subjects_sessions_from_filename(
-    bids_or_caps_files: List[str],
-) -> Tuple[List[str], List[str]]:
+    bids_or_caps_files: list[str],
+) -> tuple[list[str], list[str]]:
     """Extract the subject and session labels from a list of BIDS or CAPS files.
 
     Parameters
@@ -381,7 +398,7 @@ def extract_subjects_sessions_from_filename(
     return subject_ids, session_ids
 
 
-def extract_crash_files_from_log_file(filename: str) -> List[str]:
+def extract_crash_files_from_log_file(filename: str) -> list[str]:
     """Extract crash files (*.pklz) from `filename`.
 
     Parameters
@@ -411,7 +428,7 @@ def extract_crash_files_from_log_file(filename: str) -> List[str]:
     return crash_files
 
 
-def read_participant_tsv(tsv_file: Union[str, Path]) -> Tuple[List[str], List[str]]:
+def read_participant_tsv(tsv_file: Union[str, Path]) -> tuple[list[str], list[str]]:
     """Extract participant IDs and session IDs from TSV file.
 
     Parameters
@@ -538,13 +555,13 @@ def get_parent(path: str, n: int = 1) -> Path:
     return get_parent(Path(path).parent, n - 1)
 
 
-def get_folder_size(folder: str) -> int:
+def _get_folder_size(folder: Union[str, Path]) -> int:
     """Compute the size in bytes recursively of the given folder.
 
     Parameters
     ----------
-    folder : str
-        Path to the folder for which to compute size.
+    folder : str or Path
+        The path to the folder for which to compute size.
 
     Returns
     -------
@@ -553,7 +570,7 @@ def get_folder_size(folder: str) -> int:
 
     Examples
     --------
-    >>> get_folder_size("./test/instantiation/")
+    >>> _get_folder_size("./test/instantiation/")
     52571
     """
     import os
@@ -562,13 +579,13 @@ def get_folder_size(folder: str) -> int:
     prepend = partial(os.path.join, folder)
     return sum(
         [
-            (os.path.getsize(f) if os.path.isfile(f) else get_folder_size(f))
+            (os.path.getsize(f) if os.path.isfile(f) else _get_folder_size(f))
             for f in map(prepend, os.listdir(folder))
         ]
     )
 
 
-def get_folder_size_human(folder: str) -> str:
+def _get_folder_size_human(folder: Union[str, Path]) -> str:
     """Computes the size of the given folder in human-readable form.
 
     Parameters
@@ -583,13 +600,13 @@ def get_folder_size_human(folder: str) -> str:
 
     Examples
     --------
-    >>> get_folder_size_human("./test/instantiation/")
+    >>> _get_folder_size_human("./test/instantiation/")
     '51.3388671875 KB'
     """
-    return humanize_bytes(get_folder_size(folder))
+    return _humanize_bytes(_get_folder_size(folder))
 
 
-def humanize_bytes(size: int) -> str:
+def _humanize_bytes(size: int) -> str:
     """Convert a number of bytes in a human-readable form.
 
     Parameters
@@ -612,7 +629,7 @@ def humanize_bytes(size: int) -> str:
     return f"{size} {units[-1]}"
 
 
-def delete_directories(directories: list) -> None:
+def delete_directories(directories: list[Union[str, Path]]) -> None:
     """This function deletes the directories of the given list".
 
     Parameters
@@ -622,20 +639,13 @@ def delete_directories(directories: list) -> None:
     """
     import shutil
 
-    from clinica.utils.filemanip import (  # noqa
-        _print_and_warn,
-        get_folder_size,
-        get_folder_size_human,
-        humanize_bytes,
-    )
-
     total_size: int = 0
     for directory in directories:
-        total_size += get_folder_size(str(directory))
-        size = get_folder_size_human(str(directory))
+        total_size += _get_folder_size(str(directory))
+        size = _get_folder_size_human(str(directory))
         shutil.rmtree(directory)
         _print_and_warn(f"Folder {directory} deleted. Freeing {size} of disk space...")
-    _print_and_warn(f"Was able to remove {humanize_bytes(total_size)} of data.")
+    _print_and_warn(f"Was able to remove {_humanize_bytes(total_size)} of data.")
 
 
 def _print_and_warn(msg: str, lvl: str = "info") -> None:
@@ -646,3 +656,10 @@ def _print_and_warn(msg: str, lvl: str = "info") -> None:
 
     cprint(msg=msg, lvl=lvl)
     warnings.warn(msg)
+
+
+def delete_directories_task(directories: list) -> None:
+    """Task for Nipype."""
+    from clinica.utils.filemanip import delete_directories  # noqa
+
+    return delete_directories(directories)
