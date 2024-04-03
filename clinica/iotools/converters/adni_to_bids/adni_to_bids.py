@@ -120,30 +120,31 @@ class AdniToBids(Converter):
             study_name="ADNI", readme_data=readme_data, bids_dir=out_path
         )
 
-        # # -- Creation of participant.tsv --
-        # cprint("Creating participants.tsv...")
-        # participants_df = bids.create_participants_df(
-        #     "ADNI", clinic_specs_path, clinical_data_dir, bids_ids
-        # )
+        # -- Creation of participant.tsv --
+        cprint("Creating participants.tsv...")
+        participants_df = bids.create_participants_df(
+            "ADNI", clinic_specs_path, clinical_data_dir, bids_ids
+        )
 
-        # # Replace the original values with the standard defined by the AramisTeam
-        # participants_df["sex"] = participants_df["sex"].replace("Male", "M")
-        # participants_df["sex"] = participants_df["sex"].replace("Female", "F")
+        # Replace the original values with the standard defined by the AramisTeam
+        participants_df["sex"] = participants_df["sex"].replace("Male", "M")
+        participants_df["sex"] = participants_df["sex"].replace("Female", "F")
 
-        # # Correction of diagnosis_sc for ADNI3 participants
-        # participants_df = adni_utils.correct_diagnosis_sc_adni3(
-        #     clinical_data_dir, participants_df
-        # )
+        # Correction of diagnosis_sc for ADNI3 participants
+        participants_df = adni_utils.correct_diagnosis_sc_adni3(
+            clinical_data_dir, participants_df
+        )
 
-        # participants_df.to_csv(
-        #     path.join(out_path, "participants.tsv"),
-        #     sep="\t",
-        #     index=False,
-        #     encoding="utf-8",
-        # )
+        participants_df.to_csv(
+            path.join(out_path, "participants.tsv"),
+            sep="\t",
+            index=False,
+            encoding="utf-8",
+        )
 
-        # # -- Creation of sessions.tsv --
-        # cprint("Creating sessions files...")
+        # -- Creation of sessions.tsv --
+        # Commented this out due to an issue with my ADNIMERGE file containing smart quotes, uncomment for PR - MT 040224
+        # cprint("Creating sessions files...") 
         # adni_utils.create_adni_sessions_dict(
         #     bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths
         # )
@@ -187,6 +188,7 @@ class AdniToBids(Converter):
         import os
         from copy import copy
         from os import path
+        import pandas as pd
 
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
@@ -201,10 +203,15 @@ class AdniToBids(Converter):
 
         modalities = modalities or self.get_modalities_supported()
 
-        adni_merge_path = path.join(clinical_dir, "ADNIMERGE2.csv")
+        adni_merge_path = path.join(clinical_dir, "ADNIMERGE.csv")
         adni_merge = pd.read_csv(adni_merge_path, delimiter=',', engine='python', quotechar='"')
-        adni_merge.columns = adni_merge.columns.str.replace('"', '')
-        adni_merge.columns = adni_merge.columns.str.replace('”', '')
+        # adni_merge.columns = adni_merge.columns.str.replace('"', '')
+        # adni_merge.columns = adni_merge.columns.str.replace('”', '')
+        # Remove all double quotes from all values in the DataFrame
+        # adni_merge = adni_merge.replace('"', '', regex=True)
+        # adni_merge = adni_merge.replace('“', '', regex=True)
+        # adni_merge = adni_merge.replace('”', '', regex=True)
+
 
         # Load a file with subjects list or compute all the subjects
         if subjs_list_path is not None:

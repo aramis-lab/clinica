@@ -51,12 +51,12 @@ def convert_adni_fmap(
         f"Calculating paths of fMRI field maps (FMAPs). Output will be stored in {conversion_dir}."
     )
 
-    images = compute_fmap_path(source_dir, csv_dir, subjects, conversion_dir)
-    # import pickle
-    # # with open('images.pkl', 'wb') as f:
-    # #     pickle.dump(images, f)
-    # with open('images.pkl', 'rb') as f:
-    #     images = pickle.load(f)
+    # images = compute_fmap_path(source_dir, csv_dir, subjects, conversion_dir)
+    import pickle
+    # with open('images.pkl', 'wb') as f:
+    #     pickle.dump(images, f)
+    with open('images.pkl', 'rb') as f:
+        images = pickle.load(f)
     
     cprint("Paths of field maps found. Exporting images into BIDS ...")
 
@@ -99,7 +99,7 @@ def compute_fmap_path(source_dir, csv_dir, subjs_list, conversion_dir):
     ]
     fmap_df = pd.DataFrame(columns=fmap_col)
     fmap_dfs_list = []
-    adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE2.csv"), sep=",", engine='python')
+    adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE.csv"), sep=",", engine='python')
 
     mayo_mri_qc = pd.read_csv(
         path.join(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15.csv"),
