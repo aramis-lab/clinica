@@ -36,13 +36,9 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
         - The reference B0 volume
         - The brain mask computed on the B0 volume
     """
-    from clinica.pipelines.dwi.preprocessing.fmap.workflows import (
-        compute_reference_b0,
-    )
-    from clinica.pipelines.dwi.preprocessing.utils import _bids_dir_to_fsl_dir  # noqa
-    from clinica.utils.filemanip import (
-        extract_metadata_from_json,
-        handle_missing_keys_dwi,
+    from clinica.pipelines.dwi.preprocessing.fmap.workflows import compute_reference_b0
+    from clinica.pipelines.dwi.preprocessing.utils import (
+        get_readout_time_and_phase_encoding_direction,
     )
 
     base_dir = Path(cmdopt["input"])
@@ -51,13 +47,12 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
     )
     (tmp_path / "tmp").mkdir()
 
-    [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
-        str(input_dir / "sub-01_ses-M000_dwi.json"),
-        ["TotalReadoutTime", "PhaseEncodingDirection"],
-        handle_missing_keys=handle_missing_keys_dwi,
+    (
+        total_readout_time,
+        phase_encoding_direction,
+    ) = get_readout_time_and_phase_encoding_direction(
+        str(input_dir / "sub-01_ses-M000_dwi.json")
     )
-    phase_encoding_direction = _bids_dir_to_fsl_dir(phase_encoding_direction)
-
     wf = compute_reference_b0(
         base_dir=str(tmp_dir),
         b_value_threshold=5.0,
