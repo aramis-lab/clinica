@@ -27,7 +27,7 @@ def run_t1_freesurfer_cross_sectional(
     surf/ folder is ignored because it contains symlinks that makes hard to check with ref data
     (symlinks of ref data are ignored after rsync on CI machines).
     """
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
+    from clinica.pipelines.anatomical.freesurfer.t1.pipeline import T1FreeSurfer
 
     parameters = {"recon_all_args": "-qcache", "skip_question": False}
 
@@ -90,7 +90,7 @@ def run_t1_freesurfer_template(
     surf/ folder is ignored because it contains symlinks that makes hard to check with ref data
     (symlinks of ref data are ignored after rsync on CI machines).
     """
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import (
+    from clinica.pipelines.anatomical.freesurfer.longitudinal.template.pipeline import (
         T1FreeSurferTemplate,
     )
 
@@ -145,7 +145,7 @@ def run_t1_freesurfer_longitudinal_correction(
     surf/ folder is ignored because it contains symlinks that makes hard to check with ref data
     (symlinks of ref data are ignored after rsync on CI machines).
     """
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import (
+    from clinica.pipelines.anatomical.freesurfer.longitudinal.correction.pipeline import (
         T1FreeSurferLongitudinalCorrection,
     )
 
