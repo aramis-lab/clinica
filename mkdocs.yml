@@ -63,8 +63,6 @@ nav:
   - Installation:
     - Installation: Installation.md
     - Third-party: Third-party.md
-    # - ICM cluster installation: ICMClusterInstallation
-  # - Quick start:
   - Clinica environment:
     - What is Clinica?: WhatIsClinica.md
     - Interacting with Clinica: InteractingWithClinica.md
@@ -117,5 +115,3 @@ nav:
     - OHBM 2018: ClinicaConferences#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018
   - Glossary: glossary.md
   - What's new: CHANGELOG.md
-  # - Collaborate:
-    # - Coding for Clinica: CodingForClinica
