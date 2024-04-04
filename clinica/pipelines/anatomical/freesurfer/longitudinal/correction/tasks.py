@@ -12,7 +12,9 @@ def save_to_caps_task(
     """Adapter for Nipype."""
     from pathlib import Path
 
-    from .utils import save_to_caps
+    from clinica.pipelines.anatomical.freesurfer.longitudinal.correction.utils import (
+        save_to_caps,
+    )
 
     return save_to_caps(
         Path(source_dir),
@@ -49,7 +51,9 @@ def init_input_node_task(
     """Adapter for Nipype."""
     from pathlib import Path
 
-    from .utils import init_input_node
+    from clinica.pipelines.anatomical.freesurfer.longitudinal.correction.utils import (
+        init_input_node,
+    )
 
     return str(
         init_input_node(
@@ -66,6 +70,8 @@ def write_tsv_files_task(subjects_dir: str, subject_id: str) -> str:
     """Adapter for Nipype."""
     from pathlib import Path
 
-    from .utils import write_tsv_files
+    from clinica.pipelines.anatomical.freesurfer.longitudinal.correction.utils import (
+        write_tsv_files,
+    )
 
     return write_tsv_files(Path(subjects_dir), subject_id)
