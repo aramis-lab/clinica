@@ -25,6 +25,19 @@ Each record consists of the same number of fields, and these are separated by co
 
 - [wikipedia](https://en.wikipedia.org/wiki/Comma-separated_values)
 
+#### FWHM
+
+**FWHM** stands for *Full Width at Half Maximum*.
+
+In a distribution, full width at half maximum (FWHM) is the difference between the two values of the independent
+variable at which the dependent variable is equal to half of its maximum value. In other words, it is the width of a
+spectrum curve measured between those points on the y-axis which are half the maximum amplitude. 
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Full_width_at_half_maximum)
+
+
 #### GLM
 
 **GLM** stands for *Generalized Linear Model*.

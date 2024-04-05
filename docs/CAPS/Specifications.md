@@ -370,7 +370,7 @@ The `[_pvc-iy]` label describes the partial volume correction used in the algori
 
 The possible values for the `suvr-<suvr>` key/value are: `pons` for FDG-PET and `cerebellumPons` for different types of amyloid PET
 
-The `fwhm` represents the FWHM (in mm) of the Gaussian filter applied to the data mapped onto the FsAverage surface.
+The `fwhm` represents the [FWHM](../glossary.md#fwhm) (in mm) of the Gaussian filter applied to the data mapped onto the FsAverage surface.
 The different values are 0 (no smoothing), 5, 10, 15, 20, and 25.
 
 Files with the `_midcorticalsurface` suffix represent the surface at equal distance between the white matter/gray matter interface and the pial surface (one per hemisphere).
