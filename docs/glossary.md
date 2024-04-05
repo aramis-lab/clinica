@@ -84,6 +84,7 @@ The SUVR is the ratio of the image-derived radioactivity concentration
  and the whole body concentration of the injected radioactivity. When SUVR > 1,
 it indicates radioactivity accumulation in that region above the hypothetical
 even radioactivity distribution.
+
 ##### References
 
 - [wikipedia](https://en.wikipedia.org/wiki/Standardized_uptake_value)
