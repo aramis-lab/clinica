@@ -76,6 +76,18 @@ Different tracers are used for various imaging purposes, depending on the target
 
 - [wikipedia](https://en.wikipedia.org/wiki/Positron_emission_tomography)
 
+#### SUVR
+
+**SUVR** stands for *Standardized Uptake Value Ratio*.
+
+The SUVR is the ratio of the image-derived radioactivity concentration
+ and the whole body concentration of the injected radioactivity. When SUVR > 1,
+it indicates radioactivity accumulation in that region above the hypothetical
+even radioactivity distribution.
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Standardized_uptake_value)
+
 #### TSV
 
 **TSV** stands for *Tab-Separated Values*.
