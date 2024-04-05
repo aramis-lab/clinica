@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from os import PathLike
 from typing import Optional
 
@@ -50,7 +52,7 @@ def list_workflow_inputs(wf: Workflow) -> dict:
     return inputs
 
 
-def run(wf: Workflow, n_procs: Optional[int] = None) -> Result:
+def run(wf: Workflow, n_procs: int | None = None) -> Result:
     """Execute a Pydra workflow.
 
     If the execution of the workflow fails, the
@@ -62,19 +64,19 @@ def run(wf: Workflow, n_procs: Optional[int] = None) -> Result:
         The workflow to be executed.
 
     n_procs : int, optional
-        The number of CPU cores to be used to run the workflow.
-        If None, all available cores will be used.
+        The number of CPU cores used to run the workflow concurrently.
+        If None, the workflow is run sequentially.
 
     Returns
     -------
     Result :
         The result of running the Workflow
-
     """
     import re
 
     try:
-        with Submitter(plugin="cf", n_procs=n_procs) as submitter:
+        submitter_args = {"plugin": "cf", "n_procs": n_procs} if n_procs else {"plugin": "serial"}
+        with Submitter(**submitter_args) as submitter:
             submitter(wf)
     except Exception as e:
         path = re.search(r"/.*\.pklz", str(e))
