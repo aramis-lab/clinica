@@ -89,6 +89,20 @@ Fourier transform) of the optical transfer function of an imaging system.
 
 - [wikipedia](https://en.wikipedia.org/wiki/Point_spread_function)
 
+
+#### PVC
+
+**PVC** stands for *Partial-Volume Correction*.
+
+PVC corrects partial volume effects which blur the images and 
+are due to both the limited resolution of PET and the definite size of 
+the PET voxel. 
+
+##### References
+
+- [PET data analysis](http://www.turkupetcentre.net/petanalysis/image_pve.html)
+
+
 #### SUVR
 
 **SUVR** stands for *Standardized Uptake Value Ratio*.
