@@ -200,7 +200,16 @@ def _check_bids_is_not_caps(bids_directory: Path):
 def _check_bids_is_not_empty(bids_directory: Path):
     from clinica.utils.exceptions import ClinicaBIDSError
 
-    if len([f for f in bids_directory.iterdir()]) <= 1:
+    if (
+        len(
+            [
+                f
+                for f in bids_directory.iterdir()
+                if f.name != "dataset_description.json"
+            ]
+        )
+        == 0
+    ):
         raise ClinicaBIDSError(
             f"The BIDS directory you provided is empty. ({bids_directory})."
         )
