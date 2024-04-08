@@ -252,7 +252,7 @@ def _check_bids_or_caps_compliance(filename: str, sep: str):
     return m
 
 
-def get_subject_id(bids_or_caps_file: str) -> str:
+def get_subject_id(bids_or_caps_file: Union[str, Path]) -> str:
     """Extract the subject ID from a BIDS or CAPS file path.
 
     The subject ID is defined as
@@ -264,8 +264,8 @@ def get_subject_id(bids_or_caps_file: str) -> str:
 
     Parameters
     ----------
-    bids_or_caps_file: str
-        Path to a file from a BIDS or CAPS folder.
+    bids_or_caps_file: str or Path
+        The path to a file from a BIDS or CAPS folder.
 
     Returns
     -------
@@ -284,7 +284,7 @@ def get_subject_id(bids_or_caps_file: str) -> str:
     --------
     extract_image_ids
     """
-    match = _check_bids_or_caps_compliance(bids_or_caps_file, sep="/")
+    match = _check_bids_or_caps_compliance(str(bids_or_caps_file), sep="/")
     subject_id = match.group(1) + "_" + match.group(2)
 
     return subject_id
