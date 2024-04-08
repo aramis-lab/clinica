@@ -76,6 +76,19 @@ Different tracers are used for various imaging purposes, depending on the target
 
 - [wikipedia](https://en.wikipedia.org/wiki/Positron_emission_tomography)
 
+#### PSF
+
+**PSF** stands for *Point Spread Function*.
+
+The PSF describes the response of a focused optical imaging system to
+a point source or point object, that is considered as a spatial impulse.
+In functional terms, it is the spatial domain version (i.e., the inverse
+Fourier transform) of the optical transfer function of an imaging system. 
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Point_spread_function)
+
 #### SUVR
 
 **SUVR** stands for *Standardized Uptake Value Ratio*.

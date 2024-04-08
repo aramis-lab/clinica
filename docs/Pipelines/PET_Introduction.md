@@ -9,7 +9,7 @@
 
 To correct for [partial volume effects](http://www.turkupetcentre.net/petanalysis/image_pve.html), several PVC algorithms exist and are implemented in the [PETPVC toolbox](https://github.com/UCL/PETPVC).
 
-To perform PVC (compulsory for [`pet-surface`](../PET_Surface), optional for [`pet-volume`](../PET_Volume)), you will need to specify in a [TSV](../glossary.md#tsv) file the full width at half maximum (FWHM), in millimeters, of the [point spread function (PSF)](https://en.wikipedia.org/wiki/Point_spread_function) associated with your data, in the x, y and z directions.
+To perform PVC (compulsory for [`pet-surface`](../PET_Surface), optional for [`pet-volume`](../PET_Volume)), you will need to specify in a [TSV](../glossary.md#tsv) file the full width at half maximum (FWHM), in millimeters, of the [PSF](../glossary.md#psf) associated with your data, in the x, y and z directions.
 
 For instance, if the FWHM of the PSF associated with your first image is 5 mm along the x and y axes, and 6 mm along the z axis, the first row of your [TSV](../glossary.md#tsv) file will look like this:
 
