@@ -65,7 +65,7 @@ def init_input_node(
         )
     else:
         subjects_dir = output_dir / image_id
-    subjects_dir.mkdir(exist_ok=True)
+    subjects_dir.mkdir(parents=True, exist_ok=True)
     # Create symbolic links containing cross-sectional segmentation(s) in SUBJECTS_DIR so that recon-all can run
     for session_id in list_session_ids:
         cross_sectional_path = (

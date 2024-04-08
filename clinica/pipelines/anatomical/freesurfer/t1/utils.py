@@ -24,7 +24,7 @@ def init_input_node(
     image_id = get_subject_id(t1w)
     flags = _check_flags(t1w, recon_all_args)
     subjects_dir = output_dir / image_id
-    subjects_dir.mkdir(exist_ok=True)
+    subjects_dir.mkdir(parents=True, exist_ok=True)
     print_begin_image(image_id, ["ReconAllArgs"], [flags])
 
     return image_id, t1w, flags, subjects_dir
