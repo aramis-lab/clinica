@@ -306,17 +306,19 @@ def _build_pet_qc_all_studies_for_subject(
 
 def _convert_subject_to_rid(subject: str) -> int:
     """Get the QC RID from the subject string identifier.
-
-    TODO: Use a regex to match pattern XXX_S_XXXX ????
-
     Examples
     --------
     >>> _convert_subject_to_rid("123_S_4567")
     4567
     """
-    try:
-        return int(subject[-4:])
-    except Exception:
+
+    from re import search
+
+    match = search(r"\d{3}_S_(\d{4})", subject)
+
+    if match:
+        return int(match.group(1))
+    else:
         raise ValueError(
             f"Cannot convert the subject '{subject}' identifier into a RID "
             "for PET QC filtering. The expected format for the subject is XXX_S_XXXX."
