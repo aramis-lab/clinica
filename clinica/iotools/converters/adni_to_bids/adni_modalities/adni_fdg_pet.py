@@ -314,7 +314,7 @@ def _convert_subject_to_rid(subject: str) -> int:
 
     from re import search
 
-    match = search(r'\d{3}_S_(\d{4})', subject)
+    match = search(r"\d{3}_S_(\d{4})", subject)
 
     if match:
         return int(match.group(1))

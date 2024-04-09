@@ -221,7 +221,9 @@ def test_convert_subject_to_rid():
     assert _convert_subject_to_rid("123_S_4567") == 4567
 
 
-@pytest.mark.parametrize("subject", ["", "123_S_456a", "123_P_4567", "000S6699", "123", "4567"])
+@pytest.mark.parametrize(
+    "subject", ["", "123_S_456a", "123_P_4567", "000S6699", "123", "4567"]
+)
 def test_convert_subject_to_rid_error(subject):
     from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
         _convert_subject_to_rid,
