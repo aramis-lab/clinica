@@ -1,4 +1,3 @@
-from io import TextIOBase
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -190,7 +189,7 @@ def write_bids(
     from pandas import notna
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
-    from clinica.iotools.bids_utils import write_to_tsv
+    from clinica.iotools.bids_utils import StudyName, write_to_tsv
 
     participants = (
         clinical_data["Demographics"]
@@ -206,7 +205,7 @@ def write_bids(
     ).rename(columns=str.lower)
 
     with fsspec.open(str(rawdata / "dataset_description.json"), mode="wt") as f:
-        BIDSDatasetDescription(name="HABS").write(to=f)
+        BIDSDatasetDescription(name=StudyName.HABS).write(to=f)
 
     participants_file = rawdata / "participants.tsv"
     with fsspec.open(str(participants_file), mode="wb") as f:
@@ -273,5 +272,7 @@ def write_bids(
         ),
     }
     bids.write_modality_agnostic_files(
-        study_name="HABS", readme_data=readme_data, bids_dir=rawdata
+        study_name=StudyName.HABS,
+        readme_data=readme_data,
+        bids_dir=rawdata,
     )

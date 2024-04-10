@@ -28,7 +28,7 @@ class OasisToBids(Converter):
 
         # --Create participants.tsv--
         participants_df = bids.create_participants_df(
-            "OASIS", clinic_specs_path, clinical_data_dir, bids_ids
+            bids.StudyName.OASIS, clinic_specs_path, clinical_data_dir, bids_ids
         )
 
         # Replace the values of the diagnosis_bl column
@@ -48,7 +48,12 @@ class OasisToBids(Converter):
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict_OASIS(
-            clinical_data_dir, bids_dir, "OASIS", clinic_specs_path, bids_ids, "ID"
+            clinical_data_dir,
+            bids_dir,
+            bids.StudyName.OASIS,
+            clinic_specs_path,
+            bids_ids,
+            "ID",
         )
         for y in bids_ids:
             if sessions_dict[y]["M000"]["diagnosis"] > 0:
@@ -62,7 +67,7 @@ class OasisToBids(Converter):
         # Note: We have no scans information for OASIS
         scans_dict = bids.create_scans_dict(
             clinical_data_dir,
-            "OASIS",
+            bids.StudyName.OASIS,
             clinic_specs_path,
             bids_ids,
             "ID",
@@ -84,7 +89,9 @@ class OasisToBids(Converter):
             ),
         }
         bids.write_modality_agnostic_files(
-            study_name="OASIS-1", readme_data=readme_data, bids_dir=bids_dir
+            study_name=bids.StudyName.OASIS,
+            readme_data=readme_data,
+            bids_dir=bids_dir,
         )
 
     @staticmethod
