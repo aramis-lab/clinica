@@ -15,6 +15,8 @@ def convert_images(
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
+    from pathlib import Path
+
     import clinica.iotools.bids_utils as bids
 
     from .oasis3_utils import (
@@ -24,6 +26,8 @@ def convert_images(
         read_imaging_data,
         write_bids,
     )
+
+    bids_dir = Path(bids_dir)
 
     # read the clinical data files
     dict_df = read_clinical_data(path_to_clinical)
@@ -59,7 +63,9 @@ def convert_images(
         ),
     }
     bids.write_modality_agnostic_files(
-        study_name="OASIS-3", readme_data=readme_data, bids_dir=bids_dir
+        study_name=bids.StudyName.OASIS3,
+        readme_data=readme_data,
+        bids_dir=bids_dir,
     )
 
     return written

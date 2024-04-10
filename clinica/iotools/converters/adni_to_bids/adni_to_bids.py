@@ -71,6 +71,7 @@ class AdniToBids(Converter):
         """
         import os
         from os import path
+        from pathlib import Path
 
         import clinica.iotools.bids_utils as bids
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
@@ -78,28 +79,25 @@ class AdniToBids(Converter):
 
         from .adni_json import create_json_metadata
 
+        out_path = Path(out_path)
         clinic_specs_path = path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "data",
             "clinical_specifications_adni",
         )
-        try:
-            os.path.exists(out_path)
-        except IOError:
-            print("BIDS folder not found.")
-            raise
-
-        conversion_path = path.join(out_path, "conversion_info")
+        if not out_path.exists():
+            raise IOError("BIDS folder not found.")
+        conversion_path = out_path / "conversion_info"
 
         if clinical_data_only:
             bids_ids, bids_subjs_paths = get_bids_subjs_info(
                 clinical_data_dir=clinical_data_dir,
-                out_path=out_path,
+                out_path=str(out_path),
                 subjects_list_path=subjects_list_path,
             )
         else:
-            bids_ids = bids.get_bids_subjs_list(out_path)
-            bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
+            bids_ids = bids.get_bids_subjs_list(str(out_path))
+            bids_subjs_paths = bids.get_bids_subjs_paths(str(out_path))
 
         # -- Creation of modality agnostic files --
         cprint("Creating modality agnostic files...")
@@ -115,13 +113,18 @@ class AdniToBids(Converter):
             ),
         }
         bids.write_modality_agnostic_files(
-            study_name="ADNI", readme_data=readme_data, bids_dir=out_path
+            study_name=bids.StudyName.ADNI,
+            readme_data=readme_data,
+            bids_dir=out_path,
         )
 
         # -- Creation of participant.tsv --
         cprint("Creating participants.tsv...")
         participants_df = bids.create_participants_df(
-            "ADNI", clinic_specs_path, clinical_data_dir, bids_ids
+            bids.StudyName.ADNI,
+            clinic_specs_path,
+            clinical_data_dir,
+            bids_ids,
         )
 
         # Replace the original values with the standard defined by the AramisTeam
@@ -134,7 +137,7 @@ class AdniToBids(Converter):
         )
 
         participants_df.to_csv(
-            path.join(out_path, "participants.tsv"),
+            out_path / "participants.tsv",
             sep="\t",
             index=False,
             encoding="utf-8",
@@ -147,7 +150,7 @@ class AdniToBids(Converter):
         )
 
         # -- Creation of scans files --
-        if os.path.exists(conversion_path):
+        if conversion_path.exists():
             cprint("Creating scans files...")
             adni_utils.create_adni_scans_files(conversion_path, bids_subjs_paths)
 

@@ -14,8 +14,10 @@ def convert_images(
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
+    from pathlib import Path
 
     import clinica.iotools.bids_utils as bids
+    from clinica.iotools.bids_utils import StudyName
 
     from .ukb_utils import (
         complete_clinical,
@@ -26,6 +28,7 @@ def convert_images(
         write_bids,
     )
 
+    bids_dir = Path(bids_dir)
     # read the clinical data files
     df_clinical = find_clinical_data(path_to_clinical)
 
@@ -60,5 +63,7 @@ def convert_images(
         ),
     }
     bids.write_modality_agnostic_files(
-        study_name="UKB", readme_data=readme_data, bids_dir=bids_dir
+        study_name=StudyName.UKB,
+        readme_data=readme_data,
+        bids_dir=bids_dir,
     )
