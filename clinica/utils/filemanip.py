@@ -12,7 +12,6 @@ __all__ = [
     "get_parent",
     "get_subject_id",
     "load_volume",
-    "read_participant_tsv",
     "save_participants_sessions",
     "unzip_nii",
     "zip_nii",
@@ -426,63 +425,6 @@ def extract_crash_files_from_log_file(filename: str) -> list[str]:
                 crash_files.append(line.replace("\t crashfile:", "").replace("\n", ""))
 
     return crash_files
-
-
-def read_participant_tsv(tsv_file: Union[str, Path]) -> tuple[list[str], list[str]]:
-    """Extract participant IDs and session IDs from TSV file.
-
-    Parameters
-    ----------
-    tsv_file: str or Path
-        Participant TSV file from which to extract the participant and session IDs.
-
-    Returns
-    -------
-    participants: List[str]
-        List of participant IDs.
-
-    sessions: List[str]
-        List of session IDs.
-
-    Raises
-    ------
-    ClinicaException
-        If `tsv_file` is not a file.
-        If `participant_id` or `session_id` column is missing from TSV file.
-
-    Examples
-    --------
-    >>> dframe = pd.DataFrame({
-    ...     "participant_id": ["sub-01", "sub-01", "sub-02"],
-    ...     "session_id": ["ses-M000", "ses-M006", "ses-M000"],
-    ...})
-    >>> dframe.to_csv("participants.tsv", sep="\t")
-    >>> read_participant_tsv("participant.tsv")
-    (["sub-01", "sub-01", "sub-02"], ["ses-M000", "ses-M006", "ses-M000"])
-    """
-    import pandas as pd
-
-    from clinica.utils.exceptions import ClinicaException
-
-    try:
-        df = pd.read_csv(tsv_file, sep="\t")
-    except FileNotFoundError:
-        raise ClinicaException(
-            "The TSV file you gave is not a file.\nError explanations:\n"
-            f"\t- Clinica expected the following path to be a file: {tsv_file}\n"
-            "\t- If you gave relative path, did you run Clinica on the good folder?"
-        )
-
-    for column in ("participant_id", "session_id"):
-        if column not in list(df.columns.values):
-            raise ClinicaException(
-                f"The TSV file does not contain {column} column (path: {tsv_file})"
-            )
-
-    return (
-        [sub.strip(" ") for sub in list(df.participant_id)],
-        [ses.strip(" ") for ses in list(df.session_id)],
-    )
 
 
 def extract_metadata_from_json(
