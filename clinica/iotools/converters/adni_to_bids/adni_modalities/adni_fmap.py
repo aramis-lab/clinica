@@ -1,6 +1,7 @@
 """Module for converting field maps of ADNI."""
-from os import PathLike
+from os import Path, PathLike
 from typing import List, Optional
+import pandas as pd
 
 def convert_adni_fmap(
     source_dir: PathLike,
@@ -51,12 +52,7 @@ def convert_adni_fmap(
         f"Calculating paths of fMRI field maps (FMAPs). Output will be stored in {conversion_dir}."
     )
 
-    # images = compute_fmap_path(source_dir, csv_dir, subjects, conversion_dir)
-    import pickle
-    # with open('images.pkl', 'wb') as f:
-    #     pickle.dump(images, f)
-    with open('images.pkl', 'rb') as f:
-        images = pickle.load(f)
+    images = compute_fmap_path(source_dir, csv_dir, subjects, conversion_dir)
     
     cprint("Paths of field maps found. Exporting images into BIDS ...")
 
@@ -65,7 +61,7 @@ def convert_adni_fmap(
 
     cprint(msg="Field maps conversion done.", lvl="debug")
 
-def compute_fmap_path(source_dir, csv_dir, subjs_list, conversion_dir):
+def compute_fmap_path(source_dir: Path, csv_dir: Path, subjs_list: list[str], conversion_dir: Path) -> pd.DataFrame:
     """Compute the paths to fMR images.
 
     Args:
@@ -99,7 +95,7 @@ def compute_fmap_path(source_dir, csv_dir, subjs_list, conversion_dir):
     ]
     fmap_df = pd.DataFrame(columns=fmap_col)
     fmap_dfs_list = []
-    adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE.csv"), sep=",", engine='python')
+    adni_merge = pd.read_csv(csv_dir / "ADNIMERGE.csv", sep=",", engine='python')
 
     mayo_mri_qc = pd.read_csv(
         path.join(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15.csv"),
@@ -197,7 +193,13 @@ def compute_fmap_path(source_dir, csv_dir, subjs_list, conversion_dir):
 
     return images
 
-def fmap_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
+def fmap_image(
+    subject_id: str,
+    timepoint: str,
+    visit_str: str,
+    visit_mri_list: list[pd.DataFrame],
+    mri_qc_subj: pd.DataFrame,
+) -> Optional[dict]:
     """
     One image among those in the input list is chosen according to QC
     and then corresponding metadata is extracted to a dictionary.
@@ -210,6 +212,7 @@ def fmap_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
         mri_qc_subj: Dataframe containing list of QC of scans for the subject
 
     Returns: dictionary - contains image metadata
+             None - no image was able to be selected from the MRI list based on IDs provided
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         replace_sequence_chars,
@@ -238,17 +241,11 @@ def fmap_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
 
     return image_dict
 
-def rename_fmaps(destination_dir):
+def rename_fmaps(destination_dir: Path):
     import os
-    import shutil
     import json
 
     dir_name = destination_dir
-    for root, dirs, _ in os.walk(destination_dir):
-        for dir_name in dirs:
-            if dir_name.startswith('tmp_dcm'):
-                dir_path = os.path.join(root, dir_name)
-                shutil.rmtree(dir_path)
 
     for root, dirs, _ in os.walk(destination_dir):
         for dir_name in dirs:

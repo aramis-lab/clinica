@@ -49,6 +49,7 @@ def _convert_adni_fdg_pet(
     preprocessing_step: ADNIPreprocessingStep,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
+    n_procs: Optional[int] = 1,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -75,17 +76,25 @@ def _convert_adni_fdg_pet(
     mod_to_update : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
+
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        Default=1.
     """
     from pathlib import Path
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        load_clinical_csv,
+        paths_to_bids,
+    )
     from clinica.utils.stream import cprint
 
     if subjects is None:
-        adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-        adni_merge.columns = adni_merge.columns.str.strip('"')
+        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
         subjects = list(adni_merge.PTID.unique())
     cprint(
         "Calculating paths of FDG PET images. "
@@ -97,7 +106,9 @@ def _convert_adni_fdg_pet(
 
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
     modality = _get_modality_from_adni_preprocessing_step(preprocessing_step)
-    paths_to_bids(images, destination_dir, modality, mod_to_update=mod_to_update)
+    paths_to_bids(
+        images, destination_dir, modality, mod_to_update=mod_to_update, n_procs=n_procs
+    )
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
@@ -181,8 +192,6 @@ def _get_pet_fdg_df(
 
     dfs = []
     for subject in subjects:
-        subject = subject.replace('"','')
-
         dfs.extend(
             _get_images_pet_for_subject(
                 subject,
@@ -224,7 +233,9 @@ def _load_df_with_column_check(
     csv_dir: Path, filename: str, required_columns: Set[str]
 ) -> pd.DataFrame:
     """Load the requested CSV file in a dataframe and check that the requested columns are present."""
-    df = pd.read_csv(csv_dir / filename, sep=",", low_memory=False)
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+
+    df = load_clinical_csv(csv_dir, filename)
     if not required_columns.issubset(set(df.columns)):
         raise ValueError(
             f"Missing column(s) from {filename} file."

@@ -1,7 +1,5 @@
 from typing import List, Optional
-import time
 from clinica.iotools.abstract_converter import Converter
-
 
 def get_bids_subjs_info(
     clinical_data_dir: str,
@@ -10,7 +8,7 @@ def get_bids_subjs_info(
 ):
     from os import path
 
-    from pandas import read_csv
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
 
     # Read optional list of participants.
     subjects_list = (
@@ -20,10 +18,8 @@ def get_bids_subjs_info(
     )
 
     # Load all participants from ADNIMERGE.
-    adni_merge_path = path.join(clinical_data_dir, "ADNIMERGE.csv")
-    participants = set(
-        read_csv(adni_merge_path, sep=",", usecols=['"PTID"'], squeeze=True).unique()
-    )
+    adni_merge = load_clinical_csv(clinical_data_dir, "ADNIMERGE")
+    participants = adni_merge["PTID"].unique()
 
     # Filter participants if requested.
     participants = sorted(
@@ -39,7 +35,7 @@ def get_bids_subjs_info(
 
 class AdniToBids(Converter):
     @classmethod
-    def get_modalities_supported(cls) -> List[str]: 
+    def get_modalities_supported(cls) -> List[str]:
         """Return a list of modalities supported.
 
         Returns: a list containing the modalities supported by the converter
@@ -143,11 +139,10 @@ class AdniToBids(Converter):
         )
 
         # -- Creation of sessions.tsv --
-        # Commented this out due to an issue with my ADNIMERGE file containing smart quotes, uncomment for PR - MT 040224
-        # cprint("Creating sessions files...") 
-        # adni_utils.create_adni_sessions_dict(
-        #     bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths
-        # )
+        cprint("Creating sessions files...")
+        adni_utils.create_adni_sessions_dict(
+            bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths
+        )
 
         # -- Creation of scans files --
         if os.path.exists(conversion_path):
@@ -174,6 +169,7 @@ class AdniToBids(Converter):
         subjs_list_path=None,
         modalities=None,
         force_new_extraction=False,
+        n_procs: Optional[int] = 1,
     ):
         """Convert the images of ADNI.
 
@@ -188,7 +184,6 @@ class AdniToBids(Converter):
         import os
         from copy import copy
         from os import path
-        import pandas as pd
 
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
@@ -203,15 +198,7 @@ class AdniToBids(Converter):
 
         modalities = modalities or self.get_modalities_supported()
 
-        adni_merge_path = path.join(clinical_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path, delimiter=',', engine='python', quotechar='"')
-        # adni_merge.columns = adni_merge.columns.str.replace('"', '')
-        # adni_merge.columns = adni_merge.columns.str.replace('”', '')
-        # Remove all double quotes from all values in the DataFrame
-        # adni_merge = adni_merge.replace('"', '', regex=True)
-        # adni_merge = adni_merge.replace('“', '', regex=True)
-        # adni_merge = adni_merge.replace('”', '', regex=True)
-
+        adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
 
         # Load a file with subjects list or compute all the subjects
         if subjs_list_path is not None:
@@ -221,7 +208,7 @@ class AdniToBids(Converter):
 
             # Check that there are no errors in subjs_list given by the user
             for subj in subjs_list_copy:
-                adnimerge_subj = adni_merge[adni_merge['PTID'] == subj]
+                adnimerge_subj = adni_merge[adni_merge.PTID == subj]
 
                 if len(adnimerge_subj) == 0:
                     cprint(
@@ -233,7 +220,7 @@ class AdniToBids(Converter):
 
         else:
             cprint("Using all the subjects contained into the ADNIMERGE.csv file...")
-            subjs_list = adni_merge.loc[:, 'PTID'].unique().tolist()
+            subjs_list = list(adni_merge["PTID"].unique())
 
         # Create the output folder if is not already existing
         os.makedirs(dest_dir, exist_ok=True)
@@ -271,5 +258,6 @@ class AdniToBids(Converter):
                     conversion_dir=conversion_dir,
                     subjects=subjs_list,
                     mod_to_update=force_new_extraction,
+                    n_procs=n_procs,
                 )
 

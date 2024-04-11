@@ -10,6 +10,7 @@ def convert_adni_dwi(
     conversion_dir: PathLike,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
+    n_procs: Optional[int] = 1,
 ):
     """Convert DW images of ADNI into BIDS format.
 
@@ -33,18 +34,24 @@ def convert_adni_dwi(
     mod_to_update : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
+
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        Default=1.
     """
     from os import path
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        load_clinical_csv,
+        paths_to_bids,
+    )
     from clinica.utils.stream import cprint
 
     if not subjects:
-        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-        adni_merge.columns = adni_merge.columns.str.strip('"')
+        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
         subjects = list(adni_merge.PTID.unique())
 
     cprint(
@@ -53,7 +60,9 @@ def convert_adni_dwi(
     images = compute_dwi_paths(source_dir, csv_dir, subjects, conversion_dir)
     cprint("Paths of DWI images found. Exporting images into BIDS ...")
     # dwi_paths_to_bids(images, dest_dir)
-    paths_to_bids(images, destination_dir, "dwi", mod_to_update=mod_to_update)
+    paths_to_bids(
+        images, destination_dir, "dwi", mod_to_update=mod_to_update, n_procs=n_procs
+    )
     cprint(msg="DWI conversion done.", lvl="debug")
 
 
@@ -75,6 +84,7 @@ def compute_dwi_paths(source_dir, csv_dir, subjs_list, conversion_dir):
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
+        load_clinical_csv,
         visits_to_timepoints,
     )
 
@@ -93,19 +103,11 @@ def compute_dwi_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     dwi_dfs_list = []
 
     # Loading needed .csv files
-    # adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-    # adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-    # adni_merge.columns = adni_merge.columns.str.strip('"')
-    adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE2.csv"), sep=",", engine='python')
-
-    mayo_mri_qc = pd.read_csv(
-        path.join(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15.csv"),
-        sep=",",
-        low_memory=False,
-    )
+    adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
+    mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15")
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "DTI"]
 
-    mri_list = pd.read_csv(path.join(csv_dir, "MRILIST.csv"), sep=",", low_memory=False)
+    mri_list = load_clinical_csv(csv_dir, "MRILIST")
 
     # Selecting only DTI images that are not Multiband, processed or enhanced images
     mri_list = mri_list[mri_list.SEQUENCE.str.contains("dti", case=False, na=False)]
@@ -118,18 +120,14 @@ def compute_dwi_paths(source_dir, csv_dir, subjs_list, conversion_dir):
 
     for subj in subjs_list:
     
-        ssubj = subj.replace('"','')
-
         # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")
 
-        mri_list_subj = mri_list[mri_list.SUBJECT == ssubj]
+        mri_list_subj = mri_list[mri_list.SUBJECT == subj]
         mri_list_subj = mri_list_subj.sort_values("SCANDATE")
 
-        ssubj = subj[-4:]
-        ssubj = ssubj.replace('"','')
-        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(ssubj)]
+        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
         # Obtain corresponding timepoints for the subject visits
         visits = visits_to_timepoints(subj, mri_list_subj, adnimerge_subj, "DWI")

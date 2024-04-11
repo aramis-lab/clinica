@@ -10,6 +10,7 @@ def convert_adni_tau_pet(
     conversion_dir: PathLike,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
+    n_procs: Optional[int] = 1,
 ):
     """Convert Tau PET images of ADNI into BIDS format.
 
@@ -33,18 +34,24 @@ def convert_adni_tau_pet(
     mod_to_update : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
+    
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        Default=1
     """
     from os import path
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        load_clinical_csv,
+        paths_to_bids,
+    )
     from clinica.utils.stream import cprint
 
     if not subjects:
-        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-        adni_merge.columns = adni_merge.columns.str.strip('"')
+        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
         subjects = list(adni_merge.PTID.unique())
 
     cprint(
@@ -52,7 +59,9 @@ def convert_adni_tau_pet(
     )
     images = compute_tau_pet_paths(source_dir, csv_dir, subjects, conversion_dir)
     cprint("Paths of TAU PET images found. Exporting images into BIDS ...")
-    paths_to_bids(images, destination_dir, "tau", mod_to_update=mod_to_update)
+    paths_to_bids(
+        images, destination_dir, "tau", mod_to_update=mod_to_update, n_procs=n_procs
+    )
     cprint(msg="TAU PET conversion done.", lvl="debug")
 
 
@@ -74,6 +83,7 @@ def compute_tau_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
         get_images_pet,
+        load_clinical_csv,
     )
     from clinica.utils.pet import Tracer
 
@@ -93,27 +103,22 @@ def compute_tau_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     pet_tau_dfs_list = []
 
     # Loading needed .csv files
-    tauqc = pd.read_csv(path.join(csv_dir, "TAUQC.csv"), sep=",", low_memory=False)
-    tauqc3 = pd.read_csv(path.join(csv_dir, "TAUQC3.csv"), sep=",", low_memory=False)
-    pet_meta_list = pd.read_csv(
-        path.join(csv_dir, "PET_META_LIST.csv"), sep=",", low_memory=False
-    )
+    tauqc = load_clinical_csv(csv_dir, "TAUQC")
+    tauqc3 = load_clinical_csv(csv_dir, "TAUQC3")
+    pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
 
     for subj in subjs_list:
-    
-        ssubj = subj.replace('"','')
-
         # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == ssubj]
+        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subj]
 
         if subject_pet_meta.empty:
             continue
 
         # QC for TAU PET images for ADNI 2
-        tau_qc2_subj = tauqc[(tauqc.SCANQLTY == 1) & (tauqc.RID == int(ssubj[-4:]))]
+        tau_qc2_subj = tauqc[(tauqc.SCANQLTY == 1) & (tauqc.RID == int(subj[-4:]))]
 
         # QC for TAU PET images for ADNI 3
-        tau_qc3_subj = tauqc3[(tauqc3.SCANQLTY == 1) & (tauqc3.RID == int(ssubj[-4:]))]
+        tau_qc3_subj = tauqc3[(tauqc3.SCANQLTY == 1) & (tauqc3.RID == int(subj[-4:]))]
 
         # Concatenating visits in both QC files
         tau_qc_subj = pd.concat(

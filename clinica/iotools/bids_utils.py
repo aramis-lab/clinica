@@ -68,6 +68,7 @@ def create_participants_df(
     import numpy as np
     import pandas as pd
 
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
     from clinica.utils.stream import cprint
 
     fields_bids = ["participant_id"]
@@ -91,9 +92,8 @@ def create_participants_df(
     participant_df = pd.DataFrame(columns=fields_bids)
 
     for i in range(0, len(participant_fields_db)):
-        pfdbi = participant_fields_db[i]
         # If a field not empty is found
-        if not pd.isnull(pfdbi):
+        if not pd.isnull(participant_fields_db[i]):
             # Extract the file location of the field and read the value from the file
             tmp = field_location[i].split("/")
             location = tmp[0]
@@ -112,7 +112,9 @@ def create_participants_df(
                 if file_ext == ".xlsx":
                     file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
                 elif file_ext == ".csv":
-                    file_to_read = pd.read_csv(file_to_read_path)
+                    file_to_read = load_clinical_csv(
+                        clinical_data_dir, location.split(".")[0]
+                    )
                 prev_location = location
                 prev_sheet = sheet
 
@@ -120,19 +122,18 @@ def create_participants_df(
             # For each field in fields_dataset extract all the column values
             for j in range(0, len(file_to_read)):
                 # Convert the alternative_id_1 to string if is an integer/float
-                import time
-                value_to_read = file_to_read[pfdbi]
+                value_to_read = file_to_read[participant_fields_db[i]]
                 if participant_fields_bids[i] == "alternative_id_1" and (
                     value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64
                 ):
-                    if not pd.isnull(file_to_read.at[j, pfdbi]):
+                    if not pd.isnull(file_to_read.at[j, participant_fields_db[i]]):
                         value_to_append = str(
-                            file_to_read.at[j, pfdbi]
+                            file_to_read.at[j, participant_fields_db[i]]
                         ).rstrip(".0")
                     else:
                         value_to_append = np.NaN
                 else:
-                    value_to_append = file_to_read.at[j, pfdbi]
+                    value_to_append = file_to_read.at[j, participant_fields_db[i]]
                 field_col_values.append(value_to_append)
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
@@ -245,15 +246,6 @@ def create_sessions_dict_OASIS(
                 file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
             elif file_ext == ".csv":
                 file_to_read = pd.read_csv(file_to_read_path)
-            # if file_ext == ".xlsx":
-            #     file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
-            # if file_ext == ".csv":
-            #     file_to_read = pd.read_csv(file_to_read_path)
-            #     with open('/home/tharpm@ads.iu.edu/Desktop/Code/participant/debug_column_names.txt', 'w') as f:
-            #         f.write(f"Columns in {file_to_read_path}: \n")
-            #         for col in file_to_read.columns:
-            #             f.write(f"{col}\n")
-            #     file_to_read.columns = file_to_read.columns.str.replace('"', '')
 
             for r in range(0, len(file_to_read.values)):
                 # Extracts the subject ids columns from the dataframe
@@ -541,7 +533,7 @@ def write_modality_agnostic_files(
     _write_bidsignore(bids_dir)
 
 
-def write_sessions_tsv(bids_dir: str, sessions_dict: dict) -> None:
+def write_sessions_tsv(bids_dir: Union[str, Path], sessions_dict: dict) -> None:
     """Create <participant_id>_sessions.tsv files.
 
     Basically writes the content of the function
@@ -625,7 +617,7 @@ def _get_pet_tracer_from_filename(filename: str) -> str:
 
 
 def write_scans_tsv(
-    bids_dir: str, participant_ids: List[str], scans_dict: dict
+    bids_dir: Union[str, Path], participant_ids: List[str], scans_dict: dict
 ) -> None:
     """Write the scans dict into TSV files.
 
@@ -891,7 +883,7 @@ def run_dcm2niix(
     command = _build_dcm2niix_command(
         input_dir, output_dir, output_fmt, compress, bids_sidecar
     )
-    completed_process = subprocess.run(command)
+    completed_process = subprocess.run(command, capture_output=True)
 
     if completed_process.returncode != 0:
         if completed_process.stdout is not None:

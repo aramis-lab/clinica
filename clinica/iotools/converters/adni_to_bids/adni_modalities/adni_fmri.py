@@ -55,9 +55,7 @@ def convert_adni_fmri(
     from clinica.utils.stream import cprint
 
     if not subjects:
-        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-        adni_merge.columns = adni_merge.columns.str.strip('"')
+        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
         subjects = list(adni_merge.PTID.unique())
 
     cprint(
@@ -68,7 +66,9 @@ def convert_adni_fmri(
     )
     cprint("Paths of fMRI images found. Exporting images into BIDS ...")
     # fmri_paths_to_bids(dest_dir, images)
-    paths_to_bids(images, destination_dir, "fmri", mod_to_update=mod_to_update)
+    paths_to_bids(
+        images, destination_dir, "fmri", mod_to_update=mod_to_update, n_procs=n_procs
+    )
     cprint(msg="fMRI conversion done.", lvl="debug")
 
 
@@ -111,6 +111,7 @@ def _compute_fmri_path(
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
+        load_clinical_csv,
         visits_to_timepoints,
     )
 
@@ -129,22 +130,14 @@ def _compute_fmri_path(
     fmri_dfs_list = []
 
     # Loading needed .csv files
-    # adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-    # adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-    # adni_merge.columns = adni_merge.columns.str.strip('"')
-    adni_merge = pd.read_csv(path.join(csv_dir, "ADNIMERGE2.csv"), sep=",", engine='python')
+    adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
 
-    mayo_mri_qc = pd.read_csv(
-        path.join(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15.csv"),
-        sep=",",
-        low_memory=False,
-    )
+    mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15")
+
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "fMRI"]
     mayo_mri_qc.columns = [x.upper() for x in mayo_mri_qc.columns]
 
-    mayo_mri_qc3 = pd.read_csv(
-        path.join(csv_dir, "MAYOADIRL_MRI_QUALITY_ADNI3.csv"), sep=",", low_memory=False
-    )
+    mayo_mri_qc3 = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_QUALITY_ADNI3")
     mayo_mri_qc3 = mayo_mri_qc3[mayo_mri_qc3.SERIES_TYPE == "EPB"]
 
     # Concatenating visits in both QC files
@@ -152,10 +145,7 @@ def _compute_fmri_path(
         [mayo_mri_qc, mayo_mri_qc3], axis=0, ignore_index=True, sort=False
     )
 
-    mri_list = pd.read_csv(path.join(csv_dir, "MRILIST.csv"), sep=",", low_memory=False)
-
-
-    from clinica.utils.stream import cprint
+    mri_list = load_clinical_csv(csv_dir, "MRILIST")
 
     # Selecting fMRI images
     mri_list = mri_list[mri_list.SEQUENCE.str.contains("MRI")]
@@ -168,19 +158,14 @@ def _compute_fmri_path(
 
     # We will convert the images for each subject in the subject list
     for subj in subjs_list:
-    
-        ssubj = subj.replace('"','')
-
         # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")
 
-        mri_list_subj = mri_list[mri_list.SUBJECT == ssubj]
+        mri_list_subj = mri_list[mri_list.SUBJECT == subj]
         mri_list_subj = mri_list_subj.sort_values("SCANDATE")
         
-        ssubj = subj[-4:]
-        ssubj = ssubj.replace('"','')
-        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(ssubj)]
+        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
         # Obtain corresponding timepoints for the subject visits
         visits = visits_to_timepoints(subj, mri_list_subj, adnimerge_subj, "fMRI")
