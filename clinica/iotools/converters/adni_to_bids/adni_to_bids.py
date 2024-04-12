@@ -196,6 +196,10 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
         from clinica.utils.stream import cprint
 
+        from clinica.iotools.converters.adni_to_bids.adni_utils import (
+            load_clinical_csv,
+        )
+
         modalities = modalities or self.get_modalities_supported()
 
         adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")

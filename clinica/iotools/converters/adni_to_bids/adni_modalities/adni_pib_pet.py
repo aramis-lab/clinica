@@ -62,7 +62,6 @@ def convert_adni_pib_pet(
     paths_to_bids(
         images, destination_dir, "pib", mod_to_update=mod_to_update, n_procs=n_procs
     )
-    paths_to_bids(images, destination_dir, "pib", mod_to_update=mod_to_update)
     cprint(msg="PIB PET conversion done.", lvl="debug")
 
 

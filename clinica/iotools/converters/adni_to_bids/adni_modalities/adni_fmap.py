@@ -1,7 +1,9 @@
 """Module for converting field maps of ADNI."""
-from os import Path, PathLike
+from os import PathLike
+from pathlib import Path
 from typing import List, Optional
 import pandas as pd
+from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
 
 def convert_adni_fmap(
     source_dir: PathLike,
@@ -10,8 +12,9 @@ def convert_adni_fmap(
     conversion_dir: PathLike,
     subjects: Optional[List[str]] = None,
     mod_to_update: bool = False,
+    n_procs: Optional[int] = 1,
 ):
-    """Convert fMR images of ADNI into BIDS format.
+    """Convert field map images of ADNI into BIDS format.
 
     Parameters
     ----------
@@ -42,10 +45,12 @@ def convert_adni_fmap(
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
+    csv_dir = Path(csv_dir)
+    source_dir = Path(source_dir)
+    conversion_dir = Path(conversion_dir)
+
     if not subjects:
-        adni_merge_path = path.join(csv_dir, "ADNIMERGE.csv")
-        adni_merge = pd.read_csv(adni_merge_path, delimiter='","')
-        adni_merge.columns = adni_merge.columns.str.strip('"')
+        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
         subjects = list(adni_merge.PTID.unique())
     
     cprint(
@@ -76,6 +81,7 @@ def compute_fmap_path(source_dir: Path, csv_dir: Path, subjs_list: list[str], co
     from os import path
 
     import pandas as pd
+    from pathlib import Path
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,
@@ -95,19 +101,13 @@ def compute_fmap_path(source_dir: Path, csv_dir: Path, subjs_list: list[str], co
     ]
     fmap_df = pd.DataFrame(columns=fmap_col)
     fmap_dfs_list = []
-    adni_merge = pd.read_csv(csv_dir / "ADNIMERGE.csv", sep=",", engine='python')
+    adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
 
-    mayo_mri_qc = pd.read_csv(
-        path.join(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15.csv"),
-        sep=",",
-        low_memory=False,
-    )
+    mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15")
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "fMRI"]
     mayo_mri_qc.columns = [x.upper() for x in mayo_mri_qc.columns]
 
-    mayo_mri_qc3 = pd.read_csv(
-        path.join(csv_dir, "MAYOADIRL_MRI_QUALITY_ADNI3.csv"), sep=",", low_memory=False
-    )
+    mayo_mri_qc3 = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_QUALITY_ADNI3")
     mayo_mri_qc3 = mayo_mri_qc3[mayo_mri_qc3.SERIES_TYPE == "EPB"]
 
     # Concatenating visits in both QC files
@@ -115,7 +115,7 @@ def compute_fmap_path(source_dir: Path, csv_dir: Path, subjs_list: list[str], co
         [mayo_mri_qc, mayo_mri_qc3], axis=0, ignore_index=True, sort=False
     )
 
-    mri_list = pd.read_csv(path.join(csv_dir, "MRILIST.csv"), sep=",", low_memory=False)
+    mri_list = load_clinical_csv(csv_dir, "MRILIST")
 
     # Selecting only fMRI images that are not Multiband
     mri_list = mri_list[
@@ -123,25 +123,20 @@ def compute_fmap_path(source_dir: Path, csv_dir: Path, subjs_list: list[str], co
     ]  # 'apping' includes all field map scans, but not others
 
     for subj in subjs_list:
-        ssubj = subj.replace('"','')
-
         # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")
 
-        mri_list_subj = mri_list[mri_list.SUBJECT == ssubj]
+        mri_list_subj = mri_list[mri_list.SUBJECT == subj]
         mri_list_subj = mri_list_subj.sort_values("SCANDATE")
         
-        ssubj = subj[-4:]
-        ssubj = ssubj.replace('"','')
-        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(ssubj)]
+        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
         # Obtain corresponding timepoints for the subject visits
         visits = visits_to_timepoints(subj, mri_list_subj, adnimerge_subj, "FMAP")
 
-        for visit_info in visits.keys():
+        for visit_info, visit_str in visits.items():
             timepoint = visit_info[0]
-            visit_str = visits[visit_info]
 
             visit_mri_list = mri_list_subj[mri_list_subj.VISIT == visit_str]
             
@@ -189,7 +184,7 @@ def compute_fmap_path(source_dir: Path, csv_dir: Path, subjs_list: list[str], co
 
     # Checking for images paths in filesystem
     images = find_image_path(fmap_df, source_dir, "FMAP", "S", "Series_ID")
-    images.to_csv(path.join(conversion_dir, "fmap_paths.tsv"), sep="\t", index=False)
+    images.to_csv(conversion_dir / "fmap_paths.tsv", sep="\t", index=False)
 
     return images
 

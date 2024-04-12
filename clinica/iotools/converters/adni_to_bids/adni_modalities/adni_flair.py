@@ -78,7 +78,6 @@ def compute_flair_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     from os import path
 
     import pandas as pd
-    from clinica.utils.stream import cprint
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         find_image_path,

@@ -1,7 +1,6 @@
 """Module for converting T1 of ADNI."""
 from os import PathLike
 from typing import List, Optional
-import time
 
 def convert_adni_t1(
     source_dir: PathLike,
@@ -58,6 +57,7 @@ def convert_adni_t1(
     cprint(
         f"Calculating paths of T1 images. Output will be stored in {conversion_dir}."
     )
+    images = compute_t1_paths(source_dir, csv_dir, subjects, conversion_dir)
     paths_to_bids(
         images, destination_dir, "t1", mod_to_update=mod_to_update, n_procs=n_procs
     )

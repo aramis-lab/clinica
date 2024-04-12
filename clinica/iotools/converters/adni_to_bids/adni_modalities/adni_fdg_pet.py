@@ -246,17 +246,17 @@ def _load_df_with_column_check(
 
 _get_pet_qc_df = partial(
     _load_df_with_column_check,
-    filename="PETQC.csv",
+    filename="PETQC",
     required_columns={"PASS", "RID"},
 )
 _get_qc_adni_3_df = partial(
     _load_df_with_column_check,
-    filename="PETC3.csv",
+    filename="PETC3",
     required_columns={"SCANQLTY", "RID", "SCANDATE"},
 )
 _get_meta_list_df = partial(
     _load_df_with_column_check,
-    filename="PET_META_LIST.csv",
+    filename="PET_META_LIST",
     required_columns={"Subject"},
 )
 
