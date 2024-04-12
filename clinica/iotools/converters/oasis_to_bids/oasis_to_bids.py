@@ -1,37 +1,46 @@
 """Convert OASIS dataset (https://sites.wustl.edu/oasisbrains/) to BIDS."""
 
+from pathlib import Path
 from typing import Optional
+
+import nibabel as nb
+import numpy as np
 
 from clinica.iotools.abstract_converter import Converter
 
 
 class OasisToBids(Converter):
-    def convert_clinical_data(self, clinical_data_dir, bids_dir):
+    def convert_clinical_data(self, clinical_data_dir: Path, bids_dir: Path):
         """Convert the clinical data defined inside the clinical_specifications.xlx into BIDS.
 
         Args:
             clinical_data_dir: path to the folder with the original clinical data
             bids_dir: path to the BIDS directory
         """
-        import os
-        from os import path
-
-        import numpy as np
-
-        import clinica.iotools.bids_utils as bids
+        from clinica.iotools.bids_utils import get_bids_subjs_list
         from clinica.utils.stream import cprint
 
         cprint("Converting clinical data...")
-        bids_ids = bids.get_bids_subjs_list(bids_dir)
+        bids_ids = get_bids_subjs_list(bids_dir)
+        self._create_participants_tsv(clinical_data_dir, bids_dir, bids_ids)
+        sessions = self._create_sessions_tsv(clinical_data_dir, bids_dir, bids_ids)
+        self._create_scans_tsv(clinical_data_dir, bids_dir, bids_ids, sessions)
+        self._create_modality_agnostic_files(bids_dir)
 
-        iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        clinic_specs_path = path.join(iotools_folder, "data", "clinical_specifications")
+    def _create_participants_tsv(
+        self,
+        clinical_data_dir: Path,
+        bids_dir: Path,
+        bids_ids: list[str],
+    ):
+        from clinica.iotools.bids_utils import StudyName, create_participants_df
 
-        # --Create participants.tsv--
-        participants_df = bids.create_participants_df(
-            bids.StudyName.OASIS, clinic_specs_path, clinical_data_dir, bids_ids
+        participants_df = create_participants_df(
+            StudyName.OASIS,
+            Path(__file__).parents[2] / "specifications",
+            clinical_data_dir,
+            bids_ids,
         )
-
         # Replace the values of the diagnosis_bl column
         participants_df["diagnosis_bl"].replace([0.0, np.nan], "CN", inplace=True)
         participants_df["diagnosis_bl"].replace(
@@ -41,18 +50,29 @@ class OasisToBids(Converter):
         # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
         participants_df = participants_df.fillna("n/a")
         participants_df.to_csv(
-            path.join(bids_dir, "participants.tsv"),
+            bids_dir / "participants.tsv",
             sep="\t",
             index=False,
             encoding="utf-8",
         )
 
-        # --Create sessions files--
-        sessions_dict = bids.create_sessions_dict_OASIS(
+    def _create_sessions_tsv(
+        self,
+        clinical_data_dir: Path,
+        bids_dir: Path,
+        bids_ids: list[str],
+    ) -> dict:
+        from clinica.iotools.bids_utils import (
+            StudyName,
+            create_sessions_dict_oasis,
+            write_sessions_tsv,
+        )
+
+        sessions_dict = create_sessions_dict_oasis(
             clinical_data_dir,
             bids_dir,
-            bids.StudyName.OASIS,
-            clinic_specs_path,
+            StudyName.OASIS,
+            Path(__file__).parents[2] / "specifications",
             bids_ids,
             "ID",
         )
@@ -61,23 +81,37 @@ class OasisToBids(Converter):
                 sessions_dict[y]["M000"]["diagnosis"] = "AD"
             else:
                 sessions_dict[y]["M000"]["diagnosis"] = "CN"
+        write_sessions_tsv(bids_dir, sessions_dict)
 
-        bids.write_sessions_tsv(bids_dir, sessions_dict)
+        return sessions_dict
 
-        # --Create scans files--
-        # Note: We have no scans information for OASIS
-        scans_dict = bids.create_scans_dict(
+    def _create_scans_tsv(
+        self,
+        clinical_data_dir: Path,
+        bids_dir: Path,
+        bids_ids: list[str],
+        sessions: dict,
+    ):
+        from clinica.iotools.bids_utils import (
+            StudyName,
+            create_scans_dict,
+            write_scans_tsv,
+        )
+
+        scans_dict = create_scans_dict(
             clinical_data_dir,
-            bids.StudyName.OASIS,
-            clinic_specs_path,
+            StudyName.OASIS,
+            Path(__file__).parents[2] / "specifications",
             bids_ids,
             "ID",
             "",
-            sessions_dict,
+            sessions,
         )
-        bids.write_scans_tsv(bids_dir, bids_ids, scans_dict)
+        write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
-        # -- Creation of modality agnostic files --
+    def _create_modality_agnostic_files(self, bids_dir: Path):
+        from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
+
         readme_data = {
             "link": "https://sites.wustl.edu/oasisbrains/#access",
             "desc": (
@@ -89,89 +123,37 @@ class OasisToBids(Converter):
                 "within 90 days of their initial session."
             ),
         }
-        bids.write_modality_agnostic_files(
-            study_name=bids.StudyName.OASIS,
+        write_modality_agnostic_files(
+            study_name=StudyName.OASIS,
             readme_data=readme_data,
             bids_dir=bids_dir,
         )
 
     @staticmethod
-    def convert_single_subject(subj_folder, dest_dir):
-        import os
-        from os import path
-        from pathlib import Path
-
-        import nibabel as nb
-        import numpy as np
-
-        t1_folder = path.join(subj_folder, "PROCESSED", "MPRAGE", "SUBJ_111")
-        subj_id = path.basename(subj_folder)
-        print("Converting ", subj_id)
-        numerical_id = (subj_id.split("_"))[1]
-        participant_id = "sub-OASIS1" + str(numerical_id)
-        bids_subj_folder = path.join(dest_dir, participant_id)
-        if not path.isdir(bids_subj_folder):
-            os.mkdir(bids_subj_folder)
-
-        session_folder = path.join(bids_subj_folder, "ses-M000")
-        if not os.path.isdir(session_folder):
-            os.mkdir(path.join(session_folder))
-            os.mkdir(path.join(session_folder, "anat"))
-
+    def convert_single_subject(subj_folder: Path, dest_dir: Path):
+        t1_folder = subj_folder / "PROCESSED" / "MPRAGE" / "SUBJ_111"
+        print("Converting ", subj_folder.name)
+        numerical_id = (subj_folder.name.split("_"))[1]
+        participant_id = f"sub-OASIS1{numerical_id}"
+        bids_subj_folder = dest_dir / participant_id
+        if not bids_subj_folder.is_dir():
+            bids_subj_folder.mkdir(parents=True)
+        session_folder = bids_subj_folder / "ses-M000"
+        if not session_folder.is_dir():
+            (session_folder / "anat").mkdir(parents=True, exist_ok=True)
         # In order do convert the Analyze format to Nifti the path to the .img file is required
-        img_file_path = str(next(Path(t1_folder).glob("*.img")))
-        output_path = path.join(
-            session_folder, "anat", f"{participant_id}_ses-M000_T1w.nii.gz"
+        try:
+            img_file_path = next(t1_folder.glob("*.img"))
+        except StopIteration:
+            raise ValueError(f"No file ending in .img found in {t1_folder}.")
+        nb.save(
+            _get_image_with_good_orientation(img_file_path),
+            session_folder / "anat" / f"{participant_id}_ses-M000_T1w.nii.gz",
         )
 
-        # First, convert to Nifti so that we can extract the s_form with NiBabel
-        # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
-        img_with_wrong_orientation_analyze = nb.load(img_file_path)
-
-        # OASIS-1 images have the same header but sform is incorrect
-        # To solve this issue, we use header from images converted with FreeSurfer
-        # to generate a 'clean hard-coded' header
-        # affine:
-        # [[   0.    0.   -1.   80.]
-        #  [   1.    0.    0. -128.]
-        #  [   0.    1.    0. -128.]
-        #  [   0.    0.    0.    1.]]
-        # fmt: off
-        affine = np.array(
-            [
-                0, 0, -1, 80,
-                1, 0, 0, -128,
-                0, 1, 0, -128,
-                0, 0, 0, 1
-            ]
-        ).reshape(4, 4)
-        # fmt: on
-        s_form = affine.astype(np.int16)
-
-        hdr = nb.Nifti1Header()
-        hdr.set_data_shape((256, 256, 160))
-        hdr.set_data_dtype(np.int16)
-        hdr["bitpix"] = 16
-        hdr.set_sform(s_form, code="scanner")
-        hdr.set_qform(s_form, code="scanner")
-        hdr["extents"] = 16384
-        hdr["xyzt_units"] = 10
-
-        img_with_good_orientation_nifti = nb.Nifti1Image(
-            np.round(
-                img_with_wrong_orientation_analyze.get_fdata(dtype="float32")
-            ).astype(np.int16),
-            s_form,
-            header=hdr,
-        )
-        # Header correction to obtain dim0 = 3
-        img_with_good_dimension = nb.funcs.four_to_three(
-            img_with_good_orientation_nifti
-        )[0]
-
-        nb.save(img_with_good_dimension, output_path)
-
-    def convert_images(self, source_dir, dest_dir, n_procs: Optional[int] = 1):
+    def convert_images(
+        self, source_dir: Path, dest_dir: Path, n_procs: Optional[int] = 1
+    ):
         """Convert T1w images to BIDS.
 
         Parameters
@@ -189,17 +171,15 @@ class OasisToBids(Converter):
             Previous version of this method used mri_convert from FreeSurfer to convert
             Analyze data from OASIS-1. To remove this strong dependency, NiBabel is used instead.
         """
-        import os
         from functools import partial
         from multiprocessing import Pool
-        from pathlib import Path
 
-        if not os.path.isdir(dest_dir):
-            os.mkdir(dest_dir)
+        if not dest_dir.exists():
+            dest_dir.mkdir(parents=True)
 
-        subjs_folders = [
+        subjects_folders = [
             path
-            for path in Path(source_dir).rglob("OAS1_*")
+            for path in source_dir.rglob("OAS1_*")
             if path.is_dir() and path.name.endswith("_MR1")
         ]
         func = partial(self.convert_single_subject, dest_dir=dest_dir)
@@ -210,3 +190,48 @@ class OasisToBids(Converter):
         else:
             with Pool(processes=n_procs) as pool:
                 pool.map(func, subjs_folders)
+
+
+def _get_image_with_good_orientation(image_path: Path) -> nb.Nifti1Image:
+    # First, convert to Nifti so that we can extract the s_form with NiBabel
+    # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
+    img_with_wrong_orientation_analyze = nb.load(image_path)
+
+    # OASIS-1 images have the same header but sform is incorrect
+    # To solve this issue, we use header from images converted with FreeSurfer
+    # to generate a 'clean hard-coded' header
+    # affine:
+    # [[   0.    0.   -1.   80.]
+    #  [   1.    0.    0. -128.]
+    #  [   0.    1.    0. -128.]
+    #  [   0.    0.    0.    1.]]
+    # fmt: off
+    affine = np.array(
+        [
+            0, 0, -1, 80,
+            1, 0, 0, -128,
+            0, 1, 0, -128,
+            0, 0, 0, 1
+        ]
+    ).reshape(4, 4)
+    # fmt: on
+    s_form = affine.astype(np.int16)
+
+    hdr = nb.Nifti1Header()
+    hdr.set_data_shape((256, 256, 160))
+    hdr.set_data_dtype(np.int16)
+    hdr["bitpix"] = 16
+    hdr.set_sform(s_form, code="scanner")
+    hdr.set_qform(s_form, code="scanner")
+    hdr["extents"] = 16384
+    hdr["xyzt_units"] = 10
+
+    img_with_good_orientation_nifti = nb.Nifti1Image(
+        np.round(img_with_wrong_orientation_analyze.get_fdata(dtype="float32")).astype(
+            np.int16
+        ),
+        s_form,
+        header=hdr,
+    )
+    # Header correction to obtain dim0 = 3
+    return nb.funcs.four_to_three(img_with_good_orientation_nifti)[0]

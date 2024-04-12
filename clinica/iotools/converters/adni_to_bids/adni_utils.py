@@ -1,32 +1,30 @@
-from enum import Enum, auto
+import warnings
+from enum import Enum
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional
 
 import pandas as pd
 
+__all__ = [
+    "visits_to_timepoints",
+    "select_image_qc",
+    "get_images_pet",
+    "correct_diagnosis_sc_adni3",
+    "create_adni_sessions_dict",
+    "create_adni_scans_files",
+    "find_image_path",
+    "paths_to_bids",
+    "load_clinical_csv",
+]
 
-class ADNIStudy(Enum):
+
+class ADNIStudy(str, Enum):
     """Possible versions of ADNI studies."""
 
-    ADNI1 = auto()
-    ADNI2 = auto()
-    ADNI3 = auto()
-    ADNIGO = auto()
-
-    @classmethod
-    def from_string(cls, study_name: str):
-        if study_name == "ADNI1":
-            return cls.ADNI1
-        if study_name == "ADNI2":
-            return cls.ADNI2
-        if study_name == "ADNI3":
-            return cls.ADNI3
-        if study_name == "ADNIGO":
-            return cls.ADNIGO
-        raise ValueError(
-            f"Invalid study name for ADNI: {study_name}. "
-            f"Possible values are {list(ADNIStudy)}"
-        )
+    ADNI1 = "ADNI1"
+    ADNI2 = "ADNI2"
+    ADNI3 = "ADNI3"
+    ADNIGO = "ADNIGO"
 
 
 def _define_subjects_list(
@@ -86,13 +84,13 @@ def get_subjects_list(
 
 
 def visits_to_timepoints(
-    subject,
-    mri_list_subj,
-    adnimerge_subj,
-    modality,
-    visit_field="VISIT",
-    scandate_field="SCANDATE",
-):
+    subject: str,
+    mri_list_subj: pd.DataFrame,
+    adnimerge_subj: pd.DataFrame,
+    modality: str,
+    visit_field: str = "VISIT",
+    scandate_field: str = "SCANDATE",
+) -> dict:
     """
     A correspondence is established between ADNIMERGE and MRILIST visits, since they have different notations.
 
@@ -119,12 +117,12 @@ def visits_to_timepoints(
     # We try to obtain the corresponding image Visit for a given VISCODE
     for adni_row in adnimerge_subj.iterrows():
         visit = adni_row[1]
-        study = ADNIStudy.from_string(visit.ORIGPROT)
+        study = ADNIStudy(visit.ORIGPROT)
         preferred_visit_name = _get_preferred_visit_name(study, visit.VISCODE)
 
         if preferred_visit_name in unique_visits:
             key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
-            if key_preferred_visit not in visits.keys():
+            if key_preferred_visit not in visits:
                 visits[key_preferred_visit] = preferred_visit_name
             elif visits[key_preferred_visit] != preferred_visit_name:
                 cprint(
@@ -247,7 +245,7 @@ def _get_preferred_visit_name_adnigo(visit_code: str) -> str:
 def _get_closest_visit(
     image_acquisition_date: str,
     image_visit: str,
-    visits: List[pd.Series],
+    visits: list[pd.Series],
     subject: str,
 ) -> Optional[pd.Series]:
     """Choose the visit with the closest date to a given image acquisition date.
@@ -364,8 +362,10 @@ def _second_closest_visit_is_better(
         > datetime.strptime(image_acquisition_date, date_format)
         > datetime.strptime(second_closest_visit_date, date_format)
     ):
-        diff = days_between(closest_visit_date, second_closest_visit_date)
-        smallest_time_difference = days_between(
+        diff = _compute_number_of_days_between(
+            closest_visit_date, second_closest_visit_date
+        )
+        smallest_time_difference = _compute_number_of_days_between(
             image_acquisition_date, closest_visit_date
         )
         if abs((diff / 2.0) - smallest_time_difference) < 30:
@@ -374,9 +374,9 @@ def _second_closest_visit_is_better(
 
 
 def _get_closest_and_second_closest_visits(
-    visits: List[pd.Series],
+    visits: list[pd.Series],
     reference_date: str,
-) -> Tuple[pd.Series, pd.Series, int, int]:
+) -> tuple[pd.Series, pd.Series, int, int]:
     """Return the closest and second-closest visit from the reference date.
 
     Parameters
@@ -406,7 +406,7 @@ def _get_closest_and_second_closest_visits(
     if len(visits) < 2:
         raise ValueError(f"Expected at least two visits, received {len(visits)}.")
     time_differences_between_reference_and_visits_in_days = [
-        days_between(reference_date, visit_date)
+        _compute_number_of_days_between(reference_date, visit_date)
         for visit_date in [visit.EXAMDATE for visit in visits]
     ]
     idx = np.argsort(time_differences_between_reference_and_visits_in_days)
@@ -450,23 +450,16 @@ def _get_smallest_time_difference_too_large_message(
     return msg
 
 
-def days_between(d1, d2):
-    """Calculate the days between two dates.
-
-    Args:
-        d1: date 1
-        d2: date 2
-
-    Returns: number of days between date 2 and date 1
-    """
+def _compute_number_of_days_between(date_1: str, date_2: str) -> int:
+    """Calculate the days between two dates."""
     from datetime import datetime
 
-    d1 = datetime.strptime(d1, "%Y-%m-%d")
-    d2 = datetime.strptime(d2, "%Y-%m-%d")
-    return abs((d2 - d1).days)
+    date_1 = datetime.strptime(date_1, "%Y-%m-%d")
+    date_2 = datetime.strptime(date_2, "%Y-%m-%d")
+    return abs((date_2 - date_1).days)
 
 
-def select_image_qc(id_list, mri_qc_subj):
+def select_image_qc(id_list: list[str], mri_qc_subj: pd.DataFrame) -> Optional[int]:
     """Select image from several scans according to QC.
 
     Args:
@@ -527,14 +520,14 @@ def select_image_qc(id_list, mri_qc_subj):
 
 
 def get_images_pet(
-    subject,
-    pet_qc_subj,
-    subject_pet_meta,
-    df_cols,
-    modality,
-    sequences_preprocessing_step,
-    viscode_field="VISCODE2",
-):
+    subject: str,
+    pet_qc_subj: pd.DataFrame,
+    subject_pet_meta: pd.DataFrame,
+    df_cols: list[str],
+    modality: str,
+    sequences_preprocessing_step: list[str],
+    viscode_field: str = "VISCODE2",
+) -> list[pd.DataFrame]:
     """Selection of scans passing QC and at the chosen preprocessing stage is performed.
 
     Args:
@@ -548,21 +541,15 @@ def get_images_pet(
 
     Returns: Dataframe containing images metadata
     """
-    import pandas as pd
-
     from clinica.utils.stream import cprint
 
     subj_dfs_list = []
-
     for visit in list(pet_qc_subj[viscode_field].unique()):
         if pd.isna(visit):
             continue
-
         pet_qc_visit = pet_qc_subj[pet_qc_subj[viscode_field] == visit]
-
         if pet_qc_visit.empty:
             continue
-
         # If there are several scans for a timepoint we start with image acquired last (higher LONIUID)
         pet_qc_visit = pet_qc_visit.sort_values("LONIUID", ascending=False)
 
@@ -612,7 +599,7 @@ def get_images_pet(
 
         phase = "ADNI1" if modality == "PIB-PET" else qc_visit.Phase
         visit = sel_image.Visit
-        sequence = replace_sequence_chars(sel_image.Sequence)
+        sequence = _replace_sequence_chars(sel_image.Sequence)
         date = sel_image["Scan Date"]
         study_id = sel_image["Study ID"]
         series_id = sel_image["Series ID"]
@@ -671,7 +658,9 @@ def get_images_pet(
     return subj_dfs_list
 
 
-def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
+def correct_diagnosis_sc_adni3(
+    clinical_data_dir: Path, participants_df: pd.DataFrame
+) -> pd.DataFrame:
     """Add missing diagnosis at screening in ADNI3 due to changes in DX_bl.
 
     See https://groups.google.com/g/adni-data/c/whYhKafN_0Q.
@@ -697,8 +686,9 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
         dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV").set_index(
             ["PTID", "VISCODE2"]
         )
-
-    missing_sc = participants_df[participants_df.original_study == "ADNI3"]
+    missing_sc = participants_df[
+        participants_df.original_study == ADNIStudy.ADNI3.value
+    ]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
         try:
@@ -717,7 +707,7 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
     return participants_df
 
 
-def replace_sequence_chars(sequence_name):
+def _replace_sequence_chars(sequence_name: str) -> str:
     """Replace special characters in the sequence by underscores (as done for corresponding folder names in ADNI).
 
     Args:
@@ -730,9 +720,9 @@ def replace_sequence_chars(sequence_name):
     return re.sub("[ /;*()<>:]", "_", sequence_name)
 
 
-def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
-    import pandas as pd
-
+def _write_adni_sessions_tsv(
+    df_subj_sessions: pd.DataFrame, bids_subjs_paths: list[Path]
+):
     """Write the result of method create_session_dict into several TSV files.
 
     Args:
@@ -741,32 +731,6 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
     """
     import os
     from os import path
-
-    def compute_amyloid_status(row: pd.DataFrame) -> str:
-        if (
-            pd.isnull(row["adni_av45"])
-            and pd.isnull(row["adni_pib"])
-            and isinstance(row["adni_abeta"], float)
-        ):
-            return "Au"
-        elif row["adni_av45"] > 1.1 or row["adni_pib"] > 1.5 or row["adni_abeta"] < 192:
-            return "A+"
-        elif (
-            (pd.isnull(row["adni_av45"]) or row["adni_av45"] < 1.1)
-            and (pd.isnull(row["adni_pib"]) or row["adni_pib"] < 1.5)
-            and (isinstance(row["adni_abeta"], float) or row["adni_abeta"] > 192)
-        ):
-            return "A-"
-        else:
-            return "n/a"
-
-    def compute_ptau_status(row: pd.DataFrame) -> str:
-        if pd.isnull(row["adni_ptau"]):
-            return "Tu"
-        elif row["adni_ptau"] > 23:
-            return "T+"
-        else:
-            return "T-"
 
     df_subj_sessions["adas_memory"] = (
         df_subj_sessions["adas_Q1"]
@@ -791,7 +755,7 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
 
     # compute the amyloid and ptau status
     df_subj_sessions["a_stat"] = df_subj_sessions.apply(
-        lambda x: compute_amyloid_status(
+        lambda x: _compute_amyloid_status(
             x[["adni_av45", "adni_pib", "adni_abeta"]].apply(
                 pd.to_numeric, errors="coerce"
             )
@@ -799,89 +763,83 @@ def write_adni_sessions_tsv(df_subj_sessions, bids_subjs_paths):
         axis=1,
     )
     df_subj_sessions["tau_stat"] = df_subj_sessions.apply(
-        lambda x: compute_ptau_status(
+        lambda x: _compute_ptau_status(
             x[["adni_ptau"]].apply(pd.to_numeric, errors="coerce")
         ),
         axis=1,
     )
-
-    for sp in bids_subjs_paths:
-        os.makedirs(sp, exist_ok=True)
-
-        bids_id = sp.split(os.sep)[-1]
-
-        if bids_id == "conversion_info":
+    for subject_path in bids_subjs_paths:
+        subject_path.mkdir(parents=True, exist_ok=True)
+        if subject_path.name == "conversion_info":
             continue
-        else:
-            df_tmp = df_subj_sessions[df_subj_sessions["RID"] == bids_id[12:]]
-
-            df_tmp.to_csv(
-                path.join(sp, f"{bids_id}_sessions.tsv"),
-                sep="\t",
-                index=False,
-                encoding="utf-8",
-            )
+        df_tmp = df_subj_sessions[df_subj_sessions["RID"] == subject_path.name[12:]]
+        df_tmp.to_csv(
+            subject_path / f"{subject_path.name}_sessions.tsv",
+            sep="\t",
+            index=False,
+            encoding="utf-8",
+        )
 
 
-def remove_fields_duplicated(bids_fields):
-    """Remove duplicated fields in a list.
-
-    Args:
-        bids_fields: List of fields
-
-    Returns: list
-    """
-    seen = set()
-    seen_add = seen.add
-    return [x for x in bids_fields if not (x in seen or seen_add(x))]
-
-
-def bids_id_to_loni(bids_id: str) -> Union[str, None]:
-    """Convert a subject id of the form sub-ADNI000S0000
-    back to original format 000_S_0000
-    """
-    import re
-
-    ids = re.findall(r"\d+", bids_id)
-    if len(ids) == 2:
-        return ids[0] + "_S_" + ids[1]
-    return None
+def _compute_amyloid_status(row: pd.DataFrame) -> str:
+    if (
+        pd.isnull(row["adni_av45"])
+        and pd.isnull(row["adni_pib"])
+        and isinstance(row["adni_abeta"], float)
+    ):
+        return "Au"
+    if row["adni_av45"] > 1.1 or row["adni_pib"] > 1.5 or row["adni_abeta"] < 192:
+        return "A+"
+    if (
+        (pd.isnull(row["adni_av45"]) or row["adni_av45"] < 1.1)
+        and (pd.isnull(row["adni_pib"]) or row["adni_pib"] < 1.5)
+        and (isinstance(row["adni_abeta"], float) or row["adni_abeta"] > 192)
+    ):
+        return "A-"
+    return "n/a"
 
 
-def filter_subj_bids(df_files, location, bids_ids):
-    import clinica.iotools.bids_utils as bids
+def _compute_ptau_status(row: pd.DataFrame) -> str:
+    if pd.isnull(row["adni_ptau"]):
+        return "Tu"
+    if row["adni_ptau"] > 23:
+        return "T+"
+    return "T-"
+
+
+def _filter_subj_bids(
+    df_files: pd.DataFrame, location: str, bids_ids: list[str]
+) -> pd.DataFrame:
+    from clinica.iotools.bids_utils import remove_space_and_symbols
 
     # Depending on the file that needs to be open, identify and
     # preprocess the column that contains the subjects ids.
     bids_ids = [x[8:] for x in bids_ids if "sub-ADNI" in x]
     if location == "ADNIMERGE.csv":
         df_files["RID"] = df_files["PTID"].apply(
-            lambda x: bids.remove_space_and_symbols(x)[4:]
+            lambda x: remove_space_and_symbols(x)[4:]
         )
     else:
-        df_files["RID"] = df_files["RID"].apply(lambda x: pad_id(x))
+        df_files["RID"] = df_files["RID"].apply(lambda x: _pad_id(x))
     return df_files.loc[df_files["RID"].isin([x[4:] for x in bids_ids])]
 
 
-def update_age(row):
+def _update_age(row: pd.DataFrame) -> float:
     """Update age with time passed since bl to current visit"""
     from datetime import datetime
 
     if row["session_id"] != "ses-M000":
-        examdate = datetime.strptime(row["EXAMDATE"], "%Y-%m-%d")
-        examdate_bl = datetime.strptime(row["EXAMDATE_bl"], "%Y-%m-%d")
-        delta = examdate - examdate_bl
-
-        updated_age = round(
+        exam_date = datetime.strptime(row["EXAMDATE"], "%Y-%m-%d")
+        exam_date_baseline = datetime.strptime(row["EXAMDATE_bl"], "%Y-%m-%d")
+        delta = exam_date - exam_date_baseline
+        return round(
             float(row["AGE"]) + (delta.days / 365.25),
             1,
         )
-    else:
-        updated_age = row["AGE"]
-    return updated_age
+    return row["AGE"]
 
 
-def pad_id(ref_id):
+def _pad_id(ref_id: str) -> str:
     """Add leading zeros to the RID to keep à length of 4"""
     rid = str(ref_id)
     # Fill the rid with the needed number of zero
@@ -979,26 +937,22 @@ def _is_visit_code_not_supported(visit_code: str) -> bool:
 
 
 def create_adni_sessions_dict(
-    bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths
+    bids_ids: list[str],
+    clinical_specifications_folder: Path,
+    clinical_data_dir: Path,
+    bids_subjs_paths: list[Path],
 ):
     """Extract all the data required for the sessions files and organize them in a dictionary.
 
     Args:
         bids_ids: list of subject IDs to process
-        clinic_specs_path: path to the specifications for converting the clinical data
+        clinical_specifications_folder: path to the specifications for converting the clinical data
         clinical_data_dir: path to the clinical data folder
         bids_subjs_paths: a list with the path to all the BIDS subjects
     """
-
-    from os import path
-
-    import pandas as pd
-
     from clinica.utils.stream import cprint
 
-    # Load data
-    df_sessions = pd.read_csv(clinic_specs_path + "_sessions.tsv", sep="\t")
-
+    df_sessions = pd.read_csv(clinical_specifications_folder / "sessions.tsv", sep="\t")
     files = list(df_sessions["ADNI location"].unique())
     files = [x for x in files if not pd.isnull(x)]
     df_subj_session = pd.DataFrame()
@@ -1012,15 +966,15 @@ def create_adni_sessions_dict(
             df_file = load_clinical_csv(clinical_data_dir, location.split(".")[0])
         except IOError:
             continue
-        df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
+        df_filtered = _filter_subj_bids(df_file, location, bids_ids).copy()
         if not df_filtered.empty:
             df_filtered = _compute_session_id(df_filtered, location)
             # Filter rows with invalid session IDs.
             df_filtered.dropna(subset="session_id", inplace=True)
 
             if location == "ADNIMERGE.csv":
-                df_filtered["AGE"] = df_filtered.apply(lambda x: update_age(x), axis=1)
-            df_subj_session = update_sessions_df(
+                df_filtered["AGE"] = df_filtered.apply(lambda x: _update_age(x), axis=1)
+            df_subj_session = _update_sessions_df(
                 df_subj_session, df_filtered, df_sessions, location
             )
         else:
@@ -1046,10 +1000,15 @@ def create_adni_sessions_dict(
     df_subj_session = df_subj_session[
         df_subj_session.session_id.str.contains(r"ses-M\d+")
     ]
-    write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
+    _write_adni_sessions_tsv(df_subj_session, bids_subjs_paths)
 
 
-def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
+def _update_sessions_df(
+    df_subj_session: pd.DataFrame,
+    df_filtered: pd.DataFrame,
+    df_sessions: pd.DataFrame,
+    location: str,
+) -> pd.DataFrame:
     """Update the sessions dataframe with data of current subject.
 
     Args:
@@ -1058,9 +1017,6 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
         df_sessions: dataframe with the the metadata information
         location: the clinica data filename
     """
-
-    import pandas as pd
-
     df_columns_to_add = df_sessions[
         df_sessions["ADNI location"].str.contains(location, na=False)
     ][["BIDS CLINICA", "ADNI"]]
@@ -1069,7 +1025,6 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
         (df_columns_to_add["ADNI"].isin(df_filtered.columns))
         & (~df_columns_to_add["BIDS CLINICA"].isin(df_subj_session.columns))
     ]
-
     df_temp = df_filtered[
         ["RID", "session_id"] + list(df_columns_to_add["ADNI"])
     ].copy()
@@ -1077,14 +1032,13 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
 
     # if error in adni data (duplicate session id), keep only the first row
     df_temp.drop_duplicates(subset=["RID", "session_id"], keep="first", inplace=True)
-
     try:
         df_temp["diagnosis"] = df_temp["diagnosis"].apply(
-            lambda x: convert_diagnosis_code(x)
+            lambda x: _convert_diagnosis_code(x)
         )
-    except KeyError:
+    except ValueError as e:
+        warnings.warn(str(e))
         pass
-
     if df_subj_session.empty:
         df_subj_session = df_temp
     else:
@@ -1094,7 +1048,7 @@ def update_sessions_df(df_subj_session, df_filtered, df_sessions, location):
     return df_subj_session
 
 
-def convert_diagnosis_code(diagnosis_code):
+def _convert_diagnosis_code(diagnosis_code: str) -> str:
     """Convert the string field DX contained in ADNIMERGE.csv into a code that identify the diagnosis.
 
     Args:
@@ -1103,30 +1057,24 @@ def convert_diagnosis_code(diagnosis_code):
     Returns:
         A code that identify a diagnosis
     """
-    from pandas import isna
-
-    # Legend
     diagnosis = {"CN": "CN", "MCI": "MCI", "Dementia": "AD"}
 
-    if isna(diagnosis_code):
+    if pd.isna(diagnosis_code):
         return diagnosis_code
-    else:
+    try:
         return diagnosis[diagnosis_code]
+    except KeyError:
+        raise ValueError(f"Unknown diagnosis code {diagnosis_code}.")
 
 
-def create_adni_scans_files(conversion_path, bids_subjs_paths):
+def create_adni_scans_files(conversion_path: Path, bids_subjs_paths: list[Path]):
     """Create scans.tsv files for ADNI.
 
     Args:
         conversion_path: path to the conversion_info folder
         bids_subjs_paths: list of bids subject paths
     """
-    import os
-    from glob import glob
     from os import path
-    from os.path import normpath
-
-    import pandas as pd
 
     from clinica.utils.stream import cprint
 
@@ -1134,49 +1082,38 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
 
     conversion_versions = [
         folder
-        for folder in os.listdir(conversion_path)
-        if folder[0] == "v" and path.isdir(path.join(conversion_path, folder))
+        for folder in conversion_path.iterdir()
+        if folder.name[0] == "v" and (conversion_path / folder).is_dir()
     ]
     conversion_versions = sorted(
         conversion_versions, key=lambda x: int(x.split("v")[1])
     )
     older_version = conversion_versions[-1]
     converted_dict = dict()
-    for tsv_path in os.listdir(path.join(conversion_path, older_version)):
-        modality = tsv_path.split("_paths")[0]
-        df = pd.read_csv(path.join(conversion_path, older_version, tsv_path), sep="\t")
+    for tsv_path in (conversion_path / older_version).iterdir():
+        modality = tsv_path.name.split("_paths")[0]
+        df = pd.read_csv(conversion_path / older_version / tsv_path, sep="\t")
         df.set_index(["Subject_ID", "VISCODE"], inplace=True, drop=True)
         converted_dict[modality] = df
 
-    for bids_subj_path in bids_subjs_paths:
+    for bids_subject_path in bids_subjs_paths:
         # Create the file
-        bids_id = os.path.basename(normpath(bids_subj_path))
+        bids_id = bids_subject_path.resolve().name
         subject_id = "_S_".join(bids_id[8::].split("S"))
-
-        sessions_paths = glob(path.join(bids_subj_path, "ses-*"))
-        for session_path in sessions_paths:
-            session_name = session_path.split(os.sep)[-1]
-            viscode = session_label_to_viscode(session_name[4::])
-            tsv_name = f"{bids_id}_{session_name}_scans.tsv"
-
-            # If the file already exists, remove it
-            if os.path.exists(path.join(session_path, tsv_name)):
-                os.remove(path.join(session_path, tsv_name))
-
-            scans_tsv = open(path.join(session_path, tsv_name), "a")
+        for session_path in bids_subject_path.glob("ses-*"):
+            viscode = _session_label_to_viscode(session_path.name[4::])
+            tsv_name = f"{bids_id}_{session_path.name}_scans.tsv"
+            (session_path / tsv_name).unlink(missing_ok=True)
+            scans_tsv = open(session_path / tsv_name, "a")
             scans_df = pd.DataFrame(columns=scans_fields_bids)
             scans_df.to_csv(scans_tsv, sep="\t", index=False, encoding="utf-8")
 
             # Extract modalities available for each subject
-            mod_available = glob(path.join(session_path, "*"))
-            for mod in mod_available:
-                mod_name = os.path.basename(mod)
-                files = glob(path.join(mod, "*"))
-                for file in files:
+            for mod in session_path.glob("*"):
+                for file in mod.glob("*"):
                     scans_df = pd.DataFrame(index=[0], columns=scans_fields_bids)
-                    file_name = os.path.basename(file)
-                    scans_df["filename"] = path.join(mod_name, file_name)
-                    converted_mod = find_conversion_mod(file_name)
+                    scans_df["filename"] = path.join(mod.name, file.name)
+                    converted_mod = _find_conversion_mod(file.name)
                     conversion_df = converted_dict[converted_mod]
                     try:
                         scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
@@ -1188,30 +1125,29 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                             scans_df["mri_field"] = field_strength
                     except KeyError:
                         cprint(
-                            msg=f"No information found for file {file_name}",
+                            msg=f"No information found for file {file.name}",
                             lvl="warning",
                         )
-
                     scans_df = scans_df.fillna("n/a")
                     scans_df.to_csv(
                         scans_tsv, header=False, sep="\t", index=False, encoding="utf-8"
                     )
 
 
-def find_conversion_mod(file_name):
+def _find_conversion_mod(file_name: str) -> str:
     from clinica.utils.pet import Tracer
 
     suffix = file_name.split("_")[-1].split(".")[0]
 
     if suffix == "T1w":
         return "t1"
-    elif suffix == "FLAIR":
+    if suffix == "FLAIR":
         return "flair"
-    elif suffix == "dwi":
+    if suffix == "dwi":
         return "dwi"
-    elif suffix == "bold":
+    if suffix == "bold":
         return "fmri"
-    elif suffix in (
+    if suffix in (
         "fmap",
         "ph",
         "e1",
@@ -1223,17 +1159,19 @@ def find_conversion_mod(file_name):
         "magnitude2",
     ):
         return "fmap"
-    elif suffix == "pet":
+    if suffix == "pet":
         tracer = file_name.split("trc-")[1].split("_")[0]
         if tracer in (Tracer.AV45, Tracer.FBB):
             return "amyloid_pet"
-        else:
-            return f"{tracer}_pet"
-    else:
-        raise ValueError(f"Conversion modality could not be found for file {file_name}")
+        return f"{tracer}_pet"
+    raise ValueError(f"Conversion modality could not be found for file {file_name}")
 
 
-def find_image_path(images, source_dir, modality, prefix, id_field):
+def find_image_path(
+    images: pd.DataFrame,
+    source_dir: Path,
+    modality: str,
+) -> pd.DataFrame:
     """
     For each image, the path to an existing image file or folder is created from image metadata.
 
@@ -1243,44 +1181,32 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
         images: List of images metadata
         source_dir: path to the ADNI directory
         modality: Imaging modality
-        prefix: Prefix to prepend to image identifier to create name of folder containing the image
-        id_field: Name of the field in images metadata dataframe containing the image identifier to use
 
     Returns: Dataframe containing metadata and existing paths
     """
-    from pathlib import Path
-
-    import pandas as pd
-
     from clinica.utils.stream import cprint
 
     is_dicom = []
     image_folders = []
-
     for _, image in images.iterrows():
         # Base directory where to look for image files.
-        seq_path = Path(source_dir) / str(image["Subject_ID"])
-
+        seq_path = source_dir / str(image["Subject_ID"])
         # Generator finding files containing the image ID.
         find_file = filter(
             lambda p: p.is_file(),
             seq_path.rglob(f"*_I{image['Image_ID']}.*"),
         )
-
         try:
             # Grab the first file from the generator.
             next_file: Path = next(find_file)
-
             # Whether the image data are DICOM or not.
             dicom = "dcm" in next_file.suffix
-
             # Compute the image path (DICOM folder or NIfTI path).
             image_path = str(next_file.parent if dicom else next_file)
         except StopIteration:
             # In case no file is found.
             image_path = ""
             dicom = True
-
         is_dicom.append(dicom)
         image_folders.append(image_path)
         if image_path == "":
@@ -1291,7 +1217,6 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
                 ),
                 lvl="info",
             )
-
     images.loc[:, "Is_Dicom"] = pd.Series(is_dicom, index=images.index)
     images.loc[:, "Path"] = pd.Series(image_folders, index=images.index)
 
@@ -1300,7 +1225,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
 
 def paths_to_bids(
     images: pd.DataFrame,
-    bids_dir: str,
+    bids_dir: Path,
     modality: str,
     mod_to_update: bool = False,
     n_procs: Optional[int] = 1,
@@ -1312,8 +1237,8 @@ def paths_to_bids(
     images : pd.DataFrame
         List of images metadata and paths.
 
-    bids_dir : str
-        Path to the output BIDS directory.
+    bids_dir : Path
+        The path to the output BIDS directory.
 
     modality : str
         Imaging modality.
@@ -1351,11 +1276,9 @@ def paths_to_bids(
         raise RuntimeError(
             f"{modality.lower()} is not supported for conversion in paths_to_bids."
         )
-
-    bids_dir = Path(bids_dir)
     images_list = list([data for _, data in images.iterrows()])
     create_file_ = partial(
-        create_file,
+        _create_file,
         modality=modality,
         bids_dir=bids_dir,
         mod_to_update=mod_to_update,
@@ -1559,14 +1482,12 @@ def create_file(
         f"[{modality.upper()}] Processing subject {subject} in session {viscode}",
         lvl="info",
     )
-
     session = viscode_to_session(viscode)
-
-    image_path = image.Path
+    image_path = Path(image.Path)
     image_id = image.Image_ID
     # If the original image is a DICOM, check if contains two DICOM inside the same folder
     if image.Is_Dicom:
-        image_path = check_two_dcm_folder(image_path, str(bids_dir), image_id)
+        image_path = _check_two_dcm_folder(image_path, bids_dir, image_id)
     bids_subj = subject.replace("_", "")
     output_path = (
         bids_dir
@@ -1706,48 +1627,11 @@ def create_file(
             shutil.copy(image_path, output_image)
 
     # Check if there is still the folder tmp_dcm_folder and remove it
-    remove_tmp_dmc_folder(bids_dir, image_id)
+    _remove_tmp_dmc_folder(bids_dir, image_id)
     return output_image
 
 
-def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
-    """Load the clinical csv from ADNI. This function is able to find the csv in the
-    different known format available, the old format with just the name, and the new
-    format with the name and the date of download.
-    Parameters
-    ----------
-    clinical_dir: str
-        Directory containing the csv.
-    filename: str
-        name of the file without the suffix.
-    Returns
-    -------
-    pd.DataFrame:
-        Dataframe corresponding to the filename.
-    """
-    import re
-    from pathlib import Path
-
-    pattern = filename + r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
-    files_matching_pattern = [
-        f for f in Path(clinical_dir).rglob("*.csv") if re.search(pattern, (f.name))
-    ]
-    if len(files_matching_pattern) != 1:
-        raise IOError(
-            f"Expecting to find exactly one file in folder {clinical_dir} "
-            f"matching pattern {pattern}. {len(files_matching_pattern)} "
-            f"files were found instead : \n{'- '.join(str(files_matching_pattern))}"
-        )
-    try:
-        return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
-    except Exception:
-        raise ValueError(
-            f"File {str(files_matching_pattern[0])} was found but could not "
-            "be loaded as a DataFrame. Please check your data."
-        )
-
-
-def session_label_to_viscode(session_name: str) -> str:
+def _session_label_to_viscode(session_name: str) -> str:
     """Replace the session name passed as input with the session label 'bl' or 'mXXX'.
 
     Parameters
@@ -1762,60 +1646,98 @@ def session_label_to_viscode(session_name: str) -> str:
     """
     if session_name == "M000":
         return "bl"
-    else:
-        return f"m{(int(session_name[1:])):02d}"
+    return f"m{(int(session_name[1:])):02d}"
 
 
-def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
+def _check_two_dcm_folder(dicom_path: Path, bids_folder: Path, image_uid: str) -> Path:
     """[summary].
 
     Check if a folder contains more than one DICOM and if yes, copy the DICOM related to
     image id passed as parameter into a temporary folder called tmp_dicom_folder.
 
-    Args:
-        dicom_path (str): path to the DICOM folder
-        bids_folder (str): path to the BIDS folder where the dataset will be stored
-        image_uid (str): image id of the fMRI
+    Parameters
+    ----------
+    dicom_path : Path
+        The path to the DICOM folder.
 
-    Returns:
-        str: path to the original DICOM folder or the path to a temporary folder called
-            tmp_dicom_folder where only the DICOM to convert is copied
+    bids_folder : Path
+        The path to the BIDS folder where the dataset will be stored.
+
+    image_uid : str
+        The image id of the fMRI.
+
+    Returns
+    -------
+    Path :
+        The path to the original DICOM folder or the path to a temporary folder called
+        tmp_dicom_folder where only the DICOM to convert is copied.
     """
-    import os
     import shutil
-    from glob import glob
-    from os import path
     from shutil import copy
 
-    temp_folder_name = f"tmp_dcm_folder_{str(image_uid).strip(' ')}"
-    dest_path = path.join(bids_folder, temp_folder_name)
-
+    dest_path = bids_folder / f"tmp_dcm_folder_{image_uid.strip(' ')}"
     # Check if there are dicom files inside the folder not belonging to the desired image
-    dicom_list = glob(path.join(dicom_path, "*.dcm"))
-    image_list = glob(path.join(dicom_path, f"*{image_uid}.dcm"))
+    dicom_list = [f for f in dicom_path.glob("*.dcm")]
+    image_list = [f for f in dicom_path.glob(f"*{image_uid}.dcm")]
     if len(dicom_list) != len(image_list):
         # Remove the precedent tmp_dcm_folder if present.
-        if os.path.exists(dest_path):
+        if dest_path.exists():
             shutil.rmtree(dest_path)
-        os.mkdir(dest_path)
-        dmc_to_conv = glob(path.join(dicom_path, f"*{str(image_uid)}.dcm*"))
-        for d in dmc_to_conv:
+        dest_path.mkdir(parents=True)
+        for d in dicom_path.glob(f"*{str(image_uid)}.dcm*"):
             copy(d, dest_path)
         return dest_path
-    else:
-        return dicom_path
+    return dicom_path
 
 
-def remove_tmp_dmc_folder(bids_dir, image_id):
+def _remove_tmp_dmc_folder(bids_dir: Path, image_id: str):
     """Remove the folder tmp_dmc_folder created by the method check_two_dcm_folder (if existing).
 
     Args:
         bids_dir: path to the BIDS directory
         image_id:
     """
-    from os.path import exists, join
     from shutil import rmtree
 
-    tmp_dcm_folder_path = join(bids_dir, f"tmp_dcm_folder_{str(image_id).strip(' ')}")
-    if exists(tmp_dcm_folder_path):
+    tmp_dcm_folder_path = bids_dir / f"tmp_dcm_folder_{image_id.strip(' ')}"
+    if tmp_dcm_folder_path.exists():
         rmtree(tmp_dcm_folder_path)
+
+
+def load_clinical_csv(clinical_dir: Path, filename: str) -> pd.DataFrame:
+    """Load the clinical csv from ADNI. This function is able to find the csv in the
+    different known format available, the old format with just the name, and the new
+    format with the name and the date of download.
+
+    Parameters
+    ----------
+    clinical_dir: str
+        Directory containing the csv.
+
+    filename: str
+        name of the file without the suffix.
+
+    Returns
+    -------
+    pd.DataFrame:
+        Dataframe corresponding to the filename.
+    """
+    import re
+
+    pattern = filename + r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
+    files_matching_pattern = [
+        f for f in clinical_dir.rglob("*.csv") if re.search(pattern, f.name)
+    ]
+    if len(files_matching_pattern) != 1:
+        raise IOError(
+            f"Expecting to find exactly one file in folder {clinical_dir} "
+            f"matching pattern {pattern}. {len(files_matching_pattern)} "
+            f"files were found instead : \n{'- '.join(str(files_matching_pattern))}"
+        )
+    try:
+        return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
+    except Exception:
+        raise ValueError(
+            f"File {str(files_matching_pattern[0])} was found but could not "
+            "be loaded as a DataFrame. Please check your data."
+        )

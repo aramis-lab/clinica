@@ -13,21 +13,33 @@ METADATA_NAME_MAPPING = {
 }
 
 
-def _read_xml_files(subj_ids: Optional[list] = None, xml_path: str = "") -> list:
+def _bids_id_to_loni(bids_id: str) -> Optional[str]:
+    """Convert a subject id of the form sub-ADNI000S0000
+    back to original format 000_S_0000
+    """
+    import re
+
+    ids = re.findall(r"\d+", bids_id)
+    if len(ids) == 2:
+        return ids[0] + "_S_" + ids[1]
+    return None
+
+
+def _read_xml_files(
+    subj_ids: Optional[list] = None, xml_path: Optional[Path] = None
+) -> list[Path]:
     """Return the XML files in the folder `xml_path` for the provided `subj_ids`.
     This function assumes that file are named "ADNI_{sub_ids}.xml".
     If no files were found, an `IndexError` is raised.
     """
-    from glob import glob
-    from os import path
-
+    xml_path = xml_path or Path.cwd()
     if subj_ids:
         xml_files = []
-        xml_regex = [path.join(xml_path, ("ADNI_" + e + "*.xml")) for e in subj_ids]
+        xml_regex = [f"ADNI_{e}*.xml" for e in subj_ids]
         for subj_files in xml_regex:
-            xml_files.extend(glob(subj_files))
+            xml_files.extend([f for f in xml_path.glob(subj_files)])
     else:
-        xml_files = glob("Clinica_processed_metadata/ADNI_*.xml")
+        xml_files = [f for f in xml_path.glob("Clinica_processed_metadata/ADNI_*.xml")]
     if len(xml_files) == 0:
         raise IndexError("No ADNI xml files were found for reading the metadata.")
     return xml_files
@@ -547,14 +559,11 @@ def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> Non
     return None
 
 
-def create_json_metadata(bids_subjs_paths: list, bids_ids: list, xml_path: str) -> None:
+def create_json_metadata(bids_subjs_paths: list, bids_ids: list[str], xml_path: Path):
     """Create json metadata dictionary and add the metadata to the
     appropriate files in the BIDS hierarchy."""
-    from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni
-
-    loni_ids = [bids_id_to_loni(bids_id) for bids_id in bids_ids]
+    loni_ids = [_bids_id_to_loni(bids_id) for bids_id in bids_ids]
     xml_files = _read_xml_files(loni_ids, xml_path)
     imgs, exe = _run_parsers(xml_files)
     df_meta = _create_mri_meta_df(imgs)
     _add_metadata_to_scans(df_meta, bids_subjs_paths)
-    return None

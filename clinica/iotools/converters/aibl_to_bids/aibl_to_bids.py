@@ -4,6 +4,8 @@ Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 from pathlib import Path
 from typing import Optional
 
+__all__ = ["convert"]
+
 
 def convert(
     input_dataset: Path,
@@ -84,12 +86,9 @@ def _convert_images(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from os.path import exists
-
     from clinica.iotools.converters.aibl_to_bids.utils import Modality, paths_to_bids
-    from clinica.utils.stream import cprint
 
-    list_of_created_files = [
+    created_files = [
         paths_to_bids(
             input_dataset,
             input_clinical_data,
@@ -100,13 +99,21 @@ def _convert_images(
         )
         for modality in Modality
     ]
+    _warn_about_missing_files(created_files)
+
+
+def _warn_about_missing_files(files: list[list[Optional[Path]]]):
+    from clinica.utils.stream import cprint
+
     missing_files = []
-    for modality_list in list_of_created_files:
-        for file in modality_list:
-            if not exists(str(file)):
+    for files_for_given_modality in files:
+        for file in files_for_given_modality:
+            if file is not None and not file.exists():
                 missing_files.append(file)
     if missing_files:
-        msg = "The following file were not converted:\n" + "\n".join(missing_files)
+        msg = "The following file were not converted:\n" + "\n".join(
+            (str(f) for f in missing_files)
+        )
         cprint(msg=msg, lvl="warning")
 
 
@@ -121,9 +128,6 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
     output_dataset : Path
         The path to the BIDS directory in which to write the output.
     """
-    # clinical specifications in BIDS
-    from os.path import join, realpath, split
-
     import clinica.iotools.bids_utils as bids
     from clinica.iotools.converters.aibl_to_bids.utils import (
         create_participants_tsv_file,
@@ -132,13 +136,12 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
     )
     from clinica.utils.stream import cprint
 
-    clinical_spec_path = join(
-        split(realpath(__file__))[0], "../../data/clinical_specifications"
-    )
-    # if not exists(clinical_spec_path):
-    #    raise FileNotFoundError(
-    #        f"{clinical_spec_path} file not found ! This is an internal file of Clinica."
-    #    )
+    clinical_specifications_folder = Path(__file__).parents[2] / "specifications"
+    if not clinical_specifications_folder.exists():
+        raise FileNotFoundError(
+            f"{clinical_specifications_folder} folder cannot be found ! "
+            "This is an internal folder of Clinica."
+        )
 
     cprint("Creating modality agnostic files...")
     readme_data = {
@@ -154,17 +157,18 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
         readme_data=readme_data,
         bids_dir=output_dataset,
     )
-
     cprint("Creating participants.tsv...")
     create_participants_tsv_file(
         output_dataset,
-        clinical_spec_path,
+        clinical_specifications_folder,
         input_clinical_data,
         delete_non_bids_info=True,
     )
-
     cprint("Creating sessions files...")
-    create_sessions_tsv_file(output_dataset, input_clinical_data, clinical_spec_path)
-
+    create_sessions_tsv_file(
+        output_dataset, input_clinical_data, clinical_specifications_folder
+    )
     cprint("Creating scans files...")
-    create_scans_tsv_file(output_dataset, input_clinical_data, clinical_spec_path)
+    create_scans_tsv_file(
+        output_dataset, input_clinical_data, clinical_specifications_folder
+    )

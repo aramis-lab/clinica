@@ -7,28 +7,38 @@ import pandas as pd
 import pydicom as pdcm
 from pandas import DataFrame
 
+__all__ = [
+    "find_clinical_data",
+    "complete_clinical_data",
+    "dataset_to_bids",
+    "intersect_data",
+    "read_imaging_data",
+    "merge_imaging_data",
+    "write_bids",
+]
 
-def find_dicoms(path_to_source_data: PathLike) -> Iterable[Tuple[PathLike, PathLike]]:
+
+def _find_dicoms(path_to_source_data: Path) -> Iterable[Tuple[Path, Path]]:
     """Find the dicoms in the given directory.
 
     Parameters
     ----------
-    path_to_source_data: PathLike
-        Path to the source data
+    path_to_source_data: Path
+        The path to the source data.
 
     Returns
     -------
-    Iterable[Tuple[PathLike, PathLike]]
+    Iterable[Tuple[Path, Path]]
         Path to found files and parent directory
     """
     from clinica.utils.stream import cprint
 
     cprint("Looking for imaging data.", lvl="info")
-    for z in Path(path_to_source_data).rglob("*.dcm"):
-        yield str(z), str(Path(z).parent)
+    for z in path_to_source_data.rglob("*.dcm"):
+        yield z, z.parent
 
 
-def filter_dicoms(df: DataFrame) -> DataFrame:
+def _filter_dicoms(df: DataFrame) -> DataFrame:
     """Filters modalities handled by the converter.
 
     Parameters
@@ -99,7 +109,10 @@ def _handle_series_description(x: str) -> str:
                 return "t1"
         except AttributeError:
             warnings.warn(
-                message=f"The subject from DICOM {Path(x).parent} has no Echo Time or Repetition Time, it might be wrongly converted."
+                message=(
+                    f"The subject from DICOM {Path(x).parent} has no Echo Time "
+                    "or Repetition Time, it might be wrongly converted."
+                )
             )
     return series_description
 
@@ -111,11 +124,9 @@ def _handle_manufacturer(x: str) -> str:
         return "Unknown"
 
 
-def _check_file(directory: PathLike, pattern: str) -> PathLike:
-    from pathlib import Path
-
+def _check_file(directory: Path, pattern: str) -> Path:
     try:
-        data_file = list(Path(directory).glob(pattern))
+        data_file = [f for f in directory.glob(pattern)]
     except StopIteration:
         raise FileNotFoundError("Clinical data file not found.")
     if len(data_file) == 0:
@@ -126,14 +137,14 @@ def _check_file(directory: PathLike, pattern: str) -> PathLike:
 
 
 def find_clinical_data(
-    clinical_data_directory: PathLike,
+    clinical_data_directory: Path,
 ) -> List[DataFrame]:
     """Finds the clinical data associated with the dataset.
 
     Parameters
     ----------
-    clinical_data_directory: PathLike
-        Path to the clinical data.
+    clinical_data_directory: Path
+        The path to the clinical data.
 
     Returns
     -------
@@ -144,7 +155,7 @@ def find_clinical_data(
 
     cprint("Looking for clinical data.", lvl="info")
 
-    return (
+    return [
         _read_file(_check_file(clinical_data_directory, pattern))
         for pattern in (
             "FINAL*DEMOGRAPHICS*.xlsx",
@@ -153,15 +164,15 @@ def find_clinical_data(
             "FINAL*BIOSAMPLES*.xlsx",
             "FINAL*NEUROPSYCH*.xlsx",
         )
-    )
+    ]
 
 
-def _read_file(data_file: PathLike) -> pd.DataFrame:
+def _read_file(data_file: Path) -> pd.DataFrame:
     return (
         pd.concat(
             [
-                pd.read_excel(str(data_file)),
-                pd.read_excel(str(data_file), sheet_name=1),
+                pd.read_excel(data_file),
+                pd.read_excel(data_file, sheet_name=1),
             ]
         )
         .convert_dtypes()
@@ -215,7 +226,9 @@ def complete_clinical_data(
 
 
 def dataset_to_bids(
-    complete_data_df: DataFrame, gif: bool, path_to_clinical_tsv: PathLike
+    complete_data_df: DataFrame,
+    gif: bool,
+    path_to_clinical_tsv: Path,
 ) -> Dict[str, DataFrame]:
     """Selects the data needed to write the participants, sessions, and scans tsvs.
 
@@ -227,7 +240,7 @@ def dataset_to_bids(
     gif: bool
         If True, indicates the user wants to have the values of the gif parcellation
 
-    path_to_clinical_tsv: PathLike
+    path_to_clinical_tsv: Path
         TSV file containing the data fields the user wishes to have from the excel spreadsheets
 
     Returns
@@ -235,31 +248,20 @@ def dataset_to_bids(
     Dict[str, DataFrame]
         Dictionary containing as key participants, sessions and scans, and the values wanted for each tsv
     """
-    import os
-
-    from clinica.utils.filemanip import get_parent
-
-    # generates participants, sessions and scans tsv
     complete_data_df = complete_data_df.drop_duplicates(
         subset=["participant_id", "session_id", "modality", "run_num", "bids_filename"]
     ).set_index(
         ["participant_id", "session_id", "modality", "run_num", "bids_filename"],
         verify_integrity=True,
     )
-    # open the reference for building the tsvs:
-    genfi_data_folder = get_parent(__file__, 3) / "data"
-    path_to_ref_csv = genfi_data_folder / "genfi_ref.csv"
-    df_ref = pd.read_csv(path_to_ref_csv, sep=";")
+    specifications = pd.read_csv(Path(__file__) / "specifications.csv", sep=";")
     if not gif:
-        df_ref = df_ref.head(8)
+        specifications = specifications.head(8)
     # add additional data through csv
     if path_to_clinical_tsv:
         additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
-
-        path_to_mapping_tsv = genfi_data_folder / "genfi_data_mapping.tsv"
-        map_to_level_df = pd.read_csv(path_to_mapping_tsv, sep="\t")
-        pre_addi_df = map_to_level_df.merge(additional_data_df, how="inner", on="data")
-
+        data_mapping = pd.read_csv(Path(__file__) / "data_mapping.tsv", sep="\t")
+        pre_addi_df = data_mapping.merge(additional_data_df, how="inner", on="data")
         addi_df = pd.DataFrame(
             [
                 pre_addi_df["data"][pre_addi_df["dest"] == x].values.tolist()
@@ -267,9 +269,9 @@ def dataset_to_bids(
             ]
         ).transpose()
         addi_df.columns = ["participants", "sessions", "scans"]
-        df_to_write = pd.concat([df_ref, addi_df])
+        df_to_write = pd.concat([specifications, addi_df])
     else:
-        df_to_write = df_ref
+        df_to_write = specifications
     return {
         col: complete_data_df.filter(items=list(df_to_write[col]))
         for col in ["participants", "sessions", "scans"]
@@ -304,21 +306,21 @@ def intersect_data(
     return df_complete.loc[:, ~df_complete.columns.duplicated()]
 
 
-def read_imaging_data(source_path: PathLike) -> DataFrame:
+def read_imaging_data(source_path: Path) -> DataFrame:
     """This function finds the imaging data and filters it.
 
     Parameters
     ----------
-    source_path: PathLike
-        Path to the raw data
+    source_path: Path
+        The path to the raw data.
 
     Returns
     -------
     df_dicom: DataFrame
         Dataframe containing the data extracted.
     """
-    return filter_dicoms(
-        pd.DataFrame(find_dicoms(source_path), columns=["source_path", "source"])
+    return _filter_dicoms(
+        pd.DataFrame(_find_dicoms(source_path), columns=["source_path", "source"])
     )
 
 
@@ -767,7 +769,7 @@ def _compute_bids_full_path(df: DataFrame) -> DataFrame:
 
 
 def write_bids(
-    to: PathLike,
+    to: Path,
     participants: DataFrame,
     sessions: DataFrame,
     scans: DataFrame,
@@ -776,8 +778,8 @@ def write_bids(
 
     Parameters
     ----------
-    to: PathLike
-        Path where the BIDS should be written
+    to: Path
+        The path where the BIDS should be written
 
     participants: DataFrame
         DataFrame containing the data for the participants.tsv
@@ -789,7 +791,6 @@ def write_bids(
         DataFrame containing the data for the scans.tsv
     """
     import os
-    from pathlib import Path
 
     from fsspec.implementations.local import LocalFileSystem
 
@@ -798,7 +799,6 @@ def write_bids(
     from clinica.utils.stream import cprint
 
     cprint("Starting to write the BIDS.", lvl="info")
-    to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
     # Ensure BIDS hierarchy is written first.
 
@@ -809,11 +809,9 @@ def write_bids(
         .set_index("participant_id")
     )
     with fs.transaction:
-        with fs.open(
-            str(to / "dataset_description.json"), "w"
-        ) as dataset_description_file:
+        with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
             BIDSDatasetDescription(name="GENFI").write(to=dataset_description_file)
-        with fs.open(str(to / "participants.tsv"), "w") as participant_file:
+        with fs.open(to / "participants.tsv", "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
     for participant_id, data_frame in sessions.groupby(["participant_id"]):
@@ -822,17 +820,18 @@ def write_bids(
         ).drop_duplicates()
 
         sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
-        with fs.open(str(sessions_filepath), "w") as sessions_file:
+        with fs.open(sessions_filepath, "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
+        bids_full_path = Path(bids_full_path)
         try:
-            os.makedirs(to / (Path(bids_full_path).parent))
+            os.makedirs(to / bids_full_path.parent)
         except OSError:
             pass
         dcm2niix_success = run_dcm2niix(
             Path(metadata["source_path"]).parent,
-            to / str(Path(bids_full_path).parent),
+            to / Path(bids_full_path).parent,
             metadata["bids_filename"],
             True,
         )
@@ -853,14 +852,13 @@ def write_bids(
                 "dwi" in metadata["bids_filename"]
                 and "Philips" in metadata.manufacturer
             ):
-                merge_philips_diffusion(
-                    to / Path(bids_full_path).with_suffix(".json"),
+                _merge_philips_diffusion(
+                    to / bids_full_path.with_suffix(".json"),
                     metadata.number_of_parts,
                     metadata.run_num,
                 )
-    correct_fieldmaps_name(to)
-    delete_real_and_imaginary_files(to)
-    return
+    _correct_fieldmaps_name(to)
+    _delete_real_and_imaginary_files(to)
 
 
 def _serialize_row(row: pd.Series, write_column_names: bool) -> str:
@@ -877,13 +875,13 @@ def _serialize_list(data: list, sep="\t") -> str:
     return sep.join([str(value) for value in data])
 
 
-def correct_fieldmaps_name(to: PathLike) -> None:
+def _correct_fieldmaps_name(to: Path) -> None:
     """This function scans the BIDS after it has been written to correct the nameds of the fieldmap files.
 
     Parameters
     ----------
-    to: PathLike
-        Path to the BIDS
+    to: Path
+        The path to the BIDS
 
     Examples
     --------
@@ -904,7 +902,7 @@ def correct_fieldmaps_name(to: PathLike) -> None:
         │       ├── sub-GRN001_ses-M000_run-01_bold.json
         │       └── sub-GRN001_ses-M000_run-01_bold.nii.gz
         └── sub-GRN001_sessions.tsv
-    >>> correct_fieldmaps_name("path/to/bids)
+    >>> _correct_fieldmaps_name("path/to/bids)
     bids
     ├── README
     ├── dataset_description.json
@@ -926,15 +924,15 @@ def correct_fieldmaps_name(to: PathLike) -> None:
     import os
     import re
 
-    for z in Path(to).rglob("*magnitude_e*"):
+    for z in to.rglob("*magnitude_e*"):
         os.rename(z, z.parent / re.sub(r"magnitude_e", "magnitude", z.name))
 
-    for z in Path(to).rglob("*phasediff_e*_ph*"):
+    for z in to.rglob("*phasediff_e*_ph*"):
         os.rename(z, z.parent / re.sub(r"phasediff_e[1-9]_ph", "phasediff", z.name))
 
 
-def merge_philips_diffusion(
-    json_file: PathLike,
+def _merge_philips_diffusion(
+    json_file: Path,
     number_of_parts: float,
     run_num: str,
 ) -> None:
@@ -1000,7 +998,7 @@ def _get_multipart_id(nb_parts: PhilipsNumberOfParts, run_num: str) -> Optional[
         return None
 
 
-def delete_real_and_imaginary_files(bids_folder: PathLike) -> None:
+def _delete_real_and_imaginary_files(bids_folder: Path) -> None:
     """Delete all files with a `_real` or `_imaginary` suffix from the BIDS folder.
     These files are generated by dcm2niix when it is not able to correctly convert the full image.
     These files break the BIDS specification, and are therefore removed.
@@ -1012,7 +1010,6 @@ def delete_real_and_imaginary_files(bids_folder: PathLike) -> None:
     """
     from clinica.utils.stream import cprint
 
-    bids_folder = Path(bids_folder)
     for file_type in ("real", "imaginary"):
         for f in bids_folder.rglob(f"*_{file_type}.*"):
             f.unlink()

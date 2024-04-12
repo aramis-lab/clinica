@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
 import pandas as pd
-from pandas import DataFrame, Series
 
 import clinica.iotools.bids_utils as bids
+
+__all__ = ["convert"]
 
 PROTOCOL_TO_BIDS = {
     "3DFLAIR": {"datatype": "anat", "modality": "FLAIR"},
@@ -33,12 +34,28 @@ PROTOCOL_TO_BIDS = {
 }
 
 
-def source_participant_id_to_bids(dataframe: DataFrame) -> Series:
+def convert(sourcedata: Path, rawdata: Path):
+    clinical_data = {
+        k: _read_clinical_data(sourcedata / p, c)
+        for k, p, c in _find_clinical_data(sourcedata)
+    }
+    imaging_data = pd.concat(
+        [_parse_imaging_data(x) for x in _find_imaging_data(sourcedata)]
+    )
+    _write_bids(
+        sourcedata=sourcedata,
+        rawdata=rawdata,
+        imaging_data=imaging_data,
+        clinical_data=clinical_data,
+    )
+
+
+def _source_participant_id_to_bids(dataframe: pd.DataFrame) -> pd.Series:
     # HABS participant format prefixed with `P_`
     return dataframe.source_participant_id.str.replace("P_", "sub-HABS", regex=False)
 
 
-def source_session_id_to_bids(dataframe: DataFrame) -> Series:
+def _source_session_id_to_bids(dataframe: pd.DataFrame) -> pd.Series:
     import re
 
     # HABS session format as `{years}.{months}`
@@ -61,21 +78,7 @@ def source_session_id_to_bids(dataframe: DataFrame) -> Series:
     ).str.replace(months_only_pattern, replace_months_only_pattern, regex=True)
 
 
-def source_filename_to_bids(dataframe: DataFrame) -> Series:
-    from pandas import notna
-
-    cols = ["participant_id", "session_id", "datatype", "modality", "trc_label"]
-    return dataframe[cols].apply(
-        lambda row: (
-            f"{row.datatype}/{row.participant_id}_{row.session_id}"
-            f"{'_trc-' + row.trc_label if notna(row.trc_label) else ''}"
-            f"_{row.modality}.nii.gz"
-        ),
-        axis=1,
-    )
-
-
-def find_clinical_data(sourcedata: Path):
+def _find_clinical_data(sourcedata: Path) -> Iterator[tuple[str, Path, dict[str, str]]]:
     from csv import DictReader
 
     for f in sourcedata.rglob("*HABS_DataRelease*.csv"):
@@ -91,16 +94,14 @@ def find_clinical_data(sourcedata: Path):
         )
 
 
-def read_clinical_data(path: Path, rename_columns: Dict[str, str]) -> DataFrame:
-    from pandas import read_csv
-
+def _read_clinical_data(path: Path, rename_columns: dict[str, str]) -> pd.DataFrame:
     return (
-        read_csv(path)
+        pd.read_csv(path)
         .rename(columns=rename_columns)
         .assign(date=lambda df: pd.to_datetime(df.date))
-        .assign(participant_id=source_participant_id_to_bids)
+        .assign(participant_id=_source_participant_id_to_bids)
         .drop(columns="source_participant_id")
-        .assign(session_id=source_session_id_to_bids)
+        .assign(session_id=_source_session_id_to_bids)
         .drop(columns="source_session_id")
         .convert_dtypes()
         .set_index(["participant_id", "session_id", "date"], verify_integrity=True)
@@ -108,26 +109,19 @@ def read_clinical_data(path: Path, rename_columns: Dict[str, str]) -> DataFrame:
     )
 
 
-def find_imaging_data(sourcedata: Path) -> List[Tuple[str, str]]:
+def _find_imaging_data(sourcedata: Path) -> Iterator[list[tuple[str, str]]]:
     from zipfile import ZipFile
-
-    ext = ".nii.gz"
 
     for z in sourcedata.rglob("*HABS_DataRelease*.zip"):
         yield [
             (str(z.relative_to(sourcedata)), f)
             for f in ZipFile(z).namelist()
-            if f.endswith(ext)
+            if f.endswith(".nii.gz")
         ]
 
 
-def parse_imaging_data(paths: List[Tuple[str, str]]) -> Optional[DataFrame]:
-    from pandas import concat, to_datetime
-
-    dataframe = DataFrame.from_records(
-        paths, columns=["source_zipfile", "source_filename"]
-    )
-
+def _parse_imaging_data(paths: list[tuple[str, str]]) -> Optional[pd.DataFrame]:
+    df = pd.DataFrame.from_records(paths, columns=["source_zipfile", "source_filename"])
     # Parse imaging metadata from file paths.
     pattern = (
         r"(?P<source_participant_id>P_\w{6})"
@@ -135,29 +129,25 @@ def parse_imaging_data(paths: List[Tuple[str, str]]) -> Optional[DataFrame]:
         r"_(?P<source_session_id>HAB_\d{1}.\d{1,2})"
         r"_(?P<protocol>[\w-]+)"
     )
-
-    dataframe = concat(
-        [dataframe, dataframe["source_filename"].str.extract(pattern)],
+    df = pd.concat(
+        [df, df["source_filename"].str.extract(pattern)],
         axis="columns",
-    ).assign(date=lambda df: to_datetime(df.date))
+    ).assign(date=lambda x: pd.to_datetime(x.date))
 
     # Map protocol to BIDS entities.
-    protocol_to_bids = DataFrame.from_dict(PROTOCOL_TO_BIDS, orient="index")
-
-    dataframe = (
-        dataframe.join(protocol_to_bids, on="protocol", how="left")
+    protocol_to_bids = pd.DataFrame.from_dict(PROTOCOL_TO_BIDS, orient="index")
+    df = (
+        df.join(protocol_to_bids, on="protocol", how="left")
         .drop(columns="protocol")
         .dropna(subset=["datatype", "modality"])
     )
-
-    if dataframe.empty:
-        return
-
+    if df.empty:
+        return None
     # Compute BIDS participant ID, session ID and filename.
-    dataframe = (
-        dataframe.assign(participant_id=source_participant_id_to_bids)
+    df = (
+        df.assign(participant_id=_source_participant_id_to_bids)
         .drop(columns="source_participant_id")
-        .assign(session_id=source_session_id_to_bids)
+        .assign(session_id=_source_session_id_to_bids)
         .drop(columns="source_session_id")
         .set_index(
             ["participant_id", "session_id", "datatype", "modality", "trc_label"],
@@ -166,10 +156,10 @@ def parse_imaging_data(paths: List[Tuple[str, str]]) -> Optional[DataFrame]:
         .sort_index()
     )
 
-    return dataframe
+    return df
 
 
-def install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
+def _install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
     """Install a NIfTI file from a source archive to the target BIDS path."""
     import fsspec
 
@@ -179,11 +169,11 @@ def install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
         f.write(fs.cat(filename))
 
 
-def write_bids(
+def _write_bids(
     sourcedata: Path,
     rawdata: Path,
-    imaging_data: DataFrame,
-    clinical_data: Dict[str, DataFrame],
+    imaging_data: pd.DataFrame,
+    clinical_data: dict[str, pd.DataFrame],
 ):
     import fsspec
     from pandas import notna
@@ -252,7 +242,7 @@ def write_bids(
         )
 
         for filename, row in dataframe.iterrows():
-            install_nifti(
+            _install_nifti(
                 zipfile=str(sourcedata / row.source_zipfile),
                 filename=row.source_filename,
                 bids_path=str(bids_basedir / filename),

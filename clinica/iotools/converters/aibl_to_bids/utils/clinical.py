@@ -1,10 +1,18 @@
 from pathlib import Path
 from typing import List, Optional
 
+import pandas as pd
+
+__all__ = [
+    "create_participants_tsv_file",
+    "create_scans_tsv_file",
+    "create_sessions_tsv_file",
+]
+
 
 def create_participants_tsv_file(
     input_path: Path,
-    clinical_spec_path: str,
+    clinical_specifications_folder: Path,
     clinical_data_dir: Path,
     delete_non_bids_info: bool = True,
 ) -> None:
@@ -16,8 +24,8 @@ def create_participants_tsv_file(
     input_path : Path
         The path to the input directory.
 
-    clinical_spec_path : str
-        The path to the clinical file.
+    clinical_specifications_folder : Path
+        The path to the folder containing the clinical specification files.
 
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
@@ -32,7 +40,8 @@ def create_participants_tsv_file(
     from os import path
 
     import numpy as np
-    import pandas as pd
+
+    from clinica.iotools.bids_utils import StudyName
 
     fields_bids = ["participant_id"]
     fields_dataset = []
@@ -40,15 +49,12 @@ def create_participants_tsv_file(
     prev_sheet = ""
     index_to_drop = []
 
-    clinical_spec_path = Path(clinical_spec_path + "_participant.tsv")
-
-    if not clinical_spec_path.exists():
-        raise FileNotFoundError(f"{clinical_spec_path} not found in clinical data.")
-
-    participants_specs = pd.read_csv(clinical_spec_path, sep="\t")
-    participant_fields_db = participants_specs["AIBL"]
-    field_location = participants_specs["AIBL location"]
-    participant_fields_bids = participants_specs["BIDS CLINICA"]
+    specifications = _load_specifications(
+        clinical_specifications_folder, "participants.tsv"
+    )
+    participant_fields_db = specifications[StudyName.AIBL.value]
+    field_location = specifications[f"{StudyName.AIBL.value} location"]
+    participant_fields_bids = specifications["BIDS CLINICA"]
 
     # Extract the list of the available fields for the dataset (and the corresponding BIDS version)
     for i in range(0, len(participant_fields_db)):
@@ -96,7 +102,6 @@ def create_participants_tsv_file(
                         value_to_append = str(
                             file_to_read.at[j, participant_fields_db[i]]
                         )
-
                     else:
                         value_to_append = "n/a"
                 else:
@@ -106,13 +111,14 @@ def create_participants_tsv_file(
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
     # Compute BIDS-compatible participant ID.
-    participant_df["participant_id"] = "sub-AIBL" + participant_df["alternative_id_1"]
+    participant_df["participant_id"] = (
+        f"sub-{StudyName.AIBL.value}" + participant_df["alternative_id_1"]
+    )
 
     # Keep year-of-birth only.
     participant_df["date_of_birth"] = participant_df["date_of_birth"].str.extract(
         r"/(\d{4}).*"
     )
-
     # Normalize sex value.
     participant_df["sex"] = participant_df["sex"].map({1: "M", 2: "F"}).fillna("n/a")
 
@@ -131,8 +137,22 @@ def create_participants_tsv_file(
     )
 
 
+def _load_specifications(
+    clinical_specifications_folder: Path, filename: str
+) -> pd.DataFrame:
+    specifications = clinical_specifications_folder / filename
+    if not specifications.exists():
+        raise FileNotFoundError(
+            f"The specifications for {filename} were not found. "
+            f"The should be located in {specifications}."
+        )
+    return pd.read_csv(specifications, sep="\t")
+
+
 def create_sessions_tsv_file(
-    input_path: Path, clinical_data_dir: Path, clinical_spec_path: str
+    input_path: Path,
+    clinical_data_dir: Path,
+    clinical_specifications_folder: Path,
 ) -> None:
     """Extract the information regarding the sessions and save them in a tsv file.
 
@@ -144,17 +164,19 @@ def create_sessions_tsv_file(
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
 
-    clinical_spec_path : str
-        Path to the clinical file.
+    clinical_specifications_folder : Path
+        The path to the folder containing the clinical specification files.
     """
     import glob
 
-    import pandas as pd
+    from clinica.iotools.bids_utils import StudyName
 
-    sessions = pd.read_csv(clinical_spec_path + "_sessions.tsv", sep="\t")
-    sessions_fields = sessions["AIBL"]
-    field_location = sessions["AIBL location"]
-    sessions_fields_bids = sessions["BIDS CLINICA"]
+    specifications = _load_specifications(
+        clinical_specifications_folder, "sessions.tsv"
+    )
+    sessions_fields = specifications[StudyName.AIBL.value]
+    field_location = specifications[f"{StudyName.AIBL.value} location"]
+    sessions_fields_bids = specifications["BIDS CLINICA"]
     fields_dataset = []
     fields_bids = []
 
@@ -229,10 +251,12 @@ def create_sessions_tsv_file(
         cols = sessions.columns.tolist()
         sessions = sessions[cols[-1:] + cols[:-1]]
 
-        bids_paths = input_path / f"sub-AIBL{rid}"
+        bids_paths = input_path / f"sub-{StudyName.AIBL.value}{rid}"
         if bids_paths.exists():
             sessions.to_csv(
-                input_path / f"sub-AIBL{rid}" / f"sub-AIBL{rid}_sessions.tsv",
+                input_path
+                / f"sub-{StudyName.AIBL.value}{rid}"
+                / f"sub-{StudyName.AIBL.value}{rid}_sessions.tsv",
                 sep="\t",
                 index=False,
                 encoding="utf8",
@@ -263,8 +287,6 @@ def _find_exam_date_in_other_csv_files(
     rid: str, visit_code: str, clinical_data_dir: Path
 ) -> Optional[str]:
     """Try to find an alternative exam date by searching in other CSV files."""
-    import pandas as pd
-
     for csv_file in _get_cvs_files(clinical_data_dir):
         if "aibl_flutemeta" in csv_file:
             csv_data = pd.read_csv(
@@ -351,7 +373,9 @@ def _compute_ages_at_each_exam(
 
 
 def create_scans_tsv_file(
-    input_path: Path, clinical_data_dir: Path, clinical_spec_path: str
+    input_path: Path,
+    clinical_data_dir: Path,
+    clinical_specifications_folder: Path,
 ) -> None:
     """Create scans.tsv files for AIBL.
 
@@ -363,20 +387,18 @@ def create_scans_tsv_file(
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
 
-    clinical_spec_path : str
-        Path to the clinical file.
+    clinical_specifications_folder : Path
+        The path to the folder containing the clinical specification files.
     """
     import glob
     from os import path
 
-    import pandas as pd
-
     import clinica.iotools.bids_utils as bids
 
-    scans = pd.read_csv(clinical_spec_path + "_scans.tsv", sep="\t")
-    scans_fields = scans[bids.StudyName.AIBL.value]
-    field_location = scans[f"{bids.StudyName.AIBL.value} location"]
-    scans_fields_bids = scans["BIDS CLINICA"]
+    specifications = _load_specifications(clinical_specifications_folder, "scans.tsv")
+    scans_fields = specifications[bids.StudyName.AIBL.value]
+    field_location = specifications[f"{bids.StudyName.AIBL.value} location"]
+    scans_fields_bids = specifications["BIDS CLINICA"]
     fields_dataset = []
     fields_bids = []
 
@@ -405,7 +427,7 @@ def create_scans_tsv_file(
     scans_dict = bids.create_scans_dict(
         clinical_data_dir,
         bids.StudyName.AIBL,
-        clinical_spec_path,
+        clinical_specifications_folder,
         bids_ids,
         "RID",
         "VISCODE",

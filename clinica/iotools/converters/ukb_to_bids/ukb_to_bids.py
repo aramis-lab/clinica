@@ -1,12 +1,14 @@
 """Convert the UKB dataset into BIDS."""
 
-from os import PathLike
+from pathlib import Path
+
+__all__ = ["convert_images"]
 
 
 def convert_images(
-    path_to_dataset: PathLike,
-    bids_dir: PathLike,
-    path_to_clinical: PathLike,
+    path_to_dataset: Path,
+    bids_dir: Path,
+    path_to_clinical: Path,
 ):
     """Convert the entire dataset to BIDS.
 
@@ -14,10 +16,7 @@ def convert_images(
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
-    from pathlib import Path
-
-    import clinica.iotools.bids_utils as bids
-    from clinica.iotools.bids_utils import StudyName
+    from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
 
     from .ukb_utils import (
         complete_clinical,
@@ -28,22 +27,16 @@ def convert_images(
         write_bids,
     )
 
-    bids_dir = Path(bids_dir)
     # read the clinical data files
     df_clinical = find_clinical_data(path_to_clinical)
-
     # makes a df of the imaging data
     imaging_data = read_imaging_data(path_to_dataset)
-
     # intersect the data
     df_clinical = intersect_data(imaging_data, df_clinical)
-
     # complete clinical data
     df_clinical = complete_clinical(df_clinical)
-
     # build the tsv
     result = dataset_to_bids(df_clinical)
-
     write_bids(
         to=bids_dir,
         participants=result["participants"],
@@ -62,7 +55,7 @@ def convert_images(
             "improve human health."
         ),
     }
-    bids.write_modality_agnostic_files(
+    write_modality_agnostic_files(
         study_name=StudyName.UKB,
         readme_data=readme_data,
         bids_dir=bids_dir,

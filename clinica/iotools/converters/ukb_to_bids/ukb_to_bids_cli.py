@@ -1,4 +1,5 @@
 from os import PathLike
+from pathlib import Path
 
 import click
 
@@ -20,13 +21,17 @@ def cli(
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
     from clinica.iotools.bids_utils import _write_bidsignore
-    from clinica.iotools.converters.ukb_to_bids.ukb_to_bids import convert_images
     from clinica.utils.check_dependency import ThirdPartySoftware, check_software
     from clinica.utils.stream import cprint
 
+    from .ukb_to_bids import convert_images
+
     check_software(ThirdPartySoftware.DCM2NIIX)
-    convert_images(dataset_directory, bids_directory, clinical_data_directory)
-    _write_bidsignore(str(bids_directory))
+    bids_directory = Path(bids_directory)
+    convert_images(
+        Path(dataset_directory), bids_directory, Path(clinical_data_directory)
+    )
+    _write_bidsignore(bids_directory)
     cprint("Conversion to BIDS succeeded.")
 
 

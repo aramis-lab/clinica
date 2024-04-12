@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Optional
 
 import click
@@ -73,7 +74,11 @@ def cli(
         raise ClinicaParserError(
             "Arguments `clinical_data_only` and `force_new_extraction` are mutually exclusive."
         )
-
+    dataset_directory = Path(dataset_directory)
+    clinical_data_directory = Path(clinical_data_directory)
+    bids_directory = Path(bids_directory)
+    if xml_path:
+        xml_path = Path(xml_path)
     if not clinical_data_only:
         adni_to_bids.convert_images(
             dataset_directory,

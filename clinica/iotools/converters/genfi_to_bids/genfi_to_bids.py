@@ -1,15 +1,17 @@
 """Convert the GENFI dataset into BIDS."""
 
-from os import PathLike
+from pathlib import Path
 from typing import Optional
+
+__all__ = ["convert_images"]
 
 
 def convert_images(
-    path_to_dataset: PathLike,
-    bids_dir: PathLike,
-    path_to_clinical: Optional[PathLike] = None,
+    path_to_dataset: Path,
+    bids_dir: Path,
+    path_to_clinical: Optional[Path] = None,
     gif: Optional[bool] = False,
-    path_to_clinical_tsv: Optional[PathLike] = None,
+    path_to_clinical_tsv: Optional[Path] = None,
 ) -> None:
     """Convert the entire dataset to BIDS.
 
@@ -19,25 +21,23 @@ def convert_images(
 
     Parameters
     ----------
-    path_to_dataset: PathLike
-        Path to the raw images
+    path_to_dataset: Path
+        The path to the raw images.
 
-    bids_dir: PathLike
-        Path to directory where the bids will be written
+    bids_dir: Path
+        The path to directory where the bids will be written.
 
-    path_to_clinical: PathLike, optional
-        Path to the clinical data associated with the dataset.
+    path_to_clinical: Path, optional
+        The path to the clinical data associated with the dataset.
         If None, the clinical data won't be converted.
 
-    gif: bool
+    gif: bool, optional
         If True, indicates the user wants to have the values of the gif parcellation
 
-    path_to_clinical_tsv: PathLike, optional
-        Path to a TSV file containing the additional data the user wants to have in the BIDS output.
+    path_to_clinical_tsv: Path, optional
+        The path to a TSV file containing the additional data the user wants to have in the BIDS output.
         If None, no additional data will be added.
     """
-    from pathlib import Path
-
     import clinica.iotools.bids_utils as bids
 
     from .genfi_to_bids_utils import (
@@ -50,7 +50,6 @@ def convert_images(
         write_bids,
     )
 
-    bids_dir = Path(bids_dir)
     # check that if a clinical tsv is given, a path to the clinical data is given as well
     if path_to_clinical_tsv and not path_to_clinical:
         raise ValueError(

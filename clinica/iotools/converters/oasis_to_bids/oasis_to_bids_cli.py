@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 import click
@@ -24,8 +25,11 @@ def cli(
     located in DATASET_DIRECTORY and CLINICAL_DATA_DIRECTORY respectively,
     to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
+    from .oasis_to_bids import OasisToBids
 
+    dataset_directory = Path(dataset_directory)
+    bids_directory = Path(bids_directory)
+    clinical_data_directory = Path(clinical_data_directory)
     oasis_to_bids = OasisToBids()
     oasis_to_bids.convert_images(dataset_directory, bids_directory, n_procs=n_procs)
     oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
