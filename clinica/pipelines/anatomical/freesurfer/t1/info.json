@@ -1,0 +1,14 @@
+{
+    "id": "aramislab/t1-freesurfer",
+    "author": ["Junhao Wen", "Alexandre Routier"],
+    "version": "0.1",
+    "space_caps": "1G",
+    "space_wd": "1G",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "freesurfer",
+            "version": ">=6.0.0"
+        }
+    ]
+}

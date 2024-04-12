@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore")
 
 
 def test_instantiate_t1_freesurfer_cross_sectional(cmdopt):
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
+    from clinica.pipelines.anatomical.freesurfer.t1.pipeline import T1FreeSurfer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "T1FreeSurfer"
@@ -390,7 +390,7 @@ def test_instantiate_spatial_svm(cmdopt):
 
 
 def test_instantiate_t1_freesurfer_template(cmdopt):
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import (
+    from clinica.pipelines.anatomical.freesurfer.longitudinal.template.pipeline import (
         T1FreeSurferTemplate,
     )
 
@@ -404,7 +404,7 @@ def test_instantiate_t1_freesurfer_template(cmdopt):
 
 
 def test_instantiate_t1_freesurfer_longitudinal_correction(cmdopt):
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import (
+    from clinica.pipelines.anatomical.freesurfer.longitudinal.correction.pipeline import (
         T1FreeSurferLongitudinalCorrection,
     )
 
