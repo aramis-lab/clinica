@@ -560,7 +560,7 @@ def b0_flirt_pipeline(num_b0s: int, name: str = "b0_coregistration"):
     import nipype.pipeline.engine as pe
     from nipype.interfaces import fsl
 
-    from clinica.utils.image import merge_nifti_images_in_time_dimension_task
+    from .tasks import merge_nifti_images_in_time_dimension_task
 
     inputnode = pe.Node(niu.IdentityInterface(fields=["in_file"]), name="inputnode")
     fslroi_ref = pe.Node(fsl.ExtractROI(args="0 1"), name="b0_reference")
