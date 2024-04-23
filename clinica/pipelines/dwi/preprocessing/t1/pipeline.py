@@ -157,7 +157,6 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             name="container_path",
         )
         files_to_write_in_caps = [
-            "dwi_filename",
             "dwi_preproc_filename",
             "b_values_preproc_filename",
             "b_vectors_preproc_filename",
@@ -166,7 +165,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
 
         rename_into_caps = npe.Node(
             nutil.Function(
-                input_names=files_to_write_in_caps,
+                input_names=["dwi_filename"] + files_to_write_in_caps,
                 output_names=[f"{x}_caps" for x in files_to_write_in_caps],
                 function=rename_into_caps_task,
             ),
