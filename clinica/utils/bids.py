@@ -4,6 +4,16 @@ from os import PathLike
 from pathlib import Path
 from typing import Dict, Tuple, Union
 
+__all__ = [
+    "BIDSLabel",
+    "BIDSFileName",
+    "BIDS_VERSION",
+    "Extension",
+    "Suffix",
+]
+
+BIDS_VERSION = "1.7.0"
+
 
 class Extension(str, Enum):
     """Possible extensions in BIDS file names."""
@@ -114,7 +124,7 @@ class BIDSFileName:
 
     @classmethod
     def from_name(cls, filename: Union[str, PathLike]):
-        filename, extension = split_name_from_extension(filename)
+        filename, extension = _split_name_from_extension(filename)
         entities, suffix = _tokenize_filename_no_ext(filename)
         subject = entities.pop("sub")
         session = entities.pop("ses")
@@ -164,7 +174,7 @@ def _tokenize_filename_no_ext(
     return entities, suffix
 
 
-def split_name_from_extension(filename: Union[str, PathLike]) -> Tuple[str, str]:
+def _split_name_from_extension(filename: Union[str, PathLike]) -> Tuple[str, str]:
     extension = ""
     filename = Path(filename)
     while "." in filename.name:
