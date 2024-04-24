@@ -106,7 +106,7 @@ def expected_description_content(
 ) -> str:
     import json
 
-    from clinica.iotools.bids_dataset_description import BIDS_VERSION
+    from clinica.utils.bids import BIDS_VERSION
 
     expected_version = BIDS_VERSION if bids_version is None else bids_version
     desc_dict = {
