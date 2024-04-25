@@ -465,7 +465,18 @@ class Pipeline(Workflow):
             self.is_bids_dir = False
         else:
             check_bids_folder(self._bids_directory)
-            self.is_bids_dir = True
+            input_dir = self._bids_directory
+            is_bids_dir = True
+            if self._caps_directory is not None:
+                if (
+                    not self._caps_directory.exists()
+                    or len([f for f in self._caps_directory.iterdir()]) == 0
+                ):
+                    self._caps_directory.mkdir(parents=True, exist_ok=True)
+                    from clinica.utils.caps import write_caps_dataset_description
+
+                    write_caps_dataset_description(self._name, self._caps_directory)
+                check_caps_folder(self._caps_directory)
         self._compute_subjects_and_sessions()
         self._init_nodes()
 
