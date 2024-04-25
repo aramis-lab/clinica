@@ -261,9 +261,10 @@ class AnatLinear(Pipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
 
+        from clinica.pipelines.tasks import crop_nifti_task
         from clinica.utils.filemanip import get_filename_no_ext
 
-        from .anat_linear_utils import crop_nifti, print_end_pipeline
+        from .anat_linear_utils import print_end_pipeline
 
         image_id_node = npe.Node(
             interface=nutil.Function(
@@ -304,12 +305,12 @@ class AnatLinear(Pipeline):
         cropnifti = npe.Node(
             name="cropnifti",
             interface=nutil.Function(
-                function=crop_nifti,
-                input_names=["input_img", "ref_crop"],
-                output_names=["output_img", "crop_template"],
+                function=crop_nifti_task,
+                input_names=["input_image", "reference_image"],
+                output_names=["output_img"],
             ),
         )
-        cropnifti.inputs.ref_crop = self.ref_crop
+        cropnifti.inputs.reference_image = self.ref_crop
 
         # 4. Print end message
         print_end_message = npe.Node(
@@ -353,7 +354,7 @@ class AnatLinear(Pipeline):
                     (
                         ants_registration_node,
                         cropnifti,
-                        [("warped_image", "input_img")],
+                        [("warped_image", "input_image")],
                     ),
                     (cropnifti, self.output_node, [("output_img", "outfile_crop")]),
                     (cropnifti, print_end_message, [("output_img", "final_file")]),
