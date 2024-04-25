@@ -12,7 +12,7 @@
     100 of the included subjects over the age of 60 have been clinically diagnosed with very mild to moderate Alzheimer’s disease (AD).
     Additionally, a reliability data set is included containing 20 nondemented subjects imaged on a subsequent visit within 90 days of their initial session.
 
-  For more information about the images and the dataset you can read the [OASIS Fact Sheet](https://sites.wustl.edu/oasisbrains/pdf/oasis_cross-sectional_facts.pdf).
+  For more information about the images and the dataset you can read the [OASIS Fact Sheet](https://bpb-us-w2.wpmucdn.com/sites.wustl.edu/dist/6/4383/files/2024/03/oasis_cross-sectional_facts-bcc7a002dfb104f4.pdf).
 
 ## Dependencies
 

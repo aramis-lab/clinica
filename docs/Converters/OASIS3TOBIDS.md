@@ -17,7 +17,7 @@
      PIB, AV45, and FDG, totaling over 1500 raw imaging scans and the accompanying post-processed files from
       the Pet Unified Pipeline (PUP) are also available in OASIS-3.
 
-  For more information about the images and the dataset you can read the [OASIS-3: Imaging Methods and Data Dictionary](https://sites.wustl.edu/oasisbrains/files/OASIS-3_Imaging_Data_Dictionary_v1.5.pdf).
+  For more information about the images and the dataset you can read the [OASIS-3: Imaging Methods and Data Dictionary](https://bpb-us-w2.wpmucdn.com/sites.wustl.edu/dist/6/4383/files/2024/04/OASIS-3_Imaging_Data_Dictionary_v2.3-a93c947a586e7367.pdf).
 
 ## Dependencies
 
