@@ -462,7 +462,6 @@ class Pipeline(Workflow):
                     f"The {self._name} pipeline does not contain "
                     "BIDS nor CAPS directory at the initialization."
                 )
-
             check_caps_folder(self._caps_directory)
             input_dir = self._caps_directory
             is_bids_dir = False
@@ -470,6 +469,16 @@ class Pipeline(Workflow):
             check_bids_folder(self._bids_directory)
             input_dir = self._bids_directory
             is_bids_dir = True
+            if self._caps_directory is not None:
+                if (
+                    not self._caps_directory.exists()
+                    or len([f for f in self._caps_directory.iterdir()]) == 0
+                ):
+                    self._caps_directory.mkdir(parents=True, exist_ok=True)
+                    from clinica.utils.caps import write_caps_dataset_description
+
+                    write_caps_dataset_description(self._name, self._caps_directory)
+                check_caps_folder(self._caps_directory)
         self._subjects, self._sessions = get_subject_session_list(
             input_dir,
             subject_session_file=tsv_file,
