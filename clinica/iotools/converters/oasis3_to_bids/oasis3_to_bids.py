@@ -49,7 +49,7 @@ def convert_images(
         dataset_directory=path_to_dataset,
     )
     readme_data = {
-        "link": "https://www.oasis-brains.org/#access",
+        "link": "https://sites.wustl.edu/oasisbrains/#access",
         "desc": (
             "OASIS-3 is a retrospective compilation of data for 1378 participants that were collected across several "
             "ongoing projects through the WUSTL Knight ADRC over the course of 30years. Participants include 755 "
