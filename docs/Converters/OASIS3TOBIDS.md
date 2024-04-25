@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD046 -->
 # `oasis3-to-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS-3) to BIDS
 
-!!! quote "Description reproduced from the [OASIS' webpage](http://oasis-brains.org/)"
+!!! quote "Description reproduced from the [OASIS' webpage](https://sites.wustl.edu/oasisbrains/)"
     The Open Access Series of Imaging Studies (OASIS) is a project aimed at making MRI data sets of the brain freely available to the scientific community.
     By compiling and freely distributing MRI data sets, we hope to facilitate future discoveries in basic and clinical neuroscience.
     OASIS is made available by the Washington University Alzheimer’s Disease Research Center, Dr. Randy Buckner at the Howard Hughes Medical Institute (HHMI) at Harvard University, the Neuroinformatics Research Group (NRG) at Washington University School of Medicine, and the Biomedical Informatics Research Network (BIRN).
@@ -17,7 +17,7 @@
      PIB, AV45, and FDG, totaling over 1500 raw imaging scans and the accompanying post-processed files from
       the Pet Unified Pipeline (PUP) are also available in OASIS-3.
 
-  For more information about the images and the dataset you can read the [OASIS-3: Imaging Methods and Data Dictionary](https://www.oasis-brains.org/files/OASIS-3_Imaging_Data_Dictionary_v1.5.pdf).
+  For more information about the images and the dataset you can read the [OASIS-3: Imaging Methods and Data Dictionary](https://sites.wustl.edu/oasisbrains/files/OASIS-3_Imaging_Data_Dictionary_v1.5.pdf).
 
 ## Dependencies
 
@@ -27,7 +27,9 @@ If you installed the core of Clinica, this converter needs no further dependenci
 
 ### Clinical data
 
-The OASIS-3 to BIDS converter requires the user to have downloaded the OASIS-3 (also called *Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease*) imaging and clinical data. To do so, visit the [OASIS website](http://www.oasis-brains.org/), click on `DATASETS` then `OASIS-3`. For the first access, you have to scroll down to click on `Apply To Access OASIS Data` in the bottom of the next "Data Use Agreement" section and follow the procedure. Then, you can download the data via XNAT (if you click on `Browse Data`).
+The OASIS-3 to BIDS converter requires the user to have downloaded the OASIS-3 (also called *Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease*) imaging and clinical data.
+
+To do so, visit the [OASIS website](https://sites.wustl.edu/oasisbrains/), click on `DATASETS` then `OASIS-3`. For the first access, you have to scroll down to click on `Apply To Access OASIS Data` in the bottom of the next "Data Use Agreement" section and follow the procedure. Then, you can download the data via XNAT (if you click on `Browse Data`).
 
 The data needs to be formatted before downloading by following the step-by-step procedure below.
 
@@ -104,11 +106,11 @@ Please note that this converter currently processes the clinical data and the fo
 - T2star
 - Flair
 - DWI
-- PET 
+- [PET](../glossary.md#pet) 
 
 Support for additional modalities may be implemented later.
-For participants with multiple T1-weighted images available, the average of the motion-corrected co-registered
-individual images resampled to 1-mm isotropic resolution is given priority.
+
+For participants with multiple T1-weighted images available, the average of the motion-corrected co-registered individual images resampled to 1-mm isotropic resolution is given priority.
 
 ## Using the converter
 
@@ -168,7 +170,7 @@ where:
 - `BIDS_DIRECTORY` is the path to the output directory where the BIDS-converted version of OASIS-3 will be stored.
 
 !!! note
-    In order to improve the readability, the BIDS subject ID is different from the original OASIS-3 ID and is defined as follows:
+    In order to improve the readability, the [BIDS](../glossary.md#bids) subject ID is different from the original OASIS-3 ID and is defined as follows:
 
     ```Text
     sub-OASIS3+ original numerical ID of the subject

@@ -16,8 +16,9 @@ def cli(
 ) -> None:
     """OASIS3 to BIDS converter.
 
-    Convert the imaging and clinical data of OASIS3 (https://www.oasis-brains.org), located in DATASET_DIRECTORY and
-    CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
+    Convert the imaging and clinical data of OASIS3 (https://sites.wustl.edu/oasisbrains/),
+    located in DATASET_DIRECTORY and CLINICAL_DATA_DIRECTORY respectively,
+    to a BIDS dataset in the target BIDS_DIRECTORY.
     """
     from clinica.iotools.converters.oasis3_to_bids.oasis3_to_bids import convert_images
     from clinica.utils.stream import cprint
