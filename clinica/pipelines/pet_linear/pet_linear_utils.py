@@ -102,37 +102,6 @@ def suvr_normalization(
     return output_img
 
 
-def crop_nifti(input_img: str, ref_img: str) -> str:
-    """Crop input image based on the reference.
-
-    It uses nilearn `resample_to_img` function.
-
-    Parameters
-    ----------
-    input_img : str
-        Path to the input image.
-
-    ref_img : str
-        Path to the reference image used for cropping.
-
-    Returns
-    -------
-    output_img : str
-        Path to the cropped image.
-    """
-    from pathlib import Path
-
-    from nilearn.image import resample_to_img
-
-    basedir = Path.cwd()
-    # resample the individual MRI into the cropped template image
-    crop_img = resample_to_img(input_img, ref_img, force_resample=True)
-    crop_filename = Path(input_img.split(".nii")[0] + "_cropped.nii.gz")
-    output_img = basedir / crop_filename
-    crop_img.to_filename(str(output_img))
-    return str(output_img)
-
-
 def rename_into_caps(
     pet_filename_bids: str,
     pet_filename_raw: str,

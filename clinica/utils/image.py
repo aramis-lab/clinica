@@ -173,3 +173,34 @@ def remove_dummy_dimension_from_image(image: str, output: str) -> str:
     nib.save(img, output)
 
     return output
+
+
+def crop_nifti(input_image: Path, reference_image: Path) -> Path:
+    """Crop input image based on the reference.
+
+    It uses nilearn `resample_to_img` function.
+
+    Parameters
+    ----------
+    input_image : Path
+        Path to the input image.
+
+    reference_image : Path
+        Path to the reference image used for cropping.
+
+    Returns
+    -------
+    output_img : Path
+        Path to the cropped image.
+    """
+    from pathlib import Path
+
+    from nilearn.image import resample_to_img
+
+    basedir = Path.cwd()
+    # resample the individual MRI into the cropped template image
+    crop_img = resample_to_img(input_image, reference_image, force_resample=True)
+    crop_filename = str(input_image).split(".nii")[0] + "_cropped.nii.gz"
+    output_img = basedir / crop_filename
+    crop_img.to_filename(output_img)
+    return output_img

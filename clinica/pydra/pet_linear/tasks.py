@@ -52,6 +52,6 @@ def crop_nifti_task(input_img: os.PathLike, ref_img: os.PathLike) -> os.PathLike
     """
     from pathlib import Path
 
-    from clinica.pipelines.pet_linear.pet_linear_utils import crop_nifti
+    from clinica.utils.image import crop_nifti
 
-    return Path(crop_nifti(str(input_img), str(ref_img)))
+    return crop_nifti(input_img, ref_img)
