@@ -19,7 +19,7 @@ class ADNIPreprocessingStep(Enum):
     STEP2 = "Co-registered, Averaged"
     STEP3 = "Coreg, Avg, Standardized Image and Voxel Size"
     STEP4_8MM = "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"  # codespell:ignore
-    STEP4_6MM = "Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"  # noqa
+    STEP4_6MM = "Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"  # codespell:ignore
 
     @classmethod
     def from_step_value(cls, step_value: int):
