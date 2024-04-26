@@ -4,5 +4,5 @@ commun
 fo
 te
 artic
-Vox
-Siz
+vox
+siz
