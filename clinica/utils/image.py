@@ -11,6 +11,7 @@ __all__ = [
     "get_new_image_like",
     "merge_nifti_images_in_time_dimension",
     "remove_dummy_dimension_from_image",
+    "crop_nifti",
 ]
 
 
