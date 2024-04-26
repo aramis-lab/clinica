@@ -274,7 +274,7 @@ def test_validate_folder_existence(folder_type):
         _validate_folder_existence(1, folder_type)  # noqa
 
     with pytest.raises(
-        ClinicaBIDSError if folder_type == DatasetType.BIDS else ClinicaCAPSError,
+        ClinicaBIDSError if folder_type == DatasetType.RAW else ClinicaCAPSError,
         match=f"The {folder_type.value} directory you gave is not a folder.",
     ):
         _validate_folder_existence(Path("fooooo"), folder_type)
