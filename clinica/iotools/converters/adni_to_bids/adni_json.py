@@ -4,6 +4,9 @@ from typing import Optional, Tuple, Union
 
 import pandas as pd
 
+__all__ = ["create_json_metadata"]
+
+
 # Map from names of extracted metadata to their proper BIDS names.
 METADATA_NAME_MAPPING = {
     "acquisition_type": "MRAcquisitionType",
@@ -72,7 +75,9 @@ def _check_xml_nb_children(xml_el: xml.etree.ElementTree.Element, exp_nb_childre
 
 
 def _check_xml(
-    xml_el: xml.etree.ElementTree.Element, exp_tag: str, exp_nb_children=None
+    xml_el: xml.etree.ElementTree.Element,
+    exp_tag: str,
+    exp_nb_children: Optional[int] = None,
 ) -> xml.etree.ElementTree.Element:
     """Check that the given xml element is as expected (tag name + nb of children).
     Raise a ValueError if not and return the element if it is valid.
@@ -428,19 +433,23 @@ def _run_parsers(xml_files: list) -> Tuple[list, dict]:
     import os
 
     parser = FuncWithException(_parse_xml_file)
-    imgs_with_excep = dict(
+    images_with_exceptions = dict(
         zip(
             xml_files,  # tqdm is buggy when chunksize > 1
             [parser(xml_file) for xml_file in xml_files],
         )
     )
-    imgs = [img for img, e in imgs_with_excep.values() if e is None]
-    exceps = {
-        os.path.basename(xml_p): e
-        for xml_p, (_, e) in imgs_with_excep.items()
-        if e is not None
+    images = [
+        image
+        for image, exception in images_with_exceptions.values()
+        if exception is None
+    ]
+    exceptions = {
+        os.path.basename(xml_p): exception
+        for xml_p, (_, exception) in images_with_exceptions.items()
+        if exception is not None
     }
-    return imgs, exceps
+    return images, exceptions
 
 
 def _create_mri_meta_df(imgs: list) -> pd.DataFrame:

@@ -15,6 +15,7 @@ __all__ = [
     "find_image_path",
     "paths_to_bids",
     "load_clinical_csv",
+    "replace_sequence_chars",
 ]
 
 
@@ -599,7 +600,7 @@ def get_images_pet(
 
         phase = "ADNI1" if modality == "PIB-PET" else qc_visit.Phase
         visit = sel_image.Visit
-        sequence = _replace_sequence_chars(sel_image.Sequence)
+        sequence = replace_sequence_chars(sel_image.Sequence)
         date = sel_image["Scan Date"]
         study_id = sel_image["Study ID"]
         series_id = sel_image["Series ID"]
@@ -707,7 +708,7 @@ def correct_diagnosis_sc_adni3(
     return participants_df
 
 
-def _replace_sequence_chars(sequence_name: str) -> str:
+def replace_sequence_chars(sequence_name: str) -> str:
     """Replace special characters in the sequence by underscores (as done for corresponding folder names in ADNI).
 
     Args:

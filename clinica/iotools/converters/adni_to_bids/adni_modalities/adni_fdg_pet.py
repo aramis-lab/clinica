@@ -42,10 +42,10 @@ class ADNIPreprocessingStep(Enum):
 
 
 def _convert_adni_fdg_pet(
-    source_dir: PathLike,
-    csv_dir: PathLike,
-    destination_dir: PathLike,
-    conversion_dir: PathLike,
+    source_dir: Path,
+    csv_dir: Path,
+    destination_dir: Path,
+    conversion_dir: Path,
     preprocessing_step: ADNIPreprocessingStep,
     subjects: List[str],
     mod_to_update: bool = False,
@@ -82,10 +82,6 @@ def _convert_adni_fdg_pet(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from pathlib import Path
-
-    import pandas as pd
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         load_clinical_csv,
         paths_to_bids,
@@ -129,10 +125,10 @@ convert_adni_fdg_pet_uniform = partial(
 
 
 def _compute_fdg_pet_paths(
-    source_dir: PathLike,
-    csv_dir: PathLike,
+    source_dir: Path,
+    csv_dir: Path,
     subjects: List[str],
-    conversion_dir: PathLike,
+    conversion_dir: Path,
     preprocessing_step: ADNIPreprocessingStep,
 ) -> pd.DataFrame:
     """Compute the paths to the FDG PET images and store them in a TSV file.
@@ -163,16 +159,13 @@ def _compute_fdg_pet_paths(
     images : pd.DataFrame
         DataFrame with all the paths to the PET images that will be converted into BIDS.
     """
-    from pathlib import Path
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path
     from clinica.utils.pet import Tracer
 
-    pet_fdg_df = _get_pet_fdg_df(Path(csv_dir), subjects, preprocessing_step)
-
-    images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
+    pet_fdg_df = _get_pet_fdg_df(csv_dir, subjects, preprocessing_step)
+    images = find_image_path(pet_fdg_df, source_dir, "FDG")
     images.to_csv(
-        Path(conversion_dir) / f"{Tracer.FDG.value}_pet_paths.tsv",
+        conversion_dir / f"{Tracer.FDG.value}_pet_paths.tsv",
         sep="\t",
         index=False,
     )

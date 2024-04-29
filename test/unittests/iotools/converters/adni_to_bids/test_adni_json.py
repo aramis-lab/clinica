@@ -7,7 +7,31 @@ import pandas as pd
 import pytest
 
 
-def _get_xml_templates():
+@pytest.mark.parametrize(
+    "input_value,expected",
+    [
+        ("sub-ADNI000S0000", "000_S_0000"),
+        ("sub-ADNI123S4567", "123_S_4567"),
+        ("sub-ADNI12S4567", "12_S_4567"),
+        ("sub-ADNI123X4567", "123_S_4567"),
+        ("sub-ADNI123XYZ4567", "123_S_4567"),
+        ("sub-ADNI123XYZ_TT4567", "123_S_4567"),
+        ("sub-ADNI123XYZ12TT4567", None),
+        ("", None),
+        ("foo", None),
+        ("12", None),
+        ("123_S_4567", "123_S_4567"),
+        ("1_XY_22", "1_S_22"),
+    ],
+)
+def test_bids_id_to_loni(input_value, expected):
+    """Test function `bids_id_to_loni`."""
+    from clinica.iotools.converters.adni_to_bids.adni_json import _bids_id_to_loni  # noqa
+
+    assert _bids_id_to_loni(input_value) == expected
+
+
+def _get_xml_templates() -> list[str]:
     suffix = "_template.xml"
     current_dir = os.path.dirname(os.path.realpath(__file__))
     return [
@@ -84,28 +108,35 @@ def test_check_xml_and_get_text(basic_xml_tree):
         _check_xml_and_get_text(basic_xml_tree, "root")
 
 
-def test_read_xml_files(tmp_path):
+def test_read_xml_files_error(tmp_path):
     """Test function `_read_xml_files`."""
     from clinica.iotools.converters.adni_to_bids.adni_json import _read_xml_files
 
     with pytest.raises(IndexError, match="No ADNI xml files"):
         _read_xml_files()
+
+
+def test_read_xml_files(tmp_path):
+    """Test function `_read_xml_files`."""
+    from clinica.iotools.converters.adni_to_bids.adni_json import _read_xml_files
+
     xml_path = tmp_path / "xml_files"
     xml_path.mkdir()
     os.chdir(xml_path)
     clinica_path = xml_path / "Clinica_processed_metadata"
     clinica_path.mkdir()
     dummy_file = clinica_path / "ADNI_1234.xml"
-    with dummy_file.open("w") as fp:
-        fp.write("foo")
+    dummy_file.write_text("foo")
     assert os.listdir() == ["Clinica_processed_metadata"]
-    assert _read_xml_files() == ["Clinica_processed_metadata/ADNI_1234.xml"]
+    assert _read_xml_files() == [
+        xml_path / "Clinica_processed_metadata" / "ADNI_1234.xml"
+    ]
     subjects = ["01", "02", "06", "12"]
     for subj in subjects:
         with open(xml_path / f"ADNI_{subj}.xml", "w") as fp:
             fp.write(f"foo {subj}")
     assert _read_xml_files(subjects, xml_path) == [
-        str(xml_path / f"ADNI_{subj}.xml") for subj in subjects
+        xml_path / f"ADNI_{subj}.xml" for subj in subjects
     ]
     os.chdir(os.path.dirname(__file__))
 

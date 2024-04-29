@@ -166,38 +166,14 @@ def test_check_subjects_list(tmp_path, write_all, input, expected):
     assert set(_check_subjects_list(input, clinical_dir)) == expected
 
 
-@pytest.mark.parametrize(
-    "input_value,expected",
-    [
-        ("sub-ADNI000S0000", "000_S_0000"),
-        ("sub-ADNI123S4567", "123_S_4567"),
-        ("sub-ADNI12S4567", "12_S_4567"),
-        ("sub-ADNI123X4567", "123_S_4567"),
-        ("sub-ADNI123XYZ4567", "123_S_4567"),
-        ("sub-ADNI123XYZ_TT4567", "123_S_4567"),
-        ("sub-ADNI123XYZ12TT4567", None),
-        ("", None),
-        ("foo", None),
-        ("12", None),
-        ("123_S_4567", "123_S_4567"),
-        ("1_XY_22", "1_S_22"),
-    ],
-)
-def test_bids_id_to_loni(input_value, expected):
-    """Test function `bids_id_to_loni`."""
-    from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni
-
-    assert bids_id_to_loni(input_value) == expected
-
-
 def test_adni_study_error():
-    from clinica.iotools.converters.adni_to_bids.adni_utils import ADNIStudy
+    from clinica.iotools.converters.adni_to_bids.adni_utils import ADNIStudy  # noqa
 
     with pytest.raises(
         ValueError,
-        match="Invalid study name for ADNI: foo.",
+        match="'foo' is not a valid ADNIStudy",
     ):
-        ADNIStudy.from_string("foo")
+        ADNIStudy("foo")
 
 
 @pytest.mark.parametrize(
@@ -233,27 +209,24 @@ def test_adni_study_error():
 )
 def test_get_preferred_visit_name(study_name, visit_code, expected):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        ADNIStudy,
-        _get_preferred_visit_name,
+        ADNIStudy,  # noqa
+        _get_preferred_visit_name,  # noqa
     )
 
-    assert (
-        _get_preferred_visit_name(ADNIStudy.from_string(study_name), visit_code)
-        == expected
-    )
+    assert _get_preferred_visit_name(ADNIStudy(study_name), visit_code) == expected
 
 
 def test_get_preferred_visit_name_visit_code_error():
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        ADNIStudy,
-        _get_preferred_visit_name,
+        ADNIStudy,  # noqa
+        _get_preferred_visit_name,  # noqa
     )
 
     with pytest.raises(
         ValueError,
         match="Cannot extract month from visit code",
     ):
-        _get_preferred_visit_name(ADNIStudy.from_string("ADNI3"), "")
+        _get_preferred_visit_name(ADNIStudy("ADNI3"), "")
 
 
 @pytest.mark.parametrize(
@@ -268,7 +241,7 @@ def test_get_preferred_visit_name_visit_code_error():
     ],
 )
 def test_compute_session_id_visit_code_column_error(csv_filename, expected_visit_code):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _compute_session_id
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _compute_session_id  # noqa
 
     with pytest.raises(
         ValueError,
@@ -281,7 +254,7 @@ def test_compute_session_id_visit_code_column_error(csv_filename, expected_visit
 
 
 def test_compute_session_id_visit_code_wrong_format_error():
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _compute_session_id
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _compute_session_id  # noqa
 
     df = pd.DataFrame({"VISCODE": ["foo", "bar", "baz", "bar", "foo", "foo"]})
 
@@ -301,7 +274,7 @@ def test_compute_session_id_visit_code_wrong_format_error():
     ],
 )
 def test_compute_session_id(csv_filename, visit_code_column_name):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _compute_session_id
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _compute_session_id  # noqa
 
     input_data = {visit_code_column_name: ["f", "M00", "uns1", "sc", "M012", "M2368"]}
     expected_data = {
@@ -320,7 +293,7 @@ def test_compute_session_id(csv_filename, visit_code_column_name):
 )
 def test_get_closest_and_second_closest_visits_errors(visits, expected):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        _get_closest_and_second_closest_visits,
+        _get_closest_and_second_closest_visits,  # noqa
     )
 
     with pytest.raises(
@@ -367,7 +340,7 @@ def test_get_closest_and_second_closest_visits(
     expected_difference_with_second_closest,
 ):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        _get_closest_and_second_closest_visits,
+        _get_closest_and_second_closest_visits,  # noqa
     )
 
     closest, second, diff1, diff2 = _get_closest_and_second_closest_visits(
@@ -382,7 +355,7 @@ def test_get_closest_and_second_closest_visits(
 
 def test_get_smallest_time_difference_too_large_message():
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        _get_smallest_time_difference_too_large_message,
+        _get_smallest_time_difference_too_large_message,  # noqa
     )
 
     assert _get_smallest_time_difference_too_large_message(
@@ -406,7 +379,7 @@ def test_get_smallest_time_difference_too_large_message():
 
 
 def test_get_closest_visit_empty():
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _get_closest_visit
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _get_closest_visit  # noqa
 
     assert _get_closest_visit("2012-03-04", "control visit", [], "sub-01") is None
 
@@ -463,7 +436,7 @@ def closest_visit_timepoints() -> List[pd.Series]:
 def test_get_closest_visit_single_visit(
     closest_visit_timepoints, image_acquisition_date
 ):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _get_closest_visit
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _get_closest_visit  # noqa
 
     assert_series_equal(
         _get_closest_visit(
@@ -489,7 +462,7 @@ def test_get_closest_visit_single_visit(
     ],
 )
 def test_get_closest_visit(closest_visit_timepoints, image_acquisition_date, expected):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _get_closest_visit
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _get_closest_visit  # noqa
 
     assert_series_equal(
         _get_closest_visit(
