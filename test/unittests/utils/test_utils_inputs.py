@@ -286,7 +286,7 @@ def test_check_bids_folder_missing_dataset_description_error(tmp_path):
     with pytest.raises(
         ClinicaBIDSError,
         match=re.escape(
-            f"The BIDS directory ({tmp_path}) you provided is missing a dataset_description.json file."
+            f"The raw directory ({tmp_path}) you provided is missing a dataset_description.json file."
         ),
     ):
         check_bids_folder(tmp_path)
