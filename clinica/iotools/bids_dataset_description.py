@@ -6,6 +6,7 @@ from cattr.gen import make_dict_unstructure_fn, override
 from cattr.preconf.json import make_converter
 
 from clinica.utils.bids import BIDS_VERSION
+from clinica.utils.inputs import DatasetType
 
 
 @define
@@ -15,13 +16,9 @@ class BIDSDatasetDescription:
     See https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html
     """
 
-    class DatasetType(str, Enum):
-        raw = "raw"
-        derivative = "derivative"
-
     name: str
     bids_version: str = BIDS_VERSION
-    dataset_type: DatasetType = DatasetType.raw
+    dataset_type: DatasetType = DatasetType.RAW
 
     def write(self, to: IO[str]):
         import json
