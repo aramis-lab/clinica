@@ -278,6 +278,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
             compute_mask=True,
+            image_id=True,
         )
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(
@@ -337,7 +338,11 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
                     eddy_fsl,
                     [
                         (x, f"inputnode.{x}")
-                        for x in ("total_readout_time", "phase_encoding_direction")
+                        for x in (
+                            "total_readout_time",
+                            "phase_encoding_direction",
+                            "image_id",
+                        )
                     ],
                 ),
                 (
