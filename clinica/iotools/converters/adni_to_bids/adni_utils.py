@@ -642,17 +642,6 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
             ["PTID", "VISCODE2"]
         )
 
-    # DXSUM_PDXCONV_ADNIALL has been renamed to DXSUM_PDXCONV
-    # this ensures old ADNI downloads still work with recent versions of Clinica
-    try:
-        dxsum_df = load_clinical_csv(
-            clinical_data_dir, "DXSUM_PDXCONV_ADNIALL"
-        ).set_index(["PTID", "VISCODE2"])
-    except OSError:
-        dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV").set_index(
-            ["PTID", "VISCODE2"]
-        )
-
     missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
@@ -1610,7 +1599,7 @@ def create_file(
                 if error_msg:
                     cprint(msg=error_msg, lvl="error")
                     raise ValueError(error_msg)
-                file_without_extension.with_suffix(".nii").unlink()
+                file_without_extension.with_: wqsuffix(".nii").unlink()
 
         else:
             if modality_specific[modality]["to_center"]:
