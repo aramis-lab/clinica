@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple, Union
 
 import pandas as pd
 
+
 class ADNIStudy(Enum):
     """Possible versions of ADNI studies."""
 
@@ -300,7 +301,7 @@ def _second_closest_visit_is_better(
 ) -> bool:
     """If image is too close to the date between two visits we prefer the earlier visit."""
     from datetime import datetime
-    
+
     date_format = "%Y-%m-%d"
     if (
         datetime.strptime(closest_visit_date, date_format)
@@ -640,6 +641,18 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
         dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV").set_index(
             ["PTID", "VISCODE2"]
         )
+
+    # DXSUM_PDXCONV_ADNIALL has been renamed to DXSUM_PDXCONV
+    # this ensures old ADNI downloads still work with recent versions of Clinica
+    try:
+        dxsum_df = load_clinical_csv(
+            clinical_data_dir, "DXSUM_PDXCONV_ADNIALL"
+        ).set_index(["PTID", "VISCODE2"])
+    except OSError:
+        dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV").set_index(
+            ["PTID", "VISCODE2"]
+        )
+
     missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
@@ -949,7 +962,6 @@ def create_adni_sessions_dict(
     # Iterate over the metadata files
 
     for location in files:
-
         location = location.split("/")[0]
         try:
             df_file = load_clinical_csv(clinical_data_dir, location.split(".")[0])
@@ -958,19 +970,8 @@ def create_adni_sessions_dict(
         df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
         if not df_filtered.empty:
             df_filtered = _compute_session_id(df_filtered, location)
-        if path.exists(path.join(clinical_data_dir, location)):
-
-            file_to_read_path = path.join(clinical_data_dir, location)
-            cprint(f"\tReading clinical data file: {location}")
-
-            df_file = pd.read_csv(file_to_read_path, dtype=str)
-            df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
-
-            if not df_filtered.empty:
-                df_filtered = _compute_session_id(df_filtered, location)
-
-                # Filter rows with invalid session IDs.
-                df_filtered.dropna(subset="session_id", inplace=True)
+            # Filter rows with invalid session IDs.
+            df_filtered.dropna(subset="session_id", inplace=True)
 
             if location == "ADNIMERGE.csv":
                 df_filtered["AGE"] = df_filtered.apply(lambda x: update_age(x), axis=1)
@@ -1130,7 +1131,7 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                     scans_df["filename"] = path.join(mod_name, file_name)
                     converted_mod = find_conversion_mod(file_name)
                     try:
-                        conversion_df = converted_dict[converted_mod] 
+                        conversion_df = converted_dict[converted_mod]
                         scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
                         scans_df["scan_id"] = scan_id
                         if "Field_Strength" in conversion_df.columns.values:
@@ -1163,7 +1164,17 @@ def find_conversion_mod(file_name):
         return "dwi"
     elif suffix == "bold":
         return "fmri"
-    elif suffix in ("fmap", "ph", "e1", "e2", "phase1", "phase2", "phasediff", "magnitude1", "magnitude2"):
+    elif suffix in (
+        "fmap",
+        "ph",
+        "e1",
+        "e2",
+        "phase1",
+        "phase2",
+        "phasediff",
+        "magnitude1",
+        "magnitude2",
+    ):
         return "fmap"
     elif suffix == "pet":
         tracer = file_name.split("trc-")[1].split("_")[0]
@@ -1337,10 +1348,11 @@ def create_file(
         The path to the output image created.
         If the conversion wasn't successful, this function returns None.
     """
+    import glob
     import os
     import re
     import shutil
-    import glob
+
     import numpy as np
 
     from clinica.iotools.bids_utils import run_dcm2niix
@@ -1467,162 +1479,168 @@ def create_file(
         cprint(f"Removing old image {image_to_remove}...", lvl="info")
         image_to_remove.unlink()
 
-    if mod_to_update:
+    # if mod_to_update:
 
-        try:
-            os.makedirs(output_path)
-        except OSError:
-            # Folder already created with previous instance
-            pass
+    try:
+        os.makedirs(output_path)
+    except OSError:
+        # Folder already created with previous instance
+        pass
 
-        generate_json = modality_specific[modality]["json"]
-        if modality_specific[modality]["to_center"]:
-            zip_image = "n"
-        else:
-            zip_image = "y"
-        
-        fmap_path = image_path[:-9] # Remove the image ID, all images in the visit will be converted
-        if modality == "fmap":
-            fmap_image_ids = os.listdir(fmap_path)
-            for id in fmap_image_ids:
-                fmap_image_path = os.path.join(fmap_path, id)
-                run_dcm2niix(
-                    input_dir=fmap_image_path,
-                    output_dir=output_path,
-                    output_fmt=output_filename,
-                    compress=True if zip_image == "y" else False,
-                    bids_sidecar=True if generate_json == "y" else False,
+    generate_json = modality_specific[modality]["json"]
+    zip_image = "n" if modality_specific[modality]["to_center"] else "y"
+
+    if modality == "fmap":
+        # todo : fmap_path more robust
+        fmap_path = image_path[
+            :-9
+        ]  # Remove the image ID, all images in the visit will be converted
+        fmap_image_ids = os.listdir(fmap_path)
+        for id in fmap_image_ids:
+            fmap_image_path = os.path.join(fmap_path, id)
+            run_dcm2niix(
+                input_dir=fmap_image_path,
+                output_dir=output_path,
+                output_fmt=output_filename,
+                compress=True if zip_image == "y" else False,
+                bids_sidecar=True if generate_json == "y" else False,
+            )
+    else:
+        file_without_extension = output_path / output_filename
+        output_image = file_without_extension.with_suffix(".nii.gz")
+
+        if image.Is_Dicom:
+            run_dcm2niix(
+                input_dir=image_path,
+                output_dir=output_path,
+                output_fmt=output_filename,
+                compress=True if zip_image == "y" else False,
+                bids_sidecar=True if generate_json == "y" else False,
+            )
+
+            # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
+            exception_t = glob.glob(
+                os.path.join(output_path, output_filename + "_t[0-9]*")
+            )
+            for trigger_time in exception_t:
+                res = re.search(r"_t\d+\.", trigger_time)
+                no_trigger_time = trigger_time.replace(
+                    trigger_time[res.start() : res.end()], "."
                 )
-        else:
+                os.rename(trigger_time, no_trigger_time)
+            generate_json = modality_specific[modality]["json"]
+            zip_image = "n" if modality_specific[modality]["to_center"] else "y"
+
             if image.Is_Dicom:
-                run_dcm2niix(
+                success = run_dcm2niix(
                     input_dir=image_path,
                     output_dir=output_path,
                     output_fmt=output_filename,
                     compress=True if zip_image == "y" else False,
                     bids_sidecar=True if generate_json == "y" else False,
                 )
-
+                if not success:
+                    cprint(
+                        f"Error converting image {image_path} for subject {subject} and session {session}",
+                        lvl="warning",
+                    )
                 # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
-                exception_t = glob.glob(os.path.join(output_path, output_filename + "_t[0-9]*"))
-                for trigger_time in exception_t:
-                    res = re.search(r"_t\d+\.", trigger_time)
-                    no_trigger_time = trigger_time.replace(
+                for trigger_time in output_path.glob(f"{output_filename}_t[0-9]*"):
+                    res = re.search(r"_t\d+\.", str(trigger_time))
+                    no_trigger_time = str(trigger_time).replace(
                         trigger_time[res.start() : res.end()], "."
                     )
                     os.rename(trigger_time, no_trigger_time)
-                generate_json = modality_specific[modality]["json"]
-                zip_image = "n" if modality_specific[modality]["to_center"] else "y"
-                file_without_extension = output_path / output_filename
-                output_image = file_without_extension.with_suffix(".nii.gz")
 
-                if image.Is_Dicom:
-                    success = run_dcm2niix(
-                        input_dir=image_path,
-                        output_dir=output_path,
-                        output_fmt=output_filename,
-                        compress=True if zip_image == "y" else False,
-                        bids_sidecar=True if generate_json == "y" else False,
-                    )
-                    if not success:
-                        cprint(
-                            f"Error converting image {image_path} for subject {subject} and session {session}",
-                            lvl="warning",
-                        )
-                    # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
-                    for trigger_time in output_path.glob(f"{output_filename}_t[0-9]*"):
-                        res = re.search(r"_t\d+\.", str(trigger_time))
-                        no_trigger_time = str(trigger_time).replace(
-                            trigger_time[res.start() : res.end()], "."
-                        )
-                        os.rename(trigger_time, no_trigger_time)
-
-                # Removing images with unsupported suffixes if generated by dcm2niix
-                for suffix in ("ADC", "real", "imaginary"):
-                    file_with_bad_suffix = output_path / f"{output_filename}_{suffix}"
-                    if any(
-                        [
-                            file_with_bad_suffix.with_suffix(s).exists()
-                            for s in (".nii", ".nii.gz")
-                        ]
-                    ):
-                        cprint(
-                            f"Image with bad suffix {suffix} was generated by dcm2niix "
-                            f"for subject {subject} and session {session} : "
-                            f"{file_with_bad_suffix.with_suffix('.nii.gz')}. This image will NOT "
-                            "be converted as the suffix is not supported by Clinica.",
-                            lvl="warning",
-                        )
-                        for file_to_delete in output_path.glob(f"{output_filename}_{suffix}*"):
-                            cprint(f"Deleting file {file_to_delete}.", lvl="info")
-                            os.remove(file_to_delete)
-
-                # Conditions to check if output NIFTI files exists,
-                # and, if DWI, if .bvec and .bval files are also present
-                nifti_exists = (
-                    file_without_extension.with_suffix(".nii").is_file()
-                    or output_image.is_file()
-                )
-                dwi_bvec_and_bval_exist = not (modality == "dwi") or (
-                    file_without_extension.with_suffix(".bvec").is_file()
-                    and file_without_extension.with_suffix(".bval").is_file()
-                )
-
-                # Check if conversion worked (output files exist)
-                if not nifti_exists or not dwi_bvec_and_bval_exist:
-                    cprint(
-                        msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
-                        lvl="warning",      
-                    )
-                    return np.nan
-
-                # Case when JSON file was expected, but not generated by dcm2niix
-                elif (
-                    generate_json == "y"
-                    and not file_without_extension.with_suffix(".json").exists()
+            # Removing images with unsupported suffixes if generated by dcm2niix
+            for suffix in ("ADC", "real", "imaginary"):
+                file_with_bad_suffix = output_path / f"{output_filename}_{suffix}"
+                if any(
+                    [
+                        file_with_bad_suffix.with_suffix(s).exists()
+                        for s in (".nii", ".nii.gz")
+                    ]
                 ):
                     cprint(
-                        msg=f"JSON file not generated by dcm2niix for subject {subject} and session {session}",
+                        f"Image with bad suffix {suffix} was generated by dcm2niix "
+                        f"for subject {subject} and session {session} : "
+                        f"{file_with_bad_suffix.with_suffix('.nii.gz')}. This image will NOT "
+                        "be converted as the suffix is not supported by Clinica.",
                         lvl="warning",
                     )
+                    for file_to_delete in output_path.glob(
+                        f"{output_filename}_{suffix}*"
+                    ):
+                        cprint(f"Deleting file {file_to_delete}.", lvl="info")
+                        os.remove(file_to_delete)
 
-                if modality_specific[modality]["to_center"]:
+            # Conditions to check if output NIFTI files exists,
+            # and, if DWI, if .bvec and .bval files are also present
+            nifti_exists = (
+                file_without_extension.with_suffix(".nii").is_file()
+                or output_image.is_file()
+            )
+            dwi_bvec_and_bval_exist = not (modality == "dwi") or (
+                file_without_extension.with_suffix(".bvec").is_file()
+                and file_without_extension.with_suffix(".bval").is_file()
+            )
+
+            # Check if conversion worked (output files exist)
+            if not nifti_exists or not dwi_bvec_and_bval_exist:
+                cprint(
+                    msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
+                    lvl="warning",
+                )
+                return np.nan
+
+            # Case when JSON file was expected, but not generated by dcm2niix
+            elif (
+                generate_json == "y"
+                and not file_without_extension.with_suffix(".json").exists()
+            ):
+                cprint(
+                    msg=f"JSON file not generated by dcm2niix for subject {subject} and session {session}",
+                    lvl="warning",
+                )
+
+            if modality_specific[modality]["to_center"]:
+                output_image, error_msg = center_nifti_origin(
+                    file_without_extension.with_suffix(".nii"), output_image
+                )
+                if error_msg:
+                    cprint(msg=error_msg, lvl="error")
+                    raise ValueError(error_msg)
+                file_without_extension.with_suffix(".nii").unlink()
+
+        else:
+            if modality_specific[modality]["to_center"]:
+                try:
                     output_image, error_msg = center_nifti_origin(
-                        file_without_extension.with_suffix(".nii"), output_image
+                        image_path, output_image
                     )
-                    if error_msg:
-                        cprint(msg=error_msg, lvl="error")
-                        raise ValueError(error_msg)
-                    file_without_extension.with_suffix(".nii").unlink()
-
+                except Exception:
+                    cprint(
+                        msg=(f"No output image specified."),
+                        lvl="error",
+                    )
+                    output_image = ""
+                    error_msg = False
+                if error_msg:
+                    cprint(
+                        msg=(
+                            f"For subject {subject} in session {session}, "
+                            f"an error occurred whilst recentering Nifti image: {image_path}"
+                            f"The error is: {error_msg}"
+                        ),
+                        lvl="error",
+                    )
             else:
-                if modality_specific[modality]["to_center"]:
-                    try:
-                        output_image, error_msg = center_nifti_origin(image_path, output_image)
-                    except:
-                        cprint(
-                            msg=(
-                                f"No output image specified."
-                            ),
-                            lvl="error",
-                        )
-                        output_image = ""
-                        error_msg = False
-                    if error_msg:
-                        cprint(
-                            msg=(
-                                f"For subject {subject} in session {session}, "
-                                f"an error occurred whilst recentering Nifti image: {image_path}"
-                                f"The error is: {error_msg}"
-                            ),
-                            lvl="error",
-                        )
-                else:
-                    shutil.copy(image_path, output_image)
+                shutil.copy(image_path, output_image)
 
-            # Check if there is still the folder tmp_dcm_folder and remove it
-            remove_tmp_dmc_folder(bids_dir, image_id)
-            return output_image
+        # Check if there is still the folder tmp_dcm_folder and remove it
+        remove_tmp_dmc_folder(bids_dir, image_id)
+        return output_image
+
 
 def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
     """Load the clinical csv from ADNI. This function is able to find the csv in the
@@ -1708,7 +1726,6 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     dicom_list = glob(path.join(dicom_path, "*.dcm"))
     image_list = glob(path.join(dicom_path, f"*{image_uid}.dcm"))
     if len(dicom_list) != len(image_list):
-
         # Remove the precedent tmp_dcm_folder if present.
         if os.path.exists(dest_path):
             shutil.rmtree(dest_path)
