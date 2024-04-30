@@ -113,25 +113,25 @@ def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
     return df_source
 
 
-def _find_dicom_data(path_to_source_data: Path) -> Iterable[list[Path, str]]:
+def _find_dicom_data(path_to_source_data: Path) -> Iterable[list[Path, Path]]:
     """
     This function finds the paths to the dicoms, only for fMRI, since we use the niftis for the other modalities.
     More information here: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md
     """
     for z in path_to_source_data.rglob("*.zip"):
         if z.name.split("_")[1] == "20217":
-            yield [z.relative_to(path_to_source_data), "fMRI/tfMRI.dcm"]
+            yield [z.relative_to(path_to_source_data), Path("fMRI/tfMRI.dcm")]
         elif z.name.split("_")[1] == "20225":
-            yield [z.relative_to(path_to_source_data), "fMRI/rfMRI.dcm"]
+            yield [z.relative_to(path_to_source_data), Path("fMRI/rfMRI.dcm")]
 
 
-def _find_imaging_data(path_to_source_data: Path) -> Iterable[list[Path, str]]:
+def _find_imaging_data(path_to_source_data: Path) -> Iterable[list[Path, Path]]:
     from zipfile import ZipFile
 
     for z in path_to_source_data.rglob("*.zip"):
         for f in ZipFile(z).namelist():
             if f.endswith(".nii.gz"):
-                yield [z.relative_to(path_to_source_data), f]
+                yield [z.relative_to(path_to_source_data), Path(f)]
 
 
 def intersect_data(

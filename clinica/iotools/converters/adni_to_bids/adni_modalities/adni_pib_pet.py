@@ -40,10 +40,6 @@ def convert_adni_pib_pet(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from os import path
-
-    import pandas as pd
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         load_clinical_csv,
         paths_to_bids,
@@ -142,7 +138,7 @@ def compute_pib_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
         ]
         pet_pib_df.drop(error_ind, inplace=True)
 
-    images = find_image_path(pet_pib_df, source_dir, "PIB", "I", "Image_ID")
+    images = find_image_path(pet_pib_df, source_dir, "PIB")
     images.to_csv(
         path.join(conversion_dir, f"{Tracer.PIB.value}_pet_paths.tsv"),
         sep="\t",

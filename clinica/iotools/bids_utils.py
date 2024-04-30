@@ -53,7 +53,7 @@ BIDS_VALIDATOR_CONFIG = {
 # @ToDo:test this function
 def create_participants_df(
     study_name: StudyName,
-    clinical_spec_path: Path,
+    clinical_specifications_folder: Path,
     clinical_data_dir: Path,
     bids_ids: list[str],
     delete_non_bids_info: bool = True,
@@ -65,7 +65,7 @@ def create_participants_df(
     study_name : StudyName
         The name of the study (Ex. ADNI).
 
-    clinical_spec_path : Path
+    clinical_specifications_folder : Path
         The path to the clinical file.
 
     clinical_data_dir : Path
@@ -95,8 +95,9 @@ def create_participants_df(
     study_name = StudyName(study_name)
     location_name = f"{study_name.value} location"
 
-    # Load the data from the clincal specification file
-    participants_specs = pd.read_csv(f"{clinical_spec_path}_participant.tsv", sep="\t")
+    participants_specs = pd.read_csv(
+        clinical_specifications_folder / "participant.tsv", sep="\t"
+    )
     participant_fields_db = participants_specs[study_name.value]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
@@ -202,7 +203,7 @@ def create_sessions_dict_oasis(
     clinical_data_dir: Path,
     bids_dir: Path,
     study_name: StudyName,
-    clinical_spec_path: Path,
+    clinical_specifications_folder: Path,
     bids_ids: list[str],
     name_column_ids: str,
     subj_to_remove: Optional[list[str]] = None,
@@ -221,7 +222,7 @@ def create_sessions_dict_oasis(
     study_name : StudyName
         The name of the study (Ex: ADNI).
 
-    clinical_spec_path : Path
+    clinical_specifications_folder : Path
         The path to the clinical file.
 
     bids_ids : list of str
@@ -247,7 +248,7 @@ def create_sessions_dict_oasis(
 
     subj_to_remove = subj_to_remove or []
     location = f"{study_name.value} location"
-    sessions = pd.read_csv(f"{clinical_spec_path}_sessions.tsv", sep="\t")
+    sessions = pd.read_csv(clinical_specifications_folder / "sessions.tsv", sep="\t")
     sessions_fields = sessions[study_name.value]
     field_location = sessions[location]
     sessions_fields_bids = sessions["BIDS CLINICA"]
