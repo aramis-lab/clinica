@@ -99,3 +99,10 @@ def rename_into_caps_task(
         Path(b_vectors_preproc_filename),
         Path(b0_brain_mask_filename),
     )
+
+
+def merge_nifti_images_in_time_dimension_task(image1: str, image2: str) -> str:
+    """Merges the two provided volumes in the time (4th) dimension."""
+    from clinica.utils.image import merge_nifti_images_in_time_dimension
+
+    return str(merge_nifti_images_in_time_dimension((image1, image2)))

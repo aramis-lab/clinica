@@ -36,6 +36,8 @@ def convert_images(
         Path to a TSV file containing the additional data the user wants to have in the BIDS output.
         If None, no additional data will be added.
     """
+    from pathlib import Path
+
     import clinica.iotools.bids_utils as bids
 
     from .genfi_to_bids_utils import (
@@ -48,6 +50,7 @@ def convert_images(
         write_bids,
     )
 
+    bids_dir = Path(bids_dir)
     # check that if a clinical tsv is given, a path to the clinical data is given as well
     if path_to_clinical_tsv and not path_to_clinical:
         raise ValueError(
@@ -91,7 +94,7 @@ def convert_images(
         scans=results["scans"],
     )
     bids.write_modality_agnostic_files(
-        study_name="GENFI",
+        study_name=bids.StudyName.GENFI,
         readme_data={
             "link": _get_link(),
             "desc": _get_description(),

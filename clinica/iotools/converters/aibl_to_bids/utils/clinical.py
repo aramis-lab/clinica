@@ -374,8 +374,8 @@ def create_scans_tsv_file(
     import clinica.iotools.bids_utils as bids
 
     scans = pd.read_csv(clinical_spec_path + "_scans.tsv", sep="\t")
-    scans_fields = scans["AIBL"]
-    field_location = scans["AIBL location"]
+    scans_fields = scans[bids.StudyName.AIBL.value]
+    field_location = scans[f"{bids.StudyName.AIBL.value} location"]
     scans_fields_bids = scans["BIDS CLINICA"]
     fields_dataset = []
     fields_bids = []
@@ -404,7 +404,7 @@ def create_scans_tsv_file(
     }
     scans_dict = bids.create_scans_dict(
         clinical_data_dir,
-        "AIBL",
+        bids.StudyName.AIBL,
         clinical_spec_path,
         bids_ids,
         "RID",

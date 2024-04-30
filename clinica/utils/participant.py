@@ -3,7 +3,7 @@
 See CAPS specifications for details about long ID.
 """
 from os import PathLike
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 
 def get_unique_subjects(
@@ -105,6 +105,65 @@ def unique_subjects_sessions_to_subjects_sessions(
     return participants, sessions
 
 
+def _read_participant_tsv(
+    tsv_file: Union[str, PathLike],
+) -> tuple[list[str], list[str]]:
+    """Extract participant IDs and session IDs from TSV file.
+
+    Parameters
+    ----------
+    tsv_file: str or Path
+        Participant TSV file from which to extract the participant and session IDs.
+
+    Returns
+    -------
+    participants: List[str]
+        List of participant IDs.
+
+    sessions: List[str]
+        List of session IDs.
+
+    Raises
+    ------
+    ClinicaException
+        If `tsv_file` is not a file.
+        If `participant_id` or `session_id` column is missing from TSV file.
+
+    Examples
+    --------
+    >>> dframe = pd.DataFrame({
+    ...     "participant_id": ["sub-01", "sub-01", "sub-02"],
+    ...     "session_id": ["ses-M000", "ses-M006", "ses-M000"],
+    ...})
+    >>> dframe.to_csv("participants.tsv", sep="\t")
+    >>> _read_participant_tsv("participant.tsv")
+    (["sub-01", "sub-01", "sub-02"], ["ses-M000", "ses-M006", "ses-M000"])
+    """
+    import pandas as pd
+
+    from clinica.utils.exceptions import ClinicaException
+
+    try:
+        df = pd.read_csv(tsv_file, sep="\t")
+    except FileNotFoundError:
+        raise ClinicaException(
+            "The TSV file you gave is not a file.\nError explanations:\n"
+            f"\t- Clinica expected the following path to be a file: {tsv_file}\n"
+            "\t- If you gave relative path, did you run Clinica on the good folder?"
+        )
+
+    for column in ("participant_id", "session_id"):
+        if column not in list(df.columns.values):
+            raise ClinicaException(
+                f"The TSV file does not contain {column} column (path: {tsv_file})"
+            )
+
+    return (
+        [sub.strip(" ") for sub in list(df.participant_id)],
+        [ses.strip(" ") for ses in list(df.session_id)],
+    )
+
+
 def get_subject_session_list(
     input_dir: PathLike,
     subject_session_file: Optional[PathLike] = None,
@@ -163,7 +222,6 @@ def get_subject_session_list(
     from time import localtime, strftime, time
 
     from clinica.iotools.utils.data_handling import create_subs_sess_list
-    from clinica.utils.filemanip import read_participant_tsv
 
     if not subject_session_file:
         output_dir = Path(tsv_dir) if tsv_dir else Path(tempfile.mkdtemp())
@@ -178,4 +236,4 @@ def get_subject_session_list(
             use_session_tsv=use_session_tsv,
         )
 
-    return read_participant_tsv(subject_session_file)
+    return _read_participant_tsv(subject_session_file)

@@ -298,6 +298,7 @@ class PETLinear(PETPipeline):
         from nipype.interfaces import ants
 
         import clinica.pipelines.pet_linear.pet_linear_utils as utils
+        from clinica.pipelines.tasks import crop_nifti_task
 
         # Utilitary nodes
         init_node = npe.Node(
@@ -379,12 +380,12 @@ class PETLinear(PETPipeline):
         crop_nifti_node = npe.Node(
             name="cropNifti",
             interface=nutil.Function(
-                function=utils.crop_nifti,
-                input_names=["input_img", "ref_img"],
+                function=crop_nifti_task,
+                input_names=["input_image", "reference_image"],
                 output_names=["output_img"],
             ),
         )
-        crop_nifti_node.inputs.ref_img = self.ref_crop
+        crop_nifti_node.inputs.reference_image = self.ref_crop
 
         # 5. Print end message
         print_end_message = npe.Node(
@@ -470,7 +471,7 @@ class PETLinear(PETPipeline):
                     (
                         normalize_intensity_node,
                         crop_nifti_node,
-                        [("output_img", "input_img")],
+                        [("output_img", "input_image")],
                     ),
                     (
                         crop_nifti_node,

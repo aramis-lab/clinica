@@ -2,9 +2,9 @@ name: Unit Tests
 
 on:
   push:
-    branches: [dev]
+    branches: ["dev", "maint-*"]
   pull_request:
-    branches: [dev]
+    branches: ["dev", "maint-*"]
 
 permissions:
   contents: read
@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-12]
         python-version: ['3.9', '3.10', '3.11', '3.12']
     steps:
       - uses: actions/checkout@v4

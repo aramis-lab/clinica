@@ -213,25 +213,18 @@ def test_remove_known_conversion_errors():
     )
 
 
-@pytest.mark.parametrize(
-    "subject,expected",
-    [
-        ("123_S_4567", 4567),
-        ("000foobar6699", 6699),
-        ("4567", 4567),
-        ("123", 123),
-    ],
-)
-def test_convert_subject_to_rid(subject, expected):
+def test_convert_subject_to_rid():
     from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
         _convert_subject_to_rid,
     )
 
-    assert _convert_subject_to_rid(subject) == expected
+    assert _convert_subject_to_rid("123_S_4567") == 4567
 
 
-@pytest.mark.parametrize("subject", ["", 6699, 13.7, "foo"])
-def test_convert_subject_to_rid(subject):
+@pytest.mark.parametrize(
+    "subject", ["", "123_S_456a", "123_P_4567", "000S6699", "123", "4567"]
+)
+def test_convert_subject_to_rid_error(subject):
     from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
         _convert_subject_to_rid,
     )
@@ -253,7 +246,7 @@ def test_build_pet_qc_all_studies_for_subject_empty_dataframes():
     expected = pd.DataFrame(columns=["PASS", "RID", "EXAMDATE", "SCANQLTY", "SCANDATE"])
 
     assert_frame_equal(
-        _build_pet_qc_all_studies_for_subject("1234", df1, df2),
+        _build_pet_qc_all_studies_for_subject("123_S_1234", df1, df2),
         expected,
         check_index=False,
         check_column_type=False,
@@ -286,7 +279,7 @@ def test_build_pet_qc_all_studies_for_subject():
     )
 
     assert_frame_equal(
-        _build_pet_qc_all_studies_for_subject("1234", df1, df2), expected
+        _build_pet_qc_all_studies_for_subject("123_S_1234", df1, df2), expected
     )
 
 
@@ -316,7 +309,7 @@ def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns):
     ).to_csv(csv_dir / "PETQC.csv")
     pd.DataFrame(
         {
-            "Subject": ["sub-0001", "sub-0001", "sub-0002", "sub-0003"],
+            "Subject": ["123_S_0001", "123_S_0002", "123_S_0003", "123_S_0004"],
             "Orig/Proc": ["Original"] * 4,
             "Image ID": [10, 11, 12, 13],
             "Scan Date": ["01/01/2018", "01/06/2018", "01/01/2018", "06/11/2020"],
@@ -327,7 +320,7 @@ def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns):
     images = _compute_fdg_pet_paths(
         tmp_path,
         csv_dir,
-        ["sub-0001"],
+        ["123_S_0001"],
         tmp_path,
         ADNIPreprocessingStep.from_step_value(2),
     )

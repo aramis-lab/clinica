@@ -1,7 +1,7 @@
 """This module contains utilities used by the DWIConnectome pipeline."""
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 __all__ = [
     "get_luts",
@@ -10,6 +10,7 @@ __all__ = [
     "get_caps_filenames",
     "print_begin_pipeline",
     "print_end_pipeline",
+    "convert_flirt_to_mrtrix_transformation",
 ]
 
 
@@ -120,3 +121,71 @@ def print_end_pipeline(in_bids_or_caps_file: str, final_file: str) -> None:
     from clinica.utils.ux import print_end_image
 
     print_end_image(get_subject_id(in_bids_or_caps_file))
+
+
+def _check_file_presence(
+    file: Path,
+) -> None:
+    if not file.is_file():
+        raise FileNotFoundError(f"The file {file} was not found.")
+
+
+def _get_transformation_cmd(
+    source_image: Path,
+    reference_image: Path,
+    flirt_matrix: Path,
+    mrtrix_matrix: Path,
+) -> str:
+    for file in (source_image, reference_image, flirt_matrix):
+        _check_file_presence(file)
+
+    return f"transformconvert {flirt_matrix} {source_image} {reference_image} flirt_import {mrtrix_matrix}"
+
+
+def convert_flirt_to_mrtrix_transformation(
+    source_image: Path,
+    reference_image: Path,
+    flirt_matrix: Path,
+    name_output_matrix: Optional[str] = None,
+) -> Path:
+    """Convert flirt matrix to mrtrix matrix.
+
+    This function converts a transformation matrix produced by FSL's flirt
+    command into a format usable by MRtrix. The output of this function
+    is usually for the mrtransform command.
+
+    Parameters
+    ----------
+    source_image : Path
+        File containing the source image used in FSL flirt with the -in flag.
+
+    reference_image : Path
+        File containing the reference image used in FSL flirt with the -ref flag.
+
+    flirt_matrix : Path
+        File containing the transformation matrix obtained by FSL flirt.
+
+    name_output_matrix : Path, optional
+        Name of the output matrix. Defaults to "mrtrix_matrix.mat".
+
+    Returns
+    -------
+    mrtrix_matrix : Path
+        Transformation matrix in MRtrix format.
+    """
+    import os
+
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
+
+    check_software(ThirdPartySoftware.MRTRIX)
+
+    name_output_matrix = name_output_matrix or "mrtrix_matrix.mat"
+    mrtrix_matrix = Path(name_output_matrix)
+    mrtrix_matrix = mrtrix_matrix.resolve()
+
+    cmd = _get_transformation_cmd(
+        source_image, reference_image, flirt_matrix, mrtrix_matrix
+    )
+    os.system(cmd)
+
+    return mrtrix_matrix

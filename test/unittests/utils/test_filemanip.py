@@ -1,144 +1,12 @@
 import json
 import os
+from pathlib import Path
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
-
-from clinica.utils.exceptions import ClinicaException
-
-
-@pytest.mark.parametrize(
-    "dictionary, expected",
-    [
-        (
-            {
-                "TotalReadoutTime": 1,
-                "EstimatedTotalReadoutTime": "",
-                "PhaseEncodingSteps": "",
-                "PixelBandwidth": "",
-                "PhaseEncodingDirection": "j+",
-                "PhaseEncodingAxis": "",
-            },
-            [1, "j+"],
-        ),
-        (
-            {
-                "EstimatedTotalReadoutTime": 1,
-                "PhaseEncodingAxis": "j",
-            },
-            [1, "j+"],
-        ),
-        (
-            {
-                "PhaseEncodingSteps": 1,
-                "PixelBandwidth": 0.5,
-                "PhaseEncodingDirection": "j-",
-            },
-            [2, "j-"],
-        ),
-    ],
-)
-def test_extract_metadata_from_json_dwi(tmp_path, dictionary, expected):
-    """This function tests that the outputs of `extract_metadata_from_json` are what you'd expect in the case of DWI."""
-    import json
-
-    from clinica.utils.filemanip import (
-        extract_metadata_from_json,
-        handle_missing_keys_dwi,
-    )
-
-    with open(tmp_path / "metadata.json", "w") as outfile:
-        json.dump(dictionary, outfile)
-    assert (
-        extract_metadata_from_json(
-            tmp_path / "metadata.json",
-            [
-                "TotalReadoutTime",
-                "PhaseEncodingDirection",
-            ],
-            handle_missing_keys_dwi,
-        )
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    "input_list, dictionary, error_type, error_log",
-    [
-        (
-            [
-                "TotalReadoutTime",
-                "PhaseEncodingDirection",
-            ],
-            {
-                "PhaseEncodingSteps": 1,
-                "PixelBandwidth": 0.5,
-            },
-            ClinicaException,
-            "Could not recover the PhaseEncodingDirection from JSON file.",
-        ),
-        (
-            [
-                "TotalReadoutTime",
-                "PhaseEncodingDirection",
-            ],
-            {
-                "PhaseEncodingDirection": "j+",
-            },
-            ClinicaException,
-            "Could not recover the TotalReadoutTime from JSON file.",
-        ),
-        (
-            [
-                "TotalReadoutTime",
-                "PhaseEncodingDirection",
-            ],
-            {
-                "PhaseEncodingSteps": 1,
-                "PixelBandwidth": 0,
-                "PhaseEncodingDirection": "j+",
-            },
-            ValueError,
-            "Pixel Bandwidth value is not valid.",
-        ),
-        (
-            [
-                "blabla",
-                "PhaseEncodingDirection",
-            ],
-            {
-                "PhaseEncodingDirection": "j+",
-            },
-            ValueError,
-            "Could not recover the missing keys {'blabla'} from JSON file.",
-        ),
-    ],
-)
-def test_extract_metadata_from_json_dwi_errors(
-    tmp_path, input_list, dictionary, error_type, error_log
-):
-    """This function tests that `extract_metadata_from_json` errors as expected in the case of DWI."""
-    import json
-
-    from clinica.utils.filemanip import (
-        extract_metadata_from_json,
-        handle_missing_keys_dwi,
-    )
-
-    with open(tmp_path / "metadata.json", "w") as outfile:
-        json.dump(dictionary, outfile)
-    with pytest.raises(
-        error_type,
-        match=error_log,
-    ):
-        extract_metadata_from_json(
-            tmp_path / "metadata.json",
-            input_list,
-            handle_missing_keys_dwi,
-        )
 
 
 def test_zip_nii(tmp_path):
@@ -181,7 +49,7 @@ def test_zip_unzip_nii(tmp_path):
 
 
 @pytest.fixture
-def test_image(case):
+def test_image(case) -> nib.Nifti1Image:
     shapes = {
         "3d": (5, 6, 7),
         "4d_dummy": (5, 6, 7, 1),
@@ -219,7 +87,7 @@ def test_load_img_3d(tmp_path, case, test_image):
             assert_array_equal(test_image.get_fdata().squeeze(), img2.get_fdata())
 
 
-def test_save_participants_sessions(tmp_path):
+def test_save_participants_sessions_error(tmp_path):
     from clinica.utils.filemanip import save_participants_sessions
 
     with pytest.raises(
@@ -227,8 +95,14 @@ def test_save_participants_sessions(tmp_path):
         match="The number of participant IDs is not equal to the number of session IDs.",
     ):
         save_participants_sessions(["sub-01"], ["ses-M000", "ses-M006"], tmp_path)
+
+
+def test_save_participants_sessions(tmp_path):
+    from clinica.utils.filemanip import save_participants_sessions
+
     save_participants_sessions(["sub-01"] * 2, ["ses-M000", "ses-M006"], tmp_path)
     assert (tmp_path / "participants.tsv").exists()
+
     df = pd.read_csv(tmp_path / "participants.tsv", sep="\t")
     for col in ("participant_id", "session_id"):
         assert col in df.columns
@@ -344,42 +218,8 @@ def test_extract_crash_files_from_log_file_error():
         extract_crash_files_from_log_file("foo.log")
 
 
-def test_read_participant_tsv(tmp_path):
-    from clinica.utils.exceptions import ClinicaException
-    from clinica.utils.filemanip import read_participant_tsv
-
-    with pytest.raises(
-        ClinicaException,
-        match="The TSV file you gave is not a file.",
-    ):
-        read_participant_tsv(tmp_path / "foo.tsv")
-
-    df = pd.DataFrame(
-        {
-            "participant_id": ["sub-01", "sub-01", "sub-02"],
-            "session_id": ["ses-M000", "ses-M006", "ses-M000"],
-        }
-    )
-    df.to_csv(tmp_path / "foo.tsv", sep="\t")
-    assert read_participant_tsv(tmp_path / "foo.tsv") == (
-        ["sub-01", "sub-01", "sub-02"],
-        ["ses-M000", "ses-M006", "ses-M000"],
-    )
-
-    for column in ("participant_id", "session_id"):
-        df.drop(column, axis=1).to_csv(tmp_path / "foo.tsv", sep="\t")
-        with pytest.raises(
-            ClinicaException,
-            match=f"The TSV file does not contain {column} column",
-        ):
-            read_participant_tsv(tmp_path / "foo.tsv")
-
-
-def test_extract_metadata_from_json(tmp_path):
-    from clinica.utils.exceptions import ClinicaException
+def test_extract_metadata_from_json_missing_file_error(tmp_path):
     from clinica.utils.filemanip import extract_metadata_from_json
-
-    data = {"foo": "foo_val", "bar": "bar_val"}
 
     with pytest.raises(
         FileNotFoundError,
@@ -387,14 +227,28 @@ def test_extract_metadata_from_json(tmp_path):
     ):
         extract_metadata_from_json(tmp_path / "foo.json", ["foo", "bar"])
 
+
+@pytest.fixture
+def json_data_for_test(tmp_path: Path):
+    data = {"foo": "foo_val", "bar": "bar_val"}
+
     with open(tmp_path / "foo.json", "w") as fp:
         json.dump(data, fp)
+
+
+def test_extract_metadata_from_json_missing_keys_error(tmp_path, json_data_for_test):
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.filemanip import extract_metadata_from_json
 
     with pytest.raises(
         ClinicaException,
         match="Clinica could not find the following keys in the following JSON file",
     ):
         extract_metadata_from_json(tmp_path / "foo.json", ["foo", "baz"])
+
+
+def test_extract_metadata_from_json(tmp_path, json_data_for_test):
+    from clinica.utils.filemanip import extract_metadata_from_json
 
     assert extract_metadata_from_json(tmp_path / "foo.json", ["foo", "bar"]) == [
         "foo_val",

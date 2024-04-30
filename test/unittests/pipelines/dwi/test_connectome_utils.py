@@ -144,3 +144,74 @@ def test_get_containers(subjects, sessions, expected):
     from clinica.pipelines.dwi.connectome.utils import get_containers
 
     assert get_containers(subjects, sessions) == expected
+
+
+def _create_files_helper(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
+    flirt_matrix = tmp_path / "flirt.mat"
+    flirt_matrix.touch()
+
+    source_image = tmp_path / "src.nii.gz"
+    source_image.touch()
+
+    reference_image = tmp_path / "ref.nii.gz"
+    reference_image.touch()
+
+    mrtrix_matrix = tmp_path / "mrtrix_matrix.mat"
+    mrtrix_matrix.touch()
+
+    return source_image, reference_image, flirt_matrix, mrtrix_matrix
+
+
+def test_get_transformation_cmd(tmp_path):
+    from clinica.pipelines.dwi.connectome.utils import _get_transformation_cmd
+
+    source_image, reference_image, flirt_matrix, mrtrix_matrix = _create_files_helper(
+        tmp_path
+    )
+
+    assert (
+        _get_transformation_cmd(
+            source_image, reference_image, flirt_matrix, mrtrix_matrix
+        )
+        == f"transformconvert {flirt_matrix} {source_image} {reference_image} flirt_import {mrtrix_matrix}"
+    )
+
+
+def test_get_transformation_cmd_error(tmp_path):
+    from clinica.pipelines.dwi.connectome.utils import _get_transformation_cmd
+
+    with pytest.raises(
+        FileNotFoundError, match=f"The file {tmp_path / 'src.nii.gz'} was not found"
+    ):
+        _get_transformation_cmd(
+            tmp_path / "src.nii.gz",
+            tmp_path / "ref.nii.gz",
+            tmp_path / "flirt.mat",
+            tmp_path / "mrtx.mat",
+        )
+
+
+def test_convert_flirt_to_mrtrix_transformation(tmp_path, mocker):
+    from clinica.pipelines.dwi.connectome.utils import (
+        convert_flirt_to_mrtrix_transformation,
+    )
+
+    mocker.patch("clinica.utils.check_dependency.check_software", return_value=None)
+    mocker.patch("os.system", return_value=None)
+
+    source_image, reference_image, flirt_matrix, output_matrix = _create_files_helper(
+        tmp_path
+    )
+
+    assert (
+        convert_flirt_to_mrtrix_transformation(
+            source_image, reference_image, flirt_matrix, output_matrix.name
+        )
+        == Path(output_matrix.name).resolve()
+    )
+    assert (
+        convert_flirt_to_mrtrix_transformation(
+            source_image, reference_image, flirt_matrix, None
+        )
+        == Path("mrtrix_matrix.mat").resolve()
+    )

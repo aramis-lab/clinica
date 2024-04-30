@@ -1,4 +1,5 @@
-"""Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS."""
+"""Convert OASIS dataset (https://sites.wustl.edu/oasisbrains/) to BIDS."""
+
 from typing import Optional
 
 from clinica.iotools.abstract_converter import Converter
@@ -28,7 +29,7 @@ class OasisToBids(Converter):
 
         # --Create participants.tsv--
         participants_df = bids.create_participants_df(
-            "OASIS", clinic_specs_path, clinical_data_dir, bids_ids
+            bids.StudyName.OASIS, clinic_specs_path, clinical_data_dir, bids_ids
         )
 
         # Replace the values of the diagnosis_bl column
@@ -48,7 +49,12 @@ class OasisToBids(Converter):
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict_OASIS(
-            clinical_data_dir, bids_dir, "OASIS", clinic_specs_path, bids_ids, "ID"
+            clinical_data_dir,
+            bids_dir,
+            bids.StudyName.OASIS,
+            clinic_specs_path,
+            bids_ids,
+            "ID",
         )
         for y in bids_ids:
             if sessions_dict[y]["M000"]["diagnosis"] > 0:
@@ -62,7 +68,7 @@ class OasisToBids(Converter):
         # Note: We have no scans information for OASIS
         scans_dict = bids.create_scans_dict(
             clinical_data_dir,
-            "OASIS",
+            bids.StudyName.OASIS,
             clinic_specs_path,
             bids_ids,
             "ID",
@@ -73,7 +79,7 @@ class OasisToBids(Converter):
 
         # -- Creation of modality agnostic files --
         readme_data = {
-            "link": "https://www.oasis-brains.org/#access",
+            "link": "https://sites.wustl.edu/oasisbrains/#access",
             "desc": (
                 "This set consists of a cross-sectional collection of 416 subjects aged 18 to 96. For each subject, 3 "
                 "or 4 individual T1-weighted MRI scans obtained in single scan sessions are included. The subjects are "
@@ -84,7 +90,9 @@ class OasisToBids(Converter):
             ),
         }
         bids.write_modality_agnostic_files(
-            study_name="OASIS-1", readme_data=readme_data, bids_dir=bids_dir
+            study_name=bids.StudyName.OASIS,
+            readme_data=readme_data,
+            bids_dir=bids_dir,
         )
 
     @staticmethod

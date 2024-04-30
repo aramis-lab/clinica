@@ -5,7 +5,7 @@ from attrs import define, fields
 from cattr.gen import make_dict_unstructure_fn, override
 from cattr.preconf.json import make_converter
 
-BIDS_VERSION = "1.7.0"
+from clinica.utils.bids import BIDS_VERSION
 
 
 @define

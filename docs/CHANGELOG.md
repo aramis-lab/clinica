@@ -6,6 +6,13 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.8.1
+
+### Fixed
+
+- [ADNI2BIDS] Fix `DXSUM_PDXCONV_ADNIALL` unknown clinical file for adni-to-bids converter (see PR [#1144](https://github.com/aramis-lab/clinica/pull/1144))
+- [DWI] Fix DWI preprocessing using T1 rename to caps node (see PR [#1146](https://github.com/aramis-lab/clinica/pull/1146))
+
 ## Clinica 0.8.0
 
 ### Added

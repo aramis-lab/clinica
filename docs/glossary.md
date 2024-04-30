@@ -25,6 +25,19 @@ Each record consists of the same number of fields, and these are separated by co
 
 - [wikipedia](https://en.wikipedia.org/wiki/Comma-separated_values)
 
+#### FWHM
+
+**FWHM** stands for *Full Width at Half Maximum*.
+
+In a distribution, full width at half maximum (FWHM) is the difference between the two values of the independent
+variable at which the dependent variable is equal to half of its maximum value. In other words, it is the width of a
+spectrum curve measured between those points on the y-axis which are half the maximum amplitude. 
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Full_width_at_half_maximum)
+
+
 #### GLM
 
 **GLM** stands for *Generalized Linear Model*.
@@ -62,6 +75,46 @@ Different tracers are used for various imaging purposes, depending on the target
 ##### References
 
 - [wikipedia](https://en.wikipedia.org/wiki/Positron_emission_tomography)
+
+#### PSF
+
+**PSF** stands for *Point Spread Function*.
+
+The PSF describes the response of a focused optical imaging system to
+a point source or point object, that is considered as a spatial impulse.
+In functional terms, it is the spatial domain version (i.e., the inverse
+Fourier transform) of the optical transfer function of an imaging system. 
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Point_spread_function)
+
+
+#### PVC
+
+**PVC** stands for *Partial-Volume Correction*.
+
+PVC corrects partial volume effects which blur the images and 
+are due to both the limited resolution of PET and the definite size of 
+the PET voxel. 
+
+##### References
+
+- [PET data analysis](http://www.turkupetcentre.net/petanalysis/image_pve.html)
+
+
+#### SUVR
+
+**SUVR** stands for *Standardized Uptake Value Ratio*.
+
+The SUVR is the ratio of the image-derived radioactivity concentration
+ and the whole body concentration of the injected radioactivity. When SUVR > 1,
+it indicates radioactivity accumulation in that region above the hypothetical
+even radioactivity distribution.
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Standardized_uptake_value)
 
 #### TSV
 

@@ -272,10 +272,10 @@ class DwiConnectome(Pipeline):
         )
 
         from clinica.utils.exceptions import ClinicaCAPSError
-        from clinica.utils.mri_registration import (
-            convert_flirt_transformation_to_mrtrix_transformation,
-        )
 
+        from .tasks import (
+            convert_flirt_to_mrtrix_transformation_task,
+        )
         from .utils import (
             get_caps_filenames,
             get_conversion_luts,
@@ -344,13 +344,13 @@ class DwiConnectome(Pipeline):
             name="Reg-2-FSL2MrtrixConversion",
             interface=niu.Function(
                 input_names=[
-                    "in_source_image",
-                    "in_reference_image",
-                    "in_flirt_matrix",
+                    "source_image",
+                    "reference_image",
+                    "flirt_matrix",
                     "name_output_matrix",
                 ],
                 output_names=["out_mrtrix_matrix"],
-                function=convert_flirt_transformation_to_mrtrix_transformation,
+                function=convert_flirt_to_mrtrix_transformation_task,
             ),
         )
 
@@ -556,17 +556,17 @@ class DwiConnectome(Pipeline):
                     (
                         t1_brain_conv_node,
                         fsl2mrtrix_conv_node,
-                        [("out_file", "in_source_image")],
+                        [("out_file", "source_image")],
                     ),
                     (
                         mask_node,
                         fsl2mrtrix_conv_node,
-                        [("out_file", "in_reference_image")],
+                        [("out_file", "reference_image")],
                     ),
                     (
                         t12b0_reg_node,
                         fsl2mrtrix_conv_node,
-                        [("out_matrix_file", "in_flirt_matrix")],
+                        [("out_matrix_file", "flirt_matrix")],
                     ),
                     # Apply registration without resampling on parcellations
                     (

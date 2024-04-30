@@ -248,13 +248,10 @@ def check_b_value_threshold(b_value_threshold: float) -> None:
 
 
 def get_readout_time_and_phase_encoding_direction(
-    dwi_json_filename: str,
-) -> Tuple[str, str]:
+    dwi_json_filename: Union[str, Path],
+) -> tuple[str, str]:
     """Extract the readout time and phase encoding direction from the DWI JSON file."""
-    from clinica.utils.filemanip import (
-        extract_metadata_from_json,
-        handle_missing_keys_dwi,
-    )
+    from clinica.utils.filemanip import extract_metadata_from_json
 
     [total_readout_time, phase_encoding_direction] = extract_metadata_from_json(
         dwi_json_filename,
@@ -262,11 +259,93 @@ def get_readout_time_and_phase_encoding_direction(
             "TotalReadoutTime",
             "PhaseEncodingDirection",
         ],
-        handle_missing_keys=handle_missing_keys_dwi,
+        handle_missing_keys=_handle_missing_keys_dwi,
     )
     phase_encoding_direction = _bids_dir_to_fsl_dir(phase_encoding_direction)
 
     return total_readout_time, phase_encoding_direction
+
+
+def _handle_missing_keys_dwi(data: dict, missing_keys: set[str]) -> dict:
+    """Find alternative fields from the bids/sub-X/ses-Y/dwi/sub-X_ses-Y_dwi.json
+    file to replace those which were not found in this very json.
+
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary containing the json data.
+
+    missing_keys: set of str
+        Set of keys that are required and were not found in the json.
+
+    Returns
+    -------
+    dict:
+        Contains the values for the requested fields.
+    """
+    handlers = {
+        "TotalReadoutTime": _handle_missing_total_readout_time,
+        "PhaseEncodingDirection": _handle_missing_phase_encoding_direction,
+    }
+    try:
+        return {k: handlers[k](data, missing_keys) for k in missing_keys}
+    except KeyError:
+        raise ValueError(
+            f"Could not recover the missing keys {missing_keys} from JSON file."
+        )
+
+
+def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
+    """Find an alternative field in the json to replace the TotalReadoutTime.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary containing the json data.
+
+    missing_keys: set
+        Set of keys that are required and were not found in the json.
+
+    Returns
+    -------
+    float:
+        Value for TotalReadoutTime.
+    """
+    from clinica.utils.exceptions import ClinicaException
+
+    if "EstimatedTotalReadoutTime" in data:
+        return data["EstimatedTotalReadoutTime"]
+    if "PhaseEncodingSteps" in data and "PixelBandwidth" in data:
+        if data["PixelBandwidth"] != 0:
+            return data["PhaseEncodingSteps"] / data["PixelBandwidth"]
+        raise ValueError("Pixel Bandwidth value is not valid.")
+    raise ClinicaException("Could not recover the TotalReadoutTime from JSON file.")
+
+
+def _handle_missing_phase_encoding_direction(data: dict, missing_keys: set) -> float:
+    """Find an alternative field in the json to replace the PhaseEncodingDirection.
+
+    Parameters
+    ----------
+    data: dict
+        Dictionary containing the json data.
+
+    missing_keys: set
+        Set of keys that are required and were not found in the json.
+
+    Returns
+    -------
+    float:
+        Value for PhaseEncodingDirection.
+    """
+    from clinica.utils.exceptions import ClinicaException
+
+    if "PhaseEncodingAxis" in data:
+        return data["PhaseEncodingAxis"] + "+"
+    raise ClinicaException(
+        "Could not recover the PhaseEncodingDirection from JSON file."
+    )
 
 
 def _bids_dir_to_fsl_dir(bids_dir):
