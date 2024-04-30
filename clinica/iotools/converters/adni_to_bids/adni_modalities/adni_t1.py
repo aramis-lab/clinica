@@ -211,7 +211,7 @@ def compute_t1_paths(source_dir, csv_dir, subjs_list, conversion_dir):
         t1_df.drop(error_indices, inplace=True)
 
     # Checking for images paths in filesystem
-    images = find_image_path(t1_df, source_dir, "T1", "S", "Series_ID")
+    images = find_image_path(t1_df, source_dir, "T1")
     images.to_csv(path.join(conversion_dir, "t1_paths.tsv"), sep="\t", index=False)
 
     return images

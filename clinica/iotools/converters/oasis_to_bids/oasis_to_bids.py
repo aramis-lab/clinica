@@ -37,7 +37,7 @@ class OasisToBids(Converter):
 
         participants_df = create_participants_df(
             StudyName.OASIS,
-            Path(__file__).parents[2] / "specifications",
+            Path(__file__).parents[1] / "specifications",
             clinical_data_dir,
             bids_ids,
         )

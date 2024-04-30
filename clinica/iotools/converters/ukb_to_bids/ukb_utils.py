@@ -42,8 +42,9 @@ def find_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
         "21003-3.0",
     }
     if (
-        missing_columns := required_columns.difference(set(df_clinical.columns))
-    ) is not None:
+        len(missing_columns := required_columns.difference(set(df_clinical.columns)))
+        > 0
+    ):
         raise ValueError(f"Required columns {missing_columns} not found")
     df_clinical = df_clinical.rename(
         columns={
