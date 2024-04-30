@@ -1,5 +1,3 @@
-# coding: utf-8
-
 """Module for converting FDG PET of ADNI."""
 
 from enum import Enum
@@ -9,6 +7,11 @@ from pathlib import Path
 from typing import List, Optional, Set, Tuple
 
 import pandas as pd
+
+__all__ = [
+    "convert_adni_fdg_pet",
+    "convert_adni_fdg_pet_uniform",
+]
 
 
 class ADNIPreprocessingStep(Enum):
