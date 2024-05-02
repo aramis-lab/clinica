@@ -43,27 +43,15 @@ def cli(
     """
     from pathlib import Path
 
-    from clinica.iotools.bids_utils import _write_bidsignore
-    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
-    from clinica.utils.stream import cprint
+    from .genfi_to_bids import convert
 
-    from .genfi_to_bids import convert_images
-
-    check_software(ThirdPartySoftware.DCM2NIIX)
-    bids_directory = Path(bids_directory)
-    clinical_data_directory = (
-        Path(clinical_data_directory) if clinical_data_directory else None
-    )
-    clinical_data_tsv = Path(clinical_data_tsv) if clinical_data_tsv else None
-    convert_images(
+    convert(
         Path(dataset_directory),
-        bids_directory,
-        clinical_data_directory,
+        Path(bids_directory),
+        Path(clinical_data_directory) if clinical_data_directory else None,
         gif,
-        clinical_data_tsv,
+        Path(clinical_data_tsv) if clinical_data_tsv else None,
     )
-    _write_bidsignore(bids_directory)
-    cprint("Conversion to BIDS succeeded.")
 
 
 if __name__ == "__main__":

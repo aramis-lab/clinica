@@ -21,14 +21,11 @@ def cli(
     located in DATASET_DIRECTORY and CLINICAL_DATA_DIRECTORY respectively,
     to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from clinica.utils.stream import cprint
+    from .oasis3_to_bids import convert
 
-    from .oasis3_to_bids import convert_images
-
-    convert_images(
+    convert(
         Path(dataset_directory), Path(bids_directory), Path(clinical_data_directory)
     )
-    cprint("Conversion to BIDS succeeded.")
 
 
 if __name__ == "__main__":

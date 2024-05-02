@@ -1,22 +1,23 @@
-"""Convert the NIFD dataset into BIDS."""
+"""Convert the OASIS3 dataset into BIDS."""
 
 from pathlib import Path
 
-__all__ = ["convert_images"]
+__all__ = ["convert"]
 
 
-def convert_images(
+def convert(
     path_to_dataset: Path,
     bids_dir: Path,
     path_to_clinical: Path,
-) -> list[str]:
+):
     """Convert the entire dataset in BIDS.
 
     Scans available files in the path_to_dataset,
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
-    import clinica.iotools.bids_utils as bids
+    from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
+    from clinica.utils.stream import cprint
 
     from .oasis3_utils import (
         dataset_to_bids,
@@ -30,7 +31,7 @@ def convert_images(
     imaging_data = read_imaging_data(path_to_dataset)
     imaging_data, df_small = intersect_data(imaging_data, dict_df)
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)
-    written = write_bids(
+    write_bids(
         to=bids_dir,
         participants=participants,
         sessions=sessions,
@@ -51,10 +52,9 @@ def convert_images(
             "post-processed files from the Pet Unified Pipeline (PUP) are also available in OASIS-3."
         ),
     }
-    bids.write_modality_agnostic_files(
-        study_name=bids.StudyName.OASIS3,
+    write_modality_agnostic_files(
+        study_name=StudyName.OASIS3,
         readme_data=readme_data,
         bids_dir=bids_dir,
     )
-
-    return written
+    cprint("Conversion to BIDS succeeded.")

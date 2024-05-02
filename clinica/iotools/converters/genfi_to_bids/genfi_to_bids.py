@@ -3,10 +3,10 @@
 from pathlib import Path
 from typing import Optional
 
-__all__ = ["convert_images"]
+__all__ = ["convert"]
 
 
-def convert_images(
+def convert(
     path_to_dataset: Path,
     bids_dir: Path,
     path_to_clinical: Optional[Path] = None,
@@ -39,6 +39,8 @@ def convert_images(
         If None, no additional data will be added.
     """
     from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
+    from clinica.utils.stream import cprint
 
     from .genfi_to_bids_utils import (
         merge_imaging_and_clinical_data,
@@ -48,6 +50,7 @@ def convert_images(
         write_bids,
     )
 
+    check_software(ThirdPartySoftware.DCM2NIIX)
     _check_clinical_path_inputs(path_to_clinical_tsv, path_to_clinical)
     imaging_data = parse_imaging_data(path_to_dataset)
     if path_to_clinical:
@@ -68,6 +71,7 @@ def convert_images(
         },
         bids_dir=bids_dir,
     )
+    cprint("Conversion to BIDS succeeded.")
 
 
 def _check_clinical_path_inputs(path_to_clinical_tsv: Path, path_to_clinical: Path):

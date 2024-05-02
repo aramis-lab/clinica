@@ -19,16 +19,11 @@ def cli(
     Convert the imaging and clinical data of NIFD (https://4rtni-ftldni.ini.usc.edu/), located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
-    from clinica.utils.stream import cprint
+    from .nifd_to_bids import convert
 
-    from .nifd_to_bids import convert_images
-
-    check_software(ThirdPartySoftware.DCM2NIIX)
-    convert_images(
+    convert(
         Path(dataset_directory), Path(bids_directory), Path(clinical_data_directory)
     )
-    cprint("Conversion to BIDS succeeded.")
 
 
 if __name__ == "__main__":
