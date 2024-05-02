@@ -12,6 +12,7 @@ def convert(
     path_to_clinical: Optional[Path] = None,
     gif: Optional[bool] = False,
     path_to_clinical_tsv: Optional[Path] = None,
+    **kwargs,
 ) -> None:
     """Convert the entire dataset to BIDS.
 

@@ -77,7 +77,7 @@ def _filter_dicoms(df: DataFrame) -> DataFrame:
         manufacturer=lambda x: x.source_path.apply(lambda y: _handle_manufacturer(y)),
     )
     df = df.set_index(["source_path"], verify_integrity=True)
-    df = df[~df["source"].str.contains("secondary", case=False)]
+    df = df[df["source"].str.contains("secondary", case=False) != True]  # noqa
     for file_mod in to_filter:
         df = df[~df["series_desc"].str.contains(file_mod, case=False)]
     return df
@@ -256,7 +256,7 @@ def prepare_dataset_to_bids_format(
         ["participant_id", "session_id", "modality", "run_num", "bids_filename"],
         verify_integrity=True,
     )
-    specifications = pd.read_csv(Path(__file__) / "specifications.csv", sep=";")
+    specifications = pd.read_csv(Path(__file__).parent / "specifications.csv", sep=";")
     if not gif:
         specifications = specifications.head(8)
     # add additional data through csv

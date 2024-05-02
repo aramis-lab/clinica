@@ -37,9 +37,9 @@ def cli(
 
     convert(
         Path(dataset_directory),
-        Path(clinical_data_directory),
         Path(bids_directory),
-        overwrite,
-        clinical_data_only,
+        Path(clinical_data_directory),
+        overwrite=overwrite,
+        clinical_data_only=clinical_data_only,
         n_procs=n_procs,
     )

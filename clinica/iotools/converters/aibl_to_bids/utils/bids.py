@@ -39,7 +39,7 @@ class Modality(str, Enum):
 
     @property
     def suffix(self) -> str:
-        return "T1w" if self == "t1" else f"trc-{self.tracer}_pet"
+        return "T1w" if self == "t1" else f"trc-{self.tracer.value}_pet"
 
 
 @dataclass
@@ -210,7 +210,7 @@ def _get_first_file_matching_pattern(folder: Path, pattern: str) -> Path:
     if pattern == "":
         raise ValueError("Pattern is not valid.")
     try:
-        return sorted(list(folder.glob(pattern)))[0]
+        return sorted([f for f in folder.glob(pattern)])[0]
     except IndexError:
         raise ValueError(f"No file matching pattern {folder}/{pattern}.")
 
@@ -536,7 +536,7 @@ def _load_pet_csv(path_to_csv: Path, modality: Modality) -> pd.DataFrame:
     import pandas as pd
 
     path_to_csv_pet_modality = _get_first_file_matching_pattern(
-        path_to_csv, f"aibl_{modality}meta_*.csv"
+        path_to_csv, f"aibl_{modality.value}meta_*.csv"
     )
 
     if not path_to_csv_pet_modality.exists():
@@ -630,8 +630,6 @@ def _create_file(
     Path or None :
         Path to file
     """
-    import numpy as np
-
     from clinica.iotools.bids_utils import json_from_dcm
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
@@ -641,7 +639,9 @@ def _create_file(
     session_id = image.Session_ID
     image_path = image[modality.name_of_path]
 
-    if np.isnan(image_path):
+    try:
+        image_path = Path(image_path)
+    except TypeError:
         cprint(
             msg=(
                 f"[{modality.upper()}] No path specified for {image.Subjects_ID} "
@@ -650,7 +650,6 @@ def _create_file(
             lvl="info",
         )
         return None
-    image_path = Path(image_path)
     cprint(
         msg=(
             f"[{modality.upper()}] Processing subject {image.Subjects_ID} "

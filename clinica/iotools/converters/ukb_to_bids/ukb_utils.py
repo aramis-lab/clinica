@@ -79,7 +79,7 @@ def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
         source_path_series_nifti, columns=["source_zipfile", "source_filename"]
     )
     dataframe_nifti = dataframe_nifti[
-        ~dataframe_nifti["source_filename"].str.contains("unusable")
+        dataframe_nifti["source_filename"].str.contains("unusable") != True  # noqa
     ]
     dataframe_dicom = pd.DataFrame.from_records(
         source_path_series_dicom, columns=["source_zipfile", "source_filename"]
@@ -93,6 +93,7 @@ def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
             f"No imaging data were found in the provided folder: {imaging_data_directory}, "
             "or they are not handled by Clinica. Please check your data."
         )
+    dataframe["source_zipfile"] = dataframe["source_zipfile"].apply(lambda x: str(x))
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
         {0: "source_id", 1: "modality_num", 2: "source_sessions_number"}, axis="columns"
@@ -275,7 +276,9 @@ def prepare_dataset_to_bids_format(
     df_clinical: pd.DataFrame,
 ) -> dict[str, pd.DataFrame]:
     df_clinical = _complete_clinical(df_clinical)
-    df_specifications = pd.read_csv(Path(__file__) / "specifications.csv", sep=";")
+    df_specifications = pd.read_csv(
+        Path(__file__).parent / "specifications.csv", sep=";"
+    )
     df_clinical = df_clinical.set_index(
         ["participant_id", "sessions", "modality", "bids_filename"],
         verify_integrity=True,
@@ -342,13 +345,14 @@ def write_bids(
     return
 
 
-def _copy_file_to_bids(zipfile: Path, filenames: List[str], bids_path: Path) -> None:
+def _copy_file_to_bids(zipfile: Path, filenames: List[Path], bids_path: Path) -> None:
     """Install the requested files in the BIDS  dataset."""
     import fsspec
 
     fo = fsspec.open(str(zipfile))
     fs = fsspec.filesystem("zip", fo=fo)
     for filename in filenames:
+        filename = str(filename)
         if fs.exists(filename):
             bids_path_extension = str(bids_path) + "." + (filename.split(".", 1)[1])
             with fsspec.open(bids_path_extension, mode="wb") as f:
@@ -461,7 +465,7 @@ def _import_event_tsv(bids_path: Path) -> None:
             f"Could not find file {event_tsv} which is an internal file of Clinica."
         )
     bids_path_extension = bids_path / "task-facesshapesemotion_events.tsv"
-    fs.copy(event_tsv, bids_path_extension)
+    fs.copy(str(event_tsv), str(bids_path_extension))
 
 
 def _find_largest_imaging_data(path_to_source_data: Path) -> Optional[Path]:

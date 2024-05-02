@@ -37,17 +37,22 @@ def _get_protocol_to_bids_df() -> pd.DataFrame:
     )
 
 
-def convert(sourcedata: Path, rawdata: Path):
+def convert(
+    path_to_dataset: Path,
+    bids_dir: Path,
+    *args,
+    **kwargs,
+):
     clinical_data = {
-        k: _read_clinical_data(sourcedata / p, c)
-        for k, p, c in _find_clinical_data(sourcedata)
+        k: _read_clinical_data(path_to_dataset / p, c)
+        for k, p, c in _find_clinical_data(path_to_dataset)
     }
     imaging_data = pd.concat(
-        [_parse_imaging_data(x) for x in _find_imaging_data(sourcedata)]
+        [_parse_imaging_data(x) for x in _find_imaging_data(path_to_dataset)]
     )
     _write_bids(
-        sourcedata=sourcedata,
-        rawdata=rawdata,
+        sourcedata=path_to_dataset,
+        rawdata=bids_dir,
         imaging_data=imaging_data,
         clinical_data=clinical_data,
     )

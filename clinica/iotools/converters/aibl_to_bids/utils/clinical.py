@@ -50,7 +50,7 @@ def create_participants_tsv_file(
     index_to_drop = []
 
     specifications = _load_specifications(
-        clinical_specifications_folder, "participants.tsv"
+        clinical_specifications_folder, "participant.tsv"
     )
     participant_fields_db = specifications[StudyName.AIBL.value]
     field_location = specifications[f"{StudyName.AIBL.value} location"]

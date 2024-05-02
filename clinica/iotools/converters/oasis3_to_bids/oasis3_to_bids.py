@@ -9,6 +9,7 @@ def convert(
     path_to_dataset: Path,
     bids_dir: Path,
     path_to_clinical: Path,
+    **kwargs,
 ):
     """Convert the entire dataset in BIDS.
 

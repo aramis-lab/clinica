@@ -1037,8 +1037,7 @@ def _update_sessions_df(
         df_temp["diagnosis"] = df_temp["diagnosis"].apply(
             lambda x: _convert_diagnosis_code(x)
         )
-    except ValueError as e:
-        warnings.warn(str(e))
+    except KeyError:
         pass
     if df_subj_session.empty:
         df_subj_session = df_temp
@@ -1065,7 +1064,7 @@ def _convert_diagnosis_code(diagnosis_code: str) -> str:
     try:
         return diagnosis[diagnosis_code]
     except KeyError:
-        raise ValueError(f"Unknown diagnosis code {diagnosis_code}.")
+        raise KeyError(f"Unknown diagnosis code {diagnosis_code}.")
 
 
 def create_adni_scans_files(conversion_path: Path, bids_subjs_paths: list[Path]):
@@ -1082,7 +1081,7 @@ def create_adni_scans_files(conversion_path: Path, bids_subjs_paths: list[Path])
     scans_fields_bids = ["filename", "scan_id", "mri_field"]
 
     conversion_versions = [
-        folder
+        folder.name
         for folder in conversion_path.iterdir()
         if folder.name[0] == "v" and (conversion_path / folder).is_dir()
     ]
@@ -1190,24 +1189,7 @@ def find_image_path(
     is_dicom = []
     image_folders = []
     for _, image in images.iterrows():
-        # Base directory where to look for image files.
-        seq_path = source_dir / str(image["Subject_ID"])
-        # Generator finding files containing the image ID.
-        find_file = filter(
-            lambda p: p.is_file(),
-            seq_path.rglob(f"*_I{image['Image_ID']}.*"),
-        )
-        try:
-            # Grab the first file from the generator.
-            next_file: Path = next(find_file)
-            # Whether the image data are DICOM or not.
-            dicom = "dcm" in next_file.suffix
-            # Compute the image path (DICOM folder or NIfTI path).
-            image_path = str(next_file.parent if dicom else next_file)
-        except StopIteration:
-            # In case no file is found.
-            image_path = ""
-            dicom = True
+        image_path, dicom = _find_path_single_image(image, source_dir)
         is_dicom.append(dicom)
         image_folders.append(image_path)
         if image_path == "":
@@ -1222,6 +1204,30 @@ def find_image_path(
     images.loc[:, "Path"] = pd.Series(image_folders, index=images.index)
 
     return images
+
+
+def _find_path_single_image(image: pd.Series, source_dir: Path) -> tuple[str, bool]:
+    path_to_sequence = source_dir / str(image["Subject_ID"])
+    image_folder_path = ""
+    is_dicom = True
+    if (
+        len(
+            (
+                found_images := [
+                    f
+                    for f in path_to_sequence.rglob(f"*_I{image['Image_ID']}.*")
+                    if f.is_file()
+                ]
+            )
+        )
+        > 0
+    ):
+        if "dcm" in found_images[0].suffix:
+            image_folder_path = str(found_images[0].parent)
+        else:
+            image_folder_path = str(found_images[0])
+            is_dicom = False
+    return image_folder_path, is_dicom
 
 
 def paths_to_bids(

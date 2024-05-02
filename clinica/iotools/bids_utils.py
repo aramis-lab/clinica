@@ -383,7 +383,6 @@ def create_scans_dict(
         A pandas DataFrame that contains the scans information for all sessions of all participants.
     """
     import datetime
-    import glob
 
     from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
@@ -429,14 +428,12 @@ def create_scans_dict(
         if file_name == prev_file and sheet == prev_sheet:
             pass
         else:
-            file_to_read_path = clinical_data_dir / file_name
             file_ext = os.path.splitext(file_name)[1]
+            files_to_read = [f for f in clinical_data_dir.glob(file_name)]
             if file_ext == ".xlsx":
-                file_to_read = pd.read_excel(
-                    glob.glob(file_to_read_path)[0], sheet_name=sheet
-                )
+                file_to_read = pd.read_excel(files_to_read[0], sheet_name=sheet)
             elif file_ext == ".csv":
-                file_path = glob.glob(file_to_read_path)[0]
+                file_path = files_to_read[0]
 
                 # Fix for malformed flutemeta file in AIBL (see #796).
                 # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value

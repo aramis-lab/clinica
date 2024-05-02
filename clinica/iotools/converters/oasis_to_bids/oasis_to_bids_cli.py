@@ -25,9 +25,9 @@ def cli(
     located in DATASET_DIRECTORY and CLINICAL_DATA_DIRECTORY respectively,
     to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from .oasis_to_bids import OasisToBids
+    from .oasis_to_bids import convert
 
-    OasisToBids().convert(
+    convert(
         Path(dataset_directory),
         Path(bids_directory),
         Path(clinical_data_directory),

@@ -8,7 +8,22 @@ import numpy as np
 
 from clinica.iotools.abstract_converter import Converter
 
-__all__ = ["OasisToBids"]
+__all__ = ["convert"]
+
+
+def convert(
+    path_to_dataset: Path,
+    bids_dir: Path,
+    path_to_clinical: Path,
+    n_procs: Optional[int] = 1,
+    **kwargs,
+):
+    OasisToBids().convert(
+        path_to_dataset,
+        bids_dir,
+        path_to_clinical,
+        n_procs=n_procs,
+    )
 
 
 class OasisToBids(Converter):

@@ -9,11 +9,12 @@ __all__ = ["convert"]
 
 def convert(
     input_dataset: Path,
-    input_clinical_data: Path,
     output_dataset: Path,
+    input_clinical_data: Path,
     overwrite: bool = False,
     clinical_data_only: bool = False,
     n_procs: Optional[int] = 1,
+    **kwargs,
 ) -> None:
     """Convert the AIBL dataset (https://www.aibl.csiro.au/) in a BIDS dataset.
 
@@ -22,11 +23,11 @@ def convert(
     input_dataset : Path
         The path to the input AIBL dataset.
 
-    input_clinical_data : Path
-        The path to the clinical CSV files associated with the input dataset.
-
     output_dataset : Path
         The path to the BIDS directory in which to write the output.
+
+    input_clinical_data : Path
+        The path to the clinical CSV files associated with the input dataset.
 
     overwrite : bool, optional
         Overwrites previously written nifti and json files.
@@ -136,7 +137,7 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
     )
     from clinica.utils.stream import cprint
 
-    clinical_specifications_folder = Path(__file__).parents[2] / "specifications"
+    clinical_specifications_folder = Path(__file__).parents[1] / "specifications"
     if not clinical_specifications_folder.exists():
         raise FileNotFoundError(
             f"{clinical_specifications_folder} folder cannot be found ! "

@@ -64,38 +64,23 @@ def cli(
     Convert the imaging and clinical data of ADNI (https://adni.loni.usc.edu/), located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids import convert
     from clinica.utils.exceptions import ClinicaParserError
-
-    adni_to_bids = AdniToBids()
-    adni_to_bids.check_adni_dependencies()
 
     if clinical_data_only and force_new_extraction:
         raise ClinicaParserError(
             "Arguments `clinical_data_only` and `force_new_extraction` are mutually exclusive."
         )
-    dataset_directory = Path(dataset_directory)
-    clinical_data_directory = Path(clinical_data_directory)
-    bids_directory = Path(bids_directory)
-    if xml_path:
-        xml_path = Path(xml_path)
-    if not clinical_data_only:
-        adni_to_bids.convert_images(
-            dataset_directory,
-            clinical_data_directory,
-            bids_directory,
-            subjects_list,
-            modalities,
-            force_new_extraction,
-            n_procs=n_procs,
-        )
-
-    adni_to_bids.convert_clinical_data(
-        clinical_data_dir=clinical_data_directory,
-        out_path=bids_directory,
+    convert(
+        Path(dataset_directory),
+        Path(bids_directory),
+        Path(clinical_data_directory),
         clinical_data_only=clinical_data_only,
-        subjects_list_path=subjects_list,
-        xml_path=xml_path,
+        subjects=subjects_list,
+        modalities=modalities,
+        xml_path=Path(xml_path) if xml_path else None,
+        force_new_extraction=force_new_extraction,
+        n_procs=n_procs,
     )
 
 

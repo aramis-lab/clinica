@@ -49,8 +49,8 @@ def cli(
         Path(dataset_directory),
         Path(bids_directory),
         Path(clinical_data_directory) if clinical_data_directory else None,
-        gif,
-        Path(clinical_data_tsv) if clinical_data_tsv else None,
+        gif=gif,
+        path_to_clinical_tsv=Path(clinical_data_tsv) if clinical_data_tsv else None,
     )
 
 

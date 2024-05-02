@@ -3,7 +3,47 @@ from typing import Optional
 
 from clinica.iotools.abstract_converter import Converter
 
-__all__ = ["AdniToBids"]
+__all__ = ["convert"]
+
+
+def convert(
+    path_to_dataset: Path,
+    bids_dir: Path,
+    path_to_clinical: Path,
+    clinical_data_only: bool = False,
+    subjects: Optional[Path] = None,
+    modalities: Optional[list[str]] = None,
+    xml_path: Optional[Path] = None,
+    force_new_extraction: bool = False,
+    n_procs: Optional[int] = 1,
+):
+    adni_to_bids = AdniToBids()
+    adni_to_bids.check_adni_dependencies()
+    if not path_to_dataset.exists():
+        raise FileNotFoundError(
+            f"The provided dataset path {path_to_dataset} does not exist."
+        )
+    if not path_to_clinical.exists():
+        raise FileNotFoundError(
+            f"The provided path to clinical data {path_to_clinical} does not exist."
+        )
+    if not clinical_data_only:
+        adni_to_bids.convert_images(
+            source_dir=path_to_dataset,
+            clinical_dir=path_to_clinical,
+            dest_dir=bids_dir,
+            subjects=subjects,
+            modalities=modalities,
+            force_new_extraction=force_new_extraction,
+            n_procs=n_procs,
+        )
+    adni_to_bids.convert_clinical_data(
+        clinical_data_dir=path_to_clinical,
+        out_path=bids_dir,
+        clinical_data_only=clinical_data_only,
+        subjects=subjects,
+        xml_path=xml_path,
+    )
 
 
 class AdniToBids(Converter):
@@ -37,7 +77,7 @@ class AdniToBids(Converter):
         clinical_data_dir: Path,
         out_path: Path,
         clinical_data_only: bool = False,
-        subjects_list_path: Optional[Path] = None,
+        subjects: Optional[Path] = None,
         xml_path: Optional[Path] = None,
     ):
         """Convert the clinical data of ADNI specified into the file clinical_specifications_adni.xlsx.
@@ -46,7 +86,7 @@ class AdniToBids(Converter):
             clinical_data_dir:  path to the clinical data directory
             out_path: path to the BIDS directory
             clinical_data_only: process clinical data only
-            subjects_list_path: restrict processing to this manifest of subjects
+            subjects: restrict processing to this manifest of subjects
             xml_path: path to the XML metadata files
         """
         from clinica.iotools.bids_utils import (
@@ -74,7 +114,7 @@ class AdniToBids(Converter):
             bids_ids, bids_subjects_paths = _get_bids_subjs_info(
                 clinical_data_dir=clinical_data_dir,
                 out_path=out_path,
-                subjects_list_path=subjects_list_path,
+                subjects=subjects,
             )
         else:
             bids_ids = get_bids_subjs_list(out_path)
@@ -148,7 +188,7 @@ class AdniToBids(Converter):
         source_dir: Path,
         clinical_dir: Path,
         dest_dir: Path,
-        subjs_list_path: Optional[Path] = None,
+        subjects: Optional[Path] = None,
         modalities: Optional[list[str]] = None,
         force_new_extraction: bool = False,
         n_procs: Optional[int] = 1,
@@ -159,7 +199,7 @@ class AdniToBids(Converter):
             source_dir: path to the ADNI directory
             clinical_dir: path to the clinical data directory
             dest_dir: path to the BIDS directory
-            subjs_list_path: Path to list of subjects to process
+            subjects: Path to list of subjects to process
             modalities: modalities to convert (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
             force_new_extraction: if given pre-existing images in the BIDS directory will be erased and extracted again.
         """
@@ -223,23 +263,18 @@ class AdniToBids(Converter):
 def _get_bids_subjs_info(
     clinical_data_dir: Path,
     out_path: Path,
-    subjects_list_path: Optional[Path] = None,
+    subjects: Optional[Path] = None,
 ) -> tuple[list[str], list[Path]]:
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
 
     # Read optional list of participants.
-    subjects_list = (
-        set([line.rstrip("\n") for line in open(subjects_list_path)])
-        if subjects_list_path
-        else None
-    )
+    if subjects:
+        subjects = [subject for subject in subjects.read_text().split("\n") if subject]
     # Load all participants from ADNIMERGE.
     adni_merge = load_clinical_csv(clinical_data_dir, "ADNIMERGE")
     participants = adni_merge["PTID"].unique()
     # Filter participants if requested.
-    participants = sorted(
-        participants & subjects_list if subjects_list else participants
-    )
+    participants = sorted(participants & subjects if subjects else participants)
     # Compute their corresponding BIDS IDs and paths.
     bids_ids = [f"sub-ADNI{p.replace('_', '')}" for p in participants]
     bids_paths = [out_path / bids_id for bids_id in bids_ids]
