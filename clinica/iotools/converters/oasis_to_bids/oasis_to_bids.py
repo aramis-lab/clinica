@@ -37,7 +37,7 @@ class OasisToBids(Converter):
 
         participants_df = create_participants_df(
             StudyName.OASIS,
-            Path(__file__).parents[1] / "specifications",
+            Path(__file__).parents[0] / "specifications",
             clinical_data_dir,
             bids_ids,
         )
@@ -72,7 +72,7 @@ class OasisToBids(Converter):
             clinical_data_dir,
             bids_dir,
             StudyName.OASIS,
-            Path(__file__).parents[2] / "specifications",
+            Path(__file__).parents[0] / "specifications",
             bids_ids,
             "ID",
         )
@@ -99,13 +99,13 @@ class OasisToBids(Converter):
         )
 
         scans_dict = create_scans_dict(
-            clinical_data_dir,
-            StudyName.OASIS,
-            Path(__file__).parents[2] / "specifications",
-            bids_ids,
-            "ID",
-            "",
-            sessions,
+            clinical_data_dir=clinical_data_dir,
+            study_name=StudyName.OASIS,
+            clinical_specifications_folder=Path(__file__).parents[0] / "specifications",
+            bids_ids=bids_ids,
+            name_column_ids="ID",
+            name_column_ses="",
+            ses_dict=sessions,
         )
         write_scans_tsv(bids_dir, bids_ids, scans_dict)
 
