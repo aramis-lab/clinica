@@ -1,17 +1,14 @@
 from cmath import nan
-from os import PathLike
 from pathlib import Path
 from typing import Iterable, List, Optional
 
 import pandas as pd
-from pandas import DataFrame, Series
 
 __all__ = [
     "find_clinical_data",
     "read_imaging_data",
-    "intersect_data",
-    "complete_clinical",
-    "dataset_to_bids",
+    "merge_imaging_and_clinical_data",
+    "prepare_dataset_to_bids_format",
     "write_bids",
 ]
 
@@ -134,20 +131,17 @@ def _find_imaging_data(path_to_source_data: Path) -> Iterable[list[Path, Path]]:
                 yield [z.relative_to(path_to_source_data), Path(f)]
 
 
-def intersect_data(
-    df_source: pd.DataFrame, df_clinical_data: pd.DataFrame
+def merge_imaging_and_clinical_data(
+    imaging_data: pd.DataFrame, clinical_data: pd.DataFrame
 ) -> pd.DataFrame:
-    """
-    This function merges the two dataframes given as inputs based on the subject id
-    """
-
-    df_clinical = df_clinical_data.merge(
-        df_source, how="inner", right_on="source_id", left_on="eid"
+    """Merges the imaging and clinical dataframes based on the subject id."""
+    merged_data = clinical_data.merge(
+        imaging_data, how="inner", right_on="source_id", left_on="eid"
     )
-    return df_clinical
+    return merged_data
 
 
-def complete_clinical(df_clinical: pd.DataFrame) -> pd.DataFrame:
+def _complete_clinical(df_clinical: pd.DataFrame) -> pd.DataFrame:
     """This function uses the existing data to create the columns needed for
     the bids hierarchy (subject_id, ses, age_at _sessions, etc.)"""
 
@@ -277,7 +271,10 @@ def complete_clinical(df_clinical: pd.DataFrame) -> pd.DataFrame:
     return df_clinical
 
 
-def dataset_to_bids(df_clinical: pd.DataFrame) -> dict[str, pd.DataFrame]:
+def prepare_dataset_to_bids_format(
+    df_clinical: pd.DataFrame,
+) -> dict[str, pd.DataFrame]:
+    df_clinical = _complete_clinical(df_clinical)
     df_specifications = pd.read_csv(Path(__file__) / "specifications.csv", sep=";")
     df_clinical = df_clinical.set_index(
         ["participant_id", "sessions", "modality", "bids_filename"],

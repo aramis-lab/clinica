@@ -27,12 +27,12 @@ def cli(
     """
     from .oasis_to_bids import OasisToBids
 
-    dataset_directory = Path(dataset_directory)
-    bids_directory = Path(bids_directory)
-    clinical_data_directory = Path(clinical_data_directory)
-    oasis_to_bids = OasisToBids()
-    oasis_to_bids.convert_images(dataset_directory, bids_directory, n_procs=n_procs)
-    oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+    OasisToBids().convert(
+        Path(dataset_directory),
+        Path(bids_directory),
+        Path(clinical_data_directory),
+        n_procs=n_procs,
+    )
 
 
 if __name__ == "__main__":

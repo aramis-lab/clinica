@@ -128,7 +128,7 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
     output_dataset : Path
         The path to the BIDS directory in which to write the output.
     """
-    import clinica.iotools.bids_utils as bids
+    from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
     from clinica.iotools.converters.aibl_to_bids.utils import (
         create_participants_tsv_file,
         create_scans_tsv_file,
@@ -152,8 +152,8 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
             "Although AIBL and ADNI have many of the same goals, there are differences between the two projects."
         ),
     }
-    bids.write_modality_agnostic_files(
-        study_name=bids.StudyName.AIBL,
+    write_modality_agnostic_files(
+        study_name=StudyName.AIBL,
         readme_data=readme_data,
         bids_dir=output_dataset,
     )

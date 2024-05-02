@@ -1,34 +1,9 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from clinica.iotools.abstract_converter import Converter
 
-
-def get_bids_subjs_info(
-    clinical_data_dir: Path,
-    out_path: Path,
-    subjects_list_path: Optional[Path] = None,
-) -> tuple[list[str], list[Path]]:
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
-
-    # Read optional list of participants.
-    subjects_list = (
-        set([line.rstrip("\n") for line in open(subjects_list_path)])
-        if subjects_list_path
-        else None
-    )
-    # Load all participants from ADNIMERGE.
-    adni_merge = load_clinical_csv(clinical_data_dir, "ADNIMERGE")
-    participants = adni_merge["PTID"].unique()
-    # Filter participants if requested.
-    participants = sorted(
-        participants & subjects_list if subjects_list else participants
-    )
-    # Compute their corresponding BIDS IDs and paths.
-    bids_ids = [f"sub-ADNI{p.replace('_', '')}" for p in participants]
-    bids_paths = [out_path / bids_id for bids_id in bids_ids]
-
-    return bids_ids, bids_paths
+__all__ = ["AdniToBids"]
 
 
 class AdniToBids(Converter):
@@ -96,7 +71,7 @@ class AdniToBids(Converter):
         conversion_path = out_path / "conversion_info"
 
         if clinical_data_only:
-            bids_ids, bids_subjects_paths = get_bids_subjs_info(
+            bids_ids, bids_subjects_paths = _get_bids_subjs_info(
                 clinical_data_dir=clinical_data_dir,
                 out_path=out_path,
                 subjects_list_path=subjects_list_path,
@@ -243,3 +218,30 @@ class AdniToBids(Converter):
                     mod_to_update=force_new_extraction,
                     n_procs=n_procs,
                 )
+
+
+def _get_bids_subjs_info(
+    clinical_data_dir: Path,
+    out_path: Path,
+    subjects_list_path: Optional[Path] = None,
+) -> tuple[list[str], list[Path]]:
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+
+    # Read optional list of participants.
+    subjects_list = (
+        set([line.rstrip("\n") for line in open(subjects_list_path)])
+        if subjects_list_path
+        else None
+    )
+    # Load all participants from ADNIMERGE.
+    adni_merge = load_clinical_csv(clinical_data_dir, "ADNIMERGE")
+    participants = adni_merge["PTID"].unique()
+    # Filter participants if requested.
+    participants = sorted(
+        participants & subjects_list if subjects_list else participants
+    )
+    # Compute their corresponding BIDS IDs and paths.
+    bids_ids = [f"sub-ADNI{p.replace('_', '')}" for p in participants]
+    bids_paths = [out_path / bids_id for bids_id in bids_ids]
+
+    return bids_ids, bids_paths

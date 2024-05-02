@@ -8,8 +8,20 @@ import numpy as np
 
 from clinica.iotools.abstract_converter import Converter
 
+__all__ = ["OasisToBids"]
+
 
 class OasisToBids(Converter):
+    def convert(
+        self,
+        source_dir: Path,
+        destination_dir: Path,
+        clinical_data_dir: Path,
+        n_procs: Optional[int] = 1,
+    ):
+        self.convert_images(source_dir, destination_dir, n_procs=n_procs)
+        self.convert_clinical_data(clinical_data_dir, destination_dir)
+
     def convert_clinical_data(self, clinical_data_dir: Path, bids_dir: Path):
         """Convert the clinical data defined inside the clinical_specifications.xlx into BIDS.
 
@@ -166,9 +178,10 @@ class OasisToBids(Converter):
             If specified, it should be between 1 and the number of available CPUs.
             Default=1.
 
-        Note:
-            Previous version of this method used mri_convert from FreeSurfer to convert
-            Analyze data from OASIS-1. To remove this strong dependency, NiBabel is used instead.
+        Notes
+        -----
+        Previous version of this method used mri_convert from FreeSurfer to convert
+        Analyze data from OASIS-1. To remove this strong dependency, NiBabel is used instead.
         """
         from functools import partial
         from multiprocessing import Pool

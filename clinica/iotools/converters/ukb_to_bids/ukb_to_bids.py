@@ -2,10 +2,10 @@
 
 from pathlib import Path
 
-__all__ = ["convert_images"]
+__all__ = ["convert"]
 
 
-def convert_images(
+def convert(
     path_to_dataset: Path,
     bids_dir: Path,
     path_to_clinical: Path,
@@ -17,26 +17,24 @@ def convert_images(
     converts the image with the highest quality for each category.
     """
     from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
+    from clinica.utils.stream import cprint
 
     from .ukb_utils import (
-        complete_clinical,
-        dataset_to_bids,
         find_clinical_data,
-        intersect_data,
+        merge_imaging_and_clinical_data,
+        prepare_dataset_to_bids_format,
         read_imaging_data,
         write_bids,
     )
 
-    # read the clinical data files
-    df_clinical = find_clinical_data(path_to_clinical)
-    # makes a df of the imaging data
-    imaging_data = read_imaging_data(path_to_dataset)
-    # intersect the data
-    df_clinical = intersect_data(imaging_data, df_clinical)
-    # complete clinical data
-    df_clinical = complete_clinical(df_clinical)
-    # build the tsv
-    result = dataset_to_bids(df_clinical)
+    check_software(ThirdPartySoftware.DCM2NIIX)
+    result = prepare_dataset_to_bids_format(
+        merge_imaging_and_clinical_data(
+            read_imaging_data(path_to_dataset),
+            find_clinical_data(path_to_clinical),
+        )
+    )
     write_bids(
         to=bids_dir,
         participants=result["participants"],
@@ -60,3 +58,4 @@ def convert_images(
         readme_data=readme_data,
         bids_dir=bids_dir,
     )
+    cprint("Conversion to BIDS succeeded.")
