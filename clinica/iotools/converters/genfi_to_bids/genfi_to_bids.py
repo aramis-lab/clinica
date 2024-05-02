@@ -38,19 +38,40 @@ def convert_images(
         The path to a TSV file containing the additional data the user wants to have in the BIDS output.
         If None, no additional data will be added.
     """
-    import clinica.iotools.bids_utils as bids
+    from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
 
     from .genfi_to_bids_utils import (
-        complete_clinical_data,
-        dataset_to_bids,
-        find_clinical_data,
-        intersect_data,
-        merge_imaging_data,
-        read_imaging_data,
+        merge_imaging_and_clinical_data,
+        parse_clinical_data,
+        parse_imaging_data,
+        prepare_dataset_to_bids_format,
         write_bids,
     )
 
-    # check that if a clinical tsv is given, a path to the clinical data is given as well
+    _check_clinical_path_inputs(path_to_clinical_tsv, path_to_clinical)
+    imaging_data = parse_imaging_data(path_to_dataset)
+    if path_to_clinical:
+        clinical_data = parse_clinical_data(path_to_clinical)
+        imaging_data = merge_imaging_and_clinical_data(imaging_data, clinical_data)
+    results = prepare_dataset_to_bids_format(imaging_data, gif, path_to_clinical_tsv)
+    write_bids(
+        to=bids_dir,
+        participants=results["participants"],
+        sessions=results["sessions"],
+        scans=results["scans"],
+    )
+    write_modality_agnostic_files(
+        study_name=StudyName.GENFI,
+        readme_data={
+            "link": _get_link(),
+            "desc": _get_description(),
+        },
+        bids_dir=bids_dir,
+    )
+
+
+def _check_clinical_path_inputs(path_to_clinical_tsv: Path, path_to_clinical: Path):
+    """Check that if a clinical tsv is given, a path to the clinical data is given as well."""
     if path_to_clinical_tsv and not path_to_clinical:
         raise ValueError(
             "The Genfi2BIDS converter is unable to convert the clinical data because "
@@ -59,47 +80,6 @@ def convert_images(
             "option from the clinica command line interface to provide the missing path, "
             "or chose to not convert clinical data at all."
         )
-    # read the clinical data files
-    if path_to_clinical:
-        (
-            df_demographics,
-            df_imaging,
-            df_clinical,
-            df_biosamples,
-            df_neuropsych,
-        ) = find_clinical_data(path_to_clinical)
-
-    # makes a df of the imaging data
-    imaging_data = read_imaging_data(path_to_dataset)
-
-    # complete the data extracted
-    imaging_data = merge_imaging_data(imaging_data)
-    # complete clinical data
-    if path_to_clinical:
-        df_clinical_complete = complete_clinical_data(
-            df_demographics, df_imaging, df_clinical, df_biosamples, df_neuropsych
-        )
-    # intersect the data
-    if path_to_clinical:
-        df_complete = intersect_data(imaging_data, df_clinical_complete)
-    else:
-        df_complete = imaging_data
-    # build the tsv
-    results = dataset_to_bids(df_complete, gif, path_to_clinical_tsv)
-    write_bids(
-        to=bids_dir,
-        participants=results["participants"],
-        sessions=results["sessions"],
-        scans=results["scans"],
-    )
-    bids.write_modality_agnostic_files(
-        study_name=bids.StudyName.GENFI,
-        readme_data={
-            "link": _get_link(),
-            "desc": _get_description(),
-        },
-        bids_dir=bids_dir,
-    )
 
 
 def _get_link() -> str:

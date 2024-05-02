@@ -8,12 +8,10 @@ import pydicom as pdcm
 from pandas import DataFrame
 
 __all__ = [
-    "find_clinical_data",
-    "complete_clinical_data",
-    "dataset_to_bids",
-    "intersect_data",
-    "read_imaging_data",
-    "merge_imaging_data",
+    "merge_imaging_and_clinical_data",
+    "parse_clinical_data",
+    "parse_imaging_data",
+    "prepare_dataset_to_bids_format",
     "write_bids",
 ]
 
@@ -136,9 +134,13 @@ def _check_file(directory: Path, pattern: str) -> Path:
     return data_file[0]
 
 
-def find_clinical_data(
+def parse_clinical_data(clinical_data_directory: Path) -> DataFrame:
+    return _complete_clinical_data(*_find_clinical_data(clinical_data_directory))
+
+
+def _find_clinical_data(
     clinical_data_directory: Path,
-) -> List[DataFrame]:
+) -> tuple[DataFrame, DataFrame, DataFrame, DataFrame, DataFrame]:
     """Finds the clinical data associated with the dataset.
 
     Parameters
@@ -155,7 +157,7 @@ def find_clinical_data(
 
     cprint("Looking for clinical data.", lvl="info")
 
-    return [
+    return tuple(
         _read_file(_check_file(clinical_data_directory, pattern))
         for pattern in (
             "FINAL*DEMOGRAPHICS*.xlsx",
@@ -164,7 +166,7 @@ def find_clinical_data(
             "FINAL*BIOSAMPLES*.xlsx",
             "FINAL*NEUROPSYCH*.xlsx",
         )
-    ]
+    )
 
 
 def _read_file(data_file: Path) -> pd.DataFrame:
@@ -180,7 +182,7 @@ def _read_file(data_file: Path) -> pd.DataFrame:
     )
 
 
-def complete_clinical_data(
+def _complete_clinical_data(
     df_demographics: DataFrame,
     df_imaging: DataFrame,
     df_clinical: DataFrame,
@@ -225,7 +227,7 @@ def complete_clinical_data(
     return df_clinical_complete.merge(df_clinical, how="inner", on=merge_key)
 
 
-def dataset_to_bids(
+def prepare_dataset_to_bids_format(
     complete_data_df: DataFrame,
     gif: bool,
     path_to_clinical_tsv: Path,
@@ -278,27 +280,27 @@ def dataset_to_bids(
     }
 
 
-def intersect_data(
-    imaging_data: DataFrame, df_clinical_complete: DataFrame
+def merge_imaging_and_clinical_data(
+    imaging_data: DataFrame, clinical_data: DataFrame
 ) -> DataFrame:
     """This function merges the dataframe containing the data extracted
     from the raw images and from the clinical data.
 
     Parameters
     ----------
-    imaging_data: DataFrame
+    imaging_data : DataFrame
         Dataframe containing the data extracted from the raw images
 
-    df_clinical_complete: DataFrame
+    clinical_data : DataFrame
         Dataframe containing the clinical data
 
     Returns
     -------
-    df_complete: DataFrame
+    df_complete : DataFrame
         Dataframe containing the merged data
     """
     df_complete = imaging_data.merge(
-        df_clinical_complete,
+        clinical_data,
         how="inner",
         left_on=["source_id", "source_ses_id"],
         right_on=["blinded_code", "visit"],
@@ -306,7 +308,11 @@ def intersect_data(
     return df_complete.loc[:, ~df_complete.columns.duplicated()]
 
 
-def read_imaging_data(source_path: Path) -> DataFrame:
+def parse_imaging_data(source_path: Path) -> DataFrame:
+    return _merge_imaging_data(_read_imaging_data(source_path))
+
+
+def _read_imaging_data(source_path: Path) -> DataFrame:
     """This function finds the imaging data and filters it.
 
     Parameters
@@ -324,7 +330,7 @@ def read_imaging_data(source_path: Path) -> DataFrame:
     )
 
 
-def merge_imaging_data(df: DataFrame) -> DataFrame:
+def _merge_imaging_data(df: DataFrame) -> DataFrame:
     """This function uses the raw information extracted from the images,
     to obtain all the information necessary for the BIDS conversion.
 

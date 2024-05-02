@@ -17,16 +17,13 @@ def get_bids_subjs_info(
         if subjects_list_path
         else None
     )
-
     # Load all participants from ADNIMERGE.
     adni_merge = load_clinical_csv(clinical_data_dir, "ADNIMERGE")
     participants = adni_merge["PTID"].unique()
-
     # Filter participants if requested.
     participants = sorted(
         participants & subjects_list if subjects_list else participants
     )
-
     # Compute their corresponding BIDS IDs and paths.
     bids_ids = [f"sub-ADNI{p.replace('_', '')}" for p in participants]
     bids_paths = [out_path / bids_id for bids_id in bids_ids]
@@ -77,7 +74,13 @@ class AdniToBids(Converter):
             subjects_list_path: restrict processing to this manifest of subjects
             xml_path: path to the XML metadata files
         """
-        import clinica.iotools.bids_utils as bids
+        from clinica.iotools.bids_utils import (
+            StudyName,
+            create_participants_df,
+            get_bids_subjs_list,
+            get_bids_subjs_paths,
+            write_modality_agnostic_files,
+        )
         from clinica.iotools.converters.adni_to_bids.adni_utils import (
             correct_diagnosis_sc_adni3,
             create_adni_scans_files,
@@ -87,20 +90,20 @@ class AdniToBids(Converter):
 
         from .adni_json import create_json_metadata
 
-        clinical_specifications_folder = Path(__file__) / "specifications"
+        clinical_specifications_folder = Path(__file__).parents[0] / "specifications"
         if not out_path.exists():
             raise IOError("BIDS folder not found.")
         conversion_path = out_path / "conversion_info"
 
         if clinical_data_only:
-            bids_ids, bids_subjs_paths = get_bids_subjs_info(
+            bids_ids, bids_subjects_paths = get_bids_subjs_info(
                 clinical_data_dir=clinical_data_dir,
                 out_path=out_path,
                 subjects_list_path=subjects_list_path,
             )
         else:
-            bids_ids = bids.get_bids_subjs_list(out_path)
-            bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
+            bids_ids = get_bids_subjs_list(out_path)
+            bids_subjects_paths = get_bids_subjs_paths(out_path)
 
         # -- Creation of modality agnostic files --
         cprint("Creating modality agnostic files...")
@@ -115,15 +118,15 @@ class AdniToBids(Converter):
                 "cohesive research and share compatible data with other researchers around the world."
             ),
         }
-        bids.write_modality_agnostic_files(
-            study_name=bids.StudyName.ADNI,
+        write_modality_agnostic_files(
+            study_name=StudyName.ADNI,
             readme_data=readme_data,
             bids_dir=out_path,
         )
         # -- Creation of participant.tsv --
         cprint("Creating participants.tsv...")
-        participants_df = bids.create_participants_df(
-            bids.StudyName.ADNI,
+        participants_df = create_participants_df(
+            StudyName.ADNI,
             clinical_specifications_folder,
             clinical_data_dir,
             bids_ids,
@@ -146,16 +149,16 @@ class AdniToBids(Converter):
             bids_ids,
             clinical_specifications_folder,
             clinical_data_dir,
-            bids_subjs_paths,
+            bids_subjects_paths,
         )
         # -- Creation of scans files --
         if conversion_path.exists():
             cprint("Creating scans files...")
-            create_adni_scans_files(conversion_path, bids_subjs_paths)
+            create_adni_scans_files(conversion_path, bids_subjects_paths)
 
         if xml_path is not None:
             if xml_path.exists():
-                create_json_metadata(bids_subjs_paths, bids_ids, xml_path)
+                create_json_metadata(bids_subjects_paths, bids_ids, xml_path)
             else:
                 cprint(
                     msg=(
@@ -201,8 +204,7 @@ class AdniToBids(Converter):
 
         modalities = modalities or self.get_modalities_supported()
         adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
-
-        subjs_list = get_subjects_list(source_dir, clinical_dir, subjs_list_path)
+        subjects = get_subjects_list(source_dir, clinical_dir, subjs_list_path)
 
         # Create the output folder if is not already existing
         (dest_dir / "conversion_info").mkdir(parents=True, exist_ok=True)
@@ -237,7 +239,7 @@ class AdniToBids(Converter):
                     csv_dir=clinical_dir,
                     destination_dir=dest_dir,
                     conversion_dir=conversion_dir,
-                    subjects=subjs_list,
+                    subjects=subjects,
                     mod_to_update=force_new_extraction,
                     n_procs=n_procs,
                 )
