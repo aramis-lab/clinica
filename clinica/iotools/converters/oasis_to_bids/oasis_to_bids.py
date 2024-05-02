@@ -36,10 +36,10 @@ class OasisToBids(Converter):
         from clinica.iotools.bids_utils import StudyName, create_participants_df
 
         participants_df = create_participants_df(
-            StudyName.OASIS,
-            Path(__file__).parents[0] / "specifications",
-            clinical_data_dir,
-            bids_ids,
+            study_name=StudyName.OASIS,
+            clinical_specifications_folder=Path(__file__).parents[1] / "specifications",
+            clinical_data_dir=clinical_data_dir,
+            bids_ids=bids_ids,
         )
         # Replace the values of the diagnosis_bl column
         participants_df["diagnosis_bl"].replace([0.0, np.nan], "CN", inplace=True)
@@ -69,18 +69,17 @@ class OasisToBids(Converter):
         )
 
         sessions_dict = create_sessions_dict_oasis(
-            clinical_data_dir,
-            bids_dir,
-            StudyName.OASIS,
-            Path(__file__).parents[0] / "specifications",
-            bids_ids,
-            "ID",
+            clinical_data_dir=clinical_data_dir,
+            bids_dir=bids_dir,
+            study_name=StudyName.OASIS,
+            clinical_specifications_folder=Path(__file__).parents[1] / "specifications",
+            bids_ids=bids_ids,
+            name_column_ids="ID",
         )
-        for y in bids_ids:
-            if sessions_dict[y]["M000"]["diagnosis"] > 0:
-                sessions_dict[y]["M000"]["diagnosis"] = "AD"
-            else:
-                sessions_dict[y]["M000"]["diagnosis"] = "CN"
+        for bids_id in bids_ids:
+            sessions_dict[bids_id]["M000"]["diagnosis"] = (
+                "AD" if sessions_dict[bids_id]["M000"]["diagnosis"] > 0 else "CN"
+            )
         write_sessions_tsv(bids_dir, sessions_dict)
 
         return sessions_dict
@@ -101,7 +100,7 @@ class OasisToBids(Converter):
         scans_dict = create_scans_dict(
             clinical_data_dir=clinical_data_dir,
             study_name=StudyName.OASIS,
-            clinical_specifications_folder=Path(__file__).parents[0] / "specifications",
+            clinical_specifications_folder=Path(__file__).parents[1] / "specifications",
             bids_ids=bids_ids,
             name_column_ids="ID",
             name_column_ses="",

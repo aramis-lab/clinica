@@ -1,37 +1,40 @@
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Iterator, Optional
 
 import pandas as pd
 
-import clinica.iotools.bids_utils as bids
-
 __all__ = ["convert"]
 
-PROTOCOL_TO_BIDS = {
-    "3DFLAIR": {"datatype": "anat", "modality": "FLAIR"},
-    "ADNI_1X-MPRAGE": {"datatype": "anat", "modality": "T1w"},
-    "ADNI_2X-MPRAGE": {"datatype": "anat", "modality": "T1w"},
-    "FDG": {
-        "datatype": "pet",
-        "modality": "pet",
-        "trc_label": "18FFDG",
-    },
-    "FTP_75-105": {
-        "datatype": "pet",
-        "modality": "pet",
-        "trc_label": "18FFTP",
-    },
-    "FTP_80-100": {
-        "datatype": "pet",
-        "modality": "pet",
-        "trc_label": "18FFTP",
-    },
-    "PIB_40-60": {
-        "datatype": "pet",
-        "modality": "pet",
-        "trc_label": "11CPIB",
-    },
-}
+
+def _get_protocol_to_bids_df() -> pd.DataFrame:
+    return pd.DataFrame.from_dict(
+        {
+            "3DFLAIR": {"datatype": "anat", "modality": "FLAIR"},
+            "ADNI_1X-MPRAGE": {"datatype": "anat", "modality": "T1w"},
+            "ADNI_2X-MPRAGE": {"datatype": "anat", "modality": "T1w"},
+            "FDG": {
+                "datatype": "pet",
+                "modality": "pet",
+                "trc_label": "18FFDG",
+            },
+            "FTP_75-105": {
+                "datatype": "pet",
+                "modality": "pet",
+                "trc_label": "18FFTP",
+            },
+            "FTP_80-100": {
+                "datatype": "pet",
+                "modality": "pet",
+                "trc_label": "18FFTP",
+            },
+            "PIB_40-60": {
+                "datatype": "pet",
+                "modality": "pet",
+                "trc_label": "11CPIB",
+            },
+        },
+        orient="index",
+    )
 
 
 def convert(sourcedata: Path, rawdata: Path):
@@ -135,9 +138,8 @@ def _parse_imaging_data(paths: list[tuple[str, str]]) -> Optional[pd.DataFrame]:
     ).assign(date=lambda x: pd.to_datetime(x.date))
 
     # Map protocol to BIDS entities.
-    protocol_to_bids = pd.DataFrame.from_dict(PROTOCOL_TO_BIDS, orient="index")
     df = (
-        df.join(protocol_to_bids, on="protocol", how="left")
+        df.join(_get_protocol_to_bids_df(), on="protocol", how="left")
         .drop(columns="protocol")
         .dropna(subset=["datatype", "modality"])
     )
@@ -179,7 +181,11 @@ def _write_bids(
     from pandas import notna
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
-    from clinica.iotools.bids_utils import StudyName, write_to_tsv
+    from clinica.iotools.bids_utils import (
+        StudyName,
+        write_modality_agnostic_files,
+        write_to_tsv,
+    )
 
     participants = (
         clinical_data["Demographics"]
@@ -220,10 +226,8 @@ def _write_bids(
 
     for grouped_by, dataframe in imaging_data.groupby(["participant_id", "session_id"]):
         participant_id, session_id = grouped_by
-
         bids_basedir = rawdata / participant_id / session_id
         bids_prefix = f"{participant_id}_{session_id}"
-
         dataframe = (
             dataframe.droplevel(level=["participant_id", "session_id"])
             .reset_index()
@@ -261,7 +265,7 @@ def _write_bids(
             "progressive cognitive decline along the trajectory of preclinical Alzheimer’s Disease."
         ),
     }
-    bids.write_modality_agnostic_files(
+    write_modality_agnostic_files(
         study_name=StudyName.HABS,
         readme_data=readme_data,
         bids_dir=rawdata,
