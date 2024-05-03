@@ -18,8 +18,8 @@ class ADNIPreprocessingStep(Enum):
     STEP1 = "Co-registered Dynamic"
     STEP2 = "Co-registered, Averaged"
     STEP3 = "Coreg, Avg, Standardized Image and Voxel Size"
-    STEP4_8MM = "Coreg, Avg, Std Img and Voxel Size, Uniform Resolution"
-    STEP4_6MM = "Coreg, Avg, Std Img and Voxel Size, Uniform 6mm Res"
+    STEP4_8MM = "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"
+    STEP4_6MM = "Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"
 
     @classmethod
     def from_step_value(cls, step_value: int):
@@ -308,17 +308,19 @@ def _build_pet_qc_all_studies_for_subject(
 
 def _convert_subject_to_rid(subject: str) -> int:
     """Get the QC RID from the subject string identifier.
-
-    TODO: Use a regex to match pattern XXX_S_XXXX ????
-
     Examples
     --------
     >>> _convert_subject_to_rid("123_S_4567")
     4567
     """
-    try:
-        return int(subject[-4:])
-    except Exception:
+
+    from re import search
+
+    match = search(r"\d{3}_S_(\d{4})", subject)
+
+    if match:
+        return int(match.group(1))
+    else:
         raise ValueError(
             f"Cannot convert the subject '{subject}' identifier into a RID "
             "for PET QC filtering. The expected format for the subject is XXX_S_XXXX."

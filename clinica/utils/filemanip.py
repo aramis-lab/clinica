@@ -1,47 +1,21 @@
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Union
 
-
-def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
-    import gzip
-    import operator
-    import shutil
-    from os import getcwd
-    from os.path import abspath, join
-    from pathlib import Path
-
-    from nipype.utils.filemanip import split_filename
-    from traits.trait_base import _Undefined
-
-    try:
-        # Assuming in_file is path-like.
-        in_file = Path(in_file)
-    except TypeError:
-        try:
-            # Assuming in_file is a sequence type.
-            return [_zip_unzip_nii(f, same_dir, compress) for f in in_file]
-        except TypeError:
-            # All other cases.
-            return None
-
-    op = operator.eq if compress else operator.ne
-    if op(in_file.suffix, ".gz"):
-        return str(in_file)
-
-    if not in_file.exists():
-        raise FileNotFoundError(f"File {in_file} does not exist.")
-
-    orig_dir, base, ext = split_filename(str(in_file))
-    new_ext = ext + ".gz" if compress else ext[:-3]
-    out_file = abspath(join(orig_dir if same_dir else getcwd(), base + new_ext))
-
-    outer = open if compress else gzip.open
-    inner = gzip.open if compress else open
-    with outer(in_file, "rb") as f_in:
-        with inner(out_file, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
-
-    return out_file
+__all__ = [
+    "delete_directories",
+    "delete_directories_task",
+    "extract_crash_files_from_log_file",
+    "extract_image_ids",
+    "extract_metadata_from_json",
+    "extract_subjects_sessions_from_filename",
+    "get_filename_no_ext",
+    "get_parent",
+    "get_subject_id",
+    "load_volume",
+    "save_participants_sessions",
+    "unzip_nii",
+    "zip_nii",
+]
 
 
 def zip_nii(in_file: str, same_dir: bool = False) -> str:
@@ -131,6 +105,47 @@ def unzip_nii(
     return _zip_unzip_nii(in_file, same_dir, compress=False)
 
 
+def _zip_unzip_nii(in_file: str, same_dir: bool, compress: bool):
+    import gzip
+    import operator
+    import shutil
+    from os import getcwd
+    from os.path import abspath, join
+    from pathlib import Path
+
+    from nipype.utils.filemanip import split_filename
+
+    try:
+        # Assuming in_file is path-like.
+        in_file = Path(in_file)
+    except TypeError:
+        try:
+            # Assuming in_file is a sequence type.
+            return [_zip_unzip_nii(f, same_dir, compress) for f in in_file]
+        except TypeError:
+            # All other cases.
+            return None
+
+    op = operator.eq if compress else operator.ne
+    if op(in_file.suffix, ".gz"):
+        return str(in_file)
+
+    if not in_file.exists():
+        raise FileNotFoundError(f"File {in_file} does not exist.")
+
+    orig_dir, base, ext = split_filename(str(in_file))
+    new_ext = ext + ".gz" if compress else ext[:-3]
+    out_file = abspath(join(orig_dir if same_dir else getcwd(), base + new_ext))
+
+    outer = open if compress else gzip.open
+    inner = gzip.open if compress else open
+    with outer(in_file, "rb") as f_in:
+        with inner(out_file, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    return out_file
+
+
 def load_volume(image_path: str):
     """Load a 3D nifti image from its path.
 
@@ -169,8 +184,8 @@ def load_volume(image_path: str):
 
 
 def save_participants_sessions(
-    participant_ids: List[str],
-    session_ids: List[str],
+    participant_ids: list[str],
+    session_ids: list[str],
     out_folder: str,
     out_file: Optional[str] = "participants.tsv",
 ) -> None:
@@ -196,7 +211,6 @@ def save_participants_sessions(
         If provided `participant_ids` and `session_ids` do not have
         the same length.
     """
-    import os
     from pathlib import Path
 
     import pandas as pd
@@ -238,7 +252,7 @@ def _check_bids_or_caps_compliance(filename: str, sep: str):
     return m
 
 
-def get_subject_id(bids_or_caps_file: str) -> str:
+def get_subject_id(bids_or_caps_file: Union[str, Path]) -> str:
     """Extract the subject ID from a BIDS or CAPS file path.
 
     The subject ID is defined as
@@ -250,8 +264,8 @@ def get_subject_id(bids_or_caps_file: str) -> str:
 
     Parameters
     ----------
-    bids_or_caps_file: str
-        Path to a file from a BIDS or CAPS folder.
+    bids_or_caps_file: str or Path
+        The path to a file from a BIDS or CAPS folder.
 
     Returns
     -------
@@ -270,7 +284,7 @@ def get_subject_id(bids_or_caps_file: str) -> str:
     --------
     extract_image_ids
     """
-    match = _check_bids_or_caps_compliance(bids_or_caps_file, sep="/")
+    match = _check_bids_or_caps_compliance(str(bids_or_caps_file), sep="/")
     subject_id = match.group(1) + "_" + match.group(2)
 
     return subject_id
@@ -305,7 +319,7 @@ def get_filename_no_ext(filename: str) -> str:
     return stem
 
 
-def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
+def extract_image_ids(bids_or_caps_files: list[str]) -> list[str]:
     """Extract the image IDs from a list of BIDS or CAPS files.
 
     .. warning::
@@ -347,8 +361,8 @@ def extract_image_ids(bids_or_caps_files: List[str]) -> List[str]:
 
 
 def extract_subjects_sessions_from_filename(
-    bids_or_caps_files: List[str],
-) -> Tuple[List[str], List[str]]:
+    bids_or_caps_files: list[str],
+) -> tuple[list[str], list[str]]:
     """Extract the subject and session labels from a list of BIDS or CAPS files.
 
     Parameters
@@ -383,7 +397,7 @@ def extract_subjects_sessions_from_filename(
     return subject_ids, session_ids
 
 
-def extract_crash_files_from_log_file(filename: str) -> List[str]:
+def extract_crash_files_from_log_file(filename: str) -> list[str]:
     """Extract crash files (*.pklz) from `filename`.
 
     Parameters
@@ -413,73 +427,16 @@ def extract_crash_files_from_log_file(filename: str) -> List[str]:
     return crash_files
 
 
-def read_participant_tsv(tsv_file: str) -> Tuple[List[str], List[str]]:
-    """Extract participant IDs and session IDs from TSV file.
-
-    Parameters
-    ----------
-    tsv_file: str
-        Participant TSV file from which to extract the participant and session IDs.
-
-    Returns
-    -------
-    participants: List[str]
-        List of participant IDs.
-
-    sessions: List[str]
-        List of session IDs.
-
-    Raises
-    ------
-    ClinicaException
-        If `tsv_file` is not a file.
-        If `participant_id` or `session_id` column is missing from TSV file.
-
-    Examples
-    --------
-    >>> dframe = pd.DataFrame({
-    ...     "participant_id": ["sub-01", "sub-01", "sub-02"],
-    ...     "session_id": ["ses-M000", "ses-M006", "ses-M000"],
-    ...})
-    >>> dframe.to_csv("participants.tsv", sep="\t")
-    >>> read_participant_tsv("participant.tsv")
-    (["sub-01", "sub-01", "sub-02"], ["ses-M000", "ses-M006", "ses-M000"])
-    """
-    import pandas as pd
-
-    from clinica.utils.exceptions import ClinicaException
-
-    try:
-        df = pd.read_csv(tsv_file, sep="\t")
-    except FileNotFoundError:
-        raise ClinicaException(
-            "The TSV file you gave is not a file.\nError explanations:\n"
-            f"\t- Clinica expected the following path to be a file: {tsv_file}\n"
-            "\t- If you gave relative path, did you run Clinica on the good folder?"
-        )
-
-    for column in ("participant_id", "session_id"):
-        if column not in list(df.columns.values):
-            raise ClinicaException(
-                f"The TSV file does not contain {column} column (path: {tsv_file})"
-            )
-
-    return (
-        [sub.strip(" ") for sub in list(df.participant_id)],
-        [ses.strip(" ") for ses in list(df.session_id)],
-    )
-
-
 def extract_metadata_from_json(
-    json_file: str,
-    list_keys: List[str],
+    json_file: Union[str, Path],
+    list_keys: list[str],
     handle_missing_keys: Optional[Callable] = None,
-) -> List[str]:
+) -> list[str]:
     """Extract fields from JSON file.
 
     Parameters
     ----------
-    json_file: str
+    json_file: str or Path
         Path to a json file containing metadata needed for the pipeline.
 
     list_keys: list of str
@@ -490,7 +447,7 @@ def extract_metadata_from_json(
 
     Returns
     -------
-    list:
+    list of str:
         Contains the values for the requested fields.
     """
     import json
@@ -513,91 +470,6 @@ def extract_metadata_from_json(
         patch = handle_missing_keys(data, missing_keys)
         data.update(patch)
     return [data[k] for k in list_keys]
-
-
-def handle_missing_keys_dwi(data: dict, missing_keys: set) -> dict:
-    """Find alternative fields from the bids/sub-X/ses-Y/dwi/sub-X_ses-Y_dwi.json
-    file to replace those which were not found in this very json.
-
-
-    Parameters
-    ----------
-    data: dict
-        Dictionary containing the json data.
-
-    missing_keys: set
-        Set of keys that are required and were not found in the json.
-
-    Returns
-    -------
-    dict:
-        Contains the values for the requested fields.
-    """
-    handlers = {
-        "TotalReadoutTime": _handle_missing_total_readout_time,
-        "PhaseEncodingDirection": _handle_missing_phase_encoding_direction,
-    }
-    try:
-        return {k: handlers[k](data, missing_keys) for k in missing_keys}
-    except KeyError:
-        raise ValueError(
-            f"Could not recover the missing keys {missing_keys} from JSON file."
-        )
-
-
-def _handle_missing_total_readout_time(data: dict, missing_keys: set) -> float:
-    """Find an alternative field in the json to replace the TotalReadoutTime.
-
-    Parameters
-    ----------
-    data: dict
-        Dictionary containing the json data.
-
-    missing_keys: set
-        Set of keys that are required and were not found in the json.
-
-    Returns
-    -------
-    float:
-        Value for TotalReadoutTime.
-    """
-    from clinica.utils.exceptions import ClinicaException
-
-    if "EstimatedTotalReadoutTime" in data:
-        return data["EstimatedTotalReadoutTime"]
-    if "PhaseEncodingSteps" in data and "PixelBandwidth" in data:
-        if data["PixelBandwidth"] != 0:
-            return data["PhaseEncodingSteps"] / data["PixelBandwidth"]
-        raise ValueError("Pixel Bandwidth value is not valid.")
-    raise ClinicaException("Could not recover the TotalReadoutTime from JSON file.")
-
-
-def _handle_missing_phase_encoding_direction(
-    data: dict,
-    missing_keys: set,
-) -> float:
-    """Find an alternative field in the json to replace the PhaseEncodingDirection.
-
-    Parameters
-    ----------
-    data: dict
-        Dictionary containing the json data.
-
-    missing_keys: set
-        Set of keys that are required and were not found in the json.
-
-    Returns
-    -------
-    float:
-        Value for PhaseEncodingDirection.
-    """
-    from clinica.utils.exceptions import ClinicaException
-
-    if "PhaseEncodingAxis" in data:
-        return data["PhaseEncodingAxis"] + "+"
-    raise ClinicaException(
-        "Could not recover the PhaseEncodingDirection from JSON file."
-    )
 
 
 def get_parent(path: str, n: int = 1) -> Path:
@@ -625,13 +497,13 @@ def get_parent(path: str, n: int = 1) -> Path:
     return get_parent(Path(path).parent, n - 1)
 
 
-def get_folder_size(folder: str) -> int:
+def _get_folder_size(folder: Union[str, Path]) -> int:
     """Compute the size in bytes recursively of the given folder.
 
     Parameters
     ----------
-    folder : str
-        Path to the folder for which to compute size.
+    folder : str or Path
+        The path to the folder for which to compute size.
 
     Returns
     -------
@@ -640,7 +512,7 @@ def get_folder_size(folder: str) -> int:
 
     Examples
     --------
-    >>> get_folder_size("./test/instantiation/")
+    >>> _get_folder_size("./test/instantiation/")
     52571
     """
     import os
@@ -649,13 +521,13 @@ def get_folder_size(folder: str) -> int:
     prepend = partial(os.path.join, folder)
     return sum(
         [
-            (os.path.getsize(f) if os.path.isfile(f) else get_folder_size(f))
+            (os.path.getsize(f) if os.path.isfile(f) else _get_folder_size(f))
             for f in map(prepend, os.listdir(folder))
         ]
     )
 
 
-def get_folder_size_human(folder: str) -> str:
+def _get_folder_size_human(folder: Union[str, Path]) -> str:
     """Computes the size of the given folder in human-readable form.
 
     Parameters
@@ -670,13 +542,13 @@ def get_folder_size_human(folder: str) -> str:
 
     Examples
     --------
-    >>> get_folder_size_human("./test/instantiation/")
+    >>> _get_folder_size_human("./test/instantiation/")
     '51.3388671875 KB'
     """
-    return humanize_bytes(get_folder_size(folder))
+    return _humanize_bytes(_get_folder_size(folder))
 
 
-def humanize_bytes(size: int) -> str:
+def _humanize_bytes(size: int) -> str:
     """Convert a number of bytes in a human-readable form.
 
     Parameters
@@ -699,7 +571,7 @@ def humanize_bytes(size: int) -> str:
     return f"{size} {units[-1]}"
 
 
-def delete_directories(directories: list) -> None:
+def delete_directories(directories: list[Union[str, Path]]) -> None:
     """This function deletes the directories of the given list".
 
     Parameters
@@ -709,20 +581,13 @@ def delete_directories(directories: list) -> None:
     """
     import shutil
 
-    from clinica.utils.filemanip import (  # noqa
-        _print_and_warn,
-        get_folder_size,
-        get_folder_size_human,
-        humanize_bytes,
-    )
-
     total_size: int = 0
     for directory in directories:
-        total_size += get_folder_size(str(directory))
-        size = get_folder_size_human(str(directory))
+        total_size += _get_folder_size(str(directory))
+        size = _get_folder_size_human(str(directory))
         shutil.rmtree(directory)
         _print_and_warn(f"Folder {directory} deleted. Freeing {size} of disk space...")
-    _print_and_warn(f"Was able to remove {humanize_bytes(total_size)} of data.")
+    _print_and_warn(f"Was able to remove {_humanize_bytes(total_size)} of data.")
 
 
 def _print_and_warn(msg: str, lvl: str = "info") -> None:
@@ -733,3 +598,10 @@ def _print_and_warn(msg: str, lvl: str = "info") -> None:
 
     cprint(msg=msg, lvl=lvl)
     warnings.warn(msg)
+
+
+def delete_directories_task(directories: list) -> None:
+    """Task for Nipype."""
+    from clinica.utils.filemanip import delete_directories  # noqa
+
+    return delete_directories(directories)

@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 
 
@@ -99,3 +100,40 @@ def test_get_subject_session_list(tmp_path, config, expected):
         get_subject_session_list(tmp_path / "bids", tsv_dir=tmp_path / "tsv")
         == expected
     )
+
+
+def test_read_participant_tsv_error(tmp_path):
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.participant import _read_participant_tsv
+
+    with pytest.raises(
+        ClinicaException,
+        match="The TSV file you gave is not a file.",
+    ):
+        _read_participant_tsv(tmp_path / "foo.tsv")
+
+
+def test_read_participant_tsv(tmp_path):
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.participant import _read_participant_tsv
+
+    df = pd.DataFrame(
+        {
+            "participant_id": ["sub-01", "sub-01", "sub-02"],
+            "session_id": ["ses-M000", "ses-M006", "ses-M000"],
+        }
+    )
+    df.to_csv(tmp_path / "foo.tsv", sep="\t")
+
+    assert _read_participant_tsv(tmp_path / "foo.tsv") == (
+        ["sub-01", "sub-01", "sub-02"],
+        ["ses-M000", "ses-M006", "ses-M000"],
+    )
+
+    for column in ("participant_id", "session_id"):
+        df.drop(column, axis=1).to_csv(tmp_path / "foo.tsv", sep="\t")
+        with pytest.raises(
+            ClinicaException,
+            match=f"The TSV file does not contain {column} column",
+        ):
+            _read_participant_tsv(tmp_path / "foo.tsv")

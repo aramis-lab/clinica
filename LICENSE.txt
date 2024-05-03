@@ -57,7 +57,7 @@ on Multi-Atlas Labeling''
 (https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details).
 These data were released under the Creative Commons Attribution-NonCommercial
 (CC BY-NC) with no end date. Users should credit the MRI scans as originating
-from the OASIS project (http://www.oasis-brains.org/) and the labeled data as
+from the OASIS project (https://sites.wustl.edu/oasisbrains/) and the labeled data as
 "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under
 academic subscription".  These references should be included in all workshop
 and final publications:
@@ -206,7 +206,7 @@ Challenge and Workshop on Multi-Atlas Labeling''
 (https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details).
 These data were released under the Creative Commons Attribution-NonCommercial
 (CC BY-NC) with no end date. Users should credit the MRI scans as originating
-from the OASIS project (http://www.oasis-brains.org/) and the labeled data as
+from the OASIS project (https://sites.wustl.edu/oasisbrains/) and the labeled data as
 "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under
 academic subscription".  These references should be included in all workshop
 and final publications.
@@ -214,7 +214,7 @@ and final publications.
 
 Websites:
 A) https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details
-B) http://www.oasis-brains.org/
+B) https://sites.wustl.edu/oasisbrains/
 C) http://Neuromorphometrics.com/
 
 

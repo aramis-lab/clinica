@@ -6,6 +6,14 @@ import nibabel as nib
 import numpy as np
 from nibabel.nifti1 import Nifti1Image
 
+__all__ = [
+    "compute_aggregated_volume",
+    "get_new_image_like",
+    "merge_nifti_images_in_time_dimension",
+    "remove_dummy_dimension_from_image",
+    "crop_nifti",
+]
+
 
 def compute_aggregated_volume(
     image_filename: PathLike,
@@ -142,14 +150,6 @@ def _check_volumes_from_images(images: Tuple[Path, ...]) -> Tuple[np.ndarray, ..
     return tuple(four_dimensional_volumes)
 
 
-def merge_nifti_images_in_time_dimension_task(image1: str, image2: str) -> str:
-    """Merges the two provided volumes in the time (4th) dimension."""
-    # This is needed because Nipype needs to have self-contained functions
-    from clinica.utils.image import merge_nifti_images_in_time_dimension  # noqa
-
-    return str(merge_nifti_images_in_time_dimension((image1, image2)))
-
-
 def remove_dummy_dimension_from_image(image: str, output: str) -> str:
     """Remove all dummy dimensions (i.e. equal to 1) from an image.
 
@@ -173,3 +173,34 @@ def remove_dummy_dimension_from_image(image: str, output: str) -> str:
     nib.save(img, output)
 
     return output
+
+
+def crop_nifti(input_image: Path, reference_image: Path) -> Path:
+    """Crop input image based on the reference.
+
+    It uses nilearn `resample_to_img` function.
+
+    Parameters
+    ----------
+    input_image : Path
+        Path to the input image.
+
+    reference_image : Path
+        Path to the reference image used for cropping.
+
+    Returns
+    -------
+    output_img : Path
+        Path to the cropped image.
+    """
+    from pathlib import Path
+
+    from nilearn.image import resample_to_img
+
+    basedir = Path.cwd()
+    # resample the individual MRI into the cropped template image
+    crop_img = resample_to_img(input_image, reference_image, force_resample=True)
+    crop_filename = str(input_image).split(".nii")[0] + "_cropped.nii.gz"
+    output_img = basedir / crop_filename
+    crop_img.to_filename(output_img)
+    return output_img

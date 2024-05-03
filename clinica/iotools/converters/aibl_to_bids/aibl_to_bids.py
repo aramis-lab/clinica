@@ -150,7 +150,9 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
         ),
     }
     bids.write_modality_agnostic_files(
-        study_name="AIBL", readme_data=readme_data, bids_dir=output_dataset
+        study_name=bids.StudyName.AIBL,
+        readme_data=readme_data,
+        bids_dir=output_dataset,
     )
 
     cprint("Creating participants.tsv...")

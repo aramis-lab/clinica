@@ -3,9 +3,18 @@
 import hashlib
 import os
 from collections import namedtuple
+from enum import Enum
 from functools import partial
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple, Union
+
+
+class DatasetType(str, Enum):
+    """Defines the possible types of datasets in Clinica."""
+
+    BIDS = "BIDS"
+    CAPS = "CAPS"
+
 
 RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "checksum"])
 
@@ -81,7 +90,8 @@ def _list_subjects_sub_folders(
 
 
 def _validate_folder_existence(
-    directory: Union[str, os.PathLike], folder_type: str
+    directory: Union[str, os.PathLike],
+    folder_type: DatasetType,
 ) -> Path:
     """Utility function which performs checks common to BIDS and CAPS folder structures.
 
@@ -90,7 +100,7 @@ def _validate_folder_existence(
     directory : PathLike or str
         Directory to check.
 
-    folder_type : {"BIDS", "CAPS"}
+    folder_type : DatasetType
         The type of directory.
 
     Returns
@@ -104,12 +114,14 @@ def _validate_folder_existence(
         directory = Path(directory)
     except TypeError:
         raise TypeError(
-            f"Argument you provided to check_{folder_type.lower()}_folder() is not a valid folder name."
+            f"Argument you provided to check_{folder_type.value.lower()}_folder() is not a valid folder name."
         )
 
     if not directory.is_dir():
-        raise (ClinicaBIDSError if folder_type == "BIDS" else ClinicaCAPSError)(
-            f"The {folder_type} directory you gave is not a folder.\n"
+        raise (
+            ClinicaBIDSError if folder_type == DatasetType.BIDS else ClinicaCAPSError
+        )(
+            f"The {folder_type.value} directory you gave is not a folder.\n"
             "Error explanations:\n"
             f"\t- Clinica expected the following path to be a folder: {directory}\n"
             "\t- If you gave relative path, did you run Clinica on the good folder?"
@@ -119,10 +131,10 @@ def _validate_folder_existence(
 
 
 _validate_bids_folder_existence = partial(
-    _validate_folder_existence, folder_type="BIDS"
+    _validate_folder_existence, folder_type=DatasetType.BIDS
 )
 _validate_caps_folder_existence = partial(
-    _validate_folder_existence, folder_type="CAPS"
+    _validate_folder_existence, folder_type=DatasetType.CAPS
 )
 
 
@@ -148,9 +160,35 @@ def check_bids_folder(bids_directory: Union[str, os.PathLike]) -> None:
         If the provided folder does not contain at least one directory whose
         name starts with 'sub-'.
     """
-    from clinica.utils.exceptions import ClinicaBIDSError
-
     bids_directory = _validate_bids_folder_existence(bids_directory)
+    _check_dataset_description_exists_in_bids(bids_directory)
+    _check_bids_is_not_caps(bids_directory)
+    _check_bids_is_not_empty(bids_directory)
+    _check_bids_has_at_least_one_subject_folder(bids_directory)
+
+
+def _check_dataset_description_exists(directory: Path, folder_type: DatasetType):
+    from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
+
+    if not (directory / "dataset_description.json").exists():
+        raise (
+            ClinicaBIDSError if folder_type == DatasetType.BIDS else ClinicaCAPSError
+        )(
+            f"The {folder_type.value} directory ({directory}) you provided is missing "
+            "a dataset_description.json file."
+        )
+
+
+_check_dataset_description_exists_in_bids = partial(
+    _check_dataset_description_exists, folder_type=DatasetType.BIDS
+)
+_check_dataset_description_exists_in_caps = partial(
+    _check_dataset_description_exists, folder_type=DatasetType.CAPS
+)
+
+
+def _check_bids_is_not_caps(bids_directory: Path):
+    from clinica.utils.exceptions import ClinicaBIDSError
 
     if (bids_directory / "subjects").is_dir():
         raise ClinicaBIDSError(
@@ -158,13 +196,29 @@ def check_bids_folder(bids_directory: Union[str, os.PathLike]) -> None:
             "be a CAPS directory due to the presence of a 'subjects' folder."
         )
 
-    if len([f for f in bids_directory.iterdir()]) == 0:
+
+def _check_bids_is_not_empty(bids_directory: Path):
+    from clinica.utils.exceptions import ClinicaBIDSError
+
+    if (
+        len(
+            [
+                f
+                for f in bids_directory.iterdir()
+                if f.name != "dataset_description.json"
+            ]
+        )
+        == 0
+    ):
         raise ClinicaBIDSError(
             f"The BIDS directory you provided is empty. ({bids_directory})."
         )
 
-    subj = [f for f in bids_directory.iterdir() if f.name.startswith("sub-")]
-    if len(subj) == 0:
+
+def _check_bids_has_at_least_one_subject_folder(bids_directory: Path):
+    from clinica.utils.exceptions import ClinicaBIDSError
+
+    if len([f for f in bids_directory.iterdir() if f.name.startswith("sub-")]) == 0:
         raise ClinicaBIDSError(
             "Your BIDS directory does not contains a single folder whose name "
             "starts with 'sub-'. Check that your folder follow BIDS standard."

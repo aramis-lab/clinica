@@ -1,20 +1,25 @@
 """Methods used by BIDS converters."""
 
+from enum import Enum
 from os import PathLike
 from pathlib import Path
 from typing import BinaryIO, List, Optional, Union
 
 from pandas import DataFrame
 
-SUPPORTED_DATASETS = {
-    "ADNI",
-    "CLINAD",
-    "PREVDEMALS",
-    "INSIGHT",
-    "OASIS",
-    "OASIS3",
-    "AIBL",
-}
+
+class StudyName(str, Enum):
+    """Studies supported by the converters of Clinica."""
+
+    ADNI = "ADNI"
+    AIBL = "AIBL"
+    GENFI = "GENFI"
+    HABS = "HABS"
+    NIFD = "NIFD"
+    OASIS = "OASIS"
+    OASIS3 = "OASIS3"
+    UKB = "UKB"
+
 
 BIDS_VALIDATOR_CONFIG = {
     "ignore": [
@@ -44,7 +49,7 @@ BIDS_VALIDATOR_CONFIG = {
 # -- Methods for the clinical data --
 # @ToDo:test this function
 def create_participants_df(
-    study_name,
+    study_name: StudyName,
     clinical_spec_path,
     clinical_data_dir,
     bids_ids,
@@ -75,11 +80,12 @@ def create_participants_df(
     prev_location = ""
     index_to_drop = []
     subjects_to_drop = []
-    location_name = study_name + " location"
+    study_name = StudyName(study_name)
+    location_name = f"{study_name.value} location"
 
     # Load the data from the clincal specification file
     participants_specs = pd.read_csv(clinical_spec_path + "_participant.tsv", sep="\t")
-    participant_fields_db = participants_specs[study_name]
+    participant_fields_db = participants_specs[study_name.value]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
 
@@ -138,12 +144,12 @@ def create_participants_df(
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
-    if study_name == "ADNI" or study_name == "AIBL":
+    if study_name == StudyName.ADNI or study_name == StudyName.AIBL:
         # ADNImerge contains one row for each visits so there are duplicates
         participant_df = participant_df.drop_duplicates(
             subset=["alternative_id_1"], keep="first"
         )
-    elif study_name == "OASIS":
+    elif study_name == StudyName.OASIS:
         # OASIS provides several MRI for the same session
         participant_df = participant_df[
             ~participant_df.alternative_id_1.str.endswith("_MR2")
@@ -152,9 +158,9 @@ def create_participants_df(
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        if study_name == "OASIS":
+        if study_name == StudyName.OASIS:
             value = (participant_df["alternative_id_1"][i].split("_"))[1]
-        elif study_name == "OASIS3":
+        elif study_name == StudyName.OASIS3:
             value = participant_df["alternative_id_1"][i].replace("OAS3", "")
         else:
             value = remove_space_and_symbols(participant_df["alternative_id_1"][i])
@@ -187,7 +193,7 @@ def create_participants_df(
 def create_sessions_dict_OASIS(
     clinical_data_dir,
     bids_dir,
-    study_name,
+    study_name: StudyName,
     clinical_spec_path,
     bids_ids,
     name_column_ids,
@@ -214,9 +220,9 @@ def create_sessions_dict_OASIS(
     from clinica.utils.stream import cprint
 
     # Load data
-    location = study_name + " location"
+    location = f"{study_name.value} location"
     sessions = pd.read_csv(clinical_spec_path + "_sessions.tsv", sep="\t")
-    sessions_fields = sessions[study_name]
+    sessions_fields = sessions[study_name.value]
     field_location = sessions[location]
     sessions_fields_bids = sessions["BIDS CLINICA"]
     fields_dataset = []
@@ -255,9 +261,9 @@ def create_sessions_dict_OASIS(
                         subj_id = str(subj_id)
                 # Removes all the - from
                 subj_id_alpha = remove_space_and_symbols(subj_id)
-                if study_name == "OASIS":
+                if study_name == StudyName.OASIS:
                     subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
-                if study_name == "OASIS3":
+                if study_name == StudyName.OASIS3:
                     subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3:])
 
                 # Extract the corresponding BIDS id and create the output file if doesn't exist
@@ -279,13 +285,13 @@ def create_sessions_dict_OASIS(
                     session_names = get_bids_sess_list(subj_dir)
                     for s in session_names:
                         s_name = s.replace("ses-", "")
-                        if study_name != "OASIS3":
-                            row = file_to_read.iloc[r]
-                        else:
+                        if study_name == StudyName.OASIS3:
                             row = file_to_read[
                                 file_to_read["MR ID"].str.startswith(subj_id)
                                 & file_to_read["MR ID"].str.endswith(s_name)
                             ].iloc[0]
+                        else:
+                            row = file_to_read.iloc[r]
                         if subj_bids not in sessions_dict:
                             sessions_dict.update({subj_bids: {}})
                         if s_name not in sessions_dict[subj_bids].keys():
@@ -294,7 +300,10 @@ def create_sessions_dict_OASIS(
                             {sessions_fields_bids[i]: row[sessions_fields[i]]}
                         )
                         # Calculate the difference in months for OASIS3 only
-                        if study_name == "OASIS3" and sessions_fields_bids[i] == "age":
+                        if (
+                            study_name == StudyName.OASIS3
+                            and sessions_fields_bids[i] == "age"
+                        ):
                             diff_years = (
                                 float(sessions_dict[subj_bids][s_name]["age"])
                                 - participants_df[
@@ -310,7 +319,7 @@ def create_sessions_dict_OASIS(
 
 def create_scans_dict(
     clinical_data_dir,
-    study_name,
+    study_name: StudyName,
     clinic_specs_path,
     bids_ids,
     name_column_ids,
@@ -343,12 +352,6 @@ def create_scans_dict(
     prev_file = ""
     prev_sheet = ""
 
-    if study_name not in SUPPORTED_DATASETS:
-        raise ValueError(
-            f"Dataset {study_name} is not supported. "
-            f"Supported datasets are: {SUPPORTED_DATASETS}."
-        )
-
     # Init the dictionary with the subject ids
     for bids_id in bids_ids:
         scans_dict[bids_id] = dict()
@@ -368,12 +371,12 @@ def create_scans_dict(
     fields_mod = []
 
     # Extract the fields available and the corresponding bids name, location and type
-    for i in range(0, len(scans_specs[study_name])):
-        field = scans_specs[study_name][i]
+    for i in range(0, len(scans_specs[study_name.value])):
+        field = scans_specs[study_name.value][i]
         if not pd.isnull(field):
             fields_dataset.append(field)
             fields_bids.append(scans_specs["BIDS CLINICA"][i])
-            fields_location.append(scans_specs[study_name + " location"][i])
+            fields_location.append(scans_specs[f"{study_name.value} location"][i])
             fields_mod.append(scans_specs["Modalities related"][i])
 
     # For each field available extract the original name, extract from the file all the values and fill a data structure
@@ -404,7 +407,7 @@ def create_scans_dict(
                 # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
                 on_bad_lines = (  # noqa: E731
                     lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]
-                    if "flutemeta" in file_path and study_name == "AIBL"
+                    if "flutemeta" in file_path and study_name == StudyName.AIBL
                     else "error"
                 )
 
@@ -418,7 +421,7 @@ def create_scans_dict(
             prev_sheet = sheet
 
         for bids_id in bids_ids:
-            original_id = bids_id.replace("sub-" + study_name, "")
+            original_id = bids_id.replace(f"sub-{study_name.value}", "")
             for session_name in {"ses-" + key for key in ses_dict[bids_id].keys()}:
                 # When comparing sessions, remove the "-ses" prefix IF it exists
                 row_to_extract = file_to_read[
@@ -439,7 +442,7 @@ def create_scans_dict(
                     # Fill the dictionary with all the information
                     value = file_to_read.iloc[row_to_extract][fields_dataset[i]]
 
-                    if study_name == "AIBL":  # Deal with special format in AIBL
+                    if study_name == StudyName.AIBL:  # Deal with special format in AIBL
                         if value == "-4":
                             value = "n/a"
                         elif fields_bids[i] == "acq_time":
@@ -462,7 +465,7 @@ def create_scans_dict(
 
 
 def _write_bids_dataset_description(
-    study_name: str,
+    study_name: StudyName,
     bids_dir: Union[str, Path],
     bids_version: Optional[str] = None,
 ) -> None:
@@ -478,9 +481,9 @@ def _write_bids_dataset_description(
 
 
 def _write_readme(
-    study_name: str,
+    study_name: StudyName,
     data_dict: dict,
-    bids_dir: Union[str, Path],
+    bids_dir: Path,
 ) -> None:
     """Write `README` at the root of the BIDS directory."""
     from clinica.iotools.bids_readme import BIDSReadme
@@ -490,31 +493,30 @@ def _write_readme(
         link=data_dict["link"],
         description=data_dict["desc"],
     )
-
-    with open(Path(bids_dir) / "README", "w") as f:
+    with open(bids_dir / "README", "w") as f:
         bids_readme.write(to=f)
 
 
-def _write_bids_validator_config(bids_dir: Union[str, Path]) -> None:
+def _write_bids_validator_config(bids_dir: Path) -> None:
     """Write `.bids-validator-config.json` at the root of the BIDS directory."""
     import json
 
-    with open(Path(bids_dir) / ".bids-validator-config.json", "w") as f:
+    with open(bids_dir / ".bids-validator-config.json", "w") as f:
         json.dump(BIDS_VALIDATOR_CONFIG, f, skipkeys=True, indent=4)
 
 
-def _write_bidsignore(bids_dir: Union[str, Path]) -> None:
+def _write_bidsignore(bids_dir: Path) -> None:
     """Write `.bidsignore` file at the root of the BIDS directory."""
-    with open(Path(bids_dir) / ".bidsignore", "w") as f:
+    with open(bids_dir / ".bidsignore", "w") as f:
         # pet/ is necessary until PET is added to BIDS standard
         f.write("\n".join(["swi/\n"]))
         f.write("\n".join(["conversion_info/"]))
 
 
 def write_modality_agnostic_files(
-    study_name: str,
+    study_name: StudyName,
     readme_data: dict,
-    bids_dir: Union[str, Path],
+    bids_dir: Path,
     bids_version: Optional[str] = None,
 ) -> None:
     """

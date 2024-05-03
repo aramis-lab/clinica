@@ -1,8 +1,11 @@
 import os
+import re
 from pathlib import Path
 
 import pytest
 
+from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
+from clinica.utils.inputs import DatasetType
 from clinica.utils.testing_utils import (
     build_bids_directory,
     build_caps_directory,
@@ -260,9 +263,8 @@ def test_determine_caps_or_bids(tmp_path):
     assert determine_caps_or_bids(tmp_path)
 
 
-@pytest.mark.parametrize("folder_type", ["BIDS", "CAPS"])
+@pytest.mark.parametrize("folder_type", DatasetType)
 def test_validate_folder_existence(folder_type):
-    from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
     from clinica.utils.inputs import _validate_folder_existence
 
     with pytest.raises(
@@ -272,43 +274,82 @@ def test_validate_folder_existence(folder_type):
         _validate_folder_existence(1, folder_type)  # noqa
 
     with pytest.raises(
-        ClinicaBIDSError if folder_type == "BIDS" else ClinicaCAPSError,
-        match=f"The {folder_type} directory you gave is not a folder.",
+        ClinicaBIDSError if folder_type == DatasetType.BIDS else ClinicaCAPSError,
+        match=f"The {folder_type.value} directory you gave is not a folder.",
     ):
         _validate_folder_existence(Path("fooooo"), folder_type)
 
 
-def test_check_bids_folder(tmp_path):
-    from clinica.utils.exceptions import ClinicaBIDSError
+def test_check_bids_folder_missing_dataset_description_error(tmp_path):
     from clinica.utils.inputs import check_bids_folder
 
-    (tmp_path / "subjects").mkdir()
-    (tmp_path / "subjects" / "foo.txt").mkdir()
     with pytest.raises(
         ClinicaBIDSError,
-        match="The BIDS directory",
+        match=re.escape(
+            f"The BIDS directory ({tmp_path}) you provided is missing a dataset_description.json file."
+        ),
     ):
         check_bids_folder(tmp_path)
-    rmtree(tmp_path / "subjects")
-    (tmp_path / "data").mkdir()
+
+
+def test_check_bids_folder_mismatch_with_caps_error(tmp_path):
+    from clinica.utils.inputs import check_bids_folder
+
+    (tmp_path / "dataset_description.json").touch()
+    (tmp_path / "subjects").mkdir()
+
+    with pytest.raises(
+        ClinicaBIDSError,
+        match=re.escape(
+            f"The BIDS directory ({tmp_path}) you provided seems to be a CAPS "
+            "directory due to the presence of a 'subjects' folder."
+        ),
+    ):
+        check_bids_folder(tmp_path)
+
+
+def test_check_bids_folder_empty_error(tmp_path):
+    from clinica.utils.inputs import check_bids_folder
+
+    bids = tmp_path / "bids"
+    bids.mkdir()
+    (bids / "dataset_description.json").touch()
+
     with pytest.raises(
         ClinicaBIDSError,
         match="The BIDS directory you provided is empty.",
     ):
-        check_bids_folder(tmp_path / "data")
-    (tmp_path / "data" / "foo").mkdir()
+        check_bids_folder(bids)
+
+
+def test_check_bids_folder_no_subject_folder_error(tmp_path):
+    from clinica.utils.inputs import check_bids_folder
+
+    bids = tmp_path / "bids"
+    bids.mkdir()
+    (bids / "dataset_description.json").touch()
+    (bids / "foo").mkdir()
+
     with pytest.raises(
         ClinicaBIDSError,
         match="Your BIDS directory does not contains a single folder whose name",
     ):
-        check_bids_folder(tmp_path / "data")
-    (tmp_path / "data" / "sub-01").mkdir()
-    assert check_bids_folder(tmp_path / "data") is None
+        check_bids_folder(bids)
+
+
+def test_check_bids_folder(tmp_path):
+    from clinica.utils.inputs import check_bids_folder
+
+    bids = tmp_path / "bids"
+    bids.mkdir()
+    (bids / "dataset_description.json").touch()
+    (bids / "sub-01").mkdir()
+
+    assert check_bids_folder(bids) is None
 
 
 def test_check_caps_folder(tmp_path):
     """Test function `check_caps_folder`."""
-    from clinica.utils.exceptions import ClinicaCAPSError
     from clinica.utils.inputs import check_caps_folder
 
     (tmp_path / "subjects").mkdir()
@@ -470,7 +511,6 @@ def test_format_errors():
 @pytest.mark.parametrize("data_type", ["T1w", "flair"])
 def test_clinica_file_reader_bids_directory(tmp_path, data_type):
     """Test reading from a BIDS directory with function `clinica_file_reader`."""
-    from clinica.utils.exceptions import ClinicaBIDSError
     from clinica.utils.inputs import clinica_file_reader
 
     config = {
@@ -553,7 +593,6 @@ def test_clinica_file_reader_bids_directory(tmp_path, data_type):
 
 def test_clinica_file_reader_caps_directory(tmp_path):
     """Test reading from a CAPS directory with function `clinica_file_reader`."""
-    from clinica.utils.exceptions import ClinicaCAPSError
     from clinica.utils.inputs import clinica_file_reader
 
     config = {
@@ -645,7 +684,6 @@ def test_clinica_file_reader_caps_directory(tmp_path):
 
 
 def test_clinica_file_reader_dwi_dti_error(tmp_path):
-    from clinica.utils.exceptions import ClinicaCAPSError
     from clinica.utils.input_files import dwi_dti
     from clinica.utils.inputs import clinica_file_reader
 
@@ -693,7 +731,6 @@ def test_clinica_file_reader_dwi_dti(tmp_path):
 
 
 def test_clinica_list_of_files_reader(tmp_path):
-    from clinica.utils.exceptions import ClinicaBIDSError
     from clinica.utils.inputs import clinica_list_of_files_reader
 
     config = {
@@ -756,7 +793,6 @@ def test_clinica_list_of_files_reader(tmp_path):
 
 
 def test_clinica_group_reader(tmp_path):
-    from clinica.utils.exceptions import ClinicaCAPSError
     from clinica.utils.inputs import clinica_group_reader
 
     config = {
