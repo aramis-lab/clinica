@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from clinica.iotools.abstract_converter import Converter
 
@@ -11,22 +11,25 @@ def convert(
     bids_dir: Path,
     path_to_clinical: Path,
     clinical_data_only: bool = False,
-    subjects: Optional[Path] = None,
+    subjects: Optional[Union[str, Path]] = None,
     modalities: Optional[list[str]] = None,
-    xml_path: Optional[Path] = None,
+    xml_path: Optional[Union[str, Path]] = None,
     force_new_extraction: bool = False,
     n_procs: Optional[int] = 1,
 ):
+    from ..utils import validate_input_path
+
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
+    path_to_clinical = validate_input_path(path_to_clinical)
+    if xml_path:
+        xml_path = validate_input_path(xml_path)
+    if subjects:
+        subjects = validate_input_path(subjects)
+
     adni_to_bids = AdniToBids()
     adni_to_bids.check_adni_dependencies()
-    if not path_to_dataset.exists():
-        raise FileNotFoundError(
-            f"The provided dataset path {path_to_dataset} does not exist."
-        )
-    if not path_to_clinical.exists():
-        raise FileNotFoundError(
-            f"The provided path to clinical data {path_to_clinical} does not exist."
-        )
+
     if not clinical_data_only:
         adni_to_bids.convert_images(
             source_dir=path_to_dataset,

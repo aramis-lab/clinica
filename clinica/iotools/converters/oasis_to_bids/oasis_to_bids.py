@@ -18,6 +18,11 @@ def convert(
     n_procs: Optional[int] = 1,
     **kwargs,
 ):
+    from ..utils import validate_input_path
+
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
+    path_to_clinical = validate_input_path(path_to_clinical)
     OasisToBids().convert(
         path_to_dataset,
         bids_dir,

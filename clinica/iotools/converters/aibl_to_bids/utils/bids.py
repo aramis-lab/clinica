@@ -145,7 +145,7 @@ def paths_to_bids(
         images = _find_path_to_pet_modality(path_to_dataset, path_to_csv, modality)
 
     images.to_csv(
-        bids_dir / "conversion_info" / f"{modality}_paths.tsv",
+        bids_dir / "conversion_info" / f"{modality.value}_paths.tsv",
         index=False,
         sep="\t",
         encoding="utf-8",

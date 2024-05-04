@@ -43,6 +43,10 @@ def convert(
     *args,
     **kwargs,
 ):
+    from ..utils import validate_input_path
+
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
     clinical_data = {
         k: _read_clinical_data(path_to_dataset / p, c)
         for k, p, c in _find_clinical_data(path_to_dataset)

@@ -45,6 +45,11 @@ def convert(
     """
     from clinica.utils.check_dependency import ThirdPartySoftware, check_software
 
+    from ..utils import validate_input_path
+
+    input_dataset = validate_input_path(input_dataset)
+    output_dataset = validate_input_path(output_dataset, check_exist=False)
+    input_clinical_data = validate_input_path(input_clinical_data)
     check_software(ThirdPartySoftware.DCM2NIIX)
     output_dataset.mkdir(parents=True, exist_ok=True)
     if not clinical_data_only:

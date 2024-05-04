@@ -21,6 +21,7 @@ def convert(
     from clinica.utils.check_dependency import ThirdPartySoftware, check_software
     from clinica.utils.stream import cprint
 
+    from ..utils import validate_input_path
     from .nifd_utils import (
         dataset_to_bids,
         read_clinical_data,
@@ -28,6 +29,9 @@ def convert(
         write_bids,
     )
 
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
+    path_to_clinical = validate_input_path(path_to_clinical)
     check_software(ThirdPartySoftware.DCM2NIIX)
     clinical_data = read_clinical_data(path_to_clinical)
     imaging_data = read_imaging_data(path_to_dataset)

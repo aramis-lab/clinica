@@ -20,6 +20,7 @@ def convert(
     from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
     from clinica.utils.stream import cprint
 
+    from ..utils import validate_input_path
     from .oasis3_utils import (
         dataset_to_bids,
         intersect_data,
@@ -28,6 +29,9 @@ def convert(
         write_bids,
     )
 
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
+    path_to_clinical = validate_input_path(path_to_clinical)
     dict_df = read_clinical_data(path_to_clinical)
     imaging_data = read_imaging_data(path_to_dataset)
     imaging_data, df_small = intersect_data(imaging_data, dict_df)

@@ -43,6 +43,7 @@ def convert(
     from clinica.utils.check_dependency import ThirdPartySoftware, check_software
     from clinica.utils.stream import cprint
 
+    from ..utils import validate_input_path
     from .genfi_to_bids_utils import (
         merge_imaging_and_clinical_data,
         parse_clinical_data,
@@ -51,6 +52,11 @@ def convert(
         write_bids,
     )
 
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
+    path_to_clinical = validate_input_path(path_to_clinical)
+    if path_to_clinical_tsv:
+        path_to_clinical_tsv = validate_input_path(path_to_clinical_tsv)
     check_software(ThirdPartySoftware.DCM2NIIX)
     _check_clinical_path_inputs(path_to_clinical_tsv, path_to_clinical)
     imaging_data = parse_imaging_data(path_to_dataset)
