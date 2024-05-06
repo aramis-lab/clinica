@@ -2,6 +2,7 @@
 from os import PathLike
 from typing import List, Optional
 
+
 def convert_adni_t1(
     source_dir: PathLike,
     csv_dir: PathLike,
@@ -41,8 +42,8 @@ def convert_adni_t1(
     """
     from os import path
 
-    from pandas.io import parsers
     import pandas as pd
+    from pandas.io import parsers
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         load_clinical_csv,
@@ -58,6 +59,7 @@ def convert_adni_t1(
         f"Calculating paths of T1 images. Output will be stored in {conversion_dir}."
     )
     images = compute_t1_paths(source_dir, csv_dir, subjects, conversion_dir)
+    cprint("Paths of T1 images found. Exporting images into BIDS ...")
     paths_to_bids(
         images, destination_dir, "t1", mod_to_update=mod_to_update, n_procs=n_procs
     )
@@ -108,8 +110,11 @@ def compute_t1_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     mri_quality = load_clinical_csv(csv_dir, "MRIQUALITY")
     mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15")
 
+    # Keep only T1 scans
+    mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "T1"]
+
     # We will convert the images for each subject in the subject list
-    for subj in subjs_list:        
+    for subj in subjs_list:
         # Filter ADNIMERGE, MPRAGE METADATA and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")

@@ -164,7 +164,7 @@ def _compute_fmri_path(
 
         mri_list_subj = mri_list[mri_list.SUBJECT == subj]
         mri_list_subj = mri_list_subj.sort_values("SCANDATE")
-        
+
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
         # Obtain corresponding timepoints for the subject visits

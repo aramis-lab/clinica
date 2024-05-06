@@ -34,7 +34,7 @@ def convert_adni_flair(
     mod_to_update : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
-    
+
     n_procs : int, optional
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.

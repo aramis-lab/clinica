@@ -1119,8 +1119,8 @@ def create_adni_scans_files(conversion_path, bids_subjs_paths):
                     file_name = os.path.basename(file)
                     scans_df["filename"] = path.join(mod_name, file_name)
                     converted_mod = find_conversion_mod(file_name)
+                    conversion_df = converted_dict[converted_mod]
                     try:
-                        conversion_df = converted_dict[converted_mod]
                         scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
                         scans_df["scan_id"] = scan_id
                         if "Field_Strength" in conversion_df.columns.values:
@@ -1572,7 +1572,7 @@ def create_file(
                 if error_msg:
                     cprint(msg=error_msg, lvl="error")
                     raise ValueError(error_msg)
-                file_without_extension.with_: wqsuffix(".nii").unlink()
+                file_without_extension.with_suffix(".nii").unlink()
 
         else:
             if modality_specific[modality]["to_center"]:

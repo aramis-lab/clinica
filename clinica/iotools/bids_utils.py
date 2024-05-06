@@ -889,7 +889,7 @@ def run_dcm2niix(
 
     if completed_process.returncode != 0:
         if completed_process.stdout is not None:
-            output_message = completed_process.stdout.decode('utf-8')
+            output_message = completed_process.stdout.decode("utf-8")
         else:
             output_message = ""
         cprint(
@@ -898,7 +898,7 @@ def run_dcm2niix(
                 f"command: {' '.join(command)}\n"
                 f"{output_message}"
             ),
-            lvl="warning"
+            lvl="warning",
         )
         return False
     cprint(
