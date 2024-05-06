@@ -1,5 +1,7 @@
 from typing import List, Optional
+
 from clinica.iotools.abstract_converter import Converter
+
 
 def get_bids_subjs_info(
     clinical_data_dir: str,
@@ -41,7 +43,16 @@ class AdniToBids(Converter):
         Returns: a list containing the modalities supported by the converter
         (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI, FMAP)
         """
-        return ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI", "FMAP"]
+        return [
+            "T1",
+            "PET_FDG",
+            "PET_AMYLOID",
+            "PET_TAU",
+            "DWI",
+            "FLAIR",
+            "fMRI",
+            "FMAP",
+        ]
 
     @classmethod
     def check_adni_dependencies(cls) -> None:
@@ -192,16 +203,15 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_flair as adni_flair
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmap as adni_fmap
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
-        from clinica.utils.stream import cprint
-
         from clinica.iotools.converters.adni_to_bids.adni_utils import (
             load_clinical_csv,
         )
+        from clinica.utils.stream import cprint
 
         modalities = modalities or self.get_modalities_supported()
 
@@ -267,4 +277,3 @@ class AdniToBids(Converter):
                     mod_to_update=force_new_extraction,
                     n_procs=n_procs,
                 )
-
