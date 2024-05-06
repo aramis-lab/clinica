@@ -116,7 +116,6 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
 
     for subj in subjs_list:
-
         # PET images metadata for subject
         subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subj]
 

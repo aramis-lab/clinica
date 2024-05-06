@@ -119,7 +119,6 @@ def compute_dwi_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     ]
 
     for subj in subjs_list:
-    
         # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")

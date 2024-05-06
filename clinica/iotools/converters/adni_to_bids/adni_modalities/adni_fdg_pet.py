@@ -86,7 +86,6 @@ def _convert_adni_fdg_pet(
 
     import pandas as pd
 
-    
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         load_clinical_csv,
         paths_to_bids,
