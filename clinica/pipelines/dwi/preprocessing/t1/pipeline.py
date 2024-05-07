@@ -86,6 +86,49 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         """
         return ["preproc_dwi", "preproc_bvec", "preproc_bval", "b0_mask"]
 
+    def filter_qc(self) -> tuple[list[str], list[str]]:
+        from clinica.pipelines.dwi.preprocessing.utils import check_dwi_volume
+        from clinica.pipelines.dwi.utils import DWIDataset
+        from clinica.utils.bids import BIDSFileName
+        from clinica.utils.input_files import (
+            DWI_BVAL,
+            DWI_BVEC,
+            DWI_NII,
+        )
+        from clinica.utils.inputs import clinica_list_of_files_reader
+        from clinica.utils.stream import cprint
+
+        subjects = []
+        sessions = []
+        list_bids_files = clinica_list_of_files_reader(
+            self.subjects,
+            self.sessions,
+            self.bids_directory,
+            [DWI_NII, DWI_BVEC, DWI_BVAL],
+            raise_exception=True,
+        )
+        for files in list_bids_files:
+            dwi_image_file, b_vectors_file, b_values_file = files
+            dwi_image_file_bids = BIDSFileName.from_name(dwi_image_file)
+            try:
+                check_dwi_volume(
+                    DWIDataset(
+                        dwi=dwi_image_file,
+                        b_values=b_values_file,
+                        b_vectors=b_vectors_file,
+                    )
+                )
+                subjects.append(dwi_image_file_bids.subject)
+                sessions.append(dwi_image_file_bids.session)
+            except ValueError as e:
+                cprint(
+                    f"Ignoring DWI scan for subject {dwi_image_file_bids.subject} "
+                    f"and session {dwi_image_file_bids.session} for the following reason: {e}",
+                    lvl="warning",
+                )
+
+        return subjects, sessions
+
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil

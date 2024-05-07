@@ -477,9 +477,13 @@ class Pipeline(Workflow):
             use_session_tsv=False,
             tsv_dir=base_dir,
         )
+        self._subjects, self._sessions = self.filter_qc()
         self._input_node = None
         self._output_node = None
         self._init_nodes()
+
+    def filter_qc(self) -> tuple[list[str], list[str]]:
+        return self._subjects, self._sessions
 
     @property
     def base_dir_was_specified(self) -> bool:
