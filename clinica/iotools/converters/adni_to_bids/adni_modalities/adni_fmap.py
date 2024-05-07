@@ -175,6 +175,7 @@ def compute_fmap_path(
             ("016_S_6802", "bl"),
             ("016_S_6816", "bl"),
             ("126_S_4891", "m84"),
+            ("177_S_6448", "m24"),
             # Multiple images
             ("029_S_2395", "m72"),
         ]
@@ -250,6 +251,8 @@ def reorganize_fmaps(bids_path: Path):
     import re
     from pathlib import Path
 
+    from clinica.utils.stream import cprint
+
     bids_path = Path(bids_path)
 
     for file_path in bids_path.rglob(pattern=r"*.json"):
@@ -257,15 +260,20 @@ def reorganize_fmaps(bids_path: Path):
         if "fmap" in file_path.name:
             with open(file_path, "r") as f:
                 file_json = json.load(f)
-                bids_guess = file_json["BidsGuess"][-1]
+            if "BidsGuess" in file_json:
+                bids_guess = file_json["BidsGuess"][-1].split("_")[-1]
 
-            # todo : check if key exists, else what ?
-            # todo : to discuss if should take bids guess as is or cut it
-            # todo : can be applied to any img from dataset ?
+                cut = re.search(r"\S*_fmap", str_file_path).group(0)
+                os.rename(src=str_file_path, dst=cut + "_" + bids_guess + ".json")
+                os.rename(
+                    src=str_file_path.removesuffix(".json") + ".nii.gz",
+                    dst=cut + "_" + bids_guess + ".nii.gz",
+                )
 
-            cut = re.search(r"\S*_fmap", str_file_path).group(0)
-            os.rename(src=str_file_path, dst=cut + bids_guess + ".json")
-            os.rename(
-                src=str_file_path.removesuffix(".json") + ".nii.gz",
-                dst=cut + bids_guess + ".nii.gz",
-            )
+            else:
+                cprint(
+                    msg=f"The FMAP file {file_path.name} could not be renamed "
+                    f"since dcm2nix did not find any BIDS correspondence",
+                    lvl="warning",
+                )
+                # todo : adapt this bc breaks code later if suffix not usual
