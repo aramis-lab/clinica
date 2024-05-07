@@ -144,6 +144,7 @@ def _compute_fmri_path(
     mayo_mri_qc = pd.concat(
         [mayo_mri_qc, mayo_mri_qc3], axis=0, ignore_index=True, sort=False
     )
+
     mri_list = load_clinical_csv(csv_dir, "MRILIST")
 
     # Selecting fMRI images

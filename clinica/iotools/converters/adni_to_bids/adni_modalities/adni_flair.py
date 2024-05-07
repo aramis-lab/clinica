@@ -103,8 +103,9 @@ def compute_flair_paths(source_dir, csv_dir, subjs_list, conversion_dir):
     # Loading needed .csv files
     adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
     mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15")
-    mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "AFL"]
     mri_list = load_clinical_csv(csv_dir, "MRILIST")
+
+    mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "AFL"]
 
     # Selecting FLAIR DTI images that are not MPR
     mri_list = mri_list[mri_list.SEQUENCE.str.contains("flair", case=False, na=False)]

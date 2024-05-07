@@ -888,11 +888,15 @@ def run_dcm2niix(
     completed_process = subprocess.run(command, capture_output=True)
 
     if completed_process.returncode != 0:
+        if completed_process.stdout is not None:
+            output_message = completed_process.stdout.decode("utf-8")
+        else:
+            output_message = ""
         cprint(
             msg=(
                 "DICOM to BIDS conversion with dcm2niix failed:\n"
                 f"command: {' '.join(command)}\n"
-                f"{completed_process.stdout.decode('utf-8')}"
+                f"{output_message}"
             ),
             lvl="warning",
         )

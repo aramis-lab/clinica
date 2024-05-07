@@ -94,7 +94,6 @@ def _convert_adni_fdg_pet(
 
     if subjects is None:
         adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
-
         subjects = list(adni_merge.PTID.unique())
     cprint(
         "Calculating paths of FDG PET images. "
@@ -103,6 +102,7 @@ def _convert_adni_fdg_pet(
     images = _compute_fdg_pet_paths(
         source_dir, csv_dir, subjects, conversion_dir, preprocessing_step
     )
+
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
     modality = _get_modality_from_adni_preprocessing_step(preprocessing_step)
     paths_to_bids(
@@ -172,6 +172,7 @@ def _compute_fdg_pet_paths(
     from clinica.utils.pet import Tracer
 
     pet_fdg_df = _get_pet_fdg_df(Path(csv_dir), subjects, preprocessing_step)
+
     images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
     images.to_csv(
         Path(conversion_dir) / f"{Tracer.FDG.value}_pet_paths.tsv",
