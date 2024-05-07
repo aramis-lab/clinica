@@ -107,8 +107,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             [DWI_NII, DWI_BVEC, DWI_BVAL],
             raise_exception=True,
         )
-        for files in list_bids_files:
-            dwi_image_file, b_vectors_file, b_values_file = files
+        for dwi_image_file, b_vectors_file, b_values_file in zip(*list_bids_files):
             dwi_image_file_bids = BIDSFileName.from_name(dwi_image_file)
             try:
                 check_dwi_volume(
@@ -118,9 +117,9 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
                         b_vectors=b_vectors_file,
                     )
                 )
-                subjects.append(dwi_image_file_bids.subject)
-                sessions.append(dwi_image_file_bids.session)
-            except ValueError as e:
+                subjects.append(f"sub-{dwi_image_file_bids.subject}")
+                sessions.append(f"ses-{dwi_image_file_bids.session}")
+            except IOError as e:
                 cprint(
                     f"Ignoring DWI scan for subject {dwi_image_file_bids.subject} "
                     f"and session {dwi_image_file_bids.session} for the following reason: {e}",
