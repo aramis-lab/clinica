@@ -1163,6 +1163,8 @@ def find_conversion_mod(file_name):
         "phasediff",
         "magnitude1",
         "magnitude2",
+        "real",
+        "imaginary"
     ):
         return "fmap"
     elif suffix == "pet":
