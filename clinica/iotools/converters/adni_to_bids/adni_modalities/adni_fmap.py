@@ -217,7 +217,7 @@ def compute_fmap_path(
         fmap_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
-    images = find_image_path(fmap_df, source_dir, "FMAP", "S", "Series_ID")
+    images = find_image_path(fmap_df, source_dir, "FMAP")
     images.to_csv(conversion_dir / "fmap_paths.tsv", sep="\t", index=False)
 
     return images
