@@ -1164,7 +1164,7 @@ def find_conversion_mod(file_name):
         "magnitude1",
         "magnitude2",
     ):
-        return "fmap"
+        return "fmap"  # todo :verify what that does
     elif suffix == "pet":
         tracer = file_name.split("trc-")[1].split("_")[0]
         if tracer in (Tracer.AV45, Tracer.FBB):
@@ -1453,6 +1453,8 @@ def create_file(
     image_id = image.Image_ID
     # If the original image is a DICOM, check if contains two DICOM inside the same folder
     if image.Is_Dicom:
+        cprint(msg="cprint : image is dicom !!", lvl="info")
+        print("print: image is dicom !")
         image_path = check_two_dcm_folder(image_path, str(bids_dir), image_id)
     bids_subj = subject.replace("_", "")
     output_path = (
@@ -1491,28 +1493,13 @@ def create_file(
     output_image = file_without_extension.with_suffix(".nii.gz")
 
     if image.Is_Dicom:
-        if modality == "fmap":
-            success = all(
-                [
-                    run_dcm2niix(
-                        input_dir=fmap_image_path,
-                        output_dir=output_path,
-                        output_fmt=output_filename,
-                        compress=True if zip_image == "y" else False,
-                        bids_sidecar=True if generate_json == "y" else False,
-                    )
-                    for fmap_image_path in Path(image_path).parent.iterdir()
-                    if not fmap_image_path.name.startswith(".")
-                ]
-            )
-        else:
-            success = run_dcm2niix(
-                input_dir=image_path,
-                output_dir=output_path,
-                output_fmt=output_filename,
-                compress=True if zip_image == "y" else False,
-                bids_sidecar=True if generate_json == "y" else False,
-            )
+        success = run_dcm2niix(
+            input_dir=image_path if modality != "fmap" else Path(image_path).parent,
+            output_dir=output_path,
+            output_fmt=output_filename,
+            compress=True if zip_image == "y" else False,
+            bids_sidecar=True if generate_json == "y" else False,
+        )
         if not success:
             cprint(
                 f"Error converting image {image_path} for subject {subject} and session {session}",
@@ -1695,6 +1682,7 @@ def session_label_to_viscode(session_name: str) -> str:
         return f"m{(int(session_name[1:])):02d}"
 
 
+# todo : check following func works properly
 def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     """[summary].
 
