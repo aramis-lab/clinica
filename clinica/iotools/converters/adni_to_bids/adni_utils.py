@@ -1356,7 +1356,7 @@ def create_file(
     # Note that logging messages could easily be lost (for example when logging
     # to a file from two different processes). A better solution would be to
     # implement a logging process consuming logging messages from a multiprocessing.Queue...
-    setup_clinica_logging("DEBUG")
+    setup_clinica_logging("INFO")
 
     modality_specific = {
         "t1": {
