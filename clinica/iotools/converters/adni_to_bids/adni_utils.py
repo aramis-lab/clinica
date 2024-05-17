@@ -1453,8 +1453,6 @@ def create_file(
     image_id = image.Image_ID
     # If the original image is a DICOM, check if contains two DICOM inside the same folder
     if image.Is_Dicom:
-        cprint(msg="cprint : image is dicom !!", lvl="info")
-        print("print: image is dicom !")
         image_path = check_two_dcm_folder(image_path, str(bids_dir), image_id)
     bids_subj = subject.replace("_", "")
     output_path = (
