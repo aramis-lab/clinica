@@ -1344,11 +1344,19 @@ def create_file(
 
     import numpy as np
 
+    from clinica.cmdline import setup_clinica_logging
     from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.pet import ReconstructionMethod, Tracer
     from clinica.utils.stream import cprint
+
+    # This function is executed in a multiprocessing context
+    # such that we need to re-configure the clinica logger in the child processes.
+    # Note that logging messages could easily be lost (for example when logging
+    # to a file from two different processes). A better solution would be to
+    # implement a logging process consuming logging messages from a multiprocessing.Queue...
+    setup_clinica_logging("INFO")
 
     modality_specific = {
         "t1": {

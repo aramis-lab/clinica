@@ -32,29 +32,24 @@ def setup_logging(verbose: bool = False) -> None:
             (0 (default): WARNING, 1: INFO, 2: DEBUG)
     """
     import logging
-    import sys
-    from logging.handlers import RotatingFileHandler as RFHandler
-
-    import nipype
-    from colorlog import ColoredFormatter, StreamHandler
 
     logging_level = "DEBUG" if verbose else "INFO"
-
     # Root logger configuration.
     root_logger = logging.getLogger()
     root_logger.setLevel(logging_level)
-
     # Clinica logger configuration.
-    clinica_logger = logging.getLogger("clinica")
-    clinica_logger.setLevel(logging_level)
-    console_handler = StreamHandler(stream=sys.stdout)
-    console_handler.setFormatter(
-        ColoredFormatter("%(log_color)s%(asctime)s:%(levelname)s:%(message)s")
-    )
-    clinica_logger.addHandler(console_handler)
-
+    setup_clinica_logging(logging_level)
     # Nipype logger configuration.
-    # Monkey-patch nipype to use Python's RFH logger.
+    setup_nipype_logging()
+
+
+def setup_nipype_logging():
+    """Monkey-patch nipype to use Python's RFH logger."""
+    import logging
+    from logging.handlers import RotatingFileHandler as RFHandler
+
+    import nipype
+
     nipype.utils.logger.RFHandler = RFHandler
     # Setup debug logging to file.
     nipype.config.enable_debug_mode()
@@ -72,6 +67,21 @@ def setup_logging(verbose: bool = False) -> None:
     nipype_logger = logging.getLogger("nipype")
     nipype_logger.removeHandler(nipype_logger.handlers[0])
     nipype_logger.addHandler(logging.NullHandler())
+
+
+def setup_clinica_logging(logging_level: str):
+    import logging
+    import sys
+
+    from colorlog import ColoredFormatter, StreamHandler
+
+    clinica_logger = logging.getLogger("clinica")
+    clinica_logger.setLevel(logging_level)
+    console_handler = StreamHandler(stream=sys.stdout)
+    console_handler.setFormatter(
+        ColoredFormatter("%(log_color)s%(asctime)s:%(levelname)s:%(message)s")
+    )
+    clinica_logger.addHandler(console_handler)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
