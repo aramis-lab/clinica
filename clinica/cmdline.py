@@ -76,12 +76,23 @@ def setup_clinica_logging(logging_level: str):
     from colorlog import ColoredFormatter, StreamHandler
 
     clinica_logger = logging.getLogger("clinica")
-    clinica_logger.setLevel(logging_level)
-    console_handler = StreamHandler(stream=sys.stdout)
-    console_handler.setFormatter(
-        ColoredFormatter("%(log_color)s%(asctime)s:%(levelname)s:%(message)s")
-    )
-    clinica_logger.addHandler(console_handler)
+    if not clinica_logger.level:
+        clinica_logger.setLevel(logging_level)
+    if (
+        len(
+            [
+                handler
+                for handler in clinica_logger.handlers
+                if isinstance(handler, StreamHandler)
+            ]
+        )
+        == 0
+    ):
+        console_handler = StreamHandler(stream=sys.stdout)
+        console_handler.setFormatter(
+            ColoredFormatter("%(log_color)s%(asctime)s:%(levelname)s:%(message)s")
+        )
+        clinica_logger.addHandler(console_handler)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
