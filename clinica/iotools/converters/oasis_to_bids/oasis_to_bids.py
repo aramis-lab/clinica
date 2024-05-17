@@ -202,7 +202,11 @@ class OasisToBids(Converter):
             for path in Path(source_dir).rglob("OAS1_*")
             if path.is_dir() and path.name.endswith("_MR1")
         ]
-
-        with Pool(processes=n_procs) as pool:
-            func = partial(self.convert_single_subject, dest_dir=dest_dir)
-            pool.map(func, subjs_folders)
+        func = partial(self.convert_single_subject, dest_dir=dest_dir)
+        # If n_procs==1 do not rely on a Process Pool to enable classical debugging
+        if n_procs == 1:
+            for folder in subjs_folders:
+                func(folder)
+        else:
+            with Pool(processes=n_procs) as pool:
+                pool.map(func, subjs_folders)
