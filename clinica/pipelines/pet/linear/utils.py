@@ -1,15 +1,21 @@
-# Functions used by nipype interface.
-import os
+from pathlib import Path
+from typing import Optional, Tuple
 
-from nibabel.nifti1 import Nifti1Image
+__all__ = [
+    "init_input_node",
+    "concatenate_transforms",
+    "perform_suvr_normalization",
+    "crop_nifti_image",
+    "rename_into_caps",
+    "print_end_pipeline",
+]
 
 
-def init_input_node(pet):
+def init_input_node(pet: str) -> str:
     """Initiate the pipeline."""
     from clinica.utils.filemanip import get_subject_id
     from clinica.utils.ux import print_begin_image
 
-    # Extract image ID
     image_id = get_subject_id(pet)
     print_begin_image(image_id)
     return pet
@@ -36,12 +42,11 @@ def concatenate_transforms(
     return [t1w_to_mni_transform, pet_to_t1w_transform]
 
 
-# Normalize the images based on the reference mask region
-def suvr_normalization(
-    input_img: str,
-    norm_img: str,
-    ref_mask: str,
-) -> str:
+def perform_suvr_normalization(
+    pet_image_path: Path,
+    normalizing_image_path: Path,
+    reference_mask_path: Path,
+) -> Path:
     """Normalize the input image according to the reference region.
 
     It uses nilearn `resample_to_img` and scipy `trim_mean` functions.
@@ -50,67 +55,68 @@ def suvr_normalization(
 
     Parameters
     ----------
-    input_img : str
-        Path to the image to be processed.
+    pet_image_path : Path
+        The path to the image to be processed.
 
-    norm_img : str
-        Path to the image used to compute the mean of the reference region.
+    normalizing_image_path : Path
+        The path to the image used to compute the mean of the reference region.
 
-    ref_mask : str
-        Path to the mask of the reference region.
+    reference_mask_path : Path
+        The path to the mask of the reference region.
 
     Returns
     -------
-    output_img : str
-        Path to the normalized nifti image.
+    output_img : Path
+        The path to the normalized nifti image.
     """
-    import os
-
     import nibabel as nib
     import numpy as np
     from nilearn.image import resample_to_img
     from scipy.stats import trim_mean
 
-    pet = nib.load(input_img)
-    norm = nib.load(norm_img)
-    mask = nib.load(ref_mask)
+    from clinica.utils.filemanip import get_filename_no_ext
+    from clinica.utils.stream import cprint
+
+    pet_image = nib.load(pet_image_path)
+    normalizing_image = nib.load(normalizing_image_path)
+    reference_mask = nib.load(reference_mask_path)
 
     # Downsample the pet image used for normalization so we can multiply it with the mask
-    ds_img = resample_to_img(norm, mask, interpolation="nearest")
+    down_sampled_image = resample_to_img(
+        normalizing_image, reference_mask, interpolation="nearest"
+    )
 
     # Compute the mean of the region
-    region = np.multiply(ds_img.get_fdata(), mask.get_fdata(dtype="float32"))
+    region = np.multiply(
+        down_sampled_image.get_fdata(), reference_mask.get_fdata(dtype="float32")
+    )
     array_region = np.where(region != 0, region, np.nan).flatten()
     region_mean = trim_mean(array_region[~np.isnan(array_region)], 0.1)
 
-    from clinica.utils.stream import cprint
-
-    cprint(region_mean)
+    cprint(region_mean, lvl="info")
 
     # Divide the value of the image voxels by the computed mean
-    data = pet.get_fdata(dtype="float32") / region_mean
+    data = pet_image.get_fdata(dtype="float32") / region_mean
 
     # Create and save the normalized image
-    output_img = os.path.join(
-        os.getcwd(),
-        os.path.basename(input_img).split(".nii")[0] + "_suvr_normalized.nii.gz",
+    output_image = (
+        Path.cwd() / f"{get_filename_no_ext(pet_image_path)}_suvr_normalized.nii.gz"
     )
+    normalized_img = nib.Nifti1Image(data, pet_image.affine, header=pet_image.header)
+    normalized_img.to_filename(output_image)
 
-    normalized_img = nib.Nifti1Image(data, pet.affine, header=pet.header)
-    normalized_img.to_filename(output_img)
-
-    return output_img
+    return output_image
 
 
 def rename_into_caps(
-    pet_filename_bids: str,
-    pet_filename_raw: str,
-    transformation_filename_raw: str,
+    pet_bids_image_filename: Path,
+    pet_preprocessed_image_filename: Path,
+    pet_to_mri_transformation_filename: Path,
     suvr_reference_region: str,
     uncropped_image: bool,
-    pet_filename_in_t1w_raw: str = None,
-    output_dir: str = None,
-):
+    pet_filename_in_t1w_raw: Optional[Path] = None,
+    output_dir: Optional[Path] = None,
+) -> Tuple[Path, Path, Optional[Path]]:
     """
     Rename the outputs of the pipelines into CAPS format.
 
@@ -122,15 +128,15 @@ def rename_into_caps(
 
     Parameters
     ----------
-    pet_filename_bids : str
+    pet_bids_image_filename : Path
         Input PET image file from the BIDS dataset.
         This file is used to extract the entities from the source
         file like subject, session, run, tracer...
 
-    pet_filename_raw : str
+    pet_preprocessed_image_filename : Path
         Preprocessed PET file as outputted by Nipype.
 
-    transformation_filename_raw : str
+    pet_to_mri_transformation_filename : Path
         Transformation file from PET to MRI space as outputted by Nipype.
 
     suvr_reference_region : str
@@ -155,33 +161,29 @@ def rename_into_caps(
 
     Returns
     -------
-    pet_filename_caps : str
+    pet_filename_caps : Path
         The renamed preprocessed PET file to match CAPS conventions.
 
-    transformation_filename_caps : str
+    transformation_filename_caps : Path
         The transformation file from PET to MRI space renamed to match CAPS conventions.
 
-    pet_filename_in_t1w_caps : str or None
+    pet_filename_in_t1w_caps : Path or None
         Intermediate PET in T1w MRI space renamed to match CAPS conventions.
         If 'pet_filename_in_t1w_raw' is None, this will be None.
     """
-    import os
-
-    from clinica.pipelines.pet_linear.pet_linear_utils import (  # noqa
-        _get_bids_entities_without_suffix,
-        _rename_intermediate_pet_in_t1w_space_into_caps,
-        _rename_pet_into_caps,
-        _rename_transformation_into_caps,
+    bids_entities = _get_bids_entities_without_suffix(
+        pet_bids_image_filename, suffix="pet"
     )
-
-    bids_entities = _get_bids_entities_without_suffix(pet_filename_bids, suffix="pet")
     if output_dir:
-        bids_entities = os.path.join(output_dir, bids_entities)
+        bids_entities = str(output_dir / bids_entities)
     pet_filename_caps = _rename_pet_into_caps(
-        bids_entities, pet_filename_raw, not uncropped_image, suvr_reference_region
+        bids_entities,
+        pet_preprocessed_image_filename,
+        not uncropped_image,
+        suvr_reference_region,
     )
     transformation_filename_caps = _rename_transformation_into_caps(
-        bids_entities, transformation_filename_raw
+        bids_entities, pet_to_mri_transformation_filename
     )
     pet_filename_in_t1w_caps = None
     if pet_filename_in_t1w_raw is not None:
@@ -192,44 +194,41 @@ def rename_into_caps(
     return pet_filename_caps, transformation_filename_caps, pet_filename_in_t1w_caps
 
 
-def _get_bids_entities_without_suffix(filename: str, suffix: str) -> str:
+def _get_bids_entities_without_suffix(filename: Path, suffix: str) -> str:
     """Return the BIDS entities without the suffix from a BIDS path."""
-    from nipype.utils.filemanip import split_filename
-
-    _, stem, _ = split_filename(filename)
-    return stem.rstrip(f"_{suffix}")
+    return filename.stem.rstrip(f"_{suffix}")
 
 
 def _rename_pet_into_caps(
-    entities: str, filename: str, cropped: bool, suvr_reference_region: str
-) -> str:
+    entities: str, filename: Path, cropped: bool, suvr_reference_region: str
+) -> Path:
     """Rename into CAPS PET."""
     return _rename(
         filename, entities, _get_pet_bids_components(cropped, suvr_reference_region)
     )
 
 
-def _rename_transformation_into_caps(entities: str, filename: str) -> str:
+def _rename_transformation_into_caps(entities: str, filename: Path) -> Path:
     """Rename into CAPS transformation file."""
     return _rename(filename, entities, "_space-T1w_rigid.mat")
 
 
 def _rename_intermediate_pet_in_t1w_space_into_caps(
-    entities: str, filename: str
-) -> str:
+    entities: str, filename: Path
+) -> Path:
     """Rename intermediate PET in T1w MRI space."""
     return _rename(filename, entities, "_space-T1w_pet.nii.gz")
 
 
-def _rename(filename: str, entities: str, suffix: str):
+def _rename(filename: Path, entities: str, suffix: str) -> Path:
     """Rename 'filename' into '{entities}{suffix}'."""
     from nipype.interfaces.utility import Rename
 
     rename = Rename()
-    rename.inputs.in_file = filename
-    rename.inputs.format_string = entities + suffix
+    rename.inputs.in_file = str(filename)
+    rename.inputs.format_string = f"{entities}{suffix}"
 
-    return rename.run().outputs.out_file
+    return Path(rename.run().outputs.out_file)
 
 
 def _get_pet_bids_components(cropped: bool, suvr_reference_region: str) -> str:
@@ -244,7 +243,7 @@ def _get_pet_bids_components(cropped: bool, suvr_reference_region: str) -> str:
     return f"{space}{desc}{resolution}{suvr}_pet.nii.gz"
 
 
-def print_end_pipeline(pet, final_file):
+def print_end_pipeline(pet: str, final_file):
     """
     Display end message for <subject_id> when <final_file> is connected.
     """

@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import click
 
@@ -92,8 +92,9 @@ def cli(
     """
     from networkx import Graph
 
-    from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
     from clinica.utils.ux import print_end_pipeline
+
+    from .pipeline import PETVolume
 
     parameters = {
         "group_label": group_label,

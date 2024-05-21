@@ -6,7 +6,7 @@ from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 
-pipeline_name = "pet-linear"
+pipeline_name = "pet-surface"
 
 
 @clinica_pipeline
@@ -15,23 +15,12 @@ pipeline_name = "pet-linear"
 @cli_param.argument.caps_directory
 @cli_param.argument.acq_label
 @cli_param.argument.suvr_reference_region
-@cli_param.option_group.pipeline_specific_options
-@cli_param.option.reconstruction_method
-@cli_param.option.option(
-    "-ui",
-    "--uncropped_image",
-    is_flag=True,
-    help="Do not crop the image with template (cropped image are suggested for using with DL models)",
-)
-@cli_param.option.option(
-    "--save_pet_in_t1w_space",
-    is_flag=True,
-    help="Save the PET image in the T1w space computed in the intermediate step of the pipeline",
-)
-@cli_param.option.random_seed
+@cli_param.argument.pvc_psf_tsv
 @cli_param.option_group.common_pipelines_options
+@cli_param.option.reconstruction_method
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
+@cli_param.option.yes
 @option.global_option_group
 @option.n_procs
 def cli(
@@ -39,42 +28,43 @@ def cli(
     caps_directory: str,
     acq_label: str,
     suvr_reference_region: str,
+    pvc_psf_tsv: str,
     reconstruction_method: Optional[str] = None,
-    uncropped_image: bool = False,
-    save_pet_in_t1w_space: bool = False,
-    random_seed: Optional[int] = None,
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    yes: bool = False,
 ) -> None:
-    """Affine registration of PET images to the MNI standard space.
+    """Surface-based processing of PET images.
 
-       ACQ_LABEL corresponds the label given to the PET acquisition, specifying the tracer used.
+       ACQ_LABEL corresponds to the label given to the PET acquisition, specifying the tracer used.
     Frequently used values are '18FFDG' or '18FAV45'.
 
        The reference region must be specified to perform intensity normalization.
     Accepted values include: 'pons', 'cerebellumPons', 'pons2', 'cerebellumPons2'.
 
-    Prerequisite: You need to have performed the t1-linear pipeline on your T1-weighted MR images.
+       PVC_PSF_TSV is the TSV file containing the psf_x, psf_y and psf_z of the PSF for each PET image.
 
-    See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Linear/"
+    Prerequisite: You need to have performed the t1-freesurfer pipeline on your T1-weighted MR images.
+
+    See https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/PET_Surface/
     """
     from networkx import Graph
 
     from clinica.utils.ux import print_end_pipeline
 
-    from .pet_linear_pipeline import PETLinear
+    from .pipeline import PetSurface
 
     parameters = {
         "acq_label": acq_label,
         "suvr_reference_region": suvr_reference_region,
         "reconstruction_method": reconstruction_method,
-        "uncropped_image": uncropped_image,
-        "save_PETinT1w": save_pet_in_t1w_space,
-        "random_seed": random_seed,
+        "pvc_psf_tsv": pvc_psf_tsv,
+        "longitudinal": False,
+        "skip_question": yes,
     }
 
-    pipeline = PETLinear(
+    pipeline = PetSurface(
         bids_directory=bids_directory,
         caps_directory=caps_directory,
         tsv_file=subjects_sessions_tsv,
