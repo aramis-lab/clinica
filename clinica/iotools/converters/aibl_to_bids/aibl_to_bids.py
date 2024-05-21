@@ -2,7 +2,7 @@
 Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 """
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 __all__ = ["convert"]
 
@@ -13,6 +13,7 @@ def convert(
     input_clinical_data: Path,
     overwrite: bool = False,
     clinical_data_only: bool = False,
+    subjects: Optional[Union[str, Path]] = None,
     n_procs: Optional[int] = 1,
     **kwargs,
 ) -> None:
@@ -38,12 +39,19 @@ def convert(
         If False, everything is converted.
         Default=False.
 
+    subjects : str or Path, optional
+        The path to a file defining a subset of subjects to be converted.
+        By default, all subjects available will be converted.
+
     n_procs : int, optional
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
+    from clinica.iotools.bids_utils import StudyName
+    from clinica.iotools.converters.factory import get_converter_name
     from clinica.utils.check_dependency import ThirdPartySoftware, check_software
+    from clinica.utils.stream import cprint
 
     from ..utils import validate_input_path
 
@@ -51,6 +59,14 @@ def convert(
     output_dataset = validate_input_path(output_dataset, check_exist=False)
     input_clinical_data = validate_input_path(input_clinical_data)
     check_software(ThirdPartySoftware.DCM2NIIX)
+    if subjects:
+        cprint(
+            (
+                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.AIBL)} converter. "
+                "All subjects available will be converted."
+            ),
+            lvl="warning",
+        )
     output_dataset.mkdir(parents=True, exist_ok=True)
     if not clinical_data_only:
         _convert_images(
@@ -144,12 +160,14 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
 
     clinical_specifications_folder = Path(__file__).parents[1] / "specifications"
     if not clinical_specifications_folder.exists():
-        raise FileNotFoundError(
+        msg = (
             f"{clinical_specifications_folder} folder cannot be found ! "
             "This is an internal folder of Clinica."
         )
+        cprint(msg, lvl="error")
+        raise FileNotFoundError(msg)
 
-    cprint("Creating modality agnostic files...")
+    cprint("Creating modality agnostic files...", lvl="info")
     readme_data = {
         "link": "http://adni.loni.usc.edu/study-design/collaborative-studies/aibl/",
         "desc": (
@@ -163,18 +181,18 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
         readme_data=readme_data,
         bids_dir=output_dataset,
     )
-    cprint("Creating participants.tsv...")
+    cprint("Creating participants.tsv...", lvl="info")
     create_participants_tsv_file(
         output_dataset,
         clinical_specifications_folder,
         input_clinical_data,
         delete_non_bids_info=True,
     )
-    cprint("Creating sessions files...")
+    cprint("Creating sessions files...", lvl="info")
     create_sessions_tsv_file(
         output_dataset, input_clinical_data, clinical_specifications_folder
     )
-    cprint("Creating scans files...")
+    cprint("Creating scans files...", lvl="info")
     create_scans_tsv_file(
         output_dataset, input_clinical_data, clinical_specifications_folder
     )

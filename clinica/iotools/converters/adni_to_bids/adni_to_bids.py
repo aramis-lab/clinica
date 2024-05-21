@@ -110,7 +110,9 @@ class AdniToBids(Converter):
 
         clinical_specifications_folder = Path(__file__).parents[0] / "specifications"
         if not out_path.exists():
-            raise IOError("BIDS folder not found.")
+            msg = f"BIDS folder {out_path} not found."
+            cprint(msg, lvl="error")
+            raise FileNotFoundError(msg)
         conversion_path = out_path / "conversion_info"
 
         if clinical_data_only:
@@ -124,7 +126,7 @@ class AdniToBids(Converter):
             bids_subjects_paths = get_bids_subjs_paths(out_path)
 
         # -- Creation of modality agnostic files --
-        cprint("Creating modality agnostic files...")
+        cprint("Creating modality agnostic files...", lvl="info")
         readme_data = {
             "link": "http://adni.loni.usc.edu",
             "desc": (
@@ -142,7 +144,7 @@ class AdniToBids(Converter):
             bids_dir=out_path,
         )
         # -- Creation of participant.tsv --
-        cprint("Creating participants.tsv...")
+        cprint("Creating participants.tsv...", lvl="info")
         participants_df = create_participants_df(
             StudyName.ADNI,
             clinical_specifications_folder,
@@ -162,7 +164,7 @@ class AdniToBids(Converter):
             encoding="utf-8",
         )
         # -- Creation of sessions.tsv --
-        cprint("Creating sessions files...")
+        cprint("Creating sessions files...", lvl="info")
         create_adni_sessions_dict(
             bids_ids,
             clinical_specifications_folder,
@@ -171,7 +173,7 @@ class AdniToBids(Converter):
         )
         # -- Creation of scans files --
         if conversion_path.exists():
-            cprint("Creating scans files...")
+            cprint("Creating scans files...", lvl="info")
             create_adni_scans_files(conversion_path, bids_subjects_paths)
 
         if xml_path is not None:
@@ -206,8 +208,6 @@ class AdniToBids(Converter):
             modalities: modalities to convert (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
             force_new_extraction: if given pre-existing images in the BIDS directory will be erased and extracted again.
         """
-        from copy import copy
-
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
@@ -221,7 +221,6 @@ class AdniToBids(Converter):
         from clinica.utils.stream import cprint
 
         modalities = modalities or self.get_modalities_supported()
-        adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
         subjects = get_subjects_list(source_dir, clinical_dir, subjs_list_path)
 
         # Create the output folder if is not already existing
@@ -250,7 +249,9 @@ class AdniToBids(Converter):
 
         for modality in modalities:
             if modality not in converters:
-                raise Exception(f"{modality} is not a valid input modality")
+                msg = f"{modality} is not a valid input modality"
+                cprint(msg, lvl="error")
+                raise ValueError(msg)
             for converter in converters[modality]:
                 converter(
                     source_dir=source_dir,

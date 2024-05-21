@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Union
 
 import pandas as pd
 
@@ -41,12 +41,31 @@ def convert(
     path_to_dataset: Path,
     bids_dir: Path,
     *args,
+    subjects: Optional[Union[str, Path]] = None,
+    n_procs: Optional[int] = 1,
     **kwargs,
 ):
+    from clinica.iotools.bids_utils import StudyName
+    from clinica.iotools.converters.factory import get_converter_name
+    from clinica.utils.stream import cprint
+
     from ..utils import validate_input_path
 
     path_to_dataset = validate_input_path(path_to_dataset)
     bids_dir = validate_input_path(bids_dir, check_exist=False)
+    if subjects:
+        cprint(
+            (
+                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.HABS)} converter. "
+                "All subjects available will be converted."
+            ),
+            lvl="warning",
+        )
+    if n_procs != 1:
+        cprint(
+            f"{get_converter_name(StudyName.HABS)} converter does not support multiprocessing yet. n_procs set to 1.",
+            lvl="warning",
+        )
     clinical_data = {
         k: _read_clinical_data(path_to_dataset / p, c)
         for k, p, c in _find_clinical_data(path_to_dataset)

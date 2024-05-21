@@ -1,7 +1,7 @@
 """Convert the GENFI dataset into BIDS."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 __all__ = ["convert"]
 
@@ -12,6 +12,8 @@ def convert(
     path_to_clinical: Optional[Path] = None,
     gif: Optional[bool] = False,
     path_to_clinical_tsv: Optional[Path] = None,
+    subjects: Optional[Union[str, Path]] = None,
+    n_procs: Optional[int] = 1,
     **kwargs,
 ) -> None:
     """Convert the entire dataset to BIDS.
@@ -38,8 +40,18 @@ def convert(
     path_to_clinical_tsv: Path, optional
         The path to a TSV file containing the additional data the user wants to have in the BIDS output.
         If None, no additional data will be added.
+
+    subjects : str or Path, optional
+        The path to a file defining a subset of subjects to be converted.
+        By default, all subjects available will be converted.
+
+    n_procs : int, optional
+        The requested number of processes.
+        If specified, it should be between 1 and the number of available CPUs.
+        Default=1.
     """
     from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
+    from clinica.iotools.converters.factory import get_converter_name
     from clinica.utils.check_dependency import ThirdPartySoftware, check_software
     from clinica.utils.stream import cprint
 
@@ -59,6 +71,19 @@ def convert(
         path_to_clinical_tsv = validate_input_path(path_to_clinical_tsv)
     check_software(ThirdPartySoftware.DCM2NIIX)
     _check_clinical_path_inputs(path_to_clinical_tsv, path_to_clinical)
+    if subjects:
+        cprint(
+            (
+                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.GENFI)} converter. "
+                "All subjects available will be converted."
+            ),
+            lvl="warning",
+        )
+    if n_procs != 1:
+        cprint(
+            f"{get_converter_name(StudyName.GENFI)} converter does not support multiprocessing yet. n_procs set to 1.",
+            lvl="warning",
+        )
     imaging_data = parse_imaging_data(path_to_dataset)
     if path_to_clinical:
         clinical_data = parse_clinical_data(path_to_clinical)
@@ -78,19 +103,25 @@ def convert(
         },
         bids_dir=bids_dir,
     )
-    cprint("Conversion to BIDS succeeded.")
+    cprint("Conversion to BIDS succeeded.", lvl="info")
 
 
 def _check_clinical_path_inputs(path_to_clinical_tsv: Path, path_to_clinical: Path):
     """Check that if a clinical tsv is given, a path to the clinical data is given as well."""
+    from clinica.iotools.bids_utils import StudyName
+    from clinica.iotools.converters.factory import get_converter_name
+    from clinica.utils.stream import cprint
+
     if path_to_clinical_tsv and not path_to_clinical:
-        raise ValueError(
-            "The Genfi2BIDS converter is unable to convert the clinical data because "
+        msg = (
+            f"The {get_converter_name(StudyName.GENFI)} converter is unable to convert the clinical data because "
             "the path to these data was not provided while a TSV file with additional "
             f"data was given ({path_to_clinical_tsv}). You can either use the appropriate "
             "option from the clinica command line interface to provide the missing path, "
             "or chose to not convert clinical data at all."
         )
+        cprint(msg, lvl="error")
+        raise ValueError(msg)
 
 
 def _get_link() -> str:

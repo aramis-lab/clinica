@@ -1,6 +1,7 @@
 """Convert the OASIS3 dataset into BIDS."""
 
 from pathlib import Path
+from typing import Optional, Union
 
 __all__ = ["convert"]
 
@@ -9,6 +10,8 @@ def convert(
     path_to_dataset: Path,
     bids_dir: Path,
     path_to_clinical: Path,
+    subjects: Optional[Union[str, Path]] = None,
+    n_procs: Optional[int] = 1,
     **kwargs,
 ):
     """Convert the entire dataset in BIDS.
@@ -18,6 +21,7 @@ def convert(
     converts the image with the highest quality for each category.
     """
     from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
+    from clinica.iotools.converters.factory import get_converter_name
     from clinica.utils.stream import cprint
 
     from ..utils import validate_input_path
@@ -32,6 +36,19 @@ def convert(
     path_to_dataset = validate_input_path(path_to_dataset)
     bids_dir = validate_input_path(bids_dir, check_exist=False)
     path_to_clinical = validate_input_path(path_to_clinical)
+    if subjects:
+        cprint(
+            (
+                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.OASIS3)} converter. "
+                "All subjects available will be converted."
+            ),
+            lvl="warning",
+        )
+    if n_procs != 1:
+        cprint(
+            f"{get_converter_name(StudyName.OASIS3)} converter does not support multiprocessing yet. n_procs set to 1.",
+            lvl="warning",
+        )
     dict_df = read_clinical_data(path_to_clinical)
     imaging_data = read_imaging_data(path_to_dataset)
     imaging_data, df_small = intersect_data(imaging_data, dict_df)
@@ -62,4 +79,4 @@ def convert(
         readme_data=readme_data,
         bids_dir=bids_dir,
     )
-    cprint("Conversion to BIDS succeeded.")
+    cprint("Conversion to BIDS succeeded.", lvl="info")

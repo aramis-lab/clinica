@@ -1,7 +1,7 @@
 """Convert OASIS dataset (https://sites.wustl.edu/oasisbrains/) to BIDS."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import nibabel as nb
 import numpy as np
@@ -15,14 +15,27 @@ def convert(
     path_to_dataset: Path,
     bids_dir: Path,
     path_to_clinical: Path,
+    subjects: Optional[Union[str, Path]] = None,
     n_procs: Optional[int] = 1,
     **kwargs,
 ):
+    from clinica.iotools.bids_utils import StudyName
+    from clinica.iotools.converters.factory import get_converter_name
+    from clinica.utils.stream import cprint
+
     from ..utils import validate_input_path
 
     path_to_dataset = validate_input_path(path_to_dataset)
     bids_dir = validate_input_path(bids_dir, check_exist=False)
     path_to_clinical = validate_input_path(path_to_clinical)
+    if subjects:
+        cprint(
+            (
+                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.OASIS)} converter. "
+                "All subjects available will be converted."
+            ),
+            lvl="warning",
+        )
     OasisToBids().convert(
         path_to_dataset,
         bids_dir,
@@ -52,7 +65,7 @@ class OasisToBids(Converter):
         from clinica.iotools.bids_utils import get_bids_subjs_list
         from clinica.utils.stream import cprint
 
-        cprint("Converting clinical data...")
+        cprint("Converting clinical data...", lvl="info")
         bids_ids = get_bids_subjs_list(bids_dir)
         self._create_participants_tsv(clinical_data_dir, bids_dir, bids_ids)
         sessions = self._create_sessions_tsv(clinical_data_dir, bids_dir, bids_ids)
@@ -162,8 +175,10 @@ class OasisToBids(Converter):
 
     @staticmethod
     def convert_single_subject(subj_folder: Path, dest_dir: Path):
+        from clinica.utils.stream import cprint
+
         t1_folder = subj_folder / "PROCESSED" / "MPRAGE" / "SUBJ_111"
-        print("Converting ", subj_folder.name)
+        cprint(f"Converting {subj_folder.name}", lvl="info")
         numerical_id = (subj_folder.name.split("_"))[1]
         participant_id = f"sub-OASIS1{numerical_id}"
         bids_subj_folder = dest_dir / participant_id
@@ -176,7 +191,9 @@ class OasisToBids(Converter):
         try:
             img_file_path = next(t1_folder.glob("*.img"))
         except StopIteration:
-            raise ValueError(f"No file ending in .img found in {t1_folder}.")
+            msg = f"No file ending in .img found in {t1_folder}."
+            cprint(msg, lvl="error")
+            raise FileNotFoundError(msg)
         nb.save(
             _get_image_with_good_orientation(img_file_path),
             session_folder / "anat" / f"{participant_id}_ses-M000_T1w.nii.gz",
