@@ -173,14 +173,16 @@ def create_participants_df(
         else:
             participant_df.at[i, "participant_id"] = bids_id[0]
 
-    if len(subjects_to_drop) > 0:
-        cprint(
-            msg=(
-                "The following subjects of dataset directory were not found in your BIDS folder :\n"
-                + ", ".join(subjects_to_drop)
-            ),
-            lvl="info",
-        )
+    # todo
+
+    # if len(subjects_to_drop) > 0:
+    #     cprint(
+    #         msg=(
+    #             "The following subjects of dataset directory were not found in your BIDS folder :\n"
+    #             + ", ".join(subjects_to_drop)
+    #         ),
+    #         lvl="info",
+    #     )
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
@@ -881,7 +883,7 @@ def run_dcm2niix(
 
     from clinica.utils.stream import cprint
 
-    cprint(f"Attempting to convert {output_fmt}.", lvl="info")
+    # cprint(f"Attempting to convert {output_fmt}.", lvl="info")
     command = _build_dcm2niix_command(
         input_dir, output_dir, output_fmt, compress, bids_sidecar
     )
