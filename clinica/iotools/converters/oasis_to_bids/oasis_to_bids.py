@@ -235,11 +235,11 @@ class OasisToBids(Converter):
         func = partial(self.convert_single_subject, dest_dir=dest_dir)
         # If n_procs==1 do not rely on a Process Pool to enable classical debugging
         if n_procs == 1:
-            for folder in subjs_folders:
+            for folder in subjects_folders:
                 func(folder)
         else:
             with Pool(processes=n_procs) as pool:
-                pool.map(func, subjs_folders)
+                pool.map(func, subjects_folders)
 
 
 def _get_image_with_good_orientation(image_path: Path) -> nb.Nifti1Image:
