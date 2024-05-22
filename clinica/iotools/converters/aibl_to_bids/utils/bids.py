@@ -150,14 +150,16 @@ def paths_to_bids(
     )
 
     images_list = list([data for _, data in images.iterrows()])
-
+    create_file_ = partial(
+        _create_file,
+        modality=modality,
+        bids_dir=bids_dir,
+        overwrite=overwrite,
+    )
+    # If n_procs==1 do not rely on a Process Pool to enable classical debugging
+    if n_procs == 1:
+        return [create_file_(image) for image in images_list]
     with Pool(processes=n_procs) as pool:
-        create_file_ = partial(
-            _create_file,
-            modality=modality,
-            bids_dir=bids_dir,
-            overwrite=overwrite,
-        )
         output_file_treated = pool.map(create_file_, images_list)
 
     return output_file_treated
