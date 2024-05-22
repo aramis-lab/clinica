@@ -1,21 +1,22 @@
 """Convert OASIS dataset (https://sites.wustl.edu/oasisbrains/) to BIDS."""
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 import nibabel as nb
 import numpy as np
 
 from clinica.iotools.abstract_converter import Converter
+from clinica.utils.filemanip import UserProvidedPath
 
 __all__ = ["convert"]
 
 
 def convert(
-    path_to_dataset: Path,
-    bids_dir: Path,
-    path_to_clinical: Path,
-    subjects: Optional[Union[str, Path]] = None,
+    path_to_dataset: UserProvidedPath,
+    bids_dir: UserProvidedPath,
+    path_to_clinical: UserProvidedPath,
+    subjects: Optional[UserProvidedPath] = None,
     n_procs: Optional[int] = 1,
     **kwargs,
 ):

@@ -1,6 +1,21 @@
 from os import PathLike
 from typing import List, Optional
 
+__all__ = ["replace_sequence_chars"]
+
+
+def replace_sequence_chars(sequence_name: str) -> str:
+    """Replace special characters in the sequence by underscores (as done for corresponding folder names in ADNI).
+
+    Args:
+        sequence_name: sequence to process
+
+    Returns: the new string
+    """
+    import re
+
+    return re.sub("[ /;*()<>:]", "_", sequence_name)
+
 
 class MissingModsTracker:
     """Class used for tracking the number of missing modalities in a database.

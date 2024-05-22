@@ -5,10 +5,10 @@ from typing import Any, List, Optional
 
 import pandas as pd
 
-__all__ = ["convert_adni_flair"]
+__all__ = ["convert_flair"]
 
 
-def convert_adni_flair(
+def convert_flair(
     source_dir: Path,
     csv_dir: Path,
     destination_dir: Path,
@@ -46,20 +46,28 @@ def convert_adni_flair(
         Default=1.
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        ADNIModalityConverter,
         load_clinical_csv,
         paths_to_bids,
     )
     from clinica.utils.stream import cprint
 
     cprint(
-        f"Calculating paths of FLAIR images. Output will be stored in {conversion_dir}.",
+        f"Calculating paths of {ADNIModalityConverter.FLAIR} images. Output will be stored in {conversion_dir}.",
         lvl="info",
     )
     images = _compute_flair_paths(source_dir, csv_dir, subjects, conversion_dir)
-    cprint("Paths of FLAIR images found. Exporting images into BIDS ...", lvl="info")
+    cprint(
+        f"Paths of {ADNIModalityConverter.FLAIR} images found. Exporting images into BIDS ...",
+        lvl="info",
+    )
     # flair_paths_to_bids(images, dest_dir)
     paths_to_bids(
-        images, destination_dir, "flair", mod_to_update=mod_to_update, n_procs=n_procs
+        images,
+        destination_dir,
+        ADNIModalityConverter.FLAIR,
+        mod_to_update=mod_to_update,
+        n_procs=n_procs,
     )
     cprint(msg="FLAIR conversion done.", lvl="debug")
 
@@ -91,11 +99,10 @@ def _compute_flair_paths(
     images : pd.DataFrame
         A dataframe with all the paths to the FLAIR images that will be converted into BIDS.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        find_image_path,
-        load_clinical_csv,
-        visits_to_timepoints,
-    )
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+
+    from ._image_path_utils import find_image_path
+    from ._visits_utils import visits_to_timepoints
 
     flair_df = _initialize_flair_df()
     flair_dfs_list = []
@@ -233,10 +240,9 @@ def _select_flair_image(
     dict or None :
         Contains image metadata.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-        select_image_qc,
-    )
+    from clinica.iotools.converter_utils import replace_sequence_chars
+
+    from ._qc_utils import select_image_qc
 
     selected_image_id = select_image_qc(list(visit_mri_list.IMAGEUID), mri_qc_subj)
     if selected_image_id is None:

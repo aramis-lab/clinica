@@ -1,21 +1,22 @@
-import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Iterable, List, Optional
 
 import pandas as pd
 
+from clinica.utils.pet import ReconstructionMethod, Tracer
+from clinica.utils.stream import cprint
+
 __all__ = [
-    "visits_to_timepoints",
-    "select_image_qc",
-    "get_images_pet",
+    "get_subjects_list",
+    "ADNIModality",
+    "ADNIModalityConverter",
+    "ADNIStudy",
     "correct_diagnosis_sc_adni3",
     "create_adni_sessions_dict",
     "create_adni_scans_files",
-    "find_image_path",
     "paths_to_bids",
     "load_clinical_csv",
-    "replace_sequence_chars",
 ]
 
 
@@ -84,579 +85,46 @@ def get_subjects_list(
     )
 
 
-def visits_to_timepoints(
-    subject: str,
-    mri_list_subj: pd.DataFrame,
-    adnimerge_subj: pd.DataFrame,
-    modality: str,
-    visit_field: str = "VISIT",
-    scandate_field: str = "SCANDATE",
-) -> dict:
+class ADNIModality(str, Enum):
+    """Possible modalities supported by the ADNI-to-BIDS converter.
+
+    These are the modalities exposed to the user. There is not a
+    one-to-one relationship with the modality converters. That is,
+    some modalities, like PET_AMYLOID, are associated with multiple
+    converters, while others are associated with only one converter.
+    For this reason, the ADNIModalityConverter enumeration exists,
+    and there is a mapping between a ADNIModality and an iterable of
+    ADNIModalityConverter variants.
     """
-    A correspondence is established between ADNIMERGE and MRILIST visits, since they have different notations.
 
-    Args:
-        subject: Subject identifier
-        mri_list_subj: Dataframe containing list of MRI scans for the subject
-        adnimerge_subj: Dataframe containing visits data for the subject
-        modality: Imaging modality
-        visit_field: field name corresponding to the visit
-        scandate_field: field name corresponding to the scan date
+    T1 = "T1"
+    PET_FDG = "PET_FDG"
+    PET_AMYLOID = "PET_AMYLOID"
+    PET_TAU = "PET_TAU"
+    DWI = "DWI"
+    FLAIR = "FLAIR"
+    FMRI = "fMRI"
+    FMAP = "FMAP"
 
-    Returns:
-        [Returns]
+
+class ADNIModalityConverter(str, Enum):
+    """Possible modality converters for ADNI.
+
+    These are not exposed to the user. However, there is a one-to-one
+    relationship with the modality converters. That is, each variant
+    has a corresponding converter.
     """
-    from clinica.utils.stream import cprint
 
-    if modality == "T1":
-        mri_list_subj = mri_list_subj[mri_list_subj[visit_field] != "ADNI Baseline"]
-
-    visits = dict()
-    unique_visits = list(mri_list_subj[visit_field].unique())
-    pending_timepoints = []
-
-    # We try to obtain the corresponding image Visit for a given VISCODE
-    for adni_row in adnimerge_subj.iterrows():
-        visit = adni_row[1]
-        study = ADNIStudy(visit.ORIGPROT)
-        preferred_visit_name = _get_preferred_visit_name(study, visit.VISCODE)
-
-        if preferred_visit_name in unique_visits:
-            key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
-            if key_preferred_visit not in visits:
-                visits[key_preferred_visit] = preferred_visit_name
-            elif visits[key_preferred_visit] != preferred_visit_name:
-                cprint(
-                    f"[{modality}] Subject {subject} has multiple visits for one timepoint.",
-                    lvl="info",
-                )
-
-            unique_visits.remove(preferred_visit_name)
-            continue
-
-        pending_timepoints.append(visit)
-
-    # Then for images.Visit non matching the expected labels we find the closest date in visits list
-    for visit in unique_visits:
-        image = (mri_list_subj[mri_list_subj[visit_field] == visit]).iloc[0]
-
-        closest_visit = _get_closest_visit(
-            image[scandate_field],
-            image[visit_field],
-            pending_timepoints,
-            subject,
-        )
-        if closest_visit is None:
-            cprint(f"No closest visit found for image {image}", lvl="debug")
-            continue
-        key_min_visit = (
-            closest_visit.VISCODE,
-            closest_visit.COLPROT,
-            closest_visit.ORIGPROT,
-        )
-
-        if key_min_visit not in visits.keys():
-            visits[key_min_visit] = image[visit_field]
-        elif visits[key_min_visit] != image[visit_field]:
-            cprint(
-                f"[{modality}] Subject {subject} has multiple visits for one timepoint.",
-                lvl="debug",
-            )
-
-    return visits
-
-
-def _get_preferred_visit_name(study: ADNIStudy, visit_code: str) -> str:
-    """Return the expected visit name for a given visit depending
-    on the study (ADNI1, ADNI2, ADNI3, ADNIGO).
-
-    Parameters
-    ----------
-    study : ADNIStudy
-        The study for this visit.
-    visit_code : str
-        The visit code to convert to a new form.
-
-    Returns
-    -------
-    str :
-        The expected visit name.
-    """
-    if study == ADNIStudy.ADNI3:
-        return _get_preferred_visit_name_adni3(visit_code)
-    if study == ADNIStudy.ADNI2:
-        return _get_preferred_visit_name_adni2(visit_code)
-    if study == ADNIStudy.ADNI1:
-        return _get_preferred_visit_name_adni1(visit_code)
-    if study == ADNIStudy.ADNIGO:
-        return _get_preferred_visit_name_adnigo(visit_code)
-
-
-def _get_preferred_visit_name_adni3(visit_code: str) -> str:
-    if visit_code == "bl":
-        return "ADNI Screening"
-    return f"ADNI3 Year {_parse_year_from_visit_code(visit_code)} Visit"
-
-
-def _parse_year_from_visit_code(visit_code: str) -> float:
-    """Return the year corresponding to the visit code.
-    Assumes a visit code of the form 'mXXX'.
-    """
-    return _parse_month_from_visit_code(visit_code) / 12
-
-
-def _parse_month_from_visit_code(visit_code: str) -> int:
-    """Return the month corresponding to the visit code.
-    Assumes a visit code of the form 'mXXX'.
-    """
-    try:
-        return int(visit_code[1:])
-    except Exception:
-        raise ValueError(
-            f"Cannot extract month from visit code {visit_code}."
-            "Expected a code of the form 'mXXX' where XXX can be casted to an integer."
-        )
-
-
-def _get_preferred_visit_name_adni2(visit_code: str) -> str:
-    if visit_code == "bl":
-        return "ADNI2 Screening MRI-New Pt"
-    if visit_code == "m03":
-        return "ADNI2 Month 3 MRI-New Pt"
-    if visit_code == "m06":
-        return "ADNI2 Month 6-New Pt"
-    return f"ADNI2 Year {_parse_year_from_visit_code(visit_code)} Visit"
-
-
-def _get_preferred_visit_name_adni1(visit_code: str) -> str:
-    if visit_code == "bl":
-        return "ADNI Screening"
-    if visit_code == "m03":
-        return "ADNIGO Month 3 MRI"  # does not make any sense...
-    month = _parse_month_from_visit_code(visit_code)
-    return f"ADNI{'1/' if month < 54 else ''}GO Month {month}"
-
-
-def _get_preferred_visit_name_adnigo(visit_code: str) -> str:
-    if visit_code == "bl":
-        return "ADNIGO Screening MRI"
-    return _get_preferred_visit_name_adni1(visit_code)
-
-
-def _get_closest_visit(
-    image_acquisition_date: str,
-    image_visit: str,
-    visits: list[pd.Series],
-    subject: str,
-) -> Optional[pd.Series]:
-    """Choose the visit with the closest date to a given image acquisition date.
-
-    Parameters
-    ----------
-    image_acquisition_date : str
-        The date in string format when the image was acquired.
-
-    image_visit : str
-        The string identifier of the visit.
-
-    visits : list of pd.Series
-        List of visit entries among which we have to find the closest one.
-
-    subject : str
-        Subject identifier.
-
-    Returns
-    -------
-    None or pd.Series
-        If the list of visits provided is empty, this function returns None.
-        Otherwise, it returns a pd.Series corresponding to the closest visit found.
-    """
-    from clinica.utils.stream import cprint
-
-    if len(visits) == 0:
-        cprint(
-            "No corresponding timepoint in ADNIMERGE for "
-            f"subject {subject} in visit {image_visit}",
-            lvl="info",
-        )
-        return None
-
-    if len(visits) == 1:
-        return visits[0]
-
-    (
-        closest_visit,
-        second_closest_visit,
-        smallest_time_difference,
-        second_smallest_time_difference,
-    ) = _get_closest_and_second_closest_visits(visits, image_acquisition_date)
-
-    return (
-        _get_closest_visit_for_large_time_difference(
-            subject,
-            image_visit,
-            image_acquisition_date,
-            closest_visit,
-            second_closest_visit,
-            smallest_time_difference,
-            second_smallest_time_difference,
-        )
-        if smallest_time_difference > 90
-        else closest_visit
-    )
-
-
-def _get_closest_visit_for_large_time_difference(
-    subject: str,
-    image_visit: str,
-    image_acquisition_date: str,
-    closest_visit: pd.Series,
-    second_closest_visit: pd.Series,
-    smallest_time_difference: int,
-    second_smallest_time_difference: int,
-) -> pd.Series:
-    """Special case when the closest visit found is more than 90 days
-    apart from the image acquisition date.
-
-    In this situation, if the image acquisition date is in between the
-    closest visit and the second-closest visit, and the second-closest
-    visit is close enough from the image acquisition date, then select
-    the second-closest visit instead of the closest one.
-    """
-    from clinica.utils.stream import cprint
-
-    cprint(
-        _get_smallest_time_difference_too_large_message(
-            subject,
-            image_visit,
-            image_acquisition_date,
-            closest_visit,
-            second_closest_visit,
-            smallest_time_difference,
-            second_smallest_time_difference,
-        ),
-        lvl="debug",
-    )
-    if _second_closest_visit_is_better(
-        closest_visit.EXAMDATE,
-        image_acquisition_date,
-        second_closest_visit.EXAMDATE,
-    ):
-        closest_visit = second_closest_visit
-
-    cprint(msg=f"We prefer {closest_visit.VISCODE}", lvl="debug")
-
-    return closest_visit
-
-
-def _second_closest_visit_is_better(
-    closest_visit_date: str,
-    image_acquisition_date: str,
-    second_closest_visit_date: str,
-) -> bool:
-    """If image is too close to the date between two visits we prefer the earlier visit."""
-    from datetime import datetime
-
-    date_format = "%Y-%m-%d"
-    if (
-        datetime.strptime(closest_visit_date, date_format)
-        > datetime.strptime(image_acquisition_date, date_format)
-        > datetime.strptime(second_closest_visit_date, date_format)
-    ):
-        diff = _compute_number_of_days_between(
-            closest_visit_date, second_closest_visit_date
-        )
-        smallest_time_difference = _compute_number_of_days_between(
-            image_acquisition_date, closest_visit_date
-        )
-        if abs((diff / 2.0) - smallest_time_difference) < 30:
-            return True
-    return False
-
-
-def _get_closest_and_second_closest_visits(
-    visits: list[pd.Series],
-    reference_date: str,
-) -> tuple[pd.Series, pd.Series, int, int]:
-    """Return the closest and second-closest visit from the reference date.
-
-    Parameters
-    ----------
-    visits : list of pd.Series
-        The list of visits to analyze. Should have a length greater than two.
-
-    reference_date : str
-        The reference date used to compute the time differences.
-
-    Returns
-    -------
-    closest_visit : pd.Series
-        The visit whose EXAMDATE is the closest to the reference date.
-
-    second_closest_visit : pd.Series
-        The second closest visit to the reference date.
-
-    min_time_difference : int
-        The number of days between the reference date and the closest visit.
-
-    second_min_time_difference : int
-        The number of days between the reference date and the second closest visit.
-    """
-    import numpy as np
-
-    if len(visits) < 2:
-        raise ValueError(f"Expected at least two visits, received {len(visits)}.")
-    time_differences_between_reference_and_visits_in_days = [
-        _compute_number_of_days_between(reference_date, visit_date)
-        for visit_date in [visit.EXAMDATE for visit in visits]
-    ]
-    idx = np.argsort(time_differences_between_reference_and_visits_in_days)
-    min_time_difference = time_differences_between_reference_and_visits_in_days[idx[0]]
-    second_min_time_difference = time_differences_between_reference_and_visits_in_days[
-        idx[1]
-    ]
-
-    return (
-        visits[idx[0]],
-        visits[idx[1]],
-        min_time_difference,
-        second_min_time_difference,
-    )
-
-
-def _get_smallest_time_difference_too_large_message(
-    subject: str,
-    image_visit: str,
-    image_acquisition_date: str,
-    closest_visit: pd.Series,
-    second_closest_visit: pd.Series,
-    smallest_time_difference: int,
-    second_smallest_time_difference: int,
-) -> str:
-    """Build the debug message when the closest found visit is further than 90 days in time."""
-    msg = (
-        f"More than 90 days for corresponding timepoint in ADNIMERGE for "
-        f"subject {subject} in visit {image_visit} on {image_acquisition_date}.\n"
-    )
-    idx = 1
-    for visit, difference in zip(
-        [closest_visit, second_closest_visit],
-        [smallest_time_difference, second_smallest_time_difference],
-    ):
-        msg += (
-            f"Timepoint {idx}: {visit.VISCODE} - {visit.ORIGPROT} "
-            f"on {visit.EXAMDATE} (Distance: {difference} days)\n"
-        )
-        idx += 1
-    return msg
-
-
-def _compute_number_of_days_between(date_1: str, date_2: str) -> int:
-    """Calculate the days between two dates."""
-    from datetime import datetime
-
-    date_1 = datetime.strptime(date_1, "%Y-%m-%d")
-    date_2 = datetime.strptime(date_2, "%Y-%m-%d")
-    return abs((date_2 - date_1).days)
-
-
-def select_image_qc(id_list: list[str], mri_qc_subj: pd.DataFrame) -> Optional[int]:
-    """Select image from several scans according to QC.
-
-    Args:
-        id_list: List of images identifiers to choose among
-        mri_qc_subj: Dataframe containing list of QC of scans for the subject
-
-    Returns: int - Chosen image identifier
-    """
-    import numpy as np
-
-    if len(id_list) == 0:
-        return None
-
-    image_ids = ["I" + str(imageuid) for imageuid in id_list]
-    int_ids = [int(imageuid) for imageuid in id_list]
-    images_qc = mri_qc_subj[mri_qc_subj.loni_image.isin(image_ids)]
-
-    if images_qc.empty:
-        return max(int_ids)
-
-    if np.sum(images_qc.series_selected) == 1:
-        selected_image = (
-            images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
-        )
-    else:
-        images_not_rejected = images_qc[images_qc.series_quality < 4]
-
-        if images_not_rejected.empty:
-            # There are no images that passed the qc,
-            # so we'll try to see if there are other images without qc.
-            # Otherwise, return None.
-            qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
-            no_qc_ids = list(set(int_ids) - qc_ids)
-
-            if len(no_qc_ids) == 0:
-                return None
-            else:
-                return max(no_qc_ids)
-
-        # We select the image with the best (lower) QC.
-        # If no positive QC available we choose image with -1 (not performed)
-        series_quality = [
-            q if q > 0 else 4 for q in list(images_not_rejected.series_quality)
-        ]
-        best_q = np.amin(series_quality)
-        if best_q == 4:
-            best_q = -1
-        images_best_qc = images_not_rejected[
-            images_not_rejected.series_quality == best_q
-        ]
-        if len(images_best_qc) == 1:
-            selected_image = images_best_qc.iloc[0].loni_image[1:]
-        else:
-            best_ids = [int(x[1:]) for x in images_best_qc.loni_image.unique()]
-            selected_image = max(best_ids)
-
-    return int(selected_image)
-
-
-def get_images_pet(
-    subject: str,
-    pet_qc_subj: pd.DataFrame,
-    subject_pet_meta: pd.DataFrame,
-    df_cols: list[str],
-    modality: str,
-    sequences_preprocessing_step: list[str],
-    viscode_field: str = "VISCODE2",
-) -> list[pd.DataFrame]:
-    """Selection of scans passing QC and at the chosen preprocessing stage is performed.
-
-    Args:
-        subject: Subject identifier
-        pet_qc_subj: Dataframe containing QC for scans for the subject
-        subject_pet_meta: Dataframe containing metadata for scans for the subject
-        df_cols: Columns of output dataframe
-        modality: Imaging modality
-        sequences_preprocessing_step: List of sequence names that correspond to desired preprocessing stage
-        viscode_field: Name of the field in the pet_qc_subj dataframe that provides to the visit code
-
-    Returns: Dataframe containing images metadata
-    """
-    from clinica.utils.stream import cprint
-
-    subj_dfs_list = []
-    for visit in list(pet_qc_subj[viscode_field].unique()):
-        if pd.isna(visit):
-            continue
-        pet_qc_visit = pet_qc_subj[pet_qc_subj[viscode_field] == visit]
-        if pet_qc_visit.empty:
-            continue
-        # If there are several scans for a timepoint we start with image acquired last (higher LONIUID)
-        pet_qc_visit = pet_qc_visit.sort_values("LONIUID", ascending=False)
-
-        original_pet_meta = pd.DataFrame(columns=subject_pet_meta.columns)
-        qc_visit = pet_qc_visit.iloc[0]
-        for qc_index in range(len(pet_qc_visit)):
-            qc_visit = pet_qc_visit.iloc[qc_index]
-
-            # We are looking for FDG PET metadata of Original images, that passed QC,
-            # acquired at the same date as the current scan that passed QC for the current visit,
-            # not containing ‘early’ in the sequence name
-
-            original_pet_meta = subject_pet_meta[
-                (subject_pet_meta["Orig/Proc"] == "Original")
-                & (subject_pet_meta["Image ID"] == int(qc_visit.LONIUID[1:]))
-                & (subject_pet_meta["Scan Date"] == qc_visit.EXAMDATE)
-                & ~subject_pet_meta.Sequence.str.contains("early", case=False, na=False)
-            ]
-            # Check if we found a matching image. If yes, we stop looking for it.
-            if not original_pet_meta.empty:
-                break
-
-        if original_pet_meta.empty:
-            cprint(
-                f"No {modality} images metadata for subject {subject} and visit {qc_visit[viscode_field]}",
-                lvl="info",
-            )
-            continue
-
-        original_image = original_pet_meta.iloc[0]
-
-        # Co-registered and Averaged image with the same Series ID of the original image
-        averaged_pet_meta = subject_pet_meta[
-            subject_pet_meta["Sequence"].isin(sequences_preprocessing_step)
-            & (subject_pet_meta["Series ID"] == original_image["Series ID"])
-        ]
-
-        # If an explicit Co-registered, Averaged image does not exist,
-        # the original image is already in that preprocessing stage.
-
-        if averaged_pet_meta.empty:
-            sel_image = original_image
-            original = True
-        else:
-            sel_image = averaged_pet_meta.iloc[0]
-            original = False
-
-        phase = "ADNI1" if modality == "PIB-PET" else qc_visit.Phase
-        visit = sel_image.Visit
-        sequence = replace_sequence_chars(sel_image.Sequence)
-        date = sel_image["Scan Date"]
-        study_id = sel_image["Study ID"]
-        series_id = sel_image["Series ID"]
-        image_id = sel_image["Image ID"]
-
-        # If it is an amyloid PET we need to find which is the tracer of the scan and add it to the
-        if modality == "Amyloid-PET":
-            if "av45" in sel_image.Sequence.lower():
-                tracer = "AV45"
-            elif "fbb" in sel_image.Sequence.lower():
-                tracer = "FBB"
-            else:
-                cprint(
-                    msg=(
-                        f"Unknown tracer for Amyloid PET image metadata for subject {subject} "
-                        f"for visit {qc_visit[viscode_field]}"
-                    ),
-                    lvl="warning",
-                )
-                continue
-
-            scan_data = [
-                [
-                    phase,
-                    subject,
-                    qc_visit[viscode_field],
-                    str(visit),
-                    sequence,
-                    date,
-                    str(study_id),
-                    str(series_id),
-                    str(image_id),
-                    original,
-                    tracer,
-                ]
-            ]
-        else:
-            scan_data = [
-                [
-                    phase,
-                    subject,
-                    qc_visit[viscode_field],
-                    str(visit),
-                    sequence,
-                    date,
-                    str(study_id),
-                    str(series_id),
-                    str(image_id),
-                    original,
-                ]
-            ]
-
-        row_to_append = pd.DataFrame(scan_data, columns=df_cols)
-        subj_dfs_list.append(row_to_append)
-
-    return subj_dfs_list
+    T1 = "T1"
+    PET_FDG = "PET_FDG"
+    PET_FDG_UNIFORM = "PET_FDG_UNIFORM"
+    PET_PIB = "PET_PIB"
+    PET_AV45 = "PET_AV45"
+    PET_TAU = "PET_TAU"
+    DWI = "DWI"
+    FLAIR = "FLAIR"
+    FMRI = "fMRI"
+    FMAP = "FMAP"
 
 
 def correct_diagnosis_sc_adni3(
@@ -674,8 +142,6 @@ def correct_diagnosis_sc_adni3(
     Returns:
         Corrected participants_df.
     """
-    from clinica.utils.stream import cprint
-
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
     # DXSUM_PDXCONV_ADNIALL has been renamed to DXSUM_PDXCONV
     # this ensures old ADNI downloads still work with recent versions of Clinica
@@ -706,19 +172,6 @@ def correct_diagnosis_sc_adni3(
 
     participants_df.reset_index(inplace=True, drop=False)
     return participants_df
-
-
-def replace_sequence_chars(sequence_name: str) -> str:
-    """Replace special characters in the sequence by underscores (as done for corresponding folder names in ADNI).
-
-    Args:
-        sequence_name: sequence to process
-
-    Returns: the new string
-    """
-    import re
-
-    return re.sub("[ /;*()<>:]", "_", sequence_name)
 
 
 def _write_adni_sessions_tsv(
@@ -1167,73 +620,10 @@ def _find_conversion_mod(file_name: str) -> str:
     raise ValueError(f"Conversion modality could not be found for file {file_name}")
 
 
-def find_image_path(
-    images: pd.DataFrame,
-    source_dir: Path,
-    modality: str,
-) -> pd.DataFrame:
-    """
-    For each image, the path to an existing image file or folder is created from image metadata.
-
-    This function adds two columns to the input dataframe: 'Is_Dicom', and 'Path'.
-
-    Args:
-        images: List of images metadata
-        source_dir: path to the ADNI directory
-        modality: Imaging modality
-
-    Returns: Dataframe containing metadata and existing paths
-    """
-    from clinica.utils.stream import cprint
-
-    is_dicom = []
-    image_folders = []
-    for _, image in images.iterrows():
-        image_path, dicom = _find_path_single_image(image, source_dir)
-        is_dicom.append(dicom)
-        image_folders.append(image_path)
-        if image_path == "":
-            cprint(
-                msg=(
-                    f"No {modality} image path found for subject {image.Subject_ID} in visit {image.VISCODE} "
-                    f"with image ID {image.Image_ID}"
-                ),
-                lvl="info",
-            )
-    images.loc[:, "Is_Dicom"] = pd.Series(is_dicom, index=images.index)
-    images.loc[:, "Path"] = pd.Series(image_folders, index=images.index)
-
-    return images
-
-
-def _find_path_single_image(image: pd.Series, source_dir: Path) -> tuple[str, bool]:
-    path_to_sequence = source_dir / str(image["Subject_ID"])
-    image_folder_path = ""
-    is_dicom = True
-    if (
-        len(
-            (
-                found_images := [
-                    f
-                    for f in path_to_sequence.rglob(f"*_I{image['Image_ID']}.*")
-                    if f.is_file()
-                ]
-            )
-        )
-        > 0
-    ):
-        if "dcm" in found_images[0].suffix:
-            image_folder_path = str(found_images[0].parent)
-        else:
-            image_folder_path = str(found_images[0])
-            is_dicom = False
-    return image_folder_path, is_dicom
-
-
 def paths_to_bids(
     images: pd.DataFrame,
     bids_dir: Path,
-    modality: str,
+    modality: ADNIModalityConverter,
     mod_to_update: bool = False,
     n_procs: Optional[int] = 1,
 ) -> List[Path]:
@@ -1268,21 +658,6 @@ def paths_to_bids(
     from functools import partial
     from multiprocessing import Pool
 
-    if modality.lower() not in (
-        "t1",
-        "dwi",
-        "flair",
-        "fmri",
-        "fmap",
-        "fdg",
-        "fdg_uniform",
-        "pib",
-        "av45_fbb",
-        "tau",
-    ):
-        raise RuntimeError(
-            f"{modality.lower()} is not supported for conversion in paths_to_bids."
-        )
     images_list = list([data for _, data in images.iterrows()])
     create_file_ = partial(
         _create_file,
@@ -1298,6 +673,7 @@ def paths_to_bids(
     return output_file_treated
 
 
+<<<<<<< HEAD
 def _get_images_with_suffix(
     folder: Path,
     suffixes: Iterable[str],
@@ -1353,8 +729,11 @@ def _remove_files_with_unsupported_suffixes(
     return [folder / image for image in invalid_suffix_images]
 
 
-def create_file(
-    image: pd.Series, modality: str, bids_dir: Path, mod_to_update: bool
+def _create_file(
+    image: pd.Series,
+    modality: ADNIModalityConverter,
+    bids_dir: Path,
+    mod_to_update: bool,
 ) -> Optional[Path]:
     """Creates an image file at the corresponding output folder.
 
@@ -1393,7 +772,6 @@ def create_file(
     from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
-    from clinica.utils.pet import ReconstructionMethod, Tracer
     from clinica.utils.stream import cprint
 
     # This function is executed in a multiprocessing context
@@ -1403,90 +781,23 @@ def create_file(
     # implement a logging process consuming logging messages from a multiprocessing.Queue...
     setup_clinica_logging("INFO")
 
-    modality_specific = {
-        "t1": {
-            "output_path": "anat",
-            "output_filename": "_T1w",
-            "to_center": True,
-            "json": "n",
-        },
-        "dwi": {
-            "output_path": "dwi",
-            "output_filename": "_dwi",
-            "to_center": False,
-            "json": "y",
-        },
-        "flair": {
-            "output_path": "anat",
-            "output_filename": "_FLAIR",
-            "to_center": True,
-            "json": "y",
-        },
-        "fmri": {
-            "output_path": "func",
-            "output_filename": "_task-rest_bold",
-            "to_center": False,
-            "json": "y",
-        },
-        "fmap": {
-            "output_path": "fmap",
-            "output_filename": "_fmap",
-            "to_center": False,
-            "json": "y",
-        },
-        "fdg": {
-            "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG.value}_rec-{ReconstructionMethod.CO_REGISTERED_AVERAGED.value}_pet",
-            "to_center": True,
-            "json": "n",
-        },
-        "fdg_uniform": {
-            "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FDG.value}_rec-{ReconstructionMethod.COREGISTERED_ISOTROPIC.value}_pet",
-            "to_center": True,
-            "json": "n",
-        },
-        "pib": {
-            "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.PIB.value}_pet",
-            "to_center": True,
-            "json": "n",
-        },
-        "av45": {
-            "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.AV45.value}_pet",
-            "to_center": True,
-            "json": "n",
-        },
-        "fbb": {
-            "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.FBB.value}_pet",
-            "to_center": True,
-            "json": "n",
-        },
-        "tau": {
-            "output_path": "pet",
-            "output_filename": f"_trc-{Tracer.AV1451.value}_pet",
-            "to_center": True,
-            "json": "n",
-        },
-    }
-
     subject = image.Subject_ID
     viscode = image.VISCODE
 
-    if modality == "av45_fbb":
-        modality = image.Tracer.lower()
-
+    image_tracer = None
+    logging_header = f"[{modality.value}]"
+    if modality == ADNIModalityConverter.PET_AV45:
+        image_tracer = Tracer(image.Tracer)
+        logging_header = f"[{modality.value} - {image_tracer.value}]"
     if not image.Path:
         # todo : check for message redundancy
         cprint(
-            f"[{modality.upper()}] No path specified for {subject} in session {viscode}",
+            f"{logging_header} No path specified for {subject} in session {viscode}",
             lvl="info",
         )
         return None
     cprint(
-        f"[{modality.upper()}] Processing subject {subject} in session {viscode}",
+        f"{logging_header} Processing subject {subject} in session {viscode}",
         lvl="info",
     )
     session = viscode_to_session(viscode)
@@ -1497,46 +808,35 @@ def create_file(
         image_path = _check_two_dcm_folder(image_path, bids_dir, image_id)
     bids_subj = subject.replace("_", "")
     output_path = (
-        bids_dir
-        / f"sub-ADNI{bids_subj}"
-        / session
-        / modality_specific[modality]["output_path"]
+        bids_dir / f"sub-ADNI{bids_subj}" / session / _get_output_path(modality)
     )
     output_filename = (
-        f"sub-ADNI{bids_subj}_{session}{modality_specific[modality]['output_filename']}"
+        f"sub-ADNI{bids_subj}_{session}{_get_output_filename(modality, image_tracer)}"
     )
     output_path.mkdir(parents=True, exist_ok=True)
 
     # Check if old images exist and if updated mode is set to TRUE remove them
     if not _remove_existing_images_if_necessary(
         output_path,
-        (modality_specific[modality]["output_filename"], "magnitude", "phase"),
+        (_get_output_filename(modality, image_tracer), "magnitude", "phase"),
         mod_to_update,
     ):
         return None
 
-    try:
-        os.makedirs(output_path)
-    except OSError:
-        # Folder already created with previous instance
-        pass
-
-    generate_json = modality_specific[modality]["json"]
-    zip_image = "n" if modality_specific[modality]["to_center"] else "y"
     file_without_extension = output_path / output_filename
     output_image = file_without_extension.with_suffix(".nii.gz")
 
     if image.Is_Dicom:
         success = run_dcm2niix(
-            input_dir=image_path if modality != "fmap" else Path(image_path).parent,
+            input_dir=image_path if modality != ADNIModalityConverter.FMAP else Path(image_path).parent,
             output_dir=output_path,
             output_fmt=output_filename,
-            compress=True if zip_image == "y" else False,
-            bids_sidecar=True if generate_json == "y" else False,
+            compress=not _should_be_centered(modality),
+            bids_sidecar=_write_json_sidecar(modality),
         )
         if not success:
             cprint(
-                f"Error converting image {image_path} for subject {subject} and session {session}",
+                f"{logging_header} Error converting image {image_path} for subject {subject} and session {session}",
                 lvl="warning",
             )
 
@@ -1560,7 +860,7 @@ def create_file(
             file_without_extension.with_suffix(".nii").is_file()
             or output_image.is_file()
         )
-        if modality == "fmap":
+        if modality == ADNIModalityConverter.FMAP:
             nifti_exists = nifti_exists or any(
                 [
                     file_without_extension.with_name(
@@ -1569,7 +869,7 @@ def create_file(
                     for suffix in {"ph", "e2", "e1", "e2_ph", "e1_ph"}
                 ]
             )
-        dwi_bvec_and_bval_exist = not (modality == "dwi") or (
+        dwi_bvec_and_bval_exist = not (modality == ADNIModalityConverter.DWI) or (
             file_without_extension.with_suffix(".bvec").is_file()
             and file_without_extension.with_suffix(".bval").is_file()
         )
@@ -1577,7 +877,7 @@ def create_file(
         # Check if conversion worked (output files exist)
         if not nifti_exists or not dwi_bvec_and_bval_exist:
             cprint(
-                msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
+                msg=f"{logging_header} Conversion with dcm2niix failed for subject {subject} and session {session}",
                 lvl="warning",
             )
             return np.nan
@@ -1585,7 +885,7 @@ def create_file(
         # Case when JSON file was expected, but not generated by dcm2niix
         json_exists = file_without_extension.with_suffix(".json").exists()
 
-        if modality == "fmap":
+        if modality == ADNIModalityConverter.FMAP:
             json_exists = json_exists or any(
                 [
                     file_without_extension.with_name(
@@ -1595,13 +895,13 @@ def create_file(
                 ]
             )
 
-        if generate_json == "y" and not json_exists:
+        if _write_json_sidecar(modality) and not json_exists:
             cprint(
-                msg=f"JSON file not generated by dcm2niix for subject {subject} and session {session}",
+                msg=f"{logging_header} JSON file not generated by dcm2niix for subject {subject} and session {session}",
                 lvl="warning",
             )
 
-        if modality_specific[modality]["to_center"]:
+        if _should_be_centered(modality):
             output_image, error_msg = center_nifti_origin(
                 file_without_extension.with_suffix(".nii"), output_image
             )
@@ -1611,12 +911,12 @@ def create_file(
             file_without_extension.with_suffix(".nii").unlink()
 
     else:
-        if modality_specific[modality]["to_center"]:
+        if _should_be_centered(modality):
             try:
                 output_image, error_msg = center_nifti_origin(image_path, output_image)
             except Exception:
                 cprint(
-                    msg=(f"No output image specified."),
+                    msg=f"No output image specified.",
                     lvl="error",
                 )
                 output_image = ""
@@ -1636,6 +936,94 @@ def create_file(
     # Check if there is still the folder tmp_dcm_folder and remove it
     _remove_tmp_dmc_folder(bids_dir, image_id)
     return output_image
+
+
+def _get_output_path(modality: ADNIModalityConverter) -> str:
+    if modality == ADNIModalityConverter.T1:
+        return "anat"
+    if modality == ADNIModalityConverter.DWI:
+        return "dwi"
+    if modality == ADNIModalityConverter.FLAIR:
+        return "anat"
+    if modality == ADNIModalityConverter.FMRI:
+        return "func"
+    if modality == ADNIModalityConverter.FMAP:
+        return "fmap"
+    if modality in (
+        ADNIModalityConverter.PET_FDG,
+        ADNIModalityConverter.PET_FDG_UNIFORM,
+        ADNIModalityConverter.PET_PIB,
+        ADNIModalityConverter.PET_AV45,
+        ADNIModalityConverter.PET_TAU,
+    ):
+        return "pet"
+
+
+def _get_output_filename(
+    modality: ADNIModalityConverter, tracer: Optional[Tracer] = None
+) -> str:
+    if modality == ADNIModalityConverter.T1:
+        return "_T1w"
+    if modality == ADNIModalityConverter.DWI:
+        return "_dwi"
+    if modality == ADNIModalityConverter.FLAIR:
+        return "_FLAIR"
+    if modality == ADNIModalityConverter.FMRI:
+        return "_task-rest_bold"
+    if modality == ADNIModalityConverter.FMAP:
+        return "_fmap"
+    if modality == ADNIModalityConverter.PET_FDG:
+        return f"_trc-{Tracer.FDG.value}_rec-{ReconstructionMethod.CO_REGISTERED_AVERAGED.value}_pet"
+    if modality == ADNIModalityConverter.PET_FDG_UNIFORM:
+        return f"_trc-{Tracer.FDG.value}_rec-{ReconstructionMethod.COREGISTERED_ISOTROPIC.value}_pet"
+    if modality == ADNIModalityConverter.PET_PIB:
+        return f"_trc-{Tracer.PIB.value}_pet"
+    if modality == ADNIModalityConverter.PET_AV45:
+        return f"_trc-{tracer.value}_pet"
+    if modality == ADNIModalityConverter.PET_TAU:
+        return f"_trc-{Tracer.AV1451.value}_pet"
+
+
+def _should_be_centered(modality: ADNIModalityConverter) -> bool:
+    if modality == ADNIModalityConverter.T1:
+        return True
+    if modality == ADNIModalityConverter.DWI:
+        return False
+    if modality == ADNIModalityConverter.FLAIR:
+        return True
+    if modality == ADNIModalityConverter.FMRI:
+        return False
+    if modality == ADNIModalityConverter.FMAP:
+        return False
+    if modality in (
+        ADNIModalityConverter.PET_FDG,
+        ADNIModalityConverter.PET_FDG_UNIFORM,
+        ADNIModalityConverter.PET_PIB,
+        ADNIModalityConverter.PET_AV45,
+        ADNIModalityConverter.PET_TAU,
+    ):
+        return True
+
+
+def _write_json_sidecar(modality: ADNIModalityConverter) -> bool:
+    if modality == ADNIModalityConverter.T1:
+        return False
+    if modality == ADNIModalityConverter.DWI:
+        return True
+    if modality == ADNIModalityConverter.FLAIR:
+        return True
+    if modality == ADNIModalityConverter.FMRI:
+        return True
+    if modality == ADNIModalityConverter.FMAP:
+        return True
+    if modality in (
+        ADNIModalityConverter.PET_FDG,
+        ADNIModalityConverter.PET_FDG_UNIFORM,
+        ADNIModalityConverter.PET_PIB,
+        ADNIModalityConverter.PET_AV45,
+        ADNIModalityConverter.PET_TAU,
+    ):
+        return False
 
 
 def _session_label_to_viscode(session_name: str) -> str:

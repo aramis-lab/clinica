@@ -1,7 +1,9 @@
+from os import PathLike
 from pathlib import Path
 from typing import Callable, List, Optional, Union
 
 __all__ = [
+    "UserProvidedPath",
     "delete_directories",
     "delete_directories_task",
     "extract_crash_files_from_log_file",
@@ -16,6 +18,9 @@ __all__ = [
     "unzip_nii",
     "zip_nii",
 ]
+
+
+UserProvidedPath = Union[str, PathLike]
 
 
 def zip_nii(in_file: str, same_dir: bool = False) -> str:

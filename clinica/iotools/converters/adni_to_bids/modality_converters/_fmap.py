@@ -13,8 +13,10 @@ import pandas as pd
 from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
 from clinica.utils.stream import cprint
 
+__all__ = ["convert_fmap"]
 
-def convert_adni_fmap(
+
+def convert_fmap(
     source_dir: PathLike,
     csv_dir: PathLike,
     destination_dir: PathLike,
@@ -51,7 +53,10 @@ def convert_adni_fmap(
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        ADNIModalityConverter,
+        paths_to_bids,
+    )
     from clinica.utils.stream import cprint
 
     csv_dir = Path(csv_dir)
@@ -67,8 +72,10 @@ def convert_adni_fmap(
 
     cprint("Paths of field maps found. Exporting images into BIDS ...")
 
-    paths_to_bids(images, destination_dir, "fmap", mod_to_update=mod_to_update)
-    reorganize_fmaps(Path(destination_dir))
+    paths_to_bids(
+        images, destination_dir, ADNIModalityConverter.FMAP, mod_to_update=mod_to_update
+    )
+    reorganize_fmaps(destination_dir)
 
     cprint(msg="Field maps conversion done.", lvl="debug")
 
@@ -92,10 +99,8 @@ def compute_fmap_path(
 
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        find_image_path,
-        visits_to_timepoints,
-    )
+    from ._image_path_utils import find_image_path
+    from ._visits_utils import visits_to_timepoints
 
     fmap_col = [
         "Subject_ID",
@@ -244,10 +249,9 @@ def fmap_image(
     Returns: dictionary - contains image metadata
              None - no image was able to be selected from the MRI list based on IDs provided
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-        select_image_qc,
-    )
+    from clinica.iotools.converter_utils import replace_sequence_chars
+
+    from ._qc_utils import select_image_qc
 
     mri_qc_subj.columns = [x.lower() for x in mri_qc_subj.columns]
     sel_image = select_image_qc(list(visit_mri_list.IMAGEUID), mri_qc_subj)

@@ -1,7 +1,9 @@
 from pathlib import Path
-from typing import Iterator, Optional, Union
+from typing import Iterator, Optional
 
 import pandas as pd
+
+from clinica.utils.filemanip import UserProvidedPath
 
 __all__ = ["convert"]
 
@@ -38,10 +40,10 @@ def _get_protocol_to_bids_df() -> pd.DataFrame:
 
 
 def convert(
-    path_to_dataset: Path,
-    bids_dir: Path,
+    path_to_dataset: UserProvidedPath,
+    bids_dir: UserProvidedPath,
     *args,
-    subjects: Optional[Union[str, Path]] = None,
+    subjects: Optional[UserProvidedPath] = None,
     n_procs: Optional[int] = 1,
     **kwargs,
 ):

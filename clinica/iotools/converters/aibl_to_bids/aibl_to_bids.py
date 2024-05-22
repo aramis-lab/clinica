@@ -2,18 +2,20 @@
 Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 """
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
+
+from clinica.utils.filemanip import UserProvidedPath
 
 __all__ = ["convert"]
 
 
 def convert(
-    input_dataset: Path,
-    output_dataset: Path,
-    input_clinical_data: Path,
+    input_dataset: UserProvidedPath,
+    output_dataset: UserProvidedPath,
+    input_clinical_data: UserProvidedPath,
     overwrite: bool = False,
     clinical_data_only: bool = False,
-    subjects: Optional[Union[str, Path]] = None,
+    subjects: Optional[UserProvidedPath] = None,
     n_procs: Optional[int] = 1,
     **kwargs,
 ) -> None:

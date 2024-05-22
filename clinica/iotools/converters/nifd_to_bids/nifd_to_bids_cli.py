@@ -21,9 +21,7 @@ def cli(
     """
     from .nifd_to_bids import convert
 
-    convert(
-        Path(dataset_directory), Path(bids_directory), Path(clinical_data_directory)
-    )
+    convert(dataset_directory, bids_directory, clinical_data_directory)
 
 
 if __name__ == "__main__":

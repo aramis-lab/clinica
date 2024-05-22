@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from clinica.iotools.converters.adni_to_bids.adni_utils import ADNIModalityConverter
+
 
 def assert_frame_equal(
     df1, df2, check_index: bool = True, check_column_type: bool = True
@@ -20,11 +22,14 @@ def assert_frame_equal(
         )
 
 
-@pytest.mark.parametrize("step_value,expected", [(2, "fdg"), (4, "fdg_uniform")])
+@pytest.mark.parametrize(
+    "step_value,expected",
+    [(2, ADNIModalityConverter.PET_FDG), (4, ADNIModalityConverter.PET_FDG_UNIFORM)],
+)
 def test_get_modality_from_adni_preprocessing_step(step_value, expected):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        ADNIPreprocessingStep,
-        _get_modality_from_adni_preprocessing_step,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        ADNIPreprocessingStep,  # noqa
+        _get_modality_from_adni_preprocessing_step,  # noqa
     )
 
     assert (
@@ -37,9 +42,9 @@ def test_get_modality_from_adni_preprocessing_step(step_value, expected):
 
 @pytest.mark.parametrize("step_value", [0, 1, 3, 5])
 def test_get_modality_from_adni_preprocessing_step_error(step_value):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        ADNIPreprocessingStep,
-        _get_modality_from_adni_preprocessing_step,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        ADNIPreprocessingStep,  # noqa
+        _get_modality_from_adni_preprocessing_step,  # noqa
     )
 
     with pytest.raises(
@@ -68,8 +73,8 @@ def input_df():
     [set(), {"bar"}, {"foo", "baz"}, {"foo", "baz", "bar", "foobar"}],
 )
 def test_load_df_with_column_check(tmp_path, input_df, required_columns):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        _load_df_with_column_check,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        _load_df_with_column_check,  # noqa
     )
 
     input_df.to_csv(tmp_path / "data.csv", index=False)
@@ -80,8 +85,8 @@ def test_load_df_with_column_check(tmp_path, input_df, required_columns):
 
 
 def test_load_df_with_column_check_errors(tmp_path, input_df):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        _load_df_with_column_check,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        _load_df_with_column_check,  # noqa
     )
 
     input_df.to_csv(tmp_path / "data.csv", index=False)
@@ -118,8 +123,8 @@ def expected_images_df_columns() -> List[str]:
 
 
 def test_get_pet_fdg_columns(expected_fdg_df_columns):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        _get_pet_fdg_columns,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        _get_pet_fdg_columns,  # noqa
     )
 
     assert _get_pet_fdg_columns() == expected_fdg_df_columns
@@ -129,9 +134,9 @@ def test_compute_fdg_pet_paths_empty(tmp_path, expected_images_df_columns):
     """Checks that _compute_fdg_pet_paths returns an empty dataframe with the right
     columns when the provided list of subjects is empty.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        ADNIPreprocessingStep,
-        _compute_fdg_pet_paths,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        ADNIPreprocessingStep,  # noqa
+        _compute_fdg_pet_paths,  # noqa
     )
 
     images = _compute_fdg_pet_paths(
@@ -143,9 +148,9 @@ def test_compute_fdg_pet_paths_empty(tmp_path, expected_images_df_columns):
 
 
 def test_compute_fdg_pet_paths_column_errors(tmp_path):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        ADNIPreprocessingStep,
-        _compute_fdg_pet_paths,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        ADNIPreprocessingStep,  # noqa
+        _compute_fdg_pet_paths,  # noqa
     )
 
     csv_dir = tmp_path / "csv"
@@ -182,16 +187,16 @@ def test_compute_fdg_pet_paths_column_errors(tmp_path):
     ],
 )
 def test_is_visit_a_conversion_error(row, expected):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        _is_visit_a_conversion_error,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        _is_visit_a_conversion_error,  # noqa
     )
 
     assert _is_visit_a_conversion_error(row) is expected
 
 
 def test_remove_known_conversion_errors():
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        _remove_known_conversion_errors,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        _remove_known_conversion_errors,  # noqa
     )
 
     input_df = pd.DataFrame(
@@ -214,8 +219,8 @@ def test_remove_known_conversion_errors():
 
 
 def test_convert_subject_to_rid():
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        _convert_subject_to_rid,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        _convert_subject_to_rid,  # noqa
     )
 
     assert _convert_subject_to_rid("123_S_4567") == 4567
@@ -225,8 +230,8 @@ def test_convert_subject_to_rid():
     "subject", ["", "123_S_456a", "123_P_4567", "000S6699", "123", "4567"]
 )
 def test_convert_subject_to_rid_error(subject):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        _convert_subject_to_rid,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        _convert_subject_to_rid,  # noqa
     )
 
     with pytest.raises(
@@ -237,8 +242,8 @@ def test_convert_subject_to_rid_error(subject):
 
 
 def test_build_pet_qc_all_studies_for_subject_empty_dataframes():
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        _build_pet_qc_all_studies_for_subject,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        _build_pet_qc_all_studies_for_subject,  # noqa
     )
 
     df1 = pd.DataFrame(columns=["PASS", "RID"])
@@ -254,8 +259,8 @@ def test_build_pet_qc_all_studies_for_subject_empty_dataframes():
 
 
 def test_build_pet_qc_all_studies_for_subject():
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        _build_pet_qc_all_studies_for_subject,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        _build_pet_qc_all_studies_for_subject,  # noqa
     )
 
     df1 = pd.DataFrame(
@@ -284,9 +289,9 @@ def test_build_pet_qc_all_studies_for_subject():
 
 
 def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet import (
-        ADNIPreprocessingStep,
-        _compute_fdg_pet_paths,
+    from clinica.iotools.converters.adni_to_bids.modality_converters._fdg_pet import (
+        ADNIPreprocessingStep,  # noqa
+        _compute_fdg_pet_paths,  # noqa
     )
 
     csv_dir = tmp_path / "csv"

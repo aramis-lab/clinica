@@ -1,16 +1,17 @@
 """Convert the NIFD dataset into BIDS."""
 
-from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
+
+from clinica.utils.filemanip import UserProvidedPath
 
 __all__ = ["convert"]
 
 
 def convert(
-    path_to_dataset: Path,
-    bids_dir: Path,
-    path_to_clinical: Path,
-    subjects: Optional[Union[str, Path]] = None,
+    path_to_dataset: UserProvidedPath,
+    bids_dir: UserProvidedPath,
+    path_to_clinical: UserProvidedPath,
+    subjects: Optional[UserProvidedPath] = None,
     n_procs: Optional[int] = 1,
     **kwargs,
 ):

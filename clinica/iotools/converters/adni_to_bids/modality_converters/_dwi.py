@@ -5,10 +5,10 @@ from typing import Any, List, Optional
 
 import pandas as pd
 
-__all__ = ["convert_adni_dwi"]
+__all__ = ["convert_dwi"]
 
 
-def convert_adni_dwi(
+def convert_dwi(
     source_dir: Path,
     csv_dir: Path,
     destination_dir: Path,
@@ -46,18 +46,24 @@ def convert_adni_dwi(
         Default=1.
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        ADNIModalityConverter,
         load_clinical_csv,
         paths_to_bids,
     )
     from clinica.utils.stream import cprint
 
     cprint(
-        f"Calculating paths of DWI images. Output will be stored in {conversion_dir}."
+        f"Calculating paths of DWI images. Output will be stored in {conversion_dir}.",
+        lvl="info",
     )
     images = _compute_dwi_paths(source_dir, csv_dir, subjects, conversion_dir)
-    cprint("Paths of DWI images found. Exporting images into BIDS ...")
+    cprint("Paths of DWI images found. Exporting images into BIDS ...", lvl="info")
     paths_to_bids(
-        images, destination_dir, "dwi", mod_to_update=mod_to_update, n_procs=n_procs
+        images,
+        destination_dir,
+        ADNIModalityConverter.DWI,
+        mod_to_update=mod_to_update,
+        n_procs=n_procs,
     )
     cprint(msg="DWI conversion done.", lvl="debug")
 
@@ -89,11 +95,10 @@ def _compute_dwi_paths(
     images : pd.DataFrame
         A pandas dataframe that contains the path to all the DWI images to convert.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        find_image_path,
-        load_clinical_csv,
-        visits_to_timepoints,
-    )
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+
+    from ._image_path_utils import find_image_path
+    from ._visits_utils import visits_to_timepoints
 
     dwi_df = _initialize_dwi_df()
     dwi_dfs_list = []
@@ -292,10 +297,9 @@ def _select_dwi_image(
         Contains image metadata.
         Returns None if no image was found.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-        select_image_qc,
-    )
+    from clinica.iotools.converter_utils import replace_sequence_chars
+
+    from ._qc_utils import select_image_qc
 
     selected_image_id = select_image_qc(
         list(visit_mri_list.IMAGEUID),

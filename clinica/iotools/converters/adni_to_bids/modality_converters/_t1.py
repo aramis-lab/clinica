@@ -5,10 +5,10 @@ from typing import Any, List, Optional
 
 import pandas as pd
 
-__all__ = ["convert_adni_t1"]
+__all__ = ["convert_t1"]
 
 
-def convert_adni_t1(
+def convert_t1(
     source_dir: Path,
     csv_dir: Path,
     destination_dir: Path,
@@ -46,20 +46,32 @@ def convert_adni_t1(
         Default=1.
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        ADNIModalityConverter,
         load_clinical_csv,
         paths_to_bids,
     )
     from clinica.utils.stream import cprint
 
     cprint(
-        f"Calculating paths of T1 images. Output will be stored in {conversion_dir}."
+        (
+            f"Calculating paths of {ADNIModalityConverter.T1.value} images. "
+            f"Output will be stored in {conversion_dir}."
+        ),
+        lvl="info",
     )
     images = _compute_t1_paths(source_dir, csv_dir, subjects, conversion_dir)
-    cprint("Paths of T1 images found. Exporting images into BIDS ...")
-    paths_to_bids(
-        images, destination_dir, "t1", mod_to_update=mod_to_update, n_procs=n_procs
+    cprint(
+        f"Paths of {ADNIModalityConverter.T1.value} images found. Exporting images into BIDS ...",
+        lvl="info",
     )
-    cprint(msg="T1 conversion done.", lvl="debug")
+    paths_to_bids(
+        images,
+        destination_dir,
+        ADNIModalityConverter.T1,
+        mod_to_update=mod_to_update,
+        n_procs=n_procs,
+    )
+    cprint(msg=f"{ADNIModalityConverter.T1.value} conversion done.", lvl="debug")
 
 
 def _compute_t1_paths(
@@ -89,12 +101,11 @@ def _compute_t1_paths(
     images : pd.DataFrame
         A dataframe with all the paths to the T1 MR images that will be converted into BIDS.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        find_image_path,
-        load_clinical_csv,
-        visits_to_timepoints,
-    )
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
     from clinica.utils.stream import cprint
+
+    from ._image_path_utils import find_image_path
+    from ._visits_utils import visits_to_timepoints
 
     t1_dfs_list = []
     t1_df = _initialize_t1_df()
@@ -271,9 +282,7 @@ def _select_preferred_scan_for_subject_in_adni1go2(
         Dictionary containing selected scan information.
         Returns None if no scan found.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-    )
+    from clinica.iotools.converter_utils import replace_sequence_chars
 
     # filter out images that do not pass QC
     mprage_meta_subj = mprage_meta_subj[
@@ -398,9 +407,7 @@ def _select_preferred_scan_for_subject_in_adni3(
         Dictionary containing selected scan information.
         Returns None if no scan found.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-    )
+    from clinica.iotools.converter_utils import replace_sequence_chars
     from clinica.utils.stream import cprint
 
     filtered_scan = mprage_meta_subj[
@@ -469,9 +476,7 @@ def _select_best_original_image(
         Dictionary containing selected scan information.
         Returns None if no scan found.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-    )
+    from clinica.iotools.converter_utils import replace_sequence_chars
     from clinica.utils.stream import cprint
 
     mprage_meta_subj_orig = mprage_meta_subj[

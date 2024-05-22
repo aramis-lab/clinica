@@ -16,7 +16,7 @@ def cli(sourcedata: str, rawdata: str) -> None:
     """HABS to BIDS converter."""
     from .habs_to_bids import convert
 
-    convert(Path(sourcedata), Path(rawdata))
+    convert(sourcedata, rawdata)
 
 
 if __name__ == "__main__":

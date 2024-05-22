@@ -5,10 +5,10 @@ from typing import Any, List, Optional
 
 import pandas as pd
 
-__all__ = ["convert_adni_fmri"]
+__all__ = ["convert_fmri"]
 
 
-def convert_adni_fmri(
+def convert_fmri(
     source_dir: Path,
     csv_dir: Path,
     destination_dir: Path,
@@ -52,22 +52,31 @@ def convert_adni_fmri(
         Default=True.
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        ADNIModalityConverter,
         load_clinical_csv,
         paths_to_bids,
     )
     from clinica.utils.stream import cprint
 
     cprint(
-        f"Calculating paths of fMRI images. Output will be stored in {conversion_dir}."
+        f"Calculating paths of {ADNIModalityConverter.FMRI} images. Output will be stored in {conversion_dir}.",
+        lvl="info",
     )
     images = _compute_fmri_path(
         source_dir, csv_dir, subjects, conversion_dir, convert_multiband
     )
-    cprint("Paths of fMRI images found. Exporting images into BIDS ...")
-    paths_to_bids(
-        images, destination_dir, "fmri", mod_to_update=mod_to_update, n_procs=n_procs
+    cprint(
+        f"Paths of {ADNIModalityConverter.FMRI} images found. Exporting images into BIDS ...",
+        lvl="info",
     )
-    cprint(msg="fMRI conversion done.", lvl="debug")
+    paths_to_bids(
+        images,
+        destination_dir,
+        ADNIModalityConverter.FMRI,
+        mod_to_update=mod_to_update,
+        n_procs=n_procs,
+    )
+    cprint(msg=f"{ADNIModalityConverter.FMRI} conversion done.", lvl="debug")
 
 
 def _compute_fmri_path(
@@ -103,11 +112,10 @@ def _compute_fmri_path(
     images : pd.DataFrame
         Pandas Dataframe containing the path for each fmri.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        find_image_path,
-        load_clinical_csv,
-        visits_to_timepoints,
-    )
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+
+    from ._image_path_utils import find_image_path
+    from ._visits_utils import visits_to_timepoints
 
     fmri_dfs_list = []
     fmri_df = _initialize_fmri_df()
@@ -243,10 +251,9 @@ def _select_fmri_image(
         A dictionary which contains image metadata.
         If None, no image was found.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-        select_image_qc,
-    )
+    from clinica.iotools.converter_utils import replace_sequence_chars
+
+    from ._qc_utils import select_image_qc
 
     mri_qc_subj.columns = [x.lower() for x in mri_qc_subj.columns]
     selected_image = select_image_qc(list(visit_mri_list.IMAGEUID), mri_qc_subj)

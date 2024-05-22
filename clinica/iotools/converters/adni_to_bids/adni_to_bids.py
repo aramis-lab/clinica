@@ -1,19 +1,22 @@
 from pathlib import Path
-from typing import Optional, Union
+from typing import Iterable, Optional, Union
 
 from clinica.iotools.abstract_converter import Converter
+from clinica.utils.filemanip import UserProvidedPath
+
+from .adni_utils import ADNIModality
 
 __all__ = ["convert"]
 
 
 def convert(
-    path_to_dataset: Path,
-    bids_dir: Path,
-    path_to_clinical: Path,
+    path_to_dataset: UserProvidedPath,
+    bids_dir: UserProvidedPath,
+    path_to_clinical: UserProvidedPath,
     clinical_data_only: bool = False,
-    subjects: Optional[Union[str, Path]] = None,
-    modalities: Optional[list[str]] = None,
-    xml_path: Optional[Union[str, Path]] = None,
+    subjects: Optional[UserProvidedPath] = None,
+    modalities: Optional[Iterable[Union[str, ADNIModality]]] = None,
+    xml_path: Optional[UserProvidedPath] = None,
     force_new_extraction: bool = False,
     n_procs: Optional[int] = 1,
 ):
@@ -26,6 +29,7 @@ def convert(
         xml_path = validate_input_path(xml_path)
     if subjects:
         subjects = validate_input_path(subjects)
+    modalities = _validate_input_modalities(modalities)
 
     adni_to_bids = AdniToBids()
     adni_to_bids.check_adni_dependencies()
@@ -35,8 +39,8 @@ def convert(
             source_dir=path_to_dataset,
             clinical_dir=path_to_clinical,
             dest_dir=bids_dir,
-            subjects=subjects,
             modalities=modalities,
+            subjects=subjects,
             force_new_extraction=force_new_extraction,
             n_procs=n_procs,
         )
@@ -50,24 +54,6 @@ def convert(
 
 
 class AdniToBids(Converter):
-    @classmethod
-    def get_modalities_supported(cls) -> list[str]:
-        """Return a list of modalities supported.
-
-        Returns: a list containing the modalities supported by the converter
-        (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI, FMAP)
-        """
-        return [
-            "T1",
-            "PET_FDG",
-            "PET_AMYLOID",
-            "PET_TAU",
-            "DWI",
-            "FLAIR",
-            "fMRI",
-            "FMAP",
-        ]
-
     @classmethod
     def check_adni_dependencies(cls) -> None:
         """Check the dependencies of ADNI converter."""
@@ -99,14 +85,14 @@ class AdniToBids(Converter):
             get_bids_subjs_paths,
             write_modality_agnostic_files,
         )
-        from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        from clinica.utils.stream import cprint
+
+        from .adni_json import create_json_metadata
+        from .adni_utils import (
             correct_diagnosis_sc_adni3,
             create_adni_scans_files,
             create_adni_sessions_dict,
         )
-        from clinica.utils.stream import cprint
-
-        from .adni_json import create_json_metadata
 
         clinical_specifications_folder = Path(__file__).parents[0] / "specifications"
         if not out_path.exists():
@@ -116,7 +102,7 @@ class AdniToBids(Converter):
         conversion_path = out_path / "conversion_info"
 
         if clinical_data_only:
-            bids_ids, bids_subjects_paths = _get_bids_subjs_info(
+            bids_ids, bids_subjects_paths = _get_bids_subjects_info(
                 clinical_data_dir=clinical_data_dir,
                 out_path=out_path,
                 subjects=subjects,
@@ -193,8 +179,8 @@ class AdniToBids(Converter):
         source_dir: Path,
         clinical_dir: Path,
         dest_dir: Path,
+        modalities: Iterable[ADNIModality],
         subjects: Optional[Path] = None,
-        modalities: Optional[list[str]] = None,
         force_new_extraction: bool = False,
         n_procs: Optional[int] = 1,
     ):
@@ -208,17 +194,9 @@ class AdniToBids(Converter):
             modalities: modalities to convert (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
             force_new_extraction: if given pre-existing images in the BIDS directory will be erased and extracted again.
         """
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_flair as adni_flair
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmap as adni_fmap
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
-        from clinica.iotools.converters.adni_to_bids.adni_utils import get_subjects_list
         from clinica.utils.stream import cprint
+
+        from .modality_converters import modality_converter_factory
 
         modalities = modalities or self.get_modalities_supported()
         subjects = get_subjects_list(source_dir, clinical_dir, subjs_list_path)
@@ -230,29 +208,8 @@ class AdniToBids(Converter):
         conversion_dir.mkdir(parents=True, exist_ok=True)
         cprint(f"Destination folder = {dest_dir}", lvl="debug")
 
-        converters = {
-            "T1": [adni_t1.convert_adni_t1],
-            "PET_FDG": [
-                adni_fdg.convert_adni_fdg_pet,
-                adni_fdg.convert_adni_fdg_pet_uniform,
-            ],
-            "PET_AMYLOID": [
-                adni_pib.convert_adni_pib_pet,
-                adni_av45_fbb.convert_adni_av45_fbb_pet,
-            ],
-            "PET_TAU": [adni_tau.convert_adni_tau_pet],
-            "DWI": [adni_dwi.convert_adni_dwi],
-            "FLAIR": [adni_flair.convert_adni_flair],
-            "fMRI": [adni_fmri.convert_adni_fmri],
-            "FMAP": [adni_fmap.convert_adni_fmap],
-        }
-
         for modality in modalities:
-            if modality not in converters:
-                msg = f"{modality} is not a valid input modality"
-                cprint(msg, lvl="error")
-                raise ValueError(msg)
-            for converter in converters[modality]:
+            for converter in modality_converter_factory(modality):
                 converter(
                     source_dir=source_dir,
                     csv_dir=clinical_dir,
@@ -264,12 +221,20 @@ class AdniToBids(Converter):
                 )
 
 
-def _get_bids_subjs_info(
+def _validate_input_modalities(
+    modalities: Optional[Iterable[str]] = None,
+) -> tuple[ADNIModality, ...]:
+    if modalities:
+        return tuple((ADNIModality(modality) for modality in modalities))
+    return tuple(ADNIModality)
+
+
+def _get_bids_subjects_info(
     clinical_data_dir: Path,
     out_path: Path,
     subjects: Optional[Path] = None,
 ) -> tuple[list[str], list[Path]]:
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+    from .adni_utils import load_clinical_csv
 
     # Read optional list of participants.
     if subjects:

@@ -5,10 +5,10 @@ from typing import List
 
 import pandas as pd
 
-__all__ = ["convert_adni_av45_fbb_pet"]
+__all__ = ["convert_av45_fbb_pet"]
 
 
-def convert_adni_av45_fbb_pet(
+def convert_av45_fbb_pet(
     source_dir: Path,
     csv_dir: Path,
     destination_dir: Path,
@@ -46,6 +46,7 @@ def convert_adni_av45_fbb_pet(
         Default=1.
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        ADNIModalityConverter,
         load_clinical_csv,
         paths_to_bids,
     )
@@ -61,7 +62,7 @@ def convert_adni_av45_fbb_pet(
     paths_to_bids(
         images,
         destination_dir,
-        "av45_fbb",
+        ADNIModalityConverter.PET_AV45,
         mod_to_update=mod_to_update,
         n_procs=n_procs,
     )
@@ -95,11 +96,10 @@ def _compute_av45_fbb_pet_paths(
     images : pd.DataFrame
         Dataframe with all the paths to the PET images that will be converted into BIDS.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        find_image_path,
-        get_images_pet,
-        load_clinical_csv,
-    )
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+
+    from ._image_path_utils import find_image_path
+    from ._pet_utils import get_images_pet
 
     pet_amyloid_col = [
         "Phase",

@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 
 import click
@@ -28,9 +27,9 @@ def cli(
     from .oasis_to_bids import convert
 
     convert(
-        Path(dataset_directory),
-        Path(bids_directory),
-        Path(clinical_data_directory),
+        dataset_directory,
+        bids_directory,
+        clinical_data_directory,
         n_procs=n_procs,
     )
 

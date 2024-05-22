@@ -31,14 +31,12 @@ def cli(
     Convert the imaging and clinical data of AIBL (https://aibl.csiro.au/adni/index.html), located in DATASET_DIRECTORY
     and CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from pathlib import Path
-
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert
 
     convert(
-        Path(dataset_directory),
-        Path(bids_directory),
-        Path(clinical_data_directory),
+        dataset_directory,
+        bids_directory,
+        clinical_data_directory,
         overwrite=overwrite,
         clinical_data_only=clinical_data_only,
         n_procs=n_procs,

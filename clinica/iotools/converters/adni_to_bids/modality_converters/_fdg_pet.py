@@ -8,9 +8,11 @@ from typing import List, Optional, Set, Tuple
 
 import pandas as pd
 
+from clinica.iotools.converters.adni_to_bids.adni_utils import ADNIModalityConverter
+
 __all__ = [
-    "convert_adni_fdg_pet",
-    "convert_adni_fdg_pet_uniform",
+    "convert_fdg_pet",
+    "convert_fdg_pet_uniform",
 ]
 
 
@@ -44,7 +46,7 @@ class ADNIPreprocessingStep(Enum):
         raise ValueError(error_msg)
 
 
-def _convert_adni_fdg_pet(
+def _convert_fdg_pet(
     source_dir: Path,
     csv_dir: Path,
     destination_dir: Path,
@@ -107,11 +109,13 @@ def _convert_adni_fdg_pet(
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
-def _get_modality_from_adni_preprocessing_step(step: ADNIPreprocessingStep) -> str:
+def _get_modality_from_adni_preprocessing_step(
+    step: ADNIPreprocessingStep,
+) -> ADNIModalityConverter:
     if step == ADNIPreprocessingStep.STEP2:
-        return "fdg"
+        return ADNIModalityConverter.PET_FDG
     if step == ADNIPreprocessingStep.STEP4_8MM:
-        return "fdg_uniform"
+        return ADNIModalityConverter.PET_FDG_UNIFORM
     raise ValueError(
         f"The ADNI preprocessing step {step} is not (yet) supported by the converter."
         f"The converter only supports {ADNIPreprocessingStep.STEP2} and "
@@ -119,11 +123,11 @@ def _get_modality_from_adni_preprocessing_step(step: ADNIPreprocessingStep) -> s
     )
 
 
-convert_adni_fdg_pet = partial(
-    _convert_adni_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP2
+convert_fdg_pet = partial(
+    _convert_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP2
 )
-convert_adni_fdg_pet_uniform = partial(
-    _convert_adni_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP4_8MM
+convert_fdg_pet_uniform = partial(
+    _convert_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP4_8MM
 )
 
 
@@ -162,8 +166,9 @@ def _compute_fdg_pet_paths(
     images : pd.DataFrame
         DataFrame with all the paths to the PET images that will be converted into BIDS.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path
     from clinica.utils.pet import Tracer
+
+    from ._image_path_utils import find_image_path
 
     pet_fdg_df = _get_pet_fdg_df(csv_dir, subjects, preprocessing_step)
     images = find_image_path(pet_fdg_df, source_dir, "FDG")
@@ -259,7 +264,7 @@ def _get_images_pet_for_subject(
     preprocessing_step: ADNIPreprocessingStep,
 ) -> List[pd.DataFrame]:
     """Filter the PET images' QC dataframes for the given subject."""
-    from clinica.iotools.converters.adni_to_bids.adni_utils import get_images_pet
+    from ._pet_utils import get_images_pet
 
     pet_qc_df, pet_qc_adni_3_df, pet_meta_list_df = csv_data
     subject_pet_metadata = pet_meta_list_df[pet_meta_list_df["Subject"] == subject]

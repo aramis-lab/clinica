@@ -41,16 +41,14 @@ def cli(
     Convert the imaging and clinical data of GENFI, located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from pathlib import Path
-
     from .genfi_to_bids import convert
 
     convert(
-        Path(dataset_directory),
-        Path(bids_directory),
-        Path(clinical_data_directory) if clinical_data_directory else None,
+        dataset_directory,
+        bids_directory,
+        clinical_data_directory,
         gif=gif,
-        path_to_clinical_tsv=Path(clinical_data_tsv) if clinical_data_tsv else None,
+        path_to_clinical_tsv=clinical_data_tsv,
     )
 
 

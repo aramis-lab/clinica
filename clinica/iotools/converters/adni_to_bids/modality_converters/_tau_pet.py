@@ -5,10 +5,10 @@ from typing import List, Optional
 
 import pandas as pd
 
-__all__ = ["convert_adni_tau_pet"]
+__all__ = ["convert_tau_pet"]
 
 
-def convert_adni_tau_pet(
+def convert_tau_pet(
     source_dir: Path,
     csv_dir: Path,
     destination_dir: Path,
@@ -46,20 +46,32 @@ def convert_adni_tau_pet(
         Default=1
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        ADNIModalityConverter,
         load_clinical_csv,
         paths_to_bids,
     )
     from clinica.utils.stream import cprint
 
     cprint(
-        f"Calculating paths of TAU PET images. Output will be stored in {conversion_dir}."
+        (
+            f"Calculating paths of {ADNIModalityConverter.PET_TAU.value} images. "
+            f"Output will be stored in {conversion_dir}."
+        ),
+        lvl="info",
     )
     images = _compute_tau_pet_paths(source_dir, csv_dir, subjects, conversion_dir)
-    cprint("Paths of TAU PET images found. Exporting images into BIDS ...")
-    paths_to_bids(
-        images, destination_dir, "tau", mod_to_update=mod_to_update, n_procs=n_procs
+    cprint(
+        f"Paths of {ADNIModalityConverter.PET_TAU.value} images found. Exporting images into BIDS ...",
+        lvl="info",
     )
-    cprint(msg="TAU PET conversion done.", lvl="debug")
+    paths_to_bids(
+        images,
+        destination_dir,
+        ADNIModalityConverter.PET_TAU,
+        mod_to_update=mod_to_update,
+        n_procs=n_procs,
+    )
+    cprint(msg=f"{ADNIModalityConverter.PET_TAU.value} conversion done.", lvl="debug")
 
 
 def _compute_tau_pet_paths(
@@ -89,12 +101,11 @@ def _compute_tau_pet_paths(
     pd.DataFrame :
         A pandas Dataframe containing the path for each Tau PET image.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        find_image_path,
-        get_images_pet,
-        load_clinical_csv,
-    )
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
     from clinica.utils.pet import Tracer
+
+    from ._image_path_utils import find_image_path
+    from ._pet_utils import get_images_pet
 
     pet_tau_df = pd.DataFrame(columns=_get_tau_pet_df_columns())
     pet_tau_dfs_list = []

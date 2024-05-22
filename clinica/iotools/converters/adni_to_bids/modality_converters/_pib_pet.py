@@ -5,10 +5,10 @@ from typing import List, Optional
 
 import pandas as pd
 
-__all__ = ["convert_adni_pib_pet"]
+__all__ = ["convert_pib_pet"]
 
 
-def convert_adni_pib_pet(
+def convert_pib_pet(
     source_dir: Path,
     csv_dir: Path,
     destination_dir: Path,
@@ -46,20 +46,32 @@ def convert_adni_pib_pet(
         Default=1.
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        ADNIModalityConverter,
         load_clinical_csv,
         paths_to_bids,
     )
     from clinica.utils.stream import cprint
 
     cprint(
-        f"Calculating paths of PIB PET images. Output will be stored in {conversion_dir}."
+        (
+            f"Calculating paths of {ADNIModalityConverter.PET_PIB.value} images. "
+            f"Output will be stored in {conversion_dir}."
+        ),
+        lvl="info",
     )
     images = _compute_pib_pet_paths(source_dir, csv_dir, subjects, conversion_dir)
-    cprint("Paths of PIB PET images found. Exporting images into BIDS ...")
-    paths_to_bids(
-        images, destination_dir, "pib", mod_to_update=mod_to_update, n_procs=n_procs
+    cprint(
+        f"Paths of {ADNIModalityConverter.PET_PIB.value} images found. Exporting images into BIDS ...",
+        lvl="info",
     )
-    cprint(msg="PIB PET conversion done.", lvl="debug")
+    paths_to_bids(
+        images,
+        destination_dir,
+        ADNIModalityConverter.PET_PIB,
+        mod_to_update=mod_to_update,
+        n_procs=n_procs,
+    )
+    cprint(msg=f"{ADNIModalityConverter.PET_PIB.value} conversion done.", lvl="debug")
 
 
 def _compute_pib_pet_paths(
@@ -89,12 +101,11 @@ def _compute_pib_pet_paths(
     images : pd.DataFrame
         A dataframe with all the paths to the PET images that will be converted into BIDS.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        find_image_path,
-        get_images_pet,
-        load_clinical_csv,
-    )
+    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
     from clinica.utils.pet import Tracer
+
+    from ._image_path_utils import find_image_path
+    from ._pet_utils import get_images_pet
 
     pet_pib_dfs_list = []
     pet_pib_df = pd.DataFrame(columns=_get_pib_pet_columns())
