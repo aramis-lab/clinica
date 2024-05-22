@@ -10,6 +10,7 @@ from typing import List, Optional
 import pandas as pd
 
 from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+from clinica.utils.stream import cprint
 
 
 def convert_adni_fmap(
@@ -251,22 +252,20 @@ def fmap_image(
     return image_dict
 
 
-# todo : name variables
 # todo : debugging prints
 # todo : func description
-# todo : sometimes hidden files ??
+# todo : attention !! what if e34.nii.gz deleted but still there are 2 imgs ? ex 177
 def renaming_fmap_extensions_case1(old_extension: str) -> str:
     if old_extension == "e1":
         new_extension = "magnitude1"
     elif old_extension == "e2":
         new_extension = "magnitude2"
-    elif old_extension == "e2_ph":
+    elif old_extension == "e2_ph" or old_extension == "e1_ph":
         new_extension = "phasediff"
     return new_extension
 
 
-def fmap_1phase_2mag(fmap_path: Path):
-    # todo
+def case1_1phase_2mag(fmap_path: Path):
     "1 or 2 mag, not handled yet"
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
     check_json = [f for f in files if "ph.json" in f]
@@ -296,14 +295,11 @@ def renaming_fmap_extensions_case2(old_extension: str) -> str:
         new_extension = "phase1"
     elif old_extension == "e2_ph":
         new_extension = "phase2"
-    # todo else case : warning ?
     return new_extension
 
 
-def fmap_2phase_2mag(fmap_path: Path):
+def case2_2phase_2mag(fmap_path: Path):
     "2ph + 2 mag #todo must be echotime in each ph json / CASE 2"
-    # todo : as info
-    # todo : will avoid hidden files. always necessary ?
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
     check_json = [f for f in files if "ph.json" in f]
     # Checking for Echotime keys in phase jsons
@@ -319,6 +315,7 @@ def fmap_2phase_2mag(fmap_path: Path):
     for previous_filename in files:
         rgx = re.search(pattern, previous_filename)
         cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
+        # todo : adapt rename
         new_name = cut + renaming_fmap_extensions_case2(extension) + type
         os.rename(fmap_path / previous_filename, fmap_path / new_name)
 
@@ -330,6 +327,27 @@ def direct_fieldmap(fmap_path: Path):
         "must be UNITS in the fieldmap json (has yet to see what it looks like)"
         "Find a case somewhere ???"
     )
+    return
+
+    files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
+    check_json = [f for f in files if "ph.json" in f]  # todo : not ph.
+    # Checking for Unit key in fmap json
+    for js in check_json:
+        with open(fmap_path / js, "r") as file:
+            json_data = json.load(file)
+        if "Units" not in json_data:
+            print(f'Invalid file {js} for Direct Fieldmapping, missing "Units" key.')
+            # todo : go case1
+            case1_1phase_2mag(fmap_path)
+            return
+    # Renaming
+    pattern = r"(.*_)fmap_(.*?)(\..*)"
+    for previous_filename in files:
+        rgx = re.search(pattern, previous_filename)
+        cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
+        new_name = cut + renaming_fmap_extensions_case2(extension) + type
+        os.rename(fmap_path / previous_filename, fmap_path / new_name)
+
     print("Case3 - direct fieldmaps : todo")
 
 
@@ -337,9 +355,9 @@ def unrecognized_fmap_case(fmap_path: Path):
     # todo : as a warning ?
     print(
         f"The following files were found in {fmap_path} : {os.listdir(fmap_path)}."
-        f"The session will be deleted as it is not usable."
+        f"The fmap session will be deleted as it is not usable."
     )
-    shutil.rmtree(fmap_path.parent)
+    shutil.rmtree(fmap_path)
 
 
 def check_case_fmap(fmap_path: Path) -> str:
@@ -355,7 +373,7 @@ def check_case_fmap(fmap_path: Path) -> str:
     nb_files = len(files)
 
     if nb_files == 4:
-        # todo
+        # todo : either case 3 or case 1
         print(
             f"Assuming BIDS Case 3 : expecting 1 magnitude and 1 fieldmap files for {sub}, {ses}."
             f"Could also be 1 mag + 1 phase, TO DO"
@@ -376,55 +394,44 @@ def check_case_fmap(fmap_path: Path) -> str:
         return "unrecognized"
 
 
-def reorganize_fmaps(destination_dir: Path):
+def reorganize_fmaps(bids_path: Path):
     """
     #todo : what does it do ? relying on dcm2niix naming
     Parameters
     ----------
-    destination_dir
+    bids_path
 
     Returns
     -------
 
     """
-
+    # todo : remove
     # testing :
-    destination_dir = Path("/Users/alice.joubert/clinicaQC/data/ADNI/testing_rename")
+    # bids_path = Path("/Users/alice.joubert/clinicaQC/data/ADNI/testing_rename")
 
     bids_case = {
-        "case1": fmap_1phase_2mag,
-        "case2": fmap_2phase_2mag,
+        "case1": case1_1phase_2mag,
+        "case2": case2_2phase_2mag,
         "case3": direct_fieldmap,
         "unrecognized": unrecognized_fmap_case,
     }
 
-    lst_subjects = [
-        d for d in os.listdir(destination_dir) if "sub-ADNI" in d
-    ]  # todo : need d.is_dir ?
+    lst_subjects = [d for d in os.listdir(bids_path) if "sub-ADNI" in d]
 
     for subject in lst_subjects:
         lst_ses = [
             d
-            for d in os.listdir(destination_dir / subject)
-            if "ses" in d and (destination_dir / subject / d).is_dir()
+            for d in os.listdir(bids_path / subject)
+            if "ses" in d and (bids_path / subject / d).is_dir()
         ]
         for ses in lst_ses:
-            fmap_path = destination_dir / subject / ses / "fmap"
+            fmap_path = bids_path / subject / ses / "fmap"
             case = check_case_fmap(fmap_path)
             bids_case[case](fmap_path)
-            # todo : attention !! what if e34.nii.gz deleted but still there are 2 imgs ? ex 177, to verify
-            # todo : check genfi to bids for naming
-        # todo check if ses empty -> remove dir
-    # todo check if file empty -> remove dir
 
 
 def bids_guess(bids_path: Path):
-    import json
-    import os
-    import re
-    from pathlib import Path
-
-    from clinica.utils.stream import cprint
+    # todo : add where necessary to check
 
     bids_path = Path(bids_path)
 
@@ -449,22 +456,3 @@ def bids_guess(bids_path: Path):
                     lvl="warning",
                 )
                 # todo : adapt this bc breaks code later if suffix not usual
-
-
-def suppress_ses_fmap(bids_path: Path):
-    # todo : should suppress empty sessions
-    # should verify that fmap got sessions. then what, abort process?
-    # also should pay attention to what's written in scans.tsv and sessions.tsv
-    return
-
-
-def suppress_subj_fmap(bids_path: Path):
-    # todo : should suppress empty subj
-    # should verify that fmap got sessions. then what, abort process?
-    # also should pay attention to what's written in scans.tsv and sessions.tsv
-    return
-
-
-def check_guess_vs_rename():
-    # todo
-    return

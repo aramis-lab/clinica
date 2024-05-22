@@ -1680,7 +1680,6 @@ def session_label_to_viscode(session_name: str) -> str:
         return f"m{(int(session_name[1:])):02d}"
 
 
-# todo : check following func works properly
 def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     """[summary].
 
