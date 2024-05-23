@@ -3,9 +3,10 @@ import json
 import os
 import re
 import shutil
+from enum import Enum, StrEnum, auto
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 import pandas as pd
 
@@ -252,21 +253,53 @@ def fmap_image(
     return image_dict
 
 
-def renaming_fmap_extensions_case1(old_extension: str) -> str:
-    # todo : verify if handles both possibilities for case1
+class BIDSFMAPCase(StrEnum):
+    EMPTY_FOLDER = auto()
+    ONE_PHASE_TWO_MAGNITUDES = auto()
+    TWO_PHASES_TWO_MAGNITUDES = auto()
+    DIRECT_FIELDMAPS = auto()
+    NOT_SUPPORTED = auto()
 
+
+def fmap_case_handler_factory(case: BIDSFMAPCase) -> Callable:
+    if case == BIDSFMAPCase.EMPTY_FOLDER:
+        return empty_folder_handler
+    if case == BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES:
+        return one_phase_two_magnitudes_handler
+    if case == BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES:
+        return two_phases_two_magnitudes_handler
+    if case == BIDSFMAPCase.DIRECT_FIELDMAPS:
+        return direct_fieldmaps_handler
+    if case == BIDSFMAPCase.NOT_SUPPORTED:
+        return not_supported_handler
+
+
+def empty_folder_handler(fmap_path: Path):
+    sub = fmap_path.parent.parent.name
+    ses = fmap_path.parent.name
+    cprint(f"Folder for {sub}, {ses} is empty", lvl="warning")
+
+
+def one_phase_two_magnitudes_renamer(old_extension: str) -> str:
     # Assuming case 1 with 1 or 2 magnitudes have the same outputs from dcm2nix
     if old_extension == "e1":
-        new_extension = "magnitude1"
+        return "magnitude1"
     elif old_extension == "e2":
-        new_extension = "magnitude2"
+        return "magnitude2"
     elif old_extension == "e2_ph" or old_extension == "e1_ph":
-        new_extension = "phasediff"
-    return new_extension
+        return "phasediff"
 
 
-def case1_1phase_2mag(fmap_path: Path):
+def one_phase_two_magnitudes_handler(fmap_path: Path):
     "Performs the checks and renaming associated to BIDS specifications, case 1 for fieldmaps"
+    sub = fmap_path.parent.parent.name
+    ses = fmap_path.parent.name
+
+    cprint(
+        f"BIDS Case 1 : expecting 1 phasediff and at least 1 magnitude files for {sub}, {ses}.",
+        lvl="info",
+    )
+
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
     js = [f for f in files if f.endswith("ph.json")][0]
 
@@ -282,24 +315,31 @@ def case1_1phase_2mag(fmap_path: Path):
     for previous_filename in files:
         rgx = re.search(pattern, previous_filename)
         cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
-        new_name = cut + renaming_fmap_extensions_case1(extension) + type
+        new_name = cut + one_phase_two_magnitudes_renamer(extension) + type
         os.rename(fmap_path / previous_filename, fmap_path / new_name)
 
 
-def renaming_fmap_extensions_case2(old_extension: str) -> str:
+def two_phases_two_magnitudes_renamer(old_extension: str) -> str:
     if old_extension == "e1":
-        new_extension = "magnitude1"
+        return "magnitude1"
     elif old_extension == "e2":
-        new_extension = "magnitude2"
+        return "magnitude2"
     elif old_extension == "e1_ph":
-        new_extension = "phase1"
+        return "phase1"
     elif old_extension == "e2_ph":
-        new_extension = "phase2"
-    return new_extension
+        return "phase2"
 
 
-def case2_2phase_2mag(fmap_path: Path):
+def two_phases_two_magnitudes_handler(fmap_path: Path):
     "Performs the checks and renaming for BIDS spec case 2 for fieldmaps"
+
+    sub = fmap_path.parent.parent.name
+    ses = fmap_path.parent.name
+    cprint(
+        f"BIDS Case 2 : expecting 2 phase and 2 magnitude files for {sub}, {ses}.",
+        lvl="info",
+    )
+
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
     check_json = [f for f in files if "ph.json" in f]
     # Checking for Echotime keys in phase jsons
@@ -315,20 +355,25 @@ def case2_2phase_2mag(fmap_path: Path):
     for previous_filename in files:
         rgx = re.search(pattern, previous_filename)
         cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
-        new_name = cut + renaming_fmap_extensions_case2(extension) + type
+        new_name = cut + two_phases_two_magnitudes_renamer(extension) + type
         os.rename(fmap_path / previous_filename, fmap_path / new_name)
 
 
-def renaming_fmap_extensions_case3(old_extension: str) -> str:
+def direct_fieldmaps_renamer(old_extension: str) -> str:
     if old_extension == "":
-        new_extension = "fieldmap"
+        return "fieldmap"
     else:
-        new_extension = "magnitude"
-    return new_extension
+        return "magnitude"
 
 
-def direct_fieldmap(fmap_path: Path):
-    """Performs the checks and renaming for BIDS spec case 3 for fieldmaps"""
+def direct_fieldmaps_handler(fmap_path: Path):
+    sub = fmap_path.parent.parent.name
+    ses = fmap_path.parent.name
+
+    cprint(
+        f"BIDS Case 3: expecting 1 magnitude and 1 fieldmap files for {sub}, {ses}.",
+        lvl="info",
+    )
 
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
     # Assuming filename ends with "fmap" for the fieldmap
@@ -342,33 +387,32 @@ def direct_fieldmap(fmap_path: Path):
             f'Invalid file {js} for Direct Fieldmapping, missing "Units" key.',
             lvl="warning",
         )
-        unrecognized_fmap_case(fmap_path)
+        not_supported_handler(fmap_path)
         return
     # Renaming
     pattern = r"(.*_)fmap(.*?)(\..*)"
     for previous_filename in files:
         rgx = re.search(pattern, previous_filename)
         cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
-        new_name = cut + renaming_fmap_extensions_case3(extension) + type
+        new_name = cut + direct_fieldmaps_renamer(extension) + type
         os.rename(fmap_path / previous_filename, fmap_path / new_name)
 
 
-def unrecognized_fmap_case(fmap_path: Path):
-    """Deletes files in fmap directory"""
+def not_supported_handler(fmap_path: Path):
+    sub = fmap_path.parent.parent.name
+    ses = fmap_path.parent.name
+
     to_delete = os.listdir(fmap_path)
     cprint(
-        f"The following files were found in {fmap_path} : {to_delete}."
-        f"They will be deleted as they are not usable.",
-        lvl="info",
+        f"No BIDS case was recognized for {sub}, {ses}."
+        f"The following files will be deleted : {to_delete}.",
+        lvl="warning",
     )
     for file in to_delete:
         os.remove(fmap_path / file)
 
 
-def check_case_fmap(fmap_path: Path) -> str or None:
-    sub = fmap_path.parent.parent.name
-    ses = fmap_path.parent.name
-
+def infer_case_fmap(fmap_path: Path) -> BIDSFMAPCase:
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
     nb_files = len(files)
 
@@ -379,41 +423,23 @@ def check_case_fmap(fmap_path: Path) -> str or None:
     ]
 
     if nb_files == 0:
-        cprint(f"Folder for {sub}, {ses} is empty", lvl="warning")
-        return None
+        return BIDSFMAPCase.EMPTY_FOLDER
     elif nb_files == 4:
         if set(extensions) == set([""]):
-            cprint(
-                f"BIDS Case 3: expecting 1 magnitude and 1 fieldmap files for {sub}, {ses}.",
-                lvl="info",
-            )
-            return "case3"
+            return BIDSFMAPCase.DIRECT_FIELDMAPS
         else:
-            cprint(
-                f"BIDS Case 1 : expecting 1 magnitude and 1 phasediff files for {sub}, {ses}.",
-                lvl="info",
-            )
-            return "case1"
+            return BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES
     elif nb_files == 6 and set(extensions) == set(["_e1", "_e2", "_e2_ph"]):
-        cprint(
-            f"BIDS Case 1 : expecting 1 phasediff and 2 magnitude files for {sub}, {ses}.",
-            lvl="info",
-        )
-        return "case1"
+        return BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES
     elif nb_files == 8 and set(extensions) == set(["_e1", "_e2", "_e1_ph", "_e2_ph"]):
-        cprint(
-            f"BIDS Case 2 : expecting 2 phase and 2 magnitude files for {sub}, {ses}.",
-            lvl="info",
-        )
-        return "case2"
+        return BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES
     else:
-        cprint(f"No BIDS case was recognized for {sub}, {ses}.", lvl="warning")
-        return "unrecognized"
+        return BIDSFMAPCase.NOT_SUPPORTED
 
 
 def reorganize_fmaps(bids_path: Path):
     """
-    Performs the renaming and suppression of fmap files according to BIDS specifications.
+    Walk through each session for each subject to reorganize fmap files.
 
     Parameters
     ----------
@@ -421,26 +447,16 @@ def reorganize_fmaps(bids_path: Path):
 
     """
 
-    bids_case = {
-        "case1": case1_1phase_2mag,
-        "case2": case2_2phase_2mag,
-        "case3": direct_fieldmap,
-        "unrecognized": unrecognized_fmap_case,
-    }
-
-    lst_subjects = [d for d in os.listdir(bids_path) if "sub-ADNI" in d]
-
-    for subject in lst_subjects:
-        lst_ses = [
-            d
-            for d in os.listdir(bids_path / subject)
-            if "ses" in d and (bids_path / subject / d).is_dir()
-        ]
-        for ses in lst_ses:
-            fmap_path = bids_path / subject / ses / "fmap"
-            case = check_case_fmap(fmap_path)
-            if case:
-                bids_case[case](fmap_path)
+    for subject in (
+        folder for folder in bids_path.iterdir() if folder.name.startswith("sub-ADNI")
+    ):
+        for session in (
+            folder
+            for folder in subject.iterdir()
+            if folder.name.startswith("ses-") and folder.is_dir()
+        ):
+            fmap_path = bids_path / subject / session / "fmap"
+            fmap_case_handler_factory(infer_case_fmap(fmap_path))(fmap_path)
 
 
 def bids_guess(bids_path: Path):
