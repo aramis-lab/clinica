@@ -253,6 +253,7 @@ def fmap_image(
 
 
 def renaming_fmap_extensions_case1(old_extension: str) -> str:
+    # Assuming case 1 with 1 or 2 magnitudes have the same outputs from dcm2nix
     if old_extension == "e1":
         new_extension = "magnitude1"
     elif old_extension == "e2":
@@ -320,19 +321,20 @@ def direct_fieldmap(fmap_path: Path):
     """Performs the checks and renaming for BIDS spec case 3 for fieldmaps"""
 
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
-    check_json = [f for f in files if "ph.json" in f]  # todo : not ph, what ??
+    # Assuming the extension of the file ends with _ph
+    check_json = [f for f in files if "ph.json" in f]
+    js = [f for f in files if f.endswith("ph.json")][0]
+
     # Checking for Unit key in fmap json
-    for js in check_json:
-        with open(fmap_path / js, "r") as file:
-            json_data = json.load(file)
-        if "Units" not in json_data:
-            print(
-                f'Invalid file {js} for Direct Fieldmapping, missing "Units" key.'
-                f"Does not correspond to BIDS Case 3."
-            )
-            # todo : go case1
-            case1_1phase_2mag(fmap_path)
-            return
+    with open(fmap_path / js, "r") as file:
+        json_data = json.load(file)
+    if "Units" not in json_data:
+        print(
+            f'Invalid file {js} for Direct Fieldmapping, missing "Units" key.'
+            f"Does not correspond to BIDS Case 3."
+        )
+        case1_1phase_2mag(fmap_path)
+        return
     # Renaming
     pattern = r"(.*_)fmap_(.*?)(\..*)"
     for previous_filename in files:
