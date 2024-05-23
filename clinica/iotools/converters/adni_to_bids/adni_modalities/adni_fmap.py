@@ -351,8 +351,6 @@ def direct_fieldmap(fmap_path: Path):
         new_name = cut + renaming_fmap_extensions_case3(extension) + type
         os.rename(fmap_path / previous_filename, fmap_path / new_name)
 
-    print("Case3 - direct fieldmaps : todo")
-
 
 def unrecognized_fmap_case(fmap_path: Path):
     """Deletes fmap directory"""
