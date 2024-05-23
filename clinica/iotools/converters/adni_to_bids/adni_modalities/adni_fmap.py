@@ -253,6 +253,8 @@ def fmap_image(
 
 
 def renaming_fmap_extensions_case1(old_extension: str) -> str:
+    # todo : verify if handles both possibilities for case1
+
     # Assuming case 1 with 1 or 2 magnitudes have the same outputs from dcm2nix
     if old_extension == "e1":
         new_extension = "magnitude1"
@@ -318,7 +320,7 @@ def case2_2phase_2mag(fmap_path: Path):
 
 
 def renaming_fmap_extensions_case3(old_extension: str) -> str:
-    if old_extension.endswith("ph"):
+    if old_extension == "":
         new_extension = "fieldmap"
     else:
         new_extension = "magnitude"
@@ -329,22 +331,21 @@ def direct_fieldmap(fmap_path: Path):
     """Performs the checks and renaming for BIDS spec case 3 for fieldmaps"""
 
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
-    # Assuming the extension of the file ends with _ph
-    check_json = [f for f in files if "ph.json" in f]
-    js = [f for f in files if f.endswith("ph.json")][0]
+    # Assuming filename ends with "fmap" for the fieldmap
+    js = [f for f in files if f.endswith("fmap.json")][0]
 
-    # Checking for Unit key in fmap json
+    # Checking for 'Units' key in fmap json
     with open(fmap_path / js, "r") as file:
         json_data = json.load(file)
     if "Units" not in json_data:
-        print(
-            f'Invalid file {js} for Direct Fieldmapping, missing "Units" key.'
-            f"Does not correspond to BIDS Case 3."
+        cprint(
+            f'Invalid file {js} for Direct Fieldmapping, missing "Units" key.',
+            lvl="warning",
         )
-        case1_1phase_2mag(fmap_path)
+        unrecognized_fmap_case(fmap_path)
         return
     # Renaming
-    pattern = r"(.*_)fmap_(.*?)(\..*)"
+    pattern = r"(.*_)fmap(.*?)(\..*)"
     for previous_filename in files:
         rgx = re.search(pattern, previous_filename)
         cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
@@ -368,32 +369,38 @@ def check_case_fmap(fmap_path: Path) -> str or None:
     sub = fmap_path.parent.parent.name
     ses = fmap_path.parent.name
 
-    extensions = [
-        re.search(r"fmap_(.*).json", f).group(1)
-        for f in os.listdir(fmap_path)
-        if re.search(r"fmap_(.*).json", f)
-    ]
-
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
     nb_files = len(files)
+
+    extensions = [
+        re.search(r"fmap(.*).json", f).group(1)
+        for f in os.listdir(fmap_path)
+        if re.search(r"fmap(.*).json", f)
+    ]
 
     if nb_files == 0:
         cprint(f"Folder for {sub}, {ses} is empty", lvl="warning")
         return None
     elif nb_files == 4:
-        # todo : verify it can handle both case 3 and 1
-        cprint(
-            f"BIDS Case 1 or Case 3: expecting 1 magnitude and 1 phase or fieldmap files for {sub}, {ses}.",
-            lvl="info",
-        )
-        return "case3"
-    elif nb_files == 6 and set(extensions) == set(["e1", "e2", "e2_ph"]):
+        if set(extensions) == set([""]):
+            cprint(
+                f"BIDS Case 3: expecting 1 magnitude and 1 fieldmap files for {sub}, {ses}.",
+                lvl="info",
+            )
+            return "case3"
+        else:
+            cprint(
+                f"BIDS Case 1 : expecting 1 magnitude and 1 phase files for {sub}, {ses}.",
+                lvl="info",
+            )
+            return "case1"
+    elif nb_files == 6 and set(extensions) == set(["_e1", "_e2", "_e2_ph"]):
         cprint(
             f"BIDS Case 1 : expecting 1 phase and 2 magnitude files for {sub}, {ses}.",
             lvl="info",
         )
         return "case1"
-    elif nb_files == 8 and set(extensions) == set(["e1", "e2", "e1_ph", "e2_ph"]):
+    elif nb_files == 8 and set(extensions) == set(["_e1", "_e2", "_e1_ph", "_e2_ph"]):
         cprint(
             f"BIDS Case 2 : expecting 2 phase and 2 magnitude files for {sub}, {ses}.",
             lvl="info",
