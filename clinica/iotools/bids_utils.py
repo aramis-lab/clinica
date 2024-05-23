@@ -173,8 +173,6 @@ def create_participants_df(
         else:
             participant_df.at[i, "participant_id"] = bids_id[0]
 
-    # todo
-
     if len(subjects_to_drop) > 0:
         cprint(
             msg=(

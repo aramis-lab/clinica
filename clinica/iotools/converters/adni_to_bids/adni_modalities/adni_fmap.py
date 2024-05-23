@@ -71,7 +71,7 @@ def convert_adni_fmap(
     cprint("Paths of field maps found. Exporting images into BIDS ...")
 
     paths_to_bids(images, destination_dir, "fmap", mod_to_update=mod_to_update)
-    # rename_fmaps(destination_dir)
+    reorganize_fmaps(Path(destination_dir))
 
     cprint(msg="Field maps conversion done.", lvl="debug")
 
@@ -252,9 +252,6 @@ def fmap_image(
     return image_dict
 
 
-# todo : debugging prints
-# todo : func description
-# todo : attention !! what if e34.nii.gz deleted but still there are 2 imgs ? ex 177
 def renaming_fmap_extensions_case1(old_extension: str) -> str:
     if old_extension == "e1":
         new_extension = "magnitude1"
@@ -266,17 +263,17 @@ def renaming_fmap_extensions_case1(old_extension: str) -> str:
 
 
 def case1_1phase_2mag(fmap_path: Path):
-    "1 or 2 mag, not handled yet"
+    "Performs the checks and renaming associated to BIDS specifications, case 1 for fieldmaps"
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
-    check_json = [f for f in files if "ph.json" in f]
-    # Checking for Echotime keys in phase jsons
-    for js in check_json:
-        with open(fmap_path / js, "r") as file:
-            json_data = json.load(file)
-        if "EchoTime1" not in json_data or "EchoTime2" not in json_data:
-            print(f'Invalid file {js}, missing one "EchoTime" key.')
-            # todo : then what ? return ? Or handle files other way (other func)?
-            return
+    js = [f for f in files if f.endswith("ph.json")][0]
+
+    # Checking for Echotime keys in phase json
+    with open(fmap_path / js, "r") as file:
+        json_data = json.load(file)
+    if "EchoTime1" not in json_data or "EchoTime2" not in json_data:
+        cprint(f'Invalid file {js}, missing "EchoTime" key.', lvl="warning")
+        unrecognized_fmap_case(fmap_path)
+        return
     # Renaming
     pattern = r"(.*_)fmap_(.*?)(\..*)"
     for previous_filename in files:
@@ -299,7 +296,7 @@ def renaming_fmap_extensions_case2(old_extension: str) -> str:
 
 
 def case2_2phase_2mag(fmap_path: Path):
-    "2ph + 2 mag #todo must be echotime in each ph json / CASE 2"
+    "Performs the checks and renaming for BIDS spec case 2 for fieldmaps"
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
     check_json = [f for f in files if "ph.json" in f]
     # Checking for Echotime keys in phase jsons
@@ -307,36 +304,32 @@ def case2_2phase_2mag(fmap_path: Path):
         with open(fmap_path / js, "r") as file:
             json_data = json.load(file)
         if "EchoTime" not in json_data:
-            print(f'Invalid file {js}, missing "EchoTime" key.')
-            # todo : then what ? return ? Or handle files other way (other func:delete ses)?
+            cprint(f'Invalid file {js}, missing "EchoTime" key.', lvl="warning")
+            unrecognized_fmap_case(fmap_path)
             return
     # Renaming
     pattern = r"(.*_)fmap_(.*?)(\..*)"
     for previous_filename in files:
         rgx = re.search(pattern, previous_filename)
         cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
-        # todo : adapt rename
         new_name = cut + renaming_fmap_extensions_case2(extension) + type
         os.rename(fmap_path / previous_filename, fmap_path / new_name)
 
 
 def direct_fieldmap(fmap_path: Path):
-    # todo
-    (
-        "direct fieldmap ; what does it look like ?"
-        "must be UNITS in the fieldmap json (has yet to see what it looks like)"
-        "Find a case somewhere ???"
-    )
-    return
+    """Performs the checks and renaming for BIDS spec case 3 for fieldmaps"""
 
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
-    check_json = [f for f in files if "ph.json" in f]  # todo : not ph.
+    check_json = [f for f in files if "ph.json" in f]  # todo : not ph, what ??
     # Checking for Unit key in fmap json
     for js in check_json:
         with open(fmap_path / js, "r") as file:
             json_data = json.load(file)
         if "Units" not in json_data:
-            print(f'Invalid file {js} for Direct Fieldmapping, missing "Units" key.')
+            print(
+                f'Invalid file {js} for Direct Fieldmapping, missing "Units" key.'
+                f"Does not correspond to BIDS Case 3."
+            )
             # todo : go case1
             case1_1phase_2mag(fmap_path)
             return
@@ -352,62 +345,66 @@ def direct_fieldmap(fmap_path: Path):
 
 
 def unrecognized_fmap_case(fmap_path: Path):
-    # todo : as a warning ?
-    print(
-        f"The following files were found in {fmap_path} : {os.listdir(fmap_path)}."
-        f"The fmap session will be deleted as it is not usable."
+    """Deletes fmap directory"""
+    to_delete = os.listdir(fmap_path)
+    cprint(
+        f"The following files were found in {fmap_path} : {to_delete}."
+        f"They will be deleted as they are not usable.",
+        lvl="info",
     )
-    shutil.rmtree(fmap_path)
+    for file in to_delete:
+        os.remove(fmap_path / file)
 
 
-def check_case_fmap(fmap_path: Path) -> str:
+def check_case_fmap(fmap_path: Path) -> str or None:
     sub = fmap_path.parent.parent.name
     ses = fmap_path.parent.name
+
     extensions = [
         re.search(r"fmap_(.*).json", f).group(1)
         for f in os.listdir(fmap_path)
         if re.search(r"fmap_(.*).json", f)
     ]
-    # todo : possible that empty ? or that problem arises ?
+
     files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
     nb_files = len(files)
 
-    if nb_files == 4:
-        # todo : either case 3 or case 1
-        print(
-            f"Assuming BIDS Case 3 : expecting 1 magnitude and 1 fieldmap files for {sub}, {ses}."
-            f"Could also be 1 mag + 1 phase, TO DO"
+    if nb_files == 0:
+        cprint(f"Folder for {sub}, {ses} is empty", lvl="warning")
+        return None
+    elif nb_files == 4:
+        # todo : verify it can handle both case 3 and 1
+        cprint(
+            f"BIDS Case 1 or Case 3: expecting 1 magnitude and 1 phase or fieldmap files for {sub}, {ses}.",
+            lvl="info",
         )
         return "case3"
     elif nb_files == 6 and set(extensions) == set(["e1", "e2", "e2_ph"]):
-        print(
-            f"BIDS Case 1 : expecting 1 phase and 2 magnitude files for {sub}, {ses}."
+        cprint(
+            f"BIDS Case 1 : expecting 1 phase and 2 magnitude files for {sub}, {ses}.",
+            lvl="info",
         )
         return "case1"
     elif nb_files == 8 and set(extensions) == set(["e1", "e2", "e1_ph", "e2_ph"]):
-        print(
-            f"BIDS Case 2 : expecting 2 phase and 2 magnitude files for {sub}, {ses}."
+        cprint(
+            f"BIDS Case 2 : expecting 2 phase and 2 magnitude files for {sub}, {ses}.",
+            lvl="info",
         )
         return "case2"
     else:
-        print(f"No BIDS case was recognized for {sub}, {ses}.")
+        cprint(f"No BIDS case was recognized for {sub}, {ses}.", lvl="warning")
         return "unrecognized"
 
 
 def reorganize_fmaps(bids_path: Path):
     """
-    #todo : what does it do ? relying on dcm2niix naming
+    Performs the renaming and suppression of fmap files according to BIDS specifications.
+
     Parameters
     ----------
-    bids_path
-
-    Returns
-    -------
+    bids_path : Path to the BIDS dataset
 
     """
-    # todo : remove
-    # testing :
-    # bids_path = Path("/Users/alice.joubert/clinicaQC/data/ADNI/testing_rename")
 
     bids_case = {
         "case1": case1_1phase_2mag,
@@ -427,11 +424,12 @@ def reorganize_fmaps(bids_path: Path):
         for ses in lst_ses:
             fmap_path = bids_path / subject / ses / "fmap"
             case = check_case_fmap(fmap_path)
-            bids_case[case](fmap_path)
+            if case:
+                bids_case[case](fmap_path)
 
 
 def bids_guess(bids_path: Path):
-    # todo : add where necessary to check
+    # todo : WIP - add where necessary to check
 
     bids_path = Path(bids_path)
 
@@ -455,4 +453,4 @@ def bids_guess(bids_path: Path):
                     f"since dcm2nix did not find any BIDS correspondence",
                     lvl="warning",
                 )
-                # todo : adapt this bc breaks code later if suffix not usual
+                # todo : delete files

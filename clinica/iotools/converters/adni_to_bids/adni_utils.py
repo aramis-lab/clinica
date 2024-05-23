@@ -1164,7 +1164,7 @@ def find_conversion_mod(file_name):
         "magnitude1",
         "magnitude2",
     ):
-        return "fmap"  # todo :verify what that does
+        return "fmap"
     elif suffix == "pet":
         tracer = file_name.split("trc-")[1].split("_")[0]
         if tracer in (Tracer.AV45, Tracer.FBB):
