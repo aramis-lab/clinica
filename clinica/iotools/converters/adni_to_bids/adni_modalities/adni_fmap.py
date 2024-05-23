@@ -354,7 +354,7 @@ def direct_fieldmap(fmap_path: Path):
 
 
 def unrecognized_fmap_case(fmap_path: Path):
-    """Deletes fmap directory"""
+    """Deletes files in fmap directory"""
     to_delete = os.listdir(fmap_path)
     cprint(
         f"The following files were found in {fmap_path} : {to_delete}."
@@ -390,13 +390,13 @@ def check_case_fmap(fmap_path: Path) -> str or None:
             return "case3"
         else:
             cprint(
-                f"BIDS Case 1 : expecting 1 magnitude and 1 phase files for {sub}, {ses}.",
+                f"BIDS Case 1 : expecting 1 magnitude and 1 phasediff files for {sub}, {ses}.",
                 lvl="info",
             )
             return "case1"
     elif nb_files == 6 and set(extensions) == set(["_e1", "_e2", "_e2_ph"]):
         cprint(
-            f"BIDS Case 1 : expecting 1 phase and 2 magnitude files for {sub}, {ses}.",
+            f"BIDS Case 1 : expecting 1 phasediff and 2 magnitude files for {sub}, {ses}.",
             lvl="info",
         )
         return "case1"
