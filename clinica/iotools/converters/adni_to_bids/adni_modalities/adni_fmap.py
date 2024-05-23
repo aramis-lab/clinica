@@ -317,6 +317,14 @@ def case2_2phase_2mag(fmap_path: Path):
         os.rename(fmap_path / previous_filename, fmap_path / new_name)
 
 
+def renaming_fmap_extensions_case3(old_extension: str) -> str:
+    if old_extension.endswith("ph"):
+        new_extension = "fieldmap"
+    else:
+        new_extension = "magnitude"
+    return new_extension
+
+
 def direct_fieldmap(fmap_path: Path):
     """Performs the checks and renaming for BIDS spec case 3 for fieldmaps"""
 
@@ -340,7 +348,7 @@ def direct_fieldmap(fmap_path: Path):
     for previous_filename in files:
         rgx = re.search(pattern, previous_filename)
         cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
-        new_name = cut + renaming_fmap_extensions_case2(extension) + type
+        new_name = cut + renaming_fmap_extensions_case3(extension) + type
         os.rename(fmap_path / previous_filename, fmap_path / new_name)
 
     print("Case3 - direct fieldmaps : todo")
