@@ -263,6 +263,13 @@ class BIDSFMAPCase(StrEnum):
 
 def phase_magnitude_renamer(old_extension: str, case: BIDSFMAPCase) -> str:
     # Assuming case 1 with 1 or 2 magnitudes have the same outputs from dcm2nix
+    if (
+        case != BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES
+        and case != BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES
+    ):
+        raise NotImplementedError(
+            f"No renaming should be performed for case {case.value}"
+        )
     if old_extension == "e1":
         return "magnitude1"
     if old_extension == "e2":
@@ -272,20 +279,11 @@ def phase_magnitude_renamer(old_extension: str, case: BIDSFMAPCase) -> str:
             return "phasediff"
         elif case == BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES:
             return "phase2"
-        else:
-            raise NotImplementedError(
-                f"No renaming should be performed for case {case.value}"
-            )
     if old_extension == "e1_ph":
         if case == BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES:
             return "phasediff"
         elif case == BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES:
             return "phase1"
-        else:
-            raise NotImplementedError(
-                f"No renaming should be performed for case {case.value}"
-            )
-        return "phasediff"
     raise ValueError(f"Extension {old_extension} not taken in charge.")
 
 
