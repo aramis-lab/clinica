@@ -286,7 +286,7 @@ def phase_magnitude_renamer(old_extension: str, case: BIDSFMAPCase) -> str:
 
 
 def rename_files(fmap_path: Path, case: BIDSFMAPCase):
-    filenames = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
+    filenames = [f.name for f in fmap_path.iterdir() if not f.name.startswith(".")]
     pattern = r"(.*_)fmap_(.*?)(\..*)$"
     for previous_filename in filenames:
         rgx = re.search(pattern, previous_filename)
@@ -321,89 +321,79 @@ def get_json_file_matching_pattern(fmap_path: Path, pattern: str) -> Path:
     return json_file[0]
 
 
+def check_json_contains_keys(json_file: Path, keys: Iterable[str]) -> bool:
+    with open(json_file, "r") as file:
+        json_data = json.load(file)
+    missing_keys = [key for key in keys if key not in json_data]
+    if missing_keys:
+        cprint(
+            f"Invalid file {json_file}, missing the following keys: {missing_keys}.",
+            lvl="warning",
+        )
+        return False
+    return True
+
+
 def empty_folder_handler(fmap_path: Path):
-    sub = fmap_path.parent.parent.name
-    ses = fmap_path.parent.name
-    cprint(f"Folder for {sub}, {ses} is empty", lvl="warning")
+    cprint(
+        f"Folder for subject {fmap_path.parent.parent.name},"
+        f"session {fmap_path.parent.name} is empty",
+        lvl="warning",
+    )
 
 
 def one_phase_two_magnitudes_handler(fmap_path: Path):
-    "Performs the checks and renaming associated to BIDS specifications, case 1 for fieldmaps"
-    sub = fmap_path.parent.parent.name
-    ses = fmap_path.parent.name
-
+    """Performs the checks and renaming associated to BIDS specifications, case 1 for fieldmaps"""
     cprint(
-        f"BIDS Case 1 : expecting 1 phasediff and at least 1 magnitude files for {sub}, {ses}.",
+        f"BIDS Case 1 : expecting 1 phasediff and at least 1 magnitude files for subject"
+        f"{fmap_path.parent.parent.name}, session {fmap_path.parent.name}.",
         lvl="info",
     )
-
-    files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
-    json_file = get_json_file_matching_pattern(fmap_path, pattern="ph.json")
-
     # Checking for Echotime keys in phase json
-    with open(fmap_path / json_file, "r") as file:
-        json_data = json.load(file)
-    if "EchoTime1" not in json_data or "EchoTime2" not in json_data:
-        cprint(f'Invalid file {json_file}, missing "EchoTime" key.', lvl="warning")
-        unrecognized_fmap_case(fmap_path)
-        return
-    rename_files(fmap_path, BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES)
+    json_file = get_json_file_matching_pattern(fmap_path, pattern="ph.json")
+    if not check_json_contains_keys(json_file, ["EchoTime1", "EchoTime2"]):
+        not_supported_handler(fmap_path)
+    else:
+        rename_files(fmap_path, BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES)
 
 
 def two_phases_two_magnitudes_handler(fmap_path: Path):
     """Performs the checks and renaming for BIDS spec case 2 for fieldmaps"""
-
-    sub = fmap_path.parent.parent.name
-    ses = fmap_path.parent.name
     cprint(
-        f"BIDS Case 2 : expecting 2 phase and 2 magnitude files for {sub}, {ses}.",
+        f"BIDS Case 2 : expecting 2 phase and 2 magnitude files for subject {fmap_path.parent.parent.name},"
+        f"session {fmap_path.parent.name}.",
         lvl="info",
     )
-
-    files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
-    check_json = [f for f in files if "ph.json" in f]
+    json_files = [
+        f
+        for f in fmap_path.iterdir()
+        if not f.name.startswith(".") and f.name.endswith("ph.json")
+    ]
     # Checking for Echotime keys in phase jsons
-    for js in check_json:
-        with open(fmap_path / js, "r") as file:
-            json_data = json.load(file)
-        if "EchoTime" not in json_data:
-            cprint(f'Invalid file {js}, missing "EchoTime" key.', lvl="warning")
-            unrecognized_fmap_case(fmap_path)
-            return
-    rename_files(fmap_path, BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES)
+    if not all([check_json_contains_keys(f, ["EchoTime"]) for f in json_files]):
+        not_supported_handler(fmap_path)
+    else:
+        rename_files(fmap_path, BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES)
 
 
 def direct_fieldmaps_handler(fmap_path: Path):
-    sub = fmap_path.parent.parent.name
-    ses = fmap_path.parent.name
-
-    files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
+    cprint(
+        f"Assuming BIDS Case 3 for subject {fmap_path.parent.parent.name},"
+        f"session {fmap_path.parent.name}. Not supported yet.",
+        lvl="info",
+    )
+    # Checking for 'Units' key in fmap json
     # Assuming filename ends with "fmap" for the fieldmap
     json_file = get_json_file_matching_pattern(fmap_path, pattern="fmap.json")
-
-    # Checking for 'Units' key in fmap json
-    with open(fmap_path / json_file, "r") as file:
-        json_data = json.load(file)
-    if "Units" not in json_data:
-        cprint(
-            f'Assuming BIDS Case 3 : invalid file {json_file} for Direct Fieldmapping, missing "Units" key.',
-            lvl="warning",
-        )
-    else:
-        cprint(
-            f"Assuming BIDS Case 3 with 1 magnitude and 1 fieldmap files for {sub}, {ses}. Not supported yet.",
-            lvl="info",
-        )
+    _ = check_json_contains_keys(json_file, ["Units"])
     not_supported_handler(fmap_path)
 
 
 def not_supported_handler(fmap_path: Path):
-    sub = fmap_path.parent.parent.name
-    ses = fmap_path.parent.name
-
     to_delete = os.listdir(fmap_path)
     cprint(
-        f"No currently supported BIDS case was recognized for {sub}, {ses}."
+        f"No currently supported BIDS case was recognized for subject {fmap_path.parent.parent.name},"
+        f"session {fmap_path.parent.name}."
         f"The following files will be deleted : {to_delete}.",
         lvl="warning",
     )
@@ -412,12 +402,12 @@ def not_supported_handler(fmap_path: Path):
 
 
 def infer_case_fmap(fmap_path: Path) -> BIDSFMAPCase:
-    files = [f for f in os.listdir(fmap_path) if not f.startswith(".")]
+    files = [f.name for f in fmap_path.iterdir() if not f.name.startswith(".")]
     nb_files = len(files)
 
     extensions = set(
         re.search(r"fmap(.*).json", f).group(1)
-        for f in os.listdir(fmap_path)
+        for f in files
         if re.search(r"fmap(.*).json", f)
     )
 
