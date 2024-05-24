@@ -270,20 +270,17 @@ def phase_magnitude_renamer(old_extension: str, case: BIDSFMAPCase) -> str:
         raise NotImplementedError(
             f"No renaming should be performed for case {case.value}"
         )
-    if old_extension == "e1":
-        return "magnitude1"
-    if old_extension == "e2":
-        return "magnitude2"
-    if old_extension == "e2_ph":
+
+    magnitude_match = re.match(pattern="^e([0-9])$", string=old_extension)
+    if magnitude_match:
+        return f"magnitude{magnitude_match.group(1)}"
+
+    phase_match = re.match(pattern="^e([0-9])_ph$", string=old_extension)
+    if phase_match:
         if case == BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES:
             return "phasediff"
         elif case == BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES:
-            return "phase2"
-    if old_extension == "e1_ph":
-        if case == BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES:
-            return "phasediff"
-        elif case == BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES:
-            return "phase1"
+            return f"phase{magnitude_match.group(1)}"
     raise ValueError(f"Extension {old_extension} not taken in charge.")
 
 
