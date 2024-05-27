@@ -66,6 +66,7 @@ def test_write_caps_dataset_description_error(tmp_path):
         DatasetType,
         write_caps_dataset_description,
     )
+    from clinica.utils.exceptions import ClinicaCAPSError
 
     caps_dir = tmp_path / "caps"
     caps_dir.mkdir()
@@ -91,7 +92,7 @@ def test_write_caps_dataset_description_error(tmp_path):
 
     # But re-writing a different description raises an error
     with pytest.raises(
-        ValueError,
+        ClinicaCAPSError,
         match=(
             f"Impossible to write the dataset_description.json file in {caps_dir} "
             "because it already exists and it contains incompatible metadata."

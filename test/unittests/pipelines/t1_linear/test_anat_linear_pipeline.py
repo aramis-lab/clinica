@@ -23,7 +23,7 @@ def test_anat_linear_pipeline_single_bids_input_error(tmp_path):
     with pytest.raises(
         ClinicaBIDSError,
         match=re.escape(
-            f"The BIDS directory ({tmp_path}) you provided "
+            f"The raw directory ({tmp_path}) you provided "
             "is missing a dataset_description.json file."
         ),
     ):
@@ -37,7 +37,7 @@ def test_anat_linear_pipeline_single_caps_input_error(tmp_path):
     with pytest.raises(
         ClinicaCAPSError,
         match=re.escape(
-            f"The CAPS directory ({tmp_path}) you provided "
+            f"The derivative directory ({tmp_path}) you provided "
             "is missing a dataset_description.json file."
         ),
     ):
