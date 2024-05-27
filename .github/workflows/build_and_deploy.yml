@@ -16,7 +16,7 @@ concurrency:
 env:
   POETRY_VERSION: '1.6.1'
   PYTHON_VERSION: '3.10'
-  PR_NUMBER: ${{ github.event.number }}
+  PR_NUMBER: "PR-${{ github.event.number }}"
 
 jobs:
   build-and-deploy-doc:
