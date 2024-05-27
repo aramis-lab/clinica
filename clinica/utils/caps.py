@@ -7,15 +7,11 @@ from attrs import define, fields
 from cattr.gen import make_dict_unstructure_fn, override
 from cattr.preconf.json import make_converter
 
-# from clinica.utils.input import DatasetType
 from clinica.utils.bids import BIDS_VERSION
+from clinica.utils.exceptions import ClinicaCAPSError
+from clinica.utils.inputs import DatasetType
 
 CAPS_VERSION = "1.0.0"
-
-
-class DatasetType(str, Enum):
-    RAW = "raw"
-    DERIVATIVE = "derivative"
 
 
 @define
@@ -55,7 +51,7 @@ class CAPSDatasetDescription:
                 DatasetType(parsed["DatasetType"]),
             )
         except KeyError:
-            raise ValueError(
+            raise ClinicaCAPSError(
                 f"CAPS dataset_description.json file {json_file} is not valid and "
                 "cannot be parsed as a CAPSDatasetDescription. "
                 "Please verify that the file is well formatted."
@@ -103,17 +99,24 @@ def write_caps_dataset_description(
     caps_version: Optional[str] = None,
 ) -> None:
     """Write `dataset_description.json` at the root of the CAPS directory."""
+    from clinica.utils.stream import cprint
+
     new_desc = CAPSDatasetDescription.from_values(name, bids_version, caps_version)
     if (caps_dir / "dataset_description.json").exists():
-        print(f"The CAPS dataset already contains a dataset_description.json file.")
+        cprint(
+            f"The CAPS dataset {name} already contains a dataset_description.json file.",
+            lvl="info",
+        )
         previous_desc = CAPSDatasetDescription.from_file(
             caps_dir / "dataset_description.json"
         )
         if not previous_desc.is_compatible_with(new_desc):
-            raise ValueError(
+            msg = (
                 f"Impossible to write the dataset_description.json file in {caps_dir} "
                 "because it already exists and it contains incompatible metadata."
             )
+            cprint(msg, lvl="error")
+            raise ClinicaCAPSError(msg)
         if previous_desc.name != new_desc.name:
             new_desc.name = f"{previous_desc.name} + {new_desc.name}"
     with open(caps_dir / "dataset_description.json", "w") as f:

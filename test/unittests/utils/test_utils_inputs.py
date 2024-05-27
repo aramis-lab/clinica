@@ -1,3 +1,4 @@
+import json
 import os
 import re
 from pathlib import Path
@@ -354,6 +355,18 @@ def test_check_caps_folder(tmp_path):
 
     (tmp_path / "subjects").mkdir()
     (tmp_path / "subjects" / "foo.txt").mkdir()
+    with pytest.raises(
+        ClinicaCAPSError,
+        match=re.escape(
+            f"The derivative directory ({tmp_path}) you provided is missing a dataset_description.json file."
+        ),
+    ):
+        check_caps_folder(tmp_path)
+    with open(tmp_path / "dataset_description.json", "w") as fp:
+        json.dump(
+            {"Name": "Example dataset", "BIDSVersion": "1.0.2", "CAPSVersion": "1.0.0"},
+            fp,
+        )
     assert check_caps_folder(tmp_path) is None
     (tmp_path / "sub-01").mkdir()
     with pytest.raises(
@@ -709,6 +722,11 @@ def test_clinica_file_reader_dwi_dti(tmp_path):
         / "native_space"
     )
     dti_folder.mkdir(parents=True)
+    with open(tmp_path / "dataset_description.json", "w") as fp:
+        json.dump(
+            {"Name": "Example dataset", "BIDSVersion": "1.0.2", "CAPSVersion": "1.0.0"},
+            fp,
+        )
     for measure in DTIBasedMeasure:
         (dti_folder / f"sub-01_ses-M000_space-T1w_{measure.value}.nii.gz").touch()
     query = dwi_dti("FA", space="T1w")
