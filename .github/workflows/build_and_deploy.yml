@@ -44,7 +44,7 @@ jobs:
           echo "${{ github.head_ref }}"
           if [[ ! -z "${{ github.event_number }}" ]];
           then
-            BRANCH_NAME="${{ github.head_ref }}"
+            BRANCH_NAME="${{ github.ref_name }}"
           fi
           mv site "${BRANCH_NAME}"
           ls "${BRANCH_NAME}"
