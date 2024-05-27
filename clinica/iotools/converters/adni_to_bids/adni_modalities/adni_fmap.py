@@ -271,11 +271,11 @@ def phase_magnitude_renamer(old_extension: str, case: BIDSFMAPCase) -> str:
             f"No renaming should be performed for case {case.value}"
         )
 
-    magnitude_match = re.match(pattern="^e([0-9])$", string=old_extension)
+    magnitude_match = re.match(pattern="^e([1-2])$", string=old_extension)
     if magnitude_match:
         return f"magnitude{magnitude_match.group(1)}"
 
-    phase_match = re.match(pattern="^e([0-9])_ph$", string=old_extension)
+    phase_match = re.match(pattern="^e([1-2])_ph$", string=old_extension)
     if phase_match:
         if case == BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES:
             return "phasediff"
@@ -290,9 +290,12 @@ def rename_files(fmap_path: Path, case: BIDSFMAPCase):
     pattern = r"(.*_)fmap_(.*?)(\..*)$"
     for previous_filename in filenames:
         rgx = re.search(pattern, previous_filename)
-        cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
-        new_name = f"{cut}{phase_magnitude_renamer(extension, case)}{type}"
-        os.rename(fmap_path / previous_filename, fmap_path / new_name)
+        if rgx:
+            cut, extension, type = rgx.group(1), rgx.group(2), rgx.group(3)
+            new_name = f"{cut}{phase_magnitude_renamer(extension, case)}{type}"
+            os.rename(fmap_path / previous_filename, fmap_path / new_name)
+        else:
+            raise ValueError(f"Invalid file {previous_filename} was found.")
 
 
 def fmap_case_handler_factory(case: BIDSFMAPCase) -> Callable:
@@ -349,12 +352,11 @@ def one_phase_two_magnitudes_handler(fmap_path: Path):
         f"{fmap_path.parent.parent.name}, session {fmap_path.parent.name}.",
         lvl="info",
     )
-    # Checking for Echotime keys in phase json
     json_file = get_json_file_matching_pattern(fmap_path, pattern="ph.json")
-    if not check_json_contains_keys(json_file, ["EchoTime1", "EchoTime2"]):
-        not_supported_handler(fmap_path)
-    else:
+    if check_json_contains_keys(json_file, ("EchoTime1", "EchoTime2")):
         rename_files(fmap_path, BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES)
+    else:
+        not_supported_handler(fmap_path)
 
 
 def two_phases_two_magnitudes_handler(fmap_path: Path):
@@ -369,11 +371,10 @@ def two_phases_two_magnitudes_handler(fmap_path: Path):
         for f in fmap_path.iterdir()
         if not f.name.startswith(".") and f.name.endswith("ph.json")
     ]
-    # Checking for Echotime keys in phase jsons
-    if not all([check_json_contains_keys(f, ["EchoTime"]) for f in json_files]):
-        not_supported_handler(fmap_path)
-    else:
+    if all([check_json_contains_keys(f, ("EchoTime",)) for f in json_files]):
         rename_files(fmap_path, BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES)
+    else:
+        not_supported_handler(fmap_path)
 
 
 def direct_fieldmaps_handler(fmap_path: Path):
@@ -382,10 +383,9 @@ def direct_fieldmaps_handler(fmap_path: Path):
         f"session {fmap_path.parent.name}. Not supported yet.",
         lvl="info",
     )
-    # Checking for 'Units' key in fmap json
     # Assuming filename ends with "fmap" for the fieldmap
     json_file = get_json_file_matching_pattern(fmap_path, pattern="fmap.json")
-    _ = check_json_contains_keys(json_file, ["Units"])
+    check_json_contains_keys(json_file, ("Units",))
     not_supported_handler(fmap_path)
 
 
@@ -414,13 +414,13 @@ def infer_case_fmap(fmap_path: Path) -> BIDSFMAPCase:
     if nb_files == 0:
         return BIDSFMAPCase.EMPTY_FOLDER
     elif nb_files == 4:
-        if extensions == set([""]):
+        if extensions == {""}:
             return BIDSFMAPCase.DIRECT_FIELDMAPS
         else:
             return BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES
-    elif nb_files == 6 and extensions == set(["_e1", "_e2", "_e2_ph"]):
+    elif nb_files == 6 and extensions == {"_e1", "_e2", "_e2_ph"}:
         return BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES
-    elif nb_files == 8 and extensions == set(["_e1", "_e2", "_e1_ph", "_e2_ph"]):
+    elif nb_files == 8 and extensions == {"_e1", "_e2", "_e1_ph", "_e2_ph"}:
         return BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES
     else:
         return BIDSFMAPCase.NOT_SUPPORTED
