@@ -37,6 +37,7 @@ jobs:
           make doc
       - name: Deploy documentation
         run: |
+          echo "${GITHUB_REF}"
           if [[ ! -z "${TAG_NAME}" ]];
           then
             BRANCH_NAME="${TAG_NAME}"
