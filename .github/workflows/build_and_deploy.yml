@@ -1,0 +1,50 @@
+name: Build and Deloy Documentation
+
+on:
+  push:
+    branches: ["dev", "maint-*"]
+  pull_request:
+    branches: ["dev", "maint-*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+env:
+  POETRY_VERSION: '1.6.1'
+  PYTHON_VERSION: '3.10'
+  PR_NUMBER: "PR-${{ github.event.number }}"
+
+jobs:
+  build-and-deploy-doc:
+    runs-on:
+      - self-hosted
+      - Linux
+      - doc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: false
+      - name: Build documentation
+        run: |
+          make env.conda
+          source ~/miniconda3/etc/profile.d/conda.sh
+          conda activate "${{ github.workspace }}"/env
+          make doc
+      - name: Deploy documentation
+        run: |
+          echo "${GITHUB_REF}"
+          echo "${PR_NUMBER}"
+          if [[ ! -z "${TAG_NAME}" ]];
+          then
+            BRANCH_NAME="${TAG_NAME}"
+          fi
+          mv site "${PR_NUMBER}"
+          ls "${PR_NUMBER}"
+          scp -r "${PR_NUMBER}" "aramislab:/srv/local/clinica/docs/public/${PR_NUMBER}"
+
