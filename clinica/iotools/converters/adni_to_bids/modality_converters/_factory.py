@@ -1,4 +1,5 @@
-from typing import Callable, Iterable, Union
+from pathlib import Path
+from typing import Callable, Iterable, Optional, Union
 
 from clinica.iotools.converters.adni_to_bids.adni_utils import (
     ADNIModality,
@@ -6,6 +7,11 @@ from clinica.iotools.converters.adni_to_bids.adni_utils import (
 )
 
 __all__ = ["converter_factory", "modality_converter_factory"]
+
+
+ConverterInterface = Callable[
+    [Path, Path, Path, Path, Optional[Iterable[str]], bool, int], None
+]
 
 
 def _get_converters_for_modality(
@@ -30,7 +36,7 @@ def _get_converters_for_modality(
         return [ADNIModalityConverter.FMAP]
 
 
-def converter_factory(converter: ADNIModalityConverter) -> Callable:
+def converter_factory(converter: ADNIModalityConverter) -> ConverterInterface:
     """Returns the converter associated with the provided ADNIModalityConverter variant."""
     if converter == ADNIModalityConverter.T1:
         from ._t1 import convert_t1
@@ -76,7 +82,7 @@ def converter_factory(converter: ADNIModalityConverter) -> Callable:
 
 def modality_converter_factory(
     modality: Union[str, ADNIModality],
-) -> Iterable[Callable]:
+) -> Iterable[ConverterInterface]:
     """Returns an iterable of ADNI converters based on the provided modality."""
     return [
         converter_factory(converter)

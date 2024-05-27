@@ -1,7 +1,7 @@
 """Module for converting Tau PET of ADNI."""
 
 from pathlib import Path
-from typing import List, Optional
+from typing import Iterable, Optional
 
 import pandas as pd
 
@@ -13,9 +13,9 @@ def convert_tau_pet(
     csv_dir: Path,
     destination_dir: Path,
     conversion_dir: Path,
-    subjects: List[str],
+    subjects: Iterable[str],
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ):
     """Convert Tau PET images of ADNI into BIDS format.
 
@@ -77,7 +77,7 @@ def convert_tau_pet(
 def _compute_tau_pet_paths(
     source_dir: Path,
     csv_dir: Path,
-    subjects: list[str],
+    subjects: Iterable[str],
     conversion_dir: Path,
 ) -> pd.DataFrame:
     """Compute the paths to Tau PET images.
@@ -178,5 +178,5 @@ def _get_tau_pet_df_columns() -> list[str]:
     ]
 
 
-def _get_known_conversion_errors() -> list[tuple[str, str]]:
+def _get_known_conversion_errors() -> Iterable[tuple[str, str]]:
     return [("098_S_4275", "m84")]

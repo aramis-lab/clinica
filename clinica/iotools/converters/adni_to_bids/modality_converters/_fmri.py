@@ -1,7 +1,7 @@
 """Module for converting fMRI of ADNI."""
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Iterable, Optional
 
 import pandas as pd
 
@@ -13,9 +13,9 @@ def convert_fmri(
     csv_dir: Path,
     destination_dir: Path,
     conversion_dir: Path,
-    subjects: List[str],
+    subjects: Iterable[str],
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
     convert_multiband: bool = True,
 ):
     """Convert fMR images of ADNI into BIDS format.
@@ -82,7 +82,7 @@ def convert_fmri(
 def _compute_fmri_path(
     source_dir: Path,
     csv_dir: Path,
-    subjects: List[str],
+    subjects: Iterable[str],
     conversion_dir: Path,
     convert_multiband: bool,
 ) -> pd.DataFrame:
@@ -199,7 +199,7 @@ def _initialize_fmri_df() -> pd.DataFrame:
     )
 
 
-def _get_known_conversion_errors() -> list[tuple[str, str]]:
+def _get_known_conversion_errors() -> Iterable[tuple[str, str]]:
     return [
         ("006_S_4485", "m84"),
         ("123_S_4127", "m96"),

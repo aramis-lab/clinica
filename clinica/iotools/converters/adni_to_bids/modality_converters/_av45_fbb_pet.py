@@ -1,7 +1,7 @@
 """Module for converting AV45 and Florbetaben PET of ADNI."""
 
 from pathlib import Path
-from typing import List
+from typing import Iterable
 
 import pandas as pd
 
@@ -13,7 +13,7 @@ def convert_av45_fbb_pet(
     csv_dir: Path,
     destination_dir: Path,
     conversion_dir: Path,
-    subjects: List[str],
+    subjects: Iterable[str],
     mod_to_update: bool = False,
     n_procs: int = 1,
 ):
@@ -72,7 +72,7 @@ def convert_av45_fbb_pet(
 def _compute_av45_fbb_pet_paths(
     source_dir: Path,
     csv_dir: Path,
-    subjects: list[str],
+    subjects: Iterable[str],
     conversion_dir: Path,
 ) -> pd.DataFrame:
     """Compute the paths to the AV45 and Florbetaben PET images and store them in a TSV file.
@@ -173,7 +173,7 @@ def _compute_av45_fbb_pet_paths(
     return images
 
 
-def _get_known_conversion_errors() -> list[tuple[str, str]]:
+def _get_known_conversion_errors() -> Iterable[tuple[str, str]]:
     return [
         ("128_S_2220", "m48"),
         # Several output images

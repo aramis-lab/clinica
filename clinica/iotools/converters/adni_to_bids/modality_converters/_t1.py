@@ -1,7 +1,7 @@
 """Module for converting T1 of ADNI."""
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Iterable, Optional
 
 import pandas as pd
 
@@ -13,9 +13,9 @@ def convert_t1(
     csv_dir: Path,
     destination_dir: Path,
     conversion_dir: Path,
-    subjects: List[str],
+    subjects: Iterable[str],
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ):
     """Convert T1 MR images of ADNI into BIDS format.
 
@@ -77,7 +77,7 @@ def convert_t1(
 def _compute_t1_paths(
     source_dir: Path,
     csv_dir: Path,
-    subjects: list[str],
+    subjects: Iterable[str],
     conversion_dir: Path,
 ) -> pd.DataFrame:
     """Compute the paths to T1 MR images and store them in a TSV file.
@@ -205,7 +205,7 @@ def _initialize_t1_df() -> pd.DataFrame:
     )
 
 
-def _get_known_conversion_errors() -> list[tuple[str, str]]:
+def _get_known_conversion_errors() -> Iterable[tuple[str, str]]:
     return [  # Eq_1
         ("031_S_0830", "m48"),
         ("100_S_0995", "m18"),
@@ -676,10 +676,13 @@ def _check_qc(
 
     # If QC exists and failed we keep the other scan (in case 2 scans were performed)
     if not qc.empty and qc.iloc[0].PASS != 1:
-        cprint("QC found but NOT passed")
+        cprint("QC found but NOT passed", lvl="info")
         cprint(
-            f"Subject {subject_id} for visit {visit_str} "
-            f"- Series: {str(scan.SeriesID)} - Study: {str(scan.StudyID)}"
+            msg=(
+                f"Subject {subject_id} for visit {visit_str} "
+                f"- Series: {str(scan.SeriesID)} - Study: {str(scan.StudyID)}"
+            ),
+            lvl="info",
         )
         return False
     return True

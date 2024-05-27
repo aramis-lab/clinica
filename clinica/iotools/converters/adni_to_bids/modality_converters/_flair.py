@@ -1,7 +1,7 @@
 """Module for converting FLAIR of ADNI."""
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Iterable, Optional
 
 import pandas as pd
 
@@ -13,9 +13,9 @@ def convert_flair(
     csv_dir: Path,
     destination_dir: Path,
     conversion_dir: Path,
-    subjects: List[str],
+    subjects: Iterable[str],
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ):
     """Convert FLAIR images of ADNI into BIDS format.
 
@@ -75,7 +75,7 @@ def convert_flair(
 def _compute_flair_paths(
     source_dir: Path,
     csv_dir: Path,
-    subjects: list[str],
+    subjects: Iterable[str],
     conversion_dir: Path,
 ) -> pd.DataFrame:
     """Compute the paths to the FLAIR images and store them in a TSV file.
@@ -178,7 +178,7 @@ def _initialize_flair_df() -> pd.DataFrame:
     )
 
 
-def _get_known_conversion_errors() -> list[tuple[str, str]]:
+def _get_known_conversion_errors() -> Iterable[tuple[str, str]]:
     return [
         ("141_S_0767", "m84"),
         ("067_S_5205", "bl"),

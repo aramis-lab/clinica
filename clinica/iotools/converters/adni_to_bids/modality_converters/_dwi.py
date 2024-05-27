@@ -1,7 +1,7 @@
 """Module for converting DWI of ADNI."""
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Iterable, Optional
 
 import pandas as pd
 
@@ -13,9 +13,9 @@ def convert_dwi(
     csv_dir: Path,
     destination_dir: Path,
     conversion_dir: Path,
-    subjects: List[str],
+    subjects: Iterable[str],
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ):
     """Convert DW images of ADNI into BIDS format.
 
@@ -71,7 +71,7 @@ def convert_dwi(
 def _compute_dwi_paths(
     source_dir: Path,
     csv_dir: Path,
-    subjects: list[str],
+    subjects: Iterable[str],
     conversion_dir: Path,
 ) -> pd.DataFrame:
     """Compute paths to DW images to convert to BIDS.
@@ -177,7 +177,7 @@ def _initialize_dwi_df() -> pd.DataFrame:
     )
 
 
-def _get_known_conversion_errors() -> list[tuple[str, str]]:
+def _get_known_conversion_errors() -> Iterable[tuple[str, str]]:
     return [
         ("029_S_2395", "m60"),
         ("029_S_0824", "m108"),

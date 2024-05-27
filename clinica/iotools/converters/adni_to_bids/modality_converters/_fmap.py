@@ -21,9 +21,9 @@ def convert_fmap(
     csv_dir: PathLike,
     destination_dir: PathLike,
     conversion_dir: PathLike,
-    subjects: List[str],
+    subjects: Iterable[str],
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ):
     """Convert field map images of ADNI into BIDS format.
 
@@ -81,7 +81,7 @@ def convert_fmap(
 
 
 def compute_fmap_path(
-    source_dir: Path, csv_dir: Path, subjs_list: list[str], conversion_dir: Path
+    source_dir: Path, csv_dir: Path, subjs_list: Iterable[str], conversion_dir: Path
 ) -> pd.DataFrame:
     """Compute the paths to fMR images.
 

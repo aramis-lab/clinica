@@ -4,7 +4,7 @@ from enum import Enum
 from functools import partial
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import Iterable, List, Optional, Set, Tuple
 
 import pandas as pd
 
@@ -52,9 +52,9 @@ def _convert_fdg_pet(
     destination_dir: Path,
     conversion_dir: Path,
     preprocessing_step: ADNIPreprocessingStep,
-    subjects: List[str],
+    subjects: Iterable[str],
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -134,7 +134,7 @@ convert_fdg_pet_uniform = partial(
 def _compute_fdg_pet_paths(
     source_dir: Path,
     csv_dir: Path,
-    subjects: List[str],
+    subjects: Iterable[str],
     conversion_dir: Path,
     preprocessing_step: ADNIPreprocessingStep,
 ) -> pd.DataFrame:
@@ -182,7 +182,7 @@ def _compute_fdg_pet_paths(
 
 
 def _get_pet_fdg_df(
-    csv_dir: Path, subjects: List[str], preprocessing_step: ADNIPreprocessingStep
+    csv_dir: Path, subjects: Iterable[str], preprocessing_step: ADNIPreprocessingStep
 ) -> pd.DataFrame:
     """Build a DataFrame for the PET FDG images for the provided list of subjects."""
     import pandas as pd
