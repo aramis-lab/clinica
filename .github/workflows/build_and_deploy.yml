@@ -16,7 +16,7 @@ concurrency:
 env:
   POETRY_VERSION: '1.6.1'
   PYTHON_VERSION: '3.10'
-  PR_NUMBER: "PR-${{ github.event.number }}"
+  BRANCH_NAME: "PR-${{ github.event.number }}"
 
 jobs:
   build-and-deploy-doc:
@@ -42,11 +42,11 @@ jobs:
           echo "${PR_NUMBER}"
           echo "${{ github.ref_name }}"
           echo "${{ github.head_ref }}"
-          if [[ ! -z "${TAG_NAME}" ]];
+          if [[ ! -z "${{ github.event_number }}" ]];
           then
-            BRANCH_NAME="${TAG_NAME}"
+            BRANCH_NAME="${{ github.head_ref }}"
           fi
-          mv site "${PR_NUMBER}"
-          ls "${PR_NUMBER}"
-          scp -r "${PR_NUMBER}" "aramislab:/srv/local/clinica/docs/public/${PR_NUMBER}"
+          mv site "${BRANCH_NAME}"
+          ls "${BRANCH_NAME}"
+          scp -r "${BRANCH_NAME}" "aramislab:/srv/local/clinica/docs/public/${BRANCH_NAME}"
 
