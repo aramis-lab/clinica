@@ -16,14 +16,13 @@ concurrency:
 env:
   POETRY_VERSION: '1.6.1'
   PYTHON_VERSION: '3.10'
-  BRANCH_NAME: "PR-${{ github.event.number }}"
 
 jobs:
   build-and-deploy-doc:
     runs-on:
       - self-hosted
       - Linux
-      - doc
+      - doc-runner
     steps:
       - uses: actions/checkout@v4
       - uses: snok/install-poetry@v1
@@ -38,14 +37,13 @@ jobs:
           make doc
       - name: Deploy documentation
         run: |
-          echo "${GITHUB_REF}"
-          echo "${PR_NUMBER}"
-          echo "${{ github.ref_name }}"
-          echo "${{ github.head_ref }}"
-          if [[ ! -z "${{ github.event_number }}" ]];
+          if [[ -z "${{ github.event.number }}" ]];
           then
             BRANCH_NAME="${{ github.ref_name }}"
+          else
+            BRANCH_NAME="PR-${{ github.event.number }}"
           fi
+          echo $BRANCH_NAME
           mv site "${BRANCH_NAME}"
           ls "${BRANCH_NAME}"
           scp -r "${BRANCH_NAME}" "aramislab:/srv/local/clinica/docs/public/${BRANCH_NAME}"
