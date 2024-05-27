@@ -40,6 +40,8 @@ jobs:
         run: |
           echo "${GITHUB_REF}"
           echo "${PR_NUMBER}"
+          echo "${{ github.ref_name }}"
+          echo "${{ github.head_ref }}"
           if [[ ! -z "${TAG_NAME}" ]];
           then
             BRANCH_NAME="${TAG_NAME}"
