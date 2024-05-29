@@ -1644,7 +1644,7 @@ def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
 
     pattern = filename + r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
     files_matching_pattern = [
-        f for f in Path(clinical_dir).rglob("*.csv") if re.search(pattern, (f.name))
+        f for f in Path(clinical_dir).rglob("*.csv") if re.match(pattern, (f.name))
     ]
     if len(files_matching_pattern) != 1:
         raise IOError(
