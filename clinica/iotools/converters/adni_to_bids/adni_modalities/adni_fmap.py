@@ -3,7 +3,7 @@ import json
 import os
 import re
 import shutil
-from enum import StrEnum, auto
+from enum import Enum
 from os import PathLike
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional
@@ -253,12 +253,12 @@ def fmap_image(
     return image_dict
 
 
-class BIDSFMAPCase(StrEnum):
-    EMPTY_FOLDER = auto()
-    ONE_PHASE_TWO_MAGNITUDES = auto()
-    TWO_PHASES_TWO_MAGNITUDES = auto()
-    DIRECT_FIELDMAPS = auto()
-    NOT_SUPPORTED = auto()
+class BIDSFMAPCase(str, Enum):
+    EMPTY_FOLDER = "empty_folder"
+    ONE_PHASE_TWO_MAGNITUDES = "one_phase_two_magnitudes"
+    TWO_PHASES_TWO_MAGNITUDES = "two_phases_two_magnitudes"
+    DIRECT_FIELDMAPS = "direct_fieldmaps"
+    NOT_SUPPORTED = "not_supported"
 
 
 def phase_magnitude_renamer(old_extension: str, case: BIDSFMAPCase) -> str:
@@ -436,7 +436,8 @@ def reorganize_fmaps(bids_path: Path):
             if folder.name.startswith("ses-") and folder.is_dir()
         ):
             fmap_path = bids_path / subject / session / "fmap"
-            fmap_case_handler_factory(infer_case_fmap(fmap_path))(fmap_path)
+            if fmap_path.exists():
+                fmap_case_handler_factory(infer_case_fmap(fmap_path))(fmap_path)
 
 
 def bids_guess(bids_path: Path):
