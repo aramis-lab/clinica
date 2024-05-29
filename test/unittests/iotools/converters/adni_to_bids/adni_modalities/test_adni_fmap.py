@@ -1,4 +1,6 @@
 import json
+from pathlib import Path
+from typing import Set
 
 import pytest
 
@@ -52,7 +54,7 @@ def test_phase_magnitude_renamer_value_error(case, input_value):
     [
         (BIDSFMAPCase.DIRECT_FIELDMAPS, "e2"),
         (BIDSFMAPCase.NOT_SUPPORTED, "e1"),
-        (BIDSFMAPCase.EMPTY_FOLDER, "toto"),
+        (BIDSFMAPCase.EMPTY_FOLDER, "foo"),
     ],
 )
 def test_phase_magnitude_renamer_implemented_error(case, input_value):
@@ -67,85 +69,79 @@ def test_phase_magnitude_renamer_implemented_error(case, input_value):
         phase_magnitude_renamer(input_value, case)
 
 
-def test_rename_files_success_case1(tmp_path):
+@pytest.fixture
+def fmap_case_builder(tmp_path: Path, case: BIDSFMAPCase):
+    fmap_path = tmp_path / "fmap"
+    fmap_path.mkdir()
+    filenames = [
+        "sub-01_sesM0_fmap_e1.nii.gz",
+        "sub-01_sesM0_fmap_e1.json",
+        "sub-01_sesM0_fmap_e2.nii.gz",
+        "sub-01_sesM0_fmap_e2.json",
+        "sub-01_sesM0_fmap_e2_ph.nii.gz",
+        "sub-01_sesM0_fmap_e2_ph.json",
+        ".foo.txt",
+    ]
+    if case == BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES:
+        filenames += [
+            "sub-01_sesM0_fmap_e1_ph.nii.gz",
+            "sub-01_sesM0_fmap_e1_ph.json",
+        ]
+    for f in filenames:
+        (fmap_path / f).touch()
+
+
+@pytest.fixture
+def expected(tmp_path: Path, case: BIDSFMAPCase) -> Set[Path]:
+    fmap_path = tmp_path / "fmap"
+
+    expected_result = {
+        fmap_path / "sub-01_sesM0_magnitude1.nii.gz",
+        fmap_path / "sub-01_sesM0_magnitude1.json",
+        fmap_path / "sub-01_sesM0_magnitude2.nii.gz",
+        fmap_path / "sub-01_sesM0_magnitude2.json",
+        fmap_path / ".foo.txt",
+    }
+    if case == BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES:
+        expected_result = expected_result.union(
+            {
+                fmap_path / "sub-01_sesM0_phasediff.nii.gz",
+                fmap_path / "sub-01_sesM0_phasediff.json",
+            }
+        )
+    if case == BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES:
+        expected_result = expected_result.union(
+            {
+                fmap_path / "sub-01_sesM0_phase2.nii.gz",
+                fmap_path / "sub-01_sesM0_phase2.json",
+                fmap_path / "sub-01_sesM0_phase1.nii.gz",
+                fmap_path / "sub-01_sesM0_phase1.json",
+            }
+        )
+    return expected_result
+
+
+@pytest.mark.parametrize(
+    "case",
+    [BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES, BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES],
+)
+def test_rename_files_success(tmp_path, case, fmap_case_builder, expected):
     from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmap import (
         rename_files,
     )
 
-    fmap = tmp_path / "fmap"
-    fmap.mkdir()
-    filenames = [
-        "sub01-sesM0_fmap_e1.nii.gz",
-        "sub01-sesM0_fmap_e1.json",
-        "sub01-sesM0_fmap_e2.nii.gz",
-        "sub01-sesM0_fmap_e2.json",
-        "sub01-sesM0_fmap_e2_ph.nii.gz",
-        "sub01-sesM0_fmap_e2_ph.json",
-        ".toto.txt",
-    ]
-    for f in filenames:
-        (fmap / f).touch()
+    rename_files(tmp_path / "fmap", case)
 
-    expected_result = {
-        fmap / "sub01-sesM0_magnitude1.nii.gz",
-        fmap / "sub01-sesM0_magnitude1.json",
-        fmap / "sub01-sesM0_magnitude2.nii.gz",
-        fmap / "sub01-sesM0_magnitude2.json",
-        fmap / "sub01-sesM0_phasediff.nii.gz",
-        fmap / "sub01-sesM0_phasediff.json",
-        fmap / ".toto.txt",
-    }
-
-    rename_files(fmap, BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES)
-
-    assert set(fmap.iterdir()) == expected_result
-
-
-def test_rename_files_success_case2(tmp_path):
-    from clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmap import (
-        rename_files,
-    )
-
-    fmap = tmp_path / "fmap"
-    fmap.mkdir()
-    filenames = [
-        "sub01_sesM0_fmap_e1.nii.gz",
-        "sub01_sesM0_fmap_e1.json",
-        "sub01_sesM0_fmap_e2.nii.gz",
-        "sub01_sesM0_fmap_e2.json",
-        "sub01_sesM0_fmap_e2_ph.nii.gz",
-        "sub01_sesM0_fmap_e2_ph.json",
-        "sub01_sesM0_fmap_e1_ph.nii.gz",
-        "sub01_sesM0_fmap_e1_ph.json",
-        ".toto.txt",
-    ]
-    for f in filenames:
-        (fmap / f).touch()
-
-    expected_result = {
-        fmap / "sub01_sesM0_magnitude1.nii.gz",
-        fmap / "sub01_sesM0_magnitude1.json",
-        fmap / "sub01_sesM0_magnitude2.nii.gz",
-        fmap / "sub01_sesM0_magnitude2.json",
-        fmap / "sub01_sesM0_phase2.nii.gz",
-        fmap / "sub01_sesM0_phase2.json",
-        fmap / "sub01_sesM0_phase1.nii.gz",
-        fmap / "sub01_sesM0_phase1.json",
-        fmap / ".toto.txt",
-    }
-
-    rename_files(fmap, BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES)
-
-    assert set(fmap.iterdir()) == expected_result
+    assert set((tmp_path / "fmap").iterdir()) == expected
 
 
 @pytest.mark.parametrize(
     "invalid_filename",
     [
-        "sub01_sesM0_fmape1.nii.gz",
-        "sub01_sesM0_magnitude.nii.gz",
-        "sub01_sesM0fmap_e1.nii.gz",
-        "toto.txt",
+        "sub-01_sesM0_fmape1.nii.gz",
+        "sub-01_sesM0_magnitude.nii.gz",
+        "sub-01_sesM0fmap_e1.nii.gz",
+        "foo.txt",
     ],
 )
 def test_rename_files_error(tmp_path, invalid_filename):
@@ -169,25 +165,25 @@ def test_get_json_file_matching_pattern_success(tmp_path):
     fmap = tmp_path / "fmap"
     fmap.mkdir()
     for f in [
-        "sub01_sesM0_fmap_e2_ph.json",
-        "sub01_sesM0_fmap_e2_ph.nii.gz",
-        "sub01_sesM0_fmap_e1.json",
-        ".toto.txt",
+        "sub-01_sesM0_fmap_e2_ph.json",
+        "sub-01_sesM0_fmap_e2_ph.nii.gz",
+        "sub-01_sesM0_fmap_e1.json",
+        ".foo.txt",
     ]:
         (fmap / f).touch()
 
     assert (
         get_json_file_matching_pattern(fmap, pattern="ph.json")
-        == fmap / "sub01_sesM0_fmap_e2_ph.json"
+        == fmap / "sub-01_sesM0_fmap_e2_ph.json"
     )
 
 
 @pytest.mark.parametrize(
     "filenames, pattern",
     [
-        (("sub01_sesM0_fmap_e2.json",), "ph.json"),
-        (("sub01_sesM0_fmap_e2_ph.json", "sub01_sesM0_fmap_e1_ph.json"), "ph.json"),
-        (("sub01_sesM0_fmap_e2_ph.json"), "fmap.json"),
+        (("sub-01_sesM0_fmap_e2.json",), "ph.json"),
+        (("sub-01_sesM0_fmap_e2_ph.json", "sub-01_sesM0_fmap_e1_ph.json"), "ph.json"),
+        (("sub-01_sesM0_fmap_e2_ph.json"), "fmap.json"),
     ],
 )
 def test_get_json_file_matching_pattern_error(tmp_path, filenames, pattern):
@@ -233,61 +229,61 @@ def test_check_json_contains_keys(tmp_path, keys):
 @pytest.mark.parametrize(
     "filenames, expected",
     [
-        ((".toto.txt",), BIDSFMAPCase.EMPTY_FOLDER),
+        ((".foo.txt",), BIDSFMAPCase.EMPTY_FOLDER),
         (
             (
-                "sub01_sesM0_fmap_e2_ph.json",
-                "sub01_sesM0_fmap_e2_ph.nii.gz",
-                "sub01_sesM0_fmap_e1.json",
-                "sub01_sesM0_fmap_e1.nii.gz",
+                "sub-01_sesM0_fmap_e2_ph.json",
+                "sub-01_sesM0_fmap_e2_ph.nii.gz",
+                "sub-01_sesM0_fmap_e1.json",
+                "sub-01_sesM0_fmap_e1.nii.gz",
             ),
             BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES,
         ),
         (
             (
-                "sub01_sesM0_fmap.json",
-                "sub01_sesM0_fmap.nii.gz",
-                "sub01_sesM0_magnitude.json",
-                "sub01_sesM0_magnitude.nii.gz",
+                "sub-01_sesM0_fmap.json",
+                "sub-01_sesM0_fmap.nii.gz",
+                "sub-01_sesM0_magnitude.json",
+                "sub-01_sesM0_magnitude.nii.gz",
             ),
             BIDSFMAPCase.DIRECT_FIELDMAPS,
         ),
         (
             (
-                "sub01_sesM0_fmap_e2_ph.json",
-                "sub01_sesM0_fmap_e2_ph.nii.gz",
-                "sub01_sesM0_fmap_e1.json",
-                "sub01_sesM0_fmap_e1.nii.gz",
-                "sub01_sesM0_fmap_e2.json",
-                "sub01_sesM0_fmap_e2.nii.gz",
+                "sub-01_sesM0_fmap_e2_ph.json",
+                "sub-01_sesM0_fmap_e2_ph.nii.gz",
+                "sub-01_sesM0_fmap_e1.json",
+                "sub-01_sesM0_fmap_e1.nii.gz",
+                "sub-01_sesM0_fmap_e2.json",
+                "sub-01_sesM0_fmap_e2.nii.gz",
             ),
             BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES,
         ),
         (
             (
-                "sub01_sesM0_fmap_e2_ph.json",
-                "sub01_sesM0_fmap_e2_ph.nii.gz",
-                "sub01_sesM0_fmap_e1.json",
-                "sub01_sesM0_fmap_e1.nii.gz",
-                "sub01_sesM0_fmap_e2.json",
-                "sub01_sesM0_fmap_e2.nii.gz",
-                "sub01_sesM0_fmap_e1_ph.json",
-                "sub01_sesM0_fmap_e1_ph.nii.gz",
+                "sub-01_sesM0_fmap_e2_ph.json",
+                "sub-01_sesM0_fmap_e2_ph.nii.gz",
+                "sub-01_sesM0_fmap_e1.json",
+                "sub-01_sesM0_fmap_e1.nii.gz",
+                "sub-01_sesM0_fmap_e2.json",
+                "sub-01_sesM0_fmap_e2.nii.gz",
+                "sub-01_sesM0_fmap_e1_ph.json",
+                "sub-01_sesM0_fmap_e1_ph.nii.gz",
             ),
             BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES,
         ),
         (
             (
-                "sub01_sesM0_fmap_e2_ph.json",
-                "sub01_sesM0_fmap_e2_ph.nii.gz",
+                "sub-01_sesM0_fmap_e2_ph.json",
+                "sub-01_sesM0_fmap_e2_ph.nii.gz",
             ),
             BIDSFMAPCase.NOT_SUPPORTED,
         ),
         (
             (
-                "sub01_sesM0_fmap_e2_ph.json",
-                "sub01_sesM0_fmap_e2_ph.nii.gz",
-                "sub01_sesM0_fmap_e1.json",
+                "sub-01_sesM0_fmap_e2_ph.json",
+                "sub-01_sesM0_fmap_e2_ph.nii.gz",
+                "sub-01_sesM0_fmap_e1.json",
             ),
             BIDSFMAPCase.NOT_SUPPORTED,
         ),
