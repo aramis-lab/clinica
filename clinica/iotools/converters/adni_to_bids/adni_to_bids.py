@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import List, Optional
 
 from clinica.iotools.abstract_converter import Converter
@@ -197,6 +196,7 @@ class AdniToBids(Converter):
             force_new_extraction: if given pre-existing images in the BIDS directory will be erased and extracted again.
         """
         import os
+        import re
         from copy import copy
         from os import path
 
@@ -240,11 +240,8 @@ class AdniToBids(Converter):
             cprint(
                 f"Using all the subjects contained in the ADNI dataset at {source_dir}"
             )
-            subjs_list = [
-                sub.name
-                for sub in Path(source_dir).iterdir()
-                if not sub.name.startswith(".")
-            ]
+            rgx = re.compile(r"\d{3}_S_(\d{4})")
+            subjs_list = list(filter(rgx.fullmatch, os.listdir(source_dir)))
 
         if not subjs_list:
             # todo : right type of error ?
