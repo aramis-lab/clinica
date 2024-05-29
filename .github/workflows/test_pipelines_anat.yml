@@ -67,6 +67,7 @@ jobs:
     runs-on:
       - self-hosted
       - Linux
+      - test-runner
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
@@ -99,6 +100,7 @@ jobs:
     runs-on:
       - self-hosted
       - Linux
+      - test-runner
     timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4

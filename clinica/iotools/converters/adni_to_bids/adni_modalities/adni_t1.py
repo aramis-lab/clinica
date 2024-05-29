@@ -42,6 +42,7 @@ def convert_adni_t1(
     """
     from os import path
 
+    import pandas as pd
     from pandas.io import parsers
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import (

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import PurePath
 
 from pydra.mark import annotate, task

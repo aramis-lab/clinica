@@ -881,24 +881,32 @@ def run_dcm2niix(
 
     from clinica.utils.stream import cprint
 
-    cprint(f"Attempting to convert {output_fmt}.", lvl="info")
+    cprint(f"Attempting to convert {output_fmt}.", lvl="debug")
     command = _build_dcm2niix_command(
         input_dir, output_dir, output_fmt, compress, bids_sidecar
     )
     completed_process = subprocess.run(command, capture_output=True)
 
     if completed_process.returncode != 0:
+        output_message = (
+            completed_process.stdout.decode("utf-8")
+            if completed_process.stdout is not None
+            else ""
+        )
         cprint(
             msg=(
-                "DICOM to BIDS conversion with dcm2niix failed:\n"
+                "The DICOM to BIDS conversion with dcm2niix failed:\n"
                 f"command: {' '.join(command)}\n"
-                f"{completed_process.stdout.decode('utf-8')}"
+                f"{output_message}"
             ),
             lvl="warning",
         )
         return False
     cprint(
-        f"DICOM to BIDS conversion with dcm2niix failed:\ncommand: {' '.join(command)}\n",
+        msg=(
+            f"The DICOM to BIDS conversion with dcm2niix was successful:\n"
+            f"command: {' '.join(command)}\n"
+        ),
         lvl="debug",
     )
     return True

@@ -12,8 +12,8 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 class DatasetType(str, Enum):
     """Defines the possible types of datasets in Clinica."""
 
-    BIDS = "BIDS"
-    CAPS = "CAPS"
+    RAW = "raw"
+    DERIVATIVE = "derivative"
 
 
 RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "checksum"])
@@ -119,7 +119,7 @@ def _validate_folder_existence(
 
     if not directory.is_dir():
         raise (
-            ClinicaBIDSError if folder_type == DatasetType.BIDS else ClinicaCAPSError
+            ClinicaBIDSError if folder_type == DatasetType.RAW else ClinicaCAPSError
         )(
             f"The {folder_type.value} directory you gave is not a folder.\n"
             "Error explanations:\n"
@@ -131,10 +131,10 @@ def _validate_folder_existence(
 
 
 _validate_bids_folder_existence = partial(
-    _validate_folder_existence, folder_type=DatasetType.BIDS
+    _validate_folder_existence, folder_type=DatasetType.RAW
 )
 _validate_caps_folder_existence = partial(
-    _validate_folder_existence, folder_type=DatasetType.CAPS
+    _validate_folder_existence, folder_type=DatasetType.DERIVATIVE
 )
 
 
@@ -172,7 +172,7 @@ def _check_dataset_description_exists(directory: Path, folder_type: DatasetType)
 
     if not (directory / "dataset_description.json").exists():
         raise (
-            ClinicaBIDSError if folder_type == DatasetType.BIDS else ClinicaCAPSError
+            ClinicaBIDSError if folder_type == DatasetType.RAW else ClinicaCAPSError
         )(
             f"The {folder_type.value} directory ({directory}) you provided is missing "
             "a dataset_description.json file."
@@ -180,10 +180,10 @@ def _check_dataset_description_exists(directory: Path, folder_type: DatasetType)
 
 
 _check_dataset_description_exists_in_bids = partial(
-    _check_dataset_description_exists, folder_type=DatasetType.BIDS
+    _check_dataset_description_exists, folder_type=DatasetType.RAW
 )
 _check_dataset_description_exists_in_caps = partial(
-    _check_dataset_description_exists, folder_type=DatasetType.CAPS
+    _check_dataset_description_exists, folder_type=DatasetType.DERIVATIVE
 )
 
 

@@ -1,4 +1,5 @@
-"""Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS."""
+"""Convert OASIS dataset (https://sites.wustl.edu/oasisbrains/) to BIDS."""
+
 from typing import Optional
 
 from clinica.iotools.abstract_converter import Converter
@@ -78,7 +79,7 @@ class OasisToBids(Converter):
 
         # -- Creation of modality agnostic files --
         readme_data = {
-            "link": "https://www.oasis-brains.org/#access",
+            "link": "https://sites.wustl.edu/oasisbrains/#access",
             "desc": (
                 "This set consists of a cross-sectional collection of 416 subjects aged 18 to 96. For each subject, 3 "
                 "or 4 individual T1-weighted MRI scans obtained in single scan sessions are included. The subjects are "
@@ -201,7 +202,11 @@ class OasisToBids(Converter):
             for path in Path(source_dir).rglob("OAS1_*")
             if path.is_dir() and path.name.endswith("_MR1")
         ]
-
-        with Pool(processes=n_procs) as pool:
-            func = partial(self.convert_single_subject, dest_dir=dest_dir)
-            pool.map(func, subjs_folders)
+        func = partial(self.convert_single_subject, dest_dir=dest_dir)
+        # If n_procs==1 do not rely on a Process Pool to enable classical debugging
+        if n_procs == 1:
+            for folder in subjs_folders:
+                func(folder)
+        else:
+            with Pool(processes=n_procs) as pool:
+                pool.map(func, subjs_folders)

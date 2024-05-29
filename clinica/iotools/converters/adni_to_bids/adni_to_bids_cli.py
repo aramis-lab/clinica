@@ -5,7 +5,16 @@ import click
 from clinica import option
 from clinica.iotools.converters import cli_param
 
-ALL_MODALITIES = ("T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI")
+ALL_MODALITIES = (
+    "T1",
+    "PET_FDG",
+    "PET_AMYLOID",
+    "PET_TAU",
+    "DWI",
+    "FLAIR",
+    "fMRI",
+    "FMAP",
+)
 
 
 @click.command(name="adni-to-bids")

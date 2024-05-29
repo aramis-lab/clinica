@@ -641,6 +641,7 @@ def correct_diagnosis_sc_adni3(clinical_data_dir, participants_df):
         dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV").set_index(
             ["PTID", "VISCODE2"]
         )
+
     missing_sc = participants_df[participants_df.original_study == "ADNI3"]
     participants_df.set_index("alternative_id_1", drop=True, inplace=True)
     for alternative_id in missing_sc.alternative_id_1.values:
@@ -933,6 +934,8 @@ def create_adni_sessions_dict(
         bids_subjs_paths: a list with the path to all the BIDS subjects
     """
 
+    from os import path
+
     import pandas as pd
 
     from clinica.utils.stream import cprint
@@ -946,6 +949,7 @@ def create_adni_sessions_dict(
     # write line to get field_bids = sessions['BIDS CLINICA'] without the null values
 
     # Iterate over the metadata files
+
     for location in files:
         location = location.split("/")[0]
         try:
@@ -955,7 +959,6 @@ def create_adni_sessions_dict(
         df_filtered = filter_subj_bids(df_file, location, bids_ids).copy()
         if not df_filtered.empty:
             df_filtered = _compute_session_id(df_filtered, location)
-
             # Filter rows with invalid session IDs.
             df_filtered.dropna(subset="session_id", inplace=True)
 
@@ -1141,6 +1144,7 @@ def find_conversion_mod(file_name):
     from clinica.utils.pet import Tracer
 
     suffix = file_name.split("_")[-1].split(".")[0]
+
     if suffix == "T1w":
         return "t1"
     elif suffix == "FLAIR":
@@ -1149,6 +1153,18 @@ def find_conversion_mod(file_name):
         return "dwi"
     elif suffix == "bold":
         return "fmri"
+    elif suffix in (
+        "fmap",
+        "ph",
+        "e1",
+        "e2",
+        "phase1",
+        "phase2",
+        "phasediff",
+        "magnitude1",
+        "magnitude2",
+    ):
+        return "fmap"
     elif suffix == "pet":
         tracer = file_name.split("trc-")[1].split("_")[0]
         if tracer in (Tracer.AV45, Tracer.FBB):
@@ -1267,6 +1283,7 @@ def paths_to_bids(
         "dwi",
         "flair",
         "fmri",
+        "fmap",
         "fdg",
         "fdg_uniform",
         "pib",
@@ -1279,14 +1296,16 @@ def paths_to_bids(
 
     bids_dir = Path(bids_dir)
     images_list = list([data for _, data in images.iterrows()])
-
+    create_file_ = partial(
+        create_file,
+        modality=modality,
+        bids_dir=bids_dir,
+        mod_to_update=mod_to_update,
+    )
+    # If n_procs==1 do not rely on a Process Pool to enable classical debugging
+    if n_procs == 1:
+        return [create_file_(image) for image in images_list]
     with Pool(processes=n_procs) as pool:
-        create_file_ = partial(
-            create_file,
-            modality=modality,
-            bids_dir=bids_dir,
-            mod_to_update=mod_to_update,
-        )
         output_file_treated = pool.map(create_file_, images_list)
 
     return output_file_treated
@@ -1321,15 +1340,26 @@ def create_file(
         The path to the output image created.
         If the conversion wasn't successful, this function returns None.
     """
+    import glob
     import os
     import re
     import shutil
 
+    import numpy as np
+
+    from clinica.cmdline import setup_clinica_logging
     from clinica.iotools.bids_utils import run_dcm2niix
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.pet import ReconstructionMethod, Tracer
     from clinica.utils.stream import cprint
+
+    # This function is executed in a multiprocessing context
+    # such that we need to re-configure the clinica logger in the child processes.
+    # Note that logging messages could easily be lost (for example when logging
+    # to a file from two different processes). A better solution would be to
+    # implement a logging process consuming logging messages from a multiprocessing.Queue...
+    setup_clinica_logging("INFO")
 
     modality_specific = {
         "t1": {
@@ -1353,6 +1383,12 @@ def create_file(
         "fmri": {
             "output_path": "func",
             "output_filename": "_task-rest_bold",
+            "to_center": False,
+            "json": "y",
+        },
+        "fmap": {
+            "output_path": "fmap",
+            "output_filename": "_fmap",
             "to_center": False,
             "json": "y",
         },
@@ -1443,6 +1479,12 @@ def create_file(
         cprint(f"Removing old image {image_to_remove}...", lvl="info")
         image_to_remove.unlink()
 
+    try:
+        os.makedirs(output_path)
+    except OSError:
+        # Folder already created with previous instance
+        pass
+
     generate_json = modality_specific[modality]["json"]
     zip_image = "n" if modality_specific[modality]["to_center"] else "y"
     file_without_extension = output_path / output_filename
@@ -1450,7 +1492,7 @@ def create_file(
 
     if image.Is_Dicom:
         success = run_dcm2niix(
-            input_dir=image_path,
+            input_dir=image_path if modality != "fmap" else Path(image_path).parent,
             output_dir=output_path,
             output_fmt=output_filename,
             compress=True if zip_image == "y" else False,
@@ -1461,6 +1503,7 @@ def create_file(
                 f"Error converting image {image_path} for subject {subject} and session {session}",
                 lvl="warning",
             )
+
         # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
         for trigger_time in output_path.glob(f"{output_filename}_t[0-9]*"):
             res = re.search(r"_t\d+\.", str(trigger_time))
@@ -1470,7 +1513,15 @@ def create_file(
             os.rename(trigger_time, no_trigger_time)
 
         # Removing images with unsupported suffixes if generated by dcm2niix
-        for suffix in ("ADC", "real", "imaginary"):
+        for suffix in (
+            "ADC",
+            "real",
+            "imaginary",
+            "e1_real",
+            "e1_imaginary",
+            "e2_real",
+            "e2_imaginary",
+        ):
             file_with_bad_suffix = output_path / f"{output_filename}_{suffix}"
             if any(
                 [
@@ -1495,6 +1546,15 @@ def create_file(
             file_without_extension.with_suffix(".nii").is_file()
             or output_image.is_file()
         )
+        if modality == "fmap":
+            nifti_exists = nifti_exists or any(
+                [
+                    file_without_extension.with_name(
+                        f"{file_without_extension.name}_{suffix}.nii.gz"
+                    ).is_file()
+                    for suffix in {"ph", "e2", "e1", "e2_ph", "e1_ph"}
+                ]
+            )
         dwi_bvec_and_bval_exist = not (modality == "dwi") or (
             file_without_extension.with_suffix(".bvec").is_file()
             and file_without_extension.with_suffix(".bval").is_file()
@@ -1506,13 +1566,22 @@ def create_file(
                 msg=f"Conversion with dcm2niix failed for subject {subject} and session {session}",
                 lvl="warning",
             )
-            return None
+            return np.nan
 
         # Case when JSON file was expected, but not generated by dcm2niix
-        elif (
-            generate_json == "y"
-            and not file_without_extension.with_suffix(".json").exists()
-        ):
+        json_exists = file_without_extension.with_suffix(".json").exists()
+
+        if modality == "fmap":
+            json_exists = json_exists or any(
+                [
+                    file_without_extension.with_name(
+                        f"{file_without_extension.name}_{suffix}.json"
+                    ).is_file()
+                    for suffix in {"ph", "e2", "e1", "e2_ph", "e1_ph"}
+                ]
+            )
+
+        if generate_json == "y" and not json_exists:
             cprint(
                 msg=f"JSON file not generated by dcm2niix for subject {subject} and session {session}",
                 lvl="warning",
@@ -1529,7 +1598,15 @@ def create_file(
 
     else:
         if modality_specific[modality]["to_center"]:
-            output_image, error_msg = center_nifti_origin(image_path, output_image)
+            try:
+                output_image, error_msg = center_nifti_origin(image_path, output_image)
+            except Exception:
+                cprint(
+                    msg=(f"No output image specified."),
+                    lvl="error",
+                )
+                output_image = ""
+                error_msg = False
             if error_msg:
                 cprint(
                     msg=(
@@ -1545,6 +1622,43 @@ def create_file(
     # Check if there is still the folder tmp_dcm_folder and remove it
     remove_tmp_dmc_folder(bids_dir, image_id)
     return output_image
+
+
+def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
+    """Load the clinical csv from ADNI. This function is able to find the csv in the
+    different known format available, the old format with just the name, and the new
+    format with the name and the date of download.
+    Parameters
+    ----------
+    clinical_dir: str
+        Directory containing the csv.
+    filename: str
+        name of the file without the suffix.
+    Returns
+    -------
+    pd.DataFrame:
+        Dataframe corresponding to the filename.
+    """
+    import re
+    from pathlib import Path
+
+    pattern = filename + r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
+    files_matching_pattern = [
+        f for f in Path(clinical_dir).rglob("*.csv") if re.search(pattern, (f.name))
+    ]
+    if len(files_matching_pattern) != 1:
+        raise IOError(
+            f"Expecting to find exactly one file in folder {clinical_dir} "
+            f"matching pattern {pattern}. {len(files_matching_pattern)} "
+            f"files were found instead : \n{'- '.join(str(files_matching_pattern))}"
+        )
+    try:
+        return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
+    except Exception:
+        raise ValueError(
+            f"File {str(files_matching_pattern[0])} was found but could not "
+            "be loaded as a DataFrame. Please check your data."
+        )
 
 
 def session_label_to_viscode(session_name: str) -> str:
@@ -1619,43 +1733,3 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
     tmp_dcm_folder_path = join(bids_dir, f"tmp_dcm_folder_{str(image_id).strip(' ')}")
     if exists(tmp_dcm_folder_path):
         rmtree(tmp_dcm_folder_path)
-
-
-def load_clinical_csv(clinical_dir: str, filename: str) -> pd.DataFrame:
-    """Load the clinical csv from ADNI. This function is able to find the csv in the
-    different known format available, the old format with just the name, and the new
-    format with the name and the date of download.
-
-    Parameters
-    ----------
-    clinical_dir: str
-        Directory containing the csv.
-
-    filename: str
-        name of the file without the suffix.
-
-    Returns
-    -------
-    pd.DataFrame:
-        Dataframe corresponding to the filename.
-    """
-    import re
-    from pathlib import Path
-
-    pattern = filename + r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
-    files_matching_pattern = [
-        f for f in Path(clinical_dir).rglob("*.csv") if re.search(pattern, (f.name))
-    ]
-    if len(files_matching_pattern) != 1:
-        raise IOError(
-            f"Expecting to find exactly one file in folder {clinical_dir} "
-            f"matching pattern {pattern}. {len(files_matching_pattern)} "
-            f"files were found instead : \n{'- '.join(str(files_matching_pattern))}"
-        )
-    try:
-        return pd.read_csv(files_matching_pattern[0], sep=",", low_memory=False)
-    except Exception:
-        raise ValueError(
-            f"File {str(files_matching_pattern[0])} was found but could not "
-            "be loaded as a DataFrame. Please check your data."
-        )
