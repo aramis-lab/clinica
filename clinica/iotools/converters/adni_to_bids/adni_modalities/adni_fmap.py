@@ -58,10 +58,6 @@ def convert_adni_fmap(
     source_dir = Path(source_dir)
     conversion_dir = Path(conversion_dir)
 
-    if not subjects:
-        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
-        subjects = list(adni_merge.PTID.unique())
-
     cprint(
         f"Calculating paths of fMRI field maps (FMAPs). Output will be stored in {conversion_dir}.",
         lvl="debug",

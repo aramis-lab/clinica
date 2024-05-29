@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Optional
 
 from clinica.iotools.abstract_converter import Converter
@@ -217,7 +218,7 @@ class AdniToBids(Converter):
 
         adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
 
-        # Load a file with subjects list or compute all the subjects
+        # Load a file with subjects list or compute subjects in ADNI directory
         if subjs_list_path is not None:
             cprint("Loading a subjects lists provided by the user...")
             subjs_list = [line.rstrip("\n") for line in open(subjs_list_path)]
@@ -236,8 +237,20 @@ class AdniToBids(Converter):
             del subjs_list_copy
 
         else:
-            cprint("Using all the subjects contained into the ADNIMERGE.csv file...")
-            subjs_list = list(adni_merge["PTID"].unique())
+            cprint(
+                f"Using all the subjects contained in the ADNI dataset at {source_dir}"
+            )
+            subjs_list = [
+                sub.name
+                for sub in Path(source_dir).iterdir()
+                if not sub.name.startswith(".")
+            ]
+
+        if not subjs_list:
+            # todo : right type of error ?
+            raise ValueError(
+                f"There is no subjects to convert in the provided ADNI dataset {source_dir}"
+            )
 
         # Create the output folder if is not already existing
         os.makedirs(dest_dir, exist_ok=True)

@@ -173,6 +173,9 @@ def create_participants_df(
         else:
             participant_df.at[i, "participant_id"] = bids_id[0]
 
+    # todo : really useful ?
+    # todo : would prefer to return a list of subjects that failed something at the end of the pipeline
+
     if len(subjects_to_drop) > 0:
         cprint(
             msg=(
