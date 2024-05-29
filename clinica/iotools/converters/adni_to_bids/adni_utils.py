@@ -1491,28 +1491,13 @@ def create_file(
     output_image = file_without_extension.with_suffix(".nii.gz")
 
     if image.Is_Dicom:
-        if modality == "fmap":
-            success = all(
-                [
-                    run_dcm2niix(
-                        input_dir=fmap_image_path,
-                        output_dir=output_path,
-                        output_fmt=output_filename,
-                        compress=True if zip_image == "y" else False,
-                        bids_sidecar=True if generate_json == "y" else False,
-                    )
-                    for fmap_image_path in Path(image_path).parent.iterdir()
-                    if not fmap_image_path.name.startswith(".")
-                ]
-            )
-        else:
-            success = run_dcm2niix(
-                input_dir=image_path,
-                output_dir=output_path,
-                output_fmt=output_filename,
-                compress=True if zip_image == "y" else False,
-                bids_sidecar=True if generate_json == "y" else False,
-            )
+        success = run_dcm2niix(
+            input_dir=image_path if modality != "fmap" else Path(image_path).parent,
+            output_dir=output_path,
+            output_fmt=output_filename,
+            compress=True if zip_image == "y" else False,
+            bids_sidecar=True if generate_json == "y" else False,
+        )
         if not success:
             cprint(
                 f"Error converting image {image_path} for subject {subject} and session {session}",
