@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Optional
 
 from clinica.iotools.abstract_converter import Converter
@@ -33,6 +34,51 @@ def get_bids_subjs_info(
     bids_paths = [path.join(out_path, bids_id) for bids_id in bids_ids]
 
     return bids_ids, bids_paths
+
+
+def define_subjects_list(
+    source_dir: Path,
+    clinical_dir: Path,
+    subjs_list_path: Optional[Path] = None,
+) -> List[str]:
+    import re
+    from copy import copy
+
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        load_clinical_csv,
+    )
+    from clinica.utils.stream import cprint
+
+    if subjs_list_path:
+        cprint("Loading a subjects lists provided by the user...")
+        subjs_list = [line.rstrip("\n") for line in open(subjs_list_path)]
+
+    else:
+        cprint(f"Using the subjects contained in the ADNI dataset at {source_dir}")
+        rgx = re.compile(r"\d{3}_S_\d{4}")
+        subjs_list = list(
+            filter(rgx.fullmatch, [folder.name for folder in source_dir.iterdir()])
+        )
+
+    subjs_list_copy = copy(subjs_list)
+    adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
+    # Check that there are no errors in subjs_list given by the user
+    for subj in subjs_list_copy:
+        adnimerge_subj = adni_merge[adni_merge.PTID == subj]
+        if len(adnimerge_subj) == 0:
+            cprint(
+                msg=f"Subject with PTID {subj} does not exist. Please check your subjects list or directory.",
+                lvl="warning",
+            )
+            subjs_list.remove(subj)
+    del subjs_list_copy
+
+    if not subjs_list:
+        raise ValueError(
+            f"No actual subjects were found in given list or ADNI directory."
+        )
+
+    return subjs_list
 
 
 class AdniToBids(Converter):
@@ -191,13 +237,11 @@ class AdniToBids(Converter):
             source_dir: path to the ADNI directory
             clinical_dir: path to the clinical data directory
             dest_dir: path to the BIDS directory
-            subjs_list_path: list of subjects to process
+            subjs_list_path: Path to list of subjects to process
             modalities: modalities to convert (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
             force_new_extraction: if given pre-existing images in the BIDS directory will be erased and extracted again.
         """
         import os
-        import re
-        from copy import copy
         from os import path
 
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
@@ -209,45 +253,11 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
-        from clinica.iotools.converters.adni_to_bids.adni_utils import (
-            load_clinical_csv,
-        )
         from clinica.utils.stream import cprint
 
         modalities = modalities or self.get_modalities_supported()
 
-        adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
-
-        # Load a file with subjects list or compute subjects in ADNI directory
-        if subjs_list_path is not None:
-            cprint("Loading a subjects lists provided by the user...")
-            subjs_list = [line.rstrip("\n") for line in open(subjs_list_path)]
-            subjs_list_copy = copy(subjs_list)
-
-            # Check that there are no errors in subjs_list given by the user
-            for subj in subjs_list_copy:
-                adnimerge_subj = adni_merge[adni_merge.PTID == subj]
-
-                if len(adnimerge_subj) == 0:
-                    cprint(
-                        msg=f"Subject with PTID {subj} does not exist. Please check your subjects list.",
-                        lvl="warning",
-                    )
-                    subjs_list.remove(subj)
-            del subjs_list_copy
-
-        else:
-            cprint(
-                f"Using all the subjects contained in the ADNI dataset at {source_dir}"
-            )
-            rgx = re.compile(r"\d{3}_S_(\d{4})")
-            subjs_list = list(filter(rgx.fullmatch, os.listdir(source_dir)))
-
-        if not subjs_list:
-            # todo : right type of error ?
-            raise ValueError(
-                f"There is no subjects to convert in the provided ADNI dataset {source_dir}"
-            )
+        subjs_list = define_subjects_list(source_dir, clinical_dir, subjs_list_path)
 
         # Create the output folder if is not already existing
         os.makedirs(dest_dir, exist_ok=True)

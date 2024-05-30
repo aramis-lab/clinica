@@ -19,7 +19,7 @@ def convert_adni_fmap(
     csv_dir: PathLike,
     destination_dir: PathLike,
     conversion_dir: PathLike,
-    subjects: Optional[List[str]] = None,
+    subjects: List[str],
     mod_to_update: bool = False,
     n_procs: Optional[int] = 1,
 ):
