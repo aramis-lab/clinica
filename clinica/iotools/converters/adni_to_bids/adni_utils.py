@@ -29,6 +29,55 @@ class ADNIStudy(Enum):
         )
 
 
+def define_subjects_list(
+    source_dir: str,
+    subjs_list_path: Optional[str] = None,
+) -> List[str]:
+    # todo : here or in utils for all converters ?
+    import re
+
+    from clinica.utils.stream import cprint
+
+    if subjs_list_path:
+        cprint("Loading a subjects lists provided by the user...")
+        subjs_list = [line.rstrip("\n") for line in open(subjs_list_path)]
+
+    else:
+        cprint(f"Using the subjects contained in the ADNI dataset at {source_dir}")
+        rgx = re.compile(r"\d{3}_S_\d{4}")
+        subjs_list = list(
+            filter(
+                rgx.fullmatch, [folder.name for folder in Path(source_dir).iterdir()]
+            )
+        )
+    return subjs_list
+
+
+def check_subjects_list(
+    subjs_list: List[str],
+    clinical_dir: str,
+) -> List[str]:
+    from copy import copy
+
+    from clinica.utils.stream import cprint
+
+    subjs_list_copy = copy(subjs_list)
+    adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
+    # Check that there are no errors in subjs_list given by the user
+    for subj in subjs_list_copy:
+        adnimerge_subj = adni_merge[adni_merge.PTID == subj]
+        if len(adnimerge_subj) == 0:
+            cprint(
+                msg=f"Subject with PTID {subj} does not have corresponding clinical data."
+                f"Please check your subjects list or directory.",
+                lvl="warning",
+            )
+            subjs_list.remove(subj)
+    del subjs_list_copy
+
+    return subjs_list
+
+
 def visits_to_timepoints(
     subject,
     mri_list_subj,

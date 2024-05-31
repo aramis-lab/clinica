@@ -36,49 +36,6 @@ def get_bids_subjs_info(
     return bids_ids, bids_paths
 
 
-def _define_subjects_list(
-    source_dir: str,
-    clinical_dir: str,
-    subjs_list_path: Optional[str] = None,
-) -> List[str]:
-    import re
-    from copy import copy
-
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        load_clinical_csv,
-    )
-    from clinica.utils.stream import cprint
-
-    if subjs_list_path:
-        cprint("Loading a subjects lists provided by the user...")
-        subjs_list = [line.rstrip("\n") for line in open(subjs_list_path)]
-
-    else:
-        cprint(f"Using the subjects contained in the ADNI dataset at {source_dir}")
-        rgx = re.compile(r"\d{3}_S_\d{4}")
-        subjs_list = list(
-            filter(
-                rgx.fullmatch, [folder.name for folder in Path(source_dir).iterdir()]
-            )
-        )
-
-    subjs_list_copy = copy(subjs_list)
-    adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
-    # Check that there are no errors in subjs_list given by the user
-    for subj in subjs_list_copy:
-        adnimerge_subj = adni_merge[adni_merge.PTID == subj]
-        if len(adnimerge_subj) == 0:
-            cprint(
-                msg=f"Subject with PTID {subj} does not have corresponding clinical data."
-                f"Please check your subjects list or directory.",
-                lvl="warning",
-            )
-            subjs_list.remove(subj)
-    del subjs_list_copy
-
-    return subjs_list
-
-
 class AdniToBids(Converter):
     @classmethod
     def get_modalities_supported(cls) -> List[str]:
@@ -251,11 +208,17 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
+        from clinica.iotools.converters.adni_to_bids.adni_utils import (
+            check_subjects_list,
+            define_subjects_list,
+        )
         from clinica.utils.stream import cprint
 
         modalities = modalities or self.get_modalities_supported()
 
-        subjs_list = _define_subjects_list(source_dir, clinical_dir, subjs_list_path)
+        subjs_list = check_subjects_list(
+            define_subjects_list(source_dir, subjs_list_path), clinical_dir
+        )
 
         # Create the output folder if is not already existing
         os.makedirs(dest_dir, exist_ok=True)
