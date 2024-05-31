@@ -46,6 +46,9 @@ def convert_adni_flair(
     )
     from clinica.utils.stream import cprint
 
+    if not subjects:
+        cprint(f"Processing an empty list of subjects.", lvl="warning")
+
     cprint(
         f"Calculating paths of FLAIR images. Output will be stored in {conversion_dir}.",
         lvl="info",

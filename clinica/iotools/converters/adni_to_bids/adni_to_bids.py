@@ -36,10 +36,10 @@ def get_bids_subjs_info(
     return bids_ids, bids_paths
 
 
-def define_subjects_list(
-    source_dir: Path,
-    clinical_dir: Path,
-    subjs_list_path: Optional[Path] = None,
+def _define_subjects_list(
+    source_dir: str,
+    clinical_dir: str,
+    subjs_list_path: Optional[str] = None,
 ) -> List[str]:
     import re
     from copy import copy
@@ -57,7 +57,9 @@ def define_subjects_list(
         cprint(f"Using the subjects contained in the ADNI dataset at {source_dir}")
         rgx = re.compile(r"\d{3}_S_\d{4}")
         subjs_list = list(
-            filter(rgx.fullmatch, [folder.name for folder in source_dir.iterdir()])
+            filter(
+                rgx.fullmatch, [folder.name for folder in Path(source_dir).iterdir()]
+            )
         )
 
     subjs_list_copy = copy(subjs_list)
@@ -67,16 +69,12 @@ def define_subjects_list(
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         if len(adnimerge_subj) == 0:
             cprint(
-                msg=f"Subject with PTID {subj} does not exist. Please check your subjects list or directory.",
+                msg=f"Subject with PTID {subj} does not have corresponding clinical data."
+                f"Please check your subjects list or directory.",
                 lvl="warning",
             )
             subjs_list.remove(subj)
     del subjs_list_copy
-
-    if not subjs_list:
-        raise ValueError(
-            f"No actual subjects were found in given list or ADNI directory."
-        )
 
     return subjs_list
 
@@ -257,9 +255,7 @@ class AdniToBids(Converter):
 
         modalities = modalities or self.get_modalities_supported()
 
-        subjs_list = define_subjects_list(
-            Path(source_dir), Path(clinical_dir), subjs_list_path
-        )
+        subjs_list = _define_subjects_list(source_dir, clinical_dir, subjs_list_path)
 
         # Create the output folder if is not already existing
         os.makedirs(dest_dir, exist_ok=True)

@@ -1,6 +1,6 @@
 """Module for converting AV45 and Florbetaben PET of ADNI."""
 from os import PathLike
-from typing import List, Optional
+from typing import List
 
 
 def convert_adni_av45_fbb_pet(
@@ -49,6 +49,9 @@ def convert_adni_av45_fbb_pet(
         paths_to_bids,
     )
     from clinica.utils.stream import cprint
+
+    if not subjects:
+        cprint(f"Processing an empty list of subjects.", lvl="warning")
 
     cprint(
         f"Calculating paths of AV45 and Florbetaben PET images. Output will be stored in {conversion_dir}."

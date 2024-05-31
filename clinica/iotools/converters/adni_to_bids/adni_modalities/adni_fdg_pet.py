@@ -92,6 +92,9 @@ def _convert_adni_fdg_pet(
     )
     from clinica.utils.stream import cprint
 
+    if not subjects:
+        cprint(f"Processing an empty list of subjects.", lvl="warning")
+
     cprint(
         "Calculating paths of FDG PET images. "
         f"Output will be stored in {conversion_dir}."
