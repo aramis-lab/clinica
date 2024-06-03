@@ -6,6 +6,62 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 
 
 @pytest.mark.parametrize(
+    "input, expected",
+    [
+        (
+            {"001_S_0001", "001_S_0002", "001_S_0003"},
+            {"001_S_0001", "001_S_0002", "001_S_0003"},
+        ),
+        ({"001_S_0001", "001_S_00014", ".001_S_0001", "001S0001"}, {"001_S_0001"}),
+    ],
+)
+def test_define_subjects_list_directory(tmp_path, input, expected):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _define_subjects_list
+
+    source_dir = tmp_path / "source_dir"
+    source_dir.mkdir()
+
+    for subject in input:
+        (source_dir / subject).touch()
+
+    assert set(_define_subjects_list(source_dir)) == expected
+
+
+def test_define_subjects_list_txt(tmp_path):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _define_subjects_list
+
+    source_dir = tmp_path / "source_dir"
+    subjs_list_path = tmp_path / "subjects_list.txt"
+    input = {"001_S_0001", "001_S_00022", "001S0003"}
+    with open(subjs_list_path, "w") as f:
+        f.write("\n".join(input))
+
+    assert set(_define_subjects_list(source_dir, subjs_list_path)) == input
+
+
+@pytest.mark.parametrize(
+    "write_all, input, expected",
+    [
+        (True, ["001_S_0001", "001_S_0002"], {"001_S_0001", "001_S_0002"}),
+        (False, ["001_S_0001", "001_S_0002"], {"001_S_0001"}),
+    ],
+)
+def test_check_subjects_list(tmp_path, write_all, input, expected):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _check_subjects_list
+
+    clinical_dir = tmp_path / "clinical_dir"
+    clinical_dir.mkdir()
+
+    if not write_all:
+        input.pop()
+
+    adni_df = pd.DataFrame(columns=["PTID"], data=input)
+    adni_df.to_csv(clinical_dir / "ADNIMERGE.csv")
+
+    assert set(_check_subjects_list(input, clinical_dir)) == expected
+
+
+@pytest.mark.parametrize(
     "input_value,expected",
     [
         ("sub-ADNI000S0000", "000_S_0000"),

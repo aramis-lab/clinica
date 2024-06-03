@@ -47,7 +47,7 @@ def _convert_adni_fdg_pet(
     destination_dir: PathLike,
     conversion_dir: PathLike,
     preprocessing_step: ADNIPreprocessingStep,
-    subjects: Optional[List[str]] = None,
+    subjects: List[str],
     mod_to_update: bool = False,
     n_procs: Optional[int] = 1,
 ):
@@ -92,9 +92,6 @@ def _convert_adni_fdg_pet(
     )
     from clinica.utils.stream import cprint
 
-    if subjects is None:
-        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
-        subjects = list(adni_merge.PTID.unique())
     cprint(
         "Calculating paths of FDG PET images. "
         f"Output will be stored in {conversion_dir}."

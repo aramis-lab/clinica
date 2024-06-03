@@ -1,6 +1,6 @@
 """Module for converting AV45 and Florbetaben PET of ADNI."""
 from os import PathLike
-from typing import List, Optional
+from typing import List
 
 
 def convert_adni_av45_fbb_pet(
@@ -8,7 +8,7 @@ def convert_adni_av45_fbb_pet(
     csv_dir: PathLike,
     destination_dir: PathLike,
     conversion_dir: PathLike,
-    subjects: Optional[List[str]] = None,
+    subjects: List[str],
     mod_to_update: bool = False,
     n_procs: int = 1,
 ):
@@ -49,10 +49,6 @@ def convert_adni_av45_fbb_pet(
         paths_to_bids,
     )
     from clinica.utils.stream import cprint
-
-    if not subjects:
-        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
-        subjects = list(adni_merge.PTID.unique())
 
     cprint(
         f"Calculating paths of AV45 and Florbetaben PET images. Output will be stored in {conversion_dir}."

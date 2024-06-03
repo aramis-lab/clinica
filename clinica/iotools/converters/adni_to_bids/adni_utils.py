@@ -29,6 +29,62 @@ class ADNIStudy(Enum):
         )
 
 
+def _define_subjects_list(
+    source_dir: Path,
+    subjs_list_path: Optional[Path] = None,
+) -> List[str]:
+    # todo : here or in utils for all converters ?
+    import re
+
+    from clinica.utils.stream import cprint
+
+    if subjs_list_path:
+        cprint("Loading a subjects lists provided by the user...")
+        return subjs_list_path.read_text().splitlines()
+
+    cprint(f"Using the subjects contained in the ADNI dataset at {source_dir}")
+    rgx = re.compile(r"\d{3}_S_\d{4}")
+    return list(filter(rgx.fullmatch, [folder.name for folder in source_dir.iterdir()]))
+
+
+def _check_subjects_list(
+    subjs_list: List[str],
+    clinical_dir: Path,
+) -> List[str]:
+    from copy import copy
+
+    from clinica.utils.stream import cprint
+
+    subjs_list_copy = copy(subjs_list)
+    adni_merge = load_clinical_csv(str(clinical_dir), "ADNIMERGE")
+    # Check that there are no errors in subjs_list given by the user
+    for subj in subjs_list_copy:
+        adnimerge_subj = adni_merge[adni_merge.PTID == subj]
+        if len(adnimerge_subj) == 0:
+            cprint(
+                msg=f"Subject with PTID {subj} does not have corresponding clinical data."
+                f"Please check your subjects list or directory.",
+                lvl="warning",
+            )
+            subjs_list.remove(subj)
+    del subjs_list_copy
+
+    if not subjs_list:
+        cprint(f"Processing an empty list of subjects.", lvl="warning")
+
+    return subjs_list
+
+
+def get_subjects_list(
+    source_dir: Path,
+    clinical_dir: Path,
+    subjs_list_path: Optional[Path] = None,
+) -> List[str]:
+    return _check_subjects_list(
+        _define_subjects_list(source_dir, subjs_list_path), clinical_dir
+    )
+
+
 def visits_to_timepoints(
     subject,
     mri_list_subj,
@@ -981,8 +1037,10 @@ def create_adni_sessions_dict(
             ]
             df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
     if df_subj_session.empty:
-        raise ValueError("Empty dataset detected. Clinical data cannot be extracted.")
-
+        cprint(
+            "Empty dataset detected. Clinical data cannot be extracted.", lvl="warning"
+        )
+        return
     # Nv/None refer to sessions whose session is undefined. "sc" is the screening session with unreliable (incomplete)
     # data.
     df_subj_session = df_subj_session[

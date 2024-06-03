@@ -8,7 +8,7 @@ def convert_adni_flair(
     csv_dir: PathLike,
     destination_dir: PathLike,
     conversion_dir: PathLike,
-    subjects: Optional[List[str]] = None,
+    subjects: List[str],
     mod_to_update: bool = False,
     n_procs: Optional[int] = 1,
 ):
@@ -45,10 +45,6 @@ def convert_adni_flair(
         paths_to_bids,
     )
     from clinica.utils.stream import cprint
-
-    if not subjects:
-        adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
-        subjects = list(adni_merge.PTID.unique())
 
     cprint(
         f"Calculating paths of FLAIR images. Output will be stored in {conversion_dir}.",
