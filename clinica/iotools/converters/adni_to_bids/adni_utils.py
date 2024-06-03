@@ -56,7 +56,7 @@ def _check_subjects_list(
     from clinica.utils.stream import cprint
 
     subjs_list_copy = copy(subjs_list)
-    adni_merge = load_clinical_csv(str(clinical_dir), "ADNIMERGE")
+    adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
     # Check that there are no errors in subjs_list given by the user
     for subj in subjs_list_copy:
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
@@ -828,7 +828,9 @@ def _create_file(
 
     if image.Is_Dicom:
         success = run_dcm2niix(
-            input_dir=image_path if modality != ADNIModalityConverter.FMAP else Path(image_path).parent,
+            input_dir=image_path
+            if modality != ADNIModalityConverter.FMAP
+            else Path(image_path).parent,
             output_dir=output_path,
             output_fmt=output_filename,
             compress=not _should_be_centered(modality),
