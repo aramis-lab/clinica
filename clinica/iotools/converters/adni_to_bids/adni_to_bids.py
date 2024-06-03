@@ -216,7 +216,9 @@ class AdniToBids(Converter):
         if subjs_list_path:
             subjs_list_path = Path(subjs_list_path)
 
-        subjs_list = get_subjects_list(Path(source_dir), subjs_list_path, clinical_dir)
+        subjs_list = get_subjects_list(
+            Path(source_dir), Path(clinical_dir), subjs_list_path
+        )
 
         # Create the output folder if is not already existing
         os.makedirs(dest_dir, exist_ok=True)
