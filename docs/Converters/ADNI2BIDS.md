@@ -69,12 +69,13 @@ Currently, the modalities supported by our converter are:
 | Florbetapir (AV45) PET (amyloid)          | -      | ✓         | ✓      |
 | Florbetaben (FBB) PET (amyloid)           | -      | -         | ✓      |
 | Flortaucipir (AV1451) PET (tau)           | -      | -         | ✓      |
+| Field mapping (FMAP)                      | ✓      | ✓         | ✓      |
 | Clinical data                             | ✓      | ✓         | ✓      |
 
 To convert the imaging data to BIDS, a list of subjects with their sessions is first obtained from the `ADNIMERGE` spreadsheet.
 This list is compared for each modality of interest to the list of scans available, as provided by modality-specific csv files (e.g. `MPRAGEMETA.csv`).
 If the modality was acquired for a specific pair of subject-session, and
-several scans and/or preprocessed images are available, only one is converted:
+several scans and/or preprocessed images are available, only one is converted except for FMAP:
 
 - **T1-weighted MRI** When several scans are available for a single session, the preferred scan (as identified in `MAYOADIRL_MRI_IMAGEQC_12_08_15.csv`) is chosen.
 If a preferred scan is not specified then the higher quality scan (as defined in `MRIQUALITY.csv`) is selected.
@@ -85,6 +86,7 @@ Gradwarp, B1-inhomogeneity corrected and N3 bias field corrected images are sele
 - **FLAIR** We select images containing 'FLAIR' in the sequence name, without multiplanar reconstruction (MPR).
 - **fMRI** We select images containing 'MRI' in the sequence name, that are not multiband.
 - **FDG, Amyloid and Tau PET** The images co-registered and averaged across time frames are selected.
+- **FMAP** We select images referring to Field Mapping in their sequence name.
 
 For all imaging modalities, the scans failing quality control (if it was performed) are discarded.
 
@@ -165,6 +167,7 @@ Due to the high computational time required for converting all the modalities of
 - `PET_FDG` for Fluorodeoxyglucose (FDG) PET
 - `PET_AMYLOID` for Pittsburgh compound B (PIB), Florbetapir (AV45) and Florbetaben (FBB) PET
 - `PET_TAU` for Flortaucipir (AV1451) PET
+- `FMAP` for Field Mapping
 
 It is also possible to provide the path to a .txt file with the list of subjects to convert using the optional parameter `--subjects_list`.
 This file must contain one subject identifier per line.
@@ -306,6 +309,25 @@ clinica convert adni-to-bids -h
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
             - Subject sub-ADNI128S2220 for session ses-M048
 
+    - **FMAP** 
+        - _Image conversion generates an invalid output file TOCHECK:_
+            - Subject sub-ADNI006S4485 for session ses-M084
+            - Subject sub-ADNI009S4388 for session ses-M072
+            - Subject sub-ADNI016S6802 for session bl
+            - Subject sub-ADNI016S6816 for session bl
+            - Subject sub-ADNI023S4115 for session ses-M126
+            - Subject sub-ADNI029S2395 for session ses-M072
+            - Subject sub-ADNI036S6088 for session bl
+            - Subject sub-ADNI036S6134 for session bl
+            - Subject sub-ADNI094S4503 for session ses-M024
+            - Subject sub-ADNI123S4127 for session ses-M096
+            - Subject sub-ADNI126S4891 for session ses-M084
+            - Subject sub-ADNI177S6448 for session ses-M024
+        - _Image conversion generates an invalid output file (real/imaginary suffix):_
+            - Subject sub-ADNI002S1261 for session ses-M060
+            - Subject sub-ADNI002S1261 for session ses-M072
+            - Subject sub-ADNI002S1261 for session ses-M084
+            - Subject sub-ADNI002S1261 for session ses-M096
 ## Citing this converter in your paper
 
 !!! cite "Example of paragraph:"
@@ -478,6 +500,18 @@ Known conversion exceptions are removed from the list.
     - Then we apply the function `get_images_pet` in `adni_utils.py`:
         - Functioning is the same as described above for FDG PET but we look for a different sequence ("AV1451 Co-registered, Averaged").
     - The list of images for each subject is added to the list of images to convert.
+
+??? abstract "Field Mapping (FMAP)""
+    The quality selection process for fMRI data described above is also used there :
+    - QC files are filtered to keep only entries corresponding to fMRI scans. We keep:
+        - `MAYOADIRL_MRI_IMAGEQC_12_08_15` rows containing `fMRI` as `series_type`,
+        - `MAYOADIRL_MRI_QUALITY_ADNI3` rows containing `EPB` as `SERIES_TYPE`.
+        - Resulting entries from both QC files are concatenated in one dataframe.
+    - The image sequence names in the `MRILIST.csv` file are filtered to keep only Field Mapping sequences.
+    - For each subject, since the `ADNIMERGE` and `MRILIST` files have different notations for the visits, a correspondence must be established.
+    For each subject, we pair the closest dates from the two files as the same visit (`visits_to_timepoints`).
+    - For each visit, the images are filtered to keep only images for the current visit.
+    - Since Field Mapping produces several images, all of them are considered and renamed according to BIDS specifications.
 
 ### Step 2: Path extraction
 
