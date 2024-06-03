@@ -55,6 +55,7 @@ def test_phase_magnitude_renamer_value_error(case, input_value):
         (BIDSFMAPCase.DIRECT_FIELDMAPS, "e2"),
         (BIDSFMAPCase.NOT_SUPPORTED, "e1"),
         (BIDSFMAPCase.EMPTY_FOLDER, "foo"),
+        (BIDSFMAPCase.ALREADY_RENAMED, "e1_ph"),
     ],
 )
 def test_phase_magnitude_renamer_implemented_error(case, input_value):
@@ -74,18 +75,18 @@ def fmap_case_builder(tmp_path: Path, case: BIDSFMAPCase):
     fmap_path = tmp_path / "fmap"
     fmap_path.mkdir()
     filenames = [
-        "sub-01_sesM0_fmap_e1.nii.gz",
-        "sub-01_sesM0_fmap_e1.json",
-        "sub-01_sesM0_fmap_e2.nii.gz",
-        "sub-01_sesM0_fmap_e2.json",
-        "sub-01_sesM0_fmap_e2_ph.nii.gz",
-        "sub-01_sesM0_fmap_e2_ph.json",
+        "sub-01_ses-M0_fmap_e1.nii.gz",
+        "sub-01_ses-M0_fmap_e1.json",
+        "sub-01_ses-M0_fmap_e2.nii.gz",
+        "sub-01_ses-M0_fmap_e2.json",
+        "sub-01_ses-M0_fmap_e2_ph.nii.gz",
+        "sub-01_ses-M0_fmap_e2_ph.json",
         ".foo.txt",
     ]
     if case == BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES:
         filenames += [
-            "sub-01_sesM0_fmap_e1_ph.nii.gz",
-            "sub-01_sesM0_fmap_e1_ph.json",
+            "sub-01_ses-M0_fmap_e1_ph.nii.gz",
+            "sub-01_ses-M0_fmap_e1_ph.json",
         ]
     for f in filenames:
         (fmap_path / f).touch()
@@ -96,26 +97,26 @@ def expected(tmp_path: Path, case: BIDSFMAPCase) -> Set[Path]:
     fmap_path = tmp_path / "fmap"
 
     expected_result = {
-        fmap_path / "sub-01_sesM0_magnitude1.nii.gz",
-        fmap_path / "sub-01_sesM0_magnitude1.json",
-        fmap_path / "sub-01_sesM0_magnitude2.nii.gz",
-        fmap_path / "sub-01_sesM0_magnitude2.json",
+        fmap_path / "sub-01_ses-M0_magnitude1.nii.gz",
+        fmap_path / "sub-01_ses-M0_magnitude1.json",
+        fmap_path / "sub-01_ses-M0_magnitude2.nii.gz",
+        fmap_path / "sub-01_ses-M0_magnitude2.json",
         fmap_path / ".foo.txt",
     }
     if case == BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES:
         expected_result = expected_result.union(
             {
-                fmap_path / "sub-01_sesM0_phasediff.nii.gz",
-                fmap_path / "sub-01_sesM0_phasediff.json",
+                fmap_path / "sub-01_ses-M0_phasediff.nii.gz",
+                fmap_path / "sub-01_ses-M0_phasediff.json",
             }
         )
     if case == BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES:
         expected_result = expected_result.union(
             {
-                fmap_path / "sub-01_sesM0_phase2.nii.gz",
-                fmap_path / "sub-01_sesM0_phase2.json",
-                fmap_path / "sub-01_sesM0_phase1.nii.gz",
-                fmap_path / "sub-01_sesM0_phase1.json",
+                fmap_path / "sub-01_ses-M0_phase2.nii.gz",
+                fmap_path / "sub-01_ses-M0_phase2.json",
+                fmap_path / "sub-01_ses-M0_phase1.nii.gz",
+                fmap_path / "sub-01_ses-M0_phase1.json",
             }
         )
     return expected_result
@@ -138,9 +139,9 @@ def test_rename_files_success(tmp_path, case, fmap_case_builder, expected):
 @pytest.mark.parametrize(
     "invalid_filename",
     [
-        "sub-01_sesM0_fmape1.nii.gz",
-        "sub-01_sesM0_magnitude.nii.gz",
-        "sub-01_sesM0fmap_e1.nii.gz",
+        "sub-01_ses-M0_fmape1.nii.gz",
+        "sub-01_ses-M0_magnitude.nii.gz",
+        "sub-01_ses-M0fmap_e1.nii.gz",
         "foo.txt",
     ],
 )
@@ -165,25 +166,25 @@ def test_get_json_file_matching_pattern_success(tmp_path):
     fmap = tmp_path / "fmap"
     fmap.mkdir()
     for f in [
-        "sub-01_sesM0_fmap_e2_ph.json",
-        "sub-01_sesM0_fmap_e2_ph.nii.gz",
-        "sub-01_sesM0_fmap_e1.json",
+        "sub-01_ses-M0_fmap_e2_ph.json",
+        "sub-01_ses-M0_fmap_e2_ph.nii.gz",
+        "sub-01_ses-M0_fmap_e1.json",
         ".foo.txt",
     ]:
         (fmap / f).touch()
 
     assert (
         get_json_file_matching_pattern(fmap, pattern="ph.json")
-        == fmap / "sub-01_sesM0_fmap_e2_ph.json"
+        == fmap / "sub-01_ses-M0_fmap_e2_ph.json"
     )
 
 
 @pytest.mark.parametrize(
     "filenames, pattern",
     [
-        (("sub-01_sesM0_fmap_e2.json",), "ph.json"),
-        (("sub-01_sesM0_fmap_e2_ph.json", "sub-01_sesM0_fmap_e1_ph.json"), "ph.json"),
-        (("sub-01_sesM0_fmap_e2_ph.json"), "fmap.json"),
+        (("sub-01_ses-M0_fmap_e2.json",), "ph.json"),
+        (("sub-01_ses-M0_fmap_e2_ph.json", "sub-01_ses-M0_fmap_e1_ph.json"), "ph.json"),
+        (("sub-01_ses-M0_fmap_e2_ph.json"), "fmap.json"),
     ],
 )
 def test_get_json_file_matching_pattern_error(tmp_path, filenames, pattern):
@@ -232,58 +233,80 @@ def test_check_json_contains_keys(tmp_path, keys):
         ((".foo.txt",), BIDSFMAPCase.EMPTY_FOLDER),
         (
             (
-                "sub-01_sesM0_fmap_e2_ph.json",
-                "sub-01_sesM0_fmap_e2_ph.nii.gz",
-                "sub-01_sesM0_fmap_e1.json",
-                "sub-01_sesM0_fmap_e1.nii.gz",
+                "sub-01_ses-M0_fmap_e2_ph.json",
+                "sub-01_ses-M0_fmap_e2_ph.nii.gz",
+                "sub-01_ses-M0_fmap_e1.json",
+                "sub-01_ses-M0_fmap_e1.nii.gz",
             ),
             BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES,
         ),
         (
             (
-                "sub-01_sesM0_fmap.json",
-                "sub-01_sesM0_fmap.nii.gz",
-                "sub-01_sesM0_magnitude.json",
-                "sub-01_sesM0_magnitude.nii.gz",
+                "sub-01_ses-M0_fmap.json",
+                "sub-01_ses-M0_fmap.nii.gz",
+                "sub-01_ses-M0_magnitude.json",
+                "sub-01_ses-M0_magnitude.nii.gz",
             ),
             BIDSFMAPCase.DIRECT_FIELDMAPS,
         ),
         (
             (
-                "sub-01_sesM0_fmap_e2_ph.json",
-                "sub-01_sesM0_fmap_e2_ph.nii.gz",
-                "sub-01_sesM0_fmap_e1.json",
-                "sub-01_sesM0_fmap_e1.nii.gz",
-                "sub-01_sesM0_fmap_e2.json",
-                "sub-01_sesM0_fmap_e2.nii.gz",
+                "sub-01_ses-M0_fmap_e2_ph.json",
+                "sub-01_ses-M0_fmap_e2_ph.nii.gz",
+                "sub-01_ses-M0_fmap_e1.json",
+                "sub-01_ses-M0_fmap_e1.nii.gz",
+                "sub-01_ses-M0_fmap_e2.json",
+                "sub-01_ses-M0_fmap_e2.nii.gz",
             ),
             BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES,
         ),
         (
             (
-                "sub-01_sesM0_fmap_e2_ph.json",
-                "sub-01_sesM0_fmap_e2_ph.nii.gz",
-                "sub-01_sesM0_fmap_e1.json",
-                "sub-01_sesM0_fmap_e1.nii.gz",
-                "sub-01_sesM0_fmap_e2.json",
-                "sub-01_sesM0_fmap_e2.nii.gz",
-                "sub-01_sesM0_fmap_e1_ph.json",
-                "sub-01_sesM0_fmap_e1_ph.nii.gz",
+                "sub-01_ses-M0_fmap_e2_ph.json",
+                "sub-01_ses-M0_fmap_e2_ph.nii.gz",
+                "sub-01_ses-M0_fmap_e1.json",
+                "sub-01_ses-M0_fmap_e1.nii.gz",
+                "sub-01_ses-M0_fmap_e2.json",
+                "sub-01_ses-M0_fmap_e2.nii.gz",
+                "sub-01_ses-M0_fmap_e1_ph.json",
+                "sub-01_ses-M0_fmap_e1_ph.nii.gz",
             ),
             BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES,
         ),
         (
             (
-                "sub-01_sesM0_fmap_e2_ph.json",
-                "sub-01_sesM0_fmap_e2_ph.nii.gz",
+                "sub-01_ses-M0_phasediff.json",
+                "sub-01_ses-M0_phasediff.gz",
+                "sub-01_ses-M0_magnitude1.json",
+                "sub-01_ses-M0_magnitude1.gz",
+                "sub-01_ses-M0_magnitude2.json",
+                "sub-01_ses-M0_magnitude2.nii.gz",
+            ),
+            BIDSFMAPCase.ALREADY_RENAMED,
+        ),
+        (
+            (
+                "sub-01_ses-M0_phasediff.json",
+                "sub-01_ses-M0_phasediff.gz",
+                "sub-01_ses-M0_magnitude1.json",
+                "sub-01_ses-M0_magnitude1.gz",
+                "sub-01_ses-M0_fmap_e2_ph.json",
+                "sub-01_ses-M0_fmap_e2_ph.nii.gz",
             ),
             BIDSFMAPCase.NOT_SUPPORTED,
         ),
         (
             (
-                "sub-01_sesM0_fmap_e2_ph.json",
-                "sub-01_sesM0_fmap_e2_ph.nii.gz",
-                "sub-01_sesM0_fmap_e1.json",
+                "sub-01_ses-M0_fmap_e2_ph.json",
+                "sub-01_ses-M0_fmap_e2_ph.nii.gz",
+            ),
+            BIDSFMAPCase.NOT_SUPPORTED,
+        ),
+        (
+            (
+                "sub-01_ses-M0_fmap_e2_ph.json",
+                "sub-01_ses-M0_fmap_e2_ph.nii.gz",
+                "sub-01_ses-M0_fmap_e1.json",
             ),
             BIDSFMAPCase.NOT_SUPPORTED,
         ),

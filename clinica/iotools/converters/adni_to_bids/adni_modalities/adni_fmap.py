@@ -423,10 +423,10 @@ def infer_case_fmap(fmap_path: Path) -> BIDSFMAPCase:
         if re.search(r"fmap(.*).json", f)
     )
 
-    if any([re.search(r"magnitude|phase", f) for f in files]):
-        return BIDSFMAPCase.ALREADY_RENAMED
-    elif nb_files == 0:
+    if nb_files == 0:
         return BIDSFMAPCase.EMPTY_FOLDER
+    elif all([re.search(r"magnitude|phase", f) for f in files]):
+        return BIDSFMAPCase.ALREADY_RENAMED
     elif nb_files == 4:
         if extensions == {""}:
             return BIDSFMAPCase.DIRECT_FIELDMAPS
