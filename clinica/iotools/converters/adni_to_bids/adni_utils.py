@@ -1533,13 +1533,13 @@ def create_file(
     for image_to_remove in images_to_remove:
         if not mod_to_update:
             cprint(
-                f"There exists already images for that modality {images_to_remove}. "
+                f"There exists already images for modality {modality} : {images_to_remove}. "
                 "The parameter 'mod_to_update' is set to False such that "
                 "images cannot be overwritten.",
                 lvl="warning",
             )
             return None
-        cprint(f"Removing old image {image_to_remove}...", lvl="info")
+        cprint(f"Removing old image {output_path / image_to_remove}...", lvl="info")
         (output_path / image_to_remove).unlink()
 
     try:
