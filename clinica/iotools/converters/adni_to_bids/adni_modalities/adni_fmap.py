@@ -250,6 +250,7 @@ def fmap_image(
 
 
 class BIDSFMAPCase(str, Enum):
+    ALREADY_RENAMED = "already_renamed"
     EMPTY_FOLDER = "empty_folder"
     ONE_PHASE_TWO_MAGNITUDES = "one_phase_two_magnitudes"
     TWO_PHASES_TWO_MAGNITUDES = "two_phases_two_magnitudes"
@@ -295,6 +296,8 @@ def rename_files(fmap_path: Path, case: BIDSFMAPCase):
 
 
 def fmap_case_handler_factory(case: BIDSFMAPCase) -> Callable:
+    if case == BIDSFMAPCase.ALREADY_RENAMED:
+        return already_renamed_handler
     if case == BIDSFMAPCase.EMPTY_FOLDER:
         return empty_folder_handler
     if case == BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES:
@@ -331,6 +334,14 @@ def check_json_contains_keys(json_file: Path, keys: Iterable[str]) -> bool:
         )
         return False
     return True
+
+
+def already_renamed_handler(fmap_path: Path):
+    cprint(
+        f"Files for subject {fmap_path.parent.parent.name},"
+        f"session {fmap_path.parent.name} were already renamed.",
+        lvl="info",
+    )
 
 
 def empty_folder_handler(fmap_path: Path):
@@ -407,7 +418,9 @@ def infer_case_fmap(fmap_path: Path) -> BIDSFMAPCase:
         if re.search(r"fmap(.*).json", f)
     )
 
-    if nb_files == 0:
+    if any([re.search(r"magnitude|phase", f) for f in files]):
+        return BIDSFMAPCase.ALREADY_RENAMED
+    elif nb_files == 0:
         return BIDSFMAPCase.EMPTY_FOLDER
     elif nb_files == 4:
         if extensions == {""}:

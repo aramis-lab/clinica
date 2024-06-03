@@ -1525,17 +1525,22 @@ def create_file(
     output_path.mkdir(parents=True, exist_ok=True)
 
     # If updated mode is selected, check if an old image is existing and remove it
-    for image_to_remove in output_path.glob(f"{output_filename}*"):
+    rgx = re.compile(
+        f"{modality_specific[modality]['output_filename']}" + r"|magnitude|phase"
+    )
+    images_to_remove = list(filter(rgx.search, os.listdir(output_path)))
+
+    for image_to_remove in images_to_remove:
         if not mod_to_update:
             cprint(
-                f"There exists already an image at {image_to_remove}. "
+                f"There exists already images for that modality {images_to_remove}. "
                 "The parameter 'mod_to_update' is set to False such that "
                 "images cannot be overwritten.",
                 lvl="warning",
             )
             return None
         cprint(f"Removing old image {image_to_remove}...", lvl="info")
-        image_to_remove.unlink()
+        (output_path / image_to_remove).unlink()
 
     try:
         os.makedirs(output_path)
