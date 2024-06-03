@@ -30,8 +30,8 @@ class ADNIStudy(Enum):
 
 
 def define_subjects_list(
-    source_dir: str,
-    subjs_list_path: Optional[str] = None,
+    source_dir: Path,
+    subjs_list_path: Optional[Path] = None,
 ) -> List[str]:
     # todo : here or in utils for all converters ?
     import re
@@ -40,17 +40,11 @@ def define_subjects_list(
 
     if subjs_list_path:
         cprint("Loading a subjects lists provided by the user...")
-        subjs_list = [line.rstrip("\n") for line in open(subjs_list_path)]
+        return subjs_list_path.read_text().splitlines()
 
-    else:
-        cprint(f"Using the subjects contained in the ADNI dataset at {source_dir}")
-        rgx = re.compile(r"\d{3}_S_\d{4}")
-        subjs_list = list(
-            filter(
-                rgx.fullmatch, [folder.name for folder in Path(source_dir).iterdir()]
-            )
-        )
-    return subjs_list
+    cprint(f"Using the subjects contained in the ADNI dataset at {source_dir}")
+    rgx = re.compile(r"\d{3}_S_\d{4}")
+    return list(filter(rgx.fullmatch, [folder.name for folder in source_dir.iterdir()]))
 
 
 def check_subjects_list(
@@ -74,6 +68,9 @@ def check_subjects_list(
             )
             subjs_list.remove(subj)
     del subjs_list_copy
+
+    if not subjs_list:
+        cprint(f"Processing an empty list of subjects.", lvl="warning")
 
     return subjs_list
 

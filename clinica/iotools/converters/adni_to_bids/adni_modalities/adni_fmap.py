@@ -54,9 +54,6 @@ def convert_adni_fmap(
     from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
 
-    if not subjects:
-        cprint(f"Processing an empty list of subjects.", lvl="warning")
-
     csv_dir = Path(csv_dir)
     source_dir = Path(source_dir)
     conversion_dir = Path(conversion_dir)

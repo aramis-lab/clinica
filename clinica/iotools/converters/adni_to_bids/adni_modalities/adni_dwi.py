@@ -50,9 +50,6 @@ def convert_adni_dwi(
     )
     from clinica.utils.stream import cprint
 
-    if not subjects:
-        cprint(f"Processing an empty list of subjects.", lvl="warning")
-
     cprint(
         f"Calculating paths of DWI images. Output will be stored in {conversion_dir}."
     )

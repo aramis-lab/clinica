@@ -50,9 +50,6 @@ def convert_adni_av45_fbb_pet(
     )
     from clinica.utils.stream import cprint
 
-    if not subjects:
-        cprint(f"Processing an empty list of subjects.", lvl="warning")
-
     cprint(
         f"Calculating paths of AV45 and Florbetaben PET images. Output will be stored in {conversion_dir}."
     )

@@ -24,12 +24,19 @@ def test_define_subjects_list_directory(tmp_path, input, expected):
     for subject in input:
         (source_dir / subject).touch()
 
-    subjs_list_path = tmp_path / "subjects_list.txt"
-    with open(subjs_list_path, "w") as f:
-        f.write("".join([subj + "\n" for subj in input]))
+    assert set(define_subjects_list(source_dir)) == expected
 
-    assert set(define_subjects_list(str(source_dir))) == expected
-    assert set(define_subjects_list(str(source_dir), str(subjs_list_path))) == input
+
+def test_define_subjects_list_txt(tmp_path):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import define_subjects_list
+
+    source_dir = tmp_path / "source_dir"
+    subjs_list_path = tmp_path / "subjects_list.txt"
+    input = {"001_S_0001", "001_S_00022", "001S0003"}
+    with open(subjs_list_path, "w") as f:
+        f.write("\n".join(input))
+
+    assert set(define_subjects_list(source_dir, subjs_list_path)) == input
 
 
 @pytest.mark.parametrize(
@@ -46,7 +53,7 @@ def test_check_subjects_list(tmp_path, write_all, input, expected):
     clinical_dir.mkdir()
 
     if not write_all:
-        input.remove(input[-1])
+        input.pop()
 
     adni_df = pd.DataFrame(columns=["PTID"], data=input)
     adni_df.to_csv(clinical_dir / "ADNIMERGE.csv")

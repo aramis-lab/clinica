@@ -51,9 +51,6 @@ def convert_adni_t1(
     )
     from clinica.utils.stream import cprint
 
-    if not subjects:
-        cprint(f"Processing an empty list of subjects.", lvl="warning")
-
     cprint(
         f"Calculating paths of T1 images. Output will be stored in {conversion_dir}."
     )

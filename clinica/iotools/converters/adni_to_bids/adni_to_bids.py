@@ -216,8 +216,11 @@ class AdniToBids(Converter):
 
         modalities = modalities or self.get_modalities_supported()
 
+        if subjs_list_path:
+            subjs_list_path = Path(subjs_list_path)
+
         subjs_list = check_subjects_list(
-            define_subjects_list(source_dir, subjs_list_path), clinical_dir
+            define_subjects_list(Path(source_dir), subjs_list_path), clinical_dir
         )
 
         # Create the output folder if is not already existing
