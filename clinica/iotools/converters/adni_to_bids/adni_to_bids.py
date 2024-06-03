@@ -208,10 +208,7 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
-        from clinica.iotools.converters.adni_to_bids.adni_utils import (
-            check_subjects_list,
-            define_subjects_list,
-        )
+        from clinica.iotools.converters.adni_to_bids.adni_utils import get_subjects_list
         from clinica.utils.stream import cprint
 
         modalities = modalities or self.get_modalities_supported()
@@ -219,9 +216,7 @@ class AdniToBids(Converter):
         if subjs_list_path:
             subjs_list_path = Path(subjs_list_path)
 
-        subjs_list = check_subjects_list(
-            define_subjects_list(Path(source_dir), subjs_list_path), clinical_dir
-        )
+        subjs_list = get_subjects_list(Path(source_dir), subjs_list_path, clinical_dir)
 
         # Create the output folder if is not already existing
         os.makedirs(dest_dir, exist_ok=True)

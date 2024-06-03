@@ -16,7 +16,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
     ],
 )
 def test_define_subjects_list_directory(tmp_path, input, expected):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import define_subjects_list
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _define_subjects_list
 
     source_dir = tmp_path / "source_dir"
     source_dir.mkdir()
@@ -24,11 +24,11 @@ def test_define_subjects_list_directory(tmp_path, input, expected):
     for subject in input:
         (source_dir / subject).touch()
 
-    assert set(define_subjects_list(source_dir)) == expected
+    assert set(_define_subjects_list(source_dir)) == expected
 
 
 def test_define_subjects_list_txt(tmp_path):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import define_subjects_list
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _define_subjects_list
 
     source_dir = tmp_path / "source_dir"
     subjs_list_path = tmp_path / "subjects_list.txt"
@@ -36,7 +36,7 @@ def test_define_subjects_list_txt(tmp_path):
     with open(subjs_list_path, "w") as f:
         f.write("\n".join(input))
 
-    assert set(define_subjects_list(source_dir, subjs_list_path)) == input
+    assert set(_define_subjects_list(source_dir, subjs_list_path)) == input
 
 
 @pytest.mark.parametrize(
@@ -47,7 +47,7 @@ def test_define_subjects_list_txt(tmp_path):
     ],
 )
 def test_check_subjects_list(tmp_path, write_all, input, expected):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import check_subjects_list
+    from clinica.iotools.converters.adni_to_bids.adni_utils import _check_subjects_list
 
     clinical_dir = tmp_path / "clinical_dir"
     clinical_dir.mkdir()
@@ -58,7 +58,7 @@ def test_check_subjects_list(tmp_path, write_all, input, expected):
     adni_df = pd.DataFrame(columns=["PTID"], data=input)
     adni_df.to_csv(clinical_dir / "ADNIMERGE.csv")
 
-    assert set(check_subjects_list(input, str(clinical_dir))) == expected
+    assert set(_check_subjects_list(input, clinical_dir)) == expected
 
 
 @pytest.mark.parametrize(

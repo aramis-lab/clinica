@@ -29,7 +29,7 @@ class ADNIStudy(Enum):
         )
 
 
-def define_subjects_list(
+def _define_subjects_list(
     source_dir: Path,
     subjs_list_path: Optional[Path] = None,
 ) -> List[str]:
@@ -47,16 +47,16 @@ def define_subjects_list(
     return list(filter(rgx.fullmatch, [folder.name for folder in source_dir.iterdir()]))
 
 
-def check_subjects_list(
+def _check_subjects_list(
     subjs_list: List[str],
-    clinical_dir: str,
+    clinical_dir: Path,
 ) -> List[str]:
     from copy import copy
 
     from clinica.utils.stream import cprint
 
     subjs_list_copy = copy(subjs_list)
-    adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
+    adni_merge = load_clinical_csv(str(clinical_dir), "ADNIMERGE")
     # Check that there are no errors in subjs_list given by the user
     for subj in subjs_list_copy:
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
@@ -73,6 +73,16 @@ def check_subjects_list(
         cprint(f"Processing an empty list of subjects.", lvl="warning")
 
     return subjs_list
+
+
+def get_subjects_list(
+    source_dir: Path,
+    clinical_dir: Path,
+    subjs_list_path: Optional[Path] = None,
+) -> List[str]:
+    return _check_subjects_list(
+        _define_subjects_list(source_dir, subjs_list_path), clinical_dir
+    )
 
 
 def visits_to_timepoints(
