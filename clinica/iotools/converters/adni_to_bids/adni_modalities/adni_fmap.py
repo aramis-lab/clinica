@@ -182,6 +182,11 @@ def compute_fmap_path(
         ("023_S_4115", "m126"),
         # Multiple images
         ("029_S_2395", "m72"),
+        # Real/Imaginary
+        ("002_S_1261", "m60"),
+        ("002_S_1261", "m72"),
+        ("002_S_1261", "m84"),
+        ("002_S_1261", "m96"),
     ]
 
     # Removing known exceptions from images to convert
