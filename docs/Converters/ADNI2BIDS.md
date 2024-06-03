@@ -309,25 +309,23 @@ clinica convert adni-to-bids -h
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
             - Subject sub-ADNI128S2220 for session ses-M048
 
-    - **FMAP** 
-        - _Image conversion generates an invalid output file TOCHECK:_
-            - Subject sub-ADNI006S4485 for session ses-M084
-            - Subject sub-ADNI009S4388 for session ses-M072
-            - Subject sub-ADNI016S6802 for session bl
-            - Subject sub-ADNI016S6816 for session bl
-            - Subject sub-ADNI023S4115 for session ses-M126
-            - Subject sub-ADNI029S2395 for session ses-M072
-            - Subject sub-ADNI036S6088 for session bl
-            - Subject sub-ADNI036S6134 for session bl
-            - Subject sub-ADNI094S4503 for session ses-M024
-            - Subject sub-ADNI123S4127 for session ses-M096
-            - Subject sub-ADNI126S4891 for session ses-M084
-            - Subject sub-ADNI177S6448 for session ses-M024
+    - **FMAP**
         - _Image conversion generates an invalid output file (real/imaginary suffix):_
-            - Subject sub-ADNI002S1261 for session ses-M060
-            - Subject sub-ADNI002S1261 for session ses-M072
-            - Subject sub-ADNI002S1261 for session ses-M084
-            - Subject sub-ADNI002S1261 for session ses-M096
+            - Subject sub-ADNI002S1261 for session ses-M060 ; ses-M072 ; ses-M084 ; ses-M096
+            - Subject sub-ADNI006S4485 for session ses-M000 ; ses-M003 ; ses-M006 ; ses-M012 ; ses-M024 ; ses-M048
+        - _Unrecognized BIDS case for Field Mappings :_
+            - Subject sub-ADNI006S4485 for session ses-M078 
+            - Subject sub-ADNI009S4388 for session ses-M003 ; ses-M006 ; ses-M012 ; ses-M024 ; ses-M048
+            - Subject sub-ADNI023S4115 for session ses-M000 ; ses-M003 ; ses-M006 ; ses-M012 ; ses-M024 ; ses-M048
+            - Subject sub-ADNI123S4127 for session ses-M000 ; ses-M012 ; ses-M024 ; ses-M036
+        - _Missing keys in .json files :_
+            - Subject sub-ADNI006S4485 for session ses-M090
+            - Subject sub-ADNI036S6088 for session ses-M012
+            - Subject sub-ADNI123S4127 for session ses-M084
+        - _Missing DICOMs slices :_
+            - Subject sub-ADNI023S4115 for session ses-M126
+            - Subject sub-ADNI177S6448 for session ses-M024
+
 ## Citing this converter in your paper
 
 !!! cite "Example of paragraph:"
