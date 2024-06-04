@@ -1,8 +1,62 @@
-from typing import List
+from pathlib import Path
+from typing import Iterable, List
 
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
+
+
+@pytest.fixture
+def get_path_remove_files(tmp_path: Path, expected: Iterable[str]):
+    return set([tmp_path / name for name in expected])
+
+
+@pytest.mark.parametrize(
+    "suffixes, filenames, expected",
+    [
+        (
+            ("ADC", "real", "imaginary"),
+            {
+                "sub-01_ses-M001_magnitude1.nii.gz",
+                "sub-01_ses-M001_fmap_real.nii.gz",
+                "sub-01_ses-M001_fmap_imaginary.nii",
+                "sub-01_ses-M001_T1w_ADC.nii.gz",
+            },
+            {
+                "sub-01_ses-M001_fmap_real.nii.gz",
+                "sub-01_ses-M001_fmap_imaginary.nii",
+                "sub-01_ses-M001_T1w_ADC.nii.gz",
+            },
+        ),
+        (
+            ("ADC",),
+            {
+                "sub-01_ses-M001_magnitude1.nii.gz",
+                "sub-01_ses-M001_T1wADC.nii.gz",
+                "sub-01_ses-M001_FLAIR_ADC.nii.gz",
+                "sub-01_ses-M001_pet_ADC.json",
+            },
+            {
+                "sub-01_ses-M001_T1wADC.nii.gz",
+                "sub-01_ses-M001_FLAIR_ADC.nii.gz",
+                "sub-01_ses-M001_pet_ADC.json",
+            },
+        ),
+    ],
+)
+def test_remove_files_with_unsupported_suffixes(
+    tmp_path, get_path_remove_files, filenames, suffixes, expected
+):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        _remove_files_with_unsupported_suffixes,
+    )
+
+    for name in filenames:
+        (tmp_path / name).touch()
+    assert (
+        set(_remove_files_with_unsupported_suffixes(tmp_path, suffixes))
+        == get_path_remove_files
+    )
 
 
 @pytest.mark.parametrize(
