@@ -1365,7 +1365,6 @@ def paths_to_bids(
         return [create_file_(image) for image in images_list]
     with Pool(processes=n_procs) as pool:
         output_file_treated = pool.map(create_file_, images_list)
-
     return output_file_treated
 
 

@@ -25,8 +25,7 @@ def suffix_directory_builder(
         (tmp_path / file).touch()
 
 
-@pytest.fixture
-def get_expected_path(tmp_path: Path, expected: Iterable[str]):
+def get_expected_path(tmp_path: Path, expected: Iterable[str]) -> set[Path]:
     return set([tmp_path / name for name in expected])
 
 
@@ -49,15 +48,14 @@ def get_expected_path(tmp_path: Path, expected: Iterable[str]):
         ),
     ],
 )
-def test_get_images_with_suffix(
-    tmp_path, suffix_directory_builder, suffixes, get_expected_path, expected
-):
+def test_get_images_with_suffix(tmp_path, suffix_directory_builder, suffixes, expected):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         _get_images_with_suffix,
     )
 
-    suffix_directory_builder
-    assert set(_get_images_with_suffix(tmp_path, suffixes)) == get_expected_path
+    assert set(_get_images_with_suffix(tmp_path, suffixes)) == get_expected_path(
+        tmp_path, expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -76,7 +74,6 @@ def test_remove_existing_images_if_necessary(
         _remove_existing_images_if_necessary,
     )
 
-    suffix_directory_builder
     assert _remove_existing_images_if_necessary(tmp_path, suffixes, update) == expected
 
 
@@ -102,17 +99,15 @@ def test_remove_existing_images_if_necessary(
     ],
 )
 def test_remove_files_with_unsupported_suffixes(
-    tmp_path, suffix_directory_builder, get_expected_path, suffixes, expected
+    tmp_path, suffix_directory_builder, suffixes, expected
 ):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         _remove_files_with_unsupported_suffixes,
     )
 
-    suffix_directory_builder
-    assert (
-        set(_remove_files_with_unsupported_suffixes(tmp_path, suffixes))
-        == get_expected_path
-    )
+    assert set(
+        _remove_files_with_unsupported_suffixes(tmp_path, suffixes)
+    ) == get_expected_path(tmp_path, expected)
 
 
 @pytest.mark.parametrize(
