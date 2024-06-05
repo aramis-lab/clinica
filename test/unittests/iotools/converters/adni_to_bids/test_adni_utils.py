@@ -7,55 +7,111 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 
 
 @pytest.fixture
-def get_path_remove_files(tmp_path: Path, expected: Iterable[str]):
+def suffix_directory_builder(
+    tmp_path: Path,
+):
+    filenames = {
+        "sub-01_ses-M001_magnitude1.nii.gz",
+        "sub-01_ses-M001_fmap_real.nii.gz",
+        "sub-01_ses-M001_fmap_imaginary.nii",
+        "sub-01_ses-M001_T1w_ADC.nii.gz",
+        "sub-01_ses-M001_T1w.nii.gz",
+        "sub-01_ses-M001_T1wADC.nii.gz",
+        "sub-01_ses-M001_FLAIR_ADC.nii.gz",
+        "sub-01_ses-M001_pet_ADC.json",
+    }
+
+    for file in filenames:
+        (tmp_path / file).touch()
+
+
+@pytest.fixture
+def get_expected_path(tmp_path: Path, expected: Iterable[str]):
     return set([tmp_path / name for name in expected])
 
 
 @pytest.mark.parametrize(
-    "suffixes, filenames, expected",
+    "suffixes, expected",
     [
+        ((), {}),
         (
-            ("ADC", "real", "imaginary"),
+            ("FLAIR",),
             {
-                "sub-01_ses-M001_magnitude1.nii.gz",
-                "sub-01_ses-M001_fmap_real.nii.gz",
-                "sub-01_ses-M001_fmap_imaginary.nii",
-                "sub-01_ses-M001_T1w_ADC.nii.gz",
-            },
-            {
-                "sub-01_ses-M001_fmap_real.nii.gz",
-                "sub-01_ses-M001_fmap_imaginary.nii",
-                "sub-01_ses-M001_T1w_ADC.nii.gz",
+                "sub-01_ses-M001_FLAIR_ADC.nii.gz",
             },
         ),
         (
-            ("ADC",),
+            ("real", "imaginary"),
             {
-                "sub-01_ses-M001_magnitude1.nii.gz",
-                "sub-01_ses-M001_T1wADC.nii.gz",
-                "sub-01_ses-M001_FLAIR_ADC.nii.gz",
-                "sub-01_ses-M001_pet_ADC.json",
-            },
-            {
-                "sub-01_ses-M001_T1wADC.nii.gz",
-                "sub-01_ses-M001_FLAIR_ADC.nii.gz",
-                "sub-01_ses-M001_pet_ADC.json",
+                "sub-01_ses-M001_fmap_real.nii.gz",
+                "sub-01_ses-M001_fmap_imaginary.nii",
             },
         ),
     ],
 )
+def test_get_images_with_suffix(
+    tmp_path, suffix_directory_builder, suffixes, get_expected_path, expected
+):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        _get_images_with_suffix,
+    )
+
+    suffix_directory_builder
+    assert set(_get_images_with_suffix(tmp_path, suffixes)) == get_expected_path
+
+
+@pytest.mark.parametrize(
+    "update, suffixes, expected",
+    [
+        (True, ("foo",), True),
+        (True, ("T1w",), True),
+        (False, ("imaginary", "T1w"), False),
+        (False, (), True),
+    ],
+)
+def test_remove_existing_images_if_necessary(
+    tmp_path, suffix_directory_builder, suffixes, update, expected
+):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        _remove_existing_images_if_necessary,
+    )
+
+    suffix_directory_builder
+    assert _remove_existing_images_if_necessary(tmp_path, suffixes, update) == expected
+
+
+@pytest.mark.parametrize(
+    "suffixes, expected",
+    [
+        (
+            ("ADC", "real", "imaginary"),
+            {
+                "sub-01_ses-M001_fmap_real.nii.gz",
+                "sub-01_ses-M001_fmap_imaginary.nii",
+                "sub-01_ses-M001_T1w_ADC.nii.gz",
+                "sub-01_ses-M001_T1wADC.nii.gz",
+                "sub-01_ses-M001_T1wADC.nii.gz",
+                "sub-01_ses-M001_FLAIR_ADC.nii.gz",
+                "sub-01_ses-M001_pet_ADC.json",
+            },
+        ),
+        (
+            ("foo",),
+            {},
+        ),
+    ],
+)
 def test_remove_files_with_unsupported_suffixes(
-    tmp_path, get_path_remove_files, filenames, suffixes, expected
+    tmp_path, suffix_directory_builder, get_expected_path, suffixes, expected
 ):
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         _remove_files_with_unsupported_suffixes,
     )
 
-    for name in filenames:
-        (tmp_path / name).touch()
+    suffix_directory_builder
     assert (
         set(_remove_files_with_unsupported_suffixes(tmp_path, suffixes))
-        == get_path_remove_files
+        == get_expected_path
     )
 
 
