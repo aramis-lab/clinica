@@ -673,7 +673,6 @@ def paths_to_bids(
     return output_file_treated
 
 
-<<<<<<< HEAD
 def _get_images_with_suffix(
     folder: Path,
     suffixes: Iterable[str],
