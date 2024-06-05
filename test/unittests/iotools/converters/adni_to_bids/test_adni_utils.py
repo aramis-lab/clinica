@@ -1,8 +1,113 @@
-from typing import List
+from pathlib import Path
+from typing import Iterable, List
 
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
+
+
+@pytest.fixture
+def suffix_directory_builder(
+    tmp_path: Path,
+):
+    filenames = {
+        "sub-01_ses-M001_magnitude1.nii.gz",
+        "sub-01_ses-M001_fmap_real.nii.gz",
+        "sub-01_ses-M001_fmap_imaginary.nii",
+        "sub-01_ses-M001_T1w_ADC.nii.gz",
+        "sub-01_ses-M001_T1w.nii.gz",
+        "sub-01_ses-M001_T1wADC.nii.gz",
+        "sub-01_ses-M001_FLAIR_ADC.nii.gz",
+        "sub-01_ses-M001_pet_ADC.json",
+    }
+
+    for file in filenames:
+        (tmp_path / file).touch()
+
+
+def get_expected_path(tmp_path: Path, expected: Iterable[str]) -> set[Path]:
+    return set([tmp_path / name for name in expected])
+
+
+@pytest.mark.parametrize(
+    "suffixes, expected",
+    [
+        ((), {}),
+        (
+            ("FLAIR",),
+            {
+                "sub-01_ses-M001_FLAIR_ADC.nii.gz",
+            },
+        ),
+        (
+            ("real", "imaginary"),
+            {
+                "sub-01_ses-M001_fmap_real.nii.gz",
+                "sub-01_ses-M001_fmap_imaginary.nii",
+            },
+        ),
+    ],
+)
+def test_get_images_with_suffix(tmp_path, suffix_directory_builder, suffixes, expected):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        _get_images_with_suffix,
+    )
+
+    assert set(_get_images_with_suffix(tmp_path, suffixes)) == get_expected_path(
+        tmp_path, expected
+    )
+
+
+@pytest.mark.parametrize(
+    "update, suffixes, expected",
+    [
+        (True, ("foo",), True),
+        (True, ("T1w",), True),
+        (False, ("imaginary", "T1w"), False),
+        (False, (), True),
+    ],
+)
+def test_remove_existing_images_if_necessary(
+    tmp_path, suffix_directory_builder, suffixes, update, expected
+):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        _remove_existing_images_if_necessary,
+    )
+
+    assert _remove_existing_images_if_necessary(tmp_path, suffixes, update) == expected
+
+
+@pytest.mark.parametrize(
+    "suffixes, expected",
+    [
+        (
+            ("ADC", "real", "imaginary"),
+            {
+                "sub-01_ses-M001_fmap_real.nii.gz",
+                "sub-01_ses-M001_fmap_imaginary.nii",
+                "sub-01_ses-M001_T1w_ADC.nii.gz",
+                "sub-01_ses-M001_T1wADC.nii.gz",
+                "sub-01_ses-M001_T1wADC.nii.gz",
+                "sub-01_ses-M001_FLAIR_ADC.nii.gz",
+                "sub-01_ses-M001_pet_ADC.json",
+            },
+        ),
+        (
+            ("foo",),
+            {},
+        ),
+    ],
+)
+def test_remove_files_with_unsupported_suffixes(
+    tmp_path, suffix_directory_builder, suffixes, expected
+):
+    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+        _remove_files_with_unsupported_suffixes,
+    )
+
+    assert set(
+        _remove_files_with_unsupported_suffixes(tmp_path, suffixes)
+    ) == get_expected_path(tmp_path, expected)
 
 
 @pytest.mark.parametrize(

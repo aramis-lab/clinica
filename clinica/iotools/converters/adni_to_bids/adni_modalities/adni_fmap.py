@@ -168,20 +168,43 @@ def compute_fmap_path(
     # Exceptions
     # ==========
     conversion_errors = [
-        ("006_S_4485", "m84"),
-        ("123_S_4127", "m96"),
-        # Eq_1
-        ("094_S_4503", "m24"),
-        ("009_S_4388", "m72"),
-        ("036_S_6088", "bl"),
-        ("036_S_6134", "bl"),
-        ("016_S_6802", "bl"),
-        ("016_S_6816", "bl"),
-        ("126_S_4891", "m84"),
-        ("177_S_6448", "m24"),
-        ("023_S_4115", "m126"),
         # Multiple images
         ("029_S_2395", "m72"),
+        # Real/Imaginary
+        ("002_S_1261", "m60"),
+        ("002_S_1261", "m72"),
+        ("002_S_1261", "m84"),
+        ("002_S_1261", "m96"),
+        ("006_S_4485", "bl"),
+        ("006_S_4485", "m03"),
+        ("006_S_4485", "m06"),
+        ("006_S_4485", "m12"),
+        ("006_S_4485", "m24"),
+        ("006_S_4485", "m48"),
+        # Unrecognized BIDSCase
+        ("006_S_4485", "m78"),
+        ("009_S_4388", "m03"),
+        ("009_S_4388", "m06"),
+        ("009_S_4388", "m12"),
+        ("009_S_4388", "m24"),
+        ("009_S_4388", "m48"),
+        ("023_S_4115", "bl"),
+        ("023_S_4115", "m03"),
+        ("023_S_4115", "m06"),
+        ("023_S_4115", "m12"),
+        ("023_S_4115", "m24"),
+        ("023_S_4115", "m48"),
+        ("123_S_4127", "bl"),
+        ("123_S_4127", "m12"),
+        ("123_S_4127", "m24"),
+        ("123_S_4127", "m36"),
+        # Missing EchoTime Keys
+        ("006_S_4485", "m90"),
+        ("036_S_6088", "m12"),
+        ("123_S_4127", "m84"),
+        # Missing DICOMS
+        ("023_S_4115", "m126"),
+        ("177_S_6448", "m24"),
     ]
 
     # Removing known exceptions from images to convert
@@ -250,6 +273,7 @@ def fmap_image(
 
 
 class BIDSFMAPCase(str, Enum):
+    ALREADY_RENAMED = "already_renamed"
     EMPTY_FOLDER = "empty_folder"
     ONE_PHASE_TWO_MAGNITUDES = "one_phase_two_magnitudes"
     TWO_PHASES_TWO_MAGNITUDES = "two_phases_two_magnitudes"
@@ -295,6 +319,8 @@ def rename_files(fmap_path: Path, case: BIDSFMAPCase):
 
 
 def fmap_case_handler_factory(case: BIDSFMAPCase) -> Callable:
+    if case == BIDSFMAPCase.ALREADY_RENAMED:
+        return already_renamed_handler
     if case == BIDSFMAPCase.EMPTY_FOLDER:
         return empty_folder_handler
     if case == BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES:
@@ -331,6 +357,14 @@ def check_json_contains_keys(json_file: Path, keys: Iterable[str]) -> bool:
         )
         return False
     return True
+
+
+def already_renamed_handler(fmap_path: Path):
+    cprint(
+        f"Files for subject {fmap_path.parent.parent.name},"
+        f"session {fmap_path.parent.name} were already renamed.",
+        lvl="info",
+    )
 
 
 def empty_folder_handler(fmap_path: Path):
@@ -409,6 +443,8 @@ def infer_case_fmap(fmap_path: Path) -> BIDSFMAPCase:
 
     if nb_files == 0:
         return BIDSFMAPCase.EMPTY_FOLDER
+    elif all([re.search(r"magnitude|phase", f) for f in files]):
+        return BIDSFMAPCase.ALREADY_RENAMED
     elif nb_files == 4:
         if extensions == {""}:
             return BIDSFMAPCase.DIRECT_FIELDMAPS
