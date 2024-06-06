@@ -117,10 +117,10 @@ def test_run_habs_to_bids(cmdopt, tmp_path):
     output_dir = tmp_path / "bids"
 
     runner = CliRunner()
-    result = runner.invoke(cli, [str(input_dir), str(output_dir)])
+    result = runner.invoke(cli, [str(input_dir / "unorganized"), str(output_dir)])
 
     assert result.exit_code == 0
-    compare_folders(output_dir, ref_dir, output_dir)
+    compare_folders(output_dir, ref_dir / "bids", output_dir)
 
 
 def test_run_ukb_to_bids(cmdopt, tmp_path):
