@@ -102,7 +102,7 @@ The user can easily modify this file if they want to convert additional clinical
 For further details regarding clinica data, we recommend to look at the [ADNI Data Package
 ](https://adni.bitbucket.io/index.html) developed by the Alzheimer's Disease Neuroimaging Initiative.
 
-??? failure "Warning"
+??? failure "Warning : Field Mapping modality"
     The conversion of the Field Mapping modality was recently added to Clinica (v O.9.O) and is still experimental.
     Bugs are expected to occur. In particular, it could not be tested how the process handles having more than one full run
     (magnitude + phase images) acquired in the same session. Feel free to report bugs if you encounter any.
