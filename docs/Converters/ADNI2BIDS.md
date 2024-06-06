@@ -75,7 +75,7 @@ Currently, the modalities supported by our converter are:
 To convert the imaging data to BIDS, a list of subjects with their sessions is first obtained from the `ADNIMERGE` spreadsheet.
 This list is compared for each modality of interest to the list of scans available, as provided by modality-specific csv files (e.g. `MPRAGEMETA.csv`).
 If the modality was acquired for a specific pair of subject-session, and
-several scans and/or preprocessed images are available, only one is converted except for FMAP:
+several scans and/or preprocessed images are available, only one is converted:
 
 - **T1-weighted MRI** When several scans are available for a single session, the preferred scan (as identified in `MAYOADIRL_MRI_IMAGEQC_12_08_15.csv`) is chosen.
 If a preferred scan is not specified then the higher quality scan (as defined in `MRIQUALITY.csv`) is selected.
@@ -101,6 +101,11 @@ The user can easily modify this file if they want to convert additional clinical
 
 For further details regarding clinica data, we recommend to look at the [ADNI Data Package
 ](https://adni.bitbucket.io/index.html) developed by the Alzheimer's Disease Neuroimaging Initiative.
+
+??? failure "Warning"
+    The conversion of the Field Mapping modality was recently added to Clinica (v O.9.O) and is still experimental.
+Bugs are expected to occur. In particular, it could not be tested how the process handles having more than one full run
+(magnitude + phase images) acquired in the same session. Feel free to report bugs if you encounter any.
 
 ## Using the converter
 
