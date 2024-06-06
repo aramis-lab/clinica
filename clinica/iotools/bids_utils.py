@@ -75,6 +75,10 @@ def create_participants_df(
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
     from clinica.utils.stream import cprint
+    # todo : need both clinical_data_dir and clinical_data_spec ?
+    # todo : diff between what is in ADNI raw and BIDS can do get subjects (? not same naming type)
+    # todo : maybe simplify loops
+    # todo : used in all converters ? (only OASIS and ADNI, what happens if used elsewhere?)
 
     fields_bids = ["participant_id"]
     prev_location = ""
@@ -83,14 +87,17 @@ def create_participants_df(
     study_name = StudyName(study_name)
     location_name = f"{study_name.value} location"
 
-    # Load the data from the clincal specification file
+    # Load the data from the clinical specification file
     participants_specs = pd.read_csv(clinical_spec_path + "_participant.tsv", sep="\t")
     participant_fields_db = participants_specs[study_name.value]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
 
+    breakpoint()
+
     # Extract the list of the available BIDS fields for the dataset
     for i in range(0, len(participant_fields_db)):
+        breakpoint()
         if not pd.isnull(participant_fields_db[i]):
             fields_bids.append(participant_fields_bids[i])
 
@@ -98,6 +105,7 @@ def create_participants_df(
     participant_df = pd.DataFrame(columns=fields_bids)
 
     for i in range(0, len(participant_fields_db)):
+        breakpoint()
         # If a field not empty is found
         if not pd.isnull(participant_fields_db[i]):
             # Extract the file location of the field and read the value from the file
