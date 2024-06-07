@@ -470,31 +470,3 @@ def reorganize_fmaps(bids_path: Path):
             fmap_path = bids_path / subject / session / "fmap"
             if fmap_path.exists():
                 fmap_case_handler_factory(infer_case_fmap(fmap_path))(fmap_path)
-
-
-def bids_guess(bids_path: Path):
-    # todo : WIP - add where necessary to check
-
-    bids_path = Path(bids_path)
-
-    for file_path in bids_path.rglob(pattern=r"*.json"):
-        str_file_path = str(file_path)
-        if "fmap" in file_path.name:
-            with open(file_path, "r") as f:
-                file_json = json.load(f)
-            if "BidsGuess" in file_json:
-                bids_guess = file_json["BidsGuess"][-1].split("_")[-1]
-
-                cut = re.search(r"\S*_fmap", str_file_path).group(0)
-                os.rename(src=str_file_path, dst=cut + "_" + bids_guess + ".json")
-                os.rename(
-                    src=str_file_path.removesuffix(".json") + ".nii.gz",
-                    dst=cut + "_" + bids_guess + ".nii.gz",
-                )
-            else:
-                cprint(
-                    msg=f"The FMAP file {file_path.name} could not be renamed "
-                    f"since dcm2nix did not find any BIDS correspondence",
-                    lvl="warning",
-                )
-                # todo : delete files
