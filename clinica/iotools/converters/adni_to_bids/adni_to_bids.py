@@ -196,10 +196,11 @@ class AdniToBids(Converter):
         """
         from clinica.utils.stream import cprint
 
+        from .adni_utils import get_subjects_list
         from .modality_converters import modality_converter_factory
 
-        modalities = modalities or self.get_modalities_supported()
-        subjects = get_subjects_list(source_dir, clinical_dir, subjs_list_path)
+        modalities = modalities or ADNIModality
+        subjects = get_subjects_list(source_dir, clinical_dir, subjects)
 
         # Create the output folder if is not already existing
         (dest_dir / "conversion_info").mkdir(parents=True, exist_ok=True)
