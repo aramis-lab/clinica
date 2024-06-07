@@ -90,8 +90,8 @@ def test_run_aibl_to_bids(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "Aibl2Bids")
     output_dir = tmp_path / "bids"
-    clinical_data_directory = input_dir / "Data_extract_3.2.5"
-    dataset_directory = input_dir / "unorganized_data"
+    clinical_data_directory = input_dir / "clinical_data"
+    dataset_directory = input_dir / "unorganized"
 
     convert(dataset_directory, clinical_data_directory, output_dir)
 
