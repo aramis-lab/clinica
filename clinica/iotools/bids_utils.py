@@ -47,19 +47,18 @@ BIDS_VALIDATOR_CONFIG = {
 
 
 # -- Methods for the clinical data --
-# @ToDo:test this function
 def create_participants_df(
     study_name: StudyName,
     clinical_spec_path,
     clinical_data_dir,
     bids_ids,
     delete_non_bids_info=True,
-):
-    """Create the file participants.tsv.
+) -> DataFrame:
+    """Create the participants dataframe that will be saved as tsv.
 
     Args:
         study_name: name of the study (Ex. ADNI)
-        clinical_spec_path: path to the clinical file for specifications
+        clinical_spec_path: path to the clinical file for study specifications
         clinical_data_dir: path to the directory where the clinical data are stored
         bids_ids: list of bids ids
         delete_non_bids_info: if True delete all the rows of the subjects that
@@ -67,7 +66,6 @@ def create_participants_df(
 
     Returns: a pandas dataframe that contains the participants data
     """
-    import os
     from os import path
 
     import numpy as np
@@ -77,15 +75,13 @@ def create_participants_df(
     from clinica.utils.stream import cprint
     # todo : diff between what is in ADNI raw and BIDS can do get subjects (? not same naming type)
     # todo : used in all converters ? (only OASIS and ADNI, what happens if used elsewhere?)
-    # todo :test
+    # todo : typing, test
 
-    index_to_drop = []
-    subjects_to_drop = []
     study_name = StudyName(study_name)
     location_name = f"{study_name.value} location"
 
     # Load the data from the clinical specification file
-    # todo : maybe better to use a handler OASIS/ADNI/AIBL for clinical_spec_path
+    # todo : maybe better to use a handler OASIS/ADNI/AIBL for clinical_spec_path... and other parts ?
     participants_specs = pd.read_csv(clinical_spec_path + "_participant.tsv", sep="\t")
     clinical_spec_df = participants_specs[
         [study_name.value, location_name, "BIDS CLINICA"]
@@ -102,6 +98,7 @@ def create_participants_df(
 
     # Init the dataframe that will be saved in the file participants.tsv
     participants_df = pd.DataFrame(columns=["alternative_id_1"])
+
     for location in clinical_spec_df["Field_csv"].unique():
         to_extract = (
             clinical_spec_df["Study_Fields"]
@@ -111,6 +108,7 @@ def create_participants_df(
         if "PTID" not in to_extract:
             to_extract = np.append(to_extract, "PTID")
 
+        # todo : robust ?
         split = location.split("/")
         file = split[0]
         sheet = "" if len(split) < 2 else split[1]
@@ -124,19 +122,22 @@ def create_participants_df(
         elif extension == ".csv":
             file_to_read = load_clinical_csv(clinical_data_dir, name)
         else:
-            # todo : better
-            print("big warning")
-            return
+            cprint(
+                f"Extension {extension} for file {location} in clinical data was not recognized."
+                f"Its data will not be added to 'participants.tsv'",
+                lvl="warning",
+            )
+            continue
 
         extracted_df = file_to_read[to_extract].copy()
         extracted_df.rename(
             columns=lambda x: clinical_spec_df[
                 clinical_spec_df.Study_Fields == x
-            ].BIDS_Fields.values[0],
+            ].BIDS_Fields.item(),
             inplace=True,
         )
 
-        # todo :verify works as intended
+        # todo : verify works as intended
         extracted_df["alternative_id_1"] = extracted_df["alternative_id_1"].map(
             lambda x: str(x) if type(x) == np.int64 or type(x) == np.float64 else x
         )
@@ -148,49 +149,49 @@ def create_participants_df(
             )
         elif study_name == StudyName.OASIS:
             # OASIS provides several MRI for the same session
+            # todo : verify works as intended
             extracted_df = extracted_df[
                 ~extracted_df["alternative_id_1"].str.endswith("_MR2")
             ]
         participants_df = participants_df.merge(
             extracted_df, how="outer", on="alternative_id_1"
         )
+        # todo : how does merge perform if nan in ids ? possible ?
 
     participants_df.reset_index(inplace=True, drop=True)
 
-    breakpoint()
-    # todo
+    # Adding BIDS id based on study specific id
+    # todo : should not be defined here ; ok with "sub-truc" devant ?
+    if study_name == StudyName.OASIS:
 
-    # Adding participant_id column with BIDS ids
-    for i in range(0, len(participants_df)):
-        if study_name == StudyName.OASIS:
-            value = (participants_df["alternative_id_1"][i].split("_"))[1]
-        elif study_name == StudyName.OASIS3:
-            value = participants_df["alternative_id_1"][i].replace("OAS3", "")
-        else:
-            value = remove_space_and_symbols(participants_df["alternative_id_1"][i])
+        def replace_id(alternative_id: str) -> str:
+            return "sub-OASIS1" + alternative_id.split("_")[1]
+    elif study_name == StudyName.OASIS3:
 
-        bids_id = [s for s in bids_ids if value in s]
+        def replace_id(alternative_id: str) -> str:
+            return "sub-OASIS3" + alternative_id.replace("OAS3", "")
+    else:
 
-        if len(bids_id) == 0:
-            index_to_drop.append(i)
-            subjects_to_drop.append(value)
-        else:
-            participants_df.at[i, "participant_id"] = bids_id[0]
+        def replace_id(alternative_id: str) -> str:
+            return "sub-ADNI" + remove_space_and_symbols(alternative_id)
 
-    if len(subjects_to_drop) > 0:
-        cprint(
-            msg=(
-                "The following subjects of dataset directory were not found in your BIDS folder :\n"
-                + ", ".join(subjects_to_drop)
-            ),
-            lvl="info",
-        )
+    participants_df["participant_id"] = participants_df["alternative_id_1"].apply(
+        lambda x: replace_id(x)
+    )
+
+    # todo : indicate if a subject initially asked for was not found in BIDS ?
+    # todo : !! might be possible that some do not have the data also (different case from above, might be intersected)
+
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
-        participants_df = participants_df.drop(index_to_drop)
+        participants_df["in_bids"] = participants_df["participant_id"].apply(
+            lambda x: True if x in bids_ids else False
+        )
+        participants_df = participants_df[participants_df["in_bids"]].drop(
+            columns="in_bids"
+        )
 
     participants_df = participants_df.fillna("n/a")
-
     return participants_df
 
 
