@@ -73,15 +73,15 @@ def create_participants_df(
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
     from clinica.utils.stream import cprint
-    # todo : diff between what is in ADNI raw and BIDS can do get subjects (? not same naming type)
     # todo : used in all converters ? (only OASIS and ADNI, what happens if used elsewhere?)
+    # todo : indicate if a subject initially asked for was not found in BIDS ?
     # todo : typing, test
 
     study_name = StudyName(study_name)
     location_name = f"{study_name.value} location"
 
     # Load the data from the clinical specification file
-    # todo : maybe better to use a handler OASIS/ADNI/AIBL for clinical_spec_path... and other parts ?
+    # todo : maybe better to use a handler OASIS/ADNI/AIBL for clinical_spec_path... and other parts ; see later
     participants_specs = pd.read_csv(clinical_spec_path + "_participant.tsv", sep="\t")
     clinical_spec_df = participants_specs[
         [study_name.value, location_name, "BIDS CLINICA"]
@@ -178,9 +178,6 @@ def create_participants_df(
     participants_df["participant_id"] = participants_df["alternative_id_1"].apply(
         lambda x: replace_id(x)
     )
-
-    # todo : indicate if a subject initially asked for was not found in BIDS ?
-    # todo : !! might be possible that some do not have the data also (different case from above, might be intersected)
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
