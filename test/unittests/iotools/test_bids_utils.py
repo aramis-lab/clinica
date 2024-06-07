@@ -1,7 +1,9 @@
 from pathlib import Path
 from string import Template
-from typing import Union
+from typing import List, Union
 
+import numpy as np
+import pandas as pd
 import pytest
 
 from clinica.iotools.bids_utils import (
@@ -37,6 +39,90 @@ EXPECTED_README_CONTENT = Template(
         "Find more about it and about the data user agreement: link"
     )
 )
+
+
+def create_clinical_data(tmp_path: Path):
+    spec_df = pd.DataFrame()
+    spec_df["BIDS Clinica"] = [
+        "participant_id",
+        "alternative_id_1",
+        "date_of_birth",
+        "sex",
+        "apoegen1",
+    ]
+    spec_df["ADNI"] = [np.nan, "PTID", np.nan, "PTGENDER", "APGEN1"]
+    spec_df["ADNI location"] = [
+        np.nan,
+        "ADNIMERGE.csv",
+        np.nan,
+        "ADNIMERGE.csv",
+        "APOERES.csv",
+    ]
+    spec_df["AIBL"] = [np.nan, "RID", np.nan, "PTDOB", "PTGENDER", "APGEN1"]
+    spec_df["AIBL location"] = [
+        np.nan,
+        "aibl_ptdemog_*.csv",
+        np.nan,
+        "aibl_ptdemog_*.csv",
+        "aibl_ptdemog_*.csv",
+        "aibl_apoeres_*.csv",
+    ]
+    spec_df["OASIS"] = [np.nan, "ID", np.nan, np.nan, "M/F", np.nan]
+    spec_df["OASIS location"] = [
+        np.nan,
+        "oasis_cross-sectional.csv",
+        np.nan,
+        np.nan,
+        "oasis_cross-sectional.csv",
+        np.nan,
+    ]
+    spec_df["OASIS3"] = [np.nan, "Subject", np.nan, np.nan, "M/F", np.nan]
+    spec_df["OASIS3 location"] = [
+        np.nan,
+        "oasis3_participants.csv",
+        np.nan,
+        np.nan,
+        "oasis3_participants.csv",
+        np.nan,
+    ]
+    spec_df.to_csv(tmp_path / "spec_participant.tsv", sep="\t")
+
+    (tmp_path / "clinical_data").mkdir()
+
+    # todo : ADNI : ADNIMERGE.csv ; APOERES.csv // AIBL aibl_ptdemog_*.csv ; aibl_apoeres_*.csv // OASIS oasis_cross-sectional.csv // OASIS3 oasis3_participants.csv
+
+    # todo : create clinical_data_dir with right files in it (for each type of study)
+    # todo : fill the files
+    pass
+
+
+@pytest.fixture
+def expected(bids_ids: List[str]):
+    # todo : write expected dataframe depending on given bids_ids
+    pass
+
+
+@pytest.mark.parametrize("study_name, bids_ids", [])
+def test_create_participants_df(tmp_path, bids_ids, expected):
+    from clinica.iotools.bids_utils import create_participants_df
+
+    # todo
+    create_clinical_data(tmp_path)
+    pass
+
+
+def test_create_sessions_dict_OASIS():
+    # todo
+    from clinica.iotools.bids_utils import create_sessions_dict_OASIS
+
+    pass
+
+
+def test_create_scans_dict():
+    # todo
+    from clinica.iotools.bids_utils import create_scans_dict
+
+    pass
 
 
 def test_get_bids_subjs_list(tmp_path):
