@@ -1,14 +1,19 @@
-# coding: utf-8
-
 """Module for converting FDG PET of ADNI."""
 
 from enum import Enum
 from functools import partial
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import Iterable, List, Optional, Set, Tuple
 
 import pandas as pd
+
+from clinica.iotools.converters.adni_to_bids.adni_utils import ADNIModalityConverter
+
+__all__ = [
+    "convert_fdg_pet",
+    "convert_fdg_pet_uniform",
+]
 
 
 class ADNIPreprocessingStep(Enum):
@@ -41,15 +46,15 @@ class ADNIPreprocessingStep(Enum):
         raise ValueError(error_msg)
 
 
-def _convert_adni_fdg_pet(
-    source_dir: PathLike,
-    csv_dir: PathLike,
-    destination_dir: PathLike,
-    conversion_dir: PathLike,
+def _convert_fdg_pet(
+    source_dir: Path,
+    csv_dir: Path,
+    destination_dir: Path,
+    conversion_dir: Path,
     preprocessing_step: ADNIPreprocessingStep,
-    subjects: List[str],
+    subjects: Iterable[str],
     mod_to_update: bool = False,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -82,10 +87,6 @@ def _convert_adni_fdg_pet(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from pathlib import Path
-
-    import pandas as pd
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import (
         load_clinical_csv,
         paths_to_bids,
@@ -108,11 +109,13 @@ def _convert_adni_fdg_pet(
     cprint(msg="FDG PET conversion done.", lvl="debug")
 
 
-def _get_modality_from_adni_preprocessing_step(step: ADNIPreprocessingStep) -> str:
+def _get_modality_from_adni_preprocessing_step(
+    step: ADNIPreprocessingStep,
+) -> ADNIModalityConverter:
     if step == ADNIPreprocessingStep.STEP2:
-        return "fdg"
+        return ADNIModalityConverter.PET_FDG
     if step == ADNIPreprocessingStep.STEP4_8MM:
-        return "fdg_uniform"
+        return ADNIModalityConverter.PET_FDG_UNIFORM
     raise ValueError(
         f"The ADNI preprocessing step {step} is not (yet) supported by the converter."
         f"The converter only supports {ADNIPreprocessingStep.STEP2} and "
@@ -120,19 +123,19 @@ def _get_modality_from_adni_preprocessing_step(step: ADNIPreprocessingStep) -> s
     )
 
 
-convert_adni_fdg_pet = partial(
-    _convert_adni_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP2
+convert_fdg_pet = partial(
+    _convert_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP2
 )
-convert_adni_fdg_pet_uniform = partial(
-    _convert_adni_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP4_8MM
+convert_fdg_pet_uniform = partial(
+    _convert_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP4_8MM
 )
 
 
 def _compute_fdg_pet_paths(
-    source_dir: PathLike,
-    csv_dir: PathLike,
-    subjects: List[str],
-    conversion_dir: PathLike,
+    source_dir: Path,
+    csv_dir: Path,
+    subjects: Iterable[str],
+    conversion_dir: Path,
     preprocessing_step: ADNIPreprocessingStep,
 ) -> pd.DataFrame:
     """Compute the paths to the FDG PET images and store them in a TSV file.
@@ -163,16 +166,14 @@ def _compute_fdg_pet_paths(
     images : pd.DataFrame
         DataFrame with all the paths to the PET images that will be converted into BIDS.
     """
-    from pathlib import Path
-
-    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path
     from clinica.utils.pet import Tracer
 
-    pet_fdg_df = _get_pet_fdg_df(Path(csv_dir), subjects, preprocessing_step)
+    from ._image_path_utils import find_image_path
 
-    images = find_image_path(pet_fdg_df, source_dir, "FDG", "I", "Image_ID")
+    pet_fdg_df = _get_pet_fdg_df(csv_dir, subjects, preprocessing_step)
+    images = find_image_path(pet_fdg_df, source_dir, "FDG")
     images.to_csv(
-        Path(conversion_dir) / f"{Tracer.FDG.value}_pet_paths.tsv",
+        conversion_dir / f"{Tracer.FDG.value}_pet_paths.tsv",
         sep="\t",
         index=False,
     )
@@ -181,7 +182,7 @@ def _compute_fdg_pet_paths(
 
 
 def _get_pet_fdg_df(
-    csv_dir: Path, subjects: List[str], preprocessing_step: ADNIPreprocessingStep
+    csv_dir: Path, subjects: Iterable[str], preprocessing_step: ADNIPreprocessingStep
 ) -> pd.DataFrame:
     """Build a DataFrame for the PET FDG images for the provided list of subjects."""
     import pandas as pd
@@ -263,7 +264,7 @@ def _get_images_pet_for_subject(
     preprocessing_step: ADNIPreprocessingStep,
 ) -> List[pd.DataFrame]:
     """Filter the PET images' QC dataframes for the given subject."""
-    from clinica.iotools.converters.adni_to_bids.adni_utils import get_images_pet
+    from ._pet_utils import get_images_pet
 
     pet_qc_df, pet_qc_adni_3_df, pet_meta_list_df = csv_data
     subject_pet_metadata = pet_meta_list_df[pet_meta_list_df["Subject"] == subject]

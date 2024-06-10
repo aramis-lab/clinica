@@ -1,4 +1,5 @@
 import os
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional
@@ -6,8 +7,34 @@ from typing import Optional
 import pandas as pd
 import pytest
 
+from clinica.utils.exceptions import ClinicaXMLParserError
 
-def _get_xml_templates():
+
+@pytest.mark.parametrize(
+    "input_value,expected",
+    [
+        ("sub-ADNI000S0000", "000_S_0000"),
+        ("sub-ADNI123S4567", "123_S_4567"),
+        ("sub-ADNI12S4567", "12_S_4567"),
+        ("sub-ADNI123X4567", "123_S_4567"),
+        ("sub-ADNI123XYZ4567", "123_S_4567"),
+        ("sub-ADNI123XYZ_TT4567", "123_S_4567"),
+        ("sub-ADNI123XYZ12TT4567", None),
+        ("", None),
+        ("foo", None),
+        ("12", None),
+        ("123_S_4567", "123_S_4567"),
+        ("1_XY_22", "1_S_22"),
+    ],
+)
+def test_bids_id_to_loni(input_value, expected):
+    """Test function `bids_id_to_loni`."""
+    from clinica.iotools.converters.adni_to_bids.adni_json import _bids_id_to_loni  # noqa
+
+    assert _bids_id_to_loni(input_value) == expected
+
+
+def _get_xml_templates() -> list[str]:
     suffix = "_template.xml"
     current_dir = os.path.dirname(os.path.realpath(__file__))
     return [
@@ -28,43 +55,51 @@ def basic_xml_tree():
 
 def test_check_xml_tag():
     """Test function `_check_xml_tag`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml_tag
+    from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml_tag  # noqa
 
     _check_xml_tag("foo", "foo")
-    with pytest.raises(ValueError, match="Bad tag"):
+    with pytest.raises(
+        ClinicaXMLParserError,
+        match=re.escape("[ADNI JSON] Bad tag: expected bar, got foo"),
+    ):
         _check_xml_tag("foo", "bar")
 
 
 def test_check_xml_nb_children(basic_xml_tree):
     """Test function `_check_xml_nb_children`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml_nb_children
+    from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml_nb_children  # noqa
 
     _check_xml_nb_children(basic_xml_tree, 2)
     _check_xml_nb_children(basic_xml_tree, [1, 2, 6])
     with pytest.raises(
-        ValueError, match="Bad number of children for <root>: got 2 != 3"
+        ClinicaXMLParserError,
+        match=re.escape("[ADNI JSON] Bad number of children for <root>: got 2 != 3"),
     ):
         _check_xml_nb_children(basic_xml_tree, 3)
     with pytest.raises(
-        ValueError, match="Bad number of children for <root>: got 2, not in"
+        ClinicaXMLParserError,
+        match=re.escape("[ADNI JSON] Bad number of children for <root>: got 2, not in"),
     ):
         _check_xml_nb_children(basic_xml_tree, [1, 3])
 
 
 def test_check_xml(basic_xml_tree):
     """Test function `_check_xml`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml
+    from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml  # noqa
 
     assert _check_xml(basic_xml_tree, "root", 2) == basic_xml_tree
     assert _check_xml(basic_xml_tree, "root", [1, 2]) == basic_xml_tree
     assert _check_xml(basic_xml_tree, "root") == basic_xml_tree
-    with pytest.raises(ValueError, match="Bad tag"):
+    with pytest.raises(
+        ClinicaXMLParserError,
+        match=re.escape("[ADNI JSON] Bad tag: expected foo, got root"),
+    ):
         _check_xml(basic_xml_tree, "foo")
 
 
 def test_get_text(basic_xml_tree):
     """Test function `_get_text`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _get_text
+    from clinica.iotools.converters.adni_to_bids.adni_json import _get_text  # noqa
 
     assert _get_text(basic_xml_tree) == "100"
     assert _get_text(basic_xml_tree, cast=int) == 100
@@ -73,39 +108,54 @@ def test_get_text(basic_xml_tree):
 def test_check_xml_and_get_text(basic_xml_tree):
     """Test function `_check_xml_and_get_text`."""
     from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _check_xml_and_get_text,
+        _check_xml_and_get_text,  # noqa
     )
 
     xml_leaf = ET.Element("leaf")
     xml_leaf.text = "12"
     assert _check_xml_and_get_text(xml_leaf, "leaf") == "12"
     assert _check_xml_and_get_text(xml_leaf, "leaf", cast=int) == 12
-    with pytest.raises(ValueError, match="Bad number of children for <root>"):
+    with pytest.raises(
+        ClinicaXMLParserError,
+        match=re.escape("[ADNI JSON] Bad number of children for <root>: got 2 != 0"),
+    ):
         _check_xml_and_get_text(basic_xml_tree, "root")
+
+
+def test_read_xml_files_error(tmp_path):
+    """Test function `_read_xml_files`."""
+    from clinica.iotools.converters.adni_to_bids.adni_json import _read_xml_files  # noqa
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=re.escape(
+            "[ADNI JSON] No ADNI xml files were found for reading the metadata"
+        ),
+    ):
+        _read_xml_files()
 
 
 def test_read_xml_files(tmp_path):
     """Test function `_read_xml_files`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _read_xml_files
+    from clinica.iotools.converters.adni_to_bids.adni_json import _read_xml_files  # noqa
 
-    with pytest.raises(IndexError, match="No ADNI xml files"):
-        _read_xml_files()
     xml_path = tmp_path / "xml_files"
     xml_path.mkdir()
     os.chdir(xml_path)
     clinica_path = xml_path / "Clinica_processed_metadata"
     clinica_path.mkdir()
     dummy_file = clinica_path / "ADNI_1234.xml"
-    with dummy_file.open("w") as fp:
-        fp.write("foo")
+    dummy_file.write_text("foo")
     assert os.listdir() == ["Clinica_processed_metadata"]
-    assert _read_xml_files() == ["Clinica_processed_metadata/ADNI_1234.xml"]
+    assert _read_xml_files() == [
+        xml_path / "Clinica_processed_metadata" / "ADNI_1234.xml"
+    ]
     subjects = ["01", "02", "06", "12"]
     for subj in subjects:
         with open(xml_path / f"ADNI_{subj}.xml", "w") as fp:
             fp.write(f"foo {subj}")
     assert _read_xml_files(subjects, xml_path) == [
-        str(xml_path / f"ADNI_{subj}.xml") for subj in subjects
+        xml_path / f"ADNI_{subj}.xml" for subj in subjects
     ]
     os.chdir(os.path.dirname(__file__))
 
@@ -154,7 +204,7 @@ def _write_xml_example(
 def test_get_root_from_xml_path(tmp_path, template_id):
     """Test function `_get_root_from_xml_path`."""
     from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _get_root_from_xml_path,
+        _get_root_from_xml_path,  # noqa
     )
 
     xml_file = _write_xml_example(tmp_path, template_id=template_id)
@@ -183,12 +233,12 @@ def expected_image_metadata(template_id):
 def test_parsing(tmp_path, template_id, expected_image_metadata):
     """Test function `_get_root_from_xml_path`."""
     from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _get_root_from_xml_path,
-        _parse_images,
-        _parse_project,
-        _parse_series,
-        _parse_study,
-        _parse_subject,
+        _get_root_from_xml_path,  # noqa
+        _parse_images,  # noqa
+        _parse_project,  # noqa
+        _parse_series,  # noqa
+        _parse_study,  # noqa
+        _parse_subject,  # noqa
     )
 
     expected_subject_id = template_id[5:]
@@ -207,9 +257,15 @@ def test_parsing(tmp_path, template_id, expected_image_metadata):
 
     # _parse_project
     bad = roots.pop("bad_project")
-    with pytest.raises(ValueError, match="Not ADNI cohort"):
+    with pytest.raises(
+        ClinicaXMLParserError,
+        match=re.escape("[ADNI JSON] Not ADNI cohort"),
+    ):
         _parse_project(bad)
-    with pytest.raises(ValueError, match="XML root should have only one child."):
+    with pytest.raises(
+        ClinicaXMLParserError,
+        match=re.escape("[ADNI JSON] XML root should have only one child."),
+    ):
         _parse_project(ET.Element("root"))
     projects = {k: _parse_project(root) for k, root in roots.items()}
     assert all([isinstance(project, ET.Element) for project in projects.values()])
@@ -221,12 +277,18 @@ def test_parsing(tmp_path, template_id, expected_image_metadata):
     bad_project = ET.Element("project")
     bad_subject = ET.SubElement(bad_project, "subject")
     [ET.SubElement(bad_subject, f"{i}") for i in range(6)]
-    with pytest.raises(ValueError, match="Bad number of children for <subject>: got 6"):
+    with pytest.raises(
+        ClinicaXMLParserError,
+        match=re.escape("[ADNI JSON] Bad number of children for <subject>: got 6"),
+    ):
         _parse_subject(bad_project)
 
     # _parse_study
     bad = subjects.pop("bad_study")
-    with pytest.raises(ValueError, match="Unexpected modality bar"):
+    with pytest.raises(
+        ClinicaXMLParserError,
+        match=re.escape("[ADNI JSON] Unexpected modality bar"),
+    ):
         _parse_study(bad[1])
     studies = {k: _parse_study(subject[1]) for k, subject in subjects.items()}
     assert all([isinstance(study, ET.Element) for study in studies.values()])
@@ -239,8 +301,10 @@ def test_parsing(tmp_path, template_id, expected_image_metadata):
         bad_series = [ET.SubElement(bad_study, "series") for i in range(length_study)]
         [ET.SubElement(bad_series[5], f"{i}") for i in range(length_series)]
         with pytest.raises(
-            ValueError,
-            match=f"Bad number of children for <series>: got {length_series}",
+            ClinicaXMLParserError,
+            match=re.escape(
+                f"[ADNI JSON] Bad number of children for <series>: got {length_series}"
+            ),
         ):
             _parse_series(bad_study)
 
@@ -267,7 +331,7 @@ def expected_mprage(template_id):
 @pytest.mark.parametrize("template_id", _get_xml_templates())
 def test_parse_xml_file(template_id, tmp_path, expected_mprage):
     """Test function `_parse_xml_file`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _parse_xml_file
+    from clinica.iotools.converters.adni_to_bids.adni_json import _parse_xml_file  # noqa
 
     xml_file = _write_xml_example(tmp_path, template_id=template_id)
     scan_metadata = _parse_xml_file(xml_file)
@@ -294,7 +358,7 @@ def test_get_existing_scan_dataframe(tmp_path):
     from pandas.testing import assert_frame_equal
 
     from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _get_existing_scan_dataframe,
+        _get_existing_scan_dataframe,  # noqa
     )
 
     subj_path = tmp_path / "sub-01"
@@ -316,7 +380,7 @@ def test_get_existing_scan_dataframe(tmp_path):
 def test_get_json_filename_from_scan_filename():
     """Test function _get_json_filename_from_scan_filename`."""
     from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _get_json_filename_from_scan_filename,
+        _get_json_filename_from_scan_filename,  # noqa
     )
 
     assert _get_json_filename_from_scan_filename(Path("foo.nii.gz")) == Path("foo.json")
@@ -338,7 +402,7 @@ def test_add_json_scan_metadata(tmp_path, keep_none):
     import json
 
     from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _add_json_scan_metadata,
+        _add_json_scan_metadata,  # noqa
     )
 
     existing_metadata = {
@@ -361,15 +425,13 @@ def test_add_json_scan_metadata(tmp_path, keep_none):
     _add_json_scan_metadata(json_path, new_metadata, keep_none=keep_none)
     with open(json_path, "r") as fp:
         merged = json.load(fp)
-    expected_keys = set(
-        [
-            "MRAcquisitionType",
-            "meta_2",
-            "MagneticFieldStrength",
-            "PulseSequenceType",
-            "Manufacturer",
-        ]
-    )
+    expected_keys = {
+        "MRAcquisitionType",
+        "meta_2",
+        "MagneticFieldStrength",
+        "PulseSequenceType",
+        "Manufacturer",
+    }
     if not keep_none:
         expected_keys.remove("PulseSequenceType")
     assert set(merged.keys()) == expected_keys

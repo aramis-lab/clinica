@@ -49,7 +49,7 @@ def test_get_bids_subjs_list(tmp_path):
     for sub in ("sub-01", "sub-02", "sub-16"):
         (tmp_path / sub).mkdir()
 
-    assert set(get_bids_subjs_list(str(tmp_path))) == {"sub-01", "sub-02", "sub-16"}
+    assert set(get_bids_subjs_list(tmp_path)) == {"sub-01", "sub-02", "sub-16"}
 
 
 @pytest.mark.parametrize(
@@ -70,22 +70,22 @@ def test_remove_space_and_symbols(input_string, expected):
 
 @pytest.mark.parametrize("compress", [True, False])
 @pytest.mark.parametrize("sidecar", [True, False])
-def test_build_dcm2niix_command(compress, sidecar):
+def test_build_dcm2niix_command(tmp_path, compress, sidecar):
     from clinica.iotools.bids_utils import _build_dcm2niix_command
 
     compress_flag = "y" if compress else "n"
     sidecar_flag = "y" if sidecar else "n"
-    expected = ["dcm2niix", "-w", "0", "-f", "fmt", "-o", "output_dir"]
+    expected = ["dcm2niix", "-w", "0", "-f", "fmt", "-o", str(tmp_path / "out")]
     if compress:
         expected += ["-9"]
     expected += ["-z", compress_flag, "-b", sidecar_flag]
     if sidecar:
         expected += ["-ba", "y"]
-    expected += ["input_dir/inputs"]
+    expected += [str(tmp_path / "in")]
     assert (
         _build_dcm2niix_command(
-            "input_dir/inputs",
-            "output_dir",
+            tmp_path / "in",
+            tmp_path / "out",
             "fmt",
             compress=compress,
             bids_sidecar=sidecar,

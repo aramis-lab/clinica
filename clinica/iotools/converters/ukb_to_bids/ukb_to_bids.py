@@ -1,12 +1,19 @@
 """Convert the UKB dataset into BIDS."""
 
-from os import PathLike
+from typing import Optional
+
+from clinica.utils.filemanip import UserProvidedPath
+
+__all__ = ["convert"]
 
 
-def convert_images(
-    path_to_dataset: PathLike,
-    bids_dir: PathLike,
-    path_to_clinical: PathLike,
+def convert(
+    path_to_dataset: UserProvidedPath,
+    bids_dir: UserProvidedPath,
+    path_to_clinical: UserProvidedPath,
+    subjects: Optional[UserProvidedPath] = None,
+    n_procs: Optional[int] = 1,
+    **kwargs,
 ):
     """Convert the entire dataset to BIDS.
 
@@ -14,36 +21,43 @@ def convert_images(
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
-    from pathlib import Path
+    from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
+    from clinica.iotools.converters.factory import get_converter_name
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
+    from clinica.utils.stream import cprint
 
-    import clinica.iotools.bids_utils as bids
-    from clinica.iotools.bids_utils import StudyName
-
+    from ..utils import validate_input_path
     from .ukb_utils import (
-        complete_clinical,
-        dataset_to_bids,
         find_clinical_data,
-        intersect_data,
+        merge_imaging_and_clinical_data,
+        prepare_dataset_to_bids_format,
         read_imaging_data,
         write_bids,
     )
 
-    bids_dir = Path(bids_dir)
-    # read the clinical data files
-    df_clinical = find_clinical_data(path_to_clinical)
-
-    # makes a df of the imaging data
-    imaging_data = read_imaging_data(path_to_dataset)
-
-    # intersect the data
-    df_clinical = intersect_data(imaging_data, df_clinical)
-
-    # complete clinical data
-    df_clinical = complete_clinical(df_clinical)
-
-    # build the tsv
-    result = dataset_to_bids(df_clinical)
-
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
+    path_to_clinical = validate_input_path(path_to_clinical)
+    check_software(ThirdPartySoftware.DCM2NIIX)
+    if subjects:
+        cprint(
+            (
+                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.UKB)} converter. "
+                "All subjects available will be converted."
+            ),
+            lvl="warning",
+        )
+    if n_procs != 1:
+        cprint(
+            f"{get_converter_name(StudyName.UKB)} converter does not support multiprocessing yet. n_procs set to 1.",
+            lvl="warning",
+        )
+    result = prepare_dataset_to_bids_format(
+        merge_imaging_and_clinical_data(
+            read_imaging_data(path_to_dataset),
+            find_clinical_data(path_to_clinical),
+        )
+    )
     write_bids(
         to=bids_dir,
         participants=result["participants"],
@@ -62,8 +76,9 @@ def convert_images(
             "improve human health."
         ),
     }
-    bids.write_modality_agnostic_files(
+    write_modality_agnostic_files(
         study_name=StudyName.UKB,
         readme_data=readme_data,
         bids_dir=bids_dir,
     )
+    cprint("Conversion to BIDS succeeded.", lvl="info")

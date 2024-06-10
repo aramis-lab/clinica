@@ -2,13 +2,14 @@ import warnings
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
-from os import PathLike
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
 import pandas as pd
 
 from clinica.utils.pet import Tracer
+
+__all__ = ["Modality", "paths_to_bids"]
 
 
 class Modality(str, Enum):
@@ -38,7 +39,7 @@ class Modality(str, Enum):
 
     @property
     def suffix(self) -> str:
-        return "T1w" if self == "t1" else f"trc-{self.tracer}_pet"
+        return "T1w" if self == "t1" else f"trc-{self.tracer.value}_pet"
 
 
 @dataclass
@@ -101,22 +102,22 @@ def paths_to_bids(
     modality: Modality,
     overwrite: bool = False,
     n_procs: Optional[int] = 1,
-) -> List[str]:
+) -> List[Optional[Path]]:
     """Convert all the T1 images found in the AIBL dataset downloaded in BIDS.
 
     Parameters
     ----------
     path_to_dataset : Path
-        Path to the AIBL dataset.
+        The path to the AIBL dataset.
 
     path_to_csv : Path
-        Path to the csv file containing clinical data.
+        The path to the csv file containing clinical data.
 
     bids_dir : Path
-        Path to save the AIBL-T1-dataset converted in a BIDS format.
+        The path to save the AIBL-T1-dataset converted in a BIDS format.
 
     modality : Modality
-        Modality to convert.
+        The modality to convert.
 
     overwrite : bool
         If True previous existing outputs will be erased.
@@ -128,9 +129,10 @@ def paths_to_bids(
 
     Return
     ------
-    list of str :
-        list of all the images that are potentially converted in a BIDS format
-        and saved in the bids_dir. This does not guarantee existence.
+    list of Path or None :
+        A list of paths to all the images that are potentially converted in a BIDS format
+        and saved in the bids_dir.
+        Elements of the list can be None if the image doesn't exist.
     """
     from functools import partial
     from multiprocessing import Pool
@@ -143,12 +145,11 @@ def paths_to_bids(
         images = _find_path_to_pet_modality(path_to_dataset, path_to_csv, modality)
 
     images.to_csv(
-        bids_dir / "conversion_info" / f"{modality}_paths.tsv",
+        bids_dir / "conversion_info" / f"{modality.value}_paths.tsv",
         index=False,
         sep="\t",
         encoding="utf-8",
     )
-
     images_list = list([data for _, data in images.iterrows()])
     create_file_ = partial(
         _create_file,
@@ -209,30 +210,28 @@ def _get_first_file_matching_pattern(folder: Path, pattern: str) -> Path:
     if pattern == "":
         raise ValueError("Pattern is not valid.")
     try:
-        return sorted(list(folder.glob(pattern)))[0]
+        return sorted([f for f in folder.glob(pattern)])[0]
     except IndexError:
         raise ValueError(f"No file matching pattern {folder}/{pattern}.")
 
 
-def _listdir_nohidden(path: PathLike) -> List[str]:
-    """List all the subdirectories of path except the hidden folders.
+def _listdir_nohidden(folder: Path) -> List[str]:
+    """List the names of all the subdirectories of provided folder path, except the hidden folders.
 
     Parameters
     ----------
-    path: str
-        Path to list subdirectories from.
+    folder: Path
+        The path to list subdirectories from.
 
     Returns
     -------
     list of str:
-        Subdirectories found within path.
+        Names of subdirectories found within provided folder.
     """
-    from pathlib import Path
-
     return [
-        str(p.name)
-        for p in Path(path).iterdir()
-        if p.is_dir() and not p.name.startswith(".")
+        str(file.name)
+        for file in folder.iterdir()
+        if file.is_dir() and not file.name.startswith(".")
     ]
 
 
@@ -537,7 +536,7 @@ def _load_pet_csv(path_to_csv: Path, modality: Modality) -> pd.DataFrame:
     import pandas as pd
 
     path_to_csv_pet_modality = _get_first_file_matching_pattern(
-        path_to_csv, f"aibl_{modality}meta_*.csv"
+        path_to_csv, f"aibl_{modality.value}meta_*.csv"
     )
 
     if not path_to_csv_pet_modality.exists():
@@ -614,7 +613,7 @@ def _list_folder_without_pet() -> List[str]:
 
 def _create_file(
     image: pd.Series, modality: Modality, bids_dir: Path, overwrite: bool
-) -> Optional[str]:
+) -> Optional[Path]:
     """Convert the AIBL PET images into the BIDS specification.
 
     There are three pet modalities: av45, pib, flute. All of them are converted in BIDS.
@@ -628,11 +627,9 @@ def _create_file(
 
     Return
     ------
-    str or None :
+    Path or None :
         Path to file
     """
-    from numpy import nan
-
     from clinica.iotools.bids_utils import json_from_dcm
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
@@ -642,7 +639,9 @@ def _create_file(
     session_id = image.Session_ID
     image_path = image[modality.name_of_path]
 
-    if image_path == nan:
+    try:
+        image_path = Path(image_path)
+    except TypeError:
         cprint(
             msg=(
                 f"[{modality.upper()}] No path specified for {image.Subjects_ID} "
@@ -650,15 +649,14 @@ def _create_file(
             ),
             lvl="info",
         )
-        return nan
-    else:
-        cprint(
-            msg=(
-                f"[{modality.upper()}] Processing subject {image.Subjects_ID} "
-                f"in session {session_id}"
-            ),
-            lvl="info",
-        )
+        return None
+    cprint(
+        msg=(
+            f"[{modality.upper()}] Processing subject {image.Subjects_ID} "
+            f"in session {session_id}"
+        ),
+        lvl="info",
+    )
     session_id = viscode_to_session(session_id)
     output_path = (
         bids_dir
@@ -675,23 +673,23 @@ def _create_file(
         if output_path.with_suffix(".nii.gz").exists():
             output_path.with_suffix(".nii.gz").unlink()
         output_image = _dicom_to_nii(output_path, image_path)
-        json_from_dcm(image_path, str(output_path.with_suffix(".json")))
+        json_from_dcm(image_path, output_path.with_suffix(".json"))
 
     center_nifti_origin(output_image, output_image)
 
-    return str(output_image)
+    return output_image
 
 
-def _dicom_to_nii(output_path: Path, image_path: str) -> Path:
+def _dicom_to_nii(output_path: Path, image_path: Path) -> Path:
     """Convert the DICOM images to NIfTI files using dcm2niix.
 
     Parameters
     ----------
     output_path : Path
-     Path to the NIfTI image without the extension.
+     The path to the NIfTI image without the extension.
 
-    image_path : str
-        Path to where the DICOM files are stored.
+    image_path : Path
+        The path to where the DICOM files are stored.
 
     Return
     ------
@@ -706,18 +704,15 @@ def _dicom_to_nii(output_path: Path, image_path: str) -> Path:
     except OSError:
         if not output_path.parent.is_dir():
             raise
-
-    # if image.Is_Dicom:
     run_dcm2niix(
         input_dir=image_path,
-        output_dir=str(output_path.parent),
+        output_dir=output_path.parent,
         output_fmt=output_path.name,
         compress=True,
         bids_sidecar=False,
     )
-
     nifti_file = output_path.with_suffix(".nii.gz")
-
     if not nifti_file.exists():
         cprint(f"{nifti_file} should have been created but this did not happen")
+
     return nifti_file

@@ -62,9 +62,7 @@ def _get_label_list(
     Returns the list of labels to use in the session df depending on the
     pipeline, the atlas, and the metric considered.
     """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
-        replace_sequence_chars,
-    )
+    from clinica.iotools.converter_utils import replace_sequence_chars
 
     atlas_name = _get_atlas_name(atlas_path, pipeline)
     atlas_df = pd.read_csv(atlas_path, sep="\t")
