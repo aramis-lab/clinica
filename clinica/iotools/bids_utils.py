@@ -50,7 +50,6 @@ BIDS_VALIDATOR_CONFIG = {
 
 
 # -- Methods for the clinical data --
-# @ToDo:test this function
 def create_participants_df(
     study_name: StudyName,
     clinical_specifications_folder: Path,
