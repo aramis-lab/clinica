@@ -1,6 +1,6 @@
 from pathlib import Path
 from string import Template
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 import pandas as pd
