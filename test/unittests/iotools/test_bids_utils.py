@@ -41,7 +41,7 @@ EXPECTED_README_CONTENT = Template(
 )
 
 
-def create_clinical_data(tmp_path: Path, clinical_path: Path):
+def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
     spec_df = pd.DataFrame(
         {
             "BIDS CLINICA": [
@@ -79,52 +79,58 @@ def create_clinical_data(tmp_path: Path, clinical_path: Path):
     )
     spec_df.to_csv(tmp_path / "participant.tsv", sep="\t", index=False)
 
+    clinical_path = tmp_path / "clinical_data"
     clinical_path.mkdir()
-    df_adnimerge = pd.DataFrame(
-        {
-            "PTID": [
-                "001_S_0001",
-                "001_S_0002",
-                "001_S_0003",
-                "001_S_0004",
-                "001_S_0005",
-                "001_S_0006",
-            ],
-            "PTGENDER": ["Male", "Female", "Male", "Female", "Female", None],
-            "AGE": ["40", "50", "60", "70", "80", None],
-        }
-    )
-    df_apoeres = pd.DataFrame(
-        {
-            "APGEN1": ["3", "3", "3", "3", None, "3"],
-            "GEN2": ["2", "2", "2", "2", None, "2"],
-        }
-    )
 
-    df_oasis = pd.DataFrame(
-        {
-            "ID": [
-                "OAS1_0001_MRI1",
-                "OAS1_0002_MRI1",
-                "OAS1_0003_MRI1",
-                "OAS1_0004_MRI1",
-            ],
-            "M/F": ["F", "M", "F", "M"],
-            "Age": ["45", "50", "55", "60"],
-        }
-    )
-    df_oasis3 = pd.DataFrame(
-        {
-            "Subject": ["OAS30001", "OAS30002", "OAS30003", "OAS30004"],
-            "M/F": ["F", "F", "M", "M"],
-            "Age": ["45", "55", "65", "75"],
-        }
-    )
+    if study_name == StudyName.ADNI:
+        df_adnimerge = pd.DataFrame(
+            {
+                "PTID": [
+                    "001_S_0001",
+                    "001_S_0002",
+                    "001_S_0003",
+                    "001_S_0004",
+                    "001_S_0005",
+                    "001_S_0006",
+                ],
+                "PTGENDER": ["Male", "Female", "Male", "Female", "Female", None],
+                "AGE": ["40", "50", "60", "70", "80", None],
+            }
+        )
+        df_apoeres = pd.DataFrame(
+            {
+                "APGEN1": ["3", "3", "3", "3", None, "3"],
+                "GEN2": ["2", "2", "2", "2", None, "2"],
+            }
+        )
+        df_adnimerge.to_csv(clinical_path / "ADNIMERGE.csv", index=False)
+        df_apoeres.to_csv(clinical_path / "APOERES.csv", index=False)
+    elif study_name == StudyName.OASIS:
+        df_oasis = pd.DataFrame(
+            {
+                "ID": [
+                    "OAS1_0001_MRI1",
+                    "OAS1_0002_MRI1",
+                    "OAS1_0003_MRI1",
+                    "OAS1_0004_MRI1",
+                ],
+                "M/F": ["F", "M", "F", "M"],
+                "Age": ["45", "50", "55", "60"],
+            }
+        )
+        df_oasis.to_csv(clinical_path / "oasis_cross-sectional.csv", index=False)
 
-    df_adnimerge.to_csv(clinical_path / "ADNIMERGE.csv", index=False)
-    df_apoeres.to_csv(clinical_path / "APOERES.csv", index=False)
-    df_oasis.to_csv(clinical_path / "oasis_cross-sectional.csv", index=False)
-    df_oasis3.to_csv(clinical_path / "oasis3_participants.csv", index=False)
+    elif study_name == StudyName.OASIS3:
+        df_oasis3 = pd.DataFrame(
+            {
+                "Subject": ["OAS30001", "OAS30002", "OAS30003", "OAS30004"],
+                "M/F": ["F", "F", "M", "M"],
+                "Age": ["45", "55", "65", "75"],
+            }
+        )
+        df_oasis3.to_csv(clinical_path / "oasis3_participants.csv", index=False)
+
+    return clinical_path
 
 
 @pytest.mark.parametrize(
@@ -204,13 +210,12 @@ def create_clinical_data(tmp_path: Path, clinical_path: Path):
 def test_create_participants_df(tmp_path, bids_ids, expected, study_name):
     from clinica.iotools.bids_utils import create_participants_df
 
-    create_clinical_data(tmp_path, tmp_path / "clinical_data")
-    breakpoint()
+    clinical_path = create_clinical_data(tmp_path, study_name)
     assert (
         create_participants_df(
             study_name,
             clinical_specifications_folder=tmp_path,
-            clinical_data_dir=tmp_path / "clinical_data",
+            clinical_data_dir=clinical_path,
             bids_ids=bids_ids,
         )
         .reset_index(drop=True)
