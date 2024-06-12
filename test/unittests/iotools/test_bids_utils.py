@@ -41,81 +41,146 @@ EXPECTED_README_CONTENT = Template(
 )
 
 
-def create_clinical_data(tmp_path: Path):
-    spec_df = pd.DataFrame()
-    spec_df["BIDS Clinica"] = [
-        "participant_id",
-        "alternative_id_1",
-        "date_of_birth",
-        "sex",
-        "apoegen1",
-    ]
-    spec_df["ADNI"] = [np.nan, "PTID", np.nan, "PTGENDER", "APGEN1"]
-    spec_df["ADNI location"] = [
-        np.nan,
-        "ADNIMERGE.csv",
-        np.nan,
-        "ADNIMERGE.csv",
-        "APOERES.csv",
-    ]
-    spec_df["AIBL"] = [np.nan, "RID", np.nan, "PTDOB", "PTGENDER", "APGEN1"]
-    spec_df["AIBL location"] = [
-        np.nan,
-        "aibl_ptdemog_*.csv",
-        np.nan,
-        "aibl_ptdemog_*.csv",
-        "aibl_ptdemog_*.csv",
-        "aibl_apoeres_*.csv",
-    ]
-    spec_df["OASIS"] = [np.nan, "ID", np.nan, np.nan, "M/F", np.nan]
-    spec_df["OASIS location"] = [
-        np.nan,
-        "oasis_cross-sectional.csv",
-        np.nan,
-        np.nan,
-        "oasis_cross-sectional.csv",
-        np.nan,
-    ]
-    spec_df["OASIS3"] = [np.nan, "Subject", np.nan, np.nan, "M/F", np.nan]
-    spec_df["OASIS3 location"] = [
-        np.nan,
-        "oasis3_participants.csv",
-        np.nan,
-        np.nan,
-        "oasis3_participants.csv",
-        np.nan,
-    ]
-    spec_df.to_csv(tmp_path / "spec_participant.tsv", sep="\t")
+def create_clinical_data(tmp_path: Path, clinical_path: Path):
+    spec_df = pd.DataFrame(
+        {
+            "BIDS CLINICA": [
+                "participant_id",
+                "alternative_id_1",
+                "date_of_birth",
+                "sex",
+                "apoegen1",
+            ],
+            "ADNI": [np.nan, "PTID", np.nan, "PTGENDER", "APGEN1"],
+            "ADNI location": [
+                np.nan,
+                "ADNIMERGE.csv",
+                np.nan,
+                "ADNIMERGE.csv",
+                "APOERES.csv",
+            ],
+            "OASIS": [np.nan, "ID", np.nan, "M/F", np.nan],
+            "OASIS location": [
+                np.nan,
+                "oasis_cross-sectional.csv",
+                np.nan,
+                "oasis_cross-sectional.csv",
+                np.nan,
+            ],
+            "OASIS3": [np.nan, "Subject", np.nan, "M/F", np.nan],
+            "OASIS3 location": [
+                np.nan,
+                "oasis3_participants.csv",
+                np.nan,
+                "oasis3_participants.csv",
+                np.nan,
+            ],
+        }
+    )
+    spec_df.to_csv(tmp_path / "participant.tsv", sep="\t", index=False)
 
-    (tmp_path / "clinical_data").mkdir()
+    clinical_path.mkdir()
+    df_adnimerge = pd.DataFrame(
+        {
+            "PTID": ["001_S_0001", "001_S_0002", "001_S_0003", "001_S_0004"],
+            "PTGENDER": ["Male", "Female", "Male", "Female"],
+            "AGE": ["40", "50", "60", "70"],
+        }
+    )
+    df_apoeres = pd.DataFrame(
+        {"APGEN1": ["3", "3", "3", "3"], "GEN2": ["2", "2", "2", "2"]}
+    )
 
-    # todo : ADNI : ADNIMERGE.csv ; APOERES.csv // AIBL aibl_ptdemog_*.csv ; aibl_apoeres_*.csv // OASIS oasis_cross-sectional.csv // OASIS3 oasis3_participants.csv
+    df_oasis = pd.DataFrame(
+        {
+            "ID": [
+                "OAS1_0001_MRI1",
+                "OAS1_0002_MRI1",
+                "OAS1_0003_MRI1",
+                "OAS1_0004_MRI1",
+            ],
+            "M/F": ["F", "M", "F", "M"],
+            "Age": ["45", "50", "55", "60"],
+        }
+    )
+    df_oasis3 = pd.DataFrame(
+        {
+            "Subject": ["OAS30001", "OAS30002", "OAS30003", "OAS30004"],
+            "M/F": ["F", "F", "M", "M"],
+            "Age": ["45", "55", "65", "75"],
+        }
+    )
 
-    # todo : create clinical_data_dir with right files in it (for each type of study)
-    # todo : fill the files
-    pass
+    df_adnimerge.to_csv(clinical_path / "ADNIMERGE.csv", index=False)
+    df_apoeres.to_csv(clinical_path / "APOERES.csv", index=False)
+    df_oasis.to_csv(clinical_path / "oasis_cross-sectional.csv", index=False)
+    df_oasis3.to_csv(clinical_path / "oasis3_participants.csv", index=False)
 
 
-@pytest.fixture
-def expected(bids_ids: List[str]):
-    # todo : write expected dataframe depending on given bids_ids
-    pass
-
-
-@pytest.mark.parametrize("study_name, bids_ids", [])
-def test_create_participants_df(tmp_path, bids_ids, expected):
+@pytest.mark.parametrize(
+    "study_name, bids_ids, expected",
+    [
+        (
+            StudyName.OASIS,
+            ["0001"],
+            pd.DataFrame(
+                {
+                    "participant_id": ["0001"],
+                    "alternative_id_1": ["OAS1_0001_MRI1"],
+                    "sex": ["F"],
+                }
+            ),
+        ),
+        (
+            StudyName.OASIS3,
+            ["0001"],
+            pd.DataFrame(
+                {
+                    "participant_id": ["0001"],
+                    "alternative_id_1": ["OAS30001"],
+                    "sex": ["F"],
+                }
+            ),
+        ),
+        (
+            StudyName.ADNI,
+            ["001S0001"],
+            pd.DataFrame(
+                {
+                    "participant_id": ["001S0001"],
+                    "alternative_id_1": ["001_S_0001"],
+                    "sex": ["Male"],
+                    "apoegen1": [3],
+                }
+            ),
+        ),
+        (
+            StudyName.OASIS,
+            ["0002", "0004", "0006"],
+            pd.DataFrame(
+                {
+                    "participant_id": ["0002", "0004"],
+                    "alternative_id_1": ["OAS1_0002_MRI1", "OAS1_0004_MRI1"],
+                    "sex": ["M", "M"],
+                }
+            ),
+        ),
+    ],
+)
+def test_create_participants_df(tmp_path, bids_ids, expected, study_name):
     from clinica.iotools.bids_utils import create_participants_df
 
-    # todo
-    create_clinical_data(tmp_path)
-    pass
-
-
-def test_create_sessions_dict_OASIS():
-    # todo
-    from clinica.iotools.bids_utils import create_sessions_dict_OASIS
-
-    pass
+    create_clinical_data(tmp_path, tmp_path / "clinical_data")
+    assert (
+        create_participants_df(
+            study_name,
+            clinical_specifications_folder=tmp_path,
+            clinical_data_dir=tmp_path / "clinical_data",
+            bids_ids=bids_ids,
+        )
+        .reset_index(drop=True)
+        .equals(expected)
+    )
 
 
 def test_create_scans_dict():
