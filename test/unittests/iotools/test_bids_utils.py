@@ -183,13 +183,6 @@ def test_create_participants_df(tmp_path, bids_ids, expected, study_name):
     )
 
 
-def test_create_scans_dict():
-    # todo
-    from clinica.iotools.bids_utils import create_scans_dict
-
-    pass
-
-
 def test_get_bids_subjs_list(tmp_path):
     from clinica.iotools.bids_utils import get_bids_subjs_list
 
