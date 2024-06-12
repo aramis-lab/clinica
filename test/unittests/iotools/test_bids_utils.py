@@ -82,13 +82,23 @@ def create_clinical_data(tmp_path: Path, clinical_path: Path):
     clinical_path.mkdir()
     df_adnimerge = pd.DataFrame(
         {
-            "PTID": ["001_S_0001", "001_S_0002", "001_S_0003", "001_S_0004"],
-            "PTGENDER": ["Male", "Female", "Male", "Female"],
-            "AGE": ["40", "50", "60", "70"],
+            "PTID": [
+                "001_S_0001",
+                "001_S_0002",
+                "001_S_0003",
+                "001_S_0004",
+                "001_S_0005",
+                "001_S_0006",
+            ],
+            "PTGENDER": ["Male", "Female", "Male", "Female", "Female", None],
+            "AGE": ["40", "50", "60", "70", "80", None],
         }
     )
     df_apoeres = pd.DataFrame(
-        {"APGEN1": ["3", "3", "3", "3"], "GEN2": ["2", "2", "2", "2"]}
+        {
+            "APGEN1": ["3", "3", "3", "3", None, "3"],
+            "GEN2": ["2", "2", "2", "2", None, "2"],
+        }
     )
 
     df_oasis = pd.DataFrame(
@@ -142,7 +152,7 @@ def create_clinical_data(tmp_path: Path, clinical_path: Path):
                 }
             ),
         ),
-        (
+        (  # todo : introducing None or np.nan in data changes the format for scalar values
             StudyName.ADNI,
             ["001S0001"],
             pd.DataFrame(
@@ -150,18 +160,42 @@ def create_clinical_data(tmp_path: Path, clinical_path: Path):
                     "participant_id": ["001S0001"],
                     "alternative_id_1": ["001_S_0001"],
                     "sex": ["Male"],
-                    "apoegen1": [3],
+                    "apoegen1": [3.0],
                 }
             ),
         ),
         (
             StudyName.OASIS,
-            ["0002", "0004", "0006"],
+            ["0002", "0004", "0007"],
             pd.DataFrame(
                 {
                     "participant_id": ["0002", "0004"],
                     "alternative_id_1": ["OAS1_0002_MRI1", "OAS1_0004_MRI1"],
                     "sex": ["M", "M"],
+                }
+            ),
+        ),
+        (
+            StudyName.ADNI,
+            ["001S0005"],
+            pd.DataFrame(
+                {
+                    "participant_id": ["001S0005"],
+                    "alternative_id_1": ["001_S_0005"],
+                    "sex": ["Female"],
+                    "apoegen1": ["n/a"],
+                }
+            ),
+        ),
+        (
+            StudyName.ADNI,
+            ["001S0006"],
+            pd.DataFrame(
+                {
+                    "participant_id": ["001S0006"],
+                    "alternative_id_1": ["001_S_0006"],
+                    "sex": ["n/a"],
+                    "apoegen1": [3.0],
                 }
             ),
         ),
@@ -171,6 +205,7 @@ def test_create_participants_df(tmp_path, bids_ids, expected, study_name):
     from clinica.iotools.bids_utils import create_participants_df
 
     create_clinical_data(tmp_path, tmp_path / "clinical_data")
+    breakpoint()
     assert (
         create_participants_df(
             study_name,
