@@ -629,7 +629,7 @@ def bids_pet_nii(
 def pet_volume_normalized_suvr_pet(
     acq_label: Union[str, Tracer],
     group_label: str,
-    region: Union[str, SUVRReferenceRegion],
+    suvr_reference_region: Union[str, SUVRReferenceRegion],
     use_brainmasked_image: bool,
     use_pvc_data: bool,
     fwhm: int = 0,
@@ -637,7 +637,7 @@ def pet_volume_normalized_suvr_pet(
     from pathlib import Path
 
     acq_label = Tracer(acq_label)
-    region = SUVRReferenceRegion(region)
+    region = SUVRReferenceRegion(suvr_reference_region)
 
     if use_brainmasked_image:
         mask_key_value = "_mask-brain"
@@ -678,13 +678,13 @@ def pet_volume_normalized_suvr_pet(
 
 def pet_linear_nii(
     acq_label: Union[str, Tracer],
-    region: Union[str, SUVRReferenceRegion],
+    suvr_reference_region: Union[str, SUVRReferenceRegion],
     uncropped_image: bool,
 ) -> dict:
     from pathlib import Path
 
     acq_label = Tracer(acq_label)
-    region = SUVRReferenceRegion(region)
+    region = SUVRReferenceRegion(suvr_reference_region)
 
     if uncropped_image:
         description = ""
