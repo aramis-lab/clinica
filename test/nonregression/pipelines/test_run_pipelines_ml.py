@@ -7,7 +7,6 @@ different functions available in Clinica
 
 import warnings
 from os import fspath
-from pathlib import Path
 from test.nonregression.testing_tools import *
 
 import pytest
@@ -43,7 +42,7 @@ def run_workflows_ml(
         VertexBasedRepHoldOutDualSVM,
         VoxelBasedKFoldDualSVM,
     )
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     warnings.filterwarnings("ignore", category=UserWarning)
@@ -57,6 +56,7 @@ def run_workflows_ml(
     output_dir1 = output_dir / "VertexBasedRepHoldOutDualSVM"
 
     tracer = Tracer.FDG
+    region = SUVRReferenceRegion.PONS
 
     wf1 = VertexBasedRepHoldOutDualSVM(
         caps_directory=fspath(caps_dir),
@@ -66,7 +66,7 @@ def run_workflows_ml(
         output_dir=fspath(output_dir1),
         image_type="PET",
         acq_label=tracer,
-        suvr_reference_region="pons",
+        suvr_reference_region=region,
         fwhm=20,
         n_threads=2,
         n_iterations=10,
@@ -86,7 +86,7 @@ def run_workflows_ml(
         atlas="AICHA",
         output_dir=fspath(output_dir2),
         acq_label=tracer,
-        suvr_reference_region="pons",
+        suvr_reference_region=region,
         use_pvc_data=False,
         n_threads=2,
         n_iterations=10,
@@ -122,7 +122,7 @@ def run_workflows_ml(
         image_type="PET",
         output_dir=fspath(output_dir4),
         acq_label=tracer,
-        suvr_reference_region="pons",
+        suvr_reference_region=region,
         fwhm=8,
         n_threads=2,
         n_folds=5,
@@ -138,7 +138,6 @@ def run_spatial_svm(
     from os import fspath
 
     import nibabel as nib
-    import numpy as np
     from numpy.testing import assert_allclose
 
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import (

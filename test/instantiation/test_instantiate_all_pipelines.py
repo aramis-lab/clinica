@@ -189,13 +189,13 @@ def test_instantiate_dwi_connectome(cmdopt):
 
 def run_pet_volume(input_dir: Path) -> None:
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     root = input_dir / "PETVolume"
     parameters = {
         "group_label": "UnitTest",
         "acq_label": Tracer.FDG,
-        "suvr_reference_region": "pons",
+        "suvr_reference_region": SUVRReferenceRegion.PONS,
         "skip_question": True,
         "reconstruction_method": None,
     }
@@ -210,13 +210,13 @@ def run_pet_volume(input_dir: Path) -> None:
 
 def test_instantiate_pet_linear(cmdopt):
     from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETLinear"
     parameters = {
         "acq_label": Tracer.FDG,
-        "suvr_reference_region": "cerebellumPons2",
+        "suvr_reference_region": SUVRReferenceRegion.CEREBELLUM_PONS2,
         "skip_question": True,
         "reconstruction_method": None,
     }
@@ -252,13 +252,13 @@ def test_instantiate_statistics_surface(cmdopt, tmp_path):
 
 def test_instantiate_pet_surface_cross_sectional(cmdopt):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETSurface"
     parameters = {
         "acq_label": Tracer.FDG,
-        "suvr_reference_region": "pons",
+        "suvr_reference_region": SUVRReferenceRegion.PONS,
         "pvc_psf_tsv": fspath(root / "in" / "subjects.tsv"),
         "longitudinal": False,
         "skip_question": True,
@@ -276,13 +276,13 @@ def test_instantiate_pet_surface_cross_sectional(cmdopt):
 @pytest.mark.skip(reason="Currently broken. Needs to be fixed...")
 def test_instantiate_pet_surface_longitudinal(cmdopt):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETSurfaceLongitudinal"
     parameters = {
         "acq_label": Tracer.FDG,
-        "suvr_reference_region": "pons",
+        "suvr_reference_region": SUVRReferenceRegion.PONS,
         "pvc_psf_tsv": fspath(root / "in" / "subjects.tsv"),
         "longitudinal": True,
         "reconstruction_method": None,
@@ -302,7 +302,7 @@ def test_instantiate_workflows_ml(cmdopt):
         CAPSVertexBasedInput,
         CAPSVoxelBasedInput,
     )
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "WorkflowsML"
@@ -314,6 +314,7 @@ def test_instantiate_workflows_ml(cmdopt):
     atlases = ["AAL2", "Neuromorphometrics", "AICHA", "LPBA40", "Hammers"]
     possible_fwhm = [0, 5, 10, 15, 20, 25]
     tracer = Tracer.FDG
+    region = SUVRReferenceRegion.PONS
     voxel_input = [
         CAPSVoxelBasedInput(
             {
@@ -324,7 +325,7 @@ def test_instantiate_workflows_ml(cmdopt):
                 "image_type": im,
                 "fwhm": 8,
                 "acq_label": tracer,
-                "suvr_reference_region": "pons",
+                "suvr_reference_region": region,
                 "use_pvc_data": False,
             }
         )
@@ -340,7 +341,7 @@ def test_instantiate_workflows_ml(cmdopt):
                 "image_type": im,
                 "atlas": at,
                 "acq_label": tracer,
-                "suvr_reference_region": "pons",
+                "suvr_reference_region": region,
                 "use_pvc_data": False,
             }
         )
@@ -357,7 +358,7 @@ def test_instantiate_workflows_ml(cmdopt):
                 "image_type": "PET",
                 "fwhm": fwhm,
                 "acq_label": tracer,
-                "suvr_reference_region": "pons",
+                "suvr_reference_region": region,
             }
         )
         for fwhm in possible_fwhm
@@ -437,7 +438,7 @@ def test_instantiate_statistics_volume(cmdopt):
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "StatisticsVolume"
@@ -447,7 +448,7 @@ def test_instantiate_statistics_volume(cmdopt):
         "contrast": "group",
         "acq_label": Tracer.FDG,
         "use_pvc_data": False,
-        "suvr_reference_region": "pons",
+        "suvr_reference_region": SUVRReferenceRegion.PONS,
     }
     pipeline = StatisticsVolume(
         caps_directory=fspath(root / "in" / "caps"),

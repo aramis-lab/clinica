@@ -3,7 +3,7 @@ from os import fspath
 from pathlib import Path
 from test.nonregression.testing_tools import configure_paths, likeliness_measure
 
-from clinica.utils.pet import Tracer
+from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
 
 def test_pet_volume(cmdopt, tmp_path):
@@ -21,11 +21,12 @@ def run_pet_volume(
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     tracer = Tracer.FDG
+    region = SUVRReferenceRegion.PONS
 
     parameters = {
         "group_label": "UnitTest",
         "acq_label": tracer,
-        "suvr_reference_region": "pons",
+        "suvr_reference_region": region,
         "skip_question": False,
     }
     pipeline = PETVolume(
@@ -38,7 +39,8 @@ def run_pet_volume(
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
-    for sub in (
+    suffix = "_mask-brain_fwhm-8mm_pet.nii.gz"
+    for subject in (
         "sub-ADNI011S4105",
         "sub-ADNI023S4020",
         "sub-ADNI035S4082",
@@ -48,18 +50,14 @@ def run_pet_volume(
             output_dir
             / "caps"
             / "subjects"
-            / sub
+            / subject
             / "ses-M000/pet/preprocessing/group-UnitTest"
         )
         assert likeliness_measure(
-            fspath(
-                output_folder
-                / f"{sub}_ses-M000_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
-            ),
-            fspath(
-                ref_dir
-                / f"{sub}_ses-M000_trc-{tracer}_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz"
-            ),
+            output_folder
+            / f"{subject}_ses-M000_trc-{tracer.value}_pet_space-Ixi549Space_suvr-{region.value}{suffix}",
+            ref_dir
+            / f"{subject}_ses-M000_trc-{tracer.value}_pet_space-Ixi549Space_suvr-{region.value}{suffix}",
             (1e-2, 0.25),
             (1e-1, 0.001),
         )

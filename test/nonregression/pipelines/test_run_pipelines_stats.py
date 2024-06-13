@@ -145,7 +145,7 @@ def run_statistics_volume_pet(
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "group-UnitTest_covariates.tsv"
@@ -162,7 +162,7 @@ def run_statistics_volume_pet(
         # Optional arguments for inputs from pet-volume pipeline
         "acq_label": Tracer.FDG,
         "use_pvc_data": False,
-        "suvr_reference_region": "pons",
+        "suvr_reference_region": SUVRReferenceRegion.PONS,
     }
 
     pipeline = StatisticsVolume(
@@ -197,8 +197,6 @@ def run_statistics_volume_pet(
         nib.load(fspath(ref_t_stat)).get_fdata(dtype="float32"),
     )
 
-    # Remove data in out folder
-
 
 def run_statistics_volume_t1(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
@@ -211,7 +209,6 @@ def run_statistics_volume_t1(
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
-    from clinica.utils.pet import Tracer
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "group-UnitTest_covariates.tsv"
