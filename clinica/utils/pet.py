@@ -59,7 +59,7 @@ def read_psf_information(
     pvc_psf_tsv: os.PathLike,
     subject_ids: ty.List[str],
     session_ids: ty.List[str],
-    pet_tracer: str,
+    pet_tracer: ty.Union[str, Tracer],
 ) -> ty.List[ty.List[int]]:
     """Read PSF information from TSV file.
 
@@ -84,7 +84,7 @@ def read_psf_information(
         .. warning::
             Must have the same length as `subject_ids`.
 
-    pet_tracer : str
+    pet_tracer : str or Tracer
         Tracer we want to select in the 'acq_label' column.
         Other tracers will not be read in this function
 
@@ -112,6 +112,7 @@ def read_psf_information(
         "psf_y",
         "psf_z",
     }
+    pet_tracer = Tracer(pet_tracer)
     psf_df = pd.read_csv(pvc_psf_tsv, sep="\t")
     diff = valid_columns.symmetric_difference(set(psf_df.columns))
     if len(diff) > 0:
@@ -124,17 +125,17 @@ def read_psf_information(
     psf = []
     for sub, ses in zip(subject_ids, session_ids):
         result = psf_df.query(
-            f"participant_id == '{sub}' and session_id == '{ses}' and acq_label == '{pet_tracer}'"
+            f"participant_id == '{sub}' and session_id == '{ses}' and acq_label == '{pet_tracer.value}'"
         )
         if len(result) == 0:
             raise RuntimeError(
-                f"Subject {sub} with session {ses} and tracer {pet_tracer} "
+                f"Subject {sub} with session {ses} and tracer {pet_tracer.value} "
                 f"that you want to proceed was not found in the TSV file containing "
                 f"PSF specifications ({pvc_psf_tsv})."
             )
         if len(result) > 1:
             raise RuntimeError(
-                f"Subject {sub} with session {ses} and tracer {pet_tracer} "
+                f"Subject {sub} with session {ses} and tracer {pet_tracer.value} "
                 f"that you want to proceed was found multiple times "
                 f"in the TSV file containing PSF specifications ({pvc_psf_tsv})."
             )
