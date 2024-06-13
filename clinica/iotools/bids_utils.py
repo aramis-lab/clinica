@@ -159,7 +159,6 @@ def create_participants_df(
             extracted_df, how="outer", on="alternative_id_1"
         )
 
-    participants_df.reset_index(inplace=True, drop=True)
     # Adding BIDS id based on study specific id
     participants_df["participant_id"] = participants_df["alternative_id_1"].apply(
         lambda x: rename_study_to_bids_id(study_name, x)
