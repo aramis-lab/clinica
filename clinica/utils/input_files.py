@@ -603,18 +603,16 @@ def bids_pet_nii(
     """
     from pathlib import Path
 
+    description = f"PET data"
     trc = ""
     if tracer is not None:
         tracer = Tracer(tracer)
         trc = f"_trc-{tracer.value}"
+        description += f" with {tracer.value} tracer"
     rec = ""
     if reconstruction is not None:
         reconstruction = ReconstructionMethod(reconstruction)
         rec = f"_rec-{reconstruction.value}"
-    description = f"PET data"
-    if tracer:
-        description += f" with {tracer.value} tracer"
-    if reconstruction:
         description += f" and reconstruction method {reconstruction.value}"
 
     return {
