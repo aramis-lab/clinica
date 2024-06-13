@@ -4,6 +4,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from clinica.utils.pet import SUVRReferenceRegion
+
 
 @pytest.fixture
 def psf_df() -> pd.DataFrame:
@@ -121,13 +123,11 @@ def test_read_psf_information(tmp_path: os.PathLike, psf_df: pd.DataFrame):
     ) == [[8, 9, 10], [8, 9, 10]]
 
 
-@pytest.mark.parametrize(
-    "label", ["pons", "cerebellumPons", "pons2", "cerebellumPons2"]
-)
-def test_get_suvr_mask(label: str):
+@pytest.mark.parametrize("region", SUVRReferenceRegion)
+def test_get_suvr_mask(region):
     from clinica.utils.pet import get_suvr_mask
 
-    assert Path(get_suvr_mask(label)).exists()
+    assert Path(get_suvr_mask(region)).exists()
 
 
 @pytest.mark.parametrize("label", ["foo", "bar", "pons3", "cerebelumPons2"])
@@ -136,6 +136,6 @@ def test_get_suvr_mask_error(label: str):
 
     with pytest.raises(
         ValueError,
-        match=f"SUVR reference region label {label} is not supported.",
+        match=f"'{label}' is not a valid SUVRReferenceRegion",
     ):
         get_suvr_mask(label)
