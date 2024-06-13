@@ -2,6 +2,7 @@
 import os
 import typing as ty
 from enum import Enum
+from pathlib import Path
 
 import pandas as pd
 
@@ -20,6 +21,13 @@ class Tracer(str, Enum):
     FBB = "18FFBB"
     FDG = "18FFDG"
     FMM = "18FFMM"
+
+
+class SUVRReferenceRegion(str, Enum):
+    PONS = "pons"
+    CEREBELLUM_PONS = "cerebellumPons"
+    PONS2 = "pons2"
+    CEREBELLUM_PONS2 = "cerebellumPons2"
 
 
 class ReconstructionMethod(str, Enum):
@@ -135,37 +143,34 @@ def read_psf_information(
     return psf
 
 
-LIST_SUVR_REFERENCE_REGIONS = ["pons", "cerebellumPons", "pons2", "cerebellumPons2"]
-
-
-def get_suvr_mask(suvr_reference_region: str) -> os.PathLike:
+def get_suvr_mask(region: ty.Union[str, SUVRReferenceRegion]) -> Path:
     """Returns the path to the SUVR mask from SUVR reference region label.
 
     Parameters
     ----------
-    suvr_reference_region : str
+    region : str or SUVRReferenceRegion
         The label of the SUVR reference region.
         Supported labels are: 'pons', 'cerebellumPons', 'pons2', and 'cerebellumPons2'
 
     Returns
     -------
-    PathLike :
+    Path :
         The path to the SUVR mask.
     """
-    from pathlib import Path
-
     current_dir = Path(os.path.realpath(__file__))
     masks_dir = current_dir.parent.parent / "resources" / "masks"
 
-    suvr_reference_region_labels_to_filenames = {
-        "pons": "region-pons_eroded-6mm_mask.nii.gz",
-        "cerebellumPons": "region-cerebellumPons_eroded-6mm_mask.nii.gz",
-        "pons2": "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz",
-        "cerebellumPons2": "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz",
-    }
-    if suvr_reference_region not in suvr_reference_region_labels_to_filenames:
-        raise ValueError(
-            f"SUVR reference region label {suvr_reference_region} is not supported. "
-            f"Supported values are : {list(suvr_reference_region_labels_to_filenames.keys())}."
-        )
-    return masks_dir / suvr_reference_region_labels_to_filenames[suvr_reference_region]
+    return masks_dir / _get_suvr_reference_region_labels_filename(
+        SUVRReferenceRegion(region)
+    )
+
+
+def _get_suvr_reference_region_labels_filename(region: SUVRReferenceRegion) -> str:
+    if region == SUVRReferenceRegion.PONS:
+        return "region-pons_eroded-6mm_mask.nii.gz"
+    if region == SUVRReferenceRegion.CEREBELLUM_PONS:
+        return "region-cerebellumPons_eroded-6mm_mask.nii.gz"
+    if region == SUVRReferenceRegion.PONS2:
+        return "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz"
+    if region == SUVRReferenceRegion.CEREBELLUM_PONS2:
+        return "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz"
