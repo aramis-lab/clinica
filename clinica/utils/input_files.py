@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from typing import Optional, Union
 
 from clinica.pipelines.dwi.dti.utils import DTIBasedMeasure
-from clinica.utils.pet import ReconstructionMethod, Tracer
+from clinica.utils.pet import ReconstructionMethod, SUVRReferenceRegion, Tracer
 
 # BIDS
 
@@ -577,8 +577,8 @@ def dwi_dti(measure: Union[str, DTIBasedMeasure], space: Optional[str] = None) -
 
 
 def bids_pet_nii(
-    tracer: Optional[Tracer] = None,
-    reconstruction: Optional[ReconstructionMethod] = None,
+    tracer: Optional[Union[str, Tracer]] = None,
+    reconstruction: Optional[Union[str, ReconstructionMethod]] = None,
 ) -> dict:
     """Return the query dict required to capture PET scans.
 
@@ -603,12 +603,16 @@ def bids_pet_nii(
     """
     from pathlib import Path
 
-    trc = "" if tracer is None else f"_trc-{tracer.value}"
-    rec = "" if reconstruction is None else f"_rec-{reconstruction.value}"
     description = f"PET data"
-    if tracer:
+    trc = ""
+    if tracer is not None:
+        tracer = Tracer(tracer)
+        trc = f"_trc-{tracer.value}"
         description += f" with {tracer.value} tracer"
-    if reconstruction:
+    rec = ""
+    if reconstruction is not None:
+        reconstruction = ReconstructionMethod(reconstruction)
+        rec = f"_rec-{reconstruction.value}"
         description += f" and reconstruction method {reconstruction.value}"
 
     return {
@@ -621,14 +625,17 @@ def bids_pet_nii(
 
 
 def pet_volume_normalized_suvr_pet(
-    acq_label,
-    group_label,
-    suvr_reference_region,
-    use_brainmasked_image,
-    use_pvc_data,
-    fwhm=0,
-):
+    acq_label: Union[str, Tracer],
+    group_label: str,
+    suvr_reference_region: Union[str, SUVRReferenceRegion],
+    use_brainmasked_image: bool,
+    use_pvc_data: bool,
+    fwhm: int = 0,
+) -> dict:
     from pathlib import Path
+
+    acq_label = Tracer(acq_label)
+    region = SUVRReferenceRegion(suvr_reference_region)
 
     if use_brainmasked_image:
         mask_key_value = "_mask-brain"
@@ -651,15 +658,15 @@ def pet_volume_normalized_suvr_pet(
         fwhm_key_value = ""
         fwhm_description = "with no smoothing"
 
-    suvr_key_value = f"_suvr-{suvr_reference_region}"
+    suvr_key_value = f"_suvr-{region.value}"
 
     information = {
         "pattern": Path("pet")
         / "preprocessing"
         / f"group-{group_label}"
-        / f"*_trc-{acq_label}_pet_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
+        / f"*_trc-{acq_label.value}_pet_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
         "description": (
-            f"{mask_description} SUVR map (using {suvr_reference_region} region) of {acq_label}-PET "
+            f"{mask_description} SUVR map (using {region.value} region) of {acq_label.value}-PET "
             f"{pvc_description} and {fwhm_description} in Ixi549Space space based on {group_label} DARTEL template"
         ),
         "needed_pipeline": "pet-volume",
@@ -667,11 +674,15 @@ def pet_volume_normalized_suvr_pet(
     return information
 
 
-# pet-linear
-
-
-def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
+def pet_linear_nii(
+    acq_label: Union[str, Tracer],
+    suvr_reference_region: Union[str, SUVRReferenceRegion],
+    uncropped_image: bool,
+) -> dict:
     from pathlib import Path
+
+    acq_label = Tracer(acq_label)
+    region = SUVRReferenceRegion(suvr_reference_region)
 
     if uncropped_image:
         description = ""
@@ -680,7 +691,7 @@ def pet_linear_nii(acq_label, suvr_reference_region, uncropped_image):
 
     information = {
         "pattern": Path("pet_linear")
-        / f"*_trc-{acq_label}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{suvr_reference_region}_pet.nii.gz",
+        / f"*_trc-{acq_label.value}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{region.value}_pet.nii.gz",
         "description": "",
         "needed_pipeline": "pet-linear",
     }

@@ -7,7 +7,7 @@ import nibabel as nib
 import numpy as np
 import pytest
 
-from clinica.utils.pet import Tracer
+from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
 
 @pytest.mark.slow
@@ -26,10 +26,11 @@ def run_pet_surface(
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     tracer = Tracer.FDG
+    region = SUVRReferenceRegion.PONS
 
     parameters = {
         "acq_label": tracer,
-        "suvr_reference_region": "pons",
+        "suvr_reference_region": region,
         "pvc_psf_tsv": fspath(input_dir / "subjects.tsv"),
         "longitudinal": False,
         "skip_question": False,
@@ -57,11 +58,11 @@ def run_pet_surface(
             )
             out = fspath(
                 output_folder
-                / f"sub-ADNI011S4105_ses-M000_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
+                / f"sub-ADNI011S4105_ses-M000_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
             )
             ref = fspath(
                 ref_dir
-                / f"sub-ADNI011S4105_ses-M000_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
+                / f"sub-ADNI011S4105_ses-M000_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
             )
             assert np.allclose(
                 np.squeeze(nib.load(out).get_fdata(dtype="float32")),
@@ -89,10 +90,11 @@ def run_pet_surface_longitudinal(
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
     tracer = Tracer.FDG
+    region = SUVRReferenceRegion.PONS
 
     parameters = {
-        "acq_label": Tracer.FDG,
-        "suvr_reference_region": "pons",
+        "acq_label": tracer,
+        "suvr_reference_region": region,
         "pvc_psf_tsv": fspath(input_dir / "subjects.tsv"),
         "longitudinal": True,
     }
@@ -124,11 +126,11 @@ def run_pet_surface_longitudinal(
         for fwhm in (0, 5, 10, 15, 20, 25):
             out = fspath(
                 output_folder
-                / f"{image_id}_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
+                / f"{image_id}_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
             )
             ref = fspath(
                 ref_dir
-                / f"{image_id}_trc-{tracer}_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
+                / f"{image_id}_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
             )
             assert np.allclose(
                 np.squeeze(nib.load(out).get_fdata(dtype="float32")),

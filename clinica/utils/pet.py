@@ -2,6 +2,7 @@
 import os
 import typing as ty
 from enum import Enum
+from pathlib import Path
 
 import pandas as pd
 
@@ -20,6 +21,13 @@ class Tracer(str, Enum):
     FBB = "18FFBB"
     FDG = "18FFDG"
     FMM = "18FFMM"
+
+
+class SUVRReferenceRegion(str, Enum):
+    PONS = "pons"
+    CEREBELLUM_PONS = "cerebellumPons"
+    PONS2 = "pons2"
+    CEREBELLUM_PONS2 = "cerebellumPons2"
 
 
 class ReconstructionMethod(str, Enum):
@@ -51,7 +59,7 @@ def read_psf_information(
     pvc_psf_tsv: os.PathLike,
     subject_ids: ty.List[str],
     session_ids: ty.List[str],
-    pet_tracer: str,
+    pet_tracer: ty.Union[str, Tracer],
 ) -> ty.List[ty.List[int]]:
     """Read PSF information from TSV file.
 
@@ -76,7 +84,7 @@ def read_psf_information(
         .. warning::
             Must have the same length as `subject_ids`.
 
-    pet_tracer : str
+    pet_tracer : str or Tracer
         Tracer we want to select in the 'acq_label' column.
         Other tracers will not be read in this function
 
@@ -104,6 +112,7 @@ def read_psf_information(
         "psf_y",
         "psf_z",
     }
+    pet_tracer = Tracer(pet_tracer)
     psf_df = pd.read_csv(pvc_psf_tsv, sep="\t")
     diff = valid_columns.symmetric_difference(set(psf_df.columns))
     if len(diff) > 0:
@@ -116,17 +125,17 @@ def read_psf_information(
     psf = []
     for sub, ses in zip(subject_ids, session_ids):
         result = psf_df.query(
-            f"participant_id == '{sub}' and session_id == '{ses}' and acq_label == '{pet_tracer}'"
+            f"participant_id == '{sub}' and session_id == '{ses}' and acq_label == '{pet_tracer.value}'"
         )
         if len(result) == 0:
             raise RuntimeError(
-                f"Subject {sub} with session {ses} and tracer {pet_tracer} "
+                f"Subject {sub} with session {ses} and tracer {pet_tracer.value} "
                 f"that you want to proceed was not found in the TSV file containing "
                 f"PSF specifications ({pvc_psf_tsv})."
             )
         if len(result) > 1:
             raise RuntimeError(
-                f"Subject {sub} with session {ses} and tracer {pet_tracer} "
+                f"Subject {sub} with session {ses} and tracer {pet_tracer.value} "
                 f"that you want to proceed was found multiple times "
                 f"in the TSV file containing PSF specifications ({pvc_psf_tsv})."
             )
@@ -135,37 +144,34 @@ def read_psf_information(
     return psf
 
 
-LIST_SUVR_REFERENCE_REGIONS = ["pons", "cerebellumPons", "pons2", "cerebellumPons2"]
-
-
-def get_suvr_mask(suvr_reference_region: str) -> os.PathLike:
+def get_suvr_mask(region: ty.Union[str, SUVRReferenceRegion]) -> Path:
     """Returns the path to the SUVR mask from SUVR reference region label.
 
     Parameters
     ----------
-    suvr_reference_region : str
+    region : str or SUVRReferenceRegion
         The label of the SUVR reference region.
         Supported labels are: 'pons', 'cerebellumPons', 'pons2', and 'cerebellumPons2'
 
     Returns
     -------
-    PathLike :
+    Path :
         The path to the SUVR mask.
     """
-    from pathlib import Path
-
     current_dir = Path(os.path.realpath(__file__))
     masks_dir = current_dir.parent.parent / "resources" / "masks"
 
-    suvr_reference_region_labels_to_filenames = {
-        "pons": "region-pons_eroded-6mm_mask.nii.gz",
-        "cerebellumPons": "region-cerebellumPons_eroded-6mm_mask.nii.gz",
-        "pons2": "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz",
-        "cerebellumPons2": "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz",
-    }
-    if suvr_reference_region not in suvr_reference_region_labels_to_filenames:
-        raise ValueError(
-            f"SUVR reference region label {suvr_reference_region} is not supported. "
-            f"Supported values are : {list(suvr_reference_region_labels_to_filenames.keys())}."
-        )
-    return masks_dir / suvr_reference_region_labels_to_filenames[suvr_reference_region]
+    return masks_dir / _get_suvr_reference_region_labels_filename(
+        SUVRReferenceRegion(region)
+    )
+
+
+def _get_suvr_reference_region_labels_filename(region: SUVRReferenceRegion) -> str:
+    if region == SUVRReferenceRegion.PONS:
+        return "region-pons_eroded-6mm_mask.nii.gz"
+    if region == SUVRReferenceRegion.CEREBELLUM_PONS:
+        return "region-cerebellumPons_eroded-6mm_mask.nii.gz"
+    if region == SUVRReferenceRegion.PONS2:
+        return "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz"
+    if region == SUVRReferenceRegion.CEREBELLUM_PONS2:
+        return "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz"

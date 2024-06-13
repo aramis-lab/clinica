@@ -1,7 +1,5 @@
 # Functions used by nipype interface.
-import os
-
-from nibabel.nifti1 import Nifti1Image
+from clinica.utils.pet import SUVRReferenceRegion
 
 
 def init_input_node(pet):
@@ -173,7 +171,9 @@ def rename_into_caps(
         _rename_pet_into_caps,
         _rename_transformation_into_caps,
     )
+    from clinica.utils.pet import SUVRReferenceRegion
 
+    suvr_reference_region = SUVRReferenceRegion(suvr_reference_region)
     bids_entities = _get_bids_entities_without_suffix(pet_filename_bids, suffix="pet")
     if output_dir:
         bids_entities = os.path.join(output_dir, bids_entities)
@@ -201,12 +201,10 @@ def _get_bids_entities_without_suffix(filename: str, suffix: str) -> str:
 
 
 def _rename_pet_into_caps(
-    entities: str, filename: str, cropped: bool, suvr_reference_region: str
+    entities: str, filename: str, cropped: bool, region: SUVRReferenceRegion
 ) -> str:
     """Rename into CAPS PET."""
-    return _rename(
-        filename, entities, _get_pet_bids_components(cropped, suvr_reference_region)
-    )
+    return _rename(filename, entities, _get_pet_bids_components(cropped, region))
 
 
 def _rename_transformation_into_caps(entities: str, filename: str) -> str:
@@ -232,14 +230,14 @@ def _rename(filename: str, entities: str, suffix: str):
     return rename.run().outputs.out_file
 
 
-def _get_pet_bids_components(cropped: bool, suvr_reference_region: str) -> str:
+def _get_pet_bids_components(cropped: bool, region: SUVRReferenceRegion) -> str:
     """Return a string composed of the PET-specific entities (space, resolution,
     desc, and suvr), suffix, and extension.
     """
     space = "_space-MNI152NLin2009cSym"
     resolution = "_res-1x1x1"
     desc = "_desc-Crop" if cropped else ""
-    suvr = f"_suvr-{suvr_reference_region}"
+    suvr = f"_suvr-{region.value}"
 
     return f"{space}{desc}{resolution}{suvr}_pet.nii.gz"
 

@@ -2,7 +2,7 @@
 
 import click
 
-from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS, ReconstructionMethod, Tracer
+from clinica.utils.pet import ReconstructionMethod, SUVRReferenceRegion, Tracer
 
 from .option_group import option
 
@@ -118,7 +118,7 @@ subjects_sessions_tsv = option(
 suvr_reference_region = option(
     "-suvr",
     "--suvr_reference_region",
-    type=click.Choice(LIST_SUVR_REFERENCE_REGIONS),
+    type=click.Choice(SUVRReferenceRegion),
     help=(
         "Intensity normalization using the average PET uptake in reference regions "
         "resulting in a standardized uptake value ratio (SUVR) map. It can be "

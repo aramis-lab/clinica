@@ -887,9 +887,9 @@ def get_wf(
     white_surface_left,
     white_surface_right,
     working_directory_subjects,
-    acq_label,
+    acq_label: str,
     csv_segmentation,
-    suvr_reference_region,
+    suvr_reference_region: str,
     matscript_folder_inverse_deformation,
     destrieux_left,
     destrieux_right,
@@ -934,12 +934,19 @@ def get_wf(
 
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
     from clinica.utils.filemanip import get_subject_id, load_volume, unzip_nii
-    from clinica.utils.pet import get_suvr_mask, read_psf_information
+    from clinica.utils.pet import (
+        SUVRReferenceRegion,
+        Tracer,
+        get_suvr_mask,
+        read_psf_information,
+    )
     from clinica.utils.spm import get_tpm, use_spm_standalone_if_available
     from clinica.utils.ux import print_begin_image
 
     using_spm_standalone = use_spm_standalone_if_available()
 
+    suvr_reference_region = SUVRReferenceRegion(suvr_reference_region)
+    acq_label = Tracer(acq_label)
     image_id = get_subject_id(pet)
     try:
         load_volume(pet)
@@ -961,7 +968,7 @@ def get_wf(
     unzip_orig_nu = unzip_pet.clone(name="unzip_orig_nu")
 
     unzip_mask = unzip_pet.clone(name="unzip_mask")
-    unzip_mask.inputs.in_file = get_suvr_mask(suvr_reference_region)
+    unzip_mask.inputs.in_file = str(get_suvr_mask(suvr_reference_region))
 
     coreg = pe.Node(Coregister(), name="coreg")
 
@@ -1057,7 +1064,7 @@ def get_wf(
         ),
         name="pons_normalization",
     )
-    pons_normalization.inputs.pet_tracer = acq_label
+    pons_normalization.inputs.pet_tracer = acq_label.value
 
     # read_psf_information expects a list of subjects/sessions and returns a list of PSF
     psf_info = read_psf_information(pvc_psf_tsv, [subject_id], [session_id], acq_label)[
@@ -1286,36 +1293,36 @@ def get_wf(
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*",
             r"\1/\2_\3_trc-"
-            + acq_label
+            + acq_label.value
             + r"_pet_space-native_suvr-"
-            + suvr_reference_region
+            + suvr_reference_region.value
             + r"_pvc-iy_hemi-\4_projection.mgh",
         ),
         # Projection in fsaverage
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
             r"\1/\2_\3_trc-"
-            + acq_label
+            + acq_label.value
             + r"_pet_space-fsaverage_suvr-"
-            + suvr_reference_region
+            + suvr_reference_region.value
             + r"_pvc-iy_hemi-\4_fwhm-\5_projection.mgh",
         ),
         # TSV file for Destrieux atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/destrieux_tsv\/destrieux.tsv",
             r"\1/atlas_statistics/\2_\3_trc-"
-            + acq_label
+            + acq_label.value
             + "_pet_space-destrieux_pvc-iy_suvr-"
-            + suvr_reference_region
+            + suvr_reference_region.value
             + "_statistics.tsv",
         ),
         # TSV file for Desikan atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/desikan_tsv\/desikan.tsv",
             r"\1/atlas_statistics/\2_\3_trc-"
-            + acq_label
+            + acq_label.value
             + "_pet_space-desikan_pvc-iy_suvr-"
-            + suvr_reference_region
+            + suvr_reference_region.value
             + "_statistics.tsv",
         ),
     ]
@@ -1329,36 +1336,36 @@ def get_wf(
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*",
             r"\1/\2_\3_\4_trc-"
-            + acq_label
+            + acq_label.value
             + r"_pet_space-native_suvr-"
-            + suvr_reference_region
+            + suvr_reference_region.value
             + r"_pvc-iy_hemi-\5_projection.mgh",
         ),
         # Projection in fsaverage
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
             r"\1/\2_\3_\4_trc-"
-            + acq_label
+            + acq_label.value
             + r"_pet_space-fsaverage_suvr-"
-            + suvr_reference_region
+            + suvr_reference_region.value
             + r"_pvc-iy_hemi-\5_fwhm-\6_projection.mgh",
         ),
         # TSV file for Destrieux atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/destrieux_tsv\/destrieux.tsv",
             r"\1/atlas_statistics/\2_\3_\4_trc-"
-            + acq_label
+            + acq_label.value
             + "_pet_space-destrieux_pvc-iy_suvr-"
-            + suvr_reference_region
+            + suvr_reference_region.value
             + "_statistics.tsv",
         ),
         # TSV file for Desikan atlas
         (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/desikan_tsv\/desikan.tsv",
             r"\1/atlas_statistics/\2_\3_\4_trc-"
-            + acq_label
+            + acq_label.value
             + "_pet_space-desikan_pvc-iy_suvr-"
-            + suvr_reference_region
+            + suvr_reference_region.value
             + "_statistics.tsv",
         ),
     ]

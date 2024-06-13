@@ -5,7 +5,7 @@ This pipeline performs statistical analysis (currently group comparison) on volu
 To that aim, the pipeline relies on the tools available in [SPM](http://www.fil.ion.ucl.ac.uk/spm/).
 
 Volume-based measurements are analyzed in the [IXI549Space](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html#standard-template-identifiers) (from SPM12).
-Currently, this pipeline mainly handles gray matter maps obtained from T1-weighted MR images using the [`t1-volume` pipeline](../T1_Volume) and standardized uptake value ratio (SUVR) maps obtained from PET data using the [`pet-volume` pipeline](../PET_Volume).
+Currently, this pipeline mainly handles gray matter maps obtained from T1-weighted MR images using the [`t1-volume` pipeline](../T1_Volume) and standardized uptake value ratio ([SUVR](../glossary.md#suvr)) maps obtained from [PET](../glossary.md#pet) data using the [`pet-volume` pipeline](../PET_Volume).
 
 ## Dependencies
 
@@ -46,7 +46,7 @@ Default value is `8` mm.
 Pipeline options if you use inputs from `pet-volume` pipeline:
 
 - `--acq_label`: Name of the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
-- `--suvr_reference_region`: Reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
+- `--suvr_reference_region`: Reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio ([SUVR](../glossary.md#suvr)) map.
 It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
 - `--use_pvc_data`: Use PET data with partial value correction (by default, PET data with no PVC are used)
 

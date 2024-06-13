@@ -2,15 +2,21 @@ from pathlib import Path
 
 import pytest
 
+from clinica.utils.pet import SUVRReferenceRegion
+
 
 @pytest.mark.parametrize(
     "cropped,suvr_reference_region,expected",
     [
-        (False, "foo", "_space-MNI152NLin2009cSym_res-1x1x1_suvr-foo_pet.nii.gz"),
+        (
+            False,
+            SUVRReferenceRegion.PONS,
+            "_space-MNI152NLin2009cSym_res-1x1x1_suvr-pons_pet.nii.gz",
+        ),
         (
             True,
-            "bar",
-            "_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-bar_pet.nii.gz",
+            SUVRReferenceRegion.CEREBELLUM_PONS,
+            "_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-cerebellumPons_pet.nii.gz",
         ),
     ],
 )
@@ -50,14 +56,14 @@ def test_rename_into_caps(tmp_path):
         str(source_file),
         str(pet_file_to_rename),
         str(transformation_file_to_rename),
-        "suvrfoo",
+        SUVRReferenceRegion.PONS,
         True,
         output_dir=tmp_path,  # Force the writing to tmp_path instead of current folder...
     )
     assert (
         Path(a)
         == tmp_path
-        / "sub-01_ses-M000_run-01_space-MNI152NLin2009cSym_res-1x1x1_suvr-suvrfoo_pet.nii.gz"
+        / "sub-01_ses-M000_run-01_space-MNI152NLin2009cSym_res-1x1x1_suvr-pons_pet.nii.gz"
     )
     assert Path(b) == tmp_path / "sub-01_ses-M000_run-01_space-T1w_rigid.mat"
     assert c is None
