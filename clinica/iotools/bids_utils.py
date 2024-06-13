@@ -49,6 +49,17 @@ BIDS_VALIDATOR_CONFIG = {
 }
 
 
+def rename_study_to_bids_id(study_name: StudyName, study_id: str) -> str:
+    # todo : probably useful somewhere else
+    # todo : ok with "sub-truc" devant ?
+    if study_name == StudyName.OASIS:
+        return "sub-OASIS1" + study_id.split("_")[1]
+    elif study_name == StudyName.OASIS3:
+        return "sub-OASIS3" + study_id.replace("OAS3", "")
+    elif study_name == StudyName.ADNI:
+        return "sub-ADNI" + remove_space_and_symbols(study_id)
+
+
 # -- Methods for the clinical data --
 def create_participants_df(
     study_name: StudyName,
@@ -85,117 +96,87 @@ def create_participants_df(
     import numpy as np
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
-    from clinica.utils.stream import cprint
 
-    fields_bids = ["participant_id"]
-    prev_location = ""
-    index_to_drop = []
-    subjects_to_drop = []
     study_name = StudyName(study_name)
     location_name = f"{study_name.value} location"
 
     participants_specs = pd.read_csv(
         clinical_specifications_folder / "participant.tsv", sep="\t"
     )
-    participant_fields_db = participants_specs[study_name.value]
-    field_location = participants_specs[location_name]
-    participant_fields_bids = participants_specs["BIDS CLINICA"]
+    clinical_spec_df = participants_specs[
+        [study_name.value, location_name, "BIDS CLINICA"]
+    ].copy()
 
-    # Extract the list of the available BIDS fields for the dataset
-    for i in range(0, len(participant_fields_db)):
-        if not pd.isnull(participant_fields_db[i]):
-            fields_bids.append(participant_fields_bids[i])
+    clinical_spec_df.rename(
+        columns={
+            study_name.value: "Study_Fields",
+            location_name: "Field_csv",
+            "BIDS CLINICA": "BIDS_Fields",
+        },
+        inplace=True,
+    )
+    clinical_spec_df.dropna(subset="Study_Fields", inplace=True)
 
-    # Init the dataframe that will be saved in the file participants.tsv
-    participant_df = pd.DataFrame(columns=fields_bids)
+    participants_df = pd.DataFrame(columns=["alternative_id_1"])
 
-    for i in range(0, len(participant_fields_db)):
-        # If a field not empty is found
-        if not pd.isnull(participant_fields_db[i]):
-            # Extract the file location of the field and read the value from the file
-            tmp = field_location[i].split("/")
-            location = tmp[0]
-            # If a sheet is available
-            sheet = tmp[1] if len(tmp) > 1 else ""
-            # Check if the file to open for a certain field is the same of the previous field
-            if location == prev_location and sheet == prev_sheet:
-                pass
-            else:
-                file_ext = os.path.splitext(location)[1]
-                file_to_read_path = clinical_data_dir / location
-                if file_ext == ".xlsx":
-                    file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
-                elif file_ext == ".csv":
-                    file_to_read = load_clinical_csv(
-                        clinical_data_dir, location.split(".")[0]
-                    )
-                prev_location = location
-                prev_sheet = sheet
-
-            field_col_values = []
-            # For each field in fields_dataset extract all the column values
-            for j in range(0, len(file_to_read)):
-                # Convert the alternative_id_1 to string if is an integer/float
-                value_to_read = file_to_read[participant_fields_db[i]]
-                if participant_fields_bids[i] == "alternative_id_1" and (
-                    value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64
-                ):
-                    if not pd.isnull(file_to_read.at[j, participant_fields_db[i]]):
-                        value_to_append = str(
-                            file_to_read.at[j, participant_fields_db[i]]
-                        ).rstrip(".0")
-                    else:
-                        value_to_append = np.NaN
-                else:
-                    value_to_append = file_to_read.at[j, participant_fields_db[i]]
-                field_col_values.append(value_to_append)
-            # Add the extracted column to the participant_df
-            participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
-
-    if study_name == StudyName.ADNI or study_name == StudyName.AIBL:
-        # ADNImerge contains one row for each visits so there are duplicates
-        participant_df = participant_df.drop_duplicates(
-            subset=["alternative_id_1"], keep="first"
+    for file in clinical_spec_df["Field_csv"].unique():
+        to_extract = (
+            clinical_spec_df["Study_Fields"]
+            .loc[clinical_spec_df["Field_csv"] == file]
+            .values
         )
-    elif study_name == StudyName.OASIS:
-        # OASIS provides several MRI for the same session
-        participant_df = participant_df[
-            ~participant_df.alternative_id_1.str.endswith("_MR2")
-        ]
-    participant_df.reset_index(inplace=True, drop=True)
 
-    # Adding participant_id column with BIDS ids
-    for i in range(0, len(participant_df)):
-        if study_name == StudyName.OASIS:
-            value = (participant_df["alternative_id_1"][i].split("_"))[1]
-        elif study_name == StudyName.OASIS3:
-            value = participant_df["alternative_id_1"][i].replace("OAS3", "")
-        else:
-            value = remove_space_and_symbols(participant_df["alternative_id_1"][i])
-
-        bids_id = [s for s in bids_ids if value in s]
-
-        if len(bids_id) == 0:
-            index_to_drop.append(i)
-            subjects_to_drop.append(value)
-        else:
-            participant_df.at[i, "participant_id"] = bids_id[0]
-
-    if len(subjects_to_drop) > 0:
-        cprint(
-            msg=(
-                "The following subjects of dataset directory were not found in your BIDS folder :\n"
-                + ", ".join(subjects_to_drop)
-            ),
-            lvl="info",
+        id_name = (
+            clinical_spec_df["Study_Fields"]
+            .loc[clinical_spec_df["BIDS_Fields"] == "alternative_id_1"]
+            .item()
         )
+        if id_name not in to_extract:
+            to_extract = np.append(to_extract, id_name)
+
+        file_to_read = load_clinical_csv(clinical_data_dir, file.rsplit(".csv")[0])
+
+        extracted_df = file_to_read[to_extract].copy()
+        extracted_df.rename(
+            columns=lambda x: clinical_spec_df[
+                clinical_spec_df.Study_Fields == x
+            ].BIDS_Fields.item(),
+            inplace=True,
+        )
+
+        if study_name == StudyName.ADNI or study_name == StudyName.AIBL:
+            # ADNImerge contains one row for each visit so there are duplicates
+            extracted_df = extracted_df.drop_duplicates(
+                subset=["alternative_id_1"], keep="first"
+            )
+        elif study_name == StudyName.OASIS:
+            # OASIS provides several MRI for the same session
+            extracted_df = extracted_df[
+                ~extracted_df["alternative_id_1"].str.endswith("_MR2")
+            ]
+
+        participants_df = participants_df.merge(
+            extracted_df, how="outer", on="alternative_id_1"
+        )
+
+    participants_df.reset_index(inplace=True, drop=True)
+    # Adding BIDS id based on study specific id
+    participants_df["participant_id"] = participants_df["alternative_id_1"].apply(
+        lambda x: rename_study_to_bids_id(study_name, x)
+    )
+
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
-        participant_df = participant_df.drop(index_to_drop)
+        participants_df["in_bids"] = participants_df["participant_id"].apply(
+            lambda x: True if x in bids_ids else False
+        )
+        participants_df = participants_df[participants_df["in_bids"]].drop(
+            columns="in_bids"
+        )
 
-    participant_df = participant_df.fillna("n/a")
-
-    return participant_df
+    participants_df = participants_df.fillna("n/a")
+    participants_df.reset_index(inplace=True, drop=True)
+    return participants_df
 
 
 def create_sessions_dict_oasis(
