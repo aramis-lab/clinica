@@ -226,9 +226,7 @@ def test_create_participants_df(tmp_path, bids_ids, expected, study_name):
         clinical_data_dir=clinical_path,
         bids_ids=bids_ids,
     ).reset_index(drop=True)
-    assert set(expected.columns) == set(result.columns)
-    for col in result.columns:
-        assert all(expected[col] == result[col])
+    assert all(result.eq(expected))
 
 
 def test_get_bids_subjs_list(tmp_path):
