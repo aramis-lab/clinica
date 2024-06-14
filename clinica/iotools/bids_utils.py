@@ -49,15 +49,53 @@ BIDS_VALIDATOR_CONFIG = {
 }
 
 
-def rename_study_to_bids_id(study_name: StudyName, study_id: str) -> str:
-    # todo : probably useful somewhere else
-    # todo : ok with "sub-truc" devant ?
+def _rename_study_to_bids_id(study_name: StudyName, study_id: str) -> str:
     if study_name == StudyName.OASIS:
         return "sub-OASIS1" + study_id.split("_")[1]
-    elif study_name == StudyName.OASIS3:
+    if study_name == StudyName.OASIS3:
         return "sub-OASIS3" + study_id.replace("OAS3", "")
-    elif study_name == StudyName.ADNI:
+    if study_name == StudyName.ADNI:
         return "sub-ADNI" + remove_space_and_symbols(study_id)
+    else:
+        # todo : add other datasets
+        raise ValueError(
+            f"Study {study_name.value} is not supported by 'rename_study_to_bids_id' yet."
+        )
+
+
+# todo : create function for other direction -> bids to study
+
+
+def _read_study_specifications_file(
+    study_name: StudyName, clinical_specifications_folder: Path
+) -> pd.DataFrame:
+    location_name = f"{study_name.value} location"
+    if study_name == StudyName.ADNI:
+        clinical_spec_df = pd.read_csv(
+            clinical_specifications_folder / "participant.tsv",
+            sep="\t",
+            usecols=[study_name.value, location_name, "BIDS CLINICA"],
+        )
+    elif study_name == StudyName.OASIS:
+        clinical_spec_df = pd.read_excel(
+            clinical_specifications_folder / "TODO.xlsx"
+        )  # todo : what name ?
+    else:
+        raise ValueError(
+            f"Study {study_name.value} is not supported by '_read_study_specifications_file'."
+        )
+
+    clinical_spec_df.rename(
+        columns={
+            study_name.value: "Study_Fields",
+            location_name: "Field_csv",
+            "BIDS CLINICA": "BIDS_Fields",
+        },
+        inplace=True,
+    )
+    clinical_spec_df.dropna(subset="Study_Fields", inplace=True)
+    clinical_spec_df.drop_duplicates(subset="Study_Fields", keep="first", inplace=True)
+    return clinical_spec_df
 
 
 # -- Methods for the clinical data --
@@ -68,7 +106,7 @@ def create_participants_df(
     bids_ids: list[str],
     delete_non_bids_info: bool = True,
 ) -> pd.DataFrame:
-    """Create the file participants.tsv.
+    """Create the file participants.tsv. #todo : verify doc is clear on that point
 
     Parameters
     ----------
@@ -82,7 +120,7 @@ def create_participants_df(
         The path to the directory where the clinical data are stored.
 
     bids_ids : list of str
-        The list of bids ids.
+        The list of bids ids "sub-truc" #todo
 
     delete_non_bids_info : bool, optional
         If True delete all the rows of the subjects that are not available in the BIDS dataset.
@@ -98,28 +136,20 @@ def create_participants_df(
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
 
     study_name = StudyName(study_name)
-    location_name = f"{study_name.value} location"
+    if study_name not in (StudyName.OASIS, StudyName.ADNI):
+        # todo : add unit test for this case
+        raise ValueError(
+            f"Study {study_name.value} is not supported by 'create_participants_df'."
+        )
 
-    participants_specs = pd.read_csv(
-        clinical_specifications_folder / "participant.tsv", sep="\t"
+    clinical_spec_df = _read_study_specifications_file(
+        study_name, clinical_specifications_folder
     )
-    clinical_spec_df = participants_specs[
-        [study_name.value, location_name, "BIDS CLINICA"]
-    ].copy()
-
-    clinical_spec_df.rename(
-        columns={
-            study_name.value: "Study_Fields",
-            location_name: "Field_csv",
-            "BIDS CLINICA": "BIDS_Fields",
-        },
-        inplace=True,
-    )
-    clinical_spec_df.dropna(subset="Study_Fields", inplace=True)
 
     participants_df = pd.DataFrame(columns=["alternative_id_1"])
 
     for file in clinical_spec_df["Field_csv"].unique():
+        # todo : merge on RID
         to_extract = (
             clinical_spec_df["Study_Fields"]
             .loc[clinical_spec_df["Field_csv"] == file]
@@ -161,7 +191,7 @@ def create_participants_df(
 
     # Adding BIDS id based on study specific id
     participants_df["participant_id"] = participants_df["alternative_id_1"].apply(
-        lambda x: rename_study_to_bids_id(study_name, x)
+        lambda x: _rename_study_to_bids_id(study_name, x)
     )
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset

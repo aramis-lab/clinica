@@ -42,6 +42,7 @@ EXPECTED_README_CONTENT = Template(
 
 
 def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
+    # todo : enlever OASIS3
     spec_df = pd.DataFrame(
         {
             "BIDS CLINICA": [
@@ -217,6 +218,7 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
     ],
 )
 def test_create_participants_df(tmp_path, bids_ids, expected, study_name):
+    # todo : enlever OASIS3 (raise Value Error)
     from clinica.iotools.bids_utils import create_participants_df
 
     clinical_path = create_clinical_data(tmp_path, study_name)
