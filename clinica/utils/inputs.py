@@ -252,6 +252,7 @@ def check_caps_folder(caps_directory: Union[str, os.PathLike]) -> None:
     from clinica.utils.exceptions import ClinicaCAPSError
 
     caps_directory = _validate_caps_folder_existence(caps_directory)
+    _check_dataset_description_exists_in_caps(caps_directory)
 
     sub_folders = [f for f in caps_directory.iterdir() if f.name.startswith("sub-")]
     if len(sub_folders) > 0:
