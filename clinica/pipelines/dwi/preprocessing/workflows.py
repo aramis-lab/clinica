@@ -126,7 +126,7 @@ def eddy_fsl_pipeline(
 
     generate_index = pe.Node(
         niu.Function(
-            input_names=["b_values_filename", "output_dir"],
+            input_names=["b_values_filename", "image_id", "output_dir"],
             output_names=["out_file"],
             function=generate_index_file_task,
         ),
@@ -162,7 +162,6 @@ def eddy_fsl_pipeline(
             [("phase_encoding_direction", "fsl_phase_encoding_direction")],
         ),
         (inputnode, generate_index, [("b_values_filename", "b_values_filename")]),
-        (inputnode, generate_index, [("image_id", "image_id")]),
         (inputnode, eddy, [("b_vectors_filename", "in_bvec")]),
         (inputnode, eddy, [("b_values_filename", "in_bval")]),
         (inputnode, eddy, [("dwi_filename", "in_file")]),
@@ -176,6 +175,7 @@ def eddy_fsl_pipeline(
     if image_id:
         connections += [
             (inputnode, generate_acq, [("image_id", "image_id")]),
+            (inputnode, generate_index, [("image_id", "image_id")]),
             (inputnode, eddy, [("image_id", "out_base")]),
         ]
 
