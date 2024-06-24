@@ -119,7 +119,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
                 )
                 subjects.append(f"sub-{dwi_image_file_bids.subject}")
                 sessions.append(f"ses-{dwi_image_file_bids.session}")
-            except IOError as e:
+            except (IOError, ValueError) as e:
                 cprint(
                     f"Ignoring DWI scan for subject {dwi_image_file_bids.subject} "
                     f"and session {dwi_image_file_bids.session} for the following reason: {e}",
