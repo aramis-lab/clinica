@@ -216,7 +216,7 @@ def _get_file_locally_or_download(filename: str) -> Path:
             RemoteFileStructure(
                 filename=filename,
                 url="https://aramislab.paris.inria.fr/files/data/img_t1_linear/",
-                checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
+                checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
             ),
             resource_folder,
         )
