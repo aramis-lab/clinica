@@ -206,21 +206,32 @@ def _crop_array(array: np.ndarray, bbox: Bbox) -> np.ndarray:
     return array[*bbox.get_slices()]
 
 
+def _get_file_locally_or_download(filename: str) -> Path:
+    from clinica.utils.inputs import RemoteFileStructure, fetch_file
+
+    resource_folder = Path(__file__).parent.parent / "resources" / "masks"
+    local_file = resource_folder / filename
+    if not local_file.exists():
+        fetch_file(
+            RemoteFileStructure(
+                filename=filename,
+                url="https://aramislab.paris.inria.fr/files/data/img_t1_linear/",
+                checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
+            ),
+            resource_folder,
+        )
+    if local_file.exists():
+        return local_file
+    raise FileNotFoundError(f"Unable to get file {filename} locally or remotely.")
+
+
 def _load_mni_cropped_template() -> nib.Nifti1Image:
-    return nib.load(
-        Path(__file__).parent.parent
-        / "resources"
-        / "masks"
-        / "ref_cropped_template.nii.gz"
-    )
+    return nib.load(_get_file_locally_or_download("ref_cropped_template.nii.gz"))
 
 
 def _load_mni_template() -> nib.Nifti1Image:
     return nib.load(
-        Path(__file__).parent.parent
-        / "resources"
-        / "masks"
-        / "mni_icbm152_t1_tal_nlin_sym_09c.nii"
+        _get_file_locally_or_download("mni_icbm152_t1_tal_nlin_sym_09c.nii")
     )
 
 

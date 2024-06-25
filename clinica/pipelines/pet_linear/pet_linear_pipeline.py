@@ -86,14 +86,7 @@ class PETLinear(PETPipeline):
             url=url_aramis,
             checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
         )
-        FILE2 = RemoteFileStructure(
-            filename="ref_cropped_template.nii.gz",
-            url=url_aramis,
-            checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
-        )
-
         self.ref_template = join(path_to_mask, FILE1.filename)
-        self.ref_crop = join(path_to_mask, FILE2.filename)
         self.ref_mask = get_suvr_mask(self.parameters["suvr_reference_region"])
 
         if not (exists(self.ref_template)):
@@ -104,15 +97,6 @@ class PETLinear(PETPipeline):
                     msg=f"Unable to download required template (mni_icbm152) for processing: {err}",
                     lvl="error",
                 )
-        if not (exists(self.ref_crop)):
-            try:
-                fetch_file(FILE2, path_to_mask)
-            except IOError as err:
-                cprint(
-                    msg=f"Unable to download required template (ref_crop) for processing: {err}",
-                    lvl="error",
-                )
-
         # Inputs from BIDS directory
         try:
             pet_files, _ = clinica_file_reader(
@@ -381,11 +365,11 @@ class PETLinear(PETPipeline):
             name="cropNifti",
             interface=nutil.Function(
                 function=crop_nifti_task,
-                input_names=["input_image", "reference_image"],
+                input_names=["input_image", "output_path"],
                 output_names=["output_img"],
             ),
         )
-        crop_nifti_node.inputs.reference_image = self.ref_crop
+        crop_nifti_node.inputs.output_path = self.base_dir
 
         # 5. Print end message
         print_end_message = npe.Node(

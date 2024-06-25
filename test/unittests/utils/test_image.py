@@ -176,42 +176,52 @@ def test_mni_cropped_bbox():
     assert MNI_CROP_BBOX.end_z == 179
 
 
-def test_load_mni_cropped_template():
+def test_load_mni_cropped_template(tmp_path, mocker):
     from clinica.utils.image import _load_mni_cropped_template  # noqa
+
+    expected_affine = np.array(
+        [
+            [1.0, 0.0, 0.0, -84.0],
+            [0.0, 1.0, 0.0, -119.0],
+            [0.0, 0.0, 1.0, -78.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+    )
+    expected_shape = (169, 208, 179)
+    mocked = nib.Nifti1Image(np.zeros(expected_shape), affine=expected_affine)
+    mocked.to_filename(tmp_path / "mocked.nii.gz")
+    mocker.patch(
+        "clinica.utils.inputs.fetch_file", return_value=tmp_path / "mocked.nii.gz"
+    )
 
     img = _load_mni_cropped_template()
 
-    assert_array_equal(
-        img.affine,
-        np.array(
-            [
-                [1.0, 0.0, 0.0, -84.0],
-                [0.0, 1.0, 0.0, -119.0],
-                [0.0, 0.0, 1.0, -78.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ]
-        ),
-    )
-    assert img.shape == (169, 208, 179)
+    assert_array_equal(img.affine, expected_affine)
+    assert img.shape == expected_shape
 
 
-def test_load_mni_template():
+def test_load_mni_template(tmp_path, mocker):
     from clinica.utils.image import _load_mni_template  # noqa
+
+    expected_affine = np.array(
+        [
+            [1.0, 0.0, 0.0, -96.0],
+            [0.0, 1.0, 0.0, -132.0],
+            [0.0, 0.0, 1.0, -78.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+    )
+    expected_shape = (193, 229, 193)
+    mocked = nib.Nifti1Image(np.zeros(expected_shape), affine=expected_affine)
+    mocked.to_filename(tmp_path / "mocked.nii.gz")
+    mocker.patch(
+        "clinica.utils.inputs.fetch_file", return_value=tmp_path / "mocked.nii.gz"
+    )
 
     img = _load_mni_template()
 
-    assert_array_equal(
-        img.affine,
-        np.array(
-            [
-                [1.0, 0.0, 0.0, -96.0],
-                [0.0, 1.0, 0.0, -132.0],
-                [0.0, 0.0, 1.0, -78.0],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
-        ),
-    )
-    assert img.shape == (193, 229, 193)
+    assert_array_equal(img.affine, expected_affine)
+    assert img.shape == expected_shape
 
 
 def test_crop_nifti_error(tmp_path):
