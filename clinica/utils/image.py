@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
 from typing import Callable, Optional, Tuple, Union
@@ -175,32 +176,100 @@ def remove_dummy_dimension_from_image(image: str, output: str) -> str:
     return output
 
 
-def crop_nifti(input_image: Path, reference_image: Path) -> Path:
-    """Crop input image based on the reference.
+@dataclass
+class Bbox:
+    """Bounding Box for 3D arrays."""
 
-    It uses nilearn `resample_to_img` function.
+    start_x: int
+    end_x: int
+    start_y: int
+    end_y: int
+    start_z: int
+    end_z: int
+
+    def get_slices(self) -> tuple:
+        return (
+            slice(self.start_x, self.end_x),
+            slice(self.start_y, self.end_y),
+            slice(self.start_z, self.end_z),
+        )
+
+    def __repr__(self):
+        return f"( ( {self.start_x}, {self.end_x} ), ( {self.start_y}, {self.end_y} ), ( {self.start_z}, {self.end_z} ) )"
+
+
+# This bounding box has been pre-computed by clinica developers
+MNI_CROP_BBOX = Bbox(12, 181, 13, 221, 0, 179)
+
+
+def _crop_array(array: np.ndarray, bbox: Bbox) -> np.ndarray:
+    return array[*bbox.get_slices()]
+
+
+def _load_mni_cropped_template() -> nib.Nifti1Image:
+    return nib.load(
+        Path(__file__).parent.parent
+        / "resources"
+        / "masks"
+        / "ref_cropped_template.nii.gz"
+    )
+
+
+def _load_mni_template() -> nib.Nifti1Image:
+    return nib.load(
+        Path(__file__).parent.parent
+        / "resources"
+        / "masks"
+        / "mni_icbm152_t1_tal_nlin_sym_09c.nii"
+    )
+
+
+def crop_nifti(input_image: Path, output_dir: Optional[Path] = None) -> Path:
+    """Crop input image.
+
+    The function expects a 3D anatomical image and will crop it
+    using a pre-computed bounding box. This bounding box has been
+    used to crop the MNI template (located in
+    clinica/resources/masks/mni_icbm152_t1_tal_nlin_sym_09c.nii)
+    into the cropped template (located in
+    clinica/resources/masks/ref_cropped_template.nii.gz).
 
     Parameters
     ----------
     input_image : Path
-        Path to the input image.
+        The path to the input image to be cropped.
 
-    reference_image : Path
-        Path to the reference image used for cropping.
+    output_dir : Path, optional
+        The folder in which to write the output cropped image.
+        If not provided, the image will be written in current folder.
 
     Returns
     -------
     output_img : Path
-        Path to the cropped image.
+        The path to the cropped image.
+
+    Raises
+    ------
+    ValueError:
+        If the input image is not 3D.
     """
-    from pathlib import Path
+    from nilearn.image import new_img_like
 
-    from nilearn.image import resample_to_img
+    from clinica.utils.filemanip import get_filename_no_ext
 
-    basedir = Path.cwd()
-    # resample the individual MRI into the cropped template image
-    crop_img = resample_to_img(input_image, reference_image, force_resample=True)
-    crop_filename = str(input_image).split(".nii")[0] + "_cropped.nii.gz"
-    output_img = basedir / crop_filename
+    filename_no_ext = get_filename_no_ext(input_image)
+    input_image = nib.load(input_image)
+    if len(input_image.shape) != 3:
+        raise ValueError(
+            "The function crop_nifti is implemented for anatomical 3D images. "
+            f"You provided an image of shape {input_image.shape}."
+        )
+    output_dir = output_dir or Path.cwd()
+    crop_img = new_img_like(
+        _load_mni_cropped_template(),
+        _crop_array(input_image.get_fdata(), MNI_CROP_BBOX),
+    )
+    output_img = output_dir / f"{filename_no_ext}_cropped.nii.gz"
     crop_img.to_filename(output_img)
+
     return output_img
