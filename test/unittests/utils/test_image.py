@@ -191,7 +191,8 @@ def test_load_mni_cropped_template(tmp_path, mocker):
     mocked = nib.Nifti1Image(np.zeros(expected_shape), affine=expected_affine)
     mocked.to_filename(tmp_path / "mocked.nii.gz")
     mocker.patch(
-        "clinica.utils.inputs.fetch_file", return_value=tmp_path / "mocked.nii.gz"
+        "clinica.utils.image._get_file_locally_or_download",
+        return_value=tmp_path / "mocked.nii.gz",
     )
 
     img = _load_mni_cropped_template()
@@ -215,7 +216,8 @@ def test_load_mni_template(tmp_path, mocker):
     mocked = nib.Nifti1Image(np.zeros(expected_shape), affine=expected_affine)
     mocked.to_filename(tmp_path / "mocked.nii.gz")
     mocker.patch(
-        "clinica.utils.inputs.fetch_file", return_value=tmp_path / "mocked.nii.gz"
+        "clinica.utils.image._get_file_locally_or_download",
+        return_value=tmp_path / "mocked.nii.gz",
     )
 
     img = _load_mni_template()
