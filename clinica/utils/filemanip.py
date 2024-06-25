@@ -295,12 +295,12 @@ def get_subject_id(bids_or_caps_file: Union[str, Path]) -> str:
     return subject_id
 
 
-def get_filename_no_ext(filename: str) -> str:
+def get_filename_no_ext(filename: Union[str, Path]) -> str:
     """Get the filename without the extension.
 
     Parameters
     ----------
-    filename: str
+    filename: str or Path
         The full filename from which to extract the extension out.
 
     Returns
@@ -315,11 +315,11 @@ def get_filename_no_ext(filename: str) -> str:
     >>> get_filename_no_ext("sub-01/ses-M000/sub-01_ses-M000.tar.gz")
     'sub-01_ses-M000'
     """
-    from pathlib import PurePath
-
-    stem = PurePath(filename).stem
+    if not isinstance(filename, Path):
+        filename = Path(filename)
+    stem = filename.stem
     while "." in stem:
-        stem = PurePath(stem).stem
+        stem = Path(stem).stem
 
     return stem
 
