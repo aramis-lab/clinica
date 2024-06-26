@@ -206,17 +206,24 @@ def _crop_array(array: np.ndarray, bbox: Bbox) -> np.ndarray:
     return array[*bbox.get_slices()]
 
 
-def _get_file_locally_or_download(filename: str) -> Path:
+def _get_file_locally_or_download(
+    filename: str, expected_checksum: Optional[str] = None
+) -> Path:
     from clinica.utils.inputs import RemoteFileStructure, fetch_file
 
     resource_folder = Path(__file__).parent.parent / "resources" / "masks"
     local_file = resource_folder / filename
     if not local_file.exists():
+        if expected_checksum is None:
+            raise ValueError(
+                f"Downloading file {filename} requires the expected checksum "
+                "such that it can be ensured that no data corruption occurred."
+            )
         fetch_file(
             RemoteFileStructure(
                 filename=filename,
                 url="https://aramislab.paris.inria.fr/files/data/img_t1_linear/",
-                checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
+                checksum=expected_checksum,
             ),
             resource_folder,
         )
@@ -226,12 +233,20 @@ def _get_file_locally_or_download(filename: str) -> Path:
 
 
 def _load_mni_cropped_template() -> nib.Nifti1Image:
-    return nib.load(_get_file_locally_or_download("ref_cropped_template.nii.gz"))
+    return nib.load(
+        _get_file_locally_or_download(
+            "ref_cropped_template.nii.gz",
+            "67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
+        )
+    )
 
 
 def _load_mni_template() -> nib.Nifti1Image:
     return nib.load(
-        _get_file_locally_or_download("mni_icbm152_t1_tal_nlin_sym_09c.nii")
+        _get_file_locally_or_download(
+            "mni_icbm152_t1_tal_nlin_sym_09c.nii",
+            "93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
+        )
     )
 
 
