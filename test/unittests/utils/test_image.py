@@ -165,15 +165,37 @@ def test_remove_dummy_dimension_from_image(tmp_path):
     assert_array_equal(result_image.get_fdata(), input_data)
 
 
+def test_slice_error():
+    from clinica.utils.image import Slice  # noqa
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "Slice instance has a start value (100) larger than the end value (10)."
+        ),
+    ):
+        Slice(100, 10)
+
+
+def test_slice():
+    from clinica.utils.image import Slice  # noqa
+
+    s = Slice(3, 16)
+
+    assert s.start == 3
+    assert s.end == 16
+    assert s.get_slice() == slice(3, 16)
+
+
 def test_mni_cropped_bbox():
     from clinica.utils.image import MNI_CROP_BBOX  # noqa
 
-    assert MNI_CROP_BBOX.start_x == 12
-    assert MNI_CROP_BBOX.end_x == 181
-    assert MNI_CROP_BBOX.start_y == 13
-    assert MNI_CROP_BBOX.end_y == 221
-    assert MNI_CROP_BBOX.start_z == 0
-    assert MNI_CROP_BBOX.end_z == 179
+    assert MNI_CROP_BBOX.x_slice.start == 12
+    assert MNI_CROP_BBOX.x_slice.end == 181
+    assert MNI_CROP_BBOX.y_slice.start == 13
+    assert MNI_CROP_BBOX.y_slice.end == 221
+    assert MNI_CROP_BBOX.z_slice.start == 0
+    assert MNI_CROP_BBOX.z_slice.end == 179
 
 
 def test_load_mni_cropped_template(tmp_path, mocker):

@@ -177,32 +177,65 @@ def remove_dummy_dimension_from_image(image: str, output: str) -> str:
 
 
 @dataclass
-class Bbox:
-    """Bounding Box for 3D arrays."""
+class Slice:
+    """Interval composed of a starting point and ending point."""
 
-    start_x: int
-    end_x: int
-    start_y: int
-    end_y: int
-    start_z: int
-    end_z: int
+    start: int
+    end: int
 
-    def get_slices(self) -> tuple:
+    def __post_init__(self):
+        if self.end < self.start:
+            raise ValueError(
+                f"Slice instance has a start value ({self.start}) larger than the end value ({self.end})."
+            )
+
+    def get_slice(self) -> slice:
+        return slice(self.start, self.end)
+
+    def __repr__(self) -> str:
+        return f"( {self.start}, {self.end} )"
+
+
+@dataclass
+class Bbox3D:
+    """3D Bounding Box."""
+
+    x_slice: Slice
+    y_slice: Slice
+    z_slice: Slice
+
+    @classmethod
+    def from_coordinates(
+        cls,
+        start_x: int,
+        end_x: int,
+        start_y: int,
+        end_y: int,
+        start_z: int,
+        end_z: int,
+    ):
+        return cls(
+            Slice(start_x, end_x),
+            Slice(start_y, end_y),
+            Slice(start_z, end_z),
+        )
+
+    def get_slices(self) -> Tuple[slice, slice, slice]:
         return (
-            slice(self.start_x, self.end_x),
-            slice(self.start_y, self.end_y),
-            slice(self.start_z, self.end_z),
+            self.x_slice.get_slice(),
+            self.y_slice.get_slice(),
+            self.z_slice.get_slice(),
         )
 
     def __repr__(self):
-        return f"( ( {self.start_x}, {self.end_x} ), ( {self.start_y}, {self.end_y} ), ( {self.start_z}, {self.end_z} ) )"
+        return f"( {self.x_slice}, {self.y_slice}, {self.z_slice} )"
 
 
 # This bounding box has been pre-computed by clinica developers
-MNI_CROP_BBOX = Bbox(12, 181, 13, 221, 0, 179)
+MNI_CROP_BBOX = Bbox3D.from_coordinates(12, 181, 13, 221, 0, 179)
 
 
-def _crop_array(array: np.ndarray, bbox: Bbox) -> np.ndarray:
+def _crop_array(array: np.ndarray, bbox: Bbox3D) -> np.ndarray:
     # TODO: When Python 3.10 is dropped, replace with 'return array[*bbox.get_slices()]'
     x, y, z = bbox.get_slices()
     return array[x, y, z]
