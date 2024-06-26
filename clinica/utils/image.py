@@ -203,7 +203,9 @@ MNI_CROP_BBOX = Bbox(12, 181, 13, 221, 0, 179)
 
 
 def _crop_array(array: np.ndarray, bbox: Bbox) -> np.ndarray:
-    return array[*bbox.get_slices()]
+    # TODO: When Python 3.10 is dropped, replace with 'return array[*bbox.get_slices()]'
+    x, y, z = bbox.get_slices()
+    return array[x, y, z]
 
 
 def _get_file_locally_or_download(
