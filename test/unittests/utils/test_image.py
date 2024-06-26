@@ -198,8 +198,8 @@ def test_mni_cropped_bbox():
     assert MNI_CROP_BBOX.z_slice.end == 179
 
 
-def test_load_mni_cropped_template(tmp_path, mocker):
-    from clinica.utils.image import _load_mni_cropped_template  # noqa
+def test_get_mni_cropped_template(tmp_path, mocker):
+    from clinica.utils.image import get_mni_cropped_template
 
     expected_affine = np.array(
         [
@@ -217,14 +217,14 @@ def test_load_mni_cropped_template(tmp_path, mocker):
         return_value=tmp_path / "mocked.nii.gz",
     )
 
-    img = _load_mni_cropped_template()
+    img = nib.load(get_mni_cropped_template())
 
     assert_array_equal(img.affine, expected_affine)
     assert img.shape == expected_shape
 
 
-def test_load_mni_template(tmp_path, mocker):
-    from clinica.utils.image import _load_mni_template  # noqa
+def test_get_mni_template(tmp_path, mocker):
+    from clinica.utils.image import get_mni_template
 
     expected_affine = np.array(
         [
@@ -242,7 +242,7 @@ def test_load_mni_template(tmp_path, mocker):
         return_value=tmp_path / "mocked.nii.gz",
     )
 
-    img = _load_mni_template()
+    img = nib.load(get_mni_template("t1"))
 
     assert_array_equal(img.affine, expected_affine)
     assert img.shape == expected_shape
@@ -267,15 +267,17 @@ def test_crop_nifti_error(tmp_path):
 
 def test_crop_nifti(tmp_path):
     from clinica.utils.image import (
-        _load_mni_cropped_template,  # noqa
-        _load_mni_template,  # noqa
         crop_nifti,
+        get_mni_cropped_template,
+        get_mni_template,
     )
 
-    _load_mni_template().to_filename(tmp_path / "mni.nii.gz")
+    nib.load(get_mni_template("t1")).to_filename(tmp_path / "mni.nii.gz")
     crop_nifti(tmp_path / "mni.nii.gz", output_dir=tmp_path)
 
     assert (tmp_path / "mni_cropped.nii.gz").exists()
     cropped = nib.load(tmp_path / "mni_cropped.nii.gz")
-    assert_array_equal(cropped.affine, _load_mni_cropped_template().affine)
-    assert_array_equal(cropped.get_fdata(), _load_mni_cropped_template().get_fdata())
+    assert_array_equal(cropped.affine, nib.load(get_mni_cropped_template()).affine)
+    assert_array_equal(
+        cropped.get_fdata(), nib.load(get_mni_cropped_template()).get_fdata()
+    )

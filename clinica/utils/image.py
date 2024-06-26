@@ -13,6 +13,8 @@ __all__ = [
     "merge_nifti_images_in_time_dimension",
     "remove_dummy_dimension_from_image",
     "crop_nifti",
+    "get_mni_template",
+    "get_mni_cropped_template",
 ]
 
 
@@ -242,22 +244,22 @@ def _crop_array(array: np.ndarray, bbox: Bbox3D) -> np.ndarray:
 
 
 def _get_file_locally_or_download(
-    filename: str, expected_checksum: Optional[str] = None
+    filename: str, url: Optional[str] = None, expected_checksum: Optional[str] = None
 ) -> Path:
     from clinica.utils.inputs import RemoteFileStructure, fetch_file
 
     resource_folder = Path(__file__).parent.parent / "resources" / "masks"
     local_file = resource_folder / filename
     if not local_file.exists():
-        if expected_checksum is None:
+        if url is None or expected_checksum is None:
             raise ValueError(
-                f"Downloading file {filename} requires the expected checksum "
+                f"Downloading file {filename} requires both the URL and the expected checksum "
                 "such that it can be ensured that no data corruption occurred."
             )
         fetch_file(
             RemoteFileStructure(
                 filename=filename,
-                url="https://aramislab.paris.inria.fr/files/data/img_t1_linear/",
+                url=url,
                 checksum=expected_checksum,
             ),
             resource_folder,
@@ -267,21 +269,58 @@ def _get_file_locally_or_download(
     raise FileNotFoundError(f"Unable to get file {filename} locally or remotely.")
 
 
-def _load_mni_cropped_template() -> nib.Nifti1Image:
-    return nib.load(
-        _get_file_locally_or_download(
-            "ref_cropped_template.nii.gz",
-            "67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
-        )
+def get_mni_cropped_template() -> Path:
+    return _get_file_locally_or_download(
+        filename="ref_cropped_template.nii.gz",
+        url="https://aramislab.paris.inria.fr/files/data/img_t1_linear/",
+        expected_checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
     )
 
 
-def _load_mni_template() -> nib.Nifti1Image:
-    return nib.load(
-        _get_file_locally_or_download(
-            "mni_icbm152_t1_tal_nlin_sym_09c.nii",
-            "93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
-        )
+def get_mni_template(modality: str) -> Path:
+    """Get the path to the MNI template for the given modality.
+
+    If the file can be found locally in the resources folder, it is
+    returned directly, otherwise it is downloaded from the aramislab
+    server.
+
+    Parameters
+    ----------
+    modality : str
+        t1 or flair depending on which template is desired.
+
+    Returns
+    -------
+    Path :
+        The path to the required MNI template.
+
+    Raises
+    ------
+    ValueError:
+        If the modality is not t1 or flair.
+    FileNotFoundError:
+        If the template could not be retrieved locally or remotely.
+    """
+    if modality.lower() == "t1":
+        return _get_mni_template_t1()
+    if modality.lower() == "flair":
+        return _get_mni_template_flair()
+    raise ValueError(f"No MNI template available for modality {modality}.")
+
+
+def _get_mni_template_t1() -> Path:
+    return _get_file_locally_or_download(
+        filename="mni_icbm152_t1_tal_nlin_sym_09c.nii",
+        url="https://aramislab.paris.inria.fr/files/data/img_t1_linear/",
+        expected_checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
+    )
+
+
+def _get_mni_template_flair() -> Path:
+    return _get_file_locally_or_download(
+        filename="GG-853-FLAIR-1.0mm.nii.gz",
+        url="https://aramislab.paris.inria.fr/files/data/img_flair_linear/",
+        expected_checksum="b1d2d359a4c3671685227bb14014ce50ac232012b628335a4c049e2911c64ce1",
     )
 
 
@@ -327,7 +366,7 @@ def crop_nifti(input_image: Path, output_dir: Optional[Path] = None) -> Path:
         )
     output_dir = output_dir or Path.cwd()
     crop_img = new_img_like(
-        _load_mni_cropped_template(),
+        nib.load(get_mni_cropped_template()),
         _crop_array(input_image.get_fdata(), MNI_CROP_BBOX),
     )
     output_img = output_dir / f"{filename_no_ext}_cropped.nii.gz"

@@ -56,9 +56,6 @@ class PETLinear(PETPipeline):
 
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        from os import pardir
-        from os.path import abspath, dirname, exists, join
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -67,36 +64,16 @@ class PETLinear(PETPipeline):
             ClinicaCAPSError,
             ClinicaException,
         )
+        from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, T1W_TO_MNI_TRANSFORM
-        from clinica.utils.inputs import (
-            RemoteFileStructure,
-            clinica_file_reader,
-            fetch_file,
-        )
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.pet import get_suvr_mask
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        # Import references files
-        root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-        path_to_mask = join(root, "resources", "masks")
-        url_aramis = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/"
-        FILE1 = RemoteFileStructure(
-            filename="mni_icbm152_t1_tal_nlin_sym_09c.nii",
-            url=url_aramis,
-            checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
-        )
-        self.ref_template = join(path_to_mask, FILE1.filename)
+        self.ref_template = get_mni_template("t1")
         self.ref_mask = get_suvr_mask(self.parameters["suvr_reference_region"])
 
-        if not (exists(self.ref_template)):
-            try:
-                fetch_file(FILE1, path_to_mask)
-            except IOError as err:
-                cprint(
-                    msg=f"Unable to download required template (mni_icbm152) for processing: {err}",
-                    lvl="error",
-                )
         # Inputs from BIDS directory
         try:
             pet_files, _ = clinica_file_reader(
