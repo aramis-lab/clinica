@@ -42,7 +42,7 @@ def suvr_normalization_task(
 
 @task
 @annotate({"return": {"output_img": os.PathLike}})
-def crop_nifti_task(input_img: os.PathLike, ref_img: os.PathLike) -> os.PathLike:
+def crop_nifti_task(input_img: os.PathLike, output_dir: os.PathLike) -> os.PathLike:
     """Pydra task for cropping the input image based on the reference.
 
     .. note::
@@ -54,4 +54,4 @@ def crop_nifti_task(input_img: os.PathLike, ref_img: os.PathLike) -> os.PathLike
 
     from clinica.utils.image import crop_nifti
 
-    return crop_nifti(input_img, ref_img)
+    return crop_nifti(Path(input_img), Path(output_dir))

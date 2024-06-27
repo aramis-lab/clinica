@@ -1,3 +1,5 @@
+import re
+
 import nibabel as nib
 import numpy as np
 import pytest
@@ -161,3 +163,121 @@ def test_remove_dummy_dimension_from_image(tmp_path):
     assert result == str(tmp_path / "output_image.nii.gz")
     assert_array_equal(result_image.affine, np.eye(4))
     assert_array_equal(result_image.get_fdata(), input_data)
+
+
+def test_slice_error():
+    from clinica.utils.image import Slice  # noqa
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "Slice instance has a start value (100) larger than the end value (10)."
+        ),
+    ):
+        Slice(100, 10)
+
+
+def test_slice():
+    from clinica.utils.image import Slice  # noqa
+
+    s = Slice(3, 16)
+
+    assert s.start == 3
+    assert s.end == 16
+    assert s.get_slice() == slice(3, 16)
+
+
+def test_mni_cropped_bbox():
+    from clinica.utils.image import MNI_CROP_BBOX  # noqa
+
+    assert MNI_CROP_BBOX.x_slice.start == 12
+    assert MNI_CROP_BBOX.x_slice.end == 181
+    assert MNI_CROP_BBOX.y_slice.start == 13
+    assert MNI_CROP_BBOX.y_slice.end == 221
+    assert MNI_CROP_BBOX.z_slice.start == 0
+    assert MNI_CROP_BBOX.z_slice.end == 179
+
+
+def test_get_mni_cropped_template(tmp_path, mocker):
+    from clinica.utils.image import get_mni_cropped_template
+
+    expected_affine = np.array(
+        [
+            [1.0, 0.0, 0.0, -84.0],
+            [0.0, 1.0, 0.0, -119.0],
+            [0.0, 0.0, 1.0, -78.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+    )
+    expected_shape = (169, 208, 179)
+    mocked = nib.Nifti1Image(np.zeros(expected_shape), affine=expected_affine)
+    mocked.to_filename(tmp_path / "mocked.nii.gz")
+    mocker.patch(
+        "clinica.utils.image._get_file_locally_or_download",
+        return_value=tmp_path / "mocked.nii.gz",
+    )
+
+    img = nib.load(get_mni_cropped_template())
+
+    assert_array_equal(img.affine, expected_affine)
+    assert img.shape == expected_shape
+
+
+def test_get_mni_template(tmp_path, mocker):
+    from clinica.utils.image import get_mni_template
+
+    expected_affine = np.array(
+        [
+            [1.0, 0.0, 0.0, -96.0],
+            [0.0, 1.0, 0.0, -132.0],
+            [0.0, 0.0, 1.0, -78.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+    )
+    expected_shape = (193, 229, 193)
+    mocked = nib.Nifti1Image(np.zeros(expected_shape), affine=expected_affine)
+    mocked.to_filename(tmp_path / "mocked.nii.gz")
+    mocker.patch(
+        "clinica.utils.image._get_file_locally_or_download",
+        return_value=tmp_path / "mocked.nii.gz",
+    )
+
+    img = nib.load(get_mni_template("t1"))
+
+    assert_array_equal(img.affine, expected_affine)
+    assert img.shape == expected_shape
+
+
+def test_crop_nifti_error(tmp_path):
+    from clinica.utils.image import crop_nifti
+
+    nib.Nifti1Image(np.random.random((10, 10, 10, 10)), np.eye(4)).to_filename(
+        tmp_path / "test.nii.gz"
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            "The function crop_nifti is implemented for anatomical 3D images. "
+            "You provided an image of shape (10, 10, 10, 10)."
+        ),
+    ):
+        crop_nifti(tmp_path / "test.nii.gz")
+
+
+def test_crop_nifti(tmp_path):
+    from clinica.utils.image import (
+        crop_nifti,
+        get_mni_cropped_template,
+        get_mni_template,
+    )
+
+    nib.load(get_mni_template("t1")).to_filename(tmp_path / "mni.nii.gz")
+    crop_nifti(tmp_path / "mni.nii.gz", output_dir=tmp_path)
+
+    assert (tmp_path / "mni_cropped.nii.gz").exists()
+    cropped = nib.load(tmp_path / "mni_cropped.nii.gz")
+    assert_array_equal(cropped.affine, nib.load(get_mni_cropped_template()).affine)
+    assert_array_equal(
+        cropped.get_fdata(), nib.load(get_mni_cropped_template()).get_fdata()
+    )

@@ -70,66 +70,20 @@ class AnatLinear(Pipeline):
 
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        from os import pardir
-        from os.path import abspath, dirname, exists, join
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
+        from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
-        from clinica.utils.inputs import (
-            RemoteFileStructure,
-            clinica_file_reader,
-            fetch_file,
-        )
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-        path_to_mask = join(root, "resources", "masks")
-        if self.name == "t1-linear":
-            url_aramis = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/"
-            FILE2 = RemoteFileStructure(
-                filename="mni_icbm152_t1_tal_nlin_sym_09c.nii",
-                url=url_aramis,
-                checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
-            )
-        else:
-            url_aramis = "https://aramislab.paris.inria.fr/files/data/img_flair_linear/"
-            FILE2 = RemoteFileStructure(
-                filename="GG-853-FLAIR-1.0mm.nii.gz",
-                url=url_aramis,
-                checksum="b1d2d359a4c3671685227bb14014ce50ac232012b628335a4c049e2911c64ce1",
-            )
-
-        FILE1 = RemoteFileStructure(
-            filename="ref_cropped_template.nii.gz",
-            url=url_aramis,
-            checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
+        self.ref_template = get_mni_template(
+            "t1" if self.name == "t1-linear" else "flair"
         )
-
-        self.ref_template = join(path_to_mask, FILE2.filename)
-        self.ref_crop = join(path_to_mask, FILE1.filename)
-
-        if not (exists(self.ref_template)):
-            try:
-                fetch_file(FILE2, path_to_mask)
-            except IOError as err:
-                cprint(
-                    msg=f"Unable to download required template (mni_icbm152) for processing: {err}",
-                    lvl="error",
-                )
-
-        if not (exists(self.ref_crop)):
-            try:
-                fetch_file(FILE1, path_to_mask)
-            except IOError as err:
-                cprint(
-                    msg=f"Unable to download required template (ref_crop) for processing: {err}",
-                    lvl="error",
-                )
 
         # Display image(s) already present in CAPS folder
         # ===============================================
@@ -261,8 +215,7 @@ class AnatLinear(Pipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
 
-        from clinica.pipelines.tasks import crop_nifti_task
-        from clinica.utils.filemanip import get_filename_no_ext
+        from clinica.pipelines.tasks import crop_nifti_task, get_filename_no_ext_task
 
         from .anat_linear_utils import print_end_pipeline
 
@@ -270,7 +223,7 @@ class AnatLinear(Pipeline):
             interface=nutil.Function(
                 input_names=["filename"],
                 output_names=["image_id"],
-                function=get_filename_no_ext,
+                function=get_filename_no_ext_task,
             ),
             name="ImageID",
         )
@@ -306,11 +259,11 @@ class AnatLinear(Pipeline):
             name="cropnifti",
             interface=nutil.Function(
                 function=crop_nifti_task,
-                input_names=["input_image", "reference_image"],
+                input_names=["input_image", "output_path"],
                 output_names=["output_img"],
             ),
         )
-        cropnifti.inputs.reference_image = self.ref_crop
+        cropnifti.inputs.output_path = self.base_dir
 
         # 4. Print end message
         print_end_message = npe.Node(
