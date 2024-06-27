@@ -215,8 +215,7 @@ class AnatLinear(Pipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
 
-        from clinica.pipelines.tasks import crop_nifti_task
-        from clinica.utils.filemanip import get_filename_no_ext
+        from clinica.pipelines.tasks import crop_nifti_task, get_filename_no_ext_task
 
         from .anat_linear_utils import print_end_pipeline
 
@@ -224,7 +223,7 @@ class AnatLinear(Pipeline):
             interface=nutil.Function(
                 input_names=["filename"],
                 output_names=["image_id"],
-                function=get_filename_no_ext,
+                function=get_filename_no_ext_task,
             ),
             name="ImageID",
         )
