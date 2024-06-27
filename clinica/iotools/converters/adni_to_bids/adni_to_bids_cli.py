@@ -30,7 +30,7 @@ from .adni_utils import ADNIModality
     "--modalities",
     multiple=True,
     type=click.Choice(ADNIModality),
-    default=ADNIModality,
+    default=list(ADNIModality),
     help="Convert only the selected modality. By default, all available modalities are converted.",
 )
 @click.option(
@@ -46,7 +46,7 @@ def cli(
     subjects_list: Optional[str] = None,
     clinical_data_only: bool = False,
     force_new_extraction: bool = False,
-    modalities: Iterable[Union[str, ADNIModality]] = ADNIModality,
+    modalities: Optional[Iterable[Union[str, ADNIModality]]] = None,
     n_procs: Optional[int] = None,
 ) -> None:
     """ADNI to BIDS converter.
@@ -67,7 +67,7 @@ def cli(
         clinical_data_directory,
         clinical_data_only=clinical_data_only,
         subjects=subjects_list,
-        modalities=modalities,
+        modalities=modalities or list(ADNIModality),
         xml_path=xml_path,
         force_new_extraction=force_new_extraction,
         n_procs=n_procs,
