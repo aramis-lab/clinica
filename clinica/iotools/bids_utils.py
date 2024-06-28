@@ -51,22 +51,16 @@ BIDS_VALIDATOR_CONFIG = {
 
 # todo : test it + use it
 def study_to_bids_id(study: StudyName, study_id: str) -> str:
-    if study == StudyName.ADNI:  # X_S_X -> sub-ADNIXSX
-        return "sub-ADNI" + remove_space_and_symbols(study_id)
-    if study == StudyName.AIBL:  # X -> sub-AIBLX
-        return "sub-AIBL" + study_id
-    if study == StudyName.GENFI:  # Y -> sub-Y
+    if study == StudyName.ADNI or study == StudyName.NIFD:  # X_S_X -> sub-ADNIXSX
+        return "sub-" + StudyName(study) + remove_space_and_symbols(study_id)
+    if study == StudyName.AIBL or study == StudyName.UKB:  # X -> sub-AIBLX
+        return "sub-" + StudyName(study) + study_id
+    if study == StudyName.GENFI or study == StudyName.OASIS3:  # Y -> sub-Y
         return "sub-" + study_id
     if study == StudyName.HABS:  # P_X -> sub-HABS_X
         return study_id.replace("P_", "sub-HABS")
-    if study == StudyName.NIFD:  # X_S_X -> sub-NIFDXSX
-        return "sub-NIFD" + remove_space_and_symbols(study_id)
     if study == StudyName.OASIS:  # OAS1_X_MR1/2 -> sub-OASIS1X
         return "sub-OASIS1" + study_id.split("_")[1]
-    if study == StudyName.OASIS3:  # OAS3X -> sub-OAS3X
-        return "sub-" + study_id
-    if study == StudyName.UKB:  # X -> sub-UKBX
-        return "sub-UKB" + study_id
 
 
 # todo : bids_to_study_id useful ?
