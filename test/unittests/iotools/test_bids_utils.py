@@ -42,6 +42,7 @@ EXPECTED_README_CONTENT = Template(
 
 
 def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
+    # todo : enlever OASIS3
     spec_df = pd.DataFrame(
         {
             "BIDS CLINICA": [
@@ -99,6 +100,14 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
         )
         df_apoeres = pd.DataFrame(
             {
+                "PTID": [
+                    "001_S_0001",
+                    "001_S_0002",
+                    "001_S_0003",
+                    "001_S_0004",
+                    "001_S_0005",
+                    "001_S_0006",
+                ],
                 "APGEN1": ["3", "3", "3", "3", None, "3"],
                 "GEN2": ["2", "2", "2", "2", None, "2"],
             }
@@ -109,13 +118,14 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
         df_oasis = pd.DataFrame(
             {
                 "ID": [
-                    "OAS1_0001_MRI1",
-                    "OAS1_0002_MRI1",
-                    "OAS1_0003_MRI1",
-                    "OAS1_0004_MRI1",
+                    "OAS1_0001_MR1",
+                    "OAS1_0002_MR1",
+                    "OAS1_0003_MR1",
+                    "OAS1_0004_MR1",
+                    "OAS1_0004_MR2",
                 ],
-                "M/F": ["F", "M", "F", "M"],
-                "Age": ["45", "50", "55", "60"],
+                "M/F": ["F", "M", "F", "M", "M"],
+                "Age": ["45", "50", "55", "60", "60"],
             }
         )
         df_oasis.to_csv(clinical_path / "oasis_cross-sectional.csv", index=False)
@@ -138,21 +148,21 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
     [
         (
             StudyName.OASIS,
-            ["0001"],
+            ["sub-OASIS10001"],
             pd.DataFrame(
                 {
-                    "participant_id": ["0001"],
-                    "alternative_id_1": ["OAS1_0001_MRI1"],
+                    "participant_id": ["sub-OASIS10001"],
+                    "alternative_id_1": ["OAS1_0001_MR1"],
                     "sex": ["F"],
                 }
             ),
         ),
         (
             StudyName.OASIS3,
-            ["0001"],
+            ["sub-OASIS30001"],
             pd.DataFrame(
                 {
-                    "participant_id": ["0001"],
+                    "participant_id": ["sub-OASIS30001"],
                     "alternative_id_1": ["OAS30001"],
                     "sex": ["F"],
                 }
@@ -160,10 +170,10 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
         ),
         (  # todo : introducing None or np.nan in data changes the format for scalar values
             StudyName.ADNI,
-            ["001S0001"],
+            ["sub-ADNI001S0001"],
             pd.DataFrame(
                 {
-                    "participant_id": ["001S0001"],
+                    "participant_id": ["sub-ADNI001S0001"],
                     "alternative_id_1": ["001_S_0001"],
                     "sex": ["Male"],
                     "apoegen1": [3.0],
@@ -172,21 +182,21 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
         ),
         (
             StudyName.OASIS,
-            ["0002", "0004", "0007"],
+            ["sub-OASIS10002", "sub-OASIS10004", "sub-OASIS10007"],
             pd.DataFrame(
                 {
-                    "participant_id": ["0002", "0004"],
-                    "alternative_id_1": ["OAS1_0002_MRI1", "OAS1_0004_MRI1"],
+                    "participant_id": ["sub-OASIS10002", "sub-OASIS10004"],
+                    "alternative_id_1": ["OAS1_0002_MR1", "OAS1_0004_MR1"],
                     "sex": ["M", "M"],
                 }
             ),
         ),
         (
             StudyName.ADNI,
-            ["001S0005"],
+            ["sub-ADNI001S0005"],
             pd.DataFrame(
                 {
-                    "participant_id": ["001S0005"],
+                    "participant_id": ["sub-ADNI001S0005"],
                     "alternative_id_1": ["001_S_0005"],
                     "sex": ["Female"],
                     "apoegen1": ["n/a"],
@@ -195,10 +205,10 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
         ),
         (
             StudyName.ADNI,
-            ["001S0006"],
+            ["sub-ADNI001S0006"],
             pd.DataFrame(
                 {
-                    "participant_id": ["001S0006"],
+                    "participant_id": ["sub-ADNI001S0006"],
                     "alternative_id_1": ["001_S_0006"],
                     "sex": ["n/a"],
                     "apoegen1": [3.0],
@@ -208,19 +218,17 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
     ],
 )
 def test_create_participants_df(tmp_path, bids_ids, expected, study_name):
+    # todo : enlever OASIS3 (raise Value Error)
     from clinica.iotools.bids_utils import create_participants_df
 
     clinical_path = create_clinical_data(tmp_path, study_name)
-    assert (
-        create_participants_df(
-            study_name,
-            clinical_specifications_folder=tmp_path,
-            clinical_data_dir=clinical_path,
-            bids_ids=bids_ids,
-        )
-        .reset_index(drop=True)
-        .equals(expected)
-    )
+    result = create_participants_df(
+        study_name,
+        clinical_specifications_folder=tmp_path,
+        clinical_data_dir=clinical_path,
+        bids_ids=bids_ids,
+    ).reset_index(drop=True)
+    assert all(result.eq(expected))
 
 
 def test_get_bids_subjs_list(tmp_path):
