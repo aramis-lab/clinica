@@ -61,6 +61,10 @@ def study_to_bids_id(study: StudyName, study_id: str) -> str:
         return study_id.replace("P_", "sub-HABS")
     if study == StudyName.OASIS:  # OAS1_X_MR1/2 -> sub-OASIS1X
         return "sub-OASIS1" + study_id.split("_")[1]
+    else:
+        raise ValueError(
+            f"The study {study} is not supported by the renaming function 'study_to_bids_id'"
+        )
 
 
 # todo : bids_to_study_id useful ?
