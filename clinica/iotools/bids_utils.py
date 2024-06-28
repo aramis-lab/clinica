@@ -574,6 +574,7 @@ def write_modality_agnostic_files(
     _write_bidsignore(bids_dir)
 
 
+# todo : move to oasis utils ?
 def write_sessions_tsv(bids_dir: Path, sessions_dict: dict) -> None:
     """Create <participant_id>_sessions.tsv files.
 
@@ -933,6 +934,7 @@ def run_dcm2niix(
     return True
 
 
+# todo : place in genfi utils ?
 def identify_modality(filename: str) -> Optional[str]:
     """Identifies the modality of a file given its name.
 

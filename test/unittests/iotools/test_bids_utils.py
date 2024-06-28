@@ -67,14 +67,6 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
                 "oasis_cross-sectional.csv",
                 np.nan,
             ],
-            "OASIS3": [np.nan, "Subject", np.nan, "M/F", np.nan],
-            "OASIS3 location": [
-                np.nan,
-                "oasis3_participants.csv",
-                np.nan,
-                "oasis3_participants.csv",
-                np.nan,
-            ],
         }
     )
     spec_df.to_csv(tmp_path / "participant.tsv", sep="\t", index=False)
@@ -105,31 +97,21 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
         )
         df_adnimerge.to_csv(clinical_path / "ADNIMERGE.csv", index=False)
         df_apoeres.to_csv(clinical_path / "APOERES.csv", index=False)
-    elif study_name == StudyName.OASIS:
+    if study_name == StudyName.OASIS:
         df_oasis = pd.DataFrame(
             {
                 "ID": [
-                    "OAS1_0001_MRI1",
-                    "OAS1_0002_MRI1",
-                    "OAS1_0003_MRI1",
-                    "OAS1_0004_MRI1",
+                    "OAS1_0001_MR1",
+                    "OAS1_0002_MR1",
+                    "OAS1_0003_MR1",
+                    "OAS1_0004_MR1",
+                    "OAS1_0004_MR2",
                 ],
-                "M/F": ["F", "M", "F", "M"],
-                "Age": ["45", "50", "55", "60"],
+                "M/F": ["F", "M", "F", "M", "M"],
+                "Age": ["45", "50", "55", "60", "60"],
             }
         )
         df_oasis.to_csv(clinical_path / "oasis_cross-sectional.csv", index=False)
-
-    elif study_name == StudyName.OASIS3:
-        df_oasis3 = pd.DataFrame(
-            {
-                "Subject": ["OAS30001", "OAS30002", "OAS30003", "OAS30004"],
-                "M/F": ["F", "F", "M", "M"],
-                "Age": ["45", "55", "65", "75"],
-            }
-        )
-        df_oasis3.to_csv(clinical_path / "oasis3_participants.csv", index=False)
-
     return clinical_path
 
 
@@ -138,32 +120,21 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
     [
         (
             StudyName.OASIS,
-            ["0001"],
+            ["sub-OASIS10001"],
             pd.DataFrame(
                 {
-                    "participant_id": ["0001"],
-                    "alternative_id_1": ["OAS1_0001_MRI1"],
+                    "participant_id": ["sub-OASIS10001"],
+                    "alternative_id_1": ["OAS1_0001_MR1"],
                     "sex": ["F"],
                 }
             ),
         ),
         (
-            StudyName.OASIS3,
-            ["0001"],
-            pd.DataFrame(
-                {
-                    "participant_id": ["0001"],
-                    "alternative_id_1": ["OAS30001"],
-                    "sex": ["F"],
-                }
-            ),
-        ),
-        (  # todo : introducing None or np.nan in data changes the format for scalar values
             StudyName.ADNI,
-            ["001S0001"],
+            ["sub-ADNI001S0001"],
             pd.DataFrame(
                 {
-                    "participant_id": ["001S0001"],
+                    "participant_id": ["sub-ADNI001S0001"],
                     "alternative_id_1": ["001_S_0001"],
                     "sex": ["Male"],
                     "apoegen1": [3.0],
@@ -172,21 +143,21 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
         ),
         (
             StudyName.OASIS,
-            ["0002", "0004", "0007"],
+            ["sub-OASIS10002", "sub-OASIS10004", "sub-OASIS10007"],
             pd.DataFrame(
                 {
-                    "participant_id": ["0002", "0004"],
-                    "alternative_id_1": ["OAS1_0002_MRI1", "OAS1_0004_MRI1"],
+                    "participant_id": ["sub-OASIS10002", "sub-OASIS10004"],
+                    "alternative_id_1": ["OAS1_0002_MR1", "OAS1_0004_MR1"],
                     "sex": ["M", "M"],
                 }
             ),
         ),
         (
             StudyName.ADNI,
-            ["001S0005"],
+            ["sub-ADNI001S0005"],
             pd.DataFrame(
                 {
-                    "participant_id": ["001S0005"],
+                    "participant_id": ["sub-ADNI001S0005"],
                     "alternative_id_1": ["001_S_0005"],
                     "sex": ["Female"],
                     "apoegen1": ["n/a"],
@@ -195,10 +166,10 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
         ),
         (
             StudyName.ADNI,
-            ["001S0006"],
+            ["sub-ADNI001S0006"],
             pd.DataFrame(
                 {
-                    "participant_id": ["001S0006"],
+                    "participant_id": ["sub-ADNI001S0006"],
                     "alternative_id_1": ["001_S_0006"],
                     "sex": ["n/a"],
                     "apoegen1": [3.0],
