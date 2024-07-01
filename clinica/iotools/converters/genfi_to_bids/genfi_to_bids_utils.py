@@ -455,7 +455,11 @@ def _compute_session_numbers(df: DataFrame) -> DataFrame:
 
 def _compute_participant_id(df: DataFrame) -> DataFrame:
     """Compute the 'participant_id' column from the 'source_id' column."""
-    return df.assign(participant_id=lambda x: x.source_id.apply(lambda y: f"sub-{y}"))
+    from clinica.iotools.bids_utils import StudyName, _rename_study_to_bids_id
+
+    return df.assign(
+        participant_id=_rename_study_to_bids_id(StudyName.GENFI, df.source_id)
+    )
 
 
 def _compute_modality(df: DataFrame) -> DataFrame:
