@@ -49,7 +49,7 @@ BIDS_VALIDATOR_CONFIG = {
 }
 
 
-def study_to_bids_id(study: StudyName, study_id: str) -> str:
+def _rename_study_to_bids_id(study: StudyName, study_id: str) -> str:
     if study == StudyName.ADNI or study == StudyName.NIFD:  # X_S_X -> sub-ADNIXSX
         return "sub-" + StudyName(study) + remove_space_and_symbols(study_id)
     if study == StudyName.AIBL or study == StudyName.UKB:  # X -> sub-AIBLX
@@ -62,7 +62,7 @@ def study_to_bids_id(study: StudyName, study_id: str) -> str:
         return "sub-OASIS1" + study_id.split("_")[1]
     else:
         raise ValueError(
-            f"The study {study} is not supported by the renaming function 'study_to_bids_id'"
+            f"The study {study} is not supported by the renaming function '_rename_study_to_bids_id'"
         )
 
 
@@ -186,7 +186,9 @@ def create_participants_df(
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        value = study_to_bids_id(study_name, participant_df["alternative_id_1"][i])
+        value = _rename_study_to_bids_id(
+            study_name, participant_df["alternative_id_1"][i]
+        )
         bids_id = [s for s in bids_ids if value in s]
         if len(bids_id) == 0:
             index_to_drop.append(i)
