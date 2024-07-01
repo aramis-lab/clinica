@@ -176,12 +176,12 @@ class OasisToBids(Converter):
 
     @staticmethod
     def convert_single_subject(subj_folder: Path, dest_dir: Path):
-        from clinica.iotools.bids_utils import StudyName, study_to_bids_id
+        from clinica.iotools.bids_utils import StudyName, _rename_study_to_bids_id
         from clinica.utils.stream import cprint
 
         t1_folder = subj_folder / "PROCESSED" / "MPRAGE" / "SUBJ_111"
         cprint(f"Converting {subj_folder.name}", lvl="info")
-        participant_id = study_to_bids_id(StudyName.OASIS, subj_folder.name)
+        participant_id = _rename_study_to_bids_id(StudyName.OASIS, subj_folder.name)
         bids_subj_folder = dest_dir / participant_id
         if not bids_subj_folder.is_dir():
             bids_subj_folder.mkdir(parents=True)
