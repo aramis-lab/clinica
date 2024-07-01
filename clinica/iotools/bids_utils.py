@@ -49,7 +49,6 @@ BIDS_VALIDATOR_CONFIG = {
 }
 
 
-# todo : test it + use it
 def study_to_bids_id(study: StudyName, study_id: str) -> str:
     if study == StudyName.ADNI or study == StudyName.NIFD:  # X_S_X -> sub-ADNIXSX
         return "sub-" + StudyName(study) + remove_space_and_symbols(study_id)
@@ -187,15 +186,8 @@ def create_participants_df(
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        if study_name == StudyName.OASIS:
-            value = (participant_df["alternative_id_1"][i].split("_"))[1]
-        elif study_name == StudyName.OASIS3:
-            value = participant_df["alternative_id_1"][i].replace("OAS3", "")
-        else:
-            value = remove_space_and_symbols(participant_df["alternative_id_1"][i])
-
+        value = study_to_bids_id(study_name, participant_df["alternative_id_1"][i])
         bids_id = [s for s in bids_ids if value in s]
-
         if len(bids_id) == 0:
             index_to_drop.append(i)
             subjects_to_drop.append(value)
@@ -310,11 +302,7 @@ def create_sessions_dict_oasis(
                     if subj_id.dtype == np.int64:
                         subj_id = str(subj_id)
                 # Removes all the - from
-                subj_id_alpha = remove_space_and_symbols(subj_id)
-                if study_name == StudyName.OASIS:
-                    subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
-                if study_name == StudyName.OASIS3:
-                    subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3:])
+                subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
 
                 # Extract the corresponding BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
