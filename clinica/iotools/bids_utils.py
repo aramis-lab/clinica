@@ -50,8 +50,10 @@ BIDS_VALIDATOR_CONFIG = {
 
 
 def _rename_study_to_bids_id(study: StudyName, study_id: str) -> str:
-    if study == StudyName.ADNI or study == StudyName.NIFD:  # X_S_X -> sub-ADNIXSX
-        return "sub-" + StudyName(study) + remove_space_and_symbols(study_id)
+    if study == StudyName.ADNI:  # X_S_X -> sub-ADNIXSX
+        return "sub-ADNI" + remove_space_and_symbols(study_id)
+    if study == StudyName.NIFD:  # X_S_X -> sub-NIFDXSX
+        return "sub-NIFD" + study_id.replace("_", "")
     if study == StudyName.AIBL or study == StudyName.UKB:  # X -> sub-AIBLX
         return "sub-" + StudyName(study) + study_id
     if study == StudyName.GENFI or study == StudyName.OASIS3:  # Y -> sub-Y
