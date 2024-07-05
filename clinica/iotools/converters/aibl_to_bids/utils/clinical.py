@@ -41,7 +41,7 @@ def create_participants_tsv_file(
 
     import numpy as np
 
-    from clinica.iotools.bids_utils import StudyName
+    from clinica.iotools.bids_utils import StudyName, _id_factory
 
     fields_bids = ["participant_id"]
     fields_dataset = []
@@ -111,10 +111,9 @@ def create_participants_tsv_file(
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
     # Compute BIDS-compatible participant ID.
-    participant_df["participant_id"] = (
-        f"sub-{StudyName.AIBL.value}" + participant_df["alternative_id_1"]
+    participant_df["participant_id"] = participant_df["alternative_id_1"].apply(
+        lambda x: _id_factory(StudyName.AIBL).from_original_study_id(x)
     )
-
     # Keep year-of-birth only.
     participant_df["date_of_birth"] = participant_df["date_of_birth"].str.extract(
         r"/(\d{4}).*"
@@ -169,7 +168,7 @@ def create_sessions_tsv_file(
     """
     import glob
 
-    from clinica.iotools.bids_utils import StudyName
+    from clinica.iotools.bids_utils import StudyName, _id_factory
 
     specifications = _load_specifications(
         clinical_specifications_folder, "sessions.tsv"
@@ -251,12 +250,12 @@ def create_sessions_tsv_file(
         cols = sessions.columns.tolist()
         sessions = sessions[cols[-1:] + cols[:-1]]
 
-        bids_paths = input_path / f"sub-{StudyName.AIBL.value}{rid}"
+        bids_id = _id_factory(StudyName.AIBL).from_original_study_id(str(rid))
+
+        bids_paths = input_path / bids_id
         if bids_paths.exists():
             sessions.to_csv(
-                input_path
-                / f"sub-{StudyName.AIBL.value}{rid}"
-                / f"sub-{StudyName.AIBL.value}{rid}_sessions.tsv",
+                input_path / bids_id / f"{bids_id}_sessions.tsv",
                 sep="\t",
                 index=False,
                 encoding="utf8",
