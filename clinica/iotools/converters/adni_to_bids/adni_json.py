@@ -31,12 +31,12 @@ def _bids_id_to_loni(bids_id: str) -> Optional[str]:
     """Convert a subject id of the form sub-ADNI000S0000
     back to original format 000_S_0000
     """
-    import re
+    from clinica.iotools.bids_utils import StudyName, _id_factory
 
-    ids = re.findall(r"\d+", bids_id)
-    if len(ids) == 2:
-        return ids[0] + "_S_" + ids[1]
-    return None
+    try:
+        return _id_factory(StudyName.ADNI)(bids_id).to_original_study_id()
+    except ValueError:
+        return None
 
 
 def _read_xml_files(
