@@ -3,7 +3,7 @@ from typing import Iterator, Optional
 
 import pandas as pd
 
-from clinica.iotools.bids_utils import StudyName, _rename_study_to_bids_id
+from clinica.iotools.bids_utils import StudyName, _id_factory
 from clinica.utils.filemanip import UserProvidedPath
 
 __all__ = ["convert"]
@@ -129,8 +129,8 @@ def _read_clinical_data(path: Path, rename_columns: dict[str, str]) -> pd.DataFr
         .rename(columns=rename_columns)
         .assign(date=lambda df: pd.to_datetime(df.date))
         .assign(
-            participant_id=lambda df: _rename_study_to_bids_id(
-                StudyName.HABS, df.source_participant_id.str
+            participant_id=lambda df: df.source_participant_id.apply(
+                lambda x: _id_factory(StudyName.HABS).from_original_study_id(x)
             )
         )
         .drop(columns="source_participant_id")
@@ -178,8 +178,8 @@ def _parse_imaging_data(paths: list[tuple[str, str]]) -> Optional[pd.DataFrame]:
     # Compute BIDS participant ID, session ID and filename.
     df = (
         df.assign(
-            participant_id=_rename_study_to_bids_id(
-                StudyName.HABS, df.source_participant_id.str
+            participant_id=lambda df: df.source_participant_id.apply(
+                lambda x: _id_factory(StudyName.HABS).from_original_study_id(x)
             )
         )
         .drop(columns="source_participant_id")

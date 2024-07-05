@@ -167,7 +167,7 @@ def dataset_to_bids(
     imaging_data: pd.DataFrame,
     clinical_data: Optional[pd.DataFrame] = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    from clinica.iotools.bids_utils import StudyName, _rename_study_to_bids_id
+    from clinica.iotools.bids_utils import StudyName, _id_factory
 
     # Parse preprocessing information from scan descriptions.
     preprocessing = imaging_data.description.apply(_parse_preprocessing).apply(
@@ -202,8 +202,8 @@ def dataset_to_bids(
     )
     # Compute the BIDS-compliant participant, session and scan IDs.
     scans = scans.assign(
-        participant_id=lambda df: _rename_study_to_bids_id(
-            StudyName.NIFD, df.subject.str
+        participant_id=lambda df: df.subject.apply(
+            lambda x: _id_factory(StudyName.NIFD).from_original_study_id(x)
         ),
         session_id=lambda df: df.visit.apply(
             lambda x: (

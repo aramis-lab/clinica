@@ -48,7 +48,7 @@ def _get_df_based_on_index_name(
 
 
 def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
-    from clinica.iotools.bids_utils import StudyName, _rename_study_to_bids_id
+    from clinica.iotools.bids_utils import StudyName, _id_factory
 
     source_path_series = pd.Series(
         _find_imaging_data(imaging_data_directory), name="source_path"
@@ -80,7 +80,9 @@ def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
         .sort_values(by=["source_path"])
     )
     df_source = df_source.assign(
-        participant_id=_rename_study_to_bids_id(StudyName.OASIS3, df_source.Subject)
+        participant_id=lambda df: df.Subject.apply(
+            lambda x: _id_factory(StudyName.OASIS3).from_original_study_id(x)
+        )
     )
     df_source["modality"] = df_source[["modality", "modality_2"]].apply(
         "_".join, axis=1
