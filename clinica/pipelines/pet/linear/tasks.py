@@ -16,14 +16,6 @@ def perform_suvr_normalization_task(
     )
 
 
-def crop_nifti_image_task(input_image: str, reference_image: str) -> str:
-    from pathlib import Path
-
-    from clinica.pipelines.pet.linear.utils import crop_nifti_image
-
-    return str(crop_nifti_image(Path(input_image), Path(reference_image)))
-
-
 def rename_into_caps_task(
     pet_bids_image_filename: str,
     pet_preprocessed_image_filename: str,

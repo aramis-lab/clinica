@@ -7,7 +7,6 @@ _all__ = [
     "init_input_node",
     "concatenate_transforms",
     "perform_suvr_normalization",
-    "crop_nifti_image",
     "rename_into_caps",
     "print_end_pipeline",
 ]
