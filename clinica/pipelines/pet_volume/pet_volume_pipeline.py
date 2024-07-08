@@ -2,7 +2,7 @@ from typing import List
 
 from nipype import config
 
-from clinica.pipelines.engine import PETPipeline
+from clinica.pipelines.pet.engine import PETPipeline
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError

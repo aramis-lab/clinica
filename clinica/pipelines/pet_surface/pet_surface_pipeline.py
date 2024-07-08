@@ -1,6 +1,6 @@
 from typing import List
 
-from clinica.pipelines.engine import PETPipeline
+from clinica.pipelines.pet.engine import PETPipeline
 
 
 class PetSurface(PETPipeline):
