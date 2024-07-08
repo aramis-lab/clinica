@@ -209,7 +209,7 @@ def run_pet_volume(input_dir: Path) -> None:
 
 
 def test_instantiate_pet_linear(cmdopt):
-    from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
+    from clinica.pipelines.pet.linear.pipeline import PETLinear
     from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
