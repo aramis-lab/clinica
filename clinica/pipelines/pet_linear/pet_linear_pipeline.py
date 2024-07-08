@@ -4,7 +4,7 @@ from typing import List
 
 from nipype import config
 
-from clinica.pipelines.engine import PETPipeline
+from clinica.pipelines.pet.engine import PETPipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
