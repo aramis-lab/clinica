@@ -33,6 +33,9 @@ def read_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
     dataframe.index = dataframe.index.map(
         lambda x: (f"sub-NIFD{x[0].replace('_', '')}", f"ses-M{(6 * (x[1] - 1)):03d}")
     )
+
+    # todo : use func here
+
     # Keep relevant columns and rename them.
     dataframe = (
         dataframe[["dx", "site", "education", "race", "cdr_box_score", "mmse_tot"]]
