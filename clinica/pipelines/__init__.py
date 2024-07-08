@@ -4,7 +4,7 @@ from . import (
     dwi,
     machine_learning,
     machine_learning_spatial_svm,
-    pet_linear,
+    pet,
     pet_surface,
     pet_volume,
     statistics_surface,

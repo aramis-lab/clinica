@@ -63,7 +63,7 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
-    from .pet_linear_pipeline import PETLinear
+    from .pipeline import PETLinear
 
     parameters = {
         "acq_label": acq_label,
