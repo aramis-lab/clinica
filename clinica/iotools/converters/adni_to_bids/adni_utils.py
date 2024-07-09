@@ -541,50 +541,60 @@ def create_adni_scans_files(conversion_path: Path, bids_subjs_paths: list[Path])
     conversion_versions = sorted(
         conversion_versions, key=lambda x: int(x.split("v")[1])
     )
-    older_version = conversion_versions[-1]
+    current_version = conversion_versions[-1]
     converted_dict = dict()
-    for tsv_path in (conversion_path / older_version).iterdir():
+    # Filling in the converted_dict with what was just converted
+    for tsv_path in (conversion_path / current_version).iterdir():
         modality = tsv_path.name.split("_paths")[0]
-        df = pd.read_csv(conversion_path / older_version / tsv_path, sep="\t")
+        df = pd.read_csv(conversion_path / current_version / tsv_path, sep="\t")
         df.set_index(["Subject_ID", "VISCODE"], inplace=True, drop=True)
         converted_dict[modality] = df
 
     for bids_subject_path in bids_subjs_paths:
         # Create the file
         bids_id = bids_subject_path.resolve().name
-        subject_id = "_S_".join(bids_id[8::].split("S"))
+        study_id = "_S_".join(bids_id[8::].split("S"))
         for session_path in bids_subject_path.glob("ses-*"):
             viscode = _session_label_to_viscode(session_path.name[4::])
             tsv_name = f"{bids_id}_{session_path.name}_scans.tsv"
-            (session_path / tsv_name).unlink(missing_ok=True)
-            scans_tsv = open(session_path / tsv_name, "a")
-            scans_df = pd.DataFrame(columns=scans_fields_bids)
-            scans_df.to_csv(scans_tsv, sep="\t", index=False, encoding="utf-8")
+            scans_tsv = session_path / tsv_name
+            if scans_tsv.exists():
+                scans_df = pd.read_csv(scans_tsv, sep="\t")
+            else:
+                scans_df = pd.DataFrame(columns=scans_fields_bids)
 
-            # Extract modalities available for each subject
+            # Extract modalities available for each session
             for mod in session_path.glob("*"):
                 for file in mod.glob("*"):
-                    scans_df = pd.DataFrame(index=[0], columns=scans_fields_bids)
-                    scans_df["filename"] = path.join(mod.name, file.name)
                     converted_mod = _find_conversion_mod(file.name)
-                    conversion_df = converted_dict[converted_mod]
-                    try:
-                        scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
-                        scans_df["scan_id"] = scan_id
-                        if "Field_Strength" in conversion_df.columns.values:
-                            field_strength = conversion_df.loc[
-                                (subject_id, viscode), "Field_Strength"
-                            ]
-                            scans_df["mri_field"] = field_strength
-                    except KeyError:
-                        cprint(
-                            msg=f"No information found for file {file.name}",
-                            lvl="warning",
+                    if converted_mod in converted_dict.keys():
+                        conversion_df = converted_dict[converted_mod]
+                        scan_id = (
+                            conversion_df.loc[(study_id, viscode), "Image_ID"]
+                            if "Image_ID" in conversion_df.columns
+                            else "n/a"
                         )
-                    scans_df = scans_df.fillna("n/a")
-                    scans_df.to_csv(
-                        scans_tsv, header=False, sep="\t", index=False, encoding="utf-8"
-                    )
+                        field = (
+                            conversion_df.loc[(study_id, viscode), "Field_Strength"]
+                            if "Field_Strength" in conversion_df.columns
+                            else "n/a"
+                        )
+                        scans_df = pd.concat(
+                            [
+                                scans_df,
+                                pd.DataFrame(
+                                    {
+                                        "filename": [path.join(mod.name, file.name)],
+                                        "scan_id": [scan_id],
+                                        "mri_field": [field],
+                                    }
+                                ),
+                            ]
+                        )
+
+            # Drop duplicates in case a modality was ran twice for the same images
+            scans_df.drop_duplicates(inplace=True)
+            scans_df.to_csv(scans_tsv, sep="\t", index=False, encoding="utf-8")
 
 
 def _find_conversion_mod(file_name: str) -> str:
