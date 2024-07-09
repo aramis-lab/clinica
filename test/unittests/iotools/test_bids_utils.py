@@ -55,9 +55,9 @@ EXPECTED_README_CONTENT = Template(
     ],
 )
 def test_study_to_bids_id_passing(study, study_id, expected):
-    from clinica.iotools.bids_utils import _id_factory
+    from clinica.iotools.bids_utils import bids_id_factory
 
-    assert _id_factory(study).from_original_study_id(study_id) == expected
+    assert bids_id_factory(study).from_original_study_id(study_id) == expected
 
 
 def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:

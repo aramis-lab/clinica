@@ -528,7 +528,7 @@ def create_adni_scans_files(conversion_path: Path, bids_subjs_paths: list[Path])
     """
     from os import path
 
-    from clinica.iotools.bids_utils import StudyName, _id_factory
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
     from clinica.utils.stream import cprint
 
     scans_fields_bids = ["filename", "scan_id", "mri_field"]
@@ -552,7 +552,7 @@ def create_adni_scans_files(conversion_path: Path, bids_subjs_paths: list[Path])
     for bids_subject_path in bids_subjs_paths:
         # Create the file
         bids_id = bids_subject_path.resolve().name
-        subject_id = _id_factory(StudyName.ADNI)(bids_id).to_original_study_id()
+        subject_id = bids_id_factory(StudyName.ADNI)(bids_id).to_original_study_id()
         for session_path in bids_subject_path.glob("ses-*"):
             viscode = _session_label_to_viscode(session_path.name[4::])
             tsv_name = f"{bids_id}_{session_path.name}_scans.tsv"
@@ -768,7 +768,7 @@ def _create_file(
     import numpy as np
 
     from clinica.cmdline import setup_clinica_logging
-    from clinica.iotools.bids_utils import StudyName, _id_factory, run_dcm2niix
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory, run_dcm2niix
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
@@ -805,7 +805,7 @@ def _create_file(
     # If the original image is a DICOM, check if contains two DICOM inside the same folder
     if image.Is_Dicom:
         image_path = _check_two_dcm_folder(image_path, bids_dir, image_id)
-    bids_id = _id_factory(StudyName.ADNI).from_original_study_id(subject)
+    bids_id = bids_id_factory(StudyName.ADNI).from_original_study_id(subject)
     output_path = bids_dir / bids_id / session / _get_output_path(modality)
     output_filename = (
         f"{bids_id}_{session}{_get_output_filename(modality, image_tracer)}"

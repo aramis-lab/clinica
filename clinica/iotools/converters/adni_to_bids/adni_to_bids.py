@@ -235,7 +235,7 @@ def _get_bids_subjects_info(
     out_path: Path,
     subjects: Optional[Path] = None,
 ) -> tuple[list[str], list[Path]]:
-    from clinica.iotools.bids_utils import StudyName, _id_factory
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
     from .adni_utils import load_clinical_csv
 
@@ -249,7 +249,7 @@ def _get_bids_subjects_info(
     participants = sorted(participants & subjects if subjects else participants)
     # Compute their corresponding BIDS IDs and paths.
     bids_ids = [
-        _id_factory(StudyName.ADNI).from_original_study_id(p) for p in participants
+        bids_id_factory(StudyName.ADNI).from_original_study_id(p) for p in participants
     ]
     bids_paths = [out_path / bids_id for bids_id in bids_ids]
 

@@ -798,8 +798,6 @@ def create_subs_sess_list(
     for sub_path in subjects_paths:
         subj_id = sub_path.split(os.sep)[-1]
 
-        # todo : here use func to check id ?
-
         if use_session_tsv:
             session_df = pd.read_csv(
                 path.join(sub_path, subj_id + "_sessions.tsv"), sep="\t"

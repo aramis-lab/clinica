@@ -3,7 +3,7 @@ from typing import Iterator, Optional
 
 import pandas as pd
 
-from clinica.iotools.bids_utils import StudyName, _id_factory
+from clinica.iotools.bids_utils import StudyName, bids_id_factory
 from clinica.utils.filemanip import UserProvidedPath
 
 __all__ = ["convert"]
@@ -130,7 +130,7 @@ def _read_clinical_data(path: Path, rename_columns: dict[str, str]) -> pd.DataFr
         .assign(date=lambda df: pd.to_datetime(df.date))
         .assign(
             participant_id=lambda df: df.source_participant_id.apply(
-                lambda x: _id_factory(StudyName.HABS).from_original_study_id(x)
+                lambda x: bids_id_factory(StudyName.HABS).from_original_study_id(x)
             )
         )
         .drop(columns="source_participant_id")
@@ -179,7 +179,7 @@ def _parse_imaging_data(paths: list[tuple[str, str]]) -> Optional[pd.DataFrame]:
     df = (
         df.assign(
             participant_id=lambda df: df.source_participant_id.apply(
-                lambda x: _id_factory(StudyName.HABS).from_original_study_id(x)
+                lambda x: bids_id_factory(StudyName.HABS).from_original_study_id(x)
             )
         )
         .drop(columns="source_participant_id")

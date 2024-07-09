@@ -70,12 +70,10 @@ class BIDSSubjectID(ABC, UserString):
 
     @abstractmethod
     def to_original_study_id(self) -> str:
-        """Not sure we need that..."""
-        # todo : verify needed
         raise NotImplementedError
 
 
-def _id_factory(study: StudyName) -> Type[BIDSSubjectID]:
+def bids_id_factory(study: StudyName) -> Type[BIDSSubjectID]:
     if study == StudyName.ADNI:
         return ADNIBIDSSubjectID
     if study == StudyName.NIFD:
@@ -95,7 +93,8 @@ def _id_factory(study: StudyName) -> Type[BIDSSubjectID]:
 
 
 class ADNIBIDSSubjectID(BIDSSubjectID):
-    """Here is the implementation for ADNI."""
+    """Implementation for ADNI of the BIDSSubjectIDClass, allowing to go from the source id XXX_S_XXXX
+    to a bids id sub-ADNIXXXSXXX and reciprocally."""
 
     def validate(self, value: str) -> str:
         if re.fullmatch(r"sub-ADNI\d{3}S\d{4}", value):
@@ -119,7 +118,8 @@ class ADNIBIDSSubjectID(BIDSSubjectID):
 
 
 class NIFDBIDSSubjectID(BIDSSubjectID):
-    """Here is the implementation for NIFD."""
+    """Implementation for NIFD of the BIDSSubjectIDClass, allowing to go from the source id X_S_XXXX
+    to a bids id sub-NIFDXSXXX and reciprocally."""
 
     def validate(self, value: str) -> str:
         if re.fullmatch(r"sub-NIFD\dS\d{4}", value):
@@ -143,7 +143,8 @@ class NIFDBIDSSubjectID(BIDSSubjectID):
 
 
 class AIBLBIDSSubjectID(BIDSSubjectID):
-    """Here is the implementation for AIBL."""
+    """Implementation for AIBL of the BIDSSubjectIDClass, allowing to go from the source id Y
+    to a bids id sub-ADNIY and reciprocally."""
 
     def validate(self, value: str) -> str:
         if re.fullmatch(r"sub-AIBL\d*", value):
@@ -167,7 +168,8 @@ class AIBLBIDSSubjectID(BIDSSubjectID):
 
 
 class UKBBIDSSubjectID(BIDSSubjectID):
-    """Here is the implementation for UKB."""
+    """Implementation for UKB of the BIDSSubjectIDClass, allowing to go from the source id Y
+    to a bids id sub-ADNIY and reciprocally."""
 
     def validate(self, value: str) -> str:
         if re.fullmatch(r"sub-UKB\d*", value):
@@ -191,7 +193,8 @@ class UKBBIDSSubjectID(BIDSSubjectID):
 
 
 class GENFIBIDSSubjectID(BIDSSubjectID):
-    """Here is the implementation for GENFI."""
+    """Implementation for GENFI of the BIDSSubjectIDClass, allowing to go from the source id Y
+    to a bids id sub-Y and reciprocally."""
 
     def validate(self, value: str) -> str:
         if re.fullmatch(r"sub-\w*", value):
@@ -215,7 +218,8 @@ class GENFIBIDSSubjectID(BIDSSubjectID):
 
 
 class OASISBIDSSubjectID(BIDSSubjectID):
-    """Here is the implementation for OASIS1."""
+    """Implementation for OASIS1 of the BIDSSubjectIDClass, allowing to go from the source id OAS1_XXXX_MR1/2
+    to a bids id sub-OASIS1XXXX and reciprocally."""
 
     def validate(self, value: str) -> str:
         if re.fullmatch(r"sub-OASIS1\d{4}", value):
@@ -239,7 +243,8 @@ class OASISBIDSSubjectID(BIDSSubjectID):
 
 
 class OASIS3BIDSSubjectID(BIDSSubjectID):
-    """Here is the implementation for OASIS3."""
+    """Implementation for OASIS3 of the BIDSSubjectIDClass, allowing to go from the source id XXXX
+    to a bids id sub-OAS3XXXX and reciprocally."""
 
     def validate(self, value: str) -> str:
         if re.fullmatch(r"sub-OAS3\d{4}", value):
@@ -263,7 +268,8 @@ class OASIS3BIDSSubjectID(BIDSSubjectID):
 
 
 class HABSBIDSSubjectID(BIDSSubjectID):
-    """Here is the implementation for HABS."""
+    """Implementation for HABS of the BIDSSubjectIDClass, allowing to go from the source id P_Y
+    to a bids id sub-HABSY and reciprocally."""
 
     def validate(self, value: str) -> str:
         if re.fullmatch(r"sub-HABS\w*", value):
@@ -403,7 +409,7 @@ def create_participants_df(
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        value = _id_factory(study_name).from_original_study_id(
+        value = bids_id_factory(study_name).from_original_study_id(
             participant_df["alternative_id_1"][i]
         )
         bids_id = [s for s in bids_ids if value in s]

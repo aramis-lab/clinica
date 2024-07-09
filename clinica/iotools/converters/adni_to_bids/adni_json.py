@@ -31,10 +31,10 @@ def _bids_id_to_loni(bids_id: str) -> Optional[str]:
     """Convert a subject id of the form sub-ADNI000S0000
     back to original format 000_S_0000
     """
-    from clinica.iotools.bids_utils import StudyName, _id_factory
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
     try:
-        return _id_factory(StudyName.ADNI)(bids_id).to_original_study_id()
+        return bids_id_factory(StudyName.ADNI)(bids_id).to_original_study_id()
     except ValueError:
         return None
 
