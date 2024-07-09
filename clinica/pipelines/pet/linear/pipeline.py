@@ -144,16 +144,16 @@ class PETLinear(PETPipeline):
 
         from clinica.utils.nipype import container_from_filename, fix_join
 
-        from .pet_linear_utils import rename_into_caps
+        from .tasks import rename_into_caps_task
 
         write_node = npe.Node(name="WriteCaps", interface=DataSink())
         write_node.inputs.base_directory = str(self.caps_directory)
         write_node.inputs.parameterization = False
 
         rename_file_node_inputs = [
-            "pet_filename_bids",
-            "pet_filename_raw",
-            "transformation_filename_raw",
+            "pet_bids_image_filename",
+            "pet_preprocessed_image_filename",
+            "pet_to_mri_transformation_filename",
             "suvr_reference_region",
             "uncropped_image",
         ]
@@ -167,7 +167,7 @@ class PETLinear(PETPipeline):
                     "transformation_filename_caps",
                     "pet_filename_in_t1w_caps",
                 ],
-                function=rename_into_caps,
+                function=rename_into_caps_task,
             ),
             name="renameFileCAPS",
         )
@@ -193,11 +193,11 @@ class PETLinear(PETPipeline):
                     write_node,
                     [(("container", fix_join, "pet_linear"), "container")],
                 ),
-                (self.input_node, rename_files, [("pet", "pet_filename_bids")]),
+                (self.input_node, rename_files, [("pet", "pet_bids_image_filename")]),
                 (
                     self.output_node,
                     rename_files,
-                    [("affine_mat", "transformation_filename_raw")],
+                    [("affine_mat", "pet_to_mri_transformation_filename")],
                 ),
                 (
                     rename_files,
@@ -212,7 +212,7 @@ class PETLinear(PETPipeline):
                     (
                         self.output_node,
                         rename_files,
-                        [("outfile_crop", "pet_filename_raw")],
+                        [("outfile_crop", "pet_preprocessed_image_filename")],
                     ),
                     (
                         rename_files,
@@ -227,7 +227,7 @@ class PETLinear(PETPipeline):
                     (
                         self.output_node,
                         rename_files,
-                        [("suvr_pet", "pet_filename_raw")],
+                        [("suvr_pet", "pet_preprocessed_image_filename")],
                     ),
                     (
                         rename_files,
@@ -258,15 +258,16 @@ class PETLinear(PETPipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
 
-        import clinica.pipelines.pet_linear.pet_linear_utils as utils
         from clinica.pipelines.tasks import crop_nifti_task
 
-        # Utilitary nodes
+        from .tasks import perform_suvr_normalization_task
+        from .utils import concatenate_transforms, init_input_node, print_end_pipeline
+
         init_node = npe.Node(
             interface=nutil.Function(
                 input_names=["pet"],
                 output_names=["pet"],
-                function=utils.init_input_node,
+                function=init_input_node,
             ),
             name="initPipeline",
         )
@@ -274,7 +275,7 @@ class PETLinear(PETPipeline):
             interface=nutil.Function(
                 input_names=["pet_to_t1w_transform", "t1w_to_mni_transform"],
                 output_names=["transforms_list"],
-                function=utils.concatenate_transforms,
+                function=concatenate_transforms,
             ),
             name="concatenateTransforms",
         )
@@ -330,12 +331,16 @@ class PETLinear(PETPipeline):
         normalize_intensity_node = npe.Node(
             name="intensityNormalization",
             interface=nutil.Function(
-                function=utils.suvr_normalization,
-                input_names=["input_img", "norm_img", "ref_mask"],
+                function=perform_suvr_normalization_task,
+                input_names=[
+                    "pet_image_path",
+                    "normalizing_image_path",
+                    "reference_mask_path",
+                ],
                 output_names=["output_img"],
             ),
         )
-        normalize_intensity_node.inputs.ref_mask = self.ref_mask
+        normalize_intensity_node.inputs.reference_mask_path = self.ref_mask
 
         # 4. Crop image (using nifti). It uses custom interface, from utils file
         crop_nifti_node = npe.Node(
@@ -343,7 +348,7 @@ class PETLinear(PETPipeline):
             interface=nutil.Function(
                 function=crop_nifti_task,
                 input_names=["input_image", "output_path"],
-                output_names=["output_img"],
+                output_names=["output_image"],
             ),
         )
         crop_nifti_node.inputs.output_path = self.base_dir
@@ -351,7 +356,7 @@ class PETLinear(PETPipeline):
         # 5. Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
-                input_names=["pet", "final_file"], function=utils.print_end_pipeline
+                input_names=["pet", "final_file"], function=print_end_pipeline
             ),
             name="WriteEndMessage",
         )
@@ -404,12 +409,12 @@ class PETLinear(PETPipeline):
                 (
                     ants_applytransform_node,
                     normalize_intensity_node,
-                    [("output_image", "input_img")],
+                    [("output_image", "pet_image_path")],
                 ),
                 (
                     ants_applytransform_nonlinear_node,
                     normalize_intensity_node,
-                    [("output_image", "norm_img")],
+                    [("output_image", "normalizing_image_path")],
                 ),
                 # Connect to DataSink
                 (
@@ -437,12 +442,12 @@ class PETLinear(PETPipeline):
                     (
                         crop_nifti_node,
                         self.output_node,
-                        [("output_img", "outfile_crop")],
+                        [("output_image", "outfile_crop")],
                     ),
                     (
                         crop_nifti_node,
                         print_end_message,
-                        [("output_img", "final_file")],
+                        [("output_image", "final_file")],
                     ),
                 ]
             )
