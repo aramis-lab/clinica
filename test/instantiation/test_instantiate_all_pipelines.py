@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from clinica.utils.pet import SUVRReferenceRegion, Tracer
+
 warnings.filterwarnings("ignore")
 
 
@@ -188,8 +190,7 @@ def test_instantiate_dwi_connectome(cmdopt):
 
 
 def run_pet_volume(input_dir: Path) -> None:
-    from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
-    from clinica.utils.pet import SUVRReferenceRegion, Tracer
+    from clinica.pipelines.pet.volume.pipeline import PETVolume
 
     root = input_dir / "PETVolume"
     parameters = {
@@ -210,7 +211,6 @@ def run_pet_volume(input_dir: Path) -> None:
 
 def test_instantiate_pet_linear(cmdopt):
     from clinica.pipelines.pet.linear.pipeline import PETLinear
-    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETLinear"
@@ -252,7 +252,6 @@ def test_instantiate_statistics_surface(cmdopt, tmp_path):
 
 def test_instantiate_pet_surface_cross_sectional(cmdopt):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
-    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETSurface"
@@ -276,7 +275,6 @@ def test_instantiate_pet_surface_cross_sectional(cmdopt):
 @pytest.mark.skip(reason="Currently broken. Needs to be fixed...")
 def test_instantiate_pet_surface_longitudinal(cmdopt):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
-    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETSurfaceLongitudinal"
@@ -302,7 +300,6 @@ def test_instantiate_workflows_ml(cmdopt):
         CAPSVertexBasedInput,
         CAPSVoxelBasedInput,
     )
-    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "WorkflowsML"
@@ -438,7 +435,6 @@ def test_instantiate_statistics_volume(cmdopt):
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
-    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "StatisticsVolume"

@@ -16,7 +16,7 @@ def test_pet_volume(cmdopt, tmp_path):
 def run_pet_volume(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
+    from clinica.pipelines.pet.volume.pipeline import PETVolume
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
