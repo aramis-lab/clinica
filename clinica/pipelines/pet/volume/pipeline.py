@@ -87,6 +87,7 @@ class PETVolume(PETPipeline):
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
+        from clinica.pipelines.pet.utils import get_suvr_mask, read_psf_information
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.input_files import (
@@ -97,7 +98,6 @@ class PETVolume(PETPipeline):
             t1_volume_native_tpm_in_mni,
         )
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
-        from clinica.utils.pet import get_suvr_mask, read_psf_information
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_groups_in_caps_directory,

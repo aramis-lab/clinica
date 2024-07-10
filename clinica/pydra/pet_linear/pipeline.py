@@ -6,6 +6,7 @@ from nipype.interfaces.ants import ApplyTransforms, Registration, RegistrationSy
 from pydra.engine import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
 
+from clinica.pipelines.pet.utils import get_suvr_mask
 from clinica.pydra.engine import clinica_io
 from clinica.pydra.pet_linear.tasks import (
     concatenate_transforms_task,
@@ -13,7 +14,6 @@ from clinica.pydra.pet_linear.tasks import (
     suvr_normalization_task,
 )
 from clinica.pydra.tasks import download_mni_template_2009c
-from clinica.utils.pet import get_suvr_mask
 
 IMAGE_DIMENSION = 3
 
