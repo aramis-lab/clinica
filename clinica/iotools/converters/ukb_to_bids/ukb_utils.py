@@ -145,9 +145,12 @@ def merge_imaging_and_clinical_data(
 def _complete_clinical(df_clinical: pd.DataFrame) -> pd.DataFrame:
     """This function uses the existing data to create the columns needed for
     the bids hierarchy (subject_id, ses, age_at _sessions, etc.)"""
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
     df_clinical = df_clinical.assign(
-        participant_id=lambda df: ("sub-UKB" + df.source_id.astype("str"))
+        participant_id=lambda df: df.source_id.astype("str").apply(
+            lambda x: bids_id_factory(StudyName.UKB).from_original_study_id(x)
+        )
     )
     df_clinical = df_clinical.assign(
         sessions=lambda df: "ses-" + df.source_sessions_number.astype("str")

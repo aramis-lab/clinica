@@ -630,12 +630,14 @@ def _create_file(
     Path or None :
         Path to file
     """
-    from clinica.iotools.bids_utils import json_from_dcm
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory, json_from_dcm
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
 
-    participant_id = f"sub-AIBL{image.Subjects_ID}"
+    participant_id = bids_id_factory(StudyName.AIBL).from_original_study_id(
+        image.Subjects_ID
+    )
     session_id = image.Session_ID
     image_path = image[modality.name_of_path]
 

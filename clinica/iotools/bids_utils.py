@@ -2,9 +2,12 @@
 
 import json
 import os
+import re
+from abc import ABC, abstractmethod
+from collections import UserString
 from enum import Enum
 from pathlib import Path
-from typing import BinaryIO, List, Optional, Union
+from typing import BinaryIO, List, Optional, Type, Union
 
 import pandas as pd
 
@@ -47,6 +50,246 @@ BIDS_VALIDATOR_CONFIG = {
     "error": [],
     "ignoredFiles": [],
 }
+
+
+class BIDSSubjectID(ABC, UserString):
+    """This is the interface that BIDS subject IDs have to implement."""
+
+    def __init__(self, value: str):
+        instance = super().__init__(self.validate(value))
+        return instance
+
+    @abstractmethod
+    def validate(self, value: str) -> str:
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_original_study_id(self) -> str:
+        raise NotImplementedError
+
+
+def bids_id_factory(study: StudyName) -> Type[BIDSSubjectID]:
+    if study == StudyName.ADNI:
+        return ADNIBIDSSubjectID
+    if study == StudyName.NIFD:
+        return NIFDBIDSSubjectID
+    if study == StudyName.AIBL:
+        return AIBLBIDSSubjectID
+    if study == StudyName.UKB:
+        return UKBBIDSSubjectID
+    if study == StudyName.GENFI:
+        return GENFIBIDSSubjectID
+    if study == StudyName.OASIS:
+        return OASISBIDSSubjectID
+    if study == StudyName.OASIS3:
+        return OASIS3BIDSSubjectID
+    if study == StudyName.HABS:
+        return HABSBIDSSubjectID
+
+
+class ADNIBIDSSubjectID(BIDSSubjectID):
+    """Implementation for ADNI of the BIDSSubjectIDClass, allowing to go from the source id XXX_S_XXXX
+    to a bids id sub-ADNIXXXSXXX and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-ADNI\d{3}S\d{4}", value):
+            return value
+        raise ValueError(
+            f"BIDS ADNI subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-ADNIXXXSXXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\d{3}_S_\d{4}", study_id):
+            return "sub-ADNI" + study_id.replace("_", "")
+        raise ValueError(
+            f"Raw ADNI subject ID {study_id} is not properly formatted. "
+            "Expecting a 'XXX_S_XXXX' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return "_S_".join(self.split("ADNI")[1].split("S"))
+
+
+class NIFDBIDSSubjectID(BIDSSubjectID):
+    """Implementation for NIFD of the BIDSSubjectIDClass, allowing to go from the source id X_S_XXXX
+    to a bids id sub-NIFDXSXXX and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-NIFD\dS\d{4}", value):
+            return value
+        raise ValueError(
+            f"BIDS NIFD subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-NIFDXSXXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\d_S_\d{4}", study_id):
+            return "sub-NIFD" + study_id.replace("_", "")
+        raise ValueError(
+            f"Raw NIFD subject ID {study_id} is not properly formatted. "
+            "Expecting a 'X_S_XXXX' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return "_S_".join(self.split("NIFD")[1].split("S"))
+
+
+class AIBLBIDSSubjectID(BIDSSubjectID):
+    """Implementation for AIBL of the BIDSSubjectIDClass, allowing to go from the source id Y
+    to a bids id sub-ADNIY and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-AIBL\d*", value):
+            return value
+        raise ValueError(
+            f"BIDS AIBL subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-AIBLY' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\d*", study_id):
+            return "sub-AIBL" + study_id
+        raise ValueError(
+            f"Raw AIBL subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format where Y is a combination of digits."
+        )
+
+    def to_original_study_id(self) -> str:
+        return self.split("AIBL")[1]
+
+
+class UKBBIDSSubjectID(BIDSSubjectID):
+    """Implementation for UKB of the BIDSSubjectIDClass, allowing to go from the source id Y
+    to a bids id sub-ADNIY and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-UKB\d*", value):
+            return value
+        raise ValueError(
+            f"BIDS UKB subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-UKBY' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\d*", study_id):
+            return "sub-UKB" + study_id
+        raise ValueError(
+            f"Raw UKB subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format where Y is a combination of digits."
+        )
+
+    def to_original_study_id(self) -> str:
+        return self.split("UKB")[1]
+
+
+class GENFIBIDSSubjectID(BIDSSubjectID):
+    """Implementation for GENFI of the BIDSSubjectIDClass, allowing to go from the source id Y
+    to a bids id sub-Y and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-\w*", value):
+            return value
+        raise ValueError(
+            f"BIDS GENFI subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-Y' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\w*", study_id):
+            return "sub-" + study_id
+        raise ValueError(
+            f"Raw GENFI subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format where Y is a combination of letters and digits."
+        )
+
+    def to_original_study_id(self) -> str:
+        return self.split("-")[1]
+
+
+class OASISBIDSSubjectID(BIDSSubjectID):
+    """Implementation for OASIS1 of the BIDSSubjectIDClass, allowing to go from the source id OAS1_XXXX_MR1/2
+    to a bids id sub-OASIS1XXXX and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-OASIS1\d{4}", value):
+            return value
+        raise ValueError(
+            f"BIDS OASIS1 subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-OASIS1XXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"OAS1_\d{4}_MR\d", study_id):
+            return "sub-OASIS1" + study_id.split("_")[1]
+        raise ValueError(
+            f"Raw OASIS1 subject ID {study_id} is not properly formatted. "
+            "Expecting a 'OAS1_XXXX_MR1/2' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return "OAS1" + self.split("OASIS1")[1] + "MR1"
+
+
+class OASIS3BIDSSubjectID(BIDSSubjectID):
+    """Implementation for OASIS3 of the BIDSSubjectIDClass, allowing to go from the source id XXXX
+    to a bids id sub-OAS3XXXX and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-OAS3\d{4}", value):
+            return value
+        raise ValueError(
+            f"BIDS OASIS3 subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-OAS3XXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"OAS3\d{4}", study_id):
+            return "sub-" + study_id
+        raise ValueError(
+            f"Raw OASIS3 subject ID {study_id} is not properly formatted. "
+            "Expecting a 'OAS3XXXX' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return self.split("-")[1]
+
+
+class HABSBIDSSubjectID(BIDSSubjectID):
+    """Implementation for HABS of the BIDSSubjectIDClass, allowing to go from the source id P_Y
+    to a bids id sub-HABSY and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-HABS\w*", value):
+            return value
+        raise ValueError(
+            f"BIDS HABS subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-HABSY' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"P_\w*", study_id):
+            return study_id.replace("P_", "sub-HABS")
+        raise ValueError(
+            f"Raw HABS subject ID {study_id} is not properly formatted. "
+            "Expecting a 'P_Y' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return str(self.replace("sub-HABS", "P_"))
 
 
 # -- Methods for the clinical data --
@@ -166,15 +409,10 @@ def create_participants_df(
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        if study_name == StudyName.OASIS:
-            value = (participant_df["alternative_id_1"][i].split("_"))[1]
-        elif study_name == StudyName.OASIS3:
-            value = participant_df["alternative_id_1"][i].replace("OAS3", "")
-        else:
-            value = remove_space_and_symbols(participant_df["alternative_id_1"][i])
-
+        value = bids_id_factory(study_name).from_original_study_id(
+            participant_df["alternative_id_1"][i]
+        )
         bids_id = [s for s in bids_ids if value in s]
-
         if len(bids_id) == 0:
             index_to_drop.append(i)
             subjects_to_drop.append(value)
@@ -289,11 +527,7 @@ def create_sessions_dict_oasis(
                     if subj_id.dtype == np.int64:
                         subj_id = str(subj_id)
                 # Removes all the - from
-                subj_id_alpha = remove_space_and_symbols(subj_id)
-                if study_name == StudyName.OASIS:
-                    subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
-                if study_name == StudyName.OASIS3:
-                    subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3:])
+                subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
 
                 # Extract the corresponding BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]

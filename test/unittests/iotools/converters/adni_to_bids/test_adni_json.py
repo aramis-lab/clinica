@@ -15,16 +15,16 @@ from clinica.utils.exceptions import ClinicaXMLParserError
     [
         ("sub-ADNI000S0000", "000_S_0000"),
         ("sub-ADNI123S4567", "123_S_4567"),
-        ("sub-ADNI12S4567", "12_S_4567"),
-        ("sub-ADNI123X4567", "123_S_4567"),
-        ("sub-ADNI123XYZ4567", "123_S_4567"),
-        ("sub-ADNI123XYZ_TT4567", "123_S_4567"),
+        ("sub-ADNI12S4567", None),
+        ("sub-ADNI123X4567", None),
+        ("sub-ADNI123XYZ4567", None),
+        ("sub-ADNI123XYZ_TT4567", None),
         ("sub-ADNI123XYZ12TT4567", None),
         ("", None),
         ("foo", None),
         ("12", None),
-        ("123_S_4567", "123_S_4567"),
-        ("1_XY_22", "1_S_22"),
+        ("123_S_4567", None),
+        ("1_XY_22", None),
     ],
 )
 def test_bids_id_to_loni(input_value, expected):

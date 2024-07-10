@@ -41,6 +41,25 @@ EXPECTED_README_CONTENT = Template(
 )
 
 
+@pytest.mark.parametrize(
+    "study,study_id,expected",
+    [
+        (StudyName.ADNI, "001_S_0001", "sub-ADNI001S0001"),
+        (StudyName.NIFD, "1_S_0001", "sub-NIFD1S0001"),
+        (StudyName.AIBL, "10", "sub-AIBL10"),
+        (StudyName.UKB, "0101001", "sub-UKB0101001"),
+        (StudyName.GENFI, "MAPT009", "sub-MAPT009"),
+        (StudyName.OASIS3, "OAS30001", "sub-OAS30001"),
+        (StudyName.HABS, "P_INIBUB", "sub-HABSINIBUB"),
+        (StudyName.OASIS, "OAS1_0001_MR1", "sub-OASIS10001"),
+    ],
+)
+def test_study_to_bids_id_passing(study, study_id, expected):
+    from clinica.iotools.bids_utils import bids_id_factory
+
+    assert bids_id_factory(study).from_original_study_id(study_id) == expected
+
+
 def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
     spec_df = pd.DataFrame(
         {

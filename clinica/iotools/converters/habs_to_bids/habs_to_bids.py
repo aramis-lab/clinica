@@ -3,6 +3,7 @@ from typing import Iterator, Optional
 
 import pandas as pd
 
+from clinica.iotools.bids_utils import StudyName, bids_id_factory
 from clinica.utils.filemanip import UserProvidedPath
 
 __all__ = ["convert"]
@@ -83,11 +84,6 @@ def convert(
     )
 
 
-def _source_participant_id_to_bids(dataframe: pd.DataFrame) -> pd.Series:
-    # HABS participant format prefixed with `P_`
-    return dataframe.source_participant_id.str.replace("P_", "sub-HABS", regex=False)
-
-
 def _source_session_id_to_bids(dataframe: pd.DataFrame) -> pd.Series:
     import re
 
@@ -132,7 +128,11 @@ def _read_clinical_data(path: Path, rename_columns: dict[str, str]) -> pd.DataFr
         pd.read_csv(path)
         .rename(columns=rename_columns)
         .assign(date=lambda df: pd.to_datetime(df.date))
-        .assign(participant_id=_source_participant_id_to_bids)
+        .assign(
+            participant_id=lambda df: df.source_participant_id.apply(
+                lambda x: bids_id_factory(StudyName.HABS).from_original_study_id(x)
+            )
+        )
         .drop(columns="source_participant_id")
         .assign(session_id=_source_session_id_to_bids)
         .drop(columns="source_session_id")
@@ -177,7 +177,11 @@ def _parse_imaging_data(paths: list[tuple[str, str]]) -> Optional[pd.DataFrame]:
         return None
     # Compute BIDS participant ID, session ID and filename.
     df = (
-        df.assign(participant_id=_source_participant_id_to_bids)
+        df.assign(
+            participant_id=lambda df: df.source_participant_id.apply(
+                lambda x: bids_id_factory(StudyName.HABS).from_original_study_id(x)
+            )
+        )
         .drop(columns="source_participant_id")
         .assign(session_id=_source_session_id_to_bids)
         .drop(columns="source_session_id")

@@ -24,6 +24,8 @@ def _find_clinical_data(clinical_data_directory: Path) -> Optional[pd.DataFrame]
 
 
 def read_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
+
     if (dataframe := _find_clinical_data(clinical_data_directory)) is None:
         raise FileNotFoundError("Clinical data not found")
     # Compute participant and session IDs.
@@ -31,8 +33,12 @@ def read_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
         index={"loni_id": "participant_id", "visit_number": "session_id"}
     )
     dataframe.index = dataframe.index.map(
-        lambda x: (f"sub-NIFD{x[0].replace('_', '')}", f"ses-M{(6 * (x[1] - 1)):03d}")
+        lambda x: (
+            bids_id_factory(StudyName.NIFD).from_original_study_id(x[0]),
+            f"ses-M{(6 * (x[1] - 1)):03d}",
+        )
     )
+
     # Keep relevant columns and rename them.
     dataframe = (
         dataframe[["dx", "site", "education", "race", "cdr_box_score", "mmse_tot"]]
@@ -167,6 +173,8 @@ def dataset_to_bids(
     imaging_data: pd.DataFrame,
     clinical_data: Optional[pd.DataFrame] = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
+
     # Parse preprocessing information from scan descriptions.
     preprocessing = imaging_data.description.apply(_parse_preprocessing).apply(
         pd.Series
@@ -201,7 +209,7 @@ def dataset_to_bids(
     # Compute the BIDS-compliant participant, session and scan IDs.
     scans = scans.assign(
         participant_id=lambda df: df.subject.apply(
-            lambda x: f"sub-NIFD{x.replace('_', '')}"
+            lambda x: bids_id_factory(StudyName.NIFD).from_original_study_id(x)
         ),
         session_id=lambda df: df.visit.apply(
             lambda x: (
