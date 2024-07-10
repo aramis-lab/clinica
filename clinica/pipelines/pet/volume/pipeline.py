@@ -265,20 +265,24 @@ class PETVolume(PETPipeline):
         read_input_node.inputs.reference_mask = reference_mask_file
         read_input_node.inputs.dartel_template = final_template
 
-        # fmt: off
         self.connect(
             [
-                (read_input_node, self.input_node, [("pet_image", "pet_image"),
-                                                    ("t1_image_native", "t1_image_native"),
-                                                    ("mask_tissues", "mask_tissues"),
-                                                    ("flow_fields", "flow_fields"),
-                                                    ("dartel_template", "dartel_template"),
-                                                    ("reference_mask", "reference_mask"),
-                                                    ("psf", "psf"),
-                                                    ("pvc_mask_tissues", "pvc_mask_tissues")])
+                (
+                    read_input_node,
+                    self.input_node,
+                    [
+                        ("pet_image", "pet_image"),
+                        ("t1_image_native", "t1_image_native"),
+                        ("mask_tissues", "mask_tissues"),
+                        ("flow_fields", "flow_fields"),
+                        ("dartel_template", "dartel_template"),
+                        ("reference_mask", "reference_mask"),
+                        ("psf", "psf"),
+                        ("pvc_mask_tissues", "pvc_mask_tissues"),
+                    ],
+                )
             ]
         )
-        # fmt: on
 
     def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
@@ -385,29 +389,78 @@ class PETVolume(PETPipeline):
                 + r"\4",
             ),
         ]
-
-        # fmt: off
         self.connect(
             [
-                (self.input_node, container_path, [("pet_image", "bids_or_caps_filename")]),
-                (container_path, write_images_node, [(("container", fix_join, "pet", "preprocessing", f"group-{self.parameters['group_label']}"), "container")]),
-                (self.output_node, write_images_node, [(("pet_t1_native", zip_nii, True), "pet_t1_native"),
-                                                       (("pet_mni", zip_nii, True), "pet_mni"),
-                                                       (("pet_suvr", zip_nii, True), "pet_suvr"),
-                                                       (("binary_mask", zip_nii, True), "binary_mask"),
-                                                       (("pet_suvr_masked", zip_nii, True), "pet_suvr_masked"),
-                                                       (("pet_suvr_masked_smoothed", zip_nii, True), "pet_suvr_masked_smoothed"),
-                                                       (("pet_pvc", zip_nii, True), "pet_pvc"),
-                                                       (("pet_pvc_mni", zip_nii, True), "pet_pvc_mni"),
-                                                       (("pet_pvc_suvr", zip_nii, True), "pet_pvc_suvr"),
-                                                       (("pet_pvc_suvr_masked", zip_nii, True), "pet_pvc_suvr_masked"),
-                                                       (("pet_pvc_suvr_masked_smoothed", zip_nii, True), "pet_pvc_suvr_masked_smoothed")]),
-                (container_path, write_atlas_node, [(("container", fix_join, "pet", "preprocessing", f"group-{self.parameters['group_label']}"), "container")]),
-                (self.output_node, write_atlas_node, [("atlas_statistics", "atlas_statistics"),
-                                                      ("pvc_atlas_statistics", "pvc_atlas_statistics")]),
+                (
+                    self.input_node,
+                    container_path,
+                    [("pet_image", "bids_or_caps_filename")],
+                ),
+                (
+                    container_path,
+                    write_images_node,
+                    [
+                        (
+                            (
+                                "container",
+                                fix_join,
+                                "pet",
+                                "preprocessing",
+                                f"group-{self.parameters['group_label']}",
+                            ),
+                            "container",
+                        )
+                    ],
+                ),
+                (
+                    self.output_node,
+                    write_images_node,
+                    [
+                        (("pet_t1_native", zip_nii, True), "pet_t1_native"),
+                        (("pet_mni", zip_nii, True), "pet_mni"),
+                        (("pet_suvr", zip_nii, True), "pet_suvr"),
+                        (("binary_mask", zip_nii, True), "binary_mask"),
+                        (("pet_suvr_masked", zip_nii, True), "pet_suvr_masked"),
+                        (
+                            ("pet_suvr_masked_smoothed", zip_nii, True),
+                            "pet_suvr_masked_smoothed",
+                        ),
+                        (("pet_pvc", zip_nii, True), "pet_pvc"),
+                        (("pet_pvc_mni", zip_nii, True), "pet_pvc_mni"),
+                        (("pet_pvc_suvr", zip_nii, True), "pet_pvc_suvr"),
+                        (("pet_pvc_suvr_masked", zip_nii, True), "pet_pvc_suvr_masked"),
+                        (
+                            ("pet_pvc_suvr_masked_smoothed", zip_nii, True),
+                            "pet_pvc_suvr_masked_smoothed",
+                        ),
+                    ],
+                ),
+                (
+                    container_path,
+                    write_atlas_node,
+                    [
+                        (
+                            (
+                                "container",
+                                fix_join,
+                                "pet",
+                                "preprocessing",
+                                f"group-{self.parameters['group_label']}",
+                            ),
+                            "container",
+                        )
+                    ],
+                ),
+                (
+                    self.output_node,
+                    write_atlas_node,
+                    [
+                        ("atlas_statistics", "atlas_statistics"),
+                        ("pvc_atlas_statistics", "pvc_atlas_statistics"),
+                    ],
+                ),
             ]
         )
-        # fmt: on
 
     def _build_core_nodes(self):
         """Build and connect an output node to the pipeline."""
@@ -420,15 +473,17 @@ class PETVolume(PETPipeline):
         from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import use_spm_standalone_if_available
 
-        from .pet_volume_utils import (
-            apply_binary_mask,
-            atlas_statistics,
-            create_binary_mask,
-            create_pvc_mask,
+        from .tasks import (
+            apply_binary_mask_task,
+            compute_atlas_statistics_task,
+            create_binary_mask_task,
+            create_pvc_mask_task,
+            normalize_to_reference_task,
+        )
+        from .utils import (
+            build_pet_pvc_name,
             get_from_list,
             init_input_node,
-            normalize_to_reference,
-            pet_pvc_name,
         )
 
         use_spm_standalone_if_available()
@@ -509,7 +564,7 @@ class PETVolume(PETPipeline):
             nutil.Function(
                 input_names=["pet_image", "region_mask"],
                 output_names=["suvr_pet_path"],
-                function=normalize_to_reference,
+                function=normalize_to_reference_task,
             ),
             name="norm_to_ref",
         )
@@ -520,7 +575,7 @@ class PETVolume(PETPipeline):
             nutil.Function(
                 input_names=["tissues", "threshold"],
                 output_names=["out_mask"],
-                function=create_binary_mask,
+                function=create_binary_mask_task,
             ),
             name="binary_mask",
         )
@@ -532,7 +587,7 @@ class PETVolume(PETPipeline):
             nutil.Function(
                 input_names=["image", "binary_mask"],
                 output_names=["masked_image_path"],
-                function=apply_binary_mask,
+                function=apply_binary_mask_task,
             ),
             name="apply_mask",
         )
@@ -547,14 +602,16 @@ class PETVolume(PETPipeline):
             smoothing_node.inputs.out_prefix = [
                 "fwhm-" + str(x) + "mm_" for x in self.parameters["smooth"]
             ]
-            # fmt: off
             self.connect(
                 [
                     (apply_mask, smoothing_node, [("masked_image_path", "in_files")]),
-                    (smoothing_node, self.output_node, [("smoothed_files", "pet_suvr_masked_smoothed")]),
+                    (
+                        smoothing_node,
+                        self.output_node,
+                        [("smoothed_files", "pet_suvr_masked_smoothed")],
+                    ),
                 ]
             )
-            # fmt: on
         else:
             self.output_node.inputs.pet_suvr_masked_smoothed = [[]]
 
@@ -562,49 +619,77 @@ class PETVolume(PETPipeline):
         # ================
         atlas_stats_node = npe.MapNode(
             nutil.Function(
-                input_names=["in_image", "in_atlas_list"],
+                input_names=["image", "atlas_names"],
                 output_names=["atlas_statistics"],
-                function=atlas_statistics,
+                function=compute_atlas_statistics_task,
             ),
             name="atlas_stats_node",
             iterfield=["in_image"],
         )
-        atlas_stats_node.inputs.in_atlas_list = self.parameters["atlases"]
+        atlas_stats_node.inputs.atlas_names = self.parameters["atlases"]
 
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
                 (self.input_node, init_node, [("pet_image", "pet_nii")]),
                 (init_node, unzip_pet_image, [("pet_nii", "in_file")]),
-                (self.input_node, unzip_t1_image_native, [("t1_image_native", "in_file")]),
+                (
+                    self.input_node,
+                    unzip_t1_image_native,
+                    [("t1_image_native", "in_file")],
+                ),
                 (self.input_node, unzip_flow_fields, [("flow_fields", "in_file")]),
-                (self.input_node, unzip_dartel_template, [("dartel_template", "in_file")]),
-                (self.input_node, unzip_reference_mask, [("reference_mask", "in_file")]),
+                (
+                    self.input_node,
+                    unzip_dartel_template,
+                    [("dartel_template", "in_file")],
+                ),
+                (
+                    self.input_node,
+                    unzip_reference_mask,
+                    [("reference_mask", "in_file")],
+                ),
                 (self.input_node, unzip_mask_tissues, [("mask_tissues", "in_file")]),
                 (unzip_pet_image, coreg_pet_t1, [("out_file", "source")]),
                 (unzip_t1_image_native, coreg_pet_t1, [("out_file", "target")]),
                 (unzip_flow_fields, dartel_mni_reg, [("out_file", "flowfield_files")]),
-                (unzip_dartel_template, dartel_mni_reg, [("out_file", "template_file")]),
+                (
+                    unzip_dartel_template,
+                    dartel_mni_reg,
+                    [("out_file", "template_file")],
+                ),
                 (unzip_reference_mask, reslice, [("out_file", "in_file")]),
                 (unzip_mask_tissues, binary_mask, [("out_file", "tissues")]),
-                (coreg_pet_t1, dartel_mni_reg, [("coregistered_source", "apply_to_files")]),
+                (
+                    coreg_pet_t1,
+                    dartel_mni_reg,
+                    [("coregistered_source", "apply_to_files")],
+                ),
                 (dartel_mni_reg, reslice, [("normalized_files", "space_defining")]),
                 (dartel_mni_reg, norm_to_ref, [("normalized_files", "pet_image")]),
                 (reslice, norm_to_ref, [("out_file", "region_mask")]),
                 (norm_to_ref, apply_mask, [("suvr_pet_path", "image")]),
                 (binary_mask, apply_mask, [("out_mask", "binary_mask")]),
-                (norm_to_ref, atlas_stats_node, [("suvr_pet_path", "in_image")]),
-                (coreg_pet_t1, self.output_node, [("coregistered_source", "pet_t1_native")]),
+                (norm_to_ref, atlas_stats_node, [("suvr_pet_path", "image")]),
+                (
+                    coreg_pet_t1,
+                    self.output_node,
+                    [("coregistered_source", "pet_t1_native")],
+                ),
                 (dartel_mni_reg, self.output_node, [("normalized_files", "pet_mni")]),
                 (norm_to_ref, self.output_node, [("suvr_pet_path", "pet_suvr")]),
                 (binary_mask, self.output_node, [("out_mask", "binary_mask")]),
-                (apply_mask, self.output_node, [("masked_image_path", "pet_suvr_masked")]),
-                (atlas_stats_node, self.output_node, [("atlas_statistics", "atlas_statistics")]),
+                (
+                    apply_mask,
+                    self.output_node,
+                    [("masked_image_path", "pet_suvr_masked")],
+                ),
+                (
+                    atlas_stats_node,
+                    self.output_node,
+                    [("atlas_statistics", "atlas_statistics")],
+                ),
             ]
         )
-        # fmt: on
 
         # PVC
         # ==========
@@ -627,7 +712,7 @@ class PETVolume(PETPipeline):
                 nutil.Function(
                     input_names=["tissues"],
                     output_names=["out_mask"],
-                    function=create_pvc_mask,
+                    function=create_pvc_mask_task,
                 ),
                 name="pvc_mask",
             )
@@ -655,7 +740,7 @@ class PETVolume(PETPipeline):
                 nutil.Function(
                     input_names=["pet_image", "region_mask"],
                     output_names=["suvr_pet_path"],
-                    function=normalize_to_reference,
+                    function=normalize_to_reference_task,
                 ),
                 name="norm_to_ref_pvc",
             )
@@ -666,7 +751,7 @@ class PETVolume(PETPipeline):
                 nutil.Function(
                     input_names=["image", "binary_mask"],
                     output_names=["masked_image_path"],
-                    function=apply_binary_mask,
+                    function=apply_binary_mask_task,
                 ),
                 name="apply_mask_pvc",
             )
@@ -685,60 +770,115 @@ class PETVolume(PETPipeline):
                 smoothing_pvc.inputs.out_prefix = [
                     "fwhm-" + str(x) + "mm_" for x in self.parameters["smooth"]
                 ]
-                # fmt: off
                 self.connect(
                     [
-                        (apply_mask_pvc, smoothing_pvc, [("masked_image_path", "in_files")]),
-                        (smoothing_pvc, self.output_node, [("smoothed_files", "pet_pvc_suvr_masked_smoothed")]),
+                        (
+                            apply_mask_pvc,
+                            smoothing_pvc,
+                            [("masked_image_path", "in_files")],
+                        ),
+                        (
+                            smoothing_pvc,
+                            self.output_node,
+                            [("smoothed_files", "pet_pvc_suvr_masked_smoothed")],
+                        ),
                     ]
                 )
-                # fmt: on
             else:
                 self.output_node.inputs.pet_pvc_suvr_masked_smoothed = [[]]
             # Atlas Statistics
             # ================
             atlas_stats_pvc = npe.MapNode(
                 nutil.Function(
-                    input_names=["in_image", "in_atlas_list"],
+                    input_names=["image", "atlas_names"],
                     output_names=["atlas_statistics"],
-                    function=atlas_statistics,
+                    function=compute_atlas_statistics_task,
                 ),
                 name="atlas_stats_pvc",
                 iterfield=["in_image"],
             )
-            atlas_stats_pvc.inputs.in_atlas_list = self.parameters["atlases"]
+            atlas_stats_pvc.inputs.in_atlas_names = self.parameters["atlases"]
 
             # Connection
             # ==========
-            # fmt: off
             self.connect(
                 [
-                    (self.input_node, unzip_pvc_mask_tissues, [("pvc_mask_tissues", "in_file")]),
+                    (
+                        self.input_node,
+                        unzip_pvc_mask_tissues,
+                        [("pvc_mask_tissues", "in_file")],
+                    ),
                     (unzip_pvc_mask_tissues, pvc_mask, [("out_file", "tissues")]),
-                    (unzip_flow_fields, dartel_mni_reg_pvc, [("out_file", "flowfield_files")]),
-                    (unzip_dartel_template, dartel_mni_reg_pvc, [("out_file", "template_file")]),
+                    (
+                        unzip_flow_fields,
+                        dartel_mni_reg_pvc,
+                        [("out_file", "flowfield_files")],
+                    ),
+                    (
+                        unzip_dartel_template,
+                        dartel_mni_reg_pvc,
+                        [("out_file", "template_file")],
+                    ),
                     (unzip_reference_mask, reslice_pvc, [("out_file", "in_file")]),
-                    (coreg_pet_t1, petpvc, [("coregistered_source", "in_file"),
-                                            (("coregistered_source", pet_pvc_name, "RBV"), "out_file")]),
+                    (
+                        coreg_pet_t1,
+                        petpvc,
+                        [
+                            ("coregistered_source", "in_file"),
+                            (
+                                ("coregistered_source", build_pet_pvc_name, "RBV"),
+                                "out_file",
+                            ),
+                        ],
+                    ),
                     (pvc_mask, petpvc, [("out_mask", "mask_file")]),
-                    (self.input_node, petpvc, [(("psf", get_from_list, 0), "fwhm_x"),
-                                               (("psf", get_from_list, 1), "fwhm_y"),
-                                               (("psf", get_from_list, 2), "fwhm_z")]),
+                    (
+                        self.input_node,
+                        petpvc,
+                        [
+                            (("psf", get_from_list, 0), "fwhm_x"),
+                            (("psf", get_from_list, 1), "fwhm_y"),
+                            (("psf", get_from_list, 2), "fwhm_z"),
+                        ],
+                    ),
                     (petpvc, dartel_mni_reg_pvc, [("out_file", "apply_to_files")]),
-                    (dartel_mni_reg_pvc, reslice_pvc, [("normalized_files", "space_defining")]),
-                    (dartel_mni_reg_pvc, norm_to_ref_pvc, [("normalized_files", "pet_image")]),
+                    (
+                        dartel_mni_reg_pvc,
+                        reslice_pvc,
+                        [("normalized_files", "space_defining")],
+                    ),
+                    (
+                        dartel_mni_reg_pvc,
+                        norm_to_ref_pvc,
+                        [("normalized_files", "pet_image")],
+                    ),
                     (reslice_pvc, norm_to_ref_pvc, [("out_file", "region_mask")]),
                     (norm_to_ref_pvc, apply_mask_pvc, [("suvr_pet_path", "image")]),
                     (binary_mask, apply_mask_pvc, [("out_mask", "binary_mask")]),
-                    (norm_to_ref_pvc, atlas_stats_pvc, [("suvr_pet_path", "in_image")]),
+                    (norm_to_ref_pvc, atlas_stats_pvc, [("suvr_pet_path", "image")]),
                     (petpvc, self.output_node, [("out_file", "pet_pvc")]),
-                    (dartel_mni_reg_pvc, self.output_node, [("normalized_files", "pet_pvc_mni")]),
-                    (norm_to_ref_pvc, self.output_node, [("suvr_pet_path", "pet_pvc_suvr")]),
-                    (apply_mask_pvc, self.output_node, [("masked_image_path", "pet_pvc_suvr_masked")]),
-                    (atlas_stats_pvc, self.output_node, [("atlas_statistics", "pvc_atlas_statistics")]),
+                    (
+                        dartel_mni_reg_pvc,
+                        self.output_node,
+                        [("normalized_files", "pet_pvc_mni")],
+                    ),
+                    (
+                        norm_to_ref_pvc,
+                        self.output_node,
+                        [("suvr_pet_path", "pet_pvc_suvr")],
+                    ),
+                    (
+                        apply_mask_pvc,
+                        self.output_node,
+                        [("masked_image_path", "pet_pvc_suvr_masked")],
+                    ),
+                    (
+                        atlas_stats_pvc,
+                        self.output_node,
+                        [("atlas_statistics", "pvc_atlas_statistics")],
+                    ),
                 ]
             )
-            # fmt: on
         else:
             self.output_node.inputs.pet_pvc = [[]]
             self.output_node.inputs.pet_pvc_mni = [[]]
