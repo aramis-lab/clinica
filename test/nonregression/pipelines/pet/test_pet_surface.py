@@ -22,7 +22,7 @@ def test_pet_surface(cmdopt, tmp_path):
 def run_pet_surface(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+    from clinica.pipelines.pet.surface.pipeline import PetSurface
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
@@ -92,7 +92,7 @@ def test_run_pet_surface_longitudinal(cmdopt, tmp_path):
 def run_pet_surface_longitudinal(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+    from clinica.pipelines.pet.surface.pipeline import PetSurface
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 

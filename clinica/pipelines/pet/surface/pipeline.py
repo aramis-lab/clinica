@@ -189,21 +189,24 @@ class PetSurface(PETPipeline):
             self.parameters["acq_label"],
             skip_question=self.parameters["skip_question"],
         )
-
-        # fmt: off
         self.connect(
             [
-                (read_parameters_node, self.input_node, [("pet", "pet"),
-                                                         ("orig_nu", "orig_nu"),
-                                                         ("white_surface_left", "white_surface_left"),
-                                                         ("white_surface_right", "white_surface_right"),
-                                                         ("destrieux_left", "destrieux_left"),
-                                                         ("destrieux_right", "destrieux_right"),
-                                                         ("desikan_left", "desikan_left"),
-                                                         ("desikan_right", "desikan_right")])
+                (
+                    read_parameters_node,
+                    self.input_node,
+                    [
+                        ("pet", "pet"),
+                        ("orig_nu", "orig_nu"),
+                        ("white_surface_left", "white_surface_left"),
+                        ("white_surface_right", "white_surface_right"),
+                        ("destrieux_left", "destrieux_left"),
+                        ("destrieux_right", "destrieux_right"),
+                        ("desikan_left", "desikan_left"),
+                        ("desikan_right", "desikan_right"),
+                    ],
+                )
             ]
         )
-        # fmt: on
 
     def _build_input_node_cross_sectional(self):
         import nipype.interfaces.utility as nutil
@@ -320,21 +323,24 @@ class PetSurface(PETPipeline):
             self.parameters["acq_label"],
             skip_question=self.parameters["skip_question"],
         )
-
-        # fmt: off
         self.connect(
             [
-                (read_parameters_node, self.input_node, [("pet", "pet"),
-                                                         ("orig_nu", "orig_nu"),
-                                                         ("white_surface_left", "white_surface_left"),
-                                                         ("white_surface_right", "white_surface_right"),
-                                                         ("destrieux_left", "destrieux_left"),
-                                                         ("destrieux_right", "destrieux_right"),
-                                                         ("desikan_left", "desikan_left"),
-                                                         ("desikan_right", "desikan_right")])
+                (
+                    read_parameters_node,
+                    self.input_node,
+                    [
+                        ("pet", "pet"),
+                        ("orig_nu", "orig_nu"),
+                        ("white_surface_left", "white_surface_left"),
+                        ("white_surface_right", "white_surface_right"),
+                        ("destrieux_left", "destrieux_left"),
+                        ("destrieux_right", "destrieux_right"),
+                        ("desikan_left", "desikan_left"),
+                        ("desikan_right", "desikan_right"),
+                    ],
+                )
             ]
         )
-        # fmt: on
 
     def _build_output_node(self):
         """Build and connect an output node to the pipeline."""
@@ -355,7 +361,7 @@ class PetSurface(PETPipeline):
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
 
-        import clinica.pipelines.pet_surface.pet_surface_utils as utils
+        from clinica.pipelines.pet.surface.workflows import get_wf
 
         full_pipe = npe.MapNode(
             niu.Function(
@@ -380,7 +386,7 @@ class PetSurface(PETPipeline):
                     "is_longitudinal",
                 ],
                 output_names=[],
-                function=utils.get_wf,
+                function=get_wf,
             ),
             name="full_pipeline_mapnode",
             iterfield=[
@@ -413,6 +419,7 @@ class PetSurface(PETPipeline):
                 os.path.dirname(os.path.realpath(__file__)),
                 "..",
                 "..",
+                "..",
                 "resources",
                 "label_conversion_gtmsegmentation.csv",
             )
@@ -421,20 +428,21 @@ class PetSurface(PETPipeline):
             os.path.dirname(os.path.realpath(__file__))
         )
         full_pipe.inputs.is_longitudinal = self.parameters["longitudinal"]
-
-        # Connection
-        # ==========
-        # fmt: off
         self.connect(
             [
-                (self.input_node, full_pipe, [("pet", "pet"),
-                                              ("white_surface_left", "white_surface_left"),
-                                              ("white_surface_right", "white_surface_right"),
-                                              ("orig_nu", "orig_nu"),
-                                              ("destrieux_left", "destrieux_left"),
-                                              ("destrieux_right", "destrieux_right"),
-                                              ("desikan_left", "desikan_left"),
-                                              ("desikan_right", "desikan_right")])
+                (
+                    self.input_node,
+                    full_pipe,
+                    [
+                        ("pet", "pet"),
+                        ("white_surface_left", "white_surface_left"),
+                        ("white_surface_right", "white_surface_right"),
+                        ("orig_nu", "orig_nu"),
+                        ("destrieux_left", "destrieux_left"),
+                        ("destrieux_right", "destrieux_right"),
+                        ("desikan_left", "desikan_left"),
+                        ("desikan_right", "desikan_right"),
+                    ],
+                )
             ]
         )
-        # fmt: off

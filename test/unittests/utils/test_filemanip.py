@@ -279,3 +279,41 @@ def test_delete_directories(tmp_path):
         )
         assert not (tmp_path / f"folder{i}").exists()
     assert record[3].message.args[0] == f"Was able to remove 180 B of data."
+
+
+def test_move_file_no_src_error(tmp_path):
+    from clinica.utils.filemanip import move_file
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"File {tmp_path / 'src.txt'} is missing. Something wrong might have occurred prior to this step.",
+    ):
+        move_file(tmp_path / "src.txt", tmp_path / "dst.txt")
+
+
+def test_move_file_existing_dst_warning(tmp_path):
+    from clinica.utils.filemanip import move_file
+
+    (tmp_path / "src.txt").touch()
+    (tmp_path / "dst.txt").touch()
+
+    with pytest.warns(
+        UserWarning,
+        match=f"File {tmp_path / 'dst.txt'} already exists and will be overwritten with file {tmp_path / 'src.txt'}",
+    ):
+        move_file(tmp_path / "src.txt", tmp_path / "dst.txt")
+
+
+def test_move_file_no_dst_error(tmp_path, mocker):
+    from clinica.utils.filemanip import move_file
+
+    mocker.patch("shutil.move", return_value=None)
+    (tmp_path / "src.txt").touch()
+    with pytest.raises(
+        FileNotFoundError,
+        match=(
+            f"Moving {tmp_path / 'src.txt'} to {tmp_path / 'dst.txt'} "
+            f"failed as file {tmp_path / 'dst.txt'} is missing."
+        ),
+    ):
+        move_file(tmp_path / "src.txt", tmp_path / "dst.txt")

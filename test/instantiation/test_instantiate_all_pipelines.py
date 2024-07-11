@@ -286,7 +286,7 @@ def test_instantiate_statistics_surface(cmdopt, tmp_path):
 
 
 def test_instantiate_pet_surface_cross_sectional(cmdopt, tmp_path):
-    from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+    from clinica.pipelines.pet.surface.pipeline import PetSurface
 
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
@@ -311,7 +311,7 @@ def test_instantiate_pet_surface_cross_sectional(cmdopt, tmp_path):
 
 @pytest.mark.skip(reason="Currently broken. Needs to be fixed...")
 def test_instantiate_pet_surface_longitudinal(cmdopt):
-    from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+    from clinica.pipelines.pet.surface.pipeline import PetSurface
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "PETSurfaceLongitudinal"
