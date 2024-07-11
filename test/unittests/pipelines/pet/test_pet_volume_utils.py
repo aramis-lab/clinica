@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import pandas as pd
@@ -22,7 +21,8 @@ def psf_df() -> pd.DataFrame:
 
 
 def test_read_psf_information_errors(tmp_path: Path, psf_df: pd.DataFrame):
-    from clinica.utils.pet import Tracer, read_psf_information
+    from clinica.pipelines.pet.utils import read_psf_information
+    from clinica.utils.pet import Tracer
 
     with pytest.raises(
         FileNotFoundError,
@@ -103,7 +103,8 @@ def test_read_psf_information_errors(tmp_path: Path, psf_df: pd.DataFrame):
 
 
 def test_read_psf_information(tmp_path: Path, psf_df: pd.DataFrame):
-    from clinica.utils.pet import Tracer, read_psf_information
+    from clinica.pipelines.pet.utils import read_psf_information
+    from clinica.utils.pet import Tracer
 
     psf_df.to_csv(tmp_path / "psf.tsv", sep="\t", index=False)
     assert read_psf_information(
@@ -125,14 +126,14 @@ def test_read_psf_information(tmp_path: Path, psf_df: pd.DataFrame):
 
 @pytest.mark.parametrize("region", SUVRReferenceRegion)
 def test_get_suvr_mask(region):
-    from clinica.utils.pet import get_suvr_mask
+    from clinica.pipelines.pet.utils import get_suvr_mask
 
-    assert Path(get_suvr_mask(region)).exists()
+    assert get_suvr_mask(region).exists()
 
 
 @pytest.mark.parametrize("label", ["foo", "bar", "pons3", "cerebelumPons2"])
 def test_get_suvr_mask_error(label: str):
-    from clinica.utils.pet import get_suvr_mask
+    from clinica.pipelines.pet.utils import get_suvr_mask
 
     with pytest.raises(
         ValueError,

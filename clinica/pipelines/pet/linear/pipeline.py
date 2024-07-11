@@ -59,6 +59,7 @@ class PETLinear(PETPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
+        from clinica.pipelines.pet.utils import get_suvr_mask
         from clinica.utils.exceptions import (
             ClinicaBIDSError,
             ClinicaCAPSError,
@@ -67,7 +68,6 @@ class PETLinear(PETPipeline):
         from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, T1W_TO_MNI_TRANSFORM
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.pet import get_suvr_mask
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
