@@ -29,6 +29,14 @@ class ClinicaXMLParserError(ClinicaException):
     """Base class for parser errors."""
 
 
+class ClinicaImageError(ClinicaException):
+    """Base class for image errors."""
+
+
+class ClinicaSubprocessError(ClinicaException):
+    """Base class for subprocess errors."""
+
+
 class ClinicaInconsistentDatasetError(ClinicaException):
     """Base class for inconsistent datasets errors."""
 
