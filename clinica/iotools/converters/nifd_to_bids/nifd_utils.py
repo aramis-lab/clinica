@@ -248,7 +248,7 @@ def dataset_to_bids(
         session_id=lambda df: df.visit.apply(
             lambda x: (
                 "ses-M" + x.strip("M").zfill(3)
-                if is_string_dtype(x)
+                if isinstance(x, str)
                 else f"ses-M{(6 * (x - 1)):03d}"
             )
         ),
