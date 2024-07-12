@@ -13,9 +13,6 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
-env:
-  POETRY_VERSION: '1.8.3'
-
 jobs:
   build-and-deploy-doc:
     runs-on:
@@ -24,10 +21,6 @@ jobs:
       - doc-runner
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: false
       - name: Build documentation
         run: |
           make env.conda
