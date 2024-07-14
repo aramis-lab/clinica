@@ -24,7 +24,6 @@ __all__ = [
     "configure_working_directory",
     "register_b0",
     "extract_sub_ses_folder_name",
-    "split_dwi_dataset_with_b_values",
 ]
 
 
@@ -333,7 +332,7 @@ def prepare_reference_b0(
 
     dwi_dataset = check_dwi_dataset(dwi_dataset)
     working_directory = configure_working_directory(dwi_dataset.dwi, working_directory)
-    small_b_dataset, large_b_dataset = split_dwi_dataset_with_b_values(
+    small_b_dataset, large_b_dataset = _split_dwi_dataset_with_b_values(
         dwi_dataset,
         b_value_threshold=b_value_threshold,
         working_directory=working_directory,
@@ -341,9 +340,9 @@ def prepare_reference_b0(
     reference_b0 = compute_reference_b0(
         small_b_dataset.dwi, dwi_dataset.b_values, b_value_threshold, working_directory
     )
-    reference_dataset = insert_b0_into_dwi(reference_b0, large_b_dataset)
-
-    return reference_b0, reference_dataset
+    if large_b_dataset:
+        return reference_b0, insert_b0_into_dwi(reference_b0, large_b_dataset)
+    return reference_b0, small_b_dataset
 
 
 def insert_b0_into_dwi(b0_filename: PathLike, dwi_dataset: DWIDataset) -> DWIDataset:
@@ -624,11 +623,11 @@ def extract_sub_ses_folder_name(file_path: str) -> str:
     return (Path(Path(file_path).parent).parent).name
 
 
-def split_dwi_dataset_with_b_values(
+def _split_dwi_dataset_with_b_values(
     dwi_dataset: DWIDataset,
     b_value_threshold: float = 5.0,
     working_directory: Optional[Path] = None,
-) -> Tuple[DWIDataset, DWIDataset]:
+) -> Tuple[DWIDataset, Optional[DWIDataset]]:
     """Splits the DWI dataset in two through the B-values.
 
     Splits the DWI volumes into two datasets :
@@ -676,21 +675,24 @@ def split_dwi_dataset_with_b_values(
     large_b_filter = np.array(
         [i for i in range(len(b_values)) if i not in small_b_filter]
     )
-
-    return (
-        _build_dwi_dataset_from_filter(
+    large = None
+    if len(small_b_filter) > 0:
+        small = _build_dwi_dataset_from_filter(
             dwi_dataset,
             "small_b",
             small_b_filter,
             working_directory=working_directory,
-        ),
-        _build_dwi_dataset_from_filter(
+        )
+    else:
+        raise ValueError("No small dataset found.")
+    if len(large_b_filter) > 0:
+        large = _build_dwi_dataset_from_filter(
             dwi_dataset,
             "large_b",
             large_b_filter,
             working_directory=working_directory,
-        ),
-    )
+        )
+    return small, large
 
 
 def _check_b_values_and_b_vectors(
@@ -699,8 +701,8 @@ def _check_b_values_and_b_vectors(
     """Opens the b-values and b-vectors files and transpose the b-vectors if needed."""
     import warnings
 
-    b_values = np.loadtxt(dwi_dataset.b_values)
-    b_vectors = np.loadtxt(dwi_dataset.b_vectors)
+    b_values = np.loadtxt(dwi_dataset.b_values, ndmin=1)
+    b_vectors = np.loadtxt(dwi_dataset.b_vectors, ndmin=2)
     if b_values.shape[0] == b_vectors.shape[0]:
         warnings.warn(
             "Warning: The b-vectors file should be column-wise. The b-vectors will be transposed",
@@ -774,6 +776,8 @@ def _filter_dwi(
     working_directory: Optional[Path] = None,
 ) -> Path:
     """Filters the dwi component of the provided DWI dataset."""
+    import nibabel as nib
+
     from clinica.utils.image import compute_aggregated_volume, get_new_image_like
 
     from ..utils import add_suffix_to_filename
@@ -781,9 +785,12 @@ def _filter_dwi(
     dwi_filename = add_suffix_to_filename(dwi_dataset.dwi, filter_name)
     if working_directory:
         dwi_filename = working_directory / dwi_filename.name
-    data = compute_aggregated_volume(
-        dwi_dataset.dwi, aggregator=None, volumes_to_keep=filter_array
-    )
+    try:
+        data = compute_aggregated_volume(
+            dwi_dataset.dwi, aggregator=None, volumes_to_keep=filter_array
+        )
+    except ValueError:
+        data = nib.load(dwi_dataset.dwi).get_fdata()
     img = get_new_image_like(dwi_dataset.dwi, data)
     img.to_filename(dwi_filename)
 
