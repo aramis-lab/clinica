@@ -19,7 +19,7 @@ def test_run_nifd_to_bids(cmdopt, tmp_path):
         bids_dir=output_dir,
     )
 
-    compare_folders(output_dir, ref_dir, output_dir)
+    compare_folders(output_dir, ref_dir / "bids", output_dir)
 
 
 def test_run_oasis_to_bids(cmdopt, tmp_path):
@@ -60,7 +60,7 @@ def test_run_adni_to_bids(cmdopt, tmp_path):
     output_dir = tmp_path / "bids"
     clinical_data_directory = input_dir / "clinical_data"
     xml_directory = input_dir / "xml_metadata"
-    dataset_directory = input_dir / "unorganized_data"
+    dataset_directory = input_dir / "unorganized"
     subjects_list = input_dir / "subjects.txt"
     modalities = ["T1", "PET_FDG", "PET_AMYLOID", "PET_TAU", "DWI", "FLAIR", "fMRI"]
 
@@ -90,8 +90,8 @@ def test_run_aibl_to_bids(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "Aibl2Bids")
     output_dir = tmp_path / "bids"
-    clinical_data_directory = input_dir / "Data_extract_3.2.5"
-    dataset_directory = input_dir / "unorganized_data"
+    clinical_data_directory = input_dir / "clinical_data"
+    dataset_directory = input_dir / "unorganized"
 
     convert(dataset_directory, clinical_data_directory, output_dir)
 
@@ -108,10 +108,10 @@ def test_run_habs_to_bids(cmdopt, tmp_path):
     output_dir = tmp_path / "bids"
 
     runner = CliRunner()
-    result = runner.invoke(cli, [str(input_dir), str(output_dir)])
+    result = runner.invoke(cli, [str(input_dir / "unorganized"), str(output_dir)])
 
     assert result.exit_code == 0
-    compare_folders(output_dir, ref_dir, output_dir)
+    compare_folders(output_dir, ref_dir / "bids", output_dir)
 
 
 def test_run_ukb_to_bids(cmdopt, tmp_path):

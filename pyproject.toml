@@ -108,6 +108,6 @@ line-ending = "auto"
 
 [tool.codespell]
 summary = ''
-skip = ".git,LICENSE.txt,*.m"
+skip = ".git,LICENSE.txt,ignore_words.txt,*.m"
 quiet-level = 3
-ignore-words-list = "nd,fwe,commun,fo,te,artic"
+ignore-words = "ignore_words.txt"
