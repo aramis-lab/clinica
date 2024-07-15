@@ -458,6 +458,7 @@ class Pipeline(Workflow):
         else:
             check_bids_folder(self._bids_directory)
             self.is_bids_dir = True
+        self._compute_subjects_and_sessions()
         self._init_nodes()
 
     def _compute_subjects_and_sessions(self):
