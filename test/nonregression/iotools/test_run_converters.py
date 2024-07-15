@@ -29,4 +29,5 @@ def test_converters(cmdopt, tmp_path, study: StudyName):
         subjects=input_dir / "subjects.txt",
         xml_path=input_dir / "xml_metadata",
     )
+
     compare_folders(output_dir, ref_dir / "bids", output_dir)

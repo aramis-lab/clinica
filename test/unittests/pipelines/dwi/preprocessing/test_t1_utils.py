@@ -461,7 +461,7 @@ def dwi_dataset(tmp_path):
 
 def test_split_dwi_dataset_with_b_values_errors(tmp_path, dwi_dataset):
     from clinica.pipelines.dwi.preprocessing.t1.utils import (
-        split_dwi_dataset_with_b_values,
+        _split_dwi_dataset_with_b_values,  # noqa
     )
 
     for filename in ("foo.nii.gz", "foo.bval", "foo.bvec"):
@@ -471,13 +471,13 @@ def test_split_dwi_dataset_with_b_values_errors(tmp_path, dwi_dataset):
         ValueError,
         match="b_value_threshold should be >=0. You provided -1.",
     ):
-        split_dwi_dataset_with_b_values(dwi_dataset, b_value_threshold=-1)
+        _split_dwi_dataset_with_b_values(dwi_dataset, b_value_threshold=-1)
 
 
 @pytest.mark.parametrize("extension", ["nii", "nii.gz"])
 def test_split_dwi_dataset_with_b_values(tmp_path, extension):
     from clinica.pipelines.dwi.preprocessing.t1.utils import (
-        split_dwi_dataset_with_b_values,
+        _split_dwi_dataset_with_b_values,  # noqa
     )
     from clinica.pipelines.dwi.utils import DWIDataset
 
@@ -495,7 +495,7 @@ def test_split_dwi_dataset_with_b_values(tmp_path, extension):
         b_values=tmp_path / "foo.bval",
         b_vectors=tmp_path / "foo.bvec",
     )
-    small_b_dataset, large_b_dataset = split_dwi_dataset_with_b_values(dwi_dataset)
+    small_b_dataset, large_b_dataset = _split_dwi_dataset_with_b_values(dwi_dataset)
     assert small_b_dataset.dwi == tmp_path / f"foo_small_b.{extension}"
     assert small_b_dataset.b_values == tmp_path / "foo_small_b.bval"
     assert small_b_dataset.b_vectors == tmp_path / "foo_small_b.bvec"

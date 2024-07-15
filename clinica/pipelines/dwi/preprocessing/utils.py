@@ -57,11 +57,11 @@ def generate_index_file(
     if not b_values_filename.is_file():
         raise FileNotFoundError(f"Unable to find b-values file: {b_values_filename}.")
 
-    b_values = np.loadtxt(b_values_filename)
+    b_values = np.loadtxt(b_values_filename, ndmin=1)
     index_filename = f"{image_id}_index.txt" if image_id else "index.txt"
     output_dir = output_dir or b_values_filename.parent
     index_filename = output_dir / index_filename
-    np.savetxt(index_filename, np.ones(len(b_values)).T)
+    np.savetxt(index_filename, np.ones(len(b_values), dtype=int).T)
 
     return index_filename
 
@@ -375,18 +375,44 @@ def check_dwi_volume(dwi_dataset: DWIDataset) -> None:
     Raises
     ------
     ValueError:
-        if the number of DWI volumes, the number of B-values,
+        If the DWI nifti image is not 4D.
+
+    IOError:
+        If the b-values and/or b-vectors are all zeros.
+
+        If the number of DWI volumes, the number of B-values,
         and the number of B-vectors are not equal.
     """
-    num_b_values = len(np.loadtxt(dwi_dataset.b_values))
-    num_b_vectors = np.loadtxt(dwi_dataset.b_vectors).shape[-1]
-    num_dwi = nib.load(dwi_dataset.dwi).shape[-1]
+    b_values = np.loadtxt(dwi_dataset.b_values, ndmin=1)
+    num_b_values = len(b_values)
+    b_vectors = np.loadtxt(dwi_dataset.b_vectors, ndmin=2)
+    num_b_vectors = b_vectors.shape[-1]
+    num_dwi = _load_nifti_at_least_4d(dwi_dataset.dwi, raise_if_3d=True).shape[-1]
 
+    if np.sum(b_values) == 0 or np.sum(b_vectors) == 0:
+        raise IOError(
+            "The b-values and/or b-vectors have problematic values (all zeros)."
+        )
     if not (num_b_values == num_b_vectors == num_dwi):
         raise IOError(
             f"Number of DWIs, b-vals and b-vecs mismatch "
             f"(# DWI = {num_dwi}, # B-vec = {num_b_vectors}, #B-val = {num_b_values}) "
         )
+
+
+def _load_nifti_at_least_4d(
+    image_path: Path, raise_if_3d: bool = False
+) -> nib.Nifti1Image:
+    image = nib.load(image_path)
+    if len(image.shape) == 3:
+        if not raise_if_3d:
+            data = image.get_fdata()
+            image = nib.Nifti1Image(
+                np.expand_dims(data, axis=-1), image.affine, image.header
+            )
+    if len(image.shape) != 4:
+        raise ValueError(f"DWI image {image_path} has not a valid number of dimension.")
+    return image
 
 
 def check_dwi_dataset(dwi_dataset: DWIDataset) -> DWIDataset:

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "clinica"
-version = "0.8.1"
+version = "0.8.2"
 description = "Software platform for clinical neuroimaging studies"
 license = "MIT"
 authors = ["ARAMIS Lab"]
