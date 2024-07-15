@@ -19,12 +19,13 @@ def test_detect_cross_sectional_and_longitudinal_subjects(
         _detect_cross_sectional_and_longitudinal_subjects,
     )
 
-    bids_dir = tmp_path / Path("bids")
-    dirs = [
-        bids_dir / Path(f"{subs[i]}") / Path(f"{directory_content[i]}")
-        for i in range(0, len(subs))
+    bids_dir = tmp_path / "bids"
+    directories = [
+        bids_dir / f"{subject}" / f"{directory_content[i]}"
+        for i, subject in enumerate(subs)
     ]
-    for dir in dirs:
-        if not dir.is_dir():
-            os.makedirs(dir)
+    for directory in directories:
+        if not directory.is_dir():
+            directory.mkdir(parents=True)
+
     assert _detect_cross_sectional_and_longitudinal_subjects(subs, bids_dir) == expected
