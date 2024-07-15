@@ -5,7 +5,7 @@ Subclasses are located in clinica/pipeline/<pipeline_name>/<pipeline_name>_pipel
 
 import abc
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 import click
 from nipype.interfaces.utility import IdentityInterface
@@ -253,12 +253,10 @@ def _copy2_add_session_label(src: str, dst: str) -> str:
 def _convert_cross_sectional(
     bids_in: Path,
     bids_out: Path,
-    cross_subjects: List[str],
-    long_subjects: List[str],
-) -> None:
-    """
-    This function converts a cross-sectional-bids dataset into a
-    longitudinal clinica-compliant dataset
+    cross_subjects: Iterable[str],
+    long_subjects: Iterable[str],
+):
+    """Convert a cross-sectional-bids dataset into a longitudinal clinica-compliant dataset.
 
     Parameters
     ----------
@@ -268,21 +266,30 @@ def _convert_cross_sectional(
     bids_out : Path
         The path to the converted longitudinal bids dataset.
 
-    cross_subjects : list of str
-        List of subjects in cross-sectional form (they need some adjustment).
+    cross_subjects : Iterable of str
+        Subjects in cross-sectional form (they need some adjustment).
 
-    long_subjects : list of str
-        List of subjects in longitudinal form (they just need to be copied).
+    long_subjects : Iterable of str
+        Subjects in longitudinal form (they just need to be copied).
     """
     if not bids_out.exists():
         bids_out.mkdir()
+    _copy_metadata_files(bids_in, bids_out, ("dataset_description.json", ".bidsignore"))
     _convert(bids_in, bids_out, cross_subjects, cross_sectional=True)
     _convert(bids_in, bids_out, long_subjects, cross_sectional=False)
 
 
+def _copy_metadata_files(bids_in: Path, bids_out: Path, files_to_copy: Iterable[str]):
+    from shutil import copy2
+
+    for file in files_to_copy:
+        if (bids_in / file).is_file():
+            copy2(bids_in / file, bids_out / file)
+
+
 def _convert(
-    bids_in: Path, bids_out: Path, subjects: List[str], cross_sectional: bool
-) -> None:
+    bids_in: Path, bids_out: Path, subjects: Iterable[str], cross_sectional: bool
+):
     for subject in subjects:
         output_folder = (
             bids_out / subject / "ses-M000" if cross_sectional else bids_out / subject
@@ -296,7 +303,7 @@ def _convert(
             copy_func(bids_in / subject / file_to_copy, output_folder)
 
 
-def _copy_cross_sectional(file_to_copy: Path, output_folder: Path) -> None:
+def _copy_cross_sectional(file_to_copy: Path, output_folder: Path):
     from shutil import copy2, copytree
 
     if not (output_folder / file_to_copy.name).exists():
@@ -689,10 +696,9 @@ class Pipeline(Workflow):
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_failed_images
 
+        self._check_not_cross_sectional()
         if not self.is_built:
             self.build()
-        self._check_not_cross_sectional()
-
         if not bypass_check:
             self._check_size()
             plugin_args = self._update_parallelize_info(plugin_args)
@@ -920,6 +926,7 @@ class Pipeline(Workflow):
         import sys
 
         from clinica.utils.exceptions import ClinicaInconsistentDatasetError
+        from clinica.utils.participant import get_subject_session_list
         from clinica.utils.stream import cprint
 
         if self.bids_directory is None:
@@ -955,6 +962,15 @@ class Pipeline(Workflow):
                 cprint(
                     f"Conversion succeeded. Your clinica-compliant dataset is located here: {proposed_bids}"
                 )
+                self._bids_directory = proposed_bids
+                self._subjects, self._sessions = get_subject_session_list(
+                    proposed_bids,
+                    subject_session_file=self.tsv_file,
+                    is_bids_dir=True,
+                    use_session_tsv=False,
+                    tsv_dir=self.base_dir,
+                )
+                self._subjects, self._sessions = self.filter_qc()
 
     @abc.abstractmethod
     def _build_core_nodes(self):
