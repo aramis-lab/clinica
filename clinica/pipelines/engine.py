@@ -328,13 +328,6 @@ def _copy_longitudinal(file_to_copy: Path, output_folder: Path) -> None:
             copy2(file_to_copy, output_folder)
 
 
-def _check_cross_subj(cross_subj: list) -> None:
-    from clinica.utils.exceptions import ClinicaInconsistentDatasetError
-
-    if len(cross_subj) > 0:
-        raise ClinicaInconsistentDatasetError(cross_subj)
-
-
 class Pipeline(Workflow):
     """Clinica Pipeline class.
 
@@ -437,7 +430,6 @@ class Pipeline(Workflow):
         from tempfile import mkdtemp
 
         from clinica.utils.inputs import check_bids_folder, check_caps_folder
-        from clinica.utils.participant import get_subject_session_list
 
         self._is_built: bool = False
         self._overwrite_caps: bool = overwrite_caps
@@ -454,7 +446,10 @@ class Pipeline(Workflow):
             / "info.json"
         )
         self._info: dict = {}
-
+        self._subjects: Optional[List[str]] = None
+        self._sessions: Optional[List[str]] = None
+        self._input_node = None
+        self._output_node = None
         if base_dir:
             self.base_dir = Path(base_dir).absolute()
             self._base_dir_was_specified = True
@@ -471,28 +466,33 @@ class Pipeline(Workflow):
                     f"The {self._name} pipeline does not contain "
                     "BIDS nor CAPS directory at the initialization."
                 )
-
             check_caps_folder(self._caps_directory)
-            input_dir = self._caps_directory
-            is_bids_dir = False
+            self.is_bids_dir = False
         else:
             check_bids_folder(self._bids_directory)
-            input_dir = self._bids_directory
-            is_bids_dir = True
+            self.is_bids_dir = True
+        self._init_nodes()
+
+    def _compute_subjects_and_sessions(self):
+        from clinica.utils.participant import get_subject_session_list
+
         self._subjects, self._sessions = get_subject_session_list(
-            input_dir,
-            subject_session_file=tsv_file,
-            is_bids_dir=is_bids_dir,
+            self.input_dir,
+            subject_session_file=self.tsv_file,
+            is_bids_dir=self.is_bids_dir,
             use_session_tsv=False,
-            tsv_dir=base_dir,
+            tsv_dir=self.base_dir,
         )
         self._subjects, self._sessions = self.filter_qc()
-        self._input_node = None
-        self._output_node = None
-        self._init_nodes()
 
     def filter_qc(self) -> tuple[list[str], list[str]]:
         return self._subjects, self._sessions
+
+    @property
+    def input_dir(self) -> Path:
+        if self.is_bids_dir:
+            return self._bids_directory
+        return self._caps_directory
 
     @property
     def base_dir_was_specified(self) -> bool:
@@ -696,7 +696,7 @@ class Pipeline(Workflow):
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_failed_images
 
-        self._check_not_cross_sectional()
+        self._handle_cross_sectional_dataset()
         if not self.is_built:
             self.build()
         if not bypass_check:
@@ -915,62 +915,73 @@ class Pipeline(Workflow):
 
         return plugin_args
 
-    def _check_not_cross_sectional(self):
+    def _handle_cross_sectional_dataset(self):
+        """Check if the dataset is longitudinal or cross-sectional.
+
+        If it is cross-sectional, propose to convert it to a longitudinal layout.
         """
-        This function checks if the dataset is longitudinal.
-
-        If it is cross-sectional, clinica proposes to convert it in a clinica compliant form.
-
-        author: Arnaud Marcoux
-        """
-        import sys
-
-        from clinica.utils.exceptions import ClinicaInconsistentDatasetError
-        from clinica.utils.participant import get_subject_session_list
-        from clinica.utils.stream import cprint
-
         if self.bids_directory is None:
             return
-        all_subs = [
+        subjects = [
             f.name
             for f in self.bids_directory.iterdir()
             if (self.bids_directory / f).is_dir() and f.name.startswith("sub-")
         ]
-        cross_subj, long_subj = _detect_cross_sectional_and_longitudinal_subjects(
-            all_subs, self.bids_directory
+        (
+            cross_sectional_subjects,
+            longitudinal_subjects,
+        ) = _detect_cross_sectional_and_longitudinal_subjects(
+            subjects, self.bids_directory
         )
-        try:
-            _check_cross_subj(cross_subj)
-        except ClinicaInconsistentDatasetError as e:
-            cprint(e, lvl="warning")
-            proposed_bids = (
-                self.bids_directory.parent
-                / f"{self.bids_directory.name}_clinica_compliant"
+        if cross_sectional_subjects:
+            self._convert_to_longitudinal_if_user_agrees(
+                cross_sectional_subjects, longitudinal_subjects
             )
-            if not click.confirm(
-                "Do you want to proceed with the conversion in another folder? "
-                "(Your original BIDS folder will not be modified "
-                f"and the folder {proposed_bids} will be created.)"
-            ):
-                click.echo("Clinica will now exit...")
-                sys.exit()
-            else:
-                cprint("Converting cross-sectional dataset into longitudinal...")
-                _convert_cross_sectional(
-                    self.bids_directory, proposed_bids, cross_subj, long_subj
-                )
-                cprint(
-                    f"Conversion succeeded. Your clinica-compliant dataset is located here: {proposed_bids}"
-                )
-                self._bids_directory = proposed_bids
-                self._subjects, self._sessions = get_subject_session_list(
-                    proposed_bids,
-                    subject_session_file=self.tsv_file,
-                    is_bids_dir=True,
-                    use_session_tsv=False,
-                    tsv_dir=self.base_dir,
-                )
-                self._subjects, self._sessions = self.filter_qc()
+
+    def _convert_to_longitudinal_if_user_agrees(
+        self,
+        cross_sectional_subjects: List[str],
+        longitudinal_subjects: List[str],
+    ):
+        import sys
+
+        from clinica.utils.stream import cprint
+
+        cprint(
+            (
+                f"The following subjects of the input dataset {self.bids_directory} seem to "
+                "have a cross-sectional layout which is not supported by Clinica:\n"
+                + "\n- ".join(cross_sectional_subjects)
+            ),
+            lvl="warning",
+        )
+        proposed_bids = (
+            self.bids_directory.parent / f"{self.bids_directory.name}_clinica_compliant"
+        )
+        if not click.confirm(
+            "Do you want to proceed with the conversion in another folder? "
+            "(Your original BIDS folder will not be modified "
+            f"and the folder {proposed_bids} will be created.)"
+        ):
+            click.echo(
+                "Clinica does not support cross-sectional layout for BIDS dataset input. "
+                "To run the pipeline, please provide a dataset in longitudinal format or accept "
+                "the automatic conversion. Clinica will now exit."
+            )
+            sys.exit()
+        cprint("Converting cross-sectional dataset into longitudinal...")
+        _convert_cross_sectional(
+            self.bids_directory,
+            proposed_bids,
+            cross_sectional_subjects,
+            longitudinal_subjects,
+        )
+        cprint(
+            f"Conversion succeeded. Your clinica-compliant dataset is located here: {proposed_bids}. "
+            "The pipeline will run using this new dataset as input."
+        )
+        self._bids_directory = proposed_bids
+        self._compute_subjects_and_sessions()
 
     @abc.abstractmethod
     def _build_core_nodes(self):
