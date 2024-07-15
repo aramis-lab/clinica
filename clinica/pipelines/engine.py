@@ -225,7 +225,7 @@ def _add_session_label(filename: str) -> str:
         return filename
 
 
-def _copy2_add_session_label(src: Path, dst: Path) -> Path:
+def _copy2_add_session_label(src: str, dst: str) -> str:
     """Calls copy2 function from shutil, but modifies the filename of the
     copied files if they match the regex template described in the
     _add_session_label() function
@@ -245,7 +245,9 @@ def _copy2_add_session_label(src: Path, dst: Path) -> Path:
     """
     from shutil import copy2
 
-    return copy2(src, dst / _add_session_label(src.name))
+    filename = Path(src).name
+
+    return copy2(src, str(Path(dst).parent / _add_session_label(filename)))
 
 
 def _convert_cross_sectional(
@@ -935,7 +937,8 @@ class Pipeline(Workflow):
         except ClinicaInconsistentDatasetError as e:
             cprint(e, lvl="warning")
             proposed_bids = (
-                self.bids_directory / f"{self.bids_directory.name}_clinica_compliant"
+                self.bids_directory.parent
+                / f"{self.bids_directory.name}_clinica_compliant"
             )
             if not click.confirm(
                 "Do you want to proceed with the conversion in another folder? "
