@@ -6,6 +6,15 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.8.2
+
+### Fixed
+
+- [ADNI2BIDS] Fix wrong preprocessing sequence in FDG PET Uniform (see PR [#1159](https://github.com/aramis-lab/clinica/pull/1159))
+- [NIFD2BIDS] Fix check on type in pandas dataframe (see PR [#1230](https://github.com/aramis-lab/clinica/pull/1227))
+- [DWI] `DWIPreprocessingUsingT1` pipeline skips problematic images instead of crashing (see PR [#1169](https://github.com/aramis-lab/clinica/pull/1169))
+- Fix compatibility issues with matplotlib 3.9 (see PR [#1185](https://github.com/aramis-lab/clinica/pull/1185))
+
 ## Clinica 0.8.1
 
 ### Fixed
