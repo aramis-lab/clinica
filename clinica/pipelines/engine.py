@@ -49,14 +49,15 @@ def postset(attribute, value):
 
 
 def _detect_cross_sectional_and_longitudinal_subjects(
-    all_subs: List[str], bids_dir: Path
+    subjects: Iterable[str], bids_dir: Path
 ) -> Tuple[List[str], List[str]]:
-    """This function detects whether a subject has a longitudinal or cross sectional structure.
-    If it has a mixed structure, it will be considered cross sectionnal.
+    """Detect whether a subject's folder has a longitudinal or cross-sectional structure.
+
+    If it has a mixed structure, it will be considered cross-sectionnal.
 
     Parameters
     ----------
-    all_subs: list of str
+    subjects: Iterable of str
         List containing all the names of the subjects.
 
     bids_dir: Path
@@ -64,10 +65,10 @@ def _detect_cross_sectional_and_longitudinal_subjects(
 
     Returns
     -------
-    cross_subj: list of str
+    cross_sectional_subjects: list of str
         List of all the subject detected with a cross_sectional organisation.
 
-    long_subj: list of str
+    longitudinal_subjects: list of str
         List of all the subject detected with a longitudinal organisation.
 
     Examples
@@ -77,24 +78,18 @@ def _detect_cross_sectional_and_longitudinal_subjects(
     │   └── anat
     └── sub-02
         └── ses-M000
-    >>> _detect_cross_sectional_and_longitudinal_subjects(["sub-01", "sub-02"], /Users/name.surname/BIDS)
+    >>> _detect_cross_sectional_and_longitudinal_subjects(["sub-01", "sub-02"], Path("/Users/name.surname/BIDS"))
     (["sub-01"], ["sub-02])
     """
-    from os import listdir
-    from os.path import isdir, join
-
-    cross_subj = []
-    long_subj = []
-    for sub in all_subs:
-        folder_list = [
-            f for f in listdir(join(bids_dir, sub)) if isdir(join(bids_dir, sub, f))
-        ]
-
-        if not all([fold.startswith("ses-") for fold in folder_list]):
-            cross_subj.append(sub)
+    cross_sectional_subjects = []
+    longitudinal_subjects = []
+    for subject in subjects:
+        folders = [f.name for f in (bids_dir / subject).iterdir() if f.is_dir()]
+        if not all([folder.startswith("ses-") for folder in folders]):
+            cross_sectional_subjects.append(subject)
         else:
-            long_subj.append(sub)
-    return cross_subj, long_subj
+            longitudinal_subjects.append(subject)
+    return cross_sectional_subjects, longitudinal_subjects
 
 
 SYMBOLS = {
@@ -192,12 +187,12 @@ def _add_session_label(filename: str) -> str:
 
     Examples
     --------
-    >>> _add_ses("sub-ADNI001_scans.tsv")
+    >>> _add_session_label("sub-ADNI001_scans.tsv")
     sub-ADNI001_ses-M000_scans.tsv
 
     No modification done if filename already has a session:
 
-    >>> _add_ses("sub-023a_ses-M012_T1w.nii.gz")
+    >>> _add_session_label("sub-023a_ses-M012_T1w.nii.gz")
     sub-023a_ses-M012_T1w.nii.gz
 
     Parameters
@@ -211,13 +206,6 @@ def _add_session_label(filename: str) -> str:
     """
     import re
 
-    # If filename contains ses-..., returns the original filename
-    # Regex explication:
-    # ^ start of string
-    # ([a-zA-Z0-9]*) matches any number of characters from a to z,
-    #       A to Z, 0 to 9, and store it in group(1)
-    # (?!ses-[a-zA-Z0-9]) do not match if there is already a 'ses-'
-    # (.*) catches the rest of the string
     m = re.search(r"(^sub-[a-zA-Z0-9]*)_(?!ses-[a-zA-Z0-9])(.*)", filename)
     try:
         return m.group(1) + "_ses-M000_" + m.group(2)
@@ -225,23 +213,22 @@ def _add_session_label(filename: str) -> str:
         return filename
 
 
-def _copy2_add_session_label(src: str, dst: str) -> str:
-    """Calls copy2 function from shutil, but modifies the filename of the
-    copied files if they match the regex template described in the
-    _add_session_label() function
+def _copy_and_add_session_label(src: str, dst: str) -> str:
+    """Copy src to dst, but modifies the filename of the copied files if they
+    match the regex template described in the _add_session_label() function.
 
     Parameters
     ----------
-    src : Path
+    src : str
         The path to the file that needs to be copied.
 
-    dst : Path
+    dst : str
         The original destination for the copied file.
 
     Returns
     -------
-    Path :
-        copy2 with modified filename.
+    str :
+        Copy with modified filename.
     """
     from shutil import copy2
 
@@ -311,7 +298,7 @@ def _copy_cross_sectional(file_to_copy: Path, output_folder: Path):
             copytree(
                 file_to_copy,
                 output_folder / file_to_copy.name,
-                copy_function=_copy2_add_session_label,
+                copy_function=_copy_and_add_session_label,
             )
         elif file_to_copy.is_file():
             new_filename_wo_ses = _add_session_label(file_to_copy.name)
