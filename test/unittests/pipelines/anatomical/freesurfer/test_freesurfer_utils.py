@@ -9,6 +9,7 @@ from clinica.pipelines.anatomical.freesurfer.utils import (
     ImageID,  # noqa
     InfoType,  # noqa
 )
+from clinica.utils.image import HemiSphere
 
 
 @pytest.mark.parametrize(
@@ -108,8 +109,8 @@ def test_get_stats_filename_for_atlas(tmp_path, atlas, expected):
     )
 
     df = _get_stats_filename_for_atlas(tmp_path, atlas)
-    for hemi in ("lh", "rh"):
-        assert df[hemi] == tmp_path / f"{hemi}.{expected}"
+    for hemi in HemiSphere:
+        assert df[hemi.value] == tmp_path / f"{hemi.value}.{expected}"
 
 
 def test_generate_tsv_for_parcellation_errors(tmp_path):
@@ -301,8 +302,8 @@ def test_generate_tsv_for_parcellation(tmp_path, prefix):
     stats_folder = tmp_path / "stats"
     stats_folder.mkdir()
     for filename in ("aparc", "aparc.a2009s", "BA_exvivo"):
-        for hemi in ("lh", "rh"):
-            with open(stats_folder / f"{hemi}.{filename}.stats", "w") as fp:
+        for hemi in HemiSphere:
+            with open(stats_folder / f"{hemi.value}.{filename}.stats", "w") as fp:
                 fp.write(
                     generate_fake_parcellation_stats_file_content(dummy_number=42.0)
                 )

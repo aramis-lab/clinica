@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from os import PathLike
 from pathlib import Path
 from typing import Callable, Optional, Tuple, Union
@@ -8,6 +9,7 @@ import numpy as np
 from nibabel.nifti1 import Nifti1Image
 
 __all__ = [
+    "HemiSphere",
     "compute_aggregated_volume",
     "get_new_image_like",
     "merge_nifti_images_in_time_dimension",
@@ -16,6 +18,13 @@ __all__ = [
     "get_mni_template",
     "get_mni_cropped_template",
 ]
+
+
+class HemiSphere(str, Enum):
+    """Possible values for hemispheres."""
+
+    LEFT = "lh"
+    RIGHT = "rh"
 
 
 def compute_aggregated_volume(
