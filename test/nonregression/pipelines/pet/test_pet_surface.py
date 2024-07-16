@@ -7,6 +7,7 @@ import nibabel as nib
 import numpy as np
 import pytest
 
+from clinica.utils.image import HemiSphere
 from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
 
@@ -45,7 +46,7 @@ def run_pet_surface(
     pipeline.build()
     pipeline.run(bypass_check=True)
 
-    for hemisphere in ("lh", "rh"):
+    for hemisphere in HemiSphere:
         for fwhm in (0, 5, 10, 15, 20, 25):
             output_folder = (
                 output_dir
@@ -58,11 +59,17 @@ def run_pet_surface(
             )
             out = fspath(
                 output_folder
-                / f"sub-ADNI011S4105_ses-M000_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
+                / (
+                    f"sub-ADNI011S4105_ses-M000_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_"
+                    f"pvc-iy_hemi-{hemisphere.value}_fwhm-{fwhm}_projection.mgh"
+                )
             )
             ref = fspath(
                 ref_dir
-                / f"sub-ADNI011S4105_ses-M000_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
+                / (
+                    f"sub-ADNI011S4105_ses-M000_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_"
+                    f"pvc-iy_hemi-{hemisphere.value}_fwhm-{fwhm}_projection.mgh"
+                )
             )
             assert np.allclose(
                 np.squeeze(nib.load(out).get_fdata(dtype="float32")),
@@ -122,15 +129,21 @@ def run_pet_surface_longitudinal(
         / long_id
         / "surface_longitudinal"
     )
-    for hemisphere in ("lh", "rh"):
+    for hemisphere in HemiSphere:
         for fwhm in (0, 5, 10, 15, 20, 25):
             out = fspath(
                 output_folder
-                / f"{image_id}_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
+                / (
+                    f"{image_id}_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_"
+                    f"pvc-iy_hemi-{hemisphere.value}_fwhm-{fwhm}_projection.mgh"
+                )
             )
             ref = fspath(
                 ref_dir
-                / f"{image_id}_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_pvc-iy_hemi-{hemisphere}_fwhm-{fwhm}_projection.mgh"
+                / (
+                    f"{image_id}_trc-{tracer.value}_pet_space-fsaverage_suvr-{region.value}_"
+                    f"pvc-iy_hemi-{hemisphere.value}_fwhm-{fwhm}_projection.mgh"
+                )
             )
             assert np.allclose(
                 np.squeeze(nib.load(out).get_fdata(dtype="float32")),
