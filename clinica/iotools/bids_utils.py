@@ -25,6 +25,7 @@ class StudyName(str, Enum):
     OASIS = "OASIS"
     OASIS3 = "OASIS3"
     UKB = "UKB"
+    IXI = "IXI"
 
 
 BIDS_VALIDATOR_CONFIG = {
@@ -90,6 +91,8 @@ def bids_id_factory(study: StudyName) -> Type[BIDSSubjectID]:
         return OASIS3BIDSSubjectID
     if study == StudyName.HABS:
         return HABSBIDSSubjectID
+    if study == StudyName.IXI:
+        return IXIBIDSSubjectID
 
 
 class ADNIBIDSSubjectID(BIDSSubjectID):
@@ -290,6 +293,34 @@ class HABSBIDSSubjectID(BIDSSubjectID):
 
     def to_original_study_id(self) -> str:
         return str(self.replace("sub-HABS", "P_"))
+
+
+class IXIBIDSSubjectID(BIDSSubjectID):
+    """Implementation for IXI of the BIDSSubjectIDClass, allowing to go from the source id ?
+    to a bids id sub-? and reciprocally."""
+
+    # todo : add test part
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-IXI\d{3}", value):
+            return value
+        raise ValueError(
+            f"BIDS IXI subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-IXIXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"IXI\d{3}", study_id):
+            return "sub-" + study_id
+            pass
+        raise ValueError(
+            f"Raw IXI subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return str(self.replace("sub-", ""))
 
 
 # -- Methods for the clinical data --
