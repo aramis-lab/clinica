@@ -38,6 +38,8 @@ def get_converter_name(study: Union[str, StudyName]) -> str:
         return "Oasis3ToBids"
     if study == StudyName.UKB:
         return "UkbToBids"
+    if study == StudyName.IXI:
+        return "IxiToBids"
 
 
 def converter_factory(study: Union[str, StudyName]) -> Callable:
@@ -58,4 +60,6 @@ def converter_factory(study: Union[str, StudyName]) -> Callable:
         from .oasis3_to_bids import convert
     if study == StudyName.UKB:
         from .ukb_to_bids import convert
+    if study == StudyName.IXI:
+        from .ixi_to_bids import convert
     return convert
