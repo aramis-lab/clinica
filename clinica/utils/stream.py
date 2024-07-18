@@ -1,6 +1,7 @@
 """This module handles stream and log redirection."""
 
 from enum import Enum
+from typing import Type
 
 
 class LoggingLevel(str, Enum):
@@ -38,3 +39,18 @@ def cprint(msg: str, lvl: str = "info") -> None:
         logger.critical(msg=msg)
     else:
         pass
+
+
+def log_and_raise(message: str, error_type: Type[Exception]):
+    """Log the error message using cprint and raise.
+
+    Parameters
+    ----------
+    message : str
+        The error message.
+
+    error_type : Exception
+        The error type to raise.
+    """
+    cprint(message, lvl="error")
+    raise error_type(message)
