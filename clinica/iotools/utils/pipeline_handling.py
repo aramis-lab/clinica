@@ -189,15 +189,15 @@ def _extract_metrics_from_pipeline(
         except KeyError:
             raise KeyError("Fields `participant_id` and `session_id` are required.")
 
-    if group_selection is None:
-        try:
-            group_selection = [f.name for f in (caps_dir / "groups").iterdir()]
-        except FileNotFoundError:
-            return df, None
-    else:
-        group_selection = [f"group-{group}" for group in group_selection]
     ignore_groups = group_selection == [""]
-
+    if not ignore_groups:
+        if group_selection is None:
+            try:
+                group_selection = [f.name for f in (caps_dir / "groups").iterdir()]
+            except FileNotFoundError:
+                return df, None
+        else:
+            group_selection = [f"group-{group}" for group in group_selection]
     subjects_dir = caps_dir / "subjects"
     records = []
     for participant_id, session_id in df.index.values:
