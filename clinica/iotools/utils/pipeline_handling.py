@@ -227,6 +227,20 @@ def _extract_metrics_from_pipeline(
                                 )
                             )
                         for atlas_path in atlas_paths:
+                            if metric == "segmentationVolumes":
+                                from clinica.iotools.converters.adni_to_bids.adni_utils import (
+                                    replace_sequence_chars,
+                                )
+
+                                atlas_df = pd.read_csv(atlas_path, sep="\t")
+                                label_list = [
+                                    f"t1-freesurfer_segmentation-volumes_ROI-{replace_sequence_chars(roi_name)}_volume"
+                                    for roi_name in atlas_df.label_name.values
+                                ]
+                                values = atlas_df["label_value"].to_numpy()
+                                for label, value in zip(label_list, values):
+                                    records[-1][label] = value
+                                continue
                             if not _skip_atlas(
                                 atlas_path, pipeline, pvc_restriction, tracers_selection
                             ):
