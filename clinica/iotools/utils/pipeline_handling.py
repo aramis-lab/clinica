@@ -12,7 +12,7 @@ def _get_atlas_name(atlas_path: Path, pipeline: str) -> str:
     """Helper function for _extract_metrics_from_pipeline."""
     if pipeline == "dwi_dti":
         splitter = "_dwi_space-"
-    elif pipeline in ("t1_freesurfer_longitudinal", "t1_freesurfer"):
+    elif pipeline in ("t1_freesurfer_longitudinal", "t1-freesurfer"):
         splitter = "_parcellation-"
     elif pipeline in ("t1-volume", "pet-volume"):
         splitter = "_space-"
@@ -46,7 +46,7 @@ def _get_mod_path(ses_path: Path, pipeline: str) -> Optional[Path]:
             / "freesurfer_longitudinal"
             / "regional_measures"
         )
-    if pipeline == "t1_freesurfer":
+    if pipeline == "t1-freesurfer":
         return ses_path / "t1" / "freesurfer_cross_sectional" / "regional_measures"
     if pipeline == "t1-volume":
         return ses_path / "t1" / "spm" / "dartel"
@@ -279,7 +279,7 @@ t1_freesurfer_longitudinal_pipeline = functools.partial(
 t1_freesurfer_pipeline = functools.partial(
     _extract_metrics_from_pipeline,
     metrics=["thickness", "segmentationVolumes"],
-    pipeline="t1_freesurfer",
+    pipeline="t1-freesurfer",
     group_selection=[""],
 )
 
