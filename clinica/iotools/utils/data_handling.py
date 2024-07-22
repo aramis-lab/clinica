@@ -269,6 +269,8 @@ def _add_data_to_merge_file_from_caps(
         "dwi-dti": dwi_dti_pipeline,
     }
     merged_summary_df = pd.DataFrame()
+    if "group_selection" in kwargs and kwargs["group_selection"] is None:
+        kwargs.pop("group_selection")
     if not pipelines:
         for pipeline_name, pipeline_fn in pipeline_options.items():
             cprint(f"Extracting from CAPS pipeline output: {pipeline_name}...")

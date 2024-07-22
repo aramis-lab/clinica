@@ -1,4 +1,5 @@
 import operator
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -46,7 +47,7 @@ def test_get_mod_path_errors(tmp_path):
     "pipeline,expected_path",
     [
         ("dwi_dti", ["dwi", "dti_based_processing", "atlas_statistics"]),
-        ("t1_freesurfer", ["t1", "freesurfer_cross_sectional", "regional_measures"]),
+        ("t1-freesurfer", ["t1", "freesurfer_cross_sectional", "regional_measures"]),
         ("t1-volume", ["t1", "spm", "dartel"]),
         ("pet-volume", ["pet", "preprocessing"]),
     ],
@@ -210,3 +211,139 @@ def test_extract_metrics_from_pipeline(tmp_path):
         "group_id",
         "regions_number",
     }
+
+
+def test_t1_freesurfer_pipeline_nothing_found(tmp_path):
+    from pandas.testing import assert_frame_equal
+
+    from clinica.iotools.utils.pipeline_handling import t1_freesurfer_pipeline
+
+    caps = tmp_path / "caps"
+    caps.mkdir()
+    merged_df = pd.DataFrame(
+        {
+            "participant_id": ["sub-01"],
+            "session_id": ["ses-M000"],
+            "age": [85],
+        }
+    )
+    merged_df.set_index(
+        ["participant_id", "session_id"], inplace=True, verify_integrity=True
+    )
+    merged_df_with_t1_freesurfer_metrics, summary = t1_freesurfer_pipeline(
+        caps, merged_df
+    )
+    merged_df_with_t1_freesurfer_metrics.set_index(
+        ["participant_id", "session_id"], inplace=True, verify_integrity=True
+    )
+
+    assert_frame_equal(merged_df_with_t1_freesurfer_metrics, merged_df)
+    assert summary.empty
+
+
+def test_t1_freesurfer_longitudinal_pipeline_nothing_found(tmp_path):
+    from pandas.testing import assert_frame_equal
+
+    from clinica.iotools.utils.pipeline_handling import (
+        t1_freesurfer_longitudinal_pipeline,
+    )
+
+    caps = tmp_path / "caps"
+    caps.mkdir()
+    merged_df = pd.DataFrame(
+        {
+            "participant_id": ["sub-01"],
+            "session_id": ["ses-M000"],
+            "age": [85],
+        }
+    )
+    merged_df.set_index(
+        ["participant_id", "session_id"], inplace=True, verify_integrity=True
+    )
+    merged_df_with_t1_freesurfer_metrics, summary = t1_freesurfer_longitudinal_pipeline(
+        caps, merged_df
+    )
+    merged_df_with_t1_freesurfer_metrics.set_index(
+        ["participant_id", "session_id"], inplace=True, verify_integrity=True
+    )
+
+    assert_frame_equal(merged_df_with_t1_freesurfer_metrics, merged_df)
+    assert summary.empty
+
+
+def write_fake_statistics(tsv_file: Path):
+    fake = pd.DataFrame(
+        {
+            "label_name": ["foo", "bar", "baz"],
+            "label_value": [1.2, 2.3, 3.4],
+        }
+    )
+    fake.to_csv(tsv_file, sep="\t")
+
+
+def test_t1_freesurfer_pipeline(tmp_path):
+    from clinica.iotools.utils.pipeline_handling import t1_freesurfer_pipeline
+
+    caps = tmp_path / "caps"
+    regional_measures_folder = (
+        caps
+        / "subjects"
+        / "sub-01"
+        / "ses-M000"
+        / "t1"
+        / "freesurfer_cross_sectional"
+        / "regional_measures"
+    )
+    regional_measures_folder.mkdir(parents=True)
+    for file in (
+        "sub-01_ses-M000_parcellation-desikan_thickness.tsv",
+        "sub-01_ses-M000_parcellation-desikan_area.tsv",
+        "sub-01_ses-M000_parcellation-destrieux_thickness.tsv",
+        "sub-01_ses-M000_segmentationVolumes.tsv",
+    ):
+        write_fake_statistics(regional_measures_folder / file)
+
+    assert len([f for f in regional_measures_folder.iterdir()]) == 4
+    merged_df = pd.DataFrame(
+        {
+            "participant_id": ["sub-01"],
+            "session_id": ["ses-M000"],
+            "age": [85],
+        }
+    )
+    merged_df.set_index(
+        ["participant_id", "session_id"], inplace=True, verify_integrity=True
+    )
+    merged_df_with_t1_freesurfer_metrics, summary = t1_freesurfer_pipeline(
+        caps, merged_df
+    )
+    merged_df_with_t1_freesurfer_metrics.set_index(
+        ["participant_id", "session_id"], inplace=True, verify_integrity=True
+    )
+
+    assert len(merged_df_with_t1_freesurfer_metrics) == 1
+    assert set(merged_df_with_t1_freesurfer_metrics.columns) == {
+        "age",
+        "t1-freesurfer_atlas-desikan_ROI-bar_thickness",
+        "t1-freesurfer_atlas-desikan_ROI-baz_thickness",
+        "t1-freesurfer_atlas-desikan_ROI-foo_thickness",
+        "t1-freesurfer_atlas-destrieux_ROI-bar_thickness",
+        "t1-freesurfer_atlas-destrieux_ROI-baz_thickness",
+        "t1-freesurfer_atlas-destrieux_ROI-foo_thickness",
+        "t1-freesurfer_segmentation-volumes_ROI-bar_volume",
+        "t1-freesurfer_segmentation-volumes_ROI-baz_volume",
+        "t1-freesurfer_segmentation-volumes_ROI-foo_volume",
+    }
+    assert summary.pipeline_name.to_list() == ["t1-freesurfer"] * 3
+    assert summary.atlas_id.to_list() == ["desikan", "destrieux", "volumes"]
+    assert summary.regions_number.to_list() == [3, 3, 3]
+    assert summary.first_column_name.to_list() == [
+        "t1-freesurfer_atlas-desikan_ROI-foo_thickness",
+        "t1-freesurfer_atlas-destrieux_ROI-foo_thickness",
+        "t1-freesurfer_segmentation-volumes_ROI-foo_volume",
+    ]
+    assert summary.last_column_name.to_list() == [
+        "t1-freesurfer_atlas-desikan_ROI-baz_thickness",
+        "t1-freesurfer_atlas-destrieux_ROI-baz_thickness",
+        "t1-freesurfer_segmentation-volumes_ROI-baz_volume",
+    ]
