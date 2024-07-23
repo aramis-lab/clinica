@@ -49,13 +49,14 @@ def atlas_path(tmp_path, pipeline: PipelineNameForMetricExtraction) -> Path:
     ],
 )
 def test_get_atlas_name(atlas_path, pipeline, name):
-    from clinica.iotools.utils.pipeline_handling import _get_atlas_name
+    from clinica.iotools.utils.pipeline_handling import _get_atlas_name  # noqa
 
-    assert _get_atlas_name(atlas_path, pipeline) == name
+    assert _get_atlas_name(atlas_path, pipeline) == f"atlas-{name}"
 
 
-@pytest.fixture
-def wrong_atlas_path(tmp_path, pipeline: PipelineNameForMetricExtraction) -> Path:
+def _get_wrong_atlas_path(
+    folder: Path, pipeline: PipelineNameForMetricExtraction
+) -> Path:
     if pipeline in (
         PipelineNameForMetricExtraction.T1_VOLUME,
         PipelineNameForMetricExtraction.PET_VOLUME,
@@ -64,7 +65,7 @@ def wrong_atlas_path(tmp_path, pipeline: PipelineNameForMetricExtraction) -> Pat
             "sub-01_ses-M000_T1w_spaaaacccceee-AAL2_map-graymatter_statistics.tsv"
         )
         return (
-            tmp_path
+            folder
             / "t1"
             / "spm"
             / "dartel"
@@ -74,7 +75,7 @@ def wrong_atlas_path(tmp_path, pipeline: PipelineNameForMetricExtraction) -> Pat
         )
     if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
         filename = "sub-01_ses-M000_dwiii_space-foobar.tsv"
-        return tmp_path / "dwi" / filename
+        return folder / "dwi" / filename
 
 
 @pytest.mark.parametrize(
@@ -85,14 +86,17 @@ def wrong_atlas_path(tmp_path, pipeline: PipelineNameForMetricExtraction) -> Pat
         PipelineNameForMetricExtraction.DWI_DTI,
     ],
 )
-def test_get_atlas_name_error(wrong_atlas_path, pipeline):
-    from clinica.iotools.utils.pipeline_handling import _get_atlas_name
+def test_get_atlas_name_error(tmp_path, pipeline):
+    from clinica.iotools.utils.pipeline_handling import _get_atlas_name  # noqa
 
     with pytest.raises(
         ValueError,
         match="Unable to infer the atlas name",
     ):
-        _get_atlas_name(atlas_path, PipelineNameForMetricExtraction.DWI_DTI)
+        _get_atlas_name(
+            _get_wrong_atlas_path(tmp_path, pipeline),
+            PipelineNameForMetricExtraction.DWI_DTI,
+        )
 
 
 @pytest.mark.parametrize(
@@ -113,7 +117,7 @@ def test_get_atlas_name_error(wrong_atlas_path, pipeline):
 def test_get_modality_path(tmp_path, pipeline, expected_path):
     from functools import reduce
 
-    from clinica.iotools.utils.pipeline_handling import _get_modality_path
+    from clinica.iotools.utils.pipeline_handling import _get_modality_path  # noqa
 
     assert _get_modality_path(tmp_path, pipeline) == reduce(
         lambda x, y: x / y, [tmp_path] + expected_path
@@ -121,7 +125,7 @@ def test_get_modality_path(tmp_path, pipeline, expected_path):
 
 
 def test_get_modality_path_longitudinal(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _get_modality_path
+    from clinica.iotools.utils.pipeline_handling import _get_modality_path  # noqa
 
     assert (
         _get_modality_path(
@@ -141,7 +145,7 @@ def test_get_modality_path_longitudinal(tmp_path):
 
 @pytest.mark.parametrize("pipeline", PipelineNameForMetricExtraction)
 def test_skip_atlas_non_existing_file(tmp_path, pipeline):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
     # assert _skip_atlas(tmp_path, pipeline)
     assert _skip_atlas(tmp_path / "foo.tsv", pipeline)
@@ -149,7 +153,7 @@ def test_skip_atlas_non_existing_file(tmp_path, pipeline):
 
 @pytest.mark.parametrize("txt", ["-wm_", "-ba_"])
 def test_skip_atlas_longitudinal(tmp_path, txt):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
     (tmp_path / f"foo{txt}bar.tsv").touch()
     assert _skip_atlas(
@@ -184,7 +188,7 @@ def expected_operator_pvc(atlas_path, pvc_restriction):
 def test_skip_atlas_volume_pvc(
     tmp_path, pipeline, atlas_path, pvc_restriction, expected_operator_pvc
 ):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
     (tmp_path / atlas_path).touch()
     assert expected_operator_pvc(
@@ -201,7 +205,7 @@ def test_skip_atlas_volume_pvc(
 )
 @pytest.mark.parametrize("tracers", [["fdg"], ["trc1", "fdg", "trc2"]])
 def test_skip_atlas_volume_tracers(tmp_path, pipeline, tracers):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
     assert _skip_atlas(
         tmp_path / "pvc-rbv_stats.tsv", pipeline, tracers_selection=tracers
@@ -241,7 +245,7 @@ def expected_operator_volume(atlas_path, pvc_restriction):
 def test_skip_atlas_volume(
     tmp_path, pipeline, atlas_path, tracers, pvc_restriction, expected_operator_volume
 ):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
     (tmp_path / atlas_path).touch()
     assert expected_operator_volume(
@@ -255,7 +259,7 @@ def test_skip_atlas_volume(
 
 
 def test_extract_metrics_from_pipeline_errors(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline
+    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline  # noqa
 
     with pytest.raises(
         KeyError,
@@ -270,7 +274,7 @@ def test_extract_metrics_from_pipeline_errors(tmp_path):
 
 
 def test_extract_metrics_from_pipeline_empty(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline
+    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline  # noqa
 
     (tmp_path / "groups").mkdir()
     df = pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
@@ -284,7 +288,7 @@ def test_extract_metrics_from_pipeline_empty(tmp_path):
 
 
 def test_extract_metrics_from_pipeline(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline
+    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline  # noqa
 
     (tmp_path / "groups" / "UnitTest").mkdir(parents=True)
     df = pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
@@ -308,10 +312,12 @@ def test_extract_metrics_from_pipeline(tmp_path):
     }
 
 
-def test_t1_freesurfer_pipeline_nothing_found(tmp_path):
+def test_extract_metrics_from_t1_freesurfer_nothing_found(tmp_path):
     from pandas.testing import assert_frame_equal
 
-    from clinica.iotools.utils.pipeline_handling import t1_freesurfer_pipeline
+    from clinica.iotools.utils.pipeline_handling import (
+        pipeline_metric_extractor_factory,
+    )
 
     caps = tmp_path / "caps"
     caps.mkdir()
@@ -325,9 +331,9 @@ def test_t1_freesurfer_pipeline_nothing_found(tmp_path):
     merged_df.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
-    merged_df_with_t1_freesurfer_metrics, summary = t1_freesurfer_pipeline(
-        caps, merged_df
-    )
+    merged_df_with_t1_freesurfer_metrics, summary = pipeline_metric_extractor_factory(
+        PipelineNameForMetricExtraction.T1_FREESURFER
+    )(caps, merged_df)
     merged_df_with_t1_freesurfer_metrics.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
@@ -336,11 +342,11 @@ def test_t1_freesurfer_pipeline_nothing_found(tmp_path):
     assert summary.empty
 
 
-def test_t1_freesurfer_longitudinal_pipeline_nothing_found(tmp_path):
+def test_extract_metrics_from_t1_freesurfer_longitudinal_nothing_found(tmp_path):
     from pandas.testing import assert_frame_equal
 
     from clinica.iotools.utils.pipeline_handling import (
-        t1_freesurfer_longitudinal_pipeline,
+        pipeline_metric_extractor_factory,
     )
 
     caps = tmp_path / "caps"
@@ -355,9 +361,9 @@ def test_t1_freesurfer_longitudinal_pipeline_nothing_found(tmp_path):
     merged_df.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
-    merged_df_with_t1_freesurfer_metrics, summary = t1_freesurfer_longitudinal_pipeline(
-        caps, merged_df
-    )
+    merged_df_with_t1_freesurfer_metrics, summary = pipeline_metric_extractor_factory(
+        PipelineNameForMetricExtraction.T1_FREESURFER_LONGI
+    )(caps, merged_df)
     merged_df_with_t1_freesurfer_metrics.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
@@ -376,8 +382,10 @@ def write_fake_statistics(tsv_file: Path):
     fake.to_csv(tsv_file, sep="\t")
 
 
-def test_t1_freesurfer_pipeline(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import t1_freesurfer_pipeline
+def test_extract_metrics_from_t1_freesurfer(tmp_path):
+    from clinica.iotools.utils.pipeline_handling import (
+        pipeline_metric_extractor_factory,
+    )
 
     caps = tmp_path / "caps"
     regional_measures_folder = (
@@ -409,9 +417,9 @@ def test_t1_freesurfer_pipeline(tmp_path):
     merged_df.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
-    merged_df_with_t1_freesurfer_metrics, summary = t1_freesurfer_pipeline(
-        caps, merged_df
-    )
+    merged_df_with_t1_freesurfer_metrics, summary = pipeline_metric_extractor_factory(
+        PipelineNameForMetricExtraction.T1_FREESURFER
+    )(caps, merged_df)
     merged_df_with_t1_freesurfer_metrics.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
