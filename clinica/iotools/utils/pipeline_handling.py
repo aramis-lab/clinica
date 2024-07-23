@@ -226,7 +226,7 @@ def _extract_metrics_from_pipeline(
                             )
                         for atlas_path in atlas_paths:
                             if metric == "segmentationVolumes":
-                                from clinica.iotools.converters.adni_to_bids.adni_utils import (
+                                from clinica.iotools.converter_utils import (
                                     replace_sequence_chars,
                                 )
 
