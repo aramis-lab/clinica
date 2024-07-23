@@ -13,20 +13,24 @@ class ClinicaEnvironmentVariableError(ClinicaException):
     """Something is wrong with an environment variable managed by Clinica."""
 
 
-class ClinicaBIDSError(ClinicaException):
-    """Base class for BIDS errors."""
+class ClinicaDatasetError(ClinicaException):
+    """Base class for errors related to Datasets."""
 
 
-class ClinicaCAPSError(ClinicaException):
-    """Base class for CAPS errors."""
+class ClinicaBIDSError(ClinicaDatasetError):
+    """Base class for BIDS dataset errors."""
+
+
+class ClinicaCAPSError(ClinicaDatasetError):
+    """Base class for CAPS dataset errors."""
 
 
 class ClinicaParserError(ClinicaException):
     """Base class for parser errors."""
 
 
-class ClinicaXMLParserError(ClinicaException):
-    """Base class for parser errors."""
+class ClinicaXMLParserError(ClinicaParserError):
+    """Base class for XML parser errors."""
 
 
 class ClinicaInconsistentDatasetError(ClinicaException):

@@ -219,7 +219,7 @@ def _compute_session_rows_for_subject_with_session_files(
     This function will try to incorporate data from the sessions and scans
     if available.
     """
-    from ..pipeline_handling import DatasetError
+    from clinica.utils.exceptions import ClinicaDatasetError
 
     rows = []
     sub_path = bids_dir / subject
@@ -228,7 +228,9 @@ def _compute_session_rows_for_subject_with_session_files(
         row_session_df = sessions_df[sessions_df.session_id == session]
         row_session_df.reset_index(inplace=True, drop=True)
         if len(row_session_df) == 0:
-            raise DatasetError(sessions_df.loc[0, "session_id"] + " / " + session)
+            raise ClinicaDatasetError(
+                f"The following sessions are not properly formatted : {sessions_df.loc[0, 'session_id']} / {session}"
+            )
         scan_path = bids_dir / subject / session / f"{subject}_{session}_scans.tsv"
         row_scans_df = _get_row_scan_df(scan_path, ignore_scan_files)
         row_df = pd.concat([row_session_df, row_scans_df], axis=1)
