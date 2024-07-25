@@ -293,9 +293,7 @@ def test_write_list_of_files(tmp_path):
     ]
     write_list_of_files(file_list, tmp_path / "foo.txt")
     assert (tmp_path / "foo.txt").exists()
-    assert (tmp_path / "foo.txt").read_text() == "\n".join(
-        [str(f) for f in file_list]
-    ) + "\n"
+    assert (tmp_path / "foo.txt").read_text() == "\n".join([str(f) for f in file_list])
 
 
 def test_get_participants_and_subjects_sessions_df(tmp_path):

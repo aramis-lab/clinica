@@ -1,7 +1,12 @@
 from os import PathLike
 from typing import List, Optional
 
-__all__ = ["replace_sequence_chars"]
+__all__ = [
+    "MissingModsTracker",
+    "replace_sequence_chars",
+    "write_longitudinal_analysis",
+    "write_statistics",
+]
 
 
 def replace_sequence_chars(sequence_name: str) -> str:

@@ -25,6 +25,15 @@ class ClinicaCAPSError(ClinicaDatasetError):
     """Base class for CAPS dataset errors."""
 
 
+class ClinicaExistingDatasetError(ClinicaDatasetError):
+    """Base class for existing dataset errors."""
+
+    def __init__(self, dataset_folder_path):
+        super().__init__(
+            f"Dataset located at {dataset_folder_path} already contain some files."
+        )
+
+
 class ClinicaParserError(ClinicaException):
     """Base class for parser errors."""
 
