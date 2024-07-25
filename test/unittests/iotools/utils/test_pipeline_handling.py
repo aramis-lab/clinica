@@ -3,107 +3,168 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
+
+from clinica.iotools.utils.pipeline_handling import PipelineNameForMetricExtraction
 
 truth = operator.truth
 not_truth = operator.not_
 
 
-def test_get_atlas_name(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _get_atlas_name
-
-    with pytest.raises(
-        ValueError,
-        match="Not supported pipeline foo",
+@pytest.fixture
+def atlas_path(tmp_path, pipeline: PipelineNameForMetricExtraction) -> Path:
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
     ):
-        _get_atlas_name(tmp_path, "foo")
-    atlas_path = (
-        tmp_path
-        / "t1"
-        / "spm"
-        / "dartel"
-        / "group-foo"
-        / "atlas_statistics"
-        / "sub-01_ses-M000_T1w_space-AAL2_map-graymatter_statistics.tsv"
-    )
-    assert _get_atlas_name(atlas_path, "t1-volume") == "AAL2"
+        filename = "sub-01_ses-M000_T1w_space-AAL2_map-graymatter_statistics.tsv"
+        return (
+            tmp_path
+            / "t1"
+            / "spm"
+            / "dartel"
+            / "group-foo"
+            / "atlas_statistics"
+            / filename
+        )
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
+        filename = "sub-01_ses-M000_dwi_space-foobar.tsv"
+        return tmp_path / "dwi" / filename
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_FREESURFER_LONGI,
+        PipelineNameForMetricExtraction.T1_FREESURFER,
+    ):
+        filename = "sub-01_ses-M000_parcellation-foobaz.tsv"
+        return tmp_path / "freesurfer" / filename
+
+
+@pytest.mark.parametrize(
+    "pipeline,name",
+    [
+        (PipelineNameForMetricExtraction.T1_VOLUME, "AAL2"),
+        (PipelineNameForMetricExtraction.PET_VOLUME, "AAL2"),
+        (PipelineNameForMetricExtraction.DWI_DTI, "foobar"),
+        (PipelineNameForMetricExtraction.T1_FREESURFER_LONGI, "foobaz"),
+        (PipelineNameForMetricExtraction.T1_FREESURFER, "foobaz"),
+    ],
+)
+def test_get_atlas_name(atlas_path, pipeline, name):
+    from clinica.iotools.utils.pipeline_handling import _get_atlas_name  # noqa
+
+    assert _get_atlas_name(atlas_path, pipeline) == f"atlas-{name}"
+
+
+def _get_wrong_atlas_path(
+    folder: Path, pipeline: PipelineNameForMetricExtraction
+) -> Path:
+    if pipeline in (
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ):
+        filename = (
+            "sub-01_ses-M000_T1w_spaaaacccceee-AAL2_map-graymatter_statistics.tsv"
+        )
+        return (
+            folder
+            / "t1"
+            / "spm"
+            / "dartel"
+            / "group-foo"
+            / "atlas_statistics"
+            / filename
+        )
+    if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
+        filename = "sub-01_ses-M000_dwiii_space-foobar.tsv"
+        return folder / "dwi" / filename
+
+
+@pytest.mark.parametrize(
+    "pipeline",
+    [
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+        PipelineNameForMetricExtraction.DWI_DTI,
+    ],
+)
+def test_get_atlas_name_error(tmp_path, pipeline):
+    from clinica.iotools.utils.pipeline_handling import _get_atlas_name  # noqa
+
     with pytest.raises(
         ValueError,
         match="Unable to infer the atlas name",
     ):
-        _get_atlas_name(atlas_path, "dwi_dti")
-
-
-def test_get_mod_path_errors(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _get_mod_path
-
-    with pytest.raises(
-        ValueError,
-        match="Not supported pipeline foo",
-    ):
-        _get_mod_path(tmp_path, "foo")
+        _get_atlas_name(
+            _get_wrong_atlas_path(tmp_path, pipeline),
+            PipelineNameForMetricExtraction.DWI_DTI,
+        )
 
 
 @pytest.mark.parametrize(
     "pipeline,expected_path",
     [
-        ("dwi_dti", ["dwi", "dti_based_processing", "atlas_statistics"]),
-        ("t1-freesurfer", ["t1", "freesurfer_cross_sectional", "regional_measures"]),
-        ("t1-volume", ["t1", "spm", "dartel"]),
-        ("pet-volume", ["pet", "preprocessing"]),
+        (
+            PipelineNameForMetricExtraction.DWI_DTI,
+            ["dwi", "dti_based_processing", "atlas_statistics"],
+        ),
+        (
+            PipelineNameForMetricExtraction.T1_FREESURFER,
+            ["t1", "freesurfer_cross_sectional", "regional_measures"],
+        ),
+        (PipelineNameForMetricExtraction.T1_VOLUME, ["t1", "spm", "dartel"]),
+        (PipelineNameForMetricExtraction.PET_VOLUME, ["pet", "preprocessing"]),
     ],
 )
-def test_get_mod_path(tmp_path, pipeline, expected_path):
+def test_get_modality_path(tmp_path, pipeline, expected_path):
     from functools import reduce
 
-    from clinica.iotools.utils.pipeline_handling import _get_mod_path
+    from clinica.iotools.utils.pipeline_handling import _get_modality_path  # noqa
 
-    assert _get_mod_path(tmp_path, pipeline) == reduce(
+    assert _get_modality_path(tmp_path, pipeline) == reduce(
         lambda x, y: x / y, [tmp_path] + expected_path
     )
 
 
-def test_get_mod_longitudinal(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _get_mod_path
+def test_get_modality_path_longitudinal(tmp_path):
+    from clinica.iotools.utils.pipeline_handling import _get_modality_path  # noqa
 
-    assert _get_mod_path(tmp_path, "t1_freesurfer_longitudinal") is None
+    assert (
+        _get_modality_path(
+            tmp_path, PipelineNameForMetricExtraction.T1_FREESURFER_LONGI
+        )
+        is None
+    )
     (tmp_path / "t1").mkdir()
     (tmp_path / "t1" / "longfoo").mkdir()
     assert (
-        _get_mod_path(tmp_path, "t1_freesurfer_longitudinal")
+        _get_modality_path(
+            tmp_path, PipelineNameForMetricExtraction.T1_FREESURFER_LONGI
+        )
         == tmp_path / "t1" / "longfoo" / "freesurfer_longitudinal" / "regional_measures"
     )
 
 
-def test_get_label_list(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _get_label_list
+@pytest.mark.parametrize("pipeline", PipelineNameForMetricExtraction)
+def test_skip_atlas_non_existing_file(tmp_path, pipeline):
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
-    with pytest.raises(
-        ValueError,
-        match="Not supported pipeline bar",
-    ):
-        _get_label_list(tmp_path, "foo", "bar", "baz")
-
-
-@pytest.mark.parametrize(
-    "pipeline", ["foo", "t1-freesurfer_longitudinal", "t1-volume", "pet-volume"]
-)
-def test_skip_atlas_default(tmp_path, pipeline):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
-
-    assert not _skip_atlas(tmp_path, pipeline)
+    # assert _skip_atlas(tmp_path, pipeline)
+    assert _skip_atlas(tmp_path / "foo.tsv", pipeline)
 
 
 @pytest.mark.parametrize("txt", ["-wm_", "-ba_"])
 def test_skip_atlas_longitudinal(tmp_path, txt):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
     (tmp_path / f"foo{txt}bar.tsv").touch()
-    assert _skip_atlas(tmp_path / f"foo{txt}bar.tsv", "t1-freesurfer_longitudinal")
+    assert _skip_atlas(
+        tmp_path / f"foo{txt}bar.tsv",
+        PipelineNameForMetricExtraction.T1_FREESURFER_LONGI,
+    )
 
 
 @pytest.fixture
 def expected_operator_pvc(atlas_path, pvc_restriction):
-    if atlas_path == "stats.tsv":
+    if atlas_path == "sub-01_ses-M000_space-foobar_stats.tsv":
         if pvc_restriction:
             return truth
         return not_truth
@@ -112,23 +173,39 @@ def expected_operator_pvc(atlas_path, pvc_restriction):
     return truth
 
 
-@pytest.mark.parametrize("pipeline", ["t1-volume", "pet-volume"])
-@pytest.mark.parametrize("atlas_path", ["stats.tsv", "pvc-rbv_stats.tsv"])
+@pytest.mark.parametrize(
+    "pipeline",
+    [
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ],
+)
+@pytest.mark.parametrize(
+    "atlas_path",
+    ["sub-01_ses-M000_space-foobar_stats.tsv", "pvc-rbv_space-foo_stats.tsv"],
+)
 @pytest.mark.parametrize("pvc_restriction", [True, False])
 def test_skip_atlas_volume_pvc(
     tmp_path, pipeline, atlas_path, pvc_restriction, expected_operator_pvc
 ):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
+    (tmp_path / atlas_path).touch()
     assert expected_operator_pvc(
         _skip_atlas(tmp_path / atlas_path, pipeline, pvc_restriction=pvc_restriction)
     )
 
 
-@pytest.mark.parametrize("pipeline", ["t1-volume", "pet-volume"])
+@pytest.mark.parametrize(
+    "pipeline",
+    [
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ],
+)
 @pytest.mark.parametrize("tracers", [["fdg"], ["trc1", "fdg", "trc2"]])
 def test_skip_atlas_volume_tracers(tmp_path, pipeline, tracers):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
     assert _skip_atlas(
         tmp_path / "pvc-rbv_stats.tsv", pipeline, tracers_selection=tracers
@@ -138,25 +215,39 @@ def test_skip_atlas_volume_tracers(tmp_path, pipeline, tracers):
 @pytest.fixture
 def expected_operator_volume(atlas_path, pvc_restriction):
     if pvc_restriction:
-        if atlas_path == "trc-fdg_stats.tsv":
+        if atlas_path == "sub-01_ses-M000_space-bar_trc-fdg_stats.tsv":
             return truth
         return not_truth
-    if pvc_restriction is False and atlas_path == "trc-fdg_pvc-rbv_stats.tsv":
+    if (
+        pvc_restriction is False
+        and atlas_path == "sub-01_ses-M000_space-foo_trc-fdg_pvc-rbv_stats.tsv"
+    ):
         return truth
     return not_truth
 
 
-@pytest.mark.parametrize("pipeline", ["t1-volume", "pet-volume"])
 @pytest.mark.parametrize(
-    "atlas_path", ["trc-fdg_pvc-rbv_stats.tsv", "trc-fdg_stats.tsv"]
+    "pipeline",
+    [
+        PipelineNameForMetricExtraction.T1_VOLUME,
+        PipelineNameForMetricExtraction.PET_VOLUME,
+    ],
+)
+@pytest.mark.parametrize(
+    "atlas_path",
+    [
+        "sub-01_ses-M000_space-foo_trc-fdg_pvc-rbv_stats.tsv",
+        "sub-01_ses-M000_space-bar_trc-fdg_stats.tsv",
+    ],
 )
 @pytest.mark.parametrize("tracers", [["fdg"], ["trc2", "fdg"]])
 @pytest.mark.parametrize("pvc_restriction", [None, True, False])
 def test_skip_atlas_volume(
     tmp_path, pipeline, atlas_path, tracers, pvc_restriction, expected_operator_volume
 ):
-    from clinica.iotools.utils.pipeline_handling import _skip_atlas
+    from clinica.iotools.utils.pipeline_handling import _skip_atlas  # noqa
 
+    (tmp_path / atlas_path).touch()
     assert expected_operator_volume(
         _skip_atlas(
             tmp_path / atlas_path,
@@ -168,34 +259,42 @@ def test_skip_atlas_volume(
 
 
 def test_extract_metrics_from_pipeline_errors(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline
+    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline  # noqa
 
     with pytest.raises(
         KeyError,
         match="Fields `participant_id` and `session_id` are required.",
     ):
-        _extract_metrics_from_pipeline(tmp_path, pd.DataFrame(), ["metrics"], "foo")
-    df = pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
+        _extract_metrics_from_pipeline(
+            tmp_path,
+            pd.DataFrame(),
+            ["metrics"],
+            PipelineNameForMetricExtraction.DWI_DTI,
+        )
+
+
+def test_extract_metrics_from_pipeline_empty(tmp_path):
+    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline  # noqa
+
     (tmp_path / "groups").mkdir()
-    (tmp_path / "groups" / "UnitTest").mkdir()
-    with pytest.raises(
-        ValueError,
-        match="Not supported pipeline foo",
-    ):
-        _extract_metrics_from_pipeline(tmp_path, df, ["metrics"], "foo")
+    df = pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
+    x, y = _extract_metrics_from_pipeline(
+        tmp_path, df, ["metrics"], PipelineNameForMetricExtraction.T1_VOLUME
+    )
+    assert_frame_equal(
+        x, pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
+    )
+    assert y.empty
 
 
 def test_extract_metrics_from_pipeline(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline
+    from clinica.iotools.utils.pipeline_handling import _extract_metrics_from_pipeline  # noqa
 
+    (tmp_path / "groups" / "UnitTest").mkdir(parents=True)
     df = pd.DataFrame([["bar", "bar"]], columns=["participant_id", "session_id"])
-    assert _extract_metrics_from_pipeline(tmp_path, df, ["metrics"], "foo") == (
-        df,
-        None,
+    x, y = _extract_metrics_from_pipeline(
+        tmp_path, df, ["metrics"], PipelineNameForMetricExtraction.T1_VOLUME
     )
-    (tmp_path / "groups").mkdir()
-    (tmp_path / "groups" / "UnitTest").mkdir()
-    x, y = _extract_metrics_from_pipeline(tmp_path, df, ["metrics"], "t1-volume")
     assert isinstance(x, pd.DataFrame)
     assert isinstance(y, pd.DataFrame)
     assert len(x) == 1
@@ -213,10 +312,12 @@ def test_extract_metrics_from_pipeline(tmp_path):
     }
 
 
-def test_t1_freesurfer_pipeline_nothing_found(tmp_path):
+def test_extract_metrics_from_t1_freesurfer_nothing_found(tmp_path):
     from pandas.testing import assert_frame_equal
 
-    from clinica.iotools.utils.pipeline_handling import t1_freesurfer_pipeline
+    from clinica.iotools.utils.pipeline_handling import (
+        pipeline_metric_extractor_factory,
+    )
 
     caps = tmp_path / "caps"
     caps.mkdir()
@@ -230,9 +331,9 @@ def test_t1_freesurfer_pipeline_nothing_found(tmp_path):
     merged_df.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
-    merged_df_with_t1_freesurfer_metrics, summary = t1_freesurfer_pipeline(
-        caps, merged_df
-    )
+    merged_df_with_t1_freesurfer_metrics, summary = pipeline_metric_extractor_factory(
+        PipelineNameForMetricExtraction.T1_FREESURFER
+    )(caps, merged_df)
     merged_df_with_t1_freesurfer_metrics.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
@@ -241,11 +342,11 @@ def test_t1_freesurfer_pipeline_nothing_found(tmp_path):
     assert summary.empty
 
 
-def test_t1_freesurfer_longitudinal_pipeline_nothing_found(tmp_path):
+def test_extract_metrics_from_t1_freesurfer_longitudinal_nothing_found(tmp_path):
     from pandas.testing import assert_frame_equal
 
     from clinica.iotools.utils.pipeline_handling import (
-        t1_freesurfer_longitudinal_pipeline,
+        pipeline_metric_extractor_factory,
     )
 
     caps = tmp_path / "caps"
@@ -260,9 +361,9 @@ def test_t1_freesurfer_longitudinal_pipeline_nothing_found(tmp_path):
     merged_df.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
-    merged_df_with_t1_freesurfer_metrics, summary = t1_freesurfer_longitudinal_pipeline(
-        caps, merged_df
-    )
+    merged_df_with_t1_freesurfer_metrics, summary = pipeline_metric_extractor_factory(
+        PipelineNameForMetricExtraction.T1_FREESURFER_LONGI
+    )(caps, merged_df)
     merged_df_with_t1_freesurfer_metrics.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
@@ -281,8 +382,10 @@ def write_fake_statistics(tsv_file: Path):
     fake.to_csv(tsv_file, sep="\t")
 
 
-def test_t1_freesurfer_pipeline(tmp_path):
-    from clinica.iotools.utils.pipeline_handling import t1_freesurfer_pipeline
+def test_extract_metrics_from_t1_freesurfer(tmp_path):
+    from clinica.iotools.utils.pipeline_handling import (
+        pipeline_metric_extractor_factory,
+    )
 
     caps = tmp_path / "caps"
     regional_measures_folder = (
@@ -314,9 +417,9 @@ def test_t1_freesurfer_pipeline(tmp_path):
     merged_df.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
-    merged_df_with_t1_freesurfer_metrics, summary = t1_freesurfer_pipeline(
-        caps, merged_df
-    )
+    merged_df_with_t1_freesurfer_metrics, summary = pipeline_metric_extractor_factory(
+        PipelineNameForMetricExtraction.T1_FREESURFER
+    )(caps, merged_df)
     merged_df_with_t1_freesurfer_metrics.set_index(
         ["participant_id", "session_id"], inplace=True, verify_integrity=True
     )
