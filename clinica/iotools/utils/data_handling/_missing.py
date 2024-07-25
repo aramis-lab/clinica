@@ -5,6 +5,11 @@ from typing import List
 
 import pandas as pd
 
+__all__ = [
+    "compute_missing_mods",
+    "compute_missing_processing",
+]
+
 
 @dataclass
 class SubjectSession:
@@ -42,7 +47,7 @@ def compute_missing_mods(
 
     import pandas as pd
 
-    from ...converter_utils import (
+    from clinica.iotools.converter_utils import (
         MissingModsTracker,
         write_longitudinal_analysis,
         write_statistics,

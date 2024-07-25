@@ -44,7 +44,7 @@ def insensitive_glob(pattern_glob: str, recursive: Optional[bool] = False) -> Li
     return glob("".join(map(either, pattern_glob)), recursive=recursive)
 
 
-def determine_caps_or_bids(input_dir: os.PathLike) -> bool:
+def determine_caps_or_bids(input_dir: Union[str, os.PathLike]) -> bool:
     """Determine if the `input_dir` is a CAPS or a BIDS folder.
 
     Parameters

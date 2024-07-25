@@ -1,13 +1,18 @@
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pandas as pd
 
+__all__ = [
+    "create_subs_sess_list",
+    "write_list_of_files",
+]
+
 
 def create_subs_sess_list(
-    input_dir: PathLike,
-    output_dir: PathLike,
+    input_dir: Union[str, PathLike],
+    output_dir: Union[str, PathLike],
     file_name: Optional[str] = None,
     is_bids_dir: bool = True,
     use_session_tsv: bool = False,
@@ -109,9 +114,7 @@ def write_list_of_files(file_list: List[PathLike], output_file: PathLike) -> Pat
         )
     if output_file.is_file():
         raise IOError(f"Output file {output_file} already exists.")
-
     with open(output_file, "w") as fp:
-        for created_file in file_list:
-            fp.write(f"{created_file}\n")
+        fp.write(f"\n".join([str(f) for f in file_list]))
 
     return output_file
