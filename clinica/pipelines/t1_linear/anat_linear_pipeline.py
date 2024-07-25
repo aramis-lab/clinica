@@ -215,9 +215,12 @@ class AnatLinear(Pipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
 
+        from clinica.pipelines.t1_linear.tasks import run_n4biasfieldcorrection_task
         from clinica.pipelines.tasks import crop_nifti_task, get_filename_no_ext_task
 
         from .anat_linear_utils import print_end_pipeline
+
+        self.use_antspy = True
 
         image_id_node = npe.Node(
             interface=nutil.Function(
@@ -228,15 +231,30 @@ class AnatLinear(Pipeline):
             name="ImageID",
         )
 
-        # The core (processing) nodes
-        # =====================================
-
         # 1. N4biascorrection by ANTS. It uses nipype interface.
         n4biascorrection = npe.Node(
             name="n4biascorrection",
-            interface=ants.N4BiasFieldCorrection(dimension=3, save_bias=True),
+            interface=(
+                nutil.Function(
+                    function=run_n4biasfieldcorrection_task,
+                    input_names=[
+                        "input_image",
+                        "bspline_fitting_distance",
+                        "output_prefix",
+                        "output_dir",
+                        "save_bias",
+                        "verbose",
+                    ],
+                    output_names=["output_image"],
+                )
+                if self.use_antspy
+                else ants.N4BiasFieldCorrection(dimension=3)
+            ),
         )
-
+        n4biascorrection.inputs.save_bias = True
+        if self.use_antspy:
+            n4biascorrection.inputs.output_dir = str(self.base_dir)
+            n4biascorrection.inputs.verbose = True
         if self.name == "t1-linear":
             n4biascorrection.inputs.bspline_fitting_distance = 600
         else:
@@ -301,6 +319,16 @@ class AnatLinear(Pipeline):
                 (self.input_node, print_end_message, [("anat", "anat")]),
             ]
         )
+        if self.use_antspy:
+            self.connect(
+                [
+                    (
+                        image_id_node,
+                        n4biascorrection,
+                        [("image_id", "output_prefix")],
+                    ),
+                ]
+            )
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [

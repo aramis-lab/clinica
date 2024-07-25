@@ -1,3 +1,7 @@
+from pathlib import Path
+from typing import Optional
+
+
 def get_substitutions_datasink_flair(bids_image_id: str) -> list:
     from clinica.pipelines.t1_linear.anat_linear_utils import (  # noqa
         _get_substitutions_datasink,
@@ -60,3 +64,44 @@ def print_end_pipeline(anat, final_file):
     from clinica.utils.ux import print_end_image
 
     print_end_image(get_subject_id(anat))
+
+
+def run_n4biasfieldcorrection(
+    input_image: Path,
+    bspline_fitting_distance: int,
+    output_prefix: Optional[str] = None,
+    output_dir: Optional[Path] = None,
+    save_bias: bool = False,
+    verbose: bool = False,
+) -> Path:
+    import ants
+    from ants.utils.bias_correction import n4_bias_field_correction
+
+    from clinica.utils.stream import cprint
+
+    output_prefix = output_prefix or ""
+    input_image_ants = ants.image_read(str(input_image))
+    bias_corrected_image = n4_bias_field_correction(
+        input_image_ants, spline_param=bspline_fitting_distance, verbose=verbose
+    )
+    if save_bias:
+        bias_image = n4_bias_field_correction(
+            input_image_ants,
+            spline_param=bspline_fitting_distance,
+            return_bias_field=True,
+            verbose=verbose,
+        )
+        bias_output_path = (
+            output_dir or Path.cwd()
+        ) / f"{output_prefix}_bias_image.nii.gz"
+        ants.image_write(bias_image, str(bias_output_path))
+        cprint(f"Writing bias image to {bias_output_path}.", lvl="debug")
+    bias_corrected_output_path = (
+        output_dir or Path.cwd()
+    ) / f"{output_prefix}_bias_corrected_image.nii.gz"
+    cprint(
+        f"Writing bias corrected image to {bias_corrected_output_path}.", lvl="debug"
+    )
+    ants.image_write(bias_corrected_image, str(bias_corrected_output_path))
+
+    return bias_corrected_output_path
