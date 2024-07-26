@@ -1,7 +1,7 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from nipype import config
 
@@ -23,6 +23,44 @@ class AnatLinear(Pipeline):
     Returns:
         A clinica pipeline object containing the  AnatLinear pipeline.
     """
+
+    def __init__(
+        self,
+        bids_directory: Optional[str] = None,
+        caps_directory: Optional[str] = None,
+        tsv_file: Optional[str] = None,
+        overwrite_caps: Optional[bool] = False,
+        base_dir: Optional[str] = None,
+        parameters: Optional[dict] = None,
+        name: Optional[str] = None,
+        ignore_dependencies: Optional[List[str]] = None,
+        use_antspy: bool = False,
+    ):
+        from clinica.utils.stream import cprint
+
+        super().__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            overwrite_caps=overwrite_caps,
+            base_dir=base_dir,
+            parameters=parameters,
+            ignore_dependencies=ignore_dependencies,
+            name=name,
+        )
+        self.use_antspy = use_antspy
+        if self.use_antspy:
+            self._ignore_dependencies.append("ants")
+            cprint(
+                (
+                    "The AnatLinear pipeline has been configured to use ANTsPy instead of ANTs.\n"
+                    "This means that no installation of ANTs is required, but the antspyx Python "
+                    "package must be installed in your environment.\nThis functionality has been "
+                    "introduced in Clinica 0.9.0 and is considered experimental.\n"
+                    "Please report any issue or unexpected results to the Clinica developer team."
+                ),
+                lvl="warning",
+            )
 
     @staticmethod
     def get_processed_images(
@@ -215,12 +253,13 @@ class AnatLinear(Pipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
 
-        from clinica.pipelines.t1_linear.tasks import run_n4biasfieldcorrection_task
+        from clinica.pipelines.t1_linear.tasks import (
+            run_ants_registration_task,
+            run_n4biasfieldcorrection_task,
+        )
         from clinica.pipelines.tasks import crop_nifti_task, get_filename_no_ext_task
 
         from .anat_linear_utils import print_end_pipeline
-
-        self.use_antspy = True
 
         image_id_node = npe.Node(
             interface=nutil.Function(
@@ -262,14 +301,30 @@ class AnatLinear(Pipeline):
 
         # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
-            name="antsRegistrationSynQuick", interface=ants.RegistrationSynQuick()
+            name="antsRegistrationSynQuick",
+            interface=(
+                nutil.Function(
+                    function=run_ants_registration_task,
+                    input_names=[
+                        "fixed_image",
+                        "moving_image",
+                        "random_seed",
+                        "output_prefix",
+                        "output_dir",
+                    ],
+                    output_names=["warped_image", "out_matrix"],
+                )
+                if self.use_antspy
+                else ants.RegistrationSynQuick()
+            ),
         )
         ants_registration_node.inputs.fixed_image = self.ref_template
-        ants_registration_node.inputs.transform_type = "a"
-        ants_registration_node.inputs.dimension = 3
+        if not self.use_antspy:
+            ants_registration_node.inputs.transform_type = "a"
+            ants_registration_node.inputs.dimension = 3
 
-        if random_seed := self.parameters.get("random_seed", None):
-            ants_registration_node.inputs.random_seed = random_seed
+        random_seed = self.parameters.get("random_seed", None)
+        ants_registration_node.inputs.random_seed = random_seed or 0
 
         # 3. Crop image (using nifti). It uses custom interface, from utils file
 
