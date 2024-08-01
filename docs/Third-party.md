@@ -28,7 +28,7 @@ Pipelines' specific dependencies are listed below:
 | `t1-freesurfer`          |      |           |     x      |     |     |        |         |        |     |
 | `dwi-preprocessing-*`    |   x  |     x     |            |  x  |     |        |    x    |        |     |
 | `dwi-dti`                |   x  |           |            |  x  |     |        |    x    |        |     |
-| `dwi-connectome`         |   x  |           |            |  x  |     |        |    x    |        |     |
+| `dwi-connectome`         |   x  |           |     x      |  x  |     |        |    x    |        |     |
 | `pet-surface`            |      |           |            |  x  |  x* |        |         |   x*   |  x  |
 | `pet-volume`             |      |           |            |     |  x* |    x   |         |   x*   |  x  |
 | `statistics-surface`     |      |           |            |     |     |    x   |         |        |     |
