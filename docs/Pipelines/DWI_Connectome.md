@@ -6,10 +6,11 @@ To aim that, it relies on the **MRtrix3** [[Tournier et al., 2019](https://doi.o
 
 ## Prerequisites
 
-You need to [preprocess your DWI data](../DWI_Preprocessing) and run the [`t1-freesurfer`](../T1_FreeSurfer) pipeline on your T1-weighted MRI images prior to running this pipeline.
+You need to [preprocess your DWI data](./DWI_Preprocessing.md) and run the [`t1-freesurfer`](./T1_FreeSurfer.md) pipeline on your T1-weighted MRI images prior to running this pipeline.
 
 ## Dependencies
-If you only installed the core of Clinica, this pipeline needs the installation of [FSL 6.0](../Third-party.md#fsl) and [MRtrix3](../Third-party.md#mrtrix3) on your computer.
+
+If you only installed the core of Clinica, this pipeline needs the installation of [FSL 6.0](../Third-party.md#fsl), [MRtrix3](../Third-party.md#mrtrix3), and [Freesurfer](../Third-party.md#freesurfer) on your computer.
 
 ## Running the pipeline
 
@@ -21,9 +22,9 @@ clinica run dwi-connectome [OPTIONS] CAPS_DIRECTORY
 
 where:
 
-- `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
 
-If you want to run the pipeline on a subset of your CAPS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
+If you want to run the pipeline on a subset of your [CAPS](../CAPS/Introduction.md) dataset, you can use the `-tsv` flag to specify in a [TSV](../glossary.md#tsv) file the participants belonging to your subset.
 
 !!! note "Number of streamlines (`--n_tracks` option)"
     The quality of the tractography and, as a result, the connectome mainly depends on the number of streamlines you can generate (the more the better).
@@ -32,18 +33,13 @@ If you want to run the pipeline on a subset of your CAPS dataset, you can use th
 
 ## Outputs
 
-Results are stored in the following folder of the
-[CAPS hierarchy](../../CAPS/Specifications):
-`subjects/<participant_id>/<session_id>/dwi/connectome_based_processing/`.
+Results are stored in the following folder of the [CAPS hierarchy](../CAPS/Specifications.md): `subjects/<participant_id>/<session_id>/dwi/connectome_based_processing/`.
 
 The main output files are:
 
-- `<source_file>_space-{b0|T1w}_model-CSD_diffmodel.nii.gz`:
-Constrained spherical deconvolution (CSD) diffusion model.
-- `<source_file>_space-{b0|T1w}_model-CSD_tractography.tck`:
-The whole-brain tractography.
-- `<source_file>_space-{b0|T1w}_model-CSD_parcellation-{desikan|destrieux}_connectivity.tsv`:
-The connectivity matrix based on the Desikan or Destrieux parcellation.
+- `<source_file>_space-{b0|T1w}_model-CSD_diffmodel.nii.gz`: Constrained spherical deconvolution (CSD) diffusion model.
+- `<source_file>_space-{b0|T1w}_model-CSD_tractography.tck`: The whole-brain tractography.
+- `<source_file>_space-{b0|T1w}_model-CSD_parcellation-{desikan|destrieux}_connectivity.tsv`: The connectivity matrix based on the Desikan or Destrieux parcellation.
 
 !!! note "Atlases available for the Connectome-based processing pipeline:"
     - [Desikan](https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation)
@@ -56,7 +52,7 @@ The connectivity matrix based on the Desikan or Destrieux parcellation.
     It was built on anatomical MRI of 24 healthy subjects from which 74 cortical ROIs were manually identified in each of the individual hemispheres.
 
 !!! note
-    The full list of output files can be found in [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications).
+    The full list of output files can be found in [The ClinicA Processed Structure (CAPS) specifications](../CAPS/Specifications.md).
 
 <!--## Visualization of the results-->
 
@@ -77,7 +73,7 @@ mrview -mode 2 \
         -connectome.load        ${caps_directory}/subjects/${participant_id}/${session_id}/dwi/connectome_based_processing/*_parcellation-${atlas_label}_connectivity.tsv
 ```
 
-Do not forget to fill in the missing information (after the `=` signs) and do not hesitate to remove lines of the `mrview` command that you may not be interested in or that may take to much time to load.
+Do not forget to fill in the missing information (after the `=` signs) and do not hesitate to remove lines of the `mrview` command that you may not be interested in or that may take too much time to load.
 -->
 
 ## Describing this pipeline in your paper
