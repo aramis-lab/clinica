@@ -36,6 +36,8 @@ def convert(
             lvl="warning",
         )
 
+    path_to_clinical = "/Users/alice.joubert/Downloads"  # todo : testing only here
     clinical_data = read_ixi_clinical_data(path_to_clinical)
+
     # todo : convert here
     cprint("Conversion to BIDS succeeded.", lvl="info")
