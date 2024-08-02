@@ -465,8 +465,7 @@ class Pipeline(Workflow):
             self.is_bids_dir = False
         else:
             check_bids_folder(self._bids_directory)
-            input_dir = self._bids_directory
-            is_bids_dir = True
+            self.is_bids_dir = True
             if self._caps_directory is not None:
                 if (
                     not self._caps_directory.exists()
