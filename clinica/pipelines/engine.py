@@ -381,6 +381,7 @@ class Pipeline(Workflow):
         base_dir: Optional[str] = None,
         parameters: Optional[dict] = None,
         name: Optional[str] = None,
+        ignore_dependencies: Optional[List[str]] = None,
     ):
         """Init a Pipeline object.
 
@@ -406,6 +407,10 @@ class Pipeline(Workflow):
 
         name : str, optional
             Pipeline name. Defaults to None.
+
+        ignore_dependencies : List of str
+            List of names of dependencies whose installation checking procedure should be ignored.
+            Defaults to None (i.e. all dependencies will be checked).
 
         Raises
         ------
@@ -446,6 +451,7 @@ class Pipeline(Workflow):
 
         self._name = name or self.__class__.__name__
         self._parameters = parameters or {}
+        self._ignore_dependencies = ignore_dependencies or []
 
         if not self._bids_directory:
             if not self._caps_directory:
@@ -768,18 +774,19 @@ class Pipeline(Workflow):
         if not self.info:
             self._load_info()
         for d in self.info["dependencies"]:
-            if d["type"] == "software":
-                check_software(d["name"])
-            elif d["type"] == "binary":
-                check_binary(d["name"])
-            elif d["type"] == "toolbox":
-                pass
-            elif d["type"] == "pipeline":
-                pass
-            else:
-                raise Exception(
-                    f"Pipeline.check_dependencies() Unknown dependency type: '{d['type']}'."
-                )
+            if d["name"] not in self._ignore_dependencies:
+                if d["type"] == "software":
+                    check_software(d["name"])
+                elif d["type"] == "binary":
+                    check_binary(d["name"])
+                elif d["type"] == "toolbox":
+                    pass
+                elif d["type"] == "pipeline":
+                    pass
+                else:
+                    raise Exception(
+                        f"Pipeline.check_dependencies() Unknown dependency type: '{d['type']}'."
+                    )
         self._check_custom_dependencies()
 
         return self

@@ -60,6 +60,7 @@ pydra-bids = "^0.0.10"
 pydra-freesurfer = "^0.0.9"
 pydra-petpvc="^0.0.4"
 pydra-fsl = "^0.0.22"
+antspyx = "^0.4.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
