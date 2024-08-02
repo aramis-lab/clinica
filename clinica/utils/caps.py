@@ -11,12 +11,32 @@ from clinica.utils.bids import BIDS_VERSION
 from clinica.utils.exceptions import ClinicaCAPSError
 from clinica.utils.inputs import DatasetType
 
+__all__ = [
+    "CAPS_VERSION",
+    "CAPSDatasetDescription",
+    "write_caps_dataset_description",
+    "build_caps_dataset_description",
+]
+
+
 CAPS_VERSION = "1.0.0"
 
 
 @define
 class CAPSDatasetDescription:
-    """Model representing a CAPS dataset description."""
+    """Model representing a CAPS dataset description.
+
+    Attributes
+    ----------
+    name : str
+        The name of the CAPS dataset.
+
+    bids_version : str
+        The version number of the BIDS specifications used.
+
+    caps_version : str
+        The version number of the CAPS specifications used.
+    """
 
     name: str
     bids_version: str = BIDS_VERSION
@@ -101,7 +121,24 @@ def write_caps_dataset_description(
     bids_version: Optional[str] = None,
     caps_version: Optional[str] = None,
 ) -> None:
-    """Write `dataset_description.json` at the root of the CAPS directory."""
+    """Write `dataset_description.json` at the root of the CAPS directory.
+
+    Parameters
+    ----------
+    name : str
+        The name of the CAPS dataset.
+
+    caps_dir : Path
+        The path to the CAPS dataset.
+
+    bids_version : str, optional
+        The version of the BIDS specifications used.
+        By default, this will be set as the BIDS version currently supported by Clinica.
+
+    caps_version : str, optional
+        The version of the CAPS specifications used.
+        By default, this will be set as the CAPS version currently supported by Clinica.
+    """
     new_desc = build_caps_dataset_description(
         name, caps_dir, bids_version=bids_version, caps_version=caps_version
     )
@@ -115,6 +152,29 @@ def build_caps_dataset_description(
     bids_version: Optional[str] = None,
     caps_version: Optional[str] = None,
 ) -> CAPSDatasetDescription:
+    """Generate the CAPSDatasetDescription for a given CAPS dataset.
+
+    Parameters
+    ----------
+    name : str
+        The name of the CAPS dataset.
+
+    caps_dir : Path
+        The path to the CAPS dataset.
+
+    bids_version : str, optional
+        The version of the BIDS specifications used.
+        By default, this will be set as the BIDS version currently supported by Clinica.
+
+    caps_version : str, optional
+        The version of the CAPS specifications used.
+        By default, this will be set as the CAPS version currently supported by Clinica.
+
+    Returns
+    -------
+    CAPSDatasetDescription :
+        The CAPSDatasetDescription generated.
+    """
     from clinica.utils.stream import cprint, log_and_raise
 
     new_desc = CAPSDatasetDescription.from_values(name, bids_version, caps_version)
