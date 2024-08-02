@@ -1,6 +1,7 @@
 import warnings
 from os import fspath
 from pathlib import Path
+from test.nonregression.testing_tools import configure_paths
 
 import pytest
 
@@ -9,98 +10,106 @@ from clinica.utils.pet import SUVRReferenceRegion, Tracer
 warnings.filterwarnings("ignore")
 
 
-def test_instantiate_t1_freesurfer_cross_sectional(cmdopt):
+def test_instantiate_t1_freesurfer_cross_sectional(cmdopt, tmp_path):
     from clinica.pipelines.anatomical.freesurfer.t1.pipeline import T1FreeSurfer
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1FreeSurfer"
-    parameters = {
-        "recon_all_args": "-qcache",
-        "skip_question": True,
-    }
-    pipeline = T1FreeSurfer(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1FreeSurfer")
+    T1FreeSurfer(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "recon_all_args": "-qcache",
+            "skip_question": True,
+        },
+    ).build()
 
 
-def test_instantiate_spm_based_pipelines(cmdopt):
+def test_instantiate_spm_based_pipelines(cmdopt, tmp_path):
     """Run the instantiation tests for all pipelines using SPM.
     This avoids issues when running tests in parallel.
     """
-    input_dir = Path(cmdopt["input"])
-    run_tissue_segmentation(input_dir)
-    run_create_dartel(input_dir)
-    run_dartel_to_mni(input_dir)
-    run_register_dartel(input_dir)
-    run_pet_volume(input_dir)
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+
+    run_tissue_segmentation(base_dir, tmp_path, working_dir)
+    run_create_dartel(base_dir, tmp_path, working_dir)
+    run_dartel_to_mni(base_dir, tmp_path, working_dir)
+    run_register_dartel(base_dir, tmp_path, working_dir)
+    run_pet_volume(base_dir, tmp_path, working_dir)
 
 
-def run_tissue_segmentation(input_dir: Path) -> None:
+def run_tissue_segmentation(
+    base_dir: Path, output_dir: Path, working_dir: Path
+) -> None:
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import (
         T1VolumeTissueSegmentation,
     )
 
-    root = input_dir / "T1VolumeTissueSegmentation"
-    parameters = {"skip_question": True}
-    pipeline = T1VolumeTissueSegmentation(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, output_dir, "T1VolumeTissueSegmentation"
     )
-    pipeline.build()
+    T1VolumeTissueSegmentation(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"skip_question": True},
+    ).build()
 
 
-def run_create_dartel(input_dir: Path) -> None:
+def run_create_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import (
         T1VolumeCreateDartel,
     )
 
-    root = input_dir / "T1VolumeCreateDartel"
-    parameters = {"group_label": "UnitTest"}
-    pipeline = T1VolumeCreateDartel(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, output_dir, "T1VolumeCreateDartel"
     )
-    pipeline.build()
+    T1VolumeCreateDartel(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(input_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"group_label": "UnitTest"},
+    ).build()
 
 
-def run_dartel_to_mni(input_dir: Path) -> None:
+def run_dartel_to_mni(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import (
         T1VolumeDartel2MNI,
     )
 
-    root = input_dir / "T1VolumeDartel2MNI"
-    parameters = {"group_label": "UnitTest"}
-    pipeline = T1VolumeDartel2MNI(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, output_dir, "T1VolumeDartel2MNI"
     )
-    pipeline.build()
+    T1VolumeDartel2MNI(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(input_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"group_label": "UnitTest"},
+    ).build()
 
 
-def run_register_dartel(input_dir: Path) -> None:
+def run_register_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
     from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_pipeline import (
         T1VolumeRegisterDartel,
     )
 
-    root = input_dir / "T1VolumeRegisterDartel"
-    parameters = {"group_label": "UnitTest"}
-    pipeline = T1VolumeRegisterDartel(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, output_dir, "T1VolumeRegisterDartel"
     )
-    pipeline.build()
+    T1VolumeRegisterDartel(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(input_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"group_label": "UnitTest"},
+    ).build()
 
 
 def test_instantiate_t1_volume_parcellation(cmdopt):
@@ -119,48 +128,52 @@ def test_instantiate_t1_volume_parcellation(cmdopt):
     pipeline.build()
 
 
-def test_instantiate_dwi_preprocessing_using_t1(cmdopt):
+def test_instantiate_dwi_preprocessing_using_t1(cmdopt, tmp_path):
     from clinica.pipelines.dwi.preprocessing.t1.pipeline import (
         DwiPreprocessingUsingT1,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "DWIPreprocessingUsingT1"
-    parameters = {
-        "initrand": False,
-        "low_bval": 5,
-        "use_cuda": False,
-        "delete_cache": True,
-        "random_seed": 42,
-    }
-    pipeline = DwiPreprocessingUsingT1(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWIPreprocessingUsingT1"
     )
-    pipeline.build()
+    DwiPreprocessingUsingT1(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "initrand": False,
+            "low_bval": 5,
+            "use_cuda": False,
+            "delete_cache": True,
+            "random_seed": 42,
+        },
+    ).build()
 
 
-def test_instantiate_dwi_preprocessing_using_phase_diff_field_map(cmdopt):
+def test_instantiate_dwi_preprocessing_using_phase_diff_field_map(cmdopt, tmp_path):
     from clinica.pipelines.dwi.preprocessing.fmap.pipeline import (
         DwiPreprocessingUsingPhaseDiffFMap,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "DWIPreprocessingUsingPhaseDiffFieldmap"
-    parameters = {
-        "initrand": False,
-        "low_bval": 5,
-        "use_cuda": False,
-    }
-    pipeline = DwiPreprocessingUsingPhaseDiffFMap(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWIPreprocessingUsingPhaseDiffFieldmap"
     )
-    pipeline.build()
+    DwiPreprocessingUsingPhaseDiffFMap(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "initrand": False,
+            "low_bval": 5,
+            "use_cuda": False,
+        },
+    ).build()
 
 
 def test_instantiate_dwi_dti(cmdopt):
@@ -168,11 +181,10 @@ def test_instantiate_dwi_dti(cmdopt):
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "DWIDTI"
-    pipeline = DwiDti(
+    DwiDti(
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
-    )
-    pipeline.build()
+    ).build()
 
 
 def test_instantiate_dwi_connectome(cmdopt):
@@ -180,53 +192,50 @@ def test_instantiate_dwi_connectome(cmdopt):
 
     input_dir = Path(cmdopt["input"])
     root = input_dir / "DWIConnectome"
-    parameters = {"n_tracks": 1000}
-    pipeline = DwiConnectome(
+    DwiConnectome(
         caps_directory=fspath(root / "in" / "caps"),
         tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+        parameters={"n_tracks": 1000},
+    ).build()
 
 
-def run_pet_volume(input_dir: Path) -> None:
+def run_pet_volume(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
     from clinica.pipelines.pet.volume.pipeline import PETVolume
 
-    root = input_dir / "PETVolume"
-    parameters = {
-        "group_label": "UnitTest",
-        "acq_label": Tracer.FDG,
-        "suvr_reference_region": SUVRReferenceRegion.PONS,
-        "skip_question": True,
-        "reconstruction_method": None,
-    }
-    pipeline = PETVolume(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, output_dir, "PETVolume")
+    PETVolume(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(input_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "group_label": "UnitTest",
+            "acq_label": Tracer.FDG,
+            "suvr_reference_region": SUVRReferenceRegion.PONS,
+            "skip_question": True,
+            "reconstruction_method": None,
+        },
+    ).build()
 
 
-def test_instantiate_pet_linear(cmdopt):
+def test_instantiate_pet_linear(cmdopt, tmp_path):
     from clinica.pipelines.pet.linear.pipeline import PETLinear
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "PETLinear"
-    parameters = {
-        "acq_label": Tracer.FDG,
-        "suvr_reference_region": SUVRReferenceRegion.CEREBELLUM_PONS2,
-        "skip_question": True,
-        "reconstruction_method": None,
-    }
-    pipeline = PETLinear(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETLinear")
+    PETLinear(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(input_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "acq_label": Tracer.FDG,
+            "suvr_reference_region": SUVRReferenceRegion.CEREBELLUM_PONS2,
+            "skip_question": True,
+            "reconstruction_method": None,
+        },
+    ).build()
 
 
 def test_instantiate_statistics_surface(cmdopt, tmp_path):
@@ -250,26 +259,26 @@ def test_instantiate_statistics_surface(cmdopt, tmp_path):
     pipeline.build()
 
 
-def test_instantiate_pet_surface_cross_sectional(cmdopt):
+def test_instantiate_pet_surface_cross_sectional(cmdopt, tmp_path):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "PETSurface"
-    parameters = {
-        "acq_label": Tracer.FDG,
-        "suvr_reference_region": SUVRReferenceRegion.PONS,
-        "pvc_psf_tsv": fspath(root / "in" / "subjects.tsv"),
-        "longitudinal": False,
-        "skip_question": True,
-        "reconstruction_method": None,
-    }
-    pipeline = PetSurface(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETSurface")
+    PetSurface(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(input_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "acq_label": Tracer.FDG,
+            "suvr_reference_region": SUVRReferenceRegion.PONS,
+            "pvc_psf_tsv": fspath(input_dir / "subjects.tsv"),
+            "longitudinal": False,
+            "skip_question": True,
+            "reconstruction_method": None,
+        },
+    ).build()
 
 
 @pytest.mark.skip(reason="Currently broken. Needs to be fixed...")
@@ -294,18 +303,19 @@ def test_instantiate_pet_surface_longitudinal(cmdopt):
     pipeline.build()
 
 
-def test_instantiate_workflows_ml(cmdopt):
+def test_instantiate_workflows_ml(cmdopt, tmp_path):
     from clinica.pipelines.machine_learning.input import (
         CAPSRegionBasedInput,
         CAPSVertexBasedInput,
         CAPSVoxelBasedInput,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "WorkflowsML"
-    caps_dir = fspath(root / "in" / "caps")
-    tsv = fspath(root / "in" / "subjects.tsv")
-    diagnoses_tsv = fspath(root / "in" / "diagnosis.tsv")
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "WorkflowsML")
+    caps_dir = fspath(input_dir / "caps")
+    tsv = fspath(input_dir / "subjects.tsv")
+    diagnoses_tsv = fspath(input_dir / "diagnosis.tsv")
     group_label = "allADNIdartel"
     image_type = ["T1w", "PET"]
     atlases = ["AAL2", "Neuromorphometrics", "AICHA", "LPBA40", "Hammers"]
@@ -415,18 +425,19 @@ def test_instantiate_t1_freesurfer_longitudinal_correction(cmdopt):
     pipeline.build()
 
 
-def test_instantiate_t1_linear(cmdopt):
+def test_instantiate_t1_linear(cmdopt, tmp_path):
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1Linear"
-    parameters = {"uncropped_image": False}
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1Linear")
     pipeline = AnatLinear(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         name="t1-linear",
-        parameters=parameters,
+        parameters={"uncropped_image": False},
     )
     pipeline.build()
 
