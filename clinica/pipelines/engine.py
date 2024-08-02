@@ -423,6 +423,11 @@ class Pipeline(Workflow):
         from pathlib import Path
         from tempfile import mkdtemp
 
+        from clinica.utils.caps import (
+            build_caps_dataset_description,
+            write_caps_dataset_description,
+        )
+        from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.inputs import check_bids_folder, check_caps_folder
 
         self._is_built: bool = False
@@ -461,7 +466,14 @@ class Pipeline(Workflow):
                     f"The {self._name} pipeline does not contain "
                     "BIDS nor CAPS directory at the initialization."
                 )
-            check_caps_folder(self._caps_directory)
+            try:
+                check_caps_folder(self._caps_directory)
+            except ClinicaCAPSError as e:
+                desc = build_caps_dataset_description(self._name, self._caps_directory)
+                raise ClinicaCAPSError(
+                    f"{e}\nYou might want to create a 'dataset_description.json' "
+                    f"file with the following content:\n{desc}"
+                )
             self.is_bids_dir = False
         else:
             check_bids_folder(self._bids_directory)
@@ -472,8 +484,6 @@ class Pipeline(Workflow):
                     or len([f for f in self._caps_directory.iterdir()]) == 0
                 ):
                     self._caps_directory.mkdir(parents=True, exist_ok=True)
-                    from clinica.utils.caps import write_caps_dataset_description
-
                     write_caps_dataset_description(self._name, self._caps_directory)
                 check_caps_folder(self._caps_directory)
         self._compute_subjects_and_sessions()

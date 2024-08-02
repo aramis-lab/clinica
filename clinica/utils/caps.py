@@ -26,6 +26,9 @@ class CAPSDatasetDescription:
     def write(self, to: IO[str]):
         json.dump(converter.unstructure(self), to, indent=4)
 
+    def __str__(self):
+        return json.dumps(converter.unstructure(self))
+
     @classmethod
     def from_values(
         cls,
@@ -99,7 +102,20 @@ def write_caps_dataset_description(
     caps_version: Optional[str] = None,
 ) -> None:
     """Write `dataset_description.json` at the root of the CAPS directory."""
-    from clinica.utils.stream import cprint
+    new_desc = build_caps_dataset_description(
+        name, caps_dir, bids_version=bids_version, caps_version=caps_version
+    )
+    with open(caps_dir / "dataset_description.json", "w") as f:
+        new_desc.write(to=f)
+
+
+def build_caps_dataset_description(
+    name: str,
+    caps_dir: Path,
+    bids_version: Optional[str] = None,
+    caps_version: Optional[str] = None,
+) -> CAPSDatasetDescription:
+    from clinica.utils.stream import cprint, log_and_raise
 
     new_desc = CAPSDatasetDescription.from_values(name, bids_version, caps_version)
     if (caps_dir / "dataset_description.json").exists():
@@ -115,9 +131,7 @@ def write_caps_dataset_description(
                 f"Impossible to write the dataset_description.json file in {caps_dir} "
                 "because it already exists and it contains incompatible metadata."
             )
-            cprint(msg, lvl="error")
-            raise ClinicaCAPSError(msg)
+            log_and_raise(msg, ClinicaCAPSError)
         if previous_desc.name != new_desc.name:
             new_desc.name = f"{previous_desc.name} + {new_desc.name}"
-    with open(caps_dir / "dataset_description.json", "w") as f:
-        new_desc.write(to=f)
+    return new_desc
