@@ -1,9 +1,13 @@
 # todo : verify typing compatibility with user input
+import json
 import re
+import shutil
 from pathlib import Path
 from typing import List
 
+import nibabel as nib
 import pandas as pd
+from nilearn.image import concat_imgs
 
 from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
@@ -25,6 +29,9 @@ def filter_subjects_list(
         for subject in subjects_list
         if subject in clinical_data["IXI_ID"].values
     ]
+
+
+# todo : filter img data based on this
 
 
 def read_ixi_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
@@ -53,12 +60,19 @@ def rename_ixi_modalities(input_mod: str) -> str:
         )
 
 
-def get_data_df(data_directory: Path) -> pd.DataFrame:
+def define_magnetic_field(hospital: str) -> str:
+    if hospital == "Guys" or hospital == "IOP":
+        return "1.5"
+    if hospital == "HH":
+        return "3"
+
+
+def get_img_data_df(data_directory: Path) -> pd.DataFrame:
     # todo : works for all except DTI !!! (I mean we should drop it after this)
     df = pd.DataFrame(
         {"img_path": [path for path in data_directory.rglob(pattern="IXI*.nii.gz")]}
     )
-    # todo : rename modalities inside
+    # todo : regex pattern for 3 groups IXI\d{3}(-\w*){3}.nii.gz vs 4 groups IXI\d{3}(-\w*){4}.nii.gz
     df = (
         df.assign(img_name=lambda df: df.img_path.apply(lambda x: x.name))
         .assign(img_name_no_ext=lambda df: df.img_name.apply(lambda x: x.split(".")[0]))
@@ -74,27 +88,54 @@ def get_data_df(data_directory: Path) -> pd.DataFrame:
                 lambda x: rename_ixi_modalities(x.split("-")[3])
             )
         )
+        .assign(field=lambda df: df.hospital.apply(lambda x: define_magnetic_field(x)))
         .assign(session="ses-M000")
     )
     return df
 
 
 def select_subject_data(data_df: pd.DataFrame, subject: str) -> pd.DataFrame:
+    """Select subject images to copy based on IXI id"""
     return data_df[data_df["subject"] == subject]
 
 
 def bids_filename_from_ixi(img: pd.Series) -> str:
-    # todo : adapter for modalities
-    return f"{img['bids_id']}_{img['session']}"
+    # todo : has to work for both nifti and json
+    return f"{img['bids_id']}_{img['session']}_{img['modality']}"
 
 
 def write_subject(subject_df: pd.DataFrame, bids_path: Path) -> None:
-    # todo : place in subject folder, anat folder (T1,T2,PD) or dwi (dwi) folder if modality there ; where angio ??
+    for _, row in subject_df.iterrows():
+        filename = bids_filename_from_ixi(row)
+
+        if row["modality"] in ["T1w", "T2w", "PDw", "angio"]:
+            data_path = bids_path / row["bids_id"] / row["session"] / "anat"
+        elif row["modality"] == "dwi":
+            data_path = bids_path / row["bids_id"] / row["session"] / "func"
+        else:
+            raise ValueError(
+                f"Modality {row['modality']} not recognized for IXI dataset."
+            )
+
+        data_path.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(row["img_path"], f"{data_path}/{filename}.nii.gz")
+
+        with open(f"{data_path}/{filename}.json", "w") as f:
+            json.dump(
+                {
+                    "InstitutionName": row["hospital"],
+                    "MagneticFieldStrength (T)": row["field"],
+                },
+                f,
+                indent=4,
+            )
+
+
+def merge_dti(dti_df: pd.DataFrame) -> pd.DataFrame:
     pass
 
 
-# todo : function to place in files
-# todo : function to create jsons
+# todo : write only one json per subject ?
 # todo : test all
-
 # todo : question DTI - sessions différentes ou images différentes ?
+# todo : dataset descr? scans/sessions/...

@@ -5,7 +5,8 @@ from typing import Optional
 
 import nibabel as nb
 import numpy as np
-from ixi_to_bids_utils import read_ixi_clinical_data
+from iotools.bids_utils import write_modality_agnostic_files
+from ixi_to_bids_utils import *
 
 from clinica.utils.filemanip import UserProvidedPath
 
@@ -36,8 +37,30 @@ def convert(
             lvl="warning",
         )
 
-    path_to_clinical = "/Users/alice.joubert/Downloads"  # todo : testing only here
     clinical_data = read_ixi_clinical_data(path_to_clinical)
 
-    # todo : convert here
+    subjects = subjects if subjects else get_subjects_list_from_data(path_to_dataset)
+    subjects = filter_subjects_list(subjects, clinical_data)
+
+    # todo : treat DTI different (load and merge)
+
+    image_data = get_img_data_df(path_to_dataset)
+
+    for subject in subjects:
+        write_subject(select_subject_data(image_data, subject), bids_dir)
+
+    readme_data = {
+        "link": "https://brain-development.org/ixi-dataset/",
+        "desc": (
+            "IXI is the nickname for the Information eXtraction from Images project, "
+            "which issued a dataset of nearly 600 images from healthy subjects. The MR"
+            "acquisition protocol includes T1,T2, PD weighted, MRA and diffusion-weighted"
+            "images. Three hospitals in London were involved in data collection."
+        ),
+    }
+
+    write_modality_agnostic_files(
+        study_name=StudyName.IXI, readme_data=readme_data, bids_dir=bids_dir
+    )
+
     cprint("Conversion to BIDS succeeded.", lvl="info")
