@@ -1,5 +1,5 @@
 """This module handles stream and log redirection."""
-
+import warnings
 from enum import Enum
 from typing import Type
 
@@ -54,3 +54,18 @@ def log_and_raise(message: str, error_type: Type[Exception]):
     """
     cprint(message, lvl="error")
     raise error_type(message)
+
+
+def log_and_warn(message: str, warning_type: Type[Warning]):
+    """Log the warning message using cprint and give it to the user.
+
+    Parameters
+    ----------
+    message : str
+        The warning message.
+
+    warning_type : Warning
+        The warning type to use.
+    """
+    cprint(message, lvl="warning")
+    warnings.warn(message, warning_type)
