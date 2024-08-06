@@ -491,7 +491,7 @@ class Pipeline(Workflow):
                     self._caps_directory.mkdir(parents=True, exist_ok=True)
         if self._caps_directory:
             write_caps_dataset_description(
-                self._bids_directory,
+                self.input_dir,
                 self._caps_directory,
                 self._name,
                 f"subjects/*/*/{self._name.replace('-', '_')}",
