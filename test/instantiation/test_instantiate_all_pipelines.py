@@ -1,3 +1,4 @@
+import shutil
 import warnings
 from os import fspath
 from pathlib import Path
@@ -69,9 +70,11 @@ def run_create_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> No
     input_dir, tmp_dir, ref_dir = configure_paths(
         base_dir, output_dir, "T1VolumeCreateDartel"
     )
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
     T1VolumeCreateDartel(
         bids_directory=fspath(input_dir / "bids"),
-        caps_directory=fspath(input_dir / "caps"),
+        caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters={"group_label": "UnitTest"},
@@ -86,9 +89,11 @@ def run_dartel_to_mni(base_dir: Path, output_dir: Path, working_dir: Path) -> No
     input_dir, tmp_dir, ref_dir = configure_paths(
         base_dir, output_dir, "T1VolumeDartel2MNI"
     )
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
     T1VolumeDartel2MNI(
         bids_directory=fspath(input_dir / "bids"),
-        caps_directory=fspath(input_dir / "caps"),
+        caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters={"group_label": "UnitTest"},
@@ -103,9 +108,11 @@ def run_register_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> 
     input_dir, tmp_dir, ref_dir = configure_paths(
         base_dir, output_dir, "T1VolumeRegisterDartel"
     )
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
     T1VolumeRegisterDartel(
         bids_directory=fspath(input_dir / "bids"),
-        caps_directory=fspath(input_dir / "caps"),
+        caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters={"group_label": "UnitTest"},
@@ -203,9 +210,11 @@ def run_pet_volume(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
     from clinica.pipelines.pet.volume.pipeline import PETVolume
 
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, output_dir, "PETVolume")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
     PETVolume(
         bids_directory=fspath(input_dir / "bids"),
-        caps_directory=fspath(input_dir / "caps"),
+        caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters={
@@ -224,9 +233,11 @@ def test_instantiate_pet_linear(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETLinear")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
     PETLinear(
         bids_directory=fspath(input_dir / "bids"),
-        caps_directory=fspath(input_dir / "caps"),
+        caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters={
@@ -265,9 +276,11 @@ def test_instantiate_pet_surface_cross_sectional(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETSurface")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
     PetSurface(
         bids_directory=fspath(input_dir / "bids"),
-        caps_directory=fspath(input_dir / "caps"),
+        caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters={
@@ -313,7 +326,9 @@ def test_instantiate_workflows_ml(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "WorkflowsML")
-    caps_dir = fspath(input_dir / "caps")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    caps_dir = fspath(tmp_dir / "caps")
     tsv = fspath(input_dir / "subjects.tsv")
     diagnoses_tsv = fspath(input_dir / "diagnosis.tsv")
     group_label = "allADNIdartel"
