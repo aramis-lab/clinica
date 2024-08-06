@@ -469,7 +469,12 @@ class Pipeline(Workflow):
             try:
                 check_caps_folder(self._caps_directory)
             except ClinicaCAPSError as e:
-                desc = build_caps_dataset_description(self._name, self._caps_directory)
+                desc = build_caps_dataset_description(
+                    self._caps_directory,
+                    self._caps_directory,
+                    self._name,
+                    f"subjects/*/*/{self._name}",
+                )
                 raise ClinicaCAPSError(
                     f"{e}\nYou might want to create a 'dataset_description.json' "
                     f"file with the following content:\n{desc}"
@@ -484,7 +489,12 @@ class Pipeline(Workflow):
                     or len([f for f in self._caps_directory.iterdir()]) == 0
                 ):
                     self._caps_directory.mkdir(parents=True, exist_ok=True)
-                    write_caps_dataset_description(self._name, self._caps_directory)
+                    write_caps_dataset_description(
+                        self._bids_directory,
+                        self._caps_directory,
+                        self._name,
+                        f"subjects/*/*/{self._name}",
+                    )
                 check_caps_folder(self._caps_directory)
         self._compute_subjects_and_sessions()
         self._init_nodes()
