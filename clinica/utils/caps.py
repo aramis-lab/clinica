@@ -1,6 +1,5 @@
 import datetime
 import json
-import warnings
 from pathlib import Path
 from typing import IO, List, MutableSequence, Optional
 
@@ -11,7 +10,7 @@ from cattr.preconf.json import make_converter
 from clinica.utils.bids import BIDS_VERSION
 from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 from clinica.utils.inputs import DatasetType
-from clinica.utils.stream import log_and_raise
+from clinica.utils.stream import log_and_raise, log_and_warn
 
 __all__ = [
     "CAPS_VERSION",
@@ -210,9 +209,12 @@ class CAPSDatasetDescription:
             processing_name, processing_output_path, processing_input_path
         )
         if (existing_processing := self.get_processing(processing_name)) is not None:
-            warnings.warn(
-                f"The CAPS dataset '{self.name}' already has a processing named {processing_name}:\n"
-                f"{existing_processing}\nIt will be overwritten with the following:\n{new_processing}"
+            log_and_warn(
+                (
+                    f"The CAPS dataset '{self.name}' already has a processing named {processing_name}:\n"
+                    f"{existing_processing}\nIt will be overwritten with the following:\n{new_processing}"
+                ),
+                UserWarning,
             )
             self.delete_processing(existing_processing.name)
         self.processing.append(new_processing)
@@ -444,9 +446,12 @@ def build_caps_dataset_description(
     try:
         bids_version_from_input_dir = _get_bids_version(input_dir)
     except ClinicaBIDSError:
-        warnings.warn(
-            f"Unable to retrieve the BIDS version from the input folder {input_dir}."
-            f"Please verify your input dataset. Clinica will assume a BIDS version of {BIDS_VERSION}."
+        log_and_warn(
+            (
+                f"Unable to retrieve the BIDS version from the input folder {input_dir}."
+                f"Please verify your input dataset. Clinica will assume a BIDS version of {BIDS_VERSION}."
+            ),
+            UserWarning,
         )
     if (
         bids_version is not None
@@ -481,9 +486,12 @@ def build_caps_dataset_description(
             )
             log_and_raise(msg, ClinicaCAPSError)
         if previous_desc.name != new_desc.name:
-            warnings.warn(
-                f"The existing CAPS dataset, located at {output_dir} has a name '{previous_desc.name}' different "
-                f"from the new name '{new_desc.name}'. The old name will be kept."
+            log_and_warn(
+                (
+                    f"The existing CAPS dataset, located at {output_dir} has a name '{previous_desc.name}' different "
+                    f"from the new name '{new_desc.name}'. The old name will be kept."
+                ),
+                UserWarning,
             )
             new_desc.name = previous_desc.name
         for processing in previous_desc.processing:
