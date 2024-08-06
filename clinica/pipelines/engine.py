@@ -473,7 +473,7 @@ class Pipeline(Workflow):
                     self._caps_directory,
                     self._caps_directory,
                     self._name,
-                    f"subjects/*/*/{self._name}",
+                    f"subjects/*/*/{self._name.replace('-', '_')}",
                 )
                 raise ClinicaCAPSError(
                     f"{e}\nYou might want to create a 'dataset_description.json' "
@@ -489,13 +489,14 @@ class Pipeline(Workflow):
                     or len([f for f in self._caps_directory.iterdir()]) == 0
                 ):
                     self._caps_directory.mkdir(parents=True, exist_ok=True)
-                    write_caps_dataset_description(
-                        self._bids_directory,
-                        self._caps_directory,
-                        self._name,
-                        f"subjects/*/*/{self._name}",
-                    )
-                check_caps_folder(self._caps_directory)
+        if self._caps_directory:
+            write_caps_dataset_description(
+                self._bids_directory,
+                self._caps_directory,
+                self._name,
+                f"subjects/*/*/{self._name.replace('-', '_')}",
+            )
+            check_caps_folder(self._caps_directory)
         self._compute_subjects_and_sessions()
         self._init_nodes()
 
