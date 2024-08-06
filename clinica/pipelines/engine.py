@@ -11,6 +11,8 @@ import click
 from nipype.interfaces.utility import IdentityInterface
 from nipype.pipeline.engine import Node, Workflow
 
+from clinica.utils.stream import log_and_warn
+
 
 def clinica_pipeline(func):
     """Turns a CLI implementation into a Clinica Pipeline.
@@ -720,13 +722,11 @@ class Pipeline(Workflow):
             else:
                 raise e
         except NetworkXError:
-            cprint(
-                msg=(
-                    "Either all the images were already run by the pipeline "
-                    "or no image was found to run the pipeline."
-                ),
-                lvl="warning",
+            msg = (
+                "Either all the images were already run by the pipeline "
+                "or no image was found to run the pipeline."
             )
+            log_and_warn(msg, UserWarning)
             exec_graph = Graph()
         return exec_graph
 
@@ -871,28 +871,22 @@ class Pipeline(Workflow):
             # so we need a try / except block
             n_thread_cmdline = plugin_args["n_procs"]
             if n_thread_cmdline > n_cpu:
-                cprint(
-                    msg=(
-                        f"You are trying to run clinica with a number of threads ({n_thread_cmdline}) superior to your "
-                        f"number of CPUs ({n_cpu})."
-                    ),
-                    lvl="warning",
+                msg = (
+                    f"You are trying to run clinica with a number of threads ({n_thread_cmdline}) superior to your "
+                    f"number of CPUs ({n_cpu})."
                 )
+                log_and_warn(msg, UserWarning)
                 ask_user = True
         except TypeError:
-            cprint(
-                msg=f"You did not specify the number of threads to run in parallel (--n_procs argument).",
-                lvl="warning",
-            )
-            cprint(
-                msg=(
+            log_and_warn(
+                (
+                    f"You did not specify the number of threads to run in parallel (--n_procs argument)."
                     f"Computation time can be shorten as you have {n_cpu} CPUs on this computer. "
                     f"We recommend using {n_cpu - 1} threads."
                 ),
-                lvl="warning",
+                UserWarning,
             )
             ask_user = True
-
         if ask_user:
             n_procs = click.prompt(
                 text="How many threads do you want to use?",
@@ -942,13 +936,13 @@ class Pipeline(Workflow):
 
         from clinica.utils.stream import cprint
 
-        cprint(
+        log_and_warn(
             (
                 f"The following subjects of the input dataset {self.bids_directory} seem to "
                 "have a cross-sectional layout which is not supported by Clinica:\n"
                 + "\n- ".join(cross_sectional_subjects)
             ),
-            lvl="warning",
+            UserWarning,
         )
         proposed_bids = (
             self.bids_directory.parent / f"{self.bids_directory.name}_clinica_compliant"
