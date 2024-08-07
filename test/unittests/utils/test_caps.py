@@ -346,3 +346,26 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
             },
         ],
     }
+
+
+@pytest.mark.parametrize(
+    "version1,version2,policy,expected",
+    [
+        ("1.2.3", "1.2.3", "strict", True),
+        ("1.2.3", "1.2.3", "minor", True),
+        ("1.2.3", "1.2.3", "major", True),
+        ("1.2.3", "1.2.4", "strict", False),
+        ("1.2.3", "1.2.4", "minor", True),
+        ("1.2.3", "1.2.4", "major", True),
+        ("1.2.3", "1.3.3", "strict", False),
+        ("1.2.3", "1.3.3", "minor", False),
+        ("1.2.3", "1.3.3", "major", True),
+        ("1.2.3", "2.2.3", "strict", False),
+        ("1.2.3", "2.2.3", "minor", False),
+        ("1.2.3", "2.2.3", "major", False),
+    ],
+)
+def test_are_versions_compatible(version1, version2, policy, expected):
+    from clinica.utils.caps import are_versions_compatible
+
+    assert are_versions_compatible(version1, version2, policy=policy) is expected

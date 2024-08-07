@@ -1,7 +1,8 @@
 import json
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
-from typing import IO, List, MutableSequence, NewType, Optional
+from typing import IO, List, MutableSequence, NewType, Optional, Union
 
 from attrs import define, fields
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
@@ -17,6 +18,8 @@ from clinica.utils.stream import cprint, log_and_raise, log_and_warn
 __all__ = [
     "CAPS_VERSION",
     "CAPSDatasetDescription",
+    "VersionComparisonPolicy",
+    "are_versions_compatible",
     "write_caps_dataset_description",
     "build_caps_dataset_description",
 ]
@@ -25,6 +28,60 @@ __all__ = [
 CAPS_VERSION = Version("1.0.0")
 
 IsoDate = NewType("IsoDate", datetime)
+
+
+class VersionComparisonPolicy(str, Enum):
+    """Defines the different ways we can compare version numbers in Clinica.
+
+    STRICT: version numbers have to match exactly.
+    MINOR : version numbers have to have the same major and minor numbers.
+    MAJOR: version numbers only need to share the same major number.
+    """
+
+    STRICT = "strict"
+    MINOR = "minor"
+    MAJOR = "major"
+
+
+def are_versions_compatible(
+    version1: Union[str, Version],
+    version2: Union[str, Version],
+    policy: Optional[Union[str, VersionComparisonPolicy]] = None,
+) -> bool:
+    """Returns whether the two provided versions are compatible or not depending on the policy.
+
+    Parameters
+    ----------
+    version1 : str or Version
+        The first version number to compare.
+
+    version2 : str or Version
+        The second version number to compare.
+
+    policy : str or VersionComparisonPolicy, optional
+        The policy under which to compare version1 with version2.
+        By default, a strict policy is used, meaning that version
+        numbers have to match exactly.
+
+    Returns
+    -------
+    bool :
+        True if version1 is 'compatible' with version2, False otherwise.
+    """
+    if isinstance(version1, str):
+        version1 = Version(version1)
+    if isinstance(version2, str):
+        version2 = Version(version2)
+    if policy is None:
+        policy = VersionComparisonPolicy.STRICT
+    else:
+        policy = VersionComparisonPolicy(policy)
+    if policy == VersionComparisonPolicy.STRICT:
+        return version1 == version2
+    if policy == VersionComparisonPolicy.MINOR:
+        return version1.major == version2.major and version1.minor == version2.minor
+    if policy == VersionComparisonPolicy.MAJOR:
+        return version1.major == version2.major
 
 
 @define
@@ -209,12 +266,14 @@ class CAPSDatasetDescription:
             processing,
         )
 
-    def is_compatible_with(self, other) -> bool:
-        if self.bids_version != other.bids_version:
-            return False
-        if self.caps_version != other.caps_version:
-            return False
-        return True
+    def is_compatible_with(
+        self, other, policy: Optional[Union[str, VersionComparisonPolicy]] = None
+    ) -> bool:
+        return are_versions_compatible(
+            self.bids_version, other.bids_version, policy=policy
+        ) and are_versions_compatible(
+            self.caps_version, other.caps_version, policy=policy
+        )
 
 
 def _get_username() -> str:
@@ -452,7 +511,9 @@ def build_caps_dataset_description(
         previous_desc = CAPSDatasetDescription.from_file(
             output_dir / "dataset_description.json"
         )
-        if not previous_desc.is_compatible_with(new_desc):
+        if not previous_desc.is_compatible_with(
+            new_desc, VersionComparisonPolicy.STRICT
+        ):
             msg = (
                 f"Impossible to write the 'dataset_description.json' file in {output_dir} "
                 "because it already exists and it contains incompatible metadata."
