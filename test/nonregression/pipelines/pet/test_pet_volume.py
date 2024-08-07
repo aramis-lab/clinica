@@ -27,7 +27,7 @@ def run_pet_volume(
         "group_label": "UnitTest",
         "acq_label": tracer,
         "suvr_reference_region": region,
-        "skip_question": False,
+        "skip_question": True,
     }
     pipeline = PETVolume(
         bids_directory=fspath(input_dir / "bids"),
