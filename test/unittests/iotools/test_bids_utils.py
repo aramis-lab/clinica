@@ -285,7 +285,7 @@ def expected_description_content(
     expected_version = BIDS_VERSION if bids_version is None else bids_version
     desc_dict = {
         "Name": study_name.value,
-        "BIDSVersion": expected_version,
+        "BIDSVersion": str(expected_version),
         "DatasetType": "raw",
     }
     return json.dumps(desc_dict, indent=4)

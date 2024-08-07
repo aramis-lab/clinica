@@ -91,6 +91,11 @@ def build_caps_directory(directory: os.PathLike, configuration: dict) -> None:
     This function is a simple prototype for creating fake datasets for testing.
     """
     directory = Path(directory)
+    with open(directory / "dataset_description.json", "w") as fp:
+        json.dump(
+            {"Name": "Example dataset", "BIDSVersion": "1.0.2", "CAPSVersion": "1.0.0"},
+            fp,
+        )
     _build_groups(directory, configuration)
     _build_subjects(directory, configuration)
 
