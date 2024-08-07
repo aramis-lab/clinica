@@ -1,6 +1,7 @@
 import re
 
 import pytest
+from packaging.version import Version
 
 
 def test_anat_linear_pipeline_no_input_error(tmp_path):
@@ -62,7 +63,7 @@ def test_anat_linear_pipeline_write_caps_dataset_description(tmp_path):
 
     desc = CAPSDatasetDescription.from_file(caps / "dataset_description.json")
 
-    assert desc.bids_version == "1.7.0"
-    assert desc.caps_version == "1.0.0"
+    assert desc.bids_version == Version("1.7.0")
+    assert desc.caps_version == Version("1.0.0")
     assert desc.dataset_type == DatasetType.DERIVATIVE
     assert desc.processing[0].name == "AnatLinear"

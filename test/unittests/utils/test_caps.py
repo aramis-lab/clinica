@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 
 
 def mock_processing_metadata(mocker):
@@ -61,8 +62,8 @@ def test_caps_dataset_description(tmp_path, mocker):
     desc = CAPSDatasetDescription.from_values()
 
     assert desc.name == "my caps dataset"
-    assert desc.bids_version == "1.7.0"
-    assert desc.caps_version == "1.0.0"
+    assert desc.bids_version == Version("1.7.0")
+    assert desc.caps_version == Version("1.0.0")
     assert desc.processing == []
 
     desc.add_processing(
@@ -219,8 +220,8 @@ def test_read_caps_dataset_description(tmp_path, mocker):
     desc = CAPSDatasetDescription.from_file(caps_dir / "dataset_description.json")
 
     assert desc.name == "my CAPS dataset"
-    assert desc.bids_version == "1.7.0"
-    assert desc.caps_version == "1.0.0"
+    assert desc.bids_version == Version("1.7.0")
+    assert desc.caps_version == Version("1.0.0")
     assert desc.dataset_type == DatasetType.DERIVATIVE
     assert len(desc.processing) == 1
     proc = desc.get_processing("foo")
@@ -244,7 +245,13 @@ def test_write_caps_dataset_description_renaming_gives_warning(tmp_path):
         "subject/*/*/foo",
         "my CAPS dataset",
     )
-    with pytest.warns(UserWarning) as records:
+    with pytest.warns(
+        UserWarning,
+        match=(
+            f"The existing CAPS dataset, located at {tmp_path}/caps has a name 'my CAPS dataset' "
+            "different from the new name 'my CAPS dataset 2'. The old name will be kept."
+        ),
+    ):
         write_caps_dataset_description(
             tmp_path / "bids",
             tmp_path / "caps",
@@ -252,18 +259,6 @@ def test_write_caps_dataset_description_renaming_gives_warning(tmp_path):
             "subject/*/*/foo",
             "my CAPS dataset 2",
         )
-    assert len(records) == 2
-    assert records[0].message.args[0] == (
-        f"The existing CAPS dataset, located at {tmp_path}/caps has a name 'my CAPS dataset' "
-        "different from the new name 'my CAPS dataset 2'. The old name will be kept."
-    )
-    assert (
-        records[1]
-        .message.args[0]
-        .startswith(
-            "The CAPS dataset 'my CAPS dataset' already has a processing named foo"
-        )
-    )
 
 
 def test_write_caps_dataset_description_version_mismatch_error(tmp_path):

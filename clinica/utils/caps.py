@@ -1,16 +1,18 @@
-import datetime
 import json
+from datetime import datetime
 from pathlib import Path
-from typing import IO, List, MutableSequence, Optional
+from typing import IO, List, MutableSequence, NewType, Optional
 
 from attrs import define, fields
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 from cattr.preconf.json import make_converter
+from packaging.version import Version
 
+from clinica.iotools.bids_dataset_description import get_bids_version
 from clinica.utils.bids import BIDS_VERSION
 from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 from clinica.utils.inputs import DatasetType
-from clinica.utils.stream import log_and_raise, log_and_warn
+from clinica.utils.stream import cprint, log_and_raise, log_and_warn
 
 __all__ = [
     "CAPS_VERSION",
@@ -20,59 +22,9 @@ __all__ = [
 ]
 
 
-CAPS_VERSION = "1.0.0"
+CAPS_VERSION = Version("1.0.0")
 
-
-def _get_username() -> str:
-    import os
-    import pwd
-
-    return pwd.getpwuid(os.getuid()).pw_name
-
-
-def _get_machine_name() -> str:
-    import platform
-
-    return platform.node()
-
-
-def _get_current_timestamp() -> datetime.datetime:
-    return datetime.datetime.now()
-
-
-def _generate_random_name() -> str:
-    import uuid
-
-    return str(uuid.uuid4())
-
-
-def _get_bids_version(dataset_folder: Path):
-    """Returns the BIDS version number of a BIDS or CAPS dataset."""
-    try:
-        with open(dataset_folder / "dataset_description.json", "r") as fp:
-            bids_metadata = json.load(fp)
-        return bids_metadata["BIDSVersion"]
-    except FileNotFoundError:
-        log_and_raise(
-            (
-                f"File {dataset_folder / 'dataset_description.json'} is missing "
-                "while it is mandatory for a BIDS/CAPS dataset."
-            ),
-            ClinicaBIDSError,
-        )
-    except KeyError:
-        log_and_raise(
-            (
-                f"File {dataset_folder / 'dataset_description.json'} is missing a "
-                "'BIDSVersion' key while it is mandatory."
-            ),
-            ClinicaBIDSError,
-        )
-    except json.JSONDecodeError as e:
-        log_and_raise(
-            f"File {dataset_folder / 'dataset_description.json'} is not formatted correctly:\n{e}.",
-            ClinicaBIDSError,
-        )
+IsoDate = NewType("IsoDate", datetime)
 
 
 @define
@@ -85,7 +37,7 @@ class CAPSProcessingDescription:
         The name of the processing pipeline.
         Example: 't1-linear'.
 
-    date : datetime
+    date : IsoDate
         The date at which the processing pipeline has been run.
         More precisely, this is the date at which the dataset_description.json
         file is written to disk, which precedes the date at which the pipeline
@@ -106,7 +58,7 @@ class CAPSProcessingDescription:
     """
 
     name: str
-    date: datetime.datetime
+    date: IsoDate
     author: str
     machine: str
     processing_path: str
@@ -170,8 +122,8 @@ class CAPSDatasetDescription:
     """
 
     name: str
-    bids_version: str = BIDS_VERSION
-    caps_version: str = CAPS_VERSION
+    bids_version: Version = BIDS_VERSION
+    caps_version: Version = CAPS_VERSION
     dataset_type: DatasetType = DatasetType.DERIVATIVE
     processing: MutableSequence[CAPSProcessingDescription] = []
 
@@ -223,8 +175,8 @@ class CAPSDatasetDescription:
     def from_values(
         cls,
         name: Optional[str] = None,
-        bids_version: Optional[str] = None,
-        caps_version: Optional[str] = None,
+        bids_version: Optional[Version] = None,
+        caps_version: Optional[Version] = None,
         processing: Optional[List[CAPSProcessingDescription]] = None,
     ):
         return cls(
@@ -265,6 +217,29 @@ class CAPSDatasetDescription:
         return True
 
 
+def _get_username() -> str:
+    import os
+    import pwd
+
+    return pwd.getpwuid(os.getuid()).pw_name
+
+
+def _get_machine_name() -> str:
+    import platform
+
+    return platform.node()
+
+
+def _get_current_timestamp() -> IsoDate:
+    return IsoDate(datetime.now())
+
+
+def _generate_random_name() -> str:
+    import uuid
+
+    return str(uuid.uuid4())
+
+
 def _rename(name: str) -> str:
     """Rename attributes following the specification for the JSON file.
 
@@ -280,7 +255,8 @@ def _rename(name: str) -> str:
 converter = make_converter()
 
 # Unstructuring hooks first
-converter.register_unstructure_hook(datetime.datetime, lambda dt: dt.isoformat())
+converter.register_unstructure_hook(Version, lambda dt: str(dt))
+converter.register_unstructure_hook(IsoDate, lambda dt: dt.isoformat())
 caps_processing_field_renaming = {
     a.name: override(rename=_rename(a.name)) for a in fields(CAPSProcessingDescription)
 }
@@ -307,9 +283,8 @@ converter.register_unstructure_hook(
 )
 
 # And structuring hooks
-converter.register_structure_hook(
-    datetime.datetime, lambda ts, _: datetime.datetime.fromisoformat(ts)
-)
+converter.register_structure_hook(Version, lambda ts, _: Version(ts))
+converter.register_structure_hook(IsoDate, lambda ts, _: datetime.fromisoformat(ts))
 caps_processing_field_renaming_structure_hook = make_dict_structure_fn(
     CAPSProcessingDescription,
     converter,
@@ -440,11 +415,9 @@ def build_caps_dataset_description(
     CAPSDatasetDescription :
         The CAPSDatasetDescription generated.
     """
-    from clinica.utils.stream import cprint, log_and_raise
-
     bids_version_from_input_dir = None
     try:
-        bids_version_from_input_dir = _get_bids_version(input_dir)
+        bids_version_from_input_dir = get_bids_version(input_dir)
     except ClinicaBIDSError:
         log_and_warn(
             (
@@ -495,6 +468,7 @@ def build_caps_dataset_description(
             )
             new_desc.name = previous_desc.name
         for processing in previous_desc.processing:
-            new_desc.processing.append(processing)
+            if processing.name != processing_name:
+                new_desc.processing.append(processing)
     new_desc.add_processing(processing_name, processing_output_path, str(input_dir))
     return new_desc
