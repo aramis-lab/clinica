@@ -1,7 +1,8 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
-from typing import List
+from typing import List, Optional
 
+import nipype.pipeline.engine as npe
 from nipype import config
 
 from clinica.pipelines.pet.engine import PETPipeline
@@ -25,6 +26,44 @@ class PETLinear(PETPipeline):
     Returns:
         A clinica pipeline object containing the pet_linear pipeline.
     """
+
+    def __init__(
+        self,
+        bids_directory: Optional[str] = None,
+        caps_directory: Optional[str] = None,
+        tsv_file: Optional[str] = None,
+        overwrite_caps: Optional[bool] = False,
+        base_dir: Optional[str] = None,
+        parameters: Optional[dict] = None,
+        name: Optional[str] = None,
+        ignore_dependencies: Optional[List[str]] = None,
+        use_antspy: bool = False,
+    ):
+        from clinica.utils.stream import cprint
+
+        super().__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            overwrite_caps=overwrite_caps,
+            base_dir=base_dir,
+            parameters=parameters,
+            ignore_dependencies=ignore_dependencies,
+            name=name,
+        )
+        self.use_antspy = use_antspy
+        if self.use_antspy:
+            self._ignore_dependencies.append("ants")
+            cprint(
+                (
+                    "The PETLinear pipeline has been configured to use ANTsPy instead of ANTs.\n"
+                    "This means that no installation of ANTs is required, but the antspyx Python "
+                    "package must be installed in your environment.\nThis functionality has been "
+                    "introduced in Clinica 0.9.0 and is considered experimental.\n"
+                    "Please report any issue or unexpected results to the Clinica developer team."
+                ),
+                lvl="warning",
+            )
 
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -263,10 +302,13 @@ class PETLinear(PETPipeline):
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
-        import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
 
-        from clinica.pipelines.tasks import crop_nifti_task
+        from clinica.pipelines.tasks import (
+            crop_nifti_task,
+            get_filename_no_ext_task,
+            run_ants_apply_transforms_task,
+        )
 
         from .tasks import (
             clip_task,
@@ -282,6 +324,14 @@ class PETLinear(PETPipeline):
             ),
             name="initPipeline",
         )
+        # image_id_node = npe.Node(
+        #    interface=nutil.Function(
+        #        input_names=["filename"],
+        #        output_names=["image_id"],
+        #        function=get_filename_no_ext_task,
+        #    ),
+        #    name="ImageID",
+        # )
         concatenate_node = npe.Node(
             interface=nutil.Function(
                 input_names=["pet_to_t1w_transform", "t1w_to_mni_transform"],
@@ -290,8 +340,6 @@ class PETLinear(PETPipeline):
             ),
             name="concatenateTransforms",
         )
-
-        # The core (processing) nodes
 
         # 1. Clipping node
         clipping_node = npe.Node(
@@ -304,51 +352,52 @@ class PETLinear(PETPipeline):
         )
         clipping_node.inputs.output_dir = self.base_dir
 
-        # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
-        ants_registration_node = npe.Node(
-            name="antsRegistration", interface=ants.RegistrationSynQuick()
-        )
-        ants_registration_node.inputs.dimension = 3
-        ants_registration_node.inputs.transform_type = "r"
-
-        # 3. `ApplyTransforms` by *ANTS*. It uses nipype interface. PET to MRI
+        ants_registration_node = self._build_ants_registration_node()
         ants_applytransform_node = npe.Node(
-            name="antsApplyTransformPET2MNI", interface=ants.ApplyTransforms()
+            name="antsApplyTransformPET2MNI",
+            interface=(
+                nutil.Function(
+                    function=run_ants_apply_transforms_task,
+                    input_names=[
+                        "reference_image",
+                        "input_image",
+                        "transforms",
+                        "output_dir",
+                    ],
+                    output_names=["output_image"],
+                )
+                if self.use_antspy
+                else ants.ApplyTransforms()
+            ),
         )
-        ants_applytransform_node.inputs.dimension = 3
+        if not self.use_antspy:
+            ants_applytransform_node.inputs.dimension = 3
         ants_applytransform_node.inputs.reference_image = self.ref_template
 
-        # 4. Normalize the image (using nifti). It uses custom interface, from utils file
-        ants_registration_nonlinear_node = npe.Node(
-            name="antsRegistrationT1W2MNI", interface=ants.Registration()
+        ants_registration_nonlinear_node = (
+            self._build_ants_registration_nonlinear_node()
         )
-        ants_registration_nonlinear_node.inputs.fixed_image = self.ref_template
-        ants_registration_nonlinear_node.inputs.metric = ["MI"]
-        ants_registration_nonlinear_node.inputs.metric_weight = [1.0]
-        ants_registration_nonlinear_node.inputs.transforms = ["SyN"]
-        ants_registration_nonlinear_node.inputs.transform_parameters = [(0.1, 3, 0)]
-        ants_registration_nonlinear_node.inputs.dimension = 3
-        ants_registration_nonlinear_node.inputs.shrink_factors = [[8, 4, 2]]
-        ants_registration_nonlinear_node.inputs.smoothing_sigmas = [[3, 2, 1]]
-        ants_registration_nonlinear_node.inputs.sigma_units = ["vox"]
-        ants_registration_nonlinear_node.inputs.number_of_iterations = [[200, 50, 10]]
-        ants_registration_nonlinear_node.inputs.convergence_threshold = [1e-05]
-        ants_registration_nonlinear_node.inputs.convergence_window_size = [10]
-        ants_registration_nonlinear_node.inputs.radius_or_number_of_bins = [32]
-        ants_registration_nonlinear_node.inputs.winsorize_lower_quantile = 0.005
-        ants_registration_nonlinear_node.inputs.winsorize_upper_quantile = 0.995
-        ants_registration_nonlinear_node.inputs.collapse_output_transforms = True
-        ants_registration_nonlinear_node.inputs.use_histogram_matching = False
-        ants_registration_nonlinear_node.inputs.verbose = True
 
         ants_applytransform_nonlinear_node = npe.Node(
-            name="antsApplyTransformNonLinear", interface=ants.ApplyTransforms()
+            name="antsApplyTransformNonLinear",
+            interface=(
+                nutil.Function(
+                    function=run_ants_apply_transforms_task,
+                    input_names=[
+                        "reference_image",
+                        "input_image",
+                        "transforms",
+                        "output_dir",
+                    ],
+                    output_names=["output_image"],
+                )
+                if self.use_antspy
+                else ants.ApplyTransforms()
+            ),
         )
-        ants_applytransform_nonlinear_node.inputs.dimension = 3
+        if not self.use_antspy:
+            ants_applytransform_nonlinear_node.inputs.dimension = 3
         ants_applytransform_nonlinear_node.inputs.reference_image = self.ref_template
-
-        if random_seed := self.parameters.get("random_seed", None):
-            ants_registration_nonlinear_node.inputs.random_seed = random_seed
 
         normalize_intensity_node = npe.Node(
             name="intensityNormalization",
@@ -385,9 +434,24 @@ class PETLinear(PETPipeline):
 
         # 7. Optional node: compute PET image in T1w
         ants_applytransform_optional_node = npe.Node(
-            name="antsApplyTransformPET2T1w", interface=ants.ApplyTransforms()
+            name="antsApplyTransformPET2T1w",
+            interface=(
+                nutil.Function(
+                    function=run_ants_apply_transforms_task,
+                    input_names=[
+                        "reference_image",
+                        "input_image",
+                        "transforms",
+                        "output_dir",
+                    ],
+                    output_names=["output_image"],
+                )
+                if self.use_antspy
+                else ants.ApplyTransforms()
+            ),
         )
-        ants_applytransform_optional_node.inputs.dimension = 3
+        if not self.use_antspy:
+            ants_applytransform_optional_node.inputs.dimension = 3
 
         self.connect(
             [
@@ -514,3 +578,114 @@ class PETLinear(PETPipeline):
                     ),
                 ]
             )
+
+    def _build_ants_registration_node(self) -> npe.Node:
+        import nipype.interfaces.utility as nutil
+        from nipype.interfaces import ants
+
+        from clinica.pipelines.tasks import run_ants_registration_synquick_task
+        from clinica.pipelines.utils import AntsRegistrationSynQuickTransformType
+
+        ants_registration_node = npe.Node(
+            name="antsRegistration",
+            interface=(
+                nutil.Function(
+                    function=run_ants_registration_synquick_task,
+                    input_names=[
+                        "fixed_image",
+                        "moving_image",
+                        "random_seed",
+                        "transform_type",
+                        "output_prefix",
+                        "output_dir",
+                    ],
+                    output_names=["warped_image", "out_matrix"],
+                )
+                if self.use_antspy
+                else ants.RegistrationSynQuick()
+            ),
+        )
+        ants_registration_node.inputs.fixed_image = self.ref_template
+        if self.use_antspy:
+            ants_registration_node.inputs.output_dir = str(self.base_dir)
+            ants_registration_node.inputs.transform_type = (
+                AntsRegistrationSynQuickTransformType.RIGID
+            )
+        else:
+            ants_registration_node.inputs.transform_type = "r"
+            ants_registration_node.inputs.dimension = 3
+        ants_registration_node.inputs.random_seed = (
+            self.parameters.get("random_seed", None) or 0
+        )
+
+        return ants_registration_node
+
+    def _build_ants_registration_nonlinear_node(self) -> npe.Node:
+        import nipype.interfaces.utility as nutil
+        from nipype.interfaces import ants
+
+        from clinica.pipelines.tasks import run_ants_registration_task
+        from clinica.pipelines.utils import AntsRegistrationTransformType
+
+        ants_registration_nonlinear_node = npe.Node(
+            name="antsRegistrationT1W2MNI",
+            interface=(
+                nutil.Function(
+                    function=run_ants_registration_task,
+                    input_names=[
+                        "fixed_image",
+                        "moving_image",
+                        "random_seed",
+                        "transform_type",
+                        "output_prefix",
+                        "output_dir",
+                        "shrink_factors",
+                        "smoothing_sigmas",
+                        "number_of_iterations",
+                        "return_inverse_transform",
+                    ],
+                    output_names=[
+                        "warped_image",
+                        "out_matrix",
+                        "reverse_forward_transforms",
+                    ],
+                )
+                if self.use_antspy
+                else ants.Registration()
+            ),
+        )
+        ants_registration_nonlinear_node.inputs.fixed_image = self.ref_template
+        if self.use_antspy:
+            ants_registration_nonlinear_node.inputs.transform_type = (
+                AntsRegistrationTransformType.SYN
+            )
+            ants_registration_nonlinear_node.inputs.shrink_factors = (8, 4, 2)
+            ants_registration_nonlinear_node.inputs.smoothing_sigmas = (3, 2, 1)
+            ants_registration_nonlinear_node.inputs.number_of_iterations = (200, 50, 10)
+            ants_registration_nonlinear_node.inputs.return_inverse_transform = True
+        else:
+            ants_registration_nonlinear_node.inputs.metric = ["MI"]
+            ants_registration_nonlinear_node.inputs.metric_weight = [1.0]
+            ants_registration_nonlinear_node.inputs.transforms = ["SyN"]
+            ants_registration_nonlinear_node.inputs.dimension = 3
+            ants_registration_nonlinear_node.inputs.shrink_factors = [[8, 4, 2]]
+            ants_registration_nonlinear_node.inputs.smoothing_sigmas = [[3, 2, 1]]
+            ants_registration_nonlinear_node.inputs.sigma_units = ["vox"]
+            ants_registration_nonlinear_node.inputs.number_of_iterations = [
+                [200, 50, 10]
+            ]
+            ants_registration_nonlinear_node.inputs.radius_or_number_of_bins = [32]
+
+            ants_registration_nonlinear_node.inputs.transform_parameters = [(0.1, 3, 0)]
+            ants_registration_nonlinear_node.inputs.convergence_threshold = [1e-05]
+            ants_registration_nonlinear_node.inputs.convergence_window_size = [10]
+            ants_registration_nonlinear_node.inputs.winsorize_lower_quantile = 0.005
+            ants_registration_nonlinear_node.inputs.winsorize_upper_quantile = 0.995
+            ants_registration_nonlinear_node.inputs.collapse_output_transforms = True
+            ants_registration_nonlinear_node.inputs.use_histogram_matching = False
+        ants_registration_nonlinear_node.inputs.verbose = True
+        ants_registration_nonlinear_node.inputs.random_seed = (
+            self.parameters.get("random_seed", None) or 0
+        )
+
+        return ants_registration_nonlinear_node

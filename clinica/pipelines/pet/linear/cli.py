@@ -34,6 +34,11 @@ pipeline_name = "pet-linear"
 @cli_param.option.working_directory
 @option.global_option_group
 @option.n_procs
+@cli_param.option.option(
+    "--use-antspy",
+    is_flag=True,
+    help="Use ANTsPy instead of ANTs.",
+)
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -46,6 +51,7 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    use_antspy: bool = False,
 ) -> None:
     """Affine registration of PET images to the MNI standard space.
 
@@ -81,6 +87,7 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        use_antspy=use_antspy,
     )
 
     exec_pipeline = (
