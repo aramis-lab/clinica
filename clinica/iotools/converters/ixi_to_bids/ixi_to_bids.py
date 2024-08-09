@@ -39,15 +39,16 @@ def convert(
 
     clinical_data = read_ixi_clinical_data(path_to_clinical)
 
-    subjects = subjects if subjects else get_subjects_list_from_data(path_to_dataset)
-    subjects = filter_subjects_list(subjects, clinical_data)
+    subjects_to_filter = (
+        subjects if subjects else get_subjects_list_from_data(path_to_dataset)
+    )
+    participants = filter_subjects_list(subjects_to_filter, clinical_data)
 
-    # todo : treat DTI different (load and merge)
-
-    image_data = get_img_data_df(path_to_dataset)
-
-    for subject in subjects:
-        write_subject(select_subject_data(image_data, subject), bids_dir)
+    for participant in participants:
+        write_subject_no_dti(
+            select_subject_data(get_img_data_df(path_to_dataset), participant), bids_dir
+        )
+        write_subject_dti_if_exists(bids_dir, participant, path_to_dataset)
 
     readme_data = {
         "link": "https://brain-development.org/ixi-dataset/",
