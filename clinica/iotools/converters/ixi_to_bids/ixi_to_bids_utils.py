@@ -7,9 +7,11 @@ from typing import List
 
 import nibabel as nib
 import pandas as pd
+from nilearn import plotting
 from nilearn.image import concat_imgs
 
 from clinica.iotools.bids_utils import StudyName, bids_id_factory
+from clinica.utils.stream import cprint
 
 
 def get_subjects_list_from_data(data_directory: Path) -> List[str]:
@@ -52,8 +54,9 @@ def rename_ixi_modalities(input_mod: str) -> str:
         return "angio"
     elif input_mod == "PD":
         return "PDw"
-    elif input_mod == "DWI":
-        return "dwi"
+    elif input_mod == "DTI":
+        # todo: doubt on this one
+        return "dti"
     else:
         raise ValueError(
             f"The modality {input_mod} is not recognized in the IXI dataset."
@@ -68,11 +71,16 @@ def define_magnetic_field(hospital: str) -> str:
 
 
 def get_img_data_df(data_directory: Path) -> pd.DataFrame:
-    # todo : works for all except DTI !!! (I mean we should drop it after this)
+    # todo : get all modalities other than DTI
     df = pd.DataFrame(
-        {"img_path": [path for path in data_directory.rglob(pattern="IXI*.nii.gz")]}
+        {
+            "img_path": [
+                path
+                for path in data_directory.rglob(pattern="IXI*.nii.gz")
+                if re.search(r"IXI\d{3}(-\w*){3}.nii.gz$", str(path))
+            ]
+        }
     )
-    # todo : regex pattern for 3 groups IXI\d{3}(-\w*){3}.nii.gz vs 4 groups IXI\d{3}(-\w*){4}.nii.gz
     df = (
         df.assign(img_name=lambda df: df.img_path.apply(lambda x: x.name))
         .assign(img_name_no_ext=lambda df: df.img_name.apply(lambda x: x.split(".")[0]))
@@ -100,42 +108,67 @@ def select_subject_data(data_df: pd.DataFrame, subject: str) -> pd.DataFrame:
 
 
 def bids_filename_from_ixi(img: pd.Series) -> str:
-    # todo : has to work for both nifti and json
     return f"{img['bids_id']}_{img['session']}_{img['modality']}"
 
 
-def write_subject(subject_df: pd.DataFrame, bids_path: Path) -> None:
+def write_ixi_json_subject(writing_path: Path, hospital: str, field: str) -> None:
+    with open(writing_path, "w") as f:
+        json.dump(
+            {
+                "InstitutionName": hospital,
+                "MagneticFieldStrength (T)": field,
+            },
+            f,
+            indent=4,
+        )
+
+
+def write_subject_no_dti(subject_df: pd.DataFrame, bids_path: Path) -> None:
+    # todo :all but dti
     for _, row in subject_df.iterrows():
+        cprint(
+            f"Converting modality {row['modality']} for subject {row['subject']}.",
+            lvl="info",
+        )
         filename = bids_filename_from_ixi(row)
-
-        if row["modality"] in ["T1w", "T2w", "PDw", "angio"]:
-            data_path = bids_path / row["bids_id"] / row["session"] / "anat"
-        elif row["modality"] == "dwi":
-            data_path = bids_path / row["bids_id"] / row["session"] / "func"
-        else:
-            raise ValueError(
-                f"Modality {row['modality']} not recognized for IXI dataset."
-            )
-
+        data_path = bids_path / row["bids_id"] / row["session"] / "anat"
         data_path.mkdir(parents=True, exist_ok=True)
         shutil.copy2(row["img_path"], f"{data_path}/{filename}.nii.gz")
-
-        with open(f"{data_path}/{filename}.json", "w") as f:
-            json.dump(
-                {
-                    "InstitutionName": row["hospital"],
-                    "MagneticFieldStrength (T)": row["field"],
-                },
-                f,
-                indent=4,
-            )
+        write_ixi_json_subject(
+            f"{data_path}/{filename}.json", row["hospital"], row["field"]
+        )
 
 
-def merge_dti(dti_df: pd.DataFrame) -> pd.DataFrame:
-    pass
+def write_subject_dti_if_exists(
+    bids_path: Path, subject: str, data_directory: Path
+) -> None:
+    if dti_paths := find_subject_dti_data(data_directory, subject):
+        dti_to_save = merge_dti(dti_paths)
+        bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(subject)
+        data_path = bids_path / bids_id / "ses-M000" / "dwi"
+        filename = f"{bids_id}_ses-M000_dwi"
+        nib.save(dti_to_save, f"{data_path}/{filename}.nii.gz")
+        hospital = dti_paths[0].name.split("-")[1]
+        write_ixi_json_subject(
+            f"{data_path}/{filename}.json", hospital, define_magnetic_field(hospital)
+        )
+    else:
+        cprint(f"No DTI data was found for IXI subject {subject}.", lvl="warning")
+
+
+def find_subject_dti_data(data_directory: Path, subject: str) -> List[Path]:
+    pattern = subject + r"(-\w*){4}.nii.gz$"
+    return [
+        path
+        for path in data_directory.rglob(pattern="IXI*.nii.gz")
+        if re.search(pattern, str(path))
+    ]
+
+
+def merge_dti(dti_images: List[Path]):
+    return concat_imgs([nib.load(img) for img in dti_images])
 
 
 # todo : write only one json per subject ?
-# todo : test all
-# todo : question DTI - sessions différentes ou images différentes ?
-# todo : dataset descr? scans/sessions/...
+# todo : unit test all / tests ci
+# todo : dataset descr/scans/sessions/...
