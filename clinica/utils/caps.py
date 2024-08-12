@@ -136,6 +136,19 @@ class CAPSProcessingDescription:
             values["InputPath"],
         )
 
+    def match(
+        self,
+        processing_name: Optional[str] = None,
+        processing_input_path: Optional[str] = None,
+    ) -> bool:
+        return not (
+            (processing_name is not None and self.name != processing_name)
+            or (
+                processing_input_path is not None
+                and (self.input_path != processing_input_path)
+            )
+        )
+
     def write(self, to: IO[str]):
         json.dump(converter.unstructure(self), to, indent=4)
 
@@ -183,22 +196,45 @@ class CAPSDatasetDescription:
     def __str__(self):
         return json.dumps(converter.unstructure(self))
 
-    def has_processing(self, processing_name: str) -> bool:
+    def has_processing(
+        self,
+        processing_name: Optional[str] = None,
+        processing_input_path: Optional[str] = None,
+    ) -> bool:
         return any(
-            [processing.name == processing_name for processing in self.processing]
+            [
+                processing.match(
+                    processing_name=processing_name,
+                    processing_input_path=processing_input_path,
+                )
+                for processing in self.processing
+            ]
         )
 
     def get_processing(
-        self, processing_name: str
-    ) -> Optional[CAPSProcessingDescription]:
-        for processing in self.processing:
-            if processing.name == processing_name:
-                return processing
-        return None
+        self,
+        processing_name: Optional[str] = None,
+        processing_input_path: Optional[str] = None,
+    ) -> List[CAPSProcessingDescription]:
+        return [
+            processing
+            for processing in self.processing
+            if processing.match(
+                processing_name=processing_name,
+                processing_input_path=processing_input_path,
+            )
+        ]
 
-    def delete_processing(self, processing_name: str):
+    def delete_processing(
+        self,
+        processing_name: Optional[str] = None,
+        processing_input_path: Optional[str] = None,
+    ):
         for processing in self.processing:
-            if processing.name == processing_name:
+            if processing.match(
+                processing_name=processing_name,
+                processing_input_path=processing_input_path,
+            ):
                 self.processing.remove(processing)
 
     def add_processing(
@@ -209,10 +245,15 @@ class CAPSDatasetDescription:
         new_processing = CAPSProcessingDescription.from_values(
             processing_name, processing_input_path
         )
-        if (existing_processing := self.get_processing(processing_name)) is not None:
+        existing_processings = self.get_processing(
+            processing_name, processing_input_path
+        )
+        if existing_processings:
+            existing_processing = existing_processings[0]
             log_and_warn(
                 (
-                    f"The CAPS dataset '{self.name}' already has a processing named {processing_name}:\n"
+                    f"The CAPS dataset '{self.name}' already has a processing named {processing_name} "
+                    f"with an input folder set to {processing_input_path}:\n"
                     f"{existing_processing}\nIt will be overwritten with the following:\n{new_processing}"
                 ),
                 UserWarning,
@@ -474,7 +515,7 @@ def build_caps_dataset_description(
             "Please make sure the versions are the same before processing.",
             ClinicaBIDSError,
         )
-    new_desc = CAPSDatasetDescription.from_values(
+    new_description = CAPSDatasetDescription.from_values(
         dataset_name, bids_version_from_input_dir, caps_version
     )
     if (output_dir / "dataset_description.json").exists():
@@ -485,28 +526,31 @@ def build_caps_dataset_description(
             ),
             lvl="info",
         )
-        previous_desc = CAPSDatasetDescription.from_file(
+        previous_description = CAPSDatasetDescription.from_file(
             output_dir / "dataset_description.json"
         )
-        if not previous_desc.is_compatible_with(
-            new_desc, VersionComparisonPolicy.STRICT
+        if not previous_description.is_compatible_with(
+            new_description, VersionComparisonPolicy.STRICT
         ):
             msg = (
                 f"Impossible to write the 'dataset_description.json' file in {output_dir} "
                 "because it already exists and it contains incompatible metadata."
             )
             log_and_raise(msg, ClinicaCAPSError)
-        if previous_desc.name != new_desc.name:
+        if previous_description.name != new_description.name:
             log_and_warn(
                 (
-                    f"The existing CAPS dataset, located at {output_dir} has a name '{previous_desc.name}' different "
-                    f"from the new name '{new_desc.name}'. The old name will be kept."
+                    f"The existing CAPS dataset, located at {output_dir} has a "
+                    f"name '{previous_description.name}' different from the new "
+                    f"name '{new_description.name}'. The old name will be kept."
                 ),
                 UserWarning,
             )
-            new_desc.name = previous_desc.name
-        for processing in previous_desc.processing:
-            if processing.name != processing_name:
-                new_desc.processing.append(processing)
-    new_desc.add_processing(processing_name, str(input_dir))
-    return new_desc
+            new_description.name = previous_description.name
+        for processing in previous_description.processing:
+            if not processing.match(
+                processing_name=processing_name, processing_input_path=str(input_dir)
+            ):
+                new_description.processing.append(processing)
+    new_description.add_processing(processing_name, str(input_dir))
+    return new_description

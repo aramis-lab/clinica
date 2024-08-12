@@ -67,12 +67,13 @@ def test_caps_dataset_description(tmp_path, mocker):
     assert len(desc.processing) == 1
     assert desc.has_processing("processing-1")
     assert not desc.has_processing("processing-2")
-    proc = desc.get_processing("processing-1")
-    assert proc.name == "processing-1"
-    assert proc.date == datetime.datetime(2024, 8, 6, 16, 30, 0)
-    assert proc.author == "John Doe"
-    assert proc.machine == "my machine"
-    assert proc.input_path == str(tmp_path / "bids")
+    procs = desc.get_processing("processing-1")
+    assert len(procs) == 1
+    assert procs[0].name == "processing-1"
+    assert procs[0].date == datetime.datetime(2024, 8, 6, 16, 30, 0)
+    assert procs[0].author == "John Doe"
+    assert procs[0].machine == "my machine"
+    assert procs[0].input_path == str(tmp_path / "bids")
     assert json.loads(str(desc)) == {
         "Name": "my caps dataset",
         "BIDSVersion": "1.7.0",
@@ -90,6 +91,8 @@ def test_caps_dataset_description(tmp_path, mocker):
     }
     desc.add_processing("processing-2", str(tmp_path / "bids"))
     assert len(desc.processing) == 2
+    assert len(desc.get_processing(processing_input_path=str(tmp_path / "bids"))) == 2
+    assert len(desc.get_processing(processing_name="processing-2")) == 1
     assert json.loads(str(desc)) == {
         "Name": "my caps dataset",
         "BIDSVersion": "1.7.0",
@@ -208,11 +211,12 @@ def test_read_caps_dataset_description(tmp_path, mocker):
     assert desc.caps_version == Version("1.0.0")
     assert desc.dataset_type == DatasetType.DERIVATIVE
     assert len(desc.processing) == 1
-    proc = desc.get_processing("foo")
-    assert proc.name == "foo"
-    assert proc.author == "John Doe"
-    assert proc.date == datetime.datetime(2024, 8, 6, 16, 30)
-    assert proc.machine == "my machine"
+    procs = desc.get_processing("foo")
+    assert len(procs) == 1
+    assert procs[0].name == "foo"
+    assert procs[0].author == "John Doe"
+    assert procs[0].date == datetime.datetime(2024, 8, 6, 16, 30)
+    assert procs[0].machine == "my machine"
 
 
 def test_write_caps_dataset_description_renaming_gives_warning(tmp_path):
@@ -319,6 +323,45 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids",
+            },
+        ],
+    }
+    # Write a third processing, named 'foo' but with a different input folder
+    initialize_input_dir(tmp_path / "bids2")
+    write_caps_dataset_description(
+        tmp_path / "bids2",
+        caps_dir,
+        processing_name="foo",
+        dataset_name="my CAPS dataset",
+    )
+    files = [f for f in (tmp_path / "caps").iterdir()]
+    assert len(files) == 1
+    assert json.loads(files[0].read_text()) == {
+        "Name": "my CAPS dataset",
+        "BIDSVersion": "1.7.0",
+        "CAPSVersion": "1.0.0",
+        "DatasetType": "derivative",
+        "Processing": [
+            {
+                "Name": "foo",
+                "Date": "2024-08-06T16:30:00",
+                "Author": "John Doe",
+                "Machine": "my machine",
+                "InputPath": f"{tmp_path}/bids",
+            },
+            {
+                "Name": "bar",
+                "Date": "2024-08-06T16:30:00",
+                "Author": "John Doe",
+                "Machine": "my machine",
+                "InputPath": f"{tmp_path}/bids",
+            },
+            {
+                "Name": "foo",
+                "Date": "2024-08-06T16:30:00",
+                "Author": "John Doe",
+                "Machine": "my machine",
+                "InputPath": f"{tmp_path}/bids2",
             },
         ],
     }
