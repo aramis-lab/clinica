@@ -106,10 +106,6 @@ class CAPSProcessingDescription:
     machine : str
         This is the name of the machine of which the processing pipeline was run.
 
-    processing_path : str
-        This is the path to the processing folder(s) relative to the root of the
-        CAPS dataset.
-
     input_path : str
         This is the path to the input dataset.
     """
@@ -118,17 +114,15 @@ class CAPSProcessingDescription:
     date: IsoDate
     author: str
     machine: str
-    processing_path: str
     input_path: str
 
     @classmethod
-    def from_values(cls, name: str, processing_path: str, input_path: str):
+    def from_values(cls, name: str, input_path: str):
         return cls(
             name,
             _get_current_timestamp(),
             _get_username(),
             _get_machine_name(),
-            processing_path,
             input_path,
         )
 
@@ -139,7 +133,6 @@ class CAPSProcessingDescription:
             values["Date"],
             values["Author"],
             values["Machine"],
-            values["ProcessingPath"],
             values["InputPath"],
         )
 
@@ -211,11 +204,10 @@ class CAPSDatasetDescription:
     def add_processing(
         self,
         processing_name: str,
-        processing_output_path: str,
         processing_input_path: str,
     ):
         new_processing = CAPSProcessingDescription.from_values(
-            processing_name, processing_output_path, processing_input_path
+            processing_name, processing_input_path
         )
         if (existing_processing := self.get_processing(processing_name)) is not None:
             log_and_warn(
@@ -368,7 +360,6 @@ def write_caps_dataset_description(
     input_dir: Path,
     output_dir: Path,
     processing_name: str,
-    processing_output_path: str,
     dataset_name: Optional[str] = None,
     bids_version: Optional[str] = None,
     caps_version: Optional[str] = None,
@@ -391,12 +382,6 @@ def write_caps_dataset_description(
         Clinica will set this as the name of the pipeline, but any name
         is possible.
 
-    processing_output_path : str
-        The path to the subfolder(s) in which the results of the processing
-        will be stored, relative to the root of the CAPS dataset (defined as
-        output_dir). If there are multiple folders, use a regexp.
-        For example, for t1-linear: 'subjects/*/*/t1-linear'.
-
     dataset_name : str, optional
         The name of the CAPS dataset. If not specified, a random identifier will
         be generated. If a dataset_description.json file already exists, the
@@ -414,7 +399,6 @@ def write_caps_dataset_description(
         input_dir,
         output_dir,
         processing_name,
-        processing_output_path,
         dataset_name=dataset_name,
         bids_version=bids_version,
         caps_version=caps_version,
@@ -427,7 +411,6 @@ def build_caps_dataset_description(
     input_dir: Path,
     output_dir: Path,
     processing_name: str,
-    processing_output_path: str,
     dataset_name: Optional[str] = None,
     bids_version: Optional[str] = None,
     caps_version: Optional[str] = None,
@@ -449,12 +432,6 @@ def build_caps_dataset_description(
         The name of the processing performed. By default, pipelines of
         Clinica will set this as the name of the pipeline, but any name
         is possible.
-
-    processing_output_path : str
-        The path to the subfolder(s) in which the results of the processing
-        will be stored, relative to the root of the CAPS dataset (defined as
-        output_dir). If there are multiple folders, use a regexp.
-        For example, for t1-linear: 'subjects/*/*/t1-linear'.
 
     dataset_name : str, optional
         The name of the CAPS dataset. If not specified, a random identifier will
@@ -531,5 +508,5 @@ def build_caps_dataset_description(
         for processing in previous_desc.processing:
             if processing.name != processing_name:
                 new_desc.processing.append(processing)
-    new_desc.add_processing(processing_name, processing_output_path, str(input_dir))
+    new_desc.add_processing(processing_name, str(input_dir))
     return new_desc

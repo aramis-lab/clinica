@@ -27,22 +27,18 @@ def test_caps_processing_description(tmp_path, mocker):
     from clinica.utils.caps import CAPSProcessingDescription
 
     mocker = mock_processing_metadata(mocker)
-    desc = CAPSProcessingDescription.from_values(
-        "foo", str(tmp_path / "output"), str(tmp_path / "input")
-    )
+    desc = CAPSProcessingDescription.from_values("foo", str(tmp_path / "input"))
 
     assert desc.name == "foo"
     assert desc.date == datetime.datetime(2024, 8, 6, 16, 30)
     assert desc.author == "John Doe"
     assert desc.machine == "my machine"
-    assert desc.processing_path == str(tmp_path / "output")
     assert desc.input_path == str(tmp_path / "input")
     assert json.loads(str(desc)) == {
         "Name": "foo",
         "Date": "2024-08-06T16:30:00",
         "Author": "John Doe",
         "Machine": "my machine",
-        "ProcessingPath": f"{tmp_path}/output",
         "InputPath": f"{tmp_path}/input",
     }
     with open(tmp_path / "dataset_description.json", "w") as fp:
@@ -66,9 +62,7 @@ def test_caps_dataset_description(tmp_path, mocker):
     assert desc.caps_version == Version("1.0.0")
     assert desc.processing == []
 
-    desc.add_processing(
-        "processing-1", "subjects/*/*/processing-1", str(tmp_path / "bids")
-    )
+    desc.add_processing("processing-1", str(tmp_path / "bids"))
 
     assert len(desc.processing) == 1
     assert desc.has_processing("processing-1")
@@ -78,7 +72,6 @@ def test_caps_dataset_description(tmp_path, mocker):
     assert proc.date == datetime.datetime(2024, 8, 6, 16, 30, 0)
     assert proc.author == "John Doe"
     assert proc.machine == "my machine"
-    assert proc.processing_path == "subjects/*/*/processing-1"
     assert proc.input_path == str(tmp_path / "bids")
     assert json.loads(str(desc)) == {
         "Name": "my caps dataset",
@@ -91,14 +84,11 @@ def test_caps_dataset_description(tmp_path, mocker):
                 "Date": "2024-08-06T16:30:00",
                 "Author": "John Doe",
                 "Machine": "my machine",
-                "ProcessingPath": "subjects/*/*/processing-1",
                 "InputPath": f"{tmp_path}/bids",
             }
         ],
     }
-    desc.add_processing(
-        "processing-2", "subjects/*/*/processing-2", str(tmp_path / "bids")
-    )
+    desc.add_processing("processing-2", str(tmp_path / "bids"))
     assert len(desc.processing) == 2
     assert json.loads(str(desc)) == {
         "Name": "my caps dataset",
@@ -111,7 +101,6 @@ def test_caps_dataset_description(tmp_path, mocker):
                 "Date": "2024-08-06T16:30:00",
                 "Author": "John Doe",
                 "Machine": "my machine",
-                "ProcessingPath": "subjects/*/*/processing-1",
                 "InputPath": f"{tmp_path}/bids",
             },
             {
@@ -119,7 +108,6 @@ def test_caps_dataset_description(tmp_path, mocker):
                 "Date": "2024-08-06T16:30:00",
                 "Author": "John Doe",
                 "Machine": "my machine",
-                "ProcessingPath": "subjects/*/*/processing-2",
                 "InputPath": f"{tmp_path}/bids",
             },
         ],
@@ -147,9 +135,8 @@ def test_write_caps_dataset_description(tmp_path, mocker):
     write_caps_dataset_description(
         tmp_path / "bids",
         tmp_path / "caps",
-        "foo",
-        "subject/*/*/foo",
-        "my CAPS dataset",
+        processing_name="foo",
+        dataset_name="my CAPS dataset",
     )
 
     files = [f for f in (tmp_path / "caps").iterdir()]
@@ -165,7 +152,6 @@ def test_write_caps_dataset_description(tmp_path, mocker):
                 "Date": "2024-08-06T16:30:00",
                 "Author": "John Doe",
                 "Machine": "my machine",
-                "ProcessingPath": "subject/*/*/foo",
                 "InputPath": f"{tmp_path}/bids",
             }
         ],
@@ -190,8 +176,7 @@ def test_write_caps_dataset_description_specify_bids_and_caps_versions(tmp_path)
         write_caps_dataset_description(
             tmp_path / "bids",
             tmp_path / "caps",
-            "foo",
-            "subjects/*/*/foo",
+            processing_name="foo",
             bids_version="1.18.23",
             caps_version="2.0.0",
         )
@@ -200,9 +185,9 @@ def test_write_caps_dataset_description_specify_bids_and_caps_versions(tmp_path)
 def test_read_caps_dataset_description(tmp_path, mocker):
     from clinica.utils.caps import (
         CAPSDatasetDescription,
-        DatasetType,
         write_caps_dataset_description,
     )
+    from clinica.utils.inputs import DatasetType
 
     mocker = mock_processing_metadata(mocker)
     initialize_input_dir(tmp_path / "bids")
@@ -212,9 +197,8 @@ def test_read_caps_dataset_description(tmp_path, mocker):
     write_caps_dataset_description(
         tmp_path / "bids",
         caps_dir,
-        "foo",
-        "subject/*/*/foo",
-        "my CAPS dataset",
+        processing_name="foo",
+        dataset_name="my CAPS dataset",
     )
 
     desc = CAPSDatasetDescription.from_file(caps_dir / "dataset_description.json")
@@ -241,9 +225,8 @@ def test_write_caps_dataset_description_renaming_gives_warning(tmp_path):
     write_caps_dataset_description(
         tmp_path / "bids",
         tmp_path / "caps",
-        "foo",
-        "subject/*/*/foo",
-        "my CAPS dataset",
+        processing_name="foo",
+        dataset_name="my CAPS dataset",
     )
     with pytest.warns(
         UserWarning,
@@ -255,9 +238,8 @@ def test_write_caps_dataset_description_renaming_gives_warning(tmp_path):
         write_caps_dataset_description(
             tmp_path / "bids",
             tmp_path / "caps",
-            "foo",
-            "subject/*/*/foo",
-            "my CAPS dataset 2",
+            processing_name="foo",
+            dataset_name="my CAPS dataset 2",
         )
 
 
@@ -273,9 +255,8 @@ def test_write_caps_dataset_description_version_mismatch_error(tmp_path):
     write_caps_dataset_description(
         tmp_path / "bids",
         tmp_path / "caps",
-        "foo",
-        "subject/*/*/foo",
-        "my CAPS dataset",
+        processing_name="foo",
+        dataset_name="my CAPS dataset",
         caps_version="1.0.1",
     )
     # Now, write a second processing, named 'bar', but with a CAPS version of 1.0.2
@@ -289,9 +270,8 @@ def test_write_caps_dataset_description_version_mismatch_error(tmp_path):
         write_caps_dataset_description(
             tmp_path / "bids",
             tmp_path / "caps",
-            "bar",
-            "subject/*/*/bar",
-            "my CAPS dataset",
+            processing_name="bar",
+            dataset_name="my CAPS dataset",
             caps_version="1.0.2",
         )
 
@@ -308,17 +288,15 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
     write_caps_dataset_description(
         tmp_path / "bids",
         caps_dir,
-        "foo",
-        "subject/*/*/foo",
-        "my CAPS dataset",
+        processing_name="foo",
+        dataset_name="my CAPS dataset",
     )
     # Write a second processing, named 'bar'
     write_caps_dataset_description(
         tmp_path / "bids",
         caps_dir,
-        "bar",
-        "subject/*/*/bar",
-        "my CAPS dataset",
+        processing_name="bar",
+        dataset_name="my CAPS dataset",
     )
     files = [f for f in (tmp_path / "caps").iterdir()]
     assert len(files) == 1
@@ -333,7 +311,6 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
                 "Date": "2024-08-06T16:30:00",
                 "Author": "John Doe",
                 "Machine": "my machine",
-                "ProcessingPath": "subject/*/*/foo",
                 "InputPath": f"{tmp_path}/bids",
             },
             {
@@ -341,7 +318,6 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
                 "Date": "2024-08-06T16:30:00",
                 "Author": "John Doe",
                 "Machine": "my machine",
-                "ProcessingPath": "subject/*/*/bar",
                 "InputPath": f"{tmp_path}/bids",
             },
         ],
