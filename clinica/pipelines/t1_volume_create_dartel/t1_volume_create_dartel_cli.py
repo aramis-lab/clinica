@@ -21,6 +21,7 @@ pipeline_name = "t1-volume-create-dartel"
 @option.n_procs
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.dartel_tissues
+@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -29,6 +30,7 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Inter-subject registration using Dartel (creating a new Dartel template).
 
@@ -51,6 +53,7 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        caps_name=caps_name,
     )
 
     exec_pipeline = (

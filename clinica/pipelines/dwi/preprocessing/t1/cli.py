@@ -25,6 +25,7 @@ pipeline_name = "dwi-preprocessing-using-t1"
 @cli_param.option.initrand
 @cli_param.option.delete_cache
 @cli_param.option.random_seed
+@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -36,6 +37,7 @@ def cli(
     initrand: bool = False,
     delete_cache: bool = False,
     random_seed: Optional[int] = None,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Preprocessing of raw DWI datasets using a T1w image.
 
@@ -63,6 +65,7 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        caps_name=caps_name,
     )
 
     exec_pipeline = (

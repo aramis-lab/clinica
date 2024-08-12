@@ -35,6 +35,7 @@ class AnatLinear(Pipeline):
         name: Optional[str] = None,
         ignore_dependencies: Optional[List[str]] = None,
         use_antspy: bool = False,
+        caps_name: Optional[str] = None,
     ):
         from clinica.utils.stream import cprint
 
@@ -47,6 +48,7 @@ class AnatLinear(Pipeline):
             parameters=parameters,
             ignore_dependencies=ignore_dependencies,
             name=name,
+            caps_name=caps_name,
         )
         self.use_antspy = use_antspy
         if self.use_antspy:

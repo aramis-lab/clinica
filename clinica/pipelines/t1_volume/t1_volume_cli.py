@@ -32,6 +32,7 @@ pipeline_name = "t1-volume"
 @option.global_option_group
 @option.n_procs
 @click.pass_context
+@cli_param.option.caps_name
 def cli(
     ctx: click.Context,
     bids_directory: str,
@@ -50,6 +51,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
     yes: bool = False,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Volume-based processing of T1-weighted MR images.
 
@@ -103,6 +105,7 @@ def cli(
         working_directory=working_directory,
         n_procs=n_procs,
         yes=yes,
+        caps_name=caps_name,
     )
 
     cprint("Part 2/4: Running t1-volume-create-dartel pipeline.")
@@ -115,6 +118,7 @@ def cli(
         subjects_sessions_tsv=subjects_sessions_tsv,
         working_directory=working_directory,
         n_procs=n_procs,
+        caps_name=caps_name,
     )
 
     cprint("Part 3/4: Running t1-volume-dartel2mni pipeline.")
@@ -130,6 +134,7 @@ def cli(
         subjects_sessions_tsv=subjects_sessions_tsv,
         working_directory=working_directory,
         n_procs=n_procs,
+        caps_name=caps_name,
     )
 
     cprint("Part 4/4: Running t1-volume-parcellation pipeline.")
@@ -140,6 +145,7 @@ def cli(
         subjects_sessions_tsv=subjects_sessions_tsv,
         working_directory=working_directory,
         n_procs=n_procs,
+        caps_name=caps_name,
     )
 
 

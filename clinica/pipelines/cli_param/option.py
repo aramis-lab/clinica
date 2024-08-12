@@ -16,6 +16,18 @@ acq_label = option(
     ),
 )
 
+caps_name = option(
+    "-cn",
+    "--caps-name",
+    type=str,
+    help=(
+        "The name of the CAPS dataset that will be created by the pipeline. "
+        "This is not the name of the folder itself, but the name in the metadata, "
+        "which can be different if desired. If the CAPS folder already exists and "
+        "already has a name, this will have no effect and the existing name will be kept."
+    ),
+)
+
 dartel_tissues = option(
     "-dt",
     "--dartel_tissues",

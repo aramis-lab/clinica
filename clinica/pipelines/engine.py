@@ -384,6 +384,7 @@ class Pipeline(Workflow):
         parameters: Optional[dict] = None,
         name: Optional[str] = None,
         ignore_dependencies: Optional[List[str]] = None,
+        caps_name: Optional[str] = None,
     ):
         """Init a Pipeline object.
 
@@ -459,6 +460,7 @@ class Pipeline(Workflow):
         self._name = name or self.__class__.__name__
         self._parameters = parameters or {}
         self._ignore_dependencies = ignore_dependencies or []
+        self.caps_name = caps_name
 
         if not self._bids_directory:
             if not self._caps_directory:
@@ -470,10 +472,10 @@ class Pipeline(Workflow):
                 check_caps_folder(self._caps_directory)
             except ClinicaCAPSError as e:
                 desc = build_caps_dataset_description(
-                    self._caps_directory,
-                    self._caps_directory,
-                    self._name,
-                    f"subjects/*/*/{self._name.replace('-', '_')}",
+                    input_dir=self._caps_directory,
+                    output_dir=self._caps_directory,
+                    processing_name=self._name,
+                    dataset_name=self.caps_name,
                 )
                 raise ClinicaCAPSError(
                     f"{e}\nYou might want to create a 'dataset_description.json' "
@@ -491,10 +493,10 @@ class Pipeline(Workflow):
                     self._caps_directory.mkdir(parents=True, exist_ok=True)
         if self._caps_directory:
             write_caps_dataset_description(
-                self.input_dir,
-                self._caps_directory,
-                self._name,
-                f"subjects/*/*/{self._name.replace('-', '_')}",
+                input_dir=self.input_dir,
+                output_dir=self._caps_directory,
+                processing_name=self._name,
+                dataset_name=self.caps_name,
             )
             check_caps_folder(self._caps_directory)
         self._compute_subjects_and_sessions()

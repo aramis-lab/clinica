@@ -23,6 +23,7 @@ pipeline_name = "dwi-preprocessing-using-phasediff-fmap"
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.use_cuda
 @cli_param.option.initrand
+@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -32,6 +33,7 @@ def cli(
     n_procs: Optional[int] = None,
     use_cuda: bool = False,
     initrand: bool = False,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Preprocessing of raw DWI datasets using a phase difference image.
 
@@ -56,6 +58,7 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        caps_name=caps_name,
     )
 
     exec_pipeline = (
