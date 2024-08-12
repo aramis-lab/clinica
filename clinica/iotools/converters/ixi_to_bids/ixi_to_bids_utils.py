@@ -3,11 +3,10 @@ import json
 import re
 import shutil
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import nibabel as nib
 import pandas as pd
-from nilearn import plotting
 from nilearn.image import concat_imgs
 
 from clinica.iotools.bids_utils import StudyName, bids_id_factory
@@ -33,7 +32,17 @@ def filter_subjects_list(
     ]
 
 
-# todo : filter img data based on this
+def define_participants(
+    data_directory: Path,
+    clinical_data: pd.DataFrame,
+    subjs_list_path: Optional[Path] = None,
+) -> List[str]:
+    if subjs_list_path:
+        cprint("Loading a subjects lists provided by the user...")
+        subjects_to_filter = subjs_list_path.read_text().splitlines()
+    else:
+        subjects_to_filter = get_subjects_list_from_data(data_directory)
+    return filter_subjects_list(subjects_to_filter, clinical_data)
 
 
 def read_ixi_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
@@ -146,8 +155,9 @@ def write_subject_dti_if_exists(
         dti_to_save = merge_dti(dti_paths)
         bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(subject)
         data_path = bids_path / bids_id / "ses-M000" / "dwi"
+        data_path.mkdir(parents=True, exist_ok=True)
         filename = f"{bids_id}_ses-M000_dwi"
-        nib.save(dti_to_save, f"{data_path}/{filename}.nii.gz")
+        dti_to_save.to_filename(f"{data_path}/{filename}.nii.gz")
         hospital = dti_paths[0].name.split("-")[1]
         write_ixi_json_subject(
             f"{data_path}/{filename}.json", hospital, define_magnetic_field(hospital)

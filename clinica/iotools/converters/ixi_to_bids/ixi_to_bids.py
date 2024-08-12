@@ -5,9 +5,9 @@ from typing import Optional
 
 import nibabel as nb
 import numpy as np
-from iotools.bids_utils import write_modality_agnostic_files
-from ixi_to_bids_utils import *
 
+from clinica.iotools.bids_utils import write_modality_agnostic_files
+from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import *
 from clinica.utils.filemanip import UserProvidedPath
 
 __all__ = ["convert"]
@@ -30,6 +30,8 @@ def convert(
     path_to_dataset = validate_input_path(path_to_dataset)
     bids_dir = validate_input_path(bids_dir, check_exist=False)
     path_to_clinical = validate_input_path(path_to_clinical)
+    if subjects:
+        subjects = validate_input_path(subjects)
 
     if n_procs != 1:
         cprint(
@@ -39,10 +41,7 @@ def convert(
 
     clinical_data = read_ixi_clinical_data(path_to_clinical)
 
-    subjects_to_filter = (
-        subjects if subjects else get_subjects_list_from_data(path_to_dataset)
-    )
-    participants = filter_subjects_list(subjects_to_filter, clinical_data)
+    participants = define_participants(path_to_dataset, clinical_data, subjects)
 
     for participant in participants:
         write_subject_no_dti(
@@ -60,8 +59,8 @@ def convert(
         ),
     }
 
-    write_modality_agnostic_files(
-        study_name=StudyName.IXI, readme_data=readme_data, bids_dir=bids_dir
-    )
+    # write_modality_agnostic_files(
+    #     study_name=StudyName.IXI, readme_data=readme_data, bids_dir=bids_dir
+    # )
 
-    cprint("Conversion to BIDS succeeded.", lvl="info")
+    cprint("Conversion to BIDS finished.", lvl="info")
