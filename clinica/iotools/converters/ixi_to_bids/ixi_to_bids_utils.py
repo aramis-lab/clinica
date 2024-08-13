@@ -17,6 +17,7 @@ def get_subjects_list_from_data(data_directory: Path) -> List[str]:
         dict.fromkeys(
             re.match(r"IXI\d{3}", path.name).group(0)
             for path in data_directory.rglob(pattern="IXI*.nii.gz")
+            if re.match(r"IXI\d{3}", path.name)
         )
     )
 
