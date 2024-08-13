@@ -1,4 +1,3 @@
-# todo : verify typing compatibility with user input
 import json
 import re
 import shutil
@@ -38,7 +37,7 @@ def define_participants(
     subjs_list_path: Optional[Path] = None,
 ) -> List[str]:
     if subjs_list_path:
-        cprint("Loading a subjects lists provided by the user...")
+        cprint("Loading a subjects list provided by the user...")
         subjects_to_filter = subjs_list_path.read_text().splitlines()
     else:
         subjects_to_filter = get_subjects_list_from_data(data_directory)
@@ -64,7 +63,6 @@ def rename_ixi_modalities(input_mod: str) -> str:
     elif input_mod == "PD":
         return "PDw"
     elif input_mod == "DTI":
-        # todo: doubt on this one
         return "dti"
     else:
         raise ValueError(
@@ -80,7 +78,6 @@ def define_magnetic_field(hospital: str) -> str:
 
 
 def get_img_data_df(data_directory: Path) -> pd.DataFrame:
-    # todo : get all modalities other than DTI
     df = pd.DataFrame(
         {
             "img_path": [
@@ -120,7 +117,7 @@ def bids_filename_from_ixi(img: pd.Series) -> str:
     return f"{img['bids_id']}_{img['session']}_{img['modality']}"
 
 
-def write_ixi_json_subject(writing_path: Path, hospital: str, field: str) -> None:
+def write_ixi_json_subject(writing_path: str, hospital: str, field: str) -> None:
     with open(writing_path, "w") as f:
         json.dump(
             {
@@ -133,7 +130,6 @@ def write_ixi_json_subject(writing_path: Path, hospital: str, field: str) -> Non
 
 
 def write_subject_no_dti(subject_df: pd.DataFrame, bids_path: Path) -> None:
-    # todo :all but dti
     for _, row in subject_df.iterrows():
         cprint(
             f"Converting modality {row['modality']} for subject {row['subject']}.",
