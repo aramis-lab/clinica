@@ -48,6 +48,10 @@ def _get_substitutions_datasink(bids_image_id: str, suffix: str) -> list:
             f"{bids_image_id_without_suffix}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_{suffix}.nii.gz",
         ),
         (
+            f"{bids_image_id}0GenericAffine.mat",
+            f"{bids_image_id_without_suffix}_space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+        ),
+        (
             f"{bids_image_id}Warped.nii.gz",
             f"{bids_image_id_without_suffix}_space-MNI152NLin2009cSym_res-1x1x1_{suffix}.nii.gz",
         ),
