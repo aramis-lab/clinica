@@ -152,6 +152,7 @@ def write_subject_no_dti(subject_df: pd.DataFrame, bids_path: Path) -> None:
         write_ixi_json_subject(
             f"{data_path}/{filename}.json", row["hospital"], row["field"]
         )
+        # todo : 1 json per image or 1 json per subject ?
 
 
 def write_subject_dti_if_exists(
