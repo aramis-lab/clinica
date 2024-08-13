@@ -37,6 +37,8 @@ def define_participants(
     clinical_data: pd.DataFrame,
     subjs_list_path: Optional[Path] = None,
 ) -> List[str]:
+    """Define the actual list of participants based on the (provided) subjects list filtered
+    using clinical data"""
     if subjs_list_path:
         cprint("Loading a subjects list provided by the user...")
         subjects_to_filter = subjs_list_path.read_text().splitlines()
@@ -46,6 +48,8 @@ def define_participants(
 
 
 def read_ixi_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
+    """Reads and formats IXI clinical data"""
+    # todo : what keys ?
     clinical_data = pd.read_excel(clinical_data_path / "IXI.xls")
     clinical_data.dropna(inplace=True)
     clinical_data.drop("DATE_AVAILABLE", axis=1, inplace=True)
@@ -82,6 +86,7 @@ def define_magnetic_field(hospital: str) -> str:
 
 
 def get_img_data_df(data_directory: Path) -> pd.DataFrame:
+    """Finds paths for all images that are not DTI data and processes the info contained in their names"""
     df = pd.DataFrame(
         {
             "img_path": [
@@ -134,6 +139,7 @@ def write_ixi_json_subject(writing_path: str, hospital: str, field: str) -> None
 
 
 def write_subject_no_dti(subject_df: pd.DataFrame, bids_path: Path) -> None:
+    """Copies all subject data but DTI"""
     for _, row in subject_df.iterrows():
         cprint(
             f"Converting modality {row['modality']} for subject {row['subject']}.",
@@ -151,6 +157,7 @@ def write_subject_no_dti(subject_df: pd.DataFrame, bids_path: Path) -> None:
 def write_subject_dti_if_exists(
     bids_path: Path, subject: str, data_directory: Path
 ) -> None:
+    """Processes DTI data if found for a subject"""
     if dti_paths := find_subject_dti_data(data_directory, subject):
         cprint(f"Converting modality DTI for subject {subject}.", lvl="debug")
         dti_to_save = merge_dti(dti_paths)
