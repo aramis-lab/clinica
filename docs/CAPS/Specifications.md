@@ -45,7 +45,6 @@ Here is an example for a CAPS dataset containing the outputs of two pipelines: `
             "Date": "2024-08-06T10:28:21.848950",
             "Author": "ci",
             "Machine": "ubuntu",
-            "ProcessingPath": "subjects/*/*/t1_linear",
             "InputPath": "/mnt/data_ci/T1Linear/in/bids"
         },
         {
@@ -53,7 +52,6 @@ Here is an example for a CAPS dataset containing the outputs of two pipelines: `
             "Date": "2024-08-06T10:36:27.403373",
             "Author": "ci",
             "Machine": "ubuntu",
-            "ProcessingPath": "subjects/*/*/pet_linear",
             "InputPath": "/mnt/data_ci/PETLinear/in/bids"
         }
     ]
@@ -66,7 +64,6 @@ A `Processing` is described with the following fields:
 - `Date`: This date is in iso-format and indicates when the processing was run.
 - `Author`: This indicates the user name which triggered the processing.
 - `Machine`: This indicates the name of the machine on which the processing was run.
-- `ProcessingPath`: This is a path regex (relative to the CAPS dataset root) that can be used to get all sub-folders having data for this processing.
 - `InputPath`: This is the full path (on the machine on which the processing was run) to the input dataset of the processing.
 
 ### Potential problems

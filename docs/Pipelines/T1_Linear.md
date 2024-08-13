@@ -41,6 +41,9 @@ Use the option `--uncropped_image` if you do not want to crop the image.
 It is also possible to obtain a deterministic result by setting the value of the random seed used by ANTs with the option `--random_seed`. Default will lead to a non-deterministic result.
 This option requires [ANTs](../Third-party.md#ants) version `2.3.0` onwards. It is also compatible with [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html).
 
+It is possible to specify the name of the CAPS dataset that will be created to store the outputs of the pipeline. This works if this CAPS dataset does not exist yet, otherwise the existing name will be kept.
+This can be achieved with the `--caps-name` option. The provided name will appear in the `dataset_description.json` file, at the root of the CAPS folder (see [CAPS Specifications](../CAPS/Specifications.md#the-dataset_descriptionjson-file) for more details).
+
 Finally, it is possible to use [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html) instead of [ANTs](../Third-party.md#ants) by passing the `--use-antspy` flag.
 
 !!! note
