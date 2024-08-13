@@ -40,14 +40,18 @@ def convert(
         )
 
     clinical_data = read_ixi_clinical_data(path_to_clinical)
-
     participants = define_participants(path_to_dataset, clinical_data, subjects)
 
     for participant in participants:
+        cprint(f"Converting IXI subject {participant} to BIDS")
         write_subject_no_dti(
             select_subject_data(get_img_data_df(path_to_dataset), participant), bids_dir
         )
         write_subject_dti_if_exists(bids_dir, participant, path_to_dataset)
+        write_ixi_sessions(
+            bids_dir=bids_dir, participant=participant, clinical_data=clinical_data
+        )
+        write_ixi_scans(bids_dir=bids_dir, participant=participant)
 
     readme_data = {
         "link": "https://brain-development.org/ixi-dataset/",
@@ -59,8 +63,8 @@ def convert(
         ),
     }
 
-    # write_modality_agnostic_files(
-    #     study_name=StudyName.IXI, readme_data=readme_data, bids_dir=bids_dir
-    # )
+    write_modality_agnostic_files(
+        study_name=StudyName.IXI, readme_data=readme_data, bids_dir=bids_dir
+    )
 
     cprint("Conversion to BIDS finished.", lvl="info")

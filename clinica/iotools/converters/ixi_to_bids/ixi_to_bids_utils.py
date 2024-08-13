@@ -27,7 +27,7 @@ def filter_subjects_list(
     return [
         subject
         for subject in subjects_list
-        if subject in clinical_data["IXI_ID"].values
+        if subject in clinical_data["ixi_id"].values
     ]
 
 
@@ -47,9 +47,12 @@ def define_participants(
 def read_ixi_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
     clinical_data = pd.read_excel(clinical_data_path / "IXI.xls")
     clinical_data.dropna(inplace=True)
-    clinical_data["IXI_ID"] = clinical_data.IXI_ID.apply(
+    clinical_data.drop("DATE_AVAILABLE", axis=1, inplace=True)
+    clinical_data.rename(lambda x: x.lower(), axis=1, inplace=True)
+    clinical_data["ixi_id"] = clinical_data.ixi_id.apply(
         lambda x: "IXI" + "0" * (3 - len(str(x))) + str(x)
     )
+    clinical_data["session_id"] = "ses-M000"
     return clinical_data
 
 
@@ -133,7 +136,7 @@ def write_subject_no_dti(subject_df: pd.DataFrame, bids_path: Path) -> None:
     for _, row in subject_df.iterrows():
         cprint(
             f"Converting modality {row['modality']} for subject {row['subject']}.",
-            lvl="info",
+            lvl="debug",
         )
         filename = bids_filename_from_ixi(row)
         data_path = bids_path / row["bids_id"] / row["session"] / "anat"
@@ -148,6 +151,7 @@ def write_subject_dti_if_exists(
     bids_path: Path, subject: str, data_directory: Path
 ) -> None:
     if dti_paths := find_subject_dti_data(data_directory, subject):
+        cprint(f"Converting modality DTI for subject {subject}.", lvl="debug")
         dti_to_save = merge_dti(dti_paths)
         bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(subject)
         data_path = bids_path / bids_id / "ses-M000" / "dwi"
@@ -175,6 +179,22 @@ def merge_dti(dti_images: List[Path]):
     return concat_imgs([nib.load(img) for img in dti_images])
 
 
-# todo : write only one json per subject ?
-# todo : unit test all / tests ci
-# todo : dataset descr/scans/sessions/...
+def write_ixi_scans(bids_dir: Path, participant: str):
+    bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(participant)
+    to_write = pd.DataFrame(
+        {
+            "filename": [
+                f"{path.parent.name}/{path.name}"
+                for path in (bids_dir / bids_id).rglob("*.nii.gz")
+            ]
+        }
+    )
+    to_write.to_csv(
+        f"{bids_dir}/{bids_id}/ses-M000/{bids_id}_ses-M000_scans.tsv", sep="\t"
+    )
+
+
+def write_ixi_sessions(bids_dir: Path, clinical_data: pd.DataFrame, participant: str):
+    line = clinical_data[clinical_data["ixi_id"] == participant]
+    bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(participant)
+    line.to_csv(f"{bids_dir}/{bids_id}/{bids_id}_sessions.tsv", sep="\t")
