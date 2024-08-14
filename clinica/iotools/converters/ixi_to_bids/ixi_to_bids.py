@@ -7,7 +7,13 @@ import nibabel as nb
 import numpy as np
 
 from clinica.iotools.bids_utils import write_modality_agnostic_files
-from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import *
+from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
+    define_participants,
+    read_ixi_clinical_data,
+    write_ixi_scans,
+    write_ixi_sessions,
+    write_ixi_subject_data,
+)
 from clinica.utils.filemanip import UserProvidedPath
 
 __all__ = ["convert"]
@@ -44,10 +50,9 @@ def convert(
 
     for participant in participants:
         cprint(f"Converting IXI subject {participant} to BIDS")
-        write_subject_no_dti(
-            select_subject_data(get_img_data_df(path_to_dataset), participant), bids_dir
+        write_ixi_subject_data(
+            bids_dir=bids_dir, participant=participant, path_to_dataset=path_to_dataset
         )
-        write_subject_dti_if_exists(bids_dir, participant, path_to_dataset)
         write_ixi_sessions(
             bids_dir=bids_dir, participant=participant, clinical_data=clinical_data
         )

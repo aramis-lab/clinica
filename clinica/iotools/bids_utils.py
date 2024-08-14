@@ -296,8 +296,8 @@ class HABSBIDSSubjectID(BIDSSubjectID):
 
 
 class IXIBIDSSubjectID(BIDSSubjectID):
-    """Implementation for IXI of the BIDSSubjectIDClass, allowing to go from the source id ?
-    to a bids id sub-? and reciprocally."""
+    """Implementation for IXI of the BIDSSubjectIDClass, allowing to go from the source id IXI###
+    to a bids id sub-IXI### and reciprocally."""
 
     # todo : add test part
 
@@ -312,8 +312,7 @@ class IXIBIDSSubjectID(BIDSSubjectID):
     @classmethod
     def from_original_study_id(cls, study_id: str) -> str:
         if re.fullmatch(r"IXI\d{3}", study_id):
-            return "sub-" + study_id
-            pass
+            return f"sub-{study_id}"
         raise ValueError(
             f"Raw IXI subject ID {study_id} is not properly formatted. "
             "Expecting a 'Y' format."
