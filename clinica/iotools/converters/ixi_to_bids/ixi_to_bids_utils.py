@@ -40,6 +40,10 @@ def _filter_subjects_list(
     ]
 
 
+def _get_subjects_list_from_file(subjs_list_path: Path) -> List[str]:
+    return subjs_list_path.read_text().splitlines()
+
+
 def define_participants(
     data_directory: Path,
     clinical_data: pd.DataFrame,
@@ -63,7 +67,7 @@ def define_participants(
     """
     if subjs_list_path:
         cprint("Loading a subjects list provided by the user...")
-        subjects_to_filter = subjs_list_path.read_text().splitlines()
+        subjects_to_filter = _get_subjects_list_from_file(subjs_list_path)
     else:
         subjects_to_filter = _get_subjects_list_from_data(data_directory)
     return _filter_subjects_list(subjects_to_filter, clinical_data)
