@@ -7,7 +7,7 @@ import pytest
 from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     _filter_subjects_list,
     _get_subjects_list_from_data,
-    _rename_ixi_modalities,
+    _rename_modalities,
 )
 
 
@@ -36,7 +36,7 @@ def test_filter_subjects_list():
     ],
 )
 def test_rename_ixi_modalities_success(input_str, expected):
-    assert _rename_ixi_modalities(input_str) == expected
+    assert _rename_modalities(input_str) == expected
 
 
 @pytest.mark.parametrize("input_str", ["t1", "foo", "T1w"])
@@ -45,4 +45,4 @@ def test_rename_ixi_modalities_error(input_str):
         ValueError,
         match=f"The modality {input_str} is not recognized in the IXI dataset.",
     ):
-        _rename_ixi_modalities(input_str)
+        _rename_modalities(input_str)

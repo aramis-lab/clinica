@@ -1,4 +1,4 @@
-"""Convert OASIS dataset (https://sites.wustl.edu/oasisbrains/) to BIDS."""
+"""Convert IXI dataset (https://brain-development.org/ixi-dataset/) to BIDS."""
 
 from pathlib import Path
 from typing import Optional
@@ -9,10 +9,10 @@ import numpy as np
 from clinica.iotools.bids_utils import write_modality_agnostic_files
 from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     define_participants,
-    read_ixi_clinical_data,
-    write_ixi_scans,
-    write_ixi_sessions,
+    read_clinical_data,
     write_ixi_subject_data,
+    write_scans,
+    write_sessions,
 )
 from clinica.utils.filemanip import UserProvidedPath
 
@@ -45,7 +45,7 @@ def convert(
             lvl="warning",
         )
 
-    clinical_data = read_ixi_clinical_data(path_to_clinical)
+    clinical_data = read_clinical_data(path_to_clinical)
     participants = define_participants(path_to_dataset, clinical_data, subjects)
 
     for participant in participants:
@@ -53,10 +53,10 @@ def convert(
         write_ixi_subject_data(
             bids_dir=bids_dir, participant=participant, path_to_dataset=path_to_dataset
         )
-        write_ixi_sessions(
+        write_sessions(
             bids_dir=bids_dir, participant=participant, clinical_data=clinical_data
         )
-        write_ixi_scans(bids_dir=bids_dir, participant=participant)
+        write_scans(bids_dir=bids_dir, participant=participant)
 
     readme_data = {
         "link": "https://brain-development.org/ixi-dataset/",

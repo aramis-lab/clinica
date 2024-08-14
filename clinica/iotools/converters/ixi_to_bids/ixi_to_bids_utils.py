@@ -12,11 +12,11 @@ from clinica.iotools.bids_utils import StudyName, bids_id_factory
 from clinica.utils.stream import cprint
 
 __all__ = [
-    "read_ixi_clinical_data",
+    "read_clinical_data",
     "define_participants",
     "write_ixi_subject_data",
-    "write_ixi_sessions",
-    "write_ixi_scans",
+    "write_sessions",
+    "write_scans",
 ]
 
 
@@ -69,7 +69,7 @@ def define_participants(
     return _filter_subjects_list(subjects_to_filter, clinical_data)
 
 
-def read_ixi_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
+def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
     """
     Reads and formats IXI clinical data.
 
@@ -94,7 +94,7 @@ def read_ixi_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
     return clinical_data
 
 
-def _rename_ixi_modalities(input_mod: str) -> str:
+def _rename_modalities(input_mod: str) -> str:
     if input_mod == "T1":
         return "T1w"
     elif input_mod == "T2":
@@ -119,7 +119,7 @@ def _define_magnetic_field(hospital: str) -> str:
         return "3"
 
 
-def _get_img_data_df(data_directory: Path) -> pd.DataFrame:
+def _get_img_data(data_directory: Path) -> pd.DataFrame:
     """Finds paths for all images that are not DTI data and processes the info contained in their names"""
     df = pd.DataFrame(
         {
@@ -142,7 +142,7 @@ def _get_img_data_df(data_directory: Path) -> pd.DataFrame:
         .assign(hospital=lambda df: df.img_name_no_ext.apply(lambda x: x.split("-")[1]))
         .assign(
             modality=lambda df: df.img_name_no_ext.apply(
-                lambda x: _rename_ixi_modalities(x.split("-")[3])
+                lambda x: _rename_modalities(x.split("-")[3])
             )
         )
         .assign(field=lambda df: df.hospital.apply(lambda x: _define_magnetic_field(x)))
@@ -156,7 +156,7 @@ def _select_subject_data(data_df: pd.DataFrame, subject: str) -> pd.DataFrame:
     return data_df[data_df["subject"] == subject]
 
 
-def _bids_filename_from_ixi(img: pd.Series) -> str:
+def _get_bids_filename_from_image_data(img: pd.Series) -> str:
     return f"{img['bids_id']}_{img['session']}_{img['modality']}"
 
 
@@ -173,18 +173,18 @@ def write_ixi_subject_data(
     path_to_dataset : Path to the raw dataset directory.
     """
     _write_subject_no_dti(
-        _select_subject_data(_get_img_data_df(path_to_dataset), participant), bids_dir
+        _select_subject_data(_get_img_data(path_to_dataset), participant), bids_dir
     )
     _write_subject_dti_if_exists(bids_dir, participant, path_to_dataset)
 
 
-def _write_ixi_json_image(writing_path: str, hospital: str, field: str) -> None:
+def _write_ixi_json_image(writing_path: Path, hospital: str, field: str) -> None:
     """
     Writes a json associated to one IXI image.
 
     Parameters
     ----------
-    writing_path : name (str) of the json to be written.
+    writing_path : Path indicating under what name to write the json.
     hospital : identifier for the hospital responsible for the acquisition, determined from the image filename.
     field :  magnetic field used for the acquisition of the image, determined from the hospital.
     """
@@ -206,12 +206,12 @@ def _write_subject_no_dti(subject_df: pd.DataFrame, bids_path: Path) -> None:
             f"Converting modality {row['modality']} for subject {row['subject']}.",
             lvl="debug",
         )
-        filename = _bids_filename_from_ixi(row)
+        filename = _get_bids_filename_from_image_data(row)
         data_path = bids_path / row["bids_id"] / row["session"] / "anat"
         data_path.mkdir(parents=True, exist_ok=True)
         shutil.copy2(row["img_path"], f"{data_path}/{filename}.nii.gz")
         _write_ixi_json_image(
-            f"{data_path}/{filename}.json", row["hospital"], row["field"]
+            (data_path / filename).with_suffix(".json"), row["hospital"], row["field"]
         )
         # todo : 1 json per image or 1 json per subject ?
 
@@ -226,11 +226,13 @@ def _write_subject_dti_if_exists(
         bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(subject)
         data_path = bids_path / bids_id / "ses-M000" / "dwi"
         data_path.mkdir(parents=True, exist_ok=True)
-        filename = f"{bids_id}_ses-M000_dwi"
-        dti_to_save.to_filename(f"{data_path}/{filename}.nii.gz")
+        filename = Path(f"{bids_id}_ses-M000_dwi")
+        dti_to_save.to_filename(data_path / filename.with_suffix(".nii.gz"))
         hospital = dti_paths[0].name.split("-")[1]
         _write_ixi_json_image(
-            f"{data_path}/{filename}.json", hospital, _define_magnetic_field(hospital)
+            data_path / filename.with_suffix(".json"),
+            hospital,
+            _define_magnetic_field(hospital),
         )
     else:
         cprint(f"No DTI data was found for IXI subject {subject}.", lvl="warning")
@@ -249,7 +251,7 @@ def _merge_dti(dti_images: List[Path]):
     return concat_imgs([nib.load(img) for img in dti_images])
 
 
-def write_ixi_scans(bids_dir: Path, participant: str) -> None:
+def write_scans(bids_dir: Path, participant: str) -> None:
     """
     Write the scans.tsv for the only session (ses-M000) of a IXI subject.
 
@@ -268,11 +270,11 @@ def write_ixi_scans(bids_dir: Path, participant: str) -> None:
         }
     )
     to_write.to_csv(
-        f"{bids_dir}/{bids_id}/ses-M000/{bids_id}_ses-M000_scans.tsv", sep="\t"
+        bids_dir / bids_id / f"ses-M000/{bids_id}_ses-M000_scans.tsv", sep="\t"
     )
 
 
-def write_ixi_sessions(
+def write_sessions(
     bids_dir: Path, clinical_data: pd.DataFrame, participant: str
 ) -> None:
     """
@@ -286,4 +288,4 @@ def write_ixi_sessions(
     """
     line = clinical_data[clinical_data["ixi_id"] == participant]
     bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(participant)
-    line.to_csv(f"{bids_dir}/{bids_id}/{bids_id}_sessions.tsv", sep="\t")
+    line.to_csv(bids_dir / bids_id / f"{bids_id}_sessions.tsv", sep="\t")
