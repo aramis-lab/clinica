@@ -25,8 +25,8 @@ This file MUST be present at the root of a CAPS dataset and MUST contain the fol
 }
 ```
 
-- `Name`: String identifier of the dataset. It can be the name of your study for example. By default Clinica generates a random UUID for this field.
-- `BidsVersion`: The version number of the BIDS specifications that the BIDS input dataset is using when this CAPS dataset was generated.
+- `Name`: String identifier of the dataset. It can be the name of your study for example. By default Clinica generates a random UUID for this field. When running a pipeline which will create a new CAPS dataset, you can use the `--caps-name` option to provide a name. If the CAPS dataset already exist, the existing name will be kept.
+- `BIDSVersion`: The version number of the BIDS specifications that the BIDS input dataset is using when this CAPS dataset was generated.
 - `CAPSVersion`: The version number of the CAPS specifications used for this dataset.
 - `DatasetType`: Either "raw" or "derivative". For a CAPS dataset this should always be "derivative" as it contains processed data.
 
