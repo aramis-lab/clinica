@@ -25,6 +25,7 @@ pipeline_name = "t1-volume-tissue-segmentation"
 @cli_param.option.tissue_probability_maps
 @cli_param.option.dont_save_warped_unmodulated
 @cli_param.option.save_warped_modulated
+@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -37,6 +38,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
     yes: bool = False,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Tissue segmentation, bias correction and spatial normalization to MNI space of T1w images with SPM.
 
@@ -64,6 +66,7 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        caps_name=caps_name,
     )
 
     exec_pipeline = (

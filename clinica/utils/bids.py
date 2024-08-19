@@ -4,6 +4,8 @@ from os import PathLike
 from pathlib import Path
 from typing import Dict, Tuple, Union
 
+from packaging.version import Version
+
 __all__ = [
     "BIDSLabel",
     "BIDSFileName",
@@ -12,7 +14,7 @@ __all__ = [
     "Suffix",
 ]
 
-BIDS_VERSION = "1.7.0"
+BIDS_VERSION = Version("1.7.0")
 
 
 class Extension(str, Enum):

@@ -384,6 +384,7 @@ class Pipeline(Workflow):
         parameters: Optional[dict] = None,
         name: Optional[str] = None,
         ignore_dependencies: Optional[List[str]] = None,
+        caps_name: Optional[str] = None,
     ):
         """Init a Pipeline object.
 
@@ -423,6 +424,11 @@ class Pipeline(Workflow):
         from pathlib import Path
         from tempfile import mkdtemp
 
+        from clinica.utils.caps import (
+            build_caps_dataset_description,
+            write_caps_dataset_description,
+        )
+        from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.inputs import check_bids_folder, check_caps_folder
 
         self._is_built: bool = False
@@ -454,6 +460,7 @@ class Pipeline(Workflow):
         self._name = name or self.__class__.__name__
         self._parameters = parameters or {}
         self._ignore_dependencies = ignore_dependencies or []
+        self.caps_name = caps_name
 
         if not self._bids_directory:
             if not self._caps_directory:
@@ -461,11 +468,37 @@ class Pipeline(Workflow):
                     f"The {self._name} pipeline does not contain "
                     "BIDS nor CAPS directory at the initialization."
                 )
-            check_caps_folder(self._caps_directory)
+            try:
+                check_caps_folder(self._caps_directory)
+            except ClinicaCAPSError as e:
+                desc = build_caps_dataset_description(
+                    input_dir=self._caps_directory,
+                    output_dir=self._caps_directory,
+                    processing_name=self._name,
+                    dataset_name=self.caps_name,
+                )
+                raise ClinicaCAPSError(
+                    f"{e}\nYou might want to create a 'dataset_description.json' "
+                    f"file with the following content:\n{desc}"
+                )
             self.is_bids_dir = False
         else:
             check_bids_folder(self._bids_directory)
             self.is_bids_dir = True
+            if self._caps_directory is not None:
+                if (
+                    not self._caps_directory.exists()
+                    or len([f for f in self._caps_directory.iterdir()]) == 0
+                ):
+                    self._caps_directory.mkdir(parents=True, exist_ok=True)
+        if self._caps_directory:
+            write_caps_dataset_description(
+                input_dir=self.input_dir,
+                output_dir=self._caps_directory,
+                processing_name=self._name,
+                dataset_name=self.caps_name,
+            )
+            check_caps_folder(self._caps_directory)
         self._compute_subjects_and_sessions()
         self._init_nodes()
 

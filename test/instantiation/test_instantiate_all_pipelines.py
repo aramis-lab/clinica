@@ -1,6 +1,8 @@
+import shutil
 import warnings
 from os import fspath
 from pathlib import Path
+from test.nonregression.testing_tools import configure_paths
 
 import pytest
 
@@ -9,267 +11,302 @@ from clinica.utils.pet import SUVRReferenceRegion, Tracer
 warnings.filterwarnings("ignore")
 
 
-def test_instantiate_t1_freesurfer_cross_sectional(cmdopt):
+def test_instantiate_t1_freesurfer_cross_sectional(cmdopt, tmp_path):
     from clinica.pipelines.anatomical.freesurfer.t1.pipeline import T1FreeSurfer
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1FreeSurfer"
-    parameters = {
-        "recon_all_args": "-qcache",
-        "skip_question": True,
-    }
-    pipeline = T1FreeSurfer(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1FreeSurfer")
+    T1FreeSurfer(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "recon_all_args": "-qcache",
+            "skip_question": True,
+        },
+    ).build()
 
 
-def test_instantiate_spm_based_pipelines(cmdopt):
+def test_instantiate_spm_based_pipelines(cmdopt, tmp_path):
     """Run the instantiation tests for all pipelines using SPM.
     This avoids issues when running tests in parallel.
     """
-    input_dir = Path(cmdopt["input"])
-    run_tissue_segmentation(input_dir)
-    run_create_dartel(input_dir)
-    run_dartel_to_mni(input_dir)
-    run_register_dartel(input_dir)
-    run_pet_volume(input_dir)
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+
+    run_tissue_segmentation(base_dir, tmp_path, working_dir)
+    run_create_dartel(base_dir, tmp_path, working_dir)
+    run_dartel_to_mni(base_dir, tmp_path, working_dir)
+    run_register_dartel(base_dir, tmp_path, working_dir)
+    run_pet_volume(base_dir, tmp_path, working_dir)
 
 
-def run_tissue_segmentation(input_dir: Path) -> None:
+def run_tissue_segmentation(
+    base_dir: Path, output_dir: Path, working_dir: Path
+) -> None:
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import (
         T1VolumeTissueSegmentation,
     )
 
-    root = input_dir / "T1VolumeTissueSegmentation"
-    parameters = {"skip_question": True}
-    pipeline = T1VolumeTissueSegmentation(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, output_dir, "T1VolumeTissueSegmentation"
     )
-    pipeline.build()
+    T1VolumeTissueSegmentation(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"skip_question": True},
+    ).build()
 
 
-def run_create_dartel(input_dir: Path) -> None:
+def run_create_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import (
         T1VolumeCreateDartel,
     )
 
-    root = input_dir / "T1VolumeCreateDartel"
-    parameters = {"group_label": "UnitTest"}
-    pipeline = T1VolumeCreateDartel(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, output_dir, "T1VolumeCreateDartel"
     )
-    pipeline.build()
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    T1VolumeCreateDartel(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"group_label": "UnitTest"},
+    ).build()
 
 
-def run_dartel_to_mni(input_dir: Path) -> None:
+def run_dartel_to_mni(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import (
         T1VolumeDartel2MNI,
     )
 
-    root = input_dir / "T1VolumeDartel2MNI"
-    parameters = {"group_label": "UnitTest"}
-    pipeline = T1VolumeDartel2MNI(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, output_dir, "T1VolumeDartel2MNI"
     )
-    pipeline.build()
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    T1VolumeDartel2MNI(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"group_label": "UnitTest"},
+    ).build()
 
 
-def run_register_dartel(input_dir: Path) -> None:
+def run_register_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
     from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_pipeline import (
         T1VolumeRegisterDartel,
     )
 
-    root = input_dir / "T1VolumeRegisterDartel"
-    parameters = {"group_label": "UnitTest"}
-    pipeline = T1VolumeRegisterDartel(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, output_dir, "T1VolumeRegisterDartel"
     )
-    pipeline.build()
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    T1VolumeRegisterDartel(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"group_label": "UnitTest"},
+    ).build()
 
 
-def test_instantiate_t1_volume_parcellation(cmdopt):
+def test_instantiate_t1_volume_parcellation(cmdopt, tmp_path):
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import (
         T1VolumeParcellation,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1VolumeParcellation"
-    parameters = {"group_label": "UnitTest"}
-    pipeline = T1VolumeParcellation(
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1VolumeParcellation"
     )
-    pipeline.build()
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    T1VolumeParcellation(
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"group_label": "UnitTest"},
+    ).build()
 
 
-def test_instantiate_dwi_preprocessing_using_t1(cmdopt):
+def test_instantiate_dwi_preprocessing_using_t1(cmdopt, tmp_path):
     from clinica.pipelines.dwi.preprocessing.t1.pipeline import (
         DwiPreprocessingUsingT1,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "DWIPreprocessingUsingT1"
-    parameters = {
-        "initrand": False,
-        "low_bval": 5,
-        "use_cuda": False,
-        "delete_cache": True,
-        "random_seed": 42,
-    }
-    pipeline = DwiPreprocessingUsingT1(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWIPreprocessingUsingT1"
     )
-    pipeline.build()
+    DwiPreprocessingUsingT1(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "initrand": False,
+            "low_bval": 5,
+            "use_cuda": False,
+            "delete_cache": True,
+            "random_seed": 42,
+        },
+    ).build()
 
 
-def test_instantiate_dwi_preprocessing_using_phase_diff_field_map(cmdopt):
+def test_instantiate_dwi_preprocessing_using_phase_diff_field_map(cmdopt, tmp_path):
     from clinica.pipelines.dwi.preprocessing.fmap.pipeline import (
         DwiPreprocessingUsingPhaseDiffFMap,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "DWIPreprocessingUsingPhaseDiffFieldmap"
-    parameters = {
-        "initrand": False,
-        "low_bval": 5,
-        "use_cuda": False,
-    }
-    pipeline = DwiPreprocessingUsingPhaseDiffFMap(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "DWIPreprocessingUsingPhaseDiffFieldmap"
     )
-    pipeline.build()
+    DwiPreprocessingUsingPhaseDiffFMap(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "initrand": False,
+            "low_bval": 5,
+            "use_cuda": False,
+        },
+    ).build()
 
 
-def test_instantiate_dwi_dti(cmdopt):
+def test_instantiate_dwi_dti(cmdopt, tmp_path):
     from clinica.pipelines.dwi.dti.pipeline import DwiDti
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "DWIDTI"
-    pipeline = DwiDti(
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-    )
-    pipeline.build()
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIDTI")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    DwiDti(
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+    ).build()
 
 
-def test_instantiate_dwi_connectome(cmdopt):
+def test_instantiate_dwi_connectome(cmdopt, tmp_path):
     from clinica.pipelines.dwi.connectome.pipeline import DwiConnectome
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "DWIConnectome"
-    parameters = {"n_tracks": 1000}
-    pipeline = DwiConnectome(
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIConnectome")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    DwiConnectome(
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={"n_tracks": 1000},
+    ).build()
 
 
-def run_pet_volume(input_dir: Path) -> None:
+def run_pet_volume(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
     from clinica.pipelines.pet.volume.pipeline import PETVolume
 
-    root = input_dir / "PETVolume"
-    parameters = {
-        "group_label": "UnitTest",
-        "acq_label": Tracer.FDG,
-        "suvr_reference_region": SUVRReferenceRegion.PONS,
-        "skip_question": True,
-        "reconstruction_method": None,
-    }
-    pipeline = PETVolume(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, output_dir, "PETVolume")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    PETVolume(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "group_label": "UnitTest",
+            "acq_label": Tracer.FDG,
+            "suvr_reference_region": SUVRReferenceRegion.PONS,
+            "skip_question": True,
+            "reconstruction_method": None,
+        },
+    ).build()
 
 
-def test_instantiate_pet_linear(cmdopt):
+def test_instantiate_pet_linear(cmdopt, tmp_path):
     from clinica.pipelines.pet.linear.pipeline import PETLinear
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "PETLinear"
-    parameters = {
-        "acq_label": Tracer.FDG,
-        "suvr_reference_region": SUVRReferenceRegion.CEREBELLUM_PONS2,
-        "skip_question": True,
-        "reconstruction_method": None,
-    }
-    pipeline = PETLinear(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETLinear")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    PETLinear(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "acq_label": Tracer.FDG,
+            "suvr_reference_region": SUVRReferenceRegion.CEREBELLUM_PONS2,
+            "skip_question": True,
+            "reconstruction_method": None,
+        },
+    ).build()
 
 
 def test_instantiate_statistics_surface(cmdopt, tmp_path):
     from clinica.pipelines.statistics_surface.pipeline import StatisticsSurface
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "StatisticsSurface"
-    parameters = {
-        "group_label": "UnitTest",
-        "orig_input_data": "t1-freesurfer",
-        "glm_type": "group_comparison",
-        "contrast": "group",
-        "covariates": "age sex",
-    }
-    pipeline = StatisticsSurface(
-        caps_directory=root / "in" / "caps",
-        base_dir=tmp_path,
-        tsv_file=root / "in" / "subjects.tsv",
-        parameters=parameters,
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "StatisticsSurface"
     )
-    pipeline.build()
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    StatisticsSurface(
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "group_label": "UnitTest",
+            "orig_input_data": "t1-freesurfer",
+            "glm_type": "group_comparison",
+            "contrast": "group",
+            "covariates": "age sex",
+        },
+    ).build()
 
 
-def test_instantiate_pet_surface_cross_sectional(cmdopt):
+def test_instantiate_pet_surface_cross_sectional(cmdopt, tmp_path):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "PETSurface"
-    parameters = {
-        "acq_label": Tracer.FDG,
-        "suvr_reference_region": SUVRReferenceRegion.PONS,
-        "pvc_psf_tsv": fspath(root / "in" / "subjects.tsv"),
-        "longitudinal": False,
-        "skip_question": True,
-        "reconstruction_method": None,
-    }
-    pipeline = PetSurface(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETSurface")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    PetSurface(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "acq_label": Tracer.FDG,
+            "suvr_reference_region": SUVRReferenceRegion.PONS,
+            "pvc_psf_tsv": fspath(input_dir / "subjects.tsv"),
+            "longitudinal": False,
+            "skip_question": True,
+            "reconstruction_method": None,
+        },
+    ).build()
 
 
 @pytest.mark.skip(reason="Currently broken. Needs to be fixed...")
@@ -294,18 +331,21 @@ def test_instantiate_pet_surface_longitudinal(cmdopt):
     pipeline.build()
 
 
-def test_instantiate_workflows_ml(cmdopt):
+def test_instantiate_workflows_ml(cmdopt, tmp_path):
     from clinica.pipelines.machine_learning.input import (
         CAPSRegionBasedInput,
         CAPSVertexBasedInput,
         CAPSVoxelBasedInput,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "WorkflowsML"
-    caps_dir = fspath(root / "in" / "caps")
-    tsv = fspath(root / "in" / "subjects.tsv")
-    diagnoses_tsv = fspath(root / "in" / "diagnosis.tsv")
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "WorkflowsML")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    caps_dir = fspath(tmp_dir / "caps")
+    tsv = fspath(input_dir / "subjects.tsv")
+    diagnoses_tsv = fspath(input_dir / "diagnosis.tsv")
     group_label = "allADNIdartel"
     image_type = ["T1w", "PET"]
     atlases = ["AAL2", "Neuromorphometrics", "AICHA", "LPBA40", "Hammers"]
@@ -371,106 +411,131 @@ def test_instantiate_workflows_ml(cmdopt):
                 raise ValueError("An error occurred...")
 
 
-def test_instantiate_spatial_svm(cmdopt):
+def test_instantiate_spatial_svm(cmdopt, tmp_path):
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import (
         SpatialSVM,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "SpatialSVM"
-    parameters = {"group_label": "ADNIbl", "orig_input_data_ml": "t1-volume"}
-    pipeline = SpatialSVM(
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
-        parameters=parameters,
-    )
-    pipeline.build()
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "SpatialSVM")
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    SpatialSVM(
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "group_label": "ADNIbl",
+            "orig_input_data_ml": "t1-volume",
+        },
+    ).build()
 
 
-def test_instantiate_t1_freesurfer_template(cmdopt):
+def test_instantiate_t1_freesurfer_template(cmdopt, tmp_path):
     from clinica.pipelines.anatomical.freesurfer.longitudinal.template.pipeline import (
         T1FreeSurferTemplate,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1FreeSurferTemplate"
-    pipeline = T1FreeSurferTemplate(
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1FreeSurferTemplate"
     )
-    pipeline.build()
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    T1FreeSurferTemplate(
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+    ).build()
 
 
-def test_instantiate_t1_freesurfer_longitudinal_correction(cmdopt):
+def test_instantiate_t1_freesurfer_longitudinal_correction(cmdopt, tmp_path):
     from clinica.pipelines.anatomical.freesurfer.longitudinal.correction.pipeline import (
         T1FreeSurferLongitudinalCorrection,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1FreeSurferLongitudinalCorrection"
-    pipeline = T1FreeSurferLongitudinalCorrection(
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "T1FreeSurferLongitudinalCorrection"
     )
-    pipeline.build()
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    T1FreeSurferLongitudinalCorrection(
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+    ).build()
 
 
-def test_instantiate_t1_linear(cmdopt):
+def test_instantiate_t1_linear(cmdopt, tmp_path):
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "T1Linear"
-    parameters = {"uncropped_image": False}
-    pipeline = AnatLinear(
-        bids_directory=fspath(root / "in" / "bids"),
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "subjects.tsv"),
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1Linear")
+    AnatLinear(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
         name="t1-linear",
-        parameters=parameters,
-    )
-    pipeline.build()
+        parameters={"uncropped_image": False},
+    ).build()
 
 
-def test_instantiate_statistics_volume(cmdopt):
+def test_instantiate_statistics_volume(cmdopt, tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "StatisticsVolume"
-    parameters = {
-        "group_label": "UnitTest",
-        "orig_input_data_volume": "pet-volume",
-        "contrast": "group",
-        "acq_label": Tracer.FDG,
-        "use_pvc_data": False,
-        "suvr_reference_region": SUVRReferenceRegion.PONS,
-    }
-    pipeline = StatisticsVolume(
-        caps_directory=fspath(root / "in" / "caps"),
-        tsv_file=fspath(root / "in" / "group-UnitTest_covariates.tsv"),
-        parameters=parameters,
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "StatisticsVolume"
     )
-    pipeline.build()
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+
+    StatisticsVolume(
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "group-UnitTest_covariates.tsv"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "group_label": "UnitTest",
+            "orig_input_data_volume": "pet-volume",
+            "contrast": "group",
+            "acq_label": Tracer.FDG,
+            "use_pvc_data": False,
+            "suvr_reference_region": SUVRReferenceRegion.PONS,
+        },
+    ).build()
 
 
-def test_instantiate_statistics_volume_correction(cmdopt):
+def test_instantiate_statistics_volume_correction(cmdopt, tmp_path):
     from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import (
         StatisticsVolumeCorrection,
     )
 
-    input_dir = Path(cmdopt["input"])
-    root = input_dir / "StatisticsVolumeCorrection"
-    parameters = {
-        "t_map": "group-UnitTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics.nii",
-        "height_threshold": 3.2422,
-        "FWEp": 4.928,
-        "FDRp": 4.693,
-        "FWEc": 206987,
-        "FDRc": 206987,
-        "n_cuts": 15,
-    }
-    pipeline = StatisticsVolumeCorrection(
-        caps_directory=fspath(root / "in" / "caps"), parameters=parameters
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(
+        base_dir, tmp_path, "StatisticsVolumeCorrection"
     )
-    pipeline.build()
+    # Copy the CAPS folder in temp folder in order to have writing privileges
+    shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
+    StatisticsVolumeCorrection(
+        caps_directory=fspath(tmp_dir / "caps"),
+        base_dir=fspath(working_dir),
+        parameters={
+            "t_map": "group-UnitTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics.nii",
+            "height_threshold": 3.2422,
+            "FWEp": 4.928,
+            "FDRp": 4.693,
+            "FWEc": 206987,
+            "FDRc": 206987,
+            "n_cuts": 15,
+        },
+    ).build()

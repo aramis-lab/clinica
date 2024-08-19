@@ -1,7 +1,93 @@
 <!-- markdownlint-disable MD010 MD033 MD046 -->
 # Detailed file descriptions
 
-In the following, brackets `[`/`]` will denote optional key/value pairs in the filename while accolades `{`/`}` will indicate a list of compulsory values (e.g. `hemi-{left|right}` means that the key `hemi` only accepts `left` or `right` as values).
+This document present the specifications of the CAPS format version `1.0.0`.
+
+## Versions of Clinica, BIDS, and CAPS specifications
+
+| Clinica version | BIDS version supported | CAPS version supported |
+|-----------------| ---------------------- | ---------------------- |
+| 0.9.x           |         1.7.0          |          1.0.0         |
+| 0.8.x           |         1.7.0          |       no version       |
+
+## The dataset_description.json file
+
+### Specifications
+
+This file MUST be present at the root of a CAPS dataset and MUST contain the following minimal information:
+
+```json
+{
+	"Name": "name identifier for the dataset",
+	"BIDSVersion": "1.7.0",
+	"CAPSVersion": "1.0.0",
+	"DatasetType": "derivative"
+}
+```
+
+- `Name`: String identifier of the dataset. It can be the name of your study for example. By default Clinica generates a random UUID for this field. When running a pipeline which will create a new CAPS dataset, you can use the `--caps-name` option to provide a name. If the CAPS dataset already exist, the existing name will be kept.
+- `BIDSVersion`: The version number of the BIDS specifications that the BIDS input dataset is using when this CAPS dataset was generated.
+- `CAPSVersion`: The version number of the CAPS specifications used for this dataset.
+- `DatasetType`: Either "raw" or "derivative". For a CAPS dataset this should always be "derivative" as it contains processed data.
+
+In addition, the `dataset_description.json` file MAY contain a `Processing` key which is a list of objects describing the different processing pipelines that were run on this CAPS.
+Here is an example for a CAPS dataset containing the outputs of two pipelines: `t1-linear` and `pet-linear`:
+
+```json
+{
+    "Name": "e6719ef6-2411-4ad2-8abd-da1fd8fbdf32",
+    "BIDSVersion": "1.7.0",
+    "CAPSVersion": "1.0.0",
+    "DatasetType": "derivative",
+    "Processing": [
+        {
+            "Name": "t1-linear",
+            "Date": "2024-08-06T10:28:21.848950",
+            "Author": "ci",
+            "Machine": "ubuntu",
+            "InputPath": "/mnt/data_ci/T1Linear/in/bids"
+        },
+        {
+            "Name": "pet-linear",
+            "Date": "2024-08-06T10:36:27.403373",
+            "Author": "ci",
+            "Machine": "ubuntu",
+            "InputPath": "/mnt/data_ci/PETLinear/in/bids"
+        }
+    ]
+}
+```
+
+A `Processing` is described with the following fields:
+
+- `Name`: The name of the processing. For Clinica pipelines, this is the name of the pipeline.
+- `Date`: This date is in iso-format and indicates when the processing was run.
+- `Author`: This indicates the user name which triggered the processing.
+- `Machine`: This indicates the name of the machine on which the processing was run.
+- `InputPath`: This is the full path (on the machine on which the processing was run) to the input dataset of the processing.
+
+### Potential problems
+
+The `dataset_description.json` file for CAPS datasets was introduced in Clinica `0.9.0`.
+
+This means that results obtained with prior versions of Clinica do not have this file automatically generated.
+Clinica will interpret this as a `<1.0.0` dataset and should error with a suggestion of a minimal `dataset_description.json` that you should add to your dataset.
+In this situation, create this new file with the suggested content and re-start the pipeline.
+
+You might also see the following error message:
+
+```
+Impossible to write the 'dataset_description.json' file in <FOLDER> because it already exists and it contains incompatible metadata.
+```
+
+This means that you have version mismatch for the BIDS and/or CAPS specifications.
+That is, the versions indicated in the input (or output) dataset(s) does not match the versions currently used by Clinica.
+If this happens, it is recommended to re-run the conversion or the pipeline which initially generated the dataset with the current version of Clinica.
+
+
+## Subjects and Groups folders
+
+In the following, brackets `[`/`]` will denote optional key/value pairs in the filename, while accolades `{`/`}` will indicate a list of compulsory values (e.g. `hemi-{left|right}` means that the key `hemi` only accepts `left` or `right` as values).
 
 Finally:
 
@@ -15,6 +101,7 @@ Finally:
 ### `t1-linear` - Affine registration of T1w images to the MNI standard space
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
     └─ <session_id>/
@@ -31,6 +118,7 @@ The `desc-Crop` indicates images of size 169×208×179 after cropping to remove 
 #### Segmentation
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -47,15 +135,14 @@ subjects/
                   └─ <source_file>_segm-<segm>_dartelinput.nii.gz
 ```
 
-The `modulated-{on|off}` key indicates if modulation has been used in SPM to compensate for the effect of spatial normalization.
-
-The possible values for the `segm-<segm>` key/value are: `graymatter`, `whitematter`, `csf`, `bone`, `softtissue`, and `background`.
-
-The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applying the transformation obtained from the SPM Segmentation routine to the T1 image in native space.
+- The `modulated-{on|off}` key indicates if modulation has been used in [SPM](../Third-party.md#spm12) to compensate for the effect of spatial normalization.
+- The possible values for the `segm-<segm>` key/value are: `graymatter`, `whitematter`, `csf`, `bone`, `softtissue`, and `background`.
+- The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applying the transformation obtained from the [SPM](../Third-party.md#spm12) segmentation routine to the T1 image in native space.
 
 #### DARTEL
 
 ```Text
+dataset_description.json
 groups/
 └─ <group_id>/
    ├─ <group_id>_subjects_visits_list.tsv
@@ -64,9 +151,8 @@ groups/
       └─ <group_id>_template.nii.gz
 ```
 
-The final group template is `<group_id>_template.nii.gz`.
-
-The `<group_id>_iteration-<index>_template.nii.gz` obtained at each iteration will only be used when obtaining flow fields for registering a new image into an existing template (SPM DARTEL Existing templates procedure).
+- The final group template is `<group_id>_template.nii.gz`.
+- The `<group_id>_iteration-<index>_template.nii.gz` obtained at each iteration will only be used when obtaining flow fields for registering a new image into an existing template ([SPM](../Third-party.md#spm12) DARTEL existing templates procedure).
 
 !!! Note "Note for SPM experts"
     The original name of `<group_id>_iteration-<index>_template.nii.gz` is `Template<index>.nii`.
@@ -74,6 +160,7 @@ The `<group_id>_iteration-<index>_template.nii.gz` obtained at each iteration wi
 #### DARTEL to MNI
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -88,6 +175,7 @@ subjects/
 #### Atlas statistics
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -103,11 +191,12 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
 
 ### `t1-freesurfer` - FreeSurfer-based processing of T1-weighted MR images
 
-The outputs of the `t1-freesurfer` pipeline are split into two sub-folders, the first one containing the FreeSurfer outputs and a second with additional outputs specific to Clinica.
+The outputs of the `t1-freesurfer` pipeline are split into two sub-folders, the first one containing the [FreeSurfer](../Third-party.md#freesurfer) outputs and a second with additional outputs specific to Clinica.
 
 FreeSurfer outputs:
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -124,6 +213,7 @@ subjects/
 Clinica additional outputs:
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -144,10 +234,9 @@ For the file: `*_hemi-{left|right}_parcellation-<parcellation>_thickness.tsv`, `
 | Cortical surface area   | `_area`      | Cortical surface area|
 | Cortical mean curvature | `_meancurv`  | Mean curvature of cortical surface|
 
-The `hemi-{left|right}` key/value stands for `left` or `right` hemisphere.
-
-The possible values for the `parcellation-<parcellation>` key/value are: `desikan` (Desikan-Killiany Atlas), `destrieux` (Destrieux Atlas) and `ba` (Brodmann Area Maps).
-The TSV files for Brodmann areas contain a selection of regions, see this link for the content of this selection: [http://ftp.nmr.mgh.harvard.edu/fswiki/BrodmannAreaMaps](http://ftp.nmr.mgh.harvard.edu/fswiki/BrodmannAreaMaps)).
+- The `hemi-{left|right}` key/value stands for `left` or `right` hemisphere.
+- The possible values for the `parcellation-<parcellation>` key/value are: `desikan` (Desikan-Killiany Atlas), `destrieux` (Destrieux Atlas) and `ba` (Brodmann Area Maps).
+- The [TSV](../glossary.md#tsv) files for Brodmann areas contain a selection of regions, see this link for the content of this selection: [http://ftp.nmr.mgh.harvard.edu/fswiki/BrodmannAreaMaps](http://ftp.nmr.mgh.harvard.edu/fswiki/BrodmannAreaMaps)).
 
 The details of the white matter parcellation of FreeSurfer can be found here: [https://surfer.nmr.mgh.harvard.edu/pub/articles/salat_2008.pdf](https://surfer.nmr.mgh.harvard.edu/pub/articles/salat_2008.pdf).
 
@@ -181,6 +270,7 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
 #### FreeSurfer unbiased templates
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <long_id>/
@@ -195,9 +285,10 @@ subjects/
 
 ### FreeSurfer longitudinal outputs
 
-The outputs are split into two sub-folders, the first containing the FreeSurfer longitudinal outputs and a second with additional outputs specific to Clinica.
+The outputs are split into two sub-folders, the first containing the [FreeSurfer](../Third-party.md#freesurfer) longitudinal outputs and a second with additional outputs specific to Clinica.
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -215,6 +306,7 @@ subjects/
 Clinica additional outputs:
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -237,6 +329,7 @@ where each file is explained in the `t1-freesurfer` subsection.
 ### `dwi-preprocessing-*` - Preprocessing of raw diffusion weighted imaging (DWI) datasets
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -260,6 +353,7 @@ A brain mask of the preprocessed file is provided.
 ### `dwi-dti` - DTI-based processing of corrected DWI datasets
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -287,7 +381,7 @@ The different maps based on the DTI are:
 - `RD`: radial diffusivity.
 - `DECFA`: directionally-encoded colour (DEC) FA.
 
-Current atlases used for statistics are the 1mm version of `JHUDTI81`, `JHUTract0` and `JHUTract25` (see [Atlases page](../../Atlases) for further details).
+Current atlases used for statistics are the 1mm version of `JHUDTI81`, `JHUTract0` and `JHUTract25` (see [Atlases page](../Atlases.md) for further details).
 
 Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#appendix-content-of-a-statistic-file).
 
@@ -297,6 +391,7 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
 ### `dwi-connectome` - Computation of structural connectome from corrected DWI datasets
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
     └─ <session_id>/
@@ -307,17 +402,18 @@ subjects/
                 └─ <source_file>_space-{b0|T1w}_model-CSD_parcellation-{desikan|destrieux}_connectivity.tsv
 ```
 
-The constrained spherical deconvolution (CSD) diffusion model is saved under the `*_model-CSD_diffmodel.nii.gz` filename.
-The whole-brain tractography is saved under the `*_tractography.tck` filename.
-The connectivity matrices are saved under `*_connectivity.tsv` filenames.
+- The constrained spherical deconvolution (CSD) diffusion model is saved under the `*_model-CSD_diffmodel.nii.gz` filename.
+- The whole-brain tractography is saved under the `*_tractography.tck` filename.
+- The connectivity matrices are saved under `*_connectivity.tsv` filenames.
 
-Current parcellations used for the computation of connectivity matrices are `desikan` and `desikan` (see [Atlases page](../../Atlases) for further details).
+Current parcellations used for the computation of connectivity matrices are `desikan` and `desikan` (see [Atlases page](../Atlases.md) for further details).
 
 ## PET imaging data
 
 ### `pet-volume` - Volume-based processing of PET images
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -333,6 +429,7 @@ subjects/
 ```
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -342,17 +439,16 @@ subjects/
                └─ <source_file>_space-<space>[_pvc-rbv]_suvr-<suvr>_statistics.tsv
 ```
 
-The `_trc-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
-
-The `[_pvc-rbv]` label is optional, depending on whether your image has undergone partial volume correction (region-based voxel-wise (RBV) method) or not.
-
-The possible values for the `suvr-<suvr>` key/value are: `pons` for FDG-PET and `cerebellumPons` for different types of amyloid PET.
+- The `_trc-<label>` key/value describes the radiotracer used for the [PET](../glossary.md#pet) acquisition (currently supported: `18FFDG` and `18FAV45`).
+- The `[_pvc-rbv]` label is optional, depending on whether your image has undergone partial volume correction (region-based voxel-wise (RBV) method) or not.
+- The possible values for the `suvr-<suvr>` key/value are: `pons` for FDG-PET and `cerebellumPons` for different types of amyloid [PET](../glossary.md#pet).
 
 Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#appendix-content-of-a-statistic-file).
 
 ### `pet-surface` - Surface-based processing of PET images
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -364,27 +460,20 @@ subjects/
             └─ <source_file>_hemi-{left|right}_trc-<label>_pet_space-<space>_suvr-<suvr>_pvc-iy_hemi-{left|right}_fwhm-<label>_projection.mgh
 ```
 
-The `trc-<label>` key/value describes the radiotracer used for the PET acquisition (currently supported: `18FFDG` and `18FAV45`).
+- The `trc-<label>` key/value describes the radiotracer used for the [PET](../glossary.md#pet) acquisition (currently supported: `18FFDG` and `18FAV45`).
+- The `[_pvc-iy]` label describes the partial volume correction used in the algorithm for the projection (Iterative Yang).
+- The possible values for the `suvr-<suvr>` key/value are: `pons` for FDG-PET and `cerebellumPons` for different types of amyloid [PET](../glossary.md#pet).
+- The `fwhm` represents the [FWHM](../glossary.md#fwhm) (in mm) of the Gaussian filter applied to the data mapped onto the FsAverage surface. The different values are 0 (no smoothing), 5, 10, 15, 20, and 25.
+- Files with the `_midcorticalsurface` suffix represent the surface at equal distance between the white matter/gray matter interface and the pial surface (one per hemisphere).
+- Files with the `projection` suffix are PET data that can be mapped onto meshes. If `_space_fsaverage_` is in the name, it can be mapped either onto the white or pial surface of FsAverage. If `_space_native_` is in the name, it can be mapped onto the white or pial surface of the subject’s surface (`{l|r}h.white`, `{l|r}h.pial` files from `t1-freesurfer` pipeline).
+- Files with the `statistics` suffix are text files that display average PET values on either `_space-desikan` or `_space-destrieux` atlases.
 
-The `[_pvc-iy]` label describes the partial volume correction used in the algorithm for the projection (Iterative Yang).
-
-The possible values for the `suvr-<suvr>` key/value are: `pons` for FDG-PET and `cerebellumPons` for different types of amyloid PET
-
-The `fwhm` represents the [FWHM](../glossary.md#fwhm) (in mm) of the Gaussian filter applied to the data mapped onto the FsAverage surface.
-The different values are 0 (no smoothing), 5, 10, 15, 20, and 25.
-
-Files with the `_midcorticalsurface` suffix represent the surface at equal distance between the white matter/gray matter interface and the pial surface (one per hemisphere).
-
-Files with the `projection` suffix are PET data that can be mapped onto meshes.
-If `_space_fsaverage_` is in the name, it can be mapped either onto the white or pial surface of FsAverage.
-If `_space_native_` is in the name, it can be mapped onto the white or pial surface of the subject’s surface (`{l|r}h.white`, `{l|r}h.pial` files from `t1-freesurfer` pipeline).
-
-Files with the `statistics` suffix are text files that display average PET values on either `_space-desikan` or `_space-destrieux` atlases.
 Example of this content can be found in [appendix](#appendix-content-of-a-statistic-file).
 
 ### `pet-surface-longitudinal` - Surface-based longitudinal processing of PET images
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -403,6 +492,7 @@ Explanations on the key/values can be found on the
 ### `pet-linear` - Affine registration of PET images to the MNI standard space
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
     └─ <session_id>/
@@ -422,6 +512,7 @@ The `desc-Crop` indicates images of size 169×208×179 after cropping to remove 
 #### Group comparison
 
 ```Text
+dataset_description.json
 groups/
 └─ <group_id>/
    └─ statistics/
@@ -511,6 +602,7 @@ The `*.mat` files can be read later by tools like PySurfer and Surfstat.
 #### Correlation analysis
 
 ```Text
+dataset_description.json
 groups/
 └─ <group_id>/
    └─ statistics/
@@ -523,10 +615,9 @@ groups/
          └─ <group_id>_glm.json
 ```
 
-The `correlation-<label>` here describes the factor of the model which can be, for example, `age`.
-The `contrast-{negative|positive}` is the sign of the correlation you want to study, which can be `negative` or `positive`.
-
-All other key/value pairs are defined in the same way as in the previous section.
+- The `correlation-<label>` here describes the factor of the model which can be, for example, `age`.
+- The `contrast-{negative|positive}` is the sign of the correlation you want to study, which can be `negative` or `positive`.
+- All other key/value pairs are defined in the same way as in the previous section.
 
 <!--### Generalised Linear Model (GLM)
 ```
@@ -550,6 +641,7 @@ It follows the same spirit as the sections above.
 
 <!--#### Group comparison-->
 ```Text
+dataset_description.json
 groups/
 └─ <group_id>/
    ├─ <group_id>_participants.tsv
@@ -583,6 +675,7 @@ The value for `fwhm` corresponds to the size of the volume-based smoothing in mm
 Corrected results are stored under the following hierarchy:
 
 ```Text
+dataset_description.json
 groups/
 └─ <group_id>/
    └─ statistics_volume/
@@ -592,17 +685,17 @@ groups/
             └─ <group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_GlassBrain.png
 ```
 
-`FWEp` (resp. `FDRp`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction at the peak (=voxel) level with a statistical threshold of P < 0.05.
+- `FWEp` (resp. `FDRp`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction at the peak (=voxel) level with a statistical threshold of P < 0.05.
+- `FWEc` (resp. `FDRc`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction.
 
-`FWEc` (resp. `FDRc`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction.
-A statistical threshold of P < 0.001 was first applied (height threshold).
-An extent threshold of P < 0.05 corrected for multiple comparisons was then applied at the cluster level.
+A statistical threshold of P < 0.001 was first applied (height threshold). An extent threshold of P < 0.05 corrected for multiple comparisons was then applied at the cluster level.
 
 ## Machine Learning
 
 ### `machinelearning-prepare-spatial-svm` - Prepare input data for spatially regularized SVM
 
 ```Text
+dataset_description.json
 subjects/
 └─ <participant_id>/
    └─ <session_id>/
@@ -614,6 +707,7 @@ subjects/
 ```
 
 ```Text
+dataset_description.json
 groups/
 └─ <group_id>/
    └─ machine_learning/
@@ -622,7 +716,7 @@ groups/
          └─ <group_id>_space-Ixi549Space_parameters.json
 ```
 
-At the subject level, it contains SVM regularization of gray matter/white matter/CSF maps or PET data that accounts for the spatial and anatomical structure of neuroimaging data.
+At the subject level, it contains SVM regularization of gray matter/white matter/CSF maps or [PET](../glossary.md#pet) data that accounts for the spatial and anatomical structure of neuroimaging data.
 
 At the group level, it contains the Gram matrix with respect to gray matter/white matter/CSF maps needed for the SVM regularization and the information regarding the regularization.
 An example of JSON file is:
@@ -647,16 +741,14 @@ An example of JSON file is:
 <source_file>_space-<space>_map-<map>_statistics.tsv
 ```
 
-Statistic file for a given [atlas](../../Atlases).
-The TSV file summarizes regional volumes or averages for a given parametric map.
+Statistic file for a given [atlas](../Atlases.md).
+The [TSV](../glossary.md#tsv) file summarizes regional volumes or averages for a given parametric map.
 With the help of pandas (Python library), it can be easily parsed for machine learning purposes.
 
 Possible values for `_map-<map>` key/value are:
 
 - For T1: `graymatter` (gray matter), `whitematter` (white matter), `csf` (CSF) and `ct` (cortical thickness)
-
 - For DWI: `FA` (fractional anisotropy), `MD` (mean diffusivity, also called apparent diffusion coefficient), `AD` (axial diffusivity), `RD` (radial diffusivity), `NDI` (neurite density index), `ODI` (orientation dispersion index) and `FWF` (free water fraction).
-
 - For PET: `18FFDG` (<sup>18</sup>F-Fluorodeoxyglucose), `18FAV45` (<sup>18</sup>F-Florbetapir), `18FAV1451` (<sup>18</sup>F-Flortaucipir), `11CPIB` (<sup>11</sup>C-Pittsburgh Compound-B), `18FFBB` (<sup>18</sup>F-Florbetaben) and `18FFMM` (<sup>18</sup>F-Flutemetamol).
 
 !!! Example

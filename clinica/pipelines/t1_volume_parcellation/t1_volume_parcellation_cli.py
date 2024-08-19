@@ -20,6 +20,7 @@ pipeline_name = "t1-volume-parcellation"
 @option.n_procs
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.modulate
+@cli_param.option.caps_name
 def cli(
     caps_directory: str,
     group_label: str,
@@ -27,6 +28,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
     modulate: bool = True,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Computation of mean GM concentration for a set of regions.
 
@@ -51,6 +53,7 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        caps_name=caps_name,
     )
 
     exec_pipeline = (

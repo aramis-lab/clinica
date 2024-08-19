@@ -41,16 +41,11 @@ where:
 
 Pipeline options:
 
-- `--smooth`: a list of integers specifying the different isomorphic full width at half maximum (FWHM) in millimeters used to smooth the images.
-Default value is: `8`.
-- `--tissue_classes`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to save after segmentation (in order: gray matter (GM), white matter (WM), cerebrospinal fluid (CSF), bone, soft-tissue, air/background).
-Default value is: `1, 2, 3` (GM, WM and CSF are saved).
-- `--dartel_tissues`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to use for the Dartel template calculation (in order: GM, WM, CSF, bone, soft-tissue, air/background).
-Default value is: `1, 2, 3` (GM, WM and CSF are used).
-- `--modulate / --no-modulate`: a flag.
-If enabled, output images are modulated and volumes are preserved.
-If disabled, they are not modulated and concentrations are preserved.
-Default value: `--modulate`.
+- `--smooth`: a list of integers specifying the different isomorphic full width at half maximum (FWHM) in millimeters used to smooth the images. Default value is: `8`.
+- `--tissue_classes`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to save after segmentation (in order: gray matter (GM), white matter (WM), cerebrospinal fluid (CSF), bone, soft-tissue, air/background). Default value is: `1, 2, 3` (GM, WM and CSF are saved).
+- `--dartel_tissues`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to use for the Dartel template calculation (in order: GM, WM, CSF, bone, soft-tissue, air/background). Default value is: `1, 2, 3` (GM, WM and CSF are used).
+- `--modulate / --no-modulate`: a flag. If enabled, output images are modulated and volumes are preserved. If disabled, they are not modulated and concentrations are preserved. Default value: `--modulate`.
+- `--caps-name` : Specify the name of the CAPS dataset that will be created to store the outputs of the pipeline. This works if this CAPS dataset does not exist yet, otherwise the existing name will be kept. The provided name will appear in the `dataset_description.json` file, at the root of the CAPS folder (see [CAPS Specifications](../CAPS/Specifications.md#the-dataset_descriptionjson-file) for more details).
 
 !!! note
     - The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).

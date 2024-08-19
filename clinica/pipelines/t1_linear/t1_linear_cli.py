@@ -31,6 +31,7 @@ pipeline_name = "t1-linear"
     is_flag=True,
     help="Use ANTsPy instead of ANTs.",
 )
+@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -40,6 +41,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
     use_antspy: bool = False,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Affine registration of T1w images to the MNI standard space.
 
@@ -66,6 +68,7 @@ def cli(
         parameters=parameters,
         name=pipeline_name,
         use_antspy=use_antspy,
+        caps_name=caps_name,
     )
 
     exec_pipeline = (
