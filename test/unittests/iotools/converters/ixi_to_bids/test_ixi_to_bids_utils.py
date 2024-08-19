@@ -6,8 +6,8 @@ import pytest
 from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     _filter_subjects_list,
     _get_subjects_list_from_data,
+    _get_subjects_list_from_file,
     _rename_modalities,
-    define_participants,
 )
 
 
@@ -48,5 +48,10 @@ def test_rename_ixi_modalities_error(input_str):
         _rename_modalities(input_str)
 
 
-def test_define_participants_from_file(tmp_path):
-    pass
+def test_get_subjects_list_from_file(tmp_path):
+    with open(tmp_path / "subjects.txt", "w") as f:
+        f.write("IXI123\nIXI001")
+    assert _get_subjects_list_from_file(Path(tmp_path / "subjects.txt")) == [
+        "IXI123",
+        "IXI001",
+    ]

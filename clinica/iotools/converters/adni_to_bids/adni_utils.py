@@ -33,7 +33,6 @@ def _define_subjects_list(
     source_dir: Path,
     subjs_list_path: Optional[Path] = None,
 ) -> List[str]:
-    # todo : here or in utils for all converters ?
     import re
 
     from clinica.utils.stream import cprint
