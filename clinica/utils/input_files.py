@@ -341,45 +341,48 @@ def aggregator(func):
 
 
 @aggregator
-def t1_volume_native_tpm(tissue_number):
+def t1_volume_native_tpm(tissue_number: int) -> dict:
     from pathlib import Path
 
-    from .spm import INDEX_TISSUE_MAP
+    from .spm import get_spm_tissue_from_index
 
+    tissue = get_spm_tissue_from_index(tissue_number)
     return {
         "pattern": Path("t1")
         / "spm"
         / "segmentation"
         / "native_space"
-        / f"*_*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_probability.nii*",
-        "description": f"Tissue probability map {INDEX_TISSUE_MAP[tissue_number]} in native space",
+        / f"*_*_T1w_segm-{tissue.value}_probability.nii*",
+        "description": f"Tissue probability map {tissue.value} in native space",
         "needed_pipeline": "t1-volume-tissue-segmentation",
     }
 
 
 @aggregator
-def t1_volume_dartel_input_tissue(tissue_number):
+def t1_volume_dartel_input_tissue(tissue_number: int) -> dict:
     from pathlib import Path
 
-    from .spm import INDEX_TISSUE_MAP
+    from .spm import get_spm_tissue_from_index
 
+    tissue = get_spm_tissue_from_index(tissue_number)
     return {
         "pattern": Path("t1")
         / "spm"
         / "segmentation"
         / "dartel_input"
-        / f"*_*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_dartelinput.nii*",
-        "description": f"Dartel input for tissue probability map {INDEX_TISSUE_MAP[tissue_number]} from T1w MRI",
+        / f"*_*_T1w_segm-{tissue.value}_dartelinput.nii*",
+        "description": f"Dartel input for tissue probability map {tissue.value} from T1w MRI",
         "needed_pipeline": "t1-volume-tissue-segmentation",
     }
 
 
 @aggregator
-def t1_volume_native_tpm_in_mni(tissue_number, modulation):
+def t1_volume_native_tpm_in_mni(tissue_number: int, modulation: bool) -> dict:
     from pathlib import Path
 
-    from .spm import INDEX_TISSUE_MAP
+    from .spm import get_spm_tissue_from_index
 
+    tissue = get_spm_tissue_from_index(tissue_number)
     pattern_modulation = "on" if modulation else "off"
     description_modulation = "with" if modulation else "without"
 
@@ -388,16 +391,18 @@ def t1_volume_native_tpm_in_mni(tissue_number, modulation):
         / "spm"
         / "segmentation"
         / "normalized_space"
-        / f"*_*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_space-Ixi549Space_modulated-{pattern_modulation}_probability.nii*",
+        / f"*_*_T1w_segm-{tissue.value}_space-Ixi549Space_modulated-{pattern_modulation}_probability.nii*",
         "description": (
-            f"Tissue probability map {INDEX_TISSUE_MAP[tissue_number]} based on "
+            f"Tissue probability map {tissue.value} based on "
             f"native MRI in MNI space (Ixi549) {description_modulation} modulation."
         ),
         "needed_pipeline": "t1-volume-tissue-segmentation",
     }
 
 
-def t1_volume_template_tpm_in_mni(group_label, tissue_number, modulation, fwhm=None):
+def t1_volume_template_tpm_in_mni(
+    group_label: str, tissue_number: int, modulation: bool, fwhm: Optional[int] = None
+) -> dict:
     """Build the dictionary required by clinica_file_reader to get the tissue
     probability maps based on group template in MNI space.
 
@@ -422,8 +427,9 @@ def t1_volume_template_tpm_in_mni(group_label, tissue_number, modulation, fwhm=N
     """
     from pathlib import Path
 
-    from .spm import INDEX_TISSUE_MAP
+    from .spm import get_spm_tissue_from_index
 
+    tissue = get_spm_tissue_from_index(tissue_number)
     pattern_modulation = "on" if modulation else "off"
     description_modulation = "with" if modulation else "without"
     fwhm_key_value = f"_fwhm-{fwhm}mm" if fwhm else ""
@@ -434,10 +440,10 @@ def t1_volume_template_tpm_in_mni(group_label, tissue_number, modulation, fwhm=N
         / "spm"
         / "dartel"
         / f"group-{group_label}"
-        / f"*_T1w_segm-{INDEX_TISSUE_MAP[tissue_number]}_space-Ixi549Space_modulated-{pattern_modulation}{fwhm_key_value}_probability.nii*",
+        / f"*_T1w_segm-{tissue.value}_space-Ixi549Space_modulated-{pattern_modulation}{fwhm_key_value}_probability.nii*",
         "description": (
-            f"Tissue probability map {INDEX_TISSUE_MAP[tissue_number]} based "
-            f"on {group_label} template in MNI space (Ixi549) {description_modulation} modulation and {fwhm_description}."
+            f"Tissue probability map {tissue.value} based on {group_label} template in MNI space "
+            f"(Ixi549) {description_modulation} modulation and {fwhm_description}."
         ),
         "needed_pipeline": "t1-volume",
     }

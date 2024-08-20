@@ -6,6 +6,36 @@ from unittest import mock
 import pytest
 
 from clinica.utils.exceptions import ClinicaMissingDependencyError
+from clinica.utils.spm import SPMTissue
+
+
+@pytest.mark.parametrize("index", [-1, 0, 7, 10.2, 3.3, "foo", "3", "", None])
+def test_get_spm_tissue_from_index_error(index):
+    from clinica.utils.spm import get_spm_tissue_from_index
+
+    with pytest.raises(
+        ValueError,
+        match=f"No SPM tissue matching index {index}.",
+    ):
+        get_spm_tissue_from_index(index)
+
+
+@pytest.mark.parametrize(
+    "index,expected,expected_value",
+    [
+        (1, SPMTissue.GRAY_MATTER, "graymatter"),
+        (2, SPMTissue.WHITE_MATTER, "whitematter"),
+        (3, SPMTissue.CSF, "csf"),
+        (4, SPMTissue.BONE, "bone"),
+        (5, SPMTissue.SOFT_TISSUE, "softtissue"),
+        (6, SPMTissue.BACKGROUND, "background"),
+    ],
+)
+def test_get_spm_tissue_from_index_error(index, expected, expected_value):
+    from clinica.utils.spm import get_spm_tissue_from_index
+
+    assert get_spm_tissue_from_index(index) == expected
+    assert get_spm_tissue_from_index(index).value == expected_value
 
 
 def test_spm_standalone_is_available_no_env_variable_error():
