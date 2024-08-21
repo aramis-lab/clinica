@@ -6,7 +6,6 @@ from typing import List, Optional
 
 import nibabel as nib
 import pandas as pd
-from iotools.utils.cli import check_missing_modalities
 from nilearn.image import concat_imgs
 
 from clinica.iotools.bids_utils import StudyName, bids_id_factory
@@ -104,6 +103,7 @@ def _get_sex_mapping() -> pd.DataFrame:
 
 
 def _get_ethnic_mapping(clinical_data_path: Path) -> pd.DataFrame:
+    # todo : how to test this efficiently ? (feels more like non regression than unit testing maybe)
     return pd.read_excel(
         clinical_data_path / "IXI.xls", sheet_name="Ethnicity"
     ).set_index("ID")["ETHNIC"]
@@ -186,8 +186,10 @@ def _rename_modalities(input_mod: str) -> str:
 def _define_magnetic_field(hospital: str) -> str:
     if hospital == "Guys" or hospital == "IOP":
         return "1.5"
-    if hospital == "HH":
+    elif hospital == "HH":
         return "3"
+    else:
+        raise ValueError(f"The hospital {hospital} was not recognized.")
 
 
 def _get_img_data(data_directory: Path) -> pd.DataFrame:
@@ -222,11 +224,6 @@ def _get_img_data(data_directory: Path) -> pd.DataFrame:
     return df
 
 
-def _select_subject_data(data_df: pd.DataFrame, subject: str) -> pd.DataFrame:
-    """Select subject images to copy based on IXI id"""
-    return data_df[data_df["subject"] == subject]
-
-
 def _get_bids_filename_from_image_data(img: pd.Series) -> str:
     return f"{img['participant_id']}_{img['session']}_{img['modality']}"
 
@@ -243,9 +240,8 @@ def write_ixi_subject_data(
     participant : Current converted subject study id (str).
     path_to_dataset : Path to the raw dataset directory.
     """
-    _write_subject_no_dti(
-        _select_subject_data(_get_img_data(path_to_dataset), participant), bids_dir
-    )
+    data_df = _get_img_data(path_to_dataset)
+    _write_subject_no_dti(data_df[data_df["subject"] == participant], bids_dir)
     _write_subject_dti_if_exists(bids_dir, participant, path_to_dataset)
 
 
