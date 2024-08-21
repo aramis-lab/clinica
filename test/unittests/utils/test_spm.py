@@ -5,10 +5,23 @@ from unittest import mock
 
 import pytest
 
+from clinica.utils.exceptions import ClinicaMissingDependencyError
 
-def test_spm_standalone_is_available_no_env_variable():
+
+def test_spm_standalone_is_available_no_env_variable_error():
     from clinica.utils.spm import use_spm_standalone_if_available
 
+    with pytest.raises(
+        ClinicaMissingDependencyError,
+        match="Clinica could not find spm software: the SPM_HOME variable is not set.",
+    ):
+        use_spm_standalone_if_available()
+
+
+def test_spm_standalone_is_available_warning(tmp_path):
+    from clinica.utils.spm import use_spm_standalone_if_available
+
+    (tmp_path / "spm_home_folder").mkdir()
     with pytest.warns(
         UserWarning,
         match=re.escape(
@@ -17,7 +30,10 @@ def test_spm_standalone_is_available_no_env_variable():
             "$SPMSTANDALONE_HOME, and $MCR_HOME"
         ),
     ):
-        assert not use_spm_standalone_if_available()
+        with mock.patch.dict(
+            os.environ, {"SPM_HOME": str(tmp_path / "spm_home_folder")}
+        ):
+            assert not use_spm_standalone_if_available()
 
 
 def test_spm_standalone_is_available(tmp_path, mocker):

@@ -1,7 +1,9 @@
 import math
+import os
 from functools import partial
 from pathlib import Path
 from typing import List
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -304,12 +306,16 @@ def test_run_m_script_no_output_file_error(tmp_path, mocker):
         "clinica.pipelines.statistics_volume.statistics_volume_utils._run_matlab_script_with_matlab",
         return_value=None,
     )
+    (tmp_path / "spm_home_folder").mkdir()
 
     with pytest.raises(
         RuntimeError,
         match="Output matrix",
     ):
-        run_m_script(m_file)
+        with mock.patch.dict(
+            os.environ, {"SPM_HOME": str(tmp_path / "spm_home_folder")}
+        ):
+            run_m_script(m_file)
 
 
 def test_run_m_script(tmp_path, mocker):
@@ -327,8 +333,10 @@ def test_run_m_script(tmp_path, mocker):
         "clinica.pipelines.statistics_volume.statistics_volume_utils._run_matlab_script_with_matlab",
         return_value=None,
     )
+    (tmp_path / "spm_home_folder").mkdir()
 
-    assert run_m_script(m_file) == str(expected_output_file)
+    with mock.patch.dict(os.environ, {"SPM_HOME": str(tmp_path / "spm_home_folder")}):
+        assert run_m_script(m_file) == str(expected_output_file)
 
 
 @pytest.mark.parametrize(
