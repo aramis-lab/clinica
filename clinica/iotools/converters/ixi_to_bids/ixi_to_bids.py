@@ -37,7 +37,6 @@ def convert(
 
     path_to_dataset = validate_input_path(path_to_dataset)
     bids_dir = validate_input_path(bids_dir, check_exist=False)
-    # todo : see if bids does not exist already at this place
     path_to_clinical = validate_input_path(path_to_clinical)
     if subjects:
         subjects = validate_input_path(subjects)

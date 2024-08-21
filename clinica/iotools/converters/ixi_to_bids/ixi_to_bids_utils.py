@@ -6,6 +6,7 @@ from typing import List, Optional
 
 import nibabel as nib
 import pandas as pd
+from iotools.utils.cli import check_missing_modalities
 from nilearn.image import concat_imgs
 
 from clinica.iotools.bids_utils import StudyName, bids_id_factory
@@ -17,6 +18,8 @@ __all__ = [
     "write_ixi_subject_data",
     "write_sessions",
     "write_scans",
+    "write_participants",
+    "check_modalities",
 ]
 
 
@@ -181,7 +184,6 @@ def _rename_modalities(input_mod: str) -> str:
 
 
 def _define_magnetic_field(hospital: str) -> str:
-    # todo : raise error ?
     if hospital == "Guys" or hospital == "IOP":
         return "1.5"
     if hospital == "HH":
@@ -427,6 +429,4 @@ def check_modalities(data_directory: Path, participants: List[str]) -> None:
         cprint(message)
 
 
-# todo : check for bids existence first / check when creating paths
-# todo : what should it do when writing to existing path ?
 # todo : say in docs you should not rename downloaded folders/files, just move them
