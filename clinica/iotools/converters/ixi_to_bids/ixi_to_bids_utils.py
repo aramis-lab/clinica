@@ -67,8 +67,8 @@ def define_participants(
         # todo : file must be tested
         if invalid_subjects:
             cprint(
-                f"The subjects {invalid_subjects} do not have associated data inside the directory {data_directory}"
-                f" and will not be converted."
+                f"The subjects : {' , '.join(invalid_subjects)} do not have any associated data inside the directory {data_directory}"
+                f" and can not be converted."
             )
         return list_filtered
     else:
@@ -302,12 +302,10 @@ def _write_subject_dti_if_exists(
             hospital,
             _define_magnetic_field(hospital),
         )
-    else:
-        cprint(f"No DTI data was found for IXI subject {subject}.", lvl="warning")
 
 
 def _find_subject_dti_data(data_directory: Path, subject: str) -> List[Path]:
-    pattern = subject + r"(-\w*){4}.nii.gz$"
+    pattern = subject + r"(-\w*){2}-DTI(-\w*){1}.nii.gz$"
     return [
         path
         for path in data_directory.rglob(pattern="IXI*.nii.gz")
@@ -388,4 +386,47 @@ def write_participants(
     )
 
 
-# todo : logs INFO about modalities
+def _identify_expected_modalities(data_directory: Path) -> List[str]:
+    return [
+        p.name.split("-")[1]
+        for p in data_directory.iterdir()
+        if p.is_dir() and "IXI" in str(p)
+    ]
+
+
+def check_modalities(data_directory: Path, participants: List[str]) -> None:
+    """
+    Verify what modality folders are available in the given data directory and checks if some are missing per participant
+
+    Parameters
+    ----------
+    data_directory : Path to raw dataset.
+    participants : List of the subject ids of all participants
+
+    """
+    expected_modalities = _identify_expected_modalities(data_directory)
+    cprint(
+        f"Modalities : {' , '.join(_rename_modalities(mod) for mod in expected_modalities)} "
+        f"were identified inside {data_directory} for conversion."
+    )
+
+    participants_missing_mod = dict()
+
+    for participant in participants:
+        missing_mods = []
+        for mod in expected_modalities:
+            if not list(data_directory.rglob(f"{participant}*{mod}*.nii.gz")):
+                missing_mods += [_rename_modalities(mod)]
+        if missing_mods:
+            participants_missing_mod[participant] = missing_mods
+
+    if participants_missing_mod:
+        message = f"Some subjects do not have data for the following modalities :\n"
+        for sub, mod in participants_missing_mod.items():
+            message += f"{sub} : {' , '.join(mod)}\n"
+        cprint(message)
+
+
+# todo : check for bids existence first / check when creating paths
+# todo : what should it do when writing to existing path ?
+# todo : say in docs you should not rename downloaded folders/files, just move them
