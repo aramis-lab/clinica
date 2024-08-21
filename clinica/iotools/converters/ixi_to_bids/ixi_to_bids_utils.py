@@ -30,16 +30,6 @@ def _get_subjects_list_from_data(data_directory: Path) -> List[str]:
     )
 
 
-def _filter_subjects_list(
-    subjects_list: List[str], clinical_data: pd.DataFrame
-) -> List[str]:
-    return [
-        subject
-        for subject in subjects_list
-        if subject in clinical_data["ixi_id"].values
-    ]
-
-
 def _get_subjects_list_from_file(subjs_list_path: Path) -> List[str]:
     return subjs_list_path.read_text().splitlines()
 
@@ -51,7 +41,7 @@ def define_participants(
 ) -> List[str]:
     """
     Defines the actual list of participants based on the (provided) subjects list filtered
-    using clinical data.
+    using existing data.
 
     Parameters
     ----------
@@ -62,15 +52,76 @@ def define_participants(
     Returns
     -------
     The list of ids that were either present in the data directory or asked for with a specific text file, provided
-    associated clinical data actually exists.
+    associated images actually exists.
 
     """
+
+    list_from_data = _get_subjects_list_from_data(data_directory)
     if subjs_list_path:
         cprint("Loading a subjects list provided by the user...")
-        subjects_to_filter = _get_subjects_list_from_file(subjs_list_path)
+        list_from_file = _get_subjects_list_from_file(subjs_list_path)
+        list_filtered = [
+            subject for subject in list_from_file if subject in list_from_data
+        ]
+        invalid_subjects = list(set(list_from_file) - set(list_filtered))
+        # todo : file must be tested
+        if invalid_subjects:
+            cprint(
+                f"The subjects {invalid_subjects} do not have associated data inside the directory {data_directory}"
+                f" and will not be converted."
+            )
+        return list_filtered
     else:
-        subjects_to_filter = _get_subjects_list_from_data(data_directory)
-    return _filter_subjects_list(subjects_to_filter, clinical_data)
+        return list_from_data
+
+
+def _rename_clinical_data(column: str) -> str:
+    if column == "SEX_ID (1=m, 2=f)":
+        return "sex"
+    if column == "ETHNIC_ID":
+        return "ethnicity"
+    if column == "MARITAL_ID":
+        return "marital status"
+    if column == "OCCUPATION_ID":
+        return "occupation"
+    if column == "QUALIFICATION_ID":
+        return "qualification"
+    if column == "IXI_ID":
+        return "source_id"
+    if column == "DOB":
+        return "date of birth"
+    if column == "STUDY_DATE":
+        return "acq_time"
+    else:
+        return column.lower()
+
+
+def _get_sex_mapping() -> pd.DataFrame:
+    return pd.DataFrame({"SEX": ["male", "female"]}, index=[1, 2])["SEX"]
+
+
+def _get_ethnic_mapping(clinical_data_path: Path) -> pd.DataFrame:
+    return pd.read_excel(
+        clinical_data_path / "IXI.xls", sheet_name="Ethnicity"
+    ).set_index("ID")["ETHNIC"]
+
+
+def _get_marital_mapping(clinical_data_path: Path) -> pd.DataFrame:
+    return pd.read_excel(
+        clinical_data_path / "IXI.xls", sheet_name="Marital Status"
+    ).set_index("ID")["MARITAL"]
+
+
+def _get_occupation_mapping(clinical_data_path: Path) -> pd.DataFrame:
+    return pd.read_excel(
+        clinical_data_path / "IXI.xls", sheet_name="Occupation"
+    ).set_index("ID")["OCCUPATION"]
+
+
+def _get_qualification_mapping(clinical_data_path: Path) -> pd.DataFrame:
+    return pd.read_excel(
+        clinical_data_path / "IXI.xls", sheet_name="Qualification"
+    ).set_index("ID")["QUALIFICATION"]
 
 
 def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
@@ -86,14 +137,28 @@ def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
     A dataframe containing the clinical data, with some modifications: padded study id and added session id.
 
     """
-    # todo : what keys ?
     clinical_data = pd.read_excel(clinical_data_path / "IXI.xls")
-    clinical_data.dropna(inplace=True)
     clinical_data.drop("DATE_AVAILABLE", axis=1, inplace=True)
-    clinical_data.rename(lambda x: x.lower(), axis=1, inplace=True)
-    clinical_data["ixi_id"] = clinical_data.ixi_id.apply(
+    clinical_data["SEX_ID (1=m, 2=f)"] = clinical_data["SEX_ID (1=m, 2=f)"].map(
+        _get_sex_mapping()
+    )
+    clinical_data["ETHNIC_ID"] = clinical_data["ETHNIC_ID"].map(
+        _get_ethnic_mapping(clinical_data_path)
+    )
+    clinical_data["MARITAL_ID"] = clinical_data["MARITAL_ID"].map(
+        _get_marital_mapping(clinical_data_path)
+    )
+    clinical_data["OCCUPATION_ID"] = clinical_data["OCCUPATION_ID"].map(
+        _get_occupation_mapping(clinical_data_path)
+    )
+    clinical_data["QUALIFICATION_ID"] = clinical_data["QUALIFICATION_ID"].map(
+        _get_qualification_mapping(clinical_data_path)
+    )
+    clinical_data["IXI_ID"] = clinical_data.IXI_ID.apply(
         lambda x: "IXI" + "0" * (3 - len(str(x))) + str(x)
     )
+    clinical_data.rename(lambda x: _rename_clinical_data(x), axis=1, inplace=True)
+    clinical_data.fillna("n/a", inplace=True)
     clinical_data["session_id"] = "ses-M000"
     return clinical_data
 
@@ -139,7 +204,7 @@ def _get_img_data(data_directory: Path) -> pd.DataFrame:
         .assign(img_name_no_ext=lambda df: df.img_name.apply(lambda x: x.split(".")[0]))
         .assign(subject=lambda df: df.img_name_no_ext.apply(lambda x: x.split("-")[0]))
         .assign(
-            bids_id=lambda df: df.subject.apply(
+            participant_id=lambda df: df.subject.apply(
                 lambda x: bids_id_factory(StudyName.IXI).from_original_study_id(x)
             )
         )
@@ -161,7 +226,7 @@ def _select_subject_data(data_df: pd.DataFrame, subject: str) -> pd.DataFrame:
 
 
 def _get_bids_filename_from_image_data(img: pd.Series) -> str:
-    return f"{img['bids_id']}_{img['session']}_{img['modality']}"
+    return f"{img['participant_id']}_{img['session']}_{img['modality']}"
 
 
 def write_ixi_subject_data(
@@ -211,13 +276,12 @@ def _write_subject_no_dti(subject_df: pd.DataFrame, bids_path: Path) -> None:
             lvl="debug",
         )
         filename = _get_bids_filename_from_image_data(row)
-        data_path = bids_path / row["bids_id"] / row["session"] / "anat"
+        data_path = bids_path / row["participant_id"] / row["session"] / "anat"
         data_path.mkdir(parents=True, exist_ok=True)
         shutil.copy2(row["img_path"], f"{data_path}/{filename}.nii.gz")
         _write_ixi_json_image(
             (data_path / filename).with_suffix(".json"), row["hospital"], row["field"]
         )
-        # todo : 1 json per image or 1 json per subject ?
 
 
 def _write_subject_dti_if_exists(
@@ -290,6 +354,38 @@ def write_sessions(
     clinical_data : Dataframe containing the formatted clinical data of the IXI study.
     participant : Current converted subject study id (str).
     """
-    line = clinical_data[clinical_data["ixi_id"] == participant]
+    line = clinical_data[clinical_data["source_id"] == participant]
     bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(participant)
-    line.to_csv(bids_dir / bids_id / f"{bids_id}_sessions.tsv", sep="\t")
+    line[["session_id", "acq_time"]].to_csv(
+        bids_dir / bids_id / f"{bids_id}_sessions.tsv", sep="\t"
+    )
+
+
+def write_participants(
+    bids_dir: Path, clinical_data: pd.DataFrame, participants: List[str]
+) -> None:
+    """
+    Write the participants.tsv at the root of the BIDS directory.
+
+    Parameters
+    ----------
+    bids_dir : Path to the output BIDS directory.
+    clinical_data : Dataframe containing the formatted clinical data of the IXI study.
+    participants : List of converted subjects study source ids.
+    """
+    clinical_data.set_index("source_id", inplace=True, drop=False)
+    clinical_data.assign(
+        participant_id=clinical_data.source_id.apply(
+            lambda x: bids_id_factory(StudyName.IXI).from_original_study_id(x)
+        )
+    )
+    for participant in participants:
+        if participant not in clinical_data.index:
+            clinical_data.loc[participant] = "n/a"
+    bids_dir.mkdir()
+    clinical_data.loc[participants].drop(["acq_time", "session_id"], axis=1).to_csv(
+        bids_dir / "participants.tsv", sep="\t"
+    )
+
+
+# todo : logs INFO about modalities

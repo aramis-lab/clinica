@@ -11,6 +11,7 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     define_participants,
     read_clinical_data,
     write_ixi_subject_data,
+    write_participants,
     write_scans,
     write_sessions,
 )
@@ -47,6 +48,9 @@ def convert(
 
     clinical_data = read_clinical_data(path_to_clinical)
     participants = define_participants(path_to_dataset, clinical_data, subjects)
+    write_participants(
+        bids_dir=bids_dir, clinical_data=clinical_data, participants=participants
+    )
 
     for participant in participants:
         cprint(f"Converting IXI subject {participant} to BIDS")
