@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -5,6 +6,7 @@ import pytest
 
 from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     _define_magnetic_field,
+    _find_subject_dti_data,
     _get_bids_filename_from_image_data,
     _get_ethnic_mapping,
     _get_img_data,
@@ -14,9 +16,12 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     _get_qualification_mapping,
     _get_subjects_list_from_data,
     _get_subjects_list_from_file,
+    _identify_expected_modalities,
     _padding_source_id,
     _rename_clinical_data,
     _rename_modalities,
+    _write_json_image,
+    _write_subject_no_dti,
     define_participants,
     read_clinical_data,
 )
@@ -329,3 +334,52 @@ def test_get_mapping_valueerror(tmp_path):
         f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
     ):
         _get_mapping(tmp_path, "Qualification", "QUALIFICATION")
+
+
+def test_write_json_image(tmp_path):
+    _write_json_image(tmp_path / "test.json", hospital="Guys", field="1.5")
+    with open(tmp_path / "test.json", "r") as f:
+        data = json.load(f)
+    assert data["InstitutionName"] == "Guys"
+    assert data["MagneticFieldStrength (T)"] == "1.5"
+
+
+def test_write_subject_no_dti(tmp_path):
+    df = image_dataframe_builder(tmp_path)
+    bids_dir = tmp_path / "BIDS"
+    file_path = (
+        bids_dir
+        / f"sub-{df['subject'][0]}"
+        / "ses-M000"
+        / "anat"
+        / f"sub-{df['subject'][0]}_ses-M000_T1w"
+    )
+    _write_subject_no_dti(df, bids_dir)
+    json_files = list(bids_dir.rglob(f"sub-{df['subject'][0]}*.json"))
+    nii_files = list(bids_dir.rglob(f"sub-{df['subject'][0]}*.nii.gz"))
+    assert len(json_files) == 1 and json_files[0] == Path(f"{file_path}.json")
+    assert len(nii_files) == 1 and nii_files[0] == Path(f"{file_path}.nii.gz")
+
+
+def test_write_subject_no_dti_empty(tmp_path):
+    bids_dir = tmp_path / "BIDS"
+    bids_dir.mkdir()
+    _write_subject_no_dti(pd.DataFrame(), bids_dir)
+    assert not list(bids_dir.iterdir())
+
+
+def test_find_subject_dti_data(tmp_path):
+    (tmp_path / "IXI001-Guys-1234-T1.nii.gz").touch()
+    (tmp_path / "IXI001-Guys-1234-DTI").touch()
+    (tmp_path / "IXI001-Guys-DTI.nii.gz").touch()
+    tmp_image = tmp_path / "IXI001-Guys-1234-DTI-00.nii.gz"
+    tmp_image.touch()
+    list_dti = _find_subject_dti_data(data_directory=tmp_path, subject="IXI001")
+    assert len(list_dti) == 1 and list_dti[0] == tmp_image
+
+
+def test_identify_expected_modalities(tmp_path):
+    (tmp_path / "IXI-DTI").mkdir()
+    (tmp_path / "IXIdti").mkdir()
+    (tmp_path / "foo-bar").mkdir()
+    assert _identify_expected_modalities(tmp_path) == ["DTI"]

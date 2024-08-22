@@ -312,6 +312,7 @@ def _write_subject_dti_if_exists(
     bids_path: Path, subject: str, data_directory: Path
 ) -> None:
     """Processes DTI data if found for a subject"""
+    # todo : test, should use mocking ? (for _merge_dti)
     if dti_paths := _find_subject_dti_data(data_directory, subject):
         cprint(f"Converting modality DTI for subject {subject}.", lvl="debug")
         dti_to_save = _merge_dti(dti_paths)
@@ -350,6 +351,7 @@ def write_scans(bids_dir: Path, participant: str) -> None:
     bids_dir : Path to the output BIDS directory.
     participant : Current converted subject study id (str).
     """
+    # todo : test
     bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(participant)
     to_write = pd.DataFrame(
         {
@@ -367,6 +369,7 @@ def write_scans(bids_dir: Path, participant: str) -> None:
 def write_sessions(
     bids_dir: Path, clinical_data: pd.DataFrame, participant: str
 ) -> None:
+    # todo : test
     """
     Writes the sessions.tsv for a IXI subject.
 
@@ -386,6 +389,7 @@ def write_sessions(
 def write_participants(
     bids_dir: Path, clinical_data: pd.DataFrame, participants: List[str]
 ) -> None:
+    # todo : test
     """
     Write the participants.tsv at the root of the BIDS directory.
 
@@ -414,7 +418,7 @@ def _identify_expected_modalities(data_directory: Path) -> List[str]:
     return [
         p.name.split("-")[1]
         for p in data_directory.iterdir()
-        if p.is_dir() and "IXI" in str(p)
+        if p.is_dir() and "IXI-" in str(p)
     ]
 
 
@@ -428,6 +432,7 @@ def check_modalities(data_directory: Path, participants: List[str]) -> None:
     participants : List of the subject ids of all participants
 
     """
+    # todo : test
     expected_modalities = _identify_expected_modalities(data_directory)
     cprint(
         f"Modalities : {' , '.join(_rename_modalities(mod) for mod in expected_modalities)} "
