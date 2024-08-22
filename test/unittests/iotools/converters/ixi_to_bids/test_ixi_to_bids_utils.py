@@ -8,13 +8,16 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     _get_bids_filename_from_image_data,
     _get_ethnic_mapping,
     _get_img_data,
+    _get_mapping,
     _get_marital_mapping,
     _get_occupation_mapping,
     _get_qualification_mapping,
     _get_subjects_list_from_data,
     _get_subjects_list_from_file,
+    _padding_source_id,
     _rename_clinical_data,
     _rename_modalities,
+    define_participants,
     read_clinical_data,
 )
 
@@ -23,6 +26,31 @@ def test_get_subjects_list_from_data(tmp_path):
     for filename in ("IXI1", "IXI123", "IXIaaa", "foo"):
         Path(f"{tmp_path}/{filename}_T1w.nii.gz").touch()
     assert _get_subjects_list_from_data(tmp_path) == ["IXI123"]
+
+
+def test_get_subjects_list_from_file(tmp_path):
+    with open(tmp_path / "subjects.txt", "w") as f:
+        f.write("IXI123\nIXI001")
+    assert _get_subjects_list_from_file(tmp_path / "subjects.txt") == [
+        "IXI123",
+        "IXI001",
+    ]
+
+
+def test_define_participants_filter(tmp_path):
+    for filename in ("IXI001", "IXI002", "IXI003", "IXI004"):
+        Path(f"{tmp_path}/{filename}_T1w.nii.gz").touch()
+    with open(tmp_path / "subjects.txt", "w") as f:
+        f.write("IXI001\nIXI006")
+    assert define_participants(
+        data_directory=tmp_path, subjs_list_path=tmp_path / "subjects.txt"
+    ) == ["IXI001"]
+
+
+def test_define_participants_optional(tmp_path):
+    for filename in ("IXI001", "IXI002"):
+        Path(f"{tmp_path}/{filename}_T1w.nii.gz").touch()
+    assert define_participants(data_directory=tmp_path) == ["IXI001", "IXI002"]
 
 
 @pytest.mark.parametrize(
@@ -48,15 +76,6 @@ def test_rename_ixi_modalities_error(input_str):
         _rename_modalities(input_str)
 
 
-def test_get_subjects_list_from_file(tmp_path):
-    with open(tmp_path / "subjects.txt", "w") as f:
-        f.write("IXI123\nIXI001")
-    assert _get_subjects_list_from_file(tmp_path / "subjects.txt") == [
-        "IXI123",
-        "IXI001",
-    ]
-
-
 @pytest.mark.parametrize(
     "input_str, expected",
     [
@@ -75,8 +94,41 @@ def test_rename_clinical_data(input_str, expected):
     assert _rename_clinical_data(input_str) == expected
 
 
-def test_read_clinical_data(tmp_path):
-    # todo : need to mock the _get functions ?
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        ("1", "IXI001"),
+        ("12", "IXI012"),
+        ("123", "IXI123"),
+        (1, "IXI001"),
+    ],
+)
+def test_padding_source_id_success(input, expected):
+    assert _padding_source_id(input) == expected
+
+
+def test_padding_source_id_error():
+    with pytest.raises(
+        ValueError,
+        match=f"The source id 1234 has more than 3 digits while IXI"
+        f"source ids are expected to be between 1 and 3 digits.",
+    ):
+        _padding_source_id("1234")
+
+
+@pytest.mark.parametrize("input", ["IXI_name.xls", "IXI_format.csv"])
+def test_read_clinical_data_error(tmp_path, input):
+    (tmp_path / input).touch()
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"Clinical data stored in the folder {tmp_path} is expected to be an excel file named 'IXI.xls'. "
+        f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+    ):
+        read_clinical_data(tmp_path)
+
+
+def test_read_clinical_data_success(tmp_path):
+    # todo : ?
     pass
 
 
@@ -206,3 +258,74 @@ def test_get_qualification_mapping_success(tmp_path):
     assert _get_qualification_mapping(tmp_path).equals(
         qualif.set_index("ID")["QUALIFICATION"]
     )
+
+
+def test_get_mapping_fileerror(tmp_path):
+    qualif = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4, 5],
+            "QUALIFICATION": [
+                "No qualifications",
+                "O - levels, GCSEs, or CSEs",
+                "A - levels",
+                "Further education e.g.City & Guilds / NVQs",
+                "University or Polytechnic degree",
+            ],
+        }
+    )
+    qualif.to_excel(excel_writer=tmp_path / "IXI2.xls", sheet_name="Qualification")
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"Clinical data stored in the folder {tmp_path} is expected to be an excel file named 'IXI.xls'. "
+        f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+    ):
+        _get_mapping(tmp_path, "Qualification", "QUALIFICATION")
+
+
+def test_get_mapping_keyerror(tmp_path):
+    qualif = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4, 5],
+            "QUALIFICATION": [
+                "No qualifications",
+                "O - levels, GCSEs, or CSEs",
+                "A - levels",
+                "Further education e.g.City & Guilds / NVQs",
+                "University or Polytechnic degree",
+            ],
+        }
+    )
+    qualif.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Qualification_error")
+
+    with pytest.raises(
+        ValueError,
+        match=f"Qualification mapping is expected to be contained in a sheet called Qualification coming from the clinical data excel. "
+        f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
+        f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+    ):
+        _get_mapping(tmp_path, "Qualification", "QUALIFICATION")
+
+
+def test_get_mapping_valueerror(tmp_path):
+    qualif = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4, 5],
+            "QUALIFICATION_error": [
+                "No qualifications",
+                "O - levels, GCSEs, or CSEs",
+                "A - levels",
+                "Further education e.g.City & Guilds / NVQs",
+                "University or Polytechnic degree",
+            ],
+        }
+    )
+    qualif.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Qualification")
+
+    with pytest.raises(
+        ValueError,
+        match=f"Qualification mapping is expected to be contained in a sheet called Qualification coming from the clinical data excel. "
+        f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
+        f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+    ):
+        _get_mapping(tmp_path, "Qualification", "QUALIFICATION")

@@ -48,7 +48,7 @@ def convert(
         )
 
     clinical_data = read_clinical_data(path_to_clinical)
-    participants = define_participants(path_to_dataset, clinical_data, subjects)
+    participants = define_participants(path_to_dataset, subjects)
     check_modalities(data_directory=path_to_dataset, participants=participants)
 
     write_participants(

@@ -3,14 +3,14 @@ import re
 import shutil
 from multiprocessing.managers import Value
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import nibabel as nib
 import pandas as pd
 from nilearn.image import concat_imgs
 
 from clinica.iotools.bids_utils import StudyName, bids_id_factory
-from clinica.utils.stream import cprint
+from clinica.utils.stream import cprint, log_and_raise
 
 __all__ = [
     "read_clinical_data",
@@ -39,7 +39,6 @@ def _get_subjects_list_from_file(subjs_list_path: Path) -> List[str]:
 
 def define_participants(
     data_directory: Path,
-    clinical_data: pd.DataFrame,
     subjs_list_path: Optional[Path] = None,
 ) -> List[str]:
     """
@@ -49,7 +48,6 @@ def define_participants(
     Parameters
     ----------
     data_directory : Path to the raw data directory.
-    clinical_data : Dataframe containing the formatted clinical data of the IXI study.
     subjs_list_path : [Optional] Path to a text file containing a list of specific subjects to extract.
 
     Returns
@@ -99,39 +97,54 @@ def _get_sex_mapping() -> pd.DataFrame:
     return pd.DataFrame({"SEX": ["male", "female"]}, index=[1, 2])["SEX"]
 
 
+def _get_mapping(clinical_data_path: Path, sheet: str, column: str) -> pd.DataFrame:
+    try:
+        df = pd.read_excel(clinical_data_path / "IXI.xls", sheet_name=sheet).set_index(
+            "ID"
+        )[column]
+    except FileNotFoundError:
+        log_and_raise(
+            f"Clinical data stored in the folder {clinical_data_path} is expected to be an excel file named 'IXI.xls'. "
+            f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+            FileNotFoundError,
+        )
+    except (ValueError, KeyError):
+        log_and_raise(
+            f"{sheet} mapping is expected to be contained in a sheet called {sheet} coming from the clinical data excel. "
+            f"Possibilities are supposed to be described in a {column} column associated to keys from the 'ID' column. "
+            f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+            ValueError,
+        )
+    else:
+        return df
+
+
 def _get_ethnic_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    return pd.read_excel(
-        clinical_data_path / "IXI.xls", sheet_name="Ethnicity"
-    ).set_index("ID")["ETHNIC"]
+    return _get_mapping(clinical_data_path, sheet="Ethnicity", column="ETHNIC")
 
 
 def _get_marital_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    return pd.read_excel(
-        clinical_data_path / "IXI.xls", sheet_name="Marital Status"
-    ).set_index("ID")["MARITAL"]
+    return _get_mapping(clinical_data_path, sheet="Marital Status", column="MARITAL")
 
 
 def _get_occupation_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    return pd.read_excel(
-        clinical_data_path / "IXI.xls", sheet_name="Occupation"
-    ).set_index("ID")["OCCUPATION"]
+    return _get_mapping(clinical_data_path, sheet="Occupation", column="OCCUPATION")
 
 
 def _get_qualification_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    try:
-        qualif = pd.read_excel(
-            clinical_data_path / "IXI.xls", sheet_name="Qualification"
-        ).set_index("ID")["QUALIFICATION"]
-    except FileNotFoundError as error:
-        cprint("", lvl="error")  # todo
-        raise
-    except ValueError as error:
-        cprint("", lvl="error")  # todo
-        raise
-    except KeyError as error:
-        cprint("", lvl="error")  # todo
-    else:
-        return qualif
+    return _get_mapping(
+        clinical_data_path, sheet="Qualification", column="QUALIFICATION"
+    )
+
+
+def _padding_source_id(source_id: Union[str, int]) -> str:
+    if len(str(source_id)) > 3:
+        log_and_raise(
+            f"The source id {source_id} has more than 3 digits while IXI"
+            f"source ids are expected to be between 1 and 3 digits.",
+            ValueError,
+        )
+    return f"IXI{'0'* (3 - len(str(source_id))) + str(source_id)}"
 
 
 def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
@@ -147,31 +160,38 @@ def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
     A dataframe containing the clinical data, with some modifications: padded study id and added session id.
 
     """
-    # todo :try/except/first time clinical data was used
-    clinical_data = pd.read_excel(clinical_data_path / "IXI.xls")
-    clinical_data.drop("DATE_AVAILABLE", axis=1, inplace=True)
-    clinical_data["SEX_ID (1=m, 2=f)"] = clinical_data["SEX_ID (1=m, 2=f)"].map(
-        _get_sex_mapping()
-    )
-    clinical_data["ETHNIC_ID"] = clinical_data["ETHNIC_ID"].map(
-        _get_ethnic_mapping(clinical_data_path)
-    )
-    clinical_data["MARITAL_ID"] = clinical_data["MARITAL_ID"].map(
-        _get_marital_mapping(clinical_data_path)
-    )
-    clinical_data["OCCUPATION_ID"] = clinical_data["OCCUPATION_ID"].map(
-        _get_occupation_mapping(clinical_data_path)
-    )
-    clinical_data["QUALIFICATION_ID"] = clinical_data["QUALIFICATION_ID"].map(
-        _get_qualification_mapping(clinical_data_path)
-    )
-    clinical_data["IXI_ID"] = clinical_data.IXI_ID.apply(
-        lambda x: "IXI" + "0" * (3 - len(str(x))) + str(x)
-    )
-    clinical_data.rename(lambda x: _rename_clinical_data(x), axis=1, inplace=True)
-    clinical_data.fillna("n/a", inplace=True)
-    clinical_data["session_id"] = "ses-M000"
-    return clinical_data
+    try:
+        clinical_data = pd.read_excel(clinical_data_path / "IXI.xls")
+    except FileNotFoundError:
+        log_and_raise(
+            f"Clinical data stored in the folder {clinical_data_path} is expected to be an excel file named 'IXI.xls'. "
+            f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+            FileNotFoundError,
+        )
+    else:
+        clinical_data.drop("DATE_AVAILABLE", axis=1, inplace=True)
+        clinical_data["SEX_ID (1=m, 2=f)"] = clinical_data["SEX_ID (1=m, 2=f)"].map(
+            _get_sex_mapping()
+        )
+        clinical_data["ETHNIC_ID"] = clinical_data["ETHNIC_ID"].map(
+            _get_ethnic_mapping(clinical_data_path)
+        )
+        clinical_data["MARITAL_ID"] = clinical_data["MARITAL_ID"].map(
+            _get_marital_mapping(clinical_data_path)
+        )
+        clinical_data["OCCUPATION_ID"] = clinical_data["OCCUPATION_ID"].map(
+            _get_occupation_mapping(clinical_data_path)
+        )
+        clinical_data["QUALIFICATION_ID"] = clinical_data["QUALIFICATION_ID"].map(
+            _get_qualification_mapping(clinical_data_path)
+        )
+        clinical_data["IXI_ID"] = clinical_data.IXI_ID.apply(
+            lambda x: _padding_source_id(x)
+        )
+        clinical_data.rename(lambda x: _rename_clinical_data(x), axis=1, inplace=True)
+        clinical_data.fillna("n/a", inplace=True)
+        clinical_data["session_id"] = "ses-M000"
+        return clinical_data
 
 
 def _rename_modalities(input_mod: str) -> str:
