@@ -1,6 +1,7 @@
 import json
 import re
 import shutil
+from multiprocessing.managers import Value
 from pathlib import Path
 from typing import List, Optional
 
@@ -14,7 +15,7 @@ from clinica.utils.stream import cprint
 __all__ = [
     "read_clinical_data",
     "define_participants",
-    "write_ixi_subject_data",
+    "write_subject_data",
     "write_sessions",
     "write_scans",
     "write_participants",
@@ -59,22 +60,18 @@ def define_participants(
     """
 
     list_from_data = _get_subjects_list_from_data(data_directory)
-    if subjs_list_path:
-        cprint("Loading a subjects list provided by the user...")
-        list_from_file = _get_subjects_list_from_file(subjs_list_path)
-        list_filtered = [
-            subject for subject in list_from_file if subject in list_from_data
-        ]
-        invalid_subjects = list(set(list_from_file) - set(list_filtered))
-        # todo : file must be tested
-        if invalid_subjects:
-            cprint(
-                f"The subjects : {' , '.join(invalid_subjects)} do not have any associated data inside the directory {data_directory}"
-                f" and can not be converted."
-            )
-        return list_filtered
-    else:
+    if subjs_list_path is None:
         return list_from_data
+    cprint("Loading a subjects list provided by the user...")
+    list_from_file = _get_subjects_list_from_file(subjs_list_path)
+    list_filtered = [subject for subject in list_from_file if subject in list_from_data]
+    invalid_subjects = list(set(list_from_file) - set(list_filtered))
+    if invalid_subjects:
+        cprint(
+            f"The subjects : {' , '.join(invalid_subjects)} do not have any associated data inside the directory {data_directory}"
+            f" and can not be converted."
+        )
+    return list_filtered
 
 
 def _rename_clinical_data(column: str) -> str:
@@ -103,7 +100,6 @@ def _get_sex_mapping() -> pd.DataFrame:
 
 
 def _get_ethnic_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    # todo : how to test this efficiently ? (feels more like non regression than unit testing maybe)
     return pd.read_excel(
         clinical_data_path / "IXI.xls", sheet_name="Ethnicity"
     ).set_index("ID")["ETHNIC"]
@@ -122,9 +118,20 @@ def _get_occupation_mapping(clinical_data_path: Path) -> pd.DataFrame:
 
 
 def _get_qualification_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    return pd.read_excel(
-        clinical_data_path / "IXI.xls", sheet_name="Qualification"
-    ).set_index("ID")["QUALIFICATION"]
+    try:
+        qualif = pd.read_excel(
+            clinical_data_path / "IXI.xls", sheet_name="Qualification"
+        ).set_index("ID")["QUALIFICATION"]
+    except FileNotFoundError as error:
+        cprint("", lvl="error")  # todo
+        raise
+    except ValueError as error:
+        cprint("", lvl="error")  # todo
+        raise
+    except KeyError as error:
+        cprint("", lvl="error")  # todo
+    else:
+        return qualif
 
 
 def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
@@ -140,6 +147,7 @@ def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
     A dataframe containing the clinical data, with some modifications: padded study id and added session id.
 
     """
+    # todo :try/except/first time clinical data was used
     clinical_data = pd.read_excel(clinical_data_path / "IXI.xls")
     clinical_data.drop("DATE_AVAILABLE", axis=1, inplace=True)
     clinical_data["SEX_ID (1=m, 2=f)"] = clinical_data["SEX_ID (1=m, 2=f)"].map(
@@ -228,9 +236,7 @@ def _get_bids_filename_from_image_data(img: pd.Series) -> str:
     return f"{img['participant_id']}_{img['session']}_{img['modality']}"
 
 
-def write_ixi_subject_data(
-    bids_dir: Path, participant: str, path_to_dataset: Path
-) -> None:
+def write_subject_data(bids_dir: Path, participant: str, path_to_dataset: Path) -> None:
     """
     Writes the data of the IXI subject in the BIDS directory following BIDS specifications.
 
@@ -245,7 +251,7 @@ def write_ixi_subject_data(
     _write_subject_dti_if_exists(bids_dir, participant, path_to_dataset)
 
 
-def _write_ixi_json_image(writing_path: Path, hospital: str, field: str) -> None:
+def _write_json_image(writing_path: Path, hospital: str, field: str) -> None:
     """
     Writes a json associated to one IXI image.
 
@@ -277,7 +283,7 @@ def _write_subject_no_dti(subject_df: pd.DataFrame, bids_path: Path) -> None:
         data_path = bids_path / row["participant_id"] / row["session"] / "anat"
         data_path.mkdir(parents=True, exist_ok=True)
         shutil.copy2(row["img_path"], f"{data_path}/{filename}.nii.gz")
-        _write_ixi_json_image(
+        _write_json_image(
             (data_path / filename).with_suffix(".json"), row["hospital"], row["field"]
         )
 
@@ -295,7 +301,7 @@ def _write_subject_dti_if_exists(
         filename = Path(f"{bids_id}_ses-M000_dwi")
         dti_to_save.to_filename(data_path / filename.with_suffix(".nii.gz"))
         hospital = dti_paths[0].name.split("-")[1]
-        _write_ixi_json_image(
+        _write_json_image(
             data_path / filename.with_suffix(".json"),
             hospital,
             _define_magnetic_field(hospital),
@@ -334,7 +340,7 @@ def write_scans(bids_dir: Path, participant: str) -> None:
         }
     )
     to_write.to_csv(
-        bids_dir / bids_id / f"ses-M000/{bids_id}_ses-M000_scans.tsv", sep="\t"
+        bids_dir / bids_id / "ses-M000" / f"{bids_id}_ses-M000_scans.tsv", sep="\t"
     )
 
 

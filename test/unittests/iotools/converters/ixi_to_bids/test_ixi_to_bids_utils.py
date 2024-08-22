@@ -6,7 +6,11 @@ import pytest
 from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     _define_magnetic_field,
     _get_bids_filename_from_image_data,
+    _get_ethnic_mapping,
     _get_img_data,
+    _get_marital_mapping,
+    _get_occupation_mapping,
+    _get_qualification_mapping,
     _get_subjects_list_from_data,
     _get_subjects_list_from_file,
     _rename_clinical_data,
@@ -16,7 +20,7 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
 
 
 def test_get_subjects_list_from_data(tmp_path):
-    for filename in ["IXI1", "IXI123", "IXIaaa", "foo"]:
+    for filename in ("IXI1", "IXI123", "IXIaaa", "foo"):
         Path(f"{tmp_path}/{filename}_T1w.nii.gz").touch()
     assert _get_subjects_list_from_data(tmp_path) == ["IXI123"]
 
@@ -47,7 +51,7 @@ def test_rename_ixi_modalities_error(input_str):
 def test_get_subjects_list_from_file(tmp_path):
     with open(tmp_path / "subjects.txt", "w") as f:
         f.write("IXI123\nIXI001")
-    assert _get_subjects_list_from_file(Path(tmp_path / "subjects.txt")) == [
+    assert _get_subjects_list_from_file(tmp_path / "subjects.txt") == [
         "IXI123",
         "IXI001",
     ]
@@ -88,10 +92,10 @@ def test_define_magnetic_field_success(input_str, expected):
     assert _define_magnetic_field(input_str) == expected
 
 
-def test_define_magnetic_field_success():
+def test_define_magnetic_field_error():
     with pytest.raises(
         ValueError,
-        match=f"The hospital {'foo'} was not recognized.",
+        match=f"The hospital foo was not recognized.",
     ):
         _define_magnetic_field("foo")
 
@@ -126,3 +130,79 @@ def test_get_image_data(tmp_path):
 def test_get_bids_filename_from_image_data(tmp_path):
     input = image_dataframe_builder(tmp_path)
     assert _get_bids_filename_from_image_data(input.loc[0]) == "sub-IXI001_ses-M000_T1w"
+
+
+def test_get_marital_mapping_success(tmp_path):
+    marital = pd.DataFrame(
+        {
+            "ID": [1, 2, 4, 3, 5],
+            "MARITAL": [
+                "Single",
+                "Married",
+                "Divorced or Separated",
+                "Cohabiting",
+                "Widowed",
+            ],
+        }
+    )
+    marital.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Marital Status")
+    assert _get_marital_mapping(tmp_path).equals(marital.set_index("ID")["MARITAL"])
+
+
+def test_get_ethnic_mapping_success(tmp_path):
+    ethnic = pd.DataFrame(
+        {
+            "ID": [1, 4, 3, 5, 6],
+            "ETHNIC": [
+                "White",
+                "Black or BlackBritish",
+                "Asian or Asian British",
+                "Chinese",
+                "Other",
+            ],
+        }
+    )
+    ethnic.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Ethnicity")
+    assert _get_ethnic_mapping(tmp_path).equals(ethnic.set_index("ID")["ETHNIC"])
+
+
+# todo : write error for key not in excel i guess
+
+
+def test_get_occupation_mapping_success(tmp_path):
+    occup = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4, 5, 6, 7, 8],
+            "OCCUPATION": [
+                "Go out to full time employment",
+                "Go out to part time employment (<25hrs)",
+                "Study at college or university",
+                "Full-time housework",
+                "Retired",
+                "Unemployed",
+                "Work for pay at home",
+                "Other",
+            ],
+        }
+    )
+    occup.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Occupation")
+    assert _get_occupation_mapping(tmp_path).equals(occup.set_index("ID")["OCCUPATION"])
+
+
+def test_get_qualification_mapping_success(tmp_path):
+    qualif = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4, 5],
+            "QUALIFICATION": [
+                "No qualifications",
+                "O - levels, GCSEs, or CSEs",
+                "A - levels",
+                "Further education e.g.City & Guilds / NVQs",
+                "University or Polytechnic degree",
+            ],
+        }
+    )
+    qualif.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Qualification")
+    assert _get_qualification_mapping(tmp_path).equals(
+        qualif.set_index("ID")["QUALIFICATION"]
+    )
