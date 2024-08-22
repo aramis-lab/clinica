@@ -64,7 +64,7 @@ def use_spm_standalone_if_available() -> bool:
     """
     from clinica.utils.stream import cprint
 
-    from .check_dependency import get_mcr_home, get_spm_standalone_home
+    from .check_dependency import get_mcr_home, get_spm_home, get_spm_standalone_home
     from .exceptions import ClinicaMissingDependencyError
 
     try:
@@ -87,6 +87,10 @@ def use_spm_standalone_if_available() -> bool:
             "to set the following environment variables: "
             "$SPMSTANDALONE_HOME, and $MCR_HOME"
         )
+        import nipype.interfaces.matlab as mlab
+
+        cprint(f"Setting SPM path to {get_spm_home()}", lvl="info")
+        mlab.MatlabCommand.set_default_paths(f"{get_spm_home()}")
         return False
 
 
