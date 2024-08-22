@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD007 MD046 -->
 # `adni-to-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
 
-!!! quote "Description adapted from the [ADNI website](http://adni.loni.usc.edu)"
+???+ note "Description adapted from the [ADNI website](http://adni.loni.usc.edu)"
     ADNI is a global research effort that actively supports the investigation and development of treatments that slow or stop the progression of Alzheimer's disease (AD).
     This multisite, longitudinal study assesses clinical, imaging, genetic and biospecimen biomarkers through the process of normal aging to mild cognitive impairment (MCI) and AD dementia.
     With established, standardized methods for imaging and biomarker collection and analysis, ADNI facilitates a way for scientists to conduct cohesive research and share compatible data with other researchers around the world.

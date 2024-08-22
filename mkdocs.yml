@@ -60,17 +60,17 @@ markdown_extensions:
 # Page tree
 nav:
   - Home: index.md
-  - Installation:
-    - Installation: Installation.md
-    - Third-party: Third-party.md
   - Clinica environment:
     - What is Clinica?: WhatIsClinica.md
-    - Interacting with Clinica: InteractingWithClinica.md
     - BIDS: BIDS.md
     - CAPS:
       - Introduction: CAPS/Introduction.md
       - Specifications: CAPS/Specifications.md
     - Atlases: Atlases.md
+  - Using the software:
+    - Installation: Installation.md
+    - Third-party: Third-party.md
+    - Interacting with Clinica: InteractingWithClinica.md
   - Pipelines:
     - Anatomical MRI:
       - T1 Linear processing: Pipelines/T1_Linear.md
