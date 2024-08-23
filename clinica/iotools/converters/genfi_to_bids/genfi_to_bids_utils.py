@@ -423,7 +423,7 @@ def _compute_baseline_date(df: DataFrame) -> DataFrame:
         .groupby(["source_id", "source_ses_id"])
         .min()
     )
-    df_2 = df[["source_id", "acq_date"]].groupby(["source_id"]).min()
+    df_2 = df[["source_id", "acq_date"]].groupby("source_id").min()
     return df_1.join(df_2.rename(columns={"acq_date": "baseline"}))
 
 
@@ -826,7 +826,7 @@ def write_bids(
         with fs.open(to / "participants.tsv", "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
-    for participant_id, data_frame in sessions.groupby(["participant_id"]):
+    for participant_id, data_frame in sessions.groupby("participant_id"):
         sessions = data_frame.droplevel(
             ["participant_id", "modality", "bids_filename", "run_num"]
         ).drop_duplicates()
