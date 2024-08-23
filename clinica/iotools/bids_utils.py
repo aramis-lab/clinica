@@ -299,8 +299,6 @@ class IXIBIDSSubjectID(BIDSSubjectID):
     """Implementation for IXI of the BIDSSubjectIDClass, allowing to go from the source id IXI###
     to a bids id sub-IXI### and reciprocally."""
 
-    # todo : add test part
-
     def validate(self, value: str) -> str:
         if re.fullmatch(r"sub-IXI\d{3}", value):
             return value

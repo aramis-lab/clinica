@@ -1,4 +1,5 @@
 import json
+from asyncore import write
 from pathlib import Path
 
 import pandas as pd
@@ -19,8 +20,12 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     _rename_modalities,
     _write_json_image,
     _write_subject_no_dti,
+    check_modalities,
     define_participants,
     read_clinical_data,
+    write_participants,
+    write_scans,
+    write_sessions,
 )
 
 
@@ -383,3 +388,67 @@ def test_identify_expected_modalities(tmp_path):
     (tmp_path / "IXIdti").mkdir()
     (tmp_path / "foo-bar").mkdir()
     assert _identify_expected_modalities(tmp_path) == ["DTI"]
+
+
+def test_write_scans_not_empty(tmp_path):
+    (tmp_path / "sub-IXI001" / "ses-M000" / "anat").mkdir(parents=True)
+    (tmp_path / "sub-IXI001" / "ses-M000" / "anat" / "sub-IXI001_T1w.nii.gz").touch()
+    write_scans(tmp_path, participant="IXI001")
+    tsv_files = list(tmp_path.rglob("*.tsv"))
+    file_path = tmp_path / "sub-IXI001" / "ses-M000" / "sub-IXI001_ses-M000_scans.tsv"
+    assert len(tsv_files) == 1 and tsv_files[0] == file_path
+    assert pd.read_csv(file_path, sep="\t").equals(
+        pd.DataFrame({"filename": ["anat/sub-IXI001_T1w.nii.gz"]})
+    )
+
+
+def formatted_clinical_data_builder() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "source_id": ["IXI001"],
+            "session_id": ["ses-M000"],
+            "acq_time": ["2024-08-23"],
+            "sex": ["female"],
+            "ethnicity": ["Other"],
+            "marital status": ["Single"],
+            "occupation": ["Other"],
+            "qualification": ["A - levels"],
+            "date of birth": ["2000-01-01"],
+            "weight": [80],
+        }
+    )
+
+
+def test_write_sessions(tmp_path):
+    clinical = formatted_clinical_data_builder()
+    (tmp_path / "sub-IXI001").mkdir()
+    write_sessions(tmp_path, clinical, "IXI001")
+    tsv_files = list(tmp_path.rglob("*.tsv"))
+    file_path = tmp_path / "sub-IXI001" / "sub-IXI001_sessions.tsv"
+    assert len(tsv_files) == 1 and tsv_files[0] == file_path
+    assert pd.read_csv(file_path, sep="\t").equals(
+        clinical[["source_id", "session_id", "acq_time"]]
+    )
+
+
+def test_write_participants(tmp_path):
+    clinical = formatted_clinical_data_builder()
+    expected = clinical.copy()
+    write_participants(tmp_path, clinical, ["IXI001", "IXI002"])
+    expected.drop(["acq_time", "session_id"], axis=1, inplace=True)
+    expected = pd.concat(
+        [expected, pd.DataFrame({col: ["n/a"] for col in expected.columns})]
+    ).reset_index(drop=True)
+    expected.loc[1, "source_id"] = "IXI002"
+    tsv_files = list(tmp_path.rglob("*.tsv"))
+    assert len(tsv_files) == 1 and tsv_files[0] == tmp_path / "participants.tsv"
+    breakpoint()
+    # fixme
+    assert pd.read_csv(tmp_path / "participants.tsv", sep="\t", na_filter=False).equals(
+        expected
+    )
+
+
+def test_check_modalities():
+    # todo
+    pass

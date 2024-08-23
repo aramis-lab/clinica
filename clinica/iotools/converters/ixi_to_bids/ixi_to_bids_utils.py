@@ -339,25 +339,25 @@ def write_scans(bids_dir: Path, participant: str) -> None:
     bids_dir : Path to the output BIDS directory.
     participant : Current converted subject study id (str).
     """
-    # todo : test
     bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(participant)
     to_write = pd.DataFrame(
         {
             "filename": [
                 f"{path.parent.name}/{path.name}"
-                for path in (bids_dir / bids_id).rglob("*.nii.gz")
+                for path in (bids_dir / bids_id).rglob(f"{bids_id}*.nii.gz")
             ]
         }
     )
     to_write.to_csv(
-        bids_dir / bids_id / "ses-M000" / f"{bids_id}_ses-M000_scans.tsv", sep="\t"
+        bids_dir / bids_id / "ses-M000" / f"{bids_id}_ses-M000_scans.tsv",
+        sep="\t",
+        index=False,
     )
 
 
 def write_sessions(
     bids_dir: Path, clinical_data: pd.DataFrame, participant: str
 ) -> None:
-    # todo : test
     """
     Writes the sessions.tsv for a IXI subject.
 
@@ -369,15 +369,14 @@ def write_sessions(
     """
     line = clinical_data[clinical_data["source_id"] == participant]
     bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(participant)
-    line[["session_id", "acq_time"]].to_csv(
-        bids_dir / bids_id / f"{bids_id}_sessions.tsv", sep="\t"
+    line[["source_id", "session_id", "acq_time"]].to_csv(
+        bids_dir / bids_id / f"{bids_id}_sessions.tsv", sep="\t", index=False
     )
 
 
 def write_participants(
     bids_dir: Path, clinical_data: pd.DataFrame, participants: List[str]
 ) -> None:
-    # todo : test
     """
     Write the participants.tsv at the root of the BIDS directory.
 
@@ -396,10 +395,13 @@ def write_participants(
     for participant in participants:
         if participant not in clinical_data.index:
             clinical_data.loc[participant] = "n/a"
-    bids_dir.mkdir()
+            clinical_data.loc[participant, "source_id"] = participant
+    if not bids_dir.exists():
+        bids_dir.mkdir()
     clinical_data.loc[participants].drop(["acq_time", "session_id"], axis=1).to_csv(
-        bids_dir / "participants.tsv", sep="\t"
+        bids_dir / "participants.tsv", sep="\t", index=False, na_rep="n/a"
     )
+    clinical_data.reset_index(drop=True, inplace=True)
 
 
 def _identify_expected_modalities(data_directory: Path) -> List[str]:
