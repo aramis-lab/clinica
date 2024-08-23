@@ -1,22 +1,40 @@
 """This module contains SPM utilities."""
 import warnings
+from enum import Enum
 from os import PathLike
 from pathlib import Path
 
 __all__ = [
-    "INDEX_TISSUE_MAP",
+    "SPMTissue",
+    "get_spm_tissue_from_index",
     "get_tpm",
     "use_spm_standalone_if_available",
 ]
 
-INDEX_TISSUE_MAP = {
-    1: "graymatter",
-    2: "whitematter",
-    3: "csf",
-    4: "bone",
-    5: "softtissue",
-    6: "background",
-}
+
+class SPMTissue(str, Enum):
+    GRAY_MATTER = "graymatter"
+    WHITE_MATTER = "whitematter"
+    CSF = "csf"
+    BONE = "bone"
+    SOFT_TISSUE = "softtissue"
+    BACKGROUND = "background"
+
+
+def get_spm_tissue_from_index(index: int) -> SPMTissue:
+    if index == 1:
+        return SPMTissue.GRAY_MATTER
+    if index == 2:
+        return SPMTissue.WHITE_MATTER
+    if index == 3:
+        return SPMTissue.CSF
+    if index == 4:
+        return SPMTissue.BONE
+    if index == 5:
+        return SPMTissue.SOFT_TISSUE
+    if index == 6:
+        return SPMTissue.BACKGROUND
+    raise ValueError(f"No SPM tissue matching index {index}.")
 
 
 def get_tpm() -> PathLike:
