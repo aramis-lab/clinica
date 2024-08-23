@@ -1,6 +1,7 @@
 import json
 import re
 import shutil
+from enum import Enum
 from multiprocessing.managers import Value
 from pathlib import Path
 from typing import List, Optional, Union
@@ -72,7 +73,7 @@ def define_participants(
     return list_filtered
 
 
-def _rename_clinical_data(column: str) -> str:
+def _rename_clinical_data_to_bids(column: str) -> str:
     if column == "SEX_ID (1=m, 2=f)":
         return "sex"
     if column == "ETHNIC_ID":
@@ -97,11 +98,18 @@ def _get_sex_mapping() -> pd.DataFrame:
     return pd.DataFrame({"SEX": ["male", "female"]}, index=[1, 2])["SEX"]
 
 
-def _get_mapping(clinical_data_path: Path, sheet: str, column: str) -> pd.DataFrame:
+class Clinical_Data_Mapping(str, Enum):
+    ETHNIC = "Ethnicity"
+    MARITAL = "Marital Status"
+    OCCUPATION = "Occupation"
+    QUALIFICATION = "Qualification"
+
+
+def _get_mapping(clinical_data_path: Path, map: Clinical_Data_Mapping) -> pd.DataFrame:
     try:
-        df = pd.read_excel(clinical_data_path / "IXI.xls", sheet_name=sheet).set_index(
-            "ID"
-        )[column]
+        df = pd.read_excel(
+            clinical_data_path / "IXI.xls", sheet_name=map.value
+        ).set_index("ID")[map.name]
     except FileNotFoundError:
         log_and_raise(
             f"Clinical data stored in the folder {clinical_data_path} is expected to be an excel file named 'IXI.xls'. "
@@ -110,31 +118,13 @@ def _get_mapping(clinical_data_path: Path, sheet: str, column: str) -> pd.DataFr
         )
     except (ValueError, KeyError):
         log_and_raise(
-            f"{sheet} mapping is expected to be contained in a sheet called {sheet} coming from the clinical data excel. "
-            f"Possibilities are supposed to be described in a {column} column associated to keys from the 'ID' column. "
+            f"{map.value} mapping is expected to be contained in a sheet called {map.value} coming from the clinical data excel. "
+            f"Possibilities are supposed to be described in a {map.name} column associated to keys from the 'ID' column. "
             f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
             ValueError,
         )
     else:
         return df
-
-
-def _get_ethnic_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    return _get_mapping(clinical_data_path, sheet="Ethnicity", column="ETHNIC")
-
-
-def _get_marital_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    return _get_mapping(clinical_data_path, sheet="Marital Status", column="MARITAL")
-
-
-def _get_occupation_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    return _get_mapping(clinical_data_path, sheet="Occupation", column="OCCUPATION")
-
-
-def _get_qualification_mapping(clinical_data_path: Path) -> pd.DataFrame:
-    return _get_mapping(
-        clinical_data_path, sheet="Qualification", column="QUALIFICATION"
-    )
 
 
 def _padding_source_id(source_id: Union[str, int]) -> str:
@@ -173,22 +163,20 @@ def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
         clinical_data["SEX_ID (1=m, 2=f)"] = clinical_data["SEX_ID (1=m, 2=f)"].map(
             _get_sex_mapping()
         )
-        clinical_data["ETHNIC_ID"] = clinical_data["ETHNIC_ID"].map(
-            _get_ethnic_mapping(clinical_data_path)
-        )
-        clinical_data["MARITAL_ID"] = clinical_data["MARITAL_ID"].map(
-            _get_marital_mapping(clinical_data_path)
-        )
-        clinical_data["OCCUPATION_ID"] = clinical_data["OCCUPATION_ID"].map(
-            _get_occupation_mapping(clinical_data_path)
-        )
-        clinical_data["QUALIFICATION_ID"] = clinical_data["QUALIFICATION_ID"].map(
-            _get_qualification_mapping(clinical_data_path)
-        )
+
+        for column in ("ETHNIC_ID", "MARITAL_ID", "OCCUPATION_ID", "QUALIFICATION_ID"):
+            clinical_data[column] = clinical_data[column].map(
+                _get_mapping(
+                    clinical_data_path, Clinical_Data_Mapping[column.replace("_ID", "")]
+                )
+            )
+
         clinical_data["IXI_ID"] = clinical_data.IXI_ID.apply(
             lambda x: _padding_source_id(x)
         )
-        clinical_data.rename(lambda x: _rename_clinical_data(x), axis=1, inplace=True)
+        clinical_data.rename(
+            lambda x: _rename_clinical_data_to_bids(x), axis=1, inplace=True
+        )
         clinical_data.fillna("n/a", inplace=True)
         clinical_data["session_id"] = "ses-M000"
         return clinical_data

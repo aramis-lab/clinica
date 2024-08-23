@@ -5,20 +5,17 @@ import pandas as pd
 import pytest
 
 from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
+    Clinical_Data_Mapping,
     _define_magnetic_field,
     _find_subject_dti_data,
     _get_bids_filename_from_image_data,
-    _get_ethnic_mapping,
     _get_img_data,
     _get_mapping,
-    _get_marital_mapping,
-    _get_occupation_mapping,
-    _get_qualification_mapping,
     _get_subjects_list_from_data,
     _get_subjects_list_from_file,
     _identify_expected_modalities,
     _padding_source_id,
-    _rename_clinical_data,
+    _rename_clinical_data_to_bids,
     _rename_modalities,
     _write_json_image,
     _write_subject_no_dti,
@@ -95,8 +92,8 @@ def test_rename_ixi_modalities_error(input_str):
         ("FOO", "foo"),
     ],
 )
-def test_rename_clinical_data(input_str, expected):
-    assert _rename_clinical_data(input_str) == expected
+def test_rename_clinical_data_to_bids(input_str, expected):
+    assert _rename_clinical_data_to_bids(input_str) == expected
 
 
 @pytest.mark.parametrize(
@@ -203,7 +200,9 @@ def test_get_marital_mapping_success(tmp_path):
         }
     )
     marital.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Marital Status")
-    assert _get_marital_mapping(tmp_path).equals(marital.set_index("ID")["MARITAL"])
+    assert _get_mapping(tmp_path, Clinical_Data_Mapping.MARITAL).equals(
+        marital.set_index("ID")["MARITAL"]
+    )
 
 
 def test_get_ethnic_mapping_success(tmp_path):
@@ -220,10 +219,9 @@ def test_get_ethnic_mapping_success(tmp_path):
         }
     )
     ethnic.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Ethnicity")
-    assert _get_ethnic_mapping(tmp_path).equals(ethnic.set_index("ID")["ETHNIC"])
-
-
-# todo : write error for key not in excel i guess
+    assert _get_mapping(tmp_path, Clinical_Data_Mapping.ETHNIC).equals(
+        ethnic.set_index("ID")["ETHNIC"]
+    )
 
 
 def test_get_occupation_mapping_success(tmp_path):
@@ -243,7 +241,9 @@ def test_get_occupation_mapping_success(tmp_path):
         }
     )
     occup.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Occupation")
-    assert _get_occupation_mapping(tmp_path).equals(occup.set_index("ID")["OCCUPATION"])
+    assert _get_mapping(tmp_path, Clinical_Data_Mapping.OCCUPATION).equals(
+        occup.set_index("ID")["OCCUPATION"]
+    )
 
 
 def test_get_qualification_mapping_success(tmp_path):
@@ -260,7 +260,7 @@ def test_get_qualification_mapping_success(tmp_path):
         }
     )
     qualif.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Qualification")
-    assert _get_qualification_mapping(tmp_path).equals(
+    assert _get_mapping(tmp_path, Clinical_Data_Mapping.QUALIFICATION).equals(
         qualif.set_index("ID")["QUALIFICATION"]
     )
 
@@ -285,7 +285,7 @@ def test_get_mapping_fileerror(tmp_path):
         match=f"Clinical data stored in the folder {tmp_path} is expected to be an excel file named 'IXI.xls'. "
         f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
     ):
-        _get_mapping(tmp_path, "Qualification", "QUALIFICATION")
+        _get_mapping(tmp_path, Clinical_Data_Mapping.QUALIFICATION)
 
 
 def test_get_mapping_keyerror(tmp_path):
@@ -309,7 +309,7 @@ def test_get_mapping_keyerror(tmp_path):
         f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
         f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
     ):
-        _get_mapping(tmp_path, "Qualification", "QUALIFICATION")
+        _get_mapping(tmp_path, Clinical_Data_Mapping.QUALIFICATION)
 
 
 def test_get_mapping_valueerror(tmp_path):
@@ -333,7 +333,7 @@ def test_get_mapping_valueerror(tmp_path):
         f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
         f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
     ):
-        _get_mapping(tmp_path, "Qualification", "QUALIFICATION")
+        _get_mapping(tmp_path, Clinical_Data_Mapping.QUALIFICATION)
 
 
 def test_write_json_image(tmp_path):
