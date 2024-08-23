@@ -1,8 +1,12 @@
 import os
 import re
+from test.unittests.iotools.converters.adni_to_bids.modality_converters.test_adni_fmap import (
+    expected,
+)
 from unittest import mock
 
 import pytest
+from packaging.version import Version
 
 from clinica.utils.check_dependency import (
     SoftwareEnvironmentVariable,
@@ -220,3 +224,31 @@ def test_check_spm_alone(tmp_path, mocker):
     mocker.patch("clinica.utils.check_dependency.is_binary_present", return_value=True)
     with mock.patch.dict(os.environ, {"SPM_HOME": str(tmp_path)}):
         _check_spm()
+
+
+@pytest.mark.parametrize(
+    "version,expected",
+    [
+        ("2024a", Version("24.1")),
+        ("2023b", Version("23.2")),
+        ("2023a", Version("9.14")),
+        ("2022b", Version("9.13")),
+        ("2022a", Version("9.12")),
+        ("2021b", Version("9.11")),
+        ("2021a", Version("9.10")),
+        ("2020b", Version("9.9")),
+        ("2020a", Version("9.8")),
+        ("2019b", Version("9.7")),
+        ("2019a", Version("9.6")),
+        ("2018b", Version("9.5")),
+        ("2018a", Version("9.4")),
+        ("2017b", Version("9.3")),
+        ("2017a", Version("9.2")),
+        ("2016b", Version("9.1")),
+        ("2016a", Version("9.0.1")),
+    ],
+)
+def test_map_mcr_release_to_version_number(version, expected):
+    from clinica.utils.check_dependency import _map_mcr_release_to_version_number
+
+    assert _map_mcr_release_to_version_number(version) == expected
