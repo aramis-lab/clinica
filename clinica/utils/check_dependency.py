@@ -449,25 +449,34 @@ def _get_software_version_from_command_line(
     executable: str, prepend_with_v: bool = True, two_dashes: bool = True
 ) -> Version:
     import re
-    import subprocess
 
-    from clinica.utils.stream import cprint
+    from clinica.utils.stream import log_and_raise
 
-    raw_output = subprocess.run(
-        [executable, f"-{'-' if two_dashes else ''}version"], stdout=subprocess.PIPE
-    ).stdout.decode("utf-8")
     try:
         return Version(
-            re.search(rf"{'v' if prepend_with_v else ''}\s*([\d.]+)", raw_output)
+            re.search(
+                rf"{'v' if prepend_with_v else ''}\s*([\d.]+)",
+                _run_command(executable, two_dashes=two_dashes),
+            )
             .group(1)
             .strip(".")
         )
     except Exception as e:
-        cprint(msg=str(e), lvl="error")
+        log_and_raise(str(e), RuntimeError)
+
+
+def _run_command(executable: str, two_dashes: bool = True) -> str:
+    import subprocess
+
+    return subprocess.run(
+        [executable, f"-{'-' if two_dashes else ''}version"], stdout=subprocess.PIPE
+    ).stdout.decode("utf-8")
 
 
 _get_ants_version = partial(
-    _get_software_version_from_command_line, executable="antsRegistration"
+    _get_software_version_from_command_line,
+    executable="antsRegistration",
+    prepend_with_v=False,
 )
 _get_dcm2niix_version = partial(
     _get_software_version_from_command_line, executable="dcm2niix"
@@ -487,17 +496,26 @@ _get_convert3d_version = partial(
 
 def _get_matlab_version() -> Version:
     import re
+
+    from clinica.utils.stream import log_and_raise
+
+    try:
+        return Version(
+            re.search(r"\(\s*([\d.]+)\)", _get_matlab_start_session_message())
+            .group(1)
+            .strip(".")
+        )
+    except Exception as e:
+        log_and_raise(str(e), RuntimeError)
+
+
+def _get_matlab_start_session_message() -> str:
+    """Start Matlab, get the message displayed at the beginning of the session, and quit."""
     import subprocess
 
-    from clinica.utils.stream import cprint
-
-    raw_output = subprocess.run(
+    return subprocess.run(
         ["matlab", "-r", "quit", "-nojvm"], stdout=subprocess.PIPE
     ).stdout.decode("utf-8")
-    try:
-        return Version(re.search(r"\(\s*([\d.]+)\)", raw_output).group(1).strip("."))
-    except Exception as e:
-        cprint(msg=str(e), lvl="error")
 
 
 def _get_mcr_version() -> Version:

@@ -307,6 +307,104 @@ def test_get_fsl_version(mocker):
     assert get_software_version("fsl") == Version("3.2.1")
 
 
+def ants_version_mock(executable: str, two_dashes: bool = True) -> str:
+    return "ANTs Version: 2.5.0.post7-g46ab4e7\nCompiled: Sep  8 2023 14:35:39"
+
+
+def test_get_ants_version():
+    from clinica.utils.check_dependency import get_software_version
+
+    with mock.patch(
+        "clinica.utils.check_dependency._run_command", wraps=ants_version_mock
+    ) as ants_mock:
+        assert get_software_version("ants") == Version("2.5.0")
+        ants_mock.assert_called_once_with("antsRegistration", two_dashes=True)
+
+
+def dcm2niix_version_mock(executable: str, two_dashes: bool = True) -> str:
+    return (
+        "Compression will be faster with 'pigz' installed http://macappstore.org/pigz/\n"
+        "Chris Rorden's dcm2niiX version v1.0.20240202  Clang15.0.0 ARM (64-bit MacOS)\n"
+        "v1.0.20240202"
+    )
+
+
+def test_get_dcm2niix_version():
+    from clinica.utils.check_dependency import get_software_version
+
+    with mock.patch(
+        "clinica.utils.check_dependency._run_command", wraps=dcm2niix_version_mock
+    ) as dcm2niix_mock:
+        assert get_software_version("dcm2niix") == Version("1.0.20240202")
+        dcm2niix_mock.assert_called_once_with("dcm2niix", two_dashes=True)
+
+
+def mrtrix_version_mock(executable: str, two_dashes: bool = True) -> str:
+    return (
+        "== mrtransform 3.0.3 ==\n"
+        "64 bit release version with nogui, built Oct 22 2021, using Eigen 3.3.7\n"
+        "Author(s): J-Donald Tournier (jdtournier@gmail.com) and David Raffelt "
+        "(david.raffelt@florey.edu.au) and Max Pietsch (maximilian.pietsch@kcl.ac.uk)\n"
+        "Copyright (c) 2008-2021 the MRtrix3 contributors.\n\n"
+        "This Source Code Form is subject to the terms of the Mozilla Public\n"
+        "License, v. 2.0. If a copy of the MPL was not distributed with this\n"
+        "file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n"
+        "Covered Software is provided under this License on an 'as is'\n"
+        "basis, without warranty of any kind, either expressed, implied, or\n"
+        "statutory, including, without limitation, warranties that the\n"
+        "Covered Software is free of defects, merchantable, fit for a\n"
+        "particular purpose or non-infringing.\n"
+        "See the Mozilla Public License v. 2.0 for more details.\n\n"
+        "For more details, see http://www.mrtrix.org/."
+    )
+
+
+def test_get_mrtrix_version():
+    from clinica.utils.check_dependency import get_software_version
+
+    with mock.patch(
+        "clinica.utils.check_dependency._run_command", wraps=mrtrix_version_mock
+    ) as mrtrix_mock:
+        assert get_software_version("mrtrix") == Version("3.0.3")
+        mrtrix_mock.assert_called_once_with("mrtransform", two_dashes=True)
+
+
+def convert3d_version_mock(executable: str, two_dashes: bool = True) -> str:
+    return "Version 1.0.0"
+
+
+def test_get_convert3d_version():
+    from clinica.utils.check_dependency import get_software_version
+
+    with mock.patch(
+        "clinica.utils.check_dependency._run_command", wraps=convert3d_version_mock
+    ) as c3d_mock:
+        assert get_software_version("convert3d") == Version("1.0.0")
+        c3d_mock.assert_called_once_with("c3d", two_dashes=False)
+
+
+def matlab_version_mock() -> str:
+    return (
+        "\x1b[?1h\x1b=\n                                                                                          "
+        "< M A T L A B (R) >\n                                                                                "
+        "Copyright 1984-2017 The MathWorks, Inc.\n"
+        "                                                                                 R2017b (9.3.0.713579) 64-bit (glnxa64)\n"
+        "September 14, 2017\n\n \nFor online documentation, see http://www.mathworks.com/support\n"
+        "For product information, visit www.mathworks.com.\n \n\x1b[?1l\x1b>"
+    )
+
+
+def test_get_matlab_version():
+    from clinica.utils.check_dependency import get_software_version
+
+    with mock.patch(
+        "clinica.utils.check_dependency._get_matlab_start_session_message",
+        wraps=matlab_version_mock,
+    ) as matlab_mock:
+        assert get_software_version("matlab") == Version("9.3.0.713579")
+        matlab_mock.assert_called_once()
+
+
 mcr_version_test_suite = [
     ("2024a", Version("24.1")),
     ("2023b", Version("23.2")),
@@ -348,3 +446,34 @@ def test_get_mcr_version(tmp_path, version, expected):
         },
     ):
         assert get_software_version("MCR") == expected
+
+
+def test_get_petpvc_version():
+    from clinica.utils.check_dependency import get_software_version
+
+    assert get_software_version("petpvc") == Version("0.0.0")
+
+
+def test_check_software_version(mocker):
+    from clinica.utils.check_dependency import SeverityLevel, _check_software_version
+
+    mocker.patch(
+        "clinica.utils.check_dependency.get_software_version",
+        return_value=Version("1.0.1"),
+    )
+    mocker.patch(
+        "clinica.utils.check_dependency.get_software_min_version_supported",
+        return_value=Version("1.1.0"),
+    )
+
+    with pytest.raises(
+        ClinicaMissingDependencyError,
+        match="ants version is 1.0.1. We strongly recommend to have ants >= 1.1.0.",
+    ):
+        _check_software_version(ThirdPartySoftware.ANTS, SeverityLevel.ERROR)
+
+    with pytest.warns(
+        UserWarning,
+        match="ants version is 1.0.1. We strongly recommend to have ants >= 1.1.0.",
+    ):
+        _check_software_version(ThirdPartySoftware.ANTS, SeverityLevel.WARNING)
