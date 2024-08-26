@@ -356,6 +356,24 @@ _check_fsl = functools.partial(
 def get_software_min_version_supported(
     software: Union[str, ThirdPartySoftware],
 ) -> Version:
+    """Return the minimum version of the provided third-party software required by Clinica.
+
+    Parameters
+    ----------
+    software : str or ThirdPartySoftware
+        One of the third-party software of Clinica.
+
+    Returns
+    -------
+    Version :
+        The minimum version number of the software required by Clinica.
+
+    Examples
+    --------
+    >>> from clinica.utils.check_dependency import get_software_min_version_supported
+    >>> get_software_min_version_supported("ants")
+    <Version('2.5.0')>
+    """
     software = ThirdPartySoftware(software)
     if software == ThirdPartySoftware.FREESURFER:
         return Version("6.0.0")
@@ -382,6 +400,30 @@ def get_software_min_version_supported(
 
 
 def get_software_version(software: Union[str, ThirdPartySoftware]) -> Version:
+    """Return the version of the provided third-party software.
+
+    Parameters
+    ----------
+    software : str or ThirdPartySoftware
+        One of the third-party software of Clinica.
+
+    Returns
+    -------
+    Version :
+        The version number of the installed software.
+
+    Notes
+    -----
+    This function assumes the software are correctly installed.
+    It doesn't run any check and directly try to infer the version number by calling an
+    underlying executable.
+
+    Examples
+    --------
+    >>> from clinica.utils.check_dependency import get_software_version
+    >>> get_software_version("freesurfer")
+    <Version('7.2.0')>
+    """
     software = ThirdPartySoftware(software)
     if software == ThirdPartySoftware.FREESURFER:
         return _get_freesurfer_version()
@@ -527,6 +569,13 @@ def _get_mcr_version() -> Version:
 
 
 def _map_mcr_release_to_version_number(mcr_release: str) -> Version:
+    """Map the MCR release to a proper version number.
+
+    If the found version is older than the minimum supported version, we don't bother mapping it
+    to its version number, 0.0.0 is returned.
+    If the release is >= 2024a, we use the fact that Matlab is now using proper calendar versioning.
+    If the release is in-between, we use a hardcoded mapping.
+    """
     mcr_versions_mapping = {
         "2023b": Version("23.2"),
         "2023a": Version("9.14"),
@@ -556,6 +605,7 @@ class SeverityLevel(str, Enum):
 
 
 def _check_software_version(software: ThirdPartySoftware, severity: SeverityLevel):
+    """Check that the installed version of the software is >= to the minimum version required by Clinica."""
     from clinica.utils.stream import cprint
 
     if (installed_version := get_software_version(software)) < (
@@ -576,6 +626,19 @@ def _check_software_version(software: ThirdPartySoftware, severity: SeverityLeve
 
 
 def check_software(software: Union[str, ThirdPartySoftware]):
+    """Run some checks on the given software.
+
+    These checks are of two types:
+        - checks to verify that the executable is present in the PATH.
+          Also check configurations made through environment variables.
+        - checks on the installed version. The installed version has to
+          be more recent than a minimum version supported by Clinica.
+
+    Parameters
+    ----------
+    software : str or ThirdPartySoftware
+        One of the third-party software of Clinica.
+    """
     software = ThirdPartySoftware(software)
     if software == ThirdPartySoftware.ANTS:
         _check_ants()
