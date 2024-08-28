@@ -6,6 +6,7 @@ from test.unittests.iotools.converters.adni_to_bids.modality_converters.test_adn
 from unittest import mock
 
 import pytest
+from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
 from clinica.utils.check_dependency import (
@@ -468,12 +469,37 @@ def test_check_software_version(mocker):
 
     with pytest.raises(
         ClinicaMissingDependencyError,
-        match="ants version is 1.0.1. We strongly recommend to have ants >= 1.1.0.",
+        match="ants version is 1.0.1. We strongly recommend to have ants >=1.1.0.",
     ):
         _check_software_version(ThirdPartySoftware.ANTS, SeverityLevel.ERROR)
+    _check_software_version(
+        ThirdPartySoftware.ANTS, SeverityLevel.ERROR, SpecifierSet("==1.0.1")
+    )
+    _check_software_version(
+        ThirdPartySoftware.ANTS, SeverityLevel.ERROR, SpecifierSet("<2")
+    )
+    _check_software_version(
+        ThirdPartySoftware.ANTS, SeverityLevel.ERROR, SpecifierSet(">1.0")
+    )
+
+    with pytest.raises(
+        ClinicaMissingDependencyError,
+        match="ants version is 1.0.1. We strongly recommend to have ants ==1.2.3.",
+    ):
+        _check_software_version(
+            ThirdPartySoftware.ANTS, SeverityLevel.ERROR, SpecifierSet("==1.2.3")
+        )
 
     with pytest.warns(
         UserWarning,
-        match="ants version is 1.0.1. We strongly recommend to have ants >= 1.1.0.",
+        match="ants version is 1.0.1. We strongly recommend to have ants >=1.1.0.",
     ):
         _check_software_version(ThirdPartySoftware.ANTS, SeverityLevel.WARNING)
+
+    with pytest.warns(
+        UserWarning,
+        match="ants version is 1.0.1. We strongly recommend to have ants <=0.23.",
+    ):
+        _check_software_version(
+            ThirdPartySoftware.ANTS, SeverityLevel.WARNING, SpecifierSet("<=0.23")
+        )

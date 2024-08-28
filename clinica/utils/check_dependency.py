@@ -9,6 +9,7 @@ from functools import partial
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
+from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
 from clinica.utils.exceptions import ClinicaMissingDependencyError
@@ -604,15 +605,20 @@ class SeverityLevel(str, Enum):
     WARNING = "warning"
 
 
-def _check_software_version(software: ThirdPartySoftware, severity: SeverityLevel):
-    """Check that the installed version of the software is >= to the minimum version required by Clinica."""
+def _check_software_version(
+    software: ThirdPartySoftware,
+    severity: Optional[SeverityLevel] = None,
+    specifier: Optional[SpecifierSet] = None,
+):
+    """Check that the installed version of the software is satisfying the constraints imposed by Clinica."""
     from clinica.utils.stream import cprint
 
-    if (installed_version := get_software_version(software)) < (
-        recommended_version := get_software_min_version_supported(software)
-    ):
+    severity = severity or SeverityLevel.WARNING
+    if specifier is None:
+        specifier = SpecifierSet(f">={get_software_min_version_supported(software)}")
+    if (installed_version := get_software_version(software)) not in specifier:
         (log_and_raise if severity == SeverityLevel.ERROR else log_and_warn)(
-            f"{software.value} version is {installed_version}. We strongly recommend to have {software.value} >= {recommended_version}.",
+            f"{software.value} version is {installed_version}. We strongly recommend to have {software.value} {specifier}.",
             (
                 ClinicaMissingDependencyError
                 if severity == SeverityLevel.ERROR
@@ -620,54 +626,75 @@ def _check_software_version(software: ThirdPartySoftware, severity: SeverityLeve
             ),
         )
     cprint(
-        f"Found installation of {software.value} with version {installed_version}.",
+        f"Found installation of {software.value} with version {installed_version}, satisfying {specifier}.",
         lvl="info",
     )
 
 
-def check_software(software: Union[str, ThirdPartySoftware]):
+def check_software(
+    software: Union[str, ThirdPartySoftware],
+    specifier: Optional[Union[str, SpecifierSet]] = None,
+):
     """Run some checks on the given software.
 
     These checks are of two types:
         - checks to verify that the executable is present in the PATH.
           Also check configurations made through environment variables.
         - checks on the installed version. The installed version has to
-          be more recent than a minimum version supported by Clinica.
+          satisfy the constraints imposed by Clinica.
 
     Parameters
     ----------
     software : str or ThirdPartySoftware
         One of the third-party software of Clinica.
+
+    specifier : str or SpecifierSet, optional
+        A version constraint for the software (i.e. '>=2.0.1', '<1.0.0', or '==0.10.9').
+        If not provided, the specifier will be '>= minimum_version' where 'minimum_version'
+        is the minimum version number of the software required by Clinica.
+
+    Raises
+    ------
+    ClinicaMissingDependencyError :
+        If an issue is found with the installation of the provided software.
+        In some cases where the software is correctly installed, but the version is considered
+        a bit old compared to the one recommended by Clinica, a warning could be given instead of
+        an error. In this situation, it is strongly recommended to upgrade the dependency even
+        though Clinica does not raise.
+
+    Examples
+    --------
+    >>> from clinica.utils.check_dependency import check_software
+    >>> check_software("dcm2niix")
+    >>> check_software("ants", ">=2.5")
     """
     software = ThirdPartySoftware(software)
+    if specifier:
+        specifier = SpecifierSet(specifier)
+    severity = SeverityLevel.WARNING
     if software == ThirdPartySoftware.ANTS:
         _check_ants()
-        _check_software_version(software, SeverityLevel.WARNING)
     if software == ThirdPartySoftware.FSL:
         _check_fsl()
-        _check_software_version(software, SeverityLevel.ERROR)
+        severity = SeverityLevel.ERROR
     if software == ThirdPartySoftware.FREESURFER:
         _check_freesurfer()
-        _check_software_version(software, SeverityLevel.ERROR)
+        severity = SeverityLevel.ERROR
     if (
         software == ThirdPartySoftware.SPM
         or software == ThirdPartySoftware.SPMSTANDALONE
         or software == ThirdPartySoftware.MCR
     ):
         _check_spm()
-        _check_software_version(software, SeverityLevel.ERROR)
+        severity = SeverityLevel.ERROR
     if software == ThirdPartySoftware.MATLAB:
         _check_matlab()
-        _check_software_version(software, SeverityLevel.WARNING)
     if software == ThirdPartySoftware.DCM2NIIX:
         _check_dcm2niix()
-        _check_software_version(software, SeverityLevel.WARNING)
     if software == ThirdPartySoftware.PETPVC:
         _check_petpvc()
-        _check_software_version(software, SeverityLevel.WARNING)
     if software == ThirdPartySoftware.MRTRIX:
         _check_mrtrix()
-        _check_software_version(software, SeverityLevel.WARNING)
     if software == ThirdPartySoftware.CONVERT3D:
         _check_convert3d()
-        _check_software_version(software, SeverityLevel.WARNING)
+    _check_software_version(software, severity, specifier)
