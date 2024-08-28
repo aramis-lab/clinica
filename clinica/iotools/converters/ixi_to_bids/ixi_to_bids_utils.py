@@ -2,7 +2,6 @@ import json
 import re
 import shutil
 from enum import Enum
-from multiprocessing.managers import Value
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -98,16 +97,16 @@ def _get_sex_mapping() -> pd.DataFrame:
     return pd.DataFrame({"SEX": ["male", "female"]}, index=[1, 2])["SEX"]
 
 
-class Clinical_Data_Mapping(str, Enum):
+class ClinicalDataMapping(str, Enum):
     ETHNIC = "Ethnicity"
     MARITAL = "Marital Status"
     OCCUPATION = "Occupation"
     QUALIFICATION = "Qualification"
 
 
-def _get_mapping(clinical_data_path: Path, map: Clinical_Data_Mapping) -> pd.DataFrame:
+def _get_mapping(clinical_data_path: Path, map: ClinicalDataMapping) -> pd.DataFrame:
     try:
-        df = pd.read_excel(
+        return pd.read_excel(
             clinical_data_path / "IXI.xls", sheet_name=map.value
         ).set_index("ID")[map.name]
     except FileNotFoundError:
@@ -123,8 +122,6 @@ def _get_mapping(clinical_data_path: Path, map: Clinical_Data_Mapping) -> pd.Dat
             f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
             ValueError,
         )
-    else:
-        return df
 
 
 def _padding_source_id(source_id: Union[str, int]) -> str:
@@ -167,7 +164,7 @@ def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
         for column in ("ETHNIC_ID", "MARITAL_ID", "OCCUPATION_ID", "QUALIFICATION_ID"):
             clinical_data[column] = clinical_data[column].map(
                 _get_mapping(
-                    clinical_data_path, Clinical_Data_Mapping[column.replace("_ID", "")]
+                    clinical_data_path, ClinicalDataMapping[column.replace("_ID", "")]
                 )
             )
 
@@ -300,7 +297,6 @@ def _write_subject_dti_if_exists(
     bids_path: Path, subject: str, data_directory: Path
 ) -> None:
     """Processes DTI data if found for a subject"""
-    # todo : test, should use mocking ? (for _merge_dti)
     if dti_paths := _find_subject_dti_data(data_directory, subject):
         cprint(f"Converting modality DTI for subject {subject}.", lvl="debug")
         dti_to_save = _merge_dti(dti_paths)
@@ -326,7 +322,7 @@ def _find_subject_dti_data(data_directory: Path, subject: str) -> List[Path]:
     ]
 
 
-def _merge_dti(dti_images: List[Path]):
+def _merge_dti(dti_images: List[Path]) -> nib.Nifti1Image:
     return concat_imgs([nib.load(img) for img in dti_images])
 
 

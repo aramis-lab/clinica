@@ -2,11 +2,13 @@ import json
 from asyncore import write
 from pathlib import Path
 
+import nibabel
+import numpy as np
 import pandas as pd
 import pytest
 
 from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
-    Clinical_Data_Mapping,
+    ClinicalDataMapping,
     _define_magnetic_field,
     _find_subject_dti_data,
     _get_bids_filename_from_image_data,
@@ -15,10 +17,12 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     _get_subjects_list_from_data,
     _get_subjects_list_from_file,
     _identify_expected_modalities,
+    _merge_dti,
     _padding_source_id,
     _rename_clinical_data_to_bids,
     _rename_modalities,
     _write_json_image,
+    _write_subject_dti_if_exists,
     _write_subject_no_dti,
     check_modalities,
     define_participants,
@@ -134,9 +138,63 @@ def test_read_clinical_data_error(tmp_path, input):
         read_clinical_data(tmp_path)
 
 
-def test_read_clinical_data_success(tmp_path):
-    # todo : ?
+def test_read_clinical_data_success():
+    # todo
     pass
+
+
+def test_merge_dti(tmp_path):
+    im1 = nibabel.Nifti1Image(
+        np.empty(shape=(256, 156, 256), dtype=np.float64), np.eye(4)
+    )
+    im1.to_filename(tmp_path / "im1.nii.gz")
+    im2 = nibabel.Nifti1Image(
+        np.empty(shape=(256, 156, 256), dtype=np.float64), np.eye(4)
+    )
+    im2.to_filename(tmp_path / "im2.nii.gz")
+    merged = _merge_dti([tmp_path / "im1.nii.gz", tmp_path / "im2.nii.gz"])
+    assert type(merged) == nibabel.Nifti1Image
+    assert merged.shape[-1] == 2
+
+
+def test_write_dti_success(tmp_path):
+    im1 = nibabel.Nifti1Image(
+        np.empty(shape=(256, 156, 256), dtype=np.float64), np.eye(4)
+    )
+    im1.to_filename(tmp_path / "IXI001-Guys-1234-DTI-00.nii.gz")
+    im2 = nibabel.Nifti1Image(
+        np.empty(shape=(256, 156, 256), dtype=np.float64), np.eye(4)
+    )
+    im2.to_filename(tmp_path / "IXI001-Guys-1234-DTI-01.nii.gz")
+
+    _write_subject_dti_if_exists(
+        bids_path=tmp_path, subject="IXI001", data_directory=tmp_path
+    )
+    dti_image = list(tmp_path.rglob(pattern="*dwi.nii.gz"))
+    dti_json = list(tmp_path.rglob(pattern="*dwi.json"))
+
+    assert (
+        len(dti_image) == 1
+        and dti_image[0]
+        == tmp_path
+        / "sub-IXI001"
+        / "ses-M000"
+        / "dwi"
+        / "sub-IXI001_ses-M000_dwi.nii.gz"
+    )
+    assert (
+        len(dti_json) == 1
+        and dti_json[0]
+        == tmp_path / "sub-IXI001" / "ses-M000" / "dwi" / "sub-IXI001_ses-M000_dwi.json"
+    )
+
+
+def test_write_dti_empty(tmp_path):
+    _write_subject_dti_if_exists(
+        bids_path=tmp_path, subject="IXI001", data_directory=tmp_path
+    )
+    dti_files = list(tmp_path.rglob(pattern="*dwi.nii.gz"))
+    assert not dti_files
 
 
 @pytest.mark.parametrize(
@@ -205,7 +263,7 @@ def test_get_marital_mapping_success(tmp_path):
         }
     )
     marital.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Marital Status")
-    assert _get_mapping(tmp_path, Clinical_Data_Mapping.MARITAL).equals(
+    assert _get_mapping(tmp_path, ClinicalDataMapping.MARITAL).equals(
         marital.set_index("ID")["MARITAL"]
     )
 
@@ -224,7 +282,7 @@ def test_get_ethnic_mapping_success(tmp_path):
         }
     )
     ethnic.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Ethnicity")
-    assert _get_mapping(tmp_path, Clinical_Data_Mapping.ETHNIC).equals(
+    assert _get_mapping(tmp_path, ClinicalDataMapping.ETHNIC).equals(
         ethnic.set_index("ID")["ETHNIC"]
     )
 
@@ -246,7 +304,7 @@ def test_get_occupation_mapping_success(tmp_path):
         }
     )
     occup.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Occupation")
-    assert _get_mapping(tmp_path, Clinical_Data_Mapping.OCCUPATION).equals(
+    assert _get_mapping(tmp_path, ClinicalDataMapping.OCCUPATION).equals(
         occup.set_index("ID")["OCCUPATION"]
     )
 
@@ -265,7 +323,7 @@ def test_get_qualification_mapping_success(tmp_path):
         }
     )
     qualif.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Qualification")
-    assert _get_mapping(tmp_path, Clinical_Data_Mapping.QUALIFICATION).equals(
+    assert _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION).equals(
         qualif.set_index("ID")["QUALIFICATION"]
     )
 
@@ -290,7 +348,7 @@ def test_get_mapping_fileerror(tmp_path):
         match=f"Clinical data stored in the folder {tmp_path} is expected to be an excel file named 'IXI.xls'. "
         f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
     ):
-        _get_mapping(tmp_path, Clinical_Data_Mapping.QUALIFICATION)
+        _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION)
 
 
 def test_get_mapping_keyerror(tmp_path):
@@ -314,7 +372,7 @@ def test_get_mapping_keyerror(tmp_path):
         f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
         f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
     ):
-        _get_mapping(tmp_path, Clinical_Data_Mapping.QUALIFICATION)
+        _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION)
 
 
 def test_get_mapping_valueerror(tmp_path):
@@ -338,7 +396,7 @@ def test_get_mapping_valueerror(tmp_path):
         f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
         f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
     ):
-        _get_mapping(tmp_path, Clinical_Data_Mapping.QUALIFICATION)
+        _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION)
 
 
 def test_write_json_image(tmp_path):
@@ -414,7 +472,7 @@ def formatted_clinical_data_builder() -> pd.DataFrame:
             "occupation": ["Other"],
             "qualification": ["A - levels"],
             "date of birth": ["2000-01-01"],
-            "weight": [80],
+            "weight": ["80"],
         }
     )
 
@@ -442,8 +500,6 @@ def test_write_participants(tmp_path):
     expected.loc[1, "source_id"] = "IXI002"
     tsv_files = list(tmp_path.rglob("*.tsv"))
     assert len(tsv_files) == 1 and tsv_files[0] == tmp_path / "participants.tsv"
-    breakpoint()
-    # fixme
     assert pd.read_csv(tmp_path / "participants.tsv", sep="\t", na_filter=False).equals(
         expected
     )
