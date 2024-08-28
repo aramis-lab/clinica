@@ -252,7 +252,7 @@ def _write_bids(
         )
     ).rename(columns=str.lower)
 
-    for participant_id, dataframe in sessions.groupby(["participant_id"]):
+    for participant_id, dataframe in sessions.groupby("participant_id"):
         sessions_file = rawdata / participant_id / f"{participant_id}_sessions.tsv"
         dataframe = dataframe.droplevel("participant_id")
         with fsspec.open(sessions_file, mode="wb") as f:
