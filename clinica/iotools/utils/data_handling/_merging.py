@@ -1,9 +1,15 @@
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+
+from clinica.iotools.utils.pipeline_handling import (
+    PipelineNameForMetricExtraction,
+    pipeline_metric_extractor_factory,
+)
+from clinica.utils.stream import cprint, log_and_raise, log_and_warn
 
 __all__ = ["create_merge_file"]
 
@@ -46,11 +52,13 @@ def create_merge_file(
     """
     from os import path
 
-    from clinica.utils.stream import cprint
-
     bids_dir = Path(bids_dir)
     caps_dir = _validate_caps_dir(caps_dir)
     out_path = _validate_output_tsv_path(out_tsv)
+    if pipelines:
+        pipelines = [
+            PipelineNameForMetricExtraction(pipeline) for pipeline in pipelines
+        ]
     participants_df, sub_ses_df = _get_participants_and_subjects_sessions_df(
         bids_dir, tsv_file, ignore_sessions_files
     )
@@ -74,7 +82,9 @@ def _validate_caps_dir(caps_dir: Optional[PathLike] = None) -> Optional[Path]:
     if caps_dir is not None:
         caps_dir = Path(caps_dir)
         if not caps_dir.is_dir():
-            raise IOError("The path to the CAPS directory is wrong")
+            log_and_raise(
+                f"The path to the CAPS directory ({caps_dir}) is wrong", IOError
+            )
     return caps_dir
 
 
@@ -85,23 +95,21 @@ def _validate_output_tsv_path(out_path: PathLike) -> Path:
     If provided path is a directory, this function will return
     a file named 'merge.tsv' within this directory.
     """
-    import warnings
-
-    from clinica.utils.stream import cprint
-
     out_path = Path(out_path).resolve()
     if out_path.is_dir():
         out_path = out_path / "merge.tsv"
     elif "." not in out_path.name:
         out_path = out_path.with_suffix(".tsv")
     elif out_path.suffix != ".tsv":
-        raise TypeError("Output path extension must be tsv.")
-    if out_path.exists():
-        msg = (
-            f"Path to TSV file {out_path} already exists. The file will be overwritten."
+        log_and_raise(
+            f"Output path extension must be tsv. {out_path} was provided instead.",
+            TypeError,
         )
-        warnings.warn(msg)
-        cprint(msg=msg, lvl="warning")
+    if out_path.exists():
+        log_and_warn(
+            f"Path to TSV file {out_path} already exists. The file will be overwritten.",
+            UserWarning,
+        )
     out_dir = out_path.parent
     if not out_dir.exists():
         out_dir.mkdir(parents=True)
@@ -114,7 +122,6 @@ def _get_participants_and_subjects_sessions_df(
     ignore_sessions_files: bool = False,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     from clinica.utils.participant import get_subject_session_list
-    from clinica.utils.stream import cprint
 
     index_cols = ["participant_id", "session_id"]
     subjects, sessions = get_subject_session_list(
@@ -135,9 +142,9 @@ def _get_participants_and_subjects_sessions_df(
     try:
         sub_ses_df.set_index(index_cols, inplace=True, verify_integrity=True)
     except ValueError:
-        cprint(
+        log_and_warn(
             "Found duplicate subject/session pair. Keeping first occurrence.",
-            lvl="warning",
+            UserWarning,
         )
         sub_ses_df = sub_ses_df.drop_duplicates(subset=index_cols)
         sub_ses_df.set_index(index_cols, inplace=True)
@@ -181,14 +188,12 @@ def _get_row_data_from_participant_df(
     This part of the full row only contains information found in the participants dataframe.
     In order to make a full row entry, it will be concatenated with information from the sessions and scans.
     """
-    from clinica.utils.stream import cprint
-
     row_subject_data = participants_df[participants_df["participant_id"] == subject]
     row_subject_data.reset_index(inplace=True, drop=True)
     if len(row_subject_data) == 0:
-        cprint(
-            msg=f"Participant {subject} does not exist in participants.tsv",
-            lvl="warning",
+        log_and_warn(
+            f"Participant {subject} does not exist in participants.tsv",
+            UserWarning,
         )
         row_subject_data = pd.DataFrame([[subject]], columns=["participant_id"])
 
@@ -230,8 +235,9 @@ def _compute_session_rows_for_subject_with_session_files(
         row_session_df = sessions_df[sessions_df.session_id == session]
         row_session_df.reset_index(inplace=True, drop=True)
         if len(row_session_df) == 0:
-            raise ClinicaDatasetError(
-                f"The following sessions are not properly formatted : {sessions_df.loc[0, 'session_id']} / {session}"
+            log_and_raise(
+                f"The following sessions are not properly formatted : {sessions_df.loc[0, 'session_id']} / {session}",
+                ClinicaDatasetError,
             )
         scan_path = bids_dir / subject / session / f"{subject}_{session}_scans.tsv"
         row_scans_df = _get_row_scan_df(scan_path, ignore_scan_files)
@@ -273,15 +279,15 @@ def _get_row_scan_df(scan_path: Path, ignore_scan_files: bool) -> pd.DataFrame:
 def _add_metadata_from_json(json_path: Path, scans_dict: dict, modality: str) -> dict:
     """Add metadata from the provided JSON sidecar file to the scan dictionary."""
     import json
-    import warnings
 
     if json_path.exists():
         try:
             with open(json_path, "r") as f:
                 json_dict = json.load(f)
         except json.JSONDecodeError as e:
-            warnings.warn(
-                f"Couldn't parse the JSON file {json_path}. Ignoring metadata.\nJson error is:\n{e}"
+            log_and_warn(
+                f"Couldn't parse the JSON file {json_path}. Ignoring metadata.\nJson error is:\n{e}",
+                UserWarning,
             )
             json_dict = {}
         for key, value in json_dict.items():
@@ -305,28 +311,24 @@ def _post_process_merge_file_from_bids(merged_df: pd.DataFrame) -> pd.DataFrame:
 def _add_data_to_merge_file_from_caps(
     caps_dir: Path,
     merged_df: pd.DataFrame,
-    pipelines: Optional[List[str]] = None,
+    pipelines: Optional[Iterable[PipelineNameForMetricExtraction]] = None,
     **kwargs,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    from clinica.utils.stream import cprint
-
-    from ..pipeline_handling import (
-        PipelineNameForMetricExtraction,
-        pipeline_metric_extractor_factory,
-    )
-
     merged_summary_df = pd.DataFrame()
     if "group_selection" in kwargs and kwargs["group_selection"] is None:
         kwargs.pop("group_selection")
     pipelines = pipelines or PipelineNameForMetricExtraction
     for pipeline in pipelines:
         metric_extractor = pipeline_metric_extractor_factory(pipeline)
-        cprint(f"Extracting from CAPS pipeline output: {pipeline}...", lvl="info")
+        cprint(f"Extracting from CAPS pipeline output: {pipeline.value}...", lvl="info")
         merged_df, summary_df = metric_extractor(caps_dir, merged_df, **kwargs)
         if summary_df is not None and not summary_df.empty:
             merged_summary_df = pd.concat([merged_summary_df, summary_df])
         if summary_df is None or summary_df.empty:
-            cprint(f"{pipeline} outputs were not found in the CAPS folder.", lvl="info")
+            cprint(
+                f"{pipeline.value} outputs were not found in the CAPS folder.",
+                lvl="info",
+            )
 
     return _post_process_merged_df_from_caps(merged_df, merged_summary_df)
 
@@ -336,9 +338,12 @@ def _post_process_merged_df_from_caps(
     merged_summary_df: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     if len(merged_summary_df) == 0:
-        raise FileNotFoundError(
-            "No outputs were found for any pipeline in the CAPS folder. "
-            "The output only contains BIDS information."
+        log_and_raise(
+            (
+                "No outputs were found for any pipeline in the CAPS folder. "
+                "The output only contains BIDS information."
+            ),
+            FileNotFoundError,
         )
     columns = merged_df.columns.values.tolist()
     merged_summary_df.reset_index(inplace=True, drop=True)

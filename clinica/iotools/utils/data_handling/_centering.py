@@ -14,10 +14,7 @@ __all__ = [
 ]
 
 
-def center_nifti_origin(
-    input_image: PathLike,
-    output_image: PathLike,
-) -> Tuple[PathLike, Optional[str]]:
+def center_nifti_origin(input_image: PathLike, output_image: PathLike) -> PathLike:
     """Put the origin of the coordinate system at the center of the image.
 
     Parameters
@@ -32,48 +29,35 @@ def center_nifti_origin(
     -------
     PathLike :
         The path of the output image created.
-
-    str, optional :
-        The error message if the function failed. None if the function call was successful.
     """
-    from nibabel.filebasedimages import ImageFileError
-
-    error_str = None
-    input_image = Path(input_image)
+    input_image = nib.load(Path(input_image))
     output_image = Path(output_image)
-    try:
-        img = nib.load(input_image)
-    except FileNotFoundError:
-        error_str = f"No such file {input_image}"
-    except ImageFileError:
-        error_str = f"File {input_image} could not be read"
-    except Exception as e:
-        error_str = f"File {input_image} could not be loaded with nibabel: {e}"
+    canonical_image = nib.as_closest_canonical(input_image)
+    header = canonical_image.header
+    new_image = nib.Nifti1Image(
+        canonical_image.get_fdata(caching="unchanged"),
+        affine=_compute_qform(header),
+        header=header,
+    )
+    # Without deleting already-existing file, nib.save causes a severe bug on Linux system
+    if output_image.is_file():
+        output_image.unlink()
+    nib.save(new_image, output_image)
+    if not output_image.is_file():
+        raise RuntimeError(
+            f"NIfTI file created but Clinica could not save it to {output_image}. "
+            "Please check that the output folder has the correct permissions."
+        )
 
-    if not error_str:
-        try:
-            canonical_img = nib.as_closest_canonical(img)
-            hd = canonical_img.header
-            qform = np.zeros((4, 4))
-            for i in range(1, 4):
-                qform[i - 1, i - 1] = hd["pixdim"][i]
-                qform[i - 1, 3] = -1.0 * hd["pixdim"][i] * hd["dim"][i] / 2.0
-            new_img = nib.Nifti1Image(
-                canonical_img.get_fdata(caching="unchanged"), affine=qform, header=hd
-            )
-            # Without deleting already-existing file, nib.save causes a severe bug on Linux system
-            if output_image.is_file():
-                output_image.unlink()
-            nib.save(new_img, output_image)
-            if not output_image.is_file():
-                error_str = (
-                    f"NIfTI file created but Clinica could not save it to {output_image}. "
-                    "Please check that the output folder has the correct permissions."
-                )
-        except Exception as e:
-            error_str = f"File {input_image} could not be processed with nibabel: {e}"
+    return output_image
 
-    return output_image, error_str
+
+def _compute_qform(header: nib.Nifti1Header) -> np.ndarray:
+    qform = np.zeros((4, 4))
+    for i in range(1, 4):
+        qform[i - 1, i - 1] = header["pixdim"][i]
+        qform[i - 1, 3] = -1.0 * header["pixdim"][i] * header["dim"][i] / 2.0
+    return qform
 
 
 def check_volume_location_in_world_coordinate_system(
@@ -329,23 +313,25 @@ def center_all_nifti(
             copy(f, output_dir / f.name)
     nifti_files_filtered: List[Path] = []
     for f in output_dir.glob("**/*.nii*"):
-        if modalities and any(elem.lower() in f.name.lower() for elem in modalities):
+        if modalities is None or any(
+            elem.lower() in f.name.lower() for elem in modalities
+        ):
             nifti_files_filtered.append(f)
     if not center_all_files:
         nifti_files_filtered = [
             file for file in nifti_files_filtered if not _is_centered(file)
         ]
-
-    all_errors: List[str] = []
+    errors: List[str] = []
     for f in nifti_files_filtered:
         cprint(msg=f"Handling file {f}", lvl="debug")
-        _, current_error = center_nifti_origin(f, f)
-        if current_error:
-            all_errors.append(current_error)
-    if len(all_errors) > 0:
+        try:
+            center_nifti_origin(f, f)
+        except Exception as e:
+            errors.append(str(e))
+    if errors:
         raise RuntimeError(
-            f"Clinica encountered {len(all_errors)} error(s) while trying to center all NIfTI images.\n"
-            + "\n".join(all_errors)
+            f"Clinica encountered {len(errors)} error(s) while trying to center all NIfTI images.\n"
+            + "\n".join(errors)
         )
     return nifti_files_filtered
 
