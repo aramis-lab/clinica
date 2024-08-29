@@ -395,7 +395,7 @@ def _get_label_list(
         if "pvc-rbv" in str(atlas_path):
             additional_desc += f"_pvc-rbv"
         return [
-            f"{pipeline}_{group}_{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
+            f"{pipeline.value}_{group}_{atlas_name}{additional_desc}_ROI-{replace_sequence_chars(roi_name)}_intensity"
             for roi_name in atlas_df.label_name.values
         ]
     if pipeline == PipelineNameForMetricExtraction.DWI_DTI:
@@ -434,7 +434,9 @@ def _infer_atlas_name(splitter: str, atlas_path: Path) -> str:
 
 
 def _generate_summary(
-    pipeline_df: pd.DataFrame, pipeline_name: str, ignore_groups: bool = False
+    pipeline_df: pd.DataFrame,
+    pipeline_name: PipelineNameForMetricExtraction,
+    ignore_groups: bool = False,
 ):
     columns = [
         "pipeline_name",
@@ -499,7 +501,7 @@ def _generate_summary(
                         row_df = pd.DataFrame(
                             [
                                 [
-                                    pipeline_name,
+                                    pipeline_name.value,
                                     group_id,
                                     atlas_id,
                                     tracer,
