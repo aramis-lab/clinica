@@ -104,7 +104,7 @@ class ClinicalDataMapping(str, Enum):
     QUALIFICATION = "Qualification"
 
 
-def _get_mapping(clinical_data_path: Path, map: ClinicalDataMapping) -> pd.DataFrame:
+def _get_mapping(clinical_data_path: Path, map: ClinicalDataMapping) -> pd.Series:
     try:
         return pd.read_excel(
             clinical_data_path / "IXI.xls", sheet_name=map.value
@@ -156,7 +156,8 @@ def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
             FileNotFoundError,
         )
     else:
-        clinical_data.drop("DATE_AVAILABLE", axis=1, inplace=True)
+        if "DATE_AVAILABLE" in clinical_data.columns:
+            clinical_data.drop("DATE_AVAILABLE", axis=1, inplace=True)
         clinical_data["SEX_ID (1=m, 2=f)"] = clinical_data["SEX_ID (1=m, 2=f)"].map(
             _get_sex_mapping()
         )
@@ -418,11 +419,10 @@ def check_modalities(data_directory: Path, participants: List[str]) -> None:
     participants : List of the subject ids of all participants
 
     """
-    # todo : test
     expected_modalities = _identify_expected_modalities(data_directory)
-    cprint(
-        f"Modalities : {' , '.join(_rename_modalities(mod) for mod in expected_modalities)} "
-        f"were identified inside {data_directory} for conversion."
+    message = (
+        f"Modalities : {' , '.join(_rename_modalities(mod) for mod in expected_modalities)}"
+        f" were identified inside {data_directory} for conversion.\n"
     )
 
     participants_missing_mod = dict()
@@ -436,10 +436,8 @@ def check_modalities(data_directory: Path, participants: List[str]) -> None:
             participants_missing_mod[participant] = missing_mods
 
     if participants_missing_mod:
-        message = f"Some subjects do not have data for the following modalities :\n"
+        message += f"Some subjects do not have data for the following modalities :\n"
         for sub, mod in participants_missing_mod.items():
             message += f"{sub} : {' , '.join(mod)}\n"
-        cprint(message)
 
-
-# todo : say in docs you should not rename downloaded folders/files, just move them
+    cprint(message)

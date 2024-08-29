@@ -6,6 +6,7 @@ import nibabel
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     ClinicalDataMapping,
@@ -138,9 +139,88 @@ def test_read_clinical_data_error(tmp_path, input):
         read_clinical_data(tmp_path)
 
 
-def test_read_clinical_data_success():
-    # todo
-    pass
+def clinical_data_builder(tmp_path: Path) -> None:
+    marital = pd.DataFrame(
+        {
+            "ID": [1, 2, 4, 3, 5],
+            "MARITAL": [
+                "Single",
+                "Married",
+                "Divorced or Separated",
+                "Cohabiting",
+                "Widowed",
+            ],
+        }
+    )
+
+    ethnic = pd.DataFrame(
+        {
+            "ID": [1, 4, 3, 5, 6],
+            "ETHNIC": [
+                "White",
+                "Black or BlackBritish",
+                "Asian or Asian British",
+                "Chinese",
+                "Other",
+            ],
+        }
+    )
+
+    occup = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4, 5, 6, 7, 8],
+            "OCCUPATION": [
+                "Go out to full time employment",
+                "Go out to part time employment (<25hrs)",
+                "Study at college or university",
+                "Full-time housework",
+                "Retired",
+                "Unemployed",
+                "Work for pay at home",
+                "Other",
+            ],
+        }
+    )
+
+    qualif = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4, 5],
+            "QUALIFICATION": [
+                "No qualifications",
+                "O - levels, GCSEs, or CSEs",
+                "A - levels",
+                "Further education e.g.City & Guilds / NVQs",
+                "University or Polytechnic degree",
+            ],
+        }
+    )
+
+    subject = pd.DataFrame(
+        {
+            "IXI_ID": ["1"],
+            "STUDY_DATE": ["2024-08-23"],
+            "SEX_ID (1=m, 2=f)": [2],
+            "ETHNIC_ID": [6],
+            "MARITAL_ID": [1],
+            "OCCUPATION_ID": [8],
+            "QUALIFICATION_ID": [3],
+            "DOB": ["2000-01-01"],
+            "WEIGHT": [80],
+        }
+    )
+    with pd.ExcelWriter(tmp_path / "IXI.xls") as writer:
+        subject.to_excel(writer, index=False)
+        qualif.to_excel(writer, sheet_name="Qualification", index=False)
+        occup.to_excel(writer, sheet_name="Occupation", index=False)
+        ethnic.to_excel(writer, sheet_name="Ethnicity", index=False)
+        marital.to_excel(writer, sheet_name="Marital Status", index=False)
+
+
+def test_read_clinical_data_success(tmp_path):
+    clinical_data_builder(tmp_path)
+    assert (
+        read_clinical_data(tmp_path).eq(formatted_clinical_data_builder()).all().all()
+    )
 
 
 def test_merge_dti(tmp_path):
@@ -241,7 +321,7 @@ def image_dataframe_builder(tmp_path: Path) -> pd.DataFrame:
 
 def test_get_image_data(tmp_path):
     input = image_dataframe_builder(tmp_path)
-    assert _get_img_data(tmp_path).equals(input)
+    assert assert_frame_equal(_get_img_data(tmp_path), input) is None
 
 
 def test_get_bids_filename_from_image_data(tmp_path):
@@ -263,8 +343,12 @@ def test_get_marital_mapping_success(tmp_path):
         }
     )
     marital.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Marital Status")
-    assert _get_mapping(tmp_path, ClinicalDataMapping.MARITAL).equals(
-        marital.set_index("ID")["MARITAL"]
+    assert (
+        assert_series_equal(
+            _get_mapping(tmp_path, ClinicalDataMapping.MARITAL),
+            marital.set_index("ID")["MARITAL"],
+        )
+        is None
     )
 
 
@@ -282,8 +366,12 @@ def test_get_ethnic_mapping_success(tmp_path):
         }
     )
     ethnic.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Ethnicity")
-    assert _get_mapping(tmp_path, ClinicalDataMapping.ETHNIC).equals(
-        ethnic.set_index("ID")["ETHNIC"]
+    assert (
+        assert_series_equal(
+            _get_mapping(tmp_path, ClinicalDataMapping.ETHNIC),
+            ethnic.set_index("ID")["ETHNIC"],
+        )
+        is None
     )
 
 
@@ -304,8 +392,12 @@ def test_get_occupation_mapping_success(tmp_path):
         }
     )
     occup.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Occupation")
-    assert _get_mapping(tmp_path, ClinicalDataMapping.OCCUPATION).equals(
-        occup.set_index("ID")["OCCUPATION"]
+    assert (
+        assert_series_equal(
+            _get_mapping(tmp_path, ClinicalDataMapping.OCCUPATION),
+            occup.set_index("ID")["OCCUPATION"],
+        )
+        is None
     )
 
 
@@ -323,8 +415,12 @@ def test_get_qualification_mapping_success(tmp_path):
         }
     )
     qualif.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Qualification")
-    assert _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION).equals(
-        qualif.set_index("ID")["QUALIFICATION"]
+    assert (
+        assert_series_equal(
+            _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION),
+            qualif.set_index("ID")["QUALIFICATION"],
+        )
+        is None
     )
 
 
@@ -455,8 +551,12 @@ def test_write_scans_not_empty(tmp_path):
     tsv_files = list(tmp_path.rglob("*.tsv"))
     file_path = tmp_path / "sub-IXI001" / "ses-M000" / "sub-IXI001_ses-M000_scans.tsv"
     assert len(tsv_files) == 1 and tsv_files[0] == file_path
-    assert pd.read_csv(file_path, sep="\t").equals(
-        pd.DataFrame({"filename": ["anat/sub-IXI001_T1w.nii.gz"]})
+    assert (
+        assert_frame_equal(
+            pd.read_csv(file_path, sep="\t"),
+            pd.DataFrame({"filename": ["anat/sub-IXI001_T1w.nii.gz"]}),
+        )
+        is None
     )
 
 
@@ -472,7 +572,7 @@ def formatted_clinical_data_builder() -> pd.DataFrame:
             "occupation": ["Other"],
             "qualification": ["A - levels"],
             "date of birth": ["2000-01-01"],
-            "weight": ["80"],
+            "weight": [80],
         }
     )
 
@@ -484,8 +584,12 @@ def test_write_sessions(tmp_path):
     tsv_files = list(tmp_path.rglob("*.tsv"))
     file_path = tmp_path / "sub-IXI001" / "sub-IXI001_sessions.tsv"
     assert len(tsv_files) == 1 and tsv_files[0] == file_path
-    assert pd.read_csv(file_path, sep="\t").equals(
-        clinical[["source_id", "session_id", "acq_time"]]
+    assert (
+        assert_frame_equal(
+            pd.read_csv(file_path, sep="\t"),
+            clinical[["source_id", "session_id", "acq_time"]],
+        )
+        is None
     )
 
 
@@ -498,13 +602,13 @@ def test_write_participants(tmp_path):
         [expected, pd.DataFrame({col: ["n/a"] for col in expected.columns})]
     ).reset_index(drop=True)
     expected.loc[1, "source_id"] = "IXI002"
+    expected.loc[0, "weight"] = str(expected.loc[0, "weight"])
     tsv_files = list(tmp_path.rglob("*.tsv"))
     assert len(tsv_files) == 1 and tsv_files[0] == tmp_path / "participants.tsv"
-    assert pd.read_csv(tmp_path / "participants.tsv", sep="\t", na_filter=False).equals(
-        expected
+    assert (
+        assert_frame_equal(
+            pd.read_csv(tmp_path / "participants.tsv", sep="\t", na_filter=False),
+            expected,
+        )
+        is None
     )
-
-
-def test_check_modalities():
-    # todo
-    pass
