@@ -431,7 +431,7 @@ mcr_version_test_suite = [
 
 @pytest.mark.parametrize("version,expected", mcr_version_test_suite)
 def test_map_mcr_release_to_version_number(version, expected):
-    from clinica.utils.check_dependency import _map_mcr_release_to_version_number
+    from clinica.utils.check_dependency import _map_mcr_release_to_version_number  # noqa
 
     assert _map_mcr_release_to_version_number(version) == expected
 
@@ -456,7 +456,8 @@ def test_get_petpvc_version():
 
 
 def test_check_software_version(mocker):
-    from clinica.utils.check_dependency import SeverityLevel, _check_software_version
+    from clinica.utils.check_dependency import _check_software_version  # noqa
+    from clinica.utils.stream import LoggingLevel
 
     mocker.patch(
         "clinica.utils.check_dependency.get_software_version",
@@ -471,15 +472,21 @@ def test_check_software_version(mocker):
         ClinicaMissingDependencyError,
         match="ants version is 1.0.1. We strongly recommend to have ants >=1.1.0.",
     ):
-        _check_software_version(ThirdPartySoftware.ANTS, SeverityLevel.ERROR)
+        _check_software_version(ThirdPartySoftware.ANTS, log_level=LoggingLevel.ERROR)
     _check_software_version(
-        ThirdPartySoftware.ANTS, SeverityLevel.ERROR, SpecifierSet("==1.0.1")
+        ThirdPartySoftware.ANTS,
+        log_level=LoggingLevel.ERROR,
+        specifier=SpecifierSet("==1.0.1"),
     )
     _check_software_version(
-        ThirdPartySoftware.ANTS, SeverityLevel.ERROR, SpecifierSet("<2")
+        ThirdPartySoftware.ANTS,
+        log_level=LoggingLevel.ERROR,
+        specifier=SpecifierSet("<2"),
     )
     _check_software_version(
-        ThirdPartySoftware.ANTS, SeverityLevel.ERROR, SpecifierSet(">1.0")
+        ThirdPartySoftware.ANTS,
+        log_level=LoggingLevel.ERROR,
+        specifier=SpecifierSet(">1.0"),
     )
 
     with pytest.raises(
@@ -487,19 +494,23 @@ def test_check_software_version(mocker):
         match="ants version is 1.0.1. We strongly recommend to have ants ==1.2.3.",
     ):
         _check_software_version(
-            ThirdPartySoftware.ANTS, SeverityLevel.ERROR, SpecifierSet("==1.2.3")
+            ThirdPartySoftware.ANTS,
+            log_level=LoggingLevel.ERROR,
+            specifier=SpecifierSet("==1.2.3"),
         )
 
     with pytest.warns(
         UserWarning,
         match="ants version is 1.0.1. We strongly recommend to have ants >=1.1.0.",
     ):
-        _check_software_version(ThirdPartySoftware.ANTS, SeverityLevel.WARNING)
+        _check_software_version(ThirdPartySoftware.ANTS, log_level=LoggingLevel.WARNING)
 
     with pytest.warns(
         UserWarning,
         match="ants version is 1.0.1. We strongly recommend to have ants <=0.23.",
     ):
         _check_software_version(
-            ThirdPartySoftware.ANTS, SeverityLevel.WARNING, SpecifierSet("<=0.23")
+            ThirdPartySoftware.ANTS,
+            log_level=LoggingLevel.WARNING,
+            specifier=SpecifierSet("<=0.23"),
         )

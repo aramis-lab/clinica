@@ -13,7 +13,13 @@ from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
 from clinica.utils.exceptions import ClinicaMissingDependencyError
-from clinica.utils.stream import log_and_raise, log_and_warn
+from clinica.utils.stream import (
+    LoggingLevel,
+    cprint,
+    get_logging_level,
+    log_and_raise,
+    log_and_warn,
+)
 
 __all__ = [
     "ThirdPartySoftware",
@@ -600,28 +606,22 @@ def _map_mcr_release_to_version_number(mcr_release: str) -> Version:
     return mcr_versions_mapping.get(mcr_release, Version("0.0.0"))
 
 
-class SeverityLevel(str, Enum):
-    ERROR = "error"
-    WARNING = "warning"
-
-
 def _check_software_version(
     software: ThirdPartySoftware,
-    severity: Optional[SeverityLevel] = None,
+    *,
+    log_level: Optional[LoggingLevel] = None,
     specifier: Optional[SpecifierSet] = None,
 ):
     """Check that the installed version of the software is satisfying the constraints imposed by Clinica."""
-    from clinica.utils.stream import cprint
-
-    severity = severity or SeverityLevel.WARNING
+    log_level = log_level or LoggingLevel.WARNING
     if specifier is None:
         specifier = SpecifierSet(f">={get_software_min_version_supported(software)}")
     if (installed_version := get_software_version(software)) not in specifier:
-        (log_and_raise if severity == SeverityLevel.ERROR else log_and_warn)(
+        (log_and_raise if log_level >= LoggingLevel.ERROR else log_and_warn)(
             f"{software.value} version is {installed_version}. We strongly recommend to have {software.value} {specifier}.",
             (
                 ClinicaMissingDependencyError
-                if severity == SeverityLevel.ERROR
+                if log_level == LoggingLevel.ERROR
                 else UserWarning
             ),
         )
@@ -633,6 +633,8 @@ def _check_software_version(
 
 def check_software(
     software: Union[str, ThirdPartySoftware],
+    *,
+    log_level: Optional[Union[str, LoggingLevel]] = None,
     specifier: Optional[Union[str, SpecifierSet]] = None,
 ):
     """Run some checks on the given software.
@@ -647,6 +649,13 @@ def check_software(
     ----------
     software : str or ThirdPartySoftware
         One of the third-party software of Clinica.
+
+    log_level : str or LoggingLevel, optional
+        Whether to raise or warn if the version of the installed software does not
+        match the requirement. For specific cases like if FreeSurfer is < 6.0, an
+        error will be raised independently of this parameter because it is impossible
+        that Clinica pipelines could work in these situations.
+        Default is set to warnings.
 
     specifier : str or SpecifierSet, optional
         A version constraint for the software (i.e. '>=2.0.1', '<1.0.0', or '==0.10.9').
@@ -666,27 +675,34 @@ def check_software(
     --------
     >>> from clinica.utils.check_dependency import check_software
     >>> check_software("dcm2niix")
-    >>> check_software("ants", ">=2.5")
+    >>> check_software("matlab", log_level="error")
+    >>> check_software("ants", specifier=">=2.5")
     """
     software = ThirdPartySoftware(software)
     if specifier:
-        specifier = SpecifierSet(specifier)
-    severity = SeverityLevel.WARNING
+        if specifier == "":
+            specifier = None
+        else:
+            specifier = SpecifierSet(specifier)
+    if log_level:
+        log_level = get_logging_level(log_level)
+    else:
+        log_level = LoggingLevel.WARNING
     if software == ThirdPartySoftware.ANTS:
         _check_ants()
     if software == ThirdPartySoftware.FSL:
         _check_fsl()
-        severity = SeverityLevel.ERROR
+        log_level = LoggingLevel.ERROR
     if software == ThirdPartySoftware.FREESURFER:
         _check_freesurfer()
-        severity = SeverityLevel.ERROR
+        log_level = LoggingLevel.ERROR
     if (
         software == ThirdPartySoftware.SPM
         or software == ThirdPartySoftware.SPMSTANDALONE
         or software == ThirdPartySoftware.MCR
     ):
         _check_spm()
-        severity = SeverityLevel.ERROR
+        log_level = LoggingLevel.ERROR
     if software == ThirdPartySoftware.MATLAB:
         _check_matlab()
     if software == ThirdPartySoftware.DCM2NIIX:
@@ -697,4 +713,4 @@ def check_software(
         _check_mrtrix()
     if software == ThirdPartySoftware.CONVERT3D:
         _check_convert3d()
-    _check_software_version(software, severity, specifier)
+    _check_software_version(software, log_level=log_level, specifier=specifier)
