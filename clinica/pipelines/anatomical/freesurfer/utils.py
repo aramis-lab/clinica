@@ -210,7 +210,7 @@ def _generate_tsv_for_parcellation(
                     ]
                 )
             output_filename = (
-                output_dir / f"{prefix}_parcellation-{atlas}_{str(info)}.tsv"
+                output_dir / f"{prefix}_parcellation-{atlas}_{info.value}.tsv"
             )
             stats_df.to_csv(output_filename, sep="\t", index=False, encoding="utf-8")
 

@@ -310,7 +310,7 @@ def test_generate_tsv_for_parcellation(tmp_path, prefix):
     _generate_tsv_for_parcellation(stats_folder, tmp_path, prefix, atlases)
     for atlas in atlases:
         for info_type in (InfoType.VOLUME, InfoType.AREA, InfoType.THICKNESS):
-            tsv_file = tmp_path / f"{prefix}_parcellation-{atlas}_{str(info_type)}.tsv"
+            tsv_file = tmp_path / f"{prefix}_parcellation-{atlas}_{info_type.value}.tsv"
             assert tsv_file.exists()
             df = pd.read_csv(tsv_file, sep="\t")
             assert np.all(df["label_value"].values == 42.0)
