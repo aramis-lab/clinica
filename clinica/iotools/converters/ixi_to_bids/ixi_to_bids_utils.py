@@ -161,13 +161,10 @@ def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
         clinical_data["SEX_ID (1=m, 2=f)"] = clinical_data["SEX_ID (1=m, 2=f)"].map(
             _get_sex_mapping()
         )
-
-        for column in ("ETHNIC_ID", "MARITAL_ID", "OCCUPATION_ID", "QUALIFICATION_ID"):
-            clinical_data[column] = clinical_data[column].map(
-                _get_mapping(
-                    clinical_data_path, ClinicalDataMapping[column.replace("_ID", "")]
-                )
-            )
+        for mapping in ClinicalDataMapping:
+            clinical_data[f"{mapping.name}_ID"] = clinical_data[
+                f"{mapping.name}_ID"
+            ].map(_get_mapping(clinical_data_path, mapping))
 
         clinical_data["IXI_ID"] = clinical_data.IXI_ID.apply(
             lambda x: _padding_source_id(x)
