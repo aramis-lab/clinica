@@ -6,6 +6,8 @@ from typing import List, Optional
 from nipype import config
 
 from clinica.pipelines.engine import Pipeline
+from clinica.utils.check_dependency import ThirdPartySoftware
+from clinica.utils.stream import log_and_warn
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -37,8 +39,22 @@ class AnatLinear(Pipeline):
         use_antspy: bool = False,
         caps_name: Optional[str] = None,
     ):
-        from clinica.utils.stream import cprint
-
+        self.use_antspy = use_antspy
+        if self.use_antspy:
+            if ignore_dependencies:
+                ignore_dependencies.append(ThirdPartySoftware.ANTS)
+            else:
+                ignore_dependencies = [ThirdPartySoftware.ANTS]
+            log_and_warn(
+                (
+                    "The AnatLinear pipeline has been configured to use ANTsPy instead of ANTs.\n"
+                    "This means that no installation of ANTs is required, but the antspyx Python "
+                    "package must be installed in your environment.\nThis functionality has been "
+                    "introduced in Clinica 0.9.0 and is considered experimental.\n"
+                    "Please report any issue or unexpected results to the Clinica developer team."
+                ),
+                UserWarning,
+            )
         super().__init__(
             bids_directory=bids_directory,
             caps_directory=caps_directory,
@@ -50,19 +66,6 @@ class AnatLinear(Pipeline):
             name=name,
             caps_name=caps_name,
         )
-        self.use_antspy = use_antspy
-        if self.use_antspy:
-            self._ignore_dependencies.append("ants")
-            cprint(
-                (
-                    "The AnatLinear pipeline has been configured to use ANTsPy instead of ANTs.\n"
-                    "This means that no installation of ANTs is required, but the antspyx Python "
-                    "package must be installed in your environment.\nThis functionality has been "
-                    "introduced in Clinica 0.9.0 and is considered experimental.\n"
-                    "Please report any issue or unexpected results to the Clinica developer team."
-                ),
-                lvl="warning",
-            )
 
     @staticmethod
     def get_processed_images(
