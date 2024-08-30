@@ -1,6 +1,6 @@
 import json
-from asyncore import write
 from pathlib import Path
+from unittest.mock import patch
 
 import nibabel
 import numpy as np
@@ -612,3 +612,22 @@ def test_write_participants(tmp_path):
         )
         is None
     )
+
+
+@patch("clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils.cprint")
+def test_check_modalities(mock_cprint, tmp_path):
+    (tmp_path / "IXI-DTI").mkdir()
+    (tmp_path / "IXI-DTI" / "IXI001-DTI-00.nii.gz").touch()
+    (tmp_path / "IXI-T1").mkdir()
+    (tmp_path / "IXI-T1" / "IXI001-T1.nii.gz").touch()
+    (tmp_path / "IXI-T1" / "IXI002-T1.nii.gz").touch()
+    (tmp_path / "IXIT1").mkdir()
+
+    message = (
+        f"Modalities : dti , T1w were identified inside {tmp_path} for conversion.\n"
+        f"Some subjects do not have data for the following modalities :\n"
+        f"IXI002 : dti\n"
+    )
+
+    check_modalities(tmp_path, ["IXI001", "IXI002"])
+    mock_cprint.assert_called_once_with(message)

@@ -424,9 +424,7 @@ def check_modalities(data_directory: Path, participants: List[str]) -> None:
         f"Modalities : {' , '.join(_rename_modalities(mod) for mod in expected_modalities)}"
         f" were identified inside {data_directory} for conversion.\n"
     )
-
     participants_missing_mod = dict()
-
     for participant in participants:
         missing_mods = []
         for mod in expected_modalities:
@@ -434,7 +432,6 @@ def check_modalities(data_directory: Path, participants: List[str]) -> None:
                 missing_mods += [_rename_modalities(mod)]
         if missing_mods:
             participants_missing_mod[participant] = missing_mods
-
     if participants_missing_mod:
         message += f"Some subjects do not have data for the following modalities :\n"
         for sub, mod in participants_missing_mod.items():
