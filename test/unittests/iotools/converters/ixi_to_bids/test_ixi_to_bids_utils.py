@@ -36,7 +36,7 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
 
 def test_get_subjects_list_from_data(tmp_path):
     for filename in ("IXI1", "IXI123", "IXIaaa", "foo"):
-        Path(f"{tmp_path}/{filename}_T1w.nii.gz").touch()
+        (tmp_path / f"{filename}_T1w.nii.gz").touch()
     assert _get_subjects_list_from_data(tmp_path) == ["IXI123"]
 
 
@@ -51,7 +51,7 @@ def test_get_subjects_list_from_file(tmp_path):
 
 def test_define_participants_filter(tmp_path):
     for filename in ("IXI001", "IXI002", "IXI003", "IXI004"):
-        Path(f"{tmp_path}/{filename}_T1w.nii.gz").touch()
+        (tmp_path / f"{filename}_T1w.nii.gz").touch()
     with open(tmp_path / "subjects.txt", "w") as f:
         f.write("IXI001\nIXI006")
     assert define_participants(
@@ -61,7 +61,7 @@ def test_define_participants_filter(tmp_path):
 
 def test_define_participants_optional(tmp_path):
     for filename in ("IXI001", "IXI002"):
-        Path(f"{tmp_path}/{filename}_T1w.nii.gz").touch()
+        (tmp_path / f"{filename}_T1w.nii.gz").touch()
     assert define_participants(data_directory=tmp_path) == ["IXI001", "IXI002"]
 
 

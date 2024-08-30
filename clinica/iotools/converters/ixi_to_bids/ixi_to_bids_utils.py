@@ -183,27 +183,23 @@ def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
 def _rename_modalities(input_mod: str) -> str:
     if input_mod == "T1":
         return "T1w"
-    elif input_mod == "T2":
+    if input_mod == "T2":
         return "T2w"
-    elif input_mod == "MRA":
+    if input_mod == "MRA":
         return "angio"
-    elif input_mod == "PD":
+    if input_mod == "PD":
         return "PDw"
-    elif input_mod == "DTI":
+    if input_mod == "DTI":
         return "dti"
-    else:
-        raise ValueError(
-            f"The modality {input_mod} is not recognized in the IXI dataset."
-        )
+    raise ValueError(f"The modality {input_mod} is not recognized in the IXI dataset.")
 
 
 def _define_magnetic_field(hospital: str) -> str:
-    if hospital == "Guys" or hospital == "IOP":
+    if hospital in ("Guys", "IOP"):
         return "1.5"
-    elif hospital == "HH":
+    if hospital == "HH":
         return "3"
-    else:
-        raise ValueError(f"The hospital {hospital} was not recognized.")
+    raise ValueError(f"The hospital {hospital} was not recognized.")
 
 
 def _get_img_data(data_directory: Path) -> pd.DataFrame:
