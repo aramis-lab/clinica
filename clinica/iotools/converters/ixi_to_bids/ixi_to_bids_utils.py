@@ -415,7 +415,7 @@ def check_modalities(data_directory: Path, participants: List[str]) -> None:
     participants : List of the subject ids of all participants
 
     """
-    expected_modalities = _identify_expected_modalities(data_directory)
+    expected_modalities = sorted(_identify_expected_modalities(data_directory))
     message = (
         f"Modalities : {' , '.join(_rename_modalities(mod) for mod in expected_modalities)}"
         f" were identified inside {data_directory} for conversion.\n"
