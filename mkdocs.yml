@@ -54,6 +54,8 @@ markdown_extensions:
   - pymdownx.emoji
   - pymdownx.keys
   - pymdownx.superfences
+  - markdown_include.include:
+      base_path: docs
   - toc:
       permalink: True
 
@@ -99,6 +101,7 @@ nav:
     - AIBL to BIDS: Converters/AIBL2BIDS.md
     - GENFI to BIDS: Converters/GENFItoBIDS.md
     - HABS to BIDS: Converters/HABS2BIDS.md
+    - IXI to BIDS: Converters/IXItoBIDS.md
     - NIFD to BIDS: Converters/NIFD2BIDS.md
     - OASIS to BIDS: Converters/OASIS2BIDS.md
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md
