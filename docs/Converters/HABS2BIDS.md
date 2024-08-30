@@ -1,4 +1,4 @@
-# `habs-2-bids` – Conversion of Harvard Aging Brain Study (HABS) to BIDS
+# `habs-to-bids` – Conversion of Harvard Aging Brain Study (HABS) to BIDS
 
 ## Dependencies
 
@@ -6,8 +6,7 @@ This converter does not require additional dependencies beyond Clinica.
 
 ## Downloading HABS
 
-This converter requires both the clinical and imaging data available for download on the Harvard Aging Brain
-Study [website].
+This converter requires both the clinical and imaging data available for download on the Harvard Aging Brain Study [website].
 
 Access to the dataset must be requested through the submission of an [online form]. Please review the _Requested Data_
 section carefully and check that both the clinical data and desired imaging modalities are selected. Upon acceptance, a
