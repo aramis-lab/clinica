@@ -131,7 +131,7 @@ class CAPSProcessingDescription:
         input_path: str,
         dependencies: Optional[List[SoftwareDependency]] = None,
     ):
-        from clinica import __version__
+        from clinica import get_version
 
         return cls(
             name,
@@ -139,7 +139,7 @@ class CAPSProcessingDescription:
             _get_username(),
             _get_machine_name(),
             input_path,
-            Version(__version__),
+            get_version(),
             dependencies or [],
         )
 
