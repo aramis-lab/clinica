@@ -548,6 +548,10 @@ def version_mock(
     raise ClinicaMissingDependencyError("Not installed !")
 
 
+def check_ants_mock():
+    pass
+
+
 software_dependency_test_cases = [
     ("2.3.4", "<1.2.3", False),
     ("2.3.4", ">1.2.3", True),
@@ -574,22 +578,27 @@ def test_software_dependency_string_constructor(
         "clinica.utils.check_dependency.get_software_version",
         wraps=partial(version_mock, value_for_mock=installed_version),
     ) as version_mock_:
-        dependency = SoftwareDependency.from_strings("ants", constraint)
-        version_mock_.assert_called_once_with(ThirdPartySoftware.ANTS)
-        assert dependency.name == ThirdPartySoftware.ANTS
-        assert dependency.version_constraint == SpecifierSet(
-            ">=0.0.0" if constraint == "" else constraint
-        )
-        if installed_version:
-            assert dependency.installed_version == Version(installed_version)
-        else:
-            assert dependency.installed_version is None
-        assert dependency.is_satisfied() is satisfied
-        assert dependency.to_dict() == {
-            "name": "ants",
-            "version_constraint": ">=0.0.0" if constraint == "" else constraint,
-            "installed_version": installed_version or "",
-        }
+        with mock.patch(
+            "clinica.utils.check_dependency._check_ants",
+            wraps=check_ants_mock,
+        ) as check_mock:
+            dependency = SoftwareDependency.from_strings("ants", constraint)
+            version_mock_.assert_called_once_with(ThirdPartySoftware.ANTS)
+            assert dependency.name == ThirdPartySoftware.ANTS
+            assert dependency.version_constraint == SpecifierSet(
+                ">=0.0.0" if constraint == "" else constraint
+            )
+            if installed_version:
+                assert dependency.installed_version == Version(installed_version)
+            else:
+                assert dependency.installed_version is None
+            assert dependency.is_satisfied() is satisfied
+            assert dependency.to_dict() == {
+                "name": "ants",
+                "version_constraint": ">=0.0.0" if constraint == "" else constraint,
+                "installed_version": installed_version or "",
+            }
+            check_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -604,21 +613,26 @@ def test_software_dependency_dict_constructor(
         "clinica.utils.check_dependency.get_software_version",
         wraps=partial(version_mock, value_for_mock=installed_version),
     ) as version_mock_:
-        dependency = SoftwareDependency.from_dict(
-            {"name": "ants", "version": constraint, "foo": "bar"}
-        )
-        version_mock_.assert_called_once_with(ThirdPartySoftware.ANTS)
-        assert dependency.name == ThirdPartySoftware.ANTS
-        assert dependency.version_constraint == SpecifierSet(
-            ">=0.0.0" if constraint == "" else constraint
-        )
-        if installed_version:
-            assert dependency.installed_version == Version(installed_version)
-        else:
-            assert dependency.installed_version is None
-        assert dependency.is_satisfied() is satisfied
-        assert dependency.to_dict() == {
-            "name": "ants",
-            "version_constraint": ">=0.0.0" if constraint == "" else constraint,
-            "installed_version": installed_version or "",
-        }
+        with mock.patch(
+            "clinica.utils.check_dependency._check_ants",
+            wraps=check_ants_mock,
+        ) as check_mock:
+            dependency = SoftwareDependency.from_dict(
+                {"name": "ants", "version": constraint, "foo": "bar"}
+            )
+            version_mock_.assert_called_once_with(ThirdPartySoftware.ANTS)
+            assert dependency.name == ThirdPartySoftware.ANTS
+            assert dependency.version_constraint == SpecifierSet(
+                ">=0.0.0" if constraint == "" else constraint
+            )
+            if installed_version:
+                assert dependency.installed_version == Version(installed_version)
+            else:
+                assert dependency.installed_version is None
+            assert dependency.is_satisfied() is satisfied
+            assert dependency.to_dict() == {
+                "name": "ants",
+                "version_constraint": ">=0.0.0" if constraint == "" else constraint,
+                "installed_version": installed_version or "",
+            }
+            check_mock.assert_called_once()
