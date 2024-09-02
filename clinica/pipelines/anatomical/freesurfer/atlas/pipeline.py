@@ -21,7 +21,10 @@ class T1FreeSurferAtlas(Pipeline):
         caps_directory: str,
         atlas_path: Optional[str] = None,
     ):
-        self.atlas_path = Path(atlas_path)
+        if atlas_path:
+            self.atlas_path = Path(atlas_path)
+        else:
+            self.atlas_path = None
         super().__init__(caps_directory=caps_directory)
 
     def _check_custom_dependencies(self) -> None:

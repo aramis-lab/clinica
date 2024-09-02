@@ -1,4 +1,4 @@
-from clinica.utils.testing_utils import build_bids_directory, build_caps_directory
+from clinica.utils.testing_utils import build_bids_directory
 
 
 def test_pet_linear_info_loading(tmp_path):
