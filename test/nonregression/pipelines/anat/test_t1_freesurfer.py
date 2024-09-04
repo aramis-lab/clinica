@@ -29,7 +29,7 @@ def run_t1_freesurfer_cross_sectional(
     """
     from clinica.pipelines.anatomical.freesurfer.t1.pipeline import T1FreeSurfer
 
-    parameters = {"recon_all_args": "-qcache", "skip_question": False}
+    parameters = {"recon_all_args": "-qcache", "skip_question": True}
 
     pipeline = T1FreeSurfer(
         bids_directory=fspath(input_dir / "bids"),
