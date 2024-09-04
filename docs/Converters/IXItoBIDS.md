@@ -8,9 +8,9 @@
 
 
 ## Downloading IXI
-The IXI dataset can be downloaded from the [IXI webpage](https://brain-development.org/ixi-dataset/){ data-preview }.
-A modality at a time, all images. The converter can convert to [BIDS](../glossary.md#bids){ data-preview } all IXI modalities :
-DTI / T1 / T2 / PD, angiography
+The IXI dataset can be downloaded freely from the [IXI webpage](https://brain-development.org/ixi-dataset/){ data-preview }.
+The converter can convert to [BIDS](../glossary.md#bids){ data-preview } all the modalities offered by IXI :
+DTI, T1, T2, PD and angiography.
 
 ## Using the converter
 ### Available Modalities
@@ -18,7 +18,8 @@ for IXI basically renaming files except DTI where images
 are merged into dwi
 
 ### Dependencies
-Nothing other than clinica installation
+If you [installed clinica](../Installation.md#install-clinica), this converter needs no further dependencies.
+
 ### Understanding the command line
 ```bash
 clinica convert ixi-to-bids DATASET_DIRECTORY BIDS_DIRECTORY CLINICAL_DATA_DIRECTORY
@@ -45,4 +46,5 @@ CLINICAL_DATA_DIRECTORY
 ├── IXI.xls
 ...
 ```
+
 {!Converters/converters_options.md!}
