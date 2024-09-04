@@ -56,10 +56,9 @@ def cprint(msg: str, lvl: Optional[Union[str, int, LoggingLevel]] = None) -> Non
     from logging import getLogger
 
     lvl = lvl or LoggingLevel.INFO
-    # Use the package level logger.
+    lvl = get_logging_level(lvl)
     logger = getLogger("clinica")
 
-    # Log message as info level.
     if lvl == LoggingLevel.DEBUG:
         logger.debug(msg=msg)
     elif lvl == LoggingLevel.INFO:
