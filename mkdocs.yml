@@ -1,8 +1,7 @@
 # Project information
 site_name: Clinica Documentation
 site_author: Clinica contributors
-site_url: https://aramislab.paris.inria.fr/clinica/docs/public/PR-1276
-#todo : remove this
+site_url: https://aramislab.paris.inria.fr/clinica/docs/public/dev
 site_description: >-
   Software platform for clinical neuroimaging studies
 
@@ -25,7 +24,6 @@ theme:
     accent: light blue
   features:
     - content.tooltips
-    - navigation.instant.preview
 
 # Version panel
 extra_javascript:
@@ -60,10 +58,6 @@ markdown_extensions:
   - pymdownx.superfences
   - abbr
   - attr_list
-#  - material.extensions.preview:
-#      targets:
-#        include:
-#          - glossary.md
   - pymdownx.snippets:
       auto_append:
         - snippets/abbreviations.md

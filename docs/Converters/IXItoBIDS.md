@@ -9,7 +9,7 @@
 
 ## Downloading IXI
 The IXI dataset can be downloaded from the [IXI webpage](https://brain-development.org/ixi-dataset/).
-A modality at a time, all images. The converter can convert to [BIDS](../glossary.md#BIDS) all IXI modalities :
+A modality at a time, all images. The converter can convert to [BIDS](../glossary.md#BIDS){ data-preview } all IXI modalities :
 DTI / T1 / T2 / PD, angiography
 
 
