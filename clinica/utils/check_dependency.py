@@ -465,18 +465,20 @@ def _get_freesurfer_version() -> Version:
 def _get_spm_version() -> Version:
     from nipype.interfaces import spm
 
+    from .spm import configure_nipype_interface_to_work_with_spm
+
+    configure_nipype_interface_to_work_with_spm()
+
     return Version(spm.SPMCommand().version)
 
 
 def _get_spm_standalone_version() -> Version:
-    import os
-    from pathlib import Path
-
     from nipype.interfaces import spm
 
-    spm_path = Path(os.environ["SPM_HOME"])
-    matlab_cmd = f"{spm_path / 'run_spm12.sh'} {os.environ['MCR_HOME']} script"
-    spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+    from .spm import configure_nipype_interface_to_work_with_spm_standalone
+
+    configure_nipype_interface_to_work_with_spm_standalone()
+
     return Version(spm.SPMCommand().version)
 
 
