@@ -65,6 +65,8 @@ markdown_extensions:
       base_path: docs
   - toc:
       permalink: True
+  - pymdownx.tabbed:
+      alternate_style: True
 
 not_in_nav: |
   /Converters/converters_options.md
