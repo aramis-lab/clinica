@@ -42,6 +42,10 @@ class ClinicaXMLParserError(ClinicaParserError):
     """Base class for XML parser errors."""
 
 
+class ClinicaPipelineConfigurationError(ClinicaException):
+    """Base class for configuration errors of clinica pipelines."""
+
+
 class ClinicaInconsistentDatasetError(ClinicaException):
     """Base class for inconsistent datasets errors."""
 
