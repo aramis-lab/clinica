@@ -257,17 +257,26 @@ def test_get_freesurfer_version(mocker):
     assert get_software_version("freesurfer") == Version("1.2.3")
 
 
-def test_get_spm_version():
+def test_get_spm_version(tmp_path):
     from clinica.utils.check_dependency import get_software_version
 
     class SPMVersionMock:
         version: str = "12.6789"
 
-    with mock.patch(
-        "nipype.interfaces.spm.SPMCommand", wraps=SPMVersionMock
-    ) as spm_mock:
-        assert get_software_version("spm") == Version("12.6789")
-        spm_mock.assert_called_once()
+    spm_home_mock = tmp_path / "spm_home"
+    spm_home_mock.mkdir()
+
+    with mock.patch.dict(
+        os.environ,
+        {
+            "SPM_HOME": str(spm_home_mock),
+        },
+    ):
+        with mock.patch(
+            "nipype.interfaces.spm.SPMCommand", wraps=SPMVersionMock
+        ) as spm_mock:
+            assert get_software_version("spm") == Version("12.6789")
+            spm_mock.assert_called_once()
 
 
 def test_get_spm_standalone_version(tmp_path):
@@ -279,11 +288,16 @@ def test_get_spm_standalone_version(tmp_path):
         def set_mlab_paths(self, matlab_cmd: str, use_mcr: bool):
             pass
 
+    spm_standalone_home_mock = tmp_path / "spm_standalone_home"
+    spm_standalone_home_mock.mkdir()
+    mcr_home_mock = tmp_path / "mcr_home"
+    mcr_home_mock.mkdir()
+
     with mock.patch.dict(
         os.environ,
         {
-            "SPM_HOME": str(tmp_path / "spm_home_mock"),
-            "MCR_HOME": str(tmp_path / "mcr_home_mock"),
+            "SPMSTANDALONE_HOME": str(spm_standalone_home_mock),
+            "MCR_HOME": str(mcr_home_mock),
         },
     ):
         with mock.patch(
@@ -295,7 +309,7 @@ def test_get_spm_standalone_version(tmp_path):
                 assert get_software_version("spm standalone") == Version("13.234")
                 spm_mock.set_mlab_paths.assert_called()
                 mock_method.assert_called_once_with(
-                    matlab_cmd=f"{tmp_path / 'spm_home_mock' / 'run_spm12.sh'} {tmp_path / 'mcr_home_mock'} script",
+                    matlab_cmd=f"cd {tmp_path / 'spm_standalone_home'} && ./run_spm12.sh {tmp_path / 'mcr_home'} script",
                     use_mcr=True,
                 )
 
