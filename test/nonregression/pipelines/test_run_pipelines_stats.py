@@ -16,6 +16,7 @@ warnings.filterwarnings("ignore")
 
 
 @pytest.mark.fast
+@pytest.mark.skip(reason="Brainstat is not compatible with Numpy 2.")
 def test_statistics_surface(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
