@@ -279,7 +279,8 @@ def test_get_spm_version(tmp_path):
             spm_mock.assert_called_once()
 
 
-def test_get_spm_standalone_version(tmp_path):
+@pytest.mark.parametrize("platform", ["linux", "darwin"])
+def test_get_spm_standalone_version(tmp_path, mocker, platform):
     from clinica.utils.check_dependency import get_software_version
 
     class SPMStandaloneVersionMock:
@@ -293,6 +294,7 @@ def test_get_spm_standalone_version(tmp_path):
     mcr_home_mock = tmp_path / "mcr_home"
     mcr_home_mock.mkdir()
 
+    mocker.patch("platform.system", return_value=platform)
     with mock.patch.dict(
         os.environ,
         {
@@ -309,7 +311,11 @@ def test_get_spm_standalone_version(tmp_path):
                 assert get_software_version("spm standalone") == Version("13.234")
                 spm_mock.set_mlab_paths.assert_called()
                 mock_method.assert_called_once_with(
-                    matlab_cmd=f"cd {tmp_path / 'spm_standalone_home'} && ./run_spm12.sh {tmp_path / 'mcr_home'} script",
+                    matlab_cmd=(
+                        f"cd {tmp_path / 'spm_standalone_home'} && ./run_spm12.sh {tmp_path / 'mcr_home'} script"
+                        if platform == "darwin"
+                        else f"{tmp_path / 'spm_standalone_home' / 'run_spm12.sh'} {tmp_path / 'mcr_home'} script"
+                    ),
                     use_mcr=True,
                 )
 
