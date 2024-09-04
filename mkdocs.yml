@@ -22,6 +22,9 @@ theme:
   palette:
     primary: light blue
     accent: light blue
+  features:
+    - content.tooltips
+    - navigation.instant.preview
 
 # Version panel
 extra_javascript:
@@ -54,10 +57,23 @@ markdown_extensions:
   - pymdownx.emoji
   - pymdownx.keys
   - pymdownx.superfences
+  - abbr
+  - attr_list
+#  - material.extensions.preview:
+#      targets:
+#        include:
+#          - glossary.md
+  - pymdownx.snippets:
+      auto_append:
+        - snippets/abbreviations.md
   - markdown_include.include:
       base_path: docs
   - toc:
       permalink: True
+
+not_in_nav: |
+  /Converters/converters_options.md
+  /abbreviations.md
 
 # Page tree
 nav:
