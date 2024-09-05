@@ -15,11 +15,9 @@ def configure_paths(
     name: str,
 ) -> Tuple[Path, Path, Path]:
     """Configure paths for tests."""
-    import uuid
-
     input_dir = base_dir / name / "in"
     ref_dir = base_dir / name / "ref"
-    tmp_out_dir = tmp_path / name / str(uuid.uuid4()) / "out"
+    tmp_out_dir = tmp_path / name / "out"
     tmp_out_dir.mkdir(parents=True)
 
     return input_dir, tmp_out_dir, ref_dir
