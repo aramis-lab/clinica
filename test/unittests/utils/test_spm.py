@@ -69,7 +69,10 @@ def test_spm_standalone_is_available_warning(tmp_path):
 def test_spm_standalone_is_available(tmp_path, mocker):
     from clinica.utils.spm import use_spm_standalone_if_available
 
-    mocker.patch("clinica.utils.spm._configure_spm_nipype_interface", return_value=None)
+    mocker.patch(
+        "clinica.utils.spm.configure_nipype_interface_to_work_with_spm_standalone",
+        return_value=None,
+    )
     with mock.patch.dict(
         os.environ,
         {
@@ -110,19 +113,27 @@ def test_use_spm_standalone_if_available_error(tmp_path):
         ("Linux", "/foo/bar/run_spm12.sh /foo/bar/baz script"),
     ],
 )
-def test_get_platform_dependant_matlab_command(mocker, platform, expected_command):
-    from clinica.utils.spm import _get_platform_dependant_matlab_command  # noqa
+def test_get_platform_dependant_matlab_command_for_spm_standalone(
+    mocker, platform, expected_command
+):
+    from clinica.utils.spm import (
+        _get_platform_dependant_matlab_command_for_spm_standalone,
+    )
 
     mocker.patch("platform.system", return_value=platform)
 
     assert (
-        _get_platform_dependant_matlab_command(Path("/foo/bar"), Path("/foo/bar/baz"))
+        _get_platform_dependant_matlab_command_for_spm_standalone(
+            Path("/foo/bar"), Path("/foo/bar/baz")
+        )
         == expected_command
     )
 
 
-def test_get_platform_dependant_matlab_command_error(mocker):
-    from clinica.utils.spm import _get_platform_dependant_matlab_command  # noqa
+def test_get_platform_dependant_matlab_command_for_spm_standalone_error(mocker):
+    from clinica.utils.spm import (
+        _get_platform_dependant_matlab_command_for_spm_standalone,
+    )
 
     mocker.patch("platform.system", return_value="foo")
 
@@ -130,4 +141,6 @@ def test_get_platform_dependant_matlab_command_error(mocker):
         SystemError,
         match="Clinica only support macOS and Linux. Your system is foo.",
     ):
-        _get_platform_dependant_matlab_command(Path("/foo/bar"), Path("/foo/bar/baz"))
+        _get_platform_dependant_matlab_command_for_spm_standalone(
+            Path("/foo/bar"), Path("/foo/bar/baz")
+        )

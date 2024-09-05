@@ -180,8 +180,8 @@ def run_statistics_volume_pet(
         / "groups"
         / "group-UnitTest"
         / "statistics_volume"
-        / "group_comparison_measure-fdg"
-        / "group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii"
+        / f"group_comparison_measure-{Tracer.FDG.value}"
+        / f"group-UnitTest_CN-lt-AD_measure-{Tracer.FDG.value}_fwhm-8_TStatistics.nii"
     )
     ref_t_stat = (
         ref_dir
