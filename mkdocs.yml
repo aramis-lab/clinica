@@ -22,6 +22,8 @@ theme:
   palette:
     primary: light blue
     accent: light blue
+  features:
+    - content.tooltips
 
 # Version panel
 extra_javascript:
@@ -54,8 +56,20 @@ markdown_extensions:
   - pymdownx.emoji
   - pymdownx.keys
   - pymdownx.superfences
+  - abbr
+  - attr_list
+  - pymdownx.snippets:
+      base_path: docs
+      auto_append:
+        - snippets/abbreviations.md
   - toc:
       permalink: True
+  - pymdownx.tabbed:
+      alternate_style: True
+
+not_in_nav: |
+  /snippets/converters_options.md
+  /snippets/abbreviations.md
 
 # Page tree
 nav:
@@ -99,6 +113,7 @@ nav:
     - AIBL to BIDS: Converters/AIBL2BIDS.md
     - GENFI to BIDS: Converters/GENFItoBIDS.md
     - HABS to BIDS: Converters/HABS2BIDS.md
+    - IXI to BIDS: Converters/IXItoBIDS.md
     - NIFD to BIDS: Converters/NIFD2BIDS.md
     - OASIS to BIDS: Converters/OASIS2BIDS.md
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md
