@@ -522,6 +522,7 @@ def _run_matlab_script_with_matlab(m_file: str) -> None:
 
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
 
+    _add_spm_path_to_matlab_script(m_file)
     MatlabCommand.set_default_matlab_cmd(get_matlab_command())
     matlab = MatlabCommand()
     if platform.system().lower().startswith("linux"):
@@ -531,6 +532,16 @@ def _run_matlab_script_with_matlab(m_file: str) -> None:
     matlab.inputs.single_comp_thread = False
     matlab.inputs.logfile = abspath("./matlab_output.log")
     matlab.run()
+
+
+def _add_spm_path_to_matlab_script(m_file: str) -> None:
+    from clinica.utils.check_dependency import get_spm_home
+
+    with open(m_file, "r") as fp:
+        lines = fp.readlines()
+    lines.insert(0, f"addpath('{get_spm_home()}');")
+    with open(m_file, "w") as fp:
+        fp.writelines(lines)
 
 
 def clean_template_file(mat_file: str, template_file: str) -> str:
