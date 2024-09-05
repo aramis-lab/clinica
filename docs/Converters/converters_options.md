@@ -9,3 +9,5 @@
 ```
 
 - `-- n_procs` / `- np` :  Number of cores used to run in parallel.  (default: (Number of available CPU minus one))
+
+Test abbreviations : TSA
