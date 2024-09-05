@@ -1,23 +1,24 @@
 # `ixi-to-bids` – Conversion of Information eXtraction from Images (IXI) to BIDS format
-
-???+ quote "Dataset Description"
-    [IXI webpage](https://brain-development.org/ixi-dataset/)"
+??? quote "Dataset Description"
+    [IXI webpage](https://brain-development.org/ixi-dataset/)
     The Information eXtraction from Images is a project which issued a dataset of nearly
     600 images from healthy subjects. The MR acquisition protocol includes T1,T2, PD weighted,
     MRA and diffusion-weighted images. Three hospitals in London were involved in data collection.
 
-## Using the converter
-### Available Modalities
+## Downloading the data
 The IXI dataset can be downloaded freely from the [IXI webpage](https://brain-development.org/ixi-dataset/){ data-preview }.
-  !!! danger ""
-    The folders and files downloaded from the website should be left as they are (name, inner organisation) but can be
+!!! danger "Organising data with the aim of using the converter"
+    The folders and files downloaded from the website should be left as they are (name, inner organisation...) but can be
     placed where the user wants them.
 
-The converter can convert to [BIDS](../glossary.md#bids){ data-preview } all the modalities offered by IXI :
-DTI, T1, T2, PD and angiography.
+## Using the converter
+### Available Modalities
 
 !!! info inline end ""
-    In particular, DTI files are merged together to produce one dwi image.
+    DTI files are merged together to produce **one** dwi image.
+The converter can convert to [BIDS](../glossary.md#bids){ data-preview } all the modalities offered by IXI :
+DTI ; T1 ; T2 ; PD ; angiography.
+
 
 ### Dependencies
 If you [installed clinica](../Installation.md#install-clinica), this converter needs no further dependencies.
@@ -29,7 +30,6 @@ clinica convert ixi-to-bids DATASET_DIRECTORY BIDS_DIRECTORY CLINICAL_DATA_DIREC
 where :
 
 - `DATASET_DIRECTORY` is the path to the raw IXI dataset directory, which should contain all the IXI folders previously downloaded :
-
   ```
   DATASET_DIRECTORY
   ├── IXI-T1
