@@ -18,7 +18,7 @@ def configure_paths(
     input_dir = base_dir / name / "in"
     ref_dir = base_dir / name / "ref"
     tmp_out_dir = tmp_path / name / "out"
-    tmp_out_dir.mkdir(parents=True)
+    tmp_out_dir.mkdir(parents=True, exist_ok=False)
 
     return input_dir, tmp_out_dir, ref_dir
 
