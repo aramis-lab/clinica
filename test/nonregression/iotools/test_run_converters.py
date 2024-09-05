@@ -15,6 +15,10 @@ from clinica.iotools.bids_utils import StudyName
 def test_converters(cmdopt, tmp_path, study: StudyName):
     from clinica.iotools.converters.factory import convert, get_converter_name
 
+    # To be removed once we have built and deployed our testing dataset
+    if study == StudyName.IXI:
+        pytest.skip("Non regression tests are not yet implemented for ixi-to-bids.")
+
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(
         base_dir, tmp_path, get_converter_name(study)
