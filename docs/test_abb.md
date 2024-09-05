@@ -1,1 +1,0 @@
-*[TSA] : Test Snippets Abbreviations

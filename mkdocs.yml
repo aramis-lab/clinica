@@ -60,7 +60,7 @@ markdown_extensions:
   - attr_list
   - pymdownx.snippets:
       auto_append:
-        - test_abb.md
+        - snippets/abbreviations.md
   - markdown_include.include:
       base_path: docs
   - toc:
