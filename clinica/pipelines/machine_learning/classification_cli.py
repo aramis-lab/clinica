@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import click
 
@@ -6,6 +6,7 @@ from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
 from clinica.utils.atlas import T1AndPetVolumeAtlasName
+from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
 pipeline_name = "machinelearning-classification"
 
@@ -62,8 +63,8 @@ def cli(
     subjects_visits_tsv: str,
     diagnoses_tsv: str,
     output_directory: str,
-    acq_label: Optional[str] = None,
-    suvr_reference_region: Optional[str] = None,
+    acq_label: Optional[Union[str, Tracer]] = None,
+    suvr_reference_region: Optional[Union[str, SUVRReferenceRegion]] = None,
     atlas: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:

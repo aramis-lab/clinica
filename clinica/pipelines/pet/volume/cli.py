@@ -1,10 +1,11 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import click
 
 from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
+from clinica.utils.pet import ReconstructionMethod, SUVRReferenceRegion, Tracer
 
 pipeline_name = "pet-volume"
 
@@ -62,9 +63,9 @@ def cli(
     bids_directory: str,
     caps_directory: str,
     group_label: str,
-    acq_label: str,
-    suvr_reference_region: Optional[str] = None,
-    reconstruction_method: Optional[str] = None,
+    acq_label: Union[str, Tracer],
+    suvr_reference_region: Optional[Union[str, SUVRReferenceRegion]] = None,
+    reconstruction_method: Optional[Union[str, ReconstructionMethod]] = None,
     pvc_psf_tsv: Optional[str] = None,
     mask_tissues: List[int] = (1, 2, 3),
     mask_threshold: float = 0.3,
