@@ -68,7 +68,8 @@ markdown_extensions:
       alternate_style: True
 
 not_in_nav: |
-  /Converters/converters_options.md
+  /snippets/converters_options.md
+  /snippets/abbreviations.md
 
 # Page tree
 nav:
