@@ -9,10 +9,15 @@
 ## Using the converter
 ### Available Modalities
 The IXI dataset can be downloaded freely from the [IXI webpage](https://brain-development.org/ixi-dataset/){ data-preview }.
+  !!! danger ""
+    The folders and files downloaded from the website should be left as they are (name, inner organisation) but can be
+    placed where the user wants them.
+
 The converter can convert to [BIDS](../glossary.md#bids){ data-preview } all the modalities offered by IXI :
 DTI, T1, T2, PD and angiography.
 
-In particular, DTI files are merged together to produce one dwi image.
+!!! info inline end ""
+    In particular, DTI files are merged together to produce one dwi image.
 
 ### Dependencies
 If you [installed clinica](../Installation.md#install-clinica), this converter needs no further dependencies.
