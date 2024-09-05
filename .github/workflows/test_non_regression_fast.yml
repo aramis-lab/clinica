@@ -39,15 +39,10 @@ jobs:
           poetry run pytest --verbose \
           --working_directory=/Volumes/data/working_dir_mac \
           --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
           --junitxml=./test-reports/non_regression_fast_mac.xml \
           --disable-warnings \
           -m "fast" \
           ./nonregression/
-      - name: Clean
-        run: |
-          rm -rf /Volumes/data/tmp
-          rm -rf /Volumes/data/working_dir_mac
 
   test-non-regression-fast-Linux:
     runs-on:
@@ -76,12 +71,7 @@ jobs:
           poetry run pytest --verbose \
           --working_directory=/mnt/data/ci/working_dir_linux \
           --input_data_directory=/mnt/data_ci \
-          --basetemp=/mnt/data/ci/tmp \
           --junitxml=./test-reports/non_regression_fast_linux.xml \
           --disable-warnings \
           -m "fast" \
           ./nonregression/
-      - name: Clean
-        run: |
-          rm -rf /mnt/data/ci/tmp
-          rm -rf /mnt/data/ci/working_dir_linux
