@@ -1,6 +1,7 @@
 from typing import List
 
 from clinica.pipelines.engine import Pipeline
+from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
 
 class StatisticsVolume(Pipeline):
@@ -31,7 +32,13 @@ class StatisticsVolume(Pipeline):
 
         # Optional parameters for inputs from pet-volume pipeline
         self.parameters.setdefault("acq_label", None)
+        if self.parameters["acq_label"]:
+            self.parameters["acq_label"] = Tracer(self.parameters["acq_label"])
         self.parameters.setdefault("suvr_reference_region", None)
+        if self.parameters["suvr_reference_region"]:
+            self.parameters["suvr_reference_region"] = SUVRReferenceRegion(
+                self.parameters["suvr_reference_region"]
+            )
         self.parameters.setdefault("use_pvc_data", False)
 
         # Optional parameters for custom pipeline
@@ -105,12 +112,12 @@ class StatisticsVolume(Pipeline):
             ):
                 raise ValueError(
                     f"Missing value(s) in parameters from pet-volume pipeline. Given values:\n"
-                    f"- acq_label: {self.parameters['acq_label']}\n"
-                    f"- suvr_reference_region: {self.parameters['suvr_reference_region']}\n"
+                    f"- acq_label: {self.parameters['acq_label'].value}\n"
+                    f"- suvr_reference_region: {self.parameters['suvr_reference_region'].value}\n"
                     f"- use_pvc_data: {self.parameters['use_pvc_data']}\n"
                 )
 
-            self.parameters["measure_label"] = self.parameters["acq_label"]
+            self.parameters["measure_label"] = self.parameters["acq_label"].value
             information_dict = pet_volume_normalized_suvr_pet(
                 acq_label=self.parameters["acq_label"],
                 group_label=self.parameters["group_label_dartel"],
