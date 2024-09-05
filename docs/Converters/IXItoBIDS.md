@@ -49,4 +49,4 @@ CLINICAL_DATA_DIRECTORY
 ...
 ```
 
-{!Converters/converters_options.md!}
+--8<-- "snippets/converters_options.md"

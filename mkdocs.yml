@@ -59,10 +59,9 @@ markdown_extensions:
   - abbr
   - attr_list
   - pymdownx.snippets:
+      base_path: docs
       auto_append:
         - snippets/abbreviations.md
-  - markdown_include.include:
-      base_path: docs
   - toc:
       permalink: True
   - pymdownx.tabbed:
