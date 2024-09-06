@@ -6,11 +6,14 @@
 
 ## Downloading the Data
 
-The UK Biobank to BIDS converter assumes that the user has already applied to get access to the data and that the imaging and clinical data have already been downloaded locally.
+The UKB to BIDS converter assumes that the user has already got access to the data and has downloaded both imaging and clinical data locally.
 
-The imaging data can be downloaded and extracted using [this tutorial](https://biobank.ctsu.ox.ac.uk/~bbdatan/Accessing_UKB_data_v2.3.pdf). The clinical data can be extracted using the information from [this repository](https://github.com/kenhanscombe/ukbtools).
+!!! danger "Organising data with the aim of using the converter"
+    Be careful, the file {==clinical_data.csv==}  needs to contain the following information about the subject :
+    *sex, year of birth, age at recruitment, age at sessions*.
+    There are two columns as there are two imaging sessions.
+    The names of the columns should be kept as they are when downloaded using `ukbconv` using options `csv`.
 
-Be careful, the file {==clinical_data.csv==}  needs to contain the following information about the subject: sex, year of birth, age at recruitment, age at sessions (there are two columns as there are two imaging sessions). The names of the columns should be kept as they are when downloaded using `ukbconv` using options `csv`.
 
 
 ## Using the converter
@@ -27,9 +30,9 @@ Please note that this converter processes the following modalities :
 | Modality    | Chosen image | Format | Justification |
 | :----------:|:---------------:|:-------:|:-------:|
 | T1W         | T1.nii.gz       | nifti | Defaced and cropped so there is no neck. The rawest image would be the simply defaced one, but brain studies usually are not interested in the region of the neck. No other corrections are included. |
-| T2 Flair    | T2_FLAIR.nii.gz | nifti | Defaced and cropped so there is no neck. The reasons for choosing this image are the same as for T1. |
-| DWI         | AP/PA.nii.gz     | nifti | It is the rawest images we can get. bvals and bvec are also available. |
-| rsfMRI      | rsfMRI.dcm | dicom | Since the nii.gz version doesn't always include a json and in consideration for it's usage, we convert the dicom. |
+| T2 Flair    | T2_FLAIR.nii.gz | nifti | Defaced and cropped so there is no neck. Same as T1. |
+| DWI         | AP/PA.nii.gz     | nifti | Rawest existing images with available bvals and bvec. |
+| rsfMRI      | rsfMRI.dcm | dicom | The nifti doesn't always include a json and in consideration for its usage, the dicom is converted instead. |
 | tfMRI       | tfMRI.dcm   | dicom | Same as rsfMRI.|
 | SWI         | SWI.nii.gz      | nifti | Combined coil version. We would get a rawer version, but `dcm2niix` has trouble handling the slices direction, so it is simpler to go with this version. In addition, SWI modality is not fully integrated to BIDS specification and some changes may be coming. A simple version is available in the current version of this converter. | 
     

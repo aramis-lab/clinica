@@ -49,8 +49,4 @@ where :
     ...
 ```
 
-### Optional parameters specific to UKB
-
-#TODO
-
 --8<-- "snippets/converters_options.md"

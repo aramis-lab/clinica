@@ -11,3 +11,4 @@
 *[PVC] : Partial-Volume Correction
 *[SUVR] : Standardized Uptake Value Ratio
 *[TSV] : Tab-Separated Values
+*[UKB] : UK-Biobank
