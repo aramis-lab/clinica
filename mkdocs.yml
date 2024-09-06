@@ -55,6 +55,7 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.emoji
   - pymdownx.keys
+  - pymdownx.critic
   - pymdownx.superfences
   - abbr
   - attr_list

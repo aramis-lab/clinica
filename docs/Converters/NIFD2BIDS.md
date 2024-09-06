@@ -1,14 +1,9 @@
 # `nifd-to-bids` – Conversion of Neuroimaging in Frontotemporal Dementia (NIFD) to BIDS
 
-!!! quote "Description reproduced from the [NIFD's LONI Image & Data Archive (IDA) webpage](https://ida.loni.usc.edu/home/projectPage.jsp?project=NIFD&page=HOME&subPage=OVERVIEW_PR#)"
+??? quote "Description reproduced from the [NIFD's LONI Image & Data Archive (IDA) webpage](https://ida.loni.usc.edu/home/projectPage.jsp?project=NIFD&page=HOME&subPage=OVERVIEW_PR#)"
     NIFD is the nickname for the frontotemporal lobar degeneration neuroimaging initiative (FTLDNI, AG032306), which was funded by the NIA and NINDS to characterize longitudinal clinical and imaging changes in FTLD.
     The imaging and clinical methods are the same for NIFD and for the 4-Repeat Tauopathy Neuroimaging Initiative (4RTNI), which is also available for download from LONI.
     Controls for NIFD are the same controls as those collected for 4RTNI.
-
-## Dependencies
-
-If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2niix** DICOM to NIfTI converter.
-You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
 
 ## Downloading NIFD
 
@@ -24,29 +19,28 @@ using your credentials.
 
 To download the imaging data:
 
-1. Press `Download` and select `Image collections` in the menubar below.
+1. Press `Download` and select `Image collections` in the menu.
 
-2. Select the `Advanced Search` tab and configure the appropriate search criteria for your collection. Please, ensure
-   only `NIFD` is selected under the `PROJECT/PHASE` section of the form. `MRI` should be selected in the `Modality`
-   section by default. Select `PET` and leave the selector to `OR` to download PET imaging data in addition to MRI.
+2. In the `Advanced Search`, configure the appropriate search criteria for your collection. Please, ensure
+   **only** `NIFD` is selected under the `PROJECT/PHASE` section. In `Modality`, `MRI` should be selected by default.
+   Select `PET` and leave the selector to `OR` to download PET imaging data in addition to MRI.
 
-3. Once all search criteria have been selected, press `SEARCH` at the bottom of the form. Your search results should be
-   presented in a new tab named `Advanced Search Results`.
+3. Press `SEARCH` at the bottom right of the form to show your search results in a new tab named `Advanced Search Results`.
 
-4. Select the desired subjects and scans using the tick boxes displayed in the form or press `Select All` in the top
+4. Select the desired subjects and scans using the tick boxes or press `Select All` in the top
    right corner. Press `Add To Collection` to create a new collection from your selection and give it a name. This name
    will be used as a stem for future downloads.
 
 5. Select the `Data Collections` tab and find your collection within the `My Collections` tree on the left-hand side.
 
-6. Click the `CSV` button to download the collection metadata in tabular form.
+6. {==Download==} the collection metadata in tabular form by clicking on the `CSV`.
 
-7. Select the whole collection by ticking `All` and press `Advanced Download`. A download summary should be displayed
+7. {==Download==} the collection images by ticking `All` and press `Advanced Download`. A download summary should be displayed
    with the name of the collection, the number of items selected and a dropdown menu to select different groups of file.
    Depending on the size of the collection, it is advised to download the collection in 5 or 10 files instead of 1 as
    default.
 
-8. Upon completion of the download process, create a new folder and move the collection metadata file as well as the
+8. Upon completion of the download process, create a new folder and move the collection metadata file **as well** as the
    content of the archive(s) into it.
 
 ### Downloading the clinical data
@@ -54,7 +48,10 @@ To download the imaging data:
 To download the clinical data, press `Download`, select `Study Data`, tick `NIFD Clinical Data` and press download. Once
 downloaded, you may move this file to the same location where the imaging data are stored or somewhere else.
 
-## Supported modalities
+
+## Using the converter
+
+### Supported modalities
 
 Currently, the modalities supported by our converter are:
 
@@ -64,19 +61,31 @@ Currently, the modalities supported by our converter are:
 - Pittsburgh compound B (PiB) PET
 - Clinical data and survey (MMSE, CDR, ...)
 
-## Using the converter
+### Dependencies
 
+If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2niix** DICOM to NIfTI converter.
+You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
+
+### Understanding the command line
 The converter can be run with the following command line:
 
 ```Text
-clinica convert nifd-to-bids [OPTIONS] DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY 
+clinica convert nifd-to-bids DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY [OPTIONS]
 ```
 
 where:
 
-- `DATASET_DIRECTORY` is the path to the original NIFD images' directory;
-- `CLINICAL_DATA_DIRECTORY` is the path to the directory where the following clinical data files are located: `NIFD_Clinical_Data_2017_final_updated.xlsx`, `DataDictionary_NIFD_2017.10.18.xlsx` and `idaSearch_all.csv`;
+- `DATASET_DIRECTORY` is the path to the original NIFD images directory;
+- `CLINICAL_DATA_DIRECTORY` is the path to the directory where the following clinical data files are located :
+    - `NIFD_Clinical_Data_2017_final_updated.xlsx`,
+    - `DataDictionary_NIFD_2017.10.18.xlsx`
+    - `idaSearch_all.csv`;
 - `BIDS_DIRECTORY` is the path to the output directory, where the BIDS-converted version of NIFD will be stored.
+
+### Additional options specific to NIFD
+TODO
+
+--8<-- "snippets/converters_options.md"
 
 ## Citing this converter in your paper
 
