@@ -13,6 +13,7 @@ def mock_processing_metadata(mocker):
         - date to be 2024-08-06T16:30:00
         - user name to be 'John Doe'
         - machine name to be 'my machine'
+        - version of clinica to be 0.9.0
     """
     mocker.patch(
         "clinica.utils.caps._get_current_timestamp",
@@ -20,11 +21,12 @@ def mock_processing_metadata(mocker):
     )
     mocker.patch("clinica.utils.caps._get_username", return_value="John Doe")
     mocker.patch("clinica.utils.caps._get_machine_name", return_value="my machine")
+    mocker.patch("clinica.get_version", return_value=Version("0.9.0"))
     return mocker
 
 
 def test_caps_processing_description(tmp_path, mocker):
-    from clinica.utils.caps import CAPSProcessingDescription
+    from clinica.utils.caps import CAPSProcessingDescription  # noqa
 
     mocker = mock_processing_metadata(mocker)
     desc = CAPSProcessingDescription.from_values("foo", str(tmp_path / "input"))
@@ -40,6 +42,8 @@ def test_caps_processing_description(tmp_path, mocker):
         "Author": "John Doe",
         "Machine": "my machine",
         "InputPath": f"{tmp_path}/input",
+        "ClinicaVersion": "0.9.0",
+        "Dependencies": [],
     }
     with open(tmp_path / "dataset_description.json", "w") as fp:
         desc.write(fp)
@@ -86,6 +90,8 @@ def test_caps_dataset_description(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
             }
         ],
     }
@@ -105,6 +111,8 @@ def test_caps_dataset_description(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
             },
             {
                 "Name": "processing-2",
@@ -112,6 +120,8 @@ def test_caps_dataset_description(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
             },
         ],
     }
@@ -156,6 +166,8 @@ def test_write_caps_dataset_description(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
             }
         ],
     }
@@ -316,6 +328,8 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
             },
             {
                 "Name": "bar",
@@ -323,6 +337,8 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
             },
         ],
     }
@@ -348,6 +364,8 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
             },
             {
                 "Name": "bar",
@@ -355,6 +373,8 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
             },
             {
                 "Name": "foo",
@@ -362,6 +382,8 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
                 "Author": "John Doe",
                 "Machine": "my machine",
                 "InputPath": f"{tmp_path}/bids2",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
             },
         ],
     }

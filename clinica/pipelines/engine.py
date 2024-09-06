@@ -11,6 +11,7 @@ import click
 from nipype.interfaces.utility import IdentityInterface
 from nipype.pipeline.engine import Node, Workflow
 
+from clinica.utils.check_dependency import SoftwareDependency, ThirdPartySoftware
 from clinica.utils.stream import log_and_warn
 
 
@@ -445,7 +446,7 @@ class Pipeline(Workflow):
             Path(os.path.dirname(os.path.abspath(inspect.getfile(self.__class__))))
             / "info.json"
         )
-        self._info: dict = {}
+        self._info: Optional[dict] = None
         self._subjects: Optional[List[str]] = None
         self._sessions: Optional[List[str]] = None
         self._input_node = None
@@ -459,7 +460,12 @@ class Pipeline(Workflow):
 
         self._name = name or self.__class__.__name__
         self._parameters = parameters or {}
-        self._ignore_dependencies = ignore_dependencies or []
+        self._dependencies: Optional[List[SoftwareDependency]] = None
+        self._ignore_dependencies: List[ThirdPartySoftware] = []
+        if ignore_dependencies:
+            self._ignore_dependencies += [
+                ThirdPartySoftware(d) for d in ignore_dependencies
+            ]
         self.caps_name = caps_name
 
         if not self._bids_directory:
@@ -476,6 +482,7 @@ class Pipeline(Workflow):
                     output_dir=self._caps_directory,
                     processing_name=self._name,
                     dataset_name=self.caps_name,
+                    dependencies=self.dependencies,
                 )
                 raise ClinicaCAPSError(
                     f"{e}\nYou might want to create a 'dataset_description.json' "
@@ -497,6 +504,7 @@ class Pipeline(Workflow):
                 output_dir=self._caps_directory,
                 processing_name=self._name,
                 dataset_name=self.caps_name,
+                dependencies=self.dependencies,
             )
             check_caps_folder(self._caps_directory)
         self._compute_subjects_and_sessions()
@@ -549,14 +557,6 @@ class Pipeline(Workflow):
         # Need to rebuild input, output and core nodes
         self.is_built = False
         self.init_nodes()
-
-    @property
-    def info(self) -> dict:
-        return self._info
-
-    @info.setter
-    def info(self, value: dict):
-        self._info = value
 
     @property
     def input_node(self) -> Node:
@@ -722,7 +722,6 @@ class Pipeline(Workflow):
 
         from networkx import Graph, NetworkXError
 
-        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_failed_images
 
         self._handle_cross_sectional_dataset()
@@ -763,66 +762,41 @@ class Pipeline(Workflow):
             exec_graph = Graph()
         return exec_graph
 
-    def _load_info(self):
-        """Loads the associated info.json file.
-
-        Todo:
-            - [ ] Raise an appropriate exception when the info file can't open
-
-        Raises:
-            None. # TODO(@jguillon)
-
-        Returns:
-            self: A Pipeline object.
-        """
+    @property
+    def info(self) -> dict:
         import json
 
-        with open(self.info_file) as info_file:
-            self.info = json.load(info_file)
-        return self
+        if self._info is None:
+            try:
+                with open(self.info_file) as info_file:
+                    info = json.load(info_file)
+            except FileNotFoundError:
+                log_and_warn(
+                    f"Info file {self.info_file} for pipeline {self.name} is missing.",
+                    UserWarning,
+                )
+                info = {}
+            self._info = info
+        return self._info
+
+    @property
+    def dependencies(self) -> List[SoftwareDependency]:
+        if self._dependencies is None:
+            dependencies = [
+                SoftwareDependency.from_dict(d)
+                for d in self.info.get("dependencies", [])
+            ]
+            dependencies = [
+                d for d in dependencies if d.name not in self._ignore_dependencies
+            ]
+            self._dependencies = dependencies
+        return self._dependencies
 
     def _check_dependencies(self):
-        """Checks if listed dependencies are present.
-
-        Loads the pipelines related `info.json` file and check each one of the
-        dependencies listed in the JSON "dependencies" field. Its raises
-        exception if a program in the list does not exist or if environment
-        variables are not properly defined.
-
-        Todo:
-            - [ ] MATLAB toolbox dependency checking
-            - [x] check MATLAB
-            - [ ] Clinica pipelines dependency checks
-            - [ ] Check dependencies version
-
-        Raises:
-            Exception: Raises an exception when bad dependency types given in
-            the `info.json` file are detected.
-
-        Returns:
-            self: A Pipeline object.
-        """
-        from clinica.utils.check_dependency import check_binary, check_software
-
-        if not self.info:
-            self._load_info()
-        for d in self.info["dependencies"]:
-            if d["name"] not in self._ignore_dependencies:
-                if d["type"] == "software":
-                    check_software(d["name"])
-                elif d["type"] == "binary":
-                    check_binary(d["name"])
-                elif d["type"] == "toolbox":
-                    pass
-                elif d["type"] == "pipeline":
-                    pass
-                else:
-                    raise Exception(
-                        f"Pipeline.check_dependencies() Unknown dependency type: '{d['type']}'."
-                    )
+        """Checks if listed dependencies are correctly installed."""
+        for dependency in self.dependencies:
+            dependency.check()
         self._check_custom_dependencies()
-
-        return self
 
     def _check_size(self):
         """Check if the pipeline has enough space on the disk for both working directory and CAPS."""
@@ -893,8 +867,6 @@ class Pipeline(Workflow):
         Author: Arnaud Marcoux
         """
         from multiprocessing import cpu_count
-
-        from clinica.utils.stream import cprint
 
         n_cpu = cpu_count()
         ask_user = False

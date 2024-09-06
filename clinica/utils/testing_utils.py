@@ -1,9 +1,8 @@
 import json
-import os
 import random
 from functools import partial
 from pathlib import Path
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional
 
 import nibabel as nib
 import numpy as np
@@ -11,21 +10,31 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from clinica.pipelines.dwi.utils import DWIDataset
 
+__all__ = [
+    "build_bids_directory",
+    "build_caps_directory",
+    "build_dwi_dataset",
+    "rmtree",
+    "assert_nifti_equal",
+    "assert_nifti_almost_equal",
+    "assert_large_nifti_almost_equal",
+]
+
 
 def build_bids_directory(
-    directory: os.PathLike,
+    directory: Path,
     subjects_sessions: dict,
-    modalities: Optional[Dict[str, Tuple[str, ...]]] = None,
+    modalities: Optional[dict[str, tuple[str, ...]]] = None,
     write_tsv_files: bool = False,
     random_seed: int = 42,
-) -> None:
+) -> Path:
     """Build a fake BIDS dataset at the specified location following the
     specified structure.
 
     Parameters
     ----------
-    directory : PathLike
-        Path to folder where the fake BIDS dataset should be created.
+    directory : Path
+        The path to folder where the fake BIDS dataset should be created.
 
     subjects_sessions : Dict
         Dictionary containing the subjects and their associated sessions.
@@ -33,17 +42,24 @@ def build_bids_directory(
     modalities : dict
         Modalities to be created.
 
+    Returns
+    -------
+    Path :
+        The path to the BIDS dataset.
+
     Notes
     -----
     This function is a simple prototype for creating fake datasets for testing.
     It only adds (for now...) T1W nifti images for all subjects and sessions.
     """
+    from clinica.utils.bids import BIDS_VERSION
+
     random.seed(random_seed)
-    directory = Path(directory)
+    directory.mkdir(exist_ok=True, parents=True)
     modalities = modalities or {"anat": ("T1w", "flair")}
     extensions = ("nii.gz", "json")
     with open(directory / "dataset_description.json", "w") as fp:
-        json.dump({"Name": "Example dataset", "BIDSVersion": "1.0.2"}, fp)
+        json.dump({"Name": "Example dataset", "BIDSVersion": str(BIDS_VERSION)}, fp)
     for sub, sessions in subjects_sessions.items():
         (directory / sub).mkdir()
         if write_tsv_files:
@@ -68,16 +84,17 @@ def build_bids_directory(
                             scans_tsv_text += f"{scan_path.relative_to(session_path)}\t{random.randint(1, 1000000)}\n"
             if write_tsv_files and len(scans_tsv_text) > 0:
                 (session_path / f"{sub}_{ses}_scans.tsv").write_text(scans_tsv_text)
+    return directory
 
 
-def build_caps_directory(directory: os.PathLike, configuration: dict) -> None:
+def build_caps_directory(directory: Path, configuration: dict) -> Path:
     """Build a fake CAPS dataset at the specified location following the
     specified structure.
 
     Parameters
     ----------
-    directory : PathLike
-        Path to folder where the fake CAPS dataset should be created.
+    directory : Path
+        The path to folder where the fake CAPS dataset should be created.
 
     configuration : Dict
         Dictionary containing the configuration for building the fake CAPS
@@ -86,18 +103,31 @@ def build_caps_directory(directory: os.PathLike, configuration: dict) -> None:
             - "pipelines": ["pipeline_names"...]
             - "subjects": {"subject_labels": ["session_labels"...]}.
 
+    Returns
+    -------
+    Path :
+        The path to the CAPS dataset.
+
     Notes
     -----
     This function is a simple prototype for creating fake datasets for testing.
     """
-    directory = Path(directory)
+    from clinica.utils.bids import BIDS_VERSION
+    from clinica.utils.caps import CAPS_VERSION
+
+    directory.mkdir(exist_ok=True, parents=True)
     with open(directory / "dataset_description.json", "w") as fp:
         json.dump(
-            {"Name": "Example dataset", "BIDSVersion": "1.0.2", "CAPSVersion": "1.0.0"},
+            {
+                "Name": "Example dataset",
+                "BIDSVersion": str(BIDS_VERSION),
+                "CAPSVersion": str(CAPS_VERSION),
+            },
             fp,
         )
     _build_groups(directory, configuration)
     _build_subjects(directory, configuration)
+    return directory
 
 
 def _build_groups(directory: Path, configuration: dict) -> None:

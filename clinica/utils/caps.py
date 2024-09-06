@@ -7,6 +7,7 @@ from typing import IO, List, MutableSequence, NewType, Optional, Union
 from attrs import define, fields
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 from cattr.preconf.json import make_converter
+from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
 from clinica.iotools.bids_dataset_description import get_bids_version
@@ -14,6 +15,8 @@ from clinica.utils.bids import BIDS_VERSION
 from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 from clinica.utils.inputs import DatasetType
 from clinica.utils.stream import cprint, log_and_raise, log_and_warn
+
+from .check_dependency import SoftwareDependency
 
 __all__ = [
     "CAPS_VERSION",
@@ -108,6 +111,9 @@ class CAPSProcessingDescription:
 
     input_path : str
         This is the path to the input dataset.
+
+    dependencies : list of SoftwareDependency
+        The dependencies used by the processing.
     """
 
     name: str
@@ -115,15 +121,26 @@ class CAPSProcessingDescription:
     author: str
     machine: str
     input_path: str
+    clinica_version: Version
+    dependencies: List[SoftwareDependency]
 
     @classmethod
-    def from_values(cls, name: str, input_path: str):
+    def from_values(
+        cls,
+        name: str,
+        input_path: str,
+        dependencies: Optional[List[SoftwareDependency]] = None,
+    ):
+        from clinica import get_version
+
         return cls(
             name,
             _get_current_timestamp(),
             _get_username(),
             _get_machine_name(),
             input_path,
+            get_version(),
+            dependencies or [],
         )
 
     @classmethod
@@ -134,6 +151,8 @@ class CAPSProcessingDescription:
             values["Author"],
             values["Machine"],
             values["InputPath"],
+            values["ClinicaVersion"],
+            values["Dependencies"],
         )
 
     def match(
@@ -241,9 +260,10 @@ class CAPSDatasetDescription:
         self,
         processing_name: str,
         processing_input_path: str,
+        dependencies: Optional[List[SoftwareDependency]] = None,
     ):
         new_processing = CAPSProcessingDescription.from_values(
-            processing_name, processing_input_path
+            processing_name, processing_input_path, dependencies
         )
         existing_processings = self.get_processing(
             processing_name, processing_input_path
@@ -347,8 +367,24 @@ def _rename(name: str) -> str:
 converter = make_converter()
 
 # Unstructuring hooks first
-converter.register_unstructure_hook(Version, lambda dt: str(dt))
+converter.register_unstructure_hook(Version, lambda v: str(v))
+converter.register_unstructure_hook(SpecifierSet, lambda s: str(s))
 converter.register_unstructure_hook(IsoDate, lambda dt: dt.isoformat())
+
+
+software_dependency_field_renaming = {
+    a.name: override(rename=_rename(a.name)) for a in fields(SoftwareDependency)
+}
+software_dependency_field_renaming_unstructure_hook = make_dict_unstructure_fn(
+    SoftwareDependency,
+    converter,
+    **software_dependency_field_renaming,
+)
+converter.register_unstructure_hook(
+    SoftwareDependency,
+    software_dependency_field_renaming_unstructure_hook,
+)
+
 caps_processing_field_renaming = {
     a.name: override(rename=_rename(a.name)) for a in fields(CAPSProcessingDescription)
 }
@@ -376,7 +412,19 @@ converter.register_unstructure_hook(
 
 # And structuring hooks
 converter.register_structure_hook(Version, lambda ts, _: Version(ts))
+converter.register_structure_hook(SpecifierSet, lambda s, _: SpecifierSet(s))
 converter.register_structure_hook(IsoDate, lambda ts, _: datetime.fromisoformat(ts))
+
+software_dependency_field_renaming_structure_hook = make_dict_structure_fn(
+    SoftwareDependency,
+    converter,
+    **software_dependency_field_renaming,
+)
+converter.register_structure_hook(
+    SoftwareDependency,
+    software_dependency_field_renaming_structure_hook,
+)
+
 caps_processing_field_renaming_structure_hook = make_dict_structure_fn(
     CAPSProcessingDescription,
     converter,
@@ -404,6 +452,7 @@ def write_caps_dataset_description(
     dataset_name: Optional[str] = None,
     bids_version: Optional[str] = None,
     caps_version: Optional[str] = None,
+    dependencies: Optional[List[SoftwareDependency]] = None,
 ) -> None:
     """Write `dataset_description.json` at the root of the CAPS directory.
 
@@ -435,6 +484,9 @@ def write_caps_dataset_description(
     caps_version : str, optional
         The version of the CAPS specifications used.
         By default, this will be set as the CAPS version currently supported by Clinica.
+
+    dependencies : list of SoftwareDependency
+        The dependencies used by the processing.
     """
     description = build_caps_dataset_description(
         input_dir,
@@ -443,6 +495,7 @@ def write_caps_dataset_description(
         dataset_name=dataset_name,
         bids_version=bids_version,
         caps_version=caps_version,
+        dependencies=dependencies,
     )
     with open(output_dir / "dataset_description.json", "w") as f:
         description.write(to=f)
@@ -455,6 +508,7 @@ def build_caps_dataset_description(
     dataset_name: Optional[str] = None,
     bids_version: Optional[str] = None,
     caps_version: Optional[str] = None,
+    dependencies: Optional[List[SoftwareDependency]] = None,
 ) -> CAPSDatasetDescription:
     """Generate the CAPSDatasetDescription for a given CAPS dataset.
 
@@ -486,6 +540,9 @@ def build_caps_dataset_description(
     caps_version : str, optional
         The version of the CAPS specifications used.
         By default, this will be set as the CAPS version currently supported by Clinica.
+
+    dependencies : list of SoftwareDependency
+        The dependencies used by the processing.
 
     Returns
     -------
@@ -552,5 +609,5 @@ def build_caps_dataset_description(
                 processing_name=processing_name, processing_input_path=str(input_dir)
             ):
                 new_description.processing.append(processing)
-    new_description.add_processing(processing_name, str(input_dir))
+    new_description.add_processing(processing_name, str(input_dir), dependencies)
     return new_description

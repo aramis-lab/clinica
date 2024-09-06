@@ -3,12 +3,14 @@
 These functions can check binaries, software (e.g. FreeSurfer) or toolboxes (e.g. SPM).
 """
 import functools
+import json
 import os
 from enum import Enum
 from functools import partial
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
+from attrs import define
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
@@ -23,6 +25,7 @@ from clinica.utils.stream import (
 
 __all__ = [
     "ThirdPartySoftware",
+    "SoftwareDependency",
     "SoftwareEnvironmentVariable",
     "get_fsl_home",
     "get_freesurfer_home",
@@ -52,6 +55,71 @@ class ThirdPartySoftware(str, Enum):
     PETPVC = "petpvc"
     SPM = "spm"
     SPMSTANDALONE = "spm standalone"
+
+
+@define
+class SoftwareDependency:
+    """Class modeling a dependency on a third-party software.
+
+    Attributes
+    ----------
+    name : ThirdPartySoftware
+        The name of the software that is a dependency.
+
+    version_constraint : SpecifierSet
+        The constraint on the version of the software that Clinica imposes.
+
+    installed_version : Version, optional
+        The version of the software installed on the machine.
+        If the software is not installed, this value is set to None.
+    """
+
+    name: ThirdPartySoftware
+    version_constraint: SpecifierSet
+    installed_version: Optional[Version]
+
+    @classmethod
+    def from_strings(cls, name: str, version_constraint: str):
+        try:
+            installed_version = get_software_version(name)
+        except Exception:
+            installed_version = None
+        if version_constraint == "":
+            version_constraint = ">=0.0.0"
+        return cls(
+            ThirdPartySoftware(name),
+            SpecifierSet(version_constraint),
+            installed_version,
+        )
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls.from_strings(d["name"], d["version"])
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name.value,
+            "version_constraint": str(self.version_constraint),
+            "installed_version": str(self.installed_version)
+            if self.installed_version
+            else "",
+        }
+
+    def __str__(self) -> str:
+        return json.dumps(self.to_dict())
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def check(self):
+        check_software(self.name, log_level="error", specifier=self.version_constraint)
+
+    def is_satisfied(self) -> bool:
+        try:
+            self.check()
+        except ClinicaMissingDependencyError:
+            return False
+        return True
 
 
 class SoftwareEnvironmentVariable:
@@ -681,7 +749,7 @@ def check_software(
     >>> check_software("ants", specifier=">=2.5")
     """
     software = ThirdPartySoftware(software)
-    if specifier:
+    if specifier and not isinstance(specifier, SpecifierSet):
         if specifier == "":
             specifier = None
         else:

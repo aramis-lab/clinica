@@ -3,6 +3,8 @@ import re
 import pytest
 from packaging.version import Version
 
+from clinica.utils.testing_utils import build_bids_directory, build_caps_directory
+
 
 def test_anat_linear_pipeline_no_input_error(tmp_path):
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
@@ -49,13 +51,8 @@ def test_anat_linear_pipeline_write_caps_dataset_description(tmp_path):
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
     from clinica.utils.caps import CAPSDatasetDescription, DatasetType
 
-    bids = tmp_path / "bids"
-    caps = tmp_path / "caps"
-    bids.mkdir()
-    caps.mkdir()
-    (bids / "dataset_description.json").touch()
-    (bids / "sub-01").mkdir()
-
+    bids = build_bids_directory(tmp_path / "bids", {"sub-01": ["ses-M00"]})
+    caps = build_caps_directory(tmp_path / "caps", {})
     AnatLinear(bids_directory=str(bids), caps_directory=str(caps))
 
     files = [f for f in caps.iterdir()]
@@ -67,3 +64,54 @@ def test_anat_linear_pipeline_write_caps_dataset_description(tmp_path):
     assert desc.caps_version == Version("1.0.0")
     assert desc.dataset_type == DatasetType.DERIVATIVE
     assert desc.processing[0].name == "AnatLinear"
+
+
+def test_anat_linear_info_loading(tmp_path):
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
+
+    bids = build_bids_directory(tmp_path / "bids", {"sub-01": ["ses-M00"]})
+    caps = build_caps_directory(tmp_path / "caps", {})
+    pipeline = AnatLinear(bids_directory=str(bids), caps_directory=str(caps))
+
+    assert pipeline.info == {
+        "author": "Mauricio Diaz",
+        "dependencies": [
+            {
+                "name": "ants",
+                "type": "software",
+                "version": ">=2.2.0",
+            },
+        ],
+        "id": "aramislab/t1-linear",
+        "space_caps": "45M",
+        "space_wd": "45M",
+        "version": "0.1.0",
+    }
+
+
+def test_anat_linear_dependencies(tmp_path, mocker):
+    from packaging.specifiers import SpecifierSet
+
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
+    from clinica.utils.check_dependency import SoftwareDependency, ThirdPartySoftware
+
+    mocker.patch(
+        "clinica.utils.check_dependency._get_ants_version",
+        return_value=Version("2.2.1"),
+    )
+    bids = build_bids_directory(tmp_path / "bids", {"sub-01": ["ses-M00"]})
+    caps = build_caps_directory(tmp_path / "caps", {})
+    pipeline = AnatLinear(bids_directory=str(bids), caps_directory=str(caps))
+
+    assert pipeline.dependencies == [
+        SoftwareDependency(
+            ThirdPartySoftware.ANTS, SpecifierSet(">=2.2.0"), Version("2.2.1")
+        )
+    ]
+
+    # When using AntsPy, the ANTs dependency is not considered
+    pipeline = AnatLinear(
+        bids_directory=str(bids), caps_directory=str(caps), use_antspy=True
+    )
+
+    assert pipeline.dependencies == []
