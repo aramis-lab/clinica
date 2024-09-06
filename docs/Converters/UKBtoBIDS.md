@@ -23,19 +23,21 @@ If you installed the core of Clinica, this converter needs the {==dcm2niix==} pa
 
 ### Supported modalities
 
-Please note that this converter processes the following modalities :
+<div class="annotate" markdown>
+Please note that this converter processes the following modalities (1) :
+</div>
 
-!!! Chosen files    
-    Whenever is possible, the converter uses the rawest files found. This decision allows the user to choose the processing needed. When available the converter get the associated json.
-| Modality    | Chosen image | Format | Justification |
-| :----------:|:---------------:|:-------:|:-------:|
-| T1W         | T1.nii.gz       | nifti | Defaced and cropped so there is no neck. The rawest image would be the simply defaced one, but brain studies usually are not interested in the region of the neck. No other corrections are included. |
-| T2 Flair    | T2_FLAIR.nii.gz | nifti | Defaced and cropped so there is no neck. Same as T1. |
-| DWI         | AP/PA.nii.gz     | nifti | Rawest existing images with available bvals and bvec. |
-| rsfMRI      | rsfMRI.dcm | dicom | The nifti doesn't always include a json and in consideration for its usage, the dicom is converted instead. |
-| tfMRI       | tfMRI.dcm   | dicom | Same as rsfMRI.|
-| SWI         | SWI.nii.gz      | nifti | Combined coil version. We would get a rawer version, but `dcm2niix` has trouble handling the slices direction, so it is simpler to go with this version. In addition, SWI modality is not fully integrated to BIDS specification and some changes may be coming. A simple version is available in the current version of this converter. | 
-    
+1. Whenever possible, the converter uses the rawest files available. This decision allows the user to choose the processing they need. If possible the converter also gets the associated json.
+
+| Modality    | Chosen image | Format |                                                                                                                                                              Justification                                                                                                                                                               |
+| :----------:|:---------------:|:-------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| T1W         | T1.nii.gz       | nifti |                                                                  Defaced and cropped so there is no neck. The rawest image would be the simply defaced one, but brain studies usually are not interested in the region of the neck. No other corrections are included.                                                                   |
+| T2 Flair    | T2_FLAIR.nii.gz | nifti |                                                                                                                                           Defaced and cropped so there is no neck. Same as T1.                                                                                                                                           |
+| DWI         | AP/PA.nii.gz     | nifti |                                                                                                                                          Rawest existing images with available bvals and bvec.                                                                                                                                           |
+| rsfMRI      | rsfMRI.dcm | dicom |                                                                                                               The nifti doesn't always include a json and in consideration for its usage, the dicom is converted instead.                                                                                                                |
+| tfMRI       | tfMRI.dcm   | dicom |                                                                                                                                                             Same as rsfMRI.                                                                                                                                                              |
+| SWI         | SWI.nii.gz      | nifti | Combined coil version. We would get a rawer version, but `dcm2niix` has trouble handling the slices direction, so it is simpler to go with this version. In addition, SWI modality is not fully integrated to BIDS specification and some changes may be coming. A simple version is available in the current version of this converter. |
+
 
 ### Understanding the command line
 
