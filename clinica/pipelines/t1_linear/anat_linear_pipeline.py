@@ -110,6 +110,8 @@ class AnatLinear(Pipeline):
 
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
+        import re
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -117,7 +119,10 @@ class AnatLinear(Pipeline):
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            get_images_and_errors_from_dir,
+        )
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -149,17 +154,27 @@ class AnatLinear(Pipeline):
         # Inputs from anat/ folder
         # ========================
         # anat image file:
-        try:
-            file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
-            anat_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, file
-            )
-        except ClinicaException as e:
-            err = (
-                "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
-                + str(e)
-            )
-            raise ClinicaBIDSError(err)
+        file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
+        anat_files, wrong_sub_sess = get_images_and_errors_from_dir(
+            self.subjects, self.sessions, self.bids_directory, file
+        )
+
+        # todo : write in other function
+        tuple_subsess = []
+        for subses in wrong_sub_sess:
+            m = re.search(r"(sub-\w*).*(ses-M\d{3})", subses)
+            tuple_subsess += [(m.group(1), m.group(2))]
+
+        for sub, ses in tuple_subsess:
+            sub_indexes = [
+                i for i, subject in enumerate(self.subjects) if subject == sub
+            ]
+            session_indexes = [
+                i for i, session in enumerate(self.sessions) if session == ses
+            ]
+            to_remove = list(set(sub_indexes) & set(session_indexes))[0]
+            self.subjects.pop(to_remove)
+            self.sessions.pop(to_remove)
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)

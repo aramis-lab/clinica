@@ -584,6 +584,44 @@ def _format_errors(errors: List, information: Dict) -> str:
     return error_message
 
 
+def get_images_and_errors_from_dir(
+    subjects: List[str],
+    sessions: List[str],
+    input_directory: Path,
+    information: Dict,
+    n_procs: Optional[int] = 1,
+) -> Tuple[List[str], List[str]]:
+    _check_information(information)
+    pattern = information["pattern"]
+
+    is_bids = determine_caps_or_bids(input_directory)
+    if is_bids:
+        check_bids_folder(input_directory)
+    else:
+        check_caps_folder(input_directory)
+
+    if len(subjects) != len(sessions):
+        raise ValueError("Subjects and sessions must have the same length.")
+
+    if len(subjects) == 0:
+        return [], ""
+
+    file_reader = _read_files_parallel if n_procs > 1 else _read_files_sequential
+    return file_reader(
+        input_directory,
+        subjects,
+        sessions,
+        is_bids,
+        pattern,
+        n_procs=n_procs,
+    )
+
+
+def _remove_sub_ses_from_list() -> None:
+    # todo
+    pass
+
+
 def clinica_file_reader(
     subjects: List[str],
     sessions: List[str],
@@ -727,35 +765,19 @@ def clinica_file_reader(
     """
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 
-    _check_information(information)
-    pattern = information["pattern"]
-
     input_directory = Path(input_directory)
-    is_bids = determine_caps_or_bids(input_directory)
-    if is_bids:
-        check_bids_folder(input_directory)
-    else:
-        check_caps_folder(input_directory)
-
-    if len(subjects) != len(sessions):
-        raise ValueError("Subjects and sessions must have the same length.")
-
-    if len(subjects) == 0:
-        return [], ""
-
-    file_reader = _read_files_parallel if n_procs > 1 else _read_files_sequential
-    results, errors_encountered = file_reader(
-        input_directory,
+    results, errors_encountered = get_images_and_errors_from_dir(
         subjects,
         sessions,
-        is_bids,
-        pattern,
-        n_procs=n_procs,
+        input_directory,
+        information,
+        n_procs,
     )
+
     error_message = _format_errors(errors_encountered, information)
 
     if len(errors_encountered) > 0 and raise_exception:
-        if is_bids:
+        if determine_caps_or_bids(input_directory):
             raise ClinicaBIDSError(error_message)
         else:
             raise ClinicaCAPSError(error_message)
