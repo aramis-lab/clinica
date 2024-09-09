@@ -24,7 +24,7 @@ DTI ; T1 ; T2 ; PD ; angiography.
 If you [installed clinica](../Installation.md#install-clinica), this converter needs no further dependencies.
 
 ### Understanding the command line
-```bash
+```{ .bash .copy }
 clinica convert ixi-to-bids DATASET_DIRECTORY BIDS_DIRECTORY CLINICAL_DATA_DIRECTORY [OPTIONS]
 ```
 where :

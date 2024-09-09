@@ -43,7 +43,7 @@ Please note that this converter processes the following modalities (1) :
 
 The converter can be run with the following command line:
 
-```bash
+```{ .bash .copy }
 clinica convert ukb-to-bids DATASET_DIRECTORY CLINICAL_DATA_DIRECTORY BIDS_DIRECTORY [OPTIONS]
 ```
 
