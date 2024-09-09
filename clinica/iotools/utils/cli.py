@@ -21,6 +21,7 @@ def cli() -> None:
 @cli.command()
 @click.argument("dataset", type=click.Path(resolve_path=True))
 def describe(dataset: Union[str, Path]):
+    """Describe a dataset in BIDS or CAPS format."""
     from .describe import describe as _describe
 
     _describe(dataset)
