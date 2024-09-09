@@ -19,7 +19,7 @@ The UKB to BIDS converter assumes that the user has already got access to the da
 ## Using the converter
 ### Dependencies
 
-If you installed the core of Clinica, this converter needs the {==dcm2niix==} package.
+If you [installed the core of Clinica](../Installation.md#install-clinica), this converter needs the [dcm2niix]((../Third-party.md#converters)) package.
 
 ### Supported modalities
 
@@ -54,7 +54,7 @@ where:
 === "Imaging data :"
 
     - `DATASET_DIRECTORY` is the path to the
-    original UK BIobank imaging directory.
+    original UK Biobank imaging directory.
 
     - `BIDS_DIRECTORY` is the path to the
     output directory where the BIDS-converted
@@ -74,6 +74,12 @@ where:
 
     - `CLINICAL_DATA_DIRECTORY` is the path to the directory
     containing the clinical CSV file.
+
+```title="CLINICAL_DATA_DIRECTORY Organisation"
+    CLINICAL_DATA_DIRECTORY
+    ├── clinical_data.csv
+    ├── ...
+```
 
 </div>
 
