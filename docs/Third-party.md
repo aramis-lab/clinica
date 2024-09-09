@@ -3,18 +3,16 @@
 
 ## Converters
 
-Some converters require a recent version of [dcm2niix](https://github.com/rordenlab/dcm2niix) to transform DICOM files into NIfTI:
+Some converters require a recent version of **dcm2niix** to transform DICOM files into NIfTI:
+- `adni-to-bids`
+- `aibl-to-bids` 
+- `nifd-to-bids`
+- `ukb-to-bids`
 
-|                   | dcm2niix |
-|:------------------|:--------:|
-| `adni-to-bids`    |    x     |
-| `aibl-to-bids`    |    x     |
-| `nifd-to-bids`    |    x     |
-| `oasis-to-bids`   |          |
+Please check the installation instructions for all platforms on dcm2niix [Git repository](https://github.com/rordenlab/dcm2niix#install).
 
-Please check the installation instructions for all platforms [here](https://github.com/rordenlab/dcm2niix#install).
-
-Clinica requires dcm2niix version `1.0.20190902` or later.
+!!! warning "Version"
+    Clinica requires dcm2niix version `1.0.20190902` or later.
 
 ## Pipeline-specific interfaces
 
@@ -96,16 +94,15 @@ You can find more details about `Freesurfer` [here](http://surfer.nmr.mgh.harvar
 
 #### Installation
 
-##### On Linux
+=== "Linux"
+    Download and install `FreeSurfer` following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
 
-Download and install `FreeSurfer` following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
+    !!! warning
+        Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` ( a `sudo apt-get install tcsh libjpeg62` should do the job).
 
-!!! note
-    Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` ( a `sudo apt-get install tcsh libjpeg62` should do the job).
+=== "MacOS"
+    Download it from [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the `FreeSurfer` [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
 
-##### On MacOS
-
-Download it from [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the `FreeSurfer` [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
 
 #### Configuration
 
@@ -122,35 +119,29 @@ We recommend installing [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/).
 
 #### Installation
 
-##### On Linux
+=== "Linux"
+    Download it from [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the [FSL wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/Linux).
 
-Download it from [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the [FSL wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/Linux).
-
-##### On MacOS
-
-Download it from [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the [FSL wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/MacOsX).
+=== "MacOS"
+    Download it from [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the [FSL wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/MacOsX).
 
 #### Configuration
 
-##### On Linux
+=== "Linux"
+    Make sure to have the following environment variables defined:
+    ```bash
+    export FSLDIR="/usr/share/fsl/6.0"
+    export PATH="${FSLDIR}/bin":${PATH}
+    source ${FSLDIR}/etc/fslconf/fsl.sh
+    ```
 
-Make sure to have the following environment variables defined:
-
-```bash
-export FSLDIR="/usr/share/fsl/6.0"
-export PATH="${FSLDIR}/bin":${PATH}
-source ${FSLDIR}/etc/fslconf/fsl.sh
-```
-
-##### On MacOS
-
-Make sure to have the following environment variables defined:
-
-```bash
-export FSLDIR="/usr/local/fsl"
-export PATH="${FSLDIR}/bin":${PATH}
-source ${FSLDIR}/etc/fslconf/fsl.sh
-```
+=== "MacOS"
+    Make sure to have the following environment variables defined:
+    ```bash
+    export FSLDIR="/usr/local/fsl"
+    export PATH="${FSLDIR}/bin":${PATH}
+    source ${FSLDIR}/etc/fslconf/fsl.sh
+    ```
 
 ### ITK
 

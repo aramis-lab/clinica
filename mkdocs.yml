@@ -24,6 +24,7 @@ theme:
     accent: light blue
   features:
     - content.tooltips
+    - content.tabs.link
 
 # Version panel
 extra_javascript:
