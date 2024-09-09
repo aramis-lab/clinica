@@ -1,101 +1,114 @@
 <!-- markdownlint-disable MD046 -->
 # Third-party software
 
+## Environment variables set-up
+
+As you will see on this page, environment variables are often needed in order to configure some third-party software installations.
+
+1. Run the provided `export` and `source` commands in your terminal. Environment variables will be defined only for the duration of your session, 
+and will be lost if you re-launch your terminal.
+
+    ??? info "Learn more about the concepts used here"
+        - environment variable : can be seen as a note the computer uses to store information about its configuration
+        - `export KEY = VALUE` : used to associate a VALUE to a KEY and make it accessible to other processes started from the terminal.
+        - `source FILE` : used to read/execute a FILE, for example one where configurations are set
+
+2. In order to define these variables permanently, you need to manually edit the configuration file associated to your shell.
+
+    If you are using `bash`, it can be `~/.bashrc` or `~/.bash_profile`, if you are using `zsh`, it should be `~/.zshrc`.
+
+!!! danger "Provided command lines should be adapted"
+    **Please** do not copy/paste the provided commands without adapting them to your system and without testing them.
+    Most paths provided here require to be adapted to your system and depend on how you installed the software.
+    
+    A good approach is to verify that the different paths you want to assign to a variable exist first : 
+
+    :material-arrow-right: If they do, then try running the `export` and `source` **(1.)** commands in your terminal. Verify that the software or the pipeline you want runs as expected.
+    
+    :material-arrow-right: If this works, then consider modifying your shell configuration file **(2.)** to have these variables automatically defined on every session.
+
+
 ## Converters
 
-Some converters require a recent version of **dcm2niix** to transform DICOM files into NIfTI:
+Some converters require **dcm2niix** to transform DICOM files into NIfTI :
 
-- `adni-to-bids`
-- `aibl-to-bids` 
-- `nifd-to-bids`
-- `ukb-to-bids`
+<div class="grid">
+  <a href="Converters/ADNI2BIDS.md" class="card">adni-to-bids</a>
+  <a href="Converters/AIBL2BIDS.md" class="card">aibl-to-bids</a>
+  <a href="Converters/NIFD2BIDS.md" class="card">nifd-to-bids</a>
+  <a href="Converters/UKBtoBIDS.md" class="card">ukb-to-bids</a>
+</div>
+
+!!! warning "Version required"
+    Clinica requires dcm2niix version `1.0.20190902` or later.
 
 Please check the installation instructions for all platforms on [dcm2niix Git repository](https://github.com/rordenlab/dcm2niix#install).
 
-!!! warning "Version"
-    Clinica requires dcm2niix version `1.0.20190902` or later.
+
 
 ## Pipeline-specific interfaces
 
-Not all the following dependencies are necessary to install and run Clinica.
-You may want to only install the software packages used by certain pipelines of Clinica.
-Pipelines' specific dependencies are listed below:
+<div class="annotate" markdown>
+Some, but not all pipelines use specific third-party software. Depending on your usage of Clinica, you will need to install additional packages.
+Specific dependencies are listed below (1) :
+</div>
 
+1. If not listed, the pipeline does not require any additional dependency outside Clinica.
 
-|                          | ANTs | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
-|:-------------------------|:----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
-| `t1-volume-*`            |      |           |            |     |     |   x    |         |        |  x  |
-| `t1-freesurfer`          |      |           |     x      |     |     |        |         |        |     |
-| `dwi-preprocessing-*`    |  x   |     x     |            |  x  |     |        |    x    |        |     |
-| `dwi-dti`                |  x   |           |            |  x  |     |        |    x    |        |     |
-| `dwi-connectome`         |  x   |           |     x      |  x  |     |        |    x    |        |     |
-| `pet-surface`            |      |           |            |  x  | x*  |        |         |   x*   |  x  |
-| `pet-volume`             |      |           |            |     | x*  |   x    |         |   x*   |  x  |
-| `statistics-surface`     |      |           |            |     |     |   x    |         |        |     |
-| `machine-learning-*`     |      |           |            |     |     |        |         |        |     |
+<div markdown="1" class="third_party_table">
 
+|                      | ANTs | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
+|:--------------------:|:----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
+|    Anat > Volume     |      |           |            |     |     |   ✓    |         |        |  ✓  |
+|  Anat > FreeSurfer   |      |           |     ✓      |     |     |        |         |        |     |
+| DWI > Preprocessing  |  ✓   |     ✓     |            |  ✓  |     |        |    ✓    |        |     |
+|      DWI > DTI       |  ✓   |           |            |  ✓  |     |        |    ✓    |        |     |
+|   DWI > Connectome   |  ✓   |           |     ✓      |  ✓  |     |        |    ✓    |        |     |
+|  PET > Surface (2)   |      |           |            |  ✓  | ✓⟡  |        |         |   ✓⟡   |  ✓  |
+|     PET > Volume     |      |           |            |     | ✓⟡  |   ✓    |         |   ✓⟡   |  ✓  |
+| Statistics > Surface |      |           |            |     |     |   ✓    |         |        |     |
+</div>
 
-!!! note "CAT12 toolbox"
+*✓⟡ : you only need to install ITK if you plan to perform partial volume correction using PETPVC.*
+
+??? warning "CAT12 toolbox and Clinica < `v0.3.7`"
     Starting from Clinica `v0.3.7`, the [**CAT12**](http://dbm.neuro.uni-jena.de/cat/) toolbox is no longer needed for the `t1-volume` and `pet-volume` pipelines.
     For previous versions of Clinica, you will need to download the latest version of the toolbox [here](http://dbm.neuro.uni-jena.de/cat/index.html#DOWNLOAD) and follow the instructions to ensure that your `cat12` folder is located in your `spm/toolbox` folder.
 
-_*You only need to install ITK if you plan to perform partial volume correction using PETPVC._
-
 Depending on the architecture and OS of your system, setup of third party libraries can change.
-Please refer to each tool’s website for installation instructions:
-
-### Environment variables setup
-
-When installing some of the third party software, environment variables might be needed in order to configure some installations.
-
-If you simply run the `export` and `source` commands in your terminal, these environment variables will be defined only for the duration of your session, and will be lost if you re-launch your terminal.
-
-In order to define these variables permanently, you need to manually edit the configuration file associated to your shell.
-
-If you are using `bash`, it can be `~/.bashrc` or `~/.bash_profile`, if you are using `zsh`, it should be `~/.zshrc`.
-
-!!! note "test before"
-    Please do not copy/paste the provided commands without adapting them to your system and without testing them.
-    Most paths provided here require to be adapted to your system, and also depends on how you installed the software.
-    A good approach is to verify that the different paths you want to assign to a variable exist first.
-    If they do, then try running the `export` and `source` commands in your terminal, and verify that the software run as expected.
-    You can also verify that the pipeline you want to use is also running as expected.
-    If this works, then consider modifying your shell configuration file to have these variables automatically defined on every session.
-
+Please refer to each tool’s website for installation instructions :
+___
 
 ### ANTs
 
-#### Installation
+To install `ANTs`, download it from [ANTs release list](https://github.com/stnava/ANTs/releases) and follow the instructions on [ANTs wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
 
-To install `ANTs`, download it from [here](https://github.com/stnava/ANTs/releases) and follow the instructions on the `ANTs` [wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
+=== "`ANTs >= 2.5.0` 🔺"
+    We **strongly** recommend installing `ANTs >= 2.5.0` from which **no environment variable are needed**.
 
-#### Configuration
+=== "`ANTs < 2.5.0`"
+    Nonetheless, if you are using an older version of `ANTs`, make sure to have the following environment variables defined:
+    
+    ```{ .bash .copy }
+    export ANTSPATH="/path/to/your/ANTs/"
+    export PATH=${ANTSPATH}:${PATH}
+    ```
 
-We strongly recommend installing `ANTs >= 2.5.0` from which **no environment variable are needed**.
-
-Nonetheless, if you are using an older version of `ANTs`, make sure to have the following environment variables defined:
-
-```{ .bash .copy }
-export ANTSPATH="/path/to/your/ANTs/"
-export PATH=${ANTSPATH}:${PATH}
-```
+___
 
 ### Convert3D
 
-You can find more details about `Convert3D` [here](http://www.itksnap.org/pmwiki/pmwiki.php?n=Convert3D.Convert3D).
-
-#### Installation
-
-You have two options to install `Convert3D`:
+You can find more details about `Convert3D` on their [website](http://www.itksnap.org/pmwiki/pmwiki.php?n=Convert3D.Convert3D). There are
+two options to install it :
 
 - [Use pre-built binaries](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
 - [Use the official conda package](https://anaconda.org/conda-forge/convert3d).
 
-### Freesurfer
+___
 
-You can find more details about `Freesurfer` [here](http://surfer.nmr.mgh.harvard.edu/).
+### FreeSurfer
 
-#### Installation
+You can find more details about `FreeSurfer` on their [website](http://surfer.nmr.mgh.harvard.edu/). To install it :
 
 === "Linux"
     Download and install `FreeSurfer` following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall).
@@ -107,8 +120,6 @@ You can find more details about `Freesurfer` [here](http://surfer.nmr.mgh.harvar
     Download it from [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the `FreeSurfer` [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
 
 
-#### Configuration
-
 Make sure to have the following environment variables defined:
 
 ```{ .bash .copy }
@@ -116,21 +127,15 @@ export FREESURFER_HOME="/Applications/freesurfer"
 source ${FREESURFER_HOME}/SetUpFreeSurfer.sh &> /dev/null
 ```
 
+___
+
 ### FSL
 
 We recommend installing [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/).
 
-#### Installation
-
 === "Linux"
     Download it from [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the [FSL wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/Linux).
 
-=== "MacOS"
-    Download it from [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the [FSL wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/MacOsX).
-
-#### Configuration
-
-=== "Linux"
     Make sure to have the following environment variables defined:
     ```{ .bash .copy }
     export FSLDIR="/usr/share/fsl/6.0"
@@ -139,6 +144,8 @@ We recommend installing [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/).
     ```
 
 === "MacOS"
+    Download it from [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the [FSL wiki](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/MacOsX).
+
     Make sure to have the following environment variables defined:
     ```{ .bash .copy }
     export FSLDIR="/usr/local/fsl"
@@ -146,11 +153,11 @@ We recommend installing [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/).
     source ${FSLDIR}/etc/fslconf/fsl.sh
     ```
 
+___
+
 ### ITK
 
-You can find more details about `ITK` [here](https://itk.org/).
-
-#### Installation
+You can find more details about `ITK` on their [website](https://itk.org/). To install it :
 
 === "Linux"
     Follow the instructions on the [ITK blog](https://blog.kitware.com/itk-packages-in-linux-distributions/).
@@ -158,13 +165,12 @@ You can find more details about `ITK` [here](https://itk.org/).
 === "MacOS"
     Follow the instructions on the [ITK blog](https://blog.kitware.com/kitware-packages-on-os-x-with-homebrew/).
 
+___
+
 ### MRtrix3
 
-You can find more details about `MRtrix3` [here](http://www.mrtrix.org).
-
-#### Installation
-
-You can find the official instructions on the `MRtrix` [website](https://www.mrtrix.org/download/).
+You can find more details about `MRtrix3` on their [website](http://www.mrtrix.org), including
+official instructions for [downloading](https://www.mrtrix.org/download/).
 
 === "Linux"
     You have basically two options:
@@ -181,15 +187,14 @@ You can find the official instructions on the `MRtrix` [website](https://www.mrt
     - [Use the MacOS pre-compiled application package installer](https://www.mrtrix.org/download/macos-application/).
     - [Use the Homebrew formula](https://github.com/MRtrix3/homebrew-mrtrix3) (although large dependencies such as `XCode` and `Qt5` are required).
 
+___
 
 ### Matlab
 
-You can find more details about `Matlab` [here](https://fr.mathworks.com/products/matlab/).
+You can find more details about `Matlab` on their [website](https://fr.mathworks.com/products/matlab/).
 
 !!! warning
-    Note that using `Matlab` requires having a valid license which might be available through your university or institution.
-
-#### Configuration
+    Note that using `Matlab` requires having a **valid license** which might be available through your university or institution.
 
 Make sure to have the following environment variables defined:
 
@@ -199,13 +204,12 @@ export PATH=${MATLAB_HOME}:${PATH}
 export MATLABCMD="${MATLAB_HOME}/matlab"
 ```
 
+___
+
 ### PETPVC
 
-You can find more details about `PETPVC` [here](https://github.com/UCL/PETPVC).
-
-#### Installation
-
-You can find the official instructions in the README of [this page](https://github.com/UCL/PETPVC).
+You can find more details about `PETPVC` on their [website](https://github.com/UCL/PETPVC),
+including official instructions for downloading on their [Github](https://github.com/UCL/PETPVC).
 
 You have basically three options:
 
@@ -213,18 +217,18 @@ You have basically three options:
 - [Use the official conda package](https://anaconda.org/conda-forge/petpvc).
 - [Build from source](https://github.com/UCL/PETPVC?tab=readme-ov-file#installation-from-source-instructions).
 
-!!! warning
-    If building from source, do not forget to compile in RELEASE mode, otherwise, partial volume correction will be very slow.
+!!! tip
+    If building from source, do not forget to compile in **RELEASE** mode, otherwise, partial volume correction will be very slow.
+
+___
 
 ### SPM12
 
-You can find more details about `SPM12` [here](http://www.fil.ion.ucl.ac.uk/spm/).
+!!! warning "SPM12 and Matlab"
+    Note that `SPM12` works with [Matlab](#matlab) such that Clinica pipelines which require `SPM12`, will also need a `Matlab` installation.
+    If you cannot install `Matlab`, you can install [SPM standalone](#spm12-standalone).
 
-Note that `SPM12` works with [Matlab](#matlab) such that clinica pipelines which require `SPM12`, will also need a `Matlab` installation.
-
-If you cannot install `Matlab`, you can install [SPM standalone](#spm12-standalone).
-
-#### Installation
+You can find more details about `SPM12` on their [website](http://www.fil.ion.ucl.ac.uk/spm/). To install it :
 
 === "Linux"
     Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux).
@@ -232,37 +236,33 @@ If you cannot install `Matlab`, you can install [SPM standalone](#spm12-standalo
 === "MacOS"
     Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)).
 
-    !!! warning
+    ??? warning "MacOS Big Sur"
         For systems running on MacOS Big Sur, a [development version of SPM12](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) as well as a more recent release of the MCR (minimum 2019a) are required.
 
-#### Configuration
 
-Make sure to have the following environment variable defined:
+1. Make sure to have the following environment variable defined:
+    ```{ .bash .copy }
+    export SPM_HOME="/path/to/your/spm12"
+    ```
 
-```{ .bash .copy }
-export SPM_HOME="/path/to/your/spm12"
-```
+   2. You must also add `SPM` to the `MATLAB` path variable if you installed it as a toolbox.
+      - First, verify a `startup.m` file exists in your *initial working folder*, by default `~/Documents/MATLAB` (see [here](https://fr.mathworks.com/help/matlab/ref/startup.html) for more details). 
+        If the file does not exist, you can create it.
+      - Then, type inside:
+       ```matlab
+       addpath('/path/to/your/spm12');
+       ```
+       **OR**, assuming the `$SPM_HOME` environment variable is set in your `~/.bashrc` file :
+       ```matlab
+       [~, spmhome] = system('source ~/.bashrc > /dev/null; echo $SPM_HOME;');
+       spmhome = strsplit(spmhome,'\n');
+       addpath(spmhome{end-1});
+       ```
 
-You must also add `SPM` to the `MATLAB` path variable if you installed it as a toolbox.
+    !!! warning
+        `zsh` shell users will have to replace `~/.bashrc` by `~/.zshrc`.
 
-To do so, add the following line to your `startup.m` file located in your *initial working folder*, by default `~/Documents/MATLAB` (see [here](https://fr.mathworks.com/help/matlab/ref/startup.html) for more details).
-
-If the file does not exist, you can create it and type inside:
-
-```matlab
-addpath('/path/to/your/spm12');
-```
-
-You can also replace the previous line by the following, assuming the `$SPM_HOME` environment variable is set in your `~/.bashrc` file.
-
-```matlab
-[~, spmhome] = system('source ~/.bashrc > /dev/null; echo $SPM_HOME;');
-spmhome = strsplit(spmhome,'\n');
-addpath(spmhome{end-1});
-```
-
-!!! Note
-    `zsh` shell users will have to replace `~/.bashrc` by `~/.zshrc`.
+___
 
 ### SPM12 standalone
 
@@ -271,13 +271,9 @@ If you want to install `SPM12` without installing [Matlab](#matlab), you will ne
 - The Matlab runtime (often abbreviated into MCR), for which no license is required.
 - The SPM standalone itself.
 
-#### Installation
-
 You can find details on how to install these on [this page](https://www.fil.ion.ucl.ac.uk/spm/docs/installation/standalone/).
 
-#### Configuration
-
-!!! note
+!!! tip "Verify your environment variables"
     If you followed the installation instructions, you should have set the environment variable `$LD_LIBRARY_PATH`.
 
 In addition, you need to define the following environment variables:
@@ -287,12 +283,12 @@ export MCR_HOME="/path/to/your/MCR/"
 export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
 ```
 
-## Autocompletion
+### Autocompletion
 
 <!-- # Autocomplete system
 eval "$(register-python-argcomplete clinica)" -->
 
-!!! warning
+!!! warning "Autocompletion for `zsh` shell users"
     `zsh` shell users will have to add this right before the last line of their configuration file to enable autocompletion in Clinica:
 
     ```bash
@@ -300,13 +296,3 @@ eval "$(register-python-argcomplete clinica)" -->
     bashcompinit
     source ~/.bash_completion.d/python-argcomplete.sh
     ```
-
-
-TO REMOVE :
-<div markdown="1" class="explicit-col-width">
-
-| Test          | ANTs | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
-|:--------------|:----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
-| Very-big-name |  x   |     x     |     x      |  x  |  x  |   x    |    x    |   x    |  x  |
-
-</div>
