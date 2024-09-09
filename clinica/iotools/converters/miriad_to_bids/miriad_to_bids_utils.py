@@ -16,7 +16,7 @@ def create_bids_structure(subject_id, session, cohort, diagnosis, gender, input_
         output_dir (_type_): _description_
         path_to_dataset (_type_, optional): _description_. Defaults to None, n_procs: Optional[int] = 1, **kwargs, ):#subject_id.
     """
-    sub_id = f"sub-{subject_id}"
+    sub_id = f"sub-MIRIAD{subject_id}"
     ses_id = f"ses-{session}"
     
     # Create output directory for this subject/session
