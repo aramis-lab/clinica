@@ -25,6 +25,7 @@ theme:
   features:
     - content.tooltips
     - content.tabs.link
+    - navigation.top
 
 # Version panel
 extra_javascript:

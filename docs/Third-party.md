@@ -4,12 +4,13 @@
 ## Converters
 
 Some converters require a recent version of **dcm2niix** to transform DICOM files into NIfTI:
+
 - `adni-to-bids`
 - `aibl-to-bids` 
 - `nifd-to-bids`
 - `ukb-to-bids`
 
-Please check the installation instructions for all platforms on dcm2niix [Git repository](https://github.com/rordenlab/dcm2niix#install).
+Please check the installation instructions for all platforms on [dcm2niix Git repository](https://github.com/rordenlab/dcm2niix#install).
 
 !!! warning "Version"
     Clinica requires dcm2niix version `1.0.20190902` or later.
@@ -72,7 +73,7 @@ We strongly recommend installing `ANTs >= 2.5.0` from which **no environment var
 
 Nonetheless, if you are using an older version of `ANTs`, make sure to have the following environment variables defined:
 
-```bash
+```{ .bash .copy }
 export ANTSPATH="/path/to/your/ANTs/"
 export PATH=${ANTSPATH}:${PATH}
 ```
@@ -108,7 +109,7 @@ You can find more details about `Freesurfer` [here](http://surfer.nmr.mgh.harvar
 
 Make sure to have the following environment variables defined:
 
-```bash
+```{ .bash .copy }
 export FREESURFER_HOME="/Applications/freesurfer"
 source ${FREESURFER_HOME}/SetUpFreeSurfer.sh &> /dev/null
 ```
@@ -129,7 +130,7 @@ We recommend installing [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/).
 
 === "Linux"
     Make sure to have the following environment variables defined:
-    ```bash
+    ```{ .bash .copy }
     export FSLDIR="/usr/share/fsl/6.0"
     export PATH="${FSLDIR}/bin":${PATH}
     source ${FSLDIR}/etc/fslconf/fsl.sh
@@ -137,7 +138,7 @@ We recommend installing [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/).
 
 === "MacOS"
     Make sure to have the following environment variables defined:
-    ```bash
+    ```{ .bash .copy }
     export FSLDIR="/usr/local/fsl"
     export PATH="${FSLDIR}/bin":${PATH}
     source ${FSLDIR}/etc/fslconf/fsl.sh
@@ -149,13 +150,11 @@ You can find more details about `ITK` [here](https://itk.org/).
 
 #### Installation
 
-##### On Linux
+=== "Linux"
+    Follow the instructions on the [ITK blog](https://blog.kitware.com/itk-packages-in-linux-distributions/).
 
-Follow the instructions on the [ITK blog](https://blog.kitware.com/itk-packages-in-linux-distributions/).
-
-##### On MacOS
-
-Follow the instructions on the [ITK blog](https://blog.kitware.com/kitware-packages-on-os-x-with-homebrew/).
+=== "MacOS"
+    Follow the instructions on the [ITK blog](https://blog.kitware.com/kitware-packages-on-os-x-with-homebrew/).
 
 ### MRtrix3
 
@@ -165,37 +164,34 @@ You can find more details about `MRtrix3` [here](http://www.mrtrix.org).
 
 You can find the official instructions on the `MRtrix` [website](https://www.mrtrix.org/download/).
 
-##### On Linux
+=== "Linux"
+    You have basically two options:
 
-You have basically two options:
+    - [Use the official conda package](https://www.mrtrix.org/download/linux-anaconda/).
+    - [Build MRtrix3 from source](https://mrtrix.readthedocs.io/en/latest/installation/build_from_source.html#linux).
 
-- [Use the official conda package](https://www.mrtrix.org/download/linux-anaconda/).
-- [Build MRtrix3 from source](https://mrtrix.readthedocs.io/en/latest/installation/build_from_source.html#linux).
+    !!! tip
+        Note that using the conda package should be easier in most cases.
 
-!!! note
-    Note that using the conda package should be easier in most cases.
+=== "MacOS"
 
-##### On MacOS
+    - [Use the official conda package](https://www.mrtrix.org/download/macos-anaconda/).
+    - [Use the MacOS pre-compiled application package installer](https://www.mrtrix.org/download/macos-application/).
+    - [Use the Homebrew formula](https://github.com/MRtrix3/homebrew-mrtrix3) (although large dependencies such as `XCode` and `Qt5` are required).
 
-- [Use the official conda package](https://www.mrtrix.org/download/macos-anaconda/).
-- [Use the MacOS pre-compiled application package installer](https://www.mrtrix.org/download/macos-application/).
-- [Use the Homebrew formula](https://github.com/MRtrix3/homebrew-mrtrix3) (although large dependencies such as `XCode` and `Qt5` are required).
-
-!!! note
-    As for Linux, note that using the conda package should be easier in most cases.
 
 ### Matlab
 
 You can find more details about `Matlab` [here](https://fr.mathworks.com/products/matlab/).
 
-!!! note
+!!! warning
     Note that using `Matlab` requires having a valid license which might be available through your university or institution.
 
 #### Configuration
 
 Make sure to have the following environment variables defined:
 
-```bash
+```{ .bash .copy }
 export MATLAB_HOME="/path/to/your/matlab/bin/"
 export PATH=${MATLAB_HOME}:${PATH}
 export MATLABCMD="${MATLAB_HOME}/matlab"
@@ -215,7 +211,7 @@ You have basically three options:
 - [Use the official conda package](https://anaconda.org/conda-forge/petpvc).
 - [Build from source](https://github.com/UCL/PETPVC?tab=readme-ov-file#installation-from-source-instructions).
 
-!!! note
+!!! warning
     If building from source, do not forget to compile in RELEASE mode, otherwise, partial volume correction will be very slow.
 
 ### SPM12
@@ -228,22 +224,20 @@ If you cannot install `Matlab`, you can install [SPM standalone](#spm12-standalo
 
 #### Installation
 
-##### On Linux
+=== "Linux"
+    Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux).
 
-Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux).
+=== "MacOS"
+    Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)).
 
-##### On MacOS
-
-Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)).
-
-!!! note
-    For systems running on MacOS Big Sur, a [development version of SPM12](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) as well as a more recent release of the MCR (minimum 2019a) are required.
+    !!! warning
+        For systems running on MacOS Big Sur, a [development version of SPM12](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) as well as a more recent release of the MCR (minimum 2019a) are required.
 
 #### Configuration
 
 Make sure to have the following environment variable defined:
 
-```bash
+```{ .bash .copy }
 export SPM_HOME="/path/to/your/spm12"
 ```
 
@@ -296,7 +290,7 @@ export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
 <!-- # Autocomplete system
 eval "$(register-python-argcomplete clinica)" -->
 
-!!! Note
+!!! warning
     `zsh` shell users will have to add this right before the last line of their configuration file to enable autocompletion in Clinica:
 
     ```bash
