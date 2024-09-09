@@ -19,7 +19,7 @@ The UKB to BIDS converter assumes that the user has already got access to the da
 ## Using the converter
 ### Dependencies
 
-If you [installed the core of Clinica](../Installation.md#install-clinica), this converter needs the [dcm2niix]((../Third-party.md#converters)) package.
+If you [installed the core of Clinica](../Installation.md#install-clinica), this converter needs the [dcm2niix](../Third-party.md#converters) package.
 
 ### Supported modalities
 
