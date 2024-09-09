@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 from rich import box
+from rich.console import Console
 from rich.table import Table
 
 from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
@@ -11,7 +12,7 @@ from clinica.utils.inputs import DatasetType
 __all__ = ["describe"]
 
 
-def describe(dataset: Union[str, Path]):
+def describe(dataset: Union[str, Path]) -> None:
     """Describe a dataset in BIDS or CAPS format.
 
     Parameters
@@ -19,8 +20,6 @@ def describe(dataset: Union[str, Path]):
     dataset : str or Path
         The path to the BIDS or CAPS dataset to describe.
     """
-    from rich.console import Console
-
     description = (
         CAPSDatasetDescription if _is_caps(dataset) else BIDSDatasetDescription
     ).from_file(Path(dataset) / "dataset_description.json")
@@ -46,9 +45,11 @@ def _build_dataset_table(
     description: Union[BIDSDatasetDescription, CAPSDatasetDescription],
 ) -> Table:
     dataset_table = Table(title="Dataset information", box=box.ROUNDED)
-    dataset_table.add_column("Name", justify="right", style="bright_cyan", no_wrap=True)
-    dataset_table.add_column("Type", justify="right", style="bright_yellow")
-    dataset_table.add_column("BIDS Specifications Version", style="bright_magenta")
+    for column, color in zip(
+        ["Name", "Type", "BIDS Specifications Version"],
+        ["bright_cyan", "bright_yellow", "bright_magenta"],
+    ):
+        dataset_table.add_column(column, justify="right", style=color)
     row = (description.name, description.dataset_type, str(description.bids_version))
     if description.dataset_type == DatasetType.DERIVATIVE:
         dataset_table.add_column(

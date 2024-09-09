@@ -24,7 +24,7 @@ where:
 With a BIDS dataset:
 
 ```shell
-clinica iotools describe ./bids                                                                                                  ✔  3507  18:10:39
+clinica iotools describe ./bids
                          Dataset information
 ╭───────────────────────────────┬──────┬─────────────────────────────╮
 │                          Name │ Type │ BIDS Specifications Version │
