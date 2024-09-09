@@ -18,6 +18,7 @@ theme:
   name: material
   icon:
     repo: material/github
+    annotation: material/help-circle
   language: en
   palette:
     primary: light blue
@@ -56,6 +57,8 @@ markdown_extensions:
   - pymdownx.emoji
   - pymdownx.keys
   - pymdownx.superfences
+  - pymdownx.critic
+  - md_in_html
   - abbr
   - attr_list
   - pymdownx.snippets:
