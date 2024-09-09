@@ -41,3 +41,30 @@ h3, .h3, .md-typeset h3 {
     font-weight: 600;
     margin: 1.6rem 0 1.6rem;
 }
+
+.md-typeset__table {
+   min-width: 100%;
+}
+
+.md-typeset table:not([class]) {
+    display: table;
+}
+
+_::-moz-range-track, body:last-child table {
+  table-layout: fixed;
+}
+
+.md-typeset td {
+  overflow-wrap: break-word;
+}
+
+.explicit-col-width th:nth-child(1) { width: 25%; }
+.explicit-col-width th:nth-child(2) { width: 5%; }
+.explicit-col-width th:nth-child(3) { width: 10%; }
+.explicit-col-width th:nth-child(4) { width: 15%; }
+.explicit-col-width th:nth-child(5) { width: 5%; }
+.explicit-col-width th:nth-child(6) { width: 5%; }
+.explicit-col-width th:nth-child(7) { width: 10%; }
+.explicit-col-width th:nth-child(8) { width: 10%; }
+.explicit-col-width th:nth-child(9) { width: 10%; }
+.explicit-col-width th:nth-child(10) { width: 5%; }

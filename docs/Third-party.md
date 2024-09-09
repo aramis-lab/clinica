@@ -21,17 +21,19 @@ Not all the following dependencies are necessary to install and run Clinica.
 You may want to only install the software packages used by certain pipelines of Clinica.
 Pipelines' specific dependencies are listed below:
 
+
 |                          | ANTs | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
 |:-------------------------|:----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
-| `t1-volume-*`            |      |           |            |     |     |    x   |         |        |  x  |
+| `t1-volume-*`            |      |           |            |     |     |   x    |         |        |  x  |
 | `t1-freesurfer`          |      |           |     x      |     |     |        |         |        |     |
-| `dwi-preprocessing-*`    |   x  |     x     |            |  x  |     |        |    x    |        |     |
-| `dwi-dti`                |   x  |           |            |  x  |     |        |    x    |        |     |
-| `dwi-connectome`         |   x  |           |     x      |  x  |     |        |    x    |        |     |
-| `pet-surface`            |      |           |            |  x  |  x* |        |         |   x*   |  x  |
-| `pet-volume`             |      |           |            |     |  x* |    x   |         |   x*   |  x  |
-| `statistics-surface`     |      |           |            |     |     |    x   |         |        |     |
+| `dwi-preprocessing-*`    |  x   |     x     |            |  x  |     |        |    x    |        |     |
+| `dwi-dti`                |  x   |           |            |  x  |     |        |    x    |        |     |
+| `dwi-connectome`         |  x   |           |     x      |  x  |     |        |    x    |        |     |
+| `pet-surface`            |      |           |            |  x  | x*  |        |         |   x*   |  x  |
+| `pet-volume`             |      |           |            |     | x*  |   x    |         |   x*   |  x  |
+| `statistics-surface`     |      |           |            |     |     |   x    |         |        |     |
 | `machine-learning-*`     |      |           |            |     |     |        |         |        |     |
+
 
 !!! note "CAT12 toolbox"
     Starting from Clinica `v0.3.7`, the [**CAT12**](http://dbm.neuro.uni-jena.de/cat/) toolbox is no longer needed for the `t1-volume` and `pet-volume` pipelines.
@@ -299,3 +301,12 @@ eval "$(register-python-argcomplete clinica)" -->
     source ~/.bash_completion.d/python-argcomplete.sh
     ```
 
+
+TO REMOVE :
+<div markdown="1" class="explicit-col-width">
+
+| Test          | ANTs | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
+|:--------------|:----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
+| Very-big-name |  x   |     x     |     x      |  x  |  x  |   x    |    x    |   x    |  x  |
+
+</div>
