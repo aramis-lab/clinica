@@ -23,9 +23,9 @@ and will be lost if you re-launch your terminal.
     
     A good approach is to verify that the different paths you want to assign to a variable exist first : 
 
-    :material-arrow-right: If they do, then try running the `export` and `source` **(1.)** commands in your terminal. Verify that the software or the pipeline you want runs as expected.
+    → If they do, then try running the `export` and `source` **(step 1. above)** commands in your terminal. Verify that the software or the pipeline you want runs as expected.
     
-    :material-arrow-right: If this works, then consider modifying your shell configuration file **(2.)** to have these variables automatically defined on every session.
+    → If this works, then consider modifying your shell configuration file **(step 2. above)** to have these variables automatically defined on every session.
 
 
 ## Converters
@@ -33,11 +33,14 @@ and will be lost if you re-launch your terminal.
 Some converters require **dcm2niix** to transform DICOM files into NIfTI :
 
 <div class="grid">
-  <a href="Converters/ADNI2BIDS.md" class="card">adni-to-bids</a>
-  <a href="Converters/AIBL2BIDS.md" class="card">aibl-to-bids</a>
-  <a href="Converters/NIFD2BIDS.md" class="card">nifd-to-bids</a>
-  <a href="Converters/UKBtoBIDS.md" class="card">ukb-to-bids</a>
+  <a href="../Converters/ADNI2BIDS.md" class="card">adni-to-bids</a>
+  <a href="../Converters/AIBL2BIDS.md" class="card">aibl-to-bids</a>
+  <a href="../Converters/GENFItoBIDS.md" class="card">genfi-to-bids</a>
+  <a href="../Converters/NIFD2BIDS.md" class="card">nifd-to-bids</a>
+  <a href="../Converters/UKBtoBIDS.md" class="card">ukb-to-bids</a>
 </div>
+
+### DCM2NIX
 
 !!! warning "Version required"
     Clinica requires dcm2niix version `1.0.20190902` or later.
@@ -46,7 +49,7 @@ Please check the installation instructions for all platforms on [dcm2niix Git re
 
 
 
-## Pipeline-specific interfaces
+## Pipelines
 
 <div class="annotate" markdown>
 Some, but not all pipelines use specific third-party software. Depending on your usage of Clinica, you will need to install additional packages.
@@ -59,16 +62,20 @@ Specific dependencies are listed below (1) :
 
 |                      | ANTs | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
 |:--------------------:|:----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
+|    Anat > Linear     |  ✓∘  |           |            |     |     |        |         |        |     |
 |    Anat > Volume     |      |           |            |     |     |   ✓    |         |        |  ✓  |
 |  Anat > FreeSurfer   |      |           |     ✓      |     |     |        |         |        |     |
 | DWI > Preprocessing  |  ✓   |     ✓     |            |  ✓  |     |        |    ✓    |        |     |
 |      DWI > DTI       |  ✓   |           |            |  ✓  |     |        |    ✓    |        |     |
-|   DWI > Connectome   |  ✓   |           |     ✓      |  ✓  |     |        |    ✓    |        |     |
-|  PET > Surface (2)   |      |           |            |  ✓  | ✓⟡  |        |         |   ✓⟡   |  ✓  |
+|   DWI > Connectome   |      |           |     ✓      |  ✓  |     |        |    ✓    |        |     |
+|     PET > Linear     |  ✓   |           |            |     |     |        |         |        |     |
+|    PET > Surface     |      |           |     ✓      |  ✓  | ✓⟡  |   ✓    |         |   ✓⟡   |  ✓  |
 |     PET > Volume     |      |           |            |     | ✓⟡  |   ✓    |         |   ✓⟡   |  ✓  |
-| Statistics > Surface |      |           |            |     |     |   ✓    |         |        |     |
-</div>
+| Statistics > Surface |      |           |     ✓      |     |     |        |         |        |     |
+| Statistics > Volume  |      |           |            |     |     |   ✓    |         |        |  ✓  |
 
+</div>
+*✓∘ : for anatomical linear pipelines there is also the possibility to use ANTsPy instead of ANTs since Clinica `v0.9.0`* 
 *✓⟡ : you only need to install ITK if you plan to perform partial volume correction using PETPVC.*
 
 ??? warning "CAT12 toolbox and Clinica < `v0.3.7`"
