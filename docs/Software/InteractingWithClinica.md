@@ -9,7 +9,10 @@ BIDS is currently becoming the standard for data organization in the brain imagi
 If your dataset does not follow this standard, you will need to **convert it** :
 
 - If your data are in [DICOM format](https://www.dicomstandard.org), you can use one of the converters referenced on the [BIDS website](https://bids.neuroimaging.io/benefits.html#converters).
-- Otherwise, Clinica includes [converters for public datasets](../index.md#dataset-converters-clinica-convert).
+- Otherwise, Clinica includes converters for public datasets :
+
+??? info "Clinica available converters"
+    --8<-- "snippets/inventory_converters.md"
 
 !!! warning "Clinica and cross-sectional BIDS datasets"
     If you run Clinica with a dataset containing **no timepoints** e.g.:
@@ -35,7 +38,7 @@ If your dataset does not follow this standard, you will need to **convert it** :
                 ├── sub-CLNC0001_ses-M000_trc-18FFDG_pet.json
                 └── sub-CLNC0001_ses-M000_trc-18FFDG_pet.nii.gz
     ```
-    You should **accept** the creation of this dataset, else Clinica can not run and will fail.
+    You should **accept** the creation of this dataset, else Clinica will fail.
 
 !!! tip
      If you need to create [BIDS](http://bids.neuroimaging.io/) compliant datasets or need tutorials on [BIDS](http://bids.neuroimaging.io/), you can look at this [BIDS Starter Kit](https://github.com/INCF/bids-starter-kit/).
