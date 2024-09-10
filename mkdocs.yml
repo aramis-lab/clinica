@@ -74,10 +74,7 @@ markdown_extensions:
       alternate_style: True
 
 not_in_nav: |
-  /snippets/converters_options.md
-  /snippets/abbreviations.md
-  /snippets/inventory_converters.md
-  /snippets/inventory_pipelines.md
+  /snippets/
 
 # Page tree
 nav:

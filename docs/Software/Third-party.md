@@ -293,6 +293,8 @@ export MCR_HOME="/path/to/your/MCR/"
 export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
 ```
 
+___
+
 ### Autocompletion
 
 <!-- # Autocomplete system
@@ -306,3 +308,6 @@ eval "$(register-python-argcomplete clinica)" -->
     bashcompinit
     source ~/.bash_completion.d/python-argcomplete.sh
     ```
+
+
+--8<-- "snippets/known_issues.md:matlab"

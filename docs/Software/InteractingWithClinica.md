@@ -125,15 +125,11 @@ Any time you would like to use this `AD` template you will need to provide the g
 You might also use `CNvsAD`, for instance, as group ID for a statistical group comparison between patients with Alzheimer's disease (`AD`) and cognitively normal (`CN`) subjects.
 
 --8<-- "snippets/pipelines_options.md"
+
 --8<-- "snippets/converters_options.md"
 
-## :warning: Known issues
+--8<-- "snippets/known_issues.md:matlab"
 
-[Matlab](https://www.mathworks.com/products/matlab.html) and [SPM12](https://www.fil.ion.ucl.ac.uk/spm/software/spm12/) (whose implementation is based on Matlab) can sometimes randomly crash, causing a rather unreadable error in the console.
-Those events are unpredictable. In case it occurs to you, please do the following:
-
-- Check that you have a valid Matlab license.
-- Before relaunching the command line, be sure to remove the content of the working directory (if you specified one).
 
 ## Support
 
