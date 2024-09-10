@@ -8,8 +8,7 @@ As you will see on this page, environment variables are often needed in order to
 1. Run the provided `export` and `source` commands in your terminal. Environment variables will be defined only for the duration of your session, 
 and will be lost if you re-launch your terminal.
 
-    ??? info "Learn more about the concepts used here"
-        - environment variable : can be seen as a note the computer uses to store information about its configuration
+    ??? info "Learn how to set environment variables"
         - `export KEY = VALUE` : used to associate a VALUE to a KEY and make it accessible to other processes started from the terminal.
         - `source FILE` : used to read/execute a FILE, for example one where configurations are set
 
