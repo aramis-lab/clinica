@@ -9,8 +9,8 @@ As you will see on this page, environment variables are often needed in order to
 and will be lost if you re-launch your terminal.
 
     ??? info "Learn how to set environment variables"
-        - `export KEY = VALUE` : used to associate a VALUE to a KEY and make it accessible to other processes started from the terminal.
-        - `source FILE` : used to read/execute a FILE, for example one where configurations are set
+        - `export var_name = value` : defines an environment variable as value and makes it accessible to other processes started from the terminal.
+        - `source file` : used to read/execute a file, for example one where configurations are set
 
 2. In order to define these variables permanently, you need to manually edit the configuration file associated to your shell.
 
