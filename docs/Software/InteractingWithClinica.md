@@ -46,7 +46,11 @@ If your dataset does not follow this standard, you will need to **convert it** :
 ## Clinica command-line interface
 
 Clinica's main usage is through command-line.
-Clinica supports autocompletion: to see the list of commands, simply type `clinica` followed by ++tab++.
+
+!!! tip "See the list of available commands on your terminal"
+    - Do not hesitate to use `-h` or `--help` after any component of the command line,
+    ex : `clinica -h`, `clinica run -h` ... to see what options are available.
+    - Clinica supports autocompletion for zsh shell users : to see the list of commands, simply type `clinica` followed by ++tab++.
 
 In general, a Clinica command-line has the following syntax:
 
