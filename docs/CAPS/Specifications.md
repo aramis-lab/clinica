@@ -135,9 +135,9 @@ subjects/
                   └─ <source_file>_segm-<segm>_dartelinput.nii.gz
 ```
 
-- The `modulated-{on|off}` key indicates if modulation has been used in [SPM](../Third-party.md#spm12) to compensate for the effect of spatial normalization.
+- The `modulated-{on|off}` key indicates if modulation has been used in [SPM](../Software/Third-party.md#spm12) to compensate for the effect of spatial normalization.
 - The possible values for the `segm-<segm>` key/value are: `graymatter`, `whitematter`, `csf`, `bone`, `softtissue`, and `background`.
-- The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applying the transformation obtained from the [SPM](../Third-party.md#spm12) segmentation routine to the T1 image in native space.
+- The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applying the transformation obtained from the [SPM](../Software/Third-party.md#spm12) segmentation routine to the T1 image in native space.
 
 #### DARTEL
 
@@ -152,7 +152,7 @@ groups/
 ```
 
 - The final group template is `<group_id>_template.nii.gz`.
-- The `<group_id>_iteration-<index>_template.nii.gz` obtained at each iteration will only be used when obtaining flow fields for registering a new image into an existing template ([SPM](../Third-party.md#spm12) DARTEL existing templates procedure).
+- The `<group_id>_iteration-<index>_template.nii.gz` obtained at each iteration will only be used when obtaining flow fields for registering a new image into an existing template ([SPM](../Software/Third-party.md#spm12) DARTEL existing templates procedure).
 
 !!! Note "Note for SPM experts"
     The original name of `<group_id>_iteration-<index>_template.nii.gz` is `Template<index>.nii`.
@@ -191,7 +191,7 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
 
 ### `t1-freesurfer` - FreeSurfer-based processing of T1-weighted MR images
 
-The outputs of the `t1-freesurfer` pipeline are split into two sub-folders, the first one containing the [FreeSurfer](../Third-party.md#freesurfer) outputs and a second with additional outputs specific to Clinica.
+The outputs of the `t1-freesurfer` pipeline are split into two sub-folders, the first one containing the [FreeSurfer](../Software/Third-party.md#freesurfer) outputs and a second with additional outputs specific to Clinica.
 
 FreeSurfer outputs:
 
@@ -285,7 +285,7 @@ subjects/
 
 ### FreeSurfer longitudinal outputs
 
-The outputs are split into two sub-folders, the first containing the [FreeSurfer](../Third-party.md#freesurfer) longitudinal outputs and a second with additional outputs specific to Clinica.
+The outputs are split into two sub-folders, the first containing the [FreeSurfer](../Software/Third-party.md#freesurfer) longitudinal outputs and a second with additional outputs specific to Clinica.
 
 ```Text
 dataset_description.json

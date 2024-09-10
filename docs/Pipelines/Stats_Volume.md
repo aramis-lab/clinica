@@ -9,7 +9,7 @@ Currently, this pipeline mainly handles gray matter maps obtained from T1-weight
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of [Matlab](../Third-party.md#matlab) and [SPM12](../Third-party.md#spm12), or of [SPM standalone](../Third-party.md#spm12-standalone), on your computer.
+If you only installed the core of Clinica, this pipeline needs the installation of [Matlab](../Software/Third-party.md#matlab) and [SPM12](../Software/Third-party.md#spm12), or of [SPM standalone](../Software/Third-party.md#spm12-standalone), on your computer.
 
 ## Running the pipeline
 

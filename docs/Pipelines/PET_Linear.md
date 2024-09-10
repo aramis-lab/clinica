@@ -24,7 +24,7 @@ You need to have performed the [`t1-linear`](../T1_Linear) pipeline on your T1-w
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of [ANTs](../Third-party.md#ants) on your computer.
+If you only installed the core of Clinica, this pipeline needs the installation of [ANTs](../Software/Third-party.md#ants) on your computer.
 
 ## Running the pipeline
 

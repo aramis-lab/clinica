@@ -21,7 +21,7 @@ DTI ; T1 ; T2 ; PD ; angiography.
 
 
 ### Dependencies
-If you [installed clinica](../Installation.md#install-clinica), this converter needs no further dependencies.
+If you [installed clinica](../Software/Installation.md#install-clinica), this converter needs no further dependencies.
 
 ### Understanding the command line
 ```{ .bash .copy }

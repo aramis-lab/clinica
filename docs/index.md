@@ -14,8 +14,9 @@ We assume that users installing and using Clinica are comfortable using the comm
 
 <!-- ### Installing Clinica from source -->
 
-- [Installation](./Installation)
-- [Third-party software](./Third-party)  
+- [Installation](Software/Installation.md)
+- [Third-party software](Software/Third-party.md)  
+- [Interacting with Clinica](Software/InteractingWithClinica.md)
 
 <!--
 ### Installing Clinica using Docker
@@ -33,53 +34,18 @@ Installation instructions are available [here](./ICMClusterInstallation).
 
 ### Clinica environment
 
-- [Interacting with Clinica](InteractingWithClinica)
 - [BIDS: the input data structure](BIDS)
 - [CAPS: the processed data structure](CAPS/Introduction)
 
 ### Pipelines (`clinica run`)
 
-- Anatomical MRI
-    - `t1-linear` - [Linear processing of T1w MR images](Pipelines/T1_Linear): affine registration to the MNI standard space of T1 images
-    - `flair-linear` - [Linear processing of FLAIR images](Pipelines/FLAIR_Linear): affine registration to the MNI standard space of FLAIR images
-    - `t1-volume` - [Processing of T1w MR images using SPM](Pipelines/T1_Volume): tissue segmentation and spatial normalization
-    - `t1-freesurfer` - [Processing of T1w MR images using FreeSurfer](Pipelines/T1_FreeSurfer): cortical surface, subcortical structures and volumetrics
-    - `t1-freesurfer-longitudinal` - [Longitudinal processing of T1w MR images using FreeSurfer](Pipelines/T1_FreeSurfer_Longitudinal): cortical surface, subcortical structures and volumetrics
-- Diffusion MRI (DWI)
-    - `dwi-preprocessing-*` - [DWI pre-processing](Pipelines/DWI_Preprocessing): correction of head motion, magnetic susceptibility, eddy current and bias field induced distortions
-    - `dwi-dti` - [DTI scalar maps (FA, MD, AD, RD) and spatial normalization](Pipelines/DWI_DTI): extraction of DTI-based measures (FA, MD, AD, RD)
-    - `dwi-connectome` - [Construction of structural connectome](Pipelines/DWI_Connectome): computation of fiber orientation distributions, tractogram and connectome
-
-- PET
-    - [Introduction to concepts used in the PET pipelines](Pipelines/PET_Introduction): partial volume correction and standardized uptake value ratio (SUVR) map computation
-    - `pet-linear` - [Linear processing of PET images](Pipelines/PET_Linear): affine registration to the MNI standard space and intensity normalization
-    - `pet-volume` - [Volume-based processing of PET images](Pipelines/PET_Volume): registration to T1w MRI, intensity normalization, partial volume correction and spatial normalization
-    - `pet-surface` - [Surface-based processing of PET images](Pipelines/PET_Surface): projection of the PET signal onto the subject’s cortical surface
-    - `pet-surface-longitudinal` - [Surface-based longitudinal processing of PET images](Pipelines/PET_Surface_Longitudinal): projection of the PET signal onto the subject’s cortical surface
-
-- Statistics
-    - `statistics-surface` - [Surface-based mass-univariate analysis with SurfStat](Pipelines/Stats_Surface)
-    - `statistics-volume` - [Volume-based mass-univariate analysis with SPM](Pipelines/Stats_Volume)
-
-- Machine Learning
-    - `machinelearning-prepare-spatial-svm` - [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
-    - `machinelearning-classification` - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
-
-- Deep learning
-    - You can use the [ClinicaDL framework](https://clinicadl.readthedocs.io/) for the reproducible processing of neuroimaging data with deep learning methods.
+--8<-- "snippets/inventory_pipelines.md"
 
 ### Dataset converters (`clinica convert`)
 
 Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to [BIDS](BIDS) namely:
 
-- `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](Converters/ADNI2BIDS)
-- `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](Converters/AIBL2BIDS)
-- `genfi-to-bids` - [GENFI:Genetic Frontotemporal dementia Initiative](Converters/GENFItoBIDS)
-- `habs-to-bids` - [HABS: Harvard Aging Brain Study](Converters/HABS2BIDS)
-- `nifd-to-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](Converters/NIFD2BIDS)
-- `oasis-to-bids` - [OASIS: Open Access Series of Imaging Studies](Converters/OASIS2BIDS)
-- `oasis3-to-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](Converters/OASIS3TOBIDS)
-- `ukb-to-bids` - [UK Biobank: Large-scale biomedical database and research resource in the United Kingdom](Converter/UKBtoBIDS)
+--8<-- "snippets/inventory_converters.md"
 
 !!! note
     We provide converters for the datasets used in the [Aramis Lab](http://www.aramislab.fr/).

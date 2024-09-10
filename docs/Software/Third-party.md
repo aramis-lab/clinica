@@ -52,10 +52,13 @@ Please check the installation instructions for all platforms on [dcm2niix Git re
 
 <div class="annotate" markdown>
 Some, but not all pipelines use specific third-party software. Depending on your usage of Clinica, you will need to install additional packages.
-Specific dependencies are listed below (1) :
+Specific dependencies are described in the table below (1) :
 </div>
 
 1. If not listed, the pipeline does not require any additional dependency outside Clinica.
+
+??? info "Clinica available pipelines"
+    --8<-- "snippets/inventory_pipelines.md"
 
 <div markdown="1" class="third_party_table">
 

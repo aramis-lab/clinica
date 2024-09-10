@@ -10,11 +10,11 @@ These steps include:
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of [ANTs](../Third-party.md#ants) on your computer.
+If you only installed the core of Clinica, this pipeline needs the installation of [ANTs](../Software/Third-party.md#ants) on your computer.
 
 !!! tip
     Since clinica `0.9.0` you have the option to rely on [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html)
-    instead of [ANTs](../Third-party.md#ants) to run this pipeline, which means that the installation of ANTs is not
+    instead of [ANTs](../Software/Third-party.md#ants) to run this pipeline, which means that the installation of ANTs is not
     required in this case. The ANTsPy package is installed with other Python dependencies of Clinica.
     To use this options, you simply need to add the `--use-antspy` option flag to the command line (see below).
     Note however that this is a new and not extensively tested option such that bugs or unexpected
@@ -36,10 +36,10 @@ where:
 On default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are generated to reduce the computing power required when training deep learning models.
 Use the option `--uncropped_image` if you do not want to crop the image.
 
-Finally, it is possible to use [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html) instead of [ANTs](../Third-party.md#ants) by passing the `--use-antspy` flag.
+Finally, it is possible to use [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html) instead of [ANTs](../Software/Third-party.md#ants) by passing the `--use-antspy` flag.
 
 !!! note
-    The arguments common to all Clinica pipelines are described in [Interacting with clinica](../InteractingWithClinica.md).
+    The arguments common to all Clinica pipelines are described in [Interacting with clinica](../Software/InteractingWithClinica.md).
 
 !!! tip
     Do not hesitate to type `clinica run flair-linear --help` to see the full list of parameters.
