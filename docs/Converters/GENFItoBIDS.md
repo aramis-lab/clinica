@@ -6,11 +6,12 @@
 
 ## Dependencies
 
-If you installed the core of Clinica, this converter needs the `dcm2niix` package.
+If you only [installed the core of Clinica](../Installation.md), this pipeline needs the installation of the [**dcm2niix**](../Third-party.md#dcm2nix) DICOM to NIfTI converter.
 
 ## Supported modalities
 
 Please note that this converter currently processes the following modalities : 
+
 - T1W
 - T2W
 - DWI

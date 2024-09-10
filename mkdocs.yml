@@ -25,6 +25,8 @@ theme:
     accent: light blue
   features:
     - content.tooltips
+    - content.tabs.link
+    - navigation.top
 
 # Version panel
 extra_javascript:
@@ -61,6 +63,7 @@ markdown_extensions:
   - md_in_html
   - abbr
   - attr_list
+  - md_in_html
   - pymdownx.snippets:
       base_path: docs
       auto_append:
