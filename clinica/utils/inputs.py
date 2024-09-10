@@ -281,7 +281,7 @@ def find_sub_ses_pattern_path(
 ) -> None:
     """Appends the output path corresponding to subject, session and pattern in results.
 
-    If an error is encountered, its corresponding message is added to the list `error_encountered`.
+    If an error is encountered, its (subject,session) couple is added to the list `errors_encountered`.
 
     Parameters
     ----------
@@ -345,12 +345,12 @@ def find_sub_ses_pattern_path(
             )
             results.append(selected)
         else:
-            error_str = f"\t*  ({subject} | {session}): More than 1 file found:\n"
-            for found_file in current_glob_found:
-                error_str += f"\t\t{found_file}\n"
-            error_encountered.append(error_str)
+            # todo : RQ : now we do not know why the invalid files are considered invalid
+            error_encountered += [
+                (subject, session)
+            ]  # todo : à tester + modifier les tests
     elif len(current_glob_found) == 0:
-        error_encountered.append(f"\t* ({subject} | {session}): No file found\n")
+        error_encountered += [(subject, session)]  # todo : à tester
     # Otherwise the file found is added to the result
     else:
         results.append(current_glob_found[0])
@@ -607,7 +607,7 @@ def get_images_and_errors_from_dir(
         return [], ""
 
     file_reader = _read_files_parallel if n_procs > 1 else _read_files_sequential
-    return file_reader(
+    test = file_reader(
         input_directory,
         subjects,
         sessions,
@@ -615,11 +615,22 @@ def get_images_and_errors_from_dir(
         pattern,
         n_procs=n_procs,
     )
+    return test
 
 
-def _remove_sub_ses_from_list() -> None:
-    # todo
-    pass
+def _remove_sub_ses_from_list(
+    list_subjects: List[str],
+    list_sessions: List[str],
+    wrong_sub_ses: List[Tuple[str, str]],
+) -> None:
+    for sub, ses in wrong_sub_ses:
+        sub_indexes = [i for i, subject in enumerate(list_subjects) if subject == sub]
+        session_indexes = [
+            i for i, session in enumerate(list_sessions) if session == ses
+        ]
+        to_remove = list(set(sub_indexes) & set(session_indexes))[0]
+        list_subjects.pop(to_remove)
+        list_sessions.pop(to_remove)
 
 
 def clinica_file_reader(
@@ -774,15 +785,15 @@ def clinica_file_reader(
         n_procs,
     )
 
-    error_message = _format_errors(errors_encountered, information)
-
     if len(errors_encountered) > 0 and raise_exception:
+        error_message = _format_errors(errors_encountered, information)
+        # todo : construct error message based on errors_encountered ; might need to modify _format_errors
         if determine_caps_or_bids(input_directory):
             raise ClinicaBIDSError(error_message)
         else:
             raise ClinicaCAPSError(error_message)
 
-    return results, error_message
+    return results, errors_encountered
 
 
 def _read_files_parallel(
@@ -813,7 +824,7 @@ def _read_files_parallel(
         for sub, ses in zip(subjects, sessions)
     )
     results = list(shared_results)
-    errors_encountered = list(shared_errors_encountered)
+    errors_encountered = list(shared_errors_encountered)  # todo : needed ?
     return results, errors_encountered
 
 

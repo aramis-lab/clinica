@@ -110,7 +110,6 @@ class AnatLinear(Pipeline):
 
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import re
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -120,6 +119,7 @@ class AnatLinear(Pipeline):
         from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
         from clinica.utils.inputs import (
+            _remove_sub_ses_from_list,
             clinica_file_reader,
             get_images_and_errors_from_dir,
         )
@@ -159,22 +159,11 @@ class AnatLinear(Pipeline):
             self.subjects, self.sessions, self.bids_directory, file
         )
 
-        # todo : write in other function
-        tuple_subsess = []
-        for subses in wrong_sub_sess:
-            m = re.search(r"(sub-\w*).*(ses-M\d{3})", subses)
-            tuple_subsess += [(m.group(1), m.group(2))]
+        breakpoint()
 
-        for sub, ses in tuple_subsess:
-            sub_indexes = [
-                i for i, subject in enumerate(self.subjects) if subject == sub
-            ]
-            session_indexes = [
-                i for i, session in enumerate(self.sessions) if session == ses
-            ]
-            to_remove = list(set(sub_indexes) & set(session_indexes))[0]
-            self.subjects.pop(to_remove)
-            self.sessions.pop(to_remove)
+        _remove_sub_ses_from_list(self.subjects, self.sessions, wrong_sub_sess)
+
+        breakpoint()
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
