@@ -34,9 +34,9 @@ Some converters require **dcm2niix** to transform DICOM files into NIfTI :
 
 <div class="grid">
   <a href="/Converters/ADNI2BIDS.md" class="card">adni-to-bids</a>
-  <a href="/Converters/AIBL2BIDS.md" class="card">aibl-to-bids</a>
-  <a href="/Converters/GENFItoBIDS.md" class="card">genfi-to-bids</a>
-  <a href="/Converters/NIFD2BIDS.md" class="card">nifd-to-bids</a>
+  <a href="./Converters/AIBL2BIDS.md" class="card">aibl-to-bids</a>
+  <a href="../Converters/GENFItoBIDS.md" class="card">genfi-to-bids</a>
+  <a href="./Converters/NIFD2BIDS" class="card">nifd-to-bids</a>
   <a href="/Converters/UKBtoBIDS.md" class="card">ukb-to-bids</a>
 </div>
 
