@@ -604,10 +604,10 @@ def get_images_and_errors_from_dir(
         raise ValueError("Subjects and sessions must have the same length.")
 
     if len(subjects) == 0:
-        return [], ""
+        return [], []
 
     file_reader = _read_files_parallel if n_procs > 1 else _read_files_sequential
-    test = file_reader(
+    return file_reader(
         input_directory,
         subjects,
         sessions,
@@ -615,7 +615,6 @@ def get_images_and_errors_from_dir(
         pattern,
         n_procs=n_procs,
     )
-    return test
 
 
 def _remove_sub_ses_from_list(
@@ -623,6 +622,8 @@ def _remove_sub_ses_from_list(
     list_sessions: List[str],
     wrong_sub_ses: List[Tuple[str, str]],
 ) -> None:
+    # todo : test this !!
+    # todo : message
     for sub, ses in wrong_sub_ses:
         sub_indexes = [i for i, subject in enumerate(list_subjects) if subject == sub]
         session_indexes = [
@@ -785,9 +786,9 @@ def clinica_file_reader(
         n_procs,
     )
 
+    # todo : use of this ??? -> need for _format_errors ?
     if len(errors_encountered) > 0 and raise_exception:
         error_message = _format_errors(errors_encountered, information)
-        # todo : construct error message based on errors_encountered ; might need to modify _format_errors
         if determine_caps_or_bids(input_directory):
             raise ClinicaBIDSError(error_message)
         else:

@@ -110,7 +110,6 @@ class AnatLinear(Pipeline):
 
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -159,11 +158,10 @@ class AnatLinear(Pipeline):
             self.subjects, self.sessions, self.bids_directory, file
         )
 
-        breakpoint()
-
-        _remove_sub_ses_from_list(self.subjects, self.sessions, wrong_sub_sess)
-
-        breakpoint()
+        if wrong_sub_sess:
+            # todo : message to say which removed
+            # todo : consider get_ + _remove in the same function if used for several pipelines
+            _remove_sub_ses_from_list(self.subjects, self.sessions, wrong_sub_sess)
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
