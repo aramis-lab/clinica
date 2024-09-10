@@ -33,11 +33,11 @@ and will be lost if you re-launch your terminal.
 Some converters require **dcm2niix** to transform DICOM files into NIfTI :
 
 <div class="grid">
-  <a href="/Converters/ADNI2BIDS.md" class="card">adni-to-bids</a>
+  <a href="./Converters/ADNI2BIDS.md" class="card">adni-to-bids</a>
   <a href="./Converters/AIBL2BIDS.md" class="card">aibl-to-bids</a>
-  <a href="../Converters/GENFItoBIDS.md" class="card">genfi-to-bids</a>
-  <a href="./Converters/NIFD2BIDS" class="card">nifd-to-bids</a>
-  <a href="/Converters/UKBtoBIDS.md" class="card">ukb-to-bids</a>
+  <a href="./Converters/GENFItoBIDS.md" class="card">genfi-to-bids</a>
+  <a href="./Converters/NIFD2BIDS.md" class="card">nifd-to-bids</a>
+  <a href="./Converters/UKBtoBIDS.md" class="card">ukb-to-bids</a>
 </div>
 
 ### DCM2NIX
@@ -60,23 +60,24 @@ Specific dependencies are listed below (1) :
 
 <div markdown="1" class="third_party_table">
 
-|                      | ANTs | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
-|:--------------------:|:----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
-|    Anat > Linear     |  ✓∘  |           |            |     |     |        |         |        |     |
-|    Anat > Volume     |      |           |            |     |     |   ✓    |         |        |  ✓  |
-|  Anat > FreeSurfer   |      |           |     ✓      |     |     |        |         |        |     |
-| DWI > Preprocessing  |  ✓   |     ✓     |            |  ✓  |     |        |    ✓    |        |     |
-|      DWI > DTI       |  ✓   |           |            |  ✓  |     |        |    ✓    |        |     |
-|   DWI > Connectome   |      |           |     ✓      |  ✓  |     |        |    ✓    |        |     |
-|     PET > Linear     |  ✓   |           |            |     |     |        |         |        |     |
-|    PET > Surface     |      |           |     ✓      |  ✓  | ✓⟡  |   ✓    |         |   ✓⟡   |  ✓  |
-|     PET > Volume     |      |           |            |     | ✓⟡  |   ✓    |         |   ✓⟡   |  ✓  |
-| Statistics > Surface |      |           |     ✓      |     |     |        |         |        |     |
-| Statistics > Volume  |      |           |            |     |     |   ✓    |         |        |  ✓  |
+|                     | ANTs | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
+|:-------------------:|:----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
+|    Anat > Linear    |  ✓∘  |           |            |     |     |        |         |        |     |
+|    Anat > Volume    |      |           |            |     |     |   ✓    |         |        |  ✓  |
+|  Anat > FreeSurfer  |      |           |     ✓      |     |     |        |         |        |     |
+| DWI > Preprocessing |  ✓   |     ✓     |            |  ✓  |     |        |    ✓    |        |     |
+|      DWI > DTI      |  ✓   |           |            |  ✓  |     |        |    ✓    |        |     |
+|  DWI > Connectome   |      |           |     ✓      |  ✓  |     |        |    ✓    |        |     |
+|    PET > Linear     |  ✓   |           |            |     |     |        |         |        |     |
+|    PET > Surface    |      |           |     ✓      |  ✓  | ✓⟡  |   ✓    |         |   ✓⟡   |  ✓  |
+|    PET > Volume     |      |           |            |     | ✓⟡  |   ✓    |         |   ✓⟡   |  ✓  |
+|   Stats > Surface   |      |           |     ✓      |     |     |        |         |        |     |
+|   Stats > Volume    |      |           |            |     |     |   ✓    |         |        |  ✓  |
 
 </div>
-*✓∘ : for anatomical linear pipelines there is also the possibility to use ANTsPy instead of ANTs since Clinica `v0.9.0`* 
-*✓⟡ : you only need to install ITK if you plan to perform partial volume correction using PETPVC.*
+
+- *✓∘ : for anatomical linear pipelines there is also the possibility to use ANTsPy instead of ANTs since Clinica `v0.9.0`* 
+- *✓⟡ : you only need to install ITK if you plan to perform partial volume correction using PETPVC.*
 
 ??? warning "CAT12 toolbox and Clinica < `v0.3.7`"
     Starting from Clinica `v0.3.7`, the [**CAT12**](http://dbm.neuro.uni-jena.de/cat/) toolbox is no longer needed for the `t1-volume` and `pet-volume` pipelines.
