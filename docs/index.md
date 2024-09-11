@@ -1,18 +1,15 @@
 <!-- markdownlint-disable MD007 -->
 # Clinica Documentation
 
-## [What is Clinica?](WhatIsClinica)
+## What is Clinica ?
+Clinica is a software platform for clinical neuroscience research studies using multimodal data and most often longitudinal follow-up.
+You can learn more on [this page](WhatIsClinica).
 
 ## Installation
 
-Clinica can be installed on Mac OS X and Linux (CentOS or Debian/Ubuntu) machines,
+Clinica can be installed on **MacOS** and **Linux** (CentOS or Debian/Ubuntu) machines,
 and possibly on Windows computers with a Linux Virtual Machine.
 We assume that users installing and using Clinica are comfortable using the command line.
-
-<!--!!! info "New release: Clinica 0.3.6!"
-    We are very pleased to announce the release 0.3.6 of Clinica. The release notes are available here: [v0.3.6](http://bit.ly/2tfZjvh).-->
-
-<!-- ### Installing Clinica from source -->
 
 - [Installation](Software/Installation.md)
 - [Third-party software](Software/Third-party.md)  
@@ -83,7 +80,7 @@ as well as the references mentioned on the wiki page of the pipelines you used.
 Each page includes text to cite the software packages that are used by Clinica
 (for example, citing SPM when using the `t1-volume` pipeline).
 
-!!! info "Disclaimer"
+!!! warning "Disclaimer"
     Clinica is a software for research studies.
     It is not intended for use in medical routine.
 

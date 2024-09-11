@@ -295,15 +295,16 @@ export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
 
 ___
 
-### Autocompletion
+### Autocompletion (optional)
 
-<!-- # Autocomplete system
-eval "$(register-python-argcomplete clinica)" -->
+```{ .bash .copy }
+eval "$(register-python-argcomplete clinica)"
+```
 
 !!! warning "Autocompletion for `zsh` shell users"
     `zsh` shell users will have to add this right before the last line of their configuration file to enable autocompletion in Clinica:
 
-    ```bash
+    ```{ .bash .copy }
     autoload bashcompinit
     bashcompinit
     source ~/.bash_completion.d/python-argcomplete.sh
