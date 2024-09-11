@@ -23,7 +23,7 @@ The average gray matter density (also in MNI space) is then computed in each of 
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of either [SPM12](../Third-party.md#spm12) and [Matlab](../Third-party.md#matlab), or [SPM standalone](../Third-party.md#spm12-standalone) on your computer.
+If you only installed the core of Clinica, this pipeline needs the installation of either [SPM12](../Software/Third-party.md#spm12) and [Matlab](../Software/Third-party.md#matlab), or [SPM standalone](../Software/Third-party.md#spm12-standalone) on your computer.
 
 ## Running the pipeline
 

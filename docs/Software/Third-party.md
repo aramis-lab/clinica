@@ -52,10 +52,13 @@ Please check the installation instructions for all platforms on [dcm2niix Git re
 
 <div class="annotate" markdown>
 Some, but not all pipelines use specific third-party software. Depending on your usage of Clinica, you will need to install additional packages.
-Specific dependencies are listed below (1) :
+Specific dependencies are described in the table below (1) :
 </div>
 
 1. If not listed, the pipeline does not require any additional dependency outside Clinica.
+
+??? info "Clinica available pipelines"
+    --8<-- "snippets/inventory_pipelines.md"
 
 <div markdown="1" class="third_party_table">
 
@@ -290,16 +293,22 @@ export MCR_HOME="/path/to/your/MCR/"
 export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
 ```
 
-### Autocompletion
+___
 
-<!-- # Autocomplete system
-eval "$(register-python-argcomplete clinica)" -->
+### Autocompletion (optional)
+
+```{ .bash .copy }
+eval "$(register-python-argcomplete clinica)"
+```
 
 !!! warning "Autocompletion for `zsh` shell users"
     `zsh` shell users will have to add this right before the last line of their configuration file to enable autocompletion in Clinica:
 
-    ```bash
+    ```{ .bash .copy }
     autoload bashcompinit
     bashcompinit
     source ~/.bash_completion.d/python-argcomplete.sh
     ```
+
+
+--8<-- "snippets/known_issues.md:matlab"

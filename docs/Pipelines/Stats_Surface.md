@@ -28,7 +28,7 @@ Do not hesitate to have a look at the paragraph **[Specifying what surface data 
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer](../Third-party.md#freesurfer) on your computer.
+If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer](../Software/Third-party.md#freesurfer) on your computer.
 
 ## Running the pipeline
 

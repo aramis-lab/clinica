@@ -74,18 +74,17 @@ markdown_extensions:
       alternate_style: True
 
 not_in_nav: |
-  /snippets/converters_options.md
-  /snippets/abbreviations.md
+  /snippets/
 
 # Page tree
 nav:
   - Home: index.md
-  - Installation:
-    - Installation: Installation.md
-    - Third-party: Third-party.md
+  - Setting-up for Clinica:
+    - Installation: Software/Installation.md
+    - Third-party software: Software/Third-party.md
+    - Interacting with Clinica: Software/InteractingWithClinica.md
   - Clinica environment:
     - What is Clinica?: WhatIsClinica.md
-    - Interacting with Clinica: InteractingWithClinica.md
     - BIDS: BIDS.md
     - CAPS:
       - Introduction: CAPS/Introduction.md

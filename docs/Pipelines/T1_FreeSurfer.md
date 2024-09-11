@@ -6,7 +6,7 @@ Additionally, from the FreeSurfer outputs, we generate TSV files containing a su
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer 6.0](../Third-party.md#freesurfer) on your computer.
+If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer 6.0](../Software/Third-party.md#freesurfer) on your computer.
 
 ## Running the pipeline
 

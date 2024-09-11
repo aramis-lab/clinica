@@ -23,9 +23,9 @@ You need to have performed the [`t1-freesurfer`](../T1_FreeSurfer) pipeline on y
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer 6.0](../Third-party.md#freesurfer), [FSL 6.0](../Third-party.md#fsl), and [PETPVC 1.2.4](../Third-party.md#petpvc) (which depends on [ITK 4](../Third-party.md#itk)) on your computer.
+If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer 6.0](../Software/Third-party.md#freesurfer), [FSL 6.0](../Software/Third-party.md#fsl), and [PETPVC 1.2.4](../Software/Third-party.md#petpvc) (which depends on [ITK 4](../Software/Third-party.md#itk)) on your computer.
 
-In addition, you also need to either install [SPM12](../Third-party.md#spm12) and [Matlab](../Third-party.md#matlab), or [spm standalone](../Third-party.md#spm12-standalone).
+In addition, you also need to either install [SPM12](../Software/Third-party.md#spm12) and [Matlab](../Software/Third-party.md#matlab), or [spm standalone](../Software/Third-party.md#spm12-standalone).
 
 ## Running the pipeline
 
