@@ -576,17 +576,17 @@ def clinica_file_filter(
 ) -> List[str]:
     from clinica.utils.stream import cprint
 
+    # todo : test ?
     # todo : typing ?
     files, errors = clinica_file_reader(
         subjects, sessions, input_directory, information, n_procs
     )
-    cprint(_format_errors(errors, information))
+    cprint(_format_errors(errors, information), "warning")
     _remove_sub_ses_from_list(subjects, sessions, errors)
     return files
 
 
 def _format_errors(errors: List[Tuple[str, str]], information: Dict) -> str:
-    # todo : test new
     message = (
         f"Clinica encountered {len(errors)} "
         f"problem(s) while getting {information['description']}:\n"
