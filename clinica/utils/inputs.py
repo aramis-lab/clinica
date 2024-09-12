@@ -752,6 +752,7 @@ def clinica_file_reader(
     or even more precise: 't1/freesurfer_cross_sectional/sub-*_ses-*/surf/rh.white'
     It then gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white']
     """
+    # todo : change function description
 
     input_directory = Path(input_directory)
     _check_information(information)
@@ -864,29 +865,26 @@ def clinica_list_of_files_reader(
     list_found_files : List[List[str]]
         List of lists of found files following order of `list_information`
     """
-    from .exceptions import ClinicaBIDSError, ClinicaException
+    from .exceptions import ClinicaBIDSError
 
     all_errors = []
     list_found_files = []
     for info_file in list_information:
-        try:
-            list_found_files.append(
-                clinica_file_reader(
-                    participant_ids,
-                    session_ids,
-                    bids_or_caps_directory,
-                    info_file,
-                    True,
-                )[0]
-            )
-        except ClinicaException as e:
-            list_found_files.append([])
-            all_errors.append(e)
+        files, errors = clinica_file_reader(
+            participant_ids,
+            session_ids,
+            bids_or_caps_directory,
+            info_file,
+        )
+        # todo : should it work like that ?? maybe after change need to filter subject list ?
+
+        list_found_files.append(files)
+        all_errors += errors
 
     if len(all_errors) > 0 and raise_exception:
         error_message = "Clinica faced error(s) while trying to read files in your BIDS or CAPS directory.\n"
-        for msg in all_errors:
-            error_message += str(msg)
+        for error in all_errors:
+            error_message += f"\n\t({error[0]} | {error[1]})"
         raise ClinicaBIDSError(error_message)
 
     return list_found_files
