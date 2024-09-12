@@ -75,7 +75,10 @@ class AnatLinear(Pipeline):
         image_ids: List[str] = []
         if caps_directory.is_dir():
             cropped_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, T1W_LINEAR_CROPPED, False
+                subjects,
+                sessions,
+                caps_directory,
+                T1W_LINEAR_CROPPED,
             )
             image_ids = extract_image_ids(cropped_files)
         return image_ids
@@ -117,11 +120,7 @@ class AnatLinear(Pipeline):
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
-        from clinica.utils.inputs import (
-            _remove_sub_ses_from_list,
-            clinica_file_reader,
-            get_images_and_errors_from_dir,
-        )
+        from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -154,14 +153,11 @@ class AnatLinear(Pipeline):
         # ========================
         # anat image file:
         file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
-        anat_files, wrong_sub_sess = get_images_and_errors_from_dir(
+
+        anat_files = clinica_file_filter(
             self.subjects, self.sessions, self.bids_directory, file
         )
-
-        if wrong_sub_sess:
-            # todo : message to say which removed
-            # todo : consider get_ + _remove in the same function if used for several pipelines
-            _remove_sub_ses_from_list(self.subjects, self.sessions, wrong_sub_sess)
+        # todo : what happens if empty self.subjects ?
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)

@@ -346,11 +346,9 @@ def find_sub_ses_pattern_path(
             results.append(selected)
         else:
             # todo : RQ : now we do not know why the invalid files are considered invalid
-            error_encountered += [
-                (subject, session)
-            ]  # todo : à tester + modifier les tests
+            error_encountered += [(subject, session)]
     elif len(current_glob_found) == 0:
-        error_encountered += [(subject, session)]  # todo : à tester
+        error_encountered += [(subject, session)]
     # Otherwise the file found is added to the result
     else:
         results.append(current_glob_found[0])
@@ -569,52 +567,39 @@ def _check_information(information: Dict) -> None:
             )
 
 
-def _format_errors(errors: List, information: Dict) -> str:
-    error_message = (
-        f"Clinica encountered {len(errors)} "
-        f"problem(s) while getting {information['description']}:\n"
-    )
-    if "needed_pipeline" in information and information["needed_pipeline"]:
-        error_message += (
-            "Please note that the following clinica pipeline(s) must "
-            f"have run to obtain these files: {information['needed_pipeline']}\n"
-        )
-    error_message += "\n".join(errors)
-
-    return error_message
-
-
-def get_images_and_errors_from_dir(
+def clinica_file_filter(
     subjects: List[str],
     sessions: List[str],
     input_directory: Path,
     information: Dict,
     n_procs: Optional[int] = 1,
-) -> Tuple[List[str], List[str]]:
-    _check_information(information)
-    pattern = information["pattern"]
+) -> List[str]:
+    from clinica.utils.stream import cprint
 
-    is_bids = determine_caps_or_bids(input_directory)
-    if is_bids:
-        check_bids_folder(input_directory)
-    else:
-        check_caps_folder(input_directory)
-
-    if len(subjects) != len(sessions):
-        raise ValueError("Subjects and sessions must have the same length.")
-
-    if len(subjects) == 0:
-        return [], []
-
-    file_reader = _read_files_parallel if n_procs > 1 else _read_files_sequential
-    return file_reader(
-        input_directory,
-        subjects,
-        sessions,
-        is_bids,
-        pattern,
-        n_procs=n_procs,
+    # todo : typing ?
+    files, errors = clinica_file_reader(
+        subjects, sessions, input_directory, information, n_procs
     )
+    cprint(_format_errors(errors, information))
+    _remove_sub_ses_from_list(subjects, sessions, errors)
+    return files
+
+
+def _format_errors(errors: List[Tuple[str, str]], information: Dict) -> str:
+    # todo : test new
+    message = (
+        f"Clinica encountered {len(errors)} "
+        f"problem(s) while getting {information['description']}:\n"
+    )
+    if "needed_pipeline" in information and information["needed_pipeline"]:
+        message += (
+            "Please note that the following clinica pipeline(s) must "
+            f"have run to obtain these files: {information['needed_pipeline']}\n"
+        )
+    if errors:
+        message += "".join(f"\t* ({e[0]} | {e[1]})\n" for e in errors)
+        message += "Clinica could not identify which file to use (missing or too many) for these sessions. They will not be processed."
+    return message
 
 
 def _remove_sub_ses_from_list(
@@ -622,19 +607,16 @@ def _remove_sub_ses_from_list(
     list_sessions: List[str],
     wrong_sub_ses: List[Tuple[str, str]],
 ) -> None:
-    # todo : test this !!
-    # todo : message
     for sub, ses in wrong_sub_ses:
         sub_indexes = [i for i, subject in enumerate(list_subjects) if subject == sub]
         session_indexes = [
             i for i, session in enumerate(list_sessions) if session == ses
         ]
         to_remove = list(set(sub_indexes) & set(session_indexes))
-        if to_remove:
-            if len(to_remove) > 1:
-                raise ValueError("")
-            list_subjects.pop(to_remove[0])
-            list_sessions.pop(to_remove[0])
+        to_remove.sort(reverse=True)
+        for index in to_remove:
+            list_subjects.pop(index)
+            list_sessions.pop(index)
 
 
 def clinica_file_reader(
@@ -642,9 +624,8 @@ def clinica_file_reader(
     sessions: List[str],
     input_directory: os.PathLike,
     information: Dict,
-    raise_exception: Optional[bool] = True,
     n_procs: Optional[int] = 1,
-):
+) -> Tuple[List[str], List[Tuple[str, str]]]:
     """Read files in BIDS or CAPS directory based on participant ID(s).
 
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
@@ -669,10 +650,6 @@ def clinica_file_reader(
             - `needed_pipeline` : Optional. String describing the pipeline(s)
               needed to obtain the related file.
 
-    raise_exception : bool, optional
-        If True, an exception is raised if errors happen. If not, we return the file
-        list as it is. Default=True.
-
     n_procs : int, optional
         Number of cores used to fetch files in parallel.
         If set to 1, subjects and sessions will be processed sequentially.
@@ -682,9 +659,6 @@ def clinica_file_reader(
     -------
     results : List[str]
         List of files respecting the subject/session order provided in input.
-
-    error_message : str
-        Error message which contains all errors encountered while reading the files.
 
     Raises
     ------
@@ -778,26 +752,32 @@ def clinica_file_reader(
     or even more precise: 't1/freesurfer_cross_sectional/sub-*_ses-*/surf/rh.white'
     It then gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white']
     """
-    from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 
     input_directory = Path(input_directory)
-    results, errors_encountered = get_images_and_errors_from_dir(
+    _check_information(information)
+    pattern = information["pattern"]
+
+    is_bids = determine_caps_or_bids(input_directory)
+    if is_bids:
+        check_bids_folder(input_directory)
+    else:
+        check_caps_folder(input_directory)
+
+    if len(subjects) != len(sessions):
+        raise ValueError("Subjects and sessions must have the same length.")
+
+    if len(subjects) == 0:
+        return [], []
+
+    file_reader = _read_files_parallel if n_procs > 1 else _read_files_sequential
+    return file_reader(
+        input_directory,
         subjects,
         sessions,
-        input_directory,
-        information,
-        n_procs,
+        is_bids,
+        pattern,
+        n_procs=n_procs,
     )
-
-    # todo : use of this ??? -> need for _format_errors ?
-    if len(errors_encountered) > 0 and raise_exception:
-        error_message = _format_errors(errors_encountered, information)
-        if determine_caps_or_bids(input_directory):
-            raise ClinicaBIDSError(error_message)
-        else:
-            raise ClinicaCAPSError(error_message)
-
-    return results, errors_encountered
 
 
 def _read_files_parallel(
@@ -807,7 +787,7 @@ def _read_files_parallel(
     is_bids: bool,
     pattern: str,
     n_procs: int,
-) -> Tuple[List[str], List[str]]:
+) -> Tuple[List[str], List[Tuple[str, str]]]:
     from multiprocessing import Manager
 
     from joblib import Parallel, delayed
@@ -839,7 +819,7 @@ def _read_files_sequential(
     is_bids: bool,
     pattern: str,
     **kwargs,
-) -> Tuple[List[str], List[str]]:
+) -> Tuple[List[str], List[Tuple[str, str]]]:
     errors_encountered, results = [], []
     for sub, ses in zip(subjects, sessions):
         find_sub_ses_pattern_path(

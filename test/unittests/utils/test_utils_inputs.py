@@ -16,30 +16,23 @@ from clinica.utils.testing_utils import (
 
 @pytest.mark.parametrize(
     "input_subjects, input_sessions, to_remove, expected_subjects, expected_sessions",
-    (
-        [
+    [
+        (
             ["sub1", "sub1", "sub2"],
             ["ses1", "ses2", "ses1"],
             [("sub1", "ses1"), ("sub3", "ses1")],
             ["sub1", "sub2"],
             ["ses2", "ses1"],
-        ],
-        [
-            [
-                "sub1",
-            ],
-            [
-                "ses1",
-            ],
-            [],
-            [
-                "sub1",
-            ],
-            [
-                "ses1",
-            ],
-        ],
-    ),
+        ),
+        (["sub1"], ["ses1"], [], ["sub1"], ["ses1"]),
+        (
+            ["sub1", "sub2", "sub2"],
+            ["ses1", "ses1", "ses1"],
+            [("sub2", "ses1")],
+            ["sub1"],
+            ["ses1"],
+        ),
+    ],
 )
 def test_remove_sub_ses_from_list_success(
     input_subjects, input_sessions, to_remove, expected_subjects, expected_sessions
@@ -49,11 +42,6 @@ def test_remove_sub_ses_from_list_success(
     _remove_sub_ses_from_list(input_subjects, input_sessions, to_remove)
     assert input_subjects == expected_subjects
     assert input_sessions == expected_sessions
-
-
-def test_remove_sub_ses_from_list_error():
-    # todo
-    pass
 
 
 def test_get_parent_path(tmp_path):
@@ -536,6 +524,7 @@ def test_check_information():
 
 def test_format_errors():
     """Test utility function `_format_errors`."""
+    # todo : test
     from clinica.utils.inputs import _format_errors
 
     information = {"description": "foo bar baz"}
@@ -549,22 +538,25 @@ def test_format_errors():
         "Please note that the following clinica pipeline(s) must have "
         "run to obtain these files: ['pipeline_1', 'pipeline_3']\n"
     )
-    errors = ["error 1: foo", "error 2: bar", "error 3: baz"]
+    errors = [("sub1", "ses1"), ("sub2", "ses1"), ("sub3", "ses1")]
     assert _format_errors(errors, information) == (
         "Clinica encountered 3 problem(s) while getting foo bar baz:\n"
         "Please note that the following clinica pipeline(s) must have "
         "run to obtain these files: ['pipeline_1', 'pipeline_3']\n"
-        "error 1: foo\nerror 2: bar\nerror 3: baz"
+        "\t* (sub1 | ses1)\n\t* (sub2 | ses1)\n\t* (sub3 | ses1)\n"
+        "Clinica could not identify which file to use (missing or too many) for these sessions. They will not be processed."
     )
     information.pop("needed_pipeline")
     assert _format_errors(errors, information) == (
         "Clinica encountered 3 problem(s) while getting foo bar baz:\n"
-        "error 1: foo\nerror 2: bar\nerror 3: baz"
+        "\t* (sub1 | ses1)\n\t* (sub2 | ses1)\n\t* (sub3 | ses1)\n"
+        "Clinica could not identify which file to use (missing or too many) for these sessions. They will not be processed."
     )
 
 
 @pytest.mark.parametrize("data_type", ["T1w", "flair"])
 def test_clinica_file_reader_bids_directory(tmp_path, data_type):
+    # todo : test
     """Test reading from a BIDS directory with function `clinica_file_reader`."""
     from clinica.utils.inputs import clinica_file_reader
 
@@ -648,6 +640,7 @@ def test_clinica_file_reader_bids_directory(tmp_path, data_type):
 
 def test_clinica_file_reader_caps_directory(tmp_path):
     """Test reading from a CAPS directory with function `clinica_file_reader`."""
+    # todo : test
     from clinica.utils.inputs import clinica_file_reader
 
     config = {
@@ -739,6 +732,7 @@ def test_clinica_file_reader_caps_directory(tmp_path):
 
 
 def test_clinica_file_reader_dwi_dti_error(tmp_path):
+    # todo : test
     from clinica.utils.input_files import dwi_dti
     from clinica.utils.inputs import clinica_file_reader
 
@@ -750,6 +744,7 @@ def test_clinica_file_reader_dwi_dti_error(tmp_path):
 
 
 def test_clinica_file_reader_dwi_dti(tmp_path):
+    # todo : test
     from clinica.pipelines.dwi.dti.utils import DTIBasedMeasure
     from clinica.utils.input_files import dwi_dti
     from clinica.utils.inputs import clinica_file_reader, clinica_list_of_files_reader
@@ -791,6 +786,7 @@ def test_clinica_file_reader_dwi_dti(tmp_path):
 
 
 def test_clinica_list_of_files_reader(tmp_path):
+    # todo : test, why broken ?
     from clinica.utils.inputs import clinica_list_of_files_reader
 
     config = {
