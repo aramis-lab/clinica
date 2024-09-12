@@ -629,9 +629,12 @@ def _remove_sub_ses_from_list(
         session_indexes = [
             i for i, session in enumerate(list_sessions) if session == ses
         ]
-        to_remove = list(set(sub_indexes) & set(session_indexes))[0]
-        list_subjects.pop(to_remove)
-        list_sessions.pop(to_remove)
+        to_remove = list(set(sub_indexes) & set(session_indexes))
+        if to_remove:
+            if len(to_remove) > 1:
+                raise ValueError("")
+            list_subjects.pop(to_remove[0])
+            list_sessions.pop(to_remove[0])
 
 
 def clinica_file_reader(
