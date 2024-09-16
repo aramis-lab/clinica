@@ -249,6 +249,7 @@ You can find more details about `SPM12` on their [website](http://www.fil.ion.uc
     ??? warning "MacOS Big Sur"
         For systems running on MacOS Big Sur, a [development version of SPM12](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) as well as a more recent release of the MCR (minimum 2019a) are required.
 
+Then :
 
 1. Make sure to have the following environment variable defined:
     ```{ .bash .copy }

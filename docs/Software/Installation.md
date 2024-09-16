@@ -3,8 +3,6 @@
 
 You will find below the steps for installing Clinica on **Linux** or **Mac**.
 
-Please do not hesitate to contact us on the [forum](https://groups.google.com/forum/#!forum/clinica-user) or [GitHub](https://github.com/aramis-lab/clinica/issues) if you encounter any issues.
-
 ## Prepare your Python environment with miniconda
 
 You will need a Python environment to run Clinica.

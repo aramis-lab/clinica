@@ -1,4 +1,5 @@
 *[BIDS] : Brain Imaging Data Structure
+*[CAPS] : ClinicA Processed Structure
 *[DTI] : Diffusion Tensor Imaging
 *[DWI] : Diffusion Weighted Imaging
 *[CSV] : Comma-Separated Values
