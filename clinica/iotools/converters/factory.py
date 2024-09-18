@@ -62,4 +62,6 @@ def converter_factory(study: Union[str, StudyName]) -> Callable:
         from .ukb_to_bids import convert
     if study == StudyName.IXI:
         from .ixi_to_bids import convert
+    if study == StudyName.KIRBY:
+        from .kirby_to_bids import convert
     return convert
