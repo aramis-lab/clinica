@@ -68,6 +68,7 @@ markdown_extensions:
       base_path: docs
       auto_append:
         - snippets/abbreviations.md
+        - snippets/support.md
   - toc:
       permalink: True
   - pymdownx.tabbed:
