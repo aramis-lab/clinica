@@ -163,7 +163,7 @@ with Alzheimer's disease and healthy controls from the ADNI database:
 ## Contributing
 
 We encourage you to contribute to Clinica!
-Please check out the [Contributing to Clinica guide](CONTRIBUTING.md) for
+Please check out the [Contributing to Clinica guide](docs/Software/CONTRIBUTING.md) for
 guidelines about how to proceed.  Do not hesitate to ask questions if something
 is not clear for you, report an issue, etc.
 
