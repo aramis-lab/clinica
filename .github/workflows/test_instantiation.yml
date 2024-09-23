@@ -13,6 +13,9 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
+env:
+  POETRY_VERSION: '1.6.1'
+
 jobs:
   test-instantiation-MacOS:
     runs-on:
@@ -44,6 +47,13 @@ jobs:
       - test-runner
     steps:
       - uses: actions/checkout@v4
+      - uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+      - name: print poetry version number
+        run: |
+          which poetry
+          poetry --version
       - name: Run instantiation tests
         run: |
           make env.conda
