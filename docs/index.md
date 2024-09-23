@@ -3,7 +3,7 @@
 
 ## What is Clinica ?
 Clinica is a software platform for clinical neuroscience research studies using multimodal data and most often longitudinal follow-up.
-You can learn more on [this page](WhatIsClinica).
+You can learn more on [this page](WhatIsClinica.md).
 
 ## Installation
 
@@ -31,8 +31,8 @@ Installation instructions are available [here](./ICMClusterInstallation).
 
 ### Clinica environment
 
-- [BIDS: the input data structure](BIDS)
-- [CAPS: the processed data structure](CAPS/Introduction)
+- [BIDS: the input data structure](BIDS.md)
+- [CAPS: the processed data structure](CAPS/Introduction.md)
 
 ### Pipelines (`clinica run`)
 
