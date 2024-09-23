@@ -98,7 +98,7 @@ nav:
     - Atlases: Atlases.md
   - Pipelines:
     - Anatomical MRI:
-      - T1 Linear processing: Pipelines/T1_Linear.md
+      - T1 Linear processing: Pipelines/__DOCS_DIR__T1_Linear.md
       - FLAIR Linear processing : Pipelines/FLAIR_Linear.md
       - Volume processing: Pipelines/T1_Volume.md
       - FreeSurfer processing: Pipelines/T1_FreeSurfer.md
