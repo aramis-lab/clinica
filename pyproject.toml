@@ -61,6 +61,7 @@ pydra-freesurfer = "^0.0.9"
 pydra-petpvc="^0.0.4"
 pydra-fsl = "^0.0.22"
 antspyx = "^0.4.2"
+rich = "^13.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"

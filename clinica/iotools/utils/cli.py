@@ -1,4 +1,5 @@
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, Union
 
 import click
 
@@ -15,6 +16,15 @@ current_directory = click.argument(
 def cli() -> None:
     """Tools to handle BIDS/CAPS datasets."""
     pass
+
+
+@cli.command()
+@click.argument("dataset", type=click.Path(resolve_path=True))
+def describe(dataset: Union[str, Path]):
+    """Describe a dataset in BIDS or CAPS format."""
+    from .describe import describe as _describe
+
+    _describe(dataset)
 
 
 @cli.command()

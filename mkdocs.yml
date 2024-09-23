@@ -124,6 +124,7 @@ nav:
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md
     - UK Biobank to BIDS: Converters/UKBtoBIDS.md
   - I/O tools:
+    - describe: IO#describe-Describe-a-BIDS-or-CAPS-dataset
     - create-subjects-visits: IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset
     - check-missing-modalities: IO#check-missing-modalities-check-missing-modalities-for-each-subject
     - check-missing-processing: IO#check-missing-processing-check-missing-processing-in-a-caps-directory
