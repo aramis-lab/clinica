@@ -17,7 +17,7 @@
     | Cohort                  | 200 elderly controls + 400 MCI + 200 AD | Existing ADNI-1 + 200 early MCI | Existing ADNI-1 and ADNI-GO + 150 elderly controls + 100 early MCI + 150 late MCI + 150 AD | Existing ADNI-1, ADNI-GO, ADNI-2 + 133 elderly controls + 151 MCI + 87 AD |
 
 !!! warning "Supported ADNI versions"
-    Clinica is currently able to convert ADNI 1, 2 and 3. It is not ready for ADNI 4.
+    Clinica is currently able to convert ADNI 1, GO, 2 and 3. It is not ready for ADNI 4.
 
 ## Dependencies
 

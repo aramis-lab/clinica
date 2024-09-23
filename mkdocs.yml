@@ -84,7 +84,7 @@ nav:
     - Installation: Software/Installation.md
     - Third-party software: Software/Third-party.md
     - Interacting with Clinica: Software/InteractingWithClinica.md
-    - Contributing to the Github repository : Software/Contributing_recall.md
+    - Contributing to Clinica : ../CONTRIBUTING.md
   - Clinica environment:
     - What is Clinica?: WhatIsClinica.md
     - BIDS: BIDS.md
