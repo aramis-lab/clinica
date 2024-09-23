@@ -13,6 +13,9 @@ repo_url: https://github.com/aramis-lab/clinica
 # Copyright
 copyright: Copyright &copy; 2016-2024 Clinica contributors
 
+hooks:
+  - my_hooks.py
+
 # Configuration
 theme:
   name: material
