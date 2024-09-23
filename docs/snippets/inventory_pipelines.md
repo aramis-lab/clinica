@@ -1,6 +1,6 @@
 
 - Anatomical MRI
-    - `t1-linear` - [Linear processing of T1w MR images](__DOCS_DIR__/Pipelines/T1_Linear): affine registration to the MNI standard space of T1 images
+    - `t1-linear` - [Linear processing of T1w MR images](./../Pipelines/T1_Linear): affine registration to the MNI standard space of T1 images
     - `flair-linear` - [Linear processing of FLAIR images](./../Pipelines/FLAIR_Linear.md): affine registration to the MNI standard space of FLAIR images
     - `t1-volume` - [Processing of T1w MR images using SPM](./../Pipelines/T1_Volume.md): tissue segmentation and spatial normalization
     - `t1-freesurfer` - [Processing of T1w MR images using FreeSurfer](./../Pipelines/T1_FreeSurfer.md): cortical surface, subcortical structures and volumetrics
