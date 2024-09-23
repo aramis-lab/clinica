@@ -1,5 +1,5 @@
 - `adni-to-bids` - <div markdown><a href="./../Converters/ADNI2BIDS/index.html" markdown>ADNI: Alzheimer’s Disease Neuroimaging Initiative</a></div>
-- `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](./../Converters/AIBL2BIDS.md)
+- `aibl-to-bids` - <div><a href="./../Converters/AIBL2BIDS/index.html">AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing</a></div>
 - `genfi-to-bids` - [GENFI:Genetic Frontotemporal dementia Initiative](./../Converters/GENFItoBIDS.md)
 - `habs-to-bids` - [HABS: Harvard Aging Brain Study](./../Converters/HABS2BIDS.md)
 - `ixi-to-bids` - [IXI: Information eXtraction from Images](./../Converters/IXItoBIDS.md)
