@@ -56,14 +56,15 @@ markdown_extensions:
   - admonition
   - codehilite
   - footnotes
+  - md_in_html
   - pymdownx.details
   - pymdownx.emoji
   - pymdownx.keys
   - pymdownx.superfences
   - pymdownx.critic
+  - md_in_html
   - abbr
   - attr_list
-  - md_in_html
   - pymdownx.snippets:
       base_path: docs
       auto_append:
@@ -74,7 +75,8 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: True
 
-
+not_in_nav: |
+  /snippets/
 
 # Page tree
 nav:
