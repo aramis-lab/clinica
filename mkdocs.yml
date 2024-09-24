@@ -80,7 +80,7 @@ not_in_nav: |
 
 # Page tree
 nav:
-  - Home: index.md
+  - Home: Home/index.md
   - Setting-up for Clinica:
     - Installation: Software/Installation.md
     - Third-party software: Software/Third-party.md
