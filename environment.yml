@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - mrtrix3
 dependencies:
-  - python=3.10
+  - python=3.11
   - dcm2niix
   - petpvc
   - convert3d
