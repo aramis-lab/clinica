@@ -56,7 +56,6 @@ markdown_extensions:
   - admonition
   - codehilite
   - footnotes
-  - md_in_html
   - pymdownx.details
   - pymdownx.emoji
   - pymdownx.keys
@@ -86,7 +85,7 @@ nav:
     - Installation: Software/Installation.md
     - Third-party software: Software/Third-party.md
     - Interacting with Clinica: Software/InteractingWithClinica.md
-    - Contributing to Clinica : Software/Contributing_recall.md
+    - Contributing to Clinica : Software/contributing.md
   - Clinica environment:
     - What is Clinica?: WhatIsClinica.md
     - BIDS: BIDS.md
