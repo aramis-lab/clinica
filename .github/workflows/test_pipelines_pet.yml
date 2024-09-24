@@ -15,7 +15,6 @@ jobs:
     timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
       - name: Run tests for pet pipelines
         run: |
           make env.conda
@@ -41,7 +40,6 @@ jobs:
     timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
       - name: Run tests for pet pipelines
         run: |
           make env.conda
