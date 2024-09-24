@@ -1,10 +1,11 @@
 
 - Anatomical MRI
-    - `t1-linear` - [Linear processing of T1w MR images](./../Pipelines/T1_Linear): affine registration to the MNI standard space of T1 images
+    - `t1-linear` - [Linear processing of T1w MR images](./../Pipelines/T1_Linear.md): affine registration to the MNI standard space of T1 images
     - `flair-linear` - [Linear processing of FLAIR images](./../Pipelines/FLAIR_Linear.md): affine registration to the MNI standard space of FLAIR images
     - `t1-volume` - [Processing of T1w MR images using SPM](./../Pipelines/T1_Volume.md): tissue segmentation and spatial normalization
     - `t1-freesurfer` - [Processing of T1w MR images using FreeSurfer](./../Pipelines/T1_FreeSurfer.md): cortical surface, subcortical structures and volumetrics
     - `t1-freesurfer-longitudinal` - [Longitudinal processing of T1w MR images using FreeSurfer](./../Pipelines/T1_FreeSurfer_Longitudinal.md): cortical surface, subcortical structures and volumetrics
+
 - Diffusion MRI (DWI)
     - `dwi-preprocessing-*` - [DWI pre-processing](./../Pipelines/DWI_Preprocessing.md): correction of head motion, magnetic susceptibility, eddy current and bias field induced distortions
     - `dwi-dti` - [DTI scalar maps (FA, MD, AD, RD) and spatial normalization](./../Pipelines/DWI_DTI.md): extraction of DTI-based measures (FA, MD, AD, RD)

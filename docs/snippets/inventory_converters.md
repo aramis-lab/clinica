@@ -1,5 +1,6 @@
-- `adni-to-bids` - <div><a href="./../../Converters/ADNI2BIDS/index.html">ADNI: Alzheimer’s Disease Neuroimaging Initiative</a></div>
-- `aibl-to-bids` - <div><a href="./../../Converters/AIBL2BIDS/index.html">AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing</a></div>
+
+- `adni-to-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](./Converters/ADNI2BIDS.md)
+- `aibl-to-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](./../Converters/AIBL2BIDS.md)
 - `genfi-to-bids` - [GENFI:Genetic Frontotemporal dementia Initiative](./../Converters/GENFItoBIDS.md)
 - `habs-to-bids` - [HABS: Harvard Aging Brain Study](./../Converters/HABS2BIDS.md)
 - `ixi-to-bids` - [IXI: Information eXtraction from Images](./../Converters/IXItoBIDS.md)
@@ -7,8 +8,3 @@
 - `oasis-to-bids` - [OASIS: Open Access Series of Imaging Studies](./../Converters/OASIS2BIDS.md)
 - `oasis3-to-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](./../Converters/OASIS3TOBIDS.md)
 - `ukb-to-bids` - [UK Biobank: Large-scale biomedical database and research resource in the United Kingdom](./../Converters/UKBtoBIDS.md)
-
-
-<div class="grid">
-  <a href="./../../Converters/ADNI2BIDS/index.html" class="card">adni-to-bids</a>
-</div>
