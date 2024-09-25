@@ -13,6 +13,7 @@ repo_url: https://github.com/aramis-lab/clinica
 # Copyright
 copyright: Copyright &copy; 2016-2024 Clinica contributors
 
+
 # Configuration
 theme:
   name: material
@@ -63,11 +64,12 @@ markdown_extensions:
   - md_in_html
   - abbr
   - attr_list
-  - md_in_html
   - pymdownx.snippets:
       base_path: docs
       auto_append:
         - snippets/abbreviations.md
+        - snippets/support.md
+
   - toc:
       permalink: True
   - pymdownx.tabbed:
@@ -78,11 +80,12 @@ not_in_nav: |
 
 # Page tree
 nav:
-  - Home: index.md
+  - Home: Home/index.md
   - Setting-up for Clinica:
     - Installation: Software/Installation.md
     - Third-party software: Software/Third-party.md
     - Interacting with Clinica: Software/InteractingWithClinica.md
+    - Contributing to Clinica : Software/contributing.md
   - Clinica environment:
     - What is Clinica?: WhatIsClinica.md
     - BIDS: BIDS.md
@@ -124,12 +127,12 @@ nav:
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md
     - UK Biobank to BIDS: Converters/UKBtoBIDS.md
   - I/O tools:
-    - describe: IO#describe-Describe-a-BIDS-or-CAPS-dataset
     - create-subjects-visits: IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset
     - check-missing-modalities: IO#check-missing-modalities-check-missing-modalities-for-each-subject
     - check-missing-processing: IO#check-missing-processing-check-missing-processing-in-a-caps-directory
     - merge-tsv: IO#merge-tsv-gather-bids-and-caps-data-into-a-single-tsv-file
     - center-nifti: IO#center-nifti-center-the-nifti-files-of-a-bids-directory
+    - describe: IO#describe-Describe-a-BIDS-or-CAPS-dataset
   - Presentations & demos:
     - NOW 2023: ClinicaConferences#neuro-openscience-workshop-2023
     - NOW 2019: ClinicaConferences#neuro-openscience-workshop-2019

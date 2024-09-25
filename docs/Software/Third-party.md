@@ -32,11 +32,11 @@ and will be lost if you re-launch your terminal.
 Some converters require **dcm2niix** to transform DICOM files into NIfTI :
 
 <div class="grid">
-  <a href="./../Converters/ADNI2BIDS/index.html" class="card">adni-to-bids</a>
-  <a href="./../Converters/AIBL2BIDS/index.html" class="card">aibl-to-bids</a>
-  <a href="./../Converters/GENFItoBIDS/index.html" class="card">genfi-to-bids</a>
-  <a href="./../Converters/NIFD2BIDS/index.html" class="card">nifd-to-bids</a>
-  <a href="./../Converters/UKBtoBIDS/index.html" class="card">ukb-to-bids</a>
+  <a href="./../../Converters/ADNI2BIDS/index.html" class="card">adni-to-bids</a>
+  <a href="./../../Converters/AIBL2BIDS/index.html" class="card">aibl-to-bids</a>
+  <a href="./../../Converters/GENFItoBIDS/index.html" class="card">genfi-to-bids</a>
+  <a href="./../../Converters/NIFD2BIDS/index.html" class="card">nifd-to-bids</a>
+  <a href="./../../Converters/UKBtoBIDS/index.html" class="card">ukb-to-bids</a>
 </div>
 
 ### DCM2NIX
@@ -249,6 +249,7 @@ You can find more details about `SPM12` on their [website](http://www.fil.ion.uc
     ??? warning "MacOS Big Sur"
         For systems running on MacOS Big Sur, a [development version of SPM12](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) as well as a more recent release of the MCR (minimum 2019a) are required.
 
+Then :
 
 1. Make sure to have the following environment variable defined:
     ```{ .bash .copy }

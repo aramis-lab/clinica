@@ -133,9 +133,3 @@ You might also use `CNvsAD`, for instance, as group ID for a statistical group c
 --8<-- "snippets/converters_options.md"
 
 --8<-- "snippets/known_issues.md:matlab"
-
-
-## Support
-
-- You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
-- Report an issue on [GitHub](https://github.com/aramis-lab/clinica/issues).

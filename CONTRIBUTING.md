@@ -1,4 +1,4 @@
-# Contributing to this repo
+# Contributing to Clinica
 
 There are many ways in which you can contribute to the ongoing development of
 this project. For example, you can:

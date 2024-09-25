@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD007 MD046 -->
 # `adni-to-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
 
-!!! quote "Description adapted from the [ADNI website](http://adni.loni.usc.edu)"
+??? quote "Description adapted from the [ADNI website](http://adni.loni.usc.edu)"
     ADNI is a global research effort that actively supports the investigation and development of treatments that slow or stop the progression of Alzheimer's disease (AD).
     This multisite, longitudinal study assesses clinical, imaging, genetic and biospecimen biomarkers through the process of normal aging to mild cognitive impairment (MCI) and AD dementia.
     With established, standardized methods for imaging and biomarker collection and analysis, ADNI facilitates a way for scientists to conduct cohesive research and share compatible data with other researchers around the world.
@@ -15,6 +15,9 @@
     | Primary goal            | Develop biomarkers as outcome measures for clinical trials | Examine biomarkers in earlier stages of disease | Develop biomarkers as predictors of cognitive decline, and as outcome measures | Study the use of tau PET and functional imaging techniques in clinical trials |
     | Duration / Start date   | 5 years / October 2004 | 2 years / September 2009 | 5 years / September 2011 | 5 years / September 2016 |
     | Cohort                  | 200 elderly controls + 400 MCI + 200 AD | Existing ADNI-1 + 200 early MCI | Existing ADNI-1 and ADNI-GO + 150 elderly controls + 100 early MCI + 150 late MCI + 150 AD | Existing ADNI-1, ADNI-GO, ADNI-2 + 133 elderly controls + 151 MCI + 87 AD |
+
+!!! warning "Supported ADNI versions"
+    Clinica is currently able to convert ADNI 1, GO, 2 and 3. It is not ready for ADNI 4.
 
 ## Dependencies
 

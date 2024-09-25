@@ -3,7 +3,7 @@
 
 ## What is Clinica ?
 Clinica is a software platform for clinical neuroscience research studies using multimodal data and most often longitudinal follow-up.
-You can learn more on [this page](WhatIsClinica).
+You can learn more on [this page](../WhatIsClinica.md).
 
 ## Installation
 
@@ -11,9 +11,10 @@ Clinica can be installed on **MacOS** and **Linux** (CentOS or Debian/Ubuntu) ma
 and possibly on Windows computers with a Linux Virtual Machine.
 We assume that users installing and using Clinica are comfortable using the command line.
 
-- [Installation](Software/Installation.md)
-- [Third-party software](Software/Third-party.md)  
-- [Interacting with Clinica](Software/InteractingWithClinica.md)
+- [Installation](../Software/Installation.md)
+- [Third-party software](../Software/Third-party.md)  
+- [Interacting with Clinica](../Software/InteractingWithClinica.md)
+- [Contributing to Clinica](../Software/contributing.md)
 
 <!--
 ### Installing Clinica using Docker
@@ -31,8 +32,8 @@ Installation instructions are available [here](./ICMClusterInstallation).
 
 ### Clinica environment
 
-- [BIDS: the input data structure](BIDS)
-- [CAPS: the processed data structure](CAPS/Introduction)
+- [BIDS: the input data structure](../BIDS.md)
+- [CAPS: the processed data structure](../CAPS/Introduction.md)
 
 ### Pipelines (`clinica run`)
 
@@ -50,16 +51,16 @@ Clinica provides tools to curate several publicly available neuroimaging dataset
 
 ### I/O tools (`clinica iotools`)
 
-- [Data handling tools for BIDS and CAPS compliant datasets](IO)
+- [Data handling tools for BIDS and CAPS compliant datasets](../IO)
 
 ### Visualize pipeline outputs (`clinica visualize`)
 
 Clinica allows visualization of the main outputs of some pipelines.
-Currently only supported for the [`t1-freesurfer` pipeline](Pipelines/T1_FreeSurfer).
+Currently only supported for the [`t1-freesurfer` pipeline](../Pipelines/T1_FreeSurfer).
 
 ## Clinica at conferences
 
-Find on [this page](ClinicaConferences) the presentations and demo materials used when we showcase Clinica.
+Find on [this page](../ClinicaConferences) the presentations and demo materials used when we showcase Clinica.
 
 ## Support
 
@@ -86,4 +87,4 @@ Each page includes text to cite the software packages that are used by Clinica
 
 ---
 
-![Clinica_Partners_Banner](img/Clinica_Partners_Banner.png)
+![Clinica_Partners_Banner](../img/Clinica_Partners_Banner.png)
