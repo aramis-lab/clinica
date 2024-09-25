@@ -573,17 +573,17 @@ def clinica_file_filter(
     input_directory: Path,
     information: Dict,
     n_procs: Optional[int] = 1,
-) -> List[str]:
+) -> Tuple[List[str], List[str], List[str]]:
     from clinica.utils.stream import cprint
 
-    # todo : test ?
     files, errors = clinica_file_reader(
         subjects, sessions, input_directory, information, n_procs
     )
     cprint(_format_errors(errors, information), "warning")
-    # todo : dont remove but return filtered
-    _remove_sub_ses_from_list(subjects, sessions, errors)
-    return files
+    filtered_subjects, filtered_sessions = _remove_sub_ses_from_list(
+        subjects, sessions, errors
+    )
+    return files, filtered_subjects, filtered_sessions
 
 
 def _format_errors(errors: Iterable[InvalidSubjectSession], information: Dict) -> str:
@@ -609,7 +609,9 @@ def _remove_sub_ses_from_list(
     list_subjects: List[str],
     list_sessions: List[str],
     wrong_sub_ses: Iterable[InvalidSubjectSession],
-) -> None:
+) -> Tuple[List[str], List[str]]:
+    list_subjects = list_subjects.copy()
+    list_sessions = list_sessions.copy()
     for invalid in wrong_sub_ses:
         sub_indexes = [
             i for i, subject in enumerate(list_subjects) if subject == invalid.subject
@@ -622,6 +624,7 @@ def _remove_sub_ses_from_list(
         for index in to_remove:
             list_subjects.pop(index)
             list_sessions.pop(index)
+    return list_subjects, list_sessions
 
 
 def clinica_file_reader(
@@ -873,12 +876,10 @@ def clinica_list_of_files_reader(
         list_found_files.append(files)
         all_errors += errors
 
-    # todo : _format_errors
-
     if len(all_errors) > 0 and raise_exception:
         error_message = "Clinica faced error(s) while trying to read files in your BIDS or CAPS directory.\n"
-        for error in all_errors:
-            error_message += f"\n\t({error.subject} | {error.session})"
+        for error, info in zip(all_errors, list_information):
+            error_message += _format_errors([error], info)
         raise ClinicaBIDSError(error_message)
 
     return list_found_files

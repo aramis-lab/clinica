@@ -37,14 +37,16 @@ from clinica.utils.testing_utils import (
         ),
     ],
 )
-def test_remove_sub_ses_from_list_success(
+def test_remove_sub_ses_from_list(
     input_subjects, input_sessions, to_remove, expected_subjects, expected_sessions
 ):
     from clinica.utils.inputs import _remove_sub_ses_from_list
 
-    _remove_sub_ses_from_list(input_subjects, input_sessions, to_remove)
-    assert input_subjects == expected_subjects
-    assert input_sessions == expected_sessions
+    result_subjects, result_sessions = _remove_sub_ses_from_list(
+        input_subjects, input_sessions, to_remove
+    )
+    assert result_subjects == expected_subjects and result_sessions == expected_sessions
+    assert input_subjects == input_subjects and input_sessions == input_sessions
 
 
 def test_get_parent_path(tmp_path):

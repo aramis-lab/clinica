@@ -154,9 +154,11 @@ class AnatLinear(Pipeline):
         # anat image file:
         query = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
 
-        anat_files = clinica_file_filter(
+        anat_files, filtered_subjects, filtered_sessions = clinica_file_filter(
             self.subjects, self.sessions, self.bids_directory, query
         )
+        self.subjects = filtered_subjects
+        self.sessions = filtered_sessions
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
