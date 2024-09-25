@@ -56,11 +56,11 @@ Clinica provides tools to curate several publicly available neuroimaging dataset
 ### Visualize pipeline outputs (`clinica visualize`)
 
 Clinica allows visualization of the main outputs of some pipelines.
-Currently only supported for the [`t1-freesurfer` pipeline](Pipelines/T1_FreeSurfer).
+Currently only supported for the [`t1-freesurfer` pipeline](../Pipelines/T1_FreeSurfer).
 
 ## Clinica at conferences
 
-Find on [this page](ClinicaConferences) the presentations and demo materials used when we showcase Clinica.
+Find on [this page](../ClinicaConferences) the presentations and demo materials used when we showcase Clinica.
 
 ## Support
 
