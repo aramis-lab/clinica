@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
-from clinica.utils.inputs import DatasetType
+from clinica.utils.inputs import DatasetType, InvalidSubjectSession
 from clinica.utils.testing_utils import (
     build_bids_directory,
     build_caps_directory,
@@ -20,7 +20,10 @@ from clinica.utils.testing_utils import (
         (
             ["sub1", "sub1", "sub2"],
             ["ses1", "ses2", "ses1"],
-            [("sub1", "ses1"), ("sub3", "ses1")],
+            [
+                InvalidSubjectSession("sub1", "ses1"),
+                InvalidSubjectSession("sub3", "ses1"),
+            ],
             ["sub1", "sub2"],
             ["ses2", "ses1"],
         ),
@@ -28,7 +31,7 @@ from clinica.utils.testing_utils import (
         (
             ["sub1", "sub2", "sub2"],
             ["ses1", "ses1", "ses1"],
-            [("sub2", "ses1")],
+            [InvalidSubjectSession("sub2", "ses1")],
             ["sub1"],
             ["ses1"],
         ),
@@ -537,7 +540,11 @@ def test_format_errors():
         "Please note that the following clinica pipeline(s) must have "
         "run to obtain these files: ['pipeline_1', 'pipeline_3']\n"
     )
-    errors = [("sub1", "ses1"), ("sub2", "ses1"), ("sub3", "ses1")]
+    errors = [
+        InvalidSubjectSession("sub1", "ses1"),
+        InvalidSubjectSession("sub2", "ses1"),
+        InvalidSubjectSession("sub3", "ses1"),
+    ]
     assert _format_errors(errors, information) == (
         "Clinica encountered 3 problem(s) while getting foo bar baz:\n"
         "Please note that the following clinica pipeline(s) must have "
@@ -614,7 +621,7 @@ def test_clinica_file_reader_bids_directory(tmp_path, data_type):
         ["sub-01"], ["ses-M00"], tmp_path, information, n_procs=1
     )
     assert len(results) == 0
-    assert errors == [("sub-01", "ses-M00")]
+    assert errors == [InvalidSubjectSession("sub-01", "ses-M00")]
 
 
 def test_clinica_file_reader_caps_directory(tmp_path):
@@ -680,7 +687,7 @@ def test_clinica_file_reader_caps_directory(tmp_path):
         ["sub-01"], ["ses-M00"], tmp_path, information, n_procs=1
     )
     assert len(results) == 0
-    assert errors == [("sub-01", "ses-M00")]
+    assert errors == [InvalidSubjectSession("sub-01", "ses-M00")]
 
 
 def test_clinica_file_reader_dwi_dti_error(tmp_path):
@@ -793,9 +800,7 @@ def test_clinica_list_of_files_reader(tmp_path):
 
     assert len(results) == 2
     assert len(results[0]) == 3
-    assert (
-        len(results[1]) == 2
-    )  # todo : change in behaviour... see what we really want ?
+    assert len(results[1]) == 2
 
 
 def test_clinica_group_reader(tmp_path):

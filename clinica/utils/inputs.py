@@ -6,7 +6,7 @@ from collections import namedtuple
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 
 class DatasetType(str, Enum):
@@ -17,6 +17,7 @@ class DatasetType(str, Enum):
 
 
 RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "checksum"])
+InvalidSubjectSession = namedtuple("InvalidSubjectSession", ["subject", "session"])
 
 
 def insensitive_glob(pattern_glob: str, recursive: Optional[bool] = False) -> List[str]:
@@ -345,10 +346,9 @@ def find_sub_ses_pattern_path(
             )
             results.append(selected)
         else:
-            # todo : RQ : now we do not know why the invalid files are considered invalid
-            error_encountered += [(subject, session)]
+            error_encountered += [InvalidSubjectSession(subject, session)]
     elif len(current_glob_found) == 0:
-        error_encountered += [(subject, session)]
+        error_encountered += [InvalidSubjectSession(subject, session)]
     # Otherwise the file found is added to the result
     else:
         results.append(current_glob_found[0])
@@ -577,7 +577,6 @@ def clinica_file_filter(
     from clinica.utils.stream import cprint
 
     # todo : test ?
-    # todo : typing ?
     files, errors = clinica_file_reader(
         subjects, sessions, input_directory, information, n_procs
     )
@@ -586,7 +585,7 @@ def clinica_file_filter(
     return files
 
 
-def _format_errors(errors: List[Tuple[str, str]], information: Dict) -> str:
+def _format_errors(errors: Iterable[InvalidSubjectSession], information: Dict) -> str:
     message = (
         f"Clinica encountered {len(errors)} "
         f"problem(s) while getting {information['description']}:\n"
@@ -597,20 +596,25 @@ def _format_errors(errors: List[Tuple[str, str]], information: Dict) -> str:
             f"have run to obtain these files: {information['needed_pipeline']}\n"
         )
     if errors:
-        message += "".join(f"\t* ({e[0]} | {e[1]})\n" for e in errors)
-        message += "Clinica could not identify which file to use (missing or too many) for these sessions. They will not be processed."
+        message += "".join(f"\t* ({err.subject} | {err.session})\n" for err in errors)
+        message += (
+            "Clinica could not identify which file to use (missing or too many) for these sessions. "
+            "They will not be processed."
+        )
     return message
 
 
 def _remove_sub_ses_from_list(
     list_subjects: List[str],
     list_sessions: List[str],
-    wrong_sub_ses: List[Tuple[str, str]],
+    wrong_sub_ses: Iterable[InvalidSubjectSession],
 ) -> None:
-    for sub, ses in wrong_sub_ses:
-        sub_indexes = [i for i, subject in enumerate(list_subjects) if subject == sub]
+    for invalid in wrong_sub_ses:
+        sub_indexes = [
+            i for i, subject in enumerate(list_subjects) if subject == invalid.subject
+        ]
         session_indexes = [
-            i for i, session in enumerate(list_sessions) if session == ses
+            i for i, session in enumerate(list_sessions) if session == invalid.session
         ]
         to_remove = list(set(sub_indexes) & set(session_indexes))
         to_remove.sort(reverse=True)
@@ -625,7 +629,7 @@ def clinica_file_reader(
     input_directory: os.PathLike,
     information: Dict,
     n_procs: Optional[int] = 1,
-) -> Tuple[List[str], List[Tuple[str, str]]]:
+) -> Tuple[List[str], Iterable[InvalidSubjectSession]]:
     """Read files in BIDS or CAPS directory based on participant ID(s).
 
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
@@ -659,6 +663,8 @@ def clinica_file_reader(
     -------
     results : List[str]
         List of files respecting the subject/session order provided in input.
+              Iterable[InvalidSubjectSession]
+        List of tuples (subject, session) which were identified as invalid (too many files or none).
 
     Raises
     ------
@@ -670,25 +676,10 @@ def clinica_file_reader(
         for more details.
         If the length of `subjects` is different from the length of `sessions`.
 
-    ClinicaCAPSError or ClinicaBIDSError
-        If multiples files are found for 1 subject/session, or if no file is found.
-
-        .. note::
-            If `raise_exception` is False, no exception is raised.
-
     Notes
     -----
     This function is case-insensitive, meaning that the pattern argument can, for example,
     contain upper case letters that do not exist in the existing file path.
-
-    You should always use `clinica_file_reader` in the following manner:
-
-    .. code-block:: python
-
-         try:
-            file_list = clinica_file_reader(...)
-         except ClinicaException as e:
-            # Deal with the error
 
     Examples
     --------
@@ -752,7 +743,6 @@ def clinica_file_reader(
     or even more precise: 't1/freesurfer_cross_sectional/sub-*_ses-*/surf/rh.white'
     It then gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white']
     """
-    # todo : change function description
 
     input_directory = Path(input_directory)
     _check_information(information)
@@ -788,7 +778,7 @@ def _read_files_parallel(
     is_bids: bool,
     pattern: str,
     n_procs: int,
-) -> Tuple[List[str], List[Tuple[str, str]]]:
+) -> Tuple[List[str], Iterable[InvalidSubjectSession]]:
     from multiprocessing import Manager
 
     from joblib import Parallel, delayed
@@ -809,7 +799,9 @@ def _read_files_parallel(
         for sub, ses in zip(subjects, sessions)
     )
     results = list(shared_results)
-    errors_encountered = list(shared_errors_encountered)  # todo : needed ?
+    errors_encountered = list(
+        shared_errors_encountered
+    )  # todo : "list" needed ? to test
     return results, errors_encountered
 
 
@@ -820,7 +812,7 @@ def _read_files_sequential(
     is_bids: bool,
     pattern: str,
     **kwargs,
-) -> Tuple[List[str], List[Tuple[str, str]]]:
+) -> Tuple[List[str], Iterable[InvalidSubjectSession]]:
     errors_encountered, results = [], []
     for sub, ses in zip(subjects, sessions):
         find_sub_ses_pattern_path(
@@ -884,7 +876,7 @@ def clinica_list_of_files_reader(
     if len(all_errors) > 0 and raise_exception:
         error_message = "Clinica faced error(s) while trying to read files in your BIDS or CAPS directory.\n"
         for error in all_errors:
-            error_message += f"\n\t({error[0]} | {error[1]})"
+            error_message += f"\n\t({error.subject} | {error.session})"
         raise ClinicaBIDSError(error_message)
 
     return list_found_files

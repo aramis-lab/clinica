@@ -152,12 +152,11 @@ class AnatLinear(Pipeline):
         # Inputs from anat/ folder
         # ========================
         # anat image file:
-        file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
+        query = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
 
         anat_files = clinica_file_filter(
-            self.subjects, self.sessions, self.bids_directory, file
+            self.subjects, self.sessions, self.bids_directory, query
         )
-        # todo : what happens if empty self.subjects ?
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
