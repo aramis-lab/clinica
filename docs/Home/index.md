@@ -14,6 +14,7 @@ We assume that users installing and using Clinica are comfortable using the comm
 - [Installation](../Software/Installation.md)
 - [Third-party software](../Software/Third-party.md)  
 - [Interacting with Clinica](../Software/InteractingWithClinica.md)
+- [Contributing to Clinica](../Software/contributing.md)
 
 <!--
 ### Installing Clinica using Docker
@@ -50,7 +51,7 @@ Clinica provides tools to curate several publicly available neuroimaging dataset
 
 ### I/O tools (`clinica iotools`)
 
-- [Data handling tools for BIDS and CAPS compliant datasets](IO)
+- [Data handling tools for BIDS and CAPS compliant datasets](../IO)
 
 ### Visualize pipeline outputs (`clinica visualize`)
 
