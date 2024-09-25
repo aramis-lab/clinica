@@ -581,6 +581,7 @@ def clinica_file_filter(
         subjects, sessions, input_directory, information, n_procs
     )
     cprint(_format_errors(errors, information), "warning")
+    # todo : dont remove but return filtered
     _remove_sub_ses_from_list(subjects, sessions, errors)
     return files
 
@@ -868,10 +869,11 @@ def clinica_list_of_files_reader(
             bids_or_caps_directory,
             info_file,
         )
-        # todo : should it work like that ?? maybe after change need to filter subject list ?
 
         list_found_files.append(files)
         all_errors += errors
+
+    # todo : _format_errors
 
     if len(all_errors) > 0 and raise_exception:
         error_message = "Clinica faced error(s) while trying to read files in your BIDS or CAPS directory.\n"
