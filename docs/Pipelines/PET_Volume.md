@@ -8,15 +8,15 @@ This pipeline performs several processing steps on [PET](../glossary.md#pet) dat
 - inter-subject spatial normalization of the PET image into MNI space based on the DARTEL deformation model of SPM [[Ashburner, 2007](http://dx.doi.org/10.1016/j.neuroimage.2007.07.007)];
 - intensity normalization using the average PET uptake in reference regions resulting in a standardized uptake value ratio ([SUVR](../glossary.md#suvr)) map;
 - parcellation into anatomical regions based on an atlas and computation of average values within each region.
-The list of available atlases can be found [here](../../Atlases).
+The list of available atlases can be found [here](../Atlases.md).
 
 !!! note "Clinica & BIDS specifications for PET modality"
     Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
-    See [BIDS](../../BIDS) page for more information.
+    See [BIDS](../BIDS.md) page for more information.
 
 ## Prerequisite
 
-You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-weighted MR images.
+You need to have performed the [`t1-volume`](./T1_Volume.md) pipeline on your T1-weighted MR images.
 
 ## Dependencies
 
@@ -35,18 +35,24 @@ clinica run pet-volume [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY GROUP_LABEL ACQ_L
 
 where:
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `CAPS_DIRECTORY` acts both as an input folder (where the results of the `t1-volume-*` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-- `GROUP_LABEL` is the label of the group that is associated to the DARTEL template that you had created when running the [`t1-volume`](../T1_Volume) pipeline.
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
+- `CAPS_DIRECTORY` acts both as an input folder (where the results of the `t1-volume-*` pipeline are stored) and as the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
+- `GROUP_LABEL` is the label of the group that is associated to the DARTEL template that you had created when running the [`t1-volume`](./T1_Volume.md) pipeline.
 - `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
 - The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio ([SUVR](../glossary.md#suvr)) map.
 It can be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) or `pons` or `pons2` (used for FDG).
 
 Pipeline options:
 
-- `--pvc_psf_tsv`: TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image.
-More explanation is given in [PET Introduction](../PET_Introduction) page.
+- `--pvc_psf_tsv`: TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image. More explanation is given in [PET Introduction](./PET_Introduction.md#partial-volume-correction-pvc) page.
 - `--smooth`: a list of integers specifying the different isotropic full width at half maximum ([FWHM](../glossary.md#fwhm)) in millimeters to smooth the image. Default value is: 0, 8 (both without smoothing and with an isotropic smoothing of 8 mm)
+- `--reconstruction_method`: Select only images based on a [specific reconstruction method](./PET_Introduction.md#reconstruction-methods).
+
+!!! tip
+    It can happen that a [BIDS](../BIDS.md) dataset contains several [PET](../glossary.md#pet) scans for a given subject and session.
+    In this situation, these images will differ through at least one [BIDS](../BIDS.md) entity like the tracer or the reconstruction method.
+    When running the `pet-volume` pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.
+    To avoid that, it is important to specify values for these options such that a single image is selected per subject and session.
 
 !!! info
     Since the release of Clinica v0.3.8, the handling of PSF information in the TSV file has changed: `fwhm_x`, `fwhm_y`, `fwhm_z` columns have been replaced by `psf_x`, `psf_y`, `psf_z` and the `acq_label` column has been added.
@@ -61,9 +67,7 @@ More explanation is given in [PET Introduction](../PET_Introduction) page.
 
 ## Outputs
 
-Results are stored in the following folder of the
-[CAPS hierarchy](../../CAPS/Specifications/#pet-volume-volume-based-processing-of-pet-images):
-`subjects/<participant_id>/<session_id>/pet/preprocessing`.
+Results are stored in the following folder of the [CAPS hierarchy](../CAPS/Specifications.md#pet-volume---volume-based-processing-of-pet-images): `subjects/<participant_id>/<session_id>/pet/preprocessing`.
 
 The main output files are:
 
@@ -108,8 +112,3 @@ The main output files are:
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/INDXD9QQ).
-
-## Support
-
-- You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
-- Report an issue on [GitHub](https://github.com/aramis-lab/clinica/issues).

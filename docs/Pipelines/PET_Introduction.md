@@ -35,6 +35,25 @@ bids
       └─ sub-CLNC001_ses-M000_trc-18FFDG_pet.nii.gz
 ```
 
+## Reconstruction methods
+
+PET data can be reconstructed into the spatial distribution of the injected radio-tracer through various methods.
+The specification of the method used to reconstruct a given image is supported by the [BIDS standard](https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/09-positron-emission-tomography.html#pet-recording-data).
+
+There exists four reserved values:
+
+- `acdyn`: for reconstructions with attenuation correction of dynamic data
+- `acstat`: for reconstructions with attenuation correction of static data
+- `nacdyn`: for reconstructions without attenuation correction of dynamic data
+- `nacstat`: for reconstructions without attenuation correction of static data
+
+In addition to these values, when working with ADNI data, the following values are possible:
+
+- `coregdyn`: Corresponds to "ADNI processing steps 1"
+- `coregavg`: Corresponds to "ADNI processing steps 2"
+- `coregstd`: Corresponds to "ADNI processing steps 3"
+- `coregiso`: Corresponds to "ADNI processing steps 4"
+
 ## Reference regions used for intensity normalization
 
 In neurology, an approach widely used to allow inter- and intra-subject comparison of [PET](../glossary.md#pet) images is to compute standardized uptake value ratio ([SUVR](../glossary.md#suvr)) maps.
