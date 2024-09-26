@@ -54,6 +54,8 @@ In addition to these values, when working with ADNI data, the following values a
 - `coregstd`: Corresponds to "ADNI processing steps 3"
 - `coregiso`: Corresponds to "ADNI processing steps 4"
 
+See [this page](https://adni.loni.usc.edu/data-samples/adni-data/neuroimaging/pet/) for more information.
+
 ## Reference regions used for intensity normalization
 
 In neurology, an approach widely used to allow inter- and intra-subject comparison of [PET](../glossary.md#pet) images is to compute standardized uptake value ratio ([SUVR](../glossary.md#suvr)) maps.
