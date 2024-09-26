@@ -43,7 +43,7 @@ Use the `--uncropped_image` option if you do not want to crop the image.
 
 It is possible to select only images based on a [specific reconstruction method](./PET_Introduction.md#reconstruction-methods) with the `--reconstruction_method` option.
 
-!!! tip
+!!! warning
     It can happen that a [BIDS](../BIDS.md) dataset contains several [PET](../glossary.md#pet) scans for a given subject and session.
     In this situation, these images will differ through at least one [BIDS](../BIDS.md) entity like the tracer or the reconstruction method.
     When running the `pet-linear` pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.
