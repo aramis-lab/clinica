@@ -78,9 +78,12 @@ markdown_extensions:
 not_in_nav: |
   /snippets/
 
+validation:
+  absolute_links: relative_to_docs
+
 # Page tree
 nav:
-  - Home: Home/index.md
+  - Home: index.md
   - Setting-up for Clinica:
     - Installation: Software/Installation.md
     - Third-party software: Software/Third-party.md
