@@ -3,7 +3,7 @@
 ### `-tsv` / `--subjects_sessions_tsv`
 
 The `-tsv` flag allows you to specify in a TSV file the participants belonging to your subset.
-For instance, running the [FreeSurfer pipeline](../Pipelines/T1_FreeSurfer.md) on T1w MRI can be done using :
+For instance, running the [FreeSurfer pipeline](/Pipelines/T1_FreeSurfer.md) on T1w MRI can be done using :
 
 ```shell
 clinica run t1-freesurfer path/to/my/bids/dataset path/where/results/will/be/stored -tsv my_list_of_subjects.tsv
