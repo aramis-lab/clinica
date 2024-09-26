@@ -38,5 +38,4 @@ jobs:
           echo $BRANCH_NAME
           mv site "${BRANCH_NAME}"
           ls "${BRANCH_NAME}"
-          scp -r "${BRANCH_NAME}" aramislab:/srv/local/clinica/docs/public/
-
+          rsync -zav "${BRANCH_NAME}" aramislab:/srv/local/clinica/docs/public/
