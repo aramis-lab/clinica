@@ -39,7 +39,7 @@ class ReconstructionMethod(str, Enum):
 
     For ADNI specific reconstruction methods, see:
 
-    https://adni.loni.usc.edu/methods/pet-analysis-method/pet-analysis/
+    https://adni.loni.usc.edu/data-samples/adni-data/neuroimaging/pet/
     """
 
     # Reconstruction methods defined in the BIDS specifications
