@@ -3,7 +3,7 @@
 
 ## What is Clinica ?
 Clinica is a software platform for clinical neuroscience research studies using multimodal data and most often longitudinal follow-up.
-You can learn more on [this page](../WhatIsClinica.md).
+You can learn more on [this page](/WhatIsClinica.md).
 
 ## Installation
 
@@ -32,8 +32,8 @@ Installation instructions are available [here](./ICMClusterInstallation).
 
 ### Clinica environment
 
-- [BIDS: the input data structure](../BIDS.md)
-- [CAPS: the processed data structure](../CAPS/Introduction.md)
+- [BIDS: the input data structure](/BIDS.md)
+- [CAPS: the processed data structure](/CAPS/Introduction.md)
 
 ### Pipelines (`clinica run`)
 
@@ -41,7 +41,7 @@ Installation instructions are available [here](./ICMClusterInstallation).
 
 ### Dataset converters (`clinica convert`)
 
-Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to [BIDS](BIDS) namely:
+Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to [BIDS](/BIDS.md) namely:
 
 --8<-- "snippets/inventory_converters.md"
 
@@ -51,16 +51,16 @@ Clinica provides tools to curate several publicly available neuroimaging dataset
 
 ### I/O tools (`clinica iotools`)
 
-- [Data handling tools for BIDS and CAPS compliant datasets](../IO)
+- [Data handling tools for BIDS and CAPS compliant datasets](/IO.md)
 
 ### Visualize pipeline outputs (`clinica visualize`)
 
 Clinica allows visualization of the main outputs of some pipelines.
-Currently only supported for the [`t1-freesurfer` pipeline](../Pipelines/T1_FreeSurfer).
+Currently only supported for the [`t1-freesurfer` pipeline](/Pipelines/T1_FreeSurfer.md).
 
 ## Clinica at conferences
 
-Find on [this page](../ClinicaConferences) the presentations and demo materials used when we showcase Clinica.
+Find on [this page](/ClinicaConferences.md) the presentations and demo materials used when we showcase Clinica.
 
 ## Support
 
@@ -70,8 +70,7 @@ Find on [this page](../ClinicaConferences) the presentations and demo materials 
 
 ## License
 
-Clinica is distributed under the terms of the MIT license given
-[here](https://github.com/aramis-lab/clinica/blob/dev/LICENSE.txt).
+Clinica is distributed under the terms of the MIT license given [here](https://github.com/aramis-lab/clinica/blob/dev/LICENSE.txt).
 
 ## Citing Clinica
 
@@ -87,4 +86,4 @@ Each page includes text to cite the software packages that are used by Clinica
 
 ---
 
-![Clinica_Partners_Banner](../img/Clinica_Partners_Banner.png)
+![Clinica_Partners_Banner](/img/Clinica_Partners_Banner.png)
