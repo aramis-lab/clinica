@@ -78,6 +78,9 @@ markdown_extensions:
 not_in_nav: |
   /snippets/
 
+validation:
+  absolute_links: relative_to_docs
+
 # Page tree
 nav:
   - Home: Home/index.md

@@ -11,10 +11,10 @@ Clinica can be installed on **MacOS** and **Linux** (CentOS or Debian/Ubuntu) ma
 and possibly on Windows computers with a Linux Virtual Machine.
 We assume that users installing and using Clinica are comfortable using the command line.
 
-- [Installation](../Software/Installation.md)
-- [Third-party software](../Software/Third-party.md)  
-- [Interacting with Clinica](../Software/InteractingWithClinica.md)
-- [Contributing to Clinica](../Software/contributing.md)
+- [Installation](/Software/Installation.md)
+- [Third-party software](/Software/Third-party.md)  
+- [Interacting with Clinica](/Software/InteractingWithClinica.md)
+- [Contributing to Clinica](/Software/contributing.md)
 
 <!--
 ### Installing Clinica using Docker
