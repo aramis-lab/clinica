@@ -27,7 +27,7 @@ class T1FreeSurfer(Pipeline):
         image_ids: List[str] = []
         if caps_directory.is_dir():
             t1_freesurfer_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, T1_FS_DESTRIEUX, False
+                subjects, sessions, caps_directory, T1_FS_DESTRIEUX
             )
             image_ids = extract_image_ids(t1_freesurfer_files)
         return image_ids
@@ -97,7 +97,7 @@ class T1FreeSurfer(Pipeline):
             save_participants_sessions,
         )
         from clinica.utils.input_files import T1W_NII
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -130,16 +130,9 @@ class T1FreeSurfer(Pipeline):
                     to_process_ids
                 )
 
-        t1w_files, error_message = clinica_file_reader(
-            self.subjects,
-            self.sessions,
-            self.bids_directory,
-            T1W_NII,
-            raise_exception=False,
+        t1w_files, self.subjects, self.sessions = clinica_file_filter(
+            self.subjects, self.sessions, self.bids_directory, T1W_NII
         )
-
-        if error_message:
-            cprint(error_message, lvl="warning")
 
         if not t1w_files:
             raise ClinicaException("Empty dataset or already processed")

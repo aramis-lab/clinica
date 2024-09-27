@@ -627,6 +627,7 @@ def _remove_sub_ses_from_list(
     return list_subjects, list_sessions
 
 
+# todo : generalize
 def clinica_file_reader(
     subjects: List[str],
     sessions: List[str],
@@ -825,6 +826,7 @@ def _read_files_sequential(
     return results, errors_encountered
 
 
+# todo : generalize
 def clinica_list_of_files_reader(
     participant_ids: List[str],
     session_ids: List[str],

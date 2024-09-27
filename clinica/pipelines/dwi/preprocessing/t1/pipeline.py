@@ -40,7 +40,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         image_ids: List[str] = []
         if caps_directory.is_dir():
             preproc_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, DWI_PREPROC_NII, False
+                subjects, sessions, caps_directory, DWI_PREPROC_NII
             )
             image_ids = extract_image_ids(preproc_files)
         return image_ids
