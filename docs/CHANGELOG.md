@@ -6,6 +6,30 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.9.0
+
+### Added
+
+- [ixi-to-bids] There is a new converter to convert IXI to BIDS (see PR [#1239](https://github.com/aramis-lab/clinica/pull/1239))
+- [iotools] There is a new tool `clinica iotools describe` to nicely display metadata in `dataset_description.json` files in the console (see PR [#1287](https://github.com/aramis-lab/clinica/pull/1287))
+- [t1-linear] It is now possible to use `t1-linear` with ANTsPy (see PR [#1244](https://github.com/aramis-lab/clinica/pull/1244))
+- [ADNI2BIDS] The converter now support FMAP (see PR [#1119](https://github.com/aramis-lab/clinica/pull/1119))
+- [Doc] Some pages have been refactored to improve readability and make information easier to find (see PR [#1284](https://github.com/aramis-lab/clinica/pull/1284), [#1288](https://github.com/aramis-lab/clinica/pull/1288), and [#1295](https://github.com/aramis-lab/clinica/pull/1295))
+- [Doc] The online documentation now has a glossary page (see PR [#1110](https://github.com/aramis-lab/clinica/pull/1110))
+
+### Breaking changes
+
+- BIDS and CAPS datasets must have a `dataset_description.json` file at the root (see PR [#1127](https://github.com/aramis-lab/clinica/pull/1127) and PR [#1158](https://github.com/aramis-lab/clinica/pull/1158))
+
+### Enhanced
+
+- [Converters] Converters now implement the same API which make them easier to use from Python (see PR [#1140](https://github.com/aramis-lab/clinica/pull/1140))
+
+### Fixed
+
+- [Converters] A few issues with logging have been fixed (see PR [#1181](https://github.com/aramis-lab/clinica/pull/1181))
+- [t1-linear] Fix the `crop_nifti` function which was doing unnecessary resampling (see PR [#1215](https://github.com/aramis-lab/clinica/pull/1215))
+
 ## Clinica 0.8.4
 
 ### Fixed
