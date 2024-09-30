@@ -57,7 +57,12 @@ class T1VolumeDartel2MNI(Pipeline):
             t1_volume_final_group_template,
             t1_volume_native_tpm,
         )
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.inputs import (
+            _format_errors,
+            clinica_file_reader,
+            clinica_group_reader,
+            clinica_list_of_files_reader,
+        )
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_groups_in_caps_directory,
@@ -83,38 +88,36 @@ class T1VolumeDartel2MNI(Pipeline):
 
         # Segmented Tissues
         # =================
-        tissues_input = []
-        for tissue_number in self.parameters["tissues"]:
-            try:
-                native_space_tpm, _ = clinica_file_reader(
-                    self.subjects,
-                    self.sessions,
-                    self.caps_directory,
-                    t1_volume_native_tpm(tissue_number),
-                )
-                tissues_input.append(native_space_tpm)
-            except ClinicaException as e:
-                all_errors.append(e)
-        # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
-        # len(self.subjects). We want the opposite : a list of size len(self.subjects) whose elements have a size of
-        # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*my_list)
-        tissues_input_rearranged = []
-        for subject_tissue_list in zip(*tissues_input):
-            tissues_input_rearranged.append(subject_tissue_list)
-
-        read_input_node.inputs.native_segmentations = tissues_input_rearranged
-
-        # Flow Fields
-        # ===========
         try:
-            read_input_node.inputs.flowfield_files, _ = clinica_file_reader(
+            tissues_input = clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                t1_volume_deformation_to_template(self.parameters["group_label"]),
+                [
+                    t1_volume_native_tpm(tissue_number)
+                    for tissue_number in self.parameters["tissues"]
+                ],
             )
+            # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
+            # len(self.subjects). We want the opposite : a list of size len(self.subjects) whose elements have a size of
+            # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*my_list)
+            tissues_input_rearranged = []
+            for subject_tissue_list in zip(*tissues_input):
+                tissues_input_rearranged.append(subject_tissue_list)
+                read_input_node.inputs.native_segmentations = tissues_input_rearranged
         except ClinicaException as e:
             all_errors.append(e)
+
+        # Flow Fields
+        # ===========
+        read_input_node.inputs.flowfield_files, flowfield_errors = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            t1_volume_deformation_to_template(self.parameters["group_label"]),
+        )
+        if flowfield_errors:
+            all_errors.append(_format_errors(flowfield_errors))
 
         # Dartel Template
         # ================
@@ -126,7 +129,7 @@ class T1VolumeDartel2MNI(Pipeline):
         except ClinicaException as e:
             all_errors.append(e)
 
-        if len(all_errors) > 0:
+        if any(all_errors):
             error_message = "Clinica faced error(s) while trying to read files in your CAPS/BIDS directories.\n"
             for msg in all_errors:
                 error_message += str(msg)

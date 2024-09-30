@@ -114,7 +114,7 @@ class StatisticsSurface(Pipeline):
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_list_of_files_reader
 
         # Check if already present in CAPS
         # ================================
@@ -133,7 +133,7 @@ class StatisticsSurface(Pipeline):
             )
 
         # Check input files
-        all_errors = []
+        surface_query = []
         # clinica_files_reader expects regexp to start at subjects/ so sub-*/ses-*/ is removed here
         fwhm = str(self.parameters["full_width_at_half_maximum"])
         for direction, hemi in zip(["left", "right"], ["lh", "rh"]):
@@ -146,21 +146,16 @@ class StatisticsSurface(Pipeline):
                 ],
                 "description": f"surface-based features on {direction} hemisphere at FWHM = {fwhm}",
             }
-            try:
-                clinica_file_reader(
-                    self.subjects,
-                    self.sessions,
-                    self.caps_directory,
-                    surface_based_info,
-                )
-            except ClinicaException as e:
-                all_errors.append(e)
-
-        if len(all_errors) > 0:
-            error_message = "Clinica faced errors while trying to read files in your CAPS directory.\n"
-            for msg in all_errors:
-                error_message += str(msg)
-            raise RuntimeError(error_message)
+            surface_query.append(surface_based_info)
+        try:
+            clinica_list_of_files_reader(
+                self.subjects,
+                self.sessions,
+                self.caps_directory,
+                surface_query,
+            )
+        except ClinicaException as e:
+            raise RuntimeError(e)
 
     def _build_output_node(self):
         """Build and connect an output node to the pipeline."""

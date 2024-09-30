@@ -945,6 +945,7 @@ def _format_and_raise_group_reader_errors(
     found_files: List,
     information: Dict,
 ) -> None:
+    # todo : TEST
     from clinica.utils.exceptions import ClinicaCAPSError
 
     error_string = (

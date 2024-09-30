@@ -97,7 +97,12 @@ class PETVolume(PETPipeline):
             t1_volume_native_tpm,
             t1_volume_native_tpm_in_mni,
         )
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.inputs import (
+            _format_errors,
+            clinica_file_reader,
+            clinica_group_reader,
+            clinica_list_of_files_reader,
+        )
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_groups_in_caps_directory,
@@ -124,55 +129,56 @@ class PETVolume(PETPipeline):
         )
 
         # PET from BIDS directory
+        # Native T1w-MRI
+
         try:
-            pet_bids, _ = clinica_file_reader(
+            pet_bids, t1w_bids = clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.bids_directory,
-                self._get_pet_scans_query(),
+                [
+                    self._get_pet_scans_query(),
+                    T1W_NII,
+                ],
             )
         except ClinicaException as e:
-            all_errors.append(e)
-
-        # Native T1w-MRI
-        try:
-            t1w_bids, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
+            all_errors += e
 
         # mask_tissues
-        tissues_input = []
-        for tissue_number in self.parameters["mask_tissues"]:
-            try:
-                current_file, _ = clinica_file_reader(
-                    self.subjects,
-                    self.sessions,
-                    self.caps_directory,
-                    t1_volume_native_tpm_in_mni(tissue_number, False),
-                )
-                tissues_input.append(current_file)
-            except ClinicaException as e:
-                all_errors.append(e)
-        # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
-        # len(self.subjects). We want the opposite: a list of size len(self.subjects) whose elements have a size of
-        # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*my_list)
-        tissues_input_final = []
-        for subject_tissue_list in zip(*tissues_input):
-            tissues_input_final.append(subject_tissue_list)
-        tissues_input = tissues_input_final
-
-        # Flowfields
         try:
-            flowfields_caps, _ = clinica_file_reader(
+            tissues_input = clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                t1_volume_deformation_to_template(self.parameters["group_label"]),
+                [
+                    t1_volume_native_tpm_in_mni(tissue_number, False)
+                    for tissue_number in self.parameters["mask_tissues"]
+                ],
             )
+            # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
+            # len(self.subjects). We want the opposite: a list of size len(self.subjects) whose elements have a size of
+            # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*my_list)
+            tissues_input_final = []
+            for subject_tissue_list in zip(*tissues_input):
+                tissues_input_final.append(subject_tissue_list)
+            tissues_input = tissues_input_final
         except ClinicaException as e:
-            all_errors.append(e)
+            all_errors += e
+
+        # Flowfields
+        flowfields_caps, flowfields_errors = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            t1_volume_deformation_to_template(self.parameters["group_label"]),
+        )
+        if flowfields_errors:
+            all_errors.append(
+                _format_errors(
+                    flowfields_errors,
+                    t1_volume_deformation_to_template(self.parameters["group_label"]),
+                )
+            )
 
         # Dartel Template
         try:
@@ -197,28 +203,27 @@ class PETVolume(PETPipeline):
 
         if self.parameters["apply_pvc"]:
             # pvc tissues input
-            pvc_tissues_input = []
-            for tissue_number in self.parameters["pvc_mask_tissues"]:
-                try:
-                    current_file, _ = clinica_file_reader(
-                        self.subjects,
-                        self.sessions,
-                        self.caps_directory,
-                        t1_volume_native_tpm(tissue_number),
-                    )
-                    pvc_tissues_input.append(current_file)
-                except ClinicaException as e:
-                    all_errors.append(e)
-
-            if len(all_errors) == 0:
+            try:
+                pvc_tissues_input = clinica_list_of_files_reader(
+                    self.subjects,
+                    self.sessions,
+                    self.caps_directory,
+                    [
+                        t1_volume_native_tpm(tissue_number)
+                        for tissue_number in self.parameters["pvc_mask_tissues"]
+                    ],
+                )
                 pvc_tissues_input_final = []
                 for subject_tissue_list in zip(*pvc_tissues_input):
                     pvc_tissues_input_final.append(subject_tissue_list)
                 pvc_tissues_input = pvc_tissues_input_final
+
+            except ClinicaException as e:
+                all_errors.append(e)
         else:
             pvc_tissues_input = []
 
-        if len(all_errors) > 0:
+        if any(all_errors):
             error_message = "Clinica faced error(s) while trying to read files in your CAPS/BIDS directories.\n"
             for msg in all_errors:
                 error_message += str(msg)

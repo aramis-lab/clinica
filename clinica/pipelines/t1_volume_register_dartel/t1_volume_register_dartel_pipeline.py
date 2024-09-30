@@ -53,7 +53,11 @@ class T1VolumeRegisterDartel(Pipeline):
             t1_volume_dartel_input_tissue,
             t1_volume_i_th_iteration_group_template,
         )
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            clinica_group_reader,
+            clinica_list_of_files_reader,
+        )
         from clinica.utils.ux import print_images_to_process
 
         read_input_node = npe.Node(
@@ -67,18 +71,19 @@ class T1VolumeRegisterDartel(Pipeline):
 
         # Dartel Input Tissues
         # ====================
-        d_input = []
-        for tissue_number in self.parameters["tissues"]:
-            try:
-                current_file, _ = clinica_file_reader(
-                    self.subjects,
-                    self.sessions,
-                    self.caps_directory,
-                    t1_volume_dartel_input_tissue(tissue_number),
-                )
-                d_input.append(current_file)
-            except ClinicaException as e:
-                all_errors.append(e)
+        try:
+            d_input = clinica_list_of_files_reader(
+                self.subjects,
+                self.sessions,
+                self.caps_directory,
+                [
+                    t1_volume_dartel_input_tissue(tissue_number)
+                    for tissue_number in self.parameters["tissues"]
+                ],
+            )
+            read_input_node.inputs.dartel_input_images = d_input
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # Dartel Templates
         # ================
@@ -96,13 +101,12 @@ class T1VolumeRegisterDartel(Pipeline):
             except ClinicaException as e:
                 all_errors.append(e)
 
-        if len(all_errors) > 0:
+        if any(all_errors):
             error_message = "Clinica faced error(s) while trying to read files in your CAPS/BIDS directories.\n"
             for msg in all_errors:
                 error_message += str(msg)
             raise ClinicaCAPSError(error_message)
 
-        read_input_node.inputs.dartel_input_images = d_input
         read_input_node.inputs.dartel_iteration_templates = dartel_iter_templates
 
         if len(self.subjects):
