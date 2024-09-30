@@ -802,7 +802,7 @@ def test_clinica_list_of_files_reader(tmp_path):
 
     assert len(results) == 2
     assert len(results[0]) == 3
-    assert len(results[1]) == 2
+    assert len(results[1]) == 0
 
 
 def test_clinica_group_reader(tmp_path):

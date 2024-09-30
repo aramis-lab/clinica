@@ -634,7 +634,7 @@ def clinica_file_reader(
     input_directory: os.PathLike,
     information: Dict,
     n_procs: Optional[int] = 1,
-) -> Tuple[List[str], Iterable[InvalidSubjectSession]]:
+) -> Tuple[List[str], List[InvalidSubjectSession]]:
     """Read files in BIDS or CAPS directory based on participant ID(s).
 
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
@@ -783,7 +783,7 @@ def _read_files_parallel(
     is_bids: bool,
     pattern: str,
     n_procs: int,
-) -> Tuple[List[str], Iterable[InvalidSubjectSession]]:
+) -> Tuple[List[str], List[InvalidSubjectSession]]:
     from multiprocessing import Manager
 
     from joblib import Parallel, delayed
@@ -817,7 +817,7 @@ def _read_files_sequential(
     is_bids: bool,
     pattern: str,
     **kwargs,
-) -> Tuple[List[str], Iterable[InvalidSubjectSession]]:
+) -> Tuple[List[str], List[InvalidSubjectSession]]:
     errors_encountered, results = [], []
     for sub, ses in zip(subjects, sessions):
         find_sub_ses_pattern_path(
@@ -826,7 +826,6 @@ def _read_files_sequential(
     return results, errors_encountered
 
 
-# todo : generalize
 def clinica_list_of_files_reader(
     participant_ids: List[str],
     session_ids: List[str],
@@ -874,14 +873,13 @@ def clinica_list_of_files_reader(
             bids_or_caps_directory,
             info_file,
         )
+        all_errors.append(errors)
+        list_found_files.append([] if errors else files)
 
-        list_found_files.append(files)
-        all_errors += errors
-
-    if len(all_errors) > 0 and raise_exception:
+    if any(all_errors) and raise_exception:
         error_message = "Clinica faced error(s) while trying to read files in your BIDS or CAPS directory.\n"
         for error, info in zip(all_errors, list_information):
-            error_message += _format_errors([error], info)
+            error_message += _format_errors(error, info)
         raise ClinicaBIDSError(error_message)
 
     return list_found_files
