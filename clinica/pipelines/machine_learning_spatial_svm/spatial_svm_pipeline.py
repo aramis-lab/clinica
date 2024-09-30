@@ -128,7 +128,8 @@ class SpatialSVM(Pipeline):
             self.caps_directory,
             caps_files_information,
         )
-        all_errors.append(_format_errors(caps_error, caps_files_information))
+        if caps_error:
+            all_errors.append(_format_errors(caps_error, caps_files_information))
 
         try:
             dartel_input = clinica_group_reader(
