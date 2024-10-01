@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD007 MD046 -->
 # `adni-to-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
 
-!!! warning October 2024 ADNI new download interface
+!!! warning "October 2024 ADNI new download interface"
     The LONI Image and Data Archive is currently refactoring the ADNI data download interface.
     Because of the ongoing modifications, both the documentation and the code of this converter are not up-to-date.
     The Clinica team will work on updating the converter once the interface stabilizes.
