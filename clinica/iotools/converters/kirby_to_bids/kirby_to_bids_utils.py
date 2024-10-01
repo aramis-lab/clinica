@@ -25,9 +25,9 @@ __all__ = [
 
 
 # Helper function to create BIDS folders and move files
-def create_bids_structure(subject_id, session_id, input_file, output_dir):
+def create_bids_structure(subject_id, session_label, input_file, output_dir):
     sub_id = f"sub-KKI{subject_id}"
-    ses_id = f"ses-{session_id}"
+    ses_id = f"ses-{session_label}"
 
     # Create output directory for this subject/session
     anat_dir = os.path.join(output_dir, sub_id, ses_id, 'anat')

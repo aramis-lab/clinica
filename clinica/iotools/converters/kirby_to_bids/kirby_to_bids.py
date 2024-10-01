@@ -56,6 +56,8 @@ def convert(
     # Get all .nii files (directly or within subfolders)
     nii_files = find_nii_files(path_to_dataset)
 
+    session_count = {}
+
     # Traverse found nii files
     for file_path in nii_files:
         file = os.path.basename(file_path).replace('.nii', '').strip()  # Remove file extension and strip whitespaces
@@ -81,8 +83,18 @@ def convert(
             sex = clinical_row['Sex']
             handedness = clinical_row['Fiducial']
 
+            # Keep track of how many sessions have been processed for this subject
+            if subject_id not in session_count:
+                session_count[subject_id] = 1
+            else:
+                session_count[subject_id] += 1
+
+            # Assign session as "ses-01" or "ses-02"
+            session_label = f"{session_count[subject_id]:02d}"
+
+
             # Create BIDS structure and move the file
-            create_bids_structure(subject_id, session_id, file_path, bids_dir)
+            create_bids_structure(subject_id, session_label, file_path, bids_dir)
 
             # Store participant data (with baseline age if needed)
             if subject_id not in participants_data:
@@ -103,10 +115,22 @@ def convert(
                                         participant_info['age'],
                                         participant_info['handedness']])
 
-    # Write sessions.tsv for each subject
-    subject_sessions = clinical_data_filtered.groupby('Subject ID')
+    # # Write sessions.tsv for each subject
+    # subject_sessions = clinical_data_filtered.groupby('Subject ID')
 
-    for subject_id, sessions in subject_sessions:
+    # for subject_id, sessions in subject_sessions:
+    #     sessions_file = os.path.join(bids_dir, f"sub-KKI{subject_id}", 'sessions.tsv')
+    #     os.makedirs(os.path.dirname(sessions_file), exist_ok=True)
+
+    #     with open(sessions_file, 'w', newline='') as session_file:
+    #         session_writer = csv.writer(session_file, delimiter='\t')
+    #         session_writer.writerow(['session_id', 'age'])
+
+    #         for _, row in sessions.iterrows():
+    #             session_writer.writerow([f"ses-{row['Visit ID']}", row['Age']])
+    
+    # Write sessions.tsv for each subject
+    for subject_id, session_count in session_count.items():
         sessions_file = os.path.join(bids_dir, f"sub-KKI{subject_id}", 'sessions.tsv')
         os.makedirs(os.path.dirname(sessions_file), exist_ok=True)
 
@@ -114,7 +138,9 @@ def convert(
             session_writer = csv.writer(session_file, delimiter='\t')
             session_writer.writerow(['session_id', 'age'])
 
-            for _, row in sessions.iterrows():
-                session_writer.writerow([f"ses-{row['Visit ID']}", row['Age']])
+            # Write two sessions for each subject
+            for session_num in range(1, session_count + 1):
+                session_writer.writerow([f"ses-{session_num:02d}", participants_data[subject_id]['age']])
+
 
     print(f"BIDS conversion completed using the clinical data from {clinical_data_file}.")
