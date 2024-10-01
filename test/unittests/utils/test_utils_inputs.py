@@ -411,14 +411,14 @@ def test_check_caps_folder(tmp_path):
         check_caps_folder(tmp_path)
 
 
-def test_find_sub_ses_pattern_path_error_no_file(tmp_path):
-    """Test function `find_sub_ses_pattern_path`."""
-    from clinica.utils.inputs import find_sub_ses_pattern_path
+def test_find_images_path_error_no_file(tmp_path):
+    """Test function `find_images_path`."""
+    from clinica.utils.inputs import find_images_path
 
     (tmp_path / "sub-01" / "ses-M00" / "anat").mkdir(parents=True)
     errors, results = [], []
 
-    find_sub_ses_pattern_path(
+    find_images_path(
         tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
 
@@ -427,9 +427,9 @@ def test_find_sub_ses_pattern_path_error_no_file(tmp_path):
     assert errors[0] == ("sub-01", "ses-M00")
 
 
-def test_find_sub_ses_pattern_path_error_more_than_one_file(tmp_path):
-    """Test function `find_sub_ses_pattern_path`."""
-    from clinica.utils.inputs import find_sub_ses_pattern_path
+def test_find_images_path_error_more_than_one_file(tmp_path):
+    """Test function `find_images_path`."""
+    from clinica.utils.inputs import find_images_path
 
     errors, results = [], []
     (tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_T1w.nii.gz").mkdir(
@@ -439,7 +439,7 @@ def test_find_sub_ses_pattern_path_error_more_than_one_file(tmp_path):
         tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_foo-bar_T1w.nii.gz"
     ).mkdir(parents=True)
 
-    find_sub_ses_pattern_path(
+    find_images_path(
         tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
 
@@ -448,16 +448,16 @@ def test_find_sub_ses_pattern_path_error_more_than_one_file(tmp_path):
     assert errors[0] == ("sub-01", "ses-M00")
 
 
-def test_find_sub_ses_pattern_path(tmp_path):
-    """Test function `find_sub_ses_pattern_path`."""
-    from clinica.utils.inputs import find_sub_ses_pattern_path
+def test_find_images_path(tmp_path):
+    """Test function `find_images_path`."""
+    from clinica.utils.inputs import find_images_path
 
     (tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_T1w.nii.gz").mkdir(
         parents=True
     )
     errors, results = [], []
 
-    find_sub_ses_pattern_path(
+    find_images_path(
         tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
 
@@ -468,8 +468,8 @@ def test_find_sub_ses_pattern_path(tmp_path):
     )
 
 
-def test_find_sub_ses_pattern_path_multiple_runs(tmp_path):
-    from clinica.utils.inputs import find_sub_ses_pattern_path
+def test_find_images_path_multiple_runs(tmp_path):
+    from clinica.utils.inputs import find_images_path
 
     errors, results = [], []
     (
@@ -487,7 +487,7 @@ def test_find_sub_ses_pattern_path_multiple_runs(tmp_path):
         / "sub-01_ses-M06_run-02_foo-bar_T1w.nii.gz"
     ).mkdir(parents=True)
 
-    find_sub_ses_pattern_path(
+    find_images_path(
         tmp_path, "sub-01", "ses-M06", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
 
@@ -529,15 +529,15 @@ def test_check_information():
 
 def test_format_errors():
     """Test utility function `_format_errors`."""
-    from clinica.utils.inputs import _format_errors
+    from clinica.utils.inputs import format_clinica_file_reader_errors
 
     information = {"description": "foo bar baz"}
     assert (
-        _format_errors([], information)
+        format_clinica_file_reader_errors([], information)
         == "Clinica encountered 0 problem(s) while getting foo bar baz:\n"
     )
     information["needed_pipeline"] = ["pipeline_1", "pipeline_3"]
-    assert _format_errors([], information) == (
+    assert format_clinica_file_reader_errors([], information) == (
         "Clinica encountered 0 problem(s) while getting foo bar baz:\n"
         "Please note that the following clinica pipeline(s) must have "
         "run to obtain these files: ['pipeline_1', 'pipeline_3']\n"
@@ -547,7 +547,7 @@ def test_format_errors():
         InvalidSubjectSession("sub2", "ses1"),
         InvalidSubjectSession("sub3", "ses1"),
     ]
-    assert _format_errors(errors, information) == (
+    assert format_clinica_file_reader_errors(errors, information) == (
         "Clinica encountered 3 problem(s) while getting foo bar baz:\n"
         "Please note that the following clinica pipeline(s) must have "
         "run to obtain these files: ['pipeline_1', 'pipeline_3']\n"
@@ -555,7 +555,7 @@ def test_format_errors():
         "Clinica could not identify which file to use (missing or too many) for these sessions. They will not be processed."
     )
     information.pop("needed_pipeline")
-    assert _format_errors(errors, information) == (
+    assert format_clinica_file_reader_errors(errors, information) == (
         "Clinica encountered 3 problem(s) while getting foo bar baz:\n"
         "\t* (sub1 | ses1)\n\t* (sub2 | ses1)\n\t* (sub3 | ses1)\n"
         "Clinica could not identify which file to use (missing or too many) for these sessions. They will not be processed."

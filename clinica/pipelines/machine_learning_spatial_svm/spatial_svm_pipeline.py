@@ -64,9 +64,9 @@ class SpatialSVM(Pipeline):
             t1_volume_final_group_template,
         )
         from clinica.utils.inputs import (
-            _format_errors,
             clinica_file_reader,
             clinica_group_reader,
+            format_clinica_file_reader_errors,
         )
         from clinica.utils.ux import print_groups_in_caps_directory
 
@@ -129,7 +129,9 @@ class SpatialSVM(Pipeline):
             caps_files_information,
         )
         if caps_error:
-            all_errors.append(_format_errors(caps_error, caps_files_information))
+            all_errors.append(
+                format_clinica_file_reader_errors(caps_error, caps_files_information)
+            )
 
         try:
             dartel_input = clinica_group_reader(

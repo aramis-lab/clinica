@@ -60,7 +60,10 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
         )
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.input_files import T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX
-        from clinica.utils.inputs import _format_errors, clinica_file_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            format_clinica_file_reader_errors,
+        )
         from clinica.utils.stream import cprint
 
         from .utils import (
@@ -128,7 +131,7 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
         if any(all_errors):
             message = "Clinica faced errors while trying to read files in your CAPS directory.\n"
             for error, info in zip(all_errors, [T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX]):
-                message += _format_errors(error, info)
+                message += format_clinica_file_reader_errors(error, info)
             raise ClinicaException(message)
 
         save_part_sess_long_ids_to_tsv(

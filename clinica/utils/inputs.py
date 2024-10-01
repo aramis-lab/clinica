@@ -271,18 +271,17 @@ def check_caps_folder(caps_directory: Union[str, os.PathLike]) -> None:
         raise ClinicaCAPSError(error_string)
 
 
-def find_sub_ses_pattern_path(
+def find_images_path(
     input_directory: os.PathLike,
     subject: str,
     session: str,
-    error_encountered: list,
-    results: list,
+    errors: List[InvalidSubjectSession],
+    valid_paths: List[str],
     is_bids: bool,
     pattern: str,
 ) -> None:
-    """Appends the output path corresponding to subject, session and pattern in results.
-
-    If an error is encountered, its (subject,session) couple is added to the list `errors_encountered`.
+    """Appends the resulting path corresponding to subject, session and pattern in valid_paths.
+    If an error is encountered, its (subject,session) couple is added to the list `errors`.
 
     Parameters
     ----------
@@ -301,10 +300,10 @@ def find_sub_ses_pattern_path(
     session : str
         Name given to the folder of a session (ex: ses-M00).
 
-    error_encountered : List
+    errors : List
         List to which errors encountered in this function are added.
 
-    results : List
+    valid_paths : List
         List to which the output path corresponding to subject, session
         and pattern is added.
 
@@ -344,14 +343,14 @@ def find_sub_ses_pattern_path(
                 f"Clinica will proceed with the latest run available, that is \n\n-{selected}.",
                 lvl="warning",
             )
-            results.append(selected)
+            valid_paths.append(selected)
         else:
-            error_encountered += [InvalidSubjectSession(subject, session)]
+            errors.append(InvalidSubjectSession(subject, session))
     elif len(current_glob_found) == 0:
-        error_encountered += [InvalidSubjectSession(subject, session)]
+        errors.append(InvalidSubjectSession(subject, session))
     # Otherwise the file found is added to the result
     else:
-        results.append(current_glob_found[0])
+        valid_paths.append(current_glob_found[0])
 
 
 def _are_multiple_runs(files: List[str]) -> bool:
@@ -572,21 +571,23 @@ def clinica_file_filter(
     sessions: List[str],
     input_directory: Path,
     information: Dict,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ) -> Tuple[List[str], List[str], List[str]]:
     from clinica.utils.stream import cprint
 
     files, errors = clinica_file_reader(
         subjects, sessions, input_directory, information, n_procs
     )
-    cprint(_format_errors(errors, information), "warning")
+    cprint(format_clinica_file_reader_errors(errors, information), "warning")
     filtered_subjects, filtered_sessions = _remove_sub_ses_from_list(
         subjects, sessions, errors
     )
     return files, filtered_subjects, filtered_sessions
 
 
-def _format_errors(errors: Iterable[InvalidSubjectSession], information: Dict) -> str:
+def format_clinica_file_reader_errors(
+    errors: Iterable[InvalidSubjectSession], information: Dict
+) -> str:
     message = (
         f"Clinica encountered {len(errors)} "
         f"problem(s) while getting {information['description']}:\n"
@@ -606,34 +607,34 @@ def _format_errors(errors: Iterable[InvalidSubjectSession], information: Dict) -
 
 
 def _remove_sub_ses_from_list(
-    list_subjects: List[str],
-    list_sessions: List[str],
-    wrong_sub_ses: Iterable[InvalidSubjectSession],
+    subjects: List[str],
+    sessions: List[str],
+    errors: Iterable[InvalidSubjectSession],
 ) -> Tuple[List[str], List[str]]:
-    list_subjects = list_subjects.copy()
-    list_sessions = list_sessions.copy()
-    for invalid in wrong_sub_ses:
+    subjects = subjects.copy()
+    sessions = sessions.copy()
+    for invalid in errors:
         sub_indexes = [
-            i for i, subject in enumerate(list_subjects) if subject == invalid.subject
+            i for i, subject in enumerate(subjects) if subject == invalid.subject
         ]
         session_indexes = [
-            i for i, session in enumerate(list_sessions) if session == invalid.session
+            i for i, session in enumerate(sessions) if session == invalid.session
         ]
         to_remove = list(set(sub_indexes) & set(session_indexes))
         to_remove.sort(reverse=True)
         for index in to_remove:
-            list_subjects.pop(index)
-            list_sessions.pop(index)
-    return list_subjects, list_sessions
+            subjects.pop(index)
+            sessions.pop(index)
+    return subjects, sessions
 
 
 # todo : generalize
 def clinica_file_reader(
-    subjects: List[str],
-    sessions: List[str],
+    subjects: Iterable[str],
+    sessions: Iterable[str],
     input_directory: os.PathLike,
     information: Dict,
-    n_procs: Optional[int] = 1,
+    n_procs: int = 1,
 ) -> Tuple[List[str], List[InvalidSubjectSession]]:
     """Read files in BIDS or CAPS directory based on participant ID(s).
 
@@ -778,8 +779,8 @@ def clinica_file_reader(
 
 def _read_files_parallel(
     input_directory: os.PathLike,
-    subjects: List[str],
-    sessions: List[str],
+    subjects: Iterable[str],
+    sessions: Iterable[str],
     is_bids: bool,
     pattern: str,
     n_procs: int,
@@ -792,7 +793,7 @@ def _read_files_parallel(
     shared_results = manager.list()
     shared_errors_encountered = manager.list()
     Parallel(n_jobs=n_procs)(
-        delayed(find_sub_ses_pattern_path)(
+        delayed(find_images_path)(
             input_directory,
             sub,
             ses,
@@ -804,23 +805,21 @@ def _read_files_parallel(
         for sub, ses in zip(subjects, sessions)
     )
     results = list(shared_results)
-    errors_encountered = list(
-        shared_errors_encountered
-    )  # todo : "list" needed ? to test
+    errors_encountered = list(shared_errors_encountered)
     return results, errors_encountered
 
 
 def _read_files_sequential(
     input_directory: os.PathLike,
-    subjects: List[str],
-    sessions: List[str],
+    subjects: Iterable[str],
+    sessions: Iterable[str],
     is_bids: bool,
     pattern: str,
     **kwargs,
 ) -> Tuple[List[str], List[InvalidSubjectSession]]:
     errors_encountered, results = [], []
     for sub, ses in zip(subjects, sessions):
-        find_sub_ses_pattern_path(
+        find_images_path(
             input_directory, sub, ses, errors_encountered, results, is_bids, pattern
         )
     return results, errors_encountered
@@ -879,7 +878,7 @@ def clinica_list_of_files_reader(
     if any(all_errors) and raise_exception:
         error_message = "Clinica faced error(s) while trying to read files in your BIDS or CAPS directory.\n"
         for error, info in zip(all_errors, list_information):
-            error_message += _format_errors(error, info)
+            error_message += format_clinica_file_reader_errors(error, info)
         raise ClinicaBIDSError(error_message)
 
     return list_found_files

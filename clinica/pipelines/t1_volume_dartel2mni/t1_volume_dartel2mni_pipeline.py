@@ -58,10 +58,10 @@ class T1VolumeDartel2MNI(Pipeline):
             t1_volume_native_tpm,
         )
         from clinica.utils.inputs import (
-            _format_errors,
             clinica_file_reader,
             clinica_group_reader,
             clinica_list_of_files_reader,
+            format_clinica_file_reader_errors,
         )
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
@@ -117,7 +117,7 @@ class T1VolumeDartel2MNI(Pipeline):
             t1_volume_deformation_to_template(self.parameters["group_label"]),
         )
         if flowfield_errors:
-            all_errors.append(_format_errors(flowfield_errors))
+            all_errors.append(format_clinica_file_reader_errors(flowfield_errors))
 
         # Dartel Template
         # ================

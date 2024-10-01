@@ -78,9 +78,9 @@ class PetSurface(PETPipeline):
         )
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.inputs import (
-            _format_errors,
             clinica_file_reader,
             clinica_list_of_files_reader,
+            format_clinica_file_reader_errors,
         )
 
         read_parameters_node = npe.Node(
@@ -100,7 +100,7 @@ class PetSurface(PETPipeline):
             self._get_pet_scans_query(),
         )
         if pet_errors:
-            all_errors.append(_format_errors(pet_errors))
+            all_errors.append(format_clinica_file_reader_errors(pet_errors))
 
         try:
             (
@@ -170,9 +170,9 @@ class PetSurface(PETPipeline):
         )
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.inputs import (
-            _format_errors,
             clinica_file_reader,
             clinica_list_of_files_reader,
+            format_clinica_file_reader_errors,
         )
 
         read_parameters_node = npe.Node(
@@ -191,7 +191,7 @@ class PetSurface(PETPipeline):
             self._get_pet_scans_query(),
         )
         if pet_errors:
-            all_errors.append(_format_errors(pet_errors))
+            all_errors.append(format_clinica_file_reader_errors(pet_errors))
 
         try:
             (

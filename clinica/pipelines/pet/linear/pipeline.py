@@ -67,7 +67,10 @@ class PETLinear(PETPipeline):
         )
         from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, T1W_TO_MNI_TRANSFORM
-        from clinica.utils.inputs import _format_errors, clinica_file_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            format_clinica_file_reader_errors,
+        )
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -83,7 +86,9 @@ class PETLinear(PETPipeline):
         )
         if pet_errors:
             raise ClinicaBIDSError(
-                _format_errors(pet_errors, self._get_pet_scans_query())
+                format_clinica_file_reader_errors(
+                    pet_errors, self._get_pet_scans_query()
+                )
             )
 
         # T1w file:
@@ -91,7 +96,9 @@ class PETLinear(PETPipeline):
             self.subjects, self.sessions, self.bids_directory, T1W_NII
         )
         if t1w_errors:
-            raise ClinicaBIDSError(_format_errors(t1w_errors, T1W_NII))
+            raise ClinicaBIDSError(
+                format_clinica_file_reader_errors(t1w_errors, T1W_NII)
+            )
 
         # Inputs from t1-linear pipeline
         # Transformation files from T1w files to MNI:
@@ -100,7 +107,9 @@ class PETLinear(PETPipeline):
         )
         if t1w_to_mni_errors:
             raise ClinicaCAPSError(
-                _format_errors(t1w_to_mni_errors, T1W_TO_MNI_TRANSFORM)
+                format_clinica_file_reader_errors(
+                    t1w_to_mni_errors, T1W_TO_MNI_TRANSFORM
+                )
             )
 
         if len(self.subjects):
