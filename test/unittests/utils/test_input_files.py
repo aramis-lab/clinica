@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from clinica.utils.dwi import DTIBasedMeasure
+from clinica.utils.input_files import query_factory
 from clinica.utils.pet import ReconstructionMethod, Tracer
 
 
@@ -38,6 +39,29 @@ def test_aggregator():
         match="Arguments must have the same length.",
     ):
         toy_func_3((1, 2, 3), z=(4, 5))
+
+
+@pytest.mark.parametrize(
+    "query_name,expected_pattern,expected_description,expected_pipelines",
+    [
+        ("T1W", "sub-*_ses-*_t1w.nii*", "T1w MRI", ()),
+        ("T2W", "sub-*_ses-*_flair.nii*", "FLAIR T2w MRI", ()),
+        (
+            "T1_FS_WM",
+            "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/wm.seg.mgz",
+            "segmentation of white matter (mri/wm.seg.mgz).",
+            ("t1-freesurfer",),
+        ),
+    ],
+)
+def test_query_factory(
+    query_name, expected_pattern, expected_description, expected_pipelines
+):
+    query = query_factory(query_name)
+
+    assert query.pattern == expected_pattern
+    assert query.description == expected_description
+    assert query.needed_pipeline == expected_pipelines
 
 
 def test_bids_pet_nii_empty():
