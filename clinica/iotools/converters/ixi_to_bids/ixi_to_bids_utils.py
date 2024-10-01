@@ -291,6 +291,7 @@ def _write_subject_dti_if_exists(
     bids_path: Path, subject: str, data_directory: Path
 ) -> None:
     """Processes DTI data if found for a subject"""
+    # todo : called from this function
     if dti_paths := _find_subject_dti_data(data_directory, subject):
         cprint(f"Converting modality DTI for subject {subject}.", lvl="debug")
         dti_to_save = _merge_dti(dti_paths)
