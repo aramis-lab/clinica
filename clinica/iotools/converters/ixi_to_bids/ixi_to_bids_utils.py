@@ -316,7 +316,7 @@ def _write_subject_dti_if_exists(
 
 
 def _find_subject_dti_data(data_directory: Path, subject: str) -> List[Path]:
-    pattern = subject + r"(-\w*){2}-DTI(-\w*){1}.nii.gz$"
+    pattern = subject + r"(-\w*){2}-DTI(-(0[1-9]|[1-9][0-9])){1}.nii.gz$"
     return [
         path
         for path in data_directory.rglob(pattern="IXI*.nii.gz")

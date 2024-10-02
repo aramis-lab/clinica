@@ -540,7 +540,7 @@ def test_find_subject_dti_data(tmp_path):
     (tmp_path / "IXI001-Guys-1234-T1.nii.gz").touch()
     (tmp_path / "IXI001-Guys-1234-DTI").touch()
     (tmp_path / "IXI001-Guys-DTI.nii.gz").touch()
-    tmp_image = tmp_path / "IXI001-Guys-1234-DTI-00.nii.gz"
+    tmp_image = tmp_path / "IXI001-Guys-1234-DTI-01.nii.gz"
     tmp_image.touch()
     list_dti = _find_subject_dti_data(data_directory=tmp_path, subject="IXI001")
     assert len(list_dti) == 1 and list_dti[0] == tmp_image
