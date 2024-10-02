@@ -385,7 +385,7 @@ def write_participants(
     participants : List of converted subjects study source ids.
     """
     clinical_data.set_index("source_id", inplace=True, drop=False)
-    clinical_data.assign(
+    clinical_data = clinical_data.assign(
         participant_id=clinical_data.source_id.apply(
             lambda x: bids_id_factory(StudyName.IXI).from_original_study_id(x)
         )
