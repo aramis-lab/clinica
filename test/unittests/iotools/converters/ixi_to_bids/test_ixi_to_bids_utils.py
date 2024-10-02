@@ -228,7 +228,10 @@ def clinical_data_builder(tmp_path: Path) -> None:
 def test_read_clinical_data_success(tmp_path):
     clinical_data_builder(tmp_path)
     assert (
-        read_clinical_data(tmp_path).eq(formatted_clinical_data_builder()).all().all()
+        read_clinical_data(tmp_path)
+        .eq(formatted_clinical_data_builder().drop("participant_id", axis=1))
+        .all()
+        .all()
     )
 
 
@@ -573,6 +576,7 @@ def formatted_clinical_data_builder() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "source_id": ["IXI001"],
+            "participant_id": ["sub-IXI001"],
             "session_id": ["ses-M000"],
             "acq_time": ["2024-08-23"],
             "sex": ["female"],
