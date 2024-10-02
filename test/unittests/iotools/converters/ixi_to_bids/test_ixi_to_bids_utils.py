@@ -28,10 +28,19 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     check_modalities,
     define_participants,
     read_clinical_data,
+    write_dwi_b_values,
     write_participants,
     write_scans,
     write_sessions,
 )
+
+
+def test_write_dwi_b_values(tmp_path):
+    write_dwi_b_values(tmp_path)
+    bvec_files = list(tmp_path.rglob("*.bvec"))
+    bval_files = list(tmp_path.rglob("*.bval"))
+    assert len(bvec_files) == 1 and bvec_files[0].name == "dwi.bvec"
+    assert len(bval_files) == 1 and bval_files[0].name == "dwi.bval"
 
 
 def test_get_subjects_list_from_data(tmp_path):

@@ -20,7 +20,15 @@ __all__ = [
     "write_scans",
     "write_participants",
     "check_modalities",
+    "write_dwi_b_values",
 ]
+
+
+def write_dwi_b_values(bids_dir: Path) -> None:
+    """Writes DWI bval and bvec files at the root of the BIDS directory"""
+    b_folder = Path(__file__).parents[0] / "dwi_b_files"
+    shutil.copy(b_folder / "bvals.txt", bids_dir / "dwi.bval")
+    shutil.copy(b_folder / "bvecs.txt", bids_dir / "dwi.bvec")
 
 
 def _get_subjects_list_from_data(data_directory: Path) -> List[str]:
@@ -291,7 +299,6 @@ def _write_subject_dti_if_exists(
     bids_path: Path, subject: str, data_directory: Path
 ) -> None:
     """Processes DTI data if found for a subject"""
-    # todo : called from this function
     if dti_paths := _find_subject_dti_data(data_directory, subject):
         cprint(f"Converting modality DTI for subject {subject}.", lvl="debug")
         dti_to_save = _merge_dti(dti_paths)
