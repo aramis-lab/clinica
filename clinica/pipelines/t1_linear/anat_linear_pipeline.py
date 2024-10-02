@@ -78,7 +78,10 @@ class AnatLinear(Pipeline):
         image_ids: List[str] = []
         if caps_directory.is_dir():
             cropped_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, T1W_LINEAR_CROPPED, False
+                subjects,
+                sessions,
+                caps_directory,
+                T1W_LINEAR_CROPPED,
             )
             image_ids = extract_image_ids(cropped_files)
         return image_ids
@@ -120,7 +123,7 @@ class AnatLinear(Pipeline):
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -152,17 +155,13 @@ class AnatLinear(Pipeline):
         # Inputs from anat/ folder
         # ========================
         # anat image file:
-        try:
-            file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
-            anat_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, file
-            )
-        except ClinicaException as e:
-            err = (
-                "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
-                + str(e)
-            )
-            raise ClinicaBIDSError(err)
+        query = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
+
+        anat_files, filtered_subjects, filtered_sessions = clinica_file_filter(
+            self.subjects, self.sessions, self.bids_directory, query
+        )
+        self.subjects = filtered_subjects
+        self.sessions = filtered_sessions
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)

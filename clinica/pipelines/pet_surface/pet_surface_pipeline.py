@@ -77,7 +77,11 @@ class PetSurface(PETPipeline):
             check_relative_volume_location_in_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            clinica_list_of_files_reader,
+            format_clinica_file_reader_errors,
+        )
 
         read_parameters_node = npe.Node(
             name="LoadingCLIArguments",
@@ -88,93 +92,44 @@ class PetSurface(PETPipeline):
         )
 
         all_errors = []
-        try:
-            read_parameters_node.inputs.pet, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.bids_directory,
-                self._get_pet_scans_query(),
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
+
+        read_parameters_node.inputs.pet, pet_errors = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.bids_directory,
+            self._get_pet_scans_query(),
+        )
+        if pet_errors:
+            all_errors.append(format_clinica_file_reader_errors(pet_errors))
 
         try:
-            read_parameters_node.inputs.orig_nu, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_LONG_ORIG_NU,
-            )
-
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.white_surface_right, _ = clinica_file_reader(
+            (
+                read_parameters_node.inputs.orig_nu,
+                read_parameters_node.inputs.white_surface_right,
+                read_parameters_node.inputs.white_surface_left,
+                read_parameters_node.inputs.destrieux_left,
+                read_parameters_node.inputs.destrieux_right,
+                read_parameters_node.inputs.desikan_left,
+                read_parameters_node.inputs.desikan_right,
+            ) = clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                input_files.T1_FS_LONG_SURF_R,
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.white_surface_left, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_LONG_SURF_L,
+                [
+                    input_files.T1_FS_LONG_ORIG_NU,
+                    input_files.T1_FS_LONG_SURF_R,
+                    input_files.T1_FS_LONG_SURF_L,
+                    input_files.T1_FS_LONG_DESTRIEUX_PARC_L,
+                    input_files.T1_FS_LONG_DESTRIEUX_PARC_R,
+                    input_files.T1_FS_LONG_DESIKAN_PARC_L,
+                    input_files.T1_FS_LONG_DESIKAN_PARC_R,
+                ],
             )
 
         except ClinicaException as e:
             all_errors.append(e)
 
-        try:
-            read_parameters_node.inputs.destrieux_left, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_LONG_DESTRIEUX_PARC_L,
-            )
-
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.destrieux_right, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_LONG_DESTRIEUX_PARC_R,
-            )
-
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.desikan_left, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_LONG_DESIKAN_PARC_L,
-            )
-
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.desikan_right, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_LONG_DESIKAN_PARC_R,
-            )
-
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        if len(all_errors) > 0:
+        if any(all_errors):
             error_message = "Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n"
             for msg in all_errors:
                 error_message += str(msg)
@@ -214,7 +169,11 @@ class PetSurface(PETPipeline):
             check_relative_volume_location_in_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            clinica_list_of_files_reader,
+            format_clinica_file_reader_errors,
+        )
 
         read_parameters_node = npe.Node(
             name="LoadingCLIArguments",
@@ -225,87 +184,42 @@ class PetSurface(PETPipeline):
         )
 
         all_errors = []
-        try:
-            read_parameters_node.inputs.pet, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.bids_directory,
-                self._get_pet_scans_query(),
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
+        read_parameters_node.inputs.pet, pet_errors = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.bids_directory,
+            self._get_pet_scans_query(),
+        )
+        if pet_errors:
+            all_errors.append(format_clinica_file_reader_errors(pet_errors))
 
         try:
-            read_parameters_node.inputs.orig_nu, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_ORIG_NU,
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.white_surface_right, _ = clinica_file_reader(
+            (
+                read_parameters_node.inputs.orig_nu,
+                read_parameters_node.inputs.white_surface_right,
+                read_parameters_node.inputs.white_surface_left,
+                read_parameters_node.inputs.destrieux_left,
+                read_parameters_node.inputs.destrieux_right,
+                read_parameters_node.inputs.desikan_left,
+                read_parameters_node.inputs.desikan_right,
+            ) = clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                input_files.T1_FS_WM_SURF_R,
+                [
+                    input_files.T1_FS_ORIG_NU,
+                    input_files.T1_FS_WM_SURF_R,
+                    input_files.T1_FS_WM_SURF_L,
+                    input_files.T1_FS_DESTRIEUX_PARC_L,
+                    input_files.T1_FS_DESTRIEUX_PARC_R,
+                    input_files.T1_FS_DESIKAN_PARC_L,
+                    input_files.T1_FS_DESIKAN_PARC_R,
+                ],
             )
         except ClinicaException as e:
             all_errors.append(e)
 
-        try:
-            read_parameters_node.inputs.white_surface_left, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_WM_SURF_L,
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.destrieux_left, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_DESTRIEUX_PARC_L,
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.destrieux_right, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_DESTRIEUX_PARC_R,
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.desikan_left, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_DESIKAN_PARC_L,
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.desikan_right, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                input_files.T1_FS_DESIKAN_PARC_R,
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        if len(all_errors) > 0:
+        if any(all_errors):
             error_message = "Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n"
             for msg in all_errors:
                 error_message += str(msg)

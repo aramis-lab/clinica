@@ -6,12 +6,47 @@ from pathlib import Path
 import pytest
 
 from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
-from clinica.utils.inputs import DatasetType
+from clinica.utils.inputs import DatasetType, InvalidSubjectSession
 from clinica.utils.testing_utils import (
     build_bids_directory,
     build_caps_directory,
     rmtree,
 )
+
+
+@pytest.mark.parametrize(
+    "input_subjects, input_sessions, to_remove, expected_subjects, expected_sessions",
+    [
+        (
+            ["sub1", "sub1", "sub2"],
+            ["ses1", "ses2", "ses1"],
+            [
+                InvalidSubjectSession("sub1", "ses1"),
+                InvalidSubjectSession("sub3", "ses1"),
+            ],
+            ["sub1", "sub2"],
+            ["ses2", "ses1"],
+        ),
+        (["sub1"], ["ses1"], [], ["sub1"], ["ses1"]),
+        (
+            ["sub1", "sub2", "sub2"],
+            ["ses1", "ses1", "ses1"],
+            [InvalidSubjectSession("sub2", "ses1")],
+            ["sub1"],
+            ["ses1"],
+        ),
+    ],
+)
+def test_remove_sub_ses_from_list(
+    input_subjects, input_sessions, to_remove, expected_subjects, expected_sessions
+):
+    from clinica.utils.inputs import _remove_sub_ses_from_list
+
+    result_subjects, result_sessions = _remove_sub_ses_from_list(
+        input_subjects, input_sessions, to_remove
+    )
+    assert result_subjects == expected_subjects and result_sessions == expected_sessions
+    assert input_subjects == input_subjects and input_sessions == input_sessions
 
 
 def test_get_parent_path(tmp_path):
@@ -376,25 +411,25 @@ def test_check_caps_folder(tmp_path):
         check_caps_folder(tmp_path)
 
 
-def test_find_sub_ses_pattern_path_error_no_file(tmp_path):
-    """Test function `find_sub_ses_pattern_path`."""
-    from clinica.utils.inputs import find_sub_ses_pattern_path
+def test_find_images_path_error_no_file(tmp_path):
+    """Test function `find_images_path`."""
+    from clinica.utils.inputs import find_images_path
 
     (tmp_path / "sub-01" / "ses-M00" / "anat").mkdir(parents=True)
     errors, results = [], []
 
-    find_sub_ses_pattern_path(
+    find_images_path(
         tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
 
     assert len(results) == 0
     assert len(errors) == 1
-    assert errors[0] == "\t* (sub-01 | ses-M00): No file found\n"
+    assert errors[0] == ("sub-01", "ses-M00")
 
 
-def test_find_sub_ses_pattern_path_error_more_than_one_file(tmp_path):
-    """Test function `find_sub_ses_pattern_path`."""
-    from clinica.utils.inputs import find_sub_ses_pattern_path
+def test_find_images_path_error_more_than_one_file(tmp_path):
+    """Test function `find_images_path`."""
+    from clinica.utils.inputs import find_images_path
 
     errors, results = [], []
     (tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_T1w.nii.gz").mkdir(
@@ -404,25 +439,25 @@ def test_find_sub_ses_pattern_path_error_more_than_one_file(tmp_path):
         tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_foo-bar_T1w.nii.gz"
     ).mkdir(parents=True)
 
-    find_sub_ses_pattern_path(
+    find_images_path(
         tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
 
     assert len(results) == 0
     assert len(errors) == 1
-    assert "\t*  (sub-01 | ses-M00): More than 1 file found:" in errors[0]
+    assert errors[0] == ("sub-01", "ses-M00")
 
 
-def test_find_sub_ses_pattern_path(tmp_path):
-    """Test function `find_sub_ses_pattern_path`."""
-    from clinica.utils.inputs import find_sub_ses_pattern_path
+def test_find_images_path(tmp_path):
+    """Test function `find_images_path`."""
+    from clinica.utils.inputs import find_images_path
 
     (tmp_path / "sub-01" / "ses-M00" / "anat" / "sub-01_ses-M00_T1w.nii.gz").mkdir(
         parents=True
     )
     errors, results = [], []
 
-    find_sub_ses_pattern_path(
+    find_images_path(
         tmp_path, "sub-01", "ses-M00", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
 
@@ -433,8 +468,8 @@ def test_find_sub_ses_pattern_path(tmp_path):
     )
 
 
-def test_find_sub_ses_pattern_path_multiple_runs(tmp_path):
-    from clinica.utils.inputs import find_sub_ses_pattern_path
+def test_find_images_path_multiple_runs(tmp_path):
+    from clinica.utils.inputs import find_images_path
 
     errors, results = [], []
     (
@@ -452,7 +487,7 @@ def test_find_sub_ses_pattern_path_multiple_runs(tmp_path):
         / "sub-01_ses-M06_run-02_foo-bar_T1w.nii.gz"
     ).mkdir(parents=True)
 
-    find_sub_ses_pattern_path(
+    find_images_path(
         tmp_path, "sub-01", "ses-M06", errors, results, True, "sub-*_ses-*_t1w.nii*"
     )
 
@@ -494,30 +529,36 @@ def test_check_information():
 
 def test_format_errors():
     """Test utility function `_format_errors`."""
-    from clinica.utils.inputs import _format_errors
+    from clinica.utils.inputs import format_clinica_file_reader_errors
 
     information = {"description": "foo bar baz"}
     assert (
-        _format_errors([], information)
+        format_clinica_file_reader_errors([], information)
         == "Clinica encountered 0 problem(s) while getting foo bar baz:\n"
     )
     information["needed_pipeline"] = ["pipeline_1", "pipeline_3"]
-    assert _format_errors([], information) == (
+    assert format_clinica_file_reader_errors([], information) == (
         "Clinica encountered 0 problem(s) while getting foo bar baz:\n"
         "Please note that the following clinica pipeline(s) must have "
         "run to obtain these files: ['pipeline_1', 'pipeline_3']\n"
     )
-    errors = ["error 1: foo", "error 2: bar", "error 3: baz"]
-    assert _format_errors(errors, information) == (
+    errors = [
+        InvalidSubjectSession("sub1", "ses1"),
+        InvalidSubjectSession("sub2", "ses1"),
+        InvalidSubjectSession("sub3", "ses1"),
+    ]
+    assert format_clinica_file_reader_errors(errors, information) == (
         "Clinica encountered 3 problem(s) while getting foo bar baz:\n"
         "Please note that the following clinica pipeline(s) must have "
         "run to obtain these files: ['pipeline_1', 'pipeline_3']\n"
-        "error 1: foo\nerror 2: bar\nerror 3: baz"
+        "\t* (sub1 | ses1)\n\t* (sub2 | ses1)\n\t* (sub3 | ses1)\n"
+        "Clinica could not identify which file to use (missing or too many) for these sessions. They will not be processed."
     )
     information.pop("needed_pipeline")
-    assert _format_errors(errors, information) == (
+    assert format_clinica_file_reader_errors(errors, information) == (
         "Clinica encountered 3 problem(s) while getting foo bar baz:\n"
-        "error 1: foo\nerror 2: bar\nerror 3: baz"
+        "\t* (sub1 | ses1)\n\t* (sub2 | ses1)\n\t* (sub3 | ses1)\n"
+        "Clinica could not identify which file to use (missing or too many) for these sessions. They will not be processed."
     )
 
 
@@ -549,31 +590,27 @@ def test_clinica_file_reader_bids_directory(tmp_path, data_type):
             ["ses-M00", "ses-M06"],
             tmp_path,
             information,
-            raise_exception=True,
             n_procs=1,
         )
-    assert clinica_file_reader(
-        [], [], tmp_path, information, raise_exception=True, n_procs=1
-    ) == ([], "")
-    results, error_msg = clinica_file_reader(
-        ["sub-01"], ["ses-M00"], tmp_path, information, raise_exception=True, n_procs=1
+    assert clinica_file_reader([], [], tmp_path, information, n_procs=1) == ([], [])
+    results, errors = clinica_file_reader(
+        ["sub-01"], ["ses-M00"], tmp_path, information, n_procs=1
     )
     assert len(results) == 1
     assert Path(results[0]).relative_to(tmp_path) == Path(
         f"sub-01/ses-M00/anat/sub-01_ses-M00_{data_type}.nii.gz"
     )
-    assert error_msg == f"Clinica encountered 0 problem(s) while getting {desc}:\n"
+    assert not errors
 
-    results, error_msg = clinica_file_reader(
+    results, errors = clinica_file_reader(
         ["sub-01", "sub-02", "sub-02", "sub-06"],
         ["ses-M00", "ses-M00", "ses-M06", "ses-M00"],
         tmp_path,
         information,
-        raise_exception=True,
         n_procs=4,
     )
     assert len(results) == 4
-    assert error_msg == f"Clinica encountered 0 problem(s) while getting {desc}:\n"
+    assert not errors
 
     (
         tmp_path
@@ -582,26 +619,11 @@ def test_clinica_file_reader_bids_directory(tmp_path, data_type):
         / "anat"
         / f"sub-01_ses-M00_foo-bar_{data_type}.nii.gz"
     ).mkdir()
-    results, error_msg = clinica_file_reader(
-        ["sub-01"], ["ses-M00"], tmp_path, information, raise_exception=False, n_procs=1
+    results, errors = clinica_file_reader(
+        ["sub-01"], ["ses-M00"], tmp_path, information, n_procs=1
     )
     assert len(results) == 0
-    expected_msg = (
-        f"Clinica encountered 1 problem(s) while getting {desc}:\n"
-        "\t*  (sub-01 | ses-M00): More than 1 file found:\n\t\t"
-    )
-    assert expected_msg in error_msg
-    with pytest.raises(
-        ClinicaBIDSError,
-    ):
-        clinica_file_reader(
-            ["sub-01"],
-            ["ses-M00"],
-            tmp_path,
-            information,
-            raise_exception=True,
-            n_procs=1,
-        )
+    assert errors == [InvalidSubjectSession("sub-01", "ses-M00")]
 
 
 def test_clinica_file_reader_caps_directory(tmp_path):
@@ -634,36 +656,26 @@ def test_clinica_file_reader_caps_directory(tmp_path):
             ["ses-M00", "ses-M06"],
             tmp_path,
             information,
-            raise_exception=True,
             n_procs=1,
         )
 
-    assert clinica_file_reader(
-        [], [], tmp_path, information, raise_exception=True, n_procs=1
-    ) == ([], "")
+    assert clinica_file_reader([], [], tmp_path, information, n_procs=1) == ([], [])
 
-    results, error_msg = clinica_file_reader(
-        ["sub-01"], ["ses-M00"], tmp_path, information, raise_exception=True, n_procs=1
+    results, errors = clinica_file_reader(
+        ["sub-01"], ["ses-M00"], tmp_path, information, n_procs=1
     )
     assert len(results) == 1
-    expected_error_msg = (
-        "Clinica encountered 0 problem(s) while getting T1w image registered "
-        "in MNI152NLin2009cSym space using t1-linear pipeline:\n"
-        "Please note that the following clinica pipeline(s) must have run to "
-        "obtain these files: t1-linear\n"
-    )
-    assert error_msg == expected_error_msg
+    assert not errors
 
-    results, error_msg = clinica_file_reader(
+    results, errors = clinica_file_reader(
         ["sub-01", "sub-02", "sub-02", "sub-06"],
         ["ses-M00", "ses-M00", "ses-M06", "ses-M00"],
         tmp_path,
         information,
-        raise_exception=True,
         n_procs=4,
     )
     assert len(results) == 4
-    assert error_msg == expected_error_msg
+    assert not errors
 
     (
         tmp_path
@@ -673,38 +685,21 @@ def test_clinica_file_reader_caps_directory(tmp_path):
         / "t1_linear"
         / "sub-01_ses-M00_foo-bar_T1w_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz"
     ).mkdir()
-    results, error_msg = clinica_file_reader(
-        ["sub-01"], ["ses-M00"], tmp_path, information, raise_exception=False, n_procs=1
+    results, errors = clinica_file_reader(
+        ["sub-01"], ["ses-M00"], tmp_path, information, n_procs=1
     )
     assert len(results) == 0
-    expected_msg = (
-        "Clinica encountered 1 problem(s) while getting T1w image registered "
-        "in MNI152NLin2009cSym space using t1-linear pipeline:\n"
-        "Please note that the following clinica pipeline(s) must have run to "
-        "obtain these files: t1-linear\n"
-        "\t*  (sub-01 | ses-M00): More than 1 file found:\n"
-    )
-    assert expected_msg in error_msg
-    with pytest.raises(ClinicaCAPSError):
-        clinica_file_reader(
-            ["sub-01"],
-            ["ses-M00"],
-            tmp_path,
-            information,
-            raise_exception=True,
-            n_procs=1,
-        )
+    assert errors == [InvalidSubjectSession("sub-01", "ses-M00")]
 
 
 def test_clinica_file_reader_dwi_dti_error(tmp_path):
     from clinica.utils.input_files import dwi_dti
     from clinica.utils.inputs import clinica_file_reader
+    # todo : should be tested by check_caps_folder instead ?
 
     query = dwi_dti("FA", space="T1w")
     with pytest.raises(ClinicaCAPSError):
-        clinica_file_reader(
-            ["sub-01"], ["ses-M000"], tmp_path, query, raise_exception=True
-        )
+        clinica_file_reader(["sub-01"], ["ses-M000"], tmp_path, query)
 
 
 def test_clinica_file_reader_dwi_dti(tmp_path):
@@ -730,15 +725,14 @@ def test_clinica_file_reader_dwi_dti(tmp_path):
     for measure in DTIBasedMeasure:
         (dti_folder / f"sub-01_ses-M000_space-T1w_{measure.value}.nii.gz").touch()
     query = dwi_dti("FA", space="T1w")
-    found_files, errors = clinica_file_reader(
-        ["sub-01"], ["ses-M000"], tmp_path, query, raise_exception=True
-    )
+    found_files, _ = clinica_file_reader(["sub-01"], ["ses-M000"], tmp_path, query)
     assert found_files == [str(dti_folder / "sub-01_ses-M000_space-T1w_FA.nii.gz")]
 
     queries = [dwi_dti(measure) for measure in DTIBasedMeasure]
     found_files = clinica_list_of_files_reader(
         ["sub-01"], ["ses-M000"], tmp_path, queries, raise_exception=True
     )
+
     assert found_files == [
         [str(x)]
         for x in (
@@ -805,6 +799,7 @@ def test_clinica_list_of_files_reader(tmp_path):
         information,
         raise_exception=False,
     )
+
     assert len(results) == 2
     assert len(results[0]) == 3
     assert len(results[1]) == 0

@@ -63,7 +63,11 @@ class SpatialSVM(Pipeline):
             pet_volume_normalized_suvr_pet,
             t1_volume_final_group_template,
         )
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            clinica_group_reader,
+            format_clinica_file_reader_errors,
+        )
         from clinica.utils.ux import print_groups_in_caps_directory
 
         if not (
@@ -118,15 +122,16 @@ class SpatialSVM(Pipeline):
                 f"Image type {self.parameters['orig_input_data_ml']} unknown."
             )
 
-        try:
-            input_image, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                caps_files_information,
+        input_image, caps_error = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            caps_files_information,
+        )
+        if caps_error:
+            all_errors.append(
+                format_clinica_file_reader_errors(caps_error, caps_files_information)
             )
-        except ClinicaException as e:
-            all_errors.append(e)
 
         try:
             dartel_input = clinica_group_reader(
@@ -137,7 +142,7 @@ class SpatialSVM(Pipeline):
             all_errors.append(e)
 
         # Raise all errors if some happened
-        if len(all_errors) > 0:
+        if any(all_errors):
             error_message = "Clinica faced errors while trying to read files in your CAPS directories.\n"
             for msg in all_errors:
                 error_message += str(msg)

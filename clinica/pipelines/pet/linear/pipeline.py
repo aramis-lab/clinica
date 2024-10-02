@@ -67,7 +67,10 @@ class PETLinear(PETPipeline):
         )
         from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, T1W_TO_MNI_TRANSFORM
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            format_clinica_file_reader_errors,
+        )
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
@@ -75,44 +78,39 @@ class PETLinear(PETPipeline):
         self.ref_mask = get_suvr_mask(self.parameters["suvr_reference_region"])
 
         # Inputs from BIDS directory
-        try:
-            pet_files, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.bids_directory,
-                self._get_pet_scans_query(),
+        pet_files, pet_errors = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.bids_directory,
+            self._get_pet_scans_query(),
+        )
+        if pet_errors:
+            raise ClinicaBIDSError(
+                format_clinica_file_reader_errors(
+                    pet_errors, self._get_pet_scans_query()
+                )
             )
-        except ClinicaException as e:
-            err = (
-                "Clinica faced error(s) while trying to read pet files in your BIDS directory.\n"
-                + str(e)
-            )
-            raise ClinicaBIDSError(err)
 
         # T1w file:
-        try:
-            t1w_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII
+        t1w_files, t1w_errors = clinica_file_reader(
+            self.subjects, self.sessions, self.bids_directory, T1W_NII
+        )
+        if t1w_errors:
+            raise ClinicaBIDSError(
+                format_clinica_file_reader_errors(t1w_errors, T1W_NII)
             )
-        except ClinicaException as e:
-            err = (
-                "Clinica faced error(s) while trying to read t1w files in your BIDS directory.\n"
-                + str(e)
-            )
-            raise ClinicaBIDSError(err)
 
         # Inputs from t1-linear pipeline
         # Transformation files from T1w files to MNI:
-        try:
-            t1w_to_mni_transformation_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, T1W_TO_MNI_TRANSFORM
+        t1w_to_mni_transformation_files, t1w_to_mni_errors = clinica_file_reader(
+            self.subjects, self.sessions, self.caps_directory, T1W_TO_MNI_TRANSFORM
+        )
+        if t1w_to_mni_errors:
+            raise ClinicaCAPSError(
+                format_clinica_file_reader_errors(
+                    t1w_to_mni_errors, T1W_TO_MNI_TRANSFORM
+                )
             )
-        except ClinicaException as e:
-            err = (
-                "Clinica faced error(s) while trying to read transformation files in your CAPS directory.\n"
-                + str(e)
-            )
-            raise ClinicaCAPSError(err)
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)

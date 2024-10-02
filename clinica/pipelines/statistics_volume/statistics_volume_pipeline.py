@@ -100,11 +100,10 @@ class StatisticsVolume(Pipeline):
             pet_volume_normalized_suvr_pet,
             t1_volume_template_tpm_in_mni,
         )
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_begin_image, print_images_to_process
 
-        all_errors = []
         if self.parameters["orig_input_data_volume"] == "pet-volume":
             if not (
                 self.parameters["acq_label"]
@@ -151,18 +150,9 @@ class StatisticsVolume(Pipeline):
                 f"Input data {self.parameters['orig_input_data_volume']} unknown."
             )
 
-        try:
-            input_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, information_dict
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        if len(all_errors) > 0:
-            error_message = "Clinica faced errors while trying to read files in your CAPS directories.\n"
-            for msg in all_errors:
-                error_message += str(msg)
-            raise ClinicaException(error_message)
+        input_files, self.subjects, self.sessions = clinica_file_filter(
+            self.subjects, self.sessions, self.caps_directory, information_dict
+        )
 
         read_parameters_node = npe.Node(
             name="LoadingCLIArguments",

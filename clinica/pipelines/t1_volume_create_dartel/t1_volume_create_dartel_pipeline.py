@@ -52,7 +52,7 @@ class T1VolumeCreateDartel(Pipeline):
 
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.input_files import t1_volume_dartel_input_tissue
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_begin_image,
@@ -91,30 +91,22 @@ class T1VolumeCreateDartel(Pipeline):
                 fields=self.get_input_fields(), mandatory_inputs=True
             ),
         )
-        all_errors = []
-        d_input = []
-        for tissue_number in self.parameters["dartel_tissues"]:
-            try:
-                current_file, _ = clinica_file_reader(
-                    self.subjects,
-                    self.sessions,
-                    self.caps_directory,
-                    t1_volume_dartel_input_tissue(tissue_number),
-                )
-                d_input.append(current_file)
-            except ClinicaException as e:
-                all_errors.append(e)
 
-        # Raise all errors if some happened
-        if len(all_errors) > 0:
-            error_message = "Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n"
-            for msg in all_errors:
-                error_message += str(msg)
-            raise RuntimeError(error_message)
-
-        # d_input is a list of size len(self.parameters['dartel_tissues'])
-        #     Each element of this list is a list of size len(self.subjects)
-        read_parameters_node.inputs.dartel_inputs = d_input
+        try:
+            d_input = clinica_list_of_files_reader(
+                self.subjects,
+                self.sessions,
+                self.caps_directory,
+                [
+                    t1_volume_dartel_input_tissue(tissue_number)
+                    for tissue_number in self.parameters["dartel_tissues"]
+                ],
+            )
+            # d_input is a list of size len(self.parameters['dartel_tissues'])
+            #     Each element of this list is a list of size len(self.subjects)
+            read_parameters_node.inputs.dartel_inputs = d_input
+        except ClinicaException as e:
+            raise RuntimeError(e)
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)

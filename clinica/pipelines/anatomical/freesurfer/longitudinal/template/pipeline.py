@@ -32,11 +32,7 @@ class T1FreeSurferTemplate(Pipeline):
         image_ids: List[str] = []
         if caps_directory.is_dir():
             t1_freesurfer_files, _ = clinica_file_reader(
-                list_participant_id,
-                list_long_id,
-                caps_directory,
-                T1_FS_T_DESTRIEUX,
-                False,
+                list_participant_id, list_long_id, caps_directory, T1_FS_T_DESTRIEUX
             )
             image_ids = [
                 re.search(r"(sub-[a-zA-Z0-9]+)_(long-[a-zA-Z0-9]+)", file).group()
@@ -95,7 +91,7 @@ class T1FreeSurferTemplate(Pipeline):
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.input_files import T1_FS_DESTRIEUX
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.longitudinal import (
             get_long_id,
             get_participants_long_id,
@@ -153,16 +149,10 @@ class T1FreeSurferTemplate(Pipeline):
                 self.subjects, self.sessions = extract_subjects_sessions_from_filename(
                     to_process_ids
                 )
-        try:
-            clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, T1_FS_DESTRIEUX
-            )
-        except ClinicaException as e:
-            err_msg = (
-                "Clinica faced error(s) while trying to read files in your CAPS directory.\n"
-                + str(e)
-            )
-            raise ClinicaCAPSError(err_msg)
+
+        _, self.subjects, self.sessions = clinica_file_filter(
+            self.subjects, self.sessions, self.caps_directory, T1_FS_DESTRIEUX
+        )
 
         long_ids = get_participants_long_id(self.subjects, self.sessions)
         save_part_sess_long_ids_to_tsv(

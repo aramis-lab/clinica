@@ -51,7 +51,7 @@ class T1VolumeParcellation(Pipeline):
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.input_files import t1_volume_template_tpm_in_mni
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_file_filter, clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_groups_in_caps_directory,
@@ -67,21 +67,16 @@ class T1VolumeParcellation(Pipeline):
                 "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
 
-        try:
-            gm_mni, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                t1_volume_template_tpm_in_mni(
-                    group_label=self.parameters["group_label"],
-                    tissue_number=1,
-                    modulation=self.parameters["modulate"],
-                ),
-            )
-        except ClinicaException as e:
-            final_error_str = "Clinica faced error(s) while trying to read files in your CAPS directory.\n"
-            final_error_str += str(e)
-            raise ClinicaCAPSError(final_error_str)
+        gm_mni, self.subjects, self.sessions = clinica_file_filter(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            t1_volume_template_tpm_in_mni(
+                group_label=self.parameters["group_label"],
+                tissue_number=1,
+                modulation=self.parameters["modulate"],
+            ),
+        )
 
         read_parameters_node = npe.Node(
             name="LoadingCLIArguments",

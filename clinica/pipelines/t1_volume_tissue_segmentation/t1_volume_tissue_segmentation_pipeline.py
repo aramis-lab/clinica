@@ -77,20 +77,18 @@ class T1VolumeTissueSegmentation(Pipeline):
         )
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.input_files import T1W_NII
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-        try:
-            t1w_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII
-            )
-        except ClinicaException as e:
-            err = f"Clinica faced error(s) while trying to read files in your BIDS directory.\n{str(e)}"
-            raise ClinicaBIDSError(err)
+        t1w_files, subjects, sessions = clinica_file_filter(
+            self.subjects, self.sessions, self.bids_directory, T1W_NII
+        )
+        self.subjects = subjects
+        self.sessions = sessions
 
         check_volume_location_in_world_coordinate_system(
             t1w_files,
