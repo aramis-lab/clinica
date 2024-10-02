@@ -177,6 +177,7 @@ def query_factory(name: Union[str, QueryName], *args, **kwargs) -> Query:
 
 
 def get_dwi_file(filetype: Union[str, DWIFileType]) -> Query:
+    """Return the query to get DWI files (nii, json, bvec, bval)."""
     filetype = DWIFileType(filetype)
     return Query(
         f"dwi/sub-*_ses-*_dwi.{filetype.value}*", f"DWI {filetype.value} files.", ""
