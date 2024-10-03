@@ -61,31 +61,41 @@ class DwiConnectome(Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        import clinica.utils.input_files as input_files
         from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.input_files import (
+            DWIFileType,
+            Parcellation,
+            QueryPatternName,
+            query_pattern_factory,
+        )
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
         # Read CAPS files
+        patterns = [
+            query_pattern_factory(QueryPatternName.T1_FREESURFER_WHITE_MATTER)()
+        ]
+        patterns.extend(
+            [
+                query_pattern_factory(QueryPatternName.T1_FREESURFER_SEGMENTATION)(p)
+                for p in (Parcellation.DESIKAN, Parcellation.DESTRIEUX)
+            ]
+        )
+        patterns.append(query_pattern_factory(QueryPatternName.T1_FREESURFER_BRAIN)())
+        patterns.extend(
+            [
+                query_pattern_factory(QueryPatternName.DWI_PREPROC)(file_type)
+                for file_type in (DWIFileType.NII, DWIFileType.BVEC, DWIFileType.BVAL)
+            ]
+        )
+        patterns.append(query_pattern_factory(QueryPatternName.DWI_PREPROC_BRAINMASK)())
         list_caps_files = clinica_list_of_files_reader(
             self.subjects,
             self.sessions,
             self.caps_directory,
-            [
-                # Inputs from t1-freesurfer pipeline
-                input_files.T1_FS_WM,  # list_caps_files[0]
-                input_files.T1_FS_DESIKAN,  # list_caps_files[1]
-                input_files.T1_FS_DESTRIEUX,  # list_caps_files[2]
-                input_files.T1_FS_BRAIN,  # list_caps_files[3]
-                # Inputs from dwi-preprocessing pipeline
-                input_files.DWI_PREPROC_NII,  # list_caps_files[4]
-                input_files.DWI_PREPROC_BRAINMASK,  # list_caps_files[5]
-                input_files.DWI_PREPROC_BVEC,  # list_caps_files[6]
-                input_files.DWI_PREPROC_BVAL,  # list_caps_files[7]
-            ],
-            raise_exception=True,
+            patterns,
         )
 
         # Check space of DWI dataset
@@ -110,7 +120,7 @@ class DwiConnectome(Pipeline):
         ]
 
         list_grad_fsl = [
-            (bvec, bval) for bvec, bval in zip(list_caps_files[6], list_caps_files[7])
+            (bvec, bval) for bvec, bval in zip(list_caps_files[5], list_caps_files[6])
         ]
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
@@ -133,7 +143,7 @@ class DwiConnectome(Pipeline):
                     ("wm_mask_file", list_caps_files[0]),
                     ("t1_brain_file", list_caps_files[3]),
                     ("dwi_file", list_caps_files[4]),
-                    ("dwi_brainmask_file", list_caps_files[5]),
+                    ("dwi_brainmask_file", list_caps_files[7]),
                     ("grad_fsl", list_grad_fsl),
                     ("atlas_files", list_atlas_files),
                 ],
@@ -161,7 +171,7 @@ class DwiConnectome(Pipeline):
                 iterables=[
                     ("wm_mask_file", list_caps_files[0]),
                     ("dwi_file", list_caps_files[4]),
-                    ("dwi_brainmask_file", list_caps_files[5]),
+                    ("dwi_brainmask_file", list_caps_files[7]),
                     ("grad_fsl", list_grad_fsl),
                     ("atlas_files", list_atlas_files),
                 ],

@@ -67,22 +67,26 @@ class DwiDti(Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        import clinica.utils.input_files as input_files
         from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.input_files import (
+            DWIFileType,
+            QueryPatternName,
+            query_pattern_factory,
+        )
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
+        patterns = [
+            query_pattern_factory(QueryPatternName.DWI_PREPROC)(file_type)
+            for file_type in (DWIFileType.NII, DWIFileType.BVEC, DWIFileType.BVAL)
+        ]
+        patterns.append(query_pattern_factory(QueryPatternName.DWI_PREPROC_BRAINMASK)())
         list_caps_files = clinica_list_of_files_reader(
             self.subjects,
             self.sessions,
             self.caps_directory,
-            [
-                input_files.DWI_PREPROC_NII,
-                input_files.DWI_PREPROC_BVEC,
-                input_files.DWI_PREPROC_BVAL,
-                input_files.DWI_PREPROC_BRAINMASK,
-            ],
+            patterns,
             raise_exception=True,
         )
 
