@@ -28,10 +28,19 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     check_modalities,
     define_participants,
     read_clinical_data,
+    write_dwi_b_values,
     write_participants,
     write_scans,
     write_sessions,
 )
+
+
+def test_write_dwi_b_values(tmp_path):
+    write_dwi_b_values(tmp_path)
+    bvec_files = list(tmp_path.rglob("*.bvec"))
+    bval_files = list(tmp_path.rglob("*.bval"))
+    assert len(bvec_files) == 1 and bvec_files[0].name == "dwi.bvec"
+    assert len(bval_files) == 1 and bval_files[0].name == "dwi.bval"
 
 
 def test_get_subjects_list_from_data(tmp_path):
@@ -219,7 +228,10 @@ def clinical_data_builder(tmp_path: Path) -> None:
 def test_read_clinical_data_success(tmp_path):
     clinical_data_builder(tmp_path)
     assert (
-        read_clinical_data(tmp_path).eq(formatted_clinical_data_builder()).all().all()
+        read_clinical_data(tmp_path)
+        .eq(formatted_clinical_data_builder().drop("participant_id", axis=1))
+        .all()
+        .all()
     )
 
 
@@ -531,7 +543,7 @@ def test_find_subject_dti_data(tmp_path):
     (tmp_path / "IXI001-Guys-1234-T1.nii.gz").touch()
     (tmp_path / "IXI001-Guys-1234-DTI").touch()
     (tmp_path / "IXI001-Guys-DTI.nii.gz").touch()
-    tmp_image = tmp_path / "IXI001-Guys-1234-DTI-00.nii.gz"
+    tmp_image = tmp_path / "IXI001-Guys-1234-DTI-01.nii.gz"
     tmp_image.touch()
     list_dti = _find_subject_dti_data(data_directory=tmp_path, subject="IXI001")
     assert len(list_dti) == 1 and list_dti[0] == tmp_image
@@ -564,6 +576,7 @@ def formatted_clinical_data_builder() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "source_id": ["IXI001"],
+            "participant_id": ["sub-IXI001"],
             "session_id": ["ses-M000"],
             "acq_time": ["2024-08-23"],
             "sex": ["female"],
