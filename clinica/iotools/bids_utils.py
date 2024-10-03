@@ -26,6 +26,7 @@ class StudyName(str, Enum):
     OASIS3 = "OASIS3"
     UKB = "UKB"
     IXI = "IXI"
+    KIRBY = "KIRBY"
 
 
 BIDS_VALIDATOR_CONFIG = {
@@ -93,6 +94,8 @@ def bids_id_factory(study: StudyName) -> Type[BIDSSubjectID]:
         return HABSBIDSSubjectID
     if study == StudyName.IXI:
         return IXIBIDSSubjectID
+    if study == StudyName.KIRBY:
+        return KIRBYBIDSSubjectID
 
 
 class ADNIBIDSSubjectID(BIDSSubjectID):
@@ -313,6 +316,30 @@ class IXIBIDSSubjectID(BIDSSubjectID):
             return f"sub-{study_id}"
         raise ValueError(
             f"Raw IXI subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return str(self.replace("sub-", ""))
+
+class KIRBYBIDSSubjectID(BIDSSubjectID):
+    """Implementation for KIRBY of the BIDSSubjectIDClass, allowing to go from the source id KIRBY###
+    to a bids id sub-KKI### and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-KKI\d{3}", value):
+            return value
+        raise ValueError(
+            f"BIDS KKI subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-KKI' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"KKI\d{3}", study_id):
+            return f"sub-{study_id}"
+        raise ValueError(
+            f"Raw KIRBY subject ID {study_id} is not properly formatted. "
             "Expecting a 'Y' format."
         )
 
